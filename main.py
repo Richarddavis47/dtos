@@ -1,4 +1,4 @@
-"""DTOS v0.7 Matchups Command Center — single-file Render deployment.
+"""DTOS v0.7.1 Matchups Polish — single-file Render deployment.
 
 Public Day Traders dashboard with automatic Sleeper synchronization.
 League ID defaults to 1313066632158924800 and can be overridden with
@@ -145,7 +145,7 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                         "id": pid,
                         "name": full_name,
                         "position": p.get("position") or "—",
-                        "team": p.get("team") or "FA",
+                        "team": p.get("team") or "Vacant",
                         "starter": pid in starter_ids,
                         "starter_index": starter_index.get(pid),
                         "starter_slot": lineup_slots[starter_index[pid]] if pid in starter_index and starter_index[pid] < len(lineup_slots) else None,
@@ -237,13 +237,13 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 lineup = []
                 for index, player_id in enumerate(starters):
                     player = team_player_by_id.get(player_id, {
-                        "id": player_id, "name": player_id, "position": "—", "team": "FA"
+                        "id": player_id, "name": player_id, "position": "—", "team": "Vacant"
                     })
                     lineup.append({
                         "id": player_id,
                         "name": player.get("name") or player_id,
                         "position": player.get("position") or "—",
-                        "nfl_team": player.get("team") or "FA",
+                        "nfl_team": player.get("team") or "Vacant",
                         "slot": player.get("starter_slot") or (
                             lineup_slots[index] if index < len(lineup_slots) else "START"
                         ),
@@ -261,7 +261,7 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                         "id": pid,
                         "name": player.get("name") or pid,
                         "position": player.get("position") or "—",
-                        "nfl_team": player.get("team") or "FA",
+                        "nfl_team": player.get("team") or "Vacant",
                         "points": round(float(players_points.get(pid, 0) or 0), 2),
                     })
                 matchup_groups.setdefault(matchup_id, []).append({
