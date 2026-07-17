@@ -1,4 +1,4 @@
-"""DTOS v0.6 Complete Teams Experience — single-file Render deployment.
+"""DTOS v0.7 Matchups Command Center — single-file Render deployment.
 
 Public Day Traders dashboard with automatic Sleeper synchronization.
 League ID defaults to 1313066632158924800 and can be overridden with
@@ -77,7 +77,7 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
         STATE["syncing"] = True
         try:
             timeout = httpx.Timeout(REQUEST_TIMEOUT)
-            headers = {"User-Agent": "DTOS/0.6 (+Day Traders)"}
+            headers = {"User-Agent": "DTOS/0.7 (+Day Traders)"}
             async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
                 league, users, rosters, traded_picks, drafts, nfl_state = await asyncio.gather(
                     sleeper_get(client, f"/league/{LEAGUE_ID}"),
@@ -225,11 +225,54 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
             for team in team_rows:
                 m = matchup_by_roster.get(str(team["roster_id"]), {})
                 matchup_id = str(m.get("matchup_id") or "Unassigned")
+                players_points = m.get("players_points") or {}
+                starters = [str(x) for x in (m.get("starters") or [])]
+                starter_points_list = m.get("starters_points") or []
+                starter_points = {
+                    pid: float(starter_points_list[index] or 0)
+                    if index < len(starter_points_list) else float(players_points.get(pid, 0) or 0)
+                    for index, pid in enumerate(starters)
+                }
+                team_player_by_id = {str(p["id"]): p for p in team.get("players", [])}
+                lineup = []
+                for index, player_id in enumerate(starters):
+                    player = team_player_by_id.get(player_id, {
+                        "id": player_id, "name": player_id, "position": "—", "team": "FA"
+                    })
+                    lineup.append({
+                        "id": player_id,
+                        "name": player.get("name") or player_id,
+                        "position": player.get("position") or "—",
+                        "nfl_team": player.get("team") or "FA",
+                        "slot": player.get("starter_slot") or (
+                            lineup_slots[index] if index < len(lineup_slots) else "START"
+                        ),
+                        "points": round(float(starter_points.get(player_id, 0) or 0), 2),
+                    })
+                bench = []
+                for player_id in (m.get("players") or []):
+                    pid = str(player_id)
+                    if pid in set(starters):
+                        continue
+                    player = team_player_by_id.get(pid)
+                    if not player:
+                        continue
+                    bench.append({
+                        "id": pid,
+                        "name": player.get("name") or pid,
+                        "position": player.get("position") or "—",
+                        "nfl_team": player.get("team") or "FA",
+                        "points": round(float(players_points.get(pid, 0) or 0), 2),
+                    })
                 matchup_groups.setdefault(matchup_id, []).append({
                     "team": team["team_name"],
                     "owner": team["owner"],
-                    "points": m.get("points", 0),
+                    "points": round(float(m.get("points", 0) or 0), 2),
+                    "custom_points": m.get("custom_points"),
                     "roster_id": team["roster_id"],
+                    "record": f'{team["wins"]}-{team["losses"]}-{team["ties"]}',
+                    "lineup": lineup,
+                    "bench": sorted(bench, key=lambda p: (-p["points"], p["name"])),
                 })
 
             STATE["data"] = {
@@ -288,7 +331,7 @@ async def lifespan(_: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="DTOS", version="0.6.0", lifespan=lifespan)
+app = FastAPI(title="DTOS", version="0.7.0", lifespan=lifespan)
 
 
 CSS = """
@@ -311,6 +354,9 @@ a{color:inherit;text-decoration:none}.wrap{max-width:1180px;margin:auto;padding:
 details.pick-year{margin-top:12px}.pick-summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:#101d2d;border:1px solid var(--line);border-radius:12px;padding:12px 14px}.pick-summary::-webkit-details-marker{display:none}.pick-summary:after{content:"＋";color:var(--accent);font-size:18px}.pick-year[open] .pick-summary:after{content:"−"}.pick-year .pick-list{border-top-left-radius:0;border-top-right-radius:0;margin-top:-1px}
 .sleeper-lineup{display:grid;gap:8px}.lineup-row{display:grid;grid-template-columns:56px 1fr;gap:8px;align-items:stretch}.lineup-slot{display:grid;place-items:center;background:#0b1727;border:1px solid var(--line);border-radius:10px;font-size:11px;font-weight:900;color:var(--accent)}.lineup-player{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#101d2d;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.lineup-player b{font-size:14px}.lineup-meta{font-size:11px;color:var(--muted);text-align:right}.lineup-empty{color:var(--muted);font-style:italic}
 .owner-primary{font-size:13px;color:var(--accent);font-weight:900;text-transform:uppercase;letter-spacing:.08em}.franchise-secondary{color:var(--muted);font-size:13px;margin-top:3px}
+
+.matchup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}.matchup-card{display:block;background:linear-gradient(180deg,#122238,#0d1a2a);border:1px solid var(--line);border-radius:16px;padding:16px;transition:transform .15s ease,border-color .15s ease}.matchup-card:hover{transform:translateY(-2px);border-color:#3d5877}.matchup-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.matchup-number{font-size:12px;color:var(--accent);font-weight:900;text-transform:uppercase;letter-spacing:.08em}.matchup-status{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 8px}.versus{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}.matchup-team{text-align:left}.matchup-team.right{text-align:right}.matchup-team h3{margin:3px 0 2px;font-size:18px}.matchup-owner{font-size:12px;color:var(--muted)}.score{font-size:30px;font-weight:900;margin-top:8px}.vs-mark{color:var(--muted);font-size:12px;font-weight:900}.matchup-footer{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.edge{color:var(--gold);font-weight:900}.matchup-hero{background:linear-gradient(180deg,#14263d,#0b1727);border:1px solid var(--line);border-radius:16px;padding:18px}.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}.scoreboard-side.right{text-align:right}.scoreboard-score{font-size:42px;font-weight:950}.scoreboard-team{font-size:20px;font-weight:900}.battle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}.battle-card{background:#101d2d;border:1px solid var(--line);border-radius:12px;padding:12px}.battle-card h3{margin:0 0 8px;font-size:14px;color:var(--accent)}.battle-row{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid rgba(38,55,76,.65)}.battle-slot{font-size:10px;font-weight:900;color:var(--muted);text-transform:uppercase}.battle-player b{display:block;font-size:13px}.battle-player span{font-size:11px;color:var(--muted)}.battle-points{font-weight:900}.matchup-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}.leader-banner{margin-top:14px;padding:10px 12px;border-radius:10px;background:#0b1727;border:1px solid var(--line);color:var(--muted)}
+@media(max-width:600px){.versus,.scoreboard{grid-template-columns:1fr auto 1fr;gap:8px}.score{font-size:24px}.scoreboard-score{font-size:32px}.scoreboard-team{font-size:16px}.matchup-summary-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){.summary-grid{grid-template-columns:repeat(2,1fr)}.team-report{grid-template-columns:repeat(2,1fr)}.analytics-grid{grid-template-columns:repeat(2,1fr)}.position-strip{grid-template-columns:repeat(2,1fr)}}
 table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}pre{white-space:pre-wrap;word-break:break-word}.footer{color:var(--muted);font-size:13px;padding:24px 0}.error{background:#3b1720;border:1px solid #7f1d1d;padding:12px;border-radius:10px;margin-bottom:15px}@media(max-width:600px){.wrap{padding:14px}.card{padding:13px}th,td{padding:7px;font-size:13px}}
 """
@@ -560,10 +606,93 @@ async def matchups_page() -> HTMLResponse:
     await ensure_fresh()
     d = require_data()
     cards = []
-    for matchup_id, sides in sorted(d["matchups"].items()):
-        rows = "".join(f'<div class="player"><span><b>{escape(s["team"])}</b><br><span class="muted">{escape(s["owner"])}</span></span><span class="stat">{s["points"]:.2f}</span></div>' for s in sides)
-        cards.append(f'<div class="card"><h3>Matchup {escape(matchup_id)}</h3>{rows}</div>')
-    return page("Matchups", f'<h2>Week {d["week"]} Matchups</h2><div class="grid">{"".join(cards)}</div>')
+    for matchup_id, sides in sorted(d["matchups"].items(), key=lambda item: (item[0] == "Unassigned", item[0])):
+        if len(sides) < 2:
+            side = sides[0] if sides else {"team": "Unassigned", "owner": "—", "points": 0, "record": "—"}
+            cards.append(
+                f'<div class="matchup-card"><div class="matchup-label"><span class="matchup-number">Matchup {escape(matchup_id)}</span><span class="matchup-status">Waiting</span></div>'
+                f'<h3>{escape(side["team"])}</h3><div class="muted">Opponent not assigned</div></div>'
+            )
+            continue
+        left, right = sides[0], sides[1]
+        margin = abs(float(left["points"]) - float(right["points"]))
+        if left["points"] == right["points"]:
+            status = "Tied"
+            edge_text = "Even"
+        else:
+            leader = left if left["points"] > right["points"] else right
+            status = "Live score"
+            edge_text = f'{leader["team"]} +{margin:.2f}'
+        top_scorer = max((p for side in sides for p in side.get("lineup", [])), key=lambda p: p["points"], default=None)
+        top_text = f'{top_scorer["name"]} {top_scorer["points"]:.2f}' if top_scorer else "No points yet"
+        cards.append(
+            f'<a class="matchup-card" href="/matchups/{escape(matchup_id)}">'
+            f'<div class="matchup-label"><span class="matchup-number">Matchup {escape(matchup_id)}</span><span class="matchup-status">{status}</span></div>'
+            f'<div class="versus"><div class="matchup-team"><div class="matchup-owner">{escape(left["owner"])}</div><h3>{escape(left["team"])}</h3><div class="record">{escape(left["record"])}</div><div class="score">{left["points"]:.2f}</div></div>'
+            f'<div class="vs-mark">VS</div>'
+            f'<div class="matchup-team right"><div class="matchup-owner">{escape(right["owner"])}</div><h3>{escape(right["team"])}</h3><div class="record">{escape(right["record"])}</div><div class="score">{right["points"]:.2f}</div></div></div>'
+            f'<div class="matchup-footer"><span><b class="edge">Edge:</b> {escape(edge_text)}</span><span><b>Top scorer:</b> {escape(top_text)}</span></div></a>'
+        )
+    body = (
+        f'<div class="section-title"><div><h2 style="margin:0">Week {d["week"]} Matchups</h2><div class="muted">Live Sleeper scoring and lineup comparison</div></div>'
+        f'<span class="pill">{len(cards)} matchups</span></div><div class="matchup-grid">{"".join(cards)}</div>'
+    )
+    return page("Matchups", body)
+
+
+@app.get("/matchups/{matchup_id}", response_class=HTMLResponse)
+async def matchup_detail_page(matchup_id: str) -> HTMLResponse:
+    await ensure_fresh()
+    d = require_data()
+    sides = d["matchups"].get(str(matchup_id))
+    if not sides:
+        raise HTTPException(status_code=404, detail="Matchup not found")
+    if len(sides) < 2:
+        return page("Matchup", f'<a class="back" href="/matchups">← All Matchups</a><div class="card"><h2>Matchup {escape(matchup_id)}</h2><p class="muted">Opponent assignment is not complete.</p></div>')
+    left, right = sides[0], sides[1]
+    margin = abs(float(left["points"]) - float(right["points"]))
+    if left["points"] == right["points"]:
+        headline = "Matchup is tied"
+    else:
+        leader = left if left["points"] > right["points"] else right
+        headline = f'{leader["team"]} leads by {margin:.2f}'
+    left_top = max(left.get("lineup", []), key=lambda p: p["points"], default=None)
+    right_top = max(right.get("lineup", []), key=lambda p: p["points"], default=None)
+    combined_top = max([p for p in (left_top, right_top) if p], key=lambda p: p["points"], default=None)
+
+    max_slots = max(len(left.get("lineup", [])), len(right.get("lineup", [])))
+    battles = []
+    for index in range(max_slots):
+        lp = left.get("lineup", [])[index] if index < len(left.get("lineup", [])) else None
+        rp = right.get("lineup", [])[index] if index < len(right.get("lineup", [])) else None
+        slot = (lp or rp or {}).get("slot", "START")
+        left_html = (f'<div class="battle-player"><b>{escape(lp["name"])}</b><span>{escape(lp["position"])} · {escape(lp["nfl_team"])}</span></div><div class="battle-points">{lp["points"]:.2f}</div>') if lp else '<div class="battle-player"><b>Empty</b></div><div class="battle-points">—</div>'
+        right_html = (f'<div class="battle-player"><b>{escape(rp["name"])}</b><span>{escape(rp["position"])} · {escape(rp["nfl_team"])}</span></div><div class="battle-points">{rp["points"]:.2f}</div>') if rp else '<div class="battle-player"><b>Empty</b></div><div class="battle-points">—</div>'
+        battles.append(
+            f'<div class="battle-card"><h3>{escape(slot)}</h3>'
+            f'<div class="battle-row"><div class="battle-slot">{escape(left["owner"])}</div>{left_html}</div>'
+            f'<div class="battle-row"><div class="battle-slot">{escape(right["owner"])}</div>{right_html}</div></div>'
+        )
+
+    def bench_html(side: dict[str, Any]) -> str:
+        rows = ''.join(
+            f'<div class="player"><span><b>{escape(p["name"])}</b><br><span class="muted">{escape(p["position"])} · {escape(p["nfl_team"])}</span></span><b>{p["points"]:.2f}</b></div>'
+            for p in side.get("bench", [])[:12]
+        ) or '<div class="muted">No bench scoring available.</div>'
+        return f'<div class="card"><h3>{escape(side["team"])} Bench</h3>{rows}</div>'
+
+    top_scorer_text = f'{combined_top["name"]} · {combined_top["points"]:.2f}' if combined_top else "No points yet"
+    body = (
+        f'<a class="back" href="/matchups">← All Matchups</a>'
+        f'<section class="matchup-hero"><div class="matchup-label"><span class="matchup-number">Week {d["week"]} · Matchup {escape(matchup_id)}</span><span class="matchup-status">Live Sleeper data</span></div>'
+        f'<div class="scoreboard"><div class="scoreboard-side"><div class="matchup-owner">{escape(left["owner"])}</div><div class="scoreboard-team">{escape(left["team"])}</div><div class="record">{escape(left["record"])}</div><div class="scoreboard-score">{left["points"]:.2f}</div></div>'
+        f'<div class="vs-mark">VS</div><div class="scoreboard-side right"><div class="matchup-owner">{escape(right["owner"])}</div><div class="scoreboard-team">{escape(right["team"])}</div><div class="record">{escape(right["record"])}</div><div class="scoreboard-score">{right["points"]:.2f}</div></div></div>'
+        f'<div class="leader-banner"><b>{escape(headline)}</b></div>'
+        f'<div class="matchup-summary-grid"><div class="metric"><b>{margin:.2f}</b><span>Score Margin</span></div><div class="metric"><b>{len(left.get("lineup", []))}</b><span>{escape(left["owner"])} Starters</span></div><div class="metric"><b>{len(right.get("lineup", []))}</b><span>{escape(right["owner"])} Starters</span></div><div class="metric"><b>{escape(top_scorer_text)}</b><span>Top Starter</span></div></div></section>'
+        f'<section class="roster-section"><div class="section-title"><span class="slot-label">Starting Lineup Battles</span><span class="muted">Slot-by-slot live points</span></div><div class="battle-grid">{"".join(battles)}</div></section>'
+        f'<section class="roster-section"><div class="section-title"><span class="slot-label">Bench Scoring</span><span class="muted">Top 12 bench players shown</span></div><div class="grid">{bench_html(left)}{bench_html(right)}</div></section>'
+    )
+    return page(f'{left["team"]} vs {right["team"]}', body)
 
 
 @app.get("/picks", response_class=HTMLResponse)
