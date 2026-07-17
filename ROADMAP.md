@@ -1,0 +1,211 @@
+# DTOS Development Roadmap
+
+DTOS is the Day Traders Front Office System: a live dynasty-fantasy-football command center built on Sleeper data and expanded with league-specific analytics, history, owner intelligence, and decision support.
+
+## Product principle
+
+Every screen should answer its primary fantasy-football question in under 10 seconds.
+
+## Release workflow
+
+Each module follows the same process:
+
+1. Plan the complete module.
+2. Build related features as one safe release.
+3. Deploy through GitHub and Render.
+4. Test on mobile and desktop.
+5. Fix defects and polish usability.
+6. Freeze the module except for bugs or high-value improvements.
+
+---
+
+## Current status
+
+### Foundation — Complete
+
+- GitHub repository and version history
+- GitHub Codespaces workflow
+- Render deployment pipeline
+- FastAPI application
+- Sleeper API synchronization
+- Automatic refresh and manual Sync button
+- Mobile-responsive visual system
+- JSON API foundation
+
+### HQ Dashboard — Complete foundation
+
+- League identity and season state
+- Data-health status
+- Current standings summary
+- Navigation to core modules
+
+### Teams — Complete foundation
+
+Released through DTOS v0.6.0.
+
+- League-wide franchise cards
+- Individual franchise pages
+- Live rosters and lineup-slot order
+- Sleeper-style starting lineup
+- Bench, IR, and taxi organization
+- Position counts and roster summaries
+- Complete future-pick ledger
+- Original and current pick ownership
+- Collapsible draft-capital years
+- Traded-away pick tracking
+- Team Report layout
+- Position-room strength bars
+- Front Office Analytics framework
+
+Future Teams upgrades will focus on real DTOS valuation models rather than another major redesign.
+
+---
+
+## In progress
+
+### Matchups Command Center — DTOS v0.7.0
+
+Primary question: **Who has the advantage this week, and why?**
+
+Planned release scope:
+
+- Current-week matchup cards
+- Team names, records, scores, and projections
+- Live-versus-final matchup states
+- Clickable matchup detail pages
+- Side-by-side starting lineups
+- Player scores and projected points when available
+- Position-by-position matchup comparison
+- Current leader and projected winner indicators
+- Remaining-player summaries
+- Matchup margin and upset-alert framework
+- Mobile-first layout matching the Teams design system
+- Graceful offseason and missing-projection handling
+
+Initial analytics will be clearly labeled as framework metrics until the DTOS player-value and projection engines are complete.
+
+---
+
+## Next up
+
+### Player Database
+
+Primary question: **What is this player worth, and what should I know now?**
+
+- League and NFL player search
+- Player profile pages
+- Position, team, age, experience, and status
+- Current roster ownership
+- Weekly and season statistics
+- Market-value framework
+- Trend and injury framework
+- League transaction history
+
+### Trade Center
+
+Primary question: **What realistic trade improves my team?**
+
+- Trade builder and analyzer
+- Team-to-team asset browser
+- Pick and player valuation engine
+- Fairness and roster-fit scoring
+- Contender and rebuild impact
+- Owner-tendency integration
+- Trade finder and realistic offer generation
+- Historical league trade comparisons
+
+### Draft Center
+
+Primary question: **Who owns every pick, and what is the league-wide draft-capital picture?**
+
+- Complete pick matrix by season and round
+- Original and current ownership
+- Team draft-capital rankings
+- Pick-value framework
+- Trade history for each pick
+- Rookie-draft results and historical classes
+
+### Transactions Center
+
+Primary question: **What changed in the league, and why does it matter?**
+
+- Trades, waivers, free-agent moves, drops, and commissioner actions
+- Filters by team, player, transaction type, and season
+- Transaction detail pages
+- Asset movement summaries
+- Impact-analysis framework
+
+### League History
+
+Primary question: **What has happened in Day Traders since the beginning?**
+
+- Champions and playoff results
+- Standings by season
+- Draft history
+- Trade history
+- Records and milestones
+- Rivalries and head-to-head history
+- Owner and franchise timelines
+
+---
+
+## Front Office intelligence
+
+### Team valuation engine
+
+- Player market values
+- Draft-pick values
+- Position-room grades
+- Team value and roster rank
+- Contender score
+- Dynasty score
+- Youth and liquidity scores
+- Competitive-window assessment
+
+### Owner profiles
+
+- Confirmed owner identities
+- Negotiation and response tendencies
+- Risk tolerance
+- Trade activity
+- Preferred asset types
+- Fairness and aggressiveness profiles
+- Historical performance and achievements
+
+### GM Intelligence
+
+- Personalized recommendations
+- Buy, sell, and hold guidance
+- Team-specific trade targets
+- Opponent and market context
+- Multi-year roster planning
+- News-triggered recommendations
+- Natural-language front-office assistant
+
+---
+
+## Long-term platform goals
+
+- Multiple-league support
+- Authentication and private league access
+- Persistent database instead of cache-only storage
+- Scheduled historical snapshots
+- Notifications and major-news alerts
+- League constitution and handbook integration
+- Commissioner tools
+- Exportable reports
+- Public and private franchise profiles
+- Subscription-ready deployment architecture
+
+---
+
+## Version map
+
+- **v0.1.0** — Live deployment and Sleeper synchronization
+- **v0.2.0** — Teams and franchise-page foundation
+- **v0.5.0** — Expanded team summaries, position grouping, and draft ownership
+- **v0.6.0** — Sleeper-style starting lineups, collapsible draft capital, and Team Report
+- **v0.7.0** — Matchups Command Center
+- **v0.8.0** — Player Database foundation
+- **v0.9.0** — Trade Center foundation
+- **v1.0.0** — Complete core Day Traders front-office platform
