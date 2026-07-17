@@ -1,4 +1,4 @@
-"""DTOS v0.5 Complete Teams Experience — single-file Render deployment.
+"""DTOS v0.6 Complete Teams Experience — single-file Render deployment.
 
 Public Day Traders dashboard with automatic Sleeper synchronization.
 League ID defaults to 1313066632158924800 and can be overridden with
@@ -77,7 +77,7 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
         STATE["syncing"] = True
         try:
             timeout = httpx.Timeout(REQUEST_TIMEOUT)
-            headers = {"User-Agent": "DTOS/0.5 (+Day Traders)"}
+            headers = {"User-Agent": "DTOS/0.6 (+Day Traders)"}
             async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
                 league, users, rosters, traded_picks, drafts, nfl_state = await asyncio.gather(
                     sleeper_get(client, f"/league/{LEAGUE_ID}"),
@@ -120,7 +120,10 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 metadata = owner.get("metadata") or {}
                 settings = roster.get("settings") or {}
                 player_ids = roster.get("players") or []
-                starter_ids = set(roster.get("starters") or [])
+                starter_list = [str(x) for x in (roster.get("starters") or [])]
+                starter_ids = set(starter_list)
+                starter_index = {pid: idx for idx, pid in enumerate(starter_list)}
+                lineup_slots = [slot for slot in (league.get("roster_positions") or []) if slot not in {"BN", "IR", "TAXI"}]
                 player_rows = []
                 for player_id in player_ids:
                     p = players.get(str(player_id), {}) if isinstance(players, dict) else {}
@@ -144,6 +147,8 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                         "position": p.get("position") or "—",
                         "team": p.get("team") or "FA",
                         "starter": pid in starter_ids,
+                        "starter_index": starter_index.get(pid),
+                        "starter_slot": lineup_slots[starter_index[pid]] if pid in starter_index and starter_index[pid] < len(lineup_slots) else None,
                         "roster_slot": roster_slot,
                     })
                 slot_order = {"Starter": 0, "Bench": 1, "IR": 2, "Taxi": 3}
@@ -283,7 +288,7 @@ async def lifespan(_: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="DTOS", version="0.5.0", lifespan=lifespan)
+app = FastAPI(title="DTOS", version="0.6.0", lifespan=lifespan)
 
 
 CSS = """
@@ -300,7 +305,13 @@ a{color:inherit;text-decoration:none}.wrap{max-width:1180px;margin:auto;padding:
 .position-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.position-count{background:#0b1727;border:1px solid var(--line);border-radius:10px;padding:9px;text-align:center}.position-count b{display:block;font-size:18px}.position-count span{font-size:11px;color:var(--muted)}
 .position-block{margin-top:10px}.position-head{display:flex;justify-content:space-between;align-items:center;padding:8px 2px;color:var(--muted);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.player-name{display:flex;align-items:center;gap:8px}.pos-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(110,231,183,.10)}
 .pick-row.own{border-left:3px solid var(--accent);padding-left:10px}.pick-row.acquired{border-left:3px solid #60a5fa;padding-left:10px}.pick-row.traded-away{border-left:3px solid #f87171;padding-left:10px}.pick-status{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.pick-status.own{color:var(--accent)}.pick-status.acquired{color:#93c5fd}.pick-status.away{color:#fca5a5}
-@media(max-width:760px){.summary-grid{grid-template-columns:repeat(2,1fr)}.analytics-grid{grid-template-columns:repeat(2,1fr)}.position-strip{grid-template-columns:repeat(2,1fr)}}
+
+.team-report{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.report-card{background:linear-gradient(180deg,#14263d,#0b1727);border:1px solid var(--line);border-radius:12px;padding:12px}.report-card .grade{font-size:26px;font-weight:900;color:var(--gold)}.report-card small{display:block;color:var(--muted);margin-top:4px}
+.progress-row{margin-top:10px}.progress-label{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:5px}.progress-track{height:8px;background:#07111f;border:1px solid var(--line);border-radius:999px;overflow:hidden}.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#60a5fa);border-radius:999px}
+details.pick-year{margin-top:12px}.pick-summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:#101d2d;border:1px solid var(--line);border-radius:12px;padding:12px 14px}.pick-summary::-webkit-details-marker{display:none}.pick-summary:after{content:"＋";color:var(--accent);font-size:18px}.pick-year[open] .pick-summary:after{content:"−"}.pick-year .pick-list{border-top-left-radius:0;border-top-right-radius:0;margin-top:-1px}
+.sleeper-lineup{display:grid;gap:8px}.lineup-row{display:grid;grid-template-columns:56px 1fr;gap:8px;align-items:stretch}.lineup-slot{display:grid;place-items:center;background:#0b1727;border:1px solid var(--line);border-radius:10px;font-size:11px;font-weight:900;color:var(--accent)}.lineup-player{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#101d2d;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.lineup-player b{font-size:14px}.lineup-meta{font-size:11px;color:var(--muted);text-align:right}.lineup-empty{color:var(--muted);font-style:italic}
+.owner-primary{font-size:13px;color:var(--accent);font-weight:900;text-transform:uppercase;letter-spacing:.08em}.franchise-secondary{color:var(--muted);font-size:13px;margin-top:3px}
+@media(max-width:760px){.summary-grid{grid-template-columns:repeat(2,1fr)}.team-report{grid-template-columns:repeat(2,1fr)}.analytics-grid{grid-template-columns:repeat(2,1fr)}.position-strip{grid-template-columns:repeat(2,1fr)}}
 table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}pre{white-space:pre-wrap;word-break:break-word}.footer{color:var(--muted);font-size:13px;padding:24px 0}.error{background:#3b1720;border:1px solid #7f1d1d;padding:12px;border-radius:10px;margin-bottom:15px}@media(max-width:600px){.wrap{padding:14px}.card{padding:13px}th,td{padding:7px;font-size:13px}}
 """
 
@@ -332,7 +343,7 @@ async def api_status() -> JSONResponse:
     await ensure_fresh()
     data = STATE.get("data") or {}
     return JSONResponse({
-        "version": "0.5.0",
+        "version": "0.6.0",
         "league_id": LEAGUE_ID,
         "last_sync": STATE.get("last_sync"),
         "last_error": STATE.get("last_error"),
@@ -430,13 +441,26 @@ async def team_detail_page(roster_id: int) -> HTMLResponse:
         slot_players = [p for p in team["players"] if p["roster_slot"] == slot]
         if not slot_players:
             continue
+        if slot == "Starter":
+            ordered = sorted(slot_players, key=lambda p: (p.get("starter_index") is None, p.get("starter_index") or 0))
+            rows = "".join(
+                f'<div class="lineup-row"><div class="lineup-slot">{escape(p.get("starter_slot") or p["position"])}</div>'
+                f'<div class="lineup-player"><div><b>{escape(p["name"])}</b><div class="muted">{escape(p["position"])} · {escape(p["team"])}</div></div>'
+                f'<div class="lineup-meta">STARTER</div></div></div>'
+                for p in ordered
+            )
+            roster_html.append(
+                f'<section class="roster-section"><div class="section-title"><span class="slot-label">Starting Lineup</span>'
+                f'<span class="muted">{len(slot_players)} starters</span></div><div class="sleeper-lineup">{rows}</div></section>'
+            )
+            continue
         groups = []
         present_positions = [pos for pos in pos_order if any(p["position"] == pos for p in slot_players)]
         other_positions = sorted({p["position"] for p in slot_players if p["position"] not in pos_order})
         for pos in present_positions + other_positions:
             players = [p for p in slot_players if p["position"] == pos]
             rows = "".join(
-                f'<div class="player {"starter" if p["starter"] else ""}"><span class="player-name"><span class="pos-dot"></span>{escape(p["name"])}</span><span class="pill">{escape(p["position"])} · {escape(p["team"])}</span></div>'
+                f'<div class="player"><span class="player-name"><span class="pos-dot"></span>{escape(p["name"])}</span><span class="pill">{escape(p["position"])} · {escape(p["team"])}</span></div>'
                 for p in players
             )
             groups.append(f'<div class="position-block"><div class="position-head"><span>{escape(pos)}</span><span>{len(players)}</span></div>{rows}</div>')
@@ -449,6 +473,12 @@ async def team_detail_page(roster_id: int) -> HTMLResponse:
     firsts = team.get("pick_counts", {}).get("1", 0)
     seconds = team.get("pick_counts", {}).get("2", 0)
     thirds = team.get("pick_counts", {}).get("3", 0)
+    roster_size = max(1, len(team["players"]))
+    # Transparent first-pass presentation metrics. These are UI summaries, not market-value models.
+    position_strength = {pos: min(100, round(pos_counts[pos] / max(1, {"QB":3,"RB":8,"WR":10,"TE":4}[pos]) * 100)) for pos in ("QB","RB","WR","TE")}
+    contender_score = min(99, round((position_strength["QB"] * .25 + position_strength["RB"] * .25 + position_strength["WR"] * .30 + position_strength["TE"] * .20)))
+    dynasty_score = min(99, round(contender_score * .75 + min(100, total_picks * 7) * .25))
+    overall_grade = "A" if contender_score >= 85 else "B" if contender_score >= 70 else "C" if contender_score >= 55 else "D"
     body = (
         f'<a class="back" href="/teams">← All Teams</a>'
         f'<section class="card"><div class="team-head"><div><div class="identity-kicker">Owner: {escape(team["owner"])}</div>'
@@ -474,6 +504,14 @@ async def team_detail_page(roster_id: int) -> HTMLResponse:
         f'<div class="analytics-card"><b>Coming Soon</b><span>Contender Score</span></div>'
         f'<div class="analytics-card"><b>Coming Soon</b><span>Dynasty Grade</span></div>'
         f'</div></section>'
+        f'<section class="roster-section"><div class="section-title"><span class="slot-label">Team Report</span><span class="muted">At-a-glance roster profile</span></div>'
+        f'<div class="team-report"><div class="report-card"><div class="grade">{overall_grade}</div><small>Overall Grade</small></div>'
+        f'<div class="report-card"><div class="grade">{contender_score}</div><small>Contender Score</small></div>'
+        f'<div class="report-card"><div class="grade">{dynasty_score}</div><small>Dynasty Score</small></div></div>'
+        f'<div class="card">' + ''.join(
+            f'<div class="progress-row"><div class="progress-label"><span>{pos} Room</span><b>{position_strength[pos]}</b></div><div class="progress-track"><div class="progress-fill" style="width:{position_strength[pos]}%"></div></div></div>'
+            for pos in ("QB","RB","WR","TE")
+        ) + '</div></section>'
     )
 
     owned_by_year = {}
@@ -489,8 +527,8 @@ async def team_detail_page(roster_id: int) -> HTMLResponse:
             for pick in sorted(picks, key=lambda item: (item["round"], item["original_team"]))
         )
         owned_sections.append(
-            f'<div class="pick-year"><div class="section-title"><span class="slot-label">{season}</span>'
-            f'<span class="muted">{len(picks)} picks</span></div><div class="card pick-list">{rows}</div></div>'
+            f'<details class="pick-year"><summary class="pick-summary"><span><b>{season}</b></span><span class="muted">{len(picks)} picks</span></summary>'
+            f'<div class="card pick-list">{rows}</div></details>'
         )
 
     away_rows = "".join(
@@ -509,9 +547,8 @@ async def team_detail_page(roster_id: int) -> HTMLResponse:
         f'<div class="metric"><b>{seconds}</b><span>Future 2nds</span></div>'
         f'<div class="metric"><b>{thirds}</b><span>Future 3rds</span></div></div></div>'
         f'{"".join(owned_sections)}'
-        + (f'<div class="pick-year"><div class="section-title"><span class="slot-label away">Original Picks Traded Away</span>'
-           f'<span class="muted">{len(team.get("picks_traded_away", []))} picks</span></div>'
-           f'<div class="card pick-list">{away_rows}</div></div>' if away_rows else '')
+        + (f'<details class="pick-year"><summary class="pick-summary"><span class="away"><b>Original Picks Traded Away</b></span><span class="muted">{len(team.get("picks_traded_away", []))} picks</span></summary>'
+           f'<div class="card pick-list">{away_rows}</div></details>' if away_rows else '')
         + '</section>'
     )
     body += draft_capital + "".join(roster_html)
