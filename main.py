@@ -1,4 +1,4 @@
-"""DTOS v0.2 Teams Module — single-file Render deployment.
+"""DTOS v0.3 Complete Teams Experience — single-file Render deployment.
 
 Public Day Traders dashboard with automatic Sleeper synchronization.
 League ID defaults to 1313066632158924800 and can be overridden with
@@ -283,6 +283,8 @@ async def lifespan(_: FastAPI):
     task.cancel()
 
 
+
+OWNER_DISPLAY_NAMES={"RichardDavis47":"Richard","danreilley":"Dan","davefedex":"Dave","garrettadame36":"Garrett","Mears30":"Matt","zkobes":"Zach","OGV":"Will","TheLandsharks":"Mike","anthonyrangel":"Anthony","Markgus13":"Mark"}
 app = FastAPI(title="DTOS", version="0.2.0", lifespan=lifespan)
 
 
