@@ -1,4 +1,4 @@
-"""DTOS v0.1 MVP — single-file Render deployment.
+"""DTOS v0.2 Teams Module — single-file Render deployment.
 
 Public Day Traders dashboard with automatic Sleeper synchronization.
 League ID defaults to 1313066632158924800 and can be overridden with
@@ -77,7 +77,7 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
         STATE["syncing"] = True
         try:
             timeout = httpx.Timeout(REQUEST_TIMEOUT)
-            headers = {"User-Agent": "DTOS/0.1 (+Day Traders)"}
+            headers = {"User-Agent": "DTOS/0.2 (+Day Traders)"}
             async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
                 league, users, rosters, traded_picks, drafts, nfl_state = await asyncio.gather(
                     sleeper_get(client, f"/league/{LEAGUE_ID}"),
@@ -127,14 +127,28 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                     full_name = p.get("full_name") or " ".join(
                         part for part in [p.get("first_name"), p.get("last_name")] if part
                     ) or str(player_id)
+                    reserve_ids = set(str(x) for x in (roster.get("reserve") or []))
+                    taxi_ids = set(str(x) for x in (roster.get("taxi") or []))
+                    pid = str(player_id)
+                    if pid in starter_ids:
+                        roster_slot = "Starter"
+                    elif pid in taxi_ids:
+                        roster_slot = "Taxi"
+                    elif pid in reserve_ids:
+                        roster_slot = "IR"
+                    else:
+                        roster_slot = "Bench"
                     player_rows.append({
-                        "id": str(player_id),
+                        "id": pid,
                         "name": full_name,
                         "position": p.get("position") or "—",
                         "team": p.get("team") or "FA",
-                        "starter": str(player_id) in starter_ids,
+                        "starter": pid in starter_ids,
+                        "roster_slot": roster_slot,
                     })
-                player_rows.sort(key=lambda p: (not p["starter"], p["position"], p["name"]))
+                slot_order = {"Starter": 0, "Bench": 1, "IR": 2, "Taxi": 3}
+                pos_order = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "K": 4, "DEF": 5}
+                player_rows.sort(key=lambda p: (slot_order.get(p["roster_slot"], 9), pos_order.get(p["position"], 8), p["name"]))
                 team_rows.append({
                     "roster_id": roster.get("roster_id"),
                     "owner_id": owner_id,
@@ -145,9 +159,61 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                     "losses": settings.get("losses", 0),
                     "ties": settings.get("ties", 0),
                     "points_for": round((settings.get("fpts", 0) or 0) + (settings.get("fpts_decimal", 0) or 0) / 100, 2),
+                    "points_against": round((settings.get("fpts_against", 0) or 0) + (settings.get("fpts_against_decimal", 0) or 0) / 100, 2),
+                    "max_points": round((settings.get("ppts", 0) or 0) + (settings.get("ppts_decimal", 0) or 0) / 100, 2),
                     "players": player_rows,
                 })
             team_rows.sort(key=lambda t: (-t["wins"], t["losses"], -t["points_for"]))
+
+            # Build a complete future-pick ledger, including untraded original picks.
+            try:
+                current_season = int(league.get("season") or utcnow().year)
+            except (TypeError, ValueError):
+                current_season = utcnow().year
+            future_years = {current_season + offset for offset in (1, 2, 3)}
+            future_years.update(
+                int(pick.get("season"))
+                for pick in traded_picks
+                if str(pick.get("season") or "").isdigit() and int(pick.get("season")) > current_season
+            )
+            draft_rounds = int((league.get("settings") or {}).get("draft_rounds") or 4)
+            roster_name_by_id = {int(team["roster_id"]): team["team_name"] for team in team_rows}
+            traded_owner = {}
+            for pick in traded_picks:
+                try:
+                    key = (int(pick.get("season")), int(pick.get("round")), int(pick.get("roster_id")))
+                    traded_owner[key] = int(pick.get("owner_id"))
+                except (TypeError, ValueError):
+                    continue
+
+            pick_ledger = []
+            for season in sorted(future_years):
+                for original_roster_id in sorted(roster_name_by_id):
+                    for round_number in range(1, draft_rounds + 1):
+                        current_owner_id = traded_owner.get(
+                            (season, round_number, original_roster_id), original_roster_id
+                        )
+                        pick_ledger.append({
+                            "season": season,
+                            "round": round_number,
+                            "original_roster_id": original_roster_id,
+                            "original_team": roster_name_by_id.get(original_roster_id, f"Team {original_roster_id}"),
+                            "current_owner_id": current_owner_id,
+                            "current_owner": roster_name_by_id.get(current_owner_id, f"Team {current_owner_id}"),
+                            "is_traded": current_owner_id != original_roster_id,
+                        })
+
+            for team in team_rows:
+                roster_id = int(team["roster_id"])
+                team["picks_owned"] = [p for p in pick_ledger if p["current_owner_id"] == roster_id]
+                team["picks_traded_away"] = [
+                    p for p in pick_ledger
+                    if p["original_roster_id"] == roster_id and p["current_owner_id"] != roster_id
+                ]
+                team["pick_counts"] = {
+                    str(round_number): sum(1 for p in team["picks_owned"] if p["round"] == round_number)
+                    for round_number in range(1, draft_rounds + 1)
+                }
 
             matchup_by_roster = {str(m.get("roster_id")): m for m in matchups}
             matchup_groups: dict[str, list[dict[str, Any]]] = {}
@@ -169,6 +235,7 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 "owners": users,
                 "teams": team_rows,
                 "traded_picks": traded_picks,
+                "pick_ledger": pick_ledger,
                 "drafts": drafts,
                 "transactions": transactions,
                 "matchups": matchup_groups,
@@ -216,7 +283,7 @@ async def lifespan(_: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="DTOS", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="DTOS", version="0.2.0", lifespan=lifespan)
 
 
 CSS = """
@@ -226,6 +293,7 @@ a{color:inherit;text-decoration:none}.wrap{max-width:1180px;margin:auto;padding:
 .brand h1{margin:0;font-size:28px}.brand p{margin:4px 0;color:var(--muted)}.btn{border:0;border-radius:10px;padding:11px 15px;background:var(--accent);color:#062018;font-weight:800;cursor:pointer}.nav{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.nav a{padding:9px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card{background:rgba(16,29,45,.94);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 10px 25px rgba(0,0,0,.15)}.card h2,.card h3{margin-top:0}.muted{color:var(--muted)}.good{color:var(--accent)}.warn{color:#fca5a5}
 .stat{font-size:27px;font-weight:850}.team{margin-bottom:14px}.record{color:var(--gold);font-weight:800}.players{display:grid;gap:5px}.player{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid rgba(38,55,76,.65)}.starter{font-weight:800}.pill{font-size:12px;padding:3px 7px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+.team-link{display:block;transition:transform .15s ease,border-color .15s ease}.team-link:hover{transform:translateY(-2px);border-color:#3d5877}.team-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.rank-badge{min-width:38px;height:38px;border-radius:12px;background:#182a40;border:1px solid var(--line);display:grid;place-items:center;font-weight:900;color:var(--gold)}.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.metric{background:#0b1727;border:1px solid var(--line);border-radius:10px;padding:10px}.metric b{display:block;font-size:17px}.metric span{font-size:11px;color:var(--muted)}.roster-section{margin-top:18px}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.slot-label{font-size:12px;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:.08em}.back{display:inline-block;margin-bottom:14px;color:var(--accent)}.pick-year{margin-top:14px}.pick-list{display:grid;gap:7px}.pick-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-top:1px solid rgba(38,55,76,.65)}.pick-origin{font-size:12px;color:var(--muted)}.away{color:#fca5a5}
 table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}pre{white-space:pre-wrap;word-break:break-word}.footer{color:var(--muted);font-size:13px;padding:24px 0}.error{background:#3b1720;border:1px solid #7f1d1d;padding:12px;border-radius:10px;margin-bottom:15px}@media(max-width:600px){.wrap{padding:14px}.card{padding:13px}th,td{padding:7px;font-size:13px}}
 """
 
@@ -257,7 +325,7 @@ async def api_status() -> JSONResponse:
     await ensure_fresh()
     data = STATE.get("data") or {}
     return JSONResponse({
-        "version": "0.1.0",
+        "version": "0.2.0",
         "league_id": LEAGUE_ID,
         "last_sync": STATE.get("last_sync"),
         "last_error": STATE.get("last_error"),
@@ -312,13 +380,105 @@ async def teams_page() -> HTMLResponse:
     await ensure_fresh()
     teams = require_data()["teams"]
     cards = []
-    for team in teams:
-        players = "".join(
-            f'<div class="player {"starter" if p["starter"] else ""}"><span>{escape(p["name"])}</span><span class="pill">{escape(p["position"])} · {escape(p["team"])}</span></div>'
-            for p in team["players"]
+    for rank, team in enumerate(teams, 1):
+        starters = sum(1 for p in team["players"] if p["roster_slot"] == "Starter")
+        cards.append(
+            f'<a class="card team team-link" href="/teams/{team["roster_id"]}">'
+            f'<div class="team-head"><div><h3>{escape(team["team_name"])}</h3>'
+            f'<div class="muted">{escape(team["owner"])}</div></div><div class="rank-badge">#{rank}</div></div>'
+            f'<p class="record">{team["wins"]}-{team["losses"]}-{team["ties"]}</p>'
+            f'<div class="metric-grid">'
+            f'<div class="metric"><b>{team["points_for"]:.2f}</b><span>Points For</span></div>'
+            f'<div class="metric"><b>{team["max_points"]:.2f}</b><span>Max PF</span></div>'
+            f'<div class="metric"><b>{starters}</b><span>Starters</span></div>'
+            f'</div></a>'
         )
-        cards.append(f'<article class="card team"><h3>{escape(team["team_name"])}</h3><div class="muted">{escape(team["owner"])}</div><p class="record">{team["wins"]}-{team["losses"]}-{team["ties"]}</p><div class="players">{players}</div></article>')
-    return page("Teams", '<h2>Teams & Rosters</h2><div class="grid">' + "".join(cards) + "</div>")
+    return page(
+        "Teams",
+        '<h2>League Franchises</h2><p class="muted">Select a team for its complete roster and front-office summary.</p><div class="grid">'
+        + "".join(cards)
+        + "</div>",
+    )
+
+
+@app.get("/teams/{roster_id}", response_class=HTMLResponse)
+async def team_detail_page(roster_id: int) -> HTMLResponse:
+    await ensure_fresh()
+    teams = require_data()["teams"]
+    team = next((t for t in teams if int(t["roster_id"]) == roster_id), None)
+    if not team:
+        raise HTTPException(404, "Team not found")
+
+    rank = next((i for i, t in enumerate(teams, 1) if int(t["roster_id"]) == roster_id), "—")
+    roster_html = []
+    for slot in ("Starter", "Bench", "IR", "Taxi"):
+        slot_players = [p for p in team["players"] if p["roster_slot"] == slot]
+        if not slot_players:
+            continue
+        rows = "".join(
+            f'<div class="player {"starter" if p["starter"] else ""}"><span>{escape(p["name"])}</span><span class="pill">{escape(p["position"])} · {escape(p["team"])}</span></div>'
+            for p in slot_players
+        )
+        roster_html.append(
+            f'<section class="roster-section"><div class="section-title"><span class="slot-label">{slot}</span>'
+            f'<span class="muted">{len(slot_players)} players</span></div><div class="card players">{rows}</div></section>'
+        )
+
+    body = (
+        f'<a class="back" href="/teams">← All Teams</a>'
+        f'<section class="card"><div class="team-head"><div><div class="muted">Franchise #{rank}</div>'
+        f'<h2>{escape(team["team_name"])}</h2><p class="muted">Owner: {escape(team["owner"])}</p></div>'
+        f'<div class="rank-badge">#{rank}</div></div>'
+        f'<div class="metric-grid">'
+        f'<div class="metric"><b>{team["wins"]}-{team["losses"]}-{team["ties"]}</b><span>Record</span></div>'
+        f'<div class="metric"><b>{team["points_for"]:.2f}</b><span>Points For</span></div>'
+        f'<div class="metric"><b>{team["points_against"]:.2f}</b><span>Points Against</span></div>'
+        f'<div class="metric"><b>{team["max_points"]:.2f}</b><span>Max PF</span></div>'
+        f'<div class="metric"><b>{len(team["players"])}</b><span>Total Players</span></div>'
+        f'<div class="metric"><b>{sum(1 for p in team["players"] if p["roster_slot"] == "Taxi")}</b><span>Taxi</span></div>'
+        f'</div></section>'
+    )
+
+    owned_by_year = {}
+    for pick in team.get("picks_owned", []):
+        owned_by_year.setdefault(pick["season"], []).append(pick)
+    owned_sections = []
+    for season, picks in sorted(owned_by_year.items()):
+        rows = "".join(
+            f'<div class="pick-row"><div><b>Round {pick["round"]}</b>'
+            f'<div class="pick-origin">{"Own pick" if not pick["is_traded"] else "From " + escape(pick["original_team"])}</div></div>'
+            f'<span class="pill">{season}</span></div>'
+            for pick in sorted(picks, key=lambda item: (item["round"], item["original_team"]))
+        )
+        owned_sections.append(
+            f'<div class="pick-year"><div class="section-title"><span class="slot-label">{season}</span>'
+            f'<span class="muted">{len(picks)} picks</span></div><div class="card pick-list">{rows}</div></div>'
+        )
+
+    away_rows = "".join(
+        f'<div class="pick-row"><div><b>{pick["season"]} Round {pick["round"]}</b>'
+        f'<div class="pick-origin away">Now owned by {escape(pick["current_owner"])}</div></div>'
+        f'<span class="pill">Original</span></div>'
+        for pick in sorted(team.get("picks_traded_away", []), key=lambda item: (item["season"], item["round"]))
+    )
+    firsts = team.get("pick_counts", {}).get("1", 0)
+    seconds = team.get("pick_counts", {}).get("2", 0)
+    total_picks = len(team.get("picks_owned", []))
+    draft_capital = (
+        f'<section class="roster-section"><div class="section-title"><span class="slot-label">Draft Capital</span>'
+        f'<span class="muted">Current ownership and original source</span></div>'
+        f'<div class="card"><div class="metric-grid">'
+        f'<div class="metric"><b>{total_picks}</b><span>Total Picks</span></div>'
+        f'<div class="metric"><b>{firsts}</b><span>Future 1sts</span></div>'
+        f'<div class="metric"><b>{seconds}</b><span>Future 2nds</span></div></div></div>'
+        f'{"".join(owned_sections)}'
+        + (f'<div class="pick-year"><div class="section-title"><span class="slot-label away">Original Picks Traded Away</span>'
+           f'<span class="muted">{len(team.get("picks_traded_away", []))} picks</span></div>'
+           f'<div class="card pick-list">{away_rows}</div></div>' if away_rows else '')
+        + '</section>'
+    )
+    body += draft_capital + "".join(roster_html)
+    return page(team["team_name"], body)
 
 
 @app.get("/matchups", response_class=HTMLResponse)
