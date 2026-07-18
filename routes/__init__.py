@@ -1,4 +1,1 @@
-"""DTOS route package.
-
-Routes will be migrated here module by module while ``main:app`` remains stable.
-"""
+"""DTOS route package; route migration begins after service stabilization."""

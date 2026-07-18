@@ -1,8 +1,6 @@
-"""DTOS configuration module.
+"""Central DTOS runtime configuration."""
+from __future__ import annotations
 
-Configuration is intentionally kept compatible with the existing deployment.
-As services are migrated out of ``dtos_app.py``, shared settings will move here.
-"""
 import os
 from pathlib import Path
 
@@ -11,3 +9,5 @@ SLEEPER_BASE = "https://api.sleeper.app/v1"
 SYNC_MINUTES = max(5, int(os.getenv("SYNC_MINUTES", "15")))
 CACHE_FILE = Path(os.getenv("DTOS_CACHE_FILE", "/tmp/dtos_cache.json"))
 REQUEST_TIMEOUT = float(os.getenv("SLEEPER_TIMEOUT", "30"))
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+APP_VERSION = "0.8.1"

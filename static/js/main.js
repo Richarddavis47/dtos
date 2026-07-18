@@ -1,1 +1,1 @@
-// DTOS shared JavaScript entry point.
+// DTOS shared JavaScript migration target.

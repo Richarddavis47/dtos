@@ -1,4 +1,4 @@
-"""Alternative local entry point for DTOS."""
+"""Alternative ASGI entry point."""
 from dtos_app import app
 
 __all__ = ["app"]
