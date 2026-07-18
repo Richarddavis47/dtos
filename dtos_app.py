@@ -1,4 +1,4 @@
-"""DTOS v0.8.1 — modular Sleeper service migration."""
+"""DTOS v0.8.2 — side-by-side matchup battles."""
 from __future__ import annotations
 
 import asyncio
@@ -33,7 +33,7 @@ async def lifespan(_: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="DTOS", version="0.7.0", lifespan=lifespan)
+app = FastAPI(title="DTOS", version="0.8.2", lifespan=lifespan)
 
 
 CSS = """
@@ -57,8 +57,8 @@ details.pick-year{margin-top:12px}.pick-summary{list-style:none;cursor:pointer;d
 .sleeper-lineup{display:grid;gap:8px}.lineup-row{display:grid;grid-template-columns:56px 1fr;gap:8px;align-items:stretch}.lineup-slot{display:grid;place-items:center;background:#0b1727;border:1px solid var(--line);border-radius:10px;font-size:11px;font-weight:900;color:var(--accent)}.lineup-player{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#101d2d;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.lineup-player b{font-size:14px}.lineup-meta{font-size:11px;color:var(--muted);text-align:right}.lineup-empty{color:var(--muted);font-style:italic}
 .owner-primary{font-size:13px;color:var(--accent);font-weight:900;text-transform:uppercase;letter-spacing:.08em}.franchise-secondary{color:var(--muted);font-size:13px;margin-top:3px}
 
-.matchup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}.matchup-card{display:block;background:linear-gradient(180deg,#122238,#0d1a2a);border:1px solid var(--line);border-radius:16px;padding:16px;transition:transform .15s ease,border-color .15s ease}.matchup-card:hover{transform:translateY(-2px);border-color:#3d5877}.matchup-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.matchup-number{font-size:12px;color:var(--accent);font-weight:900;text-transform:uppercase;letter-spacing:.08em}.matchup-status{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 8px}.versus{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}.matchup-team{text-align:left}.matchup-team.right{text-align:right}.matchup-team h3{margin:3px 0 2px;font-size:18px}.matchup-owner{font-size:12px;color:var(--muted)}.score{font-size:30px;font-weight:900;margin-top:8px}.vs-mark{color:var(--muted);font-size:12px;font-weight:900}.matchup-footer{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.edge{color:var(--gold);font-weight:900}.matchup-hero{background:linear-gradient(180deg,#14263d,#0b1727);border:1px solid var(--line);border-radius:16px;padding:18px}.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}.scoreboard-side.right{text-align:right}.scoreboard-score{font-size:42px;font-weight:950}.scoreboard-team{font-size:20px;font-weight:900}.battle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}.battle-card{background:#101d2d;border:1px solid var(--line);border-radius:12px;padding:12px}.battle-card h3{margin:0 0 8px;font-size:14px;color:var(--accent)}.battle-row{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid rgba(38,55,76,.65)}.battle-slot{font-size:10px;font-weight:900;color:var(--muted);text-transform:uppercase}.battle-player b{display:block;font-size:13px}.battle-player span{font-size:11px;color:var(--muted)}.battle-points{font-weight:900}.matchup-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}.leader-banner{margin-top:14px;padding:10px 12px;border-radius:10px;background:#0b1727;border:1px solid var(--line);color:var(--muted)}
-@media(max-width:600px){.versus,.scoreboard{grid-template-columns:1fr auto 1fr;gap:8px}.score{font-size:24px}.scoreboard-score{font-size:32px}.scoreboard-team{font-size:16px}.matchup-summary-grid{grid-template-columns:repeat(2,1fr)}}
+.matchup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}.matchup-card{display:block;background:linear-gradient(180deg,#122238,#0d1a2a);border:1px solid var(--line);border-radius:16px;padding:16px;transition:transform .15s ease,border-color .15s ease}.matchup-card:hover{transform:translateY(-2px);border-color:#3d5877}.matchup-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.matchup-number{font-size:12px;color:var(--accent);font-weight:900;text-transform:uppercase;letter-spacing:.08em}.matchup-status{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 8px}.versus{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}.matchup-team{text-align:left}.matchup-team.right{text-align:right}.matchup-team h3{margin:3px 0 2px;font-size:18px}.matchup-owner{font-size:12px;color:var(--muted)}.score{font-size:30px;font-weight:900;margin-top:8px}.vs-mark{color:var(--muted);font-size:12px;font-weight:900}.matchup-footer{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.edge{color:var(--gold);font-weight:900}.matchup-hero{background:linear-gradient(180deg,#14263d,#0b1727);border:1px solid var(--line);border-radius:16px;padding:18px}.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}.scoreboard-side.right{text-align:right}.scoreboard-score{font-size:42px;font-weight:950}.scoreboard-team{font-size:20px;font-weight:900}.battle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}.battle-card{background:#101d2d;border:1px solid var(--line);border-radius:14px;padding:12px;overflow:hidden}.battle-card h3{margin:0 0 10px;font-size:13px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase}.battle-head{display:grid;grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr);align-items:center;gap:8px}.battle-side{min-width:0;border:1px solid rgba(38,55,76,.8);border-radius:11px;padding:11px 9px;background:#0b1727;text-align:left}.battle-side.right{text-align:right}.battle-side.winning{border-color:rgba(110,231,183,.8);box-shadow:inset 0 0 0 1px rgba(110,231,183,.18)}.battle-side.losing{border-color:rgba(248,113,113,.55)}.battle-side.tied{border-color:var(--line)}.battle-side.vacant{border-style:dashed;opacity:.72}.battle-owner{font-size:9px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.battle-player b{display:block;font-size:14px;line-height:1.15;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.battle-player span{display:block;font-size:10px;color:var(--muted);margin-top:3px}.battle-points{font-size:18px;font-weight:950;margin-top:8px}.battle-vs{display:grid;place-items:center;color:var(--muted);font-size:10px;font-weight:950}.battle-result{display:block;font-size:8px;margin-top:4px;text-transform:uppercase;letter-spacing:.08em}.winning .battle-result{color:var(--accent)}.losing .battle-result{color:#fca5a5}.tied .battle-result{color:var(--muted)}.matchup-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}.leader-banner{margin-top:14px;padding:10px 12px;border-radius:10px;background:#0b1727;border:1px solid var(--line);color:var(--muted)}
+@media(max-width:600px){.versus,.scoreboard{grid-template-columns:1fr auto 1fr;gap:8px}.score{font-size:24px}.scoreboard-score{font-size:32px}.scoreboard-team{font-size:16px}.matchup-summary-grid{grid-template-columns:repeat(2,1fr)}.battle-grid{grid-template-columns:1fr}.battle-card{padding:10px}.battle-head{grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:5px}.battle-side{padding:10px 7px}.battle-player b{font-size:13px}.battle-owner{font-size:8px}.battle-points{font-size:17px}}
 @media(max-width:760px){.summary-grid{grid-template-columns:repeat(2,1fr)}.team-report{grid-template-columns:repeat(2,1fr)}.analytics-grid{grid-template-columns:repeat(2,1fr)}.position-strip{grid-template-columns:repeat(2,1fr)}}
 table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}pre{white-space:pre-wrap;word-break:break-word}.footer{color:var(--muted);font-size:13px;padding:24px 0}.error{background:#3b1720;border:1px solid #7f1d1d;padding:12px;border-radius:10px;margin-bottom:15px}@media(max-width:600px){.wrap{padding:14px}.card{padding:13px}th,td{padding:7px;font-size:13px}}
 """
@@ -91,7 +91,7 @@ async def api_status() -> JSONResponse:
     await ensure_fresh()
     data = STATE.get("data") or {}
     return JSONResponse({
-        "version": "0.8.1",
+        "version": "0.8.2",
         "league_id": LEAGUE_ID,
         "last_sync": STATE.get("last_sync"),
         "last_error": STATE.get("last_error"),
@@ -368,12 +368,38 @@ async def matchup_detail_page(matchup_id: str) -> HTMLResponse:
         lp = left.get("lineup", [])[index] if index < len(left.get("lineup", [])) else None
         rp = right.get("lineup", [])[index] if index < len(right.get("lineup", [])) else None
         slot = (lp or rp or {}).get("slot", "START")
-        left_html = (f'<div class="battle-player"><b>{escape(lp["name"])}</b><span>{escape(lp["position"])} · {escape(lp["nfl_team"])}</span></div><div class="battle-points">{lp["points"]:.2f}</div>') if lp else '<div class="battle-player"><b>Empty</b></div><div class="battle-points">—</div>'
-        right_html = (f'<div class="battle-player"><b>{escape(rp["name"])}</b><span>{escape(rp["position"])} · {escape(rp["nfl_team"])}</span></div><div class="battle-points">{rp["points"]:.2f}</div>') if rp else '<div class="battle-player"><b>Empty</b></div><div class="battle-points">—</div>'
+        left_points = float(lp["points"]) if lp else 0.0
+        right_points = float(rp["points"]) if rp else 0.0
+        if lp and rp and left_points != right_points:
+            left_state = "winning" if left_points > right_points else "losing"
+            right_state = "winning" if right_points > left_points else "losing"
+            left_result = "Winning" if left_points > right_points else "Trailing"
+            right_result = "Winning" if right_points > left_points else "Trailing"
+        else:
+            left_state = "tied"
+            right_state = "tied"
+            left_result = right_result = "Tied"
+        if not lp:
+            left_state += " vacant"
+            left_result = "Vacant"
+        if not rp:
+            right_state += " vacant"
+            right_result = "Vacant"
+
+        left_html = (
+            f'<div class="battle-player"><b>{escape(lp["name"])}</b><span>{escape(lp["position"])} · {escape(lp["nfl_team"] or "—")}</span></div>'
+            f'<div class="battle-points">{left_points:.2f}</div><span class="battle-result">{left_result}</span>'
+        ) if lp else '<div class="battle-player"><b>Vacant</b><span>No starter assigned</span></div><div class="battle-points">—</div><span class="battle-result">Vacant</span>'
+        right_html = (
+            f'<div class="battle-player"><b>{escape(rp["name"])}</b><span>{escape(rp["position"])} · {escape(rp["nfl_team"] or "—")}</span></div>'
+            f'<div class="battle-points">{right_points:.2f}</div><span class="battle-result">{right_result}</span>'
+        ) if rp else '<div class="battle-player"><b>Vacant</b><span>No starter assigned</span></div><div class="battle-points">—</div><span class="battle-result">Vacant</span>'
         battles.append(
-            f'<div class="battle-card"><h3>{escape(slot)}</h3>'
-            f'<div class="battle-row"><div class="battle-slot">{escape(left["owner"])}</div>{left_html}</div>'
-            f'<div class="battle-row"><div class="battle-slot">{escape(right["owner"])}</div>{right_html}</div></div>'
+            f'<div class="battle-card"><h3>{escape(slot)}</h3><div class="battle-head">'
+            f'<div class="battle-side {left_state}"><div class="battle-owner">{escape(left["owner"])}</div>{left_html}</div>'
+            f'<div class="battle-vs">VS</div>'
+            f'<div class="battle-side right {right_state}"><div class="battle-owner">{escape(right["owner"])}</div>{right_html}</div>'
+            f'</div></div>'
         )
 
     def bench_html(side: dict[str, Any]) -> str:
