@@ -1,27 +1,29 @@
-# DTOS v0.9.4 - Decision Engine v1
+# DTOS v0.9.5 - Asset Intelligence v1
 
-DTOS v0.9.4 introduces the shared intelligence layer that future Front Office modules can extend without duplicating evaluation logic.
+DTOS v0.9.5 establishes one deterministic and explainable evaluation source for individual players and draft picks.
 
 ## Highlights
 
-- Added contextual team profiles carrying Active Front Office, league settings, strategy, league context, positional rooms, and market-context extension points.
-- Evaluates Current Championship Outlook and Future Outlook independently; DTOS no longer presents a single overall team score.
-- Added deterministic Depth and Asset Health horizons plus QB, RB, WR, and TE room evaluations.
-- Classifies Championship, Playoff, Transition, Rebuild, and Ascension windows with concise explanations.
-- Standardized Buy, Sell, Hold, Trade, Compete, Rebuild, Waiver, and Monitor recommendation categories.
-- Every recommendation includes priority, bounded confidence, reasoning, supporting metrics, and a future explanation hook.
-- Commissioner Desk and Team Headquarters now consume the same engine while preserving their executive layouts.
+- Added reusable player, pick, evidence, risk, value, context, and report contracts under `src/core/asset_intelligence/`.
+- Added player dossiers with executive summary, snapshot, four independent values, archetypes, strengths, weaknesses, risk, opportunity horizons, and contextual recommendations.
+- Added Dynasty Value, Redraft Value, neutral Market Value, and Front Office-specific Team Fit Value.
+- Added draft-pick intelligence covering dynasty value, neutral market value, risk, expected range, time horizon, and strategy.
+- Added a reusable Evidence Engine; every score and recommendation exposes observed values, source, impact, explanation, confidence, and limitations.
+- Updated the Decision Engine to aggregate Asset Intelligence reports instead of maintaining separate player and pick formulas.
+- Enhanced existing player and draft-pick pages without a broad UI redesign.
+- Added `/api/players` as the canonical rostered-player dossier index, with the same index available through `/api/league?include_players=true`.
 
 ## Metadata
 
 - Application: DTOS
-- Version: 0.9.4
-- Build: 904
-- Codename: Decision Engine v1
+- Version: 0.9.5
+- Build: 905
+- Codename: Asset Intelligence v1
 
 ## Intentional boundaries
 
-- V1 uses transparent heuristics and neutral fallbacks; it does not claim predictive accuracy.
-- Live projections, dynasty market values, simulations, machine learning, AI chat, and automated trade negotiation are not included.
-- The engine advises; the GM retains the final decision.
-- Future modules should extend the shared contracts and providers rather than duplicate scoring logic.
+- Production, usage, coaching, supporting-cast, contract, live projection, and historical market feeds are not currently connected.
+- Missing inputs remain neutral and are disclosed; DTOS does not fabricate a value from unavailable data.
+- Market Value is intentionally 50/100 with low confidence until a traceable consensus provider exists.
+- Archetypes avoid elite or breakout claims that cannot be supported by the cached evidence.
+- Asset Intelligence advises; the GM makes the final decision.

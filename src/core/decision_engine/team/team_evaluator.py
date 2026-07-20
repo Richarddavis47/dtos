@@ -64,6 +64,8 @@ def build_team_profile(data: dict[str, Any], roster_id: int, context: DecisionCo
         draft_pick_count=len(picks), first_round_pick_count=sum(int(pick.get("round") or 0) == 1 for pick in picks),
         position_rooms=rooms,
         market_context=context.market_conditions or build_market_context(data),
+        players=tuple({**(player_database.get(str(player.get("id")), {}) or {}), **player} for player in players),
+        picks=tuple(picks),
     )
 
 

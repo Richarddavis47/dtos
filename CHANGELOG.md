@@ -2,6 +2,18 @@
 
 Notable DTOS changes are recorded here from the repository's Git history.
 
+## v0.9.5 - 2026-07-20
+
+- Added a centralized Asset Intelligence module as the shared source of player and draft-pick evaluations.
+- Added contextual player dossiers with independent Dynasty, Redraft, Market, and Team Fit values.
+- Added traceable evidence, explicit confidence, limitations, risk, opportunity horizons, conservative archetypes, and contextual recommendations.
+- Added deterministic draft-pick value, uncertainty, expected range, time horizon, and strategic recommendation reports.
+- Updated player pages and the draft-pick ledger with collapsed supporting evidence while preserving the existing visual system.
+- Added a canonical cached `/api/players` dossier index and optional lightweight player inclusion in `/api/league`.
+- Replaced Decision Engine player and pick heuristics with Asset Intelligence portfolio adapters.
+- Added focused Asset Intelligence contract tests and architecture documentation.
+- Updated application metadata to DTOS v0.9.5, build 905, codename Asset Intelligence v1.
+
 ## v0.9.4 - 2026-07-20
 
 - Added a centralized, reusable Decision Engine with typed context, profile, evaluation, team-window, and recommendation contracts.
