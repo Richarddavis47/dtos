@@ -9,15 +9,12 @@ from typing import Any
 from models.commissioner import (
     ActiveFrontOffice,
     ActiveLeague,
-    ConfidenceScore,
     DailyBriefing,
     LeagueEvent,
     LeagueEventType,
     LeagueHeadline,
-    Recommendation,
-    RecommendationPriority,
 )
-from services.team_headquarters import build_team_headquarters
+from src.core.decision_engine import DecisionContext, TeamWindow, evaluate_team
 from services.transactions import normalize_transactions
 
 
@@ -240,95 +237,24 @@ def _headlines(data: dict[str, Any]) -> list[LeagueHeadline]:
     return headlines[:5]
 
 
-def _status(view: dict[str, Any]) -> str:
-    grades = view["grades"]
-    overall = grades["Overall Team Grade"]["score"]
-    youth = grades["Youth"]["score"]
-    draft = grades["Draft Capital"]["score"]
-    if view["rank"] <= 3 and overall >= 70:
-        return "Contending"
-    if overall < 60 and (youth >= 65 or draft >= 65):
-        return "Rebuilding"
-    return "Stable"
-
-
-def _recommendations(view: dict[str, Any]) -> list[Recommendation]:
-    grades = view["grades"]
-    recommendations: list[Recommendation] = []
-    positions = ["QB", "RB", "WR", "TE"]
-    weakest = min(positions, key=lambda position: (grades[position]["score"], position))
-    weak_score = grades[weakest]["score"]
-    if weak_score < 70:
-        recommendations.append(
-            Recommendation(
-                f"Review {weakest} roster coverage",
-                RecommendationPriority.HIGH if weak_score < 55 else RecommendationPriority.MEDIUM,
-                ConfidenceScore(92),
-                f"Audit the {weakest} room before the next roster or trade decision.",
-                "This recommendation identifies an objective coverage gap. It does not assume the available players are upgrades.",
-                (grades[weakest]["data"], grades[weakest]["calculation"], f"Foundation score: {weak_score}/100"),
-                {"engine": "player-intelligence", "position": weakest},
-            )
-        )
-    draft = grades["Draft Capital"]
-    if draft["score"] < 70:
-        recommendations.append(
-            Recommendation(
-                "Review future draft flexibility",
-                RecommendationPriority.MEDIUM,
-                ConfidenceScore(88),
-                "Compare owned future picks with the league distribution before moving additional draft capital.",
-                "The current pick inventory is below the foundation coverage benchmark; no specific acquisition is implied.",
-                (draft["data"], draft["calculation"], f"Draft Capital score: {draft['score']}/100"),
-                {"engine": "draft-intelligence"},
-            )
-        )
-    youth = grades["Youth"]
-    if youth["score"] < 60:
-        recommendations.append(
-            Recommendation(
-                "Audit roster age concentration",
-                RecommendationPriority.MEDIUM,
-                ConfidenceScore(82),
-                "Review older roster clusters alongside competitive needs before committing long-term assets.",
-                "The age distribution is observable, but DTOS does not yet have player values or competitive-window probabilities.",
-                (youth["data"], youth["calculation"], f"Youth score: {youth['score']}/100"),
-                {"engine": "competitive-window"},
-            )
-        )
-    if not recommendations:
-        recommendations.append(
-            Recommendation(
-                "Maintain flexibility and monitor new activity",
-                RecommendationPriority.LOW,
-                ConfidenceScore(76),
-                "Review new transactions and lineup changes before making a reactive move.",
-                "No foundation roster-construction grade currently falls below the action threshold.",
-                (f"Overall grade: {grades['Overall Team Grade']['score']}/100", f"Lowest position score: {weak_score}/100"),
-                {"engine": "recommendation-engine"},
-            )
-        )
-    priority_order = {RecommendationPriority.HIGH: 0, RecommendationPriority.MEDIUM: 1, RecommendationPriority.LOW: 2}
-    return sorted(recommendations, key=lambda rec: (priority_order[rec.priority], -rec.confidence.value, rec.title))
-
-
-def _league_intelligence(data: dict[str, Any]) -> dict[str, Any]:
+def _league_intelligence(data: dict[str, Any], league_id: str) -> dict[str, Any]:
     teams = data.get("teams") or []
     ages = [age for team in teams if (age := _team_average_age(data, team)) is not None]
     total_picks = sum(len(team.get("picks_owned") or []) for team in teams)
     pick_leader = max((len(team.get("picks_owned") or []) for team in teams), default=0)
-    statuses = Counter()
+    windows = Counter()
     for team in teams:
-        view = build_team_headquarters(data, int(team.get("roster_id") or 0))
-        if view:
-            statuses[_status(view)] += 1
+        roster_id = int(team.get("roster_id") or 0)
+        context = DecisionContext(roster_id, league_id, data.get("league_settings") or {})
+        decision = evaluate_team(data, roster_id, context)
+        windows[decision.window] += 1
     transactions = normalize_transactions(data)
     return {
         "average_roster_age": round(mean(ages), 1) if ages else None,
         "draft_concentration": round(pick_leader / total_picks * 100) if total_picks else None,
         "recent_activity": len(transactions),
-        "contenders": statuses["Contending"],
-        "rebuilders": statuses["Rebuilding"],
+        "contenders": windows[TeamWindow.CHAMPIONSHIP] + windows[TeamWindow.PLAYOFF],
+        "rebuilders": windows[TeamWindow.REBUILD],
         "trending_up": "Unavailable without historical snapshots",
         "trending_down": "Unavailable without historical snapshots",
     }
@@ -353,18 +279,32 @@ def build_commissioner_desk(
         (office for office in front_offices if office.roster_id == active_roster_id),
         front_offices[0],
     )
-    team_view = build_team_headquarters(data, selected_front_office.roster_id, last_sync)
-    if team_view is None:
-        raise ValueError("The selected Front Office is not available in the active league.")
+    selected_team = next(
+        team
+        for team in data.get("teams") or []
+        if int(team.get("roster_id") or 0) == selected_front_office.roster_id
+    )
+    rank = next(
+        index
+        for index, team in enumerate(data.get("teams") or [], 1)
+        if int(team.get("roster_id") or 0) == selected_front_office.roster_id
+    )
+    context = DecisionContext(
+        active_front_office_id=selected_front_office.roster_id,
+        league_id=selected_league.league_id,
+        league_settings=data.get("league_settings") or {},
+    )
+    decision = evaluate_team(data, selected_front_office.roster_id, context)
     since_time = _parse_since(since)
     summary = {
-        "overall_grade": team_view["grades"]["Overall Team Grade"],
-        "competitive_window": "Pending deterministic Competitive Window Engine",
-        "record": team_view["performance"]["record"],
-        "power_ranking": team_view["rank"],
-        "roster_grade": team_view["grades"]["Overall Team Grade"],
-        "draft_capital_grade": team_view["grades"]["Draft Capital"],
-        "status": _status(team_view),
+        "current_outlook": decision.current_outlook,
+        "future_outlook": decision.future_outlook,
+        "depth": decision.depth,
+        "asset_health": decision.asset_health,
+        "competitive_window": decision.window.value,
+        "window_explanation": decision.window_explanation,
+        "record": f"{selected_team.get('wins', 0)}-{selected_team.get('losses', 0)}-{selected_team.get('ties', 0)}",
+        "power_ranking": rank,
     }
     normalized = normalize_transactions(data)
     return {
@@ -375,8 +315,8 @@ def build_commissioner_desk(
         "briefing": _briefing(data, since_time),
         "headlines": _headlines(data),
         "front_office_summary": summary,
-        "recommendations": _recommendations(team_view),
-        "league_intelligence": _league_intelligence(data),
+        "recommendations": decision.recommendations,
+        "league_intelligence": _league_intelligence(data, selected_league.league_id),
         "snapshot": {
             "standings": data.get("teams") or [],
             "transactions": normalized[:5],

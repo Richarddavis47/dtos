@@ -53,6 +53,27 @@ def _grade_cards(grades: dict[str, dict[str, Any]]) -> str:
     )
 
 
+def _decision_horizons(view: dict[str, Any]) -> str:
+    decision = view["decision"]
+    evaluations = (
+        decision.current_outlook,
+        decision.future_outlook,
+        decision.depth,
+        decision.asset_health,
+    )
+    cards = []
+    for evaluation in evaluations:
+        factors = "".join(
+            f'<li><b>{escape(factor.name)}:</b> {escape(factor.value)} · {escape(factor.explanation)}</li>'
+            for factor in evaluation.factors
+        )
+        limits = "".join(f"<li>{escape(item)}</li>" for item in evaluation.limitations)
+        cards.append(
+            f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>{escape(evaluation.horizon.value)}</h3><div class="thq-grade-score">{evaluation.score}/100 · {evaluation.confidence}% confidence</div></div><div class="thq-grade-mark">{escape(evaluation.grade)}</div></div><p class="muted">{escape(evaluation.summary)}</p><details><summary>Show Reasoning</summary><div class="thq-reasoning"><b>Factors</b><ul>{factors}</ul>{f"<b>Known limitations</b><ul>{limits}</ul>" if limits else ""}</div></details></article>'
+        )
+    return "".join(cards)
+
+
 def _roster_rooms(view: dict[str, Any]) -> str:
     labels = {"QB": "Quarterbacks", "RB": "Running Backs", "WR": "Wide Receivers", "TE": "Tight Ends"}
     rooms = []
@@ -140,15 +161,22 @@ def create_teams_router(
             )
         )
         future = "".join(
-            f'<article class="thq-future"><span>{escape(label)}</span><b>{escape(value)}</b><small>Coming in a future DTOS release</small></article>'
-            for label, value in (("Competitive Window", "Pending"), ("Contender Score", "Pending"), ("Rebuild Score", "Pending"), ("Youth Grade", view["grades"]["Youth"]["grade"] + " foundation"), ("Draft Capital Grade", view["grades"]["Draft Capital"]["grade"] + " foundation"))
+            f'<article class="thq-future"><span>{escape(label)}</span><b>{escape(value)}</b><small>{escape(note)}</small></article>'
+            for label, value, note in (
+                ("Competitive Window", view["decision"].window.value, "Decision Engine v1"),
+                ("Current Outlook", f'{view["decision"].current_outlook.score}/100', "Decision Engine v1"),
+                ("Future Outlook", f'{view["decision"].future_outlook.score}/100', "Decision Engine v1"),
+                ("Youth Grade", view["grades"]["Youth"]["grade"] + " foundation", "Deterministic roster age model"),
+                ("Draft Capital Grade", view["grades"]["Draft Capital"]["grade"] + " foundation", "Deterministic pick inventory model"),
+            )
         )
         body = f"""
 {TEAM_HQ_CSS}
 <a class="back" href="/teams">← All Teams</a>
-<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Record {performance['record']}</span><span>·</span><span>League Rank #{view['rank']}</span></div></div></div><div><span class="thq-badge">Competitive Window · Placeholder</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
+<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Record {performance['record']}</span><span>·</span><span>League Rank #{view['rank']}</span></div></div></div><div><span class="thq-badge">{escape(view['decision'].window.value)}</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
 <section class="thq-section"><div class="thq-section-head"><h2>Asset Snapshot</h2><span>Objective roster and pick inventory</span></div><div class="thq-cards">{_asset_cards(view['snapshot'])}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Front Office Summary</h2><span>Deterministic · No generated claims</span></div><div class="thq-summary">{summary}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Decision Horizons</h2><span>Current and future remain independent</span></div><div class="thq-grades">{_decision_horizons(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Team Grades</h2><span>Explainable foundation formulas</span></div><div class="thq-grades">{_grade_cards(view['grades'])}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Roster</h2><span>Position rooms and current lineup designation</span></div><div class="thq-roster">{_roster_rooms(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Draft Capital</h2><span>Every currently owned future pick</span></div><div class="thq-picks">{_draft_capital(view)}</div></section>

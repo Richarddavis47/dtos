@@ -7,6 +7,7 @@ from statistics import mean
 from typing import Any
 
 from services.transactions import normalize_transactions
+from src.core.decision_engine import DecisionContext, TeamDecision, evaluate_team
 
 CORE_POSITIONS = ("QB", "RB", "WR", "TE")
 POSITION_TARGETS = {
@@ -150,20 +151,20 @@ def calculate_team_grades(players: list[dict[str, Any]], team: dict[str, Any]) -
 
     overall_inputs = [grades[position]["score"] for position in (*CORE_POSITIONS, "Youth", "Depth", "Draft Capital", "Flexibility")]
     overall_score = mean(overall_inputs)
-    grades["Overall Team Grade"] = _grade_result(
+    grades["Roster Construction"] = _grade_result(
         overall_score,
         "Scores used: " + ", ".join(f"{name} {grades[name]['score']}" for name in (*CORE_POSITIONS, "Youth", "Depth", "Draft Capital", "Flexibility")) + ".",
         "Equal-weight average of all eight foundation grades.",
-        "The overall grade summarizes observable roster construction and assets, not competitive probability.",
+        "This legacy-compatible construction grade summarizes observable coverage and assets; it is not a combined current/future team score.",
     )
     return grades
 
 
 def generate_front_office_summary(
-    snapshot: dict[str, Any], grades: dict[str, dict[str, Any]]
+    snapshot: dict[str, Any], grades: dict[str, dict[str, Any]], decision: TeamDecision
 ) -> dict[str, str]:
     """Create a deterministic, fact-limited front-office summary."""
-    overall = grades["Overall Team Grade"]
+    construction = grades["Roster Construction"]
     component_names = (*CORE_POSITIONS, "Youth", "Depth", "Draft Capital", "Flexibility")
     ordered = sorted(component_names, key=lambda name: (-grades[name]["score"], name))
     strongest, weakest = ordered[:2], ordered[-2:]
@@ -173,11 +174,11 @@ def generate_front_office_summary(
         else "Player age data is unavailable, so age-based conclusions are limited."
     )
     return {
-        "Overall Assessment": f"The foundation model assigns an {overall['grade']} ({overall['score']}/100) roster-construction grade. {age_note} This is not a player-value or championship forecast.",
+        "Overall Assessment": f"Current Championship Outlook is {decision.current_outlook.grade} ({decision.current_outlook.score}/100); Future Outlook is {decision.future_outlook.grade} ({decision.future_outlook.score}/100). The separate roster-construction grade is {construction['grade']} ({construction['score']}/100). {age_note}",
         "Current Strengths": "The strongest observable areas are " + " and ".join(f"{name} ({grades[name]['score']}/100)" for name in strongest) + ".",
         "Current Weaknesses": "The lowest observable areas are " + " and ".join(f"{name} ({grades[name]['score']}/100)" for name in weakest) + "; this identifies coverage gaps, not individual-player quality.",
-        "Short-Term Outlook": f"Current record and roster coverage are visible, but projections and player-value data are not available. The Depth grade is {grades['Depth']['grade']} ({grades['Depth']['score']}/100); no stronger short-term claim is justified.",
-        "Long-Term Outlook": f"The objective long-term proxies are Youth {grades['Youth']['grade']} ({grades['Youth']['score']}/100) and Draft Capital {grades['Draft Capital']['grade']} ({grades['Draft Capital']['score']}/100). Competitive-window conclusions require future valuation models.",
+        "Short-Term Outlook": f"The Decision Engine rates the current horizon {decision.current_outlook.grade} ({decision.current_outlook.score}/100). {decision.current_outlook.summary}",
+        "Long-Term Outlook": f"The independently calculated future horizon is {decision.future_outlook.grade} ({decision.future_outlook.score}/100). {decision.future_outlook.summary}",
     }
 
 
@@ -217,6 +218,13 @@ def build_team_headquarters(
     players = _enriched_players(team, data)
     snapshot = _asset_snapshot(players, team)
     grades = calculate_team_grades(players, team)
+    league = data.get("league") or {}
+    context = DecisionContext(
+        active_front_office_id=roster_id,
+        league_id=str(league.get("league_id") or "configured-league"),
+        league_settings=data.get("league_settings") or {},
+    )
+    decision = evaluate_team(data, roster_id, context)
     rank = next(index for index, item in enumerate(teams, 1) if item is team)
     if isinstance(last_updated, datetime):
         updated = last_updated.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -234,7 +242,8 @@ def build_team_headquarters(
         "last_updated": updated,
         "snapshot": snapshot,
         "grades": grades,
-        "summary": generate_front_office_summary(snapshot, grades),
+        "summary": generate_front_office_summary(snapshot, grades, decision),
+        "decision": decision,
         "roster_groups": roster_groups,
         "other_players": [player for player in players if player.get("position") not in CORE_POSITIONS],
         "picks_by_year": {

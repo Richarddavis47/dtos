@@ -69,6 +69,19 @@ Future Team Headquarters upgrades will replace or extend calculation layers with
 
 ---
 
+### Decision Engine - DTOS v0.9.4 foundation
+
+- Shared contextual team evaluation contracts
+- Independent Current Championship and Future Outlook horizons
+- Position-level depth and injury-exposure analysis
+- Deterministic Asset Health and competitive-window classification
+- Explainable recommendation categories, priority, confidence, evidence, and extension hooks
+- Reusable integration surface for Commissioner Desk, Team HQ, Trade Center, Player Intelligence, GM Intelligence, League Reports, Draft Assistant, and notifications
+
+Future releases can replace individual scoring providers without changing the Decision Engine's public output contracts or presentation components.
+
+---
+
 ## In progress
 
 ### Matchups Command Center — DTOS v0.7.0

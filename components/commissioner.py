@@ -95,12 +95,14 @@ def league_headlines(view: dict[str, Any]) -> str:
 def front_office_summary(view: dict[str, Any]) -> str:
     office = view["active_front_office"]
     summary = view["front_office_summary"]
-    overall = summary["overall_grade"]
-    draft = summary["draft_capital_grade"]
+    current = summary["current_outlook"]
+    future = summary["future_outlook"]
+    depth = summary["depth"]
+    assets = summary["asset_health"]
     return f"""
 <section class="cd-section"><div class="cd-section-head"><div><h2>Your Front Office</h2><p>{escape(office.owner_name)} · {escape(office.team_name)}</p></div><a class="cd-chip" href="/teams/{office.roster_id}">Open Team Headquarters</a></div>
-<div class="cd-office"><article class="cd-card cd-office-main"><span class="cd-kicker">Overall Foundation Grade</span><div class="cd-grade">{escape(overall['grade'])}</div><p>{overall['score']}/100 · roster construction and draft assets, not a championship forecast.</p><span class="cd-status">{escape(summary['status'])}</span></article>
-<article class="cd-card cd-metric"><span>Record</span><b>{escape(summary['record'])}</b><p>Current Sleeper record</p></article><article class="cd-card cd-metric"><span>Power Ranking</span><b>#{summary['power_ranking']}</b><p>Current standings order</p></article><article class="cd-card cd-metric"><span>Draft Capital Grade</span><b>{escape(draft['grade'])} · {draft['score']}</b><p>Explainable foundation formula</p></article><article class="cd-card cd-metric"><span>Roster Grade</span><b>{escape(overall['grade'])} · {overall['score']}</b><p>Observable roster construction</p></article><article class="cd-card cd-metric"><span>Competitive Window</span><b>Pending</b><p>{escape(summary['competitive_window'])}</p></article></div></section>
+<div class="cd-office"><article class="cd-card cd-office-main"><span class="cd-kicker">Current Championship Outlook</span><div class="cd-grade">{escape(current.grade)} · {current.score}</div><p>{escape(current.summary)}</p><span class="cd-status">{escape(summary['competitive_window'])}</span><details><summary>Show Window Reasoning</summary><p>{escape(summary['window_explanation'])}</p></details></article>
+<article class="cd-card cd-metric"><span>Future Outlook</span><b>{escape(future.grade)} · {future.score}</b><p>Evaluated independently from current results</p></article><article class="cd-card cd-metric"><span>Record</span><b>{escape(summary['record'])}</b><p>Current Sleeper record</p></article><article class="cd-card cd-metric"><span>Power Ranking</span><b>#{summary['power_ranking']}</b><p>Current standings order</p></article><article class="cd-card cd-metric"><span>Depth Analysis</span><b>{escape(depth.grade)} · {depth.score}</b><p>Core position coverage</p></article><article class="cd-card cd-metric"><span>Asset Health</span><b>{escape(assets.grade)} · {assets.score}</b><p>Draft capital, flexibility, and balance</p></article></div></section>
 """
 
 
@@ -110,7 +112,7 @@ def recommendation_panel(view: dict[str, Any]) -> str:
     for recommendation in view["recommendations"]:
         metrics = "".join(f"<li>{escape(metric)}</li>" for metric in recommendation.supporting_metrics)
         cards.append(
-            f'<article class="cd-card cd-rec"><div class="cd-priority {recommendation.priority.value.lower()}">{icons[recommendation.priority]} {escape(recommendation.priority.value)} Priority</div><div><h3>{escape(recommendation.title)}</h3><p>{escape(recommendation.action)}</p></div><div class="cd-confidence"><b>{recommendation.confidence.value}%</b><span class="muted">Confidence</span></div><details><summary>Show Reasoning</summary><div class="cd-reason"><p>{escape(recommendation.reasoning)}</p><b>Supporting data</b><ul>{metrics}</ul><p>Future explanation hook: {escape(str(recommendation.future_explanation_hook.get("engine") or "unassigned"))}</p></div></details></article>'
+            f'<article class="cd-card cd-rec"><div class="cd-priority {recommendation.priority.value.lower()}">{icons[recommendation.priority]} {escape(recommendation.priority.value)} Priority<br><span>{escape(recommendation.category.value)}</span></div><div><h3>{escape(recommendation.title)}</h3><p>{escape(recommendation.summary)}</p></div><div class="cd-confidence"><b>{recommendation.confidence.value}%</b><span class="muted">Confidence</span></div><details><summary>Show Reasoning</summary><div class="cd-reason"><p>{escape(recommendation.reasoning)}</p><b>Supporting data</b><ul>{metrics}</ul><p>Future explanation hook: {escape(str(recommendation.future_explanation_hook.get("engine") or "unassigned"))}</p></div></details></article>'
         )
     return f'<section class="cd-section"><div class="cd-section-head"><div><h2>What should I do?</h2><p>Prioritized Front Office recommendations for {escape(view["active_front_office"].owner_name)}</p></div><span class="cd-chip">Confidence + evidence</span></div><div class="cd-recommendations">{"".join(cards)}</div></section>'
 

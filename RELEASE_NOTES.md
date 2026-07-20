@@ -1,30 +1,27 @@
-# DTOS v0.9.3 — Commissioner Desk
+# DTOS v0.9.4 - Decision Engine v1
 
-DTOS v0.9.3 replaces the homepage with the Commissioner Desk: a daily executive briefing and the central integration hub for the Front Office Operating System.
+DTOS v0.9.4 introduces the shared intelligence layer that future Front Office modules can extend without duplicating evaluation logic.
 
 ## Highlights
 
-- Added Active League and Active Front Office selectors with persistent local context.
-- Organized the homepage around “What changed?”, “What matters?”, and “What should I do?”.
-- Added visit-window transaction events with meaningful empty states and explicit historical-data limitations.
-- Added deterministic league headlines that expose their supporting evidence.
-- Added personalized Front Office status, record, standings rank, roster grade, and draft-capital grade.
-- Added prioritized recommendations with confidence scores, reasoning, supporting metrics, and future-engine hooks.
-- Added league intelligence, expandable standings, transactions, matchups, leaders, and health snapshots.
-- Added league-personality extension points without hardcoding a specific league.
-- Added reusable typed models, business services, and server-rendered components.
+- Added contextual team profiles carrying Active Front Office, league settings, strategy, league context, positional rooms, and market-context extension points.
+- Evaluates Current Championship Outlook and Future Outlook independently; DTOS no longer presents a single overall team score.
+- Added deterministic Depth and Asset Health horizons plus QB, RB, WR, and TE room evaluations.
+- Classifies Championship, Playoff, Transition, Rebuild, and Ascension windows with concise explanations.
+- Standardized Buy, Sell, Hold, Trade, Compete, Rebuild, Waiver, and Monitor recommendation categories.
+- Every recommendation includes priority, bounded confidence, reasoning, supporting metrics, and a future explanation hook.
+- Commissioner Desk and Team Headquarters now consume the same engine while preserving their executive layouts.
 
 ## Metadata
 
 - Application: DTOS
-- Version: 0.9.3
-- Build: 903
-- Codename: Commissioner Desk
+- Version: 0.9.4
+- Build: 904
+- Codename: Decision Engine v1
 
-## Data boundaries
+## Intentional boundaries
 
-- One Sleeper league is available in this release, but the active-league architecture accepts a collection.
-- Browser-local context persistence does not introduce authentication or user accounts.
-- Standings movement, injury changes, matchup result timing, and league records require future historical snapshots.
-- Competitive Window and advanced Player, Trade, GM, Draft, and predictive intelligence remain future engines.
-- Recommendations use objective foundation data and do not assert player value, trade availability, or championship probability.
+- V1 uses transparent heuristics and neutral fallbacks; it does not claim predictive accuracy.
+- Live projections, dynasty market values, simulations, machine learning, AI chat, and automated trade negotiation are not included.
+- The engine advises; the GM retains the final decision.
+- Future modules should extend the shared contracts and providers rather than duplicate scoring logic.

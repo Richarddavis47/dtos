@@ -4,7 +4,9 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v0.9.3 introduces the Commissioner Desk as the application homepage. It answers three questions in order:
+DTOS v0.9.4 introduces Decision Engine v1, the shared deterministic intelligence layer behind Commissioner Desk and Team Headquarters. It evaluates current championship and future outlooks independently, classifies team windows, and produces contextual, explainable recommendations.
+
+The Commissioner Desk remains the application homepage and answers three questions in order:
 
 1. What changed?
 2. What matters?
@@ -34,4 +36,6 @@ Runtime configuration uses environment variables such as `SLEEPER_LEAGUE_ID`, `D
 - `tests/` — focused deterministic and regression tests
 - `docs/` — feature architecture and developer documentation
 
-See [Commissioner Desk architecture](docs/CommissionerDesk.md), [DTOS philosophy](DTOS_PHILOSOPHY.md), [roadmap](ROADMAP.md), and [release notes](RELEASE_NOTES.md).
+The shared intelligence implementation lives in `src/core/decision_engine/`.
+
+See [Decision Philosophy](docs/DTOS_DECISION_PHILOSOPHY.md), [Commissioner Desk architecture](docs/CommissionerDesk.md), [DTOS philosophy](DTOS_PHILOSOPHY.md), [roadmap](ROADMAP.md), and [release notes](RELEASE_NOTES.md).

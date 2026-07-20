@@ -2,6 +2,17 @@
 
 Notable DTOS changes are recorded here from the repository's Git history.
 
+## v0.9.4 - 2026-07-20
+
+- Added a centralized, reusable Decision Engine with typed context, profile, evaluation, team-window, and recommendation contracts.
+- Separated Current Championship Outlook from Future Outlook and added independent Depth and Asset Health evaluations.
+- Added deterministic positional depth analysis, five competitive-window classifications, and contextual recommendation categories.
+- Standardized recommendation priority, confidence, metrics, collapsed reasoning, and future explanation hooks across DTOS.
+- Connected Commissioner Desk and Team Headquarters intelligence surfaces to the shared engine without redesigning either page.
+- Replaced the ambiguous overall team grade with a clearly scoped Roster Construction grade.
+- Added Decision Philosophy documentation and focused engine contract tests.
+- Updated application metadata to DTOS v0.9.4, build 904, codename Decision Engine v1.
+
 ## v0.9.3 - 2026-07-20
 
 - Replaced the homepage with the Commissioner Desk executive briefing organized around what changed, what matters, and what to do.
