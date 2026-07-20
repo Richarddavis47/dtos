@@ -13,6 +13,7 @@ from config import SYNC_MINUTES
 from services.sleeper import (
     LEAGUE_ID, STATE, ensure_data_fresh, load_cache, sync_sleeper, utcnow
 )
+from routes.draft import create_draft_router
 from routes.matchups import create_matchups_router
 from routes.teams import create_teams_router
 from routes.hq import create_hq_router
@@ -126,6 +127,14 @@ app.include_router(
     )
 )
 
+app.include_router(
+    create_draft_router(
+        ensure_fresh=ensure_fresh,
+        require_data=require_data,
+        page=page,
+    )
+)
+
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
@@ -165,18 +174,6 @@ async def manual_sync(request: Request):
     if "application/json" in request.headers.get("accept", ""):
         return JSONResponse({"ok": STATE.get("last_error") is None, "last_sync": STATE.get("last_sync"), "error": STATE.get("last_error")})
     return RedirectResponse(url="/", status_code=303)
-
-
-@app.get("/picks", response_class=HTMLResponse)
-async def picks_page() -> HTMLResponse:
-    await ensure_fresh()
-    d = require_data()
-    roster_names = {str(t["roster_id"]): t["team_name"] for t in d["teams"]}
-    rows = []
-    for p in sorted(d["traded_picks"], key=lambda x: (x.get("season", ""), x.get("round", 0), x.get("roster_id", 0))):
-        rows.append(f'<tr><td>{escape(str(p.get("season","")))}</td><td>{escape(str(p.get("round","")))}</td><td>{escape(roster_names.get(str(p.get("roster_id")), str(p.get("roster_id"))))}</td><td>{escape(roster_names.get(str(p.get("owner_id")), str(p.get("owner_id"))))}</td></tr>')
-    body = '<h2>Traded Draft Picks</h2><div class="card"><table><thead><tr><th>Season</th><th>Round</th><th>Original Team</th><th>Current Owner</th></tr></thead><tbody>' + "".join(rows) + '</tbody></table></div>'
-    return page("Draft Picks", body)
 
 
 @app.get("/settings", response_class=HTMLResponse)
