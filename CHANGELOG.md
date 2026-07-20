@@ -9,6 +9,7 @@ Notable DTOS changes are recorded here from the repository's Git history.
 - Centralized application name, version, build number, and release codename in `app_metadata.py`.
 - Added DTOS version, build, Git branch, and latest commit information to the Settings page.
 - Cleaned and reorganized `dtos_app.py` without changing existing endpoint behavior.
+- Made the default cache location portable across Linux and Windows.
 
 ## v0.8.9 - 2026-07-20
 

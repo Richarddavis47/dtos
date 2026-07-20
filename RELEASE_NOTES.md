@@ -13,6 +13,7 @@ DTOS v0.9.0 completes the current modular-router foundation while preserving exi
   - Build: 900
   - Codename: Front Office Foundation
 - Simplified `dtos_app.py` to application lifecycle setup, shared rendering/data helpers, and router registration.
+- Made the default Sleeper cache path portable across supported operating systems.
 
 ## Compatibility
 
