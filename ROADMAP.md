@@ -32,12 +32,15 @@ Each module follows the same process:
 - Mobile-responsive visual system
 - JSON API foundation
 
-### HQ Dashboard — Complete foundation
+### Commissioner Desk — DTOS v0.9.3 foundation
 
-- League identity and season state
-- Data-health status
-- Current standings summary
-- Navigation to core modules
+- Active League and Active Front Office context
+- Persistent personalized executive briefing
+- Since Last Visit event foundation
+- Evidence-backed league headlines
+- Explainable prioritized recommendations
+- League intelligence, snapshots, health, and personality extension points
+- Central integration surface for future Player, Trade, GM, Draft, and predictive intelligence
 
 ### Team Headquarters — DTOS v0.9.2 foundation
 
@@ -215,4 +218,5 @@ Primary question: **What has happened in Day Traders since the beginning?**
 - **v0.9.0** — Trade Center foundation
 - **v0.9.1** — Transactions Center foundation
 - **v0.9.2** — Team Headquarters foundation
+- **v0.9.3** — Commissioner Desk foundation
 - **v1.0.0** — Complete core Day Traders front-office platform

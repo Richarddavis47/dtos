@@ -51,7 +51,7 @@ app = FastAPI(title=APPLICATION_NAME, version=VERSION, lifespan=lifespan)
 
 
 CSS = """
-:root{--bg:#07111f;--panel:#101d2d;--line:#26374c;--text:#f5f7fb;--muted:#9fb0c6;--accent:#6ee7b7;--gold:#f5c451}
+:root{color-scheme:dark;--bg:#07111f;--panel:#101d2d;--line:#26374c;--text:#f5f7fb;--muted:#9fb0c6;--accent:#6ee7b7;--gold:#f5c451}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#07111f,#0b1727);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif}
 a{color:inherit;text-decoration:none}.wrap{max-width:1180px;margin:auto;padding:20px}.top{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:20px}
 .brand h1{margin:0;font-size:28px}.brand p{margin:4px 0;color:var(--muted)}.btn{border:0;border-radius:10px;padding:11px 15px;background:var(--accent);color:#062018;font-weight:800;cursor:pointer}.nav{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.nav a{padding:9px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
@@ -87,13 +87,16 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;bord
 """
 
 
-def page(title: str, body: str) -> HTMLResponse:
+def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLResponse:
     sync = STATE.get("last_sync") or "Never"
     error = STATE.get("last_error")
     error_html = f'<div class="error"><b>Sync error:</b> {escape(error)}</div>' if error else ""
+    league_name = str(((STATE.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
+    standard_chrome = f"""<header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>{escape(league_name)} Front Office · Live Sleeper data</p></div><form method="post" action="/sync"><button class="btn" type="submit">Sync Now</button></form></header>
+<nav class="nav"><a href="/">Commissioner Desk</a><a href="/teams">Teams</a><a href="/matchups">Matchups</a><a href="/picks">Draft Picks</a><a href="/transactions">Transactions</a><a href="/settings">League Settings</a><a href="/api/status">API</a></nav>"""
+    footer = f'<footer class="footer">Last sync: {escape(sync)} · Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'
     html = f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style></head>
-<body><main class="wrap"><header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>Day Traders Front Office · Live Sleeper data</p></div><form method="post" action="/sync"><button class="btn" type="submit">Sync Now</button></form></header>
-<nav class="nav"><a href="/">HQ</a><a href="/teams">Teams</a><a href="/matchups">Matchups</a><a href="/picks">Draft Picks</a><a href="/transactions">Transactions</a><a href="/settings">League Settings</a><a href="/api/status">API</a></nav>{error_html}{body}<footer class="footer">Last sync: {escape(sync)} · Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer></main></body></html>"""
+<body><main class="wrap">{"" if commissioner_chrome else standard_chrome}{error_html}{body}{"" if commissioner_chrome else footer}</main></body></html>"""
     return HTMLResponse(html)
 
 
@@ -126,6 +129,8 @@ app.include_router(
     create_hq_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
+        state=STATE,
+        league_id=LEAGUE_ID,
         page=page,
     )
 )

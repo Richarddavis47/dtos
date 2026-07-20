@@ -1,28 +1,30 @@
-# DTOS v0.9.2 — Team Headquarters
+# DTOS v0.9.3 — Commissioner Desk
 
-DTOS v0.9.2 turns every franchise detail page into a modular Front Office Headquarters while preserving the league directory and all existing application routes.
+DTOS v0.9.3 replaces the homepage with the Commissioner Desk: a daily executive briefing and the central integration hub for the Front Office Operating System.
 
 ## Highlights
 
-- Added a Front Office header with team identity, avatar, record, league rank, update time, and a stable Competitive Window placeholder.
-- Added an Asset Snapshot covering roster size, owned picks, first-round picks, roster and starter ages, youth, and veteran counts.
-- Added deterministic Front Office Summary sections for assessment, strengths, weaknesses, and short- and long-term outlooks.
-- Added explainable grades for QB, RB, WR, TE, Youth, Depth, Draft Capital, Flexibility, and Overall Team Grade.
-- Organized rosters into position rooms with age, NFL team, lineup designation, and bye-week availability.
-- Organized every owned draft pick by year with acquired-pick provenance.
-- Added current performance, a newest-first team transaction timeline, future-intelligence placeholders, and quick actions.
-- Separated calculation, summary, data-view modeling, and presentation responsibilities.
-- Added `DTOS_PHILOSOPHY.md` and targeted Team Headquarters tests.
+- Added Active League and Active Front Office selectors with persistent local context.
+- Organized the homepage around “What changed?”, “What matters?”, and “What should I do?”.
+- Added visit-window transaction events with meaningful empty states and explicit historical-data limitations.
+- Added deterministic league headlines that expose their supporting evidence.
+- Added personalized Front Office status, record, standings rank, roster grade, and draft-capital grade.
+- Added prioritized recommendations with confidence scores, reasoning, supporting metrics, and future-engine hooks.
+- Added league intelligence, expandable standings, transactions, matchups, leaders, and health snapshots.
+- Added league-personality extension points without hardcoding a specific league.
+- Added reusable typed models, business services, and server-rendered components.
 
 ## Metadata
 
 - Application: DTOS
-- Version: 0.9.2
-- Build: 902
-- Codename: Team Headquarters
+- Version: 0.9.3
+- Build: 903
+- Codename: Commissioner Desk
 
 ## Data boundaries
 
-- Foundation grades measure observable roster construction and draft assets; they are not player-value estimates or championship forecasts.
-- Current streak and player bye weeks display as unavailable when Sleeper does not supply them.
-- Competitive Window, Contender Score, Rebuild Score, and advanced intelligence remain stable placeholders for future engines.
+- One Sleeper league is available in this release, but the active-league architecture accepts a collection.
+- Browser-local context persistence does not introduce authentication or user accounts.
+- Standings movement, injury changes, matchup result timing, and league records require future historical snapshots.
+- Competitive Window and advanced Player, Trade, GM, Draft, and predictive intelligence remain future engines.
+- Recommendations use objective foundation data and do not assert player value, trade availability, or championship probability.

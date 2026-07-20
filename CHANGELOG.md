@@ -2,6 +2,16 @@
 
 Notable DTOS changes are recorded here from the repository's Git history.
 
+## v0.9.3 - 2026-07-20
+
+- Replaced the homepage with the Commissioner Desk executive briefing organized around what changed, what matters, and what to do.
+- Added extensible Active League and Active Front Office models, selectors, URL state, and browser-local persistence.
+- Added deterministic daily briefings, evidence-backed league headlines, personalized Front Office summaries, explainable prioritized recommendations, league intelligence, and expandable league snapshots.
+- Added reusable Commissioner models, services, and presentation components with future intelligence hooks.
+- Removed the hardcoded league identity from shared application chrome and added league-personality extension points.
+- Added `docs/CommissionerDesk.md`, expanded the README, and added targeted Commissioner Desk tests.
+- Updated application metadata to DTOS v0.9.3, build 903, codename Commissioner Desk.
+
 ## v0.9.2 - 2026-07-20
 
 - Rebuilt every franchise detail page as a responsive Team Headquarters with front-office identity, assets, performance, roster rooms, draft capital, recent activity, future outlook, and quick actions.
