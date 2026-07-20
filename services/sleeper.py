@@ -152,6 +152,8 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                         "name": full_name,
                         "position": p.get("position") or "—",
                         "team": p.get("team") or "Vacant",
+                        "age": p.get("age"),
+                        "bye_week": p.get("bye_week"),
                         "starter": pid in starter_ids,
                         "starter_index": starter_index.get(pid),
                         "starter_slot": lineup_slots[starter_index[pid]] if pid in starter_index and starter_index[pid] < len(lineup_slots) else None,

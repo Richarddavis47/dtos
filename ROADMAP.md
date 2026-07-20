@@ -39,7 +39,7 @@ Each module follows the same process:
 - Current standings summary
 - Navigation to core modules
 
-### Teams — Complete foundation
+### Team Headquarters — DTOS v0.9.2 foundation
 
 Released through DTOS v0.6.0.
 
@@ -57,7 +57,12 @@ Released through DTOS v0.6.0.
 - Position-room strength bars
 - Front Office Analytics framework
 
-Future Teams upgrades will focus on real DTOS valuation models rather than another major redesign.
+- Front Office identity, asset snapshot, performance, roster rooms, draft capital, timeline, and quick actions
+- Deterministic Front Office Summary with explicit data limitations
+- Explainable foundation grades for positions, youth, depth, draft capital, flexibility, and overall roster construction
+- Stable integration cards for Competitive Window, Contender, Rebuild, Player Intelligence, League History, Trade Center, and future recommendation engines
+
+Future Team Headquarters upgrades will replace or extend calculation layers with real DTOS valuation and competitive-window models without another major page redesign.
 
 ---
 
@@ -208,4 +213,6 @@ Primary question: **What has happened in Day Traders since the beginning?**
 - **v0.7.0** — Matchups Command Center
 - **v0.8.0** — Player Database foundation
 - **v0.9.0** — Trade Center foundation
+- **v0.9.1** — Transactions Center foundation
+- **v0.9.2** — Team Headquarters foundation
 - **v1.0.0** — Complete core Day Traders front-office platform

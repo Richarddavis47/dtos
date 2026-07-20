@@ -150,6 +150,7 @@ app.include_router(
     create_teams_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
+        state=STATE,
         page=page,
     )
 )

@@ -2,6 +2,15 @@
 
 Notable DTOS changes are recorded here from the repository's Git history.
 
+## v0.9.2 - 2026-07-20
+
+- Rebuilt every franchise detail page as a responsive Team Headquarters with front-office identity, assets, performance, roster rooms, draft capital, recent activity, future outlook, and quick actions.
+- Added deterministic, explainable roster-construction grades for core positions, youth, depth, draft capital, flexibility, and the overall team.
+- Added objective Front Office Summaries that disclose missing data and avoid speculative player-value or competitive claims.
+- Added reusable Team Headquarters calculation and view-model services plus targeted unit tests.
+- Added `DTOS_PHILOSOPHY.md` to establish evidence-first, transparent, deterministic standards for future intelligence systems.
+- Updated application metadata to DTOS v0.9.2, build 902, codename Team Headquarters.
+
 ## v0.9.1 - 2026-07-20
 
 - Rebuilt the Transactions page as a responsive Front Office dashboard with activity summaries.
