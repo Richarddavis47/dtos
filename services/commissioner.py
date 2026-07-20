@@ -1,0 +1,391 @@
+"""Deterministic Commissioner Desk briefing and intelligence service."""
+from __future__ import annotations
+
+from collections import Counter
+from datetime import datetime, timedelta, timezone
+from statistics import mean
+from typing import Any
+
+from models.commissioner import (
+    ActiveFrontOffice,
+    ActiveLeague,
+    ConfidenceScore,
+    DailyBriefing,
+    LeagueEvent,
+    LeagueEventType,
+    LeagueHeadline,
+    Recommendation,
+    RecommendationPriority,
+)
+from services.team_headquarters import build_team_headquarters
+from services.transactions import normalize_transactions
+
+
+def _parse_since(value: str | None) -> datetime:
+    if value:
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            return parsed.astimezone(timezone.utc) if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    return datetime.now(timezone.utc) - timedelta(hours=24)
+
+
+def _league_contexts(data: dict[str, Any], configured_league_id: str) -> list[ActiveLeague]:
+    league = data.get("league") or {}
+    return [
+        ActiveLeague(
+            league_id=str(league.get("league_id") or configured_league_id),
+            name=str(league.get("name") or "Sleeper League"),
+            season=str(league.get("season") or "Unknown"),
+        )
+    ]
+
+
+def _front_offices(data: dict[str, Any]) -> list[ActiveFrontOffice]:
+    return [
+        ActiveFrontOffice(
+            roster_id=int(team.get("roster_id") or 0),
+            owner_id=str(team.get("owner_id") or ""),
+            owner_name=str(team.get("owner") or "Unassigned"),
+            team_name=str(team.get("team_name") or f"Team {team.get('roster_id')}"),
+        )
+        for team in data.get("teams") or []
+    ]
+
+
+def _event_detail(transaction: dict[str, Any]) -> str:
+    assets = [str(asset.get("label")) for asset in transaction.get("assets") or []]
+    teams = [str(team.get("team_name")) for team in transaction.get("teams") or []]
+    detail = ", ".join(assets[:5]) or "No asset detail is available."
+    if len(assets) > 5:
+        detail += f" and {len(assets) - 5} more"
+    return f"{' / '.join(teams) or 'League transaction'}: {detail}"
+
+
+def _briefing(data: dict[str, Any], since: datetime) -> DailyBriefing:
+    events: list[LeagueEvent] = []
+    for transaction in normalize_transactions(data):
+        occurred_ms = int(transaction.get("created_ms") or 0)
+        if occurred_ms < int(since.timestamp() * 1000):
+            continue
+        roster_ids = tuple(
+            int(team["roster_id"])
+            for team in transaction.get("teams") or []
+            if str(team.get("roster_id") or "").isdigit()
+        )
+        tx_type = transaction.get("type")
+        event_type = {
+            "trade": LeagueEventType.TRADE,
+            "waiver": LeagueEventType.WAIVER,
+        }.get(tx_type, LeagueEventType.LEAGUE)
+        events.append(
+            LeagueEvent(
+                event_type=event_type,
+                occurred_at=str(transaction.get("timestamp") or "Unknown time"),
+                occurred_ms=occurred_ms,
+                title=str(transaction.get("type_label") or "Transaction"),
+                detail=_event_detail(transaction),
+                roster_ids=roster_ids,
+                source_id=str(transaction.get("id") or "") or None,
+            )
+        )
+        if transaction.get("add_count"):
+            events.append(
+                LeagueEvent(
+                    LeagueEventType.ADD,
+                    str(transaction.get("timestamp") or "Unknown time"),
+                    occurred_ms,
+                    f"{transaction['add_count']} player add{'s' if transaction['add_count'] != 1 else ''}",
+                    _event_detail(transaction),
+                    roster_ids,
+                    str(transaction.get("id") or "") or None,
+                )
+            )
+        if transaction.get("drop_count"):
+            events.append(
+                LeagueEvent(
+                    LeagueEventType.DROP,
+                    str(transaction.get("timestamp") or "Unknown time"),
+                    occurred_ms,
+                    f"{transaction['drop_count']} player drop{'s' if transaction['drop_count'] != 1 else ''}",
+                    _event_detail(transaction),
+                    roster_ids,
+                    str(transaction.get("id") or "") or None,
+                )
+            )
+        if transaction.get("has_draft_pick"):
+            events.append(
+                LeagueEvent(
+                    LeagueEventType.DRAFT_PICK,
+                    str(transaction.get("timestamp") or "Unknown time"),
+                    occurred_ms,
+                    "Draft pick ownership changed",
+                    _event_detail(transaction),
+                    roster_ids,
+                    str(transaction.get("id") or "") or None,
+                )
+            )
+    events.sort(key=lambda event: event.occurred_ms, reverse=True)
+    counts = Counter(event.event_type.value for event in events)
+    return DailyBriefing(
+        since_label=since.strftime("%Y-%m-%d %H:%M UTC"),
+        events=tuple(events[:30]),
+        counts=dict(counts),
+        unavailable=(
+            "Standings movement requires a prior standings snapshot.",
+            "Injury changes require historical injury snapshots.",
+            "Matchup results do not include a reliable completion timestamp in the current cache.",
+            "League records and custom events require a future league-history source.",
+        ),
+    )
+
+
+def _team_average_age(data: dict[str, Any], team: dict[str, Any]) -> float | None:
+    player_database = data.get("players") or {}
+    ages = []
+    for player in team.get("players") or []:
+        details = player_database.get(str(player.get("id")), {}) if isinstance(player_database, dict) else {}
+        age = player.get("age") if player.get("age") is not None else details.get("age")
+        try:
+            if age is not None:
+                ages.append(float(age))
+        except (TypeError, ValueError):
+            continue
+    return round(mean(ages), 1) if ages else None
+
+
+def _headlines(data: dict[str, Any]) -> list[LeagueHeadline]:
+    teams = data.get("teams") or []
+    headlines: list[LeagueHeadline] = []
+    if teams:
+        leader = teams[0]
+        leading_mark = (
+            leader.get("wins", 0),
+            leader.get("losses", 0),
+            leader.get("ties", 0),
+            leader.get("points_for", 0),
+        )
+        tied_leaders = [
+            team
+            for team in teams
+            if (
+                team.get("wins", 0),
+                team.get("losses", 0),
+                team.get("ties", 0),
+                team.get("points_for", 0),
+            ) == leading_mark
+        ]
+        if len(tied_leaders) == 1:
+            headlines.append(
+                LeagueHeadline(
+                    f"{leader.get('team_name')} leads the current standings",
+                    f"{leader.get('owner')} is ranked first at {leader.get('wins', 0)}-{leader.get('losses', 0)}-{leader.get('ties', 0)}.",
+                    "Current cached Sleeper standings order, record, and points for.",
+                    "Standings",
+                )
+            )
+        else:
+            headlines.append(
+                LeagueHeadline(
+                    "The current standings leaders are level",
+                    f"{len(tied_leaders)} franchises share the leading record and points-for mark.",
+                    "Current cached Sleeper records and points for.",
+                    "Standings",
+                )
+            )
+    ages = [(age, team) for team in teams if (age := _team_average_age(data, team)) is not None]
+    if ages:
+        youngest_age, youngest = min(ages, key=lambda item: (item[0], str(item[1].get("team_name"))))
+        youngest_count = sum(age == youngest_age for age, _ in ages)
+        headlines.append(
+            LeagueHeadline(
+                f"{youngest.get('team_name')} {'is tied for' if youngest_count > 1 else 'has'} the youngest measured roster",
+                f"Average age is {youngest_age} across players with known ages.",
+                "Sleeper player ages for currently rostered players; unknown ages are excluded.",
+                "Roster",
+            )
+        )
+    normalized = normalize_transactions(data)
+    activity = Counter()
+    for transaction in normalized:
+        for team in transaction.get("teams") or []:
+            activity[str(team.get("team_name"))] += 1
+    if activity:
+        name, count = sorted(activity.items(), key=lambda item: (-item[1], item[0]))[0]
+        active_count = sum(value == count for value in activity.values())
+        headlines.append(
+            LeagueHeadline(
+                f"{name} {'is tied as' if active_count > 1 else 'is'} the most active team in the cached transaction window",
+                f"The franchise appears in {count} transactions.",
+                "Current cached Sleeper transaction participation.",
+                "Activity",
+            )
+        )
+    if teams:
+        pick_leader = sorted(
+            teams,
+            key=lambda team: (-len(team.get("picks_owned") or []), str(team.get("team_name"))),
+        )[0]
+        pick_count = len(pick_leader.get("picks_owned") or [])
+        pick_leader_count = sum(len(team.get("picks_owned") or []) == pick_count for team in teams)
+        headlines.append(
+            LeagueHeadline(
+                f"{pick_leader.get('team_name')} {'is tied for' if pick_leader_count > 1 else 'holds'} the largest future-pick inventory",
+                f"The franchise owns {pick_count} future picks.",
+                "Current complete future-pick ledger.",
+                "Draft Capital",
+            )
+        )
+    return headlines[:5]
+
+
+def _status(view: dict[str, Any]) -> str:
+    grades = view["grades"]
+    overall = grades["Overall Team Grade"]["score"]
+    youth = grades["Youth"]["score"]
+    draft = grades["Draft Capital"]["score"]
+    if view["rank"] <= 3 and overall >= 70:
+        return "Contending"
+    if overall < 60 and (youth >= 65 or draft >= 65):
+        return "Rebuilding"
+    return "Stable"
+
+
+def _recommendations(view: dict[str, Any]) -> list[Recommendation]:
+    grades = view["grades"]
+    recommendations: list[Recommendation] = []
+    positions = ["QB", "RB", "WR", "TE"]
+    weakest = min(positions, key=lambda position: (grades[position]["score"], position))
+    weak_score = grades[weakest]["score"]
+    if weak_score < 70:
+        recommendations.append(
+            Recommendation(
+                f"Review {weakest} roster coverage",
+                RecommendationPriority.HIGH if weak_score < 55 else RecommendationPriority.MEDIUM,
+                ConfidenceScore(92),
+                f"Audit the {weakest} room before the next roster or trade decision.",
+                "This recommendation identifies an objective coverage gap. It does not assume the available players are upgrades.",
+                (grades[weakest]["data"], grades[weakest]["calculation"], f"Foundation score: {weak_score}/100"),
+                {"engine": "player-intelligence", "position": weakest},
+            )
+        )
+    draft = grades["Draft Capital"]
+    if draft["score"] < 70:
+        recommendations.append(
+            Recommendation(
+                "Review future draft flexibility",
+                RecommendationPriority.MEDIUM,
+                ConfidenceScore(88),
+                "Compare owned future picks with the league distribution before moving additional draft capital.",
+                "The current pick inventory is below the foundation coverage benchmark; no specific acquisition is implied.",
+                (draft["data"], draft["calculation"], f"Draft Capital score: {draft['score']}/100"),
+                {"engine": "draft-intelligence"},
+            )
+        )
+    youth = grades["Youth"]
+    if youth["score"] < 60:
+        recommendations.append(
+            Recommendation(
+                "Audit roster age concentration",
+                RecommendationPriority.MEDIUM,
+                ConfidenceScore(82),
+                "Review older roster clusters alongside competitive needs before committing long-term assets.",
+                "The age distribution is observable, but DTOS does not yet have player values or competitive-window probabilities.",
+                (youth["data"], youth["calculation"], f"Youth score: {youth['score']}/100"),
+                {"engine": "competitive-window"},
+            )
+        )
+    if not recommendations:
+        recommendations.append(
+            Recommendation(
+                "Maintain flexibility and monitor new activity",
+                RecommendationPriority.LOW,
+                ConfidenceScore(76),
+                "Review new transactions and lineup changes before making a reactive move.",
+                "No foundation roster-construction grade currently falls below the action threshold.",
+                (f"Overall grade: {grades['Overall Team Grade']['score']}/100", f"Lowest position score: {weak_score}/100"),
+                {"engine": "recommendation-engine"},
+            )
+        )
+    priority_order = {RecommendationPriority.HIGH: 0, RecommendationPriority.MEDIUM: 1, RecommendationPriority.LOW: 2}
+    return sorted(recommendations, key=lambda rec: (priority_order[rec.priority], -rec.confidence.value, rec.title))
+
+
+def _league_intelligence(data: dict[str, Any]) -> dict[str, Any]:
+    teams = data.get("teams") or []
+    ages = [age for team in teams if (age := _team_average_age(data, team)) is not None]
+    total_picks = sum(len(team.get("picks_owned") or []) for team in teams)
+    pick_leader = max((len(team.get("picks_owned") or []) for team in teams), default=0)
+    statuses = Counter()
+    for team in teams:
+        view = build_team_headquarters(data, int(team.get("roster_id") or 0))
+        if view:
+            statuses[_status(view)] += 1
+    transactions = normalize_transactions(data)
+    return {
+        "average_roster_age": round(mean(ages), 1) if ages else None,
+        "draft_concentration": round(pick_leader / total_picks * 100) if total_picks else None,
+        "recent_activity": len(transactions),
+        "contenders": statuses["Contending"],
+        "rebuilders": statuses["Rebuilding"],
+        "trending_up": "Unavailable without historical snapshots",
+        "trending_down": "Unavailable without historical snapshots",
+    }
+
+
+def build_commissioner_desk(
+    data: dict[str, Any],
+    configured_league_id: str,
+    active_league_id: str | None = None,
+    active_roster_id: int | None = None,
+    since: str | None = None,
+    last_sync: Any = None,
+    last_error: Any = None,
+) -> dict[str, Any]:
+    """Build a complete presentation-neutral Commissioner Desk view model."""
+    leagues = _league_contexts(data, configured_league_id)
+    selected_league = next((league for league in leagues if league.league_id == active_league_id), leagues[0])
+    front_offices = _front_offices(data)
+    if not front_offices:
+        raise ValueError("Commissioner Desk requires at least one league franchise.")
+    selected_front_office = next(
+        (office for office in front_offices if office.roster_id == active_roster_id),
+        front_offices[0],
+    )
+    team_view = build_team_headquarters(data, selected_front_office.roster_id, last_sync)
+    if team_view is None:
+        raise ValueError("The selected Front Office is not available in the active league.")
+    since_time = _parse_since(since)
+    summary = {
+        "overall_grade": team_view["grades"]["Overall Team Grade"],
+        "competitive_window": "Pending deterministic Competitive Window Engine",
+        "record": team_view["performance"]["record"],
+        "power_ranking": team_view["rank"],
+        "roster_grade": team_view["grades"]["Overall Team Grade"],
+        "draft_capital_grade": team_view["grades"]["Draft Capital"],
+        "status": _status(team_view),
+    }
+    normalized = normalize_transactions(data)
+    return {
+        "leagues": leagues,
+        "active_league": selected_league,
+        "front_offices": front_offices,
+        "active_front_office": selected_front_office,
+        "briefing": _briefing(data, since_time),
+        "headlines": _headlines(data),
+        "front_office_summary": summary,
+        "recommendations": _recommendations(team_view),
+        "league_intelligence": _league_intelligence(data),
+        "snapshot": {
+            "standings": data.get("teams") or [],
+            "transactions": normalized[:5],
+            "matchups": data.get("matchups") or {},
+            "leader": (data.get("teams") or [None])[0],
+            "health": {
+                "status": "Degraded" if last_error else "Healthy",
+                "last_sync": str(last_sync or "Never"),
+                "error": str(last_error) if last_error else None,
+            },
+        },
+    }

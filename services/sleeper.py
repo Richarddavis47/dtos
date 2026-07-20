@@ -71,11 +71,11 @@ async def sleeper_get(client: httpx.AsyncClient, path: str) -> Any:
 
 def request_headers() -> dict[str, str]:
     """Return the shared DTOS identity used for Sleeper requests."""
-    return {"User-Agent": f"{APPLICATION_NAME}/{VERSION} (+Day Traders)"}
+    return {"User-Agent": f"{APPLICATION_NAME}/{VERSION} (+Front Office OS)"}
 
 
 async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
-    """Fetch and normalize the current Day Traders league state."""
+    """Fetch and normalize the configured Sleeper league state."""
     async with SYNC_LOCK:
         if STATE["syncing"]:
             return STATE
