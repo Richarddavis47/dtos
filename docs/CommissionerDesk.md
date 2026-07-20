@@ -15,7 +15,8 @@ It is a foundation for future intelligence, not an AI speculation layer. Missing
 The feature separates responsibilities into four layers:
 
 - `models/commissioner.py` defines immutable context and intelligence contracts.
-- `services/commissioner.py` selects active context, builds briefings and headlines, derives summaries, and produces recommendations.
+- `services/commissioner.py` selects active context and builds briefings, headlines, snapshots, and presentation-neutral view models.
+- `src/core/decision_engine/` owns shared team evaluations, window classification, and recommendations.
 - `components/commissioner.py` renders reusable, responsive HTML components and owns browser-local context persistence.
 - `routes/hq.py` validates query inputs, requests the view model, and renders the composed Desk.
 
@@ -82,7 +83,7 @@ Every recommendation exposes:
 - Supporting metrics
 - A named future-engine hook
 
-Current recommendations identify observable roster-construction, age, or draft-capital conditions. They do not claim player value, trade availability, injury prognosis, or championship probability.
+Current recommendations consume the shared Decision Engine and identify observable performance, roster-construction, age, depth, and draft-capital conditions. Current Championship Outlook and Future Outlook remain separate. Recommendations do not claim player value, trade availability, injury prognosis, or championship probability.
 
 ## Extension points
 

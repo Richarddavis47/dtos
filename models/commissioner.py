@@ -1,9 +1,15 @@
 """Typed contracts for Commissioner Desk context and intelligence."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+
+from src.core.decision_engine import (
+    ConfidenceScore,
+    Recommendation,
+    RecommendationCategory,
+    RecommendationPriority,
+)
 
 
 @dataclass(frozen=True)
@@ -60,26 +66,15 @@ class DailyBriefing:
     unavailable: tuple[str, ...] = ()
 
 
-class RecommendationPriority(str, Enum):
-    HIGH = "High"
-    MEDIUM = "Medium"
-    LOW = "Low"
-
-
-@dataclass(frozen=True)
-class ConfidenceScore:
-    value: int
-
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "value", max(0, min(100, int(self.value))))
-
-
-@dataclass(frozen=True)
-class Recommendation:
-    title: str
-    priority: RecommendationPriority
-    confidence: ConfidenceScore
-    action: str
-    reasoning: str
-    supporting_metrics: tuple[str, ...]
-    future_explanation_hook: dict[str, Any] = field(default_factory=dict)
+__all__ = [
+    "ActiveFrontOffice",
+    "ActiveLeague",
+    "ConfidenceScore",
+    "DailyBriefing",
+    "LeagueEvent",
+    "LeagueEventType",
+    "LeagueHeadline",
+    "Recommendation",
+    "RecommendationCategory",
+    "RecommendationPriority",
+]

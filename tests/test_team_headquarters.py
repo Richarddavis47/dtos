@@ -67,7 +67,7 @@ class TeamHeadquartersTests(unittest.TestCase):
         assert view is not None
         self.assertEqual(
             set(view["grades"]),
-            {"QB", "RB", "WR", "TE", "Youth", "Depth", "Draft Capital", "Flexibility", "Overall Team Grade"},
+            {"QB", "RB", "WR", "TE", "Youth", "Depth", "Draft Capital", "Flexibility", "Roster Construction"},
         )
         for grade in view["grades"].values():
             self.assertIn(grade["grade"], "ABCDF")
@@ -81,9 +81,9 @@ class TeamHeadquartersTests(unittest.TestCase):
         view = build_team_headquarters(self.data, 1)
         assert view is not None
         combined = " ".join(view["summary"].values())
-        self.assertIn("not a player-value or championship forecast", combined)
-        self.assertIn("no stronger short-term claim is justified", combined)
-        self.assertIn("future valuation models", combined)
+        self.assertIn("Current Championship Outlook", combined)
+        self.assertIn("evaluated independently from future assets", combined)
+        self.assertIn("independently calculated future horizon", combined)
 
     def test_missing_ages_use_neutral_explainable_baseline(self) -> None:
         players = [{"id": "unknown", "position": "QB", "roster_slot": "Starter"}]

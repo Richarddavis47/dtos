@@ -11,7 +11,7 @@
 
 ## Standard autonomous release workflow
 
-When a release prompt authorizes end-to-end completion, perform the full workflow without pausing between routine steps:
+For every DTOS feature or release, perform the full workflow without pausing between routine steps:
 
 1. Start from a clean, current `main` branch.
 2. Pull the latest `origin/main`.
@@ -32,11 +32,14 @@ When a release prompt authorizes end-to-end completion, perform the full workflo
 11. Commit the focused release and push its feature branch.
 12. Open a pull request targeting `main`.
 13. Mark the pull request ready for review after validation passes.
-14. Squash-merge the pull request when all checks pass and the release prompt authorizes end-to-end completion.
-15. Switch the local repository back to `main` and pull the merged changes.
-16. Confirm that `HEAD` matches `origin/main`, the working tree is clean, the correct application version is reported, and the merged application starts successfully.
-17. Stop the local test server before finishing.
-18. Report:
+14. Confirm there are no merge conflicts with current `main`, then squash-merge the pull request when every required validation gate passes.
+15. Delete the merged feature branch locally and remotely.
+16. Create and push the release version tag, and publish release notes when appropriate.
+17. Switch the local repository back to `main` and pull the merged changes.
+18. Confirm that `HEAD` matches `origin/main`, the working tree is clean, the correct application version is reported, and the merged application starts successfully.
+19. Stop the local test server before finishing.
+20. Continue to the next approved milestone or prepare the backlog without waiting for another approval.
+21. Report:
     - Release version.
     - Feature branch.
     - Pull request.
@@ -47,18 +50,33 @@ When a release prompt authorizes end-to-end completion, perform the full workflo
     - Issues found and fixed.
     - Any known limitations.
 
+## Required release gates
+
+Automatic merge is authorized only after all of these pass:
+
+- All unit and targeted tests.
+- All linting and DTOS quality checks.
+- Python compilation and any other applicable build step.
+- Application startup.
+- Route registration and HTTP smoke tests, with no duplicate routes.
+- All release-specific validation.
+- A conflict check against current `main`.
+
+If any gate fails, stop immediately, do not merge, report exactly what failed, and wait for instructions. Never skip, bypass, hide, or misrepresent a validation result.
+
 ## Autonomy and safety rules
 
-- For routine patch and minor releases, complete the full process without waiting for approval when the prompt says "build end to end."
+- Complete the full feature-branch, validation, pull-request, squash-merge, branch-cleanup, tag, documentation, and synchronization process without waiting for merge approval whenever every required gate passes.
 - Do not stop merely because a dependency is missing; install it safely in the ignored virtual environment.
-- Do not leave an unmerged pull request when end-to-end completion is authorized and all merge conditions pass.
+- Do not leave a validated release pull request unmerged.
 - Do not push directly to `main` unless explicitly instructed.
-- Stop only for destructive changes, authentication failure, unavailable required credentials, ambiguous product requirements that materially affect behavior, or a problem that cannot be safely resolved.
+- Explicit approval is always required for force pushes, published-history rewrites, destructive database or data migrations, credential or authentication changes, intentional deletion of user data, or bypassing validation.
+- Otherwise stop only for a failed validation gate, an unsafe merge conflict, unavailable credentials, materially ambiguous product requirements, or an unexpected issue that could compromise DTOS stability or integrity.
 - Never hide failed checks or claim a test passed when it was not run.
 - Preserve `DTOS_CACHE_FILE` and all other environment overrides.
 - Maintain Windows compatibility.
 - Never overwrite working code from memory; inspect the repository first.
-- Do not merge unless the prompt explicitly authorizes the merge or end-to-end completion.
+- A passing release is standing authorization to merge; no additional approval is required.
 
 ## Expected release request
 
