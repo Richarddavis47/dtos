@@ -125,15 +125,15 @@ Primary question: **Who owns every pick, and what is the league-wide draft-capit
 - Trade history for each pick
 - Rookie-draft results and historical classes
 
-### Transactions Center
+### Transactions Center — DTOS v0.9.1 foundation
 
 Primary question: **What changed in the league, and why does it matter?**
 
-- Trades, waivers, free-agent moves, drops, and commissioner actions
-- Filters by team, player, transaction type, and season
-- Transaction detail pages
-- Asset movement summaries
-- Impact-analysis framework
+- Delivered current-week trades, waivers, free-agent moves, adds, and drops
+- Delivered filters by team, owner, player, transaction type, picks, date, and search
+- Delivered sortable and paginated asset-movement summaries
+- Delivered transaction-only refresh with cached-data fallback
+- Next: historical season aggregation and impact-analysis framework
 
 ### League History
 

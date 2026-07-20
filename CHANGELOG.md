@@ -2,6 +2,15 @@
 
 Notable DTOS changes are recorded here from the repository's Git history.
 
+## v0.9.1 - 2026-07-20
+
+- Rebuilt the Transactions page as a responsive Front Office dashboard with activity summaries.
+- Added cached filtering by team, owner, transaction type, player, draft-pick involvement, date range, and search text.
+- Added sortable transaction columns, configurable pagination, team links, player transaction pages, position badges, asset movement details, and preserved raw Sleeper payload access.
+- Added transaction-only Sleeper synchronization with preserved filter state, last-successful-refresh reporting, and graceful failure handling.
+- Added a dedicated transaction business-logic service and targeted unit tests.
+- Updated application metadata to DTOS v0.9.1, build 901, codename Transactions Center.
+
 ## v0.9.0 - 2026-07-20
 
 - Completed the Settings migration into `routes/settings.py`.

@@ -27,8 +27,12 @@ STATE: dict[str, Any] = {
     "last_sync": None,
     "last_error": None,
     "syncing": False,
+    "transactions_last_sync": None,
+    "transactions_last_error": None,
+    "transactions_syncing": False,
 }
 SYNC_LOCK = asyncio.Lock()
+TRANSACTIONS_SYNC_LOCK = asyncio.Lock()
 
 
 def utcnow() -> datetime:
@@ -42,6 +46,7 @@ def load_cache() -> None:
         payload = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
         STATE.update(payload)
         STATE["syncing"] = False
+        STATE["transactions_syncing"] = False
     except Exception as exc:  # pragma: no cover
         logger.warning("Could not load cache: %s", exc)
 
@@ -49,7 +54,9 @@ def load_cache() -> None:
 def save_cache() -> None:
     try:
         CACHE_FILE.write_text(
-            json.dumps({k: v for k, v in STATE.items() if k != "syncing"}),
+            json.dumps(
+                {k: v for k, v in STATE.items() if not k.endswith("syncing")}
+            ),
             encoding="utf-8",
         )
     except Exception as exc:  # pragma: no cover
@@ -62,6 +69,11 @@ async def sleeper_get(client: httpx.AsyncClient, path: str) -> Any:
     return response.json()
 
 
+def request_headers() -> dict[str, str]:
+    """Return the shared DTOS identity used for Sleeper requests."""
+    return {"User-Agent": f"{APPLICATION_NAME}/{VERSION} (+Day Traders)"}
+
+
 async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
     """Fetch and normalize the current Day Traders league state."""
     async with SYNC_LOCK:
@@ -70,10 +82,9 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
         STATE["syncing"] = True
         try:
             timeout = httpx.Timeout(REQUEST_TIMEOUT)
-            headers = {
-                "User-Agent": f"{APPLICATION_NAME}/{VERSION} (+Day Traders)"
-            }
-            async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
+            async with httpx.AsyncClient(
+                timeout=timeout, headers=request_headers()
+            ) as client:
                 league, users, rosters, traded_picks, drafts, nfl_state = await asyncio.gather(
                     sleeper_get(client, f"/league/{LEAGUE_ID}"),
                     sleeper_get(client, f"/league/{LEAGUE_ID}/users"),
@@ -287,8 +298,11 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 "players": players,
                 "players_fetched_at": players_fetched_at,
             }
-            STATE["last_sync"] = utcnow().isoformat()
+            synced_at = utcnow().isoformat()
+            STATE["last_sync"] = synced_at
             STATE["last_error"] = None
+            STATE["transactions_last_sync"] = synced_at
+            STATE["transactions_last_error"] = None
             save_cache()
             logger.info("Sleeper sync complete: %s teams", len(team_rows))
         except Exception as exc:
@@ -297,6 +311,38 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
         finally:
             STATE["syncing"] = False
         return STATE
+
+
+async def sync_transactions() -> bool:
+    """Refresh only the cached transaction list from Sleeper."""
+    async with TRANSACTIONS_SYNC_LOCK:
+        if STATE.get("transactions_syncing"):
+            return False
+        STATE["transactions_syncing"] = True
+        try:
+            data = STATE.get("data") or {}
+            if not data:
+                raise RuntimeError("League data must be loaded before refreshing transactions.")
+            week = int(data.get("week") or 1)
+            timeout = httpx.Timeout(REQUEST_TIMEOUT)
+            async with httpx.AsyncClient(
+                timeout=timeout, headers=request_headers()
+            ) as client:
+                transactions = await sleeper_get(
+                    client, f"/league/{LEAGUE_ID}/transactions/{week}"
+                )
+            data["transactions"] = transactions
+            STATE["transactions_last_sync"] = utcnow().isoformat()
+            STATE["transactions_last_error"] = None
+            save_cache()
+            logger.info("Transaction sync complete: %s transactions", len(transactions))
+            return True
+        except Exception as exc:
+            STATE["transactions_last_error"] = f"{type(exc).__name__}: {exc}"
+            logger.exception("Transaction sync failed")
+            return False
+        finally:
+            STATE["transactions_syncing"] = False
 
 
 
