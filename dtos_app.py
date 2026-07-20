@@ -1,4 +1,4 @@
-"""DTOS v0.8.7 — HQ route migration."""
+"""DTOS v0.8.8 — transactions route migration."""
 from __future__ import annotations
 
 import asyncio
@@ -16,6 +16,7 @@ from services.sleeper import (
 from routes.matchups import create_matchups_router
 from routes.teams import create_teams_router
 from routes.hq import create_hq_router
+from routes.transactions import create_transactions_router
 
 async def ensure_fresh() -> None:
     await ensure_data_fresh()
@@ -36,7 +37,7 @@ async def lifespan(_: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="DTOS", version="0.8.7", lifespan=lifespan)
+app = FastAPI(title="DTOS", version="0.8.8", lifespan=lifespan)
 
 
 CSS = """
@@ -117,6 +118,14 @@ app.include_router(
     )
 )
 
+app.include_router(
+    create_transactions_router(
+        ensure_fresh=ensure_fresh,
+        require_data=require_data,
+        page=page,
+    )
+)
+
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
@@ -128,7 +137,7 @@ async def api_status() -> JSONResponse:
     await ensure_fresh()
     data = STATE.get("data") or {}
     return JSONResponse({
-        "version": "0.8.7",
+        "version": "0.8.8",
         "league_id": LEAGUE_ID,
         "last_sync": STATE.get("last_sync"),
         "last_error": STATE.get("last_error"),
@@ -168,18 +177,6 @@ async def picks_page() -> HTMLResponse:
         rows.append(f'<tr><td>{escape(str(p.get("season","")))}</td><td>{escape(str(p.get("round","")))}</td><td>{escape(roster_names.get(str(p.get("roster_id")), str(p.get("roster_id"))))}</td><td>{escape(roster_names.get(str(p.get("owner_id")), str(p.get("owner_id"))))}</td></tr>')
     body = '<h2>Traded Draft Picks</h2><div class="card"><table><thead><tr><th>Season</th><th>Round</th><th>Original Team</th><th>Current Owner</th></tr></thead><tbody>' + "".join(rows) + '</tbody></table></div>'
     return page("Draft Picks", body)
-
-
-@app.get("/transactions", response_class=HTMLResponse)
-async def transactions_page() -> HTMLResponse:
-    await ensure_fresh()
-    txs = require_data()["transactions"]
-    cards = []
-    for tx in txs:
-        created = tx.get("created")
-        date = datetime.fromtimestamp(created / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC") if created else "—"
-        cards.append(f'<div class="card"><h3>{escape(str(tx.get("type") or "Transaction").replace("_"," ").title())}</h3><div class="muted">{escape(date)} · {escape(str(tx.get("status") or ""))}</div><pre>{escape(json.dumps(tx, indent=2)[:5000])}</pre></div>')
-    return page("Transactions", '<h2>Latest Week Transactions</h2><div class="grid">' + "".join(cards) + "</div>")
 
 
 @app.get("/settings", response_class=HTMLResponse)
