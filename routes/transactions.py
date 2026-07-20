@@ -10,6 +10,8 @@ from urllib.parse import parse_qsl, quote, urlencode
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from components.asset_intelligence import player_dossier
+from services.asset_intelligence import build_player_dossier
 from services.transactions import transaction_center
 
 
@@ -306,12 +308,16 @@ def create_transactions_router(
         )
 
     @router.get("/players/{player_id}", response_class=HTMLResponse)
-    async def player_page(player_id: str) -> HTMLResponse:
+    async def player_page(player_id: str, front_office: int | None = None) -> HTMLResponse:
         await ensure_fresh()
         data = require_data()
         player = (data.get("players") or {}).get(player_id)
         if not player:
             raise HTTPException(404, "Player not found")
+        try:
+            report, selected_team, teams = build_player_dossier(data, player_id, front_office)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
         view = transaction_center(
             data,
             {
@@ -325,7 +331,6 @@ def create_transactions_router(
         name = player.get("full_name") or " ".join(
             value for value in (player.get("first_name"), player.get("last_name")) if value
         ) or player_id
-        initials = "".join(part[:1] for part in str(name).split()[:2]).upper() or "P"
         cards = "".join(
             '<div class="card">'
             f'<div class="muted">{escape(transaction["timestamp"])}</div>'
@@ -337,7 +342,7 @@ def create_transactions_router(
         body = f"""
 {TRANSACTIONS_CSS}
 <a class="back" href="/transactions">← Back to Transactions Center</a>
-<section class="card player-hero"><div class="player-monogram">{escape(initials)}</div><div><div class="identity-kicker">Player transaction activity</div><h2>{escape(str(name))}</h2><div class="muted">{escape(str(player.get('position') or '—'))} · {escape(str(player.get('team') or 'Free Agent'))} · Sleeper ID {escape(player_id)}</div></div></section>
+{player_dossier(report, selected_team, teams)}
 <h2>Recent Transactions</h2><div class="grid">{cards}</div>
 """
         return page(str(name), body)

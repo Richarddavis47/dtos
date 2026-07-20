@@ -40,3 +40,5 @@ class TeamProfile:
     first_round_pick_count: int
     position_rooms: dict[str, PositionRoom]
     market_context: dict[str, Any]
+    players: tuple[dict[str, Any], ...]
+    picks: tuple[dict[str, Any], ...]

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app_metadata import VERSION
+from services.asset_intelligence import player_asset_index
 
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -55,11 +56,20 @@ def create_api_router(
         )
 
     @router.get("/api/league")
-    async def api_league() -> JSONResponse:
+    async def api_league(include_players: bool = False) -> JSONResponse:
         await ensure_fresh()
         data = require_data().copy()
         data.pop("players", None)
+        if include_players:
+            data["players"] = player_asset_index(require_data())
         return JSONResponse(data)
+
+    @router.get("/api/players")
+    async def api_players() -> JSONResponse:
+        """List cached rostered players with canonical dossier URLs."""
+        await ensure_fresh()
+        players = player_asset_index(require_data())
+        return JSONResponse({"count": len(players), "players": players})
 
     @router.post("/sync")
     async def manual_sync(request: Request):

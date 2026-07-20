@@ -1,46 +1,23 @@
-"""Player-asset signals available before the full Player Intelligence engine."""
+"""Decision Engine adapter for Asset Intelligence player portfolios."""
 from __future__ import annotations
 
+from src.core.asset_intelligence.models import AssetContext
+from src.core.asset_intelligence.portfolio import evaluate_player_portfolio
 from src.core.decision_engine.models.evaluation import EvaluationFactor
 from src.core.decision_engine.models.team_profile import TeamProfile
 
 
 def evaluate_player_assets(profile: TeamProfile) -> tuple[float, tuple[EvaluationFactor, ...], tuple[str, ...]]:
-    """Evaluate only observable age distribution; market value remains a future input."""
-    if not profile.known_ages:
-        return (
-            50.0,
-            (
-                EvaluationFactor(
-                    "Age availability",
-                    "No known ages",
-                    50.0,
-                    "A neutral placeholder is used because objective age data is unavailable.",
-                    "Sleeper player records",
-                ),
-            ),
-            ("Player market value and rookie-pipeline data are not available.",),
-        )
-    young_share = profile.young_player_count / len(profile.known_ages)
-    veteran_share = profile.veteran_player_count / len(profile.known_ages)
-    score = 50 + young_share * 50 - veteran_share * 25
-    return (
-        score,
-        (
-            EvaluationFactor(
-                "Young core",
-                f"{profile.young_player_count} of {len(profile.known_ages)} known ages are 24 or younger",
-                young_share * 50,
-                "A larger young-player share improves future flexibility.",
-                "Sleeper roster and player ages",
-            ),
-            EvaluationFactor(
-                "Veteran concentration",
-                f"{profile.veteran_player_count} of {len(profile.known_ages)} known ages are 28 or older",
-                -(veteran_share * 25),
-                "Veteran concentration reduces the age-based future signal without judging player quality.",
-                "Sleeper roster and player ages",
-            ),
-        ),
-        ("Dynasty market value, rookie pipeline quality, and player trajectories are future inputs.",),
+    context = AssetContext(
+        profile.league_id,
+        profile.active_front_office_id,
+        profile.league_settings,
+        team_strategy=profile.strategy,
+        position_depth={position: room.total_players for position, room in profile.position_rooms.items()},
     )
+    result = evaluate_player_portfolio(profile.players, context)
+    factors = tuple(
+        EvaluationFactor(item.factor, item.observed_value, item.impact, item.explanation, item.source)
+        for item in result.evidence
+    )
+    return float(result.score), factors, result.limitations

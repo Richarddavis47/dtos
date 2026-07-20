@@ -6,9 +6,9 @@ import subprocess
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "0.9.4"
-BUILD_NUMBER = 904
-RELEASE_CODENAME = "Decision Engine v1"
+VERSION = "0.9.5"
+BUILD_NUMBER = 905
+RELEASE_CODENAME = "Asset Intelligence v1"
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
 

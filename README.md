@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v0.9.4 introduces Decision Engine v1, the shared deterministic intelligence layer behind Commissioner Desk and Team Headquarters. It evaluates current championship and future outlooks independently, classifies team windows, and produces contextual, explainable recommendations.
+DTOS v0.9.5 introduces Asset Intelligence v1, the shared deterministic source for player and draft-pick evaluations. Player dossiers separate Dynasty, Redraft, Market, and Team Fit values, while every score exposes observable evidence and limitations.
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 
@@ -38,4 +38,6 @@ Runtime configuration uses environment variables such as `SLEEPER_LEAGUE_ID`, `D
 
 The shared intelligence implementation lives in `src/core/decision_engine/`.
 
-See [Decision Philosophy](docs/DTOS_DECISION_PHILOSOPHY.md), [Commissioner Desk architecture](docs/CommissionerDesk.md), [DTOS philosophy](DTOS_PHILOSOPHY.md), [roadmap](ROADMAP.md), and [release notes](RELEASE_NOTES.md).
+Individual asset evaluation lives in `src/core/asset_intelligence/` and is consumed by the Decision Engine.
+
+See [Asset Intelligence](docs/ASSET_INTELLIGENCE.md), [Decision Philosophy](docs/DTOS_DECISION_PHILOSOPHY.md), [Commissioner Desk architecture](docs/CommissionerDesk.md), [DTOS philosophy](DTOS_PHILOSOPHY.md), [roadmap](ROADMAP.md), and [release notes](RELEASE_NOTES.md).

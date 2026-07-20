@@ -80,6 +80,18 @@ Future Team Headquarters upgrades will replace or extend calculation layers with
 
 Future releases can replace individual scoring providers without changing the Decision Engine's public output contracts or presentation components.
 
+### Asset Intelligence - DTOS v0.9.5 foundation
+
+- Shared contextual player and draft-pick report contracts
+- Independent Dynasty, Redraft, Market, and Team Fit values
+- Observable evidence, confidence, limitations, risk, and opportunity horizons
+- Contextual recommendations based on league and Active Front Office inputs
+- Draft-pick value, uncertainty, expected range, time horizon, and strategy
+- Decision Engine integration through portfolio adapters
+- Stable provider interfaces for future production, usage, contract, injury-history, and market feeds
+
+Future releases can enrich individual evidence providers without changing dossier, Decision Engine, or presentation contracts.
+
 ---
 
 ## In progress
