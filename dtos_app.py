@@ -1,4 +1,4 @@
-"""DTOS v0.8.8 — transactions route migration."""
+"""DTOS v0.8.9 — transactions route migration."""
 from __future__ import annotations
 
 import asyncio
@@ -38,7 +38,7 @@ async def lifespan(_: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="DTOS", version="0.8.8", lifespan=lifespan)
+app = FastAPI(title="DTOS", version="0.8.9", lifespan=lifespan)
 
 
 CSS = """
@@ -146,7 +146,7 @@ async def api_status() -> JSONResponse:
     await ensure_fresh()
     data = STATE.get("data") or {}
     return JSONResponse({
-        "version": "0.8.8",
+        "version": "0.8.9",
         "league_id": LEAGUE_ID,
         "last_sync": STATE.get("last_sync"),
         "last_error": STATE.get("last_error"),
