@@ -1,4 +1,4 @@
-"""DTOS v0.8.6 — teams route migration."""
+"""DTOS v0.8.7 — HQ route migration."""
 from __future__ import annotations
 
 import asyncio
@@ -15,6 +15,7 @@ from services.sleeper import (
 )
 from routes.matchups import create_matchups_router
 from routes.teams import create_teams_router
+from routes.hq import create_hq_router
 
 async def ensure_fresh() -> None:
     await ensure_data_fresh()
@@ -35,7 +36,7 @@ async def lifespan(_: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="DTOS", version="0.8.6", lifespan=lifespan)
+app = FastAPI(title="DTOS", version="0.8.7", lifespan=lifespan)
 
 
 CSS = """
@@ -108,6 +109,14 @@ app.include_router(
     )
 )
 
+app.include_router(
+    create_hq_router(
+        ensure_fresh=ensure_fresh,
+        require_data=require_data,
+        page=page,
+    )
+)
+
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
@@ -119,7 +128,7 @@ async def api_status() -> JSONResponse:
     await ensure_fresh()
     data = STATE.get("data") or {}
     return JSONResponse({
-        "version": "0.8.5",
+        "version": "0.8.7",
         "league_id": LEAGUE_ID,
         "last_sync": STATE.get("last_sync"),
         "last_error": STATE.get("last_error"),
@@ -147,26 +156,6 @@ async def manual_sync(request: Request):
     if "application/json" in request.headers.get("accept", ""):
         return JSONResponse({"ok": STATE.get("last_error") is None, "last_sync": STATE.get("last_sync"), "error": STATE.get("last_error")})
     return RedirectResponse(url="/", status_code=303)
-
-
-@app.get("/", response_class=HTMLResponse)
-async def home() -> HTMLResponse:
-    await ensure_fresh()
-    d = require_data()
-    league = d["league"]
-    teams = d["teams"]
-    nfl = d["nfl_state"]
-    leader = teams[0] if teams else None
-    body = f"""
-<section class="grid">
-<div class="card"><div class="muted">League</div><div class="stat">{escape(league.get('name') or 'Day Traders')}</div><p class="muted">{len(teams)} teams · {escape(str(league.get('season') or ''))} season</p></div>
-<div class="card"><div class="muted">NFL State</div><div class="stat">Week {escape(str(d['week']))}</div><p class="muted">{escape(str(nfl.get('season_type') or ''))}</p></div>
-<div class="card"><div class="muted">Current Leader</div><div class="stat">{escape(leader['team_name'] if leader else '—')}</div><p class="record">{leader['wins'] if leader else 0}-{leader['losses'] if leader else 0}</p></div>
-<div class="card"><div class="muted">Data Health</div><div class="stat good">Live</div><p class="muted">Scoring settings, rosters, owners, picks, matchups and transactions synced.</p></div>
-</section>
-<h2>Standings</h2><div class="card"><table><thead><tr><th>#</th><th>Team</th><th>Owner</th><th>Record</th><th>PF</th></tr></thead><tbody>{''.join(f'<tr><td>{i}</td><td><b>{escape(t["team_name"])}</b></td><td>{escape(t["owner"])}</td><td>{t["wins"]}-{t["losses"]}-{t["ties"]}</td><td>{t["points_for"]}</td></tr>' for i,t in enumerate(teams,1))}</tbody></table></div>
-"""
-    return page("Front Office HQ", body)
 
 
 @app.get("/picks", response_class=HTMLResponse)
