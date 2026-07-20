@@ -10,4 +10,3 @@ SYNC_MINUTES = max(5, int(os.getenv("SYNC_MINUTES", "15")))
 CACHE_FILE = Path(os.getenv("DTOS_CACHE_FILE", "/tmp/dtos_cache.json"))
 REQUEST_TIMEOUT = float(os.getenv("SLEEPER_TIMEOUT", "30"))
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-APP_VERSION = "0.8.1"

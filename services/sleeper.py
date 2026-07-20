@@ -9,9 +9,14 @@ from typing import Any
 
 import httpx
 
+from app_metadata import APPLICATION_NAME, VERSION
 from config import (
-    APP_VERSION, CACHE_FILE, LEAGUE_ID, LOG_LEVEL, REQUEST_TIMEOUT,
-    SLEEPER_BASE, SYNC_MINUTES,
+    CACHE_FILE,
+    LEAGUE_ID,
+    LOG_LEVEL,
+    REQUEST_TIMEOUT,
+    SLEEPER_BASE,
+    SYNC_MINUTES,
 )
 
 logging.basicConfig(level=LOG_LEVEL)
@@ -65,7 +70,9 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
         STATE["syncing"] = True
         try:
             timeout = httpx.Timeout(REQUEST_TIMEOUT)
-            headers = {"User-Agent": f"DTOS/{APP_VERSION} (+Day Traders)"}
+            headers = {
+                "User-Agent": f"{APPLICATION_NAME}/{VERSION} (+Day Traders)"
+            }
             async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
                 league, users, rosters, traded_picks, drafts, nfl_state = await asyncio.gather(
                     sleeper_get(client, f"/league/{LEAGUE_ID}"),

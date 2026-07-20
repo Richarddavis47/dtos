@@ -1,4 +1,4 @@
-"""DTOS v0.8.9 — transactions route migration."""
+"""DTOS FastAPI application setup and router registration."""
 from __future__ import annotations
 
 import asyncio
@@ -6,18 +6,26 @@ from contextlib import asynccontextmanager
 from html import escape
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 
+from app_metadata import APPLICATION_NAME, VERSION
 from config import SYNC_MINUTES
-from services.sleeper import (
-    LEAGUE_ID, STATE, ensure_data_fresh, load_cache, sync_sleeper, utcnow
-)
+from routes.api import create_api_router
 from routes.draft import create_draft_router
-from routes.matchups import create_matchups_router
-from routes.teams import create_teams_router
 from routes.hq import create_hq_router
+from routes.matchups import create_matchups_router
+from routes.settings import create_settings_router
+from routes.teams import create_teams_router
 from routes.transactions import create_transactions_router
+from services.sleeper import (
+    LEAGUE_ID,
+    STATE,
+    ensure_data_fresh,
+    load_cache,
+    sync_sleeper,
+)
+
 
 async def ensure_fresh() -> None:
     await ensure_data_fresh()
@@ -38,7 +46,7 @@ async def lifespan(_: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="DTOS", version="0.8.9", lifespan=lifespan)
+app = FastAPI(title=APPLICATION_NAME, version=VERSION, lifespan=lifespan)
 
 
 CSS = """
@@ -82,8 +90,8 @@ def page(title: str, body: str) -> HTMLResponse:
     sync = STATE.get("last_sync") or "Never"
     error = STATE.get("last_error")
     error_html = f'<div class="error"><b>Sync error:</b> {escape(error)}</div>' if error else ""
-    html = f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · DTOS</title><style>{CSS}</style></head>
-<body><main class="wrap"><header class="top"><div class="brand"><h1>DTOS</h1><p>Day Traders Front Office · Live Sleeper data</p></div><form method="post" action="/sync"><button class="btn" type="submit">Sync Now</button></form></header>
+    html = f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style></head>
+<body><main class="wrap"><header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>Day Traders Front Office · Live Sleeper data</p></div><form method="post" action="/sync"><button class="btn" type="submit">Sync Now</button></form></header>
 <nav class="nav"><a href="/">HQ</a><a href="/teams">Teams</a><a href="/matchups">Matchups</a><a href="/picks">Draft Picks</a><a href="/transactions">Transactions</a><a href="/settings">League Settings</a><a href="/api/status">API</a></nav>{error_html}{body}<footer class="footer">Last sync: {escape(sync)} · Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer></main></body></html>"""
     return HTMLResponse(html)
 
@@ -96,15 +104,17 @@ def require_data() -> dict[str, Any]:
 
 
 app.include_router(
-    create_matchups_router(
+    create_api_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
-        page=page,
+        sync_sleeper=sync_sleeper,
+        state=STATE,
+        league_id=LEAGUE_ID,
     )
 )
 
 app.include_router(
-    create_teams_router(
+    create_draft_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
         page=page,
@@ -120,7 +130,7 @@ app.include_router(
 )
 
 app.include_router(
-    create_transactions_router(
+    create_matchups_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
         page=page,
@@ -128,60 +138,25 @@ app.include_router(
 )
 
 app.include_router(
-    create_draft_router(
+    create_settings_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
         page=page,
     )
 )
 
+app.include_router(
+    create_teams_router(
+        ensure_fresh=ensure_fresh,
+        require_data=require_data,
+        page=page,
+    )
+)
 
-@app.get("/health")
-async def health() -> dict[str, Any]:
-    return {"status": "ok" if STATE.get("data") else "starting", "league_id": LEAGUE_ID, "last_sync": STATE.get("last_sync"), "last_error": STATE.get("last_error")}
-
-
-@app.get("/api/status")
-async def api_status() -> JSONResponse:
-    await ensure_fresh()
-    data = STATE.get("data") or {}
-    return JSONResponse({
-        "version": "0.8.9",
-        "league_id": LEAGUE_ID,
-        "last_sync": STATE.get("last_sync"),
-        "last_error": STATE.get("last_error"),
-        "syncing": STATE.get("syncing"),
-        "counts": {
-            "owners": len(data.get("owners") or []),
-            "teams": len(data.get("teams") or []),
-            "traded_picks": len(data.get("traded_picks") or []),
-            "transactions": len(data.get("transactions") or []),
-        },
-    })
-
-
-@app.get("/api/league")
-async def api_league() -> JSONResponse:
-    await ensure_fresh()
-    data = require_data().copy()
-    data.pop("players", None)
-    return JSONResponse(data)
-
-
-@app.post("/sync")
-async def manual_sync(request: Request):
-    await sync_sleeper(force_players=False)
-    if "application/json" in request.headers.get("accept", ""):
-        return JSONResponse({"ok": STATE.get("last_error") is None, "last_sync": STATE.get("last_sync"), "error": STATE.get("last_error")})
-    return RedirectResponse(url="/", status_code=303)
-
-
-@app.get("/settings", response_class=HTMLResponse)
-async def settings_page() -> HTMLResponse:
-    await ensure_fresh()
-    d = require_data()
-    scoring_rows = "".join(f'<tr><td>{escape(str(k))}</td><td>{escape(str(v))}</td></tr>' for k,v in sorted(d["scoring_settings"].items()))
-    setting_rows = "".join(f'<tr><td>{escape(str(k))}</td><td>{escape(str(v))}</td></tr>' for k,v in sorted(d["league_settings"].items()))
-    positions = " ".join(f'<span class="pill">{escape(str(p))}</span>' for p in d["roster_positions"])
-    body = f'<h2>League Configuration</h2><div class="card"><h3>Roster Positions</h3><p>{positions}</p></div><div class="grid"><div class="card"><h3>Scoring Settings</h3><table><tbody>{scoring_rows}</tbody></table></div><div class="card"><h3>League Settings</h3><table><tbody>{setting_rows}</tbody></table></div></div>'
-    return page("League Settings", body)
+app.include_router(
+    create_transactions_router(
+        ensure_fresh=ensure_fresh,
+        require_data=require_data,
+        page=page,
+    )
+)
