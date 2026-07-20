@@ -24,6 +24,7 @@ from services.sleeper import (
     ensure_data_fresh,
     load_cache,
     sync_sleeper,
+    sync_transactions,
 )
 
 
@@ -156,7 +157,9 @@ app.include_router(
 app.include_router(
     create_transactions_router(
         ensure_fresh=ensure_fresh,
+        refresh_transactions=sync_transactions,
         require_data=require_data,
+        state=STATE,
         page=page,
     )
 )
