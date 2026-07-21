@@ -70,7 +70,13 @@ def create_api_router(
         result = intelligence_orchestrator.analyze(data, roster_id)
         from dataclasses import asdict
         from fastapi.encoders import jsonable_encoder
-        return JSONResponse(jsonable_encoder({"active_front_office": roster_id, "recommendation": asdict(result.recommendation), "timings_ms": result.timings_ms, "cache_hit": result.cache_hit}))
+        market_summary = {
+            "available_assets": sum(item.consensus.value is not None for item in result.market.assets.values()),
+            "opportunities": [asdict(item) for item in result.market.opportunities],
+            "provider_health": result.market.provider_health,
+            "offline": result.market.offline,
+        }
+        return JSONResponse(jsonable_encoder({"active_front_office": roster_id, "recommendation": asdict(result.recommendation), "market": market_summary, "timings_ms": result.timings_ms, "cache_hit": result.cache_hit}))
 
     @router.get("/api/league")
     async def api_league(include_players: bool = False) -> JSONResponse:

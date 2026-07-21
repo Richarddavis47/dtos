@@ -15,8 +15,10 @@ class IntelligenceResult:
     decisions: dict[int, Any]
     player_portfolio: Any
     pick_portfolio: Any
+    player_reports: dict[str, Any]
     front_office_model: Any
     trades: tuple[Any, ...]
+    market: Any
     recommendation: UnifiedRecommendation
     timings_ms: dict[str, float]
     cache_hit: bool

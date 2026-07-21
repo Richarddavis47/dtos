@@ -2,7 +2,7 @@
 
 ## Purpose
 
-DTOS v0.9.8 turns the Decision, Asset, Trade, and Front Office engines into providers behind one Front Office Operating System. Application services ask the orchestrator for an analysis; they do not independently assemble competing recommendations.
+DTOS v0.9.8 turned the Decision, Asset, Trade, and Front Office engines into providers behind one Front Office Operating System. DTOS v0.9.9 adds Market Intelligence through the same boundary. Application services ask the orchestrator for an analysis; they do not independently assemble competing recommendations.
 
 The platform preserves every v0.9.7 engine and API contract. Provider adapters translate the shared context into each stable engine contract while the orchestrator owns execution order, caching, evidence aggregation, conflict resolution, confidence, timing, and the final recommendation.
 
@@ -17,7 +17,8 @@ flowchart TD
     Decision --> Asset[Asset Intelligence provider]
     Asset --> FrontOffice[Front Office Intelligence provider]
     FrontOffice --> Trade[Trade Intelligence provider]
-    Trade --> Evidence[Unified evidence aggregation]
+    Trade --> Market[Market Intelligence provider]
+    Market --> Evidence[Unified evidence aggregation]
     Evidence --> Resolver[Conflict resolver]
     Resolver --> Confidence[Shared confidence model]
     Confidence --> Result[One IntelligenceResult and recommendation]
@@ -44,10 +45,11 @@ flowchart TD
 4. Evaluate the active roster's player and pick portfolios through Asset Intelligence.
 5. Build the league Front Office model from the shared decisions.
 6. Generate Trade Intelligence with those same decisions and Front Office profiles.
-7. Normalize and deduplicate evidence from all four providers.
-8. Resolve conflicts conservatively. Low acceptance or negative expected value produces a wait recommendation rather than contradictory advice.
-9. Calculate one confidence score and retain each disclosed input.
-10. Return the unified result and runtime metrics.
+7. Evaluate traceable market providers, trends, value gaps, and trade impacts without replacing intrinsic values.
+8. Normalize and deduplicate evidence from all five providers.
+9. Resolve conflicts conservatively. Low acceptance or negative expected value produces a wait recommendation rather than contradictory advice.
+10. Calculate one confidence score and retain each disclosed input.
+11. Return the unified result and runtime metrics.
 
 Sleeper and transaction refreshes invalidate the shared snapshot namespace. If Sleeper is unavailable, the existing cache file remains the source of the shared context.
 

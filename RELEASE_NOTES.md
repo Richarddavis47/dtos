@@ -1,30 +1,29 @@
-# DTOS v0.9.8 - Intelligence Integration Platform v1
+# DTOS v0.9.9 - Market Intelligence v1
 
-DTOS v0.9.8 unifies Decision Engine, Asset Intelligence, Trade Intelligence, and Front Office Intelligence behind one explainable Front Office Operating System.
+DTOS v0.9.9 adds explainable external market evidence to the unified intelligence platform while keeping DTOS intrinsic values independent.
 
 ## Highlights
 
-- Builds one shared context for league, roster, picks, settings, opponents, market, Front Offices, cached data, and user preferences.
-- Registers intelligence providers behind a central orchestrator and timed pipeline.
-- Produces one final recommendation with current and future outlooks, supporting evidence, risks, counterarguments, assumptions, confidence, and change conditions.
-- Resolves disagreement conservatively rather than exposing contradictory engine recommendations.
-- Reuses shared TTL cache entries for decisions, asset portfolios, Front Office profiles, trade evaluations, and final results.
-- Invalidates intelligence snapshots after successful Sleeper or transaction refresh while preserving cached fallback behavior.
-- Adds runtime engine, Sleeper, cache, database, orchestration, and latency health through `/api/platform/health`.
-- Adds the backward-compatible `/api/intelligence` contract and integrates unified recommendations into existing application surfaces.
-- Promotes validation into `src/platform/validation/` with independently executable Windows-safe release tools.
+- Registers FantasyCalc, KeepTradeCut, Sleeper ADP, and DynastyProcess through replaceable provider adapters.
+- Produces a robust consensus with provider coverage, agreement, dispersion, confidence, and explicit missing-provider handling.
+- Keeps Intrinsic Value and Market Value separate and identifies explainable undervaluation, overvaluation, fair value, and uncertainty.
+- Stores provider snapshots through a persistent-capable history interface and calculates trends, momentum, volatility, and confidence drift.
+- Isolates provider cache entries by execution context and clearly distinguishes live data, fresh cache hits, cached fallback, and unavailable data.
+- Adds transparent provider status, freshness, cache age, confidence impact, latency, availability, and cache health.
+- Enriches player Market Value and Trade Dossiers without changing the responsibility of Decision, Asset, Trade, or Front Office Intelligence.
+- Integrates market evidence only through the Intelligence Orchestrator and preserves existing API contracts.
 
 ## Metadata
 
 - Application: DTOS
-- Version: 0.9.8
-- Build: 908
-- Codename: Intelligence Integration Platform v1
+- Version: 0.9.9
+- Build: 909
+- Codename: Market Intelligence v1
 
 ## Intentional boundaries
 
-- Existing engine report and API contracts remain available for detailed domain views.
-- V1 does not add a new fantasy-football intelligence domain or change league business rules.
-- Market certainty remains limited until a validated external market provider exists.
-- Historical accuracy remains disclosed as unavailable until persistent outcome snapshots exist.
-- The orchestrator coordinates deterministic providers; it does not use machine learning or opaque scoring.
+- V1 consumes cached provider payloads and adds no new external network dependency.
+- No market value is inferred from DTOS intrinsic value when provider data is unavailable.
+- Market opportunity labels are evidence patterns, not automatic trade instructions.
+- Front Office market behavior remains unchanged until sufficient observable history supports it.
+- Provider-specific authentication and scheduled collection remain future extension points.

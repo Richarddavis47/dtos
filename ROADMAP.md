@@ -125,6 +125,17 @@ Future historical providers can add draft behavior, offer/counter events, and se
 
 Future providers plug into the registry and evidence lifecycle instead of adding another application-level recommendation path.
 
+### Market Intelligence - DTOS v0.9.9 foundation
+
+- Replaceable FantasyCalc, KeepTradeCut, Sleeper ADP, and DynastyProcess provider adapters
+- Robust consensus, agreement, dispersion, coverage, and Market Confidence
+- Independent Intrinsic Value and Market Value with explainable value-gap opportunities
+- Persistent-capable provider snapshots, trends, volatility, momentum, and confidence drift
+- Execution-mode-aware caching, explicit offline fallback, freshness, health, and confidence penalties
+- Asset, Trade, unified recommendation, and platform-health integration through the orchestrator
+
+Future releases can add authenticated provider retrieval, scheduled snapshots, draft-pick mappings, and database-backed history without changing the application boundary.
+
 ---
 
 ## In progress
