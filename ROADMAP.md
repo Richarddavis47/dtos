@@ -114,6 +114,17 @@ Future GM and Market Intelligence providers can enrich acceptance and negotiatio
 
 Future historical providers can add draft behavior, offer/counter events, and seasonal normalization without changing the public organization or compatibility contracts.
 
+### Intelligence Integration Platform - DTOS v0.9.8 foundation
+
+- One orchestrator and shared context across the four intelligence pillars
+- Registry-based providers and a timed recommendation pipeline
+- Unified evidence, conflict resolution, confidence, assumptions, counterarguments, and change conditions
+- TTL caching, invalidation, cached fallback, health, and performance telemetry
+- Backward-compatible unified recommendation and platform-health APIs
+- First-class validation platform and cross-engine regression coverage
+
+Future providers plug into the registry and evidence lifecycle instead of adding another application-level recommendation path.
+
 ---
 
 ## In progress

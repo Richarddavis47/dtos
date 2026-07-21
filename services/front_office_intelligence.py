@@ -3,17 +3,21 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.core.front_office_intelligence import front_office_intelligence
+from src.core.intelligence import intelligence_orchestrator
 
 
 def build_front_office_center(data: dict[str, Any], roster_id: int | None = None) -> dict[str, Any]:
-    model = front_office_intelligence.league(data)
-    if not model.reports:
+    teams = data.get("teams") or []
+    if not teams:
         raise ValueError("No Front Office is available.")
-    selected = roster_id if roster_id in model.reports else sorted(model.reports)[0]
+    valid_ids = {int(team.get("roster_id") or 0) for team in teams}
+    selected = roster_id if roster_id in valid_ids else min(valid_ids)
+    intelligence = intelligence_orchestrator.analyze(data, selected)
+    model = intelligence.front_office_model
     return {
         "active": model.reports[selected],
         "reports": tuple(model.reports[key] for key in sorted(model.reports)),
         "compatibilities": tuple(model.compatibility(selected, key) for key in sorted(model.reports) if key != selected),
         "relationships": model.relationships,
+        "unified_recommendation": intelligence.recommendation,
     }

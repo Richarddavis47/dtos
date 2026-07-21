@@ -7,8 +7,7 @@ from statistics import mean
 from typing import Any
 
 from services.transactions import normalize_transactions
-from src.core.decision_engine import DecisionContext, TeamDecision, evaluate_team
-from src.core.front_office_intelligence import front_office_intelligence
+from src.core.intelligence import intelligence_orchestrator
 
 CORE_POSITIONS = ("QB", "RB", "WR", "TE")
 POSITION_TARGETS = {
@@ -162,7 +161,7 @@ def calculate_team_grades(players: list[dict[str, Any]], team: dict[str, Any]) -
 
 
 def generate_front_office_summary(
-    snapshot: dict[str, Any], grades: dict[str, dict[str, Any]], decision: TeamDecision
+    snapshot: dict[str, Any], grades: dict[str, dict[str, Any]], decision: Any
 ) -> dict[str, str]:
     """Create a deterministic, fact-limited front-office summary."""
     construction = grades["Roster Construction"]
@@ -219,14 +218,9 @@ def build_team_headquarters(
     players = _enriched_players(team, data)
     snapshot = _asset_snapshot(players, team)
     grades = calculate_team_grades(players, team)
-    league = data.get("league") or {}
-    context = DecisionContext(
-        active_front_office_id=roster_id,
-        league_id=str(league.get("league_id") or "configured-league"),
-        league_settings=data.get("league_settings") or {},
-    )
-    decision = evaluate_team(data, roster_id, context)
-    organization = front_office_intelligence.report(data, roster_id, decision)
+    intelligence = intelligence_orchestrator.analyze(data, roster_id)
+    decision = intelligence.decision
+    organization = intelligence.front_office_model.reports[roster_id]
     rank = next(index for index, item in enumerate(teams, 1) if item is team)
     if isinstance(last_updated, datetime):
         updated = last_updated.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -247,6 +241,7 @@ def build_team_headquarters(
         "summary": generate_front_office_summary(snapshot, grades, decision),
         "decision": decision,
         "front_office_intelligence": organization,
+        "unified_recommendation": intelligence.recommendation,
         "roster_groups": roster_groups,
         "other_players": [player for player in players if player.get("position") not in CORE_POSITIONS],
         "picks_by_year": {

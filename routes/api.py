@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from app_metadata import VERSION
 from services.asset_intelligence import player_asset_index
+from src.core.intelligence import intelligence_orchestrator
 
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -54,6 +55,22 @@ def create_api_router(
                 },
             }
         )
+
+    @router.get("/api/platform/health")
+    async def platform_health() -> JSONResponse:
+        return JSONResponse({"version": VERSION, **intelligence_orchestrator.health(state)})
+
+    @router.get("/api/intelligence")
+    async def unified_intelligence(front_office: int | None = None) -> JSONResponse:
+        await ensure_fresh()
+        data = require_data()
+        teams = data.get("teams") or []
+        valid_ids = {int(team.get("roster_id") or 0) for team in teams}
+        roster_id = front_office if front_office in valid_ids else min(valid_ids)
+        result = intelligence_orchestrator.analyze(data, roster_id)
+        from dataclasses import asdict
+        from fastapi.encoders import jsonable_encoder
+        return JSONResponse(jsonable_encoder({"active_front_office": roster_id, "recommendation": asdict(result.recommendation), "timings_ms": result.timings_ms, "cache_hit": result.cache_hit}))
 
     @router.get("/api/league")
     async def api_league(include_players: bool = False) -> JSONResponse:

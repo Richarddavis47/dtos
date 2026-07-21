@@ -14,7 +14,7 @@ from models.commissioner import (
     LeagueEventType,
     LeagueHeadline,
 )
-from src.core.decision_engine import DecisionContext, TeamWindow, evaluate_team
+from src.core.intelligence import intelligence_orchestrator
 from services.transactions import normalize_transactions
 
 
@@ -237,7 +237,7 @@ def _headlines(data: dict[str, Any]) -> list[LeagueHeadline]:
     return headlines[:5]
 
 
-def _league_intelligence(data: dict[str, Any], league_id: str) -> dict[str, Any]:
+def _league_intelligence(data: dict[str, Any], decisions: dict[int, Any]) -> dict[str, Any]:
     teams = data.get("teams") or []
     ages = [age for team in teams if (age := _team_average_age(data, team)) is not None]
     total_picks = sum(len(team.get("picks_owned") or []) for team in teams)
@@ -245,16 +245,15 @@ def _league_intelligence(data: dict[str, Any], league_id: str) -> dict[str, Any]
     windows = Counter()
     for team in teams:
         roster_id = int(team.get("roster_id") or 0)
-        context = DecisionContext(roster_id, league_id, data.get("league_settings") or {})
-        decision = evaluate_team(data, roster_id, context)
+        decision = decisions[roster_id]
         windows[decision.window] += 1
     transactions = normalize_transactions(data)
     return {
         "average_roster_age": round(mean(ages), 1) if ages else None,
         "draft_concentration": round(pick_leader / total_picks * 100) if total_picks else None,
         "recent_activity": len(transactions),
-        "contenders": windows[TeamWindow.CHAMPIONSHIP] + windows[TeamWindow.PLAYOFF],
-        "rebuilders": windows[TeamWindow.REBUILD],
+        "contenders": sum(count for window, count in windows.items() if window.value in {"Championship Window", "Playoff Window"}),
+        "rebuilders": sum(count for window, count in windows.items() if window.value == "Rebuild Window"),
         "trending_up": "Unavailable without historical snapshots",
         "trending_down": "Unavailable without historical snapshots",
     }
@@ -289,12 +288,8 @@ def build_commissioner_desk(
         for index, team in enumerate(data.get("teams") or [], 1)
         if int(team.get("roster_id") or 0) == selected_front_office.roster_id
     )
-    context = DecisionContext(
-        active_front_office_id=selected_front_office.roster_id,
-        league_id=selected_league.league_id,
-        league_settings=data.get("league_settings") or {},
-    )
-    decision = evaluate_team(data, selected_front_office.roster_id, context)
+    intelligence = intelligence_orchestrator.analyze(data, selected_front_office.roster_id)
+    decision = intelligence.decision
     since_time = _parse_since(since)
     summary = {
         "current_outlook": decision.current_outlook,
@@ -316,7 +311,8 @@ def build_commissioner_desk(
         "headlines": _headlines(data),
         "front_office_summary": summary,
         "recommendations": decision.recommendations,
-        "league_intelligence": _league_intelligence(data, selected_league.league_id),
+        "unified_recommendation": intelligence.recommendation,
+        "league_intelligence": _league_intelligence(data, intelligence.decisions),
         "snapshot": {
             "standings": data.get("teams") or [],
             "transactions": normalized[:5],

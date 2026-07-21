@@ -117,6 +117,17 @@ def recommendation_panel(view: dict[str, Any]) -> str:
     return f'<section class="cd-section"><div class="cd-section-head"><div><h2>What should I do?</h2><p>Prioritized Front Office recommendations for {escape(view["active_front_office"].owner_name)}</p></div><span class="cd-chip">Confidence + evidence</span></div><div class="cd-recommendations">{"".join(cards)}</div></section>'
 
 
+def unified_recommendation_panel(view: dict[str, Any]) -> str:
+    recommendation = view["unified_recommendation"]
+    supporting = "".join(f"<li>{escape(item)}</li>" for item in recommendation.why)
+    counterarguments = "".join(f"<li>{escape(item)}</li>" for item in recommendation.why_not)
+    assumptions = "".join(f"<li>{escape(item)}</li>" for item in recommendation.assumptions)
+    changes = "".join(f"<li>{escape(item)}</li>" for item in recommendation.change_conditions)
+    sources = " / ".join(recommendation.sources)
+    card = f'<article class="cd-card cd-rec"><div class="cd-priority {escape(recommendation.priority.lower())}">{escape(recommendation.priority)} Priority<br><span>Unified Intelligence</span></div><div><h3>{escape(recommendation.title)}</h3><p>{escape(recommendation.recommendation)}</p></div><div class="cd-confidence"><b>{recommendation.confidence.score}%</b><span class="muted">{escape(recommendation.confidence.level)} Confidence</span></div><details><summary>Show Reasoning</summary><div class="cd-reason"><p><b>Current:</b> {escape(recommendation.current_outlook)}</p><p><b>Future:</b> {escape(recommendation.future_outlook)}</p><b>Why</b><ul>{supporting}</ul><b>Why not</b><ul>{counterarguments}</ul><b>Assumptions</b><ul>{assumptions}</ul><b>What could change this</b><ul>{changes}</ul><p>Sources: {escape(sources)}</p></div></details></article>'
+    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>What should I do?</h2><p>One unified recommendation for {escape(view["active_front_office"].owner_name)}</p></div><span class="cd-chip">Four engines / one answer</span></div><div class="cd-recommendations">{card}</div></section>'
+
+
 def league_intelligence(view: dict[str, Any]) -> str:
     intelligence = view["league_intelligence"]
     values = (
@@ -161,7 +172,7 @@ def commissioner_desk(view: dict[str, Any]) -> str:
         + since_last_visit(view)
         + league_headlines(view)
         + front_office_summary(view)
-        + recommendation_panel(view)
+        + unified_recommendation_panel(view)
         + league_intelligence(view)
         + league_snapshot(view)
         + league_personality(view)

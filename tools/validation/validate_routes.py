@@ -9,7 +9,7 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from dtos_app import app  # noqa: E402
-from validation.routes import HttpEndpoint, validate_routes  # noqa: E402
+from src.platform.validation.routes import HttpEndpoint, validate_routes  # noqa: E402
 
 REQUIRED_GET_PATHS = (
     "/",
@@ -23,6 +23,8 @@ REQUIRED_GET_PATHS = (
     "/picks",
     "/settings",
     "/api/status",
+    "/api/platform/health",
+    "/api/intelligence",
     "/api/league",
     "/api/players",
 )

@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from app_metadata import APPLICATION_NAME, VERSION
+from src.core.intelligence.cache import intelligence_cache
 from config import (
     CACHE_FILE,
     LEAGUE_ID,
@@ -306,6 +307,7 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
             STATE["transactions_last_sync"] = synced_at
             STATE["transactions_last_error"] = None
             save_cache()
+            intelligence_cache.invalidate("snapshot:")
             logger.info("Sleeper sync complete: %s teams", len(team_rows))
         except Exception as exc:
             STATE["last_error"] = f"{type(exc).__name__}: {exc}"
@@ -337,6 +339,7 @@ async def sync_transactions() -> bool:
             STATE["transactions_last_sync"] = utcnow().isoformat()
             STATE["transactions_last_error"] = None
             save_cache()
+            intelligence_cache.invalidate("snapshot:")
             logger.info("Transaction sync complete: %s transactions", len(transactions))
             return True
         except Exception as exc:
