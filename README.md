@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v0.9.5 introduces Asset Intelligence v1, the shared deterministic source for player and draft-pick evaluations. Player dossiers separate Dynasty, Redraft, Market, and Team Fit values, while every score exposes observable evidence and limitations.
+DTOS v0.9.6 introduces Trade Intelligence v1, a deterministic Assistant General Manager that identifies balanced, contextual opportunities using Decision Engine team horizons and Asset Intelligence player/pick reports.
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 
@@ -40,4 +40,6 @@ The shared intelligence implementation lives in `src/core/decision_engine/`.
 
 Individual asset evaluation lives in `src/core/asset_intelligence/` and is consumed by the Decision Engine.
 
-See [Asset Intelligence](docs/ASSET_INTELLIGENCE.md), [Decision Philosophy](docs/DTOS_DECISION_PHILOSOPHY.md), [Commissioner Desk architecture](docs/CommissionerDesk.md), [DTOS philosophy](DTOS_PHILOSOPHY.md), [roadmap](ROADMAP.md), and [release notes](RELEASE_NOTES.md).
+Trade opportunity generation lives in `src/core/trade_intelligence/` and consumes both foundational engines without duplicating their formulas.
+
+See [Trade Intelligence](docs/TRADE_INTELLIGENCE.md), [Asset Intelligence](docs/ASSET_INTELLIGENCE.md), [Decision Philosophy](docs/DTOS_DECISION_PHILOSOPHY.md), [Commissioner Desk architecture](docs/CommissionerDesk.md), [DTOS philosophy](DTOS_PHILOSOPHY.md), [roadmap](ROADMAP.md), and [release notes](RELEASE_NOTES.md).

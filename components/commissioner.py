@@ -71,7 +71,7 @@ def commissioner_header(view: dict[str, Any]) -> str:
     return f"""
 <header class="cd-header"><div class="cd-header-top"><div class="cd-brand"><small>DTOS · Front Office Operating System</small><h1>Commissioner Desk</h1><p>{escape(active_league.name)} executive briefing</p></div><div class="cd-sync"><div class="cd-sync-meta">Last synchronization<br><b>{escape(health['last_sync'])}</b></div><form method="post" action="/sync"><button class="btn" type="submit">Sync League</button></form></div></div>
 <div class="cd-context"><div><label for="active-league">Active League</label><select id="active-league" name="league">{leagues}</select></div><div><label for="active-front-office">Active Front Office</label><select id="active-front-office" name="front_office">{offices}</select></div></div>
-<nav class="cd-nav" aria-label="Quick navigation"><a href="/">Commissioner Desk</a><a href="/teams">Team Headquarters</a><a href="/transactions">Transactions</a><a href="/matchups">Matchups</a><a href="/picks">Draft Picks</a><a href="/settings">Settings</a><a href="/api/status">API</a></nav></header>
+<nav class="cd-nav" aria-label="Quick navigation"><a href="/">Commissioner Desk</a><a href="/teams">Team Headquarters</a><a href="/trades">Trade Intelligence</a><a href="/transactions">Transactions</a><a href="/matchups">Matchups</a><a href="/picks">Draft Picks</a><a href="/settings">Settings</a><a href="/api/status">API</a></nav></header>
 """
 
 

@@ -1,29 +1,29 @@
-# DTOS v0.9.5 - Asset Intelligence v1
+# DTOS v0.9.6 - Trade Intelligence v1
 
-DTOS v0.9.5 establishes one deterministic and explainable evaluation source for individual players and draft picks.
+DTOS v0.9.6 introduces a deterministic Assistant General Manager that identifies and explains contextual trade opportunities without acting like a universal trade calculator.
 
 ## Highlights
 
-- Added reusable player, pick, evidence, risk, value, context, and report contracts under `src/core/asset_intelligence/`.
-- Added player dossiers with executive summary, snapshot, four independent values, archetypes, strengths, weaknesses, risk, opportunity horizons, and contextual recommendations.
-- Added Dynasty Value, Redraft Value, neutral Market Value, and Front Office-specific Team Fit Value.
-- Added draft-pick intelligence covering dynasty value, neutral market value, risk, expected range, time horizon, and strategy.
-- Added a reusable Evidence Engine; every score and recommendation exposes observed values, source, impact, explanation, confidence, and limitations.
-- Updated the Decision Engine to aggregate Asset Intelligence reports instead of maintaining separate player and pick formulas.
-- Enhanced existing player and draft-pick pages without a broad UI redesign.
-- Added `/api/players` as the canonical rostered-player dossier index, with the same index available through `/api/league?include_players=true`.
+- Evaluates every potential partner through Decision Engine roster needs, strengths, team windows, and cached bilateral trade history.
+- Builds player and pick pools exclusively through Asset Intelligence reports.
+- Generates bounded 1-for-1, 2-for-1, 3-for-2, player-plus-pick, pick-package, and multi-asset proposals.
+- Keeps Current Outlook and Future Outlook impacts independent.
+- Evaluates roster balance, positional depth, asset value, risk, opportunity cost, market efficiency, and a clearly labeled championship-outlook proxy.
+- Produces prioritized Trade Dossiers with evidence for why each side benefits, why the package is balanced, and why the timing fits the Active Front Office.
+- Adds opening offer, likely counter, walk-away point, fallback, alternative targets, and human-controlled negotiation notes.
+- Adds `/trades` and `/api/trades`, plus Team HQ and navigation integration.
 
 ## Metadata
 
 - Application: DTOS
-- Version: 0.9.5
-- Build: 905
-- Codename: Asset Intelligence v1
+- Version: 0.9.6
+- Build: 906
+- Codename: Trade Intelligence v1
 
 ## Intentional boundaries
 
-- Production, usage, coaching, supporting-cast, contract, live projection, and historical market feeds are not currently connected.
-- Missing inputs remain neutral and are disclosed; DTOS does not fabricate a value from unavailable data.
-- Market Value is intentionally 50/100 with low confidence until a traceable consensus provider exists.
-- Archetypes avoid elite or breakout claims that cannot be supported by the cached evidence.
-- Asset Intelligence advises; the GM makes the final decision.
+- Acceptance likelihood remains unavailable until a validated GM behavior model exists.
+- Market consensus remains neutral where Asset Intelligence lacks an external provider.
+- Championship impact is an explainable current-value proxy, not a probability forecast.
+- Cached historical trades provide a small familiarity signal; they do not imply manager intent.
+- DTOS does not message managers, submit trades, negotiate automatically, or execute roster moves.
