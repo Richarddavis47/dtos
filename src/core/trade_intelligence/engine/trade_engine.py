@@ -11,6 +11,7 @@ from src.core.trade_intelligence.engine.trade_generator import generate_proposal
 from src.core.trade_intelligence.gm import evaluate_partners
 from src.core.trade_intelligence.market import build_asset_pool
 from src.core.trade_intelligence.models import TradeDossier
+from src.core.front_office_intelligence import LeagueFrontOfficeModel
 
 
 def _asset_context(decision: TeamDecision) -> AssetContext:
@@ -29,14 +30,22 @@ def _asset_context(decision: TeamDecision) -> AssetContext:
 
 
 class TradeIntelligence:
-    def opportunities(self, data: dict[str, Any], active_roster_id: int, limit: int = 12) -> tuple[TradeDossier, ...]:
+    def opportunities(
+        self,
+        data: dict[str, Any],
+        active_roster_id: int,
+        limit: int = 12,
+        *,
+        decisions: dict[int, TeamDecision] | None = None,
+        front_office_model: LeagueFrontOfficeModel | None = None,
+    ) -> tuple[TradeDossier, ...]:
         teams = data.get("teams") or []
         if not any(int(team.get("roster_id") or 0) == active_roster_id for team in teams):
             raise ValueError(f"Front Office {active_roster_id} is not available.")
         league = data.get("league") or {}
         league_id = str(league.get("league_id") or "configured-league")
         settings = {**(data.get("league_settings") or {}), "roster_positions": league.get("roster_positions") or []}
-        decisions = {
+        decisions = decisions or {
             int(team.get("roster_id") or 0): evaluate_team(
                 data,
                 int(team.get("roster_id") or 0),
@@ -45,7 +54,7 @@ class TradeIntelligence:
             for team in teams
         }
         active = decisions[active_roster_id]
-        reports = evaluate_partners(data, active, decisions)
+        reports = evaluate_partners(data, active, decisions, front_office_model)
         team_by_id = {int(team.get("roster_id") or 0): team for team in teams}
         dossiers = []
         for partner in reports:

@@ -28,7 +28,7 @@ def main() -> int:
 
     major = (
         "/", "/teams", "/matchups", "/transactions", "/picks", "/settings",
-        "/api/status", "/api/league", "/api/players", "/front-offices",
+        "/api/status", "/api/platform/health", "/api/intelligence", "/api/league", "/api/players", "/front-offices",
         "/api/front-offices", "/trades", "/api/trades", "/openapi.json",
     )
     for path in major:

@@ -2,6 +2,17 @@
 
 Notable DTOS changes are recorded here from the repository's Git history.
 
+## v0.9.8 - 2026-07-21
+
+- Added the unified Intelligence Orchestrator, shared request context, provider registry, timed pipeline, and one final recommendation contract.
+- Combined Decision, Asset, Trade, and Front Office evidence with explicit conflict resolution, counterarguments, assumptions, change conditions, and centralized confidence.
+- Added shared TTL caching for league decisions, asset portfolios, Front Office profiles, trade evaluations, and final results, including refresh invalidation and health metrics.
+- Added `/api/intelligence` and `/api/platform/health` without changing existing API contracts.
+- Updated Commissioner Desk, Team Headquarters, Trade Center, and Front Office services to reuse the same orchestration result.
+- Promoted route, OpenAPI, lifecycle, process, smoke, and release validation behind `src/platform/validation/`.
+- Added cross-engine, API compatibility, cache, performance, health, and validation-platform regression tests.
+- Updated application metadata to DTOS v0.9.8, build 908, codename Intelligence Integration Platform v1.
+
 ## v0.9.7 - 2026-07-21
 
 - Added centralized Front Office Intelligence profiles derived only from observable cached fantasy-football actions.

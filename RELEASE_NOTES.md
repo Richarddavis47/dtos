@@ -1,27 +1,30 @@
-# DTOS v0.9.7 - Front Office Intelligence v1
+# DTOS v0.9.8 - Intelligence Integration Platform v1
 
-DTOS v0.9.7 introduces a shared, explainable model of how each organization behaves inside its fantasy league. It improves recommendations from observable actions without judging managers or inferring personal characteristics.
+DTOS v0.9.8 unifies Decision Engine, Asset Intelligence, Trade Intelligence, and Front Office Intelligence behind one explainable Front Office Operating System.
 
 ## Highlights
 
-- Gives every organization an evidence-backed competitive window, philosophy, activity profile, negotiation style, asset preferences, strengths, constraints, and confidence score.
-- Calculates pairwise compatibility from Decision Engine needs and depth, with a small capped signal for completed bilateral trades.
-- Uses Asset Intelligence portfolio reports as shared asset context without duplicating valuation formulas.
-- Adds conservative negotiation forecasts, alternative structures, fallback targets, and explicit sparse-history limitations.
-- Adds an informational relationship graph limited to observed league activity and roster compatibility.
-- Makes Trade Intelligence consume this shared layer for partner selection and negotiation context.
-- Adds `/front-offices` and `/api/front-offices`, plus Commissioner Desk navigation and Team Headquarters integration.
+- Builds one shared context for league, roster, picks, settings, opponents, market, Front Offices, cached data, and user preferences.
+- Registers intelligence providers behind a central orchestrator and timed pipeline.
+- Produces one final recommendation with current and future outlooks, supporting evidence, risks, counterarguments, assumptions, confidence, and change conditions.
+- Resolves disagreement conservatively rather than exposing contradictory engine recommendations.
+- Reuses shared TTL cache entries for decisions, asset portfolios, Front Office profiles, trade evaluations, and final results.
+- Invalidates intelligence snapshots after successful Sleeper or transaction refresh while preserving cached fallback behavior.
+- Adds runtime engine, Sleeper, cache, database, orchestration, and latency health through `/api/platform/health`.
+- Adds the backward-compatible `/api/intelligence` contract and integrates unified recommendations into existing application surfaces.
+- Promotes validation into `src/platform/validation/` with independently executable Windows-safe release tools.
 
 ## Metadata
 
 - Application: DTOS
-- Version: 0.9.7
-- Build: 907
-- Codename: Front Office Intelligence v1
+- Version: 0.9.8
+- Build: 908
+- Codename: Intelligence Integration Platform v1
 
 ## Intentional boundaries
 
-- Acceptance probability remains unavailable until both organizations and their bilateral history cross documented minimum sample thresholds; even then it is capped at 65%.
-- Cached data does not expose response timing, rejected offers, counteroffers, or private negotiation intent, so v1 does not classify those behaviors.
-- Relationship edges describe completed trades and calculated compatibility only, never personal relationships.
-- DTOS does not infer personality, competence, character, or traits outside observable fantasy-football actions.
+- Existing engine report and API contracts remain available for detailed domain views.
+- V1 does not add a new fantasy-football intelligence domain or change league business rules.
+- Market certainty remains limited until a validated external market provider exists.
+- Historical accuracy remains disclosed as unavailable until persistent outcome snapshots exist.
+- The orchestrator coordinates deterministic providers; it does not use machine learning or opaque scoring.

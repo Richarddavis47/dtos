@@ -40,9 +40,10 @@ def trade_card(dossier: TradeDossier) -> str:
 
 def trade_center(view: dict) -> str:
     active = view["active_team"]
+    unified = view["unified_recommendation"]
     options = "".join(
         f'<option value="{int(team.get("roster_id") or 0)}" {"selected" if int(team.get("roster_id") or 0) == int(active.get("roster_id") or 0) else ""}>{escape(str(team.get("owner") or team.get("team_name")))}</option>'
         for team in view["teams"]
     )
     cards = "".join(trade_card(item) for item in view["dossiers"]) or '<div class="card ti-empty">No balanced cached opportunity crossed the v1 generation boundary. Monitor roster and market changes.</div>'
-    return f"""{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Intelligence v1</div><h2>Assistant General Manager</h2><p class="muted">Prioritized, contextual opportunities for {escape(str(active.get('team_name')))}. No trade is submitted automatically.</p></div><form class="ti-selector" method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section><div class="ti-list">{cards}</div>"""
+    return f"""{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Intelligence v1 / Unified Intelligence Platform</div><h2>{escape(unified.title)}</h2><p>{escape(unified.recommendation)}</p><span class="pill">{unified.confidence.score}% {escape(unified.confidence.level)} confidence</span></div><form class="ti-selector" method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section><div class="ti-list">{cards}</div>"""

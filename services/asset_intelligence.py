@@ -4,8 +4,7 @@ from __future__ import annotations
 from typing import Any
 from urllib.parse import quote
 
-from src.core.asset_intelligence import AssetContext, PickReport, PlayerReport, evaluate_pick, evaluate_player
-from src.core.decision_engine import DecisionContext, evaluate_team
+from src.core.intelligence import intelligence_orchestrator
 
 
 def player_asset_index(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -52,35 +51,16 @@ def _team(data: dict[str, Any], roster_id: int | None, player_id: str | None = N
     return teams[0]
 
 
-def _context(data: dict[str, Any], team: dict[str, Any]) -> AssetContext:
-    roster_id = int(team.get("roster_id") or 0)
-    league = data.get("league") or {}
-    settings = {**(data.get("league_settings") or {}), "roster_positions": league.get("roster_positions") or []}
-    decision = evaluate_team(data, roster_id, DecisionContext(roster_id, str(league.get("league_id") or "configured-league"), settings))
-    depths = {position: room.total_players for position, room in decision.profile.position_rooms.items()}
-    needs = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score < 55)
-    return AssetContext(
-        decision.profile.league_id,
-        roster_id,
-        settings,
-        decision.window.value,
-        decision.profile.strategy,
-        needs,
-        depths,
-        decision.profile.market_context.get("position_counts") or {},
-    )
-
-
-def build_player_dossier(data: dict[str, Any], player_id: str, roster_id: int | None = None) -> tuple[PlayerReport, dict[str, Any], list[dict[str, Any]]]:
+def build_player_dossier(data: dict[str, Any], player_id: str, roster_id: int | None = None) -> tuple[Any, dict[str, Any], list[dict[str, Any]]]:
     player = (data.get("players") or {}).get(player_id)
     if not player:
         raise ValueError("Player not found")
     team = _team(data, roster_id, player_id)
-    report = evaluate_player({**player, "id": player_id}, _context(data, team))
+    report = intelligence_orchestrator.player_report(data, {**player, "id": player_id}, int(team.get("roster_id") or 0))
     return report, team, list(data.get("teams") or [])
 
 
-def build_pick_intelligence(data: dict[str, Any], pick: dict[str, Any], roster_id: int | None = None) -> PickReport:
+def build_pick_intelligence(data: dict[str, Any], pick: dict[str, Any], roster_id: int | None = None) -> Any:
     owner_id = roster_id or pick.get("current_owner_id") or pick.get("owner_id")
     team = _team(data, int(owner_id) if owner_id is not None else None)
     enriched = {
@@ -90,17 +70,15 @@ def build_pick_intelligence(data: dict[str, Any], pick: dict[str, Any], roster_i
             "Unknown",
         ),
     }
-    return evaluate_pick(enriched, _context(data, team))
+    return intelligence_orchestrator.pick_report(data, enriched, int(team.get("roster_id") or 0))
 
 
-def build_pick_reports(data: dict[str, Any], picks: list[dict[str, Any]]) -> list[tuple[dict[str, Any], PickReport]]:
-    """Evaluate a ledger efficiently by reusing one context per current owner."""
-    contexts: dict[int, AssetContext] = {}
-    reports: list[tuple[dict[str, Any], PickReport]] = []
+def build_pick_reports(data: dict[str, Any], picks: list[dict[str, Any]]) -> list[tuple[dict[str, Any], Any]]:
+    """Evaluate a ledger through cached orchestrator contexts per current owner."""
+    reports: list[tuple[dict[str, Any], Any]] = []
     for pick in picks:
         owner_id = int(pick.get("current_owner_id") or pick.get("owner_id") or 0)
-        if owner_id not in contexts:
-            contexts[owner_id] = _context(data, _team(data, owner_id or None))
+        team = _team(data, owner_id or None)
         enriched = {
             **pick,
             "original_team": next(
@@ -108,5 +86,5 @@ def build_pick_reports(data: dict[str, Any], picks: list[dict[str, Any]]) -> lis
                 "Unknown",
             ),
         }
-        reports.append((pick, evaluate_pick(enriched, contexts[owner_id])))
+        reports.append((pick, intelligence_orchestrator.pick_report(data, enriched, int(team.get("roster_id") or 0))))
     return reports
