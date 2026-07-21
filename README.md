@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v0.9.8 introduces Intelligence Integration Platform v1: one shared context, evidence model, confidence calculation, cache, health surface, and final recommendation across Decision, Asset, Trade, and Front Office Intelligence.
+DTOS v0.9.9 introduces Market Intelligence v1: replaceable market providers, robust consensus, explicit intrinsic-versus-market value gaps, historical trends, offline-aware caching, and explainable market evidence integrated through the Intelligence Orchestrator.
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 
@@ -42,4 +42,6 @@ Individual asset evaluation lives in `src/core/asset_intelligence/` and is consu
 
 Trade opportunity generation lives in `src/core/trade_intelligence/` and consumes both foundational engines without duplicating their formulas.
 
-See [Trade Intelligence](docs/TRADE_INTELLIGENCE.md), [Asset Intelligence](docs/ASSET_INTELLIGENCE.md), [Decision Philosophy](docs/DTOS_DECISION_PHILOSOPHY.md), [Commissioner Desk architecture](docs/CommissionerDesk.md), [DTOS philosophy](DTOS_PHILOSOPHY.md), [roadmap](ROADMAP.md), and [release notes](RELEASE_NOTES.md).
+External market evidence lives in `src/core/market_intelligence/`. It enhances—but never replaces—DTOS intrinsic evaluation and is consumed only through the Intelligence Orchestrator.
+
+See [Market Intelligence](docs/MARKET_INTELLIGENCE.md), [Intelligence Platform](docs/INTELLIGENCE_PLATFORM.md), [Trade Intelligence](docs/TRADE_INTELLIGENCE.md), [Asset Intelligence](docs/ASSET_INTELLIGENCE.md), [Decision Philosophy](docs/DTOS_DECISION_PHILOSOPHY.md), [Commissioner Desk architecture](docs/CommissionerDesk.md), [DTOS philosophy](DTOS_PHILOSOPHY.md), [roadmap](ROADMAP.md), and [release notes](RELEASE_NOTES.md).

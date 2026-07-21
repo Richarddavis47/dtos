@@ -2,6 +2,18 @@
 
 Notable DTOS changes are recorded here from the repository's Git history.
 
+## v0.9.9 - 2026-07-21
+
+- Added Market Intelligence as a fifth provider behind the unified Intelligence Orchestrator.
+- Added replaceable FantasyCalc, KeepTradeCut, Sleeper ADP, and DynastyProcess adapters with explicit missing-provider behavior.
+- Added robust market consensus, agreement, dispersion, confidence, intrinsic-versus-market value gaps, opportunity discovery, and explainable evidence.
+- Added persistent-capable provider snapshot history with 7-day, 30-day, season, and career trends, momentum, volatility, and confidence drift.
+- Added execution-mode-aware provider caching, explicit cached fallback, freshness and age reporting, invalidation, provider health, and offline isolation.
+- Enriched player dossiers and Trade Dossiers with provider-backed market context while preserving DTOS intrinsic evaluations.
+- Extended `/api/intelligence` and `/api/platform/health` with backward-compatible market output.
+- Added provider, consensus, outlier, value-gap, trend, history, cache, offline, recovery, health, and cross-engine regression coverage.
+- Updated application metadata to DTOS v0.9.9, build 909, codename Market Intelligence v1.
+
 ## v0.9.8 - 2026-07-21
 
 - Added the unified Intelligence Orchestrator, shared request context, provider registry, timed pipeline, and one final recommendation contract.

@@ -23,7 +23,7 @@ class UnifiedRecommendation:
     sources: tuple[str, ...]
 
 
-def resolve_recommendation(*, decision, trade, front_office, evidence: tuple[UnifiedEvidence, ...], confidence: UnifiedConfidence) -> UnifiedRecommendation:
+def resolve_recommendation(*, decision, trade, front_office, market, evidence: tuple[UnifiedEvidence, ...], confidence: UnifiedConfidence) -> UnifiedRecommendation:
     trade_rec = trade.recommendation if trade is not None else None
     low_acceptance = trade_rec is not None and trade_rec.acceptance_likelihood is not None and trade_rec.acceptance_likelihood < 45
     negative_value = trade_rec is not None and trade_rec.expected_value < 0
@@ -40,7 +40,7 @@ def resolve_recommendation(*, decision, trade, front_office, evidence: tuple[Uni
         f"{decision.current_outlook.grade} ({decision.current_outlook.score}/100): {decision.current_outlook.summary}",
         f"{decision.future_outlook.grade} ({decision.future_outlook.score}/100): {decision.future_outlook.summary}",
         supporting, risks,
-        ("Sleeper cached data reflects the latest successful synchronization.", "Market consensus remains neutral where no external provider exists."),
-        ("A new successful synchronization changes the evidence snapshot.", "Material roster, injury, market, or trade-history changes require reevaluation."),
-        evidence, ("Decision Engine", "Asset Intelligence", "Trade Intelligence", "Front Office Intelligence"),
+        ("Sleeper cached data reflects the latest successful synchronization.", "Market consensus is used only where traceable provider data exists."),
+        ("A new successful synchronization changes the evidence snapshot.", "Material roster, injury, market, or trade-history changes require reevaluation.", "A meaningful market value or trend change may open or close a timing window."),
+        evidence, ("Decision Engine", "Asset Intelligence", "Trade Intelligence", "Front Office Intelligence", "Market Intelligence"),
     )
