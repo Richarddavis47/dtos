@@ -2,6 +2,17 @@
 
 Notable DTOS changes are recorded here from the repository's Git history.
 
+## v0.9.7 - 2026-07-21
+
+- Added centralized Front Office Intelligence profiles derived only from observable cached fantasy-football actions.
+- Added deterministic competitive windows, organizational philosophies, activity profiles, negotiation styles, asset preferences, evidence, confidence, and explicit sparse-data defaults.
+- Added pairwise Trade Compatibility, conservative Negotiation Forecasts, and an informational league relationship graph.
+- Updated Trade Intelligence to consume shared Front Office Intelligence rather than maintaining duplicate partner logic.
+- Added Front Office dossiers at `/front-offices` and a stable `/api/front-offices` contract, with Commissioner Desk navigation and Team Headquarters integration.
+- Added privacy and fairness boundaries prohibiting personal-trait inference and unsupported manager judgments.
+- Added focused behavioral, integration, relationship, probability-threshold, and API/page contract tests.
+- Updated application metadata to DTOS v0.9.7, build 907, codename Front Office Intelligence v1.
+
 ## v0.9.6 - 2026-07-21
 
 - Added a centralized Trade Intelligence module that consumes Decision Engine and Asset Intelligence outputs without duplicating their evaluations.

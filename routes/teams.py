@@ -166,6 +166,7 @@ def create_teams_router(
                 ("Competitive Window", view["decision"].window.value, "Decision Engine v1"),
                 ("Current Outlook", f'{view["decision"].current_outlook.score}/100', "Decision Engine v1"),
                 ("Future Outlook", f'{view["decision"].future_outlook.score}/100', "Decision Engine v1"),
+                ("Organization", view["front_office_intelligence"].competitive_window, "Front Office Intelligence v1"),
                 ("Youth Grade", view["grades"]["Youth"]["grade"] + " foundation", "Deterministic roster age model"),
                 ("Draft Capital Grade", view["grades"]["Draft Capital"]["grade"] + " foundation", "Deterministic pick inventory model"),
             )
@@ -183,7 +184,7 @@ def create_teams_router(
 <section class="thq-section"><div class="thq-section-head"><h2>Current Team Performance</h2><span>Sleeper league data</span></div><div class="thq-performance">{performance_cards}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Team Timeline</h2><span>Newest cached activity first</span></div><div class="thq-timeline">{_timeline(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Future Outlook</h2><span>Stable integration points for future intelligence</span></div><div class="thq-future-grid">{future}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Quick Actions</h2></div><div class="thq-actions"><a class="thq-action" href="/transactions?team={team['roster_id']}">Transactions</a><a class="thq-action" href="/trades?front_office={team['roster_id']}">Trade Intelligence</a><span class="thq-action placeholder" aria-disabled="true">Compare Teams · Coming Soon</span><span class="thq-action placeholder" aria-disabled="true">League History · Coming Soon</span></div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Quick Actions</h2></div><div class="thq-actions"><a class="thq-action" href="/transactions?team={team['roster_id']}">Transactions</a><a class="thq-action" href="/front-offices?front_office={team['roster_id']}">Front Office Dossier</a><a class="thq-action" href="/trades?front_office={team['roster_id']}">Trade Intelligence</a><span class="thq-action placeholder" aria-disabled="true">Compare Teams · Coming Soon</span><span class="thq-action placeholder" aria-disabled="true">League History · Coming Soon</span></div></section>
 """
         return page(team["team_name"], body)
 

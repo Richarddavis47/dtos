@@ -63,6 +63,10 @@ class PartnerReport:
     complementary_needs: tuple[str, ...]
     historical_trades: int
     evidence: tuple[Evidence, ...]
+    negotiation_style: str = "Neutral default — insufficient trade history"
+    acceptance_likelihood: int | None = None
+    expected_counter: str = "No evidence-supported counter pattern is available."
+    forecast_notes: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

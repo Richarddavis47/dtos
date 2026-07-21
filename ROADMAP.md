@@ -103,6 +103,17 @@ Future releases can enrich individual evidence providers without changing dossie
 
 Future GM and Market Intelligence providers can enrich acceptance and negotiation context without changing proposal or dossier contracts.
 
+### Front Office Intelligence - DTOS v0.9.7 foundation
+
+- Evidence-backed profiles for every organization using observable fantasy-football actions only
+- Competitive windows, organizational philosophies, negotiation styles, activity levels, and asset preferences
+- Pairwise compatibility, conservative negotiation forecasts, and informational league relationship edges
+- Shared Decision Engine and Asset Intelligence inputs with Trade Intelligence consumption
+- Stable dossier, API, Commissioner Desk, and Team Headquarters integration surfaces
+- Neutral defaults and unavailable probability states when historical evidence is insufficient
+
+Future historical providers can add draft behavior, offer/counter events, and seasonal normalization without changing the public organization or compatibility contracts.
+
 ---
 
 ## In progress
