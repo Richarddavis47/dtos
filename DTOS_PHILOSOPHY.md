@@ -13,6 +13,7 @@ DTOS exists to become a true fantasy football Front Office Operating System: a d
 - **Never fabricate conclusions.** DTOS must not fill missing data with invented facts or unsupported certainty.
 - **Communicate uncertainty.** When data is incomplete or confidence is low, say so clearly and limit the conclusion.
 - **Build a Front Office Operating System.** Each release should strengthen a modular platform for roster management, league context, valuation, and decision support.
+- **Model observable front office behavior—not personal characteristics.** Every organizational profile, negotiation recommendation, and compatibility score must be derived from explainable fantasy football actions, remain transparent to the user, and improve as additional league history becomes available.
 
 ## Intelligence standard
 

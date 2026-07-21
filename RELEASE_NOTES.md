@@ -1,29 +1,27 @@
-# DTOS v0.9.6 - Trade Intelligence v1
+# DTOS v0.9.7 - Front Office Intelligence v1
 
-DTOS v0.9.6 introduces a deterministic Assistant General Manager that identifies and explains contextual trade opportunities without acting like a universal trade calculator.
+DTOS v0.9.7 introduces a shared, explainable model of how each organization behaves inside its fantasy league. It improves recommendations from observable actions without judging managers or inferring personal characteristics.
 
 ## Highlights
 
-- Evaluates every potential partner through Decision Engine roster needs, strengths, team windows, and cached bilateral trade history.
-- Builds player and pick pools exclusively through Asset Intelligence reports.
-- Generates bounded 1-for-1, 2-for-1, 3-for-2, player-plus-pick, pick-package, and multi-asset proposals.
-- Keeps Current Outlook and Future Outlook impacts independent.
-- Evaluates roster balance, positional depth, asset value, risk, opportunity cost, market efficiency, and a clearly labeled championship-outlook proxy.
-- Produces prioritized Trade Dossiers with evidence for why each side benefits, why the package is balanced, and why the timing fits the Active Front Office.
-- Adds opening offer, likely counter, walk-away point, fallback, alternative targets, and human-controlled negotiation notes.
-- Adds `/trades` and `/api/trades`, plus Team HQ and navigation integration.
+- Gives every organization an evidence-backed competitive window, philosophy, activity profile, negotiation style, asset preferences, strengths, constraints, and confidence score.
+- Calculates pairwise compatibility from Decision Engine needs and depth, with a small capped signal for completed bilateral trades.
+- Uses Asset Intelligence portfolio reports as shared asset context without duplicating valuation formulas.
+- Adds conservative negotiation forecasts, alternative structures, fallback targets, and explicit sparse-history limitations.
+- Adds an informational relationship graph limited to observed league activity and roster compatibility.
+- Makes Trade Intelligence consume this shared layer for partner selection and negotiation context.
+- Adds `/front-offices` and `/api/front-offices`, plus Commissioner Desk navigation and Team Headquarters integration.
 
 ## Metadata
 
 - Application: DTOS
-- Version: 0.9.6
-- Build: 906
-- Codename: Trade Intelligence v1
+- Version: 0.9.7
+- Build: 907
+- Codename: Front Office Intelligence v1
 
 ## Intentional boundaries
 
-- Acceptance likelihood remains unavailable until a validated GM behavior model exists.
-- Market consensus remains neutral where Asset Intelligence lacks an external provider.
-- Championship impact is an explainable current-value proxy, not a probability forecast.
-- Cached historical trades provide a small familiarity signal; they do not imply manager intent.
-- DTOS does not message managers, submit trades, negotiate automatically, or execute roster moves.
+- Acceptance probability remains unavailable until both organizations and their bilateral history cross documented minimum sample thresholds; even then it is capped at 65%.
+- Cached data does not expose response timing, rejected offers, counteroffers, or private negotiation intent, so v1 does not classify those behaviors.
+- Relationship edges describe completed trades and calculated compatibility only, never personal relationships.
+- DTOS does not infer personality, competence, character, or traits outside observable fantasy-football actions.

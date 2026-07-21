@@ -8,6 +8,7 @@ from typing import Any
 
 from services.transactions import normalize_transactions
 from src.core.decision_engine import DecisionContext, TeamDecision, evaluate_team
+from src.core.front_office_intelligence import front_office_intelligence
 
 CORE_POSITIONS = ("QB", "RB", "WR", "TE")
 POSITION_TARGETS = {
@@ -225,6 +226,7 @@ def build_team_headquarters(
         league_settings=data.get("league_settings") or {},
     )
     decision = evaluate_team(data, roster_id, context)
+    organization = front_office_intelligence.report(data, roster_id, decision)
     rank = next(index for index, item in enumerate(teams, 1) if item is team)
     if isinstance(last_updated, datetime):
         updated = last_updated.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -244,6 +246,7 @@ def build_team_headquarters(
         "grades": grades,
         "summary": generate_front_office_summary(snapshot, grades, decision),
         "decision": decision,
+        "front_office_intelligence": organization,
         "roster_groups": roster_groups,
         "other_players": [player for player in players if player.get("position") not in CORE_POSITIONS],
         "picks_by_year": {

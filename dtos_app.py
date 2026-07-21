@@ -13,6 +13,7 @@ from app_metadata import APPLICATION_NAME, VERSION
 from config import SYNC_MINUTES
 from routes.api import create_api_router
 from routes.draft import create_draft_router
+from routes.front_offices import create_front_offices_router
 from routes.hq import create_hq_router
 from routes.matchups import create_matchups_router
 from routes.settings import create_settings_router
@@ -94,7 +95,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     error_html = f'<div class="error"><b>Sync error:</b> {escape(error)}</div>' if error else ""
     league_name = str(((STATE.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
     standard_chrome = f"""<header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>{escape(league_name)} Front Office · Live Sleeper data</p></div><form method="post" action="/sync"><button class="btn" type="submit">Sync Now</button></form></header>
-<nav class="nav"><a href="/">Commissioner Desk</a><a href="/teams">Teams</a><a href="/trades">Trade Intelligence</a><a href="/matchups">Matchups</a><a href="/picks">Draft Picks</a><a href="/transactions">Transactions</a><a href="/settings">League Settings</a><a href="/api/status">API</a></nav>"""
+<nav class="nav"><a href="/">Commissioner Desk</a><a href="/teams">Teams</a><a href="/front-offices">Front Offices</a><a href="/trades">Trade Intelligence</a><a href="/matchups">Matchups</a><a href="/picks">Draft Picks</a><a href="/transactions">Transactions</a><a href="/settings">League Settings</a><a href="/api/status">API</a></nav>"""
     footer = f'<footer class="footer">Last sync: {escape(sync)} · Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'
     html = f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style></head>
 <body><main class="wrap">{"" if commissioner_chrome else standard_chrome}{error_html}{body}{"" if commissioner_chrome else footer}</main></body></html>"""
@@ -120,6 +121,14 @@ app.include_router(
 
 app.include_router(
     create_draft_router(
+        ensure_fresh=ensure_fresh,
+        require_data=require_data,
+        page=page,
+    )
+)
+
+app.include_router(
+    create_front_offices_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
         page=page,

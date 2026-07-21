@@ -67,7 +67,7 @@ def evaluate_proposal(
         priority,
         confidence,
         expected,
-        None,
+        partner.acceptance_likelihood,
         evidence,
     )
     return TradeDossier(
@@ -75,11 +75,11 @@ def evaluate_proposal(
         partner,
         recommendation,
         impact,
-        build_negotiation_plan(proposal, alternatives),
+        build_negotiation_plan(proposal, alternatives, partner),
         f"A {trade_type.value} opportunity with {partner.owner_name}, generated from complementary roster context and balanced Asset Intelligence values.",
         tuple(item.explanation for item in impact.evidence if item.impact > 0) or ("Package balance is within the v1 realism boundary.",),
         tuple(item.explanation for item in impact.evidence if item.impact < 0) or ("No measured horizon has a negative delta above the v1 threshold.",),
-        ("Acceptance likelihood is unavailable without validated GM behavior data.", "Player news and market movement may change values after the cached snapshot."),
+        (("Acceptance likelihood is unavailable without sufficient completed trade history.",) if partner.acceptance_likelihood is None else ("Acceptance likelihood is a conservative historical signal, not a prediction.",)) + ("Player news and market movement may change values after the cached snapshot.",),
         f"The incoming package has {received_value:.1f} blended dynasty/fit value in the Active Front Office context.",
         f"The offered package has {sent_value:.1f} blended dynasty/fit value in {partner.team_name}'s context.",
         f"The package ratio is {(received_value / max(sent_value, 1)):.2f}, inside the generator's documented balance boundary; this does not predict acceptance.",

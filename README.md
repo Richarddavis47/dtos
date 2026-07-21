@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v0.9.6 introduces Trade Intelligence v1, a deterministic Assistant General Manager that identifies balanced, contextual opportunities using Decision Engine team horizons and Asset Intelligence player/pick reports.
+DTOS v0.9.7 introduces Front Office Intelligence v1, a neutral, deterministic model of observable organizational behavior that improves trade recommendations without inferring personal characteristics.
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 

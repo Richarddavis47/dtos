@@ -6,9 +6,9 @@ import subprocess
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "0.9.6"
-BUILD_NUMBER = 906
-RELEASE_CODENAME = "Trade Intelligence v1"
+VERSION = "0.9.7"
+BUILD_NUMBER = 907
+RELEASE_CODENAME = "Front Office Intelligence v1"
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
 
