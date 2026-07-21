@@ -2,6 +2,17 @@
 
 Notable DTOS changes are recorded here from the repository's Git history.
 
+## v0.9.6 - 2026-07-21
+
+- Added a centralized Trade Intelligence module that consumes Decision Engine and Asset Intelligence outputs without duplicating their evaluations.
+- Added deterministic partner compatibility, balanced package generation, contextual trade impacts, opportunity prioritization, and negotiation guardrails.
+- Added support for 1-for-1, 2-for-1, 3-for-2, player-plus-pick, pick-package, and multi-asset proposal structures.
+- Added explainable Trade Dossiers covering both sides, current and future impact, risk, evidence, alternatives, fallback, counter, and walk-away guidance.
+- Added the read-only Trade Intelligence Center at `/trades` and a stable `/api/trades` contract.
+- Connected Team Headquarters and shared navigation to Trade Intelligence.
+- Added focused tests for package realism, evidence, engine reuse, API/page parity, and contextual evaluation.
+- Updated application metadata to DTOS v0.9.6, build 906, codename Trade Intelligence v1.
+
 ## v0.9.5 - 2026-07-20
 
 - Added a centralized Asset Intelligence module as the shared source of player and draft-pick evaluations.

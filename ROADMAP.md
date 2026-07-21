@@ -92,6 +92,17 @@ Future releases can replace individual scoring providers without changing the De
 
 Future releases can enrich individual evidence providers without changing dossier, Decision Engine, or presentation contracts.
 
+### Trade Intelligence - DTOS v0.9.6 foundation
+
+- Decision Engine and Asset Intelligence orchestration without duplicated valuation logic
+- Deterministic partner compatibility and complementary-needs analysis
+- Balanced single-player, consolidation, player-plus-pick, pick-package, and multi-asset generation
+- Independent current/future impact and explainable roster, depth, value, risk, opportunity-cost, and market signals
+- Prioritized Trade Dossiers with bilateral reasoning and negotiation guardrails
+- Read-only Trade Center and API contracts for future Commissioner Desk, Team HQ, GM Intelligence, mobile, and notification integrations
+
+Future GM and Market Intelligence providers can enrich acceptance and negotiation context without changing proposal or dossier contracts.
+
 ---
 
 ## In progress
