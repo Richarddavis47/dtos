@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.4.2 activates approved FantasyCalc and DynastyProcess market feeds alongside official Sleeper player, league, transaction, and trending data. Player pages show attributed consensus, provider values, metadata, depth-chart context, and specific explanations for sources that are not supported.
+DTOS v1.4.3 adds a cached, public, read-only crawl API for fast external discovery of league snapshots, teams, Front Offices, trade intelligence, transactions, matchups, draft picks, and standings. It also publishes crawler guidance through `robots.txt` and a public-page XML sitemap.
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 

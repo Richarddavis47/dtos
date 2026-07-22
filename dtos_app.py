@@ -8,11 +8,13 @@ from time import perf_counter
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from app_metadata import APPLICATION_NAME, VERSION
 from config import SYNC_MINUTES
 from routes.api import create_api_router
+from routes.crawl import create_crawl_router
 from routes.draft import create_draft_router
 from routes.front_offices import create_front_offices_router
 from routes.hq import create_hq_router
@@ -58,6 +60,12 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title=APPLICATION_NAME, version=VERSION, lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "OPTIONS"],
+    allow_headers=["Accept", "Content-Type"],
+)
 install_observability(app)
 
 
@@ -123,6 +131,14 @@ app.include_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
         sync_sleeper=sync_sleeper,
+        state=STATE,
+        league_id=LEAGUE_ID,
+    )
+)
+
+app.include_router(
+    create_crawl_router(
+        get_data=lambda: STATE.get("data") or {},
         state=STATE,
         league_id=LEAGUE_ID,
     )

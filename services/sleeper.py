@@ -335,6 +335,7 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
             STATE["transactions_last_error"] = None
             save_cache()
             intelligence_cache.invalidate("snapshot:")
+            intelligence_cache.invalidate("crawl:")
             logger.info("Sleeper sync complete: %s teams", len(team_rows))
         except Exception as exc:
             STATE["last_error"] = f"{type(exc).__name__}: {exc}"
@@ -367,6 +368,7 @@ async def sync_transactions() -> bool:
             STATE["transactions_last_error"] = None
             save_cache()
             intelligence_cache.invalidate("snapshot:")
+            intelligence_cache.invalidate("crawl:")
             logger.info("Transaction sync complete: %s transactions", len(transactions))
             return True
         except Exception as exc:

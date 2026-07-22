@@ -1,9 +1,15 @@
-# DTOS v1.4.2 — Provider Data Flow Activation
+# DTOS v1.4.3 — Public Crawl API
 
-DTOS now carries approved public provider data through transport, normalization, canonical identity, consensus, API, and player-page presentation. Legitimate values are shown with attribution; unsupported fields explain the exact provider limitation.
+DTOS now exposes the synchronized public league state through fast, cached, read-only JSON endpoints designed for ChatGPT and other standards-compliant crawlers.
 
 ## Highlights
 
+- `/api/crawl` publishes version, league, sync, page, endpoint, and cache discovery metadata.
+- `/api/crawl/snapshot` consolidates public league, roster, standings, picks, matchup, transaction, Front Office, trade, ranking, recommendation, alert, and sync data.
+- Section endpoints provide teams, Front Offices, trades, transactions, matchups, picks, and standings without triggering Sleeper synchronization.
+- Crawl artifacts use the shared intelligence cache, are isolated by league and sync generation, and invalidate after successful synchronization.
+- Public serialization excludes credentials, environment variables, internal paths, and administrator-only state.
+- `robots.txt` and `sitemap.xml` make the public site discoverable while excluding mutation and administrative paths.
 - FantasyCalc and DynastyProcess public values now refresh into the canonical market cache with visible attribution.
 - Sleeper player metadata, depth-chart fields, ownership, transactions, and trending activity reach player pages end to end.
 - Provider failures preserve prior data only as a disclosed cached fallback; unsupported sources state the exact limitation.
@@ -20,9 +26,9 @@ DTOS now carries approved public provider data through transport, normalization,
 
 ## Metadata
 
-- Version: 1.4.2
-- Build: 1420
-- Codename: Provider Data Flow Activation
+- Version: 1.4.3
+- Build: 1430
+- Codename: Public Crawl API
 
 ## Provider boundaries
 

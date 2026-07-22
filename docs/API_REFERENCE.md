@@ -4,6 +4,22 @@ DTOS v1 freezes the following public HTTP contracts. Additive fields and endpoin
 
 All JSON errors use FastAPI's `{"detail": ...}` shape unless an endpoint documents a domain payload. Data-dependent routes may return 503 before initial data is available. Unknown entities return 404. Unhandled failures return 500 and include an `X-Request-ID` response header for log correlation.
 
+## Public crawl API
+
+All crawl endpoints are unauthenticated, read-only JSON views over the most recently synchronized DTOS cache. They never initiate synchronization.
+
+- `GET /api/crawl` — discovery index, league support, sync state, public pages, endpoints, and cache metadata.
+- `GET /api/crawl/snapshot?league=<league_id>` — consolidated public league snapshot.
+- `GET /api/crawl/teams?league=<league_id>&limit=100&offset=0&team=<roster_id>`
+- `GET /api/crawl/front-offices?league=<league_id>`
+- `GET /api/crawl/trades?league=<league_id>`
+- `GET /api/crawl/transactions?league=<league_id>&limit=100&offset=0&since=<ISO-8601>&team=<roster_id>`
+- `GET /api/crawl/matchups?league=<league_id>`
+- `GET /api/crawl/picks?league=<league_id>&season=<year>&team=<roster_id>`
+- `GET /api/crawl/standings?league=<league_id>`
+
+Invalid league identifiers return a stable JSON `404`. Responses include schema, application version, generation time, league ID, and cache metadata. `GET /robots.txt` and `GET /sitemap.xml` provide crawler discovery.
+
 | Method | Path | Inputs | Successful output |
 |---|---|---|---|
 | GET | `/health` | none | service, league, sync, and runtime health |

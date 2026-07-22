@@ -37,6 +37,19 @@ class IntelligenceCache:
             self._entries[key] = CacheEntry(value, monotonic() + (self.default_ttl if ttl is None else ttl))
         return value
 
+    def get_or_create_with_status(self, key: str, factory: Callable[[], Any], ttl: float | None = None) -> tuple[Any, bool]:
+        """Return a cached value and hit status while serializing expensive creation."""
+        now = monotonic()
+        with self._lock:
+            entry = self._entries.get(key)
+            if entry is not None and entry.expires_at > now:
+                self.hits += 1
+                return entry.value, True
+            self.misses += 1
+            value = factory()
+            self._entries[key] = CacheEntry(value, monotonic() + (self.default_ttl if ttl is None else ttl))
+            return value, False
+
     def invalidate(self, prefix: str | None = None) -> int:
         with self._lock:
             keys = [key for key in self._entries if prefix is None or key.startswith(prefix)]
