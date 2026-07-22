@@ -1,33 +1,20 @@
-"""Robust consensus calculation that limits outlier influence."""
+"""Canonical market consensus calculated only from normalized provider values."""
 from __future__ import annotations
 
-from statistics import median, pstdev
-
 from src.core.market_intelligence.models import MarketConsensus, ProviderQuote
+from src.core.valuation import NormalizedValuation, build_canonical_consensus
 
 
 def build_consensus(asset_id: str, quotes: tuple[ProviderQuote, ...], expected: tuple[str, ...]) -> MarketConsensus:
-    available = tuple(item for item in quotes if item.available and item.value is not None)
+    available = tuple(item for item in quotes if item.available and item.value is not None and (item.normalized_value is not None or 0 <= item.value <= 1000))
     missing = tuple(name for name in expected if name not in {item.provider for item in available})
     if not available:
-        return MarketConsensus(asset_id, None, 0, None, 0, quotes, missing, None)
-    center = median(item.value for item in available if item.value is not None)
-    deviations = [abs(float(item.value) - center) for item in available if item.value is not None]
-    scale = median(deviations) or max(center * 0.10, 1)
-    weighted = []
-    weights = []
-    for item in available:
-        distance = abs(float(item.value) - center)
-        outlier_weight = 1 / (1 + distance / scale)
-        weight = max(0.05, item.confidence / 100) * outlier_weight
-        weighted.append(float(item.value) * weight)
-        weights.append(weight)
-    value = round(sum(weighted) / sum(weights))
-    dispersion = round(pstdev(float(item.value) for item in available), 2) if len(available) > 1 else 0.0
-    normalized = dispersion / max(abs(value), 1)
-    agreement = max(0, min(100, round(100 - normalized * 180)))
-    coverage = len(available) / max(len(expected), 1)
-    provider_confidence = sum(item.confidence for item in available) / len(available)
-    confidence = max(0, min(100, round(provider_confidence * 0.45 + agreement * 0.35 + coverage * 100 * 0.20)))
+        return MarketConsensus(asset_id, None, 0, None, 0, quotes, missing, None, "insufficient_data", (), "Experimental — market calibration has insufficient data.")
+    normalized = tuple(
+        NormalizedValuation(item.provider, float(item.value), *(item.raw_scale or (0, 1000)), int(item.normalized_value if item.normalized_value is not None else item.value), item.observed_at, None, item.confidence, item.freshness, item.normalization_version or "legacy-canonical", item.normalization_method or "legacy_canonical_passthrough")
+        for item in available
+    )
+    canonical = build_canonical_consensus(normalized, len(expected))
+    agreement = max(0, 100 - round((canonical.provider_spread or 0) / 4))
     updated = max((item.observed_at for item in available if item.observed_at), default=None)
-    return MarketConsensus(asset_id, value, agreement, dispersion, confidence, quotes, missing, updated)
+    return MarketConsensus(asset_id, canonical.market_consensus, agreement, float(canonical.provider_spread or 0), canonical.confidence_score, quotes, missing, updated, canonical.calibration_status.value, tuple((item.provider, item.weight) for item in canonical.providers_used), canonical.warning)

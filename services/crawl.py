@@ -13,6 +13,7 @@ from services.front_office_intelligence import build_front_office_center
 from services.trade_intelligence import build_trade_center
 from services.transactions import normalize_transactions
 from src.core.intelligence.cache import intelligence_cache
+from src.core.valuation import NORMALIZATION_VERSION, VALUATION_SCHEMA_VERSION, build_canonical_consensus, normalize_value
 
 SCHEMA_VERSION = "1.0"
 PUBLIC_PAGES = ("/", "/teams", "/front-offices", "/trades", "/transactions", "/matchups", "/picks", "/settings")
@@ -58,9 +59,29 @@ def _safe(value: Any) -> Any:
     return value
 
 
-def _player(row: dict[str, Any]) -> dict[str, Any]:
+def _valuation(player_id: str, data: dict[str, Any]) -> dict[str, Any]:
+    market = data.get("market_data") or {}
+    normalized = []
+    for provider, rows in (market.get("providers") or {}).items():
+        row = (rows or {}).get(player_id)
+        if not isinstance(row, dict) or row.get("value") is None:
+            continue
+        distribution = tuple(float(item.get("value")) for item in rows.values() if isinstance(item, dict) and item.get("value") is not None)
+        normalized.append(normalize_value(provider, float(row["value"]), distribution=distribution, updated_at=row.get("updated_at"), source_season=row.get("season"), provider_confidence=int(row.get("confidence") or 70)))
+    consensus = build_canonical_consensus(tuple(normalized))
     return {
-        "id": str(row.get("id") or row.get("player_id") or ""),
+        "market_value": consensus.market_consensus,
+        "confidence_score": consensus.confidence_score,
+        "calibration_status": consensus.calibration_status.value,
+        "provider_count": len(consensus.providers_used),
+        "provider_spread": consensus.provider_spread,
+    }
+
+
+def _player(row: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+    player_id = str(row.get("id") or row.get("player_id") or "")
+    return {
+        "id": player_id,
         "name": row.get("name") or row.get("full_name"),
         "position": row.get("position"),
         "nfl_team": row.get("team") or row.get("nfl_team"),
@@ -68,6 +89,7 @@ def _player(row: dict[str, Any]) -> dict[str, Any]:
         "starter": bool(row.get("starter")),
         "roster_slot": row.get("roster_slot"),
         "starter_slot": row.get("starter_slot"),
+        "valuation": _valuation(player_id, data),
     }
 
 
@@ -82,7 +104,7 @@ def public_teams(data: dict[str, Any]) -> list[dict[str, Any]]:
             "points_for": team.get("points_for"),
             "points_against": team.get("points_against"),
             "max_points": team.get("max_points"),
-            "roster": [_player(player) for player in team.get("players") or []],
+            "roster": [_player(player, data) for player in team.get("players") or []],
             "draft_picks": _safe(team.get("picks_owned") or []),
             "draft_picks_traded_away": _safe(team.get("picks_traded_away") or []),
         }
@@ -125,9 +147,10 @@ def public_league(data: dict[str, Any]) -> dict[str, Any]:
 
 def public_front_offices(data: dict[str, Any]) -> dict[str, Any]:
     if not data.get("teams"):
-        return {"active_front_office": None, "organizations": [], "compatibilities": [], "relationships": []}
+        return {"valuation_schema_version": VALUATION_SCHEMA_VERSION, "active_front_office": None, "organizations": [], "compatibilities": [], "relationships": []}
     view = build_front_office_center(data)
     return {
+        "valuation_schema_version": VALUATION_SCHEMA_VERSION,
         "active_front_office": view["active"].roster_id,
         "organizations": _safe(view["reports"]),
         "compatibilities": _safe(view["compatibilities"]),
@@ -138,9 +161,10 @@ def public_front_offices(data: dict[str, Any]) -> dict[str, Any]:
 
 def public_trades(data: dict[str, Any]) -> dict[str, Any]:
     if not data.get("teams"):
-        return {"active_front_office": None, "opportunities": [], "value_impacts": {}}
+        return {"valuation_schema_version": VALUATION_SCHEMA_VERSION, "active_front_office": None, "opportunities": [], "value_impacts": {}}
     view = build_trade_center(data)
     return {
+        "valuation_schema_version": VALUATION_SCHEMA_VERSION,
         "active_front_office": view["active_team"].get("roster_id"),
         "opportunities": _safe(view["dossiers"]),
         "value_impacts": _safe(view["value_impacts"]),
@@ -165,6 +189,7 @@ def build_snapshot(data: dict[str, Any], state: dict[str, Any], league_id: str) 
     trades = public_trades(data)
     team_rows = public_teams(data)
     return {
+        "valuation_schema_version": VALUATION_SCHEMA_VERSION,
         "league_id": league_id,
         "league": public_league(data),
         "owners": [{"owner": team["owner"], "roster_id": team["roster_id"], "team_name": team["team_name"]} for team in team_rows],
@@ -194,7 +219,7 @@ def sync_metadata(state: dict[str, Any]) -> dict[str, Any]:
 
 
 def cached_response(key: str, factory: Callable[[], Any], *, sync_marker: str | None, ttl: float = 300) -> dict[str, Any]:
-    cache_key = f"crawl:{sync_marker or 'empty'}:{key}"
+    cache_key = f"crawl:{NORMALIZATION_VERSION}:{sync_marker or 'empty'}:{key}"
     artifact, hit = intelligence_cache.get_or_create_with_status(
         cache_key,
         lambda: {"generated_at": utcnow(), "data": jsonable_encoder(_safe(factory()))},
@@ -203,6 +228,7 @@ def cached_response(key: str, factory: Callable[[], Any], *, sync_marker: str | 
     return {
         "ok": True,
         "schema_version": SCHEMA_VERSION,
+        "valuation_schema_version": VALUATION_SCHEMA_VERSION,
         "app_version": VERSION,
         "generated_at": utcnow(),
         "data": artifact["data"],

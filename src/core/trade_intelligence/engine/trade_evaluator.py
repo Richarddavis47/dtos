@@ -13,10 +13,11 @@ from src.core.trade_intelligence.models import (
     TradeRecommendation,
     TradeType,
 )
+from src.core.valuation import CalibrationStatus, adjusted_package_value, evaluate_trade_guardrails
 
 
 def _package_value(assets) -> float:
-    return sum((asset.dynasty_value + asset.team_fit_value) / 2 for asset in assets)
+    return adjusted_package_value(assets).adjusted_value
 
 
 def _trade_type(proposal: TradeProposal, active: TeamDecision, current: int, future: int, depth: int) -> TradeType:
@@ -55,6 +56,9 @@ def evaluate_proposal(
     sent_value, received_value = _package_value(proposal.assets_sent), _package_value(proposal.assets_received)
     gap = abs(received_value - sent_value) / max(sent_value, received_value, 1)
     confidence = max(35, min(92, round(50 + partner.compatibility_score * 0.30 - gap * 30)))
+    superflex = any(position == "SUPER_FLEX" for position in active.profile.league_settings.get("roster_positions", ()))
+    calibration = CalibrationStatus.CALIBRATED if all(asset.confidence_score >= 55 for asset in (*proposal.assets_sent, *proposal.assets_received)) else CalibrationStatus.PARTIALLY_CALIBRATED
+    guardrail = evaluate_trade_guardrails(proposal.assets_sent, proposal.assets_received, superflex=superflex, confidence=confidence, calibration_status=calibration)
     evidence = impact.evidence + partner.evidence + (
         Evidence("Package balance", f"{sent_value:.1f} offered / {received_value:.1f} requested", (1 - gap) * 20, "Packages are generated only inside a 20% to 25% blended Asset Intelligence boundary.", "Trade Generator package boundary"),
     )
@@ -69,6 +73,8 @@ def evaluate_proposal(
         expected,
         partner.acceptance_likelihood,
         evidence,
+        guardrail.recommendation_status,
+        guardrail.reason_code,
     )
     return TradeDossier(
         proposal,

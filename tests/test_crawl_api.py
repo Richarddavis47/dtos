@@ -31,6 +31,7 @@ class CrawlApiTests(unittest.TestCase):
         payload = response.json()
         self.assertTrue(payload["ok"])
         self.assertEqual(payload["schema_version"], "1.0")
+        self.assertEqual(payload["valuation_schema_version"], "1.0")
         self.assertEqual(payload["default_league_id"], LEAGUE_ID)
         self.assertIn("/api/crawl/snapshot", payload["endpoints"].values())
         self.assertIn("/teams", payload["pages"])
@@ -47,10 +48,21 @@ class CrawlApiTests(unittest.TestCase):
 
     def test_snapshot_uses_public_allowlist_and_contains_required_sections(self) -> None:
         payload = self.client.get("/api/crawl/snapshot").json()["data"]
+        self.assertEqual(payload["valuation_schema_version"], "1.0")
         self.assertTrue({"league", "owners", "teams", "standings", "draft_picks", "matchups", "transactions", "trades", "front_offices", "rankings", "recommendations", "alerts", "sync"}.issubset(payload))
         serialized = str(payload).casefold()
         for secret in ("database_url", "password", "token", "secret", "c:\\users", "/tmp/"):
             self.assertNotIn(secret, serialized)
+
+    def test_team_valuation_summaries_are_concise_and_canonical(self) -> None:
+        self.data["market_data"] = {"providers": {"FantasyCalc": {"player one": {"value": 7200, "confidence": 85}}, "DynastyProcess": {"player one": {"value": 6500, "confidence": 75}}}}
+        intelligence_cache.invalidate("crawl:")
+        payload = self.client.get("/api/crawl/teams").json()
+        self.assertEqual(payload["valuation_schema_version"], "1.0")
+        valuation = payload["data"]["teams"][0]["roster"][0]["valuation"]
+        self.assertTrue(0 <= valuation["market_value"] <= 1000)
+        self.assertIn(valuation["calibration_status"], {"calibrated", "partially_calibrated", "stale"})
+        self.assertNotIn("raw_value", valuation)
 
     def test_default_explicit_and_invalid_league_selection(self) -> None:
         self.assertEqual(self.client.get("/api/crawl/teams").json()["league_id"], LEAGUE_ID)

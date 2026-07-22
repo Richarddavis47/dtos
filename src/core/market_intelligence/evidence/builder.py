@@ -14,8 +14,8 @@ def build_market_evidence(consensus: MarketConsensus, gap: ValueGap, trend: Mark
     rows.extend(
         MarketEvidence(
             item.provider,
-            f"{item.value if item.available else 'Unavailable'}; mode={item.retrieval_mode}; freshness={item.freshness}; age={item.cache_age_seconds if item.cache_age_seconds is not None else 'n/a'}s",
-            ((item.value or 50) - 50) + item.confidence_impact,
+            f"raw={item.value if item.available else 'Unavailable'}; normalized={item.normalized_value if item.normalized_value is not None else 'Unavailable'}/1000; mode={item.retrieval_mode}; freshness={item.freshness}; age={item.cache_age_seconds if item.cache_age_seconds is not None else 'n/a'}s",
+            (((item.normalized_value or 500) - 500) / 10) + item.confidence_impact,
             f"{item.detail} Provider status, retrieval mode, freshness, cache age, and confidence impact are disclosed.",
             item.source,
             item.available,

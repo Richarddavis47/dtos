@@ -6,9 +6,9 @@ import subprocess
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.4.3"
-BUILD_NUMBER = 1430
-RELEASE_CODENAME = "Public Crawl API"
+VERSION = "1.4.4"
+BUILD_NUMBER = 1440
+RELEASE_CODENAME = "Valuation Calibration and Trade Safety"
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
 

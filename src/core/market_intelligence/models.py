@@ -29,6 +29,10 @@ class ProviderQuote:
     cache_age_seconds: float | None = None
     freshness: str = "unavailable"
     confidence_impact: int = 0
+    normalized_value: int | None = None
+    raw_scale: tuple[float, float] | None = None
+    normalization_version: str | None = None
+    normalization_method: str | None = None
 
 
 @dataclass(frozen=True)
@@ -51,6 +55,9 @@ class MarketConsensus:
     quotes: tuple[ProviderQuote, ...]
     missing_providers: tuple[str, ...]
     updated_at: str | None
+    calibration_status: str = "uncalibrated"
+    provider_weights: tuple[tuple[str, float], ...] = ()
+    warning: str | None = None
 
 
 @dataclass(frozen=True)

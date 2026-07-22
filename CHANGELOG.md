@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.4 - Valuation Calibration and Trade Safety
+
+- Added a shared canonical 0–1000 valuation layer for players, picks, consensus, and trade packages.
+- Added provider-specific normalization with raw-value preservation, freshness, confidence, and method versioning.
+- Added calibrated market consensus, Player Intelligence Cards, explicit calibration states, and cautious recommendation language.
+- Added package-quality adjustments and guardrails for market floors, elite consolidation, low-value aggregation, and superflex quarterbacks.
+- Added concise valuation summaries and schema versioning to public crawl responses without removing existing fields.
+- Added 20 focused valuation and trade-safety regressions, including the 50-vs-7500 mismatch and two-thirds-for-a-premium-QB cases.
+
 ## v1.4.3 - Public Crawl API
 
 - Added a lightweight public crawl index, consolidated snapshot, and section-specific JSON endpoints backed by synchronized DTOS data.

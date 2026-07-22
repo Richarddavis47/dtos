@@ -10,6 +10,7 @@ from src.core.market_intelligence.evidence import build_market_evidence
 from src.core.market_intelligence.history import MarketHistoryStore, MarketSnapshot
 from src.core.market_intelligence.models import AssetMarketReport, MarketIntelligenceReport, ProviderQuote, TradeMarketImpact, ValueGap, ValueGapLabel
 from src.core.market_intelligence.trends import calculate_trend
+from src.core.valuation import normalize_value
 
 
 def value_gap(intrinsic: int, market: int | None, confidence: int) -> ValueGap:
@@ -59,7 +60,8 @@ class MarketIntelligence:
                         {"asset": asset, "market_data": market_data, "namespace": namespace},
                         mode=context_mode,
                         allow_cached=allow_cached_fallback,
-                    )
+                    ),
+                    market_data,
                 )
                 for provider in providers
             )
@@ -75,7 +77,7 @@ class MarketIntelligence:
                     state["cache_age_seconds"] = quote.cache_age_seconds
                     state["freshness"] = quote.freshness
                     state["confidence_impact"] = quote.confidence_impact
-                    asset_snapshots.append(MarketSnapshot(asset_id, quote.observed_at or generated_at, quote.provider, float(quote.value), quote.confidence))
+                    asset_snapshots.append(MarketSnapshot(asset_id, quote.observed_at or generated_at, quote.provider, float(quote.normalized_value), quote.confidence))
             consensus = build_consensus(asset_id, quotes, tuple(provider.metadata.name for provider in providers))
             self.history.append(tuple(asset_snapshots))
             trend = calculate_trend(self.history.for_asset(asset_id))
@@ -90,9 +92,13 @@ class MarketIntelligence:
         return MarketIntelligenceReport(reports, opportunities, impacts, evidence, health, generated_at, offline)
 
     @staticmethod
-    def _quote(envelope: Any) -> ProviderQuote:
+    def _quote(envelope: Any, market_data: dict[str, Any]) -> ProviderQuote:
         available = envelope.value is not None and envelope.quality.status != "blocked"
-        return ProviderQuote(envelope.provider, envelope.key, float(envelope.value) if available else None, envelope.confidence if available else 0, envelope.timestamp, envelope.source, available, "; ".join((*envelope.quality.issues, *envelope.limitations)) or "Data Platform envelope", 0.0, envelope.cache_state != "fresh", envelope.retrieval_mode, envelope.timestamp, None, envelope.freshness, 0)
+        raw = float(envelope.value) if available else None
+        provider_rows = (market_data.get("providers") or {}).get(envelope.provider) or {}
+        distribution = tuple(float(row.get("value")) for row in provider_rows.values() if isinstance(row, dict) and row.get("value") is not None)
+        normalized = normalize_value(envelope.provider, raw, distribution=distribution, updated_at=envelope.timestamp, provider_confidence=envelope.confidence) if raw is not None else None
+        return ProviderQuote(envelope.provider, envelope.key, raw, envelope.confidence if available else 0, envelope.timestamp, envelope.source, available, "; ".join((*envelope.quality.issues, *envelope.limitations)) or "Data Platform envelope", 0.0, envelope.cache_state != "fresh", envelope.retrieval_mode, envelope.timestamp, None, normalized.freshness if normalized else envelope.freshness, 0, normalized.normalized_value if normalized else None, (normalized.raw_min, normalized.raw_max) if normalized else None, normalized.normalization_version if normalized else None, normalized.method if normalized else None)
 
     @staticmethod
     def _trade_impact(dossier: Any, reports: dict[str, AssetMarketReport]) -> TradeMarketImpact:
