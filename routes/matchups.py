@@ -11,6 +11,8 @@ from typing import Any, Awaitable, Callable
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 
+from services.matchup_intelligence import matchup_projection
+
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[[str, str], HTMLResponse]
@@ -39,23 +41,18 @@ def create_matchups_router(
                 )
                 continue
             left, right = sides[0], sides[1]
-            margin = abs(float(left["points"]) - float(right["points"]))
+            projected = matchup_projection(d, sides)
             if left["points"] == right["points"]:
                 status = "Tied"
-                edge_text = "Even"
             else:
-                leader = left if left["points"] > right["points"] else right
                 status = "Live score"
-                edge_text = f'{leader["team"]} +{margin:.2f}'
-            top_scorer = max((p for side in sides for p in side.get("lineup", [])), key=lambda p: p["points"], default=None)
-            top_text = f'{top_scorer["name"]} {top_scorer["points"]:.2f}' if top_scorer else "No points yet"
             cards.append(
                 f'<a class="matchup-card" href="/matchups/{escape(matchup_id)}">'
                 f'<div class="matchup-label"><span class="matchup-number">Matchup {escape(matchup_id)}</span><span class="matchup-status">{status}</span></div>'
                 f'<div class="versus"><div class="matchup-team"><div class="matchup-owner">{escape(left["owner"])}</div><h3>{escape(left["team"])}</h3><div class="record">{escape(left["record"])}</div><div class="score">{left["points"]:.2f}</div></div>'
                 f'<div class="vs-mark">VS</div>'
                 f'<div class="matchup-team right"><div class="matchup-owner">{escape(right["owner"])}</div><h3>{escape(right["team"])}</h3><div class="record">{escape(right["record"])}</div><div class="score">{right["points"]:.2f}</div></div></div>'
-                f'<div class="matchup-footer"><span><b class="edge">Edge:</b> {escape(edge_text)}</span><span><b>Top scorer:</b> {escape(top_text)}</span></div></a>'
+                f'<div class="matchup-footer"><span><b class="edge">Projected:</b> {projected["sides"][0]["projected"]:.1f}–{projected["sides"][1]["projected"]:.1f} ({escape(projected["status"])})</span><span><b>Largest edge:</b> {escape(projected["largest_advantage"])}</span></div></a>'
             )
         body = (
             f'<div class="section-title"><div><h2 style="margin:0">Week {d["week"]} Matchups</h2><div class="muted">Live Sleeper scoring and lineup comparison</div></div>'
@@ -74,6 +71,17 @@ def create_matchups_router(
         if len(sides) < 2:
             return page("Matchup", f'<a class="back" href="/matchups">← All Matchups</a><div class="card"><h2>Matchup {escape(matchup_id)}</h2><p class="muted">Opponent assignment is not complete.</p></div>')
         left, right = sides[0], sides[1]
+        projected = matchup_projection(d, sides)
+        projection_summary = (
+            f'<section class="card"><h3>Projected Starter Outlook · {escape(projected["status"])}</h3><div class="matchup-summary-grid">'
+            f'<div class="metric"><b>{projected["sides"][0]["projected"]:.1f}</b><span>{escape(left["team"])} Projection</span></div>'
+            f'<div class="metric"><b>{projected["sides"][1]["projected"]:.1f}</b><span>{escape(right["team"])} Projection</span></div>'
+            f'<div class="metric"><b>{projected["sides"][0]["floor"]:.1f}–{projected["sides"][0]["ceiling"]:.1f}</b><span>{escape(left["team"])} Range</span></div>'
+            f'<div class="metric"><b>{projected["sides"][1]["floor"]:.1f}–{projected["sides"][1]["ceiling"]:.1f}</b><span>{escape(right["team"])} Range</span></div>'
+            f'<div class="metric"><b>{escape(projected["largest_advantage"])}</b><span>Largest Advantage</span></div>'
+            f'<div class="metric"><b>{escape(projected["highest_volatility"])}</b><span>Highest Volatility</span></div>'
+            f'<div class="metric"><b>{escape(projected["confidence"])}</b><span>Projection Confidence · {projected["missing"]} missing</span></div></div></section>'
+        )
         margin = abs(float(left["points"]) - float(right["points"]))
         if left["points"] == right["points"]:
             headline = "Matchup is tied"
@@ -203,6 +211,7 @@ def create_matchups_router(
             f'<div class="matchup-summary-grid"><div class="metric"><b>{margin:.2f}</b><span>Score Margin</span></div><div class="metric"><b>{len(left.get("lineup", []))}</b><span>{escape(left["owner"])} Starters</span></div><div class="metric"><b>{len(right.get("lineup", []))}</b><span>{escape(right["owner"])} Starters</span></div><div class="metric"><b>{escape(top_scorer_text)}</b><span>Top Starter</span></div></div>'
             f'<div class="advantage-strip"><div class="advantage-side"><span>{escape(left["team"])} Battle Wins</span><b>{left_battle_wins}</b></div><div class="advantage-center">{tied_battles} tied slots</div><div class="advantage-side right"><span>{escape(right["team"])} Battle Wins</span><b>{right_battle_wins}</b></div></div></section>'
             f'<section class="roster-section"><div class="section-title"><span class="slot-label">Starting Lineup Battles</span><span class="muted">Slot-by-slot live points</span></div><div class="battle-grid">{"".join(battles)}</div></section>'
+            f'{projection_summary}'
             f'<section class="roster-section"><div class="section-title"><span class="slot-label">Bench Comparison</span><span class="muted">Top 12 bench players, side by side</span></div>{bench_comparison_html}</section>'
         )
         return page(f'{left["team"]} vs {right["team"]}', body)

@@ -19,3 +19,5 @@ All JSON errors use FastAPI's `{"detail": ...}` shape unless an endpoint documen
 HTML routes are `/`, `/teams`, `/teams/{roster_id}`, `/front-offices`, `/trades`, `/matchups`, `/matchups/{matchup_id}`, `/picks`, `/transactions`, `/transactions/refresh`, `/players/{player_id}`, and `/settings`. Query parameters on Transactions provide filtering, sorting, pagination, and preserved state.
 
 The generated schema at `/openapi.json` is authoritative for parameter types. New clients should ignore unknown additive fields. No v1.0.0 endpoint is deprecated.
+
+As of v1.2.0, `/api/intelligence` additively exposes `player_values` and `roster` contracts, including provider status, freshness, confidence, projection ranges, production availability, lineup value, and positional context.

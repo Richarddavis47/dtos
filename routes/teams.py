@@ -203,6 +203,10 @@ def create_teams_router(
                 ("Positional Advantages", ", ".join(roster.positional_advantages) or "None identified"),
             )
         )
+        league_rankings = "".join(
+            f'<article class="thq-kpi"><span>{escape(label)}</span><b>#{rank} of {roster.rooms["QB"].league_size}</b></article>'
+            for label, rank in roster.metrics["League Rankings"].items()
+        )
         body = f"""
 {TEAM_HQ_CSS}
 <a class="back" href="/teams">← All Teams</a>
@@ -211,6 +215,7 @@ def create_teams_router(
 <section class="thq-section"><div class="thq-section-head"><h2>Front Office Summary</h2><span>Deterministic · No generated claims</span></div><div class="thq-summary">{summary}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Decision Horizons</h2><span>Current and future remain independent</span></div><div class="thq-grades">{_decision_horizons(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Roster Intelligence</h2><span>{escape(roster.identity)} · {escape(roster.identity_reasoning)}</span></div><div class="thq-intel">{intelligence_cards}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>League Value Rankings</h2><span>Independent dimensions · No combined overall rank</span></div><div class="thq-intel">{league_rankings}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Position Room Intelligence</h2><span>Quality-first, explainable evaluation</span></div><div class="thq-grades">{_grade_cards(view['grades'])}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Roster</h2><span>Position rooms and current lineup designation</span></div><div class="thq-roster">{_roster_rooms(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Draft Capital</h2><span>Every currently owned future pick</span></div><div class="thq-picks">{_draft_capital(view)}</div></section>

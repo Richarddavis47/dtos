@@ -19,6 +19,7 @@ from src.core.intelligence.pipeline import IntelligencePipeline
 from src.core.intelligence.recommendations import resolve_recommendation
 from src.core.intelligence.registry import IntelligenceRegistry, intelligence_registry
 from src.core.market_intelligence import market_intelligence
+from src.core.player_value_projection import evaluate_player_values, player_data_registry
 from src.core.roster_intelligence import evaluate_roster
 from src.core.trade_intelligence import trade_intelligence
 
@@ -63,7 +64,7 @@ def _market_provider(context: IntelligenceContext, player_reports: dict[str, Any
 
 
 def _register_defaults(registry: IntelligenceRegistry) -> None:
-    defaults = {"decision": _decision_provider, "asset": _asset_provider, "front_office": _front_office_provider, "trade": _trade_provider, "market": _market_provider, "roster": evaluate_roster}
+    defaults = {"decision": _decision_provider, "asset": _asset_provider, "front_office": _front_office_provider, "trade": _trade_provider, "market": _market_provider, "player_value": evaluate_player_values, "roster": evaluate_roster}
     existing = set(registry.names())
     for name, provider in defaults.items():
         if name not in existing:
@@ -112,8 +113,9 @@ class IntelligenceOrchestrator:
             market_available = any(report.consensus.value is not None for report in market.assets.values())
             confidence = calculate_confidence(evidence, providers=5, expected_providers=5, market_available=market_available, sample_size=offices.reports[roster_id].activity.trades, missing=missing)
             recommendation = resolve_recommendation(decision=decision, trade=top_trade, front_office=offices.reports[roster_id], market=market, evidence=evidence, confidence=confidence)
+            player_values = pipeline.run("player_value_projection", self.cache.get_or_create, prefix + "player_values", lambda: self.registry.provider("player_value")(context, decision, player_reports, market))
             pipeline.timings_ms["orchestration_total"] = round((perf_counter() - total_started) * 1000, 3)
-            partial = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, offices, trades, market, None, recommendation, pipeline.timings_ms, False)
+            partial = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, offices, trades, market, player_values, None, recommendation, pipeline.timings_ms, False)
             roster = pipeline.run("roster_intelligence", self.cache.get_or_create, prefix + "roster", lambda: self.registry.provider("roster")(partial))
             return replace(partial, roster=roster, timings_ms=pipeline.timings_ms)
 
@@ -140,15 +142,17 @@ class IntelligenceOrchestrator:
             "cache": self.cache.health(),
             "database": {"status": "not_configured", "detail": "DTOS currently uses the configured cache file."},
             "market": market_intelligence.health(),
+            "player_data": player_data_registry.health(),
             "orchestration": {"runs": self.runs, "last_timings_ms": self.last_timings_ms, "last_error": self.last_error},
         }
 
     def player_report(self, data: dict[str, Any], player: dict[str, Any], roster_id: int) -> Any:
         result = self.analyze(data, roster_id)
         report = evaluate_player(player, _asset_context(result.context, result.decision))
+        value_profile = result.player_values.get(str(player.get("id") or player.get("player_id")))
         market = result.market.assets.get(str(player.get("id") or player.get("player_id")))
         if market is None or market.consensus.value is None:
-            return report
+            return replace(report, value_profile=value_profile)
         market_value = AssetEvaluation(
             "Market Value",
             market.consensus.value,
@@ -157,7 +161,7 @@ class IntelligenceOrchestrator:
             tuple(Evidence(item.factor, item.observed_value, item.impact, item.explanation, item.source, item.available) for item in market.evidence),
             tuple(f"Missing provider: {name}" for name in market.consensus.missing_providers),
         )
-        return replace(report, core_values=replace(report.core_values, market=market_value))
+        return replace(report, core_values=replace(report.core_values, market=market_value), value_profile=value_profile)
 
     def pick_report(self, data: dict[str, Any], pick: dict[str, Any], roster_id: int) -> Any:
         result = self.analyze(data, roster_id)

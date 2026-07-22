@@ -19,6 +19,7 @@ class IntelligenceResult:
     front_office_model: Any
     trades: tuple[Any, ...]
     market: Any
+    player_values: dict[str, Any]
     roster: Any
     recommendation: UnifiedRecommendation
     timings_ms: dict[str, float]

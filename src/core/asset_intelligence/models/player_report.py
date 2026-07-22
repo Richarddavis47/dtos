@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from src.core.asset_intelligence.models.asset_evaluation import AssetEvaluation, CoreValues
 from src.core.asset_intelligence.models.evidence import Evidence
@@ -51,3 +52,4 @@ class PlayerReport:
     opportunity: dict[str, AssetEvaluation]
     recommendation: AssetRecommendation
     limitations: tuple[str, ...]
+    value_profile: Any = None

@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.1.0 adds Roster Intelligence to the production-ready Front Office Operating System. Decision, Asset, Trade, Front Office, Market, and Roster Intelligence operate through one explainable orchestrator, with quality-first position rooms, player tiers, roster identities, validated configuration, structured observability, stable APIs, and deterministic release validation.
+DTOS v1.2.0 adds shared Player Value and Projection Integration to the production-ready Front Office Operating System. Independent dynasty, market, contender, rebuilder, projection, production, lineup, and scarcity inputs flow through one explainable orchestrator into player dossiers, roster rooms, matchups, trades, and APIs.
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 
