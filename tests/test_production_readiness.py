@@ -32,6 +32,7 @@ class ConfigurationTests(unittest.TestCase):
             "DTOS_LOG_FORMAT": "text",
             "DTOS_INTELLIGENCE_CACHE_TTL": "12",
             "DTOS_MARKET_CACHE_TTL": "120",
+            "DTOS_DATA_WAREHOUSE_FILE": "custom-history.json",
         }
         with patch.dict(os.environ, values, clear=False):
             settings = Settings.from_environment()
@@ -39,6 +40,7 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(str(settings.cache_file), "custom-cache.json")
         self.assertEqual(settings.intelligence_cache_ttl, 12)
         self.assertEqual(settings.market_cache_ttl, 120)
+        self.assertEqual(str(settings.data_warehouse_file), "custom-history.json")
 
     def test_invalid_configuration_fails_fast(self) -> None:
         with patch.dict(os.environ, {"SYNC_MINUTES": "not-a-number"}, clear=False), self.assertRaisesRegex(ValueError, "SYNC_MINUTES"):

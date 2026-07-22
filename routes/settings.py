@@ -8,6 +8,7 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
 from app_metadata import BUILD_NUMBER, VERSION, repository_metadata
+from src.core.data_platform import data_platform
 
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -41,6 +42,10 @@ def create_settings_router(
             f'<span class="pill">{escape(str(position))}</span>'
             for position in data["roster_positions"]
         )
+        provider_rows = "".join(
+            f"<tr><td>{escape(str(name))}</td><td>{escape(str(row['status'].value))}</td><td>{escape(str(row['licensing_tier'].value))}</td><td>{escape(str(row['freshness']))}</td><td>{escape(str(row['next_refresh'] or 'Not scheduled'))}</td></tr>"
+            for name, row in sorted(data_platform.health()["providers"].items())
+        )
         body = f"""
 <h2>League Configuration</h2>
 <div class="grid">
@@ -59,6 +64,7 @@ def create_settings_router(
   <div class="card"><h3>Scoring Settings</h3><table><tbody>{scoring_rows}</tbody></table></div>
   <div class="card"><h3>League Settings</h3><table><tbody>{setting_rows}</tbody></table></div>
 </div>
+<div class="card"><h3>Provider Health</h3><p class="muted">Provider status and licensing are explicit. Disabled sources do not block DTOS.</p><table><thead><tr><th>Provider</th><th>Status</th><th>Licensing</th><th>Freshness</th><th>Next Refresh</th></tr></thead><tbody>{provider_rows}</tbody></table></div>
 """
         return page("League Settings", body)
 

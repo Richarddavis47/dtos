@@ -6,9 +6,9 @@ import subprocess
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.3.0"
-BUILD_NUMBER = 1300
-RELEASE_CODENAME = "League Intelligence Engine v1"
+VERSION = "1.4.0"
+BUILD_NUMBER = 1400
+RELEASE_CODENAME = "Live Data Platform & Market Integration"
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
 

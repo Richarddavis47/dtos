@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from app_metadata import VERSION
 from services.asset_intelligence import player_asset_index
+from src.core.data_platform import data_platform
 from src.core.intelligence import intelligence_orchestrator
 from src.platform.observability import environment_summary, runtime_metrics
 
@@ -60,7 +61,56 @@ def create_api_router(
 
     @router.get("/api/platform/health")
     async def platform_health() -> JSONResponse:
-        return JSONResponse({"version": VERSION, "runtime": runtime_metrics.health(), "configuration": environment_summary(), **intelligence_orchestrator.health(state)})
+        return JSONResponse({"version": VERSION, "runtime": runtime_metrics.health(), "configuration": environment_summary(), "data_platform": data_platform.health(), **intelligence_orchestrator.health(state)})
+
+    @router.get("/api/data/providers")
+    async def data_providers() -> JSONResponse:
+        from dataclasses import asdict
+        from fastapi.encoders import jsonable_encoder
+        return JSONResponse(jsonable_encoder({"providers": [asdict(provider.metadata) for provider in data_platform.registry.providers()], "health": data_platform.health()}))
+
+    @router.get("/api/data/health")
+    async def data_health() -> JSONResponse:
+        return JSONResponse(data_platform.health())
+
+    @router.get("/api/data/history/{category}/{key}")
+    async def data_history(category: str, key: str) -> JSONResponse:
+        from dataclasses import asdict
+        from fastapi.encoders import jsonable_encoder
+        return JSONResponse(jsonable_encoder({"key": key, "category": category, "snapshots": [asdict(row) for row in data_platform.warehouse.history(key, category)]}))
+
+    @router.get("/api/data/trend/{category}/{key}")
+    async def data_trend(category: str, key: str) -> JSONResponse:
+        from dataclasses import asdict
+        return JSONResponse(asdict(data_platform.trend(key, category)))
+
+    @router.get("/api/data/consensus/{category}/{key}")
+    async def data_consensus(category: str, key: str) -> JSONResponse:
+        from dataclasses import asdict
+        from fastapi.encoders import jsonable_encoder
+        data = state.get("data") or {}
+        context = {"asset": (data.get("players") or {}).get(key, {}), "market_data": data.get("market_data") or {}, "namespace": f"{league_id}:api"}
+        mode = "online" if context["market_data"].get("providers") else "offline"
+        return JSONResponse(jsonable_encoder(asdict(data_platform.aggregate(category, key, context, mode=mode))))
+
+    @router.get("/api/data/{category}/{key}")
+    async def unified_data(category: str, key: str) -> JSONResponse:
+        from dataclasses import asdict
+        from fastapi.encoders import jsonable_encoder
+        data = state.get("data") or {}
+        context = {"asset": (data.get("players") or {}).get(key, {}), "market_data": data.get("market_data") or {}, "namespace": f"{league_id}:api"}
+        mode = "online" if context["market_data"].get("providers") else "offline"
+        rows = [asdict(data_platform.fetch(provider.metadata.name, key, context, mode=mode)) for provider in data_platform.registry.providers(category)]
+        return JSONResponse(jsonable_encoder({"key": key, "category": category, "sources": rows}))
+
+    @router.post("/api/data/refresh/{category}")
+    async def refresh_data(category: str, key: str | None = None, provider: str | None = None) -> JSONResponse:
+        from dataclasses import asdict
+        from fastapi.encoders import jsonable_encoder
+        data = state.get("data") or {}
+        keys = (key,) if key else tuple(player_asset_index(data))[:100]
+        context = {"market_data": data.get("market_data") or {}, "namespace": f"{league_id}:refresh"}
+        return JSONResponse(jsonable_encoder({"results": [asdict(row) for row in data_platform.refresh(category, context, keys, provider_name=provider)]}))
 
     @router.get("/api/intelligence")
     async def unified_intelligence(front_office: int | None = None) -> JSONResponse:

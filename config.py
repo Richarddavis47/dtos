@@ -34,6 +34,7 @@ class Settings:
     log_format: str
     intelligence_cache_ttl: float
     market_cache_ttl: float
+    data_warehouse_file: Path
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -53,6 +54,7 @@ class Settings:
             log_format=log_format,
             intelligence_cache_ttl=_number("DTOS_INTELLIGENCE_CACHE_TTL", 60, 0),
             market_cache_ttl=_number("DTOS_MARKET_CACHE_TTL", 3600, 0),
+            data_warehouse_file=Path(os.getenv("DTOS_DATA_WAREHOUSE_FILE", str(Path(gettempdir()) / "dtos_data_history.json"))),
         )
 
 
@@ -66,3 +68,4 @@ LOG_LEVEL = SETTINGS.log_level
 LOG_FORMAT = SETTINGS.log_format
 INTELLIGENCE_CACHE_TTL = SETTINGS.intelligence_cache_ttl
 MARKET_CACHE_TTL = SETTINGS.market_cache_ttl
+DATA_WAREHOUSE_FILE = SETTINGS.data_warehouse_file
