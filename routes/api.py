@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from app_metadata import VERSION
 from services.asset_intelligence import player_asset_index
 from src.core.intelligence import intelligence_orchestrator
+from src.platform.observability import environment_summary, runtime_metrics
 
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -34,6 +35,7 @@ def create_api_router(
             "league_id": league_id,
             "last_sync": state.get("last_sync"),
             "last_error": state.get("last_error"),
+            "runtime": runtime_metrics.health(),
         }
 
     @router.get("/api/status")
@@ -58,7 +60,7 @@ def create_api_router(
 
     @router.get("/api/platform/health")
     async def platform_health() -> JSONResponse:
-        return JSONResponse({"version": VERSION, **intelligence_orchestrator.health(state)})
+        return JSONResponse({"version": VERSION, "runtime": runtime_metrics.health(), "configuration": environment_summary(), **intelligence_orchestrator.health(state)})
 
     @router.get("/api/intelligence")
     async def unified_intelligence(front_office: int | None = None) -> JSONResponse:

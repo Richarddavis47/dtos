@@ -6,6 +6,8 @@ from threading import RLock
 from time import monotonic
 from typing import Any, Callable
 
+from config import INTELLIGENCE_CACHE_TTL
+
 
 @dataclass
 class CacheEntry:
@@ -53,4 +55,4 @@ class IntelligenceCache:
             return {"status": "healthy", "entries": len(self._entries), "namespaces": namespaces, "hits": self.hits, "misses": self.misses, "hit_rate": round(self.hits / total, 3) if total else 0.0, "invalidations": self.invalidations, "default_ttl_seconds": self.default_ttl}
 
 
-intelligence_cache = IntelligenceCache()
+intelligence_cache = IntelligenceCache(default_ttl=INTELLIGENCE_CACHE_TTL)

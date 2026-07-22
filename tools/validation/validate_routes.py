@@ -1,15 +1,8 @@
 """Validate DTOS route registration and OpenAPI contracts."""
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-if str(REPOSITORY_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPOSITORY_ROOT))
-
-from dtos_app import app  # noqa: E402
-from src.platform.validation.routes import HttpEndpoint, validate_routes  # noqa: E402
+from dtos_app import app
+from src.platform.validation.routes import HttpEndpoint, validate_routes
 
 REQUIRED_GET_PATHS = (
     "/",

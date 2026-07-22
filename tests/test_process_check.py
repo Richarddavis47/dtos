@@ -15,6 +15,10 @@ class ProcessCheckTests(unittest.TestCase):
         item = record(10, "python.exe", "python.exe -m uvicorn dtos_app:app --port 8123")
         self.assertTrue(is_dtos_server(item))
 
+    def test_validation_server_host_is_detected(self) -> None:
+        item = record(12, "python.exe", "python.exe -m tools.validation.server_host --port 8123")
+        self.assertTrue(is_dtos_server(item))
+
     def test_powershell_query_text_is_not_a_server(self) -> None:
         item = record(11, "powershell.exe", "powershell -Command search uvicorn dtos_app:app")
         self.assertFalse(is_dtos_server(item))
