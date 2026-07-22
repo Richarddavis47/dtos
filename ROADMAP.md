@@ -21,6 +21,14 @@ Each module follows the same process:
 
 ## Current status
 
+### League Intelligence Engine - DTOS v1.3.0
+
+- Quality-, projection-, scarcity-, and window-aware team needs and evidence-backed surpluses
+- Deterministic team direction, asset availability, pairwise trade compatibility, league market map, and positional economy
+- Observable-behavior GM profiles, deterministic team reports, and prioritized league opportunities
+- Commissioner Desk League Opportunity Dashboard and additive unified API integration
+- Shared orchestration across Decision, Asset, Market, Trade, Front Office, Player Value, and Roster Intelligence without duplicated formulas
+
 ### Player Value & Projection Integration - DTOS v1.2.0
 
 - Independent DTOS, market, contender, rebuilder, current-season, positional, replacement-adjusted, and liquidity values

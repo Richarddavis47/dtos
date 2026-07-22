@@ -56,3 +56,6 @@ class RosterReport:
     weakest_position: str
     positional_advantages: tuple[str, ...]
     limitations: tuple[str, ...]
+    league_rooms: dict[int, dict[str, int]]
+    league_players: dict[int, dict[str, PlayerCard]]
+    league_metrics: dict[int, dict[str, float]]

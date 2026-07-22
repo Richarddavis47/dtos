@@ -312,6 +312,7 @@ def build_commissioner_desk(
         "front_office_summary": summary,
         "recommendations": decision.recommendations,
         "unified_recommendation": intelligence.recommendation,
+        "league_opportunity": intelligence.league,
         "league_intelligence": _league_intelligence(data, intelligence.decisions),
         "snapshot": {
             "standings": data.get("teams") or [],

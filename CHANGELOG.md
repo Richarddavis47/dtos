@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.3.0 - League Intelligence Engine v1
+
+- Added deterministic league-wide needs, surpluses, directions, asset availability, market mapping, positional economy, and pairwise trade-compatibility analysis.
+- Added evidence-backed GM profiles and team reports derived only from observable fantasy-football data, with neutral unavailable states for unsupported behavior metrics.
+- Added prioritized league opportunity and complete trade recommendation contracts that preserve separate current, future, lineup, risk, market, and negotiation impacts.
+- Added a League Opportunity Dashboard to the Commissioner Desk and additive League Intelligence output to the unified intelligence API.
+- Extended Roster Intelligence with reusable league-wide room, player, and construction metrics so League Intelligence consumes shared evaluations instead of duplicating them.
+- Added regression coverage for quality-based needs, evidence-backed surpluses, deterministic compatibility, economy, availability, GM evidence, opportunities, dashboard integration, and architecture boundaries.
+
 ## v1.2.0 - Player Value & Projection Integration v1
 
 - Added shared, contextual player-value profiles that keep DTOS dynasty, market consensus, contender, rebuilder, current-season, positional, replacement-adjusted, and liquidity values independent.

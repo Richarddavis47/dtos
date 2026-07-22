@@ -21,6 +21,7 @@ class IntelligenceResult:
     market: Any
     player_values: dict[str, Any]
     roster: Any
+    league: Any
     recommendation: UnifiedRecommendation
     timings_ms: dict[str, float]
     cache_hit: bool

@@ -140,6 +140,22 @@ def league_intelligence(view: dict[str, Any]) -> str:
     return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Intelligence</h2><p>Current structure and activity, with historical limits disclosed</p></div></div><div class="cd-intelligence">{cards}</div></section>'
 
 
+def league_opportunity_dashboard(view: dict[str, Any]) -> str:
+    report = view["league_opportunity"]
+    cards = "".join(f'<article class="cd-card cd-intel"><span>{escape(label)}</span><b>{escape(value)}</b></article>' for label, value in report.dashboard.items())
+    partners = [item for item in report.compatibilities if report.active_roster_id in {item.first_roster_id, item.second_roster_id}][:5]
+    partner_rows = "".join(
+        f'<div class="cd-mini-row"><b>Team {item.second_roster_id if item.first_roster_id == report.active_roster_id else item.first_roster_id} · {item.score}/100</b><span>{escape(", ".join(item.complementary_needs) or item.timeline_fit)}</span></div>'
+        for item in partners
+    ) or '<p class="muted">No compatible partner crossed the current evidence boundary.</p>'
+    opportunities = "".join(
+        f'<div class="cd-mini-row"><b>{escape(item.player_name)} · {item.score}/100</b><span>Team {item.owner_roster_id} · {escape(item.availability)}</span></div>'
+        for item in report.opportunities[:7]
+    ) or '<p class="muted">No evidence-supported player opportunity is available.</p>'
+    economy = "".join(f'<div class="cd-mini-row"><b>{escape(position)} · {escape(item.state)}</b><span>{item.demand} buyers / {item.supply} sellers · {item.premium:+d} premium</span></div>' for position, item in report.economy.items())
+    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Opportunity Dashboard</h2><p>League-aware needs, availability, compatibility, and market inefficiencies</p></div><span class="cd-chip">Explainable synthesis</span></div><div class="cd-intelligence">{cards}</div><div class="cd-snapshots"><details class="cd-snapshot" open><summary>Best Trade Partners</summary><div class="cd-snapshot-body">{partner_rows}</div></details><details class="cd-snapshot"><summary>Top Player Opportunities</summary><div class="cd-snapshot-body">{opportunities}</div></details><details class="cd-snapshot"><summary>League Economy</summary><div class="cd-snapshot-body">{economy}</div></details></div></section>'
+
+
 def league_snapshot(view: dict[str, Any]) -> str:
     snapshot = view["snapshot"]
     standings = "".join(f'<div class="cd-mini-row"><b>#{rank} {escape(team["team_name"])}</b><span>{team["wins"]}-{team["losses"]}-{team["ties"]} · {team["points_for"]:.2f} PF</span></div>' for rank, team in enumerate(snapshot["standings"], 1))
@@ -169,6 +185,7 @@ def commissioner_desk(view: dict[str, Any]) -> str:
         COMMISSIONER_DESK_CSS
         + '<div class="cd-shell">'
         + commissioner_header(view)
+        + league_opportunity_dashboard(view)
         + since_last_visit(view)
         + league_headlines(view)
         + front_office_summary(view)
