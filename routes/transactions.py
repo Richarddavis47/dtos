@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from components.asset_intelligence import player_dossier
 from services.asset_intelligence import build_player_dossier
+from src.core.data_platform import data_platform
 from services.transactions import transaction_center
 
 
@@ -331,6 +332,14 @@ def create_transactions_router(
         name = player.get("full_name") or " ".join(
             value for value in (player.get("first_name"), player.get("last_name")) if value
         ) or player_id
+        live = data_platform.player_report(player_id, data)
+        consensus = live["consensus"]
+        provider_values = "".join(
+            f'<tr><td>{escape(str(row["provider"]))}</td><td>{escape(str(row["value"] if row["value"] is not None else row["availability"]))}</td><td>{escape(str(row["freshness"]))}</td><td>{escape(str(row["confidence"]))}%</td><td>{escape(str((live["provider_availability"].get(row["provider"]) or {}).get("reason", "Available")))}</td></tr>'
+            for row in live["provider_values"]
+        )
+        normalized = live["normalized_player"]
+        live_panel = f'''<section class="card"><h2>Live Data & Market</h2><div class="grid"><div><div class="muted">Consensus Value</div><div class="stat">{consensus["value"] if consensus["value"] is not None else "Unavailable"}</div><p>Confidence {consensus["confidence"]}% · Agreement {consensus["agreement"]}%</p></div><div><div class="muted">Normalized Identity</div><p><b>{escape(str(normalized["position"]))}</b> · {escape(str(normalized["nfl_team"]))} · {escape(str(normalized["status"]))}</p><p>Provider IDs reconciled: {len(normalized["provider_ids"])}</p></div></div><table><thead><tr><th>Provider</th><th>Value / State</th><th>Freshness</th><th>Confidence</th><th>Availability reason</th></tr></thead><tbody>{provider_values}</tbody></table></section>'''
         cards = "".join(
             '<div class="card">'
             f'<div class="muted">{escape(transaction["timestamp"])}</div>'
@@ -343,6 +352,7 @@ def create_transactions_router(
 {TRANSACTIONS_CSS}
 <a class="back" href="/transactions">← Back to Transactions Center</a>
 {player_dossier(report, selected_team, teams)}
+{live_panel}
 <h2>Recent Transactions</h2><div class="grid">{cards}</div>
 """
         return page(str(name), body)

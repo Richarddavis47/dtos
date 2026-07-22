@@ -1,33 +1,32 @@
-# DTOS v1.4.0 — Live Data Platform & Market Integration
+# DTOS v1.4.1 — Provider Activation & Data Normalization Platform
 
-DTOS now has one transparent boundary for external data. The platform preserves each source's opinion, licensing state, provenance, quality, freshness, and failure state before intelligence engines consume it.
+DTOS now normalizes every provider opinion before it reaches storage, consensus, or intelligence. Official Sleeper trending data is activated, and player pages explain exactly which provider values exist, how fresh and reliable they are, and why other values are unavailable.
 
 ## Highlights
 
-- Public provider SDK and dynamic provider registry.
-- Explicit provider category, version, enablement, licensing tier, refresh capabilities, latency, cache, freshness, confidence, and health.
-- Independently configurable scheduled and on-demand refresh contracts with season/offseason intervals.
-- Durable, attributed snapshot warehouse and deterministic 7-day, 30-day, 90-day, one-year, and lifetime trends.
-- Robust consensus that limits outlier influence and exposes variance, agreement, bullish sources, bearish sources, and missing providers.
-- Deterministic fallback chain: live provider, fresh cache, historical snapshot, disclosed DTOS estimate, then unavailable.
-- Quality states for missing, impossible, duplicate, stale, and disagreeing data.
-- Structured news interpretation based only on observable supplied facts.
-- Standardized Data Platform APIs and provider-health visibility on Settings.
-- Market Intelligence and Sleeper HTTP transport now consume the platform boundary.
+- Canonical DTOS player identities reconcile Sleeper, FantasyCalc, KeepTradeCut, FantasyPros, Underdog, and Dynasty Daddy identifiers when supplied.
+- Normalization covers names, teams, position eligibility, free agents, rookies, values, rankings, ADP, timestamps, confidence, and metadata.
+- Invalid values, broken IDs, provider mismatches, and conflicting metadata are blocked before entering consensus.
+- Provider reliability tracks success, failure, schema stability, and latency.
+- Consensus 2.1 weights confidence, reliability, freshness, agreement, coverage, and missing sources without using a simple average.
+- Sleeper trending adds and drops use the documented public API and remain cached for offline operation.
+- Player dossiers display normalized identity, consensus, provider values, freshness, confidence, availability, licensing, and unavailable reasons.
+- `/api/players/{player_id}/intelligence` exposes the full normalized player contract.
+- Settings provides a Provider Activation Dashboard.
 
 ## Metadata
 
-- Version: 1.4.0
-- Build: 1400
-- Codename: Live Data Platform & Market Integration
+- Version: 1.4.1
+- Build: 1410
+- Codename: Provider Activation & Data Normalization Platform
 
-## Provider and licensing boundaries
+## Provider boundaries
 
-- Cached FantasyCalc, KeepTradeCut, Sleeper ADP, and DynastyProcess-compatible values retain their existing behavior behind platform adapters.
-- Sleeper league and transaction access uses the platform transport boundary.
-- FantasyPros, Dynasty Daddy, Underdog, Rotowire, NBC Sports Edge, and news integrations remain disabled unless approved access and licensing configuration are available.
-- Disabled and unavailable providers remain visible and never silently contribute values.
+- Sleeper league, player, roster, transaction, trade, matchup, metadata, and trending endpoints are active through its official read-only API.
+- Cached provider values are normalized and attributed when legitimately supplied to DTOS.
+- FantasyCalc remains subject to its attribution, caching, and commercial-use terms.
+- Providers without approved public or licensed access remain explicitly disabled; no scraping or fabricated data is introduced.
 
 ## Non-goals preserved
 
-No championship probability, win probability, new trade algorithm, new Decision Engine logic, machine learning model, or unapproved scraping was introduced.
+No championship probability, Decision Engine change, trade recommendation change, machine learning, or scouting feature was added.

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -11,6 +12,7 @@ import httpx
 
 from app_metadata import APPLICATION_NAME, VERSION
 from src.core.data_platform import data_platform
+from src.core.data_platform.normalization import PlayerIdentityResolver
 from src.core.intelligence.cache import intelligence_cache
 from config import (
     CACHE_FILE,
@@ -98,9 +100,11 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 season_type = (nfl_state or {}).get("season_type") or "regular"
                 matchup_week = week if season_type in {"regular", "post"} else 1
 
-                matchups, transactions = await asyncio.gather(
+                matchups, transactions, trending_adds, trending_drops = await asyncio.gather(
                     sleeper_get(client, f"/league/{LEAGUE_ID}/matchups/{matchup_week}"),
                     sleeper_get(client, f"/league/{LEAGUE_ID}/transactions/{matchup_week}"),
+                    sleeper_get(client, "/players/nfl/trending/add?lookback_hours=24&limit=50"),
+                    sleeper_get(client, "/players/nfl/trending/drop?lookback_hours=24&limit=50"),
                 )
 
                 cached_players = (STATE.get("data") or {}).get("players") or {}
@@ -283,6 +287,8 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                     "bench": sorted(bench, key=lambda p: (-p["points"], p["name"])),
                 })
 
+            resolver = PlayerIdentityResolver(players if isinstance(players, dict) else {})
+            normalized_players = {player_id: asdict(player) for player_id in players if (player := resolver.resolve(player_id))} if isinstance(players, dict) else {}
             STATE["data"] = {
                 "league": league,
                 "scoring_settings": league.get("scoring_settings") or {},
@@ -298,6 +304,8 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 "nfl_state": nfl_state,
                 "week": matchup_week,
                 "players": players,
+                "normalized_players": normalized_players,
+                "trending_players": {"adds": trending_adds, "drops": trending_drops, "source": "Sleeper", "updated_at": utcnow().isoformat()},
                 "players_fetched_at": players_fetched_at,
             }
             synced_at = utcnow().isoformat()

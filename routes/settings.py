@@ -42,9 +42,10 @@ def create_settings_router(
             f'<span class="pill">{escape(str(position))}</span>'
             for position in data["roster_positions"]
         )
+        platform_health = data_platform.health()
         provider_rows = "".join(
-            f"<tr><td>{escape(str(name))}</td><td>{escape(str(row['status'].value))}</td><td>{escape(str(row['licensing_tier'].value))}</td><td>{escape(str(row['freshness']))}</td><td>{escape(str(row['next_refresh'] or 'Not scheduled'))}</td></tr>"
-            for name, row in sorted(data_platform.health()["providers"].items())
+            f"<tr><td>{escape(str(name))}</td><td>{escape(str(row['status'].value))}</td><td>{escape(str(row['licensing_tier'].value))}</td><td>{escape(str(row['freshness']))}</td><td>{escape(str((platform_health['reliability'].get(name) or {}).get('score', 'Not measured')))}</td><td>{escape(str(row['failure_reason'] or 'None'))}</td><td>{escape(str(row['next_refresh'] or 'Not scheduled'))}</td></tr>"
+            for name, row in sorted(platform_health["providers"].items())
         )
         body = f"""
 <h2>League Configuration</h2>
@@ -64,7 +65,7 @@ def create_settings_router(
   <div class="card"><h3>Scoring Settings</h3><table><tbody>{scoring_rows}</tbody></table></div>
   <div class="card"><h3>League Settings</h3><table><tbody>{setting_rows}</tbody></table></div>
 </div>
-<div class="card"><h3>Provider Health</h3><p class="muted">Provider status and licensing are explicit. Disabled sources do not block DTOS.</p><table><thead><tr><th>Provider</th><th>Status</th><th>Licensing</th><th>Freshness</th><th>Next Refresh</th></tr></thead><tbody>{provider_rows}</tbody></table></div>
+<div class="card"><h3>Provider Activation Dashboard</h3><p class="muted">Authentication, licensing, availability, reliability, failures, and scheduling remain explicit. Disabled sources do not block DTOS.</p><table><thead><tr><th>Provider</th><th>Status</th><th>Licensing</th><th>Freshness</th><th>Reliability</th><th>Missing Configuration / Failure</th><th>Next Refresh</th></tr></thead><tbody>{provider_rows}</tbody></table></div>
 """
         return page("League Settings", body)
 

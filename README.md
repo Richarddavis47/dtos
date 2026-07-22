@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.4.0 adds a transparent Live Data Platform beneath the Intelligence Orchestrator. External sources now share provider contracts, licensing metadata, refresh planning, historical snapshots, health, quality, provenance, confidence, consensus, trends, and disclosed fallback states.
+DTOS v1.4.1 activates official Sleeper trending data and makes normalization mandatory for every provider value. Canonical player identity, reliability-weighted consensus, explicit availability reasons, normalized player APIs, and live player-page market details now sit between provider formats and DTOS intelligence.
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 
@@ -56,4 +56,4 @@ League-wide synthesis lives in `src/core/league_intelligence/`. It consumes orch
 
 All external provider access flows through `src/core/data_platform/`. Market Intelligence and Sleeper transport consume this boundary rather than provider implementations directly.
 
-See [Live Data Platform](docs/LIVE_DATA_PLATFORM.md), [League Intelligence](docs/LEAGUE_INTELLIGENCE.md), [Market Intelligence](docs/MARKET_INTELLIGENCE.md), [Intelligence Platform](docs/INTELLIGENCE_PLATFORM.md), [Trade Intelligence](docs/TRADE_INTELLIGENCE.md), [Asset Intelligence](docs/ASSET_INTELLIGENCE.md), [Decision Philosophy](docs/DTOS_DECISION_PHILOSOPHY.md), [Commissioner Desk architecture](docs/CommissionerDesk.md), [DTOS philosophy](DTOS_PHILOSOPHY.md), [roadmap](ROADMAP.md), and [release notes](RELEASE_NOTES.md).
+See [Data Normalization](docs/DATA_NORMALIZATION.md), [Provider Activation](docs/PROVIDER_ACTIVATION.md), [Live Data Platform](docs/LIVE_DATA_PLATFORM.md), [League Intelligence](docs/LEAGUE_INTELLIGENCE.md), [Market Intelligence](docs/MARKET_INTELLIGENCE.md), [Intelligence Platform](docs/INTELLIGENCE_PLATFORM.md), [Trade Intelligence](docs/TRADE_INTELLIGENCE.md), [Asset Intelligence](docs/ASSET_INTELLIGENCE.md), [Decision Philosophy](docs/DTOS_DECISION_PHILOSOPHY.md), [Commissioner Desk architecture](docs/CommissionerDesk.md), [DTOS philosophy](DTOS_PHILOSOPHY.md), [roadmap](ROADMAP.md), and [release notes](RELEASE_NOTES.md).
