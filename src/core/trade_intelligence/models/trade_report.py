@@ -42,6 +42,10 @@ class TradeAsset:
     team_fit_value: int
     risk: int
     source_roster_id: int
+    trade_value: int = 0
+    liquidity_score: int = 50
+    confidence_score: int = 60
+    calibration_status: str = "partially_calibrated"
 
 
 @dataclass(frozen=True)
@@ -107,6 +111,8 @@ class TradeRecommendation:
     expected_value: int
     acceptance_likelihood: int | None
     evidence: tuple[Evidence, ...]
+    recommendation_status: str = "accepted"
+    reason_code: str | None = None
 
 
 @dataclass(frozen=True)

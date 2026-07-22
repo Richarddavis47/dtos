@@ -1,3 +1,13 @@
+# DTOS v1.4.4 — Valuation Calibration and Trade Safety
+
+DTOS now compares all player, pick, market, and package values on one documented 0–1000 scale. FantasyCalc and DynastyProcess retain their raw values but are normalized independently before consensus. Internal DTOS values and draft picks are converted through explicit deterministic methods.
+
+Trade Intelligence now applies package diminishing returns and rejects low-value aggregation that lacks a premium centerpiece, including inappropriate superflex quarterback offers. Calibration state, provider agreement, confidence, and warnings are exposed in player intelligence and public crawl contracts.
+
+Full methodology and current limits are documented in `docs/VALUATION_CALIBRATION.md`.
+
+---
+
 # DTOS v1.4.3 — Public Crawl API
 
 DTOS now exposes the synchronized public league state through fast, cached, read-only JSON endpoints designed for ChatGPT and other standards-compliant crawlers.

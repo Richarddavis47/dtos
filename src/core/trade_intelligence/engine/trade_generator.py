@@ -4,6 +4,7 @@ from __future__ import annotations
 from itertools import combinations
 
 from src.core.trade_intelligence.models import TradeAsset, TradeProposal
+from src.core.valuation import adjusted_package_value, evaluate_trade_guardrails
 
 
 PACKAGE_SHAPES = (
@@ -17,7 +18,7 @@ PACKAGE_SHAPES = (
 
 
 def _value(assets: tuple[TradeAsset, ...]) -> float:
-    return sum((asset.dynasty_value + asset.team_fit_value) / 2 for asset in assets)
+    return adjusted_package_value(assets).adjusted_value
 
 
 def _matches(assets: tuple[TradeAsset, ...], kind: str | None) -> bool:
@@ -55,7 +56,9 @@ def generate_proposals(
                 if not sent_value or not received_value:
                     continue
                 ratio = received_value / sent_value
-                if 0.80 <= ratio <= 1.25:
+                superflex = any(asset.position == "QB" for asset in received)
+                guardrail = evaluate_trade_guardrails(sent, received, superflex=superflex, confidence=min(*(asset.confidence_score for asset in (*sent, *received)), 75))
+                if 0.80 <= ratio <= 1.25 and guardrail.recommendation_status == "accepted":
                     candidates.append((abs(received_value - sent_value), -sum(item.team_fit_value for item in received), sent, received))
         if candidates:
             _, _, sent, received = min(candidates, key=lambda item: (item[0], item[1], tuple(asset.asset_id for asset in item[2]), tuple(asset.asset_id for asset in item[3])))

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,6 +15,10 @@ class ProcessRecord:
     name: str
     executable: str
     arguments: str
+
+
+class ProcessInventoryError(RuntimeError):
+    """Raised when no Windows inventory source can provide trustworthy data."""
 
 
 def is_dtos_server(record: ProcessRecord, excluded_pids: set[int] | None = None) -> bool:
@@ -57,18 +62,14 @@ def genuine_dtos_servers(records: list[ProcessRecord], current_pid: int, parent_
     return tuple(record for record in records if is_dtos_server(record, excluded))
 
 
-def windows_process_inventory() -> list[ProcessRecord]:
-    command = (
-        "Get-CimInstance Win32_Process | "
-        "Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine | "
-        "ConvertTo-Json -Compress"
-    )
-    result = subprocess.run(
-        ["powershell.exe", "-NoProfile", "-Command", command],
-        capture_output=True, text=True, check=True, timeout=30,
-    )
-    payload = json.loads(result.stdout or "[]")
+def _parse_process_json(output: str, context: str) -> list[ProcessRecord]:
+    try:
+        payload = json.loads(output.strip() or "[]")
+    except json.JSONDecodeError as exc:
+        raise ProcessInventoryError(f"{context} returned malformed JSON: {exc}; stdout={output!r}") from exc
     rows = payload if isinstance(payload, list) else [payload]
+    if rows == [None]:
+        rows = []
     return [
         ProcessRecord(
             int(row.get("ProcessId") or 0), int(row.get("ParentProcessId") or 0),
@@ -76,10 +77,64 @@ def windows_process_inventory() -> list[ProcessRecord]:
             str(row.get("CommandLine") or ""),
         )
         for row in rows
+        if isinstance(row, dict)
     ]
 
 
+def _powershell_inventory(executable: str, command_name: str) -> list[ProcessRecord]:
+    query = (
+        "$ErrorActionPreference='Stop'; "
+        "[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new(); "
+        f"@({command_name} Win32_Process | "
+        "Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine) | "
+        "ConvertTo-Json -Compress -Depth 3"
+    )
+    command = [executable, "-NoProfile", "-NonInteractive", "-Command", query]
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False, timeout=30)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise ProcessInventoryError(f"PowerShell inventory invocation failed; executable={executable!r}; command={command!r}; error={exc}") from exc
+    if result.returncode:
+        raise ProcessInventoryError(
+            "PowerShell process inventory failed; "
+            f"executable={executable!r}; method={command_name}; exit_code={result.returncode}; "
+            f"stdout={result.stdout.strip()!r}; stderr={result.stderr.strip()!r}; command={command!r}"
+        )
+    return _parse_process_json(result.stdout, f"{executable} {command_name}")
+
+
+def _psutil_inventory() -> list[ProcessRecord]:
+    try:
+        import psutil
+    except ImportError as exc:
+        raise ProcessInventoryError("psutil fallback is unavailable; install repository dependencies") from exc
+    records: list[ProcessRecord] = []
+    for process in psutil.process_iter(("pid", "ppid", "name", "exe", "cmdline")):
+        try:
+            info = process.info
+            records.append(ProcessRecord(int(info.get("pid") or 0), int(info.get("ppid") or 0), str(info.get("name") or ""), str(info.get("exe") or ""), subprocess.list2cmdline(info.get("cmdline") or [])))
+        except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
+            continue
+    return records
+
+
+def windows_process_inventory() -> list[ProcessRecord]:
+    errors: list[str] = []
+    executables = tuple(dict.fromkeys(item for item in (shutil.which("powershell.exe"), shutil.which("pwsh.exe")) if item))
+    for executable in executables:
+        for method in ("Get-CimInstance", "Get-WmiObject"):
+            try:
+                return _powershell_inventory(executable, method)
+            except ProcessInventoryError as exc:
+                errors.append(str(exc))
+    try:
+        return _psutil_inventory()
+    except ProcessInventoryError as exc:
+        errors.append(str(exc))
+    raise ProcessInventoryError("All Windows process inventory methods failed:\n- " + "\n- ".join(errors))
+
+
 __all__ = [
-    "ProcessRecord", "descendants", "genuine_dtos_servers", "is_dtos_server",
+    "ProcessInventoryError", "ProcessRecord", "descendants", "genuine_dtos_servers", "is_dtos_server",
     "processes_for_run", "validation_run_id", "windows_process_inventory",
 ]

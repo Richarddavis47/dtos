@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Valuation Calibration and Trade Safety - DTOS v1.4.4
+
+- Canonical 0–1000 valuation boundary across player, pick, consensus, and trade calculations.
+- Provider-aware normalization and calibration confidence.
+- Player Intelligence Card contract and public crawl valuation summaries.
+- Explainable consolidation, market-floor, low-value aggregation, and superflex quarterback guardrails.
+
 DTOS is the Day Traders Front Office System: a live dynasty-fantasy-football command center built on Sleeper data and expanded with league-specific analytics, history, owner intelligence, and decision support.
 
 ## Product principle
