@@ -146,6 +146,16 @@ def create_api_router(
         players = player_asset_index(require_data())
         return JSONResponse({"count": len(players), "players": players})
 
+    @router.get("/api/players/{player_id}/intelligence")
+    async def api_player_intelligence(player_id: str) -> JSONResponse:
+        from fastapi.encoders import jsonable_encoder
+        await ensure_fresh()
+        try:
+            report = data_platform.player_report(player_id, require_data())
+        except KeyError:
+            return JSONResponse({"detail": "Player not found"}, status_code=404)
+        return JSONResponse(jsonable_encoder(report))
+
     @router.post("/sync")
     async def manual_sync(request: Request):
         await sync_sleeper(force_players=False)

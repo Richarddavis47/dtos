@@ -21,6 +21,14 @@ Each module follows the same process:
 
 ## Current status
 
+### Provider Activation & Data Normalization - DTOS v1.4.1
+
+- Mandatory normalized player, identity, value, ranking, ADP, timestamp, confidence, and metadata contracts
+- Official Sleeper trending activation with attribution and cached fallback
+- Reliability- and freshness-weighted consensus with explicit provider coverage
+- Normalized player APIs, live dossier market details, and informative availability reasons
+- Provider Activation Dashboard with licensing, reliability, failures, configuration, and schedules
+
 ### Live Data Platform & Market Integration - DTOS v1.4.0
 
 - Unified provider SDK, registry, licensing configuration, scheduled/on-demand refresh contracts, cache isolation, historical warehouse, and provider health

@@ -8,13 +8,13 @@ The Live Data Platform is DTOS's single boundary for external information. Intel
 
 `src/core/data_platform/` contains immutable contracts, the provider SDK, dynamic registry, refresh scheduler, namespace-aware cache, attributed snapshot warehouse, robust aggregation, historical trends, quality checks, structured news interpretation, and provider health.
 
-The dependency direction is:
+The v1.4.1 dependency direction is:
 
 ```text
-Application → Intelligence Orchestrator → Intelligence Engines → Data Platform → Providers
+External Providers → Provider Registry → Normalizer → Data Platform → Intelligence Orchestrator → Intelligence Engines
 ```
 
-Provider adapters implement `DataProvider.fetch()` and return `DataEnvelope`. A provider can be registered, disabled, or replaced without changing business logic.
+Provider adapters implement `DataProvider.fetch()`, normalize provider formats into canonical DTOS models, and return `DataEnvelope`. A provider can be registered, disabled, or replaced without changing business logic.
 
 ## Envelope contract
 

@@ -1,7 +1,7 @@
 """Stable contracts for external data, provenance, health, and refresh state."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -56,6 +56,9 @@ class DataEnvelope:
     retrieval_mode: str
     quality: DataQuality
     limitations: tuple[str, ...]
+    availability: str = "Unavailable"
+    reliability: int = 50
+    normalization: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

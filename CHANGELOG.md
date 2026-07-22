@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.1 - Provider Activation & Data Normalization Platform
+
+- Added mandatory player identity and provider normalization contracts for names, IDs, teams, positions, values, rankings, ADP, timestamps, confidence, and metadata reconciliation.
+- Added observable provider reliability scoring and freshness-, reliability-, agreement-, and coverage-aware consensus weighting.
+- Activated official Sleeper trending add/drop ingestion alongside existing league, player, roster, transaction, trade, matchup, and metadata synchronization.
+- Added normalized player intelligence APIs and live player-page market sections with provider values, confidence, freshness, availability, licensing, and explicit unavailable reasons.
+- Expanded Settings into a Provider Activation Dashboard with reliability, failures, licensing, schedules, and missing configuration.
+- Added regression coverage for identity resolution, normalization, invalid values, reliability, weighted consensus, player APIs, availability, deterministic outputs, and engine boundaries.
+
 ## v1.4.0 - Live Data Platform & Market Integration
 
 - Added a unified external-data platform with a public provider SDK, dynamic registry, licensing-aware configuration, refresh scheduling, isolated cache namespaces, durable historical snapshots, health reporting, and deterministic fallback states.

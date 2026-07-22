@@ -94,6 +94,8 @@ class PlayerApiContractTests(unittest.TestCase):
         valid = self.client.get(f"{dossier_url}?front_office=1")
         self.assertEqual(valid.status_code, 200)
         self.assertIn("Asset Intelligence v1", valid.text)
+        self.assertIn("Live Data & Market", valid.text)
+        self.assertIn("Availability reason", valid.text)
         self.assertEqual(self.client.get("/players/").status_code, 404)
         self.assertEqual(self.client.get("/players/not-found").status_code, 404)
 
