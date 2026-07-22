@@ -21,6 +21,13 @@ Each module follows the same process:
 
 ## Current status
 
+### Public Crawl API - DTOS v1.4.3
+
+- Cached public crawl discovery, consolidated snapshot, and section JSON endpoints
+- Shared synchronized league data and Intelligence Orchestrator outputs without request-time synchronization
+- Strict public serialization, league validation, filters, pagination, CORS, robots, and sitemap discovery
+- Cache invalidation after successful Sleeper and transaction synchronization
+
 ### Provider Data Flow Activation - DTOS v1.4.2
 
 - Approved FantasyCalc and DynastyProcess public-source ingestion with daily caching and attribution

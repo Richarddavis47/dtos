@@ -6,9 +6,9 @@ import subprocess
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.4.2"
-BUILD_NUMBER = 1420
-RELEASE_CODENAME = "Provider Data Flow Activation"
+VERSION = "1.4.3"
+BUILD_NUMBER = 1430
+RELEASE_CODENAME = "Public Crawl API"
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
 

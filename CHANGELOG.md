@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.4.3 - Public Crawl API
+
+- Added a lightweight public crawl index, consolidated snapshot, and section-specific JSON endpoints backed by synchronized DTOS data.
+- Added safe league selection, pagination and filtering, strict public serialization, explicit JSON errors, and cross-origin read access.
+- Reused the shared intelligence cache with per-sync namespaces, serialized cache creation, stale-data continuity, and sync-driven invalidation.
+- Added `robots.txt` and a public-page-only XML sitemap for `https://dtos.onrender.com`.
+- Added regression coverage for discovery, snapshots, every section, cache reuse and invalidation, league selection, empty data, sensitive fields, robots, and sitemap behavior.
+
 ## v1.4.2 - Provider Data Flow Activation
 
 - Activated cached, attributed FantasyCalc and DynastyProcess public market ingestion with canonical Sleeper-ID reconciliation.
