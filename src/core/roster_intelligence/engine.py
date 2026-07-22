@@ -6,6 +6,7 @@ from typing import Any
 
 from src.core.asset_intelligence import AssetContext, evaluate_player
 from src.core.roster_intelligence.models import GradeDimension, PlayerCard, PositionRoomReport, RosterReport
+from src.core.team_intelligence import build_team_intelligence
 
 POSITIONS = ("QB", "RB", "WR", "TE")
 POSITION_WEIGHTS = {
@@ -44,11 +45,15 @@ def _market(report: Any, market: Any) -> tuple[int | None, str, int]:
 
 def _player_card(report: Any, market: Any, window: str, scarcity: int, unified: Any = None) -> PlayerCard:
     if unified is not None:
+        dynasty = _clamp((unified.dtos_dynasty.value or 0) / 10)
+        contender = _clamp((unified.contender.value or 0) / 10)
+        rebuilder = _clamp((unified.rebuilder.value or 0) / 10)
+        market_value = round(unified.market_consensus.value / 10) if unified.market_consensus.value is not None else None
         return PlayerCard(
-            unified.player_id, unified.positional.tier, _grade(unified.dtos_dynasty.value or 0),
-            _clamp(unified.dtos_dynasty.value or 0), "Unknown" if unified.age is None else "Ascending" if unified.age <= 24 else "Prime" if unified.age <= 27 else "Veteran",
-            unified.market_trend, round(unified.market_consensus.value) if unified.market_consensus.value is not None else None,
-            round(unified.dtos_dynasty.value or 0), round(unified.contender.value or 0), round(unified.rebuilder.value or 0),
+            unified.player_id, unified.positional.tier, _grade(dynasty),
+            dynasty, "Unknown" if unified.age is None else "Ascending" if unified.age <= 24 else "Prime" if unified.age <= 27 else "Veteran",
+            unified.market_trend, market_value,
+            dynasty, contender, rebuilder,
             round(unified.trade_liquidity.value or 0), unified.positional.scarcity, report.risk.level,
             _clamp((unified.projection.ceiling or 0) * 4), _clamp((unified.projection.floor or 0) * 5),
             unified.projection.source, report.long_term_outlook, unified.recommendation,
@@ -188,4 +193,5 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
     }
     advantages = tuple(room.advantage for room in rooms.values() if room.advantage)
     league_metric_map = {int(item["roster_id"]): {key: value for key, value in item.items() if key != "roster_id"} for item in league_dimensions}
-    return RosterReport(identity, identity_reasoning, rooms, cards, metrics, sorted_rooms[0], sorted_rooms[-1], advantages, ("Production and projection dimensions use available deterministic Asset Intelligence proxies when live feeds are unavailable.",), league_rooms_by_roster, league_players, league_metric_map)
+    team_intelligence, league_summary = build_team_intelligence(intelligence.decisions, league_rooms_by_roster, league_players, league_metric_map)
+    return RosterReport(identity, identity_reasoning, rooms, cards, metrics, sorted_rooms[0], sorted_rooms[-1], advantages, ("Production and projection dimensions use available deterministic Asset Intelligence proxies when live feeds are unavailable.",), league_rooms_by_roster, league_players, league_metric_map, team_intelligence, league_summary)

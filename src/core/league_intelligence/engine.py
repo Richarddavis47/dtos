@@ -12,35 +12,15 @@ from src.core.league_intelligence.models import (
 POSITIONS = ("QB", "RB", "WR", "TE")
 
 
-def _direction(decision: Any) -> TeamDirection:
-    current, future = decision.current_outlook.score, decision.future_outlook.score
-    if current >= 88:
-        label = "Championship Favorite"
-    elif current >= 78:
-        label = "Strong Contender"
-    elif current >= 67 and future >= 62:
-        label = "Bubble Team"
-    elif future >= 82:
-        label = "Future Contender"
-    elif future >= current + 15:
-        label = "Ascending"
-    elif current < 45 and future < 55:
-        label = "Hard Rebuild"
-    elif current < 55:
-        label = "Productive Struggle" if future >= 65 else "Soft Rebuild"
-    elif current > future + 15:
-        label = "Retool"
-    else:
-        label = "Bridge Team"
-    confidence = min(90, round((decision.current_outlook.confidence + decision.future_outlook.confidence) / 2))
-    return TeamDirection(decision.profile.roster_id, label, confidence, (f"Current outlook {current}/100.", f"Future outlook {future}/100.", decision.window_explanation))
+def _direction(decision: Any, card: Any) -> TeamDirection:
+    return TeamDirection(decision.profile.roster_id, card.current_window.value, card.confidence, (f"Current league-relative strength {card.current_strength}/100 (#{card.current_contending.rank}).", f"Future league-relative strength {card.future_strength}/100 (#{card.future_outlook.rank}).", *card.explanation))
 
 
 def _need(roster_id: int, position: str, room_score: int, cards: list[Any], direction: TeamDirection) -> TeamNeed:
     starter_quality = max((card.contender_value for card in cards), default=0)
     future_quality = max((card.rebuilder_value for card in cards), default=0)
     replacement = max((card.weekly_floor for card in cards), default=0)
-    urgency = round((100 - room_score) * .45 + (100 - starter_quality) * .30 + (100 - replacement) * .15 + (10 if direction.label in {"Championship Favorite", "Strong Contender"} else (100 - future_quality) * .10))
+    urgency = round((100 - room_score) * .45 + (100 - starter_quality) * .30 + (100 - replacement) * .15 + (10 if direction.label in {"Elite Contender", "Contender"} else (100 - future_quality) * .10))
     priority = "Critical" if urgency >= 72 else "High" if urgency >= 58 else "Medium" if urgency >= 43 else "Low"
     return TeamNeed(roster_id, position, priority, max(0, min(100, urgency)), (f"Quality-first {position} room score is {room_score}/100.", f"Best contender value is {starter_quality}/100; best future value is {future_quality}/100.", f"Direction is {direction.label}; player count is considered only inside the separate depth input."))
 
@@ -56,11 +36,11 @@ def _surplus(roster_id: int, position: str, room_score: int, cards: list[Any], n
 def _availability(player_id: str, roster_id: int, card: Any, direction: TeamDirection, surplus_positions: set[str], position: str) -> AssetAvailability:
     if card.tier == "Elite Franchise Player":
         status = "Untouchable"
-    elif card.tier == "Cornerstone" and direction.label not in {"Hard Rebuild", "Soft Rebuild"}:
+    elif card.tier == "Cornerstone" and direction.label not in {"Rebuilding", "Full Rebuild"}:
         status = "Extremely Difficult"
     elif position in surplus_positions and card.trade_liquidity >= 65:
         status = "Available"
-    elif direction.label in {"Hard Rebuild", "Soft Rebuild", "Productive Struggle"} and card.age_curve == "Veteran":
+    elif direction.label in {"Rebuilding", "Full Rebuild"} and card.age_curve == "Veteran":
         status = "Actively Shopping"
     elif card.trade_liquidity >= 60:
         status = "Available For Premium"
@@ -71,7 +51,7 @@ def _availability(player_id: str, roster_id: int, card: Any, direction: TeamDire
 
 def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
     roster = intelligence.roster
-    directions = {roster_id: _direction(decision) for roster_id, decision in intelligence.decisions.items()}
+    directions = {roster_id: _direction(decision, roster.team_intelligence[roster_id]) for roster_id, decision in intelligence.decisions.items()}
     needs: dict[int, tuple[TeamNeed, ...]] = {}
     surpluses: dict[int, tuple[TeamSurplus, ...]] = {}
     availability: dict[str, AssetAvailability] = {}
@@ -96,8 +76,8 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
         first_surplus = {item.category for item in surpluses[first_id]}
         second_surplus = {item.category for item in surpluses[second_id]}
         complementary = tuple(sorted((first_needs & second_surplus) | (second_needs & first_surplus)))
-        first_rebuild = "Rebuild" in directions[first_id].label or directions[first_id].label == "Productive Struggle"
-        second_rebuild = "Rebuild" in directions[second_id].label or directions[second_id].label == "Productive Struggle"
+        first_rebuild = directions[first_id].label in {"Rebuilding", "Full Rebuild"}
+        second_rebuild = directions[second_id].label in {"Rebuilding", "Full Rebuild"}
         timeline = "Complementary" if first_rebuild != second_rebuild else "Aligned"
         score = min(100, round(observed.score * .45 + len(complementary) * 16 + (12 if timeline == "Complementary" else 5) + min(observed.bilateral_trades, 3) * 4))
         compatibility_rows.append(TradeCompatibility(first_id, second_id, score, complementary, timeline, (f"Front Office Intelligence compatibility is {observed.score}/100.", f"Complementary needs/surpluses: {', '.join(complementary) or 'none'}.", f"Timeline fit is {timeline}.", f"Observed bilateral trades: {observed.bilateral_trades}.")))
@@ -114,8 +94,8 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
         premium = max(-50, min(50, (demand - supply) * 12))
         state = "Elite Scarcity" if demand >= supply + 3 else "Scarce" if demand > supply else "Oversupplied" if supply > demand + 1 else "Balanced"
         economy[position] = PositionEconomy(position, state, supply, demand, premium, f"{demand} quality-based buyers and {supply} evidence-supported sellers; premium {premium:+d}.")
-    rebuild_ids = tuple(sorted(roster_id for roster_id, item in directions.items() if item.label in {"Hard Rebuild", "Soft Rebuild", "Productive Struggle", "Future Contender", "Ascending"}))
-    contender_ids = tuple(sorted(roster_id for roster_id, item in directions.items() if item.label in {"Championship Favorite", "Strong Contender", "Bubble Team"}))
+    rebuild_ids = tuple(sorted(roster_id for roster_id, item in directions.items() if item.label in {"Rebuilding", "Full Rebuild"}))
+    contender_ids = tuple(sorted(roster_id for roster_id, item in directions.items() if item.label in {"Elite Contender", "Contender"}))
     pick_sellers = tuple(sorted(roster_id for roster_id, rows in surpluses.items() if "Future Picks" in {item.category for item in rows} and roster_id in contender_ids))
     market_map["Draft Picks"] = {"buyers": rebuild_ids, "sellers": pick_sellers}
     market_map["Veterans"] = {"buyers": contender_ids, "sellers": rebuild_ids}

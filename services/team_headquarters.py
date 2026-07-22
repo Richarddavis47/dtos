@@ -159,7 +159,7 @@ def calculate_team_grades(players: list[dict[str, Any]], team: dict[str, Any], r
 
 
 def generate_front_office_summary(
-    snapshot: dict[str, Any], grades: dict[str, dict[str, Any]], decision: Any
+    snapshot: dict[str, Any], grades: dict[str, dict[str, Any]], decision: Any, team_card: Any | None = None,
 ) -> dict[str, str]:
     """Create a deterministic, fact-limited front-office summary."""
     construction = grades["Roster Construction"]
@@ -171,6 +171,14 @@ def generate_front_office_summary(
         if snapshot["known_ages"]
         else "Player age data is unavailable, so age-based conclusions are limited."
     )
+    if team_card is not None:
+        return {
+            "Overall Assessment": f"League-relative Overall Grade is {team_card.overall.grade} ({team_card.overall.score}/100), ranked #{team_card.overall.rank} of {team_card.overall.league_size}. Current Window: {team_card.current_window.value}. {age_note}",
+            "Current Strengths": team_card.explanation[0],
+            "Current Weaknesses": team_card.explanation[1],
+            "Short-Term Outlook": f"Current Championship Outlook uses the league-relative Current Contending Grade: {team_card.current_contending.grade} ({team_card.current_strength}/100), #{team_card.current_contending.rank} in the league, evaluated independently from future assets. " + " ".join(team_card.current_contending.reasons),
+            "Long-Term Outlook": f"Future Outlook Grade is {team_card.future_outlook.grade} ({team_card.future_strength}/100), #{team_card.future_outlook.rank} in the league and remains an independently calculated future horizon. " + " ".join(team_card.future_outlook.reasons),
+        }
     return {
         "Overall Assessment": f"Current Championship Outlook is {decision.current_outlook.grade} ({decision.current_outlook.score}/100); Future Outlook is {decision.future_outlook.grade} ({decision.future_outlook.score}/100). The separate roster-construction grade is {construction['grade']} ({construction['score']}/100). {age_note}",
         "Current Strengths": "The strongest observable areas are " + " and ".join(f"{name} ({grades[name]['score']}/100)" for name in strongest) + ".",
@@ -219,7 +227,8 @@ def build_team_headquarters(
     grades = calculate_team_grades(players, team, intelligence.roster)
     decision = intelligence.decision
     organization = intelligence.front_office_model.reports[roster_id]
-    rank = next(index for index, item in enumerate(teams, 1) if item is team)
+    team_intelligence = intelligence.roster.team_intelligence[roster_id]
+    rank = team_intelligence.overall.rank
     if isinstance(last_updated, datetime):
         updated = last_updated.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     elif last_updated:
@@ -242,11 +251,12 @@ def build_team_headquarters(
         "last_updated": updated,
         "snapshot": snapshot,
         "grades": grades,
-        "summary": generate_front_office_summary(snapshot, grades, decision),
+        "summary": generate_front_office_summary(snapshot, grades, decision, team_intelligence),
         "decision": decision,
         "front_office_intelligence": organization,
         "unified_recommendation": intelligence.recommendation,
         "roster_intelligence": intelligence.roster,
+        "team_intelligence": team_intelligence,
         "roster_groups": roster_groups,
         "other_players": [player for player in players if player.get("position") not in CORE_POSITIONS],
         "picks_by_year": {

@@ -1,3 +1,13 @@
+# DTOS v1.4.5 — League Intelligence & Team Grading
+
+Team strength is now evaluated relative to the selected league. Every franchise receives the same reusable Team Intelligence Card with overall, current, dynasty, lineup, depth, position, draft, youth, future, flexibility, and liquidity grades.
+
+Commissioner Desk, Team Headquarters, Front Office Intelligence, League Intelligence, and public crawl APIs now share the same competitive-window vocabulary and contender totals. Before Week 1, projected order replaces misleading 0–0 standings.
+
+See `docs/TEAM_INTELLIGENCE.md` for weighting, percentile thresholds, API fields, and limitations.
+
+---
+
 # DTOS v1.4.4 — Valuation Calibration and Trade Safety
 
 DTOS now compares all player, pick, market, and package values on one documented 0–1000 scale. FantasyCalc and DynastyProcess retain their raw values but are normalized independently before consensus. Internal DTOS values and draft picks are converted through explicit deterministic methods.

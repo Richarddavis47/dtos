@@ -237,23 +237,30 @@ def _headlines(data: dict[str, Any]) -> list[LeagueHeadline]:
     return headlines[:5]
 
 
-def _league_intelligence(data: dict[str, Any], decisions: dict[int, Any]) -> dict[str, Any]:
+def _league_intelligence(data: dict[str, Any], cards: dict[int, Any], league_summary: Any) -> dict[str, Any]:
     teams = data.get("teams") or []
     ages = [age for team in teams if (age := _team_average_age(data, team)) is not None]
     total_picks = sum(len(team.get("picks_owned") or []) for team in teams)
     pick_leader = max((len(team.get("picks_owned") or []) for team in teams), default=0)
-    windows = Counter()
-    for team in teams:
-        roster_id = int(team.get("roster_id") or 0)
-        decision = decisions[roster_id]
-        windows[decision.window] += 1
+    windows = Counter(card.current_window.value for card in cards.values())
     transactions = normalize_transactions(data)
     return {
         "average_roster_age": round(mean(ages), 1) if ages else None,
         "draft_concentration": round(pick_leader / total_picks * 100) if total_picks else None,
         "recent_activity": len(transactions),
-        "contenders": sum(count for window, count in windows.items() if window.value in {"Championship Window", "Playoff Window"}),
-        "rebuilders": sum(count for window, count in windows.items() if window.value == "Rebuild Window"),
+        "average_team_grade": league_summary.average_team_grade,
+        "league_strength": league_summary.league_strength,
+        "league_parity": league_summary.parity_score,
+        "contenders": sum(windows[name] for name in ("Elite Contender", "Contender")),
+        "rebuilders": sum(windows[name] for name in ("Rebuilding", "Full Rebuild")),
+        "strongest_position": league_summary.strongest_position_group,
+        "weakest_position": league_summary.weakest_position_group,
+        "championship_favorite": league_summary.championship_favorite,
+        "most_draft_capital": league_summary.most_draft_capital,
+        "least_draft_capital": league_summary.least_draft_capital,
+        "most_flexible_roster": league_summary.most_flexible_roster,
+        "oldest_team": league_summary.oldest_team,
+        "youngest_team": league_summary.youngest_team,
         "trending_up": "Unavailable without historical snapshots",
         "trending_down": "Unavailable without historical snapshots",
     }
@@ -283,23 +290,20 @@ def build_commissioner_desk(
         for team in data.get("teams") or []
         if int(team.get("roster_id") or 0) == selected_front_office.roster_id
     )
-    rank = next(
-        index
-        for index, team in enumerate(data.get("teams") or [], 1)
-        if int(team.get("roster_id") or 0) == selected_front_office.roster_id
-    )
     intelligence = intelligence_orchestrator.analyze(data, selected_front_office.roster_id)
     decision = intelligence.decision
+    team_card = intelligence.roster.team_intelligence[selected_front_office.roster_id]
     since_time = _parse_since(since)
     summary = {
-        "current_outlook": decision.current_outlook,
-        "future_outlook": decision.future_outlook,
+        "current_outlook": team_card.current_contending,
+        "future_outlook": team_card.future_outlook,
         "depth": decision.depth,
         "asset_health": decision.asset_health,
-        "competitive_window": decision.window.value,
-        "window_explanation": decision.window_explanation,
+        "competitive_window": team_card.current_window.value,
+        "window_explanation": " ".join(team_card.explanation),
         "record": f"{selected_team.get('wins', 0)}-{selected_team.get('losses', 0)}-{selected_team.get('ties', 0)}",
-        "power_ranking": rank,
+        "power_ranking": team_card.overall.rank,
+        "team_intelligence": team_card,
     }
     normalized = normalize_transactions(data)
     return {
@@ -313,9 +317,10 @@ def build_commissioner_desk(
         "recommendations": decision.recommendations,
         "unified_recommendation": intelligence.recommendation,
         "league_opportunity": intelligence.league,
-        "league_intelligence": _league_intelligence(data, intelligence.decisions),
+        "league_intelligence": _league_intelligence(data, intelligence.roster.team_intelligence, intelligence.roster.league_summary),
         "snapshot": {
-            "standings": data.get("teams") or [],
+            "standings": sorted(data.get("teams") or [], key=lambda team: intelligence.roster.team_intelligence[int(team.get("roster_id") or 0)].overall.rank),
+            "season_label": intelligence.roster.league_summary.season_label,
             "transactions": normalized[:5],
             "matchups": data.get("matchups") or {},
             "leader": (data.get("teams") or [None])[0],

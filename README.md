@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.4.4 adds a documented canonical 0–1000 valuation boundary, provider-aware normalization, confidence-weighted market consensus, reusable Player Intelligence Cards, and trade-package safety guardrails. Raw provider values remain auditable, while incompatible scales are never compared directly. See [Valuation Calibration](docs/VALUATION_CALIBRATION.md).
+DTOS v1.4.5 adds league-relative Team Intelligence: one explainable grading card, standardized competitive windows, preseason projections, and consistent contender counts across Commissioner Desk, Team Headquarters, League Intelligence, and crawl APIs. See [Team Intelligence](docs/TEAM_INTELLIGENCE.md) and [Valuation Calibration](docs/VALUATION_CALIBRATION.md).
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 
