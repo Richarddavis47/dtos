@@ -19,6 +19,7 @@ from src.core.intelligence.pipeline import IntelligencePipeline
 from src.core.intelligence.recommendations import resolve_recommendation
 from src.core.intelligence.registry import IntelligenceRegistry, intelligence_registry
 from src.core.market_intelligence import market_intelligence
+from src.core.roster_intelligence import evaluate_roster
 from src.core.trade_intelligence import trade_intelligence
 
 
@@ -62,7 +63,7 @@ def _market_provider(context: IntelligenceContext, player_reports: dict[str, Any
 
 
 def _register_defaults(registry: IntelligenceRegistry) -> None:
-    defaults = {"decision": _decision_provider, "asset": _asset_provider, "front_office": _front_office_provider, "trade": _trade_provider, "market": _market_provider}
+    defaults = {"decision": _decision_provider, "asset": _asset_provider, "front_office": _front_office_provider, "trade": _trade_provider, "market": _market_provider, "roster": evaluate_roster}
     existing = set(registry.names())
     for name, provider in defaults.items():
         if name not in existing:
@@ -112,7 +113,9 @@ class IntelligenceOrchestrator:
             confidence = calculate_confidence(evidence, providers=5, expected_providers=5, market_available=market_available, sample_size=offices.reports[roster_id].activity.trades, missing=missing)
             recommendation = resolve_recommendation(decision=decision, trade=top_trade, front_office=offices.reports[roster_id], market=market, evidence=evidence, confidence=confidence)
             pipeline.timings_ms["orchestration_total"] = round((perf_counter() - total_started) * 1000, 3)
-            return IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, offices, trades, market, recommendation, pipeline.timings_ms, False)
+            partial = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, offices, trades, market, None, recommendation, pipeline.timings_ms, False)
+            roster = pipeline.run("roster_intelligence", self.cache.get_or_create, prefix + "roster", lambda: self.registry.provider("roster")(partial))
+            return replace(partial, roster=roster, timings_ms=pipeline.timings_ms)
 
         try:
             result = self.cache.get_or_create(key, execute)

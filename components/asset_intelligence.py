@@ -34,7 +34,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict])
         f'<article class="ai-value"><span>{escape(value.name)}</span><b>{value.score}</b><small>{value.confidence}% confidence</small>{_evidence(value)}</article>'
         for value in (report.core_values.dynasty, report.core_values.redraft, report.core_values.market, report.core_values.team_fit)
     )
-    snapshot = (("Position", profile.position), ("NFL Team", profile.nfl_team), ("Age", str(profile.age or "Unavailable")), ("Experience", str(profile.experience if profile.experience is not None else "Unavailable")), ("Contract", profile.contract_status), ("Injury", profile.injury_status), ("Bye", profile.bye_week))
+    snapshot = (("Asset Tier", report.archetypes[0]), ("Position", profile.position), ("NFL Team", profile.nfl_team), ("Age", str(profile.age or "Unavailable")), ("Experience", str(profile.experience if profile.experience is not None else "Unavailable")), ("Contract", profile.contract_status), ("Injury", profile.injury_status), ("Bye", profile.bye_week))
     snapshot_html = "".join(f"<li><b>{escape(label)}:</b> {escape(value)}</li>" for label, value in snapshot)
     strengths = "".join(f"<li>{escape(item)}</li>" for item in report.strengths)
     weaknesses = "".join(f"<li>{escape(item)}</li>" for item in report.weaknesses)

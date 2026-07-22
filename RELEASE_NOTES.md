@@ -1,27 +1,24 @@
-# DTOS v1.0.0 - Front Office Operating System
+# DTOS v1.1.0 — Roster Intelligence Engine v1
 
-DTOS v1.0.0 turns the feature-complete intelligence foundation into a stable, documented, reproducible Front Office Operating System suitable for long-term development and single-process deployment.
+DTOS now evaluates roster quality, leverage, market strength, longevity, and construction instead of rewarding raw player counts.
 
 ## Highlights
 
-- Validates configuration at startup while preserving documented environment overrides.
-- Emits structured logs with request IDs and exposes startup, request, cache, provider, recommendation, and health metrics.
-- Freezes and documents all v1 API inputs, outputs, errors, compatibility guarantees, and deprecation policy.
-- Supplies one canonical, timed validation command for every release gate.
-- Adds meaningful large-league, repeated-request, configuration, observability, architecture, documentation, and performance regressions.
-- Completes the operator and developer documentation set, production-readiness checklist, validation record, and v1.1 roadmap.
-- Preserves every intelligence domain, existing route, cache fallback, and deterministic recommendation contract.
+- Quality-first QB, RB, WR, and TE room grades with six independent dimensions and A+ through F grading.
+- Elite Asset tiers from Elite Franchise Player through Replacement Level.
+- League-relative positional advantages based on shared player evaluations rather than room size.
+- Roster identities including Contender, Young Contender, Aging Contender, Ascending, Rebuilding, and Future Powerhouse.
+- Team HQ widgets for windows, elite concentration, trade chips, flexibility, weekly ceiling/floor, balance, and strongest/weakest rooms.
+- Enhanced roster cards expose tier, overall grade, and recommended action.
+- Every grade and classification includes deterministic reasoning and explicit data limitations.
 
 ## Metadata
 
-- Application: DTOS
-- Version: 1.0.0
-- Build: 1000
-- Codename: Front Office Operating System
+- Version: 1.1.0
+- Build: 1100
+- Codename: Roster Intelligence Engine v1
 
-## Intentional boundaries
+## Known limitations
 
-- Authentication, authorization, multi-user controls, and multi-league synchronization remain out of scope.
-- The persisted cache is JSON and process-local; horizontally scaled deployment requires external coordination.
-- Live external market retrieval and scheduled historical collection remain future extensions.
-- Hosting infrastructure owns TLS, persistence, process supervision, external monitoring, and capacity planning.
+- When live production or projection feeds are unavailable, weekly dimensions use transparent Asset Intelligence opportunity and risk proxies.
+- Market values remain explicitly unavailable when no provider snapshot exists; DTOS never presents intrinsic value as live consensus.

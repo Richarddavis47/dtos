@@ -19,6 +19,7 @@ TEAM_HQ_CSS = """
 .thq-header{display:flex;justify-content:space-between;gap:18px;align-items:center;background:linear-gradient(135deg,#142a43,#0b1727);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:15px}.thq-identity{display:flex;gap:15px;align-items:center}.thq-avatar{width:72px;height:72px;border-radius:18px;object-fit:cover;background:#1b3048;border:1px solid #39536f}.thq-avatar-fallback{display:grid;place-items:center;font-size:25px;font-weight:950;color:var(--accent)}.thq-title h2{margin:2px 0 4px}.thq-meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:11px}.thq-badge{display:inline-block;border:1px solid rgba(245,196,81,.55);color:var(--gold);border-radius:999px;padding:6px 10px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}.thq-updated{text-align:right;color:var(--muted);font-size:10px;margin-top:8px}
 .thq-section{margin-top:18px}.thq-section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:9px}.thq-section-head h2{margin:0}.thq-section-head span{color:var(--muted);font-size:11px}.thq-cards{display:grid;grid-template-columns:repeat(7,minmax(115px,1fr));gap:9px}.thq-kpi,.thq-grade,.thq-future{background:linear-gradient(180deg,#13243a,#0c1929);border:1px solid var(--line);border-radius:14px;padding:13px}.thq-kpi span,.thq-grade span,.thq-future span{display:block;font-size:9px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.06em}.thq-kpi b{display:block;font-size:22px;margin-top:5px}.thq-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.thq-summary article{background:#101d2d;border:1px solid var(--line);border-radius:13px;padding:13px}.thq-summary h3{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}.thq-summary p{font-size:12px;color:#c7d2e0;margin:0;line-height:1.55}
 .thq-grades{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.thq-grade-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.thq-grade h3{margin:0;font-size:13px}.thq-grade-mark{font-size:25px;font-weight:950;color:var(--accent)}.thq-grade-score{color:var(--muted);font-size:10px}.thq-grade details{margin-top:9px;border-top:1px solid var(--line);padding-top:8px}.thq-grade summary{cursor:pointer;font-size:10px;font-weight:850;color:var(--gold)}.thq-reasoning{font-size:10px;color:var(--muted);line-height:1.5}.thq-reasoning b{color:var(--text)}
+.thq-dimensions{display:grid;gap:4px;margin-top:8px}.thq-dimension{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}.thq-tier{display:block;margin-top:5px;color:var(--gold);font-size:9px;font-weight:900;text-transform:uppercase}.thq-intel{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
 .thq-roster{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}.thq-room{background:#101d2d;border:1px solid var(--line);border-radius:14px;overflow:hidden}.thq-room-head{display:flex;justify-content:space-between;background:#0b1727;padding:11px 13px;font-weight:900}.thq-player{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:10px 13px;border-top:1px solid rgba(38,55,76,.7)}.thq-player a{font-weight:800}.thq-player-meta{font-size:10px;color:var(--muted);margin-top:3px}.thq-status{font-size:9px;font-weight:900;border:1px solid var(--line);border-radius:999px;padding:4px 7px;align-self:center}.thq-status.starter{color:var(--accent);border-color:rgba(110,231,183,.45)}
 .thq-picks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.thq-pick-year{background:#101d2d;border:1px solid var(--line);border-radius:14px;padding:13px}.thq-pick-year h3{margin:0 0 8px;color:var(--accent)}.thq-pick{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid rgba(38,55,76,.65)}.thq-pick small{display:block;color:var(--muted);margin-top:2px}.thq-performance{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}.thq-timeline{display:grid;gap:8px}.thq-event{display:grid;grid-template-columns:145px 105px minmax(0,1fr) auto;gap:10px;align-items:center;background:#101d2d;border:1px solid var(--line);border-radius:12px;padding:11px 13px}.thq-event-type{font-weight:900;color:var(--accent)}.thq-event-assets{color:var(--muted);font-size:11px}.thq-event a{font-size:10px}.thq-future-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.thq-future b{display:block;margin:8px 0 3px}.thq-future small{color:var(--muted)}.thq-actions{display:flex;gap:9px;flex-wrap:wrap}.thq-action{display:inline-block;border:1px solid var(--line);border-radius:10px;background:#172940;color:var(--text);padding:10px 13px;font-weight:850}.thq-action.placeholder{color:var(--muted);border-style:dashed;cursor:not-allowed}
 @media(max-width:1100px){.thq-cards{grid-template-columns:repeat(4,1fr)}.thq-summary{grid-template-columns:repeat(2,1fr)}.thq-future-grid{grid-template-columns:repeat(3,1fr)}}
@@ -30,6 +31,13 @@ TEAM_HQ_CSS = """
 
 def _display(value: Any) -> str:
     return "Unavailable" if value is None else str(value)
+
+
+def _player_tier(player: dict[str, Any]) -> str:
+    intelligence = player.get("intelligence")
+    if intelligence is None:
+        return ""
+    return f'<span class="thq-tier">{escape(intelligence.tier)} · {escape(intelligence.overall_grade)} · {escape(intelligence.recommended_action)}</span>'
 
 
 def _asset_cards(snapshot: dict[str, Any]) -> str:
@@ -46,11 +54,18 @@ def _asset_cards(snapshot: dict[str, Any]) -> str:
 
 
 def _grade_cards(grades: dict[str, dict[str, Any]]) -> str:
-    return "".join(
-        f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>{escape(name)}</h3><div class="thq-grade-score">{grade["score"]}/100</div></div><div class="thq-grade-mark">{escape(grade["grade"])}</div></div>'
-        f'<details><summary>Show Reasoning</summary><div class="thq-reasoning"><p><b>Data used:</b> {escape(grade["data"])}</p><p><b>Calculation:</b> {escape(grade["calculation"])}</p><p><b>Why:</b> {escape(grade["why"])}</p></div></details></article>'
-        for name, grade in grades.items()
-    )
+    cards = []
+    for name, grade in grades.items():
+        dimensions = "".join(
+            f'<div class="thq-dimension"><span>{escape(item.name)}</span><b>{escape(item.grade)}</b></div>'
+            for item in grade.get("dimensions", ())
+        )
+        cards.append(
+            f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>{escape(name)}</h3><div class="thq-grade-score">{grade["score"]}/100</div></div><div class="thq-grade-mark">{escape(grade["grade"])}</div></div>'
+            f'{f"<div class=\"thq-dimensions\">{dimensions}</div>" if dimensions else ""}'
+            f'<details><summary>Show Reasoning</summary><div class="thq-reasoning"><p><b>Data used:</b> {escape(grade["data"])}</p><p><b>Calculation:</b> {escape(grade["calculation"])}</p><p><b>Why:</b> {escape(grade["why"])}</p></div></details></article>'
+        )
+    return "".join(cards)
 
 
 def _decision_horizons(view: dict[str, Any]) -> str:
@@ -81,7 +96,8 @@ def _roster_rooms(view: dict[str, Any]) -> str:
         players = view["roster_groups"][position]
         rows = "".join(
             f'<div class="thq-player"><div><a href="/players/{quote(str(player["id"]))}">{escape(str(player["name"]))}</a>'
-            f'<div class="thq-player-meta">{escape(position)} · {escape(str(player.get("team") or "Free Agent"))} · Age {escape(_display(player.get("age")))} · Bye {escape(_display(player.get("bye_week")))}</div></div>'
+            f'<div class="thq-player-meta">{escape(position)} · {escape(str(player.get("team") or "Free Agent"))} · Age {escape(_display(player.get("age")))} · Bye {escape(_display(player.get("bye_week")))}</div>'
+            f'{_player_tier(player)}</div>'
             f'<span class="thq-status {"starter" if player.get("roster_slot") == "Starter" else ""}">{escape(str(player.get("roster_slot") or "Bench"))}</span></div>'
             for player in players
         ) or '<div class="thq-player"><span class="muted">No players currently rostered.</span></div>'
@@ -171,6 +187,22 @@ def create_teams_router(
                 ("Draft Capital Grade", view["grades"]["Draft Capital"]["grade"] + " foundation", "Deterministic pick inventory model"),
             )
         )
+        roster = view["roster_intelligence"]
+        intelligence_cards = "".join(
+            f'<article class="thq-kpi"><span>{escape(label)}</span><b>{escape(_display(value))}</b></article>'
+            for label, value in (
+                ("Team Identity", roster.identity),
+                ("Strongest Position", roster.strongest_position),
+                ("Weakest Position", roster.weakest_position),
+                ("Elite Assets", roster.metrics["Elite Assets"]),
+                ("Trade Chips", roster.metrics["Trade Chips"]),
+                ("Roster Flexibility", f'{roster.metrics["Roster Flexibility"]}/100'),
+                ("Weekly Ceiling", f'{roster.metrics["Weekly Ceiling"]}/100'),
+                ("Weekly Floor", f'{roster.metrics["Weekly Floor"]}/100'),
+                ("Positional Balance", f'{roster.metrics["Positional Balance"]}/100'),
+                ("Positional Advantages", ", ".join(roster.positional_advantages) or "None identified"),
+            )
+        )
         body = f"""
 {TEAM_HQ_CSS}
 <a class="back" href="/teams">← All Teams</a>
@@ -178,7 +210,8 @@ def create_teams_router(
 <section class="thq-section"><div class="thq-section-head"><h2>Asset Snapshot</h2><span>Objective roster and pick inventory</span></div><div class="thq-cards">{_asset_cards(view['snapshot'])}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Front Office Summary</h2><span>Deterministic · No generated claims</span></div><div class="thq-summary">{summary}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Decision Horizons</h2><span>Current and future remain independent</span></div><div class="thq-grades">{_decision_horizons(view)}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Team Grades</h2><span>Explainable foundation formulas</span></div><div class="thq-grades">{_grade_cards(view['grades'])}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Roster Intelligence</h2><span>{escape(roster.identity)} · {escape(roster.identity_reasoning)}</span></div><div class="thq-intel">{intelligence_cards}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Position Room Intelligence</h2><span>Quality-first, explainable evaluation</span></div><div class="thq-grades">{_grade_cards(view['grades'])}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Roster</h2><span>Position rooms and current lineup designation</span></div><div class="thq-roster">{_roster_rooms(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Draft Capital</h2><span>Every currently owned future pick</span></div><div class="thq-picks">{_draft_capital(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Current Team Performance</h2><span>Sleeper league data</span></div><div class="thq-performance">{performance_cards}</div></section>
