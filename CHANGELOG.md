@@ -2,6 +2,18 @@
 
 Notable DTOS changes are recorded here from the repository's Git history.
 
+## v1.0.0 - 2026-07-21
+
+- Stabilized Decision, Asset, Trade, Front Office, and Market Intelligence behind the single Intelligence Orchestrator boundary.
+- Added validated production configuration with preserved environment overrides and configurable intelligence/market cache TTLs.
+- Added structured JSON logging, request correlation IDs, request/error/runtime metrics, startup timing, and expanded health reporting.
+- Added a single permanent release-validation entry point covering documentation, architecture, whitespace, compilation, lint, dependencies, regression tests, routes, OpenAPI, HTTP smoke tests, and process cleanup.
+- Added production-readiness, large-league, cache-performance, configuration, observability, documentation, and architecture regression coverage.
+- Froze and documented v1 public APIs, compatibility guarantees, and deprecation policy.
+- Completed installation, architecture, developer, deployment, configuration, validation, API, market-provider, caching, release, contribution, troubleshooting, versioning, readiness, and validation-report documentation.
+- Added updated architecture diagrams, production-readiness checklist, and post-release v1.1 roadmap.
+- Updated application metadata to DTOS v1.0.0, build 1000, codename Front Office Operating System.
+
 ## v0.9.9 - 2026-07-21
 
 - Added Market Intelligence as a fifth provider behind the unified Intelligence Orchestrator.

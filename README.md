@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v0.9.9 introduces Market Intelligence v1: replaceable market providers, robust consensus, explicit intrinsic-versus-market value gaps, historical trends, offline-aware caching, and explainable market evidence integrated through the Intelligence Orchestrator.
+DTOS v1.0.0 is the production-ready Front Office Operating System: Decision, Asset, Trade, Front Office, and Market Intelligence integrated through one explainable orchestrator, with validated configuration, structured observability, stable APIs, deterministic release validation, and complete operator/developer documentation.
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 
@@ -24,6 +24,12 @@ python -m venv .venv
 
 Open `http://127.0.0.1:8000/`.
 
+Run the complete supported validation workflow with:
+
+```powershell
+.\.venv\Scripts\python.exe -m tools.validation.validate_release
+```
+
 Runtime configuration uses environment variables such as `SLEEPER_LEAGUE_ID`, `DTOS_CACHE_FILE`, `SYNC_MINUTES`, and `SLEEPER_TIMEOUT`. Existing environment overrides are preserved.
 
 ## Architecture
@@ -35,6 +41,8 @@ Runtime configuration uses environment variables such as `SLEEPER_LEAGUE_ID`, `D
 - `components/` — reusable server-rendered presentation components
 - `tests/` — focused deterministic and regression tests
 - `docs/` — feature architecture and developer documentation
+
+Start with the [installation guide](docs/INSTALLATION.md), [architecture guide](docs/ARCHITECTURE.md), [developer guide](docs/DEVELOPER_GUIDE.md), [configuration reference](docs/CONFIGURATION.md), [API reference](docs/API_REFERENCE.md), and [production-readiness assessment](docs/PRODUCTION_READINESS.md).
 
 The shared intelligence implementation lives in `src/core/decision_engine/`.
 

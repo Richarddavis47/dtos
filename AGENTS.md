@@ -20,12 +20,14 @@ For every DTOS feature or release, perform the full workflow without pausing bet
 5. Implement the complete requested release while preserving existing functionality.
 6. Install required dependencies in the ignored `.venv` when needed.
 7. Run all applicable validation:
+   - Run the canonical `.\.venv\Scripts\python.exe -m tools.validation.validate_release` entry point for a complete release.
    - Compile all Python files.
    - Run `git diff --check`.
    - Run an application startup test.
    - Check route registration, including missing and duplicate routes.
    - Run HTTP smoke tests for all major existing routes.
    - Run targeted tests for new or changed functionality.
+   - Do not substitute an ad hoc command list for the canonical release validator.
 8. Fix every discovered issue and repeat validation until everything passes.
 9. Update application metadata, version, build number, `CHANGELOG.md`, and `RELEASE_NOTES.md`.
 10. Review the final diff for accidental changes, dead code, duplicate routes, hardcoded version strings, and regressions.

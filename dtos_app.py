@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from contextlib import asynccontextmanager
 from html import escape
+from time import perf_counter
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -28,6 +29,9 @@ from services.sleeper import (
     sync_sleeper,
     sync_transactions,
 )
+from src.platform.observability import install_observability, mark_startup_complete
+
+_PROCESS_STARTED = perf_counter()
 
 
 async def ensure_fresh() -> None:
@@ -44,12 +48,17 @@ async def background_sync() -> None:
 async def lifespan(_: FastAPI):
     load_cache()
     await sync_sleeper()
+    mark_startup_complete(_PROCESS_STARTED)
     task = asyncio.create_task(background_sync())
-    yield
-    task.cancel()
+    try:
+        yield
+    finally:
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
 
 
 app = FastAPI(title=APPLICATION_NAME, version=VERSION, lifespan=lifespan)
+install_observability(app)
 
 
 CSS = """

@@ -28,7 +28,7 @@ class RouteValidationTests(unittest.TestCase):
     def test_release_route_validation_entry_point_executes(self) -> None:
         root = Path(__file__).resolve().parents[1]
         result = subprocess.run(
-            [sys.executable, "tools/validation/validate_routes.py"],
+            [sys.executable, "-m", "tools.validation.validate_routes"],
             cwd=root,
             capture_output=True,
             text=True,
@@ -37,6 +37,10 @@ class RouteValidationTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Route validation passed", result.stdout)
+        self.assertIn("no duplicates", result.stdout)
+        self.assertIn("OpenAPI paths", result.stdout)
+        source = (root / "tools/validation/validate_routes.py").read_text(encoding="utf-8")
+        self.assertNotIn("sys.path", source)
 
     def test_single_apiroute_is_discovered(self) -> None:
         router = APIRouter(prefix="/single")

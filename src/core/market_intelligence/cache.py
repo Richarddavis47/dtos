@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from time import monotonic
 from typing import Callable
 
+from config import MARKET_CACHE_TTL
 from src.core.market_intelligence.models import ProviderQuote
 
 
@@ -17,7 +18,7 @@ class _Entry:
 
 
 class MarketQuoteCache:
-    def __init__(self, ttl_seconds: float = 3600) -> None:
+    def __init__(self, ttl_seconds: float = MARKET_CACHE_TTL) -> None:
         self.ttl_seconds = ttl_seconds
         self._entries: dict[tuple[str, str, str, str], _Entry] = {}
         self.hits = 0

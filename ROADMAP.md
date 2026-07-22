@@ -140,6 +140,19 @@ Future releases can add authenticated provider retrieval, scheduled snapshots, d
 
 ## In progress
 
+### Post-v1.0 roadmap - DTOS v1.1
+
+Priorities after the production-readiness release:
+
+- Database-backed league, event, and market history with explicit migrations and recovery procedures
+- Authenticated multi-user and multi-league contexts
+- External market-provider retrieval and scheduled snapshot collection
+- Deployment-specific tracing, alerts, capacity tests, and multi-process coordination
+- Player Database and Matchups Command Center completion using stable v1 contracts
+- Outcome tracking for recommendation calibration and historical confidence accuracy
+
+Every v1.1 item must preserve the v1 API policy or follow the documented deprecation process.
+
 ### Matchups Command Center — DTOS v0.7.0
 
 Primary question: **Who has the advantage this week, and why?**
