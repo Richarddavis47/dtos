@@ -9,6 +9,7 @@ from typing import Any
 from src.core.data_platform.aggregation import consensus, trend
 from src.core.data_platform.models import DataEnvelope, DataQuality, ProviderHealth, ProviderStatus, RefreshResult
 from src.core.data_platform.normalization import PlayerIdentityResolver
+from src.core.data_platform.provider_activation import player_context
 from src.core.data_platform.provider import DataProvider
 from src.core.data_platform.reliability import ReliabilityTracker
 from src.core.data_platform.registry import ProviderRegistry
@@ -105,8 +106,20 @@ class DataPlatform:
         providers = self.registry.providers("market")
         values = tuple(self.fetch(provider.metadata.name, player_id, context, mode=mode) for provider in providers)
         result = consensus(player_id, values, tuple(provider.metadata.name for provider in providers))
-        availability = {row.provider: {"state": row.availability, "reason": row.limitations[0] if row.limitations else "Normalized provider value available.", "freshness": row.freshness, "confidence": row.confidence, "licensing": self.registry.provider(row.provider).metadata.licensing_tier.value} for row in values}
-        return {"normalized_player": asdict(player), "provider_values": tuple(asdict(row) for row in values), "consensus": asdict(result), "market_trend": asdict(self.trend(player_id, "market")), "provider_availability": availability, "normalization": {"identity": "canonical DTOS player", "contract": "NormalizedPlayer + DataEnvelope", "provider_ids": player.provider_ids}, "unavailable_reasons": tuple(sorted({row.limitations[0] for row in values if row.value is None and row.limitations}))}
+        status_rows = market_data.get("provider_status") or {}
+        availability = {}
+        for row in values:
+            provider_status = status_rows.get(row.provider) or {}
+            if row.value is None and provider_status.get("status") == "healthy":
+                reason = f"{row.provider} returned no record for this canonical player."
+            else:
+                reason = provider_status.get("reason") or (row.limitations[0] if row.limitations else "Normalized provider value available.")
+            availability[row.provider] = {"state": row.availability, "reason": reason, "freshness": row.freshness, "confidence": row.confidence, "licensing": self.registry.provider(row.provider).metadata.licensing_tier.value}
+        details = {
+            provider.metadata.name: ((market_data.get("providers") or {}).get(provider.metadata.name) or {}).get(player_id)
+            for provider in providers
+        }
+        return {"normalized_player": asdict(player), "provider_values": tuple(asdict(row) for row in values), "provider_details": details, "consensus": asdict(result), "market_trend": asdict(self.trend(player_id, "market")), "provider_availability": availability, "provider_health": market_data.get("provider_status") or {}, "attribution": market_data.get("attribution") or {}, "player_context": player_context(player_id, data), "normalization": {"identity": "canonical DTOS player", "contract": "NormalizedPlayer + DataEnvelope", "provider_ids": player.provider_ids}, "unavailable_reasons": tuple(sorted({row.limitations[0] for row in values if row.value is None and row.limitations}))}
 
     def refresh(self, category: str, context: dict[str, Any], keys: tuple[str, ...], *, provider_name: str | None = None) -> tuple[RefreshResult, ...]:
         providers = (self.registry.provider(provider_name),) if provider_name else self.registry.providers(category)

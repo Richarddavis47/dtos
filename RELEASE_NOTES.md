@@ -1,9 +1,13 @@
-# DTOS v1.4.1 — Provider Activation & Data Normalization Platform
+# DTOS v1.4.2 — Provider Data Flow Activation
 
-DTOS now normalizes every provider opinion before it reaches storage, consensus, or intelligence. Official Sleeper trending data is activated, and player pages explain exactly which provider values exist, how fresh and reliable they are, and why other values are unavailable.
+DTOS now carries approved public provider data through transport, normalization, canonical identity, consensus, API, and player-page presentation. Legitimate values are shown with attribution; unsupported fields explain the exact provider limitation.
 
 ## Highlights
 
+- FantasyCalc and DynastyProcess public values now refresh into the canonical market cache with visible attribution.
+- Sleeper player metadata, depth-chart fields, ownership, transactions, and trending activity reach player pages end to end.
+- Provider failures preserve prior data only as a disclosed cached fallback; unsupported sources state the exact limitation.
+- Bijan Robinson resolves to Sleeper ID `9509`; FantasyCalc value `10213` remains a value, never an identity.
 - Canonical DTOS player identities reconcile Sleeper, FantasyCalc, KeepTradeCut, FantasyPros, Underdog, and Dynasty Daddy identifiers when supplied.
 - Normalization covers names, teams, position eligibility, free agents, rookies, values, rankings, ADP, timestamps, confidence, and metadata.
 - Invalid values, broken IDs, provider mismatches, and conflicting metadata are blocked before entering consensus.
@@ -16,9 +20,9 @@ DTOS now normalizes every provider opinion before it reaches storage, consensus,
 
 ## Metadata
 
-- Version: 1.4.1
-- Build: 1410
-- Codename: Provider Activation & Data Normalization Platform
+- Version: 1.4.2
+- Build: 1420
+- Codename: Provider Data Flow Activation
 
 ## Provider boundaries
 

@@ -19,8 +19,8 @@ def build_data_platform() -> DataPlatform:
     platform = DataPlatform(warehouse=SnapshotWarehouse(DATA_WAREHOUSE_FILE), cache_ttl_seconds=MARKET_CACHE_TTL)
     market = (
         ("FantasyCalc", "fantasycalc_value", (), LicensingTier.PUBLIC_API, True),
-        ("KeepTradeCut", "ktc_value", ("keeptradecut_value",), LicensingTier.UNSUPPORTED, True),
-        ("Sleeper ADP", "sleeper_adp", ("adp",), LicensingTier.PUBLIC_API, True),
+        ("KeepTradeCut", "ktc_value", ("keeptradecut_value",), LicensingTier.UNSUPPORTED, False),
+        ("Sleeper ADP", "sleeper_adp", ("adp",), LicensingTier.UNSUPPORTED, False),
         ("DynastyProcess", "dynastyprocess_value", (), LicensingTier.PUBLIC_API, True),
     )
     for name, field, aliases, tier, default in market:
@@ -30,7 +30,7 @@ def build_data_platform() -> DataPlatform:
     catalog = (
         ("Sleeper League", "league", LicensingTier.PUBLIC_API, True, 900, 3_600),
         ("Sleeper Transactions", "transactions", LicensingTier.PUBLIC_API, True, 900, 3_600),
-        ("Sleeper Trending", "market", LicensingTier.PUBLIC_API, True, 900, 3_600),
+        ("Sleeper Trending", "league_activity", LicensingTier.PUBLIC_API, True, 900, 3_600),
         ("Dynasty Daddy", "market", LicensingTier.UNSUPPORTED, False, 86_400, 86_400),
         ("FantasyPros", "rankings", LicensingTier.API_KEY, False, 21_600, 86_400),
         ("Underdog Fantasy ADP", "adp", LicensingTier.UNSUPPORTED, False, 86_400, 86_400),

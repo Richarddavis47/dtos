@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.4.1 activates official Sleeper trending data and makes normalization mandatory for every provider value. Canonical player identity, reliability-weighted consensus, explicit availability reasons, normalized player APIs, and live player-page market details now sit between provider formats and DTOS intelligence.
+DTOS v1.4.2 activates approved FantasyCalc and DynastyProcess market feeds alongside official Sleeper player, league, transaction, and trending data. Player pages show attributed consensus, provider values, metadata, depth-chart context, and specific explanations for sources that are not supported.
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 

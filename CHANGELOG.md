@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.4.2 - Provider Data Flow Activation
+
+- Activated cached, attributed FantasyCalc and DynastyProcess public market ingestion with canonical Sleeper-ID reconciliation.
+- Added isolated provider refresh status, record counts, timestamps, next-refresh schedules, recovery, and disclosed cached fallback.
+- Completed player-page market, trend, Sleeper metadata, depth-chart, ownership, transaction, and trending data flow.
+- Replaced generic unavailable states in the player workflow with provider-specific explanations and disabled unsupported sources.
+- Added regression coverage for empty, partial, failed, recovered, and successful provider responses plus end-to-end consensus and player context.
+
 ## v1.4.1 - Provider Activation & Data Normalization Platform
 
 - Added mandatory player identity and provider normalization contracts for names, IDs, teams, positions, values, rankings, ADP, timestamps, confidence, and metadata reconciliation.

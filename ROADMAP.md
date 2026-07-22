@@ -21,6 +21,13 @@ Each module follows the same process:
 
 ## Current status
 
+### Provider Data Flow Activation - DTOS v1.4.2
+
+- Approved FantasyCalc and DynastyProcess public-source ingestion with daily caching and attribution
+- Canonical Sleeper-ID reconciliation across provider values
+- Complete player-page market, trend, metadata, depth-chart, ownership, transaction, and trending flow
+- Explicit health and unavailability reasons for every configured or unsupported provider
+
 ### Provider Activation & Data Normalization - DTOS v1.4.1
 
 - Mandatory normalized player, identity, value, ranking, ADP, timestamp, confidence, and metadata contracts
