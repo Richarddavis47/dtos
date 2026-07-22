@@ -339,7 +339,27 @@ def create_transactions_router(
             for row in live["provider_values"]
         )
         normalized = live["normalized_player"]
-        live_panel = f'''<section class="card"><h2>Live Data & Market</h2><div class="grid"><div><div class="muted">Consensus Value</div><div class="stat">{consensus["value"] if consensus["value"] is not None else "Unavailable"}</div><p>Confidence {consensus["confidence"]}% · Agreement {consensus["agreement"]}%</p></div><div><div class="muted">Normalized Identity</div><p><b>{escape(str(normalized["position"]))}</b> · {escape(str(normalized["nfl_team"]))} · {escape(str(normalized["status"]))}</p><p>Provider IDs reconciled: {len(normalized["provider_ids"])}</p></div></div><table><thead><tr><th>Provider</th><th>Value / State</th><th>Freshness</th><th>Confidence</th><th>Availability reason</th></tr></thead><tbody>{provider_values}</tbody></table></section>'''
+        context = live["player_context"]
+        metadata = context["metadata"]
+        league_context = context["league"]
+        reasons = context["availability"]
+        fantasycalc = live["provider_details"].get("FantasyCalc") or {}
+        trend_value = fantasycalc.get("trend_30_day")
+        trend_label = f"{trend_value:+}" if isinstance(trend_value, (int, float)) else "No historical provider trend is available."
+        consensus_value = consensus["value"] if consensus["value"] is not None else "No enabled market provider returned a value for this player."
+        attribution = " · ".join(
+            f'<a href="{escape(str(item["url"]))}" target="_blank" rel="noopener">{escape(str(item["label"]))}</a>'
+            for item in live["attribution"].values()
+        ) or "No external provider data was used."
+        depth_role = metadata.get("depth_chart_role") if metadata.get("depth_chart_role") is not None else reasons["depth_chart_role"]
+        bye_week = metadata.get("bye_week") if metadata.get("bye_week") is not None else reasons["bye_week"]
+        live_panel = f'''<section class="card"><h2>Live Data &amp; Market</h2>
+<div class="grid"><div><div class="muted">Market Consensus</div><div class="stat">{escape(str(consensus_value))}</div><p>Confidence {consensus["confidence"]}% · Agreement {consensus["agreement"]}%</p><p>30-day trend: {escape(str(trend_label))}</p></div>
+<div><div class="muted">Canonical Player Identity</div><p><b>{escape(str(normalized["position"]))}</b> · {escape(str(normalized["nfl_team"]))} · {escape(str(normalized["status"]))}</p><p>Age: {escape(str(metadata.get("age") if metadata.get("age") is not None else "Sleeper metadata does not provide age."))}</p><p>Depth chart: {escape(str(depth_role))} · Bye: {escape(str(bye_week))}</p></div></div>
+<table><thead><tr><th>Provider</th><th>Value / State</th><th>Freshness</th><th>Confidence</th><th>Availability reason</th></tr></thead><tbody>{provider_values}</tbody></table>
+<h3>League Context</h3><div class="grid"><div><b>Trending</b><p>{league_context["trending_adds"]} adds · {league_context["trending_drops"]} drops (Sleeper, last cached window)</p></div><div><b>Ownership</b><p>{escape(str(league_context["owned_by"] or "Not rostered in the active league."))}</p></div><div><b>Transactions</b><p>{league_context["transaction_count"]} cached league transactions</p></div></div>
+<h3>Data Availability</h3><ul><li><b>ADP:</b> {escape(str(reasons["adp"]))}</li><li><b>Current projections:</b> {escape(str(reasons["projection"]))}</li><li><b>Production:</b> {escape(str(reasons["production"]))}</li><li><b>Usage:</b> {escape(str(reasons["usage"]))}</li></ul>
+<p class="muted">Sources: {attribution} · Sleeper player, league, transaction, and trending metadata.</p></section>'''
         cards = "".join(
             '<div class="card">'
             f'<div class="muted">{escape(transaction["timestamp"])}</div>'

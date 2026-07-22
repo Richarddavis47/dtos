@@ -6,9 +6,9 @@ import subprocess
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.4.1"
-BUILD_NUMBER = 1410
-RELEASE_CODENAME = "Provider Activation & Data Normalization Platform"
+VERSION = "1.4.2"
+BUILD_NUMBER = 1420
+RELEASE_CODENAME = "Provider Data Flow Activation"
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
 

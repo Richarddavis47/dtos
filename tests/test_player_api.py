@@ -51,6 +51,12 @@ def fixture_data() -> dict[str, object]:
         "teams": teams,
         "transactions": [],
         "traded_picks": [],
+        "market_data": {
+            "providers": {"FantasyCalc": {"player one": {"value": 9100, "confidence": 85, "trend_30_day": 120}}},
+            "provider_status": {"FantasyCalc": {"status": "healthy", "reason": None}, "KeepTradeCut": {"status": "unsupported", "reason": "No approved public API or licensed integration is configured."}, "Sleeper ADP": {"status": "unsupported", "reason": "Sleeper's supported public API does not expose an ADP endpoint."}},
+            "attribution": {"FantasyCalc": {"label": "FantasyCalc", "url": "https://fantasycalc.com/"}},
+            "context_mode": "online",
+        },
     }
 
 
@@ -94,8 +100,12 @@ class PlayerApiContractTests(unittest.TestCase):
         valid = self.client.get(f"{dossier_url}?front_office=1")
         self.assertEqual(valid.status_code, 200)
         self.assertIn("Asset Intelligence v1", valid.text)
-        self.assertIn("Live Data & Market", valid.text)
+        self.assertIn("Live Data &amp; Market", valid.text)
         self.assertIn("Availability reason", valid.text)
+        self.assertIn("9100", valid.text)
+        self.assertIn("FantasyCalc", valid.text)
+        self.assertIn("No supported production-stat provider is configured", valid.text)
+        self.assertNotIn("Market Consensus</div><div class=\"stat\">Unavailable", valid.text)
         self.assertEqual(self.client.get("/players/").status_code, 404)
         self.assertEqual(self.client.get("/players/not-found").status_code, 404)
 

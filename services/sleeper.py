@@ -13,6 +13,7 @@ import httpx
 from app_metadata import APPLICATION_NAME, VERSION
 from src.core.data_platform import data_platform
 from src.core.data_platform.normalization import PlayerIdentityResolver
+from src.core.data_platform.provider_activation import refresh_public_market
 from src.core.intelligence.cache import intelligence_cache
 from config import (
     CACHE_FILE,
@@ -121,6 +122,10 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                     players_fetched_at = utcnow().isoformat()
                 else:
                     players = cached_players
+
+                market_data = await refresh_public_market(
+                    client, (STATE.get("data") or {}).get("market_data")
+                )
 
             user_by_id = {str(u.get("user_id")): u for u in users}
             team_rows = []
@@ -289,6 +294,21 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
 
             resolver = PlayerIdentityResolver(players if isinstance(players, dict) else {})
             normalized_players = {player_id: asdict(player) for player_id in players if (player := resolver.resolve(player_id))} if isinstance(players, dict) else {}
+            synced_at = utcnow().isoformat()
+            for provider_name, records in (
+                ("Sleeper Players", len(players) if isinstance(players, dict) else 0),
+                ("Sleeper Trending", len(trending_adds) + len(trending_drops)),
+                ("Sleeper Transactions", len(transactions)),
+            ):
+                market_data["provider_status"][provider_name] = {
+                    "enabled": True,
+                    "status": "healthy",
+                    "last_refresh": synced_at,
+                    "next_refresh": (utcnow() + timedelta(minutes=SYNC_MINUTES)).isoformat(),
+                    "refresh_result": "success",
+                    "records_retrieved": records,
+                    "reason": None,
+                }
             STATE["data"] = {
                 "league": league,
                 "scoring_settings": league.get("scoring_settings") or {},
@@ -307,8 +327,8 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 "normalized_players": normalized_players,
                 "trending_players": {"adds": trending_adds, "drops": trending_drops, "source": "Sleeper", "updated_at": utcnow().isoformat()},
                 "players_fetched_at": players_fetched_at,
+                "market_data": market_data,
             }
-            synced_at = utcnow().isoformat()
             STATE["last_sync"] = synced_at
             STATE["last_error"] = None
             STATE["transactions_last_sync"] = synced_at
