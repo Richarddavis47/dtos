@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### League Intelligence & Team Grading - DTOS v1.4.5
+
+- League-relative category grades, ranks, percentiles, and explanations.
+- Shared Team Intelligence Cards and standardized competitive windows.
+- Preseason projections and consistent Commissioner Desk league summaries.
+- Crawl API team-intelligence schema for future reports and historical tracking.
+
 ### Valuation Calibration and Trade Safety - DTOS v1.4.4
 
 - Canonical 0–1000 valuation boundary across player, pick, consensus, and trade calculations.

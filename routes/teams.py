@@ -53,21 +53,6 @@ def _asset_cards(snapshot: dict[str, Any]) -> str:
     return "".join(f'<article class="thq-kpi"><span>{escape(label)}</span><b>{escape(str(value))}</b></article>' for label, value in metrics)
 
 
-def _grade_cards(grades: dict[str, dict[str, Any]]) -> str:
-    cards = []
-    for name, grade in grades.items():
-        dimensions = "".join(
-            f'<div class="thq-dimension"><span>{escape(item.name)}</span><b>{escape(item.grade)}</b></div>'
-            for item in grade.get("dimensions", ())
-        )
-        cards.append(
-            f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>{escape(name)}</h3><div class="thq-grade-score">{grade["score"]}/100</div></div><div class="thq-grade-mark">{escape(grade["grade"])}</div></div>'
-            f'{f"<div class=\"thq-dimensions\">{dimensions}</div>" if dimensions else ""}'
-            f'<details><summary>Show Reasoning</summary><div class="thq-reasoning"><p><b>Data used:</b> {escape(grade["data"])}</p><p><b>Calculation:</b> {escape(grade["calculation"])}</p><p><b>Why:</b> {escape(grade["why"])}</p></div></details></article>'
-        )
-    return "".join(cards)
-
-
 def _decision_horizons(view: dict[str, Any]) -> str:
     decision = view["decision"]
     evaluations = (
@@ -87,6 +72,15 @@ def _decision_horizons(view: dict[str, Any]) -> str:
             f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>{escape(evaluation.horizon.value)}</h3><div class="thq-grade-score">{evaluation.score}/100 · {evaluation.confidence}% confidence</div></div><div class="thq-grade-mark">{escape(evaluation.grade)}</div></div><p class="muted">{escape(evaluation.summary)}</p><details><summary>Show Reasoning</summary><div class="thq-reasoning"><b>Factors</b><ul>{factors}</ul>{f"<b>Known limitations</b><ul>{limits}</ul>" if limits else ""}</div></details></article>'
         )
     return "".join(cards)
+
+
+def _team_intelligence(view: dict[str, Any]) -> str:
+    card = view["team_intelligence"]
+    grades = (card.overall, card.current_contending, card.dynasty, card.starting_lineup, card.depth, *card.positions.values(), card.draft_capital, card.youth, card.future_outlook, card.roster_flexibility, card.asset_liquidity)
+    return "".join(
+        f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>{escape(item.category)}</h3><div class="thq-grade-score">{item.score}/100 · #{item.rank} of {item.league_size} · {item.percentile}th percentile</div></div><div class="thq-grade-mark">{escape(item.grade)}</div></div><details><summary>Show Reasoning</summary><div class="thq-reasoning"><ul>{"".join(f"<li>{escape(reason)}</li>" for reason in item.reasons or card.explanation)}</ul></div></details></article>'
+        for item in grades
+    )
 
 
 def _roster_rooms(view: dict[str, Any]) -> str:
@@ -179,9 +173,12 @@ def create_teams_router(
         future = "".join(
             f'<article class="thq-future"><span>{escape(label)}</span><b>{escape(value)}</b><small>{escape(note)}</small></article>'
             for label, value, note in (
-                ("Competitive Window", view["decision"].window.value, "Decision Engine v1"),
-                ("Current Outlook", f'{view["decision"].current_outlook.score}/100', "Decision Engine v1"),
-                ("Future Outlook", f'{view["decision"].future_outlook.score}/100', "Decision Engine v1"),
+                ("Competitive Window", view["team_intelligence"].current_window.value, "League-relative Team Intelligence"),
+                ("Current Outlook", f'{view["team_intelligence"].current_strength}/100', "League-relative Team Intelligence"),
+                ("Future Outlook", f'{view["team_intelligence"].future_strength}/100', "League-relative Team Intelligence"),
+                ("Projected Wins", str(view["team_intelligence"].projected_wins), "Deterministic 14-game preseason indicator"),
+                ("Playoff Odds", f'{view["team_intelligence"].playoff_odds}%', "Relative strength indicator, not a simulation"),
+                ("Championship Odds", f'{view["team_intelligence"].championship_odds}%', "Relative strength indicator, not a simulation"),
                 ("Organization", view["front_office_intelligence"].competitive_window, "Front Office Intelligence v1"),
                 ("Youth Grade", view["grades"]["Youth"]["grade"] + " foundation", "Deterministic roster age model"),
                 ("Draft Capital Grade", view["grades"]["Draft Capital"]["grade"] + " foundation", "Deterministic pick inventory model"),
@@ -210,13 +207,13 @@ def create_teams_router(
         body = f"""
 {TEAM_HQ_CSS}
 <a class="back" href="/teams">← All Teams</a>
-<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Record {performance['record']}</span><span>·</span><span>League Rank #{view['rank']}</span></div></div></div><div><span class="thq-badge">{escape(view['decision'].window.value)}</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
+<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Record {performance['record']}</span><span>·</span><span>League Rank #{view['rank']}</span><span>·</span><span>{view['team_intelligence'].overall.percentile}th percentile</span></div></div></div><div><span class="thq-badge">{escape(view['team_intelligence'].current_window.value)}</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
 <section class="thq-section"><div class="thq-section-head"><h2>Asset Snapshot</h2><span>Objective roster and pick inventory</span></div><div class="thq-cards">{_asset_cards(view['snapshot'])}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Front Office Summary</h2><span>Deterministic · No generated claims</span></div><div class="thq-summary">{summary}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Decision Horizons</h2><span>Current and future remain independent</span></div><div class="thq-grades">{_decision_horizons(view)}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>League-Relative Team Intelligence</h2><span>{view['team_intelligence'].confidence}% confidence · all grades relative to this league</span></div><div class="thq-grades">{_team_intelligence(view)}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Underlying Decision Signals</h2><span>Raw deterministic inputs · not league-relative team grades</span></div><div class="thq-grades">{_decision_horizons(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Roster Intelligence</h2><span>{escape(roster.identity)} · {escape(roster.identity_reasoning)}</span></div><div class="thq-intel">{intelligence_cards}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>League Value Rankings</h2><span>Independent dimensions · No combined overall rank</span></div><div class="thq-intel">{league_rankings}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Position Room Intelligence</h2><span>Quality-first, explainable evaluation</span></div><div class="thq-grades">{_grade_cards(view['grades'])}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Roster</h2><span>Position rooms and current lineup designation</span></div><div class="thq-roster">{_roster_rooms(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Draft Capital</h2><span>Every currently owned future pick</span></div><div class="thq-picks">{_draft_capital(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Current Team Performance</h2><span>Sleeper league data</span></div><div class="thq-performance">{performance_cards}</div></section>

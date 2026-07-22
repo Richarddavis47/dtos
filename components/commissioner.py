@@ -101,8 +101,8 @@ def front_office_summary(view: dict[str, Any]) -> str:
     assets = summary["asset_health"]
     return f"""
 <section class="cd-section"><div class="cd-section-head"><div><h2>Your Front Office</h2><p>{escape(office.owner_name)} · {escape(office.team_name)}</p></div><a class="cd-chip" href="/teams/{office.roster_id}">Open Team Headquarters</a></div>
-<div class="cd-office"><article class="cd-card cd-office-main"><span class="cd-kicker">Current Championship Outlook</span><div class="cd-grade">{escape(current.grade)} · {current.score}</div><p>{escape(current.summary)}</p><span class="cd-status">{escape(summary['competitive_window'])}</span><details><summary>Show Window Reasoning</summary><p>{escape(summary['window_explanation'])}</p></details></article>
-<article class="cd-card cd-metric"><span>Future Outlook</span><b>{escape(future.grade)} · {future.score}</b><p>Evaluated independently from current results</p></article><article class="cd-card cd-metric"><span>Record</span><b>{escape(summary['record'])}</b><p>Current Sleeper record</p></article><article class="cd-card cd-metric"><span>Power Ranking</span><b>#{summary['power_ranking']}</b><p>Current standings order</p></article><article class="cd-card cd-metric"><span>Depth Analysis</span><b>{escape(depth.grade)} · {depth.score}</b><p>Core position coverage</p></article><article class="cd-card cd-metric"><span>Asset Health</span><b>{escape(assets.grade)} · {assets.score}</b><p>Draft capital, flexibility, and balance</p></article></div></section>
+<div class="cd-office"><article class="cd-card cd-office-main"><span class="cd-kicker">Current Contending Grade</span><div class="cd-grade">{escape(current.grade)} · {current.score}</div><p>#{current.rank} of {current.league_size} · {current.percentile}th percentile</p><span class="cd-status">{escape(summary['competitive_window'])}</span><details><summary>Show Window Reasoning</summary><p>{escape(summary['window_explanation'])}</p></details></article>
+<article class="cd-card cd-metric"><span>Future Outlook</span><b>{escape(future.grade)} · {future.score}</b><p>#{future.rank} · {future.percentile}th percentile</p></article><article class="cd-card cd-metric"><span>Record</span><b>{escape(summary['record'])}</b><p>Current Sleeper record</p></article><article class="cd-card cd-metric"><span>Power Ranking</span><b>#{summary['power_ranking']}</b><p>League-relative projected order</p></article><article class="cd-card cd-metric"><span>Depth Analysis</span><b>{escape(depth.grade)} · {depth.score}</b><p>Core position coverage</p></article><article class="cd-card cd-metric"><span>Asset Health</span><b>{escape(assets.grade)} · {assets.score}</b><p>Draft capital, flexibility, and balance</p></article></div></section>
 """
 
 
@@ -133,8 +133,14 @@ def league_intelligence(view: dict[str, Any]) -> str:
     values = (
         ("Average Roster Age", intelligence["average_roster_age"] if intelligence["average_roster_age"] is not None else "Unavailable"),
         ("Draft Capital Concentration", f'{intelligence["draft_concentration"]}%' if intelligence["draft_concentration"] is not None else "Unavailable"),
-        ("Recent Transactions", intelligence["recent_activity"]), ("Foundation Contenders", intelligence["contenders"]),
-        ("Foundation Rebuilders", intelligence["rebuilders"]), ("Trending Up", intelligence["trending_up"]), ("Trending Down", intelligence["trending_down"]),
+        ("Average Team Grade", intelligence["average_team_grade"]), ("League Strength", intelligence["league_strength"]),
+        ("League Parity", intelligence["league_parity"]), ("Contenders", intelligence["contenders"]),
+        ("Rebuilders", intelligence["rebuilders"]), ("Strongest Position Group", intelligence["strongest_position"]),
+        ("Weakest Position Group", intelligence["weakest_position"]), ("Championship Favorite", intelligence["championship_favorite"]),
+        ("Most Draft Capital", intelligence["most_draft_capital"]), ("Least Draft Capital", intelligence["least_draft_capital"]),
+        ("Most Flexible Roster", intelligence["most_flexible_roster"]),
+        ("Oldest Team", intelligence["oldest_team"]), ("Youngest Team", intelligence["youngest_team"]),
+        ("Trending Up", intelligence["trending_up"]), ("Trending Down", intelligence["trending_down"]),
     )
     cards = "".join(f'<article class="cd-card cd-intel"><span>{escape(label)}</span><b>{escape(str(value))}</b></article>' for label, value in values)
     return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Intelligence</h2><p>Current structure and activity, with historical limits disclosed</p></div></div><div class="cd-intelligence">{cards}</div></section>'
@@ -158,17 +164,17 @@ def league_opportunity_dashboard(view: dict[str, Any]) -> str:
 
 def league_snapshot(view: dict[str, Any]) -> str:
     snapshot = view["snapshot"]
-    standings = "".join(f'<div class="cd-mini-row"><b>#{rank} {escape(team["team_name"])}</b><span>{team["wins"]}-{team["losses"]}-{team["ties"]} · {team["points_for"]:.2f} PF</span></div>' for rank, team in enumerate(snapshot["standings"], 1))
+    standings = "".join(f'<div class="cd-mini-row"><b>#{rank} {escape(team["team_name"])}</b><span>{escape(snapshot["season_label"])} · {team["wins"]}-{team["losses"]}-{team["ties"]}</span></div>' for rank, team in enumerate(snapshot["standings"], 1))
     transactions = "".join(f'<div class="cd-mini-row"><b>{escape(item["type_label"])}</b><span>{escape(item["timestamp"])}</span></div>' for item in snapshot["transactions"]) or '<p class="muted">No cached transactions.</p>'
     matchups = []
     for matchup_id, sides in sorted(snapshot["matchups"].items(), key=lambda item: str(item[0])):
         names = " vs ".join(escape(str(side.get("team") or "TBD")) for side in sides)
         matchups.append(f'<div class="cd-mini-row"><b>Matchup {escape(str(matchup_id))}</b><span>{names}</span></div>')
     leader = snapshot["leader"]
-    leaders = f'<div class="cd-mini-row"><b>Standings Leader</b><span>{escape(str(leader.get("team_name"))) if leader else "Unavailable"}</span></div>'
+    leaders = f'<div class="cd-mini-row"><b>{escape(snapshot["season_label"])} Leader</b><span>{escape(str(leader.get("team_name"))) if leader else "Unavailable"}</span></div>'
     health = snapshot["health"]
     health_html = f'<div class="cd-mini-row"><b>{escape(health["status"])}</b><span>Last sync {escape(health["last_sync"])}</span></div>' + (f'<p class="warn">{escape(health["error"])}</p>' if health["error"] else "")
-    sections = (("Standings", standings), ("Recent Transactions", transactions), ("Upcoming Matchups", "".join(matchups) or '<p class="muted">No matchup assignments.</p>'), ("League Leaders", leaders), ("League Health", health_html))
+    sections = ((snapshot["season_label"], standings), ("Recent Transactions", transactions), ("Upcoming Matchups", "".join(matchups) or '<p class="muted">No matchup assignments.</p>'), ("League Leaders", leaders), ("League Health", health_html))
     cards = "".join(f'<details class="cd-snapshot"{" open" if index == 0 else ""}><summary>{escape(title)}</summary><div class="cd-snapshot-body">{body}</div></details>' for index, (title, body) in enumerate(sections))
     return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Snapshot</h2><p>Compact reference cards · expand only what you need</p></div></div><div class="cd-snapshots">{cards}</div></section>'
 

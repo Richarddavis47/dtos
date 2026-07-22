@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.5 - League Intelligence & Team Grading
+
+- Added league-relative grades, ranks, percentiles, confidence, and explanations across 13 team categories.
+- Added one reusable Team Intelligence Card consumed by team, homepage, league, Front Office, and crawl surfaces.
+- Standardized competitive windows to six mutually exclusive classifications.
+- Replaced meaningless 0–0 standings presentation with preseason projected order.
+- Corrected canonical 0–1000 player values before roster-level 0–100 scoring.
+- Added deterministic homepage league summaries and 12 focused grading regressions.
+
 ## v1.4.4 - Valuation Calibration and Trade Safety
 
 - Added a shared canonical 0–1000 valuation layer for players, picks, consensus, and trade packages.

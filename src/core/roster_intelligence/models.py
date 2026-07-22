@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -59,3 +60,5 @@ class RosterReport:
     league_rooms: dict[int, dict[str, int]]
     league_players: dict[int, dict[str, PlayerCard]]
     league_metrics: dict[int, dict[str, float]]
+    team_intelligence: dict[int, Any]
+    league_summary: Any

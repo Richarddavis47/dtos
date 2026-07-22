@@ -13,9 +13,11 @@ from services.front_office_intelligence import build_front_office_center
 from services.trade_intelligence import build_trade_center
 from services.transactions import normalize_transactions
 from src.core.intelligence.cache import intelligence_cache
+from src.core.intelligence import intelligence_orchestrator
 from src.core.valuation import NORMALIZATION_VERSION, VALUATION_SCHEMA_VERSION, build_canonical_consensus, normalize_value
 
 SCHEMA_VERSION = "1.0"
+TEAM_INTELLIGENCE_SCHEMA_VERSION = "1.0"
 PUBLIC_PAGES = ("/", "/teams", "/front-offices", "/trades", "/transactions", "/matchups", "/picks", "/settings")
 CRAWL_ENDPOINTS = {
     "snapshot": "/api/crawl/snapshot",
@@ -93,7 +95,44 @@ def _player(row: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _team_intelligence_cards(data: dict[str, Any]) -> dict[int, Any]:
+    teams = data.get("teams") or []
+    if not teams:
+        return {}
+    roster_id = int(teams[0].get("roster_id") or 0)
+    return intelligence_orchestrator.analyze(data, roster_id).roster.team_intelligence
+
+
+def _public_team_intelligence(card: Any) -> dict[str, Any]:
+    def grade(item: Any) -> dict[str, Any]:
+        return {"score": item.score, "grade": item.grade, "percentile": item.percentile, "rank": item.rank}
+    return {
+        "schema_version": TEAM_INTELLIGENCE_SCHEMA_VERSION,
+        "overall": grade(card.overall),
+        "current_contending": grade(card.current_contending),
+        "dynasty": grade(card.dynasty),
+        "starting_lineup": grade(card.starting_lineup),
+        "depth": grade(card.depth),
+        "positions": {position: grade(value) for position, value in card.positions.items()},
+        "draft_capital": grade(card.draft_capital),
+        "youth": grade(card.youth),
+        "future_outlook": grade(card.future_outlook),
+        "roster_flexibility": grade(card.roster_flexibility),
+        "asset_liquidity": grade(card.asset_liquidity),
+        "current_window": card.current_window.value,
+        "risk_score": card.risk_score,
+        "confidence": card.confidence,
+        "explanation": list(card.explanation),
+        "preseason": card.preseason,
+        "projected_finish": card.projected_finish,
+        "projected_wins": card.projected_wins,
+        "playoff_odds": card.playoff_odds,
+        "championship_odds": card.championship_odds,
+    }
+
+
 def public_teams(data: dict[str, Any]) -> list[dict[str, Any]]:
+    cards = _team_intelligence_cards(data)
     return [
         {
             "roster_id": team.get("roster_id"),
@@ -107,12 +146,16 @@ def public_teams(data: dict[str, Any]) -> list[dict[str, Any]]:
             "roster": [_player(player, data) for player in team.get("players") or []],
             "draft_picks": _safe(team.get("picks_owned") or []),
             "draft_picks_traded_away": _safe(team.get("picks_traded_away") or []),
+            "team_intelligence": _public_team_intelligence(cards[int(team.get("roster_id") or 0)]) if cards else None,
         }
         for team in data.get("teams") or []
     ]
 
 
 def standings(data: dict[str, Any]) -> list[dict[str, Any]]:
+    cards = _team_intelligence_cards(data)
+    teams = sorted(data.get("teams") or [], key=lambda team: cards[int(team.get("roster_id") or 0)].overall.rank) if cards else data.get("teams") or []
+    preseason = all((team.get("wins", 0) + team.get("losses", 0) + team.get("ties", 0)) == 0 for team in teams)
     return [
         {
             "rank": rank,
@@ -125,8 +168,11 @@ def standings(data: dict[str, Any]) -> list[dict[str, Any]]:
             "points_for": team.get("points_for"),
             "points_against": team.get("points_against"),
             "max_points": team.get("max_points"),
+            "ranking_type": "Preseason Projection" if preseason else "Current Standings",
+            "current_window": cards[int(team.get("roster_id") or 0)].current_window.value if cards else None,
+            "overall_grade": cards[int(team.get("roster_id") or 0)].overall.grade if cards else None,
         }
-        for rank, team in enumerate(data.get("teams") or [], 1)
+        for rank, team in enumerate(teams, 1)
     ]
 
 
@@ -147,15 +193,18 @@ def public_league(data: dict[str, Any]) -> dict[str, Any]:
 
 def public_front_offices(data: dict[str, Any]) -> dict[str, Any]:
     if not data.get("teams"):
-        return {"valuation_schema_version": VALUATION_SCHEMA_VERSION, "active_front_office": None, "organizations": [], "compatibilities": [], "relationships": []}
+        return {"valuation_schema_version": VALUATION_SCHEMA_VERSION, "team_intelligence_schema_version": TEAM_INTELLIGENCE_SCHEMA_VERSION, "active_front_office": None, "organizations": [], "compatibilities": [], "relationships": []}
     view = build_front_office_center(data)
+    cards = _team_intelligence_cards(data)
     return {
         "valuation_schema_version": VALUATION_SCHEMA_VERSION,
+        "team_intelligence_schema_version": TEAM_INTELLIGENCE_SCHEMA_VERSION,
         "active_front_office": view["active"].roster_id,
         "organizations": _safe(view["reports"]),
         "compatibilities": _safe(view["compatibilities"]),
         "relationships": _safe(view["relationships"]),
         "recommendation": _safe(view["unified_recommendation"]),
+        "team_intelligence": {str(roster_id): _public_team_intelligence(card) for roster_id, card in cards.items()},
     }
 
 
@@ -165,6 +214,7 @@ def public_trades(data: dict[str, Any]) -> dict[str, Any]:
     view = build_trade_center(data)
     return {
         "valuation_schema_version": VALUATION_SCHEMA_VERSION,
+        "team_intelligence_schema_version": TEAM_INTELLIGENCE_SCHEMA_VERSION,
         "active_front_office": view["active_team"].get("roster_id"),
         "opportunities": _safe(view["dossiers"]),
         "value_impacts": _safe(view["value_impacts"]),
@@ -190,6 +240,7 @@ def build_snapshot(data: dict[str, Any], state: dict[str, Any], league_id: str) 
     team_rows = public_teams(data)
     return {
         "valuation_schema_version": VALUATION_SCHEMA_VERSION,
+        "team_intelligence_schema_version": TEAM_INTELLIGENCE_SCHEMA_VERSION,
         "league_id": league_id,
         "league": public_league(data),
         "owners": [{"owner": team["owner"], "roster_id": team["roster_id"], "team_name": team["team_name"]} for team in team_rows],
@@ -200,7 +251,7 @@ def build_snapshot(data: dict[str, Any], state: dict[str, Any], league_id: str) 
         "transactions": public_transactions(data),
         "trades": trades,
         "front_offices": front_offices,
-        "rankings": {"contender_and_dynasty": [organization.get("competitive_window") for organization in front_offices["organizations"]], "power": standings(data)},
+        "rankings": {"current_windows": [team["team_intelligence"]["current_window"] for team in team_rows], "power": standings(data)},
         "recommendations": [item for item in (front_offices.get("recommendation"), trades.get("recommendation")) if item],
         "alerts": ([{"type": "sync", "message": "The latest synchronization attempt failed; cached data is being served."}] if state.get("last_error") else []),
         "historical_records": {"available": False, "reason": "No public historical-record dataset is currently stored by DTOS.", "records": []},
@@ -219,7 +270,7 @@ def sync_metadata(state: dict[str, Any]) -> dict[str, Any]:
 
 
 def cached_response(key: str, factory: Callable[[], Any], *, sync_marker: str | None, ttl: float = 300) -> dict[str, Any]:
-    cache_key = f"crawl:{NORMALIZATION_VERSION}:{sync_marker or 'empty'}:{key}"
+    cache_key = f"crawl:{NORMALIZATION_VERSION}:{TEAM_INTELLIGENCE_SCHEMA_VERSION}:{sync_marker or 'empty'}:{key}"
     artifact, hit = intelligence_cache.get_or_create_with_status(
         cache_key,
         lambda: {"generated_at": utcnow(), "data": jsonable_encoder(_safe(factory()))},
@@ -229,6 +280,7 @@ def cached_response(key: str, factory: Callable[[], Any], *, sync_marker: str | 
         "ok": True,
         "schema_version": SCHEMA_VERSION,
         "valuation_schema_version": VALUATION_SCHEMA_VERSION,
+        "team_intelligence_schema_version": TEAM_INTELLIGENCE_SCHEMA_VERSION,
         "app_version": VERSION,
         "generated_at": utcnow(),
         "data": artifact["data"],
