@@ -78,7 +78,7 @@ def create_api_router(
             "provider_health": result.market.provider_health,
             "offline": result.market.offline,
         }
-        return JSONResponse(jsonable_encoder({"active_front_office": roster_id, "recommendation": asdict(result.recommendation), "market": market_summary, "player_values": {key: asdict(value) for key, value in result.player_values.items()}, "roster": asdict(result.roster), "timings_ms": result.timings_ms, "cache_hit": result.cache_hit}))
+        return JSONResponse(jsonable_encoder({"active_front_office": roster_id, "recommendation": asdict(result.recommendation), "market": market_summary, "player_values": {key: asdict(value) for key, value in result.player_values.items()}, "roster": asdict(result.roster), "league_intelligence": asdict(result.league), "timings_ms": result.timings_ms, "cache_hit": result.cache_hit}))
 
     @router.get("/api/league")
     async def api_league(include_players: bool = False) -> JSONResponse:

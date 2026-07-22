@@ -121,6 +121,8 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
     room_scores = {position: value[0] for position, value in room_inputs.items()}
     league_room_scores: dict[str, list[int]] = {position: [] for position in POSITIONS}
     league_dimensions: list[dict[str, float]] = []
+    league_rooms_by_roster: dict[int, dict[str, int]] = {}
+    league_players: dict[int, dict[str, PlayerCard]] = {}
     for roster_id, other in intelligence.decisions.items():
         if roster_id == context.active_roster_id:
             other_scores = room_scores
@@ -147,6 +149,8 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
         })
         for position in POSITIONS:
             league_room_scores[position].append(other_scores[position])
+        league_rooms_by_roster[roster_id] = other_scores
+        league_players[roster_id] = {card.player_id: card for card in other_cards}
     sorted_rooms = sorted(room_scores, key=lambda item: (-room_scores[item], item))
     rooms = {}
     league_size = len(context.teams)
@@ -183,4 +187,5 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
         for name in active_dimensions if name != "roster_id"
     }
     advantages = tuple(room.advantage for room in rooms.values() if room.advantage)
-    return RosterReport(identity, identity_reasoning, rooms, cards, metrics, sorted_rooms[0], sorted_rooms[-1], advantages, ("Production and projection dimensions use available deterministic Asset Intelligence proxies when live feeds are unavailable.",))
+    league_metric_map = {int(item["roster_id"]): {key: value for key, value in item.items() if key != "roster_id"} for item in league_dimensions}
+    return RosterReport(identity, identity_reasoning, rooms, cards, metrics, sorted_rooms[0], sorted_rooms[-1], advantages, ("Production and projection dimensions use available deterministic Asset Intelligence proxies when live feeds are unavailable.",), league_rooms_by_roster, league_players, league_metric_map)

@@ -21,7 +21,7 @@ class IntelligencePlatformTests(unittest.TestCase):
 
     def test_all_four_registered_providers_produce_one_recommendation(self) -> None:
         result = self.orchestrator.analyze(self.data, 1)
-        self.assertEqual(self.orchestrator.registry.names(), ("decision", "asset", "front_office", "trade", "market", "player_value", "roster"))
+        self.assertEqual(self.orchestrator.registry.names(), ("decision", "asset", "front_office", "trade", "market", "player_value", "roster", "league_intelligence"))
         self.assertEqual(set(result.recommendation.sources), {"Decision Engine", "Asset Intelligence", "Trade Intelligence", "Front Office Intelligence", "Market Intelligence"})
         self.assertTrue(result.recommendation.evidence)
         self.assertTrue(result.recommendation.why)
@@ -73,7 +73,7 @@ class IntelligencePlatformTests(unittest.TestCase):
         intelligence = client.get("/api/intelligence?front_office=1")
         legacy = client.get("/api/status")
         self.assertEqual(health.status_code, 200)
-        self.assertEqual(set(health.json()["engines"]), {"decision", "asset", "front_office", "trade", "market", "player_value", "roster"})
+        self.assertEqual(set(health.json()["engines"]), {"decision", "asset", "front_office", "trade", "market", "player_value", "roster", "league_intelligence"})
         self.assertEqual(intelligence.status_code, 200)
         self.assertEqual(intelligence.json()["active_front_office"], 1)
         self.assertIn("recommendation", intelligence.json())
@@ -84,8 +84,8 @@ class IntelligencePlatformTests(unittest.TestCase):
         health = self.orchestrator.health({"data": self.data, "last_sync": "now", "last_error": None})
         self.assertEqual(health["status"], "healthy")
         self.assertEqual(health["sleeper"]["status"], "connected")
-        self.assertTrue({"league", "assets", "front_offices", "trades", "market", "player_values", "roster", "result"}.issubset(health["cache"]["namespaces"]))
-        self.assertTrue({"decision_engine", "asset_intelligence", "front_office_intelligence", "trade_intelligence", "market_intelligence", "player_value_projection", "roster_intelligence", "orchestration_total"}.issubset(health["orchestration"]["last_timings_ms"]))
+        self.assertTrue({"league", "assets", "front_offices", "trades", "market", "player_values", "roster", "league_intelligence", "result"}.issubset(health["cache"]["namespaces"]))
+        self.assertTrue({"decision_engine", "asset_intelligence", "front_office_intelligence", "trade_intelligence", "market_intelligence", "player_value_projection", "roster_intelligence", "league_intelligence", "orchestration_total"}.issubset(health["orchestration"]["last_timings_ms"]))
 
     def test_application_services_use_orchestrator_boundary(self) -> None:
         root = Path(__file__).resolve().parents[1]

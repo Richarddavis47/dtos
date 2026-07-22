@@ -20,4 +20,4 @@ HTML routes are `/`, `/teams`, `/teams/{roster_id}`, `/front-offices`, `/trades`
 
 The generated schema at `/openapi.json` is authoritative for parameter types. New clients should ignore unknown additive fields. No v1.0.0 endpoint is deprecated.
 
-As of v1.2.0, `/api/intelligence` additively exposes `player_values` and `roster` contracts, including provider status, freshness, confidence, projection ranges, production availability, lineup value, and positional context.
+As of v1.3.0, `/api/intelligence` additively exposes `player_values`, `roster`, and `league_intelligence` contracts, including provider status, freshness, projections, lineup value, quality-based team needs, surpluses, directions, compatibility, league economy, availability, and prioritized opportunities.
