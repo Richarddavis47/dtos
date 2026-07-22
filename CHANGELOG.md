@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.0 - Roster Intelligence Engine v1
+
+- Replaced position-count grading with quality-first room evaluations built from shared Asset, Market, Decision, and league context.
+- Added independent position-room dimensions, elite asset tiers, league-relative positional advantages, and explainable reasoning.
+- Added deterministic roster construction metrics, team identities, enhanced Team HQ player cards, and championship/future window widgets.
+- Added regression coverage for elite-but-thin rooms, deep replacement rooms, identities, consistency, integration, and explainability.
+
 Notable DTOS changes are recorded here from the repository's Git history.
 
 ## v1.0.0 - 2026-07-21

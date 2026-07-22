@@ -21,6 +21,13 @@ Each module follows the same process:
 
 ## Current status
 
+### Roster Intelligence Engine - DTOS v1.1.0
+
+- Quality-first position-room evaluation across elite talent, depth, weekly advantage, longevity, market value, and championship impact
+- Explainable player tiers, positional advantages, roster construction metrics, and team identities
+- Shared orchestration across Decision, Asset, Market, Trade, and Front Office Intelligence without duplicated valuation logic
+- Team Headquarters integration with stable contracts for future production, projection, injury, and historical providers
+
 ### Foundation — Complete
 
 - GitHub repository and version history
@@ -302,3 +309,4 @@ Primary question: **What has happened in Day Traders since the beginning?**
 - **v0.9.2** — Team Headquarters foundation
 - **v0.9.3** — Commissioner Desk foundation
 - **v1.0.0** — Complete core Day Traders front-office platform
+- **v1.1.0** — Roster Intelligence Engine v1

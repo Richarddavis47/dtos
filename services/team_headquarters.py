@@ -86,24 +86,22 @@ def _asset_snapshot(players: list[dict[str, Any]], team: dict[str, Any]) -> dict
     }
 
 
-def _position_grade(position: str, players: list[dict[str, Any]]) -> dict[str, Any]:
-    room = [player for player in players if player.get("position") == position]
-    starters = sum(player.get("roster_slot") == "Starter" for player in room)
-    target = POSITION_TARGETS[position]
-    total_score = min(len(room) / target["total"], 1) * 60
-    starter_score = min(starters / target["starters"], 1) * 40
-    score = total_score + starter_score
-    return _grade_result(
-        score,
-        f"{len(room)} rostered {position}s; {starters} currently designated as starters.",
-        f"60% room coverage ({len(room)}/{target['total']}) + 40% starter coverage ({starters}/{target['starters']}).",
-        "This is a roster-construction grade only. It does not claim to measure player quality or market value.",
-    )
-
-
-def calculate_team_grades(players: list[dict[str, Any]], team: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """Calculate explainable first-generation Team Headquarters grades."""
-    grades = {position: _position_grade(position, players) for position in CORE_POSITIONS}
+def calculate_team_grades(players: list[dict[str, Any]], team: dict[str, Any], roster: Any | None = None) -> dict[str, dict[str, Any]]:
+    """Calculate explainable grades, preferring quality-first Roster Intelligence."""
+    if roster is not None:
+        grades = {
+            position: {
+                "score": room.overall.score,
+                "grade": room.overall.grade,
+                "data": " ".join(room.reasoning),
+                "calculation": "; ".join(f"{item.name} {item.score}/100 ({item.grade})" for item in room.dimensions),
+                "why": room.advantage or "Quality, leverage, longevity, market value, championship impact, and depth are evaluated independently.",
+                "dimensions": room.dimensions,
+            }
+            for position, room in roster.rooms.items()
+        }
+    else:
+        grades = {position: _grade_result(50, f"{position} intelligence unavailable.", "Neutral fallback.", "No quality evaluation was available.") for position in CORE_POSITIONS}
     known_ages = [player.get("age") for player in players if player.get("age") is not None]
     young = sum(age <= 24 for age in known_ages)
     old = sum(age >= 28 for age in known_ages)
@@ -217,8 +215,8 @@ def build_team_headquarters(
         return None
     players = _enriched_players(team, data)
     snapshot = _asset_snapshot(players, team)
-    grades = calculate_team_grades(players, team)
     intelligence = intelligence_orchestrator.analyze(data, roster_id)
+    grades = calculate_team_grades(players, team, intelligence.roster)
     decision = intelligence.decision
     organization = intelligence.front_office_model.reports[roster_id]
     rank = next(index for index, item in enumerate(teams, 1) if item is team)
@@ -231,7 +229,13 @@ def build_team_headquarters(
             updated = str(last_updated)
     else:
         updated = "Unavailable"
-    roster_groups = {position: [player for player in players if player.get("position") == position] for position in CORE_POSITIONS}
+    roster_groups = {
+        position: [
+            {**player, "intelligence": intelligence.roster.players.get(str(player.get("id")))}
+            for player in players if player.get("position") == position
+        ]
+        for position in CORE_POSITIONS
+    }
     return {
         "team": team,
         "rank": rank,
@@ -242,6 +246,7 @@ def build_team_headquarters(
         "decision": decision,
         "front_office_intelligence": organization,
         "unified_recommendation": intelligence.recommendation,
+        "roster_intelligence": intelligence.roster,
         "roster_groups": roster_groups,
         "other_players": [player for player in players if player.get("position") not in CORE_POSITIONS],
         "picks_by_year": {

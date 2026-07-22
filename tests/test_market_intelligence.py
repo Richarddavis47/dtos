@@ -145,7 +145,7 @@ class MarketIntegrationTests(unittest.TestCase):
 
     def test_orchestrator_registers_market_and_enriches_assets_and_trades(self) -> None:
         result = self.orchestrator.analyze(self.data, 1)
-        self.assertEqual(self.orchestrator.registry.names(), ("decision", "asset", "front_office", "trade", "market"))
+        self.assertEqual(self.orchestrator.registry.names(), ("decision", "asset", "front_office", "trade", "market", "roster"))
         self.assertTrue(result.market.assets)
         self.assertTrue(any(report.consensus.value is not None for report in result.market.assets.values()))
         self.assertTrue(all(dossier.market is not None for dossier in result.trades))

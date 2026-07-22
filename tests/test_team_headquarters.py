@@ -70,7 +70,7 @@ class TeamHeadquartersTests(unittest.TestCase):
             {"QB", "RB", "WR", "TE", "Youth", "Depth", "Draft Capital", "Flexibility", "Roster Construction"},
         )
         for grade in view["grades"].values():
-            self.assertIn(grade["grade"], "ABCDF")
+            self.assertRegex(grade["grade"], r"^(A|B|C|D)[+-]?$|^F$")
             self.assertGreaterEqual(grade["score"], 0)
             self.assertLessEqual(grade["score"], 100)
             self.assertTrue(grade["data"])
