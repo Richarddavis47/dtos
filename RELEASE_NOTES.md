@@ -1,24 +1,26 @@
-# DTOS v1.1.0 — Roster Intelligence Engine v1
+# DTOS v1.2.0 — Player Value & Projection Integration v1
 
-DTOS now evaluates roster quality, leverage, market strength, longevity, and construction instead of rewarding raw player counts.
+DTOS now combines independent dynasty, market, current-season, projection, lineup, scarcity, and strategic value inputs without collapsing them into one unexplained score.
 
 ## Highlights
 
-- Quality-first QB, RB, WR, and TE room grades with six independent dimensions and A+ through F grading.
-- Elite Asset tiers from Elite Franchise Player through Replacement Level.
-- League-relative positional advantages based on shared player evaluations rather than room size.
-- Roster identities including Contender, Young Contender, Aging Contender, Ascending, Rebuilding, and Future Powerhouse.
-- Team HQ widgets for windows, elite concentration, trade chips, flexibility, weekly ceiling/floor, balance, and strongest/weakest rooms.
-- Enhanced roster cards expose tier, overall grade, and recommended action.
-- Every grade and classification includes deterministic reasoning and explicit data limitations.
+- Unified player-value profiles with source, state, confidence, freshness, evidence, and limitations.
+- Existing Market Intelligence consensus, range, disagreement, trend, value gap, liquidity, and explicit market posture.
+- League-scoring-aware weekly projection contracts with floor, median, ceiling, role, injury adjustment, and disclosed fallback state.
+- Recent-production windows when cached statistics exist, plus an explicit unavailable state when they do not.
+- Roster-aware projected roles, points above replacement, points above the current starter, and marginal lineup value.
+- Positional ranks, tiers, scarcity, league supply, and elite positional advantage.
+- Enhanced player dossiers, Roster Intelligence rooms, matchup projections, trade horizon comparisons, unified API output, and separate team ranking dimensions.
 
 ## Metadata
 
-- Version: 1.1.0
-- Build: 1100
-- Codename: Roster Intelligence Engine v1
+- Version: 1.2.0
+- Build: 1200
+- Codename: Player Value & Projection Integration v1
 
-## Known limitations
+## Intentional boundaries
 
-- When live production or projection feeds are unavailable, weekly dimensions use transparent Asset Intelligence opportunity and risk proxies.
-- Market values remain explicitly unavailable when no provider snapshot exists; DTOS never presents intrinsic value as live consensus.
+- No championship or matchup win probability is introduced.
+- The bundled projection provider is explicitly labeled as a deterministic fallback, not a live projection feed.
+- Production remains unavailable when no cached history exists; DTOS does not invent recent game statistics.
+- External market values remain separate from DTOS internal valuation.

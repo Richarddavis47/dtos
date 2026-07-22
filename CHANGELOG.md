@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2.0 - Player Value & Projection Integration v1
+
+- Added shared, contextual player-value profiles that keep DTOS dynasty, market consensus, contender, rebuilder, current-season, positional, replacement-adjusted, and liquidity values independent.
+- Added registry-backed weekly projection and production contracts with league-scoring awareness and explicit live, cached, fallback, and unavailable states.
+- Added roster-specific lineup roles, points above replacement/current starter, positional scarcity/ranks, market posture, evidence, freshness, and portrait fallbacks.
+- Integrated player values into player dossiers, Roster Intelligence, weekly matchups, Trade Intelligence, unified APIs, and multidimensional league rankings.
+- Added regression coverage for scoring settings, provider states, replacement value, team context, matchup aggregation, trade horizons, portrait fallback, determinism, and architecture boundaries.
+
 ## v1.1.0 - Roster Intelligence Engine v1
 
 - Replaced position-count grading with quality-first room evaluations built from shared Asset, Market, Decision, and league context.

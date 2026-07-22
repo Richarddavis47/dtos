@@ -42,7 +42,17 @@ def _market(report: Any, market: Any) -> tuple[int | None, str, int]:
     return None, "Unavailable", report.core_values.market.confidence
 
 
-def _player_card(report: Any, market: Any, window: str, scarcity: int) -> PlayerCard:
+def _player_card(report: Any, market: Any, window: str, scarcity: int, unified: Any = None) -> PlayerCard:
+    if unified is not None:
+        return PlayerCard(
+            unified.player_id, unified.positional.tier, _grade(unified.dtos_dynasty.value or 0),
+            _clamp(unified.dtos_dynasty.value or 0), "Unknown" if unified.age is None else "Ascending" if unified.age <= 24 else "Prime" if unified.age <= 27 else "Veteran",
+            unified.market_trend, round(unified.market_consensus.value) if unified.market_consensus.value is not None else None,
+            round(unified.dtos_dynasty.value or 0), round(unified.contender.value or 0), round(unified.rebuilder.value or 0),
+            round(unified.trade_liquidity.value or 0), unified.positional.scarcity, report.risk.level,
+            _clamp((unified.projection.ceiling or 0) * 4), _clamp((unified.projection.floor or 0) * 5),
+            unified.projection.source, report.long_term_outlook, unified.recommendation,
+        )
     market_value, trend, market_confidence = _market(report, market)
     dynasty = report.core_values.dynasty.score
     redraft = report.core_values.redraft.score
@@ -102,7 +112,7 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
     context = intelligence.context
     scarcity_by_position = decision.profile.market_context.get("position_counts") or {}
     cards = {
-        player_id: _player_card(report, intelligence.market, decision.window.value, _clamp(100 - int(scarcity_by_position.get(report.profile.position, 0))))
+        player_id: _player_card(report, intelligence.market, decision.window.value, _clamp(100 - int(scarcity_by_position.get(report.profile.position, 0))), intelligence.player_values.get(player_id))
         for player_id, report in intelligence.player_reports.items()
     }
     room_inputs: dict[str, tuple[int, dict[str, int]]] = {}
@@ -110,15 +120,31 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
         room_inputs[position] = _room_score([card for player_id, card in cards.items() if intelligence.player_reports[player_id].profile.position == position], position)
     room_scores = {position: value[0] for position, value in room_inputs.items()}
     league_room_scores: dict[str, list[int]] = {position: [] for position in POSITIONS}
+    league_dimensions: list[dict[str, float]] = []
     for roster_id, other in intelligence.decisions.items():
         if roster_id == context.active_roster_id:
             other_scores = room_scores
+            other_cards = list(cards.values())
+            starter_ids = {str(player.get("id") or player.get("player_id")) for player in other.profile.players if player.get("roster_slot") == "Starter"}
         else:
             depths = {position: room.total_players for position, room in other.profile.position_rooms.items()}
             asset_context = AssetContext(context.league_id, roster_id, context.settings, other.window.value, other.profile.strategy, (), depths, other.profile.market_context.get("position_counts") or {})
             other_reports = [evaluate_player(player, asset_context) for player in other.profile.players]
             other_cards = [_player_card(report, None, other.window.value, _clamp(100 - int(scarcity_by_position.get(report.profile.position, 0)))) for report in other_reports]
+            starter_ids = {str(player.get("id") or player.get("player_id")) for player in other.profile.players if player.get("roster_slot") == "Starter"}
             other_scores = {position: _room_score([card for card, report in zip(other_cards, other_reports) if report.profile.position == position], position)[0] for position in POSITIONS}
+        starter_cards = [card for card in other_cards if card.player_id in starter_ids]
+        league_dimensions.append({
+            "roster_id": roster_id,
+            "Total Dynasty Value": sum(card.dynasty_value for card in other_cards),
+            "Starting-Lineup Dynasty Value": sum(card.dynasty_value for card in starter_cards),
+            "Projected Weekly Starter Points": sum(card.weekly_ceiling * .25 for card in starter_cards),
+            "Projected Floor": sum(card.weekly_floor * .20 for card in starter_cards),
+            "Projected Ceiling": sum(card.weekly_ceiling * .25 for card in starter_cards),
+            "Market Liquidity": mean((card.trade_liquidity for card in other_cards)) if other_cards else 0,
+            "Contender Value": sum(card.contender_value for card in other_cards),
+            "Rebuild Value": sum(card.rebuilder_value for card in other_cards),
+        })
         for position in POSITIONS:
             league_room_scores[position].append(other_scores[position])
     sorted_rooms = sorted(room_scores, key=lambda item: (-room_scores[item], item))
@@ -150,6 +176,11 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
         "Weekly Floor": _clamp(mean(card.weekly_floor for card in cards.values())) if cards else 0,
         "Elite Concentration": _clamp(elite / max(1, len(cards)) * 400),
         "Positional Balance": _clamp(100 - (max(room_scores.values()) - min(room_scores.values()))) if room_scores else 0,
+    }
+    active_dimensions = next(item for item in league_dimensions if item["roster_id"] == context.active_roster_id)
+    metrics["League Rankings"] = {
+        name: 1 + sum(item[name] > active_dimensions[name] for item in league_dimensions)
+        for name in active_dimensions if name != "roster_id"
     }
     advantages = tuple(room.advantage for room in rooms.values() if room.advantage)
     return RosterReport(identity, identity_reasoning, rooms, cards, metrics, sorted_rooms[0], sorted_rooms[-1], advantages, ("Production and projection dimensions use available deterministic Asset Intelligence proxies when live feeds are unavailable.",))

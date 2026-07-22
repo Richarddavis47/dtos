@@ -21,6 +21,14 @@ Each module follows the same process:
 
 ## Current status
 
+### Player Value & Projection Integration - DTOS v1.2.0
+
+- Independent DTOS, market, contender, rebuilder, current-season, positional, replacement-adjusted, and liquidity values
+- League-scoring-aware projection and production provider contracts with transparent fallback states
+- Roster-aware lineup value, positional scarcity, points above replacement, and multidimensional team rankings
+- Player dossier, Roster Intelligence, Matchup, Trade Intelligence, and unified API integration
+- Factual inputs for a future Championship Equity Engine without premature probability claims
+
 ### Roster Intelligence Engine - DTOS v1.1.0
 
 - Quality-first position-room evaluation across elite talent, depth, weekly advantage, longevity, market value, and championship impact
@@ -310,3 +318,4 @@ Primary question: **What has happened in Day Traders since the beginning?**
 - **v0.9.3** — Commissioner Desk foundation
 - **v1.0.0** — Complete core Day Traders front-office platform
 - **v1.1.0** — Roster Intelligence Engine v1
+- **v1.2.0** — Player Value & Projection Integration v1
