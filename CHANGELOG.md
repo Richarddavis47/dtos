@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.0 - Live Data Platform & Market Integration
+
+- Added a unified external-data platform with a public provider SDK, dynamic registry, licensing-aware configuration, refresh scheduling, isolated cache namespaces, durable historical snapshots, health reporting, and deterministic fallback states.
+- Added source-preserving robust consensus, confidence, disagreement, bullish/bearish source, quality, and 7-day through lifetime trend contracts.
+- Registered Sleeper, dynasty-market, rankings, ADP, and news provider capabilities with transparent disabled states where approved access is not configured.
+- Routed Market Intelligence and Sleeper HTTP transport through the Data Platform boundary while preserving Intelligence Orchestrator behavior.
+- Added standardized provider, health, data, history, trend, consensus, and on-demand refresh API endpoints plus a Provider Health table on Settings.
+- Added deterministic structured news interpretation and regression coverage for registration, refresh, storage, consensus, trend, outages, rate limits, licensing, fallback, determinism, and architecture boundaries.
+
 ## v1.3.0 - League Intelligence Engine v1
 
 - Added deterministic league-wide needs, surpluses, directions, asset availability, market mapping, positional economy, and pairwise trade-compatibility analysis.

@@ -169,7 +169,7 @@ class MarketIntegrationTests(unittest.TestCase):
     def test_health_endpoint_reports_all_market_providers_and_cache(self) -> None:
         self.orchestrator.analyze(self.data, 1)
         health = self.orchestrator.health({"data": self.data, "last_sync": "now", "last_error": None})
-        self.assertEqual(set(health["market"]["providers"]), {"FantasyCalc", "KeepTradeCut", "Sleeper ADP", "DynastyProcess"})
+        self.assertTrue({"FantasyCalc", "KeepTradeCut", "Sleeper ADP", "DynastyProcess"}.issubset(health["market"]["providers"]))
         self.assertIn("ttl_seconds", health["market"]["cache"])
 
         async def noop():

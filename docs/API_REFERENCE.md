@@ -10,6 +10,13 @@ All JSON errors use FastAPI's `{"detail": ...}` shape unless an endpoint documen
 | GET | `/api/status` | none | version, sync state, and entity counts |
 | GET | `/api/platform/health` | none | runtime, engines, providers, caches, timings, and configuration mode |
 | GET | `/api/intelligence` | `front_office` integer, optional | unified recommendation, market summary, timings, cache state |
+| GET | `/api/data/providers` | none | provider catalog, capabilities, licensing, and health |
+| GET | `/api/data/health` | none | provider, cache, snapshot, freshness, and failure health |
+| GET | `/api/data/{category}/{key}` | category and data key | standardized source envelopes with provenance and quality |
+| GET | `/api/data/consensus/{category}/{key}` | category and data key | consensus, confidence, variance, agreement, and missing sources |
+| GET | `/api/data/history/{category}/{key}` | category and data key | timestamped attributed snapshots |
+| GET | `/api/data/trend/{category}/{key}` | category and data key | 7-day through lifetime trend contract |
+| POST | `/api/data/refresh/{category}` | optional `key` and `provider` | isolated on-demand refresh result |
 | GET | `/api/league` | `include_players` boolean | normalized league snapshot; player index is opt-in |
 | GET | `/api/players` | none | canonical rostered-player IDs and dossier URLs |
 | GET | `/api/front-offices` | `front_office` integer, optional | observable Front Office dossiers and relationships |
@@ -20,4 +27,4 @@ HTML routes are `/`, `/teams`, `/teams/{roster_id}`, `/front-offices`, `/trades`
 
 The generated schema at `/openapi.json` is authoritative for parameter types. New clients should ignore unknown additive fields. No v1.0.0 endpoint is deprecated.
 
-As of v1.3.0, `/api/intelligence` additively exposes `player_values`, `roster`, and `league_intelligence` contracts, including provider status, freshness, projections, lineup value, quality-based team needs, surpluses, directions, compatibility, league economy, availability, and prioritized opportunities.
+As of v1.4.0, provider-backed responses disclose source, timestamp, freshness, confidence, provider, cache state, retrieval mode, quality, and limitations. Existing `/api/intelligence` fields remain additive and compatible.

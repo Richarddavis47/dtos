@@ -21,6 +21,14 @@ Each module follows the same process:
 
 ## Current status
 
+### Live Data Platform & Market Integration - DTOS v1.4.0
+
+- Unified provider SDK, registry, licensing configuration, scheduled/on-demand refresh contracts, cache isolation, historical warehouse, and provider health
+- Source-preserving robust consensus, confidence, disagreement, quality, and multi-window trends
+- Explicit live, fresh-cache, historical-snapshot, DTOS-estimate, and unavailable fallback states
+- Standardized data APIs and Settings provider-health visibility
+- External-data boundary consumed by Market Intelligence and Sleeper transport without new recommendation logic
+
 ### League Intelligence Engine - DTOS v1.3.0
 
 - Quality-, projection-, scarcity-, and window-aware team needs and evidence-backed surpluses

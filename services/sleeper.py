@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from app_metadata import APPLICATION_NAME, VERSION
+from src.core.data_platform import data_platform
 from src.core.intelligence.cache import intelligence_cache
 from config import (
     CACHE_FILE,
@@ -65,9 +66,7 @@ def save_cache() -> None:
 
 
 async def sleeper_get(client: httpx.AsyncClient, path: str) -> Any:
-    response = await client.get(f"{SLEEPER_BASE}{path}")
-    response.raise_for_status()
-    return response.json()
+    return await data_platform.get_json(client, f"{SLEEPER_BASE}{path}")
 
 
 def request_headers() -> dict[str, str]:

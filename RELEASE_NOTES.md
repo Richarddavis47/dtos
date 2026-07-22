@@ -1,28 +1,33 @@
-# DTOS v1.3.0 — League Intelligence Engine v1
+# DTOS v1.4.0 — Live Data Platform & Market Integration
 
-DTOS now evaluates the league as an interconnected market. League Intelligence combines existing orchestrated team, player, market, trade, roster, and observable Front Office evidence without duplicating their formulas.
+DTOS now has one transparent boundary for external data. The platform preserves each source's opinion, licensing state, provenance, quality, freshness, and failure state before intelligence engines consume it.
 
 ## Highlights
 
-- Quality-based needs that consider room strength, projections, scarcity, weekly floor, and competitive direction rather than player counts.
-- Evidence-backed surpluses that require useful quality and liquidity, not simple positional duplication.
-- Independent team directions: aggressive contender, contender, balanced, transitioning, productive struggle, rebuilding, or aggressive rebuild.
-- Pairwise trade compatibility across every Front Office, with complementary needs, timeline fit, and observed trading history.
-- A league market map covering positional buyers and sellers, picks, veterans, and youth, plus deterministic supply, demand, scarcity, and premium signals.
-- Explainable asset availability ranging from Untouchable to Actively Shopping.
-- Observable-behavior GM profiles with neutral unavailable states where offer history cannot support a conclusion.
-- Prioritized opportunities and complete trade recommendations that keep current, future, lineup, market, risk, negotiation, and opportunity-cost impacts separate.
-- A League Opportunity Dashboard on the Commissioner Desk and additive output through `/api/intelligence`.
+- Public provider SDK and dynamic provider registry.
+- Explicit provider category, version, enablement, licensing tier, refresh capabilities, latency, cache, freshness, confidence, and health.
+- Independently configurable scheduled and on-demand refresh contracts with season/offseason intervals.
+- Durable, attributed snapshot warehouse and deterministic 7-day, 30-day, 90-day, one-year, and lifetime trends.
+- Robust consensus that limits outlier influence and exposes variance, agreement, bullish sources, bearish sources, and missing providers.
+- Deterministic fallback chain: live provider, fresh cache, historical snapshot, disclosed DTOS estimate, then unavailable.
+- Quality states for missing, impossible, duplicate, stale, and disagreeing data.
+- Structured news interpretation based only on observable supplied facts.
+- Standardized Data Platform APIs and provider-health visibility on Settings.
+- Market Intelligence and Sleeper HTTP transport now consume the platform boundary.
 
 ## Metadata
 
-- Version: 1.3.0
-- Build: 1300
-- Codename: League Intelligence Engine v1
+- Version: 1.4.0
+- Build: 1400
+- Codename: Live Data Platform & Market Integration
 
-## Intentional boundaries
+## Provider and licensing boundaries
 
-- League Intelligence is deterministic and does not introduce championship, matchup, or trade-acceptance probabilities.
-- External market consensus remains optional. Missing coverage is disclosed and produces neutral market-gap evidence rather than invented values.
-- Response rate, counteroffer frequency, and similar negotiation measures remain unavailable until observable offer-event history exists.
-- Availability and opportunities are decision support, not claims about another manager's private intent.
+- Cached FantasyCalc, KeepTradeCut, Sleeper ADP, and DynastyProcess-compatible values retain their existing behavior behind platform adapters.
+- Sleeper league and transaction access uses the platform transport boundary.
+- FantasyPros, Dynasty Daddy, Underdog, Rotowire, NBC Sports Edge, and news integrations remain disabled unless approved access and licensing configuration are available.
+- Disabled and unavailable providers remain visible and never silently contribute values.
+
+## Non-goals preserved
+
+No championship probability, win probability, new trade algorithm, new Decision Engine logic, machine learning model, or unapproved scraping was introduced.

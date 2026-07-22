@@ -4,12 +4,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+from src.core.data_platform import DataPlatform, data_platform
 from src.core.market_intelligence.aggregation import build_consensus
-from src.core.market_intelligence.cache import MarketQuoteCache
 from src.core.market_intelligence.evidence import build_market_evidence
 from src.core.market_intelligence.history import MarketHistoryStore, MarketSnapshot
-from src.core.market_intelligence.models import AssetMarketReport, MarketIntelligenceReport, TradeMarketImpact, ValueGap, ValueGapLabel
-from src.core.market_intelligence.providers import MarketProviderRegistry, default_market_registry
+from src.core.market_intelligence.models import AssetMarketReport, MarketIntelligenceReport, ProviderQuote, TradeMarketImpact, ValueGap, ValueGapLabel
 from src.core.market_intelligence.trends import calculate_trend
 
 
@@ -33,9 +32,8 @@ def _opportunity(gap: ValueGap, trend_direction: str) -> str:
 
 
 class MarketIntelligence:
-    def __init__(self, registry: MarketProviderRegistry | None = None, cache: MarketQuoteCache | None = None, history: MarketHistoryStore | None = None) -> None:
-        self.registry = registry or default_market_registry()
-        self.cache = cache or MarketQuoteCache()
+    def __init__(self, platform: DataPlatform | None = None, history: MarketHistoryStore | None = None) -> None:
+        self.platform = platform or data_platform
         self.history = history or MarketHistoryStore()
         self._health: dict[str, dict[str, object]] = {}
 
@@ -49,21 +47,21 @@ class MarketIntelligence:
         intrinsic_by_id = {str(asset_id): int(report.core_values.dynasty.score) for asset_id, report in player_reports.items()}
         labels = {str(player_id): str(row.get("full_name") or player_id) for player_id, row in players.items()}
         reports: dict[str, AssetMarketReport] = {}
-        health: dict[str, dict[str, object]] = {name: {"status": "unavailable", "available_quotes": 0, "latency_ms": 0.0, "last_updated": None} for name in self.registry.names()}
+        providers = self.platform.registry.providers("market")
+        health: dict[str, dict[str, object]] = {provider.metadata.name: {"status": "unavailable", "available_quotes": 0, "latency_ms": 0.0, "last_updated": None} for provider in providers}
         for asset_id, intrinsic in intrinsic_by_id.items():
             asset = {**(players.get(asset_id) or {}), "id": asset_id, "player_id": asset_id}
             quotes = tuple(
-                self.cache.quote(
-                    provider.name,
-                    asset_id,
-                    lambda provider=provider: provider.quote(asset_id, asset, market_data),
-                    namespace=namespace,
-                    context_mode=context_mode,
-                    provider_version=str(market_data.get("provider_version") or "v1"),
-                    allow_cached_fallback=allow_cached_fallback,
-                    maximum_stale_seconds=float(market_data.get("maximum_stale_seconds") or self.cache.ttl_seconds),
+                self._quote(
+                    self.platform.fetch(
+                        provider.metadata.name,
+                        asset_id,
+                        {"asset": asset, "market_data": market_data, "namespace": namespace},
+                        mode=context_mode,
+                        allow_cached=allow_cached_fallback,
+                    )
                 )
-                for provider in self.registry.providers()
+                for provider in providers
             )
             asset_snapshots: list[MarketSnapshot] = []
             for quote in quotes:
@@ -78,7 +76,7 @@ class MarketIntelligence:
                     state["freshness"] = quote.freshness
                     state["confidence_impact"] = quote.confidence_impact
                     asset_snapshots.append(MarketSnapshot(asset_id, quote.observed_at or generated_at, quote.provider, float(quote.value), quote.confidence))
-            consensus = build_consensus(asset_id, quotes, self.registry.names())
+            consensus = build_consensus(asset_id, quotes, tuple(provider.metadata.name for provider in providers))
             self.history.append(tuple(asset_snapshots))
             trend = calculate_trend(self.history.for_asset(asset_id))
             gap = value_gap(intrinsic, consensus.value, consensus.confidence)
@@ -90,6 +88,11 @@ class MarketIntelligence:
         self._health = health
         offline = context_mode == "offline"
         return MarketIntelligenceReport(reports, opportunities, impacts, evidence, health, generated_at, offline)
+
+    @staticmethod
+    def _quote(envelope: Any) -> ProviderQuote:
+        available = envelope.value is not None and envelope.quality.status != "blocked"
+        return ProviderQuote(envelope.provider, envelope.key, float(envelope.value) if available else None, envelope.confidence if available else 0, envelope.timestamp, envelope.source, available, "; ".join((*envelope.quality.issues, *envelope.limitations)) or "Data Platform envelope", 0.0, envelope.cache_state != "fresh", envelope.retrieval_mode, envelope.timestamp, None, envelope.freshness, 0)
 
     @staticmethod
     def _trade_impact(dossier: Any, reports: dict[str, AssetMarketReport]) -> TradeMarketImpact:
@@ -106,7 +109,8 @@ class MarketIntelligence:
         return TradeMarketImpact(dossier.proposal.active_roster_id, dossier.proposal.partner_roster_id, gain, consensus, movement, arbitrage, evidence)
 
     def health(self) -> dict[str, object]:
-        return {"providers": self._health or {name: {"status": "not_run"} for name in self.registry.names()}, "cache": self.cache.health()}
+        platform_health = self.platform.health()
+        return {"providers": self._health or platform_health["providers"], "cache": platform_health["cache"], "data_platform": platform_health}
 
 
 market_intelligence = MarketIntelligence()

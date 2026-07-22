@@ -13,6 +13,8 @@ DTOS reads configuration once at import/startup. Invalid numeric or logging sett
 | `DTOS_LOG_FORMAT` | `json` | `json` structured output or `text` |
 | `DTOS_INTELLIGENCE_CACHE_TTL` | `60` | Orchestrator cache TTL seconds |
 | `DTOS_MARKET_CACHE_TTL` | `3600` | Market quote cache TTL seconds |
+| `DTOS_DATA_WAREHOUSE_FILE` | OS temp `dtos_data_history.json` | Durable attributed external-data snapshots |
+| `DTOS_PROVIDER_<NAME>` | provider-specific | Enable or disable a provider permitted by deployment licensing |
 | `DTOS_GIT_BRANCH` | detected | Deployment branch override |
 | `DTOS_GIT_COMMIT` | detected | Deployment commit override |
 
