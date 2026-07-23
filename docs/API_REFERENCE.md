@@ -45,3 +45,8 @@ HTML routes are `/`, `/teams`, `/teams/{roster_id}`, `/front-offices`, `/trades`
 The generated schema at `/openapi.json` is authoritative for parameter types. New clients should ignore unknown additive fields. No v1.0.0 endpoint is deprecated.
 
 As of v1.4.1, player/provider responses additionally disclose canonical identity reconciliation, normalized contracts, availability state, reliability, and field-specific unavailable reasons. Existing fields remain additive and compatible.
+# Historical crawl API
+
+DTOS v1.5.0 advertises paginated historical endpoints from `/api/crawl`. Routes under `/api/crawl/history` cover seasons, matchups, standings, playoffs, transactions, trades, drafts, players, player weekly/usage/value history, Team Intelligence history, import status, and data quality.
+
+Common filters are `league`, `season`, `week`, `franchise`, `player`, `limit`, and `offset`. Defaults are bounded and all records include schema version and provenance. Unsupported usage returns an explicit `provider_not_supported` state.

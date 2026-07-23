@@ -6,6 +6,7 @@ from typing import Any
 
 from src.core.player_value_projection.models import DataStatus, LineupValue, PlayerValueProfile, PositionalContext, ValueMetric
 from src.core.player_value_projection.providers import PlayerDataRegistry, player_data_registry
+from src.core.historical_memory.valuation import apply_historical_evidence
 from src.core.valuation import CalibrationStatus, PlayerIntelligenceCard, normalize_internal
 from src.core.valuation.models import ConsensusProvider
 
@@ -46,7 +47,11 @@ def evaluate_player_values(context: Any, decision: Any, reports: dict[str, Any],
         if market_report and quotes:
             modes = {quote.retrieval_mode for quote in market_report.consensus.quotes if quote.value is not None}
             market_status = DataStatus.LIVE if "online" in modes else DataStatus.CACHED
-        dynasty = normalize_internal(report.core_values.dynasty.score)
+        dynasty_base = normalize_internal(report.core_values.dynasty.score)
+        historical = apply_historical_evidence(
+            dynasty_base, report.profile.position, raw.get("historical_evidence"),
+        )
+        dynasty = historical.adjusted_value
         redraft = normalize_internal(report.core_values.redraft.score)
         team_fit = normalize_internal(report.core_values.team_fit.score)
         contender = round(redraft * .55 + team_fit * .30 + dynasty * .15)
@@ -64,7 +69,13 @@ def evaluate_player_values(context: Any, decision: Any, reports: dict[str, Any],
         positional = PositionalContext(dynasty_rank, dynasty_rank, weekly_rank, tier, scarcity, above_replacement, int(supplies.get(report.profile.position, 0)), dynasty_rank <= 2 and scarcity >= 65)
         production = registry.production().production(raw)
         limitations = tuple(dict.fromkeys((*report.limitations, *projection.limitations, *production.limitations)))
-        evidence = (f"DTOS intrinsic value {dynasty}/1000 remains independent from provider market evidence.", f"Projection state is {projection.status.value} from {projection.source}.", f"Projects {above_replacement:+.2f} points above roster-specific replacement.", f"Market state is {market_status.value}; raw provider values are normalized before comparison.")
+        evidence = (
+            f"DTOS intrinsic value {dynasty}/1000 remains independent from provider market evidence.",
+            *historical.evidence,
+            f"Projection state is {projection.status.value} from {projection.source}.",
+            f"Projects {above_replacement:+.2f} points above roster-specific replacement.",
+            f"Market state is {market_status.value}; raw provider values are normalized before comparison.",
+        )
         name = report.profile.name
         initials = "".join(part[:1] for part in name.split()[:2]).upper() or "DT"
         confidence = market_report.consensus.confidence if market_report else 0

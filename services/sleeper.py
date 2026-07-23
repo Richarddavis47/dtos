@@ -15,6 +15,7 @@ from src.core.data_platform import data_platform
 from src.core.data_platform.normalization import PlayerIdentityResolver
 from src.core.data_platform.provider_activation import refresh_public_market
 from src.core.intelligence.cache import intelligence_cache
+from services.history import capture_current_state, player_history_evidence
 from config import (
     CACHE_FILE,
     LEAGUE_ID,
@@ -129,6 +130,7 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
 
             user_by_id = {str(u.get("user_id")): u for u in users}
             team_rows = []
+            history_by_player: dict[str, dict[str, Any]] = {}
             for roster in rosters:
                 owner_id = str(roster.get("owner_id") or "")
                 owner = user_by_id.get(owner_id, {})
@@ -156,6 +158,8 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                         roster_slot = "IR"
                     else:
                         roster_slot = "Bench"
+                    if pid not in history_by_player:
+                        history_by_player[pid] = player_history_evidence(LEAGUE_ID, pid)
                     player_rows.append({
                         "id": pid,
                         "name": full_name,
@@ -167,6 +171,7 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                         "starter_index": starter_index.get(pid),
                         "starter_slot": lineup_slots[starter_index[pid]] if pid in starter_index and starter_index[pid] < len(lineup_slots) else None,
                         "roster_slot": roster_slot,
+                        "historical_evidence": history_by_player[pid],
                     })
                 slot_order = {"Starter": 0, "Bench": 1, "IR": 2, "Taxi": 3}
                 pos_order = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "K": 4, "DEF": 5}
@@ -333,6 +338,7 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
             STATE["last_error"] = None
             STATE["transactions_last_sync"] = synced_at
             STATE["transactions_last_error"] = None
+            capture_current_state(STATE["data"], synced_at)
             save_cache()
             intelligence_cache.invalidate("snapshot:")
             intelligence_cache.invalidate("crawl:")

@@ -34,6 +34,7 @@ class CrawlApiTests(unittest.TestCase):
         self.assertEqual(payload["valuation_schema_version"], "1.0")
         self.assertEqual(payload["default_league_id"], LEAGUE_ID)
         self.assertIn("/api/crawl/snapshot", payload["endpoints"].values())
+        self.assertIn("/api/crawl/history", payload["endpoints"].values())
         self.assertIn("/teams", payload["pages"])
         self.assertEqual(response.headers["access-control-allow-origin"], "*")
 
@@ -45,6 +46,29 @@ class CrawlApiTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertTrue(response.headers["content-type"].startswith("application/json"))
                 self.assertTrue(response.json()["ok"])
+
+    def test_history_endpoints_are_paginated_and_backwards_compatible(self) -> None:
+        endpoints = (
+            "history", "history/seasons", "history/matchups", "history/standings",
+            "history/playoffs", "history/transactions", "history/trades",
+            "history/drafts", "history/players", "history/teams",
+            "history/import-status", "history/data-quality",
+        )
+        for endpoint in endpoints:
+            with self.subTest(endpoint=endpoint):
+                response = self.client.get(f"/api/crawl/{endpoint}?league={LEAGUE_ID}&limit=2")
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(response.json()["ok"])
+        history = self.client.get(f"/api/crawl/history?league={LEAGUE_ID}&limit=2").json()
+        self.assertEqual(history["schema_version"], "1.0")
+        self.assertEqual(history["limit"], 2)
+
+    def test_missing_usage_has_explicit_provider_reason(self) -> None:
+        payload = self.client.get(
+            f"/api/crawl/history/player/player-one/usage?league={LEAGUE_ID}",
+        ).json()
+        self.assertEqual(payload["availability"], "provider_not_supported")
+        self.assertIn("provider", payload["reason"].casefold())
 
     def test_snapshot_uses_public_allowlist_and_contains_required_sections(self) -> None:
         payload = self.client.get("/api/crawl/snapshot").json()["data"]
