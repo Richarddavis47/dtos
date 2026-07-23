@@ -18,7 +18,7 @@ from src.core.valuation import NORMALIZATION_VERSION, VALUATION_SCHEMA_VERSION, 
 
 SCHEMA_VERSION = "1.0"
 TEAM_INTELLIGENCE_SCHEMA_VERSION = "1.0"
-PUBLIC_PAGES = ("/", "/teams", "/front-offices", "/trades", "/transactions", "/matchups", "/picks", "/settings")
+PUBLIC_PAGES = ("/", "/teams", "/front-offices", "/trades", "/transactions", "/matchups", "/picks", "/history", "/settings")
 CRAWL_ENDPOINTS = {
     "snapshot": "/api/crawl/snapshot",
     "teams": "/api/crawl/teams",
@@ -28,6 +28,22 @@ CRAWL_ENDPOINTS = {
     "matchups": "/api/crawl/matchups",
     "picks": "/api/crawl/picks",
     "standings": "/api/crawl/standings",
+    "history": "/api/crawl/history",
+    "history_seasons": "/api/crawl/history/seasons",
+    "history_matchups": "/api/crawl/history/matchups",
+    "history_standings": "/api/crawl/history/standings",
+    "history_playoffs": "/api/crawl/history/playoffs",
+    "history_transactions": "/api/crawl/history/transactions",
+    "history_trades": "/api/crawl/history/trades",
+    "history_drafts": "/api/crawl/history/drafts",
+    "history_players": "/api/crawl/history/players",
+    "history_player": "/api/crawl/history/player/{player_id}",
+    "history_player_weekly": "/api/crawl/history/player/{player_id}/weekly",
+    "history_player_usage": "/api/crawl/history/player/{player_id}/usage",
+    "history_player_values": "/api/crawl/history/player/{player_id}/values",
+    "history_teams": "/api/crawl/history/teams",
+    "history_import_status": "/api/crawl/history/import-status",
+    "history_data_quality": "/api/crawl/history/data-quality",
 }
 
 

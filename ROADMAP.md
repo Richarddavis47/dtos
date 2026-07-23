@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Historical League Memory & Player Performance Intelligence - DTOS v1.5.0
+
+- Immutable league-season, weekly roster, matchup, transaction, draft, player-production, value, prediction, and Team Intelligence evidence.
+- Stable franchise/player identity, source provenance, availability semantics, reconciliation, and data-quality reports.
+- Resumable Sleeper history import with paginated historical APIs and minimal historical views.
+- Foundation for later GM Intelligence, trade-outcome analysis, prediction calibration, and negotiation evidence.
+
 ### League Intelligence & Team Grading - DTOS v1.4.5
 
 - League-relative category grades, ranks, percentiles, and explanations.

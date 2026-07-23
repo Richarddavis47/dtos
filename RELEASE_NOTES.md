@@ -60,3 +60,15 @@ DTOS now exposes the synchronized public league state through fast, cached, read
 ## Non-goals preserved
 
 No championship probability, Decision Engine change, trade recommendation change, machine learning, or scouting feature was added.
+
+# DTOS v1.5.0 — Historical League Memory & Player Performance Intelligence
+
+DTOS now preserves league and player evidence longitudinally instead of treating synchronized current state as history. A versioned SQLite store retains league-season configuration, franchise identity changes, weekly roster and matchup evidence, standings, playoff brackets, drafts, transactions, trades, player points, values, predictions, and Team Intelligence snapshots with provider provenance.
+
+Historical import is resumable and idempotent. Missing raw NFL statistics and advanced usage are never converted to zero: Sleeper-scored fantasy points are retained as observed evidence, while unsupported components carry explicit availability reasons.
+
+Public historical APIs are paginated and filterable by league, season, week, franchise, and player. Minimal League, Team, and Player History views expose available trends without drawing misleading lines through missing weeks.
+
+See `docs/HISTORICAL_MEMORY.md` for schemas, import behavior, provenance, storage, performance, and current source limitations.
+
+---

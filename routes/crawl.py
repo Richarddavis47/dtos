@@ -1,6 +1,7 @@
 """Public, read-only crawl and discovery routes."""
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from typing import Any, Callable
 
@@ -24,6 +25,8 @@ from services.crawl import (
     sync_metadata,
     validate_league,
 )
+from services.history import data_quality, history_records, import_status, player_career
+from src.core.historical_memory import HISTORICAL_SCHEMA_VERSION
 
 GetData = Callable[[], dict[str, Any]]
 
@@ -121,6 +124,117 @@ def create_crawl_router(*, get_data: GetData, state: dict[str, Any], league_id: 
     @router.get("/api/crawl/standings")
     async def crawl_standings(league: str | None = None) -> JSONResponse:
         return respond("standings", league, lambda data: {"standings": standings(data)})
+
+    def history_response(
+        requested: str | None, entity_type: str | None, *, season: int | None = None,
+        week: int | None = None, franchise: str | None = None,
+        player: str | None = None, limit: int = 100, offset: int = 0,
+    ) -> JSONResponse:
+        try:
+            _, selected_league = selected(requested)
+        except CrawlLeagueError as exc:
+            return JSONResponse({"ok": False, "schema_version": HISTORICAL_SCHEMA_VERSION, "error": "invalid_league", "detail": str(exc)}, status_code=404)
+        payload = history_records(
+            selected_league, entity_type, season=season, week=week,
+            franchise_id=franchise, player_id=player, limit=limit, offset=offset,
+        )
+        return JSONResponse(
+            {"ok": True, "league_id": selected_league, **payload},
+            headers={"Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=60"},
+        )
+
+    @router.get("/api/crawl/history")
+    async def crawl_history(league: str | None = None, limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)) -> JSONResponse:
+        return history_response(league, None, limit=limit, offset=offset)
+
+    @router.get("/api/crawl/history/seasons")
+    async def crawl_history_seasons(league: str | None = None, season: int | None = None) -> JSONResponse:
+        return history_response(league, "league_season", season=season)
+
+    @router.get("/api/crawl/history/matchups")
+    async def crawl_history_matchups(league: str | None = None, season: int | None = None, week: int | None = None, franchise: str | None = None, limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)) -> JSONResponse:
+        return history_response(league, "matchup_team", season=season, week=week, franchise=franchise, limit=limit, offset=offset)
+
+    @router.get("/api/crawl/history/standings")
+    async def crawl_history_standings(league: str | None = None, season: int | None = None, franchise: str | None = None) -> JSONResponse:
+        return history_response(league, "season_standing", season=season, franchise=franchise)
+
+    @router.get("/api/crawl/history/playoffs")
+    async def crawl_history_playoffs(league: str | None = None, season: int | None = None) -> JSONResponse:
+        return history_response(league, "playoff_result", season=season)
+
+    @router.get("/api/crawl/history/transactions")
+    async def crawl_history_transactions(league: str | None = None, season: int | None = None, week: int | None = None, limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)) -> JSONResponse:
+        return history_response(league, "transaction", season=season, week=week, limit=limit, offset=offset)
+
+    @router.get("/api/crawl/history/trades")
+    async def crawl_history_trades(league: str | None = None, season: int | None = None, week: int | None = None, franchise: str | None = None, limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)) -> JSONResponse:
+        return history_response(league, "trade", season=season, week=week, franchise=franchise, limit=limit, offset=offset)
+
+    @router.get("/api/crawl/history/drafts")
+    async def crawl_history_drafts(league: str | None = None, season: int | None = None, limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)) -> JSONResponse:
+        return history_response(league, "draft_pick", season=season, limit=limit, offset=offset)
+
+    @router.get("/api/crawl/history/players")
+    async def crawl_history_players(league: str | None = None, season: int | None = None, week: int | None = None, player: str | None = None, limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)) -> JSONResponse:
+        return history_response(league, "player_week", season=season, week=week, player=player, limit=limit, offset=offset)
+
+    @router.get("/api/crawl/history/player/{player_id}")
+    async def crawl_player_history(player_id: str, league: str | None = None) -> JSONResponse:
+        try:
+            _, selected_league = selected(league)
+        except CrawlLeagueError as exc:
+            return JSONResponse({"ok": False, "schema_version": HISTORICAL_SCHEMA_VERSION, "error": "invalid_league", "detail": str(exc)}, status_code=404)
+        return JSONResponse({"ok": True, "league_id": selected_league, **player_career(selected_league, player_id)})
+
+    @router.get("/api/crawl/history/player/{player_id}/weekly")
+    async def crawl_player_weekly(player_id: str, league: str | None = None, season: int | None = None, limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)) -> JSONResponse:
+        return history_response(league, "player_week", season=season, player=player_id, limit=limit, offset=offset)
+
+    @router.get("/api/crawl/history/player/{player_id}/usage")
+    async def crawl_player_usage(player_id: str, league: str | None = None, season: int | None = None) -> JSONResponse:
+        response = history_response(league, "player_usage", season=season, player=player_id)
+        if response.status_code == 200:
+            payload = json.loads(response.body)
+            if payload["count"] == 0:
+                payload["availability"] = "provider_not_supported"
+                payload["reason"] = "No configured provider supplies historical advanced usage."
+            return JSONResponse(payload, headers=dict(response.headers))
+        return response
+
+    @router.get("/api/crawl/history/player/{player_id}/values")
+    async def crawl_player_values(player_id: str, league: str | None = None, season: int | None = None, limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)) -> JSONResponse:
+        return history_response(league, "valuation_snapshot", season=season, player=player_id, limit=limit, offset=offset)
+
+    @router.get("/api/crawl/history/teams")
+    async def crawl_team_history(league: str | None = None, season: int | None = None, franchise: str | None = None, limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)) -> JSONResponse:
+        try:
+            _, selected_league = selected(league)
+        except CrawlLeagueError as exc:
+            return JSONResponse({"ok": False, "schema_version": HISTORICAL_SCHEMA_VERSION, "error": "invalid_league", "detail": str(exc)}, status_code=404)
+        franchises = history_records(selected_league, "franchise_identity", season=season, franchise_id=franchise, limit=limit, offset=offset)
+        intelligence = history_records(selected_league, "team_intelligence_snapshot", season=season, franchise_id=franchise, limit=limit, offset=offset)
+        return JSONResponse({
+            "ok": True, "league_id": selected_league,
+            "schema_version": HISTORICAL_SCHEMA_VERSION,
+            "franchises": franchises, "team_intelligence": intelligence,
+        })
+
+    @router.get("/api/crawl/history/import-status")
+    async def crawl_import_status(league: str | None = None) -> JSONResponse:
+        try:
+            _, selected_league = selected(league)
+        except CrawlLeagueError as exc:
+            return JSONResponse({"ok": False, "schema_version": HISTORICAL_SCHEMA_VERSION, "error": "invalid_league", "detail": str(exc)}, status_code=404)
+        return JSONResponse({"ok": True, "league_id": selected_league, **import_status(selected_league)})
+
+    @router.get("/api/crawl/history/data-quality")
+    async def crawl_data_quality(league: str | None = None) -> JSONResponse:
+        try:
+            _, selected_league = selected(league)
+        except CrawlLeagueError as exc:
+            return JSONResponse({"ok": False, "schema_version": HISTORICAL_SCHEMA_VERSION, "error": "invalid_league", "detail": str(exc)}, status_code=404)
+        return JSONResponse({"ok": True, "league_id": selected_league, **data_quality(selected_league)})
 
     @router.get("/robots.txt", include_in_schema=False)
     async def robots() -> PlainTextResponse:

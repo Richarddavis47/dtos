@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.5.0 - Historical League Memory & Player Performance Intelligence
+
+- Added an indexed, versioned, append-only SQLite historical evidence store with migrations, stable dimensions, provenance, availability, confidence, and model versions.
+- Added resumable and idempotent Sleeper season backfills for league settings, franchise identity, weekly rosters, matchups, standings, playoffs, drafts, transactions, trades, and observed player points.
+- Added current-sync valuation, roster, Team Intelligence, and prediction snapshots without overwriting earlier observations.
+- Added deterministic player production aggregation, season-specific scoring recalculation, conservative role signals, explicit usage gaps, and data-quality reporting.
+- Added paginated historical crawl endpoints plus minimal League, Team, and Player History views.
+- Added focused identity, rename, idempotency, checkpoint, scoring, usage, aggregation, and historical API regressions.
+
 ## v1.4.5 - League Intelligence & Team Grading
 
 - Added league-relative grades, ranks, percentiles, confidence, and explanations across 13 team categories.

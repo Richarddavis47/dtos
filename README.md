@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.4.5 adds league-relative Team Intelligence: one explainable grading card, standardized competitive windows, preseason projections, and consistent contender counts across Commissioner Desk, Team Headquarters, League Intelligence, and crawl APIs. See [Team Intelligence](docs/TEAM_INTELLIGENCE.md) and [Valuation Calibration](docs/VALUATION_CALIBRATION.md).
+DTOS v1.5.0 adds immutable Historical League Memory and Player Performance Intelligence: season-specific league settings, weekly rosters and matchups, transactions, drafts, player production, valuation and Team Intelligence snapshots, provenance, quality reporting, and resumable Sleeper backfills. See [Historical Memory](docs/HISTORICAL_MEMORY.md), [Team Intelligence](docs/TEAM_INTELLIGENCE.md), and [Valuation Calibration](docs/VALUATION_CALIBRATION.md).
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 
@@ -30,7 +30,7 @@ Run the complete supported validation workflow with:
 .\.venv\Scripts\python.exe -m tools.validation.validate_release
 ```
 
-Runtime configuration uses environment variables such as `SLEEPER_LEAGUE_ID`, `DTOS_CACHE_FILE`, `SYNC_MINUTES`, and `SLEEPER_TIMEOUT`. Existing environment overrides are preserved.
+Runtime configuration uses environment variables such as `SLEEPER_LEAGUE_ID`, `DTOS_CACHE_FILE`, `DTOS_HISTORY_DB_FILE`, `SYNC_MINUTES`, and `SLEEPER_TIMEOUT`. Existing environment overrides are preserved.
 
 ## Architecture
 
@@ -53,6 +53,8 @@ Trade opportunity generation lives in `src/core/trade_intelligence/` and consume
 External market evidence lives in `src/core/market_intelligence/`. It enhances—but never replaces—DTOS intrinsic evaluation and is consumed only through the Intelligence Orchestrator.
 
 League-wide synthesis lives in `src/core/league_intelligence/`. It consumes orchestrated engine outputs and never replaces or duplicates their evaluation formulas.
+
+Immutable longitudinal evidence lives in `src/core/historical_memory/`. SQLite indexes isolate league, season, week, franchise, player, provider, and model-version dimensions while current-state JSON caching remains unchanged.
 
 All external provider access flows through `src/core/data_platform/`. Market Intelligence and Sleeper transport consume this boundary rather than provider implementations directly.
 
