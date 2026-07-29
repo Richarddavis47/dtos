@@ -135,6 +135,41 @@ class IntelligenceOrchestrator:
             self.last_error = str(exc)
             raise
 
+    def matchup_player_values(
+        self,
+        data: dict[str, Any],
+        roster_ids: tuple[int, ...],
+    ) -> dict[int, dict[str, Any]]:
+        """Build only the shared intelligence required by matchup projections."""
+        unique_roster_ids = tuple(dict.fromkeys(roster_ids))
+        if not unique_roster_ids:
+            return {}
+        contexts = {
+            roster_id: self.context(data, roster_id)
+            for roster_id in unique_roster_ids
+        }
+        first_context = contexts[unique_roster_ids[0]]
+        decisions = self.registry.provider("decision")(first_context)
+        values: dict[int, dict[str, Any]] = {}
+        for roster_id, context in contexts.items():
+            decision = decisions[roster_id]
+            _, _, player_reports = self.registry.provider("asset")(
+                context,
+                decision,
+            )
+            market = self.registry.provider("market")(
+                context,
+                player_reports,
+                (),
+            )
+            values[roster_id] = self.registry.provider("player_value")(
+                context,
+                decision,
+                player_reports,
+                market,
+            )
+        return values
+
     def health(self, sleeper_state: dict[str, Any] | None = None) -> dict[str, Any]:
         state = sleeper_state or {}
         provider_status = "healthy" if self.last_error is None else "degraded"

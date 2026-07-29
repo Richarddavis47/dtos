@@ -5,13 +5,14 @@ receives shared DTOS helpers so the existing UI and data behavior remain unchang
 """
 from __future__ import annotations
 
+import asyncio
 from html import escape
 from typing import Any, Awaitable, Callable
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 
-from services.matchup_intelligence import matchup_projection
+from services.matchup_intelligence import matchup_player_values, matchup_projection
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -31,6 +32,11 @@ def create_matchups_router(
     async def matchups_page() -> HTMLResponse:
         await ensure_fresh()
         d = require_data()
+        player_values = await asyncio.to_thread(
+            matchup_player_values,
+            d,
+            d["matchups"],
+        )
         cards = []
         for matchup_id, sides in sorted(d["matchups"].items(), key=lambda item: (item[0] == "Unassigned", item[0])):
             if len(sides) < 2:
@@ -41,7 +47,7 @@ def create_matchups_router(
                 )
                 continue
             left, right = sides[0], sides[1]
-            projected = matchup_projection(d, sides)
+            projected = matchup_projection(d, sides, player_values)
             if left["points"] == right["points"]:
                 status = "Tied"
             else:

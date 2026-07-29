@@ -7,15 +7,41 @@ from typing import Any
 from src.core.intelligence import intelligence_orchestrator
 
 
-def matchup_projection(data: dict[str, Any], sides: list[dict[str, Any]]) -> dict[str, Any]:
+def matchup_player_values(
+    data: dict[str, Any],
+    matchup_groups: dict[str, list[dict[str, Any]]],
+) -> dict[int, dict[str, Any]]:
+    roster_ids = tuple(
+        int(side.get("roster_id") or 0)
+        for sides in matchup_groups.values()
+        for side in sides[:2]
+        if int(side.get("roster_id") or 0)
+    )
+    return intelligence_orchestrator.matchup_player_values(data, roster_ids)
+
+
+def matchup_projection(
+    data: dict[str, Any],
+    sides: list[dict[str, Any]],
+    player_values: dict[int, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     summaries = []
     player_edges = []
     missing = 0
+    values_by_roster = player_values
     for side in sides[:2]:
         roster_id = int(side.get("roster_id") or 0)
-        result = intelligence_orchestrator.analyze(data, roster_id)
+        if values_by_roster is None:
+            values_by_roster = intelligence_orchestrator.matchup_player_values(
+                data,
+                tuple(
+                    int(item.get("roster_id") or 0)
+                    for item in sides[:2]
+                ),
+            )
         lineup = side.get("lineup") or []
-        values = [result.player_values.get(str(player.get("id"))) for player in lineup]
+        roster_values = values_by_roster.get(roster_id) or {}
+        values = [roster_values.get(str(player.get("id"))) for player in lineup]
         projections = [item.projection for item in values if item is not None]
         missing += len(lineup) - len(projections)
         total = sum(item.projected_points or 0 for item in projections)
