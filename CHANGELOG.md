@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.5.7 - Historical Recovery
+
+- Classified interrupted HTTP response reads as retryable transport failures under the existing bounded four-attempt policy.
+- Added path-aware retry logging while preserving the original exception when all attempts fail.
+- Resume foundation imports by skipping completed season checkpoints and replaying only incomplete seasons through immutable duplicate-safe record keys.
+- Distinguished preseason 2026 weekly, matchup, transaction, trade, and player data as pending instead of unsupported or failed.
+- Reconciled a fresh real-provider import to 30,051 records; consecutive recovery runs produced no duplicate rows or identities.
+
 ## v1.5.6 - Deployment Readiness
 
 - Separated lightweight process liveness from cached-data readiness with dedicated `/health/live` and `/health/ready` probes.
