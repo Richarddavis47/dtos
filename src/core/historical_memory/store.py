@@ -317,10 +317,35 @@ class HistoricalStore:
             return cursor.rowcount == 1
 
     def append_many(self, records: list[dict[str, Any]]) -> tuple[int, int]:
-        """Append one bounded batch on a worker thread using safe connections."""
-        written = 0
-        for record in records:
-            written += int(self.append(**record))
+        """Append one bounded batch in one transaction on a worker thread."""
+        values = [
+            (
+                record["record_key"], record["entity_type"], record["league_id"],
+                record.get("season"), record.get("week"),
+                record.get("franchise_id"), record.get("player_id"),
+                record["source_record_id"], record["observed_at"],
+                record["retrieved_at"], record["provider"],
+                record["availability"], record["confidence"],
+                record["calculation_method"], int(record.get("derived", False)),
+                record["schema_version"],
+                json.dumps(
+                    record["payload"], separators=(",", ":"), sort_keys=True,
+                    default=lambda value: getattr(value, "value", str(value)),
+                ),
+            )
+            for record in records
+        ]
+        with self._lock, self.connection() as connection:
+            before = connection.total_changes
+            connection.executemany(
+                """INSERT OR IGNORE INTO historical_records(
+                record_key, entity_type, league_id, season, week, franchise_id,
+                player_id, source_record_id, observed_at, retrieved_at, provider,
+                availability, confidence, calculation_method, derived,
+                schema_version, payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                values,
+            )
+            written = connection.total_changes - before
         return written, len(records) - written
 
     def records(
