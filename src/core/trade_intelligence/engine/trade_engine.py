@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from src.core.asset_intelligence import AssetContext
-from src.core.decision_engine import DecisionContext, TeamDecision, evaluate_team
+from src.core.decision_engine import TeamDecision
 from src.core.trade_intelligence.engine.recommendation_engine import prioritize
 from src.core.trade_intelligence.engine.trade_evaluator import evaluate_proposal
 from src.core.trade_intelligence.engine.trade_generator import generate_proposals
@@ -22,7 +22,7 @@ def _asset_context(decision: TeamDecision) -> AssetContext:
         decision.profile.league_id,
         decision.profile.roster_id,
         decision.profile.league_settings,
-        decision.window.value,
+        decision.competitive_window.classification.value,
         decision.profile.strategy,
         needs,
         depths,
@@ -43,17 +43,14 @@ class TradeIntelligence:
         teams = data.get("teams") or []
         if not any(int(team.get("roster_id") or 0) == active_roster_id for team in teams):
             raise ValueError(f"Front Office {active_roster_id} is not available.")
-        league = data.get("league") or {}
-        league_id = str(league.get("league_id") or "configured-league")
-        settings = {**(data.get("league_settings") or {}), "roster_positions": league.get("roster_positions") or []}
-        decisions = decisions or {
-            int(team.get("roster_id") or 0): evaluate_team(
-                data,
-                int(team.get("roster_id") or 0),
-                DecisionContext(int(team.get("roster_id") or 0), league_id, settings),
-            )
-            for team in teams
-        }
+        if decisions is None:
+            from src.core.front_office_intelligence import build_league_model
+
+            front_office_model = build_league_model(data)
+            decisions = {
+                roster_id: report.decision
+                for roster_id, report in front_office_model.reports.items()
+            }
         active = decisions[active_roster_id]
         reports = evaluate_partners(data, active, decisions, front_office_model)
         team_by_id = {int(team.get("roster_id") or 0): team for team in teams}

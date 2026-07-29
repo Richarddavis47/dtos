@@ -4,10 +4,7 @@ from __future__ import annotations
 import copy
 import unittest
 
-from src.core.decision_engine import DecisionContext, DecisionEngine, TeamWindow, evaluate_team
-from src.core.decision_engine.models.evaluation import Evaluation, EvaluationHorizon
-from src.core.decision_engine.models.recommendation import RecommendationCategory
-from src.core.decision_engine.team.competitive_window import classify_competitive_window
+from src.core.decision_engine import DecisionContext, DecisionEngine, evaluate_team
 
 
 class DecisionEngineTests(unittest.TestCase):
@@ -80,33 +77,10 @@ class DecisionEngineTests(unittest.TestCase):
             for factor in decision.position_evaluations["RB"].factors
         ).lower())
 
-    def test_recommendations_implement_shared_contract(self) -> None:
+    def test_recommendations_wait_for_canonical_team_window(self) -> None:
         decision = evaluate_team(self.data, 1, self.context)
-        self.assertTrue(decision.recommendations)
-        for recommendation in decision.recommendations:
-            self.assertIsInstance(recommendation.category, RecommendationCategory)
-            self.assertGreaterEqual(recommendation.confidence.value, 0)
-            self.assertLessEqual(recommendation.confidence.value, 100)
-            self.assertTrue(recommendation.reasoning)
-            self.assertTrue(recommendation.supporting_metrics)
-            self.assertTrue(recommendation.future_explanation_hook)
-
-    def test_all_window_classifications_have_deterministic_boundaries(self) -> None:
-        def evaluation(score: int) -> Evaluation:
-            return Evaluation(EvaluationHorizon.CURRENT, score, "C", 80, "Test", ())
-
-        cases = (
-            (80, 70, TeamWindow.CHAMPIONSHIP),
-            (70, 40, TeamWindow.PLAYOFF),
-            (40, 70, TeamWindow.ASCENSION),
-            (40, 40, TeamWindow.REBUILD),
-            (55, 60, TeamWindow.TRANSITION),
-        )
-        for current, future, expected in cases:
-            with self.subTest(expected=expected):
-                window, explanation = classify_competitive_window(evaluation(current), evaluation(future))
-                self.assertEqual(window, expected)
-                self.assertTrue(explanation)
+        self.assertIsNone(decision.competitive_window)
+        self.assertEqual(decision.recommendations, ())
 
 
 if __name__ == "__main__":

@@ -2,20 +2,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any
 
+from src.core.competitive_window import CompetitiveWindowContract
 from src.core.decision_engine.models.evaluation import Evaluation
 from src.core.decision_engine.models.recommendation import Recommendation
 from src.core.decision_engine.models.team_profile import TeamProfile
-
-
-class TeamWindow(str, Enum):
-    CHAMPIONSHIP = "Championship Window"
-    PLAYOFF = "Playoff Window"
-    TRANSITION = "Transition Window"
-    REBUILD = "Rebuild Window"
-    ASCENSION = "Ascension Window"
 
 
 @dataclass(frozen=True)
@@ -35,6 +27,5 @@ class TeamDecision:
     depth: Evaluation
     asset_health: Evaluation
     position_evaluations: dict[str, Evaluation]
-    window: TeamWindow
-    window_explanation: str
+    competitive_window: CompetitiveWindowContract | None
     recommendations: tuple[Recommendation, ...]

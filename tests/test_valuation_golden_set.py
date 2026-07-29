@@ -7,8 +7,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from src.core.asset_intelligence.picks.pick_value import dynasty_pick_value
+from src.core.competitive_window import build_competitive_window
 from src.core.valuation import CalibrationStatus, calibrate_asset_value, contextualize_valuation_tier
-from src.core.team_intelligence.engine import _window
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "golden_valuation_v159.json"
@@ -112,7 +112,16 @@ class GoldenValuationTests(unittest.TestCase):
     def test_competitive_window_scenarios_are_stable(self) -> None:
         for row in self.benchmark["team_scenarios"]:
             self.assertEqual(
-                _window(row["current"], row["overall"], row["future"]).value,
+                build_competitive_window(
+                    current_strength=row["current"],
+                    overall_strength=row["overall"],
+                    future_strength=row["future"],
+                    depth=50,
+                    youth=50,
+                    draft_capital=50,
+                    risk=50,
+                    confidence=80,
+                ).classification.value,
                 row["window"],
                 row["label"],
             )

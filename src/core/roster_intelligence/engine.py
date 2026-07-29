@@ -151,7 +151,7 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
     context = intelligence.context
     scarcity_by_position = decision.profile.market_context.get("position_counts") or {}
     cards = {
-        player_id: _player_card(report, intelligence.market, decision.window.value, _clamp(100 - int(scarcity_by_position.get(report.profile.position, 0))), intelligence.player_values.get(player_id))
+        player_id: _player_card(report, intelligence.market, "Pending canonical window", _clamp(100 - int(scarcity_by_position.get(report.profile.position, 0))), intelligence.player_values.get(player_id))
         for player_id, report in intelligence.player_reports.items()
     }
     room_inputs: dict[str, tuple[int, dict[str, int]]] = {}
@@ -174,13 +174,13 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
     )
     for roster_id, other in intelligence.decisions.items():
         depths = {position: room.total_players for position, room in other.profile.position_rooms.items()}
-        asset_context = AssetContext(context.league_id, roster_id, context.settings, other.window.value, other.profile.strategy, (), depths, other.profile.market_context.get("position_counts") or {})
+        asset_context = AssetContext(context.league_id, roster_id, context.settings, "Pending canonical window", other.profile.strategy, (), depths, other.profile.market_context.get("position_counts") or {})
         other_reports = [evaluate_player(player, asset_context) for player in other.profile.players]
         other_cards = [
             _player_card(
                 report,
                 None,
-                other.window.value,
+                "Pending canonical window",
                 _clamp(100 - int(scarcity_by_position.get(report.profile.position, 0))),
                 cached_market=league_market_values.get(report.profile.player_id),
             )

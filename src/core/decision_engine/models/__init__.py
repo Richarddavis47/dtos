@@ -1,5 +1,5 @@
 """Decision Engine model exports."""
-from src.core.decision_engine.models.decision import DecisionContext, TeamDecision, TeamWindow
+from src.core.decision_engine.models.decision import DecisionContext, TeamDecision
 from src.core.decision_engine.models.evaluation import Evaluation, EvaluationFactor, EvaluationHorizon
 from src.core.decision_engine.models.recommendation import (
     ConfidenceScore,
@@ -21,5 +21,4 @@ __all__ = [
     "RecommendationPriority",
     "TeamDecision",
     "TeamProfile",
-    "TeamWindow",
 ]

@@ -179,7 +179,7 @@ def create_teams_router(
                 ("Projected Wins", str(view["team_intelligence"].projected_wins), "Deterministic 14-game preseason indicator"),
                 ("Playoff Odds", f'{view["team_intelligence"].playoff_odds}%', "Relative strength indicator, not a simulation"),
                 ("Championship Odds", f'{view["team_intelligence"].championship_odds}%', "Relative strength indicator, not a simulation"),
-                ("Organization", view["front_office_intelligence"].competitive_window, "Front Office Intelligence v1"),
+                ("Organization", view["front_office_intelligence"].competitive_window.classification.value, "Canonical Competitive Window"),
                 ("Youth Grade", view["grades"]["Youth"]["grade"] + " foundation", "Deterministic roster age model"),
                 ("Draft Capital Grade", view["grades"]["Draft Capital"]["grade"] + " foundation", "Deterministic pick inventory model"),
             )

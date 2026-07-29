@@ -4,6 +4,10 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
+DTOS v1.5.11 gives every intelligence subsystem one authoritative,
+league-relative competitive-window contract. See the
+[Competitive Window Contract](docs/COMPETITIVE_WINDOW_CONTRACT.md).
+
 DTOS v1.5.10 verifies league-wide intelligence quality and makes every
 league-relative comparison independent of the selected Front Office. See the
 [Intelligence Quality Audit](docs/INTELLIGENCE_QUALITY_AUDIT.md).

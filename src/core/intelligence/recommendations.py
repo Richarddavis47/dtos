@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from src.core.competitive_window import CompetitiveWindowContract
 from src.core.intelligence.confidence import UnifiedConfidence
 from src.core.intelligence.evidence import UnifiedEvidence
 
@@ -21,6 +22,7 @@ class UnifiedRecommendation:
     change_conditions: tuple[str, ...]
     evidence: tuple[UnifiedEvidence, ...]
     sources: tuple[str, ...]
+    competitive_window: CompetitiveWindowContract
 
 
 def resolve_recommendation(*, decision, trade, front_office, market, evidence: tuple[UnifiedEvidence, ...], confidence: UnifiedConfidence) -> UnifiedRecommendation:
@@ -43,4 +45,5 @@ def resolve_recommendation(*, decision, trade, front_office, market, evidence: t
         ("Sleeper cached data reflects the latest successful synchronization.", "Market consensus is used only where traceable provider data exists."),
         ("A new successful synchronization changes the evidence snapshot.", "Material roster, injury, market, or trade-history changes require reevaluation.", "A meaningful market value or trend change may open or close a timing window."),
         evidence, ("Decision Engine", "Asset Intelligence", "Trade Intelligence", "Front Office Intelligence", "Market Intelligence"),
+        decision.competitive_window,
     )
