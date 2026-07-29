@@ -80,7 +80,6 @@ class IntelligencePlatformTests(unittest.TestCase):
         self.assertIn("recommendation", intelligence.json())
         self.assertEqual(legacy.status_code, 200)
         self.assertEqual(legacy.json()["version"], VERSION)
-        self.assertEqual(legacy.json()["version"], "1.5.7")
 
     def test_health_exposes_cache_namespaces_and_engine_timings(self) -> None:
         self.orchestrator.analyze(self.data, 1)

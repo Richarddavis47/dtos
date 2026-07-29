@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
 
@@ -198,6 +199,45 @@ class PlayerValueProjectionTests(unittest.TestCase):
             provider.call_count,
             first_calls * 2,
         )
+
+    def test_concurrent_matchup_fast_paths_are_isolated_and_deterministic(self) -> None:
+        teams = self.data["teams"][:4]
+        roster_ids = tuple(int(team["roster_id"]) for team in teams)
+        sides = [
+            {
+                "roster_id": team["roster_id"],
+                "team": team["team_name"],
+                "lineup": [
+                    {"id": player["id"], "position": player["position"]}
+                    for player in team["players"][:2]
+                ],
+            }
+            for team in teams[:2]
+        ]
+
+        def evaluate() -> dict[int, dict[str, object]]:
+            orchestrator = IntelligenceOrchestrator(
+                IntelligenceRegistry(),
+                IntelligenceCache(default_ttl=60),
+            )
+            return orchestrator.matchup_player_values(self.data, roster_ids)
+
+        expected = evaluate()
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            first, second = tuple(executor.map(lambda _: evaluate(), range(2)))
+        self.assertEqual(
+            {roster_id: tuple(values) for roster_id, values in first.items()},
+            {roster_id: tuple(values) for roster_id, values in expected.items()},
+        )
+        self.assertEqual(
+            matchup_projection(self.data, sides, first),
+            matchup_projection(self.data, sides, expected),
+        )
+        self.assertEqual(
+            matchup_projection(self.data, sides, second),
+            matchup_projection(self.data, sides, expected),
+        )
+        self.assertEqual(self.orchestrator.cache.health()["entries"], 0)
 
     def test_matchup_fast_path_matches_full_orchestrator_projection(self) -> None:
         teams = self.data["teams"][:2]

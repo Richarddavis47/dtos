@@ -11,6 +11,7 @@ from src.core.market_intelligence.history import MarketHistoryStore, MarketSnaps
 from src.core.market_intelligence.models import AssetMarketReport, MarketIntelligenceReport, ProviderQuote, TradeMarketImpact, ValueGap, ValueGapLabel
 from src.core.market_intelligence.trends import calculate_trend
 from src.core.valuation import normalize_value
+from src.core.valuation.normalization import prepare_distribution
 
 
 def value_gap(intrinsic: int, market: int | None, confidence: int) -> ValueGap:
@@ -49,6 +50,20 @@ class MarketIntelligence:
         labels = {str(player_id): str(row.get("full_name") or player_id) for player_id, row in players.items()}
         reports: dict[str, AssetMarketReport] = {}
         providers = self.platform.registry.providers("market")
+        provider_rows = market_data.get("providers") or {}
+        provider_distributions = {
+            provider.metadata.name: prepare_distribution(
+                provider.metadata.name,
+                (
+                    row.get("value")
+                    for row in (
+                        provider_rows.get(provider.metadata.name) or {}
+                    ).values()
+                    if isinstance(row, dict) and row.get("value") is not None
+                ),
+            )
+            for provider in providers
+        }
         health: dict[str, dict[str, object]] = {provider.metadata.name: {"status": "unavailable", "available_quotes": 0, "latency_ms": 0.0, "last_updated": None} for provider in providers}
         for asset_id, intrinsic in intrinsic_by_id.items():
             asset = {**(players.get(asset_id) or {}), "id": asset_id, "player_id": asset_id}
@@ -62,6 +77,7 @@ class MarketIntelligence:
                         allow_cached=allow_cached_fallback,
                     ),
                     market_data,
+                    provider_distributions[provider.metadata.name],
                 )
                 for provider in providers
             )
@@ -92,12 +108,26 @@ class MarketIntelligence:
         return MarketIntelligenceReport(reports, opportunities, impacts, evidence, health, generated_at, offline)
 
     @staticmethod
-    def _quote(envelope: Any, market_data: dict[str, Any]) -> ProviderQuote:
+    def _quote(
+        envelope: Any,
+        market_data: dict[str, Any],
+        distribution: tuple[float, ...] | None = None,
+    ) -> ProviderQuote:
         available = envelope.value is not None and envelope.quality.status != "blocked"
         raw = float(envelope.value) if available else None
         provider_rows = (market_data.get("providers") or {}).get(envelope.provider) or {}
-        distribution = tuple(float(row.get("value")) for row in provider_rows.values() if isinstance(row, dict) and row.get("value") is not None)
-        normalized = normalize_value(envelope.provider, raw, distribution=distribution, updated_at=envelope.timestamp, provider_confidence=envelope.confidence) if raw is not None else None
+        normalized = normalize_value(
+            envelope.provider,
+            raw,
+            distribution=(
+                float(row.get("value"))
+                for row in provider_rows.values()
+                if isinstance(row, dict) and row.get("value") is not None
+            ),
+            prepared_distribution=distribution,
+            updated_at=envelope.timestamp,
+            provider_confidence=envelope.confidence,
+        ) if raw is not None else None
         return ProviderQuote(envelope.provider, envelope.key, raw, envelope.confidence if available else 0, envelope.timestamp, envelope.source, available, "; ".join((*envelope.quality.issues, *envelope.limitations)) or "Data Platform envelope", 0.0, envelope.cache_state != "fresh", envelope.retrieval_mode, envelope.timestamp, None, normalized.freshness if normalized else envelope.freshness, 0, normalized.normalized_value if normalized else None, (normalized.raw_min, normalized.raw_max) if normalized else None, normalized.normalization_version if normalized else None, normalized.method if normalized else None)
 
     @staticmethod
