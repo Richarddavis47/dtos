@@ -36,6 +36,7 @@ class Settings:
     market_cache_ttl: float
     data_warehouse_file: Path
     history_database_file: Path
+    background_start_delay: float
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -57,6 +58,11 @@ class Settings:
             market_cache_ttl=_number("DTOS_MARKET_CACHE_TTL", 3600, 0),
             data_warehouse_file=Path(os.getenv("DTOS_DATA_WAREHOUSE_FILE", str(Path(gettempdir()) / "dtos_data_history.json"))),
             history_database_file=Path(os.getenv("DTOS_HISTORY_DB_FILE", str(Path(gettempdir()) / "dtos_history.sqlite3"))),
+            background_start_delay=_number(
+                "DTOS_BACKGROUND_START_DELAY",
+                30,
+                0,
+            ),
         )
 
 
@@ -72,3 +78,4 @@ INTELLIGENCE_CACHE_TTL = SETTINGS.intelligence_cache_ttl
 MARKET_CACHE_TTL = SETTINGS.market_cache_ttl
 DATA_WAREHOUSE_FILE = SETTINGS.data_warehouse_file
 HISTORY_DATABASE_FILE = SETTINGS.history_database_file
+BACKGROUND_START_DELAY = SETTINGS.background_start_delay

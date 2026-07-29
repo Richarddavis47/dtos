@@ -30,14 +30,36 @@ def create_api_router(
     router = APIRouter()
 
     @router.get("/health")
-    async def health() -> dict[str, Any]:
-        return {
-            "status": "ok" if state.get("data") else "starting",
+    async def health() -> JSONResponse:
+        status_code = 200 if runtime_metrics.ready else 503
+        return JSONResponse({
+            "status": "ready" if runtime_metrics.ready else "starting",
             "league_id": league_id,
             "last_sync": state.get("last_sync"),
             "last_error": state.get("last_error"),
             "runtime": runtime_metrics.health(),
+        }, status_code=status_code)
+
+    @router.get("/health/live")
+    async def health_live() -> dict[str, Any]:
+        return {
+            "status": "alive",
+            "version": VERSION,
+            "runtime": runtime_metrics.health(),
         }
+
+    @router.get("/health/ready")
+    async def health_ready() -> JSONResponse:
+        status_code = 200 if runtime_metrics.ready else 503
+        return JSONResponse(
+            {
+                "status": "ready" if runtime_metrics.ready else "not_ready",
+                "version": VERSION,
+                "reason": runtime_metrics.readiness_reason,
+                "runtime": runtime_metrics.health(),
+            },
+            status_code=status_code,
+        )
 
     @router.get("/api/status")
     async def api_status() -> JSONResponse:

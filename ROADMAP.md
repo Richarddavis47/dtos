@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Deployment Readiness - DTOS v1.5.6
+
+- Separate process liveness from usable-data readiness.
+- Reserve initial cached-deployment capacity before maintenance tasks begin.
+- Expose opt-in timings that distinguish hosting delay from application work.
+- Preserve v1.5.3 through v1.5.5 matchup, market, and trade behavior.
+
 ### Production Request Latency - DTOS v1.5.5
 
 - Eliminate redundant Trade Intelligence package valuation from cold Commissioner Desk requests.

@@ -10,10 +10,16 @@ Install from `requirements.txt`, configure environment variables, provide writab
 
 ## Health checks
 
-- `/health` is the lightweight liveness/readiness surface.
+- `/health/live` is the process-only liveness probe and never calls external providers or intelligence engines.
+- `/health/ready` is the readiness probe. It returns HTTP 200 after cached or synchronized league data is available and HTTP 503 otherwise.
+- `/health` remains the backward-compatible readiness surface.
 - `/api/platform/health` reports engine, provider, cache, Sleeper, runtime, timing, and configuration-mode health.
 
-Use graceful termination so FastAPI lifespan cleanup cancels the background synchronization task. Do not embed secrets in build artifacts or logs. Roll back by deploying the preceding signed/reviewed tag; the cache schema remains backward compatible through v1.0.0.
+Configure hosting liveness checks to use `/health/live` and traffic-readiness checks to use `/health/ready`. Cached deployments reserve `DTOS_BACKGROUND_START_DELAY` seconds (30 by default) for initial traffic before synchronization and historical maintenance begin. Empty deployments synchronize immediately and do not become ready until usable league data exists.
+
+For bounded deployment diagnosis, send `X-DTOS-Diagnostics: 1`. The response then includes request-start time, route duration, total application duration, and process uptime. These headers are omitted from ordinary responses.
+
+Use graceful termination so FastAPI lifespan cleanup cancels tracked background tasks. Do not embed secrets in build artifacts or logs. Roll back by deploying the preceding signed/reviewed tag; the cache schema remains backward compatible through v1.0.0.
 
 ## Render
 

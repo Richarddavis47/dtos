@@ -41,7 +41,8 @@ def main() -> int:
 
     major = (
         "/", "/teams", "/matchups", "/transactions", "/picks", "/settings",
-        "/api/status", "/api/crawl", "/api/crawl/history", "/history",
+        "/health/live", "/health/ready", "/api/status", "/api/crawl",
+        "/api/crawl/history", "/history",
         "/api/platform/health", "/api/intelligence", "/api/league",
         "/api/players", "/front-offices", "/api/front-offices", "/trades",
         "/api/trades", "/openapi.json",

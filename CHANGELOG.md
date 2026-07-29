@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.6 - Deployment Readiness
+
+- Separated lightweight process liveness from cached-data readiness with dedicated `/health/live` and `/health/ready` probes.
+- Added a configurable cached-deployment maintenance delay so first requests do not compete with synchronization and historical backfill startup.
+- Added opt-in request timing and process-uptime response headers for deployment diagnosis without changing normal responses.
+- Added lifecycle, readiness, diagnostics, failure-state, and canonical HTTP smoke regression coverage.
+
 ## v1.5.5 - Production Request Latency
 
 - Removed redundant Trade Intelligence package valuations from cold Commissioner Desk requests by valuing each eligible combination once.

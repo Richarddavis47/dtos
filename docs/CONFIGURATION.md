@@ -7,6 +7,7 @@ DTOS reads configuration once at import/startup. Invalid numeric or logging sett
 | `SLEEPER_LEAGUE_ID` | bundled league ID | Active Sleeper league |
 | `SLEEPER_BASE_URL` | `https://api.sleeper.app/v1` | Sleeper API base URL |
 | `SYNC_MINUTES` | `15` (minimum 5) | Background synchronization interval |
+| `DTOS_BACKGROUND_START_DELAY` | `30` | Seconds reserved for initial traffic before cached deployments start synchronization and historical maintenance; set to `0` for immediate startup |
 | `DTOS_CACHE_FILE` | OS temp `dtos_cache.json` | Normalized Sleeper cache; override is always preserved |
 | `SLEEPER_TIMEOUT` | `30` (minimum 1) | HTTP timeout in seconds |
 | `LOG_LEVEL` | `INFO` | Python log level |
