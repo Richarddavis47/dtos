@@ -201,3 +201,18 @@ archetype, team-window, and trade-package scenarios. See
 `docs/INTELLIGENCE_QUALITY_AUDIT.md` for the league table and remaining limits.
 
 ---
+# DTOS v1.5.11 — Competitive Window Contract
+
+DTOS now computes each franchise's competitive window exactly once from calibrated
+league-relative Team Intelligence. Decision, Front Office, Trade Intelligence,
+recommendations, team pages, and APIs consume the same immutable contract.
+
+The contract exposes the classification, confidence, championship/playoff/rebuild
+scores, explainable reasons, strengths, weaknesses, generation timestamp, and
+contract version. Valuation and Team Intelligence now complete before any trade
+or recommendation can use the window, eliminating stale pre-calibration labels.
+
+See `docs/COMPETITIVE_WINDOW_CONTRACT.md` for the dependency flow, consumer
+boundaries, serialization behavior, and extension contract.
+
+---

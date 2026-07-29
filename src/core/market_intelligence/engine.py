@@ -148,5 +148,20 @@ class MarketIntelligence:
         platform_health = self.platform.health()
         return {"providers": self._health or platform_health["providers"], "cache": platform_health["cache"], "data_platform": platform_health}
 
+    def attach_trade_impacts(
+        self,
+        report: MarketIntelligenceReport,
+        trades: tuple[Any, ...],
+    ) -> MarketIntelligenceReport:
+        """Attach trade impacts without repeating provider evaluation."""
+        from dataclasses import replace
+
+        return replace(
+            report,
+            trade_impacts=tuple(
+                self._trade_impact(dossier, report.assets) for dossier in trades
+            ),
+        )
+
 
 market_intelligence = MarketIntelligence()

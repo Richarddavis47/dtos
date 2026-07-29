@@ -6,7 +6,7 @@ from typing import Any
 
 from src.core.asset_intelligence import AssetContext, Evidence
 from src.core.asset_intelligence.portfolio import evaluate_pick_portfolio, evaluate_player_portfolio
-from src.core.decision_engine import DecisionContext, TeamDecision, TeamWindow, evaluate_team
+from src.core.decision_engine import TeamDecision
 from src.core.front_office_intelligence.models import (
     ActivityProfile, AssetPreference, CompatibilityReport, FrontOfficeReport,
     LeagueFrontOfficeModel, NegotiationForecast, RelationshipEdge,
@@ -47,22 +47,12 @@ def _activity(data: dict[str, Any], roster_id: int, pick_count: int) -> Activity
     return ActivityProfile(level, counts["trade"], counts["waiver"], counts["free_agent"], counts["drop"], pick_count, evidence)
 
 
-def _window(decision: TeamDecision) -> str:
-    if decision.window == TeamWindow.CHAMPIONSHIP:
-        return "Championship Favorite" if decision.current_outlook.score >= 85 else "Contender"
-    if decision.window == TeamWindow.PLAYOFF:
-        return "Playoff Team"
-    if decision.window == TeamWindow.TRANSITION:
-        return "Re-tooling"
-    if decision.window == TeamWindow.ASCENSION:
-        return "Rebuilding"
-    return "Full Rebuild" if decision.current_outlook.score < 45 else "Rebuilding"
-
-
 def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
     profile = decision.profile
     activity = _activity(data, profile.roster_id, profile.draft_pick_count)
-    asset_context = AssetContext(profile.league_id, profile.roster_id, profile.league_settings, decision.window.value, profile.strategy)
+    if decision.competitive_window is None:
+        raise ValueError("Front Office Intelligence requires the canonical competitive-window contract.")
+    asset_context = AssetContext(profile.league_id, profile.roster_id, profile.league_settings, decision.competitive_window.classification.value, profile.strategy)
     player_portfolio = evaluate_player_portfolio(profile.players, asset_context)
     pick_portfolio = evaluate_pick_portfolio(profile.picks, asset_context)
     philosophies: list[str] = []
@@ -100,8 +90,8 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
     )
     strengths = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score >= 70) or ("No position crossed the v1 strength threshold.",)
     constraints = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score < 55) or ("No position crossed the v1 need threshold.",)
-    window = _window(decision)
-    summary = f"{profile.team_name} is currently classified as {window} with a {', '.join(philosophies).lower()} approach. {style}. This profile describes cached fantasy-football actions only."
+    window = decision.competitive_window
+    summary = f"{profile.team_name} is currently classified as {window.classification.value} with a {', '.join(philosophies).lower()} approach. {style}. This profile describes cached fantasy-football actions only."
     return FrontOfficeReport(profile.roster_id, profile.owner_name, profile.team_name, summary, window, tuple(philosophies), style, activity, tuple(preferences), strengths, constraints, confidence, evidence, decision)
 
 
@@ -145,10 +135,11 @@ def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: Front
 
 def build_league_model(data: dict[str, Any], decisions: dict[int, TeamDecision] | None = None) -> LeagueFrontOfficeModel:
     teams = data.get("teams") or []
-    league = data.get("league") or {}
-    league_id = str(league.get("league_id") or "configured-league")
-    settings = {**(data.get("league_settings") or {}), "roster_positions": league.get("roster_positions") or []}
-    decisions = decisions or {int(team.get("roster_id") or 0): evaluate_team(data, int(team.get("roster_id") or 0), DecisionContext(int(team.get("roster_id") or 0), league_id, settings)) for team in teams}
+    if decisions is None:
+        from src.core.intelligence.orchestrator import intelligence_orchestrator
+
+        first_roster = int(teams[0].get("roster_id") or 0)
+        return intelligence_orchestrator.analyze(data, first_roster).front_office_model
     reports = {roster_id: _profile(decision, data) for roster_id, decision in decisions.items()}
     compatibilities = {}
     relationships = []

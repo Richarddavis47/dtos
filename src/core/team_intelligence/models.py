@@ -2,16 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
-
-
-class CompetitiveWindow(str, Enum):
-    ELITE_CONTENDER = "Elite Contender"
-    CONTENDER = "Contender"
-    PLAYOFF_TEAM = "Playoff Team"
-    RETOOLING = "Re-tooling"
-    REBUILDING = "Rebuilding"
-    FULL_REBUILD = "Full Rebuild"
+from src.core.competitive_window import (
+    CompetitiveWindowClassification,
+    CompetitiveWindowContract,
+)
 
 
 @dataclass(frozen=True)
@@ -39,7 +33,7 @@ class TeamIntelligenceCard:
     future_outlook: RelativeGrade
     roster_flexibility: RelativeGrade
     asset_liquidity: RelativeGrade
-    current_window: CompetitiveWindow
+    competitive_window: CompetitiveWindowContract
     current_strength: int
     future_strength: int
     risk_score: int
@@ -50,6 +44,11 @@ class TeamIntelligenceCard:
     projected_wins: float
     playoff_odds: int
     championship_odds: int
+
+    @property
+    def current_window(self) -> CompetitiveWindowClassification:
+        """Backward-compatible presentation alias for the canonical contract."""
+        return self.competitive_window.classification
 
 
 @dataclass(frozen=True)

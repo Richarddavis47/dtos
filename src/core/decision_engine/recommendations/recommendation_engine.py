@@ -1,7 +1,7 @@
 """Contextual deterministic team recommendation engine."""
 from __future__ import annotations
 
-from src.core.decision_engine.models.decision import TeamWindow
+from src.core.competitive_window import CompetitiveWindowClassification, CompetitiveWindowContract
 from src.core.decision_engine.models.evaluation import Evaluation
 from src.core.decision_engine.models.recommendation import Recommendation, RecommendationCategory, RecommendationPriority
 from src.core.decision_engine.models.team_profile import TeamProfile
@@ -16,23 +16,31 @@ def build_recommendations(
     depth: Evaluation,
     assets: Evaluation,
     positions: dict[str, Evaluation],
-    window: TeamWindow,
+    window: CompetitiveWindowContract,
 ) -> tuple[Recommendation, ...]:
     recommendations: list[Recommendation] = []
-    if window in {TeamWindow.CHAMPIONSHIP, TeamWindow.PLAYOFF}:
+    classification = window.classification
+    if classification in {
+        CompetitiveWindowClassification.ELITE_CONTENDER,
+        CompetitiveWindowClassification.CONTENDER,
+        CompetitiveWindowClassification.PLAYOFF_TEAM,
+    }:
         recommendations.append(
             Recommendation(
                 "Protect the active competitive window",
                 "Prioritize moves that preserve current lineup strength while checking their future-asset cost.",
-                RecommendationPriority.HIGH if window is TeamWindow.CHAMPIONSHIP else RecommendationPriority.MEDIUM,
+                RecommendationPriority.HIGH if classification is CompetitiveWindowClassification.ELITE_CONTENDER else RecommendationPriority.MEDIUM,
                 calculate_confidence(current, future),
                 RecommendationCategory.COMPETE,
-                build_reasoning(f"The team is classified in the {window.value}", current, future),
+                build_reasoning(f"The team is classified as {classification.value}", current, future),
                 supporting_metrics(current, future),
-                {"engine": "trade-intelligence", "window": window.value},
+                {"engine": "trade-intelligence", "window": classification.value},
             )
         )
-    elif window is TeamWindow.REBUILD:
+    elif classification in {
+        CompetitiveWindowClassification.REBUILDING,
+        CompetitiveWindowClassification.FULL_REBUILD,
+    }:
         recommendations.append(
             Recommendation(
                 "Preserve rebuild flexibility",
@@ -42,20 +50,7 @@ def build_recommendations(
                 RecommendationCategory.REBUILD,
                 build_reasoning("The team is classified in the Rebuild Window", current, future, assets),
                 supporting_metrics(current, future, assets),
-                {"engine": "trade-intelligence", "window": window.value},
-            )
-        )
-    elif window is TeamWindow.ASCENSION:
-        recommendations.append(
-            Recommendation(
-                "Hold the ascending core unless value is clear",
-                "Preserve future strength while monitoring opportunities to improve the current outlook.",
-                RecommendationPriority.MEDIUM,
-                calculate_confidence(current, future),
-                RecommendationCategory.HOLD,
-                build_reasoning("Future outlook currently exceeds current outlook", current, future),
-                supporting_metrics(current, future),
-                {"engine": "player-intelligence", "window": window.value},
+                {"engine": "trade-intelligence", "window": classification.value},
             )
         )
     weakest_position, weakest = min(positions.items(), key=lambda item: (item[1].score, item[0]))

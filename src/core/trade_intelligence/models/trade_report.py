@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Any
 
 from src.core.asset_intelligence import Evidence
+from src.core.competitive_window import CompetitiveWindowContract
 
 
 class TradePriority(str, Enum):
@@ -130,4 +131,5 @@ class TradeDossier:
     why_partner_improves: str
     why_realistic: str
     why_now: str
+    competitive_window: CompetitiveWindowContract
     market: Any = None

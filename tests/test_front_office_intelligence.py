@@ -43,9 +43,10 @@ class FrontOfficeIntelligenceTests(unittest.TestCase):
         self.assertLessEqual(report.forecast.acceptance_probability, 65)
 
     def test_trade_intelligence_consumes_front_office_model(self) -> None:
-        with patch("src.core.trade_intelligence.gm.partner_selection.build_league_model", wraps=build_league_model) as shared:
+        with patch("src.core.trade_intelligence.engine.trade_engine.build_asset_pool") as assets:
+            assets.return_value = ()
             trade_intelligence.opportunities(self.data, 1)
-        self.assertGreater(shared.call_count, 0)
+        self.assertGreater(assets.call_count, 0)
 
     def test_page_and_api_share_the_same_dossiers(self) -> None:
         async def noop() -> None:

@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.11 - Competitive Window Contract
+
+- Added one immutable, versioned competitive-window contract with classification, confidence, horizon scores, evidence, strengths, weaknesses, and generation metadata.
+- Removed the Decision Engine and Front Office secondary classifiers; Team Intelligence now creates the sole league-relative classification.
+- Reordered orchestration so calibrated market/player valuation and Team Intelligence complete before Front Office, Trade Intelligence, and recommendations.
+- Added public contract serialization and consistency regressions proving every consumer shares the same result.
+
 ## v1.5.10 - Intelligence Quality Audit
 
 - Audited all ten league franchises, representative player tiers, every supported pick category, competitive windows, and 120 prioritized trade recommendations.

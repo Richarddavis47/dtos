@@ -4,7 +4,8 @@ from __future__ import annotations
 from statistics import mean, pstdev
 from typing import Any
 
-from src.core.team_intelligence.models import CompetitiveWindow, LeagueTeamSummary, RelativeGrade, TeamIntelligenceCard
+from src.core.competitive_window import CompetitiveWindowClassification, build_competitive_window
+from src.core.team_intelligence.models import LeagueTeamSummary, RelativeGrade, TeamIntelligenceCard
 from src.core.asset_intelligence.picks.pick_value import dynasty_pick_value
 from src.core.valuation import normalize_pick
 
@@ -40,20 +41,6 @@ def _relative(category: str, roster_id: int, raw: dict[int, dict[str, float]], r
     population = tuple(row[category] for row in raw.values())
     percentile = _percentile(value, population)
     return RelativeGrade(category, percentile, _letter(percentile), percentile, _rank(value, population), len(population), reasons)
-
-
-def _window(current: int, overall: int, future: int) -> CompetitiveWindow:
-    if current >= 85 and overall >= 80:
-        return CompetitiveWindow.ELITE_CONTENDER
-    if current >= 70 and overall >= 65:
-        return CompetitiveWindow.CONTENDER
-    if current >= 52:
-        return CompetitiveWindow.PLAYOFF_TEAM
-    if current < 25 and future < 35:
-        return CompetitiveWindow.FULL_REBUILD
-    if current < 40:
-        return CompetitiveWindow.REBUILDING
-    return CompetitiveWindow.RETOOLING
 
 
 def _pick_value(picks: tuple[dict[str, Any], ...]) -> float:
@@ -124,7 +111,22 @@ def build_team_intelligence(
         explanation = (f"Strongest relative area: {ordered[0].category} ({ordered[0].grade}, #{ordered[0].rank}).", f"Lowest relative area: {ordered[-1].category} ({ordered[-1].grade}, #{ordered[-1].rank}).", "Overall combines category percentiles; no 0–1000 player value is treated as a 0–100 grade.")
         confidence = round(mean((decision.current_outlook.confidence, decision.future_outlook.confidence, decision.depth.confidence, decision.asset_health.confidence)))
         risk = max(0, min(100, round(100 - mean((current.percentile, dynasty.percentile, flexibility.percentile)))))
-        window = _window(current.percentile, overall.percentile, future.percentile)
+        premium_assets = sum(
+            getattr(card, "tier", None) in {"Elite Franchise Player", "Cornerstone"}
+            for card in league_players[roster_id].values()
+        )
+        window = build_competitive_window(
+            current_strength=current.percentile,
+            overall_strength=overall.percentile,
+            future_strength=future.percentile,
+            depth=depth.percentile,
+            youth=youth.percentile,
+            draft_capital=draft.percentile,
+            risk=risk,
+            confidence=confidence,
+            elite_assets=premium_assets,
+            starter_strength=lineup.percentile,
+        )
         playoff_odds = max(5, min(95, round(current.percentile * .8 + 10)))
         championship_odds = max(1, min(60, round(current.percentile * .35 + overall.percentile * .25 - 10)))
         projected_wins = round(playoff_odds / 100 * 14, 1)
@@ -145,5 +147,5 @@ def build_team_intelligence(
         return max(cards.values(), key=lambda card: (getattr(card, attribute).rank, -card.roster_id)).roster_id if cards else None
     age_rows = [(mean(decision.profile.known_ages), roster_id) for roster_id, decision in decisions.items() if decision.profile.known_ages]
     absolute_league_strength = round(mean(score for rooms in league_rooms.values() for score in rooms.values())) if league_rooms else 0
-    summary = LeagueTeamSummary(absolute_league_strength, round(mean(all_ages), 1) if all_ages else None, round(mean(overall_scores), 1) if overall_scores else 0, sum(card.current_window in {CompetitiveWindow.ELITE_CONTENDER, CompetitiveWindow.CONTENDER} for card in cards.values()), sum(card.current_window in {CompetitiveWindow.REBUILDING, CompetitiveWindow.FULL_REBUILD} for card in cards.values()), f"Team {strongest[1]} {strongest[2]}", f"Team {weakest[1]} {weakest[2]}", max(0, min(100, round(100 - pstdev(overall_scores) * 2))) if len(overall_scores) > 1 else 100, min(cards.values(), key=lambda card: (card.overall.rank, card.roster_id)).roster_id if cards else None, "Unavailable without prior team-grade snapshots", "Unavailable without prior team-grade snapshots", best("draft_capital"), worst("draft_capital"), best("roster_flexibility"), max(age_rows, default=(0, None))[1], min(age_rows, default=(0, None))[1], "Preseason Projection" if preseason else "Current Season")
+    summary = LeagueTeamSummary(absolute_league_strength, round(mean(all_ages), 1) if all_ages else None, round(mean(overall_scores), 1) if overall_scores else 0, sum(card.current_window in {CompetitiveWindowClassification.ELITE_CONTENDER, CompetitiveWindowClassification.CONTENDER} for card in cards.values()), sum(card.current_window in {CompetitiveWindowClassification.REBUILDING, CompetitiveWindowClassification.FULL_REBUILD} for card in cards.values()), f"Team {strongest[1]} {strongest[2]}", f"Team {weakest[1]} {weakest[2]}", max(0, min(100, round(100 - pstdev(overall_scores) * 2))) if len(overall_scores) > 1 else 100, min(cards.values(), key=lambda card: (card.overall.rank, card.roster_id)).roster_id if cards else None, "Unavailable without prior team-grade snapshots", "Unavailable without prior team-grade snapshots", best("draft_capital"), worst("draft_capital"), best("roster_flexibility"), max(age_rows, default=(0, None))[1], min(age_rows, default=(0, None))[1], "Preseason Projection" if preseason else "Current Season")
     return cards, summary

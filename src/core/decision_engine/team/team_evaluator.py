@@ -10,8 +10,6 @@ from src.core.decision_engine.assets.player_evaluator import evaluate_player_ass
 from src.core.decision_engine.models.decision import DecisionContext, TeamDecision
 from src.core.decision_engine.models.evaluation import Evaluation, EvaluationFactor, EvaluationHorizon
 from src.core.decision_engine.models.team_profile import PositionRoom, TeamProfile
-from src.core.decision_engine.recommendations.recommendation_engine import build_recommendations
-from src.core.decision_engine.team.competitive_window import classify_competitive_window
 from src.core.decision_engine.team.contender_score import evaluate_current_outlook
 from src.core.decision_engine.team.depth_analyzer import evaluate_depth
 from src.core.decision_engine.team.future_score import evaluate_future_outlook
@@ -86,6 +84,4 @@ def evaluate_team(data: dict[str, Any], roster_id: int, context: DecisionContext
     future = evaluate_future_outlook(profile)
     depth, positions = evaluate_depth(profile)
     assets = _asset_health(profile)
-    window, explanation = classify_competitive_window(current, future)
-    recommendations = build_recommendations(profile, current, future, depth, assets, positions, window)
-    return TeamDecision(profile, current, future, depth, assets, positions, window, explanation, recommendations)
+    return TeamDecision(profile, current, future, depth, assets, positions, None, ())

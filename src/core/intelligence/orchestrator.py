@@ -9,6 +9,7 @@ from dataclasses import replace
 from src.core.asset_intelligence import AssetContext, AssetEvaluation, Evidence, evaluate_pick, evaluate_player
 from src.core.asset_intelligence.portfolio import evaluate_pick_portfolio, evaluate_player_portfolio
 from src.core.decision_engine import DecisionContext, evaluate_team
+from src.core.decision_engine.recommendations.recommendation_engine import build_recommendations
 from src.core.front_office_intelligence import build_league_model
 from src.core.intelligence.cache import IntelligenceCache, intelligence_cache
 from src.core.intelligence.confidence import calculate_confidence
@@ -39,7 +40,12 @@ def _decision_provider(context: IntelligenceContext) -> dict[int, Any]:
 def _asset_context(context: IntelligenceContext, decision: Any) -> AssetContext:
     depths = {position: room.total_players for position, room in decision.profile.position_rooms.items()}
     needs = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score < 55)
-    return AssetContext(context.league_id, context.active_roster_id, context.settings, decision.window.value, decision.profile.strategy, needs, depths, decision.profile.market_context.get("position_counts") or {})
+    window = (
+        decision.competitive_window.classification.value
+        if decision.competitive_window is not None
+        else "Pending canonical window"
+    )
+    return AssetContext(context.league_id, context.active_roster_id, context.settings, window, decision.profile.strategy, needs, depths, decision.profile.market_context.get("position_counts") or {})
 
 
 def _asset_provider(context: IntelligenceContext, decision: Any) -> tuple[Any, Any, dict[str, Any]]:
@@ -98,9 +104,30 @@ class IntelligenceOrchestrator:
             decisions = pipeline.run("decision_engine", self.cache.get_or_create, prefix + "league", lambda: self.registry.provider("decision")(context))
             decision = decisions[roster_id]
             player_portfolio, pick_portfolio, player_reports = pipeline.run("asset_intelligence", self.cache.get_or_create, prefix + "assets", lambda: self.registry.provider("asset")(context, decision))
+            market = pipeline.run("market_intelligence", self.cache.get_or_create, prefix + "market", lambda: self.registry.provider("market")(context, player_reports, ()))
+            player_values = pipeline.run("player_value_projection", self.cache.get_or_create, prefix + "player_values", lambda: self.registry.provider("player_value")(context, decision, player_reports, market))
+            preliminary = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, None, (), market, player_values, None, None, None, pipeline.timings_ms, False)
+            roster = pipeline.run("roster_intelligence", self.cache.get_or_create, prefix + "roster", lambda: self.registry.provider("roster")(preliminary))
+            decisions = {
+                team_id: replace(
+                    team_decision,
+                    competitive_window=roster.team_intelligence[team_id].competitive_window,
+                    recommendations=build_recommendations(
+                        team_decision.profile,
+                        team_decision.current_outlook,
+                        team_decision.future_outlook,
+                        team_decision.depth,
+                        team_decision.asset_health,
+                        team_decision.position_evaluations,
+                        roster.team_intelligence[team_id].competitive_window,
+                    ),
+                )
+                for team_id, team_decision in decisions.items()
+            }
+            decision = decisions[roster_id]
             offices = pipeline.run("front_office_intelligence", self.cache.get_or_create, prefix + "front_offices", lambda: self.registry.provider("front_office")(context, decisions))
             trades = pipeline.run("trade_intelligence", self.cache.get_or_create, prefix + "trades", lambda: self.registry.provider("trade")(context, decisions, offices))
-            market = pipeline.run("market_intelligence", self.cache.get_or_create, prefix + "market", lambda: self.registry.provider("market")(context, player_reports, trades))
+            market = market_intelligence.attach_trade_impacts(market, trades)
             trades = tuple(replace(dossier, market=impact) for dossier, impact in zip(trades, market.trade_impacts))
             top_trade = trades[0] if trades else None
             evidence = aggregate_evidence((
@@ -114,10 +141,7 @@ class IntelligenceOrchestrator:
             market_available = any(report.consensus.value is not None for report in market.assets.values())
             confidence = calculate_confidence(evidence, providers=5, expected_providers=5, market_available=market_available, sample_size=offices.reports[roster_id].activity.trades, missing=missing)
             recommendation = resolve_recommendation(decision=decision, trade=top_trade, front_office=offices.reports[roster_id], market=market, evidence=evidence, confidence=confidence)
-            player_values = pipeline.run("player_value_projection", self.cache.get_or_create, prefix + "player_values", lambda: self.registry.provider("player_value")(context, decision, player_reports, market))
-            partial = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, offices, trades, market, player_values, None, None, recommendation, pipeline.timings_ms, False)
-            roster = pipeline.run("roster_intelligence", self.cache.get_or_create, prefix + "roster", lambda: self.registry.provider("roster")(partial))
-            partial = replace(partial, roster=roster)
+            partial = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, offices, trades, market, player_values, roster, None, recommendation, pipeline.timings_ms, False)
             league = pipeline.run("league_intelligence", self.cache.get_or_create, prefix + "league_intelligence", lambda: self.registry.provider("league_intelligence")(partial))
             pipeline.timings_ms["orchestration_total"] = round((perf_counter() - total_started) * 1000, 3)
             return replace(partial, league=league, timings_ms=pipeline.timings_ms)

@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from src.core.asset_intelligence import Evidence
-from src.core.decision_engine import TeamDecision, TeamWindow
+from src.core.competitive_window import CompetitiveWindowClassification
+from src.core.decision_engine import TeamDecision
 from src.core.trade_intelligence.analysis import evaluate_trade_impact
 from src.core.trade_intelligence.engine.negotiation_engine import build_negotiation_plan
 from src.core.trade_intelligence.models import (
@@ -21,9 +22,19 @@ def _package_value(assets) -> float:
 
 
 def _trade_type(proposal: TradeProposal, active: TeamDecision, current: int, future: int, depth: int) -> TradeType:
-    if active.window in {TeamWindow.CHAMPIONSHIP, TeamWindow.PLAYOFF} and current > 0:
+    window = active.competitive_window
+    if window is None:
+        raise ValueError("Trade Intelligence requires the canonical competitive-window contract.")
+    if window.classification in {
+        CompetitiveWindowClassification.ELITE_CONTENDER,
+        CompetitiveWindowClassification.CONTENDER,
+        CompetitiveWindowClassification.PLAYOFF_TEAM,
+    } and current > 0:
         return TradeType.CHAMPIONSHIP_PUSH
-    if active.window in {TeamWindow.REBUILD, TeamWindow.ASCENSION} and future > 0:
+    if window.classification in {
+        CompetitiveWindowClassification.REBUILDING,
+        CompetitiveWindowClassification.FULL_REBUILD,
+    } and future > 0:
         return TradeType.REBUILD
     if any(asset.kind == "pick" for asset in proposal.assets_received):
         return TradeType.PICK_ACQUISITION
@@ -89,5 +100,6 @@ def evaluate_proposal(
         f"The incoming package has {received_value:.1f} blended dynasty/fit value in the Active Front Office context.",
         f"The offered package has {sent_value:.1f} blended dynasty/fit value in {partner.team_name}'s context.",
         f"The package ratio is {(received_value / max(sent_value, 1)):.2f}, inside the generator's documented balance boundary; this does not predict acceptance.",
-        f"The Active Front Office is classified in the {active.window.value}, so current and future impacts are evaluated separately now.",
+        f"The Active Front Office is classified as {active.competitive_window.classification.value}, so current and future impacts are evaluated separately now.",
+        active.competitive_window,
     )

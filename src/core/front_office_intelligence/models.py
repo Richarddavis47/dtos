@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from src.core.asset_intelligence import Evidence
+from src.core.competitive_window import CompetitiveWindowContract
 from src.core.decision_engine import TeamDecision
 
 
@@ -31,7 +32,7 @@ class FrontOfficeReport:
     owner_name: str
     team_name: str
     executive_summary: str
-    competitive_window: str
+    competitive_window: CompetitiveWindowContract
     philosophies: tuple[str, ...]
     negotiation_style: str
     activity: ActivityProfile

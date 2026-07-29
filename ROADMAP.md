@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Competitive Window Contract - DTOS v1.5.11
+
+- One versioned, explainable competitive-window object is shared by Decision,
+  Team, Front Office, Trade, recommendation, API, and UI consumers.
+- Calibrated Team Intelligence completes before trade and recommendation work.
+
 ### Intelligence Quality Audit - DTOS v1.5.10
 
 - Audit every franchise and major intelligence classification against calibrated values.
