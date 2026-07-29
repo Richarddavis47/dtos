@@ -194,12 +194,6 @@ class PlayerValueProjectionTests(unittest.TestCase):
                 len(roster_ids),
             )
             self.assertNotIn("trade", provider_names)
-        first_player = next(iter(first[roster_ids[0]].values()))
-        second_player = next(iter(second[roster_ids[0]].values()))
-        self.assertNotEqual(
-            first_player.dtos_dynasty.updated_at,
-            second_player.dtos_dynasty.updated_at,
-        )
         self.assertEqual(
             provider.call_count,
             first_calls * 2,

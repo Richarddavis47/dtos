@@ -13,22 +13,36 @@ class SnapshotWarehouse:
     def __init__(self, path: Path | None = None) -> None:
         self.path = path
         self._rows: list[DataEnvelope] = []
+        self._identities: set[tuple[str, str, str, str]] = set()
         self._lock = RLock()
         if path and path.exists():
             try:
                 for row in json.loads(path.read_text(encoding="utf-8")):
                     row["quality"] = DataQuality(**row["quality"])
                     row["limitations"] = tuple(row.get("limitations") or ())
-                    self._rows.append(DataEnvelope(**row))
+                    envelope = DataEnvelope(**row)
+                    self._rows.append(envelope)
+                    self._identities.add(self._identity(envelope))
             except (OSError, TypeError, ValueError):
                 self._rows = []
+                self._identities = set()
+
+    @staticmethod
+    def _identity(envelope: DataEnvelope) -> tuple[str, str, str, str]:
+        return (
+            envelope.key,
+            envelope.provider,
+            envelope.timestamp,
+            envelope.category,
+        )
 
     def append(self, envelope: DataEnvelope) -> None:
         with self._lock:
-            identity = (envelope.key, envelope.provider, envelope.timestamp, envelope.category)
-            if any((row.key, row.provider, row.timestamp, row.category) == identity for row in self._rows):
+            identity = self._identity(envelope)
+            if identity in self._identities:
                 return
             self._rows.append(envelope)
+            self._identities.add(identity)
             if self.path:
                 self.path.parent.mkdir(parents=True, exist_ok=True)
                 temporary = self.path.with_suffix(self.path.suffix + ".tmp")

@@ -86,6 +86,51 @@ class DataPlatformTests(unittest.TestCase):
             self.assertEqual(len(restored), 1)
             self.assertEqual(restored[0].provider, "Fixture")
 
+    def test_snapshot_warehouse_indexes_duplicates_without_changing_order(self) -> None:
+        store = SnapshotWarehouse()
+        rows = tuple(
+            FixtureProvider(name, value).fetch(
+                f"p{index}",
+                {"timestamp": f"2026-07-29T00:00:0{index}+00:00"},
+            )
+            for index, (name, value) in enumerate(
+                (("A", 100), ("B", 105), ("C", 110)),
+            )
+        )
+        for row in (*rows, *rows):
+            store.append(row)
+        self.assertEqual(store.history("p0", "market"), (rows[0],))
+        self.assertEqual(store._rows, list(rows))
+        self.assertEqual(len(store._identities), len(rows))
+
+    def test_snapshot_warehouse_restores_duplicate_index_from_serialized_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "history.json"
+            row = FixtureProvider().fetch("p1", {})
+            store = SnapshotWarehouse(path)
+            store.append(row)
+            before = path.read_text(encoding="utf-8")
+            restored = SnapshotWarehouse(path)
+            restored.append(row)
+            self.assertEqual(path.read_text(encoding="utf-8"), before)
+            restored_rows = restored.history("p1", "market")
+            self.assertEqual(len(restored_rows), 1)
+            restored_row = restored_rows[0]
+            self.assertEqual(
+                restored._identity(restored_row),
+                restored._identity(row),
+            )
+            self.assertIn(restored._identity(row), restored._identities)
+            self.assertEqual(restored_row.value, row.value)
+            self.assertEqual(restored_row.source, row.source)
+            self.assertEqual(restored_row.confidence, row.confidence)
+            self.assertEqual(restored_row.quality.status, row.quality.status)
+            self.assertEqual(
+                tuple(restored_row.quality.issues),
+                tuple(row.quality.issues),
+            )
+            self.assertEqual(restored_row.quality.score, row.quality.score)
+
     def test_consensus_preserves_sources_and_limits_outlier_influence(self) -> None:
         rows = tuple(FixtureProvider(name, value).fetch("p1", {}) for name, value in (("A", 100), ("B", 105), ("C", 1000)))
         result = consensus("p1", rows, ("A", "B", "C", "D"))

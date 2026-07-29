@@ -6,9 +6,9 @@ import subprocess
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.5.2"
-BUILD_NUMBER = 1520
-RELEASE_CODENAME = "Initial Backfill Performance"
+VERSION = "1.5.4"
+BUILD_NUMBER = 1540
+RELEASE_CODENAME = "Market Snapshot Index"
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
 

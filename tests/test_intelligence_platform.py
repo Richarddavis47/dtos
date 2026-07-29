@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from app_metadata import VERSION
 from routes.api import create_api_router
 from src.core.intelligence import IntelligenceCache, IntelligenceOrchestrator, IntelligenceRegistry
 from src.platform.validation import HttpEndpoint, validate_routes
@@ -78,6 +79,8 @@ class IntelligencePlatformTests(unittest.TestCase):
         self.assertEqual(intelligence.json()["active_front_office"], 1)
         self.assertIn("recommendation", intelligence.json())
         self.assertEqual(legacy.status_code, 200)
+        self.assertEqual(legacy.json()["version"], VERSION)
+        self.assertEqual(legacy.json()["version"], "1.5.4")
 
     def test_health_exposes_cache_namespaces_and_engine_timings(self) -> None:
         self.orchestrator.analyze(self.data, 1)
