@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS import_runs (
   errors TEXT NOT NULL DEFAULT '[]',
   workbook_status TEXT NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_import_runs_league_status_completed
+ON import_runs(league_id, status, completed_at);
 CREATE TABLE IF NOT EXISTS data_quality_issues (
   issue_key TEXT PRIMARY KEY,
   run_id TEXT NOT NULL,
@@ -70,6 +72,65 @@ CREATE TABLE IF NOT EXISTS data_quality_issues (
   category TEXT NOT NULL,
   detail TEXT NOT NULL,
   resolved INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS import_jobs (
+  job_id TEXT PRIMARY KEY,
+  league_id TEXT NOT NULL,
+  requested_seasons TEXT NOT NULL,
+  requested_data_types TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  started_at TEXT,
+  last_progress_at TEXT,
+  completed_at TEXT,
+  failed_at TEXT,
+  current_season INTEGER,
+  current_week INTEGER,
+  current_data_type TEXT,
+  total_steps INTEGER NOT NULL DEFAULT 0,
+  completed_steps INTEGER NOT NULL DEFAULT 0,
+  inserted_records INTEGER NOT NULL DEFAULT 0,
+  updated_records INTEGER NOT NULL DEFAULT 0,
+  unchanged_records INTEGER NOT NULL DEFAULT 0,
+  skipped_records INTEGER NOT NULL DEFAULT 0,
+  failed_records INTEGER NOT NULL DEFAULT 0,
+  retry_count INTEGER NOT NULL DEFAULT 0,
+  next_retry_at TEXT,
+  last_error_type TEXT,
+  last_error_message TEXT,
+  last_error_context TEXT,
+  requested_by TEXT NOT NULL,
+  worker_identity TEXT,
+  lock_expiration TEXT,
+  schema_version TEXT NOT NULL,
+  importer_version TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_import_jobs_league_status
+ON import_jobs(league_id, status, created_at);
+CREATE TABLE IF NOT EXISTS import_checkpoints (
+  checkpoint_key TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  league_id TEXT NOT NULL,
+  season INTEGER NOT NULL,
+  week INTEGER,
+  data_type TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  importer_version TEXT NOT NULL,
+  status TEXT NOT NULL,
+  completed_at TEXT,
+  records_written INTEGER NOT NULL DEFAULT 0,
+  records_unchanged INTEGER NOT NULL DEFAULT 0,
+  error TEXT,
+  FOREIGN KEY(job_id) REFERENCES import_jobs(job_id)
+);
+CREATE INDEX IF NOT EXISTS idx_import_checkpoints_scope
+ON import_checkpoints(league_id, season, data_type, provider, importer_version);
+CREATE TABLE IF NOT EXISTS import_locks (
+  lock_key TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  worker_identity TEXT NOT NULL,
+  acquired_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL
 );
 """
 
@@ -96,10 +157,123 @@ class HistoricalStore:
     def migrate(self) -> None:
         with self._lock, self.connection() as connection:
             connection.executescript(SCHEMA)
-            connection.execute(
+            connection.executemany(
                 "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, datetime('now'))",
-                (DATABASE_MIGRATION_VERSION,),
+                ((version,) for version in range(1, DATABASE_MIGRATION_VERSION + 1)),
             )
+
+    def create_job(self, job: dict[str, Any]) -> None:
+        columns = tuple(job)
+        placeholders = ",".join("?" for _ in columns)
+        with self._lock, self.connection() as connection:
+            connection.execute(
+                f"INSERT INTO import_jobs({','.join(columns)}) VALUES ({placeholders})",
+                tuple(
+                    json.dumps(value) if isinstance(value, (list, dict)) else value
+                    for value in job.values()
+                ),
+            )
+
+    def update_job(self, job_id: str, **fields: Any) -> None:
+        if not fields:
+            return
+        assignments = ",".join(f"{column}=?" for column in fields)
+        values = [
+            json.dumps(value) if isinstance(value, (list, dict)) else value
+            for value in fields.values()
+        ]
+        with self._lock, self.connection() as connection:
+            connection.execute(
+                f"UPDATE import_jobs SET {assignments} WHERE job_id=?",
+                (*values, job_id),
+            )
+
+    def jobs(self, league_id: str, limit: int = 50) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT * FROM import_jobs WHERE league_id=?
+                ORDER BY created_at DESC LIMIT ?""",
+                (league_id, limit),
+            ).fetchall()
+        return [_decode_job(dict(row)) for row in rows]
+
+    def checkpoint(
+        self, *, checkpoint_key: str, job_id: str, league_id: str,
+        season: int, week: int | None, data_type: str, provider: str,
+        importer_version: str, status: str, completed_at: str | None = None,
+        records_written: int = 0, records_unchanged: int = 0,
+        error: str | None = None,
+    ) -> None:
+        with self._lock, self.connection() as connection:
+            connection.execute(
+                """INSERT INTO import_checkpoints(
+                checkpoint_key,job_id,league_id,season,week,data_type,provider,
+                importer_version,status,completed_at,records_written,
+                records_unchanged,error) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ON CONFLICT(checkpoint_key) DO UPDATE SET
+                job_id=excluded.job_id,status=excluded.status,
+                completed_at=excluded.completed_at,
+                records_written=excluded.records_written,
+                records_unchanged=excluded.records_unchanged,error=excluded.error""",
+                (
+                    checkpoint_key, job_id, league_id, season, week, data_type,
+                    provider, importer_version, status, completed_at,
+                    records_written, records_unchanged, error,
+                ),
+            )
+
+    def checkpoints(self, league_id: str) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT * FROM import_checkpoints WHERE league_id=?
+                ORDER BY season,week,data_type""",
+                (league_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def acquire_lock(
+        self, lock_key: str, job_id: str, worker_identity: str,
+        acquired_at: str, expires_at: str,
+    ) -> bool:
+        with self._lock, self.connection() as connection:
+            connection.execute(
+                "DELETE FROM import_locks WHERE expires_at <= ?", (acquired_at,),
+            )
+            cursor = connection.execute(
+                """INSERT OR IGNORE INTO import_locks(
+                lock_key,job_id,worker_identity,acquired_at,expires_at)
+                VALUES (?,?,?,?,?)""",
+                (lock_key, job_id, worker_identity, acquired_at, expires_at),
+            )
+            return cursor.rowcount == 1
+
+    def release_lock(self, lock_key: str, job_id: str) -> None:
+        with self._lock, self.connection() as connection:
+            connection.execute(
+                "DELETE FROM import_locks WHERE lock_key=? AND job_id=?",
+                (lock_key, job_id),
+            )
+
+    def renew_job_lease(self, job_id: str, expires_at: str) -> None:
+        with self._lock, self.connection() as connection:
+            connection.execute(
+                "UPDATE import_locks SET expires_at=? WHERE job_id=?",
+                (expires_at, job_id),
+            )
+            connection.execute(
+                """UPDATE import_jobs SET lock_expiration=?,
+                last_progress_at=datetime('now') WHERE job_id=?""",
+                (expires_at, job_id),
+            )
+
+    def locks(self) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            return [
+                dict(row)
+                for row in connection.execute(
+                    "SELECT * FROM import_locks ORDER BY lock_key",
+                ).fetchall()
+            ]
 
     def append(
         self,
@@ -141,6 +315,13 @@ class HistoricalStore:
                 values,
             )
             return cursor.rowcount == 1
+
+    def append_many(self, records: list[dict[str, Any]]) -> tuple[int, int]:
+        """Append one bounded batch on a worker thread using safe connections."""
+        written = 0
+        for record in records:
+            written += int(self.append(**record))
+        return written, len(records) - written
 
     def records(
         self,
@@ -197,9 +378,42 @@ class HistoricalStore:
     def import_status(self, league_id: str) -> list[dict[str, Any]]:
         with self.connection() as connection:
             rows = connection.execute(
-                "SELECT * FROM import_runs WHERE league_id=? ORDER BY started_at DESC", (league_id,),
+                """SELECT * FROM import_runs WHERE league_id=?
+                ORDER BY started_at DESC, rowid DESC""",
+                (league_id,),
             ).fetchall()
         return [{**dict(row), "errors": json.loads(row["errors"])} for row in rows]
+
+    def latest_completed_foundation(
+        self, league_id: str,
+    ) -> dict[str, Any] | None:
+        """Return the newest usable completed backfill, not the latest attempt."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """SELECT run.* FROM import_runs AS run
+                WHERE run.league_id=?
+                  AND run.status='complete'
+                  AND run.completed_at IS NOT NULL
+                  AND EXISTS (
+                    SELECT 1 FROM historical_records AS record
+                    WHERE record.league_id=run.league_id
+                      AND record.entity_type='league_season'
+                  )
+                  AND NOT EXISTS (
+                    SELECT 1 FROM data_quality_issues AS issue
+                    WHERE issue.league_id=run.league_id
+                      AND issue.severity='blocking'
+                      AND issue.resolved=0
+                  )
+                ORDER BY run.completed_at DESC, run.started_at DESC
+                LIMIT 1""",
+                (league_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        result["errors"] = json.loads(result["errors"])
+        return result
 
     def quality(self, league_id: str) -> list[dict[str, Any]]:
         with self.connection() as connection:
@@ -237,3 +451,9 @@ class HistoricalStore:
                 VALUES (?,?,?,?,?,?,?)""",
                 (issue_key, run_id, league_id, season, severity, category, detail),
             )
+
+
+def _decode_job(row: dict[str, Any]) -> dict[str, Any]:
+    for key in ("requested_seasons", "requested_data_types"):
+        row[key] = json.loads(row[key])
+    return row

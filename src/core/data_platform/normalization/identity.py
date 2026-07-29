@@ -12,7 +12,15 @@ def normalize_name(value: str) -> str:
 
 
 class PlayerIdentityResolver:
-    PROVIDER_FIELDS = {"Sleeper": "player_id", "FantasyCalc": "fantasycalc_id", "KeepTradeCut": "ktc_id", "FantasyPros": "fantasypros_id", "Underdog": "underdog_id", "Dynasty Daddy": "dynasty_daddy_id"}
+    PROVIDER_FIELDS = {
+        "Sleeper": "player_id",
+        "GSIS": "gsis_id",
+        "FantasyCalc": "fantasycalc_id",
+        "KeepTradeCut": "ktc_id",
+        "FantasyPros": "fantasypros_id",
+        "Underdog": "underdog_id",
+        "Dynasty Daddy": "dynasty_daddy_id",
+    }
 
     def __init__(self, players: dict[str, dict[str, Any]] | None = None) -> None:
         self._players: dict[str, NormalizedPlayer] = {}

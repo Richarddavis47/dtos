@@ -70,6 +70,31 @@ class CrawlApiTests(unittest.TestCase):
         self.assertEqual(payload["availability"], "provider_not_supported")
         self.assertIn("provider", payload["reason"].casefold())
 
+    def test_reliability_and_enrichment_routes_are_read_only_and_explicit(self) -> None:
+        routes = (
+            "/api/crawl/history/completeness?league=league-1",
+            "/api/crawl/history/providers",
+            "/api/crawl/history/player/player-one/stats?league=league-1",
+            "/api/crawl/history/player/player-one/fantasy?league=league-1",
+            "/api/crawl/history/player/player-one/availability?league=league-1",
+            "/api/crawl/history/player/player-one/aggregates?league=league-1",
+            "/api/crawl/history/player/player-one/signals?league=league-1",
+            "/api/crawl/history/player/player-one/data-quality?league=league-1",
+        )
+        for route in routes:
+            with self.subTest(route=route):
+                response = self.client.get(route)
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(response.json()["ok"])
+        unavailable = self.client.get(
+            "/api/crawl/history/player/player-one/availability?league=league-1",
+        ).json()
+        self.assertEqual(unavailable["availability"], "unsupported")
+        self.assertEqual(
+            self.client.post("/api/crawl/history/completeness").status_code,
+            405,
+        )
+
     def test_snapshot_uses_public_allowlist_and_contains_required_sections(self) -> None:
         payload = self.client.get("/api/crawl/snapshot").json()["data"]
         self.assertEqual(payload["valuation_schema_version"], "1.0")

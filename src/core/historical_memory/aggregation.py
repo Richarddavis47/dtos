@@ -30,6 +30,19 @@ def aggregate_production(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "rolling_3": rolling_average(observed, 3),
         "rolling_5": rolling_average(observed, 5),
         "rolling_8": rolling_average(observed, 8),
+        "active_game_average": round(average, 2),
+        "starter_worthy_week_rate": round(
+            sum(value >= 12 for value in observed) / len(observed), 3,
+        ),
+        "boom_week_rate": round(
+            sum(value >= 20 for value in observed) / len(observed), 3,
+        ),
+        "bust_week_rate": round(
+            sum(value < 6 for value in observed) / len(observed), 3,
+        ),
+        "availability_rate": round(
+            len(observed) / max(1, len(rows)), 3,
+        ),
     }
 
 

@@ -72,3 +72,18 @@ Public historical APIs are paginated and filterable by league, season, week, fra
 See `docs/HISTORICAL_MEMORY.md` for schemas, import behavior, provenance, storage, performance, and current source limitations.
 
 ---
+# DTOS v1.5.1 — Historical Data Reliability & Player Data Enrichment
+
+Historical imports now persist durable jobs, granular checkpoints, worker leases,
+retry classification, and step-based progress. A deployment or provider interruption
+can resume without discarding completed categories or blocking ordinary requests.
+
+DTOS also adds a free, attributed nflverse adapter for weekly raw player statistics.
+Stable GSIS-to-Sleeper identity mappings are required; ambiguous or unresolved
+players are excluded. League-season scoring settings produce separately versioned
+fantasy scoring records, with incomplete components and confidence reported.
+
+Advanced snaps, routes, and injury designations remain unavailable unless a future
+approved provider supplies them. Missing metrics remain null and never become zero.
+
+---

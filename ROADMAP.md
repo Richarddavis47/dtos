@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Historical Reliability & Player Data Enrichment - DTOS v1.5.1
+
+- Persistent resumable import jobs, checkpoints, retries, leases, recovery, and completeness.
+- Approved nflverse weekly-stat adapter with stable-ID reconciliation.
+- League-specific historical scoring and read-only operational APIs.
+
 ### Historical League Memory & Player Performance Intelligence - DTOS v1.5.0
 
 - Immutable league-season, weekly roster, matchup, transaction, draft, player-production, value, prediction, and Team Intelligence evidence.

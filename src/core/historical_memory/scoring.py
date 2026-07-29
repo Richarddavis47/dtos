@@ -14,8 +14,10 @@ def calculate_fantasy_points(
             "components": {},
         }
     components: dict[str, float] = {}
+    missing_components: list[str] = []
     for category, multiplier in scoring_settings.items():
         if category not in raw_stats or raw_stats[category] is None:
+            missing_components.append(category)
             continue
         try:
             components[category] = float(raw_stats[category]) * float(multiplier)
@@ -23,9 +25,15 @@ def calculate_fantasy_points(
             continue
     return {
         "fantasy_points": round(sum(components.values()), 2),
-        "availability": "calculated",
-        "reason": None,
+        "availability": "incomplete" if missing_components else "calculated",
+        "reason": (
+            f"Missing scoring components: {', '.join(missing_components)}"
+            if missing_components else None
+        ),
         "components": components,
+        "missing_components": missing_components,
+        "confidence": max(20, round(100 * len(components) / max(1, len(scoring_settings)))),
+        "scoring_engine_version": "1.1",
     }
 
 

@@ -14,6 +14,11 @@ The default database is `DTOS_HISTORY_DB_FILE` or the platform temporary directo
 
 Historical schema, player-history schema, prediction model, Team Intelligence model, and valuation schema versions remain attached to records so later models cannot reinterpret old snapshots silently.
 
+Migration version `2` adds durable `import_jobs`, granular
+`import_checkpoints`, and expiring `import_locks`. See
+`docs/HISTORICAL_OPERATIONS.md` for recovery and production procedures and
+`docs/PLAYER_DATA_PROVIDERS.md` for nflverse attribution and metric coverage.
+
 ## Identity
 
 League identity and source-season league IDs remain distinct. A franchise uses a stable root-league and roster-slot identifier while owner IDs, usernames, and team names are dated season records. Player history joins by provider IDs, never display name. Duplicate names therefore remain independent.

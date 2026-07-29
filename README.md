@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.5.0 adds immutable Historical League Memory and Player Performance Intelligence: season-specific league settings, weekly rosters and matchups, transactions, drafts, player production, valuation and Team Intelligence snapshots, provenance, quality reporting, and resumable Sleeper backfills. See [Historical Memory](docs/HISTORICAL_MEMORY.md), [Team Intelligence](docs/TEAM_INTELLIGENCE.md), and [Valuation Calibration](docs/VALUATION_CALIBRATION.md).
+DTOS v1.5.1 adds persistent historical import jobs, checkpoints, leases, bounded retries, recovery, completeness reporting, and approved nflverse weekly-stat enrichment. See [Historical Memory](docs/HISTORICAL_MEMORY.md), [Historical Operations](docs/HISTORICAL_OPERATIONS.md), and [Player Data Providers](docs/PLAYER_DATA_PROVIDERS.md).
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 

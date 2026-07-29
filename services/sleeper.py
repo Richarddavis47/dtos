@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import threading
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -37,7 +38,7 @@ STATE: dict[str, Any] = {
     "transactions_last_error": None,
     "transactions_syncing": False,
 }
-SYNC_LOCK = asyncio.Lock()
+SYNC_LOCK = threading.Lock()
 TRANSACTIONS_SYNC_LOCK = asyncio.Lock()
 
 
@@ -78,9 +79,9 @@ def request_headers() -> dict[str, str]:
     return {"User-Agent": f"{APPLICATION_NAME}/{VERSION} (+Front Office OS)"}
 
 
-async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
+async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
     """Fetch and normalize the configured Sleeper league state."""
-    async with SYNC_LOCK:
+    with SYNC_LOCK:
         if STATE["syncing"]:
             return STATE
         STATE["syncing"] = True
@@ -351,6 +352,13 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
         return STATE
 
 
+async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
+    """Synchronize Sleeper without blocking the application event loop."""
+    return await asyncio.to_thread(
+        lambda: asyncio.run(_sync_sleeper(force_players=force_players)),
+    )
+
+
 async def sync_transactions() -> bool:
     """Refresh only the cached transaction list from Sleeper."""
     async with TRANSACTIONS_SYNC_LOCK:
@@ -387,19 +395,35 @@ async def sync_transactions() -> bool:
 
 
 async def ensure_data_fresh() -> None:
-    """Refresh cached Sleeper data when it is missing or stale."""
+    """Queue a cached Sleeper refresh without delaying the calling route."""
     if not STATE.get("data"):
-        await sync_sleeper(force_players=True)
+        start_sleeper_sync(force_players=True)
         return
     last_sync = STATE.get("last_sync")
     if not last_sync:
-        await sync_sleeper()
+        start_sleeper_sync()
         return
     try:
         age = utcnow() - datetime.fromisoformat(last_sync)
     except (TypeError, ValueError):
-        await sync_sleeper()
+        start_sleeper_sync()
         return
     if age > timedelta(minutes=SYNC_MINUTES):
-        await sync_sleeper()
+        start_sleeper_sync()
+
+
+_SLEEPER_SYNC_TASK: asyncio.Task[dict[str, Any]] | None = None
+
+
+def start_sleeper_sync(
+    *, force_players: bool = False,
+) -> asyncio.Task[dict[str, Any]]:
+    """Return the one tracked in-process refresh task for this app worker."""
+    global _SLEEPER_SYNC_TASK
+    if _SLEEPER_SYNC_TASK is None or _SLEEPER_SYNC_TASK.done():
+        _SLEEPER_SYNC_TASK = asyncio.create_task(
+            sync_sleeper(force_players=force_players),
+            name="dtos-sleeper-sync",
+        )
+    return _SLEEPER_SYNC_TASK
 
