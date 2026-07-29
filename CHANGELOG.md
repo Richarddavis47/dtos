@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.5.1 - Historical Data Reliability & Player Data Enrichment
+
+- Added persistent import jobs, per-season/data-type checkpoints, database leases, bounded provider retries, stalled-worker recovery, and deterministic completeness reporting.
+- Added an approved nflverse CC-BY-4.0 adapter for free weekly raw player statistics with stable-ID reconciliation and explicit metric availability.
+- Added versioned raw-stat and league-specific fantasy scoring records without conflating missing values with observed zero.
+- Added read-only completeness, provider, stats, fantasy, availability, aggregate, signal, and player-quality APIs plus import monitoring on League History.
+- Added reliability, restart, locking, retry, scoring, normalization, enrichment, idempotency, and API regressions.
+
 ## v1.5.0 - Historical League Memory & Player Performance Intelligence
 
 - Added an indexed, versioned, append-only SQLite historical evidence store with migrations, stable dimensions, provenance, availability, confidence, and model versions.

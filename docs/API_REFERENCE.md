@@ -50,3 +50,11 @@ As of v1.4.1, player/provider responses additionally disclose canonical identity
 DTOS v1.5.0 advertises paginated historical endpoints from `/api/crawl`. Routes under `/api/crawl/history` cover seasons, matchups, standings, playoffs, transactions, trades, drafts, players, player weekly/usage/value history, Team Intelligence history, import status, and data quality.
 
 Common filters are `league`, `season`, `week`, `franchise`, `player`, `limit`, and `offset`. Defaults are bounded and all records include schema version and provenance. Unsupported usage returns an explicit `provider_not_supported` state.
+- `GET /api/crawl/history/completeness` — per-season supported-category coverage.
+- `GET /api/crawl/history/providers` — provider capabilities, attribution, and limits.
+- `GET /api/crawl/history/player/{player_id}/stats` — versioned weekly raw statistics.
+- `GET /api/crawl/history/player/{player_id}/fantasy` — league-specific scoring.
+- `GET /api/crawl/history/player/{player_id}/availability` — observed status or an explicit unsupported reason.
+- `GET /api/crawl/history/player/{player_id}/aggregates` — deterministic season aggregates.
+- `GET /api/crawl/history/player/{player_id}/signals` — explainable versioned signals.
+- `GET /api/crawl/history/player/{player_id}/data-quality` — provenance and quality findings.

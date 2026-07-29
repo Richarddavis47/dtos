@@ -41,7 +41,6 @@ def create_api_router(
 
     @router.get("/api/status")
     async def api_status() -> JSONResponse:
-        await ensure_fresh()
         data = state.get("data") or {}
         return JSONResponse(
             {

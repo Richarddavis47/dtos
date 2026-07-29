@@ -7,7 +7,14 @@ from typing import Callable
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 
-from services.history import data_quality, history_records, import_status, player_career
+from services.history import (
+    data_quality,
+    history_records,
+    import_completeness,
+    import_status,
+    player_career,
+    provider_coverage,
+)
 
 PageRenderer = Callable[[str, str], HTMLResponse]
 
@@ -21,6 +28,16 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
         standings = history_records(league_id, "season_standing", limit=100)
         quality = data_quality(league_id)
         status = import_status(league_id)
+        completeness = import_completeness(league_id)
+        providers = provider_coverage()
+        latest_job = status["jobs"][0] if status["jobs"] else {}
+        progress = (
+            round(
+                100 * latest_job.get("completed_steps", 0)
+                / latest_job["total_steps"],
+            )
+            if latest_job.get("total_steps") else None
+        )
         season_cards = "".join(
             f'<article class="card"><h3>{row["season"]}</h3><p>{escape(str(row["payload"].get("league_name") or "Sleeper League"))}</p><p class="muted">Scoring and roster settings preserved with provenance.</p></article>'
             for row in seasons["records"]
@@ -29,6 +46,7 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
 <h2>League History</h2>
 <p class="muted">Immutable Sleeper evidence with season-specific settings. Missing provider data remains explicitly unavailable.</p>
 <div class="summary-grid"><article class="metric"><b>{seasons['count']}</b><span>Seasons</span></article><article class="metric"><b>{standings['count']}</b><span>Standing Records</span></article><article class="metric"><b>{quality['blocking_count']}</b><span>Blocking Issues</span></article><article class="metric"><b>{escape(str(status['latest'].get('status')))}</b><span>Import Status</span></article></div>
+<div class="card"><h3>Historical Import Reliability</h3><p><b>{escape(completeness['status'])}</b> · {escape(str(progress if progress is not None else 'Unknown'))}% step progress</p><p class="muted">Current segment: {escape(str(latest_job.get('current_season') or 'waiting'))} / {escape(str(latest_job.get('current_data_type') or 'waiting'))}. Retry count: {escape(str(latest_job.get('retry_count') or 0))}. Last progress: {escape(str(latest_job.get('last_progress_at') or 'No persisted progress yet'))}.</p><p>Provider coverage: {escape(', '.join(item['name'] for item in providers['providers']))}</p></div>
 <h3>Season Memory</h3><div class="grid">{season_cards}</div>
 <p><a class="btn" href="/api/crawl/history">Open Historical API</a></p>
 """

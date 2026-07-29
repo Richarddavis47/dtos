@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +18,22 @@ from src.core.historical_memory import (
     historical_store,
 )
 from src.core.historical_memory.importer import HistoricalImporter
+from src.core.historical_memory.enrichment import (
+    build_identity_context,
+    enrich_rows,
+)
+from src.core.historical_memory.jobs import (
+    ImportJob,
+    completeness_report,
+    recover_stalled_jobs,
+    utcnow,
+)
+from src.core.historical_memory.models import IMPORTER_VERSION
+from src.core.historical_memory.providers import (
+    NflverseProvider,
+    classify_nflverse_404,
+)
+from src.core.historical_memory.season_state import classify_season
 from src.core.intelligence import intelligence_orchestrator
 from src.core.valuation import VALUATION_SCHEMA_VERSION, normalize_value
 
@@ -172,24 +188,237 @@ async def backfill_history(
 
 
 async def ensure_history_backfill(fetch: Any, *, league_id: str = LEAGUE_ID) -> dict[str, Any]:
-    existing = historical_store.import_status(league_id)
-    if existing and existing[0]["status"] == "complete":
+    recover_stalled_jobs(historical_store, league_id)
+    foundation = historical_store.latest_completed_foundation(league_id)
+    if foundation is not None:
         try:
-            age = datetime.now(timezone.utc) - datetime.fromisoformat(existing[0]["completed_at"])
+            age = datetime.now(timezone.utc) - datetime.fromisoformat(
+                foundation["completed_at"],
+            )
         except (TypeError, ValueError):
             age = None
         if age is not None and age.total_seconds() < 86400:
+            enrichment = await enrich_player_history(
+                league_id, skip_current=True,
+            )
             return {
-                "status": "current", "run_id": existing[0]["run_id"],
+                "status": "current", "run_id": foundation["run_id"],
                 "reason": "A complete backfill finished within the last 24 hours.",
+                "enrichment": enrichment,
             }
-    return await backfill_history(fetch, league_id=league_id)
+    result = await backfill_history(fetch, league_id=league_id)
+    if result.get("status") == "complete":
+        result["enrichment"] = await enrich_player_history(
+            league_id, seasons=set(result.get("seasons") or []),
+            skip_current=True,
+        )
+    return result
+
+
+async def enrich_player_history(
+    league_id: str, *, seasons: set[int] | None = None,
+    today: date | None = None, skip_current: bool = False,
+) -> dict[str, Any]:
+    """Fetch approved weekly stats in the background and persist mapped records."""
+    current_date = today or datetime.now(timezone.utc).date()
+    selected = sorted(seasons or range(2021, current_date.year + 1))
+    totals = {"written": 0, "unchanged": 0, "unresolved": 0}
+    errors: list[str] = []
+    segments: list[dict[str, Any]] = []
+    identity_context_reuses = 0
+    identity_context = await asyncio.to_thread(
+        build_identity_context, historical_store,
+    )
+    current_checkpoints = {
+        (row["season"], row["data_type"], row["provider"]): row
+        for row in historical_store.checkpoints(league_id)
+    }
+    job = ImportJob(
+        historical_store, league_id, tuple(selected), ("player_week",),
+        requested_by="player_enrichment",
+    )
+    job.create()
+    historical_store.update_job(
+        job.job_id, status="running", started_at=utcnow().isoformat(),
+        last_progress_at=utcnow().isoformat(),
+    )
+    async with httpx.AsyncClient(
+        timeout=httpx.Timeout(max(REQUEST_TIMEOUT, 60)),
+        follow_redirects=True,
+        headers={"User-Agent": "DTOS/1.5.1 historical-enrichment"},
+    ) as client:
+        provider = NflverseProvider(client)
+        for season in selected:
+            classification = classify_season(season, today=current_date)
+            checkpoint_key = (
+                f"{league_id}:{season}:player_week:nflverse:{IMPORTER_VERSION}"
+            )
+            historical_store.update_job(
+                job.job_id, current_season=season, current_data_type="player_week",
+                last_progress_at=utcnow().isoformat(),
+            )
+            existing_checkpoint = current_checkpoints.get(
+                (season, "player_week", "nflverse"),
+            )
+            checkpoint_current = (
+                skip_current
+                and existing_checkpoint is not None
+                and existing_checkpoint["status"] == "completed"
+                and existing_checkpoint["importer_version"] == IMPORTER_VERSION
+                and (
+                    identity_context.latest_identity_at is None
+                    or str(existing_checkpoint.get("completed_at") or "")
+                    >= identity_context.latest_identity_at
+                )
+            )
+            if checkpoint_current:
+                segments.append({
+                    "season": season, "status": "current",
+                    "provider": "nflverse",
+                    "reason": "Completed checkpoint and identity context are current.",
+                    "checked_at": utcnow().isoformat(),
+                })
+                continue
+            if classification.state.value in {
+                "pre_regular", "future", "unsupported",
+            }:
+                availability = classify_nflverse_404(classification)
+                checked_at = utcnow().isoformat()
+                historical_store.checkpoint(
+                    checkpoint_key=checkpoint_key, job_id=job.job_id,
+                    league_id=league_id, season=season, week=None,
+                    data_type="player_week", provider="nflverse",
+                    importer_version=IMPORTER_VERSION,
+                    status=availability.status, completed_at=checked_at,
+                    error=availability.reason,
+                )
+                segments.append({
+                    "season": season, "status": availability.status,
+                    "provider": "nflverse", "reason": availability.reason,
+                    "checked_at": checked_at,
+                    "next_eligible_at": availability.next_eligible_at,
+                })
+                continue
+            try:
+                rows = await provider.weekly(season)
+                _, season_rows = historical_store.records(
+                    league_id, "league_season", season=season, limit=1,
+                )
+                settings = (
+                    season_rows[0]["payload"].get("scoring_settings") or {}
+                    if season_rows else {}
+                )
+                result = {"written": 0, "unchanged": 0, "unresolved": 0}
+                for offset in range(0, len(rows), 50):
+                    identity_context_reuses += 1
+                    batch = await asyncio.to_thread(
+                        enrich_rows, historical_store, league_id,
+                        rows[offset:offset + 50], settings, identity_context,
+                    )
+                    for key in result:
+                        result[key] += batch[key]
+                    await asyncio.sleep(0)
+                for key in totals:
+                    totals[key] += result[key]
+                checked_at = utcnow().isoformat()
+                historical_store.checkpoint(
+                    checkpoint_key=checkpoint_key, job_id=job.job_id,
+                    league_id=league_id, season=season, week=None,
+                    data_type="player_week", provider="nflverse",
+                    importer_version=IMPORTER_VERSION, status="completed",
+                    completed_at=checked_at, records_written=result["written"],
+                    records_unchanged=result["unchanged"],
+                )
+                segments.append({
+                    "season": season, "status": "imported",
+                    "provider": "nflverse", "checked_at": checked_at, **result,
+                })
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code != 404:
+                    errors.append(f"{season}:{type(exc).__name__}:{exc}")
+                    historical_store.checkpoint(
+                        checkpoint_key=checkpoint_key, job_id=job.job_id,
+                        league_id=league_id, season=season, week=None,
+                        data_type="player_week", provider="nflverse",
+                        importer_version=IMPORTER_VERSION, status="failed",
+                        completed_at=utcnow().isoformat(), error=str(exc),
+                    )
+                    continue
+                count, _ = historical_store.records(
+                    league_id, "player_raw_week", season=season, limit=1,
+                )
+                availability = classify_nflverse_404(
+                    classification, prior_week_count=count,
+                )
+                checked_at = utcnow().isoformat()
+                historical_store.checkpoint(
+                    checkpoint_key=checkpoint_key, job_id=job.job_id,
+                    league_id=league_id, season=season, week=None,
+                    data_type="player_week", provider="nflverse",
+                    importer_version=IMPORTER_VERSION,
+                    status=availability.status, completed_at=checked_at,
+                    error=availability.reason,
+                )
+                segments.append({
+                    "season": season, "status": availability.status,
+                    "provider": "nflverse", "reason": availability.reason,
+                    "checked_at": checked_at,
+                    "next_eligible_at": availability.next_eligible_at,
+                })
+                if availability.status == "failed":
+                    errors.append(f"{season}:HTTP404:{availability.reason}")
+            except (httpx.HTTPError, ValueError) as exc:
+                errors.append(f"{season}:{type(exc).__name__}:{exc}")
+                historical_store.checkpoint(
+                    checkpoint_key=checkpoint_key, job_id=job.job_id,
+                    league_id=league_id, season=season, week=None,
+                    data_type="player_week", provider="nflverse",
+                    importer_version=IMPORTER_VERSION, status="failed",
+                    completed_at=utcnow().isoformat(), error=str(exc),
+                )
+    pending = [
+        segment for segment in segments
+        if segment["status"] in {"pending", "not_yet_available", "unsupported"}
+    ]
+    status = (
+        "failed" if errors
+        else "completed_with_pending" if pending
+        else "complete"
+    )
+    historical_store.update_job(
+        job.job_id, status=status, completed_at=utcnow().isoformat(),
+        inserted_records=totals["written"],
+        unchanged_records=totals["unchanged"],
+        skipped_records=totals["unresolved"],
+        failed_records=len(errors), last_error_message="; ".join(errors) or None,
+        next_retry_at=next(
+            (
+                segment["next_eligible_at"] for segment in pending
+                if segment.get("next_eligible_at")
+            ),
+            None,
+        ),
+    )
+    return {
+        "provider": "nflverse", "seasons": selected, **totals,
+        "segments": segments, "pending": pending, "errors": errors,
+        "status": status,
+        "identity_context": {
+            "canonical_count": identity_context.canonical_count,
+            "gsis_count": identity_context.gsis_count,
+            "latest_identity_at": identity_context.latest_identity_at,
+            "build_ms": identity_context.build_ms,
+            "batch_reuse_count": identity_context_reuses,
+        },
+    }
 
 
 def start_background_backfill(fetch: Any) -> asyncio.Task[dict[str, Any]]:
     global _BACKFILL_TASK
     if _BACKFILL_TASK is None or _BACKFILL_TASK.done():
-        _BACKFILL_TASK = asyncio.create_task(ensure_history_backfill(fetch))
+        _BACKFILL_TASK = asyncio.create_task(
+            ensure_history_backfill(fetch), name="dtos-history-worker",
+        )
     return _BACKFILL_TASK
 
 
@@ -248,12 +477,53 @@ def player_history_evidence(league_id: str, player_id: str) -> dict[str, Any]:
 
 def import_status(league_id: str) -> dict[str, Any]:
     runs = historical_store.import_status(league_id)
+    foundation = historical_store.latest_completed_foundation(league_id)
     return {
         "schema_version": HISTORICAL_SCHEMA_VERSION,
         "runs": runs,
+        "jobs": historical_store.jobs(league_id),
+        "checkpoints": historical_store.checkpoints(league_id),
+        "latest_attempt": runs[0] if runs else None,
+        "latest_completed_foundation": foundation,
         "latest": runs[0] if runs else {
             "status": "waiting", "reason": "Historical backfill has not started."
         },
+    }
+
+
+def import_completeness(league_id: str) -> dict[str, Any]:
+    seasons = tuple(range(2021, datetime.now().year + 1))
+    return {
+        "schema_version": HISTORICAL_SCHEMA_VERSION,
+        **completeness_report(historical_store, league_id, seasons),
+    }
+
+
+def provider_coverage() -> dict[str, Any]:
+    provider = NflverseProvider
+    return {
+        "schema_version": HISTORICAL_SCHEMA_VERSION,
+        "providers": [{
+            "name": provider.name,
+            "status": "configured",
+            "license": provider.license,
+            "cost": provider.cost,
+            "update_frequency": provider.update_frequency,
+            "capabilities": asdict(provider.capabilities),
+            "limitations": (
+                "Weekly player statistics do not include snaps, routes, "
+                "availability designations, or complete red-zone participation."
+            ),
+        }, {
+            "name": "Sleeper",
+            "status": "configured",
+            "license": "Public API; provider terms apply",
+            "cost": "$0",
+            "capabilities": {
+                "league_history": True, "league_scored_points": True,
+                "advanced_usage": False,
+            },
+        }],
     }
 
 

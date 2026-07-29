@@ -3,12 +3,21 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 from uuid import uuid4
 
-from src.core.historical_memory.models import HISTORICAL_SCHEMA_VERSION
+from src.core.historical_memory.jobs import (
+    REQUIRED_CATEGORIES,
+    ImportJob,
+    classify_failure,
+    with_retry,
+)
+from src.core.historical_memory.models import (
+    HISTORICAL_SCHEMA_VERSION,
+    IMPORTER_VERSION,
+)
 from src.core.historical_memory.store import HistoricalStore
 
 logger = logging.getLogger("dtos.history")
@@ -25,13 +34,17 @@ class HistoricalImporter:
         self.store = store
         self.fetch = fetch
 
+    async def _fetch(self, path: str) -> Any:
+        result, _ = await with_retry(lambda: self.fetch(path))
+        return result
+
     async def discover_seasons(self, league_id: str, earliest: int = 2021) -> list[tuple[str, dict[str, Any]]]:
         seasons: list[tuple[str, dict[str, Any]]] = []
         seen: set[str] = set()
         current = league_id
         while current and current not in seen:
             seen.add(current)
-            league = await self.fetch(f"/league/{current}")
+            league = await self._fetch(f"/league/{current}")
             if not isinstance(league, dict) or not league:
                 break
             season = int(league.get("season") or 0)
@@ -58,6 +71,29 @@ class HistoricalImporter:
             else "not_supplied; Sleeper remains authoritative"
         )
         self.store.start_run(run_id, league_id, started, workbook_status)
+        requested_seasons = tuple(sorted(seasons or range(earliest, datetime.now().year + 1)))
+        job = ImportJob(
+            self.store, league_id, requested_seasons, REQUIRED_CATEGORIES,
+            requested_by="startup_recovery", job_id=run_id,
+        )
+        job.create()
+        if not job.acquire():
+            self.store.update_job(
+                run_id, status="blocked",
+                last_error_type="concurrent_job",
+                last_error_message="An overlapping import lease is active.",
+            )
+            self.store.update_run(
+                run_id, status="blocked", checkpoint="lock", written=0,
+                unchanged=0, errors=["Overlapping import lease"], completed_at=_now(),
+            )
+            return {
+                "run_id": run_id, "league_id": league_id, "seasons": [],
+                "status": "blocked", "records_written": 0,
+                "records_unchanged": 0, "errors": ["Overlapping import lease"],
+                "started_at": started, "completed_at": _now(),
+                "workbook_status": workbook_status, "checkpoint": "lock",
+            }
         written = unchanged = 0
         errors: list[str] = []
         imported: list[int] = []
@@ -65,7 +101,7 @@ class HistoricalImporter:
         try:
             discovered, nfl_state = await asyncio.gather(
                 self.discover_seasons(league_id, earliest),
-                self.fetch("/state/nfl"),
+                self._fetch("/state/nfl"),
             )
             if seasons:
                 discovered = [item for item in discovered if int(item[1]["season"]) in seasons]
@@ -79,20 +115,76 @@ class HistoricalImporter:
                 written += added
                 unchanged += same
                 imported.append(season)
-                self.store.update_run(
+                await asyncio.sleep(0)
+                for data_type in REQUIRED_CATEGORIES:
+                    count, _ = await asyncio.to_thread(
+                        self.store.records, league_id, data_type,
+                        season=season, limit=1,
+                    )
+                    await asyncio.to_thread(
+                        self.store.checkpoint,
+                        checkpoint_key=(
+                            f"{league_id}:{season}:{data_type}:Sleeper:"
+                            f"{IMPORTER_VERSION}"
+                        ),
+                        job_id=run_id, league_id=league_id, season=season,
+                        week=None, data_type=data_type, provider="Sleeper",
+                        importer_version=IMPORTER_VERSION,
+                        status="completed" if count else "unsupported",
+                        completed_at=_now(), records_written=count,
+                    )
+                    await asyncio.sleep(0)
+                await asyncio.to_thread(
+                    self.store.update_run,
                     run_id, status="running", checkpoint=f"{season}:complete",
                     written=written, unchanged=unchanged, errors=errors, completed_at=None,
                 )
             status = "complete"
+        except asyncio.CancelledError:
+            self.store.update_job(
+                run_id, status="queued", worker_identity=None,
+                lock_expiration=None, last_error_type="worker_interrupted",
+                last_error_message="Historical worker cancelled between bounded batches.",
+                last_error_context=checkpoint,
+            )
+            lock_key = (
+                f"{league_id}:{','.join(map(str, requested_seasons))}:"
+                f"{','.join(REQUIRED_CATEGORIES)}:Sleeper:{IMPORTER_VERSION}"
+            )
+            self.store.release_lock(lock_key, run_id)
+            raise
         except Exception as exc:
             logger.exception("Historical import failed at %s", checkpoint)
             errors.append(f"{type(exc).__name__}: {exc}")
             status = "partial"
+            failure_type = classify_failure(exc)
+            self.store.update_job(
+                run_id,
+                status=(
+                    "retry_wait"
+                    if failure_type in {"retryable", "rate_limited"}
+                    else "failed"
+                ),
+                failed_at=_now(), retry_count=1,
+                last_error_type=failure_type,
+                last_error_message=str(exc), last_error_context=checkpoint,
+            )
         completed = _now()
         self.store.update_run(
             run_id, status=status, checkpoint=checkpoint, written=written,
             unchanged=unchanged, errors=errors, completed_at=completed,
         )
+        if status == "complete":
+            self.store.update_job(
+                run_id, status="completed", completed_at=completed,
+                last_progress_at=completed, completed_steps=len(imported) * len(REQUIRED_CATEGORIES),
+                inserted_records=written, unchanged_records=unchanged,
+            )
+        lock_key = (
+            f"{league_id}:{','.join(map(str, requested_seasons))}:"
+            f"{','.join(REQUIRED_CATEGORIES)}:Sleeper:{IMPORTER_VERSION}"
+        )
+        self.store.release_lock(lock_key, run_id)
         return {
             "run_id": run_id, "league_id": league_id, "seasons": imported,
             "status": status, "records_written": written,
@@ -114,11 +206,11 @@ class HistoricalImporter:
     ) -> tuple[int, int]:
         retrieved = _now()
         written = unchanged = 0
+        pending: list[dict[str, Any]] = []
 
         def append(entity: str, source_id: str, payload: dict[str, Any], **dimensions: Any) -> None:
-            nonlocal written, unchanged
             key_parts = [root_league_id, entity, str(season), str(dimensions.get("week") or ""), source_id]
-            inserted = self.store.append(
+            pending.append(dict(
                 record_key=":".join(key_parts), entity_type=entity,
                 league_id=root_league_id, season=season,
                 source_record_id=source_id, observed_at=dimensions.pop("observed_at", retrieved),
@@ -127,9 +219,28 @@ class HistoricalImporter:
                 confidence=dimensions.pop("confidence", 95),
                 calculation_method=dimensions.pop("calculation_method", "provider_record"),
                 schema_version=HISTORICAL_SCHEMA_VERSION, payload=payload, **dimensions,
-            )
-            written += int(inserted)
-            unchanged += int(not inserted)
+            ))
+
+        async def flush(phase: str) -> None:
+            nonlocal written, unchanged
+            while pending:
+                batch = pending[:100]
+                del pending[:100]
+                added, same = await asyncio.to_thread(
+                    self.store.append_many, batch,
+                )
+                written += added
+                unchanged += same
+                self.store.update_job(
+                    run_id, current_season=season, current_data_type=phase,
+                    inserted_records=written, unchanged_records=unchanged,
+                    last_progress_at=_now(),
+                )
+                await asyncio.to_thread(
+                    self.store.renew_job_lease, run_id,
+                    (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat(),
+                )
+                await asyncio.sleep(0)
 
         append("league_season", source_league_id, {
             "league_id": root_league_id, "source_league_id": source_league_id,
@@ -149,12 +260,13 @@ class HistoricalImporter:
             "status": league.get("status"),
             "schema_version": HISTORICAL_SCHEMA_VERSION,
         })
+        await flush("league_season")
         users, rosters, drafts, winners, losers = await asyncio.gather(
-            self.fetch(f"/league/{source_league_id}/users"),
-            self.fetch(f"/league/{source_league_id}/rosters"),
-            self.fetch(f"/league/{source_league_id}/drafts"),
-            self.fetch(f"/league/{source_league_id}/winners_bracket"),
-            self.fetch(f"/league/{source_league_id}/losers_bracket"),
+            self._fetch(f"/league/{source_league_id}/users"),
+            self._fetch(f"/league/{source_league_id}/rosters"),
+            self._fetch(f"/league/{source_league_id}/drafts"),
+            self._fetch(f"/league/{source_league_id}/winners_bracket"),
+            self._fetch(f"/league/{source_league_id}/losers_bracket"),
         )
         user_map = {str(row.get("user_id")): row for row in users or []}
         ranked_rosters = sorted(
@@ -210,10 +322,11 @@ class HistoricalImporter:
             "final_four_roster_ids": [value for place, value in placements.items() if place <= 4],
             "availability": "observed" if placements else "unavailable",
         }, availability="observed" if placements else "unavailable")
+        await flush("franchise_and_standings")
 
         for draft in drafts or []:
             draft_id = str(draft.get("draft_id") or "")
-            picks = await self.fetch(f"/draft/{draft_id}/picks") if draft_id else []
+            picks = await self._fetch(f"/draft/{draft_id}/picks") if draft_id else []
             append("draft", draft_id, {"draft": draft, "picks_count": len(picks or [])})
             for pick in picks or []:
                 pick_id = str(pick.get("pick_no") or f"{pick.get('round')}-{pick.get('draft_slot')}")
@@ -222,13 +335,14 @@ class HistoricalImporter:
                     "original_franchise": pick.get("roster_id"),
                     "current_pick_owner": pick.get("picked_by"),
                 }, player_id=str(pick.get("player_id") or "") or None)
+            await flush("draft")
 
         weekly_payloads = await asyncio.gather(*(
             request
             for week in range(1, max_week + 1)
             for request in (
-                self.fetch(f"/league/{source_league_id}/matchups/{week}"),
-                self.fetch(f"/league/{source_league_id}/transactions/{week}"),
+                self._fetch(f"/league/{source_league_id}/matchups/{week}"),
+                self._fetch(f"/league/{source_league_id}/transactions/{week}"),
             )
         ))
         for week in range(1, max_week + 1):
@@ -298,10 +412,11 @@ class HistoricalImporter:
                     **transaction, "trade_time_values": None,
                     "trade_time_value_availability": "unavailable unless a contemporaneous valuation snapshot exists",
                 }, week=week, observed_at=_timestamp(transaction.get("created")) or retrieved)
+            await flush(f"week_{week}")
 
-        self._quality_checks(
-            run_id, root_league_id, season, expect_weeks=max_week > 0,
-            expect_champion=max_week == REGULAR_WEEKS,
+        await asyncio.to_thread(
+            self._quality_checks, run_id, root_league_id, season,
+            expect_weeks=max_week > 0, expect_champion=max_week == REGULAR_WEEKS,
         )
         return written, unchanged
 

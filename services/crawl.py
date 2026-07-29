@@ -43,6 +43,14 @@ CRAWL_ENDPOINTS = {
     "history_player_values": "/api/crawl/history/player/{player_id}/values",
     "history_teams": "/api/crawl/history/teams",
     "history_import_status": "/api/crawl/history/import-status",
+    "history_completeness": "/api/crawl/history/completeness",
+    "history_providers": "/api/crawl/history/providers",
+    "history_player_stats": "/api/crawl/history/player/{player_id}/stats",
+    "history_player_fantasy": "/api/crawl/history/player/{player_id}/fantasy",
+    "history_player_availability": "/api/crawl/history/player/{player_id}/availability",
+    "history_player_aggregates": "/api/crawl/history/player/{player_id}/aggregates",
+    "history_player_signals": "/api/crawl/history/player/{player_id}/signals",
+    "history_player_data_quality": "/api/crawl/history/player/{player_id}/data-quality",
     "history_data_quality": "/api/crawl/history/data-quality",
 }
 

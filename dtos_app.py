@@ -29,6 +29,7 @@ from services.sleeper import (
     STATE,
     ensure_data_fresh,
     load_cache,
+    start_sleeper_sync,
     sync_sleeper,
     sync_transactions,
 )
@@ -51,7 +52,7 @@ async def background_sync() -> None:
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     load_cache()
-    await sync_sleeper()
+    sleeper_task = start_sleeper_sync()
     history_task = start_background_backfill(direct_fetch)
     mark_startup_complete(_PROCESS_STARTED)
     task = asyncio.create_task(background_sync())
@@ -59,8 +60,11 @@ async def lifespan(_: FastAPI):
         yield
     finally:
         task.cancel()
+        sleeper_task.cancel()
         history_task.cancel()
-        await asyncio.gather(task, history_task, return_exceptions=True)
+        await asyncio.gather(
+            task, sleeper_task, history_task, return_exceptions=True,
+        )
 
 
 app = FastAPI(title=APPLICATION_NAME, version=VERSION, lifespan=lifespan)

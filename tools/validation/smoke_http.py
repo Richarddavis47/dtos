@@ -3,12 +3,15 @@ from __future__ import annotations
 
 import argparse
 import json
+from time import perf_counter
 from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.request import urlopen
 
 
 def get(base_url: str, path: str, expected: int = 200) -> bytes:
+    started = perf_counter()
+    print(f"HTTP smoke requesting: {path}", flush=True)
     try:
         with urlopen(base_url.rstrip("/") + path, timeout=60) as response:
             status = response.status
@@ -16,6 +19,16 @@ def get(base_url: str, path: str, expected: int = 200) -> bytes:
     except HTTPError as exc:
         status = exc.code
         body = exc.read()
+    except TimeoutError as exc:
+        elapsed = perf_counter() - started
+        raise AssertionError(
+            f"HTTP smoke timed out: {path} after {elapsed:.3f}s",
+        ) from exc
+    elapsed = perf_counter() - started
+    print(
+        f"HTTP smoke completed: {path} status={status} elapsed={elapsed:.3f}s",
+        flush=True,
+    )
     if status != expected:
         raise AssertionError(f"{path}: expected HTTP {expected}, received {status}; body={body[:300]!r}")
     return body
@@ -28,8 +41,10 @@ def main() -> int:
 
     major = (
         "/", "/teams", "/matchups", "/transactions", "/picks", "/settings",
-        "/api/status", "/api/platform/health", "/api/intelligence", "/api/league", "/api/players", "/front-offices",
-        "/api/front-offices", "/trades", "/api/trades", "/openapi.json",
+        "/api/status", "/api/crawl", "/api/crawl/history", "/history",
+        "/api/platform/health", "/api/intelligence", "/api/league",
+        "/api/players", "/front-offices", "/api/front-offices", "/trades",
+        "/api/trades", "/openapi.json",
     )
     for path in major:
         get(args.base_url, path)
