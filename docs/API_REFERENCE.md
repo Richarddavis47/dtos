@@ -22,7 +22,9 @@ Invalid league identifiers return a stable JSON `404`. Responses include schema,
 
 | Method | Path | Inputs | Successful output |
 |---|---|---|---|
-| GET | `/health` | none | service, league, sync, and runtime health |
+| GET | `/health` | none | backward-compatible readiness, league, sync, and runtime health |
+| GET | `/health/live` | none | lightweight process liveness |
+| GET | `/health/ready` | none | cached/synchronized data readiness; HTTP 503 until ready |
 | GET | `/api/status` | none | version, sync state, and entity counts |
 | GET | `/api/platform/health` | none | runtime, engines, providers, caches, timings, and configuration mode |
 | GET | `/api/intelligence` | `front_office` integer, optional | unified recommendation, market summary, timings, cache state |

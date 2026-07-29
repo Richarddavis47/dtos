@@ -119,3 +119,17 @@ In a production-scale empty-database profile, the 30,051-record backfill fell fr
 seconds. Existing historical and enrichment behavior is unchanged.
 
 ---
+# DTOS v1.5.6 — Deployment Readiness
+
+DTOS now exposes separate liveness and readiness probes, keeps empty-data
+instances out of service until synchronization succeeds, and delays cached
+deployment maintenance for 30 seconds so initial user traffic does not compete
+with synchronization and historical backfill startup.
+
+Deployment diagnostics are opt-in through `X-DTOS-Diagnostics: 1` and expose
+application request timing and process uptime without changing ordinary
+responses. Local deployment-transition profiling kept liveness below 3 ms
+during a concurrent matchup request and produced cached matchup medians of
+approximately 0.58 seconds with graceful process cleanup.
+
+---

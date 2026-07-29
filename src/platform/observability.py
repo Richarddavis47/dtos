@@ -63,6 +63,10 @@ class RuntimeMetrics:
     requests: int = 0
     errors: int = 0
     total_request_ms: float = 0.0
+    ready: bool = False
+    readiness_reason: str = "Application startup has not completed."
+    ready_at: str | None = None
+    background_tasks: dict[str, str] = field(default_factory=dict)
 
     def record(self, duration_ms: float, status_code: int) -> None:
         self.requests += 1
@@ -85,7 +89,27 @@ class RuntimeMetrics:
             "errors": self.errors,
             "average_request_ms": round(self.total_request_ms / self.requests, 3) if self.requests else 0.0,
             "memory_high_water_kb": memory_kb,
+            "ready": self.ready,
+            "readiness_reason": self.readiness_reason,
+            "ready_at": self.ready_at,
+            "background_tasks": dict(self.background_tasks),
         }
+
+    def mark_ready(self, reason: str) -> None:
+        self.ready = True
+        self.readiness_reason = reason
+        self.ready_at = datetime.now(timezone.utc).isoformat()
+
+    def mark_not_ready(self, reason: str) -> None:
+        self.ready = False
+        self.readiness_reason = reason
+        self.ready_at = None
+
+    def mark_background(self, name: str, status: str) -> None:
+        self.background_tasks[name] = status
+
+    def uptime_seconds(self) -> float:
+        return round(monotonic() - self.started_monotonic, 3)
 
 
 runtime_metrics = RuntimeMetrics()
@@ -100,11 +124,20 @@ def install_observability(app: FastAPI) -> None:
         request_id = request.headers.get("X-Request-ID") or uuid4().hex
         token = request_id_context.set(request_id)
         started = perf_counter()
+        started_at = datetime.now(timezone.utc).isoformat()
         status_code = 500
         try:
             response = await call_next(request)
             status_code = response.status_code
             response.headers["X-Request-ID"] = request_id
+            if request.headers.get("X-DTOS-Diagnostics") == "1":
+                duration_ms = round((perf_counter() - started) * 1000, 3)
+                response.headers["X-DTOS-Request-Start"] = started_at
+                response.headers["X-DTOS-Route-Duration"] = str(duration_ms)
+                response.headers["X-DTOS-Request-Duration"] = str(duration_ms)
+                response.headers["X-DTOS-Process-Uptime"] = str(
+                    runtime_metrics.uptime_seconds()
+                )
             return response
         finally:
             duration_ms = round((perf_counter() - started) * 1000, 3)

@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from app_metadata import APPLICATION_NAME, VERSION
-from config import SYNC_MINUTES
+from config import BACKGROUND_START_DELAY, SYNC_MINUTES
 from routes.api import create_api_router
 from routes.crawl import create_crawl_router
 from routes.draft import create_draft_router
@@ -34,7 +34,11 @@ from services.sleeper import (
     sync_transactions,
 )
 from services.history import direct_fetch, start_background_backfill
-from src.platform.observability import install_observability, mark_startup_complete
+from src.platform.observability import (
+    install_observability,
+    mark_startup_complete,
+    runtime_metrics,
+)
 
 _PROCESS_STARTED = perf_counter()
 
@@ -49,21 +53,60 @@ async def background_sync() -> None:
         await sync_sleeper()
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI):
-    load_cache()
+async def deployment_maintenance() -> None:
+    """Start required data promptly and defer optional cached maintenance."""
+    if STATE.get("data"):
+        runtime_metrics.mark_ready("Cached league data loaded.")
+        runtime_metrics.mark_background("deployment_delay", "waiting")
+        await asyncio.sleep(BACKGROUND_START_DELAY)
+    else:
+        runtime_metrics.mark_not_ready("Waiting for the initial Sleeper dataset.")
+        runtime_metrics.mark_background("sleeper_sync", "running")
+        await start_sleeper_sync(force_players=True)
+        runtime_metrics.mark_background("sleeper_sync", "complete")
+        if not STATE.get("data"):
+            runtime_metrics.mark_not_ready(
+                "Initial Sleeper synchronization did not produce league data."
+            )
+            return
+        runtime_metrics.mark_ready("Initial Sleeper dataset loaded.")
+        await asyncio.sleep(BACKGROUND_START_DELAY)
+
+    runtime_metrics.mark_background("deployment_delay", "complete")
+    runtime_metrics.mark_background("sleeper_sync", "running")
+    runtime_metrics.mark_background("history_backfill", "running")
     sleeper_task = start_sleeper_sync()
     history_task = start_background_backfill(direct_fetch)
+    await asyncio.gather(sleeper_task, history_task, return_exceptions=True)
+    runtime_metrics.mark_background("sleeper_sync", "complete")
+    runtime_metrics.mark_background("history_backfill", "complete")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    runtime_metrics.mark_not_ready("Loading cached league data.")
+    load_cache()
     mark_startup_complete(_PROCESS_STARTED)
+    if STATE.get("data"):
+        runtime_metrics.mark_ready("Cached league data loaded.")
+    else:
+        runtime_metrics.mark_not_ready(
+            "Waiting for the initial Sleeper dataset."
+        )
+    maintenance_task = asyncio.create_task(
+        deployment_maintenance(),
+        name="dtos-deployment-maintenance",
+    )
     task = asyncio.create_task(background_sync())
     try:
         yield
     finally:
         task.cancel()
-        sleeper_task.cancel()
-        history_task.cancel()
+        maintenance_task.cancel()
         await asyncio.gather(
-            task, sleeper_task, history_task, return_exceptions=True,
+            task,
+            maintenance_task,
+            return_exceptions=True,
         )
 
 
@@ -72,7 +115,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["GET", "OPTIONS"],
-    allow_headers=["Accept", "Content-Type"],
+    allow_headers=["Accept", "Content-Type", "X-DTOS-Diagnostics"],
 )
 install_observability(app)
 
