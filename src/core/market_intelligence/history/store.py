@@ -20,19 +20,33 @@ class MarketHistoryStore:
     def __init__(self, path: Path | None = None) -> None:
         self.path = path
         self._rows: list[MarketSnapshot] = []
+        self._identities: set[tuple[str, str, str]] = set()
         self._lock = RLock()
         if path and path.exists():
             try:
                 self._rows = [MarketSnapshot(**row) for row in json.loads(path.read_text(encoding="utf-8"))]
+                self._identities = {
+                    self._identity(row)
+                    for row in self._rows
+                }
             except (OSError, ValueError, TypeError):
                 self._rows = []
+                self._identities = set()
+
+    @staticmethod
+    def _identity(row: MarketSnapshot) -> tuple[str, str, str]:
+        return row.asset_id, row.timestamp, row.provider
 
     def append(self, rows: tuple[MarketSnapshot, ...]) -> None:
         if not rows:
             return
         with self._lock:
-            known = {(row.asset_id, row.timestamp, row.provider) for row in self._rows}
-            self._rows.extend(row for row in rows if (row.asset_id, row.timestamp, row.provider) not in known)
+            for row in rows:
+                identity = self._identity(row)
+                if identity in self._identities:
+                    continue
+                self._rows.append(row)
+                self._identities.add(identity)
             if self.path:
                 self.path.parent.mkdir(parents=True, exist_ok=True)
                 temporary = self.path.with_suffix(self.path.suffix + ".tmp")

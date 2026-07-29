@@ -89,6 +89,28 @@ class HistoryAndCacheTests(unittest.TestCase):
             self.assertEqual(trend.periods["7 day"], 20.0)
             self.assertGreater(trend.confidence_drift, 0)
 
+    def test_history_index_preserves_uniqueness_order_and_serialization(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "market.json"
+            rows = tuple(
+                MarketSnapshot(
+                    f"p{index % 2}",
+                    f"2026-07-29T00:00:0{index}+00:00",
+                    "A",
+                    50 + index,
+                    80,
+                )
+                for index in range(4)
+            )
+            store = MarketHistoryStore(path)
+            store.append(rows)
+            serialized = path.read_text(encoding="utf-8")
+            store.append(rows)
+            self.assertEqual(path.read_text(encoding="utf-8"), serialized)
+            self.assertEqual(store._rows, list(rows))
+            self.assertEqual(len(store._identities), len(rows))
+            self.assertEqual(store.for_asset("p0"), (rows[0], rows[2]))
+
     def test_expired_cache_uses_stale_quote_when_provider_fails(self) -> None:
         cache = MarketQuoteCache(ttl_seconds=-1)
         fresh = ProviderQuote("A", "p1", 55, 80, "now", "A", True, "fresh")
