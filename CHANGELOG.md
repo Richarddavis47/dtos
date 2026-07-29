@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.9 - Valuation Calibration
+
+- Added one explainable player calibration boundary that blends independent DTOS intrinsic value with normalized, confidence-weighted market consensus.
+- Corrected roster grades, tiers, positional ranks, contender/rebuilder values, and Trade Intelligence to consume the calibrated value without duplicating provider logic.
+- Rebalanced draft-pick rounds and disclosed slot adjustments so low-value pick bundles cannot impersonate premium assets.
+- Added a permanent 50-asset golden calibration set spanning every player tier and representative rookie-pick slots.
+
 ## v1.5.8 - Matchup Performance
 
 - Prepared provider market distributions once per evaluation instead of rebuilding and scanning them for every player quote.

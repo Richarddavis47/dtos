@@ -6,9 +6,9 @@ import subprocess
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.5.8"
-BUILD_NUMBER = 1580
-RELEASE_CODENAME = "Matchup Performance"
+VERSION = "1.5.9"
+BUILD_NUMBER = 1590
+RELEASE_CODENAME = "Valuation Calibration"
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
 

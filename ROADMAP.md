@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Valuation Calibration - DTOS v1.5.9
+
+- Keep DTOS intrinsic evaluation independent while exposing a separate, explainable market-backed calibration.
+- Feed the same calibrated value into player, roster, team, and trade consumers.
+- Restore meaningful separation between premium players and later-round rookie picks.
+- Freeze representative tier and pick relationships in a permanent golden benchmark.
+
 ### Matchup Performance - DTOS v1.5.8
 
 - Reuse prepared provider distributions throughout each Market evaluation.

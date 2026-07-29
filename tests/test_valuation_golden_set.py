@@ -1,0 +1,92 @@
+"""Permanent relationship-based calibration benchmark for DTOS assets."""
+from __future__ import annotations
+
+import json
+import unittest
+from datetime import datetime, timezone
+from pathlib import Path
+
+from src.core.asset_intelligence.picks.pick_value import dynasty_pick_value
+from src.core.valuation import CalibrationStatus, calibrate_asset_value
+
+
+FIXTURE = Path(__file__).parent / "fixtures" / "golden_valuation_v159.json"
+
+
+class GoldenValuationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.benchmark = json.loads(FIXTURE.read_text(encoding="utf-8"))
+
+    def test_set_is_representative_and_permanent(self) -> None:
+        total = len(self.benchmark["players"]) + len(self.benchmark["picks"])
+        self.assertGreaterEqual(total, 50)
+        self.assertLessEqual(total, 100)
+        tiers = {row["tier"] for row in self.benchmark["players"]}
+        self.assertEqual(
+            tiers,
+            {
+                "Elite Franchise Player", "Cornerstone", "Core Starter",
+                "Quality Starter", "Flex Asset", "Depth", "Developmental",
+            },
+        )
+
+    def test_player_calibration_matches_golden_tiers(self) -> None:
+        values = []
+        for row in self.benchmark["players"]:
+            calibration = calibrate_asset_value(
+                row["intrinsic"], row["market"], row["confidence"],
+                status=CalibrationStatus.CALIBRATED,
+            )
+            self.assertEqual(calibration.tier, row["tier"], row["name"])
+            values.append(calibration.calibrated_value)
+            self.assertEqual(
+                calibration,
+                calibrate_asset_value(
+                    row["intrinsic"], row["market"], row["confidence"],
+                    status=CalibrationStatus.CALIBRATED,
+                ),
+            )
+        tier_floor = {
+            "Elite Franchise Player": 790, "Cornerstone": 675,
+            "Core Starter": 550, "Quality Starter": 425,
+            "Flex Asset": 300, "Depth": 200, "Developmental": 100,
+        }
+        for row, value in zip(self.benchmark["players"], values):
+            self.assertGreaterEqual(value, tier_floor[row["tier"]], row["name"])
+
+    def test_missing_market_evidence_cannot_create_elite_asset(self) -> None:
+        calibration = calibrate_asset_value(
+            1000, None, 0, status=CalibrationStatus.INSUFFICIENT_DATA,
+        )
+        self.assertNotIn(calibration.tier, {"Elite Franchise Player", "Cornerstone"})
+        self.assertEqual(calibration.market_weight, 0)
+
+    def test_pick_curve_preserves_round_and_slot_relationships(self) -> None:
+        current_year = datetime.now(timezone.utc).year
+        values = {}
+        for row in self.benchmark["picks"]:
+            values[row["label"]] = dynasty_pick_value({
+                "round": row["round"],
+                "season": current_year + row["years_away"],
+                "projected_slot": row["slot"],
+            }).score
+        self.assertGreater(values["Next early first"], values["Next middle first"])
+        self.assertGreater(values["Next middle first"], values["Next late first"])
+        self.assertGreater(values["Next early second"], values["Next early third"])
+        self.assertGreater(values["Next early third"], values["Next fourth"])
+        self.assertGreater(values["Next early first"], values["Future early first"])
+
+    def test_two_thirds_cannot_equal_an_elite_player(self) -> None:
+        current_year = datetime.now(timezone.utc).year
+        third = dynasty_pick_value({
+            "round": 3, "season": current_year + 1, "projected_slot": "middle",
+        }).score * 10
+        elite = calibrate_asset_value(
+            750, 877, 89, status=CalibrationStatus.CALIBRATED,
+        ).calibrated_value
+        self.assertLess(third * 2, elite)
+
+
+if __name__ == "__main__":
+    unittest.main()

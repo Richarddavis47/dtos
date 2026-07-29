@@ -5,25 +5,38 @@ from typing import Any
 
 from src.core.asset_intelligence import AssetContext, evaluate_pick, evaluate_player
 from src.core.trade_intelligence.models import TradeAsset
-from src.core.valuation import normalize_internal, normalize_pick
+from src.core.valuation import CalibrationStatus, calibrate_asset_value, normalize_internal, normalize_pick
 
 
-def _player_asset(player: dict[str, Any], context: AssetContext, source_roster_id: int) -> TradeAsset:
+def _player_asset(
+    player: dict[str, Any],
+    context: AssetContext,
+    source_roster_id: int,
+    market_values: dict[str, tuple[int | None, int, CalibrationStatus]],
+) -> TradeAsset:
     report = evaluate_player(player, context)
+    player_id = report.profile.player_id
+    market_value, confidence, status = market_values.get(
+        player_id, (None, 0, CalibrationStatus.INSUFFICIENT_DATA),
+    )
+    intrinsic = normalize_internal(report.core_values.dynasty.score)
+    calibrated = calibrate_asset_value(
+        intrinsic, market_value, confidence, status=status,
+    )
     return TradeAsset(
-        report.profile.player_id,
+        player_id,
         "player",
         report.profile.name,
         report.profile.position,
-        normalize_internal(report.core_values.dynasty.score),
+        calibrated.calibrated_value,
         normalize_internal(report.core_values.redraft.score),
-        normalize_internal(report.core_values.market.score),
+        market_value if market_value is not None else normalize_internal(report.core_values.market.score),
         normalize_internal(report.core_values.team_fit.score),
         report.risk.score,
         source_roster_id,
-        normalize_internal(round((report.core_values.dynasty.score + report.core_values.team_fit.score) / 2)),
+        round((calibrated.calibrated_value + normalize_internal(report.core_values.team_fit.score)) / 2),
         55,
-        report.recommendation.confidence,
+        max(report.recommendation.confidence, confidence),
     )
 
 
@@ -51,11 +64,17 @@ def build_asset_pool(
     data: dict[str, Any],
     team: dict[str, Any],
     recipient_context: AssetContext,
+    market_values: dict[str, tuple[int | None, int, CalibrationStatus]] | None = None,
 ) -> tuple[TradeAsset, ...]:
     roster_id = int(team.get("roster_id") or 0)
     database = data.get("players") or {}
     players = tuple(
-        _player_asset({**(database.get(str(player.get("id")), {}) or {}), **player}, recipient_context, roster_id)
+        _player_asset(
+            {**(database.get(str(player.get("id")), {}) or {}), **player},
+            recipient_context,
+            roster_id,
+            market_values or {},
+        )
         for player in team.get("players") or []
         if str(player.get("position") or "") in {"QB", "RB", "WR", "TE"}
     )
