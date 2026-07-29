@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.5.10 - Intelligence Quality Audit
+
+- Audited all ten league franchises, representative player tiers, every supported pick category, competitive windows, and 120 prioritized trade recommendations.
+- Fixed active-Front-Office bias in league comparisons by evaluating every franchise against the same cached market-backed calibration context.
+- Removed a stale duplicate draft-pick scale from Team Intelligence and reused the canonical pick evaluator.
+- Corrected elite-asset counts and prevented older low-value players from receiving a developmental label.
+- Expanded the permanent golden benchmark from 50 to 82 player, pick, archetype, team-window, and trade-package scenarios.
+
 ## v1.5.9 - Valuation Calibration
 
 - Added one explainable player calibration boundary that blends independent DTOS intrinsic value with normalized, confidence-weighted market consensus.

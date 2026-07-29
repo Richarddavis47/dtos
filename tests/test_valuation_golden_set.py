@@ -7,7 +7,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from src.core.asset_intelligence.picks.pick_value import dynasty_pick_value
-from src.core.valuation import CalibrationStatus, calibrate_asset_value
+from src.core.valuation import CalibrationStatus, calibrate_asset_value, contextualize_valuation_tier
+from src.core.team_intelligence.engine import _window
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "golden_valuation_v159.json"
@@ -19,7 +20,10 @@ class GoldenValuationTests(unittest.TestCase):
         cls.benchmark = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
     def test_set_is_representative_and_permanent(self) -> None:
-        total = len(self.benchmark["players"]) + len(self.benchmark["picks"])
+        total = sum(
+            len(self.benchmark[key])
+            for key in ("players", "picks", "archetypes", "team_scenarios", "trade_packages")
+        )
         self.assertGreaterEqual(total, 50)
         self.assertLessEqual(total, 100)
         tiers = {row["tier"] for row in self.benchmark["players"]}
@@ -29,6 +33,10 @@ class GoldenValuationTests(unittest.TestCase):
                 "Elite Franchise Player", "Cornerstone", "Core Starter",
                 "Quality Starter", "Flex Asset", "Depth", "Developmental",
             },
+        )
+        self.assertEqual(
+            {row["position"] for row in self.benchmark["archetypes"]},
+            {"QB", "RB", "WR", "TE"},
         )
 
     def test_player_calibration_matches_golden_tiers(self) -> None:
@@ -62,6 +70,20 @@ class GoldenValuationTests(unittest.TestCase):
         self.assertNotIn(calibration.tier, {"Elite Franchise Player", "Cornerstone"})
         self.assertEqual(calibration.market_weight, 0)
 
+    def test_older_low_value_players_are_not_called_developmental(self) -> None:
+        self.assertEqual(
+            contextualize_valuation_tier("Developmental", 31),
+            "Veteran Depth",
+        )
+        self.assertEqual(
+            contextualize_valuation_tier("Replacement Level", 29),
+            "Veteran Replacement",
+        )
+        self.assertEqual(
+            contextualize_valuation_tier("Developmental", 22),
+            "Developmental",
+        )
+
     def test_pick_curve_preserves_round_and_slot_relationships(self) -> None:
         current_year = datetime.now(timezone.utc).year
         values = {}
@@ -86,6 +108,28 @@ class GoldenValuationTests(unittest.TestCase):
             750, 877, 89, status=CalibrationStatus.CALIBRATED,
         ).calibrated_value
         self.assertLess(third * 2, elite)
+
+    def test_competitive_window_scenarios_are_stable(self) -> None:
+        for row in self.benchmark["team_scenarios"]:
+            self.assertEqual(
+                _window(row["current"], row["overall"], row["future"]).value,
+                row["window"],
+                row["label"],
+            )
+
+    def test_trade_package_relationships_are_economically_reasonable(self) -> None:
+        for row in self.benchmark["trade_packages"]:
+            offered = sum(row["offered"])
+            requested = sum(row["requested"])
+            low_value_aggregation = (
+                len(row["offered"]) >= 3
+                and max(row["offered"]) < 300
+                and max(row["requested"]) >= 675
+            )
+            economically_supported = (
+                offered >= requested * 0.72 and not low_value_aggregation
+            )
+            self.assertEqual(economically_supported, row["accepted"], row["label"])
 
 
 if __name__ == "__main__":

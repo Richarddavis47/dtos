@@ -4,9 +4,9 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.5.9 unifies explainable player and pick calibration across roster and
-trade decisions while preserving independent intrinsic values. See
-[Valuation Calibration](docs/VALUATION_CALIBRATION_V159.md).
+DTOS v1.5.10 verifies league-wide intelligence quality and makes every
+league-relative comparison independent of the selected Front Office. See the
+[Intelligence Quality Audit](docs/INTELLIGENCE_QUALITY_AUDIT.md).
 
 The Commissioner Desk remains the application homepage and answers three questions in order:
 

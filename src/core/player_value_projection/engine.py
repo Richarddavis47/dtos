@@ -7,7 +7,7 @@ from typing import Any
 from src.core.player_value_projection.models import DataStatus, LineupValue, PlayerValueProfile, PositionalContext, ValueMetric
 from src.core.player_value_projection.providers import PlayerDataRegistry, player_data_registry
 from src.core.historical_memory.valuation import apply_historical_evidence
-from src.core.valuation import CalibrationStatus, PlayerIntelligenceCard, calibrate_asset_value, normalize_internal
+from src.core.valuation import CalibrationStatus, PlayerIntelligenceCard, calibrate_asset_value, contextualize_valuation_tier, normalize_internal
 from src.core.valuation.models import ConsensusProvider
 
 
@@ -86,7 +86,10 @@ def evaluate_player_values(context: Any, decision: Any, reports: dict[str, Any],
             if item.profile.position == report.profile.position
         )
         weekly_rank = 1 + sum((projections[key].projected_points or 0) > (projection.projected_points or 0) for key in reports if reports[key].profile.position == report.profile.position)
-        tier = calibrated.tier
+        tier = contextualize_valuation_tier(
+            calibrated.tier,
+            report.profile.age,
+        )
         role = "Starter" if raw.get("roster_slot") == "Starter" else "Flex Upgrade" if above_starter > 0 else "Bench / Developmental"
         lineup = LineupValue(role, raw.get("roster_slot") == "Starter", report.profile.position in {"RB", "WR", "TE"}, report.profile.position == "QB" and "SUPER_FLEX" in context.settings.get("roster_positions", ()), round(replacement, 2), above_replacement, above_starter, max(0, min(100, round(50 + above_replacement * 5))), scarcity)
         positional = PositionalContext(dynasty_rank, dynasty_rank, weekly_rank, tier, scarcity, above_replacement, int(supplies.get(report.profile.position, 0)), dynasty_rank <= 2 and scarcity >= 65)

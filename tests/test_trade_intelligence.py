@@ -125,6 +125,26 @@ class TradeIntelligenceTests(unittest.TestCase):
         self.assertIsInstance(dossier.impact.future_outlook, int)
         self.assertIn("not a probability", " ".join(dossier.impact.limitations))
 
+    def test_recommendations_are_unique_non_contradictory_and_explainable(self) -> None:
+        dossiers = trade_intelligence.opportunities(self.data, 1)
+        signatures = {
+            (
+                dossier.proposal.partner_roster_id,
+                tuple(asset.asset_id for asset in dossier.proposal.assets_sent),
+                tuple(asset.asset_id for asset in dossier.proposal.assets_received),
+            )
+            for dossier in dossiers
+        }
+        self.assertEqual(len(signatures), len(dossiers))
+        for dossier in dossiers:
+            sent = {asset.asset_id for asset in dossier.proposal.assets_sent}
+            received = {asset.asset_id for asset in dossier.proposal.assets_received}
+            self.assertTrue(sent.isdisjoint(received))
+            self.assertTrue(dossier.recommendation.summary)
+            self.assertTrue(dossier.recommendation.evidence)
+            self.assertGreaterEqual(dossier.recommendation.confidence, 0)
+            self.assertLessEqual(dossier.recommendation.confidence, 100)
+
     def test_engine_consumes_asset_intelligence_evaluators(self) -> None:
         with patch("src.core.trade_intelligence.market.trade_market.evaluate_player", wraps=evaluate_player) as players, patch("src.core.trade_intelligence.market.trade_market.evaluate_pick", wraps=evaluate_pick) as picks:
             trade_intelligence.opportunities(self.data, 1)

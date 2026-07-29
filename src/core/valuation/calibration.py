@@ -53,6 +53,17 @@ def valuation_grade(value: int, *, market_available: bool) -> str:
     return "F"
 
 
+def contextualize_valuation_tier(tier: str, age: float | None) -> str:
+    """Keep value tiers semantically accurate across player age curves."""
+    if age is None or age < 27:
+        return tier
+    if tier == "Developmental":
+        return "Veteran Depth"
+    if tier == "Replacement Level":
+        return "Veteran Replacement"
+    return tier
+
+
 def calibrate_asset_value(
     intrinsic_value: int,
     market_value: int | None,

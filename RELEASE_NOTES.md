@@ -183,3 +183,21 @@ first- through fourth-round picks to detect future drift.
 See `docs/VALUATION_CALIBRATION_V159.md` for methodology and limitations.
 
 ---
+# DTOS v1.5.10 - Intelligence Quality Audit
+
+DTOS intelligence was audited across all ten franchises, 120 prioritized trade
+recommendations, the full player tier range, every supported rookie-pick round,
+and competitive-window edge cases.
+
+The audit found that the selected Front Office received calibrated market-backed
+player cards while comparison teams received intrinsic-only cards. That made
+league ranks and classifications depend on which franchise was selected. All
+teams now use one neutral, cached, calibrated comparison contract. Team
+Intelligence also consumes the canonical pick evaluator instead of a stale
+duplicate round table.
+
+The permanent golden benchmark now contains 82 representative player, pick,
+archetype, team-window, and trade-package scenarios. See
+`docs/INTELLIGENCE_QUALITY_AUDIT.md` for the league table and remaining limits.
+
+---
