@@ -4,6 +4,14 @@ DTOS v1.5.1 stores import jobs, granular checkpoints, and leases in the same SQL
 database as historical evidence. Production must set `DTOS_HISTORY_DB_FILE` to a
 durable Render disk path; temporary storage cannot survive redeployment.
 
+## First-run persistence
+
+Historical records are assembled and persisted in bounded batches of at most 100.
+Each batch is serialized before acquiring the store lock and committed in one
+SQLite transaction. The importer yields after every batch, renews its durable
+lease, and updates job progress, so read traffic remains responsive throughout a
+fresh-database backfill.
+
 ## Recovery
 
 Startup schedules recovery without waiting for it. Expired `running` jobs return to

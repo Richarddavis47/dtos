@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Initial Backfill Performance - DTOS v1.5.2
+
+- Bound SQLite transaction duration during first-time historical population.
+- Keep normal read routes responsive while a fresh historical database is populated.
+- Preserve durable checkpoints, leases, immutable records, and idempotent replay.
+
 ### Historical Reliability & Player Data Enrichment - DTOS v1.5.1
 
 - Persistent resumable import jobs, checkpoints, retries, leases, recovery, and completeness.

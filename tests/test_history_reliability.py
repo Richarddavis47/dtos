@@ -83,6 +83,38 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(recovered["status"], "queued")
 
+    async def test_bounded_batch_uses_one_transaction_and_is_idempotent(self) -> None:
+        records = [
+            {
+                "record_key": f"L:player_week:2022:1:{index}",
+                "entity_type": "player_week",
+                "league_id": "L",
+                "season": 2022,
+                "week": 1,
+                "player_id": str(index),
+                "source_record_id": str(index),
+                "observed_at": "2022-09-01T00:00:00+00:00",
+                "retrieved_at": "2026-07-29T00:00:00+00:00",
+                "provider": "Sleeper",
+                "availability": "observed",
+                "confidence": 95,
+                "calculation_method": "provider_record",
+                "schema_version": "1.0",
+                "payload": {"fantasy_points": float(index)},
+            }
+            for index in range(100)
+        ]
+        with patch.object(
+            self.store, "connection", wraps=self.store.connection,
+        ) as connection:
+            self.assertEqual(self.store.append_many(records), (100, 0))
+            self.assertEqual(connection.call_count, 1)
+        with patch.object(
+            self.store, "connection", wraps=self.store.connection,
+        ) as connection:
+            self.assertEqual(self.store.append_many(records), (0, 100))
+            self.assertEqual(connection.call_count, 1)
+
     async def test_checkpoint_and_job_state_survive_store_restart(self) -> None:
         job = ImportJob(self.store, "L", (2022,), ("matchup",))
         job.create()

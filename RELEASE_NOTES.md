@@ -87,3 +87,16 @@ Advanced snaps, routes, and injury designations remain unavailable unless a futu
 approved provider supplies them. Missing metrics remain null and never become zero.
 
 ---
+
+# DTOS v1.5.2 — Initial Backfill Performance
+
+Fresh deployments now persist each bounded historical batch in one SQLite
+transaction. The importer still yields between batches, renews its durable lease,
+persists granular checkpoints, and uses immutable record keys for safe replay.
+
+In a production-scale empty-database profile, the 30,051-record backfill fell from
+468.162 seconds to 28.673 seconds. Batch persistence fell from 445.074 seconds to
+6.987 seconds, while the longest transaction fell from 5.889 seconds to 0.046
+seconds. Existing historical and enrichment behavior is unchanged.
+
+---

@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.2 - Initial Backfill Performance
+
+- Changed bounded historical record batches to use one SQLite transaction per batch instead of one transaction per record.
+- Reduced a measured 30,051-record empty-database backfill from 468 seconds to 29 seconds while preserving immutable record keys, checkpoints, leases, and idempotency.
+- Added regression coverage for bounded transaction count and duplicate-safe batch replays.
+
 ## v1.5.1 - Historical Data Reliability & Player Data Enrichment
 
 - Added persistent import jobs, per-season/data-type checkpoints, database leases, bounded provider retries, stalled-worker recovery, and deterministic completeness reporting.
