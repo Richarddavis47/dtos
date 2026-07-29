@@ -140,6 +140,18 @@ class TradeSafetyTests(unittest.TestCase):
         self.assertTrue(result.message)
         self.assertGreater(result.requested_value, result.offered_value)
 
+    def test_precomputed_packages_preserve_guardrail_result(self) -> None:
+        offered = (asset("offer-a", 500), asset("offer-b", 250))
+        requested = (asset("request", 650),)
+        expected = evaluate_trade_guardrails(offered, requested)
+        actual = evaluate_trade_guardrails(
+            offered,
+            requested,
+            offered_package=adjusted_package_value(offered),
+            requested_package=adjusted_package_value(requested),
+        )
+        self.assertEqual(actual, expected)
+
 
 class ConfigurationTests(unittest.TestCase):
     def test_normalization_version_is_explicit_for_cache_namespacing(self) -> None:

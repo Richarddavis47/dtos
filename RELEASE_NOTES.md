@@ -1,3 +1,22 @@
+# DTOS v1.5.5 — Production Request Latency
+
+The Commissioner Desk now avoids repeated valuation of the same trade package
+combinations. Eligible packages are valued once per proposal shape, balance
+filtering occurs before guardrail evaluation, and guardrails reuse the same
+canonical package values.
+
+For the populated production-scale league fixture, cold homepage model generation
+fell from approximately 4.49 seconds to 1.04 seconds locally. Proposal counts,
+selection, ordering, and serialized output remain identical to v1.5.4 across all
+nine trade partners.
+
+The earlier 18.397-second production matchup observation was transient deployment
+contention rather than persistent matchup behavior. Repeated v1.5.4 production
+requests measured 2.636–3.003 seconds, consistent with the hosting platform's
+slower CPU allocation. Matchup intelligence and caching behavior are unchanged.
+
+---
+
 # DTOS v1.4.5 — League Intelligence & Team Grading
 
 Team strength is now evaluated relative to the selected league. Every franchise receives the same reusable Team Intelligence Card with overall, current, dynasty, lineup, depth, position, draft, youth, future, flexibility, and liquidity grades.

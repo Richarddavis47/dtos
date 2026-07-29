@@ -11,6 +11,7 @@ from routes.trades import create_trades_router
 from src.core.asset_intelligence import evaluate_pick, evaluate_player
 from src.core.trade_intelligence import TradeAsset, TradePriority, trade_intelligence
 from src.core.trade_intelligence.engine.trade_generator import generate_proposals
+from src.core.valuation import packages
 
 
 def fixture_data() -> dict:
@@ -72,6 +73,29 @@ class TradeGeneratorTests(unittest.TestCase):
             received = sum((item.dynasty_value + item.team_fit_value) / 2 for item in proposal.assets_received)
             self.assertGreaterEqual(received / sent, 0.80)
             self.assertLessEqual(received / sent, 1.25)
+
+    def test_generator_reuses_package_values_without_changing_output(self) -> None:
+        outgoing = tuple(
+            asset(f"out-{index}", "player" if index < 8 else "pick", 20 + index)
+            for index in range(12)
+        )
+        incoming = tuple(
+            asset(
+                f"in-{index}",
+                "player" if index < 8 else "pick",
+                20 + index,
+                2,
+            )
+            for index in range(12)
+        )
+        with patch(
+            "src.core.trade_intelligence.engine.trade_generator.adjusted_package_value",
+            wraps=packages.adjusted_package_value,
+        ) as package_value:
+            first = generate_proposals(1, 2, outgoing, incoming)
+        second = generate_proposals(1, 2, outgoing, incoming)
+        self.assertEqual(first, second)
+        self.assertLess(package_value.call_count, 10_000)
 
 
 class TradeIntelligenceTests(unittest.TestCase):
