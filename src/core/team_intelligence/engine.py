@@ -5,6 +5,7 @@ from statistics import mean, pstdev
 from typing import Any
 
 from src.core.team_intelligence.models import CompetitiveWindow, LeagueTeamSummary, RelativeGrade, TeamIntelligenceCard
+from src.core.asset_intelligence.picks.pick_value import dynasty_pick_value
 from src.core.valuation import normalize_pick
 
 POSITIONS = ("QB", "RB", "WR", "TE")
@@ -56,7 +57,13 @@ def _window(current: int, overall: int, future: int) -> CompetitiveWindow:
 
 
 def _pick_value(picks: tuple[dict[str, Any], ...]) -> float:
-    return sum(normalize_pick({1: 82, 2: 64, 3: 48, 4: 36}.get(int(pick.get("round") or 4), 25), int(pick.get("round") or 4)) for pick in picks)
+    return sum(
+        normalize_pick(
+            dynasty_pick_value(pick).score,
+            int(pick.get("round") or 4),
+        )
+        for pick in picks
+    )
 
 
 def build_team_intelligence(

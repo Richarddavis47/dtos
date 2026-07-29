@@ -62,6 +62,18 @@ class RosterIntelligenceTests(unittest.TestCase):
         self.assertGreaterEqual(player.rebuilder_value, 0)
         self.assertTrue(player.recommended_action)
 
+    def test_league_comparisons_do_not_change_with_active_front_office(self) -> None:
+        data = fixture_data()
+        orchestrator = IntelligenceOrchestrator(IntelligenceRegistry(), IntelligenceCache())
+        first = orchestrator.analyze(data, 1)
+        second = orchestrator.analyze(data, 2)
+        self.assertEqual(first.roster.league_rooms, second.roster.league_rooms)
+        self.assertEqual(first.roster.league_metrics, second.roster.league_metrics)
+        self.assertEqual(
+            first.roster.team_intelligence,
+            second.roster.team_intelligence,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

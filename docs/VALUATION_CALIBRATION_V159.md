@@ -37,9 +37,10 @@ multiple third- or fourth-round picks from being treated as an elite centerpiece
 ## Golden benchmark
 
 `tests/fixtures/golden_valuation_v159.json` is the permanent calibration set. It
-contains 40 representative player profiles and 10 draft picks spanning all
-supported tiers, positions, rounds, and projected slots. It asserts relationships
-rather than special-casing production player IDs.
+contains 82 representative player, pick, positional-archetype, team-window, and
+trade-package scenarios spanning all supported tiers, positions, rounds, and
+projected slots. It asserts relationships rather than special-casing production
+player IDs.
 
 Future valuation changes must update this benchmark deliberately and explain any
 changed relationship in release documentation.

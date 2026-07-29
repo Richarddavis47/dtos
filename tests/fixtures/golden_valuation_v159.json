@@ -53,5 +53,43 @@
     {"label": "Next early third", "round": 3, "years_away": 1, "slot": "early"},
     {"label": "Next middle third", "round": 3, "years_away": 1, "slot": "middle"},
     {"label": "Next fourth", "round": 4, "years_away": 1, "slot": "middle"}
+  ],
+  "archetypes": [
+    {"label": "Superflex franchise quarterback", "position": "QB", "tier": "Elite Franchise Player", "strategy": "build_around"},
+    {"label": "Superflex stable quarterback", "position": "QB", "tier": "Core Starter", "strategy": "hold"},
+    {"label": "Developmental quarterback", "position": "QB", "tier": "Developmental", "strategy": "monitor"},
+    {"label": "Young workhorse running back", "position": "RB", "tier": "Cornerstone", "strategy": "build_around"},
+    {"label": "Contender veteran running back", "position": "RB", "tier": "Quality Starter", "strategy": "hold"},
+    {"label": "Running back handcuff", "position": "RB", "tier": "Depth", "strategy": "monitor"},
+    {"label": "Prime target-earning receiver", "position": "WR", "tier": "Elite Franchise Player", "strategy": "build_around"},
+    {"label": "Young ascending receiver", "position": "WR", "tier": "Core Starter", "strategy": "hold"},
+    {"label": "Veteran depth receiver", "position": "WR", "tier": "Depth", "strategy": "sell_if_market_rises"},
+    {"label": "Elite scarcity tight end", "position": "TE", "tier": "Cornerstone", "strategy": "build_around"},
+    {"label": "Streaming tight end", "position": "TE", "tier": "Flex Asset", "strategy": "hold"},
+    {"label": "Athletic tight end stash", "position": "TE", "tier": "Developmental", "strategy": "monitor"}
+  ],
+  "team_scenarios": [
+    {"label": "Dominant current roster", "current": 90, "overall": 86, "future": 70, "window": "Elite Contender"},
+    {"label": "Sustainable contender", "current": 76, "overall": 72, "future": 68, "window": "Contender"},
+    {"label": "Fringe playoff roster", "current": 58, "overall": 54, "future": 50, "window": "Playoff Team"},
+    {"label": "Balanced retool", "current": 46, "overall": 48, "future": 55, "window": "Re-tooling"},
+    {"label": "Young ascending retool", "current": 44, "overall": 55, "future": 82, "window": "Re-tooling"},
+    {"label": "Pick-heavy rebuild", "current": 32, "overall": 40, "future": 78, "window": "Rebuilding"},
+    {"label": "Early rebuild", "current": 24, "overall": 30, "future": 55, "window": "Rebuilding"},
+    {"label": "Full rebuild", "current": 18, "overall": 20, "future": 25, "window": "Full Rebuild"},
+    {"label": "Aging playoff roster", "current": 64, "overall": 52, "future": 28, "window": "Playoff Team"},
+    {"label": "Future-rich non-contender", "current": 36, "overall": 56, "future": 90, "window": "Rebuilding"}
+  ],
+  "trade_packages": [
+    {"label": "Elite for two thirds", "offered": [220, 220], "requested": [850], "accepted": false},
+    {"label": "Elite for three depth assets", "offered": [240, 230, 210], "requested": [820], "accepted": false},
+    {"label": "Cornerstone for first and starter", "offered": [780, 500], "requested": [700], "accepted": true},
+    {"label": "Quality starter swap", "offered": [475], "requested": [460], "accepted": true},
+    {"label": "Two firsts for elite quarterback", "offered": [840, 780], "requested": [900], "accepted": true},
+    {"label": "Fourth for core starter", "offered": [95], "requested": [560], "accepted": false},
+    {"label": "Third for flex asset", "offered": [220], "requested": [320], "accepted": false},
+    {"label": "Second for quality starter", "offered": [480], "requested": [450], "accepted": true},
+    {"label": "Depth consolidation", "offered": [230, 210], "requested": [390], "accepted": true},
+    {"label": "Three low assets for cornerstone", "offered": [280, 270, 250], "requested": [700], "accepted": false}
   ]
 }

@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Intelligence Quality Audit - DTOS v1.5.10
+
+- Audit every franchise and major intelligence classification against calibrated values.
+- Ensure league-relative grades and windows do not change with the selected Front Office.
+- Verify trade packages, pick economics, recommendation consistency, and explainability.
+- Expand the permanent golden benchmark before beginning v1.6.0.
+
 ### Valuation Calibration - DTOS v1.5.9
 
 - Keep DTOS intrinsic evaluation independent while exposing a separate, explainable market-backed calibration.
