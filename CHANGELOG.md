@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.5 - Production Request Latency
+
+- Removed redundant Trade Intelligence package valuations from cold Commissioner Desk requests by valuing each eligible combination once.
+- Deferred trade guardrail evaluation until after the existing balance filter and reused the already-calculated package values.
+- Preserved proposal selection, ordering, guardrails, matchup request isolation, and serialized trade output.
+- Reduced the populated-league cold homepage model from approximately 4.49 seconds to 1.04 seconds locally.
+
 ## v1.5.2 - Initial Backfill Performance
 
 - Changed bounded historical record batches to use one SQLite transaction per batch instead of one transaction per record.

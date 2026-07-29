@@ -32,9 +32,11 @@ def evaluate_trade_guardrails(
     confidence: int = 75,
     calibration_status: CalibrationStatus = CalibrationStatus.CALIBRATED,
     config: ValuationConfig = DEFAULT_CONFIG,
+    offered_package: PackageValue | None = None,
+    requested_package: PackageValue | None = None,
 ) -> TradeGuardrailResult:
-    offer = adjusted_package_value(offered, config)
-    request = adjusted_package_value(requested, config)
+    offer = offered_package or adjusted_package_value(offered, config)
+    request = requested_package or adjusted_package_value(requested, config)
     premium = max((int(getattr(asset, "trade_value", 0) or getattr(asset, "dynasty_value", 0)) for asset in requested), default=0)
     centerpiece = max((int(getattr(asset, "trade_value", 0) or getattr(asset, "dynasty_value", 0)) for asset in offered), default=0)
     requested_qb = any(getattr(asset, "position", None) == "QB" for asset in requested)

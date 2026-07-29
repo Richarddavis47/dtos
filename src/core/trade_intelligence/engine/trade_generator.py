@@ -4,7 +4,11 @@ from __future__ import annotations
 from itertools import combinations
 
 from src.core.trade_intelligence.models import TradeAsset, TradeProposal
-from src.core.valuation import adjusted_package_value, evaluate_trade_guardrails
+from src.core.valuation import (
+    PackageValue,
+    adjusted_package_value,
+    evaluate_trade_guardrails,
+)
 
 
 PACKAGE_SHAPES = (
@@ -17,8 +21,8 @@ PACKAGE_SHAPES = (
 )
 
 
-def _value(assets: tuple[TradeAsset, ...]) -> float:
-    return adjusted_package_value(assets).adjusted_value
+def _value(assets: tuple[TradeAsset, ...]) -> PackageValue:
+    return adjusted_package_value(assets)
 
 
 def _matches(assets: tuple[TradeAsset, ...], kind: str | None) -> bool:
@@ -35,6 +39,20 @@ def _shortlist(pool: tuple[TradeAsset, ...]) -> tuple[TradeAsset, ...]:
     return tuple(players + picks)
 
 
+def _valued_combinations(
+    pool: tuple[TradeAsset, ...],
+    count: int,
+    kind: str | None,
+) -> tuple[tuple[tuple[TradeAsset, ...], PackageValue], ...]:
+    """Calculate each eligible package value once per proposal shape."""
+    return tuple(
+        (assets, value)
+        for assets in combinations(pool, count)
+        if _matches(assets, kind)
+        if (value := _value(assets)).adjusted_value
+    )
+
+
 def generate_proposals(
     active_roster_id: int,
     partner_roster_id: int,
@@ -46,20 +64,44 @@ def generate_proposals(
     proposals = []
     for label, sent_count, received_count, sent_kind, received_kind in PACKAGE_SHAPES:
         candidates = []
-        for sent in combinations(outgoing, sent_count):
-            if not _matches(sent, sent_kind):
-                continue
-            for received in combinations(incoming, received_count):
-                if not _matches(received, received_kind):
+        sent_packages = _valued_combinations(outgoing, sent_count, sent_kind)
+        received_packages = _valued_combinations(
+            incoming,
+            received_count,
+            received_kind,
+        )
+        for sent, sent_value in sent_packages:
+            for received, received_value in received_packages:
+                ratio = received_value.adjusted_value / sent_value.adjusted_value
+                if not 0.80 <= ratio <= 1.25:
                     continue
-                sent_value, received_value = _value(sent), _value(received)
-                if not sent_value or not received_value:
-                    continue
-                ratio = received_value / sent_value
-                superflex = any(asset.position == "QB" for asset in received)
-                guardrail = evaluate_trade_guardrails(sent, received, superflex=superflex, confidence=min(*(asset.confidence_score for asset in (*sent, *received)), 75))
-                if 0.80 <= ratio <= 1.25 and guardrail.recommendation_status == "accepted":
-                    candidates.append((abs(received_value - sent_value), -sum(item.team_fit_value for item in received), sent, received))
+                superflex = any(
+                    asset.position == "QB"
+                    for asset in received
+                )
+                guardrail = evaluate_trade_guardrails(
+                    sent,
+                    received,
+                    superflex=superflex,
+                    confidence=min(
+                        *(asset.confidence_score for asset in (*sent, *received)),
+                        75,
+                    ),
+                    offered_package=sent_value,
+                    requested_package=received_value,
+                )
+                if guardrail.recommendation_status == "accepted":
+                    candidates.append(
+                        (
+                            abs(
+                                received_value.adjusted_value
+                                - sent_value.adjusted_value
+                            ),
+                            -sum(item.team_fit_value for item in received),
+                            sent,
+                            received,
+                        )
+                    )
         if candidates:
             _, _, sent, received = min(candidates, key=lambda item: (item[0], item[1], tuple(asset.asset_id for asset in item[2]), tuple(asset.asset_id for asset in item[3])))
             proposals.append(TradeProposal(active_roster_id, partner_roster_id, sent, received, label))

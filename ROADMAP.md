@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Production Request Latency - DTOS v1.5.5
+
+- Eliminate redundant Trade Intelligence package valuation from cold Commissioner Desk requests.
+- Preserve deterministic proposal selection, guardrails, and serialized output.
+- Distinguish application CPU cost from transient hosting-platform contention.
+
 ### Initial Backfill Performance - DTOS v1.5.2
 
 - Bound SQLite transaction duration during first-time historical population.
