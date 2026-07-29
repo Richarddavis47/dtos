@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.8 - Matchup Performance
+
+- Prepared provider market distributions once per evaluation instead of rebuilding and scanning them for every player quote.
+- Replaced linear percentile counting with equivalent binary-search lookups over the prepared immutable distribution.
+- Preserved matchup projections, player values, market normalization formulas, ordering, request isolation, and historical behavior.
+- Added equivalence, work-reduction, concurrency, and request-isolation regression coverage.
+
 ## v1.5.7 - Historical Recovery
 
 - Classified interrupted HTTP response reads as retryable transport failures under the existing bounded four-attempt policy.

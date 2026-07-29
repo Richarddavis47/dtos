@@ -18,6 +18,7 @@ from src.core.valuation import (
     normalize_pick,
     normalize_value,
 )
+from src.core.valuation.normalization import prepare_distribution
 
 
 def asset(asset_id: str, value: int, *, kind: str = "player", position: str | None = "WR", confidence: int = 85) -> TradeAsset:
@@ -39,6 +40,37 @@ class NormalizationTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(first.raw_value, 7500)
         self.assertIn("percentile", first.method)
+
+    def test_prepared_distribution_preserves_output_and_avoids_repeated_scans(self) -> None:
+        class CountingDistribution:
+            def __init__(self, values: tuple[int, ...]) -> None:
+                self.values = values
+                self.iterations = 0
+
+            def __iter__(self):
+                self.iterations += 1
+                return iter(self.values)
+
+        source = CountingDistribution(tuple(range(0, 10_001, 25)))
+        expected = tuple(
+            normalize_value(
+                "DynastyProcess",
+                value,
+                distribution=source.values,
+            )
+            for value in range(500, 9_501, 500)
+        )
+        prepared = prepare_distribution("DynastyProcess", source)
+        actual = tuple(
+            normalize_value(
+                "DynastyProcess",
+                value,
+                prepared_distribution=prepared,
+            )
+            for value in range(500, 9_501, 500)
+        )
+        self.assertEqual(actual, expected)
+        self.assertEqual(source.iterations, 1)
 
     def test_internal_50_and_external_7500_are_compared_only_after_normalization(self) -> None:
         intrinsic = normalize_internal(50)

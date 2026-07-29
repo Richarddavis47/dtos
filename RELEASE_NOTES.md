@@ -152,3 +152,19 @@ complete. The preseason 2026 foundation is present while weekly rosters,
 matchups, transactions, trades, and player-week data remain explicitly pending.
 
 ---
+# DTOS v1.5.8 - Matchup Performance
+
+Matchup market normalization now prepares each provider's value distribution once
+per evaluation and reuses it for every player. Percentile ranks use binary-search
+counts over the same sorted population, preserving the existing 70% provider-range
+and 30% percentile formula exactly.
+
+Production-scale local profiling reduced calls in the matchup fast path from about
+2.89 million to 0.77 million. Median direct evaluation fell from approximately
+0.84 seconds to 0.44 seconds, and five repeated local HTTP requests completed in
+0.41-0.62 seconds. Trade Intelligence and package generation remain excluded from
+the matchup route, and no shared matchup cache or historical behavior changed.
+
+See `docs/MATCHUP_PERFORMANCE.md` for the measured pipeline and invariants.
+
+---

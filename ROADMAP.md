@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Matchup Performance - DTOS v1.5.8
+
+- Reuse prepared provider distributions throughout each Market evaluation.
+- Preserve market formulas and deterministic matchup output while reducing repeated normalization work.
+- Keep matchup computation request-scoped and independent from Trade Intelligence and historical jobs.
+- Validate concurrent requests, background isolation, health probes, and deterministic cleanup.
+
 ### Historical Recovery - DTOS v1.5.7
 
 - Recover interrupted Sleeper response reads with bounded, observable retries.
