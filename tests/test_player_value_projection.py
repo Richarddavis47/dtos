@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from services.matchup_intelligence import matchup_projection
+from services.matchup_intelligence import matchup_player_values, matchup_projection
 from services.trade_intelligence import build_trade_center
-from src.core.intelligence import IntelligenceCache, IntelligenceOrchestrator, IntelligenceRegistry
+from src.core.intelligence import IntelligenceCache, IntelligenceOrchestrator, IntelligenceRegistry, intelligence_orchestrator
+from src.core.valuation import packages
 from src.core.player_value_projection.models import DataStatus
 from src.core.player_value_projection.providers import CachedProductionProvider, InternalProjectionProvider, scoring_multiplier
 from tests.test_trade_intelligence import fixture_data
@@ -79,6 +81,158 @@ class PlayerValueProjectionTests(unittest.TestCase):
         self.assertEqual(len(summary["sides"]), 2)
         self.assertTrue(all(item["floor"] <= item["projected"] <= item["ceiling"] for item in summary["sides"]))
         self.assertNotIn("probability", summary)
+
+    def test_matchup_projection_skips_unrelated_trade_intelligence(self) -> None:
+        teams = self.data["teams"][:2]
+        sides = [
+            {
+                "roster_id": team["roster_id"],
+                "team": team["team_name"],
+                "lineup": [
+                    {"id": player["id"], "position": player["position"]}
+                    for player in team["players"][:2]
+                ],
+            }
+            for team in teams
+        ]
+        with patch.object(
+            self.orchestrator.registry,
+            "provider",
+            wraps=self.orchestrator.registry.provider,
+        ) as provider, patch.object(
+            packages,
+            "adjusted_package_value",
+            wraps=packages.adjusted_package_value,
+        ) as package_value:
+            values = self.orchestrator.matchup_player_values(
+                self.data,
+                tuple(side["roster_id"] for side in sides),
+            )
+            summary = matchup_projection(self.data, sides, values)
+        self.assertNotIn("trade", [call.args[0] for call in provider.call_args_list])
+        package_value.assert_not_called()
+        self.assertEqual(len(summary["sides"]), 2)
+
+    def test_matchup_page_builds_all_roster_values_once(self) -> None:
+        fixture_teams = self.data["teams"][:4]
+        matchup_groups = {
+            "1": [
+                {"roster_id": team["roster_id"]}
+                for team in fixture_teams[:2]
+            ],
+            "2": [
+                {"roster_id": team["roster_id"]}
+                for team in fixture_teams[2:4]
+            ],
+        }
+        expected_ids = {
+            int(side["roster_id"])
+            for sides in matchup_groups.values()
+            for side in sides
+        }
+        with patch.object(
+            intelligence_orchestrator,
+            "matchup_player_values",
+            wraps=intelligence_orchestrator.matchup_player_values,
+        ) as build:
+            values = matchup_player_values(self.data, matchup_groups)
+        self.assertEqual(build.call_count, 1)
+        self.assertEqual(set(values), expected_ids)
+
+    def test_matchup_request_deduplicates_rosters_and_rebuilds_next_request(self) -> None:
+        teams = self.data["teams"][:2]
+        roster_ids = tuple(int(team["roster_id"]) for team in teams)
+        duplicated = roster_ids + roster_ids
+        sides = [
+            {
+                "roster_id": team["roster_id"],
+                "team": team["team_name"],
+                "lineup": [
+                    {"id": player["id"], "position": player["position"]}
+                    for player in team["players"][:2]
+                ],
+            }
+            for team in teams
+        ]
+        with patch.object(
+            self.orchestrator.registry,
+            "provider",
+            wraps=self.orchestrator.registry.provider,
+        ) as provider:
+            first = self.orchestrator.matchup_player_values(
+                self.data,
+                duplicated,
+            )
+            first_calls = provider.call_count
+            first_provider_names = [
+                call.args[0]
+                for call in provider.call_args_list
+            ]
+            second = self.orchestrator.matchup_player_values(
+                self.data,
+                duplicated,
+            )
+            second_provider_names = [
+                call.args[0]
+                for call in provider.call_args_list[first_calls:]
+            ]
+        self.assertEqual(set(first), set(roster_ids))
+        self.assertEqual(set(second), set(roster_ids))
+        self.assertEqual(
+            matchup_projection(self.data, sides, first),
+            matchup_projection(self.data, sides, second),
+        )
+        for provider_names in (first_provider_names, second_provider_names):
+            self.assertEqual(provider_names.count("decision"), 1)
+            self.assertEqual(provider_names.count("asset"), len(roster_ids))
+            self.assertEqual(
+                provider_names.count("market"),
+                len(roster_ids),
+            )
+            self.assertEqual(
+                provider_names.count("player_value"),
+                len(roster_ids),
+            )
+            self.assertNotIn("trade", provider_names)
+        first_player = next(iter(first[roster_ids[0]].values()))
+        second_player = next(iter(second[roster_ids[0]].values()))
+        self.assertNotEqual(
+            first_player.dtos_dynasty.updated_at,
+            second_player.dtos_dynasty.updated_at,
+        )
+        self.assertEqual(
+            provider.call_count,
+            first_calls * 2,
+        )
+
+    def test_matchup_fast_path_matches_full_orchestrator_projection(self) -> None:
+        teams = self.data["teams"][:2]
+        sides = [
+            {
+                "roster_id": team["roster_id"],
+                "team": team["team_name"],
+                "lineup": [
+                    {"id": player["id"], "position": player["position"]}
+                    for player in team["players"][:2]
+                ],
+            }
+            for team in teams
+        ]
+        full_values = {
+            int(side["roster_id"]): self.orchestrator.analyze(
+                self.data,
+                int(side["roster_id"]),
+            ).player_values
+            for side in sides
+        }
+        fast_values = self.orchestrator.matchup_player_values(
+            self.data,
+            tuple(int(side["roster_id"]) for side in sides),
+        )
+        self.assertEqual(
+            matchup_projection(self.data, sides, fast_values),
+            matchup_projection(self.data, sides, full_values),
+        )
 
     def test_trade_view_exposes_separate_value_horizons(self) -> None:
         view = build_trade_center(self.data, 1)
