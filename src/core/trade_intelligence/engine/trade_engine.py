@@ -12,6 +12,7 @@ from src.core.trade_intelligence.gm import evaluate_partners
 from src.core.trade_intelligence.market import build_asset_pool
 from src.core.trade_intelligence.models import TradeDossier
 from src.core.front_office_intelligence import LeagueFrontOfficeModel
+from src.core.valuation import cached_market_consensus
 
 
 def _asset_context(decision: TeamDecision) -> AssetContext:
@@ -56,11 +57,18 @@ class TradeIntelligence:
         active = decisions[active_roster_id]
         reports = evaluate_partners(data, active, decisions, front_office_model)
         team_by_id = {int(team.get("roster_id") or 0): team for team in teams}
+        player_ids = {
+            str(player.get("id") or player.get("player_id"))
+            for team in teams
+            for player in (team.get("players") or ())
+            if player.get("id") or player.get("player_id")
+        }
+        market_values = cached_market_consensus(data.get("market_data") or {}, player_ids)
         dossiers = []
         for partner in reports:
             partner_decision = decisions[partner.roster_id]
-            outgoing = build_asset_pool(data, team_by_id[active_roster_id], _asset_context(partner_decision))
-            incoming = build_asset_pool(data, team_by_id[partner.roster_id], _asset_context(active))
+            outgoing = build_asset_pool(data, team_by_id[active_roster_id], _asset_context(partner_decision), market_values)
+            incoming = build_asset_pool(data, team_by_id[partner.roster_id], _asset_context(active), market_values)
             proposals = generate_proposals(active_roster_id, partner.roster_id, outgoing, incoming)
             alternative_labels = tuple(asset.label for asset in sorted(incoming, key=lambda item: (-item.team_fit_value, item.label))[:3])
             dossiers.extend(evaluate_proposal(proposal, active, partner, alternative_labels) for proposal in proposals)

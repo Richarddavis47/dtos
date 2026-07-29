@@ -7,6 +7,7 @@ from typing import Any
 from src.core.asset_intelligence import AssetContext, evaluate_player
 from src.core.roster_intelligence.models import GradeDimension, PlayerCard, PositionRoomReport, RosterReport
 from src.core.team_intelligence import build_team_intelligence
+from src.core.valuation import valuation_grade as card_grade
 
 POSITIONS = ("QB", "RB", "WR", "TE")
 POSITION_WEIGHTS = {
@@ -45,12 +46,13 @@ def _market(report: Any, market: Any) -> tuple[int | None, str, int]:
 
 def _player_card(report: Any, market: Any, window: str, scarcity: int, unified: Any = None) -> PlayerCard:
     if unified is not None:
-        dynasty = _clamp((unified.dtos_dynasty.value or 0) / 10)
+        card = unified.intelligence_card
+        dynasty = _clamp(card.trade_value / 10)
         contender = _clamp((unified.contender.value or 0) / 10)
         rebuilder = _clamp((unified.rebuilder.value or 0) / 10)
         market_value = round(unified.market_consensus.value / 10) if unified.market_consensus.value is not None else None
         return PlayerCard(
-            unified.player_id, unified.positional.tier, _grade(dynasty),
+            unified.player_id, unified.positional.tier, card_grade(card.trade_value, market_available=card.market_value is not None),
             dynasty, "Unknown" if unified.age is None else "Ascending" if unified.age <= 24 else "Prime" if unified.age <= 27 else "Veteran",
             unified.market_trend, market_value,
             dynasty, contender, rebuilder,

@@ -168,3 +168,18 @@ the matchup route, and no shared matchup cache or historical behavior changed.
 See `docs/MATCHUP_PERFORMANCE.md` for the measured pipeline and invariants.
 
 ---
+# DTOS v1.5.9 - Valuation Calibration
+
+DTOS now distinguishes its independent intrinsic player value from a separate
+calibrated value that incorporates normalized public market evidence. Roster
+grades, positional tiers, contender and rebuild profiles, and Trade Intelligence
+consume that shared result, with confidence and blend weights remaining
+explainable.
+
+Draft-pick values now preserve a steeper round curve. A permanent 50-asset golden
+test set covers elite players through developmental assets and representative
+first- through fourth-round picks to detect future drift.
+
+See `docs/VALUATION_CALIBRATION_V159.md` for methodology and limitations.
+
+---
