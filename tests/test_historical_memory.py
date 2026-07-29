@@ -5,6 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import httpx
+
 from services.history import capture_current_state
 from src.core.historical_memory.aggregation import aggregate_production
 from src.core.historical_memory.importer import HistoricalImporter
@@ -64,8 +66,50 @@ class HistoricalMemoryTests(unittest.IsolatedAsyncioTestCase):
         second = await self.importer.backfill("L2")
         self.assertGreater(first["records_written"], 0)
         self.assertEqual(second["records_written"], 0)
-        self.assertEqual(second["records_unchanged"], first["records_written"])
+        self.assertEqual(second["records_unchanged"], 0)
+        self.assertEqual(second["skipped_completed_seasons"], [2021, 2022])
         self.assertEqual(second["reconciliation"]["chosen_source"], "Sleeper")
+
+    async def test_read_error_recovery_preserves_completed_season(self) -> None:
+        rows = provider()
+        calls: list[str] = []
+        failures = 0
+
+        async def interrupted(path: str) -> object:
+            nonlocal failures
+            calls.append(path)
+            if path == "/league/L2/matchups/1" and failures < 2:
+                failures += 1
+                raise httpx.ReadError(
+                    "truncated response",
+                    request=httpx.Request(
+                        "GET",
+                        "https://api.sleeper.app/v1" + path,
+                    ),
+                )
+            return rows.get(path, [])
+
+        result = await HistoricalImporter(
+            self.store,
+            interrupted,
+        ).backfill("L2")
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(
+            calls.count("/league/L2/matchups/1"),
+            3,
+        )
+        first_count, _ = self.store.records("L2")
+
+        calls.clear()
+        second = await HistoricalImporter(
+            self.store,
+            interrupted,
+        ).backfill("L2")
+        second_count, _ = self.store.records("L2")
+        self.assertEqual(second["skipped_completed_seasons"], [2021, 2022])
+        self.assertNotIn("/league/L1/users", calls)
+        self.assertNotIn("/league/L2/users", calls)
+        self.assertEqual(second_count, first_count)
 
     async def test_weekly_roster_is_versioned_by_season_and_week(self) -> None:
         await self.importer.backfill("L2")

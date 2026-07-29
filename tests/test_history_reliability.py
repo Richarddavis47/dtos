@@ -55,6 +55,39 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
             await with_retry(permanent, base_delay=0)
         self.assertEqual(permanent.await_count, 1)
 
+    async def test_truncated_http_read_is_bounded_and_retryable(self) -> None:
+        request = httpx.Request(
+            "GET",
+            "https://api.sleeper.app/v1/league/2025/matchups/12",
+        )
+        read_error = httpx.ReadError(
+            "peer closed connection before complete body",
+            request=request,
+        )
+        transient = AsyncMock(
+            side_effect=[read_error, read_error, {"ok": True}]
+        )
+        result, retries = await with_retry(
+            transient,
+            base_delay=0,
+            jitter=lambda: 0,
+            operation_name="Sleeper 2025 matchup week 12",
+        )
+        self.assertEqual(result, {"ok": True})
+        self.assertEqual(retries, 2)
+        self.assertEqual(transient.await_count, 3)
+        self.assertEqual(classify_failure(read_error), "retryable")
+
+        persistent = AsyncMock(side_effect=read_error)
+        with self.assertRaises(httpx.ReadError):
+            await with_retry(
+                persistent,
+                base_delay=0,
+                jitter=lambda: 0,
+                operation_name="Sleeper 2025 matchup week 12",
+            )
+        self.assertEqual(persistent.await_count, 4)
+
     async def test_rate_limit_is_classified_and_retry_after_honored(self) -> None:
         request = httpx.Request("GET", "https://provider.example")
         response = httpx.Response(

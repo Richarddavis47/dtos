@@ -133,3 +133,22 @@ during a concurrent matchup request and produced cached matchup medians of
 approximately 0.58 seconds with graceful process cleanup.
 
 ---
+# DTOS v1.5.7 — Historical Recovery
+
+The production v1.5.6 foundation import encountered an `httpx.ReadError` while
+reading a Sleeper response during 2025 weekly history retrieval. That transport
+exception was outside the existing retry classification and stopped the import
+after 23,595 records.
+
+DTOS now treats all HTTPX transport failures as bounded retry candidates, logs
+the exact Sleeper path and attempt, and preserves the original exception after
+four unsuccessful attempts. Recovery skips complete 2021–2024 checkpoints and
+replays incomplete 2025 records through the existing immutable record keys.
+
+A fresh real-provider proof produced the canonical 30,051 records in 23.00
+seconds. Consecutive reruns added zero rows, with zero duplicate record keys,
+duplicate provider identities, or orphaned checkpoints. Seasons 2021–2025 are
+complete. The preseason 2026 foundation is present while weekly rosters,
+matchups, transactions, trades, and player-week data remain explicitly pending.
+
+---

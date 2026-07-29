@@ -35,7 +35,10 @@ class HistoricalImporter:
         self.fetch = fetch
 
     async def _fetch(self, path: str) -> Any:
-        result, _ = await with_retry(lambda: self.fetch(path))
+        result, _ = await with_retry(
+            lambda: self.fetch(path),
+            operation_name=f"Sleeper {path}",
+        )
         return result
 
     async def discover_seasons(self, league_id: str, earliest: int = 2021) -> list[tuple[str, dict[str, Any]]]:
@@ -97,6 +100,7 @@ class HistoricalImporter:
         written = unchanged = 0
         errors: list[str] = []
         imported: list[int] = []
+        skipped: list[int] = []
         checkpoint: str | None = "discover"
         try:
             discovered, nfl_state = await asyncio.gather(
@@ -105,8 +109,25 @@ class HistoricalImporter:
             )
             if seasons:
                 discovered = [item for item in discovered if int(item[1]["season"]) in seasons]
+            completed_checkpoints = {
+                (int(row["season"]), str(row["data_type"]))
+                for row in self.store.checkpoints(league_id)
+                if row["provider"] == "Sleeper"
+                and row["importer_version"] == IMPORTER_VERSION
+                and row["status"] in {"completed", "unsupported"}
+            }
             for source_league_id, league in discovered:
                 season = int(league["season"])
+                if all(
+                    (season, category) in completed_checkpoints
+                    for category in REQUIRED_CATEGORIES
+                ):
+                    skipped.append(season)
+                    logger.info(
+                        "Historical recovery skipped completed season %d",
+                        season,
+                    )
+                    continue
                 max_week = _completed_week_limit(season, nfl_state)
                 checkpoint = f"{season}:league"
                 added, same = await self._import_season(
@@ -130,7 +151,19 @@ class HistoricalImporter:
                         job_id=run_id, league_id=league_id, season=season,
                         week=None, data_type=data_type, provider="Sleeper",
                         importer_version=IMPORTER_VERSION,
-                        status="completed" if count else "unsupported",
+                        status=(
+                            "completed"
+                            if count
+                            else "pending"
+                            if max_week == 0 and data_type in {
+                                "weekly_roster",
+                                "matchup",
+                                "transaction",
+                                "trade",
+                                "player_week",
+                            }
+                            else "unsupported"
+                        ),
                         completed_at=_now(), records_written=count,
                     )
                     await asyncio.sleep(0)
@@ -187,6 +220,7 @@ class HistoricalImporter:
         self.store.release_lock(lock_key, run_id)
         return {
             "run_id": run_id, "league_id": league_id, "seasons": imported,
+            "skipped_completed_seasons": skipped,
             "status": status, "records_written": written,
             "records_unchanged": unchanged, "errors": errors,
             "started_at": started, "completed_at": completed,

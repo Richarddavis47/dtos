@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Historical Recovery - DTOS v1.5.7
+
+- Recover interrupted Sleeper response reads with bounded, observable retries.
+- Preserve completed historical checkpoints while resuming incomplete seasons.
+- Keep current-season unavailable categories explicitly pending.
+- Reconcile the canonical foundation to 30,051 immutable records.
+
 ### Deployment Readiness - DTOS v1.5.6
 
 - Separate process liveness from usable-data readiness.

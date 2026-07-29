@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import random
 import socket
 from dataclasses import dataclass
@@ -30,6 +31,7 @@ UNSUPPORTED_CATEGORIES = (
     "player_usage", "player_availability",
 )
 RetryCall = Callable[[], Awaitable[Any]]
+logger = logging.getLogger("dtos.history")
 
 
 def utcnow() -> datetime:
@@ -46,7 +48,7 @@ def classify_failure(exc: Exception) -> str:
         if status in {401, 403}:
             return "authentication"
         return "permanent"
-    if isinstance(exc, (httpx.TimeoutException, httpx.ConnectError, OSError)):
+    if isinstance(exc, (httpx.TransportError, OSError)):
         return "retryable"
     if isinstance(exc, (ValueError, TypeError)):
         return "malformed_response"
@@ -57,6 +59,7 @@ async def with_retry(
     operation: RetryCall, *, attempts: int = 4, base_delay: float = .25,
     jitter: Callable[[], float] = random.random,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    operation_name: str = "provider request",
 ) -> tuple[Any, int]:
     """Run a provider call with bounded retry and return result/retry count."""
     retries = 0
@@ -76,6 +79,16 @@ async def with_retry(
                 else min(30.0, base_delay * (2 ** retries) + jitter() * base_delay)
             )
             retries += 1
+            logger.warning(
+                "Historical provider retry: operation=%s attempt=%d/%d "
+                "exception=%s category=%s delay_seconds=%.3f",
+                operation_name,
+                retries + 1,
+                attempts,
+                type(exc).__name__,
+                category,
+                delay,
+            )
             await sleep(delay)
 
 
@@ -177,6 +190,10 @@ def completeness_report(
             if row["season"] == season
             and row["status"] in {"pending", "not_yet_available"}
         })
+        provider_unsupported = sorted({
+            row["data_type"] for row in checkpoints
+            if row["season"] == season and row["status"] == "unsupported"
+        })
         blocking = [
             item for item in quality
             if item["season"] in {None, season}
@@ -184,7 +201,7 @@ def completeness_report(
         ]
         required_missing = [
             category for category in missing
-            if category not in pending
+            if category not in pending and category not in provider_unsupported
         ]
         complete = not required_missing and not failed and not blocking
         all_complete &= complete
@@ -195,7 +212,10 @@ def completeness_report(
                 else "complete" if complete else "incomplete"
             ),
             "completed_categories": completed, "missing_categories": missing,
-            "unsupported_categories": list(UNSUPPORTED_CATEGORIES),
+            "unsupported_categories": sorted({
+                *UNSUPPORTED_CATEGORIES,
+                *provider_unsupported,
+            }),
             "pending_categories": pending, "failed_categories": failed,
             "record_totals": totals,
             "first_observation": first, "last_observation": last,
