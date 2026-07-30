@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.6.1 - FOIS Results and Competitive Cycle Engine
+
+- Promoted all 15 Results registry metrics to deterministic production scoring
+  over canonical Historical Memory standings, playoff placements, and matchups.
+- Added reusable season-timeline, competitive-cycle, rebuild, contention-window,
+  reload-efficiency, peak, longevity, and historical-window analysis.
+- Added league-size-normalized finishes, actual-matchup win rates, explicit
+  strengths and weaknesses, and ownership/missing-history confidence handling.
+- Persisted Results timelines and cycles inside existing idempotent FOIS score
+  snapshots and exposed them through a dedicated feature-flagged Results API.
+- Added ten representative Results scenarios plus cycle, window, history adapter,
+  determinism, confidence, persistence, and API regression coverage.
+
 ## v1.6.0 - Front Office Intelligence System Foundation
 
 - Added a parallel, feature-flagged FOIS domain with versioned score, category,

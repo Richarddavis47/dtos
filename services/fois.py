@@ -6,7 +6,9 @@ from pathlib import Path
 from tempfile import gettempdir
 
 from src.core.fois.repository import FOISRepository
+from src.core.fois.history import load_results_history
 from src.core.fois.service import FOISService
+from src.core.historical_memory import historical_store
 
 
 def _database_path() -> Path:
@@ -18,4 +20,10 @@ def _database_path() -> Path:
     )
 
 
-fois_service = FOISService(repository_factory=lambda: FOISRepository(_database_path()))
+fois_service = FOISService(
+    repository_factory=lambda: FOISRepository(_database_path()),
+    history_loader=lambda league_id: load_results_history(
+        historical_store,
+        league_id,
+    ),
+)

@@ -30,11 +30,13 @@ class FOISService:
         repository: FOISRepository | None = None,
         *,
         repository_factory: Callable[[], FOISRepository] | None = None,
+        history_loader: Callable[[str], dict[str, dict[str, Any]]] | None = None,
     ) -> None:
         if repository is None and repository_factory is None:
             raise ValueError("FOIS requires a repository or repository factory.")
         self._repository = repository
         self._repository_factory = repository_factory
+        self._history_loader = history_loader
         self.engine = FOISEngine()
         self._status: dict[str, Any] = {
             "state": "disabled" if not fois_enabled() else "waiting",
@@ -88,7 +90,14 @@ class FOISService:
     def _generate_sync(self, data: dict[str, Any]) -> tuple[Any, ...]:
         league = data.get("league") or {}
         league_id = str(league.get("league_id") or "configured-league")
-        history = data.get("fois_history") or {}
+        supplied_history = data.get("fois_history")
+        history = (
+            supplied_history
+            if supplied_history is not None
+            else self._history_loader(league_id)
+            if self._history_loader is not None
+            else {}
+        )
         scores = []
         for team in data.get("teams") or ():
             identity = identity_from_team(league_id, team)
@@ -98,13 +107,20 @@ class FOISService:
             trades = tuple(TradeFact(**row) for row in rows.get("trades") or ())
             drafts = tuple(DraftFact(**row) for row in rows.get("drafts") or ())
             roster_metrics = rows.get("roster_metrics")
+            history_source = (
+                "explicit FOIS facts"
+                if supplied_history is not None
+                else "canonical Historical Memory"
+            )
             facts = FOISFacts(
                 league_id, identity.franchise_id, identity.owner_id,
                 seasons, trades, drafts, roster_metrics,
                 data.get("league_settings") or league.get("settings") or {},
                 warnings=(
-                    "Current release uses only explicitly supplied FOIS historical facts.",
+                    f"Results source: {history_source}; unsupported categories remain unavailable.",
                 ),
+                ownership_changes=int(rows.get("ownership_changes") or 0),
+                expected_seasons=rows.get("expected_seasons"),
             )
             score = self.engine.evaluate(facts)
             fingerprint = hashlib.sha256(

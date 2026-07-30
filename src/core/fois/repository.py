@@ -137,6 +137,8 @@ def _category(payload: dict) -> FrontOfficeCategoryScore:
             "metric_scores": tuple(_metric(row) for row in payload["metric_scores"]),
             "evidence_references": tuple(payload["evidence_references"]),
             "warnings": tuple(payload["warnings"]),
+            "strengths": tuple(payload.get("strengths") or ()),
+            "weaknesses": tuple(payload.get("weaknesses") or ()),
         }
     )
 

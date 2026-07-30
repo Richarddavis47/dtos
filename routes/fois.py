@@ -76,6 +76,21 @@ def create_fois_router(
             ]
         }
 
+    @router.get("/leagues/{league_id}/franchises/{franchise_id}/results")
+    async def results(league_id: str, franchise_id: str) -> Any:
+        score = await franchise(league_id, franchise_id)
+        category = next(
+            (
+                row
+                for row in score["category_scores"]
+                if row["category_key"] == "results"
+            ),
+            None,
+        )
+        if category is None:
+            raise HTTPException(404, "No Results score exists for this franchise.")
+        return category
+
     @router.get("/leagues/{league_id}/completeness")
     async def completeness(league_id: str) -> dict[str, Any]:
         require_enabled()

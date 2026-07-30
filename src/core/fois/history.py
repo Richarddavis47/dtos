@@ -1,0 +1,87 @@
+"""Adapter from canonical Historical Memory records to FOIS Results facts."""
+from __future__ import annotations
+
+from collections import defaultdict
+from typing import Any
+
+from src.core.historical_memory.store import HistoricalStore
+
+
+def load_results_history(
+    store: HistoricalStore,
+    league_id: str,
+) -> dict[str, dict[str, Any]]:
+    """Build provider-free FOIS histories from immutable cached evidence."""
+    _, standings = store.records(league_id, "season_standing", limit=10_000)
+    _, playoffs = store.records(league_id, "playoff_result", limit=1_000)
+    _, matchups = store.records(league_id, "matchup", limit=100_000)
+    _, identities = store.records(league_id, "franchise_identity", limit=10_000)
+    _, league_seasons = store.records(league_id, "league_season", limit=1_000)
+    playoff_by_season = {
+        int(row["season"]): row["payload"]
+        for row in playoffs
+        if row.get("season") is not None
+    }
+    league_size = {
+        int(row["season"]): int(row["payload"].get("total_rosters") or 0) or None
+        for row in league_seasons
+        if row.get("season") is not None
+    }
+    owners: dict[str, set[str]] = defaultdict(set)
+    for row in identities:
+        roster_id = str(row["payload"].get("sleeper_roster_id") or "")
+        owner_id = str(row["payload"].get("owner_id") or "")
+        if roster_id and owner_id:
+            owners[roster_id].add(owner_id)
+    records: dict[tuple[str, int], list[int]] = defaultdict(lambda: [0, 0])
+    for row in matchups:
+        payload = row["payload"]
+        if payload.get("postseason_context") or row.get("season") is None:
+            continue
+        season = int(row["season"])
+        winner = payload.get("winner")
+        loser = payload.get("loser")
+        if winner is not None:
+            records[(str(winner), season)][0] += 1
+        if loser is not None:
+            records[(str(loser), season)][1] += 1
+    histories: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {"seasons": [], "trades": [], "drafts": []}
+    )
+    expected = len(league_size)
+    for row in standings:
+        payload = row["payload"]
+        season = int(row["season"])
+        roster_id = str(payload.get("roster_id") or "")
+        playoff = playoff_by_season.get(season, {})
+        placements = {
+            int(place): int(roster)
+            for place, roster in (playoff.get("placements") or {}).items()
+        }
+        finish_by_roster = {roster: place for place, roster in placements.items()}
+        roster_number = int(roster_id)
+        playoff_finish = finish_by_roster.get(roster_number)
+        matchup_wins, matchup_losses = records[(roster_id, season)]
+        histories[roster_id]["seasons"].append({
+            "season": season,
+            "wins": payload.get("wins"),
+            "losses": payload.get("losses"),
+            "finish": payload.get("rank"),
+            "playoff_finish": (
+                str(playoff_finish) if playoff_finish is not None else None
+            ),
+            "championship": playoff.get("champion_roster_id") == roster_number,
+            "rebuilding": False,
+            "league_size": league_size.get(season),
+            "playoff": playoff_finish is not None,
+            "final_four": roster_number in (playoff.get("final_four_roster_ids") or []),
+            "championship_game": playoff_finish in {1, 2},
+            "matchup_wins": matchup_wins if matchup_wins + matchup_losses else None,
+            "matchup_losses": matchup_losses if matchup_wins + matchup_losses else None,
+            "complete": row.get("availability") not in {"incomplete", "unavailable"},
+        })
+    for roster_id, history in histories.items():
+        history["seasons"].sort(key=lambda row: row["season"])
+        history["ownership_changes"] = max(0, len(owners[roster_id]) - 1)
+        history["expected_seasons"] = expected
+    return dict(histories)

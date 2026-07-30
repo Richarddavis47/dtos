@@ -15,6 +15,13 @@ class SeasonResult:
     playoff_finish: str | None = None
     championship: bool = False
     rebuilding: bool = False
+    league_size: int | None = None
+    playoff: bool = False
+    final_four: bool = False
+    championship_game: bool = False
+    matchup_wins: int | None = None
+    matchup_losses: int | None = None
+    complete: bool = True
 
 
 @dataclass(frozen=True)
@@ -46,6 +53,8 @@ class FOISFacts:
     league_settings: dict[str, object] | None = None
     evidence: tuple[FrontOfficeEvidence, ...] = ()
     warnings: tuple[str, ...] = ()
+    ownership_changes: int = 0
+    expected_seasons: int | None = None
 
     @property
     def completed_seasons(self) -> tuple[SeasonResult, ...]:

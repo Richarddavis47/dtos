@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-FOIS_MODEL_VERSION = "1.0"
-FOIS_METRIC_DEFINITION_VERSION = "1.0"
+FOIS_MODEL_VERSION = "1.1"
+FOIS_METRIC_DEFINITION_VERSION = "1.1"
 
 
 class MetricStatus(str, Enum):
@@ -75,6 +75,9 @@ class FrontOfficeCategoryScore:
     completeness: float
     evidence_references: tuple[str, ...]
     warnings: tuple[str, ...]
+    strengths: tuple[str, ...] = ()
+    weaknesses: tuple[str, ...] = ()
+    details: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -129,3 +132,56 @@ class CrossCategoryTrait:
     explanation: str
     evidence_references: tuple[str, ...]
     status: MetricStatus
+
+
+@dataclass(frozen=True)
+class SeasonTimeline:
+    season: int
+    state: str
+    wins: int | None
+    losses: int | None
+    finish: int | None
+    league_size: int | None
+    playoff: bool
+    final_four: bool
+    championship_game: bool
+    championship: bool
+    explanation: str
+    confidence: float
+
+
+@dataclass(frozen=True)
+class CompetitiveCycle:
+    cycle_id: str
+    cycle_type: str
+    start_season: int
+    end_season: int
+    duration: int
+    peak_finish: int | None
+    peak_years: tuple[int, ...]
+    championships: int
+    playoff_appearances: int
+    rebuild_length: int
+    reload_time: int | None
+    explanation: str
+
+
+@dataclass(frozen=True)
+class HistoricalWindow:
+    key: str
+    start_season: int
+    end_season: int
+    seasons: tuple[int, ...]
+    sufficient: bool
+    confidence: float
+
+
+@dataclass(frozen=True)
+class ResultsAnalysis:
+    timeline: tuple[SeasonTimeline, ...]
+    competitive_cycles: tuple[CompetitiveCycle, ...]
+    historical_windows: tuple[HistoricalWindow, ...]
+    rebuild_summary: dict[str, float | int | None]
+    strengths: tuple[str, ...]
+    weaknesses: tuple[str, ...]
+    explanation: str
