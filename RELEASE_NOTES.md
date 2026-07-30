@@ -216,3 +216,24 @@ See `docs/COMPETITIVE_WINDOW_CONTRACT.md` for the dependency flow, consumer
 boundaries, serialization behavior, and extension contract.
 
 ---
+# DTOS v1.6.0 — Front Office Intelligence System Foundation
+
+DTOS now has a parallel foundation for evaluating long-horizon franchise
+management without replacing existing roster, valuation, historical,
+competitive-window, or intelligence systems.
+
+FOIS defines versioned contracts for scores, categories, metrics, evidence,
+confidence, completeness, owner and franchise identity, model configuration, and
+future cross-category traits. The initial weights are Results 35%, Trading and
+Asset Management 25%, Roster Construction 20%, and Drafting and Talent
+Evaluation 20%.
+
+The subsystem is disabled by default with `DTOS_FOIS_ENABLED`. When enabled,
+explicit cached facts are evaluated off the event loop and saved idempotently.
+Unsupported evidence is disclosed as unavailable or insufficient and never
+converted to zero. Advanced metrics remain provisional pending deeper historical
+valuation, lineup, transaction, draft, and probability evidence.
+
+See `docs/FOIS_FOUNDATION.md`.
+
+---

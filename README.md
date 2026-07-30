@@ -4,6 +4,9 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
+DTOS v1.6.0 establishes the parallel, feature-flagged Front Office Intelligence
+System foundation. See the [FOIS Foundation](docs/FOIS_FOUNDATION.md).
+
 DTOS v1.5.11 gives every intelligence subsystem one authoritative,
 league-relative competitive-window contract. See the
 [Competitive Window Contract](docs/COMPETITIVE_WINDOW_CONTRACT.md).
@@ -36,7 +39,10 @@ Run the complete supported validation workflow with:
 .\.venv\Scripts\python.exe -m tools.validation.validate_release
 ```
 
-Runtime configuration uses environment variables such as `SLEEPER_LEAGUE_ID`, `DTOS_CACHE_FILE`, `DTOS_HISTORY_DB_FILE`, `SYNC_MINUTES`, and `SLEEPER_TIMEOUT`. Existing environment overrides are preserved.
+Runtime configuration uses environment variables such as `SLEEPER_LEAGUE_ID`,
+`DTOS_CACHE_FILE`, `DTOS_HISTORY_DB_FILE`, `DTOS_FOIS_ENABLED`,
+`DTOS_FOIS_DB_FILE`, `SYNC_MINUTES`, and `SLEEPER_TIMEOUT`. Existing environment
+overrides are preserved.
 
 ## Architecture
 

@@ -17,6 +17,7 @@ from routes.api import create_api_router
 from routes.crawl import create_crawl_router
 from routes.draft import create_draft_router
 from routes.front_offices import create_front_offices_router
+from routes.fois import create_fois_router
 from routes.hq import create_hq_router
 from routes.history import create_history_router
 from routes.matchups import create_matchups_router
@@ -34,6 +35,7 @@ from services.sleeper import (
     sync_transactions,
 )
 from services.history import direct_fetch, start_background_backfill
+from services.fois import fois_service
 from src.platform.observability import (
     install_observability,
     mark_startup_complete,
@@ -208,6 +210,13 @@ app.include_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
         page=page,
+    )
+)
+
+app.include_router(
+    create_fois_router(
+        service=fois_service,
+        require_data=require_data,
     )
 )
 
