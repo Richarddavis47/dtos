@@ -1,5 +1,14 @@
 # DTOS Development Roadmap
 
+### Front Office Intelligence System Foundation - DTOS v1.6.0
+
+- Establish versioned, explainable FOIS score, category, metric, evidence,
+  identity, configuration, and persistence contracts.
+- Keep FOIS parallel and disabled by default while existing intelligence remains
+  authoritative.
+- Prepare phased results, trade, draft, roster, and presentation engines without
+  fabricating unavailable historical evidence.
+
 ### Competitive Window Contract - DTOS v1.5.11
 
 - One versioned, explainable competitive-window object is shared by Decision,

@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.6.0 - Front Office Intelligence System Foundation
+
+- Added a parallel, feature-flagged FOIS domain with versioned score, category,
+  metric, evidence, configuration, identity, and cross-category trait contracts.
+- Added configurable 35/25/20/20 category weighting, deterministic aggregation,
+  letter grades, and explicit confidence, completeness, and availability states.
+- Added idempotent SQLite score persistence and nonblocking orchestration over
+  explicitly supplied historical facts.
+- Added feature-flagged model, score, category, metric, and completeness APIs
+  without changing existing intelligence or UI behavior.
+- Added ten representative management scenarios and focused regressions.
+
 ## v1.5.11 - Competitive Window Contract
 
 - Added one immutable, versioned competitive-window contract with classification, confidence, horizon scores, evidence, strengths, weaknesses, and generation metadata.
