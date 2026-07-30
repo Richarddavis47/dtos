@@ -4,8 +4,12 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.6.0 establishes the parallel, feature-flagged Front Office Intelligence
-System foundation. See the [FOIS Foundation](docs/FOIS_FOUNDATION.md).
+DTOS v1.6.1 makes Results the first production FOIS category using canonical
+historical standings, matchups, playoff results, and owner history. See the
+[FOIS Foundation](docs/FOIS_FOUNDATION.md).
+
+DTOS v1.6.0 established the parallel, feature-flagged Front Office Intelligence
+System foundation.
 
 DTOS v1.5.11 gives every intelligence subsystem one authoritative,
 league-relative competitive-window contract. See the

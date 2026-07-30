@@ -237,3 +237,23 @@ valuation, lineup, transaction, draft, and probability evidence.
 See `docs/FOIS_FOUNDATION.md`.
 
 ---
+# DTOS v1.6.1 — FOIS Results and Competitive Cycle Engine
+
+Results is now the first production-scored FOIS category. DTOS evaluates observed
+championships, championship games, Final Fours, playoff appearances, winning
+seasons, actual-matchup win rate, league-size-normalized finishes, sustained
+excellence, rebuild duration, reload efficiency, contention windows, competitive
+longevity, and peak performance.
+
+A reusable `CompetitiveCycleAnalyzer` produces explainable season timelines,
+contention and rebuild cycles, peak seasons, reload timing, and full-history,
+trailing-ten, trailing-five, trailing-three, and current-cycle windows. Missing
+history and ownership changes reduce confidence and completeness without reducing
+the outcome score.
+
+The engine reads only immutable cached Historical Memory records. It performs no
+provider I/O, runs through the existing worker-thread boundary, and persists its
+timeline and cycle detail inside idempotent FOIS snapshots. Trading, Roster
+Construction, and Drafting remain unchanged and out of scope.
+
+---

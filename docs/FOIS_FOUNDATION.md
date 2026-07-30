@@ -94,3 +94,45 @@ Planned phases cover results and competitive cycles; historical trade outcomes,
 liquidity, timing, and relationship capital; draft-slot expectation and talent
 evaluation; multi-year roster construction; and a final FOIS UI with evidence
 timelines, comparisons, trends, and franchise-versus-owner views.
+
+## Results engine (v1.6.1)
+
+Results is the first production category. Its 35% top-level weight is unchanged.
+The category consumes canonical `season_standing`, `playoff_result`, `matchup`,
+`league_season`, and `franchise_identity` records from Historical Memory.
+Provider access is prohibited.
+
+Production metrics cover championships, championship-game and Final Four
+appearances, playoffs and streaks, winning seasons and streaks, observed
+regular-season matchup win rate, league-size-normalized average/best/worst
+finishes, title conversion, playoff advancement, contention-window length,
+reload efficiency, rebuild duration, and long-term competitive consistency.
+Championships carry the highest individual achievement weight but only 10% of
+the Results category, preventing a single outcome from overwhelming sustained
+performance.
+
+`CompetitiveCycleAnalyzer` classifies each completed season as rebuild,
+ascending, contender, elite contender, decline, reload, or transition. Adjacent
+seasons form rebuild, contention, or transition cycles with stable IDs, duration,
+peak finish and years, championships, playoff appearances, rebuild length, and
+reload time. Explanations identify why each state and cycle was assigned.
+
+The engine exposes full history (capped at ten completed seasons), trailing ten,
+trailing five, trailing three, and current-cycle windows when sufficient seasons
+exist. One- and two-year rebuilds remain inside the productive-cycle threshold;
+longer rebuilds receive progressively lower rebuild-duration scores. Isolated
+poor finishes have limited effect, while repeated bottom-quartile finishes are
+visible.
+
+Ownership transitions and incomplete seasons reduce confidence. Missing seasons
+reduce completeness. Neither becomes a zero-valued outcome. Timeline, cycles,
+rebuild summary, strengths, weaknesses, and narrative explanation are persisted
+with the Results category and returned by:
+
+`GET /api/fois/leagues/{league_id}/franchises/{franchise_id}/results`
+
+Known limitations: historical roster-age, draft-capital, veteran-concentration,
+and championship-probability signals are not yet used for cycle classification.
+Observed standings, matchups, and postseason placements are authoritative in this
+release. Those additional signals can refine states in later versions without
+changing the cycle contract.

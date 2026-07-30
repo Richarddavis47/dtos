@@ -16,6 +16,7 @@ from src.core.fois.models import (
     MetricStatus,
 )
 from src.core.fois.registry import registry_by_category
+from src.core.fois.results import ResultsScorer
 from src.core.fois.scoring import aggregate_categories, aggregate_metrics, clamp, letter_grade
 
 CATEGORY_NAMES = {
@@ -64,6 +65,7 @@ class FOISEngine:
     ) -> None:
         self.configuration = validate_configuration(configuration)
         self.registry = registry_by_category()
+        self.results_scorer = ResultsScorer(configuration)
 
     def evaluate(self, facts: FOISFacts, *, generated_at: str | None = None) -> FrontOfficeIntelligenceScore:
         completed = tuple(sorted(facts.completed_seasons, key=lambda row: row.season))[-10:]
@@ -163,6 +165,9 @@ class FOISEngine:
                 )
         categories = []
         for category, definitions in self.registry.items():
+            if category == "results":
+                categories.append(self.results_scorer.score(facts))
+                continue
             metrics = tuple(calculated.get(definition.key, _unavailable(definition)) for definition in definitions)
             categories.append(aggregate_metrics(
                 category, CATEGORY_NAMES[category],

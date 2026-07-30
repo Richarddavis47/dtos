@@ -6,9 +6,9 @@ import subprocess
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.6.0"
-BUILD_NUMBER = 1600
-RELEASE_CODENAME = "Front Office Intelligence System Foundation"
+VERSION = "1.6.1"
+BUILD_NUMBER = 1601
+RELEASE_CODENAME = "FOIS Results and Competitive Cycle Engine"
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
 

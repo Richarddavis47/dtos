@@ -1,5 +1,13 @@
 # DTOS Development Roadmap
 
+### FOIS Results and Competitive Cycle Engine - DTOS v1.6.1
+
+- Score observed championships, postseason depth, sustained contention, regular
+  season performance, normalized finishes, rebuilds, reloads, and longevity.
+- Reuse immutable Historical Memory records without provider I/O.
+- Establish the production category pattern for v1.6.2 Trading and Asset
+  Management while leaving other FOIS categories unchanged.
+
 ### Front Office Intelligence System Foundation - DTOS v1.6.0
 
 - Establish versioned, explainable FOIS score, category, metric, evidence,
