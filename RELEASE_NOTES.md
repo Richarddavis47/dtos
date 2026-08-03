@@ -342,3 +342,6 @@ See `docs/DINS_INSPECTION.md`.
 DTOS now enumerates every cached Sleeper player and canonical future pick once, exposes each valuation layer independently, records provider evidence and freshness, and exports the live universe as JSON or CSV. Existing value and recommendation behavior remains unchanged. Unsupported or missing evidence is explicit rather than inferred.
 
 ## Previous release
+# DTOS v1.7.1 - Automated Market Calibration Dashboard
+
+DTOS now audits every canonical player and draft pick whenever market providers refresh. The new calibration dashboard summarizes integrity, freshness, provider coverage, category health, high-impact differences, and explainable recommendations. Automatic changes are limited to small category-level model adjustments and require fresh evidence from multiple providers, sufficient sample size, high confidence, and a complete asset universe. No individual player or pick can be manually overridden by this system.

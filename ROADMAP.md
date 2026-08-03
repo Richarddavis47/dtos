@@ -1,5 +1,14 @@
 # DTOS Development Roadmap
 
+### Automated Market Calibration Dashboard - DTOS v1.7.1
+
+- Audit the complete Canonical Asset Universe after provider refreshes.
+- Compare supported providers without treating consensus as truth.
+- Generate category-level, explainable recommendations and downstream impact scores.
+- Apply only bounded model-level calibration when multi-provider confidence, freshness,
+  sample-size, integrity, and agreement safety rails all pass.
+- Retain calibration history and expose executive dashboard, API, and DINS contracts.
+
 ### Market Calibration Foundation - DTOS v1.7.0
 
 - Completed canonical asset universe, live valuation APIs, separate valuation layers, provider abstraction, freshness contract, deterministic exports, comparison fields, and DINS support.

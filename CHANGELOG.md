@@ -388,3 +388,9 @@ Notable DTOS changes are recorded here from the repository's Git history.
 - Moved matchup list and matchup detail routes from `dtos_app.py` into `routes/matchups.py`.
 - Registered the Matchups router through the shared application dependencies.
 - Added a packaged DTOS archive to the repository.
+# v1.7.1 - Automated Market Calibration Dashboard
+
+- Added full-universe, category-level market calibration audits after provider refreshes.
+- Added explainable recommendations, impact scoring, safety-gated automatic model adjustments, and retained calibration history.
+- Added calibration dashboard and status, category, recommendation, and history APIs.
+- Preserved independent DTOS intrinsic valuation; market consensus remains evidence rather than authority.
