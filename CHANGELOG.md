@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.6.2 - AI Inspection System Foundation
+
+- Added DINS, a deterministic read-only page inspection contract under
+  `/api/inspect` that projects only the current cached DTOS state.
+- Added page catalog, Team Headquarters, Player Dossier, Front Office, and Trade
+  Intelligence inspection endpoints with typed structural JSON.
+- Standardized sections, cards, tables, charts, buttons, navigation, links,
+  empty states, placeholders, warnings, page metrics, and cache timestamps.
+- Prohibited synchronization, provider access, intelligence execution, HTML
+  rendering, and application-state mutation from the inspection boundary.
+- Added contract, determinism, immutability, cached-data, empty-state, and
+  no-execution regression coverage.
+
 ## v1.6.1 - FOIS Results and Competitive Cycle Engine
 
 - Promoted all 15 Results registry metrics to deterministic production scoring

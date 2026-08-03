@@ -60,3 +60,16 @@ Common filters are `league`, `season`, `week`, `franchise`, `player`, `limit`, a
 - `GET /api/crawl/history/player/{player_id}/aggregates` — deterministic season aggregates.
 - `GET /api/crawl/history/player/{player_id}/signals` — explainable versioned signals.
 - `GET /api/crawl/history/player/{player_id}/data-quality` — provenance and quality findings.
+# AI Inspection System
+
+DINS exposes cached, read-only structural page descriptions:
+
+- `GET /api/inspect`
+- `GET /api/inspect/pages`
+- `GET /api/inspect/team/{roster_id}`
+- `GET /api/inspect/player/{player_id}`
+- `GET /api/inspect/front-office/{roster_id}`
+- `GET /api/inspect/trades`
+
+These routes perform no synchronization or intelligence calculation. See
+`docs/DINS_INSPECTION.md` for the schema and guarantees.

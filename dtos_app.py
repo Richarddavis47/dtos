@@ -20,6 +20,7 @@ from routes.front_offices import create_front_offices_router
 from routes.fois import create_fois_router
 from routes.hq import create_hq_router
 from routes.history import create_history_router
+from routes.inspect import create_inspection_router
 from routes.matchups import create_matchups_router
 from routes.settings import create_settings_router
 from routes.teams import create_teams_router
@@ -231,6 +232,8 @@ app.include_router(
 )
 
 app.include_router(create_history_router(league_id=LEAGUE_ID, page=page))
+
+app.include_router(create_inspection_router(state=STATE))
 
 app.include_router(
     create_matchups_router(

@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### AI Inspection System Foundation - DTOS v1.6.2
+
+- Expose stable read-only page contracts for automated inspection and testing.
+- Project cached DTOS state without synchronization or intelligence execution.
+- Extend future DINS releases to additional pages and presentation-contract
+  comparisons without coupling inspection to HTML markup.
+
 ### FOIS Results and Competitive Cycle Engine - DTOS v1.6.1
 
 - Score observed championships, postseason depth, sustained contention, regular
