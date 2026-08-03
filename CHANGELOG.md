@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7.5 - League Payload Memory Safety
+
+- Replaced embedded full-universe Brain caches in `/api/league` with a compact backwards-compatible Brain summary and canonical endpoint links.
+- Removed the duplicated internal Brain timeline from the generic league response while preserving dedicated asset and timeline APIs.
+- Reduced response serialization memory pressure that could intermittently restart the production worker and surface as an empty HTTP 502.
+
 ## v1.7.4 - Brain Integration & Unified Decision Engine
 
 - Established `BrainService` as the cached public source for canonical valuation layers, evidence quality, explanations, diagnostics, and timelines.

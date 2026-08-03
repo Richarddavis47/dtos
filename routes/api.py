@@ -160,6 +160,27 @@ def create_api_router(
         await ensure_fresh()
         data = require_data().copy()
         data.pop("players", None)
+        brain = data.get("valuation_intelligence")
+        if isinstance(brain, dict):
+            data["valuation_intelligence"] = {
+                key: brain.get(key)
+                for key in (
+                    "application_version", "application_build", "commit",
+                    "schema_version", "generated_at", "availability",
+                    "asset_count", "summary", "safety",
+                )
+            }
+            data["valuation_intelligence"]["diagnostics"] = {
+                key: len(value) if isinstance(value, list) else value
+                for key, value in (brain.get("diagnostics") or {}).items()
+            }
+            data["valuation_intelligence"]["canonical_endpoints"] = {
+                "assets": "/api/brain/assets/{asset_id}",
+                "timeline": "/api/brain/timeline/{asset_id}",
+                "health": "/api/brain/health",
+                "migration": "/api/brain/migration",
+            }
+        data.pop("valuation_intelligence_timeline", None)
         if include_players:
             data["players"] = player_asset_index(require_data())
         return JSONResponse(data)
