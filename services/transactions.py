@@ -6,6 +6,8 @@ from datetime import date, datetime, timezone
 from math import ceil
 from typing import Any
 
+from src.core.team_identity import canonical_team_name
+
 
 SORT_FIELDS = {"date", "type", "teams", "assets", "id"}
 PAGE_SIZES = {10, 25, 50}
@@ -24,7 +26,7 @@ def _player_name(player_id: str, players: dict[str, Any]) -> str:
 
 def _team_label(roster_id: str | int | None, teams: dict[str, dict[str, Any]]) -> str:
     key = str(roster_id or "")
-    return str((teams.get(key) or {}).get("team_name") or f"Team {key or '?'}")
+    return canonical_team_name(teams.get(key))
 
 
 def _team_owner(roster_id: str | int | None, teams: dict[str, dict[str, Any]]) -> str:

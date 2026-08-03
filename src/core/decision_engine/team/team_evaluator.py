@@ -14,6 +14,7 @@ from src.core.decision_engine.team.contender_score import evaluate_current_outlo
 from src.core.decision_engine.team.depth_analyzer import evaluate_depth
 from src.core.decision_engine.team.future_score import evaluate_future_outlook
 from src.core.decision_engine.team.scoring import clamp, grade
+from src.core.team_identity import canonical_team_name
 
 
 def _age(player: dict[str, Any], player_database: dict[str, Any]) -> float | None:
@@ -48,7 +49,7 @@ def build_team_profile(data: dict[str, Any], roster_id: int, context: DecisionCo
     return TeamProfile(
         roster_id=roster_id,
         owner_name=str(team.get("owner") or "Unassigned"),
-        team_name=str(team.get("team_name") or f"Team {roster_id}"),
+        team_name=canonical_team_name(team),
         league_id=context.league_id,
         active_front_office_id=context.active_front_office_id,
         league_settings=context.league_settings,

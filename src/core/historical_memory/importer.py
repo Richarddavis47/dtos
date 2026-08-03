@@ -326,7 +326,7 @@ class HistoricalImporter:
                 "franchise_id": franchise_id, "sleeper_roster_id": roster_id,
                 "owner_id": owner_id, "sleeper_username": owner.get("display_name") or owner.get("username"),
                 "sleeper_team_name": metadata.get("team_name"),
-                "dtos_display_name": metadata.get("team_name") or owner.get("display_name") or f"Team {roster_id}",
+                "dtos_display_name": metadata.get("team_name") or owner.get("display_name") or "Unassigned Franchise",
                 "valid_from": f"{season}-01-01", "valid_to": f"{season}-12-31",
                 "active": True,
             }, franchise_id=franchise_id)

@@ -181,7 +181,7 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                     "roster_id": roster.get("roster_id"),
                     "owner_id": owner_id,
                     "owner": owner.get("display_name") or owner.get("username") or "Unassigned",
-                    "team_name": metadata.get("team_name") or owner.get("display_name") or f"Team {roster.get('roster_id')}",
+                    "team_name": metadata.get("team_name") or owner.get("display_name") or "Unassigned Franchise",
                     "avatar": owner.get("avatar"),
                     "wins": settings.get("wins", 0),
                     "losses": settings.get("losses", 0),
@@ -225,9 +225,9 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                             "season": season,
                             "round": round_number,
                             "original_roster_id": original_roster_id,
-                            "original_team": roster_name_by_id.get(original_roster_id, f"Team {original_roster_id}"),
+                            "original_team": roster_name_by_id.get(original_roster_id, "Unassigned Franchise"),
                             "current_owner_id": current_owner_id,
-                            "current_owner": roster_name_by_id.get(current_owner_id, f"Team {current_owner_id}"),
+                            "current_owner": roster_name_by_id.get(current_owner_id, "Unassigned Franchise"),
                             "is_traded": current_owner_id != original_roster_id,
                         })
 

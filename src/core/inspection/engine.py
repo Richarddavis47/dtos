@@ -14,6 +14,7 @@ from src.core.inspection.models import (
     PageInspection,
     PageMetrics,
 )
+from src.core.team_identity import team_name_for
 
 NAVIGATION = (
     InspectionLink("Commissioner Desk", "/", "navigation"),
@@ -204,7 +205,7 @@ class InspectionEngine:
             }, "available" if provider_rows else "empty"),
         )
         links = tuple(
-            InspectionLink(f"Team {roster_id}", f"/teams/{roster_id}", "team")
+            InspectionLink(team_name_for(self.data, roster_id), f"/teams/{roster_id}", "team")
             for roster_id in roster_ids
         )
         empty = () if provider_rows else (

@@ -1,3 +1,11 @@
+# DTOS v1.6.4 — Team Identity Normalization & Team Headquarters Polish
+
+DTOS now presents every franchise by its canonical identity throughout Team Headquarters, Commissioner Desk, intelligence summaries, and DINS. Team Headquarters has a cleaner executive hierarchy with one competitive-window classification and one primary recommendation, while detailed evidence remains available in a collapsed disclosure.
+
+Preseason pages now emphasize projections instead of empty results, unknown bye weeks are omitted, and unfinished controls have been removed. The tracked HTTP release validator permanently rejects rendered generic numbered team and roster fallbacks when canonical league identity is available.
+
+---
+
 # DTOS v1.5.5 — Production Request Latency
 
 The Commissioner Desk now avoids repeated valuation of the same trade package

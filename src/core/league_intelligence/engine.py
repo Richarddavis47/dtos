@@ -148,15 +148,16 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
     most_tradable = max((item for item in availability.values() if item.status != "Untouchable"), key=lambda item: status_scores[item.status], default=None)
     strongest = max(((score, roster_id, position) for roster_id, rooms in roster.league_rooms.items() for position, score in rooms.items()), default=(0, 0, "Unavailable"))
     weakest = min(((score, roster_id, position) for roster_id, rooms in roster.league_rooms.items() for position, score in rooms.items()), default=(0, 0, "Unavailable"))
+    names = {roster_id: getattr(decision.profile, "team_name", "Unassigned Franchise") for roster_id, decision in intelligence.decisions.items()}
     dashboard = {
-        "Today's Best Trade Partner": str(active_partners[0][1]) if active_partners else "Unavailable",
+        "Today's Best Trade Partner": names.get(active_partners[0][1], "Unassigned Franchise") if active_partners else "Unavailable",
         "Most Undervalued Player": undervalued.label if undervalued else "Unavailable",
         "Most Overvalued Player": overvalued.label if overvalued and overvalued.value_gap.difference is not None else "Unavailable",
-        "Largest Team Need": f"Team {max((item for rows in needs.values() for item in rows), key=lambda item: item.score).roster_id} {max((item for rows in needs.values() for item in rows), key=lambda item: item.score).position}",
+        "Largest Team Need": f"{names.get(max((item for rows in needs.values() for item in rows), key=lambda item: item.score).roster_id, 'Unassigned Franchise')} {max((item for rows in needs.values() for item in rows), key=lambda item: item.score).position}",
         "Most Tradable Asset": most_tradable.player_id if most_tradable else "Unavailable",
         "Most Valuable Pick": "Requires pick-market provider",
-        "Strongest Position Group": f"Team {strongest[1]} {strongest[2]} ({strongest[0]})",
-        "Weakest Position Group": f"Team {weakest[1]} {weakest[2]} ({weakest[0]})",
+        "Strongest Position Group": f"{names.get(strongest[1], 'Unassigned Franchise')} {strongest[2]} ({strongest[0]})",
+        "Weakest Position Group": f"{names.get(weakest[1], 'Unassigned Franchise')} {weakest[2]} ({weakest[0]})",
         "Highest Opportunity Score": f"{opportunities[0].player_name} ({opportunities[0].score})" if opportunities else "Unavailable",
         "League Market Summary": ", ".join(f"{position} {item.state}" for position, item in economy.items()),
     }

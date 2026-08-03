@@ -16,6 +16,7 @@ from models.commissioner import (
 )
 from src.core.intelligence import intelligence_orchestrator
 from services.transactions import normalize_transactions
+from src.core.team_identity import canonical_team_name, team_name_map
 
 
 def _parse_since(value: str | None) -> datetime:
@@ -45,7 +46,7 @@ def _front_offices(data: dict[str, Any]) -> list[ActiveFrontOffice]:
             roster_id=int(team.get("roster_id") or 0),
             owner_id=str(team.get("owner_id") or ""),
             owner_name=str(team.get("owner") or "Unassigned"),
-            team_name=str(team.get("team_name") or f"Team {team.get('roster_id')}"),
+            team_name=canonical_team_name(team),
         )
         for team in data.get("teams") or []
     ]
@@ -317,6 +318,7 @@ def build_commissioner_desk(
         "recommendations": decision.recommendations,
         "unified_recommendation": intelligence.recommendation,
         "league_opportunity": intelligence.league,
+        "team_names": team_name_map(data),
         "league_intelligence": _league_intelligence(data, intelligence.roster.team_intelligence, intelligence.roster.league_summary),
         "snapshot": {
             "standings": sorted(data.get("teams") or [], key=lambda team: intelligence.roster.team_intelligence[int(team.get("roster_id") or 0)].overall.rank),
