@@ -11,6 +11,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from src.core.provider_network import provider_network_report
 from src.core.valuation.automation import calibration_report
 from src.core.valuation.universe import ValuationUniverse
+from src.core.valuation_intelligence import valuation_intelligence_report
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -28,7 +29,7 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
     @router.get("")
     async def valuation_index() -> Any:
         result = await universe()
-        return {**result.status(), "endpoints": ["/api/valuation/assets", "/api/valuation/status", "/api/valuation/providers", "/api/valuation/export.json", "/api/valuation/export.csv"]}
+        return {**result.status(), "endpoints": ["/api/valuation/assets", "/api/valuation/status", "/api/valuation/providers", "/api/valuation/evidence", "/api/valuation/confidence", "/api/valuation/coverage", "/api/valuation/agreement", "/api/valuation/explanation", "/api/valuation/timeline", "/api/valuation/diagnostics", "/api/valuation/export.json", "/api/valuation/export.csv"]}
 
     @router.get("/status")
     async def valuation_status() -> Any:
@@ -43,6 +44,61 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
     async def network() -> dict[str, Any]:
         await ensure_fresh()
         return provider_network_report(require_data())
+
+    async def intelligence() -> dict[str, Any]:
+        await ensure_fresh()
+        return valuation_intelligence_report(require_data())
+
+    @router.get("/evidence")
+    async def valuation_evidence(offset: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000)) -> Any:
+        report = await intelligence()
+        rows = sorted(report["assets"].values(), key=lambda row: row["asset_id"])
+        return _intelligence_envelope(report, {"total": len(rows), "offset": offset, "limit": limit, "assets": rows[offset:offset + limit]})
+
+    @router.get("/evidence/{asset_id:path}")
+    async def valuation_asset_evidence(asset_id: str) -> Any:
+        report = await intelligence()
+        row = report["assets"].get(asset_id)
+        if row is None:
+            raise HTTPException(404, "Valuation evidence is not available for this asset.")
+        return _intelligence_envelope(report, {"asset": row, "timeline": report["timeline"].get(asset_id, [])})
+
+    @router.get("/confidence")
+    async def valuation_confidence() -> Any:
+        report = await intelligence()
+        return _intelligence_envelope(report, {"average": report["summary"].get("average_confidence", 0), "highest": report["summary"].get("highest_confidence", []), "lowest": report["summary"].get("lowest_confidence", [])})
+
+    @router.get("/coverage")
+    async def valuation_coverage() -> Any:
+        report = await intelligence()
+        return _intelligence_envelope(report, {"average": report["summary"].get("average_coverage", 0), "highest": report["summary"].get("highest_coverage", []), "lowest": report["summary"].get("lowest_coverage", [])})
+
+    @router.get("/agreement")
+    async def valuation_agreement() -> Any:
+        report = await intelligence()
+        return _intelligence_envelope(report, {"average": report["summary"].get("average_agreement", 0), "strongest_consensus": report["summary"].get("strongest_consensus", []), "most_disputed": report["summary"].get("most_disputed", [])})
+
+    @router.get("/explanation")
+    async def valuation_explanation(asset_id: str | None = None) -> Any:
+        report = await intelligence()
+        if asset_id:
+            row = report["assets"].get(asset_id)
+            if row is None:
+                raise HTTPException(404, "Valuation explanation is not available for this asset.")
+            return _intelligence_envelope(report, {"asset_id": asset_id, "explanation": row["explanation"], "scores": row["scores"], "evidence_sources": row["evidence_sources"]})
+        return _intelligence_envelope(report, {"explanations": [{"asset_id": row["asset_id"], "explanation": row["explanation"]} for row in list(report["assets"].values())[:100]]})
+
+    @router.get("/timeline")
+    async def valuation_timeline(asset_id: str | None = None) -> Any:
+        report = await intelligence()
+        if asset_id and asset_id not in report["assets"]:
+            raise HTTPException(404, "Valuation timeline is not available for this asset.")
+        return _intelligence_envelope(report, {"asset_id": asset_id, "timeline": report["timeline"].get(asset_id, []) if asset_id else {key: report["timeline"][key] for key in list(report["timeline"])[:100]}})
+
+    @router.get("/diagnostics")
+    async def valuation_diagnostics() -> Any:
+        report = await intelligence()
+        return _intelligence_envelope(report, {"diagnostics": report["diagnostics"], "summary": {key: len(value) for key, value in report["diagnostics"].items()}, "safety": report["safety"]})
 
     @router.get("/providers/{provider_id}/status")
     async def provider_status(provider_id: str) -> Any:
@@ -118,6 +174,7 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
         @root.get("/valuation/calibration", response_class=HTMLResponse, tags=["valuation"])
         async def valuation_calibration_dashboard() -> HTMLResponse:
             result = await calibration()
+            intelligence_report = await intelligence()
             summary = result["summary"]
             cards = "".join(
                 f'<article class="card"><p class="muted">{escape(label)}</p><h2>{escape(str(value))}</h2></article>'
@@ -150,7 +207,9 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
                 f'<td>{escape(str(row.get("status_explanation") or "Awaiting background provider generation."))}</td></tr>'
                 for row in provider_report["providers"]
             )
-            body = f'''<p class="eyebrow">Valuation Operations</p><h2>Automated Market Calibration</h2><p class="muted">Consensus is an input, not the answer. DTOS audits the full universe and changes only bounded model-level principles when every safety rail passes.</p><div class="grid">{cards}</div><div class="card"><h3>Market Intelligence Providers</h3><p class="muted">Market, expert, performance, league-local, and intrinsic evidence remain distinct. Correlated provider families count only once.</p><table><thead><tr><th>Provider</th><th>Category</th><th>Status</th><th>Records</th><th>Coverage</th><th>Identity</th><th>Reliability</th><th>Weight</th><th>Explanation</th></tr></thead><tbody>{provider_rows}</tbody></table></div><div class="card"><h3>Category Health</h3><table><thead><tr><th>Category</th><th>Audited</th><th>Comparable</th><th>Median Difference</th><th>Confidence</th><th>Status</th><th>Impact</th></tr></thead><tbody>{category_rows}</tbody></table></div><h2>Calibration Recommendations</h2><div class="grid">{recommendations}</div><p class="muted">Last calibration: {escape(result["generated_at"])}</p>'''
+            intelligence_cards = "".join(f'<article class="card"><p class="muted">{escape(label)}</p><h2>{escape(str(value))}</h2></article>' for label, value in (("Evidence Coverage", intelligence_report["summary"].get("average_coverage", 0)), ("Confidence", intelligence_report["summary"].get("average_confidence", 0)), ("Agreement", intelligence_report["summary"].get("average_agreement", 0)), ("Assets Evaluated", intelligence_report.get("asset_count", 0))))
+            diagnostic_rows = "".join(f'<tr><td>{escape(name)}</td><td>{len(asset_ids)}</td></tr>' for name, asset_ids in sorted(intelligence_report["diagnostics"].items())) or '<tr><td>No diagnostics</td><td>0</td></tr>'
+            body = f'''<p class="eyebrow">Valuation Intelligence</p><h2>Evidence Intelligence Dashboard</h2><p class="muted">DTOS selects the best-supported, explainable valuation using independently weighted evidence. Coverage, confidence, and agreement remain distinct.</p><div class="grid">{intelligence_cards}</div><div class="card"><h3>Valuation Diagnostics</h3><table><thead><tr><th>Diagnostic</th><th>Assets</th></tr></thead><tbody>{diagnostic_rows}</tbody></table></div><h2>Automated Market Calibration</h2><p class="muted">Consensus is an input, not the answer. DTOS audits the full universe and changes only bounded model-level principles when every safety rail passes.</p><div class="grid">{cards}</div><div class="card"><h3>Market Intelligence Providers</h3><p class="muted">Market, expert, performance, league-local, and intrinsic evidence remain distinct. Correlated provider families count only once.</p><table><thead><tr><th>Provider</th><th>Category</th><th>Status</th><th>Records</th><th>Coverage</th><th>Identity</th><th>Reliability</th><th>Weight</th><th>Explanation</th></tr></thead><tbody>{provider_rows}</tbody></table></div><div class="card"><h3>Category Health</h3><table><thead><tr><th>Category</th><th>Audited</th><th>Comparable</th><th>Median Difference</th><th>Confidence</th><th>Status</th><th>Impact</th></tr></thead><tbody>{category_rows}</tbody></table></div><h2>Calibration Recommendations</h2><div class="grid">{recommendations}</div><p class="muted">Last calibration: {escape(result["generated_at"])}</p>'''
             return page("Market Calibration Dashboard", body)
 
     @router.get("/assets")
@@ -175,7 +234,8 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
         row = result.by_id.get(asset_id)
         if row is None:
             raise HTTPException(404, "Valuation asset not found in current production state.")
-        return JSONResponse(jsonable_encoder(row))
+        intelligence_row = (await intelligence())["assets"].get(asset_id)
+        return JSONResponse(jsonable_encoder({**row, "valuation_intelligence": intelligence_row}))
 
     root.include_router(router)
     return root
@@ -190,6 +250,10 @@ def _provider(report: dict[str, Any], provider_id: str) -> dict[str, Any]:
 
 def _network_envelope(report: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
     return {key: report.get(key) for key in ("application_version", "application_build", "commit", "provider_registry_version", "evidence_contract_version", "generation_timestamp", "freshness", "availability")} | payload
+
+
+def _intelligence_envelope(report: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+    return {key: report.get(key) for key in ("application_version", "application_build", "commit", "schema_version", "generated_at", "availability", "asset_count")} | payload
 
 
 def _display_metric(value: Any, suffix: str = "") -> str:

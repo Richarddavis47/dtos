@@ -194,7 +194,7 @@ def audit_market_calibration(data: dict[str, Any], state: dict[str, Any], *, app
     integrity_score = 100 if integrity_ok else 0
     report = {
         "schema_version": CALIBRATION_SCHEMA_VERSION, "generated_at": generated_at,
-        "model_version": "1.7.2", "automatic": True,
+        "model_version": "1.7.3", "automatic": True,
         "summary": {
             "overall_calibration_score": calibration_score, "total_assets_audited": len(universe.assets),
             "providers_available": len(healthy_market_providers), "provider_freshness": universe.freshness["current_status"],

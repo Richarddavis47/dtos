@@ -1,4 +1,14 @@
-# DTOS v1.7.2 — Multi-Source Market Intelligence Provider Network
+# DTOS v1.7.3 — Valuation Intelligence Engine (DTOS Brain Phase I)
+
+DTOS now reasons over cached multi-source evidence instead of treating provider consensus as an answer. Every canonical player and pick receives separate Coverage, Confidence, and Agreement scores, a provider/category breakdown, five independent valuation layers, a readable explanation, a bounded evidence timeline, and transparent diagnostics.
+
+The engine is generated during background synchronization and performs no external request during page or API handling. Provider reliability, freshness, identity quality, agreement, sample size, and evidence-family lineage determine each contribution. Missing or conflicting evidence lowers confidence explicitly rather than creating false certainty.
+
+New APIs expose evidence, per-asset reports, confidence, coverage, agreement, explanations, timelines, and diagnostics. The valuation dashboard and DINS contract now inspect the same cached intelligence model used by downstream DTOS systems.
+
+## Previous release: v1.7.2
+
+### Multi-Source Market Intelligence Provider Network
 
 DTOS now treats each provider as measured evidence rather than truth. Approved FantasyCalc and DynastyProcess feeds, completed Sleeper trades, league-local behavior, nflverse historical evidence, and the independent DTOS historical model are registered with explicit purpose, lineage, licensing, freshness, coverage, and dynamic reliability. FantasyPros remains credential- and license-gated; KeepTradeCut remains unavailable because no approved integration exists.
 

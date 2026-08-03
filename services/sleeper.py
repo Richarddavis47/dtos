@@ -18,6 +18,7 @@ from src.core.data_platform.provider_activation import refresh_public_market
 from src.core.intelligence.cache import intelligence_cache
 from src.core.provider_network import build_provider_network
 from src.core.valuation.automation import audit_market_calibration
+from src.core.valuation_intelligence import build_valuation_intelligence
 from services.history import capture_current_state, player_history_evidence
 from config import (
     CACHE_FILE,
@@ -340,6 +341,7 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 "calibration_state": previous_data.get("calibration_state") or {},
                 "calibration_history": previous_data.get("calibration_history") or [],
                 "provider_reliability_history": previous_data.get("provider_reliability_history") or [],
+                "valuation_intelligence_timeline": previous_data.get("valuation_intelligence_timeline") or {},
             }
             STATE["last_sync"] = synced_at
             STATE["last_error"] = None
@@ -347,6 +349,7 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
             STATE["transactions_last_error"] = None
             try:
                 await asyncio.to_thread(build_provider_network, STATE["data"], STATE)
+                await asyncio.to_thread(build_valuation_intelligence, STATE["data"], STATE)
                 await asyncio.to_thread(audit_market_calibration, STATE["data"], STATE, apply=True)
             except Exception:
                 logger.exception("Provider network or automated market calibration audit failed")

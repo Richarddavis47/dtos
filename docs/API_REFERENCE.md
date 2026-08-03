@@ -90,8 +90,10 @@ for the canonical page inventory, `/api/inspect/visual/pages/{page_id}/{viewport
 rendered evidence, `/api/inspect/health` for bundle readiness, and
 `/api/inspect/releases/current` for the release manifest. Supported viewports are
 `desktop`, `tablet`, and `mobile`. Artifact URLs are absolute and never expose local paths.
-# Valuation and calibration API (v1.7.2)
+# Valuation, evidence intelligence, and calibration API (v1.7.3)
 
 The `/api/valuation` family exposes only the current cached production universe. Asset lists are paginated; `/export.json` and `/export.csv` provide complete deterministic exports. Every payload includes explicit freshness and source metadata. See [VALUATION.md](VALUATION.md) for identity and layer contracts.
+
+Evidence Intelligence endpoints are `/api/valuation/evidence`, `/api/valuation/evidence/{asset_id}`, `/api/valuation/confidence`, `/api/valuation/coverage`, `/api/valuation/agreement`, `/api/valuation/explanation`, `/api/valuation/timeline`, and `/api/valuation/diagnostics`. Every response includes application version, build, commit, intelligence schema version, generation timestamp, availability, and canonical asset count. Asset-specific routes use canonical IDs such as `player:10213` and return HTTP 404 for missing identities.
 
 Automated calibration is exposed through `/api/valuation/calibration`, `/api/valuation/calibration/categories`, `/api/valuation/calibration/recommendations`, and `/api/valuation/calibration/history`. The HTML dashboard is `/api/valuation/dashboard`. These endpoints reuse the most recent full-universe audit and never initiate provider synchronization.
