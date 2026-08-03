@@ -1,4 +1,14 @@
-# DTOS v1.6.5 — Product Design System, Navigation & Consistency
+# DTOS v1.6.6 — Team Headquarters Mobile Overflow Correction
+
+DTOS v1.6.6 is a focused production correction for a responsive defect discovered
+during the complete v1.6.5 DINS audit. The Team Headquarters Core Intelligence
+grid now collapses within tablet and mobile widths instead of extending beyond the
+viewport. No intelligence formulas, provider behavior, or application workflows
+changed.
+
+## Previous release
+
+### DTOS v1.6.5 — Product Design System, Navigation & Consistency
 
 DTOS v1.6.5 unifies every major Front Office surface around a shared visual and
 interaction language. Pages now state what decision they support, show fresh data

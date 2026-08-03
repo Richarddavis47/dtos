@@ -4,7 +4,8 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.6.5 introduces Product Design System 1.0: shared page hierarchy, navigation,
+DTOS v1.6.6 corrects Team Headquarters mobile overflow while preserving Product
+Design System 1.0. DTOS v1.6.5 introduced shared page hierarchy, navigation,
 explainable recommendations, league-relative grade context, truthful offseason
 states, responsive behavior, and permanent DINS product-contract validation.
 DTOS v1.6.4 normalized franchise identity across the application and polished Team Headquarters into a concise executive workflow. DTOS v1.6.3 expanded the read-only AI Inspection System into a complete semantic,
