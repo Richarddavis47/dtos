@@ -275,6 +275,8 @@ def build_team_headquarters(
         "decision": decision,
         "front_office_intelligence": organization,
         "unified_recommendation": intelligence.recommendation,
+        "brain": intelligence.brain,
+        "decision_confidence": intelligence.brain_decision.confidence,
         "roster_intelligence": intelligence.roster,
         "team_intelligence": team_intelligence,
         "competitive_window": team_intelligence.competitive_window,

@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
+from src.core.brain import brain_service
 from src.core.inspection import (
     INSPECTION_SCHEMA_VERSION,
     VIEWPORTS,
@@ -150,6 +151,21 @@ def create_inspection_router(
                 "sample_assets": list((valuation_intelligence.get("assets") or {}).values())[:2],
             },
             "warnings": universe.freshness["reasons"],
+        })
+
+    @router.get("/brain")
+    async def inspect_brain() -> Any:
+        """Inspect the canonical cached Brain and migration contract."""
+        brain = brain_service(state.get("data") or {})
+        return jsonable_encoder({
+            "application_version": VERSION,
+            "application_build": BUILD_NUMBER,
+            "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
+            "page_name": "DTOS Brain",
+            "route": "/brain",
+            "health": brain.health(),
+            "migration": brain.migration(),
+            "warnings": [] if brain.report.get("availability") == "available" else ["The synchronized Brain snapshot is pending."],
         })
 
     @router.get("/site-map")

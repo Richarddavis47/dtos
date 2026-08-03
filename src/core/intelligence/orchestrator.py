@@ -8,6 +8,7 @@ from dataclasses import replace
 
 from src.core.asset_intelligence import AssetContext, AssetEvaluation, Evidence, evaluate_pick, evaluate_player
 from src.core.asset_intelligence.portfolio import evaluate_pick_portfolio, evaluate_player_portfolio
+from src.core.brain import brain_service
 from src.core.decision_engine import DecisionContext, evaluate_team
 from src.core.decision_engine.recommendations.recommendation_engine import build_recommendations
 from src.core.front_office_intelligence import build_league_model
@@ -101,12 +102,13 @@ class IntelligenceOrchestrator:
         def execute() -> IntelligenceResult:
             total_started = perf_counter()
             pipeline = IntelligencePipeline()
+            brain = brain_service(context.cached_data)
             decisions = pipeline.run("decision_engine", self.cache.get_or_create, prefix + "league", lambda: self.registry.provider("decision")(context))
             decision = decisions[roster_id]
             player_portfolio, pick_portfolio, player_reports = pipeline.run("asset_intelligence", self.cache.get_or_create, prefix + "assets", lambda: self.registry.provider("asset")(context, decision))
             market = pipeline.run("market_intelligence", self.cache.get_or_create, prefix + "market", lambda: self.registry.provider("market")(context, player_reports, ()))
             player_values = pipeline.run("player_value_projection", self.cache.get_or_create, prefix + "player_values", lambda: self.registry.provider("player_value")(context, decision, player_reports, market))
-            preliminary = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, None, (), market, player_values, None, None, None, pipeline.timings_ms, False)
+            preliminary = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, None, (), market, player_values, None, None, None, pipeline.timings_ms, False, brain)
             roster = pipeline.run("roster_intelligence", self.cache.get_or_create, prefix + "roster", lambda: self.registry.provider("roster")(preliminary))
             decisions = {
                 team_id: replace(
@@ -141,7 +143,9 @@ class IntelligenceOrchestrator:
             market_available = any(report.consensus.value is not None for report in market.assets.values())
             confidence = calculate_confidence(evidence, providers=5, expected_providers=5, market_available=market_available, sample_size=offices.reports[roster_id].activity.trades, missing=missing)
             recommendation = resolve_recommendation(decision=decision, trade=top_trade, front_office=offices.reports[roster_id], market=market, evidence=evidence, confidence=confidence)
-            partial = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, offices, trades, market, player_values, roster, None, recommendation, pipeline.timings_ms, False)
+            team_asset_ids = tuple(str(player.get("id") or player.get("player_id")) for player in decision.profile.players if player.get("id") or player.get("player_id"))
+            brain_decision = brain.decision("Recommendation Engine", team_asset_ids, trade_complexity=len(top_trade.proposal.assets_sent) + len(top_trade.proposal.assets_received) if top_trade else 0)
+            partial = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, offices, trades, market, player_values, roster, None, recommendation, pipeline.timings_ms, False, brain, brain_decision)
             league = pipeline.run("league_intelligence", self.cache.get_or_create, prefix + "league_intelligence", lambda: self.registry.provider("league_intelligence")(partial))
             pipeline.timings_ms["orchestration_total"] = round((perf_counter() - total_started) * 1000, 3)
             return replace(partial, league=league, timings_ms=pipeline.timings_ms)

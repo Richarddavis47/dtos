@@ -25,3 +25,5 @@ class IntelligenceResult:
     recommendation: UnifiedRecommendation
     timings_ms: dict[str, float]
     cache_hit: bool
+    brain: Any = None
+    brain_decision: Any = None
