@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 from components.trade_intelligence import trade_center
 from services.trade_intelligence import build_trade_center
+from src.core.intelligence.serialization import recommendation_contract
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -38,6 +39,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             "active_front_office": int(result["active_team"].get("roster_id") or 0),
             "count": len(result["dossiers"]),
             "opportunities": [asdict(item) for item in result["dossiers"]],
+            **recommendation_contract(result["unified_recommendation"], result.get("brain_recommendation")),
         }
         return JSONResponse(jsonable_encoder(payload))
 

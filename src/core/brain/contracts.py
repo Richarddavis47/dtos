@@ -30,3 +30,8 @@ class BrainDecision:
     confidence: DecisionConfidence
     generated_at: str | None
     brain_version: str
+    decision_confidence_version: str
+    brain_snapshot_id: str
+    recommendation_timestamp: str | None
+    decision_provenance: tuple[str, ...]
+    recommendation_explanation: tuple[str, ...]

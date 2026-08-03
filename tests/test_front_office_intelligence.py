@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 from routes.front_offices import create_front_offices_router
+from routes.trades import create_trades_router
 from src.core.front_office_intelligence import build_league_model
 from src.core.trade_intelligence import trade_intelligence
 from tests.test_trade_intelligence import fixture_data
@@ -60,10 +61,32 @@ class FrontOfficeIntelligenceTests(unittest.TestCase):
         self.assertEqual(api.status_code, 200)
         self.assertEqual(api.json()["active_front_office"], 2)
         self.assertEqual(len(api.json()["organizations"]), 3)
+        self.assertIsNotNone(api.json()["decision_confidence"])
+        self.assertEqual(api.json()["availability"], "available")
+        self.assertTrue(api.json()["brain_snapshot_id"])
+        self.assertTrue(api.json()["decision_provenance"])
         self.assertEqual(page.status_code, 200)
         self.assertIn('data-dtos-component="recommendation"', page.text)
         self.assertIn("Franchise Management Profile", page.text)
         self.assertNotIn("<details open", page.text)
+
+    def test_trade_and_front_office_serialize_identical_brain_decision_contracts(self) -> None:
+        async def noop() -> None:
+            return None
+
+        app = FastAPI()
+        def page(_: str, body: str) -> HTMLResponse:
+            return HTMLResponse(body)
+        app.include_router(create_front_offices_router(ensure_fresh=noop, require_data=lambda: self.data, page=page))
+        app.include_router(create_trades_router(ensure_fresh=noop, require_data=lambda: self.data, page=page))
+        client = TestClient(app)
+        office = client.get("/api/front-offices?front_office=1").json()
+        trade = client.get("/api/trades?front_office=1").json()
+        for key in (
+            "decision_confidence", "decision_confidence_version", "brain_snapshot_id",
+            "recommendation_timestamp", "decision_provenance", "recommendation_explanation",
+        ):
+            self.assertEqual(office[key], trade[key], key)
 
 
 if __name__ == "__main__":

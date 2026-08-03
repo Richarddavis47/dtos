@@ -22,5 +22,6 @@ def build_front_office_center(data: dict[str, Any], roster_id: int | None = None
         "relationships": model.relationships,
         "unified_recommendation": intelligence.recommendation,
         "brain": intelligence.brain,
+        "brain_recommendation": intelligence.brain_decision,
         "decision_confidence": intelligence.brain_decision.confidence,
     }

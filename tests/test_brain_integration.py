@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from routes.valuation import create_valuation_router
+from src.core.intelligence.serialization import recommendation_contract
 from src.core.brain import brain_service
 from src.core.provider_network import build_provider_network
 from src.core.valuation_intelligence import build_valuation_intelligence
@@ -59,6 +60,13 @@ class BrainIntegrationTests(unittest.TestCase):
         for route in ("/api/brain", "/api/brain/health", "/api/brain/migration", "/api/brain/assets/player:1", "/api/brain/timeline/player:1"):
             self.assertEqual(client.get(route).status_code, 200, route)
         self.assertEqual(client.get("/api/brain/assets/not-real").status_code, 404)
+
+    def test_missing_brain_recommendation_is_explicit_not_silently_omitted(self) -> None:
+        contract = recommendation_contract(None, None)
+        self.assertEqual(contract["availability"], "unavailable")
+        self.assertIn("decision_confidence", contract)
+        self.assertIn("brain_snapshot_id", contract)
+        self.assertTrue(contract["decision_provenance"])
 
 
 if __name__ == "__main__":

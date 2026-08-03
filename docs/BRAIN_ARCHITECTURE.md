@@ -21,3 +21,7 @@ The service reads only the synchronized in-memory snapshot. Page rendering never
 The public `/api/brain` contract is canonical. Existing `/api/valuation` payloads remain supported as compatibility adapters. `/api/brain/migration` identifies migrated, legacy, and deprecated paths, while `/brain` provides the operational dashboard.
 
 New consumers must depend on `src.core.brain`, preferably through the Intelligence Orchestrator. Direct assembly of equivalent valuation fields is deprecated.
+
+## Recommendation API consistency audit
+
+Trade Intelligence, Front Office Intelligence, the unified recommendation API, Team Headquarters, and public crawl recommendation contracts serialize the shared `BrainDecision` contract. They expose the same Decision Confidence, Brain snapshot identity, recommendation timestamp, provenance, and explanation without presentation-layer recalculation. Player Dossier asset actions are classified as contextual asset guidance rather than unified team recommendations; their existing evidence contract remains intentionally independent.

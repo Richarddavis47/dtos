@@ -11,6 +11,7 @@ from fastapi.encoders import jsonable_encoder
 from app_metadata import VERSION
 from services.front_office_intelligence import build_front_office_center
 from services.trade_intelligence import build_trade_center
+from src.core.intelligence.serialization import recommendation_contract
 from services.transactions import normalize_transactions
 from src.core.intelligence.cache import intelligence_cache
 from src.core.intelligence import intelligence_orchestrator
@@ -240,6 +241,7 @@ def public_front_offices(data: dict[str, Any]) -> dict[str, Any]:
         "compatibilities": _safe(view["compatibilities"]),
         "relationships": _safe(view["relationships"]),
         "recommendation": _safe(view["unified_recommendation"]),
+        "decision_contract": _safe(recommendation_contract(view["unified_recommendation"], view.get("brain_recommendation"))),
         "team_intelligence": {str(roster_id): _public_team_intelligence(card) for roster_id, card in cards.items()},
     }
 
@@ -255,6 +257,7 @@ def public_trades(data: dict[str, Any]) -> dict[str, Any]:
         "opportunities": _safe(view["dossiers"]),
         "value_impacts": _safe(view["value_impacts"]),
         "recommendation": _safe(view["unified_recommendation"]),
+        "decision_contract": _safe(recommendation_contract(view["unified_recommendation"], view.get("brain_recommendation"))),
     }
 
 

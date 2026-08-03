@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 from components.front_office_intelligence import front_office_center
 from services.front_office_intelligence import build_front_office_center
+from src.core.intelligence.serialization import recommendation_contract
 
 
 def create_front_offices_router(*, ensure_fresh: Callable[[], Awaitable[None]], require_data: Callable[[], dict[str, Any]], page: Callable[[str, str], HTMLResponse]) -> APIRouter:
@@ -30,6 +31,7 @@ def create_front_offices_router(*, ensure_fresh: Callable[[], Awaitable[None]], 
     async def front_offices_api(front_office: int | None = None) -> JSONResponse:
         await ensure_fresh()
         result = view(front_office)
-        return JSONResponse(jsonable_encoder({"active_front_office": result["active"].roster_id, "organizations": [asdict(item) for item in result["reports"]], "compatibilities": [asdict(item) for item in result["compatibilities"]], "relationships": [asdict(item) for item in result["relationships"]]}))
+        payload = {"active_front_office": result["active"].roster_id, "organizations": [asdict(item) for item in result["reports"]], "compatibilities": [asdict(item) for item in result["compatibilities"]], "relationships": [asdict(item) for item in result["relationships"]], **recommendation_contract(result["unified_recommendation"], result.get("brain_recommendation"))}
+        return JSONResponse(jsonable_encoder(payload))
 
     return router
