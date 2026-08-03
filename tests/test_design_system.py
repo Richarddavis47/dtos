@@ -4,6 +4,7 @@ from __future__ import annotations
 import unittest
 
 from src.ui.design_system import DESIGN_SYSTEM_CSS, page_header, recommendation_panel
+from routes.teams import TEAM_HQ_CSS
 from tools.validation.smoke_http import validate_product_contract
 
 
@@ -50,6 +51,7 @@ class DesignSystemTests(unittest.TestCase):
         self.assertIn("overflow-x:auto", DESIGN_SYSTEM_CSS)
         self.assertIn("@media(max-width:760px)", DESIGN_SYSTEM_CSS)
         self.assertIn("min-height:44px", DESIGN_SYSTEM_CSS)
+        self.assertRegex(TEAM_HQ_CSS, r"max-width:460px[^}]+\.thq-intel\{grid-template-columns:1fr")
 
     def test_http_product_contract_rejects_generic_and_internal_labels(self) -> None:
         valid = page_header("Falcons Headquarters", league_name="Dynasty League", last_updated="today")

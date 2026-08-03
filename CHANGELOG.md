@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.6.6 - Team Headquarters Mobile Overflow Correction
+
+- Corrected the Team Headquarters intelligence grid so it collapses to two
+  columns on tablets and one column on narrow mobile viewports.
+- Added a permanent regression contract for the mobile grid breakpoint.
+- Preserved all v1.6.5 product design, intelligence, and data behavior.
+
 ## v1.6.5 - Product Design System, Navigation & Consistency
 
 - Added Product Design System 1.0 with shared page headers, action hierarchy,
