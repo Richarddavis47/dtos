@@ -257,3 +257,22 @@ timeline and cycle detail inside idempotent FOIS snapshots. Trading, Roster
 Construction, and Drafting remain unchanged and out of scope.
 
 ---
+# DTOS v1.6.2 — AI Inspection System Foundation
+
+DTOS now exposes deterministic, machine-readable descriptions of major page
+structures through the AI Inspection System (DINS). These endpoints describe
+what pages contain—sections, cards, tables, charts, actions, navigation, links,
+empty states, warnings, and element counts—without returning raw HTML.
+
+DINS reads the already-cached DTOS state directly. It never synchronizes Sleeper,
+calls a provider, executes intelligence engines, renders page services, performs
+expensive recalculation, or changes application state. Missing cached information
+is represented with explicit empty states and warnings.
+
+Initial coverage includes the inspection catalog, Team Headquarters, Player
+Dossier, Front Office Intelligence, and Trade Intelligence. The inspection schema
+is independently versioned as `1.0`.
+
+See `docs/DINS_INSPECTION.md`.
+
+---
