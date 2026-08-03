@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.7.3 - Valuation Intelligence Engine (DTOS Brain Phase I)
+
+- Added a canonical cached Evidence Engine for every player and draft pick.
+- Added distinct, reproducible Evidence Coverage, Confidence, and Provider Agreement scores.
+- Added dynamic provider contributions based on reliability, freshness, identity quality, observation confidence, and evidence-family independence.
+- Added explainable asset reports, bounded evidence timelines, and valuation diagnostics.
+- Added eight versioned evidence-intelligence APIs and expanded valuation asset responses, dashboard, and DINS contracts.
+- Preserved Market, Intrinsic, League Adjusted, Contender, and Rebuilder values as independent layers with zero request-time provider calls.
+
 ## v1.7.2 - Multi-Source Market Intelligence Provider Network
 
 - Added a canonical, versioned provider registry and immutable evidence contract with explicit licensing, availability, lineage, freshness, identity, and redistribution rules.

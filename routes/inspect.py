@@ -20,6 +20,7 @@ from src.core.inspection import (
 )
 from src.core.inspection.publication import GitHubPublicationResolver
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
+from src.core.valuation_intelligence import valuation_intelligence_report
 
 
 def create_inspection_router(
@@ -113,6 +114,7 @@ def create_inspection_router(
         universe = ValuationUniverse(data, state)
         calibration = data.get("calibration_report") or {}
         provider_network = data.get("provider_network") or {}
+        valuation_intelligence = valuation_intelligence_report(data)
         samples = [universe.assets[0], next((row for row in universe.assets if row["asset_type"] == "pick"), None)] if universe.assets else []
         return jsonable_encoder({
             "application_version": VERSION,
@@ -137,6 +139,15 @@ def create_inspection_router(
                 "consensus": provider_network.get("consensus") or {},
                 "observed_market": provider_network.get("observed_market") or {},
                 "safety": provider_network.get("safety") or {},
+            },
+            "valuation_intelligence": {
+                "schema_version": valuation_intelligence.get("schema_version"),
+                "availability": valuation_intelligence.get("availability"),
+                "asset_count": valuation_intelligence.get("asset_count", 0),
+                "summary": valuation_intelligence.get("summary") or {},
+                "diagnostics": {key: len(value) for key, value in (valuation_intelligence.get("diagnostics") or {}).items()},
+                "safety": valuation_intelligence.get("safety") or {},
+                "sample_assets": list((valuation_intelligence.get("assets") or {}).values())[:2],
             },
             "warnings": universe.freshness["reasons"],
         })

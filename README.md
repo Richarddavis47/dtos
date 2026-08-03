@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.7.2 adds the [Multi-Source Market Intelligence Provider Network](docs/MARKET_PROVIDER_NETWORK.md): a versioned compliance registry, immutable evidence contract, identity reconciliation, lineage-aware weighted consensus, dynamic reliability, quality-filtered Sleeper trade evidence, and strict calibration safety. No single provider is truth; every approved provider is measured evidence.
+DTOS v1.7.3 adds the [Valuation Intelligence Engine](docs/VALUATION_INTELLIGENCE_ENGINE.md): a deterministic evidence brain that gives every canonical asset independently reproducible Coverage, Confidence, and Agreement scores, dynamic source contributions, readable explanations, bounded timelines, and actionable diagnostics. It consumes the v1.7.2 Provider Network cache without request-time provider calls and preserves every valuation layer independently.
 
 DTOS v1.6.7 publishes immutable production DINS bundles through GitHub Releases and
 validates them dynamically without changing the inspected commit. DTOS v1.6.6 corrected Team Headquarters mobile overflow while preserving Product

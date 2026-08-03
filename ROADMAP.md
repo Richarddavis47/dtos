@@ -503,3 +503,10 @@ Primary question: **What has happened in Day Traders since the beginning?**
 - **v1.0.0** — Complete core Day Traders front-office platform
 - **v1.1.0** — Roster Intelligence Engine v1
 - **v1.2.0** — Player Value & Projection Integration v1
+### Valuation Intelligence Engine - DTOS v1.7.3
+
+- [x] Canonical cached Evidence Engine across all assets.
+- [x] Reproducible Coverage, Confidence, and Agreement scoring.
+- [x] Dynamic evidence weighting and readable explanations.
+- [x] Evidence timelines, diagnostics, APIs, dashboard, asset integration, and DINS inspection.
+- [ ] Expand historical predictive-accuracy feedback as additional completed seasons become available.
