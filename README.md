@@ -4,6 +4,8 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
+DTOS v1.7.0 adds the [canonical valuation universe](docs/VALUATION.md): every cached Sleeper player and future pick has one identity, independent valuation layers, explicit provider/freshness evidence, deterministic JSON/CSV exports, and DINS audit coverage. Existing values are not recalibrated in this foundation release.
+
 DTOS v1.6.7 publishes immutable production DINS bundles through GitHub Releases and
 validates them dynamically without changing the inspected commit. DTOS v1.6.6 corrected Team Headquarters mobile overflow while preserving Product
 Design System 1.0. DTOS v1.6.5 introduced shared page hierarchy, navigation,

@@ -1,5 +1,10 @@
 # DTOS Development Roadmap
 
+### Market Calibration Foundation - DTOS v1.7.0
+
+- Completed canonical asset universe, live valuation APIs, separate valuation layers, provider abstraction, freshness contract, deterministic exports, comparison fields, and DINS support.
+- Next: calibrate values only after representative market differences from this versioned audit foundation are reviewed and approved.
+
 ### GitHub DINS Artifact Publication Completion - DTOS v1.6.7
 
 - Publish post-deployment DINS bundles as immutable GitHub Release assets.

@@ -143,6 +143,16 @@ class InspectionContractTests(unittest.TestCase):
         sync.assert_not_called()
         intelligence.assert_not_called()
 
+    def test_valuation_inspection_uses_live_cached_contract(self) -> None:
+        before = copy.deepcopy(self.state)
+        response = self.client.get("/api/inspect/valuation")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["route"], "/api/valuation")
+        self.assertEqual(payload["status"]["counts"]["players"], 1)
+        self.assertIn("market_value", payload["valuation_layers"])
+        self.assertEqual(self.state, before)
+
     def test_page_metrics_match_rendered_contract_elements(self) -> None:
         payload = self.client.get("/api/inspect/team/1").json()
         metrics = payload["page_metrics"]

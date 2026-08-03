@@ -19,6 +19,7 @@ from src.core.inspection import (
     discover_pages,
 )
 from src.core.inspection.publication import GitHubPublicationResolver
+from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 
 
 def create_inspection_router(
@@ -104,6 +105,23 @@ def create_inspection_router(
     @router.get("/trades")
     async def inspect_trades() -> Any:
         return jsonable_encoder(engine().trades())
+
+    @router.get("/valuation")
+    async def inspect_valuation() -> Any:
+        """Inspect the live valuation contract without provider calls or state changes."""
+        universe = ValuationUniverse(state.get("data") or {}, state)
+        samples = [universe.assets[0], next((row for row in universe.assets if row["asset_type"] == "pick"), None)] if universe.assets else []
+        return jsonable_encoder({
+            "application_version": VERSION,
+            "application_build": BUILD_NUMBER,
+            "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
+            "page_name": "Valuation API",
+            "route": "/api/valuation",
+            "status": universe.status(),
+            "valuation_layers": LAYER_NAMES,
+            "sample_assets": [row for row in samples if row is not None],
+            "warnings": universe.freshness["reasons"],
+        })
 
     @router.get("/site-map")
     async def inspection_site_map() -> Any:
