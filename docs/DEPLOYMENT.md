@@ -24,3 +24,10 @@ Use graceful termination so FastAPI lifespan cleanup cancels tracked background 
 ## Render
 
 Set the start command above, configure `SLEEPER_LEAGUE_ID`, and use a persistent writable cache path only when the hosting plan supplies persistent storage. Render branch/commit variables are automatically surfaced on Settings.
+
+After a tagged Render deployment is ready, capture DINS against the exact production
+commit and upload its deterministic ZIP, manifest, and checksum files to the matching
+GitHub Release. Render resolves these public assets dynamically; generated inspection
+files are never committed or baked into a follow-up deployment. Set
+`DTOS_GITHUB_REPOSITORY` only when deploying a fork; the default is
+`Richarddavis47/dtos`.

@@ -51,3 +51,8 @@ The web application discovers routes and serves cached inspection artifacts. The
 and accessibility extraction, interaction evidence, and artifact writes. This keeps
 the dependency direction `read-only API -> artifact store` and prevents ordinary
 requests from performing visual work or invoking intelligence engines.
+
+The post-deployment publication boundary is `capture -> deterministic package ->
+GitHub Release assets`. Production performs a brief cached, read-only GitHub release
+lookup and validates immutable identity; it never owns Chromium, uploads, or generated
+artifact persistence.

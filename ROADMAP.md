@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### GitHub DINS Artifact Publication Completion - DTOS v1.6.7
+
+- Publish post-deployment DINS bundles as immutable GitHub Release assets.
+- Resolve public assets from production with version/build/commit/checksum identity.
+- Keep generated visual artifacts outside repository history.
+
 ### Product Design System, Navigation & Consistency - DTOS v1.6.5
 
 - Standardize public page hierarchy, actions, recommendation evidence, grade

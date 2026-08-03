@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import asyncio
 from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ from src.core.inspection import (
     InspectionEngine,
     discover_pages,
 )
+from src.core.inspection.publication import GitHubPublicationResolver
 
 
 def create_inspection_router(
@@ -24,10 +26,15 @@ def create_inspection_router(
     state: dict[str, Any],
     route_provider: Callable[[], Iterable[Any]] = tuple,
     artifact_root: Path | None = None,
+    publication_resolver: GitHubPublicationResolver | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/inspect", tags=["inspection"])
     public_base = os.getenv("DTOS_PUBLIC_URL", "https://dtos.onrender.com").rstrip("/")
     store = InspectionArtifactStore(artifact_root or Path("static/inspection"), public_base)
+    publication = publication_resolver or GitHubPublicationResolver()
+
+    async def published(*, refresh: bool = False) -> dict[str, Any]:
+        return await asyncio.to_thread(publication.current, refresh=refresh)
 
     def engine() -> InspectionEngine:
         return InspectionEngine(state)
@@ -55,13 +62,20 @@ def create_inspection_router(
         page = next((row for row in page_catalog() if row.page_id == page_id), None)
         if page is None:
             raise HTTPException(404, "Inspection page ID is not registered.")
+        release = await published()
+        bundle_url = release.get("full_bundle_url")
+        local_visuals = any(store.page(page_id, viewport.name) for viewport in VIEWPORTS)
         return {
             "application_version": VERSION,
             "application_build": BUILD_NUMBER,
             "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
             "page": jsonable_encoder(page),
-            "visual_urls": {
-                viewport.name: f"{public_base}/api/inspect/visual/pages/{page_id}/{viewport.name}"
+            "visual_artifacts": {
+                viewport.name: (
+                    {"url": f"{public_base}/api/inspect/visual/pages/{page_id}/{viewport.name}", "mode": "direct"}
+                    if local_visuals else
+                    {"bundle_url": bundle_url, "internal_path": f"dins/pages/{page_id}/{viewport.name}.json", "mode": "bundle"}
+                )
                 for viewport in VIEWPORTS
             },
         }
@@ -94,11 +108,13 @@ def create_inspection_router(
     @router.get("/site-map")
     async def inspection_site_map() -> Any:
         pages = page_catalog()
+        release = await published()
         return {
             "application_version": VERSION,
             "application_build": BUILD_NUMBER,
             "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
             "pages": jsonable_encoder(pages),
+            "publication": {key: release.get(key) for key in ("publication_status", "full_bundle_url", "published_manifest_url", "checksums_url")},
             "metrics": {"total": len(pages), "inspectable": sum(not page.excluded for page in pages), "excluded": sum(page.excluded for page in pages)},
         }
 
@@ -129,11 +145,12 @@ def create_inspection_router(
 
     @router.get("/releases")
     async def inspection_releases() -> Any:
-        return {"releases": store.releases(), "current": f"{public_base}/api/inspect/releases/current"}
+        current = await published()
+        return {"releases": [current, *store.releases()], "current": f"{public_base}/api/inspect/releases/current"}
 
     @router.get("/releases/current")
-    async def current_release() -> Any:
-        return current_manifest() or {"version": VERSION, "build": BUILD_NUMBER, "status": "pending"}
+    async def current_release(refresh: bool = False) -> Any:
+        return await published(refresh=refresh)
 
     def retained_release(version: str) -> dict[str, Any]:
         result = next((row for row in store.releases() if row.get("version") == version), None)
@@ -143,27 +160,30 @@ def create_inspection_router(
 
     @router.get("/releases/{version}")
     async def release(version: str) -> Any:
+        if version.removeprefix("v") == VERSION:
+            return await published()
         return retained_release(version)
 
     @router.get("/releases/{version}/changes")
     async def release_changes(version: str) -> Any:
-        result = retained_release(version)
+        result = await published() if version.removeprefix("v") == VERSION else retained_release(version)
         return {key: result.get(key, []) for key in ("pages_added", "pages_removed", "pages_changed", "semantic_contract_changes")}
 
     @router.get("/releases/{version}/regressions")
     async def release_regressions(version: str) -> Any:
-        result = retained_release(version)
+        result = await published() if version.removeprefix("v") == VERSION else retained_release(version)
         return {key: result.get(key, []) for key in ("visual_difference_results", "interaction_failures", "accessibility_regressions", "stale_version_mismatches")}
 
     @router.get("/health")
-    async def inspection_health() -> Any:
-        current = current_manifest() or {}
+    async def inspection_health(refresh: bool = False) -> Any:
+        current = await published(refresh=refresh)
         pages = page_catalog()
         deployment = deployment_metadata()
         branch, commit = deployment["branch"], deployment["commit"]
         completed = int(current.get("total_pages_completed") or 0)
         expected = sum(not page.excluded for page in pages)
         latest = current.get("version")
-        return {"application_version": VERSION, "application_build": BUILD_NUMBER, "inspection_schema_version": INSPECTION_SCHEMA_VERSION, "latest_completed_inspection_version": latest, "inspection_status": current.get("status", "pending"), "total_pages_expected": expected, "total_pages_completed": completed, "total_visual_artifacts": current.get("total_visual_artifacts", 0), "failures": current.get("failures", []), "warnings": current.get("warnings", []), "generated_timestamp": current.get("generated_at"), "source_commit": current.get("commit_sha") or commit, "source_branch": branch, "production_inspection_matches_deployment": latest == VERSION and completed == expected}
+        identities_match = bool(current.get("identities_match"))
+        return {"application_version": VERSION, "application_build": BUILD_NUMBER, "current_production_commit": commit, "expected_release_tag": f"v{VERSION}", "inspection_schema_version": INSPECTION_SCHEMA_VERSION, "latest_completed_inspection_version": latest, "inspection_status": current.get("publication_status", "pending"), "publication_status": current.get("publication_status", "pending"), "published_manifest_url": current.get("published_manifest_url"), "full_bundle_url": current.get("full_bundle_url"), "checksums_url": current.get("checksums_url"), "total_pages_expected": expected, "total_pages_completed": completed, "total_visual_artifacts": current.get("total_visual_artifacts", 0), "failures": current.get("failures", []), "warnings": current.get("warnings", []), "generated_timestamp": current.get("generated_at"), "source_commit": current.get("commit_sha") or commit, "source_branch": branch, "identities_match": identities_match, "production_inspection_matches_deployment": identities_match and latest == VERSION and completed == expected}
 
     return router
