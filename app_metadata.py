@@ -3,12 +3,14 @@ from __future__ import annotations
 
 import os
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.6.4"
-BUILD_NUMBER = 1604
-RELEASE_CODENAME = "Team Identity Normalization & Team Headquarters Polish"
+VERSION = "1.6.5"
+BUILD_NUMBER = 1605
+RELEASE_CODENAME = "Product Design System, Navigation & Consistency"
+APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
 
@@ -90,3 +92,13 @@ def repository_metadata() -> tuple[str, str]:
         or file_commit
     )
     return branch or "Unavailable", commit or "Unavailable"
+
+
+def deployment_metadata() -> dict[str, str]:
+    """Return public deployment provenance without exposing host internals."""
+    branch, commit = repository_metadata()
+    return {
+        "branch": branch,
+        "commit": commit,
+        "deployed_at": os.getenv("DTOS_DEPLOYED_AT") or APPLICATION_STARTED_AT,
+    }

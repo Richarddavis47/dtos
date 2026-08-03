@@ -168,7 +168,8 @@ class TradeIntelligenceTests(unittest.TestCase):
         self.assertEqual(api.status_code, 200)
         self.assertGreater(api.json()["count"], 0)
         self.assertEqual(page.status_code, 200)
-        self.assertIn("Trade Intelligence v1", page.text)
+        self.assertIn('data-dtos-component="recommendation"', page.text)
+        self.assertIn("Active Front Office", page.text)
         self.assertIn("Open Trade Dossier", page.text)
         self.assertNotIn("<details open", page.text)
 

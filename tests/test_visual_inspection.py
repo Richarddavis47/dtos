@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from app_metadata import BUILD_NUMBER, VERSION
+from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from routes.inspect import create_inspection_router
 from src.core.inspection import INSPECTION_SCHEMA_VERSION, InspectionArtifactStore, discover_pages
 from src.core.inspection.comparison import compare_images
@@ -19,7 +19,7 @@ from src.core.inspection.comparison import compare_images
 
 class VisualInspectionTests(unittest.TestCase):
     def state(self) -> dict:
-        return {"last_sync": "2026-08-02T00:00:00Z", "data": {"league": {"league_id": "l1"}, "players": {"p1": {"full_name": "Player One", "position": "QB"}}, "teams": [{"roster_id": 1, "players": [{"id": "p1"}]}], "matchups": [{"matchup_id": 7}]}}
+        return {"last_sync": "2026-08-02T00:00:00Z", "data": {"league": {"league_id": "l1"}, "players": {"p1": {"full_name": "Player One", "position": "QB"}}, "teams": [{"roster_id": 1, "team_name": "Team 1", "owner": "Owner 1", "players": [{"id": "p1"}]}], "matchups": [{"matchup_id": 7}]}}
 
     def app(self, root: Path) -> FastAPI:
         app = FastAPI()
@@ -48,6 +48,13 @@ class VisualInspectionTests(unittest.TestCase):
         self.assertIn("/teams/1", routes)
         self.assertIn("/players/p1", routes)
         self.assertNotIn("/api/inspect", routes)
+
+    def test_discovery_uses_meaningful_dynamic_page_names(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            pages = discover_pages(self.app(Path(folder)).routes, self.state())
+        names = {page.route: page.page_name for page in pages}
+        self.assertEqual(names["/teams/1"], "Team 1 Headquarters")
+        self.assertEqual(names["/players/p1"], "Player One — Player Intelligence")
 
     def test_public_contract_exposes_schema_site_map_and_pending_health(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
@@ -103,6 +110,11 @@ class VisualInspectionTests(unittest.TestCase):
             store.current_root.mkdir(parents=True)
             (store.current_root / "manifest.json").write_text("not-json", encoding="utf-8")
             self.assertIsNone(store.manifest())
+
+    def test_deployment_provenance_contract_is_complete(self) -> None:
+        deployment = deployment_metadata()
+        self.assertEqual(set(deployment), {"branch", "commit", "deployed_at"})
+        self.assertTrue(all(deployment.values()))
 
 
 if __name__ == "__main__":

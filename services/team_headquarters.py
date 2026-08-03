@@ -18,6 +18,26 @@ POSITION_TARGETS = {
 }
 
 
+def build_team_directory(data: dict[str, Any]) -> dict[int, dict[str, Any]]:
+    """Return one league-relative, offseason-aware directory card per franchise."""
+    teams = data.get("teams") or []
+    if not teams:
+        return {}
+    active_id = min(int(team.get("roster_id") or 0) for team in teams)
+    intelligence = intelligence_orchestrator.analyze(data, active_id).roster.team_intelligence
+    return {
+        roster_id: {
+            "preseason": card.preseason,
+            "rank": card.overall.rank,
+            "projected_wins": card.projected_wins,
+            "playoff_odds": card.playoff_odds,
+            "championship_odds": card.championship_odds,
+            "grade": card.overall.grade,
+        }
+        for roster_id, card in intelligence.items()
+    }
+
+
 def _number(value: Any) -> float | None:
     try:
         return float(value) if value not in (None, "") else None

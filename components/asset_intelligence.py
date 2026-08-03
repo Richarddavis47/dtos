@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from html import escape
 
+from src.ui import recommendation_panel
+
 from src.core.asset_intelligence import AssetEvaluation, PlayerReport
 
 ASSET_CSS = """
@@ -40,7 +42,8 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict])
     weaknesses = "".join(f"<li>{escape(item)}</li>" for item in report.weaknesses)
     risk_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(item.explanation)}</li>" for item in report.risk.evidence)
     opportunity = "".join(f"<li><b>{escape(label)}:</b> {value.score}/100 — {escape(value.summary)}</li>" for label, value in report.opportunity.items())
-    rec_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(item.explanation)}</li>" for item in report.recommendation.evidence)
+    recommendation_evidence = tuple(f"{item.factor}: {item.observed_value} — {item.explanation}" for item in report.recommendation.evidence)
+    primary_recommendation = recommendation_panel(title=report.recommendation.action, recommendation=report.recommendation.summary, confidence=report.recommendation.confidence, primary_reason=recommendation_evidence[0] if recommendation_evidence else report.executive_summary, evidence=recommendation_evidence, expected_impact="Aligns this player's role and value with the selected Front Office direction.", action_label="Open Trade Center", action_href=f'/trades?front_office={selected_team.get("roster_id")}', limitations=tuple(report.risk.limitations))
     value = report.value_profile
     integrated = ""
     if value is not None:
@@ -59,7 +62,8 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict])
     return f"""
 {ASSET_CSS}
 <section class="card ai-context"><div><div class="identity-kicker">Asset Intelligence v1 · Player Dossier</div><h2>{escape(profile.name)}</h2><p class="muted">{escape(report.executive_summary)}</p></div><form method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section>
+{primary_recommendation}
 <section class="ai-values">{values}</section>
 {integrated}
-<section class="ai-sections"><article class="ai-card"><h3>Player Snapshot</h3><ul>{snapshot_html}</ul><p><b>Archetypes:</b> {escape(", ".join(report.archetypes))}</p></article><article class="ai-card"><h3>Opportunity Analysis</h3><ul>{opportunity}</ul></article><article class="ai-card"><h3>Strength Analysis</h3><ul>{strengths}</ul></article><article class="ai-card"><h3>Weakness Analysis</h3><ul>{weaknesses}</ul></article><article class="ai-card"><h3>Risk Analysis · {escape(report.risk.level)} ({report.risk.score}/100)</h3><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{risk_evidence}</ul></details></article><article class="ai-card ai-recommendation"><div class="ai-priority">{escape(report.recommendation.priority)} Priority · {report.recommendation.confidence}% confidence</div><h3>{escape(report.recommendation.action)}</h3><p>{escape(report.recommendation.summary)}</p><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{rec_evidence}</ul></details></article></section>
+<section class="ai-sections"><article class="ai-card"><h3>Player Snapshot</h3><ul>{snapshot_html}</ul><p><b>Archetypes:</b> {escape(", ".join(report.archetypes))}</p></article><article class="ai-card"><h3>Opportunity Analysis</h3><ul>{opportunity}</ul></article><article class="ai-card"><h3>Strength Analysis</h3><ul>{strengths}</ul></article><article class="ai-card"><h3>Weakness Analysis</h3><ul>{weaknesses}</ul></article><article class="ai-card"><h3>Risk Analysis · {escape(report.risk.level)} ({report.risk.score}/100)</h3><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{risk_evidence}</ul></details></article></section>
 """

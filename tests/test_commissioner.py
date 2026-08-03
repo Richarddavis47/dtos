@@ -127,8 +127,8 @@ class CommissionerDeskTests(unittest.TestCase):
         rendered = commissioner_desk(self.build())
         for label in (
             "Commissioner Desk", "Active League", "Active Front Office", "What changed?", "What matters?",
-            "What should I do?", "Your Front Office", "League Intelligence", "League Snapshot", "League Personality",
-            "Show Reasoning",
+            "What should I do?", "Your Front Office", "League Intelligence", "League Snapshot",
+            "Detailed Evidence",
         ):
             self.assertIn(label, rendered)
         self.assertIn("localStorage", rendered)
@@ -137,6 +137,7 @@ class CommissionerDeskTests(unittest.TestCase):
         self.assertIn("fetch('/sync'", rendered)
         self.assertIn("@media(max-width:650px)", rendered)
         self.assertIn("color-scheme:dark", rendered)
+        self.assertNotIn("League Personality", rendered)
 
     def test_confidence_score_is_bounded(self) -> None:
         self.assertEqual(ConfidenceScore(150).value, 100)

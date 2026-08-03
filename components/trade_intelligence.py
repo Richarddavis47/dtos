@@ -4,6 +4,7 @@ from __future__ import annotations
 from html import escape
 
 from src.core.trade_intelligence import TradeDossier
+from src.ui import recommendation_panel
 
 TRADE_CSS = """
 <style>
@@ -54,4 +55,5 @@ def trade_center(view: dict) -> str:
         for team in view["teams"]
     )
     cards = "".join(trade_card(item, view.get("value_impacts", {}).get(item.partner.roster_id)) for item in view["dossiers"]) or '<div class="card ti-empty">No balanced cached opportunity crossed the v1 generation boundary. Monitor roster and market changes.</div>'
-    return f"""{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Intelligence v1 / Unified Intelligence Platform</div><h2>{escape(unified.title)}</h2><p>{escape(unified.recommendation)}</p><span class="pill">{unified.confidence.score}% {escape(unified.confidence.level)} confidence</span></div><form class="ti-selector" method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section><div class="ti-list">{cards}</div>"""
+    primary = recommendation_panel(title=unified.title, recommendation=unified.recommendation, confidence=unified.confidence.score, primary_reason=unified.why[0] if unified.why else unified.current_outlook, evidence=unified.why, expected_impact=f"Current: {unified.current_outlook} Future: {unified.future_outlook}", action_label="Review Recommended Offers", action_href="#recommended-offers", limitations=unified.why_not)
+    return f"""{TRADE_CSS}{primary}<section class="card ti-hero"><div><div class="identity-kicker">Active Front Office</div><h2>{escape(str(active.get('team_name') or active.get('owner') or 'Unassigned Franchise'))}</h2><p>Who should this Front Office trade with, and what should it offer?</p></div><form class="ti-selector" method="get"><label for="front_office">Change Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section><div class="ti-list" id="recommended-offers">{cards}</div>"""

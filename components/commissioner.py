@@ -6,6 +6,7 @@ from typing import Any
 from urllib.parse import quote
 
 from models.commissioner import RecommendationPriority
+from src.ui import recommendation_panel as shared_recommendation_panel
 
 COMMISSIONER_DESK_CSS = """
 <style>
@@ -69,9 +70,9 @@ def commissioner_header(view: dict[str, Any]) -> str:
     offices = "".join(_option(str(item.roster_id), f"{item.owner_name} · {item.team_name}", str(active_office.roster_id)) for item in view["front_offices"])
     health = view["snapshot"]["health"]
     return f"""
-<header class="cd-header"><div class="cd-header-top"><div class="cd-brand"><small>DTOS · Front Office Operating System</small><h1>Commissioner Desk</h1><p>{escape(active_league.name)} executive briefing</p></div><div class="cd-sync"><div class="cd-sync-meta">Last synchronization<br><b>{escape(health['last_sync'])}</b></div><form method="post" action="/sync"><button class="btn" type="submit">Sync League</button></form></div></div>
+<header class="cd-header" data-dtos-component="page-header" data-design-system="1.0"><div class="cd-header-top"><div class="cd-brand"><small>DTOS · Daily Front Office Briefing</small><h1>Commissioner Desk</h1><p>See what changed, what matters, and what to do next in {escape(active_league.name)}.</p></div><div class="cd-sync"><div class="cd-sync-meta">League Sync<br><b>{escape(health['last_sync'] or 'Not synchronized yet')}</b></div><form method="post" action="/sync"><button class="btn" type="submit">Sync League</button></form></div></div>
 <div class="cd-context"><div><label for="active-league">Active League</label><select id="active-league" name="league">{leagues}</select></div><div><label for="active-front-office">Active Front Office</label><select id="active-front-office" name="front_office">{offices}</select></div></div>
-<nav class="cd-nav" aria-label="Quick navigation"><a href="/">Commissioner Desk</a><a href="/teams">Team Headquarters</a><a href="/front-offices">Front Office Intelligence</a><a href="/trades">Trade Intelligence</a><a href="/transactions">Transactions</a><a href="/matchups">Matchups</a><a href="/picks">Draft Picks</a><a href="/settings">Settings</a><a href="/api/status">API</a></nav></header>
+<nav class="cd-nav" aria-label="Primary navigation"><a href="/">Home</a><a href="/teams">Team HQ</a><a href="/trades">Trade Center</a><a href="/matchups">Matchups</a><a href="/transactions">Transactions</a><a href="/picks">Draft Capital</a><a href="/history">History</a><a href="/front-offices">Front Office</a><a href="/settings">Settings</a></nav></header>
 """
 
 
@@ -101,8 +102,8 @@ def front_office_summary(view: dict[str, Any]) -> str:
     assets = summary["asset_health"]
     return f"""
 <section class="cd-section"><div class="cd-section-head"><div><h2>Your Front Office</h2><p>{escape(office.owner_name)} · {escape(office.team_name)}</p></div><a class="cd-chip" href="/teams/{office.roster_id}">Open Team Headquarters</a></div>
-<div class="cd-office"><article class="cd-card cd-office-main"><span class="cd-kicker">Current Contending Grade</span><div class="cd-grade">{escape(current.grade)} · {current.score}</div><p>#{current.rank} of {current.league_size} · {current.percentile}th percentile</p><span class="cd-status">{escape(summary['competitive_window'])}</span><details><summary>Show Window Reasoning</summary><p>{escape(summary['window_explanation'])}</p></details></article>
-<article class="cd-card cd-metric"><span>Future Outlook</span><b>{escape(future.grade)} · {future.score}</b><p>#{future.rank} · {future.percentile}th percentile</p></article><article class="cd-card cd-metric"><span>Record</span><b>{escape(summary['record'])}</b><p>Current Sleeper record</p></article><article class="cd-card cd-metric"><span>Power Ranking</span><b>#{summary['power_ranking']}</b><p>League-relative projected order</p></article><article class="cd-card cd-metric"><span>Depth Analysis</span><b>{escape(depth.grade)} · {depth.score}</b><p>Core position coverage</p></article><article class="cd-card cd-metric"><span>Asset Health</span><b>{escape(assets.grade)} · {assets.score}</b><p>Draft capital, flexibility, and balance</p></article></div></section>
+<div class="cd-office"><article class="cd-card cd-office-main"><span class="cd-kicker">Current Contending Grade</span><div class="cd-grade">{escape(current.grade)} · {current.score}</div><p>#{current.rank} of {current.league_size} · {current.percentile}th percentile · {summary['confidence']}% confidence</p><p class="ds-grade-context">Meaning: league-relative championship readiness based on current evidence.</p><span class="cd-status">{escape(summary['competitive_window'])}</span><details><summary>Show Window Reasoning</summary><p>{escape(summary['window_explanation'])}</p></details></article>
+<article class="cd-card cd-metric"><span>Future Outlook</span><b>{escape(future.grade)} · {future.score}</b><p>#{future.rank} · {future.percentile}th percentile · {summary['confidence']}% confidence</p><p class="ds-grade-context">Meaning: sustainable value beyond the current season.</p></article><article class="cd-card cd-metric"><span>Record</span><b>{escape(summary['record'])}</b><p>Current Sleeper record</p></article><article class="cd-card cd-metric"><span>Power Ranking</span><b>#{summary['power_ranking']}</b><p>League-relative projected order</p></article><article class="cd-card cd-metric"><span>Depth Analysis</span><b>{escape(depth.grade)} · {depth.score}</b><p>{summary['confidence']}% confidence · core position coverage</p></article><article class="cd-card cd-metric"><span>Asset Health</span><b>{escape(assets.grade)} · {assets.score}</b><p>{summary['confidence']}% confidence · draft capital, flexibility, and balance</p></article></div></section>
 """
 
 
@@ -119,12 +120,7 @@ def recommendation_panel(view: dict[str, Any]) -> str:
 
 def unified_recommendation_panel(view: dict[str, Any]) -> str:
     recommendation = view["unified_recommendation"]
-    supporting = "".join(f"<li>{escape(item)}</li>" for item in recommendation.why)
-    counterarguments = "".join(f"<li>{escape(item)}</li>" for item in recommendation.why_not)
-    assumptions = "".join(f"<li>{escape(item)}</li>" for item in recommendation.assumptions)
-    changes = "".join(f"<li>{escape(item)}</li>" for item in recommendation.change_conditions)
-    sources = " / ".join(recommendation.sources)
-    card = f'<article class="cd-card cd-rec"><div class="cd-priority {escape(recommendation.priority.lower())}">{escape(recommendation.priority)} Priority<br><span>Unified Intelligence</span></div><div><h3>{escape(recommendation.title)}</h3><p>{escape(recommendation.recommendation)}</p></div><div class="cd-confidence"><b>{recommendation.confidence.score}%</b><span class="muted">{escape(recommendation.confidence.level)} Confidence</span></div><details><summary>Show Reasoning</summary><div class="cd-reason"><p><b>Current:</b> {escape(recommendation.current_outlook)}</p><p><b>Future:</b> {escape(recommendation.future_outlook)}</p><b>Why</b><ul>{supporting}</ul><b>Why not</b><ul>{counterarguments}</ul><b>Assumptions</b><ul>{assumptions}</ul><b>What could change this</b><ul>{changes}</ul><p>Sources: {escape(sources)}</p></div></details></article>'
+    card = shared_recommendation_panel(title=recommendation.title, recommendation=recommendation.recommendation, confidence=recommendation.confidence.score, primary_reason=recommendation.why[0] if recommendation.why else recommendation.current_outlook, evidence=recommendation.why, expected_impact=f"Current: {recommendation.current_outlook} Future: {recommendation.future_outlook}", action_label="Open Trade Center", action_href=f'/trades?front_office={view["active_front_office"].roster_id}', limitations=recommendation.why_not)
     return f'<section class="cd-section"><div class="cd-section-head"><div><h2>What should I do?</h2><p>One unified recommendation for {escape(view["active_front_office"].owner_name)}</p></div><span class="cd-chip">Four engines / one answer</span></div><div class="cd-recommendations">{card}</div></section>'
 
 
@@ -172,7 +168,7 @@ def league_snapshot(view: dict[str, Any]) -> str:
         names = " vs ".join(escape(str(side.get("team") or "TBD")) for side in sides)
         matchups.append(f'<div class="cd-mini-row"><b>Matchup {escape(str(matchup_id))}</b><span>{names}</span></div>')
     leader = snapshot["leader"]
-    leaders = f'<div class="cd-mini-row"><b>{escape(snapshot["season_label"])} Leader</b><span>{escape(str(leader.get("team_name"))) if leader else "Unavailable"}</span></div>'
+    leaders = (f'<div class="cd-mini-row"><b>Projected Power Leader</b><span>{escape(str(leader.get("team_name"))) if leader else "No projected leader is available yet."}</span></div>' if snapshot["preseason"] else f'<div class="cd-mini-row"><b>{escape(snapshot["season_label"])} Leader</b><span>{escape(str(leader.get("team_name"))) if leader else "No current-season leader is available."}</span></div>')
     health = snapshot["health"]
     health_html = f'<div class="cd-mini-row"><b>{escape(health["status"])}</b><span>Last sync {escape(health["last_sync"])}</span></div>' + (f'<p class="warn">{escape(health["error"])}</p>' if health["error"] else "")
     sections = ((snapshot["season_label"], standings), ("Recent Transactions", transactions), ("Upcoming Matchups", "".join(matchups) or '<p class="muted">No matchup assignments.</p>'), ("League Leaders", leaders), ("League Health", health_html))
@@ -192,14 +188,13 @@ def commissioner_desk(view: dict[str, Any]) -> str:
         COMMISSIONER_DESK_CSS
         + '<div class="cd-shell">'
         + commissioner_header(view)
-        + league_opportunity_dashboard(view)
         + since_last_visit(view)
-        + league_headlines(view)
-        + front_office_summary(view)
         + unified_recommendation_panel(view)
+        + front_office_summary(view)
+        + league_opportunity_dashboard(view)
+        + league_headlines(view)
         + league_intelligence(view)
         + league_snapshot(view)
-        + league_personality(view)
         + '<p class="cd-footer-note">Facts before interpretation · Explainable recommendations · Uncertainty disclosed</p></div>'
         + PERSISTENCE_SCRIPT
     )

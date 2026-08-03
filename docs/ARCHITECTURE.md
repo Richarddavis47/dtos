@@ -32,10 +32,16 @@ flowchart TD
 - `src/core/data_platform/normalization/` owns canonical player identity and mandatory provider-format reconciliation before values enter storage, consensus, APIs, or intelligence.
 - Domain engines own evaluation implementations but do not call application services.
 - `src/platform/` owns cross-cutting observability and validation.
+- `src/ui/` owns reusable presentation contracts only. It consumes already-built
+  view data and never imports or duplicates intelligence calculations.
 
 The call dependency is Application → Orchestrator → Intelligence Engines → Data Platform → registered adapters. Inbound data flows External Providers → Provider Registry → Normalizer → Data Platform → Intelligence Orchestrator. Services and routes may not import intelligence implementation packages directly, and intelligence engines may not consume provider-specific objects.
 
 ## Data lifecycle
+
+Presentation follows `Routes -> application services -> view models -> Design
+System renderers`. Design System 1.0 standardizes hierarchy and interaction while
+preserving domain ownership in the orchestrator and registered engines.
 
 Sleeper synchronization normalizes data into one cache snapshot. A request selects a Front Office, builds an immutable intelligence context, executes or reuses provider results, aggregates evidence, resolves conflicts conservatively, and renders HTML or JSON. Refresh invalidates the affected orchestration namespace.
 # DINS release-verification boundary

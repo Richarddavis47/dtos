@@ -8,7 +8,8 @@ from urllib.parse import quote
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 
-from services.team_headquarters import CORE_POSITIONS, build_team_headquarters
+from services.team_headquarters import CORE_POSITIONS, build_team_directory, build_team_headquarters
+from src.ui import recommendation_panel
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -79,7 +80,7 @@ def _team_intelligence(view: dict[str, Any]) -> str:
     card = view["team_intelligence"]
     grades = (card.overall, card.current_contending, card.dynasty, card.starting_lineup, card.depth, *card.positions.values(), card.draft_capital, card.youth, card.future_outlook, card.roster_flexibility, card.asset_liquidity)
     return "".join(
-        f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>{escape(item.category)}</h3><div class="thq-grade-score">{item.score}/100 · #{item.rank} of {item.league_size} · {item.percentile}th percentile</div></div><div class="thq-grade-mark">{escape(item.grade)}</div></div><details><summary>Show Reasoning</summary><div class="thq-reasoning"><ul>{"".join(f"<li>{escape(reason)}</li>" for reason in item.reasons or card.explanation)}</ul></div></details></article>'
+        f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>{escape(item.category)}</h3><div class="thq-grade-score">Score {item.score}/100 · #{item.rank} of {item.league_size} · {item.percentile}th percentile · {card.confidence}% confidence</div></div><div class="thq-grade-mark">{escape(item.grade)}</div></div><p class="ds-grade-context">Meaning: this grade compares the franchise with the rest of this league using the evidence shown below.</p><details><summary>Show Reasoning</summary><div class="thq-reasoning"><ul>{"".join(f"<li>{escape(reason)}</li>" for reason in item.reasons or card.explanation)}</ul></div></details></article>'
         for item in grades
     )
 
@@ -139,13 +140,18 @@ def create_teams_router(
     @router.get("/teams", response_class=HTMLResponse)
     async def teams_page() -> HTMLResponse:
         await ensure_fresh()
-        teams = require_data()["teams"]
+        data = require_data()
+        teams = data["teams"]
+        directory = build_team_directory(data)
         cards = []
-        for rank, team in enumerate(teams, 1):
+        for team in teams:
             starters = sum(player.get("roster_slot") == "Starter" for player in team.get("players") or [])
             firsts = team.get("pick_counts", {}).get("1", 0)
+            outlook = directory[int(team["roster_id"])]
+            result = (f'<p class="record">Projected #{outlook["rank"]} · {outlook["projected_wins"]} wins</p>' if outlook["preseason"] else f'<p class="record">{team["wins"]}-{team["losses"]}-{team["ties"]}</p>')
+            performance = (f'<div class="metric"><b>{outlook["playoff_odds"]}%</b><span>Playoff Odds</span></div><div class="metric"><b>{outlook["championship_odds"]}%</b><span>Championship Odds</span></div>' if outlook["preseason"] else f'<div class="metric"><b>{team["points_for"]:.2f}</b><span>Points For</span></div><div class="metric"><b>{team["max_points"]:.2f}</b><span>Max PF</span></div>')
             cards.append(
-                f'<a class="card team team-link" href="/teams/{team["roster_id"]}"><div class="team-head"><div><div class="identity-kicker">Owner: {escape(team["owner"])}</div><h3 class="franchise-name">{escape(team["team_name"])}</h3></div><div class="rank-badge">#{rank}</div></div><p class="record">{team["wins"]}-{team["losses"]}-{team["ties"]}</p><div class="summary-grid"><div class="metric"><b>{team["points_for"]:.2f}</b><span>Points For</span></div><div class="metric"><b>{team["max_points"]:.2f}</b><span>Max PF</span></div><div class="metric"><b>{len(team["players"])}</b><span>Players</span></div><div class="metric"><b>{firsts}</b><span>Future 1sts</span></div></div><p class="muted">{starters} starters · {len(team.get("picks_owned", []))} total future picks</p></a>'
+                f'<a class="card team team-link" href="/teams/{team["roster_id"]}"><div class="team-head"><div><div class="identity-kicker">Owner: {escape(team["owner"])}</div><h3 class="franchise-name">{escape(team["team_name"])}</h3></div><div class="rank-badge">{escape(outlook["grade"])}</div></div>{result}<div class="summary-grid">{performance}<div class="metric"><b>{len(team["players"])}</b><span>Players</span></div><div class="metric"><b>{firsts}</b><span>Future 1sts</span></div></div><p class="muted">{starters} starters · {len(team.get("picks_owned", []))} total future picks</p></a>'
             )
         return page("Teams", '<h2>League Franchises</h2><p class="muted">Select a team to open its Front Office Headquarters.</p><div class="grid">' + "".join(cards) + "</div>")
 
@@ -206,8 +212,7 @@ def create_teams_router(
             for label, rank in roster.metrics["League Rankings"].items()
         )
         recommendation = view["unified_recommendation"]
-        recommendation_reasons = "".join(f"<li>{escape(reason)}</li>" for reason in recommendation.why)
-        recommendation_card = f'<section class="thq-section thq-recommendation"><div class="identity-kicker">{escape(recommendation.priority)} priority · {recommendation.confidence.score}% confidence</div><h2>{escape(recommendation.title)}</h2><p>{escape(recommendation.recommendation)}</p><details><summary>Show Reasoning</summary><ul>{recommendation_reasons}</ul></details></section>'
+        recommendation_card = recommendation_panel(title=recommendation.title, recommendation=recommendation.recommendation, confidence=recommendation.confidence.score, primary_reason=recommendation.why[0] if recommendation.why else recommendation.current_outlook, evidence=recommendation.why, expected_impact=f"Current: {recommendation.current_outlook} Future: {recommendation.future_outlook}", action_label="Open Trade Center", action_href=f'/trades?front_office={team["roster_id"]}', limitations=recommendation.why_not)
         body = f"""
 {TEAM_HQ_CSS}
 <a class="back" href="/teams">← All Teams</a>
@@ -221,6 +226,6 @@ def create_teams_router(
 <section class="thq-section"><details class="thq-evidence"><summary>Detailed Evidence</summary><div class="thq-evidence-body"><div class="thq-summary">{summary}</div><h3>League-Relative Team Intelligence</h3><div class="thq-grades">{_team_intelligence(view)}</div><h3>Why DTOS Recommends This</h3><p class="muted">Supporting Evidence</p><div class="thq-grades">{_decision_horizons(view)}</div><div class="thq-future-grid">{future}</div></div></details></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Quick Actions</h2></div><div class="thq-actions"><a class="thq-action" href="/transactions?team={team['roster_id']}">Transactions</a><a class="thq-action" href="/front-offices?front_office={team['roster_id']}">Front Office Dossier</a><a class="thq-action" href="/trades?front_office={team['roster_id']}">Trade Intelligence</a><a class="thq-action" href="/history">League History</a></div></section>
 """
-        return page(team["team_name"], body)
+        return page(f'{team["team_name"]} Headquarters', body)
 
     return router

@@ -64,7 +64,7 @@ def create_matchups_router(
             f'<div class="section-title"><div><h2 style="margin:0">Week {d["week"]} Matchups</h2><div class="muted">Live Sleeper scoring and lineup comparison</div></div>'
             f'<span class="pill">{len(cards)} matchups</span></div><div class="matchup-grid">{"".join(cards)}</div>'
         )
-        return page("Matchups", body)
+        return page(f'Week {d["week"]} Matchups', body)
 
 
     @router.get("/matchups/{matchup_id}", response_class=HTMLResponse)
@@ -75,7 +75,8 @@ def create_matchups_router(
         if not sides:
             raise HTTPException(status_code=404, detail="Matchup not found")
         if len(sides) < 2:
-            return page("Matchup", f'<a class="back" href="/matchups">← All Matchups</a><div class="card"><h2>Matchup {escape(matchup_id)}</h2><p class="muted">Opponent assignment is not complete.</p></div>')
+            side_name = str(sides[0].get("team") or "Unassigned Franchise")
+            return page(f"{side_name} — Matchup Awaiting Opponent", f'<a class="back" href="/matchups">← All Matchups</a><div class="card"><h2>{escape(side_name)}</h2><p class="muted">Opponent assignment is not complete. DTOS will update this page after Sleeper assigns both franchises.</p></div>')
         left, right = sides[0], sides[1]
         projected = matchup_projection(d, sides)
         projection_summary = (
@@ -220,6 +221,6 @@ def create_matchups_router(
             f'{projection_summary}'
             f'<section class="roster-section"><div class="section-title"><span class="slot-label">Bench Comparison</span><span class="muted">Top 12 bench players, side by side</span></div>{bench_comparison_html}</section>'
         )
-        return page(f'{left["team"]} vs {right["team"]}', body)
+        return page(f'{left["team"]} vs {right["team"]} — Matchup', body)
 
     return router

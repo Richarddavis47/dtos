@@ -297,6 +297,7 @@ def build_commissioner_desk(
     since_time = _parse_since(since)
     summary = {
         "current_outlook": team_card.current_contending,
+        "confidence": team_card.confidence,
         "future_outlook": team_card.future_outlook,
         "depth": decision.depth,
         "asset_health": decision.asset_health,
@@ -323,6 +324,7 @@ def build_commissioner_desk(
         "snapshot": {
             "standings": sorted(data.get("teams") or [], key=lambda team: intelligence.roster.team_intelligence[int(team.get("roster_id") or 0)].overall.rank),
             "season_label": intelligence.roster.league_summary.season_label,
+            "preseason": team_card.preseason,
             "transactions": normalized[:5],
             "matchups": data.get("matchups") or {},
             "leader": (data.get("teams") or [None])[0],

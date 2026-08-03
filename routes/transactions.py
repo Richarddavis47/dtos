@@ -1,7 +1,6 @@
 """DTOS Transactions Center routes and presentation."""
 from __future__ import annotations
 
-import json
 from datetime import datetime
 from html import escape
 from typing import Any, Awaitable, Callable
@@ -140,18 +139,16 @@ def _transactions_table(view: dict[str, Any], filters: dict[str, Any]) -> str:
             for team in transaction["teams"]
         ) or "—"
         assets = "".join(_asset_html(asset) for asset in transaction["assets"]) or "—"
-        raw = escape(json.dumps(transaction["raw"], indent=2)[:10000])
         rows.append(
             "<tr>"
             f'<td class="tx-time"><b>{escape(transaction["timestamp"])}</b></td>'
             f'<td><span class="tx-type {escape(transaction["type"])}">{escape(transaction["type_label"])}</span><br><small class="muted">{escape(transaction["status"])}</small></td>'
             f'<td><div class="tx-teams">{teams}</div></td>'
-            f'<td><div class="tx-assets">{assets}</div><details class="tx-raw"><summary>Raw Sleeper data</summary><pre>{raw}</pre></details></td>'
-            f'<td class="tx-id">{escape(transaction["id"] or "—")}</td>'
+            f'<td><div class="tx-assets">{assets}</div></td>'
             "</tr>"
         )
     if not rows:
-        rows.append('<tr><td colspan="5" class="tx-empty">No transactions match the current filters.</td></tr>')
+        rows.append('<tr><td colspan="4" class="tx-empty"><b>No transactions match these filters.</b><br>Reset the filters or refresh transactions to check for new league activity.</td></tr>')
 
     sort = str(filters["sort"])
     direction = str(filters["direction"])
@@ -162,7 +159,6 @@ def _transactions_table(view: dict[str, Any], filters: dict[str, Any]) -> str:
             ("Type", "type"),
             ("Teams involved", "teams"),
             ("Assets exchanged", "assets"),
-            ("Sleeper ID", "id"),
         )
     )
     return f'<div class="tx-table-wrap"><table class="tx-table"><thead><tr>{headings}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
@@ -279,11 +275,11 @@ def create_transactions_router(
     <div class="tx-field"><label for="team">Team</label><select id="team" name="team">{team_options}</select></div>
     <div class="tx-field"><label for="owner">Owner</label><select id="owner" name="owner">{owner_options}</select></div>
     <div class="tx-field"><label for="type">Transaction type</label><select id="type" name="type">{type_options}</select></div>
-    <div class="tx-field"><label for="player">Player</label><input id="player" name="player" value="{escape(player)}" placeholder="Name or Sleeper ID"></div>
+    <div class="tx-field"><label for="player">Player</label><input id="player" name="player" value="{escape(player)}" placeholder="Player name"></div>
     <div class="tx-field"><label for="draft_pick">Draft pick</label><select id="draft_pick" name="draft_pick">{pick_options}</select></div>
     <div class="tx-field"><label for="date_from">From date</label><input id="date_from" type="date" name="date_from" value="{escape(date_from)}"></div>
     <div class="tx-field"><label for="date_to">To date</label><input id="date_to" type="date" name="date_to" value="{escape(date_to)}"></div>
-    <div class="tx-field"><label for="q">Search</label><input id="q" name="q" value="{escape(search)}" placeholder="Team, owner, player, pick, or ID"></div>
+    <div class="tx-field"><label for="q">Search</label><input id="q" name="q" value="{escape(search)}" placeholder="Team, owner, player, or draft pick"></div>
     <div class="tx-field"><label for="per_page">Page size</label><select id="per_page" name="per_page">{page_options}</select></div>
     <input type="hidden" name="sort" value="{escape(sort)}"><input type="hidden" name="direction" value="{escape(direction)}">
     <div class="tx-filter-actions"><button type="submit">Apply filters</button><a class="tx-reset" href="/transactions">Reset</a></div>
@@ -375,6 +371,6 @@ def create_transactions_router(
 {live_panel}
 <h2>Recent Transactions</h2><div class="grid">{cards}</div>
 """
-        return page(str(name), body)
+        return page(f"{name} — Player Intelligence", body)
 
     return router

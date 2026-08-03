@@ -61,7 +61,8 @@ class FrontOfficeIntelligenceTests(unittest.TestCase):
         self.assertEqual(api.json()["active_front_office"], 2)
         self.assertEqual(len(api.json()["organizations"]), 3)
         self.assertEqual(page.status_code, 200)
-        self.assertIn("Front Office Intelligence v1", page.text)
+        self.assertIn('data-dtos-component="recommendation"', page.text)
+        self.assertIn("Franchise Management Profile", page.text)
         self.assertNotIn("<details open", page.text)
 
 
