@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from src.core.team_identity import canonical_team_name
+
 
 @dataclass(frozen=True)
 class FranchiseIdentity:
@@ -21,5 +23,5 @@ def identity_from_team(league_id: str, team: dict) -> FranchiseIdentity:
         f"{league_id}:franchise:{roster_id}",
         str(owner_id) if owner_id is not None else None,
         str(team.get("owner") or "Unassigned"),
-        str(team.get("team_name") or f"Team {roster_id}"),
+        canonical_team_name(team),
     )

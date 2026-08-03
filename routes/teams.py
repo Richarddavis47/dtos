@@ -21,7 +21,8 @@ TEAM_HQ_CSS = """
 .thq-grades{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.thq-grade-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.thq-grade h3{margin:0;font-size:13px}.thq-grade-mark{font-size:25px;font-weight:950;color:var(--accent)}.thq-grade-score{color:var(--muted);font-size:10px}.thq-grade details{margin-top:9px;border-top:1px solid var(--line);padding-top:8px}.thq-grade summary{cursor:pointer;font-size:10px;font-weight:850;color:var(--gold)}.thq-reasoning{font-size:10px;color:var(--muted);line-height:1.5}.thq-reasoning b{color:var(--text)}
 .thq-dimensions{display:grid;gap:4px;margin-top:8px}.thq-dimension{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}.thq-tier{display:block;margin-top:5px;color:var(--gold);font-size:9px;font-weight:900;text-transform:uppercase}.thq-intel{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
 .thq-roster{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}.thq-room{background:#101d2d;border:1px solid var(--line);border-radius:14px;overflow:hidden}.thq-room-head{display:flex;justify-content:space-between;background:#0b1727;padding:11px 13px;font-weight:900}.thq-player{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:10px 13px;border-top:1px solid rgba(38,55,76,.7)}.thq-player a{font-weight:800}.thq-player-meta{font-size:10px;color:var(--muted);margin-top:3px}.thq-status{font-size:9px;font-weight:900;border:1px solid var(--line);border-radius:999px;padding:4px 7px;align-self:center}.thq-status.starter{color:var(--accent);border-color:rgba(110,231,183,.45)}
-.thq-picks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.thq-pick-year{background:#101d2d;border:1px solid var(--line);border-radius:14px;padding:13px}.thq-pick-year h3{margin:0 0 8px;color:var(--accent)}.thq-pick{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid rgba(38,55,76,.65)}.thq-pick small{display:block;color:var(--muted);margin-top:2px}.thq-performance{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}.thq-timeline{display:grid;gap:8px}.thq-event{display:grid;grid-template-columns:145px 105px minmax(0,1fr) auto;gap:10px;align-items:center;background:#101d2d;border:1px solid var(--line);border-radius:12px;padding:11px 13px}.thq-event-type{font-weight:900;color:var(--accent)}.thq-event-assets{color:var(--muted);font-size:11px}.thq-event a{font-size:10px}.thq-future-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.thq-future b{display:block;margin:8px 0 3px}.thq-future small{color:var(--muted)}.thq-actions{display:flex;gap:9px;flex-wrap:wrap}.thq-action{display:inline-block;border:1px solid var(--line);border-radius:10px;background:#172940;color:var(--text);padding:10px 13px;font-weight:850}.thq-action.placeholder{color:var(--muted);border-style:dashed;cursor:not-allowed}
+.thq-picks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.thq-pick-year{background:#101d2d;border:1px solid var(--line);border-radius:14px;padding:13px}.thq-pick-year h3{margin:0 0 8px;color:var(--accent)}.thq-pick{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid rgba(38,55,76,.65)}.thq-pick small{display:block;color:var(--muted);margin-top:2px}.thq-performance{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}.thq-timeline{display:grid;gap:8px}.thq-event{display:grid;grid-template-columns:145px 105px minmax(0,1fr) auto;gap:10px;align-items:center;background:#101d2d;border:1px solid var(--line);border-radius:12px;padding:11px 13px}.thq-event-type{font-weight:900;color:var(--accent)}.thq-event-assets{color:var(--muted);font-size:11px}.thq-event a{font-size:10px}.thq-future-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.thq-future b{display:block;margin:8px 0 3px}.thq-future small{color:var(--muted)}.thq-actions{display:flex;gap:9px;flex-wrap:wrap}.thq-action{display:inline-block;border:1px solid var(--line);border-radius:10px;background:#172940;color:var(--text);padding:10px 13px;font-weight:850}
+.thq-recommendation{border-left:4px solid var(--gold);background:linear-gradient(135deg,#172940,#101d2d);padding:18px}.thq-recommendation h2{margin:0 0 6px}.thq-evidence>summary{cursor:pointer;font-weight:900;color:var(--gold);padding:14px;background:#101d2d;border:1px solid var(--line);border-radius:12px}.thq-evidence[open]>summary{border-radius:12px 12px 0 0}.thq-evidence-body{border:1px solid var(--line);border-top:0;padding:14px;border-radius:0 0 12px 12px}
 @media(max-width:1100px){.thq-cards{grid-template-columns:repeat(4,1fr)}.thq-summary{grid-template-columns:repeat(2,1fr)}.thq-future-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:760px){.thq-header{display:block}.thq-header>div:last-child{margin-top:12px;text-align:left}.thq-updated{text-align:left}.thq-cards,.thq-grades,.thq-roster,.thq-picks,.thq-performance,.thq-future-grid{grid-template-columns:repeat(2,1fr)}.thq-event{grid-template-columns:1fr 1fr}.thq-event-assets{grid-column:1/-1}.thq-summary{grid-template-columns:1fr}}
 @media(max-width:460px){.thq-cards,.thq-grades,.thq-roster,.thq-picks,.thq-performance,.thq-future-grid{grid-template-columns:1fr}.thq-avatar{width:58px;height:58px}}
@@ -88,14 +89,15 @@ def _roster_rooms(view: dict[str, Any]) -> str:
     rooms = []
     for position in CORE_POSITIONS:
         players = view["roster_groups"][position]
+        room_grade = view["roster_intelligence"].rooms[position].overall.grade
         rows = "".join(
             f'<div class="thq-player"><div><a href="/players/{quote(str(player["id"]))}">{escape(str(player["name"]))}</a>'
-            f'<div class="thq-player-meta">{escape(position)} · {escape(str(player.get("team") or "Free Agent"))} · Age {escape(_display(player.get("age")))} · Bye {escape(_display(player.get("bye_week")))}</div>'
+            f'<div class="thq-player-meta">{escape(position)} · {escape(str(player.get("team") or "Free Agent"))} · Age {escape(_display(player.get("age")))}{f" · Bye {escape(str(player.get("bye_week")))}" if player.get("bye_week") not in (None, "", "Unavailable") else ""}</div>'
             f'{_player_tier(player)}</div>'
             f'<span class="thq-status {"starter" if player.get("roster_slot") == "Starter" else ""}">{escape(str(player.get("roster_slot") or "Bench"))}</span></div>'
             for player in players
         ) or '<div class="thq-player"><span class="muted">No players currently rostered.</span></div>'
-        rooms.append(f'<section class="thq-room"><div class="thq-room-head"><span>{labels[position]}</span><span>{len(players)}</span></div>{rows}</section>')
+        rooms.append(f'<section class="thq-room"><div class="thq-room-head"><span>{labels[position]}</span><span>{room_grade} · {len(players)} players</span></div>{rows}</section>')
     if view["other_players"]:
         rows = "".join(
             f'<div class="thq-player"><div><a href="/players/{quote(str(player["id"]))}">{escape(str(player["name"]))}</a><div class="thq-player-meta">{escape(str(player.get("position") or "Other"))} · {escape(str(player.get("team") or "Free Agent"))} · Age {escape(_display(player.get("age")))}</div></div><span class="thq-status">{escape(str(player.get("roster_slot") or "Bench"))}</span></div>'
@@ -162,24 +164,23 @@ def create_teams_router(
         )
         summary = "".join(f'<article><h3>{escape(label)}</h3><p>{escape(text)}</p></article>' for label, text in view["summary"].items())
         performance = view["performance"]
+        performance_metrics = (
+            (("Projected Wins", view["team_intelligence"].projected_wins), ("Power Ranking", f'#{view["rank"]} of {len(data["teams"])}'), ("Championship Odds", f'{view["team_intelligence"].championship_odds}%'), ("Playoff Odds", f'{view["team_intelligence"].playoff_odds}%'))
+            if view["preseason"] else
+            (("Record", performance["record"]), ("Points For", f'{performance["points_for"]:.2f}'), ("Points Against", f'{performance["points_against"]:.2f}'), ("Max PF", f'{performance["max_points"]:.2f}'), ("League Standing", performance["standing"]))
+        )
         performance_cards = "".join(
             f'<article class="thq-kpi"><span>{escape(label)}</span><b>{escape(str(value))}</b></article>'
-            for label, value in (
-                ("Record", performance["record"]), ("Points For", f'{performance["points_for"]:.2f}'),
-                ("Points Against", f'{performance["points_against"]:.2f}'), ("Max PF", f'{performance["max_points"]:.2f}'),
-                ("Current Streak", performance["streak"]), ("League Standing", performance["standing"]),
-            )
+            for label, value in performance_metrics
         )
         future = "".join(
             f'<article class="thq-future"><span>{escape(label)}</span><b>{escape(value)}</b><small>{escape(note)}</small></article>'
             for label, value, note in (
-                ("Competitive Window", view["team_intelligence"].current_window.value, "League-relative Team Intelligence"),
                 ("Current Outlook", f'{view["team_intelligence"].current_strength}/100', "League-relative Team Intelligence"),
                 ("Future Outlook", f'{view["team_intelligence"].future_strength}/100', "League-relative Team Intelligence"),
                 ("Projected Wins", str(view["team_intelligence"].projected_wins), "Deterministic 14-game preseason indicator"),
                 ("Playoff Odds", f'{view["team_intelligence"].playoff_odds}%', "Relative strength indicator, not a simulation"),
                 ("Championship Odds", f'{view["team_intelligence"].championship_odds}%', "Relative strength indicator, not a simulation"),
-                ("Organization", view["front_office_intelligence"].competitive_window.classification.value, "Canonical Competitive Window"),
                 ("Youth Grade", view["grades"]["Youth"]["grade"] + " foundation", "Deterministic roster age model"),
                 ("Draft Capital Grade", view["grades"]["Draft Capital"]["grade"] + " foundation", "Deterministic pick inventory model"),
             )
@@ -204,22 +205,21 @@ def create_teams_router(
             f'<article class="thq-kpi"><span>{escape(label)}</span><b>#{rank} of {roster.rooms["QB"].league_size}</b></article>'
             for label, rank in roster.metrics["League Rankings"].items()
         )
+        recommendation = view["unified_recommendation"]
+        recommendation_reasons = "".join(f"<li>{escape(reason)}</li>" for reason in recommendation.why)
+        recommendation_card = f'<section class="thq-section thq-recommendation"><div class="identity-kicker">{escape(recommendation.priority)} priority · {recommendation.confidence.score}% confidence</div><h2>{escape(recommendation.title)}</h2><p>{escape(recommendation.recommendation)}</p><details><summary>Show Reasoning</summary><ul>{recommendation_reasons}</ul></details></section>'
         body = f"""
 {TEAM_HQ_CSS}
 <a class="back" href="/teams">← All Teams</a>
-<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Record {performance['record']}</span><span>·</span><span>League Rank #{view['rank']}</span><span>·</span><span>{view['team_intelligence'].overall.percentile}th percentile</span></div></div></div><div><span class="thq-badge">{escape(view['team_intelligence'].current_window.value)}</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
-<section class="thq-section"><div class="thq-section-head"><h2>Asset Snapshot</h2><span>Objective roster and pick inventory</span></div><div class="thq-cards">{_asset_cards(view['snapshot'])}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Front Office Summary</h2><span>Deterministic · No generated claims</span></div><div class="thq-summary">{summary}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>League-Relative Team Intelligence</h2><span>{view['team_intelligence'].confidence}% confidence · all grades relative to this league</span></div><div class="thq-grades">{_team_intelligence(view)}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Underlying Decision Signals</h2><span>Raw deterministic inputs · not league-relative team grades</span></div><div class="thq-grades">{_decision_horizons(view)}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Roster Intelligence</h2><span>{escape(roster.identity)} · {escape(roster.identity_reasoning)}</span></div><div class="thq-intel">{intelligence_cards}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>League Value Rankings</h2><span>Independent dimensions · No combined overall rank</span></div><div class="thq-intel">{league_rankings}</div></section>
+<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Overall Grade {view['team_intelligence'].overall.grade}</span><span>·</span><span>League Rank #{view['rank']}</span><span>·</span><span>{view['team_intelligence'].overall.percentile}th percentile</span></div></div></div><div><span class="thq-badge">{escape(view['competitive_window'].classification.value)}</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
+{recommendation_card}
+<section class="thq-section"><div class="thq-section-head"><h2>Core Intelligence</h2><span>Current and future league-relative strength</span></div><div class="thq-intel">{intelligence_cards}{league_rankings}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Roster</h2><span>Position rooms and current lineup designation</span></div><div class="thq-roster">{_roster_rooms(view)}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Draft Capital</h2><span>Every currently owned future pick</span></div><div class="thq-picks">{_draft_capital(view)}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Current Team Performance</h2><span>Sleeper league data</span></div><div class="thq-performance">{performance_cards}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Team Timeline</h2><span>Newest cached activity first</span></div><div class="thq-timeline">{_timeline(view)}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Future Outlook</h2><span>Stable integration points for future intelligence</span></div><div class="thq-future-grid">{future}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Quick Actions</h2></div><div class="thq-actions"><a class="thq-action" href="/transactions?team={team['roster_id']}">Transactions</a><a class="thq-action" href="/front-offices?front_office={team['roster_id']}">Front Office Dossier</a><a class="thq-action" href="/trades?front_office={team['roster_id']}">Trade Intelligence</a><span class="thq-action placeholder" aria-disabled="true">Compare Teams · Coming Soon</span><span class="thq-action placeholder" aria-disabled="true">League History · Coming Soon</span></div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Assets</h2><span>Roster construction, draft capital, and liquidity</span></div><div class="thq-cards">{_asset_cards(view['snapshot'])}</div><div class="thq-picks">{_draft_capital(view)}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>{'Preseason Outlook' if view['preseason'] else 'Current Team Performance'}</h2><span>{'Deterministic projections' if view['preseason'] else 'Sleeper league data'}</span></div><div class="thq-performance">{performance_cards}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Activity</h2><span>Newest cached transactions first</span></div><div class="thq-timeline">{_timeline(view)}</div></section>
+<section class="thq-section"><details class="thq-evidence"><summary>Detailed Evidence</summary><div class="thq-evidence-body"><div class="thq-summary">{summary}</div><h3>League-Relative Team Intelligence</h3><div class="thq-grades">{_team_intelligence(view)}</div><h3>Why DTOS Recommends This</h3><p class="muted">Supporting Evidence</p><div class="thq-grades">{_decision_horizons(view)}</div><div class="thq-future-grid">{future}</div></div></details></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Quick Actions</h2></div><div class="thq-actions"><a class="thq-action" href="/transactions?team={team['roster_id']}">Transactions</a><a class="thq-action" href="/front-offices?front_office={team['roster_id']}">Front Office Dossier</a><a class="thq-action" href="/trades?front_office={team['roster_id']}">Trade Intelligence</a><a class="thq-action" href="/history">League History</a></div></section>
 """
         return page(team["team_name"], body)
 

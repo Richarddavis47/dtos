@@ -148,14 +148,15 @@ def league_intelligence(view: dict[str, Any]) -> str:
 
 def league_opportunity_dashboard(view: dict[str, Any]) -> str:
     report = view["league_opportunity"]
+    team_names = view["team_names"]
     cards = "".join(f'<article class="cd-card cd-intel"><span>{escape(label)}</span><b>{escape(value)}</b></article>' for label, value in report.dashboard.items())
     partners = [item for item in report.compatibilities if report.active_roster_id in {item.first_roster_id, item.second_roster_id}][:5]
     partner_rows = "".join(
-        f'<div class="cd-mini-row"><b>Team {item.second_roster_id if item.first_roster_id == report.active_roster_id else item.first_roster_id} · {item.score}/100</b><span>{escape(", ".join(item.complementary_needs) or item.timeline_fit)}</span></div>'
+        f'<div class="cd-mini-row"><b>{escape(team_names.get(item.second_roster_id if item.first_roster_id == report.active_roster_id else item.first_roster_id, "Unassigned Franchise"))} · {item.score}/100</b><span>{escape(", ".join(item.complementary_needs) or item.timeline_fit)}</span></div>'
         for item in partners
     ) or '<p class="muted">No compatible partner crossed the current evidence boundary.</p>'
     opportunities = "".join(
-        f'<div class="cd-mini-row"><b>{escape(item.player_name)} · {item.score}/100</b><span>Team {item.owner_roster_id} · {escape(item.availability)}</span></div>'
+        f'<div class="cd-mini-row"><b>{escape(item.player_name)} · {item.score}/100</b><span>{escape(team_names.get(item.owner_roster_id, "Unassigned Franchise"))} · {escape(item.availability)}</span></div>'
         for item in report.opportunities[:7]
     ) or '<p class="muted">No evidence-supported player opportunity is available.</p>'
     economy = "".join(f'<div class="cd-mini-row"><b>{escape(position)} · {escape(item.state)}</b><span>{item.demand} buyers / {item.supply} sellers · {item.premium:+d} premium</span></div>' for position, item in report.economy.items())

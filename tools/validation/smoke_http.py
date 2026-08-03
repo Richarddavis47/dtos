@@ -3,10 +3,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from time import perf_counter
 from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.request import urlopen
+
+GENERIC_TEAM_LABEL = re.compile(r"\b(?:Team|Roster)\s+(?:[1-9]|10)\b|\bTeam Detail\b", re.IGNORECASE)
+
+
+def validate_team_identity(body: bytes, path: str) -> None:
+    """Reject rendered fallback labels when canonical team identity is available."""
+    match = GENERIC_TEAM_LABEL.search(body.decode("utf-8", errors="replace"))
+    if match:
+        raise AssertionError(f"{path}: rendered generic team label {match.group(0)!r}")
 
 
 def get(base_url: str, path: str, expected: int = 200) -> bytes:
@@ -59,8 +69,10 @@ def main() -> int:
         raise AssertionError("Cached league contract contains no teams.")
     roster_ids = [int(team["roster_id"]) for team in teams]
     for roster_id in roster_ids:
-        get(args.base_url, f"/teams/{roster_id}")
-        get(args.base_url, f"/front-offices?front_office={roster_id}")
+        team_path = f"/teams/{roster_id}"
+        validate_team_identity(get(args.base_url, team_path), team_path)
+        front_office_path = f"/front-offices?front_office={roster_id}"
+        validate_team_identity(get(args.base_url, front_office_path), front_office_path)
         organization = json.loads(get(args.base_url, f"/api/front-offices?front_office={roster_id}"))
         if organization.get("active_front_office") != roster_id:
             raise AssertionError(f"Front Office context {roster_id} did not persist through the API.")

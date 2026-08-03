@@ -257,6 +257,8 @@ def build_team_headquarters(
         "unified_recommendation": intelligence.recommendation,
         "roster_intelligence": intelligence.roster,
         "team_intelligence": team_intelligence,
+        "competitive_window": team_intelligence.competitive_window,
+        "preseason": team_intelligence.preseason,
         "roster_groups": roster_groups,
         "other_players": [player for player in players if player.get("position") not in CORE_POSITIONS],
         "picks_by_year": {

@@ -9,6 +9,7 @@ from urllib.parse import quote
 from fastapi.routing import APIRoute
 
 from src.core.inspection.models import DiscoveredPage
+from src.core.team_identity import team_name_for
 
 _PRIVATE_PREFIXES = ("/api/", "/health", "/openapi", "/docs", "/redoc")
 _EXCLUDED = {
@@ -140,8 +141,11 @@ def discover_pages(routes: Iterable[Any], state: dict[str, Any]) -> tuple[Discov
                 continue
             seen.add(resolved)
             page_id = _slug(resolved)
+            page_name = _name(route)
+            if "roster_id" in fixture and path == "/teams/{roster_id}":
+                page_name = f"{team_name_for(data, int(fixture['roster_id']))} Headquarters"
             discovered.append(DiscoveredPage(
-                page_id, _name(route), resolved, path,
+                page_id, page_name, resolved, path,
                 "dynamic" if fixture else "static", "live_cached", "deterministic",
             ))
     return tuple(sorted(discovered, key=lambda page: (page.excluded, page.route, page.page_id)))

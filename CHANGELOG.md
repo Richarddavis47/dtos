@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.6.4 - Team Identity Normalization & Team Headquarters Polish
+
+- Centralized canonical team-name resolution across presentation, intelligence, inspection, and transaction boundaries.
+- Reorganized Team Headquarters around recommendation, core intelligence, roster, assets, activity, and collapsed evidence.
+- Made the canonical Competitive Window Contract the sole visible team-window classification.
+- Replaced misleading preseason results with projected wins, power ranking, and playoff/championship outlook.
+- Removed unavailable bye labels and unfinished Team Headquarters controls.
+- Added a permanent HTTP validation gate that rejects rendered generic numbered team and roster labels.
+
 ## v1.6.3 - Complete Visual Inspection & Release Verification System
 
 - Upgraded DINS to schema 2.0 with automatic public-page discovery and deterministic dynamic fixtures.
