@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
+from src.core.provider_network import provider_network_report
 from src.core.valuation.automation import calibration_report
 from src.core.valuation.universe import ValuationUniverse
 
@@ -35,7 +36,59 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
 
     @router.get("/providers")
     async def valuation_providers() -> Any:
-        return (await universe()).providers()
+        await ensure_fresh()
+        report = provider_network_report(require_data())
+        return _network_envelope(report, {"providers": report["providers"], "provider_dependencies": report["provider_dependencies"], "evidence_summary": report["evidence_summary"], "performance": report["performance"], "safety": report["safety"]})
+
+    async def network() -> dict[str, Any]:
+        await ensure_fresh()
+        return provider_network_report(require_data())
+
+    @router.get("/providers/{provider_id}/status")
+    async def provider_status(provider_id: str) -> Any:
+        row = _provider(await network(), provider_id)
+        return _network_envelope(await network(), {"provider": row, "status": row["current_availability"], "reason": row["status_explanation"]})
+
+    @router.get("/providers/{provider_id}/coverage")
+    async def provider_coverage(provider_id: str) -> Any:
+        row = _provider(await network(), provider_id)
+        return _network_envelope(await network(), {"provider_id": provider_id, "record_count": row.get("record_count", 0), "coverage_percentage": row.get("coverage_percentage", 0.0), "identity_match_rate": row.get("identity_match_rate"), "unmatched_records": row.get("unmatched_records", 0), "runtime_metrics_status": "available" if "identity_match_rate" in row else "pending"})
+
+    @router.get("/providers/{provider_id}/reliability")
+    async def provider_reliability(provider_id: str) -> Any:
+        row = _provider(await network(), provider_id)
+        return _network_envelope(await network(), {"provider_id": provider_id, "reliability_score": row.get("reliability_score"), "dimensions": row.get("reliability_dimensions") or {}, "effective_calibration_weight": row.get("effective_calibration_weight"), "runtime_metrics_status": "available" if "reliability_score" in row else "pending"})
+
+    @router.get("/providers/{provider_id}/history")
+    async def provider_history(provider_id: str) -> Any:
+        report = await network()
+        _provider(report, provider_id)
+        return _network_envelope(report, {"provider_id": provider_id, "history": [row for row in report["reliability_history"] if row["provider_id"] == provider_id]})
+
+    @router.get("/providers/{provider_id}")
+    async def provider_detail(provider_id: str) -> Any:
+        report = await network()
+        return _network_envelope(report, {"provider": _provider(report, provider_id)})
+
+    @router.get("/provider-consensus")
+    async def provider_consensus() -> Any:
+        report = await network()
+        return _network_envelope(report, {"consensus": report["consensus"]})
+
+    @router.get("/provider-agreement")
+    async def provider_agreement() -> Any:
+        report = await network()
+        return _network_envelope(report, {"provider_dependencies": report["provider_dependencies"], "agreement": {"average_disagreement": report["consensus"]["average_disagreement"], "independent_family_assets": report["consensus"]["assets_with_multiple_independent_families"]}})
+
+    @router.get("/observed-market")
+    async def observed_market() -> Any:
+        report = await network()
+        return _network_envelope(report, {"observed_market": report["observed_market"]})
+
+    @router.get("/league-market")
+    async def league_market() -> Any:
+        report = await network()
+        return _network_envelope(report, {"league_market": report["league_market"]})
 
     async def calibration() -> dict[str, Any]:
         await ensure_fresh()
@@ -87,7 +140,17 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
                 f'<article class="card"><h3>{escape(row["title"])}</h3><p><b>{escape(row["status"])}</b> · Confidence {row["confidence"]}% · Impact {row["impact_score"]}</p><p>{escape(row["summary"])}</p><details><summary>Show Reasoning</summary><ul>{"".join(f"<li>{escape(item)}</li>" for item in row["evidence"])}</ul><p>{escape(row["explanation"])}</p></details></article>'
                 for row in result["recommendations"][:12]
             ) or '<div class="card"><h3>No calibration required</h3><p>Current model evidence is within configured safety thresholds.</p></div>'
-            body = f'''<p class="eyebrow">Valuation Operations</p><h2>Automated Market Calibration</h2><p class="muted">Consensus is an input, not the answer. DTOS audits the full universe and changes only bounded model-level principles when every safety rail passes.</p><div class="grid">{cards}</div><div class="card"><h3>Category Health</h3><table><thead><tr><th>Category</th><th>Audited</th><th>Comparable</th><th>Median Difference</th><th>Confidence</th><th>Status</th><th>Impact</th></tr></thead><tbody>{category_rows}</tbody></table></div><h2>Calibration Recommendations</h2><div class="grid">{recommendations}</div><p class="muted">Last calibration: {escape(result["generated_at"])}</p>'''
+            provider_report = await network()
+            provider_rows = "".join(
+                f'<tr><td>{escape(row["provider_name"])}</td><td>{escape(row["evidence_category"])}</td>'
+                f'<td>{escape(str(row.get("current_availability") or "Pending").title())}</td>'
+                f'<td>{_display_metric(row.get("record_count"))}</td><td>{_display_metric(row.get("coverage_percentage"), "%")}</td>'
+                f'<td>{_display_metric(row.get("identity_match_rate"), "%")}</td>'
+                f'<td>{_display_metric(row.get("reliability_score"))}</td><td>{_display_metric(row.get("effective_calibration_weight"))}</td>'
+                f'<td>{escape(str(row.get("status_explanation") or "Awaiting background provider generation."))}</td></tr>'
+                for row in provider_report["providers"]
+            )
+            body = f'''<p class="eyebrow">Valuation Operations</p><h2>Automated Market Calibration</h2><p class="muted">Consensus is an input, not the answer. DTOS audits the full universe and changes only bounded model-level principles when every safety rail passes.</p><div class="grid">{cards}</div><div class="card"><h3>Market Intelligence Providers</h3><p class="muted">Market, expert, performance, league-local, and intrinsic evidence remain distinct. Correlated provider families count only once.</p><table><thead><tr><th>Provider</th><th>Category</th><th>Status</th><th>Records</th><th>Coverage</th><th>Identity</th><th>Reliability</th><th>Weight</th><th>Explanation</th></tr></thead><tbody>{provider_rows}</tbody></table></div><div class="card"><h3>Category Health</h3><table><thead><tr><th>Category</th><th>Audited</th><th>Comparable</th><th>Median Difference</th><th>Confidence</th><th>Status</th><th>Impact</th></tr></thead><tbody>{category_rows}</tbody></table></div><h2>Calibration Recommendations</h2><div class="grid">{recommendations}</div><p class="muted">Last calibration: {escape(result["generated_at"])}</p>'''
             return page("Market Calibration Dashboard", body)
 
     @router.get("/assets")
@@ -116,3 +179,19 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
 
     root.include_router(router)
     return root
+
+
+def _provider(report: dict[str, Any], provider_id: str) -> dict[str, Any]:
+    row = next((item for item in report["providers"] if item["provider_id"] == provider_id), None)
+    if row is None:
+        raise HTTPException(404, "Provider is not registered.")
+    return row
+
+
+def _network_envelope(report: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+    return {key: report.get(key) for key in ("application_version", "application_build", "commit", "provider_registry_version", "evidence_contract_version", "generation_timestamp", "freshness", "availability")} | payload
+
+
+def _display_metric(value: Any, suffix: str = "") -> str:
+    """Format computed provider metrics without changing their canonical data."""
+    return "Pending" if value is None else f"{value}{suffix}"

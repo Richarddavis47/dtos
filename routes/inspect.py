@@ -112,6 +112,7 @@ def create_inspection_router(
         data = state.get("data") or {}
         universe = ValuationUniverse(data, state)
         calibration = data.get("calibration_report") or {}
+        provider_network = data.get("provider_network") or {}
         samples = [universe.assets[0], next((row for row in universe.assets if row["asset_type"] == "pick"), None)] if universe.assets else []
         return jsonable_encoder({
             "application_version": VERSION,
@@ -127,6 +128,15 @@ def create_inspection_router(
                 "summary": calibration.get("summary") or {},
                 "recommendation_count": len(calibration.get("recommendations") or []),
                 "last_calibration_timestamp": calibration.get("generated_at"),
+            },
+            "provider_network": {
+                "provider_registry_version": provider_network.get("provider_registry_version"),
+                "evidence_contract_version": provider_network.get("evidence_contract_version"),
+                "provider_count": len(provider_network.get("providers") or []),
+                "evidence_summary": provider_network.get("evidence_summary") or {},
+                "consensus": provider_network.get("consensus") or {},
+                "observed_market": provider_network.get("observed_market") or {},
+                "safety": provider_network.get("safety") or {},
             },
             "warnings": universe.freshness["reasons"],
         })

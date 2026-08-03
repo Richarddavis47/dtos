@@ -38,6 +38,16 @@ Invalid league identifiers return a stable JSON `404`. Responses include schema,
 | GET | `/api/league` | `include_players` boolean | normalized league snapshot; player index is opt-in |
 | GET | `/api/players` | none | canonical rostered-player IDs and dossier URLs |
 | GET | `/api/players/{player_id}/intelligence` | canonical player ID | normalized player, provider values, availability, consensus, trend, freshness, confidence, and unavailable reasons |
+| GET | `/api/valuation/providers` | none | versioned provider registry, compliance, freshness, coverage, reliability, dependencies, and safe evidence summary |
+| GET | `/api/valuation/providers/{provider_id}` | provider ID | public-safe provider contract |
+| GET | `/api/valuation/providers/{provider_id}/status` | provider ID | availability and explanatory state |
+| GET | `/api/valuation/providers/{provider_id}/coverage` | provider ID | record, coverage, identity-match, and unmatched counts |
+| GET | `/api/valuation/providers/{provider_id}/reliability` | provider ID | dynamic overall and category reliability dimensions |
+| GET | `/api/valuation/providers/{provider_id}/history` | provider ID | versioned reliability observations |
+| GET | `/api/valuation/provider-consensus` | none | family-aware weighted consensus summary and audit samples |
+| GET | `/api/valuation/provider-agreement` | none | disagreement and provider dependency evidence |
+| GET | `/api/valuation/observed-market` | none | aggregated, quality-filtered Sleeper trade evidence |
+| GET | `/api/valuation/league-market` | none | active-league isolated market context; no private raw records |
 | GET | `/api/front-offices` | `front_office` integer, optional | observable Front Office dossiers and relationships |
 | GET | `/api/trades` | `front_office` integer, optional | contextual Trade Dossiers including market impact |
 | POST | `/sync` | `Accept: application/json` for JSON | synchronization result or 303 redirect |
@@ -80,7 +90,7 @@ for the canonical page inventory, `/api/inspect/visual/pages/{page_id}/{viewport
 rendered evidence, `/api/inspect/health` for bundle readiness, and
 `/api/inspect/releases/current` for the release manifest. Supported viewports are
 `desktop`, `tablet`, and `mobile`. Artifact URLs are absolute and never expose local paths.
-# Valuation and calibration API (v1.7.1)
+# Valuation and calibration API (v1.7.2)
 
 The `/api/valuation` family exposes only the current cached production universe. Asset lists are paginated; `/export.json` and `/export.csv` provide complete deterministic exports. Every payload includes explicit freshness and source metadata. See [VALUATION.md](VALUATION.md) for identity and layer contracts.
 
