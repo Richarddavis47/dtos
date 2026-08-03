@@ -106,6 +106,30 @@ class DinsPublicationTests(unittest.TestCase):
             second = package_bundle(capture, root / "assets")
             self.assertEqual(hashes, {key: sha256(path) for key, path in second.items()})
 
+    def test_public_home_page_urls_do_not_match_local_home_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            capture = root / "capture"
+            capture.mkdir()
+            manifest = self.manifest(screenshot_artifact_urls=[
+                "https://dtos.onrender.com/inspection-artifacts/v1.7.0/pages/home/desktop.png",
+            ])
+            (capture / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+            assets = package_bundle(capture, root / "assets")
+            self.assertTrue(assets["bundle"].is_file())
+
+    def test_local_home_path_remains_forbidden(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            capture = root / "capture"
+            capture.mkdir()
+            (capture / "manifest.json").write_text(
+                json.dumps(self.manifest(build_path="/home/render/project")),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "forbidden local or sensitive reference"):
+                package_bundle(capture, root / "assets")
+
 
 if __name__ == "__main__":
     unittest.main()
