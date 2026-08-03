@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+from contextvars import ContextVar
 from html import escape
 from time import perf_counter
 from typing import Any
@@ -10,6 +11,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from app_metadata import APPLICATION_NAME, VERSION
 from config import BACKGROUND_START_DELAY, SYNC_MINUTES
@@ -44,9 +46,12 @@ from src.platform.observability import (
 )
 
 _PROCESS_STARTED = perf_counter()
+_INSPECTION_REQUEST: ContextVar[bool] = ContextVar("dtos_inspection_request", default=False)
 
 
 async def ensure_fresh() -> None:
+    if _INSPECTION_REQUEST.get():
+        return
     await ensure_data_fresh()
 
 
@@ -121,6 +126,20 @@ app.add_middleware(
     allow_headers=["Accept", "Content-Type", "X-DTOS-Diagnostics"],
 )
 install_observability(app)
+
+
+@app.middleware("http")
+async def deterministic_inspection_mode(request: Any, call_next: Any) -> Any:
+    """Make browser audits cached-only without changing ordinary requests."""
+    enabled = request.headers.get("X-DTOS-Inspection", "").casefold() == "deterministic"
+    token = _INSPECTION_REQUEST.set(enabled)
+    try:
+        response = await call_next(request)
+        if enabled:
+            response.headers["X-DTOS-Inspection-Mode"] = "deterministic"
+        return response
+    finally:
+        _INSPECTION_REQUEST.reset(token)
 
 
 CSS = """
@@ -233,7 +252,7 @@ app.include_router(
 
 app.include_router(create_history_router(league_id=LEAGUE_ID, page=page))
 
-app.include_router(create_inspection_router(state=STATE))
+app.include_router(create_inspection_router(state=STATE, route_provider=lambda: app.routes))
 
 app.include_router(
     create_matchups_router(
@@ -276,4 +295,10 @@ app.include_router(
         require_data=require_data,
         page=page,
     )
+)
+
+app.mount(
+    "/inspection-artifacts",
+    StaticFiles(directory="static/inspection", check_dir=False),
+    name="inspection-artifacts",
 )

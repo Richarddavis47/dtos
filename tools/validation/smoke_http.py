@@ -46,6 +46,9 @@ def main() -> int:
         "/api/platform/health", "/api/intelligence", "/api/league",
         "/api/players", "/front-offices", "/api/front-offices", "/trades",
         "/api/trades", "/openapi.json",
+        "/api/inspect", "/api/inspect/pages", "/api/inspect/site-map",
+        "/api/inspect/schema", "/api/inspect/health",
+        "/api/inspect/visual/pages", "/api/inspect/releases/current",
     )
     for path in major:
         get(args.base_url, path)

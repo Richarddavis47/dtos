@@ -257,6 +257,14 @@ timeline and cycle detail inside idempotent FOIS snapshots. Trading, Roster
 Construction, and Drafting remain unchanged and out of scope.
 
 ---
+# DTOS v1.6.3 — Complete Visual Inspection & Release Verification System
+
+DINS 2.0 makes DTOS externally auditable as both a semantic product and a rendered web application. Public inspection APIs automatically inventory registered HTML pages, expose lightweight versioned artifact bundles, and report whether the bundle matches the deployed build. A separate bounded Playwright worker captures desktop, tablet, and mobile viewport/full-page screenshots plus sanitized DOM, accessibility, geometry, style, network, performance, and interaction evidence without adding browser work to user requests.
+
+The capture job sends the deterministic inspection header, which bypasses freshness synchronization only for that request context. It never invokes providers or writes league state. Route validation now rejects unsupported public dynamic routes and version mismatches.
+
+Known limitation: accessibility checks use a deterministic built-in WCAG-oriented audit rather than shipping axe-core into the web process. The capture contract is designed so axe findings can be added without a schema break.
+
 # DTOS v1.6.2 — AI Inspection System Foundation
 
 DTOS now exposes deterministic, machine-readable descriptions of major page

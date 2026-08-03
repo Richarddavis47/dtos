@@ -4,7 +4,9 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.6.2 adds the read-only AI Inspection System under `/api/inspect`. See
+DTOS v1.6.3 expands the read-only AI Inspection System into a complete semantic,
+rendered-visual, DOM, accessibility, geometry, interaction, and release-verification
+surface under `/api/inspect`. See
 the [DINS inspection contract](docs/DINS_INSPECTION.md).
 
 DTOS v1.6.1 makes Results the first production FOIS category using canonical

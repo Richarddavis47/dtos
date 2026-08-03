@@ -107,6 +107,52 @@ surfaced as a warning without initiating recovery.
 
 ## Extensibility and limitations
 
+## DINS 2.0 visual and release architecture
+
+DTOS v1.6.3 retains the v1 semantic endpoints and adds six coordinated layers:
+semantic contracts, rendered visuals, sanitized DOM/accessibility evidence, curated
+style/geometry measurements, deterministic interactions, and versioned release
+manifests. The FastAPI route registry is the inventory source. Dynamic team, player,
+and matchup paths are expanded from cached deterministic representatives; an unknown
+parameter type fails release route validation instead of silently disappearing.
+
+Artifacts live below `static/inspection/v{version}-b{build}-s{schema}` and are exposed
+through `/inspection-artifacts/...`. The web service only reads these files. Run the
+bounded capture worker after deployment:
+
+```powershell
+.\.venv\Scripts\python.exe -m playwright install chromium
+.\.venv\Scripts\python.exe -m tools.inspection.capture --base-url https://dtos.onrender.com
+```
+
+The worker sends `X-DTOS-Inspection: deterministic`, uses cached application state,
+blocks synchronization in that request context, disables motion, waits for network
+idle and document readiness, normalizes ordering through the site map, and closes
+Chromium in `finally`. It records network failures without cookies, headers, query
+values, environment variables, source, stack traces, or filesystem paths.
+
+Desktop is 1440x1200, tablet is 1024x1366, and mobile is 390x844. Each produces a
+viewport screenshot, full-page screenshot, structured page contract, sanitized DOM,
+and accessibility report. Current and previous bundles are retained; older metadata
+may remain after images are pruned. Missing or stale bundles make inspection health
+pending rather than falsely ready. Browser crashes and timeouts produce partial
+manifests and fail validation.
+
+Accessibility findings are grouped as critical, serious, moderate, and minor. New
+critical findings fail the capture outcome; moderate/minor findings remain visible.
+Image comparisons ignore low-level channel differences within a configurable
+anti-alias tolerance and report changed-pixel percentages rather than assuming every
+intentional change is a regression.
+
+### AI Auditor Quick Start
+
+- Discovery: `https://dtos.onrender.com/api/inspect/site-map`
+- Readiness: `https://dtos.onrender.com/api/inspect/health`
+- Current release: `https://dtos.onrender.com/api/inspect/releases/current`
+- Visual index: `https://dtos.onrender.com/api/inspect/visual/pages`
+- Team semantic contract: `https://dtos.onrender.com/api/inspect/team/1`
+- Team visual contract: `https://dtos.onrender.com/api/inspect/visual/pages/teams-1/desktop`
+
 The v1.6.2 foundation covers five major page types plus the catalog. Future
 versions can add Commissioner Desk, Matchups, Transactions, Draft Picks, History,
 Settings, schema-diff tooling, and snapshot fixtures.
