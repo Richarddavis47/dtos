@@ -21,4 +21,6 @@ def build_front_office_center(data: dict[str, Any], roster_id: int | None = None
         "compatibilities": tuple(model.compatibility(selected, key) for key in sorted(model.reports) if key != selected),
         "relationships": model.relationships,
         "unified_recommendation": intelligence.recommendation,
+        "brain": intelligence.brain,
+        "decision_confidence": intelligence.brain_decision.confidence,
     }

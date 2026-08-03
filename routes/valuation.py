@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
+from src.core.brain import brain_service
 from src.core.provider_network import provider_network_report
 from src.core.valuation.automation import calibration_report
 from src.core.valuation.universe import ValuationUniverse
@@ -48,6 +49,41 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
     async def intelligence() -> dict[str, Any]:
         await ensure_fresh()
         return valuation_intelligence_report(require_data())
+
+    @root.get("/api/brain", tags=["brain"])
+    async def brain_index() -> Any:
+        await ensure_fresh()
+        brain = brain_service(require_data())
+        return {**brain.health(), "endpoints": ["/api/brain/assets/{asset_id}", "/api/brain/health", "/api/brain/migration", "/api/brain/timeline/{asset_id}"]}
+
+    @root.get("/api/brain/health", tags=["brain"])
+    async def brain_health() -> Any:
+        await ensure_fresh()
+        return brain_service(require_data()).health()
+
+    @root.get("/api/brain/migration", tags=["brain"])
+    async def brain_migration() -> Any:
+        await ensure_fresh()
+        return brain_service(require_data()).migration()
+
+    @root.get("/api/brain/assets/{asset_id:path}", tags=["brain"])
+    async def brain_asset(asset_id: str) -> Any:
+        await ensure_fresh()
+        brain = brain_service(require_data())
+        row = brain.asset(asset_id)
+        if row is None:
+            raise HTTPException(404, "The asset is not available in the synchronized Brain snapshot.")
+        return _intelligence_envelope(brain.report, {"asset": row, "canonical_source": "DTOS Brain"})
+
+    @root.get("/api/brain/timeline/{asset_id:path}", tags=["brain"])
+    async def brain_timeline(asset_id: str) -> Any:
+        await ensure_fresh()
+        brain = brain_service(require_data())
+        row = brain.asset(asset_id)
+        if row is None:
+            raise HTTPException(404, "The asset is not available in the synchronized Brain snapshot.")
+        canonical_id = row["asset_id"]
+        return _intelligence_envelope(brain.report, {"asset_id": canonical_id, "timeline": brain.report.get("timeline", {}).get(canonical_id, [])})
 
     @router.get("/evidence")
     async def valuation_evidence(offset: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000)) -> Any:
@@ -171,6 +207,14 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
         return {"schema_version": "1.0", "history": data.get("calibration_history") or []}
 
     if page is not None:
+        @root.get("/brain", response_class=HTMLResponse, tags=["brain"])
+        async def brain_dashboard() -> HTMLResponse:
+            await ensure_fresh()
+            health = brain_service(require_data()).health()
+            migration = health["migration"]
+            body = f'''<p class="eyebrow">Canonical Intelligence</p><h2>DTOS Brain</h2><p class="muted">There is only one Brain. Every intelligence consumer reads the same synchronized, explainable snapshot.</p><div class="grid"><article class="card"><p class="muted">Assets</p><h2>{health["asset_count"]}</h2></article><article class="card"><p class="muted">Coverage</p><h2>{health["coverage"]}</h2></article><article class="card"><p class="muted">Confidence</p><h2>{health["confidence"]}</h2></article><article class="card"><p class="muted">Agreement</p><h2>{health["agreement"]}</h2></article></div><div class="card"><h3>Migration</h3><p>{migration["migrated_count"]} of {migration["consumer_count"]} consumers use the canonical boundary.</p><p>Duplicate calculations: {migration["duplicate_calculation_count"]} · Legacy consumers: {migration["legacy_consumer_count"]}</p></div><div class="card"><h3>Cache and synchronization</h3><p>Mode: synchronized snapshot · Request-time provider calls: 0 · Request-time recalculation: no</p><p>Brain schema {health["brain_schema_version"]} · Generated {escape(str(health["generated_at"]))}</p></div>'''
+            return page("DTOS Brain", body)
+
         @root.get("/valuation/calibration", response_class=HTMLResponse, tags=["valuation"])
         async def valuation_calibration_dashboard() -> HTMLResponse:
             result = await calibration()

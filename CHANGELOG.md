@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.7.4 - Brain Integration & Unified Decision Engine
+
+- Established `BrainService` as the cached public source for canonical valuation layers, evidence quality, explanations, diagnostics, and timelines.
+- Migrated application intelligence consumers through the Intelligence Orchestrator and added explainable Decision Confidence.
+- Added Brain health, migration, asset, timeline, dashboard, and DINS inspection contracts.
+- Retained the v1.7.3 valuation APIs as backwards-compatible adapters and added cross-consumer consistency tests.
+
 ## v1.7.3 - Valuation Intelligence Engine (DTOS Brain Phase I)
 
 - Added a canonical cached Evidence Engine for every player and draft pick.
@@ -411,3 +418,11 @@ Notable DTOS changes are recorded here from the repository's Git history.
 - Added explainable recommendations, impact scoring, safety-gated automatic model adjustments, and retained calibration history.
 - Added calibration dashboard and status, category, recommendation, and history APIs.
 - Preserved independent DTOS intrinsic valuation; market consensus remains evidence rather than authority.
+# DTOS Changelog
+
+## v1.7.4 - Brain Integration & Unified Decision Engine
+
+- Established `BrainService` as the public, cached source for canonical valuation layers, evidence quality, explanations, diagnostics, and timelines.
+- Migrated application intelligence consumers through the Intelligence Orchestrator and added explainable Decision Confidence.
+- Added Brain health, migration, asset, timeline, dashboard, and DINS inspection contracts.
+- Retained the v1.7.3 valuation APIs as backwards-compatible adapters and added permanent cross-consumer consistency tests.

@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Brain Integration & Unified Decision Engine - DTOS v1.7.4
+
+- One cached public Brain contract for all canonical asset intelligence.
+- Cross-consumer consistency validation and migration diagnostics.
+- Explainable Decision Confidence and decision-history foundations.
+- Brain health dashboard, APIs, and DINS inspection coverage.
+
 ### Multi-Source Market Intelligence Provider Network - DTOS v1.7.2
 
 - Register approved, credentialed, unsupported, and future providers in one versioned compliance contract.

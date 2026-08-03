@@ -31,4 +31,4 @@ def build_trade_center(data: dict[str, Any], active_roster_id: int | None = None
             "rebuild": round(totals(received, "rebuilder") - totals(sent, "rebuilder"), 1),
             "weekly": round(projections(received) - projections(sent), 2),
         }
-    return {"active_team": active_team, "teams": teams, "dossiers": dossiers, "value_impacts": impacts, "unified_recommendation": intelligence.recommendation}
+    return {"active_team": active_team, "teams": teams, "dossiers": dossiers, "value_impacts": impacts, "unified_recommendation": intelligence.recommendation, "brain": intelligence.brain, "decision_confidence": intelligence.brain_decision.confidence}

@@ -1,3 +1,18 @@
+# DTOS v1.7.4 — Brain Integration & Unified Decision Engine
+
+DTOS now has one public Brain boundary. Every major intelligence consumer receives the same cached asset values, evidence scores, explanations, and histories through the Intelligence Orchestrator. The release adds a distinct, explainable Decision Confidence metric, a Brain dashboard, migration diagnostics, health APIs, and DINS coverage. Existing valuation contracts remain compatible; provider calls and valuation recalculation remain outside request rendering.
+
+## Canonical endpoints
+
+- `/brain`
+- `/api/brain`
+- `/api/brain/health`
+- `/api/brain/migration`
+- `/api/brain/assets/{asset_id}`
+- `/api/brain/timeline/{asset_id}`
+
+---
+
 # DTOS v1.7.3 — Valuation Intelligence Engine (DTOS Brain Phase I)
 
 DTOS now reasons over cached multi-source evidence instead of treating provider consensus as an answer. Every canonical player and pick receives separate Coverage, Confidence, and Agreement scores, a provider/category breakdown, five independent valuation layers, a readable explanation, a bounded evidence timeline, and transparent diagnostics.
