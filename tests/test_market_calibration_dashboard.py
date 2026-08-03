@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 from routes.valuation import create_valuation_router
+from src.core.provider_network import build_provider_network
 from src.core.valuation.automation import audit_market_calibration, calibration_report
 from src.core.valuation.universe import ValuationUniverse
 
@@ -58,6 +59,7 @@ class MarketCalibrationDashboardTests(unittest.TestCase):
 
     def test_high_confidence_adjustment_is_model_level_bounded_and_explainable(self) -> None:
         data, state = calibration_fixture()
+        build_provider_network(data, state)
         report = audit_market_calibration(data, state, apply=True)
         quarterback = next(row for row in report["recommendations"] if row["category"] == "Quarterbacks")
         self.assertTrue(quarterback["applied"])
@@ -69,6 +71,7 @@ class MarketCalibrationDashboardTests(unittest.TestCase):
 
     def test_adjustment_changes_only_league_adjusted_layer(self) -> None:
         data, state = calibration_fixture()
+        build_provider_network(data, state)
         before = ValuationUniverse(data, state).by_id["player:1"]["layers"]
         audit_market_calibration(data, state, apply=True)
         after = ValuationUniverse(data, state).by_id["player:1"]["layers"]
@@ -82,15 +85,17 @@ class MarketCalibrationDashboardTests(unittest.TestCase):
 
     def test_failed_or_stale_provider_prevents_automatic_change(self) -> None:
         data, state = calibration_fixture(healthy=False)
+        build_provider_network(data, state)
         report = audit_market_calibration(data, state, apply=True)
         self.assertFalse(any(row["applied"] for row in report["recommendations"]))
         self.assertEqual(report["summary"]["providers_available"], 0)
 
     def test_history_records_no_action_and_applied_runs(self) -> None:
         data, state = calibration_fixture()
+        build_provider_network(data, state)
         first = audit_market_calibration(data, state, apply=True)
         self.assertEqual(len(data["calibration_history"]), 1)
-        self.assertEqual(data["calibration_history"][0]["model_version"], "1.7.1")
+        self.assertEqual(data["calibration_history"][0]["model_version"], "1.7.2")
         self.assertEqual(calibration_report(data, state)["generated_at"], first["generated_at"])
 
     def test_api_dashboard_categories_recommendations_and_history(self) -> None:

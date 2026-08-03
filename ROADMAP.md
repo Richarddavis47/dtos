@@ -1,5 +1,13 @@
 # DTOS Development Roadmap
 
+### Multi-Source Market Intelligence Provider Network - DTOS v1.7.2
+
+- Register approved, credentialed, unsupported, and future providers in one versioned compliance contract.
+- Normalize immutable evidence into canonical asset identities and retain conflicts for review.
+- Weight evidence dynamically by quality, freshness, identity, coverage, format, and independent lineage.
+- Treat completed Sleeper trades and league-local demand as contextual observed evidence, never universal truth.
+- Keep external refreshes off request handlers and require multi-family evidence before automatic calibration.
+
 ### Automated Market Calibration Dashboard - DTOS v1.7.1
 
 - Audit the complete Canonical Asset Universe after provider refreshes.

@@ -129,6 +129,9 @@ def audit_market_calibration(data: dict[str, Any], state: dict[str, Any], *, app
     integrity = universe.status()
     integrity_ok = integrity["duplicate_identities"] == 0 and integrity["counts"]["total"] == len(universe.assets)
     healthy_market_providers = [row for row in providers if row["provider"] != "DTOS" and row["status"] == "healthy" and row["records"]]
+    provider_network = data.get("provider_network") or {}
+    independent_families = int((provider_network.get("consensus") or {}).get("assets_with_multiple_independent_families") or 0)
+    network_safe = bool((provider_network.get("safety") or {}).get("asset_integrity_score") == 100 and not (provider_network.get("evidence_summary") or {}).get("conflicting"))
     freshness_current = universe.freshness["current_status"] == "Current"
     category_health: list[dict[str, Any]] = []
     recommendations: list[dict[str, Any]] = []
@@ -160,7 +163,7 @@ def audit_market_calibration(data: dict[str, Any], state: dict[str, Any], *, app
         safe = (
             status == "Calibration Required" and len(comparable) >= AUTO_APPLY_SAMPLE
             and confidence >= AUTO_APPLY_CONFIDENCE and len(healthy_market_providers) >= 2
-            and freshness_current and integrity_ok
+            and freshness_current and integrity_ok and independent_families >= AUTO_APPLY_SAMPLE and network_safe
         )
         adjustment = round(max(-MAXIMUM_AUTOMATIC_ADJUSTMENT, min(MAXIMUM_AUTOMATIC_ADJUSTMENT, -(deviation or 0) / 100 * .25)), 4) if safe else 0.0
         applied = bool(apply and safe and adjustment)
@@ -177,6 +180,8 @@ def audit_market_calibration(data: dict[str, Any], state: dict[str, Any], *, app
                 "multiple_providers": len(healthy_market_providers) >= 2, "fresh_data": freshness_current,
                 "minimum_sample": len(comparable) >= AUTO_APPLY_SAMPLE, "confidence_threshold": confidence >= AUTO_APPLY_CONFIDENCE,
                 "asset_integrity": integrity_ok,
+                "independent_evidence_families": independent_families >= AUTO_APPLY_SAMPLE,
+                "provider_network_safe": network_safe,
                 "bounded_adjustment": abs(adjustment) <= MAXIMUM_AUTOMATIC_ADJUSTMENT,
             },
             "proposed_adjustment": adjustment, "applied": applied,
@@ -189,7 +194,7 @@ def audit_market_calibration(data: dict[str, Any], state: dict[str, Any], *, app
     integrity_score = 100 if integrity_ok else 0
     report = {
         "schema_version": CALIBRATION_SCHEMA_VERSION, "generated_at": generated_at,
-        "model_version": "1.7.1", "automatic": True,
+        "model_version": "1.7.2", "automatic": True,
         "summary": {
             "overall_calibration_score": calibration_score, "total_assets_audited": len(universe.assets),
             "providers_available": len(healthy_market_providers), "provider_freshness": universe.freshness["current_status"],

@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.7.2 - Multi-Source Market Intelligence Provider Network
+
+- Added a canonical, versioned provider registry and immutable evidence contract with explicit licensing, availability, lineage, freshness, identity, and redistribution rules.
+- Added dynamic category reliability, independent-family weighted consensus, and transparent missing/disagreement evidence.
+- Promoted completed Sleeper trades and league-local demand into quality-filtered, league-isolated observed-market providers.
+- Expanded calibration safety, provider APIs, the calibration dashboard, and DINS inspection without adding request-time provider calls.
+- Added permanent compliance, privacy, deterministic-output, trade-quality, API, and pending-lifecycle regression gates.
+
 ## v1.7.0 - Market Calibration Foundation
 
 - Added one canonical valuation universe for every cached Sleeper player and every canonical future pick.

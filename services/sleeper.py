@@ -16,6 +16,7 @@ from src.core.data_platform import data_platform
 from src.core.data_platform.normalization import PlayerIdentityResolver
 from src.core.data_platform.provider_activation import refresh_public_market
 from src.core.intelligence.cache import intelligence_cache
+from src.core.provider_network import build_provider_network
 from src.core.valuation.automation import audit_market_calibration
 from services.history import capture_current_state, player_history_evidence
 from config import (
@@ -338,16 +339,18 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 "market_data": market_data,
                 "calibration_state": previous_data.get("calibration_state") or {},
                 "calibration_history": previous_data.get("calibration_history") or [],
+                "provider_reliability_history": previous_data.get("provider_reliability_history") or [],
             }
             STATE["last_sync"] = synced_at
             STATE["last_error"] = None
             STATE["transactions_last_sync"] = synced_at
             STATE["transactions_last_error"] = None
             try:
-                audit_market_calibration(STATE["data"], STATE, apply=True)
+                await asyncio.to_thread(build_provider_network, STATE["data"], STATE)
+                await asyncio.to_thread(audit_market_calibration, STATE["data"], STATE, apply=True)
             except Exception:
-                logger.exception("Automated market calibration audit failed")
-                STATE["data"]["calibration_error"] = "The automatic audit failed; no model adjustment was applied."
+                logger.exception("Provider network or automated market calibration audit failed")
+                STATE["data"]["calibration_error"] = "Provider evidence evaluation failed; no model adjustment was applied."
             capture_current_state(STATE["data"], synced_at)
             save_cache()
             intelligence_cache.invalidate("snapshot:")

@@ -1,4 +1,12 @@
-# DTOS v1.6.7 — GitHub DINS Artifact Publication Completion
+# DTOS v1.7.2 — Multi-Source Market Intelligence Provider Network
+
+DTOS now treats each provider as measured evidence rather than truth. Approved FantasyCalc and DynastyProcess feeds, completed Sleeper trades, league-local behavior, nflverse historical evidence, and the independent DTOS historical model are registered with explicit purpose, lineage, licensing, freshness, coverage, and dynamic reliability. FantasyPros remains credential- and license-gated; KeepTradeCut remains unavailable because no approved integration exists.
+
+Weighted consensus groups correlated sources into evidence families, so a derivative source cannot receive an extra independent vote. Missing, stale, unmatched, ambiguous, conflicting, or restricted evidence lowers confidence and remains visible. Ordinary application requests use a cached read model and never refresh providers. Automatic calibration remains bounded, reversible, model-level only, and now also requires sufficient multi-family coverage and a conflict-free provider network.
+
+## Previous release
+
+### DTOS v1.6.7 — GitHub DINS Artifact Publication Completion
 
 DTOS v1.6.7 closes the inspection-publication gap without adding a paid service or
 changing the inspected application commit. Production discovers immutable DINS
