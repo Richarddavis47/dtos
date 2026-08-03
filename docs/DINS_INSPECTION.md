@@ -161,6 +161,38 @@ intentional change is a regression.
 - Team semantic contract: `https://dtos.onrender.com/api/inspect/team/1`
 - Team visual contract: `https://dtos.onrender.com/api/inspect/visual/pages/teams-1/desktop`
 
+## GitHub Release publication
+
+Beginning with v1.6.7, the post-deployment worker captures the exact running Render
+commit and packages the result outside the repository. It publishes three immutable,
+versioned assets to the matching public GitHub Release:
+
+- `dtos-vX.Y.Z-dins-full.zip`
+- `dtos-vX.Y.Z-dins-manifest.json`
+- `dtos-vX.Y.Z-dins-checksums.json`
+
+The ZIP contains the release manifest, site map, per-page semantic contracts, all
+three viewport and full-page screenshots, DOM and accessibility snapshots,
+interactions, network/console evidence, and comparison artifacts. ZIP entries are
+sorted with fixed timestamps and permissions so identical inputs produce identical
+SHA-256 values.
+
+Production queries the public GitHub Release API using its running version, caches
+the result briefly, and validates version, build, merge commit, release tag, schema,
+manifest checksum, and capture outcome. `/api/inspect/health?refresh=true` bypasses
+the short cache after publication. Missing, partial, corrupt, or stale releases never
+report complete. No credentials, repository write, provider synchronization, or
+intelligence execution occurs in this read-only lookup.
+
+Post-deployment commands:
+
+```powershell
+$env:DTOS_PUBLIC_URL='https://dtos.onrender.com'
+.\.venv\Scripts\python.exe -m tools.inspection.capture --base-url https://dtos.onrender.com --output <capture-root>
+.\.venv\Scripts\python.exe -m tools.inspection.package <capture-namespace> --output <release-assets>
+gh release upload vX.Y.Z <release-assets>\* --clobber
+```
+
 The v1.6.2 foundation covers five major page types plus the catalog. Future
 versions can add Commissioner Desk, Matchups, Transactions, Draft Picks, History,
 Settings, schema-diff tooling, and snapshot fixtures.

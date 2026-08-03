@@ -1,4 +1,19 @@
-# DTOS v1.6.6 — Team Headquarters Mobile Overflow Correction
+# DTOS v1.6.7 — GitHub DINS Artifact Publication Completion
+
+DTOS v1.6.7 closes the inspection-publication gap without adding a paid service or
+changing the inspected application commit. Production discovers immutable DINS
+ZIP, manifest, and checksum assets directly from the matching public GitHub
+Release, validates version/build/commit/schema/capture identity, and reports an
+explicit publication state through the inspection API.
+
+Generated browser artifacts remain outside Git history. The post-deployment worker
+captures the exact Render commit, packages deterministic sanitized assets, uploads
+them to its existing release, and production becomes complete after public identity
+and checksum verification.
+
+## Previous release
+
+### DTOS v1.6.6 — Team Headquarters Mobile Overflow Correction
 
 DTOS v1.6.6 is a focused production correction for a responsive defect discovered
 during the complete v1.6.5 DINS audit. The Team Headquarters Core Intelligence

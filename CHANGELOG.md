@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.6.7 - GitHub DINS Artifact Publication Completion
+
+- Added immutable DINS publication through deterministic GitHub Release assets.
+- Added public release discovery with brief caching, identity and checksum checks,
+  explicit pending/partial/failed/stale states, and production health integration.
+- Added deterministic ZIP, manifest, checksum, sanitization, and idempotency tests.
+- Kept generated inspection artifacts outside Git history and preserved v1.6.6
+  mobile, accessibility, product-contract, and intelligence behavior.
+
 ## v1.6.6 - Team Headquarters Mobile Overflow Correction
 
 - Corrected the Team Headquarters intelligence grid so it collapses to two

@@ -21,7 +21,11 @@ class VisualInspectionTests(unittest.TestCase):
     def state(self) -> dict:
         return {"last_sync": "2026-08-02T00:00:00Z", "data": {"league": {"league_id": "l1"}, "players": {"p1": {"full_name": "Player One", "position": "QB"}}, "teams": [{"roster_id": 1, "team_name": "Team 1", "owner": "Owner 1", "players": [{"id": "p1"}]}], "matchups": [{"matchup_id": 7}]}}
 
-    def app(self, root: Path) -> FastAPI:
+    def app(self, root: Path, publication_payload: dict | None = None) -> FastAPI:
+        class PendingPublication:
+            def current(self, *, refresh: bool = False) -> dict:
+                return publication_payload or {"version": VERSION, "build": BUILD_NUMBER, "publication_status": "pending", "status": "pending", "identities_match": False}
+
         app = FastAPI()
 
         @app.get("/", response_class=HTMLResponse)
@@ -36,7 +40,7 @@ class VisualInspectionTests(unittest.TestCase):
         async def player(player_id: str) -> HTMLResponse:
             return HTMLResponse(f"<h1>{player_id}</h1>")
 
-        app.include_router(create_inspection_router(state=self.state(), route_provider=lambda: app.routes, artifact_root=root))
+        app.include_router(create_inspection_router(state=self.state(), route_provider=lambda: app.routes, artifact_root=root, publication_resolver=PendingPublication()))
         return app
 
     def test_discovery_resolves_dynamic_routes_and_excludes_api(self) -> None:
@@ -68,6 +72,21 @@ class VisualInspectionTests(unittest.TestCase):
         self.assertGreaterEqual(site_map["metrics"]["inspectable"], 3)
         self.assertEqual(health["inspection_status"], "pending")
         self.assertFalse(health["production_inspection_matches_deployment"])
+
+    def test_published_health_exposes_public_assets_and_matching_identity(self) -> None:
+        payload = {
+            "version": VERSION, "build": BUILD_NUMBER, "commit_sha": deployment_metadata()["commit"],
+            "publication_status": "complete", "status": "complete", "identities_match": True,
+            "total_pages_completed": 3, "total_visual_artifacts": 12,
+            "published_manifest_url": "https://github.com/example/manifest.json",
+            "full_bundle_url": "https://github.com/example/bundle.zip",
+            "checksums_url": "https://github.com/example/checksums.json",
+        }
+        with tempfile.TemporaryDirectory() as folder:
+            health = TestClient(self.app(Path(folder), payload)).get("/api/inspect/health?refresh=true").json()
+        self.assertEqual(health["publication_status"], "complete")
+        self.assertTrue(health["production_inspection_matches_deployment"])
+        self.assertTrue(health["full_bundle_url"].startswith("https://github.com/"))
 
     def test_artifacts_are_namespaced_and_run_contract_is_retrievable(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
