@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -32,8 +33,9 @@ def _validate_public_content(path: Path, content: bytes) -> None:
     if path.suffix.casefold() not in {".json", ".txt", ".html", ".xml"}:
         return
     text = content.decode("utf-8", errors="replace").casefold()
-    forbidden = ("localhost", "127.0.0.1", "c:\\users\\", "/home/", "authorization:", "cookie:")
-    if any(item in text for item in forbidden):
+    forbidden = ("localhost", "127.0.0.1", "c:\\users\\", "authorization:", "cookie:")
+    local_home_path = re.search(r"(?<![a-z0-9._~:/-])/home/", text)
+    if any(item in text for item in forbidden) or local_home_path:
         raise ValueError(f"Capture contains a forbidden local or sensitive reference in {path.name}.")
 
 
