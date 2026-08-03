@@ -76,7 +76,17 @@ class BrainService:
                 f"Recommendation stability is {stability}/100; complexity penalty is {complexity_penalty}.",
             ),
         )
-        return BrainDecision(consumer, canonical_ids, assets, confidence, self._report.get("generated_at"), VERSION)
+        generated_at = self._report.get("generated_at")
+        return BrainDecision(
+            consumer, canonical_ids, assets, confidence, generated_at, VERSION,
+            BRAIN_SCHEMA_VERSION, f"{VERSION}:{generated_at or 'pending'}", generated_at,
+            (
+                "DTOS Brain synchronized valuation-intelligence snapshot",
+                f"Consumer: {consumer}",
+                "Decision Confidence is calculated once inside BrainService.",
+            ),
+            confidence.rationale,
+        )
 
     def migration(self) -> dict[str, Any]:
         consumers = [{"consumer": name, "status": "migrated", "boundary": "BrainService via Intelligence Orchestrator"} for name in CONSUMERS]

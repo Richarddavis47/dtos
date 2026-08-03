@@ -7,6 +7,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
+from src.core.intelligence.serialization import recommendation_contract
 from services.asset_intelligence import player_asset_index
 from src.core.data_platform import data_platform
 from src.core.intelligence import intelligence_orchestrator
@@ -153,7 +154,7 @@ def create_api_router(
             "provider_health": result.market.provider_health,
             "offline": result.market.offline,
         }
-        return JSONResponse(jsonable_encoder({"active_front_office": roster_id, "competitive_window": asdict(result.decision.competitive_window), "recommendation": asdict(result.recommendation), "market": market_summary, "player_values": {key: asdict(value) for key, value in result.player_values.items()}, "roster": asdict(result.roster), "league_intelligence": asdict(result.league), "timings_ms": result.timings_ms, "cache_hit": result.cache_hit}))
+        return JSONResponse(jsonable_encoder({"active_front_office": roster_id, "competitive_window": asdict(result.decision.competitive_window), **recommendation_contract(result.recommendation, result.brain_decision), "market": market_summary, "player_values": {key: asdict(value) for key, value in result.player_values.items()}, "roster": asdict(result.roster), "league_intelligence": asdict(result.league), "timings_ms": result.timings_ms, "cache_hit": result.cache_hit}))
 
     @router.get("/api/league")
     async def api_league(include_players: bool = False) -> JSONResponse:
