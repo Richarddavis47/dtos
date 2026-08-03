@@ -10,6 +10,8 @@ from urllib.parse import quote
 from urllib.request import urlopen
 
 GENERIC_TEAM_LABEL = re.compile(r"\b(?:Team|Roster)\s+(?:[1-9]|10)\b|\bTeam Detail\b", re.IGNORECASE)
+GENERIC_PAGE_TITLE = re.compile(r"<title>\s*(?:Team|Player|Matchup)\s*(?:Detail)?\s*</title>", re.IGNORECASE)
+INTERNAL_LABEL = re.compile(r"\b(?:Roster ID|Player ID|Transaction ID|Sleeper ID|Franchise ID|Provider Key)\b", re.IGNORECASE)
 
 
 def validate_team_identity(body: bytes, path: str) -> None:
@@ -17,6 +19,22 @@ def validate_team_identity(body: bytes, path: str) -> None:
     match = GENERIC_TEAM_LABEL.search(body.decode("utf-8", errors="replace"))
     if match:
         raise AssertionError(f"{path}: rendered generic team label {match.group(0)!r}")
+
+
+def validate_product_contract(body: bytes, path: str, *, recommendation: bool = False) -> None:
+    """Validate the public design-system contract on a rendered page."""
+    html = body.decode("utf-8", errors="replace")
+    if 'data-dtos-component="page-header"' not in html:
+        raise AssertionError(f"{path}: shared page header is missing")
+    if 'class="ds-action primary"' not in html and ">Sync League</button>" not in html:
+        raise AssertionError(f"{path}: primary page action is missing")
+    if GENERIC_PAGE_TITLE.search(html):
+        raise AssertionError(f"{path}: page title is generic")
+    match = INTERNAL_LABEL.search(html)
+    if match:
+        raise AssertionError(f"{path}: exposes internal identifier label {match.group(0)!r}")
+    if recommendation and 'data-dtos-component="recommendation"' not in html:
+        raise AssertionError(f"{path}: shared recommendation contract is missing")
 
 
 def get(base_url: str, path: str, expected: int = 200) -> bytes:
@@ -60,8 +78,12 @@ def main() -> int:
         "/api/inspect/schema", "/api/inspect/health",
         "/api/inspect/visual/pages", "/api/inspect/releases/current",
     )
+    product_pages = {"/", "/teams", "/matchups", "/transactions", "/picks", "/settings", "/history", "/front-offices", "/trades"}
+    recommendation_pages = {"/", "/front-offices", "/trades"}
     for path in major:
-        get(args.base_url, path)
+        body = get(args.base_url, path)
+        if path in product_pages:
+            validate_product_contract(body, path, recommendation=path in recommendation_pages)
 
     league = json.loads(get(args.base_url, "/api/league"))
     teams = league.get("teams") or []
@@ -70,9 +92,13 @@ def main() -> int:
     roster_ids = [int(team["roster_id"]) for team in teams]
     for roster_id in roster_ids:
         team_path = f"/teams/{roster_id}"
-        validate_team_identity(get(args.base_url, team_path), team_path)
+        team_body = get(args.base_url, team_path)
+        validate_team_identity(team_body, team_path)
+        validate_product_contract(team_body, team_path, recommendation=True)
         front_office_path = f"/front-offices?front_office={roster_id}"
-        validate_team_identity(get(args.base_url, front_office_path), front_office_path)
+        front_office_body = get(args.base_url, front_office_path)
+        validate_team_identity(front_office_body, front_office_path)
+        validate_product_contract(front_office_body, front_office_path, recommendation=True)
         organization = json.loads(get(args.base_url, f"/api/front-offices?front_office={roster_id}"))
         if organization.get("active_front_office") != roster_id:
             raise AssertionError(f"Front Office context {roster_id} did not persist through the API.")
@@ -85,7 +111,8 @@ def main() -> int:
         raise AssertionError("Canonical cached player index contains no discoverable player ID.")
     player_id = quote(str(players[0]["player_id"]), safe="")
     for roster_id in roster_ids:
-        get(args.base_url, f"/players/{player_id}?front_office={roster_id}")
+        player_path = f"/players/{player_id}?front_office={roster_id}"
+        validate_product_contract(get(args.base_url, player_path), player_path, recommendation=True)
 
     get(args.base_url, "/players/", expected=404)
     get(args.base_url, "/players/dtos-validation-missing-player", expected=404)

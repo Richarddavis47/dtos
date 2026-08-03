@@ -51,7 +51,7 @@ def create_settings_router(
 <h2>League Configuration</h2>
 <div class="grid">
   <div class="card"><h3>Roster Positions</h3><p>{positions}</p></div>
-  <div class="card">
+  <div class="card" id="sync-status">
     <h3>Front Office</h3>
     <table><tbody>
       <tr><td>DTOS version</td><td>{escape(VERSION)}</td></tr>

@@ -44,6 +44,7 @@ from src.platform.observability import (
     mark_startup_complete,
     runtime_metrics,
 )
+from src.ui import DESIGN_SYSTEM_CSS, page_header
 
 _PROCESS_STARTED = perf_counter()
 _INSPECTION_REQUEST: ContextVar[bool] = ContextVar("dtos_inspection_request", default=False)
@@ -177,6 +178,7 @@ details.pick-year{margin-top:12px}.pick-summary{list-style:none;cursor:pointer;d
 @media(max-width:760px){.summary-grid{grid-template-columns:repeat(2,1fr)}.team-report{grid-template-columns:repeat(2,1fr)}.analytics-grid{grid-template-columns:repeat(2,1fr)}.position-strip{grid-template-columns:repeat(2,1fr)}}
 table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}pre{white-space:pre-wrap;word-break:break-word}.footer{color:var(--muted);font-size:13px;padding:24px 0}.error{background:#3b1720;border:1px solid #7f1d1d;padding:12px;border-radius:10px;margin-bottom:15px}@media(max-width:600px){.wrap{padding:14px}.card{padding:13px}th,td{padding:7px;font-size:13px}}
 """
+CSS += DESIGN_SYSTEM_CSS
 
 
 def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLResponse:
@@ -184,9 +186,9 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     error = STATE.get("last_error")
     error_html = f'<div class="error"><b>Sync error:</b> {escape(error)}</div>' if error else ""
     league_name = str(((STATE.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
-    standard_chrome = f"""<header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>{escape(league_name)} Front Office · Live Sleeper data</p></div><form method="post" action="/sync"><button class="btn" type="submit">Sync Now</button></form></header>
-<nav class="nav"><a href="/">Commissioner Desk</a><a href="/teams">Teams</a><a href="/front-offices">Front Offices</a><a href="/trades">Trade Intelligence</a><a href="/matchups">Matchups</a><a href="/picks">Draft Picks</a><a href="/transactions">Transactions</a><a href="/history">League History</a><a href="/settings">League Settings</a><a href="/api/status">API</a></nav>"""
-    footer = f'<footer class="footer">Last sync: {escape(sync)} · Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'
+    standard_chrome = f"""<header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync"><button class="btn" type="submit">Sync League</button></form></header>
+<nav class="nav" aria-label="Primary navigation"><a href="/">Home</a><a href="/teams">Team HQ</a><a href="/trades">Trade Center</a><a href="/matchups">Matchups</a><a href="/transactions">Transactions</a><a href="/picks">Draft Capital</a><a href="/history">History</a><a href="/front-offices">Front Office</a><a href="/settings">Settings</a></nav>{page_header(title, league_name=league_name, last_updated=str(sync))}"""
+    footer = f'<footer class="footer"><b>League Sync:</b> {escape(str(sync))} · Intelligence is generated from the latest cached league state. Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'
     html = f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style></head>
 <body><main class="wrap">{"" if commissioner_chrome else standard_chrome}{error_html}{body}{"" if commissioner_chrome else footer}</main></body></html>"""
     return HTMLResponse(html)

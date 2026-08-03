@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.6.5 - Product Design System, Navigation & Consistency
+
+- Added Product Design System 1.0 with shared page headers, action hierarchy,
+  recommendation evidence, grade context, freshness, accessibility, and mobile rules.
+- Standardized primary navigation and Commissioner Desk briefing order around the
+  General Manager workflow.
+- Replaced generic dynamic-page and internal-identifier presentation with real
+  franchise, player, owner, and matchup language.
+- Added truthful preseason projections to the Teams directory and preserved all
+  underlying intelligence calculations.
+- Extended DINS and canonical HTTP validation with product-contract and deployment-
+  provenance gates.
+
 ## v1.6.4 - Team Identity Normalization & Team Headquarters Polish
 
 - Centralized canonical team-name resolution across presentation, intelligence, inspection, and transaction boundaries.

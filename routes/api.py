@@ -6,7 +6,7 @@ from typing import Any, Awaitable, Callable
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from app_metadata import VERSION
+from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from services.asset_intelligence import player_asset_index
 from src.core.data_platform import data_platform
 from src.core.intelligence import intelligence_orchestrator
@@ -55,6 +55,8 @@ def create_api_router(
             {
                 "status": "ready" if runtime_metrics.ready else "not_ready",
                 "version": VERSION,
+                "build": BUILD_NUMBER,
+                "deployment": deployment_metadata(),
                 "reason": runtime_metrics.readiness_reason,
                 "runtime": runtime_metrics.health(),
             },
@@ -67,6 +69,8 @@ def create_api_router(
         return JSONResponse(
             {
                 "version": VERSION,
+                "build": BUILD_NUMBER,
+                "deployment": deployment_metadata(),
                 "league_id": league_id,
                 "last_sync": state.get("last_sync"),
                 "last_error": state.get("last_error"),

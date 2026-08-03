@@ -144,6 +144,18 @@ def discover_pages(routes: Iterable[Any], state: dict[str, Any]) -> tuple[Discov
             page_name = _name(route)
             if "roster_id" in fixture and path == "/teams/{roster_id}":
                 page_name = f"{team_name_for(data, int(fixture['roster_id']))} Headquarters"
+            elif "player_id" in fixture and path == "/players/{player_id}":
+                player = (data.get("players") or {}).get(str(fixture["player_id"])) or {}
+                player_name = player.get("full_name") or player.get("first_name") or "Player"
+                page_name = f"{player_name} — Player Intelligence"
+            elif "matchup_id" in fixture and path == "/matchups/{matchup_id}":
+                matchup_id = str(fixture["matchup_id"])
+                matchup_rows = data.get("matchups") or ()
+                if isinstance(matchup_rows, dict):
+                    matchup_rows = matchup_rows.get(matchup_id) or ()
+                roster_ids = [int(row.get("roster_id") or 0) for row in matchup_rows if isinstance(row, dict)]
+                names = [team_name_for(data, roster_id) for roster_id in roster_ids[:2] if roster_id]
+                page_name = f"{' vs '.join(names)} — Matchup" if names else f"Matchup {matchup_id}"
             discovered.append(DiscoveredPage(
                 page_id, page_name, resolved, path,
                 "dynamic" if fixture else "static", "live_cached", "deterministic",

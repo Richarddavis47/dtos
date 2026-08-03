@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Product Design System, Navigation & Consistency - DTOS v1.6.5
+
+- Standardize public page hierarchy, actions, recommendation evidence, grade
+  meaning, freshness, responsive behavior, and accessibility primitives.
+- Organize navigation and Commissioner Desk around the General Manager workflow.
+- Make DINS product presentation and deployment provenance permanent release gates.
+
 ### Complete Visual Inspection & Release Verification - DTOS v1.6.3
 
 - DINS 2.0 automatic page inventory, browser artifacts, accessibility evidence,

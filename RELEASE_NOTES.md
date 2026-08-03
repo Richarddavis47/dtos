@@ -1,4 +1,24 @@
-# DTOS v1.6.4 — Team Identity Normalization & Team Headquarters Polish
+# DTOS v1.6.5 — Product Design System, Navigation & Consistency
+
+DTOS v1.6.5 unifies every major Front Office surface around a shared visual and
+interaction language. Pages now state what decision they support, show fresh data
+context, and lead to a clear next action. Recommendations use one explainable
+contract, league-relative grades state what they mean, and mobile and keyboard
+behavior share permanent primitives.
+
+The Commissioner Desk now follows the executive sequence: what changed, what to
+do, my team, league opportunities, league context, then the compact snapshot.
+Preseason team cards present projections and odds instead of empty standings.
+
+DINS records deployed commit and timestamp provenance and treats missing product
+contracts, generic dynamic names, exposed internal identifiers, local artifact
+URLs, and critical accessibility regressions as release failures.
+
+No intelligence formulas, provider behavior, or cached-state semantics changed.
+
+## Previous release
+
+### DTOS v1.6.4 — Team Identity Normalization & Team Headquarters Polish
 
 DTOS now presents every franchise by its canonical identity throughout Team Headquarters, Commissioner Desk, intelligence summaries, and DINS. Team Headquarters has a cleaner executive hierarchy with one competitive-window classification and one primary recommendation, while detailed evidence remains available in a collapsed disclosure.
 

@@ -6,6 +6,11 @@ DINS provides a stable JSON description of what major DTOS pages render. It is
 designed for automated agents, regression tools, accessibility analysis, and
 future presentation-contract verification that should not parse raw HTML.
 
+For v1.6.5, browser artifacts also verify the Product Design System contract:
+shared headers, primary actions, explainable recommendation panels, meaningful
+dynamic page names, absence of internal identifier labels, accessibility findings,
+and public artifact URLs. A violation fails the visual release manifest.
+
 DINS is an inspection boundary, not another business-logic layer. It reports
 cached facts and page structure; it does not reproduce DTOS calculations.
 
@@ -117,7 +122,10 @@ and matchup paths are expanded from cached deterministic representatives; an unk
 parameter type fails release route validation instead of silently disappearing.
 
 Artifacts live below `static/inspection/v{version}-b{build}-s{schema}` and are exposed
-through `/inspection-artifacts/...`. The web service only reads these files. Run the
+through `/inspection-artifacts/...`. The web service only reads these files.
+Release manifests use runtime deployment metadata from `/api/status`, including
+the deployed commit, source branch, and deployment timestamp. Public captures must
+set `DTOS_PUBLIC_URL`; localhost artifact URLs fail the production contract. Run the
 bounded capture worker after deployment:
 
 ```powershell

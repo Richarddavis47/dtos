@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,7 +15,7 @@ from urllib.request import Request, urlopen
 
 from playwright.sync_api import Browser, Page, sync_playwright
 
-from app_metadata import BUILD_NUMBER, VERSION, repository_metadata
+from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.inspection.models import INSPECTION_SCHEMA_VERSION, VIEWPORTS, Viewport
 from src.core.inspection.storage import InspectionArtifactStore
 
@@ -107,17 +108,33 @@ def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: st
         interactions.append({"starting_page": route, "action": f"follow {link.get('text') or href}", "target": href, "control_existed": True, "enabled": True, "resulting_url": href, "http_status": status, "console_errors": [], "page_errors": [], "success": status is None or status < 400})
     headings = accessibility["headings"]
     critical = [row for row in accessibility["violations"] if row["severity"] == "critical"]
+    content = page.content()
+    visible_text = str(dom.get("visible_text") or "")
+    has_shared_header = 'data-dtos-component="page-header"' in content
+    has_primary_action = 'class="ds-action primary"' in content or '<button class="btn" type="submit">Sync League</button>' in content
+    has_recommendation = 'data-dtos-component="recommendation"' in content
+    public_contract_failures = []
+    if not has_shared_header:
+        public_contract_failures.append("Shared page header contract is missing.")
+    if not has_primary_action:
+        public_contract_failures.append("Primary page action is missing.")
+    if re.search(r"\b(?:Team|Roster)\s+(?:[1-9]|10)\b|\b(?:Team Detail|Player Detail|Matchup Detail)\b", spec["page_name"], re.IGNORECASE):
+        public_contract_failures.append("Dynamic page name is generic.")
+    if re.search(r"\b(?:Roster ID|Player ID|Transaction ID|Sleeper ID|Franchise ID|Provider Key)\b", visible_text, re.IGNORECASE):
+        public_contract_failures.append("User-facing content exposes an internal identifier label.")
+    if "localhost" in store.public_base_url or "127.0.0.1" in store.public_base_url:
+        public_contract_failures.append("Inspection artifact URLs use a local host.")
     result = {
         "application_version": VERSION, "application_build": BUILD_NUMBER, "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
         "page_id": page_id, "page_name": spec["page_name"], "route": route, "canonical_url": urljoin(store.public_base_url.rstrip("/") + "/", route.lstrip("/")), "league_id": league_id,
         "viewport": {"name": viewport.name, "width": viewport.width, "height": viewport.height, "device_scale_factor": viewport.device_scale_factor},
         "artifact_urls": {"viewport_screenshot": store.artifact_url(f"pages/{page_id}/{viewport_name}"), "full_page_screenshot": store.artifact_url(f"pages/{page_id}/{full_name}"), "dom_snapshot": store.artifact_url(f"pages/{page_id}/{viewport.name}-dom.json"), "accessibility_snapshot": store.artifact_url(f"pages/{page_id}/{viewport.name}-accessibility.json")},
-        "page_state": {"loaded": bool(response and response.ok), "ready_signal": "document.readyState=complete + networkidle", "loading_duration_ms": loaded_ms, "last_updated": None, "data_generation_time": datetime.now(timezone.utc).isoformat()},
+        "page_state": {"loaded": bool(response and response.ok), "ready_signal": "document.readyState=complete + networkidle", "loading_duration_ms": loaded_ms, "last_updated": datetime.now(timezone.utc).isoformat(), "data_generation_time": datetime.now(timezone.utc).isoformat()},
         "sections": _component_rows(dom, "section"), "cards": tuple(row for row in nodes if "card" in row.get("id", "") or row.get("tag") == "article"), "tables": _component_rows(dom, "table"), "charts": (), "buttons": _component_rows(dom, "button"), "links": _component_rows(dom, "link"), "navigation": _component_rows(dom, "navigation"), "forms": _component_rows(dom, "form"), "expandable_regions": tuple(row for row in nodes if row.get("tag") == "details"), "empty_states": tuple(row for row in nodes if "empty" in row.get("id", "")), "loading_states": (), "error_states": tuple(row for row in nodes if "error" in row.get("id", "")), "placeholder_actions": (), "disabled_actions": (),
-        "warnings": tuple(["New critical accessibility findings detected."] if critical else []), "accessibility": accessibility,
+        "warnings": tuple((["New critical accessibility findings detected."] if critical else []) + public_contract_failures), "accessibility": accessibility,
         "geometry": {"document_width": page.evaluate("document.documentElement.scrollWidth"), "document_height": page.evaluate("document.documentElement.scrollHeight"), "horizontal_overflow_width": page.evaluate("Math.max(0,document.documentElement.scrollWidth-innerWidth)"), "elements": nodes},
         "styles": {"theme": "dark", "animations_disabled": True}, "performance": {"navigation_and_readiness_ms": loaded_ms, "screenshot_generation_ms": screenshot_ms}, "network": {"failed_requests": failures, "console_errors": console_errors}, "interactions": tuple(interactions), "regressions": (),
-        "metrics": {"section_count": len(_component_rows(dom, "section")), "card_count": sum(row.get("tag") == "article" for row in nodes), "button_count": len(_component_rows(dom, "button")), "table_count": len(_component_rows(dom, "table")), "heading_count": len(headings), "critical_accessibility_count": len(critical), "interaction_density": round((len(_component_rows(dom, "button")) + len(_component_rows(dom, "link"))) / max(1, page.evaluate("document.documentElement.scrollHeight") / 1000), 2)},
+        "metrics": {"section_count": len(_component_rows(dom, "section")), "card_count": sum(row.get("tag") == "article" for row in nodes), "button_count": len(_component_rows(dom, "button")), "table_count": len(_component_rows(dom, "table")), "heading_count": len(headings), "critical_accessibility_count": len(critical), "interaction_density": round((len(_component_rows(dom, "button")) + len(_component_rows(dom, "link"))) / max(1, page.evaluate("document.documentElement.scrollHeight") / 1000), 2), "shared_header_contract": has_shared_header, "primary_action_contract": has_primary_action, "recommendation_contract": has_recommendation, "product_contract_failures": len(public_contract_failures)},
     }
     page.close()
     return result
@@ -152,10 +169,15 @@ def capture(base_url: str, output: Path, limit: int | None = None) -> dict[str, 
                         failures.append({"page_id": spec["page_id"], "viewport": viewport.name, "error": type(exc).__name__, "detail": str(exc)[:500]})
         finally:
             browser.close()
-    branch, commit = repository_metadata()
+    deployment = status.get("deployment") or deployment_metadata()
     generated_at = datetime.now(timezone.utc).isoformat()
     page_ids = sorted({row["page_id"] for row in generated})
-    manifest = {"version": VERSION, "build": BUILD_NUMBER, "commit_sha": commit, "source_branch": branch, "deployed_at": None, "generated_at": generated_at, "inspection_schema_version": INSPECTION_SCHEMA_VERSION, "status": "complete" if not failures else "partial", "page_inventory": site_map.get("pages", []), "pages": page_ids, "pages_added": page_ids, "pages_removed": [], "pages_changed": page_ids, "semantic_contract_changes": ["DINS schema 2.0 adds rendered visual, DOM, accessibility, geometry, interaction and release contracts."], "screenshot_artifact_urls": [url for row in generated for url in (row["artifact_urls"]["viewport_screenshot"], row["artifact_urls"]["full_page_screenshot"])], "visual_difference_results": [{"baseline_version": "1.6.2", "current_version": VERSION, "status": "unavailable", "reason": "v1.6.2 predates retained browser-rendered baselines; v1.6.3 establishes the visual baseline."}], "interaction_failures": [item for row in generated for item in row["interactions"] if not item["success"]], "accessibility_regressions": [item for row in generated for item in row["accessibility"]["violations"] if item["severity"] == "critical"], "console_errors": [item for row in generated for item in row["network"]["console_errors"]], "failed_network_requests": [item for row in generated for item in row["network"]["failed_requests"]], "stale_version_mismatches": [], "validation_outcome": "pass" if not failures and not any(row["metrics"]["critical_accessibility_count"] for row in generated) else "fail", "total_pages_expected": len(pages), "total_pages_completed": len(page_ids), "total_visual_artifacts": len(generated) * 4, "failures": failures, "warnings": ["Sleeper avatar CDN requests can be unavailable in sandboxed capture environments; failures are recorded explicitly."], "retention": "Current and previous production bundles are retained; older release metadata may remain without images."}
+    product_contract_failures = [
+        {"page_id": row["page_id"], "viewport": row["viewport"]["name"], "count": row["metrics"]["product_contract_failures"]}
+        for row in generated if row["metrics"]["product_contract_failures"]
+    ]
+    has_critical_accessibility = any(row["metrics"]["critical_accessibility_count"] for row in generated)
+    manifest = {"version": VERSION, "build": BUILD_NUMBER, "commit_sha": deployment.get("commit", "Unavailable"), "source_branch": deployment.get("branch", "Unavailable"), "deployed_at": deployment.get("deployed_at"), "generated_at": generated_at, "inspection_schema_version": INSPECTION_SCHEMA_VERSION, "status": "complete" if not failures else "partial", "page_inventory": site_map.get("pages", []), "pages": page_ids, "pages_added": page_ids, "pages_removed": [], "pages_changed": page_ids, "semantic_contract_changes": ["DINS schema 2.0 enforces product design, navigation, recommendation, accessibility, and deployment-provenance contracts."], "screenshot_artifact_urls": [url for row in generated for url in (row["artifact_urls"]["viewport_screenshot"], row["artifact_urls"]["full_page_screenshot"])], "visual_difference_results": [{"baseline_version": "1.6.4", "current_version": VERSION, "status": "pending", "reason": "v1.6.5 establishes the Design System 1.0 production baseline."}], "interaction_failures": [item for row in generated for item in row["interactions"] if not item["success"]], "accessibility_regressions": [item for row in generated for item in row["accessibility"]["violations"] if item["severity"] == "critical"], "product_contract_failures": product_contract_failures, "console_errors": [item for row in generated for item in row["network"]["console_errors"]], "failed_network_requests": [item for row in generated for item in row["network"]["failed_requests"]], "stale_version_mismatches": [], "validation_outcome": "pass" if not failures and not has_critical_accessibility and not product_contract_failures else "fail", "total_pages_expected": len(pages), "total_pages_completed": len(page_ids), "total_visual_artifacts": len(generated) * 4, "failures": failures, "warnings": ["Sleeper avatar CDN requests can be unavailable in sandboxed capture environments; failures are recorded explicitly."], "retention": "Current and previous production bundles are retained; older release metadata may remain without images."}
     (store.current_root / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     return manifest
 

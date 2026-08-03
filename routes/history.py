@@ -62,8 +62,8 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
             for season, summary in career["seasons"].items()
         )
         return page(
-            f"Player {player_id} History",
-            f'<h2>Player History · {escape(player_id)}</h2><p class="muted">Weekly gaps are not connected or converted to zero.</p><div class="grid">{seasons}</div><div class="card"><h3>Usage</h3><p>{escape(career["usage"]["reason"])}</p></div>',
+            f"{career.get('player_name') or 'Player'} — Historical Performance",
+            f'<h2>Historical Performance</h2><p class="muted">Weekly gaps are not connected or converted to zero.</p><div class="grid">{seasons}</div><div class="card"><h3>Usage</h3><p>{escape(career["usage"]["reason"])}</p></div>',
         )
 
     @router.get("/history/team/{franchise_id:path}", response_class=HTMLResponse)
@@ -80,6 +80,7 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
             f'<article class="card"><h3>{row["season"]} Week {row["week"]}</h3><p>{escape(str(row["payload"].get("current_window")))}</p></article>'
             for row in snapshots["records"]
         ) or '<article class="card"><p class="muted">No Team Intelligence snapshots exist for this historical roster state.</p></article>'
-        return page("Team History", f'<h2>Franchise History</h2><ul>{names}</ul><h3>Team Intelligence Trajectory</h3><div class="grid">{trajectory}</div>')
+        current_name = next((str(row["payload"].get("dtos_display_name")) for row in identities["records"] if row["payload"].get("dtos_display_name")), "Franchise")
+        return page(f"{current_name} — Franchise History", f'<h2>Franchise History</h2><ul>{names}</ul><h3>Competitive Direction Over Time</h3><div class="grid">{trajectory}</div>')
 
     return router

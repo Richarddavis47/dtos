@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 
-from app_metadata import BUILD_NUMBER, VERSION, repository_metadata
+from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.inspection import (
     INSPECTION_SCHEMA_VERSION,
     VIEWPORTS,
@@ -47,8 +47,8 @@ def create_inspection_router(
         result = store.manifest()
         if result is None:
             return None
-        _, commit = repository_metadata()
-        return {**result, "version": VERSION, "build": BUILD_NUMBER, "commit_sha": commit}
+        deployment = deployment_metadata()
+        return {**result, "version": VERSION, "build": BUILD_NUMBER, "commit_sha": deployment["commit"], "source_branch": deployment["branch"], "deployed_at": deployment["deployed_at"]}
 
     @router.get("/pages/{page_id}")
     async def inspect_page(page_id: str) -> Any:
@@ -159,7 +159,8 @@ def create_inspection_router(
     async def inspection_health() -> Any:
         current = current_manifest() or {}
         pages = page_catalog()
-        branch, commit = repository_metadata()
+        deployment = deployment_metadata()
+        branch, commit = deployment["branch"], deployment["commit"]
         completed = int(current.get("total_pages_completed") or 0)
         expected = sum(not page.excluded for page in pages)
         latest = current.get("version")
