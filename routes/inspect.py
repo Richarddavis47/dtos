@@ -109,7 +109,9 @@ def create_inspection_router(
     @router.get("/valuation")
     async def inspect_valuation() -> Any:
         """Inspect the live valuation contract without provider calls or state changes."""
-        universe = ValuationUniverse(state.get("data") or {}, state)
+        data = state.get("data") or {}
+        universe = ValuationUniverse(data, state)
+        calibration = data.get("calibration_report") or {}
         samples = [universe.assets[0], next((row for row in universe.assets if row["asset_type"] == "pick"), None)] if universe.assets else []
         return jsonable_encoder({
             "application_version": VERSION,
@@ -120,6 +122,12 @@ def create_inspection_router(
             "status": universe.status(),
             "valuation_layers": LAYER_NAMES,
             "sample_assets": [row for row in samples if row is not None],
+            "market_calibration": {
+                "schema_version": calibration.get("schema_version"),
+                "summary": calibration.get("summary") or {},
+                "recommendation_count": len(calibration.get("recommendations") or []),
+                "last_calibration_timestamp": calibration.get("generated_at"),
+            },
             "warnings": universe.freshness["reasons"],
         })
 

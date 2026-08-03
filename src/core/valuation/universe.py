@@ -170,6 +170,10 @@ class ValuationUniverse:
         market, market_confidence, calibration = consensus or (None, 0, CalibrationStatus.INSUFFICIENT_DATA)
         raw_intrinsic = next((_number(player.get(key)) for key in ("dtos_value", "dynasty_value") if _number(player.get(key)) is not None), None)
         intrinsic = normalize_internal(raw_intrinsic) if raw_intrinsic is not None and raw_intrinsic <= 100 else int(raw_intrinsic) if raw_intrinsic is not None else None
+        adjustment_category = {"QB": "Quarterbacks", "RB": "Running Backs", "WR": "Wide Receivers", "TE": "Tight Ends"}.get(str(player.get("position") or "").upper())
+        adjustments = ((self.data.get("calibration_state") or {}).get("adjustments") or {})
+        multiplier = float(adjustments.get(adjustment_category, adjustments.get("All Assets", 1.0)))
+        league_adjusted = round(intrinsic * multiplier) if intrinsic is not None else None
         provider_rows = _provider_rows(player_id, providers, distributions, provider_status)
         if intrinsic is not None:
             provider_rows[0].update({"raw_value": raw_intrinsic, "normalized_value": intrinsic, "confidence": 70, "availability": "available", "reason": None})
@@ -178,7 +182,7 @@ class ValuationUniverse:
         layers.update({
             "market_value": _layer(market, "Provider consensus", self.generated_at, market_confidence),
             "intrinsic_dtos_value": _layer(intrinsic, "DTOS existing valuation", self.generated_at, 70 if intrinsic is not None else 0),
-            "league_adjusted_value": _layer(intrinsic, "DTOS existing valuation; no v1.7 recalibration", self.generated_at, 65 if intrinsic is not None else 0),
+            "league_adjusted_value": _layer(league_adjusted, f"DTOS intrinsic value with {adjustment_category or 'All Assets'} model calibration", self.generated_at, 65 if league_adjusted is not None else 0),
             "confidence_score": _layer(market_confidence, "Provider coverage and freshness", self.generated_at, market_confidence),
             "provider_consensus": _layer(market, "Canonical provider consensus", self.generated_at, market_confidence),
             "current_production_value": _layer(_number(player.get("fantasy_points")), "Sleeper cached player metadata", self.generated_at, 50 if player.get("fantasy_points") is not None else 0),
@@ -187,7 +191,7 @@ class ValuationUniverse:
         status = str(player.get("status") or "Unknown")
         return {
             "asset_id": f"player:{player_id}", "asset_type": "player",
-            "identity": {"player_name": name, "position": player.get("position"), "nfl_team": player.get("nfl_team") or player.get("team"), "sleeper_id": player_id, "current_owner": owner, "free_agent": owner is None, "draft_pick_description": None, "year": None, "round": None, "projected_slot": None, "rookie_class": player.get("years_exp") == 0, "status": status},
+            "identity": {"player_name": name, "position": player.get("position"), "nfl_team": player.get("nfl_team") or player.get("team"), "sleeper_id": player_id, "current_owner": owner, "free_agent": owner is None, "draft_pick_description": None, "year": None, "round": None, "projected_slot": None, "rookie_class": player.get("years_exp") == 0, "age": player.get("age"), "status": status},
             "layers": layers, "providers": provider_rows,
             "audit": {"provider_count": len(available), "provider_agreement": None if len(available) < 2 else "measured", "missing_providers": [row["provider"] for row in provider_rows if row["raw_value"] is None], "data_age": self.freshness["provider_refresh_timestamp"], "confidence": market_confidence, "last_changed": max((row["last_updated"] for row in available if row["last_updated"]), default=None), "source_version": UNIVERSE_SCHEMA_VERSION, "inspection_ready": True, "calibration_status": calibration.value},
             "comparison": _comparison(intrinsic, market), "freshness": self.freshness,
@@ -199,10 +203,14 @@ class ValuationUniverse:
         season, round_number, original = int(pick.get("season") or 0), int(pick.get("round") or 0), int(pick.get("original_roster_id") or 0)
         asset_id = f"pick:{season}:{round_number}:{original}"
         intrinsic = normalize_internal(dynasty_pick_value(pick).score)
+        adjustments = ((self.data.get("calibration_state") or {}).get("adjustments") or {})
+        pick_category = "Early Picks" if round_number <= 2 else "Late Picks"
+        multiplier = float(adjustments.get(pick_category, adjustments.get("Future Picks", adjustments.get("All Assets", 1.0))))
+        league_adjusted = round(intrinsic * multiplier)
         layers = {name: _layer(None, "Unavailable", self.generated_at) for name in LAYER_NAMES}
         layers.update({
             "intrinsic_dtos_value": _layer(intrinsic, "DTOS deterministic pick value", self.generated_at, 70),
-            "league_adjusted_value": _layer(intrinsic, "DTOS deterministic pick value; no v1.7 recalibration", self.generated_at, 65),
+            "league_adjusted_value": _layer(league_adjusted, f"DTOS deterministic pick value with {pick_category} model calibration", self.generated_at, 65),
             "future_value": _layer(intrinsic, "DTOS deterministic pick value", self.generated_at, 70),
             "confidence_score": _layer(70, "Deterministic pick identity", self.generated_at, 70),
         })

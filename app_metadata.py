@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.7.0"
-BUILD_NUMBER = 1700
-RELEASE_CODENAME = "Market Calibration Foundation"
+VERSION = "1.7.1"
+BUILD_NUMBER = 1701
+RELEASE_CODENAME = "Automated Market Calibration Dashboard"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

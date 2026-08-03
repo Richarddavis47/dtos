@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.7.0 adds the [canonical valuation universe](docs/VALUATION.md): every cached Sleeper player and future pick has one identity, independent valuation layers, explicit provider/freshness evidence, deterministic JSON/CSV exports, and DINS audit coverage. Existing values are not recalibrated in this foundation release.
+DTOS v1.7.1 adds the [Automated Market Calibration Dashboard](docs/MARKET_CALIBRATION_DASHBOARD.md): every canonical asset is audited against available market evidence, category-level recommendations remain explainable, and only bounded model adjustments that pass every safety gate can be applied automatically. Consensus informs DTOS; it does not replace intrinsic value.
 
 DTOS v1.6.7 publishes immutable production DINS bundles through GitHub Releases and
 validates them dynamically without changing the inspected commit. DTOS v1.6.6 corrected Team Headquarters mobile overflow while preserving Product
