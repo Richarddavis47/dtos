@@ -90,9 +90,11 @@ for the canonical page inventory, `/api/inspect/visual/pages/{page_id}/{viewport
 rendered evidence, `/api/inspect/health` for bundle readiness, and
 `/api/inspect/releases/current` for the release manifest. Supported viewports are
 `desktop`, `tablet`, and `mobile`. Artifact URLs are absolute and never expose local paths.
-# Brain, valuation, evidence intelligence, and calibration API (v1.7.4)
+# Brain, valuation, evidence intelligence, and calibration API (v1.7.5)
 
 The canonical intelligence contract is `/api/brain`. Asset, health, migration, and timeline resources live beneath that path. Existing `/api/valuation` resources are compatibility contracts and remain supported.
+
+`/api/league` includes a compact Brain summary, safety state, diagnostic counts, and canonical endpoint links. Full-universe Brain assets and timelines are intentionally served only by the dedicated Brain APIs so generic league serialization remains bounded.
 
 The `/api/valuation` family exposes only the current cached production universe. Asset lists are paginated; `/export.json` and `/export.csv` provide complete deterministic exports. Every payload includes explicit freshness and source metadata. See [VALUATION.md](VALUATION.md) for identity and layer contracts.
 

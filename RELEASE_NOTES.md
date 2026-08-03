@@ -1,3 +1,9 @@
+# DTOS v1.7.5 — League Payload Memory Safety
+
+This corrective release keeps `/api/league` focused on league data and a compact Brain summary. Full canonical asset intelligence and timelines remain available through `/api/brain`. The change prevents a 35 MB compatibility response from materializing the full Brain and its duplicated timeline during every request, eliminating the production memory-pressure path observed during v1.7.4 verification.
+
+---
+
 # DTOS v1.7.4 — Brain Integration & Unified Decision Engine
 
 DTOS now has one public Brain boundary. Every major intelligence consumer receives the same cached asset values, evidence scores, explanations, and histories through the Intelligence Orchestrator. The release adds a distinct, explainable Decision Confidence metric, a Brain dashboard, migration diagnostics, health APIs, and DINS coverage. Existing valuation contracts remain compatible; provider calls and valuation recalculation remain outside request rendering.

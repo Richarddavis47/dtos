@@ -95,6 +95,26 @@ class PlayerApiContractTests(unittest.TestCase):
         self.assertEqual(included, canonical)
         self.assertNotIn("players", self.client.get("/api/league").json())
 
+    def test_league_exposes_compact_brain_contract_without_internal_caches(self) -> None:
+        self.data["valuation_intelligence"] = {
+            "application_version": "1.7.5",
+            "asset_count": 12_326,
+            "assets": {"player:1": {"large": "payload"}},
+            "timeline": {"player:1": [{"timestamp": "now"}]},
+            "diagnostics": {"Missing evidence": ["player:1", "player:2"]},
+            "summary": {"average_confidence": 31.4},
+            "safety": {"asset_integrity_score": 100, "unsafe_adjustments": 0},
+        }
+        self.data["valuation_intelligence_timeline"] = {"player:1": [{"timestamp": "now"}]}
+        payload = self.client.get("/api/league").json()
+        brain = payload["valuation_intelligence"]
+        self.assertNotIn("assets", brain)
+        self.assertNotIn("timeline", brain)
+        self.assertNotIn("valuation_intelligence_timeline", payload)
+        self.assertEqual(brain["asset_count"], 12_326)
+        self.assertEqual(brain["diagnostics"]["Missing evidence"], 2)
+        self.assertEqual(brain["canonical_endpoints"]["assets"], "/api/brain/assets/{asset_id}")
+
     def test_valid_dossier_url_and_missing_id_behavior(self) -> None:
         dossier_url = self.client.get("/api/players").json()["players"][0]["dossier_url"]
         valid = self.client.get(f"{dossier_url}?front_office=1")
