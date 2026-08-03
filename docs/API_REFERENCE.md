@@ -73,3 +73,10 @@ DINS exposes cached, read-only structural page descriptions:
 
 These routes perform no synchronization or intelligence calculation. See
 `docs/DINS_INSPECTION.md` for the schema and guarantees.
+# DINS 2.0 inspection API
+
+`/api/inspect` discovers all public inspection capabilities. Use `/api/inspect/site-map`
+for the canonical page inventory, `/api/inspect/visual/pages/{page_id}/{viewport}` for
+rendered evidence, `/api/inspect/health` for bundle readiness, and
+`/api/inspect/releases/current` for the release manifest. Supported viewports are
+`desktop`, `tablet`, and `mobile`. Artifact URLs are absolute and never expose local paths.

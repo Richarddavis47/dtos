@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from dtos_app import app
+from app_metadata import VERSION
+from src.core.inspection import unsupported_dynamic_patterns
 from src.platform.validation.routes import HttpEndpoint, validate_routes
 
 REQUIRED_GET_PATHS = (
@@ -20,6 +22,12 @@ REQUIRED_GET_PATHS = (
     "/api/intelligence",
     "/api/league",
     "/api/players",
+    "/api/inspect",
+    "/api/inspect/site-map",
+    "/api/inspect/health",
+    "/api/inspect/schema",
+    "/api/inspect/visual/pages",
+    "/api/inspect/releases/current",
 )
 
 
@@ -33,6 +41,11 @@ def main() -> int:
     missing_openapi = sorted(path for path in REQUIRED_GET_PATHS if path not in documented)
     if missing_openapi:
         raise AssertionError("missing OpenAPI paths: " + ", ".join(missing_openapi))
+    unsupported = unsupported_dynamic_patterns(app.routes)
+    if unsupported:
+        raise AssertionError("public HTML routes lack DINS fixture metadata: " + ", ".join(unsupported))
+    if schema.get("info", {}).get("version") != VERSION:
+        raise AssertionError("OpenAPI and centralized application versions differ.")
 
     print(
         f"Route validation passed: {len(result.endpoints)} method registrations, "

@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.6.3 - Complete Visual Inspection & Release Verification System
+
+- Upgraded DINS to schema 2.0 with automatic public-page discovery and deterministic dynamic fixtures.
+- Added cached public visual, DOM, accessibility, geometry, interaction, health, schema, site-map, and release-manifest APIs.
+- Added Playwright Chromium capture at 1440x1200, 1024x1366, and 390x844 with viewport and full-page screenshots.
+- Added version-namespaced artifact storage, tolerant image comparison, inspection-mode no-sync isolation, and route-coverage validation.
+- Centralized v1.6.3/build 1603 metadata across status, crawl, OpenAPI, and inspection contracts.
+
 ## v1.6.2 - AI Inspection System Foundation
 
 - Added DINS, a deterministic read-only page inspection contract under

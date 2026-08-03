@@ -6,9 +6,9 @@ import subprocess
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.6.2"
-BUILD_NUMBER = 1602
-RELEASE_CODENAME = "AI Inspection System Foundation"
+VERSION = "1.6.3"
+BUILD_NUMBER = 1603
+RELEASE_CODENAME = "Complete Visual Inspection & Release Verification System"
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
 

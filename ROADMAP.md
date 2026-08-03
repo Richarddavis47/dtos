@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Complete Visual Inspection & Release Verification - DTOS v1.6.3
+
+- DINS 2.0 automatic page inventory, browser artifacts, accessibility evidence,
+  interaction records, visual comparisons, and release manifests.
+- Future work: remote object storage when retained production bundles outgrow the
+  current/previous static retention policy.
+
 ### AI Inspection System Foundation - DTOS v1.6.2
 
 - Expose stable read-only page contracts for automated inspection and testing.

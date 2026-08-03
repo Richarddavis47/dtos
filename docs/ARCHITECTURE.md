@@ -38,3 +38,10 @@ The call dependency is Application → Orchestrator → Intelligence Engines →
 ## Data lifecycle
 
 Sleeper synchronization normalizes data into one cache snapshot. A request selects a Front Office, builds an immutable intelligence context, executes or reuses provider results, aggregates evidence, resolves conflicts conservatively, and renders HTML or JSON. Refresh invalidates the affected orchestration namespace.
+# DINS release-verification boundary
+
+The web application discovers routes and serves cached inspection artifacts. The
+`tools.inspection.capture` worker alone owns Chromium, navigation, screenshots, DOM
+and accessibility extraction, interaction evidence, and artifact writes. This keeps
+the dependency direction `read-only API -> artifact store` and prevents ordinary
+requests from performing visual work or invoking intelligence engines.
