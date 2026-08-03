@@ -337,3 +337,8 @@ is independently versioned as `1.0`.
 See `docs/DINS_INSPECTION.md`.
 
 ---
+# DTOS v1.7.0 — Market Calibration Foundation
+
+DTOS now enumerates every cached Sleeper player and canonical future pick once, exposes each valuation layer independently, records provider evidence and freshness, and exports the live universe as JSON or CSV. Existing value and recommendation behavior remains unchanged. Unsupported or missing evidence is explicit rather than inferred.
+
+## Previous release

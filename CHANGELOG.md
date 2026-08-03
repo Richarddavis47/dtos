@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.7.0 - Market Calibration Foundation
+
+- Added one canonical valuation universe for every cached Sleeper player and every canonical future pick.
+- Added live valuation status, provider, asset, detail, JSON export, and CSV export APIs.
+- Exposed twelve independent, traceable valuation layers without recalibrating existing values.
+- Added explicit synchronization and provider freshness contracts, comparison metadata, identity auditing, and DINS valuation inspection.
+- Added regression coverage for uniqueness, ownership, free agents, picks, providers, exports, layers, and unchanged DTOS values.
+
 ## v1.6.7 - GitHub DINS Artifact Publication Completion
 
 - Added immutable DINS publication through deterministic GitHub Release assets.

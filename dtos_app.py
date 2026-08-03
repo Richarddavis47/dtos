@@ -28,6 +28,7 @@ from routes.settings import create_settings_router
 from routes.teams import create_teams_router
 from routes.trades import create_trades_router
 from routes.transactions import create_transactions_router
+from routes.valuation import create_valuation_router
 from services.sleeper import (
     LEAGUE_ID,
     STATE,
@@ -208,6 +209,14 @@ app.include_router(
         sync_sleeper=sync_sleeper,
         state=STATE,
         league_id=LEAGUE_ID,
+    )
+)
+
+app.include_router(
+    create_valuation_router(
+        ensure_fresh=ensure_fresh,
+        require_data=require_data,
+        state=STATE,
     )
 )
 

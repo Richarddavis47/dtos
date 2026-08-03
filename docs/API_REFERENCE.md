@@ -80,3 +80,6 @@ for the canonical page inventory, `/api/inspect/visual/pages/{page_id}/{viewport
 rendered evidence, `/api/inspect/health` for bundle readiness, and
 `/api/inspect/releases/current` for the release manifest. Supported viewports are
 `desktop`, `tablet`, and `mobile`. Artifact URLs are absolute and never expose local paths.
+# Valuation API (v1.7.0)
+
+The `/api/valuation` family exposes only the current cached production universe. Asset lists are paginated; `/export.json` and `/export.csv` provide complete deterministic exports. Every payload includes explicit freshness and source metadata. See [VALUATION.md](VALUATION.md) for identity and layer contracts.

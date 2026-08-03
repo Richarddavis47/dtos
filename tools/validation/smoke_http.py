@@ -77,6 +77,8 @@ def main() -> int:
         "/api/inspect", "/api/inspect/pages", "/api/inspect/site-map",
         "/api/inspect/schema", "/api/inspect/health",
         "/api/inspect/visual/pages", "/api/inspect/releases/current",
+        "/api/valuation", "/api/valuation/status", "/api/valuation/providers",
+        "/api/valuation/assets?limit=1", "/api/inspect/valuation",
     )
     product_pages = {"/", "/teams", "/matchups", "/transactions", "/picks", "/settings", "/history", "/front-offices", "/trades"}
     recommendation_pages = {"/", "/front-offices", "/trades"}
@@ -110,6 +112,14 @@ def main() -> int:
     if not players or not players[0].get("player_id"):
         raise AssertionError("Canonical cached player index contains no discoverable player ID.")
     player_id = quote(str(players[0]["player_id"]), safe="")
+    valuation = json.loads(get(args.base_url, "/api/valuation/status"))
+    if int((valuation.get("counts") or {}).get("players") or 0) < len(players):
+        raise AssertionError("Valuation universe omits cached Sleeper players.")
+    if int(valuation.get("duplicate_identities") or 0):
+        raise AssertionError("Valuation universe contains duplicate canonical identities.")
+    valuation_asset = json.loads(get(args.base_url, f"/api/valuation/assets/player:{player_id}"))
+    if str((valuation_asset.get("identity") or {}).get("sleeper_id")) != player_id:
+        raise AssertionError("Valuation lookup did not preserve the canonical Sleeper identity.")
     for roster_id in roster_ids:
         player_path = f"/players/{player_id}?front_office={roster_id}"
         validate_product_contract(get(args.base_url, player_path), player_path, recommendation=True)
