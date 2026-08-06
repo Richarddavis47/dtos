@@ -5,6 +5,7 @@ import json
 import hashlib
 import sqlite3
 import os
+from uuid import uuid4
 from contextlib import contextmanager
 from pathlib import Path
 from threading import RLock
@@ -15,6 +16,10 @@ from src.core.historical_memory.models import DATABASE_MIGRATION_VERSION
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS schema_migrations (
   version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS database_metadata (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS historical_records (
   id INTEGER PRIMARY KEY,
@@ -194,6 +199,10 @@ class HistoricalStore:
                     "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, datetime('now'))",
                     ((version,) for version in range(1, DATABASE_MIGRATION_VERSION + 1)),
                 )
+                connection.execute(
+                    "INSERT OR IGNORE INTO database_metadata(key,value) VALUES ('database_uuid',?)",
+                    (uuid4().hex,),
+                )
                 connection.commit()
             finally:
                 connection.close()
@@ -226,7 +235,23 @@ class HistoricalStore:
                 "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, datetime('now'))",
                 ((version,) for version in range(1, DATABASE_MIGRATION_VERSION + 1)),
             )
+            connection.execute(
+                "INSERT OR IGNORE INTO database_metadata(key,value) VALUES ('database_uuid',?)",
+                (uuid4().hex,),
+            )
             self._repair_enrichment_progress(connection)
+
+    def database_uuid(self) -> str:
+        """Return the private durable generation identity for this database."""
+        if not self.path.exists() or not self.path.is_file():
+            raise RuntimeError("HistoricalStore backing database is unavailable.")
+        with self.connection() as connection:
+            row = connection.execute(
+                "SELECT value FROM database_metadata WHERE key='database_uuid'",
+            ).fetchone()
+        if row is None or not str(row[0]).strip():
+            raise RuntimeError("HistoricalStore database generation identity is missing.")
+        return str(row[0])
 
     def create_job(self, job: dict[str, Any]) -> None:
         columns = tuple(job)

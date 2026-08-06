@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Asset Market Cache Stability - DTOS v1.8.1
+
+- Give each historical database a private, durable generation UUID.
+- Keep the compact market model stable during unrelated enrichment commits while historical detail contracts continue tracking committed evidence.
+- Meet the production warm-directory, search, expansion, and trending latency gates without weakening output.
+
 ### Asset Market & Dynasty Exchange - DTOS v1.8.0
 
 - Make the Asset Market the primary DTOS destination without removing Commissioner workflows.
