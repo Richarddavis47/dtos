@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Canonical Trade History Discovery - DTOS v1.7.14
+
+- Generate inspectable historical trade routes only from completed durable Historical Memory records.
+- Explain current-only trade exclusions with stable machine-readable reasons.
+- Keep DINS discovery and detail resolution aligned without provider calls or global graph hydration.
+
 ### Durable Historical Storage - DTOS v1.7.10
 
 - Validate the production mount, database containment, and writable state before readiness.

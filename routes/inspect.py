@@ -19,7 +19,9 @@ from src.core.inspection import (
     InspectionArtifactStore,
     InspectionEngine,
     discover_pages,
+    excluded_current_trade_pages,
 )
+from src.core.historical_memory import historical_store
 from src.core.inspection.publication import GitHubPublicationResolver
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 from src.core.valuation_intelligence import valuation_intelligence_report
@@ -58,8 +60,31 @@ def create_inspection_router(
     async def inspect_pages() -> Any:
         return jsonable_encoder(engine().pages())
 
+    def canonical_trade_discovery() -> dict[str, Any]:
+        selected = league_id or str(
+            ((state.get("data") or {}).get("league") or {}).get("league_id") or ""
+        )
+        records = (
+            historical_store.discoverable_trade_records(selected)
+            if selected else []
+        )
+        return {
+            "dataset_version": (
+                historical_store.dataset_version(selected) if selected else None
+            ),
+            "transaction_ids": tuple(
+                str(row["source_record_id"]) for row in records
+            ),
+            "status_rule": "complete_or_completed",
+            "source": "durable_historical_memory",
+        }
+
     def page_catalog() -> tuple[Any, ...]:
-        return discover_pages(route_provider(), state)
+        trades = canonical_trade_discovery()
+        return discover_pages(
+            route_provider(), state,
+            historical_trades=trades["transaction_ids"],
+        )
 
     def current_manifest() -> dict[str, Any] | None:
         result = store.manifest()
@@ -180,12 +205,20 @@ def create_inspection_router(
     @router.get("/site-map")
     async def inspection_site_map() -> Any:
         pages = page_catalog()
+        trade_discovery = canonical_trade_discovery()
+        exclusions = excluded_current_trade_pages(
+            state, trade_discovery["transaction_ids"],
+        )
         release = await published()
         return {
             "application_version": VERSION,
             "application_build": BUILD_NUMBER,
             "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
             "pages": jsonable_encoder(pages),
+            "dynamic_discovery": {
+                "historical_trades": trade_discovery,
+                "exclusions": jsonable_encoder(exclusions),
+            },
             "publication": {key: release.get(key) for key in ("publication_status", "full_bundle_url", "published_manifest_url", "checksums_url")},
             "metrics": {"total": len(pages), "inspectable": sum(not page.excluded for page in pages), "excluded": sum(page.excluded for page in pages)},
         }

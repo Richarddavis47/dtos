@@ -102,6 +102,7 @@ class DiscoveredPage:
     inspection_mode: str
     excluded: bool = False
     exclusion_reason: str | None = None
+    exclusion_code: str | None = None
 
 
 @dataclass(frozen=True)

@@ -72,7 +72,11 @@ def _players(data: dict[str, Any], limit: int = 6) -> tuple[str, ...]:
     return tuple(selected)
 
 
-def _representatives(path: str, data: dict[str, Any]) -> tuple[dict[str, Any], ...]:
+def _representatives(
+    path: str,
+    data: dict[str, Any],
+    historical_trades: tuple[str, ...] = (),
+) -> tuple[dict[str, Any], ...]:
     teams = tuple(str(row.get("roster_id")) for row in data.get("teams") or () if row.get("roster_id"))
     if "{roster_id}" in path:
         return tuple({"roster_id": item} for item in teams)
@@ -94,12 +98,10 @@ def _representatives(path: str, data: dict[str, Any]) -> tuple[dict[str, Any], .
         })
         return tuple({"pick_id": quote(item, safe="")} for item in picks[:4])
     if "{transaction_id}" in path:
-        transactions = data.get("transactions") or ()
-        identifiers = sorted({
-            str(row.get("transaction_id")) for row in transactions
-            if isinstance(row, dict) and row.get("type") == "trade" and row.get("transaction_id")
-        })
-        return tuple({"transaction_id": quote(item, safe="")} for item in identifiers[:3])
+        return tuple(
+            {"transaction_id": quote(item, safe="")}
+            for item in historical_trades[:3]
+        )
     if "{matchup_id}" in path:
         matchups = data.get("matchups") or ()
         if isinstance(matchups, dict):
@@ -112,7 +114,12 @@ def _representatives(path: str, data: dict[str, Any]) -> tuple[dict[str, Any], .
     return ({},)
 
 
-def discover_pages(routes: Iterable[Any], state: dict[str, Any]) -> tuple[DiscoveredPage, ...]:
+def discover_pages(
+    routes: Iterable[Any],
+    state: dict[str, Any],
+    *,
+    historical_trades: tuple[str, ...] = (),
+) -> tuple[DiscoveredPage, ...]:
     """Return every public GET HTML route with canonical representative parameters."""
     data = state.get("data") or {}
     discovered: list[DiscoveredPage] = []
@@ -139,12 +146,13 @@ def discover_pages(routes: Iterable[Any], state: dict[str, Any]) -> tuple[Discov
                 exclusion_reason="Connected historical performance is inspected through the canonical Player Dossier; this compatibility route requires a player with imported weekly observations.",
             ))
             continue
-        fixtures = _representatives(path, data)
+        fixtures = _representatives(path, data, historical_trades)
         if not fixtures:
             discovered.append(DiscoveredPage(
                 _slug(path), _name(route), path, path, "dynamic", "unsupported",
                 "unsupported", excluded=True,
                 exclusion_reason="No deterministic representative parameters are available.",
+                exclusion_code="representative_unavailable",
             ))
             continue
         for fixture in fixtures:
@@ -175,6 +183,40 @@ def discover_pages(routes: Iterable[Any], state: dict[str, Any]) -> tuple[Discov
                 "dynamic" if fixture else "static", "live_cached", "deterministic",
             ))
     return tuple(sorted(discovered, key=lambda page: (page.excluded, page.route, page.page_id)))
+
+
+def excluded_current_trade_pages(
+    state: dict[str, Any], canonical_trade_ids: tuple[str, ...], limit: int = 3,
+) -> tuple[DiscoveredPage, ...]:
+    """Explain why current-only trades are not historical dossier pages."""
+    canonical = set(canonical_trade_ids)
+    transactions = (state.get("data") or {}).get("transactions") or ()
+    identifiers = sorted({
+        str(row.get("transaction_id"))
+        for row in transactions
+        if isinstance(row, dict)
+        and row.get("type") == "trade"
+        and row.get("transaction_id")
+        and str(row.get("transaction_id")) not in canonical
+    })
+    return tuple(
+        DiscoveredPage(
+            page_id=_slug(f"trade-history-{transaction_id}"),
+            page_name="Historical Trade Dossier",
+            route=f"/trades/history/{quote(transaction_id, safe='')}",
+            source_route="/trades/history/{transaction_id}",
+            kind="dynamic",
+            state="not_in_canonical_historical_dataset",
+            inspection_mode="unsupported",
+            excluded=True,
+            exclusion_reason=(
+                "The transaction exists in the current Sleeper cache but has no "
+                "canonical durable Historical Memory trade record."
+            ),
+            exclusion_code="canonical_historical_trade_unavailable",
+        )
+        for transaction_id in identifiers[:limit]
+    )
 
 
 def uncovered_public_routes(routes: Iterable[Any], state: dict[str, Any]) -> tuple[str, ...]:

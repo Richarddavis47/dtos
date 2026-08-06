@@ -1018,6 +1018,25 @@ class HistoricalStore:
         result["payload"] = json.loads(result["payload"])
         return result
 
+    def discoverable_trade_records(
+        self, league_id: str, limit: int = 3,
+    ) -> list[dict[str, Any]]:
+        """Return bounded, completed canonical trades for public discovery."""
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT source_record_id, season, week, observed_at, payload
+                FROM historical_records WHERE league_id=? AND entity_type='trade'
+                AND lower(coalesce(json_extract(payload, '$.status'), ''))
+                    IN ('complete', 'completed')
+                ORDER BY season DESC, week DESC, observed_at DESC, id DESC
+                LIMIT ?""",
+                (league_id, limit),
+            ).fetchall()
+        return [
+            {**dict(row), "payload": json.loads(row["payload"])}
+            for row in rows
+        ]
+
     def search_transaction_ids(
         self, league_id: str, query: str, limit: int,
     ) -> list[dict[str, Any]]:

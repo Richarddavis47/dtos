@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7.14 - Canonical Trade History Discovery
+
+- Derived DINS historical trade pages from completed durable Historical Memory records instead of current cached Sleeper transactions.
+- Added deterministic, machine-readable exclusions for current trades that do not yet have canonical historical evidence.
+- Kept discovery bounded and provider-free while preserving the historical trade detail contract, dataset identity, and stable ordering.
+
 ## v1.7.13 - Canonical History Progress Presentation
 
 - Added one presentation-ready player-week enrichment progress contract shared by the History UI, progress and coverage APIs, inspection health, and DINS artifacts.
