@@ -413,6 +413,59 @@ class HistoricalStore:
         )
         return hashlib.sha256(source.encode()).hexdigest()
 
+    def distinct_player_ids(self, league_id: str) -> tuple[str, ...]:
+        """Return graph player identities without materializing record payloads."""
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT DISTINCT player_id FROM historical_records
+                WHERE league_id=? AND player_id IS NOT NULL
+                  AND entity_type IN ('player_week', 'draft_pick')
+                ORDER BY player_id""",
+                (league_id,),
+            ).fetchall()
+        return tuple(str(row[0]) for row in rows)
+
+    def player_week_totals(self, league_id: str) -> dict[int, dict[str, float]]:
+        """Aggregate ranking inputs in SQLite without loading weekly payloads."""
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT season, player_id,
+                sum(CAST(json_extract(payload, '$.fantasy_points') AS REAL))
+                FROM historical_records
+                WHERE league_id=? AND entity_type='player_week'
+                  AND player_id IS NOT NULL
+                  AND json_extract(payload, '$.fantasy_points') IS NOT NULL
+                GROUP BY season, player_id""",
+                (league_id,),
+            ).fetchall()
+        totals: dict[int, dict[str, float]] = {}
+        for season, player_id, points in rows:
+            totals.setdefault(int(season), {})[str(player_id)] = float(points)
+        return totals
+
+    def entity_counts_by_season(
+        self, league_id: str, entity_types: tuple[str, ...],
+    ) -> tuple[list[int], dict[str, dict[str, int]]]:
+        """Return compact coverage counts with one indexed SQL aggregation."""
+        placeholders = ",".join("?" for _ in entity_types)
+        with self.connection() as connection:
+            rows = connection.execute(
+                f"""SELECT season, entity_type, count(*)
+                FROM historical_records
+                WHERE league_id=? AND entity_type IN ({placeholders})
+                GROUP BY season, entity_type ORDER BY season, entity_type""",
+                (league_id, *entity_types),
+            ).fetchall()
+        seasons = sorted({int(row[0]) for row in rows if row[0] is not None})
+        counts = {
+            str(season): {entity: 0 for entity in entity_types}
+            for season in seasons
+        }
+        for season, entity_type, count in rows:
+            if season is not None:
+                counts[str(int(season))][str(entity_type)] = int(count)
+        return seasons, counts
+
     def upsert_identity(
         self, dtos_player_id: str, provider: str, provider_player_id: str,
         display_name: str, confidence: int, valid_from: str, metadata: dict[str, Any],

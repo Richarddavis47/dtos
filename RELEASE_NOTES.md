@@ -1,4 +1,14 @@
-# DTOS v1.7.7 — Historical Asset Graph Read-Path Optimization
+# DTOS v1.7.8 — Historical Import & Read-Model Lifecycle Stability
+
+DTOS v1.7.8 stabilizes the production lifecycle discovered during v1.7.7 verification. Historical graph objects now start lightweight and construct only the route-specific indexes needed by asset, player, or coverage reads. Player directories use indexed identities without loading every weekly payload, player dossiers load only the requested player's weekly records, and coverage counts are aggregated directly in SQLite.
+
+The process retains one immutable graph generation instead of two. Production-scale validation measures the entire cold-to-warm read workflow and confirms identical historical outputs without provider synchronization.
+
+Historical import recovery now waits for a live worker heartbeat, detects bounded lease expiration, removes the stale lock atomically, requeues the interrupted job visibly, and continues from completed checkpoints with a single importer.
+
+---
+
+## Previous release: v1.7.7 — Historical Asset Graph Read-Path Optimization
 
 DTOS v1.7.7 corrects the production read-path timeout discovered after v1.7.6 without changing historical outputs or synchronization behavior. A dataset-keyed read model now builds the normalized graph once per immutable history/current-identity version and reuses deterministic indexes across every historical consumer.
 

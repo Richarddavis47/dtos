@@ -4,6 +4,8 @@ DTOS v1.7.6 introduces Historical Asset Graph schema `1.0`, preserves the backwa
 
 ## Read-model lifecycle (v1.7.7)
 
+As of v1.7.8, graph construction is lazy and route-specific. Coverage uses compact SQLite aggregation, player reads load only the requested player's weekly payloads, asset directories resolve indexed identities without hydrating all player-week evidence, and the process retains one active dataset generation. Expired importer leases are recovered automatically from completed checkpoints without permitting two live importers.
+
 The process-local read model is keyed by league, historical dataset content identity, all relevant schema/importer/calculation versions, and verified current identity metadata. It builds once under a lock, publishes only after every index is complete, retains at most two versions, and invalidates automatically when stored history or identity inputs change. Multi-worker deployments independently build the same deterministic model per worker.
 
 Directory requests filter and paginate stable player/pick references before hydrating summaries. Detail requests use indexed asset events, parent transactions, player weeks, season totals, ownership evidence, trades, and conversions. Cache and query diagnostics are returned by `/api/history/coverage`; directory responses include the same read-model metadata. No read method imports or invokes provider synchronization.
