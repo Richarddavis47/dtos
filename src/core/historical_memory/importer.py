@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 import logging
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -243,6 +245,21 @@ class HistoricalImporter:
         pending: list[dict[str, Any]] = []
 
         def append(entity: str, source_id: str, payload: dict[str, Any], **dimensions: Any) -> None:
+            source_hash = hashlib.sha256(
+                json.dumps(payload, separators=(",", ":"), sort_keys=True, default=str).encode()
+            ).hexdigest()
+            payload = {
+                **payload,
+                "source_provider": "Sleeper",
+                "source_league_id": source_league_id,
+                "source_season": season,
+                "sleeper_record_id": source_id,
+                "retrieved_at": retrieved,
+                "importer_version": IMPORTER_VERSION,
+                "schema_version": HISTORICAL_SCHEMA_VERSION,
+                "source_hash": source_hash,
+                "provenance": f"Sleeper:{source_league_id}:{source_id}",
+            }
             key_parts = [root_league_id, entity, str(season), str(dimensions.get("week") or ""), source_id]
             pending.append(dict(
                 record_key=":".join(key_parts), entity_type=entity,
@@ -295,12 +312,13 @@ class HistoricalImporter:
             "schema_version": HISTORICAL_SCHEMA_VERSION,
         })
         await flush("league_season")
-        users, rosters, drafts, winners, losers = await asyncio.gather(
+        users, rosters, drafts, winners, losers, traded_picks = await asyncio.gather(
             self._fetch(f"/league/{source_league_id}/users"),
             self._fetch(f"/league/{source_league_id}/rosters"),
             self._fetch(f"/league/{source_league_id}/drafts"),
             self._fetch(f"/league/{source_league_id}/winners_bracket"),
             self._fetch(f"/league/{source_league_id}/losers_bracket"),
+            self._fetch(f"/league/{source_league_id}/traded_picks"),
         )
         user_map = {str(row.get("user_id")): row for row in users or []}
         ranked_rosters = sorted(
@@ -356,6 +374,18 @@ class HistoricalImporter:
             "final_four_roster_ids": [value for place, value in placements.items() if place <= 4],
             "availability": "observed" if placements else "unavailable",
         }, availability="observed" if placements else "unavailable")
+        for index, pick in enumerate(traded_picks or []):
+            source_id = (
+                f"{pick.get('season')}:{pick.get('round')}:"
+                f"{pick.get('roster_id')}:{pick.get('owner_id')}:{index}"
+            )
+            append("pick_snapshot", source_id, {
+                **pick,
+                "original_roster_id": pick.get("roster_id"),
+                "current_owner_id": pick.get("owner_id"),
+                "previous_owner_id": pick.get("previous_owner_id"),
+                "slot_status": "unknown",
+            })
         await flush("franchise_and_standings")
 
         for draft in drafts or []:

@@ -28,6 +28,7 @@ class BrainService:
 
     def __init__(self, data: dict[str, Any]) -> None:
         started = perf_counter()
+        self._data = data
         self._report = valuation_intelligence_report(data)
         self._assets = self._report.get("assets") or {}
         self.latency_ms = round((perf_counter() - started) * 1000, 3)
@@ -65,7 +66,24 @@ class BrainService:
         histories = [self._report.get("timeline", {}).get(asset_id, []) for asset_id in canonical_ids]
         stability = round(mean(100 if len(history) <= 1 else max(30, 100 - (len(history) - 1) * 10) for history in histories)) if histories else 40
         complexity_penalty = min(25, max(0, trade_complexity - 2) * 5)
-        value = round(evidence_confidence * .25 + agreement * .20 + coverage * .20 + context_quality * .10 + calibration * .10 + stability * .15 - complexity_penalty)
+        history_by_player = {
+            str(player.get("id") or player.get("player_id")): player.get("historical_evidence") or {}
+            for team in self._data.get("teams") or []
+            for player in team.get("players") or []
+            if player.get("id") or player.get("player_id")
+        }
+        raw_player_ids = [asset_id.removeprefix("player:") for asset_id in canonical_ids if asset_id.startswith("player:")]
+        historical_observations = sum(
+            int((history_by_player.get(player_id) or {}).get("weekly_record_count") or 0)
+            for player_id in raw_player_ids
+        )
+        history_covered = sum(
+            int((history_by_player.get(player_id) or {}).get("weekly_record_count") or 0) > 0
+            for player_id in raw_player_ids
+        )
+        historical_coverage = round(100 * history_covered / len(raw_player_ids)) if raw_player_ids else 0
+        history_penalty = 0 if not raw_player_ids else round((100 - historical_coverage) * .10)
+        value = round(evidence_confidence * .25 + agreement * .20 + coverage * .20 + context_quality * .10 + calibration * .10 + stability * .15 - complexity_penalty - history_penalty)
         confidence = DecisionConfidence(
             max(0, min(100, value)), evidence_confidence, agreement, coverage,
             context_quality, calibration, stability, complexity_penalty,
@@ -74,6 +92,7 @@ class BrainService:
                 f"Provider agreement is {agreement}/100 and coverage is {coverage}/100.",
                 f"Context quality is {context_quality}/100; calibration safety is {calibration}/100.",
                 f"Recommendation stability is {stability}/100; complexity penalty is {complexity_penalty}.",
+                f"Historical coverage is {historical_coverage}/100 across {historical_observations} verified weekly observations; missing history penalty is {history_penalty}.",
             ),
         )
         generated_at = self._report.get("generated_at")
@@ -82,6 +101,7 @@ class BrainService:
             BRAIN_SCHEMA_VERSION, f"{VERSION}:{generated_at or 'pending'}", generated_at,
             (
                 "DTOS Brain synchronized valuation-intelligence snapshot",
+                "Historical Memory immutable Sleeper evidence (confidence-only, capped at 10 points)",
                 f"Consumer: {consumer}",
                 "Decision Confidence is calculated once inside BrainService.",
             ),

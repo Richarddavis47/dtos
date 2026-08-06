@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.7.6 - Historical Asset Graph & Connected Dossiers
+
+- Added a versioned, deterministic Historical Asset Graph connecting players, picks, transactions, trades, franchises, ownership intervals, and season summaries.
+- Added Player, Pick, and Historical Trade dossier contracts with stable canonical IDs, provenance, explicit missing-data states, and bidirectional links.
+- Expanded Transactions Center, Team Headquarters, Front Office Intelligence, League History, unified search, public APIs, and DINS discovery with historical evidence.
+- Extended resumable Sleeper history ingestion with traded-pick snapshots and lossless source metadata while ensuring failed and pending transactions never alter ownership.
+- Added a capped historical-coverage contribution to Brain Decision Confidence without backdating current values or changing intrinsic valuation.
+
 ## v1.7.5 - League Payload Memory Safety
 
 - Replaced embedded full-universe Brain caches in `/api/league` with a compact backwards-compatible Brain summary and canonical endpoint links.

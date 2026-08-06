@@ -215,7 +215,7 @@ class HistoricalMemoryTests(unittest.IsolatedAsyncioTestCase):
     def test_migration_version_is_recorded(self) -> None:
         with self.store.connection() as connection:
             versions = [row[0] for row in connection.execute("SELECT version FROM schema_migrations")]
-        self.assertEqual(versions, [1, 2])
+        self.assertEqual(versions, [1, 2, 3])
 
     def test_current_team_and_prediction_snapshots_are_immutable(self) -> None:
         data = fixture_data()

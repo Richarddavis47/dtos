@@ -97,7 +97,7 @@ class PlayerApiContractTests(unittest.TestCase):
 
     def test_league_exposes_compact_brain_contract_without_internal_caches(self) -> None:
         self.data["valuation_intelligence"] = {
-            "application_version": "1.7.5",
+            "application_version": "1.7.6",
             "asset_count": 12_326,
             "assets": {"player:1": {"large": "payload"}},
             "timeline": {"player:1": [{"timestamp": "now"}]},

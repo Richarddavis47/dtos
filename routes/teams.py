@@ -8,7 +8,9 @@ from urllib.parse import quote
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 
+from config import LEAGUE_ID
 from services.team_headquarters import CORE_POSITIONS, build_team_directory, build_team_headquarters
+from src.core.historical_memory import HistoricalAssetGraph, historical_store
 from src.ui import recommendation_panel
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -212,6 +214,11 @@ def create_teams_router(
             for label, rank in roster.metrics["League Rankings"].items()
         )
         recommendation = view["unified_recommendation"]
+        franchise_history = HistoricalAssetGraph(
+            historical_store, LEAGUE_ID, data,
+        ).franchise_history(str(team["roster_id"]))
+        historical_seasons = len({row["season"] for row in franchise_history["standings"]})
+        historical_transactions = len(franchise_history["transactions"])
         recommendation_card = recommendation_panel(title=recommendation.title, recommendation=recommendation.recommendation, confidence=recommendation.confidence.score, primary_reason=recommendation.why[0] if recommendation.why else recommendation.current_outlook, evidence=recommendation.why, expected_impact=f"Current: {recommendation.current_outlook} Future: {recommendation.future_outlook}", action_label="Open Trade Center", action_href=f'/trades?front_office={team["roster_id"]}', limitations=recommendation.why_not)
         body = f"""
 {TEAM_HQ_CSS}
@@ -223,6 +230,7 @@ def create_teams_router(
 <section class="thq-section"><div class="thq-section-head"><h2>Assets</h2><span>Roster construction, draft capital, and liquidity</span></div><div class="thq-cards">{_asset_cards(view['snapshot'])}</div><div class="thq-picks">{_draft_capital(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>{'Preseason Outlook' if view['preseason'] else 'Current Team Performance'}</h2><span>{'Deterministic projections' if view['preseason'] else 'Sleeper league data'}</span></div><div class="thq-performance">{performance_cards}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Activity</h2><span>Newest cached transactions first</span></div><div class="thq-timeline">{_timeline(view)}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Franchise History</h2><span>Verified Sleeper evidence across renamed teams and manager eras</span></div><div class="thq-performance"><article class="thq-kpi"><span>Imported Seasons</span><b>{historical_seasons}</b></article><article class="thq-kpi"><span>Archived Transactions</span><b>{historical_transactions}</b></article><article class="thq-kpi"><span>Identity Records</span><b>{len(franchise_history["identities"])}</b></article><article class="thq-kpi"><span>Roster Snapshots</span><b>{len(franchise_history["roster_snapshots"])}</b></article></div><p><a class="thq-action" href="/history/team/{escape(franchise_history["franchise_id"])}">Open complete franchise history</a></p></section>
 <section class="thq-section"><details class="thq-evidence"><summary>Detailed Evidence</summary><div class="thq-evidence-body"><div class="thq-summary">{summary}</div><h3>League-Relative Team Intelligence</h3><div class="thq-grades">{_team_intelligence(view)}</div><h3>Why DTOS Recommends This</h3><p class="muted">Supporting Evidence</p><div class="thq-grades">{_decision_horizons(view)}</div><div class="thq-future-grid">{future}</div></div></details></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Quick Actions</h2></div><div class="thq-actions"><a class="thq-action" href="/transactions?team={team['roster_id']}">Transactions</a><a class="thq-action" href="/front-offices?front_office={team['roster_id']}">Front Office Dossier</a><a class="thq-action" href="/trades?front_office={team['roster_id']}">Trade Intelligence</a><a class="thq-action" href="/history">League History</a></div></section>
 """

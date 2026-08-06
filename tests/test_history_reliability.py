@@ -521,10 +521,10 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
         job = ImportJob(self.store, "L", (2022,), ("player_week",))
         job.create()
         self.store.checkpoint(
-            checkpoint_key="L:2022:player_week:nflverse:1.1",
+            checkpoint_key="L:2022:player_week:nflverse:1.2",
             job_id=job.job_id, league_id="L", season=2022, week=None,
             data_type="player_week", provider="nflverse",
-            importer_version="1.1", status="completed",
+            importer_version="1.2", status="completed",
             completed_at="2023-01-01T00:00:00+00:00",
         )
         weekly = AsyncMock(side_effect=AssertionError("redundant provider call"))

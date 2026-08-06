@@ -10,9 +10,11 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from components.asset_intelligence import player_dossier
+from config import LEAGUE_ID
 from services.asset_intelligence import build_player_dossier
-from src.core.data_platform import data_platform
 from services.transactions import transaction_center
+from src.core.data_platform import data_platform
+from src.core.historical_memory import HistoricalAssetGraph, historical_store
 
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -129,6 +131,21 @@ def _format_refresh_time(value: Any) -> str:
         return str(value)
 
 
+def _historical_archive_row(row: dict[str, Any]) -> str:
+    detail = (
+        f'<a href="{escape(row["trade_dossier_url"])}">Trade Dossier</a>'
+        if row["trade_dossier_url"]
+        else escape(row["sleeper_transaction_id"])
+    )
+    asset_count = len(row["adds"]) + len(row["drops"]) + len(row["draft_picks"])
+    return (
+        f'<tr><td>{escape(str(row["season"]))} W{escape(str(row["week"] or "?"))}</td>'
+        f'<td>{escape(str(row["occurred_at"]))}</td>'
+        f'<td>{escape(row["type"].replace("_", " ").title())}</td>'
+        f'<td>{escape(str(row["status"]))}</td><td>{asset_count}</td><td>{detail}</td></tr>'
+    )
+
+
 def _transactions_table(view: dict[str, Any], filters: dict[str, Any]) -> str:
     rows = []
     for transaction in view["transactions"]:
@@ -207,6 +224,10 @@ def create_transactions_router(
         date_from: str = "",
         date_to: str = "",
         search: str = Query("", alias="q"),
+        scope: str = "current_activity",
+        season: int | None = None,
+        week: int | None = None,
+        status: str = "",
         sort: str = "date",
         direction: str = "desc",
         page_number: int = Query(1, alias="page", ge=1),
@@ -216,6 +237,7 @@ def create_transactions_router(
         await ensure_fresh()
         data = require_data()
         filters = _filters(**locals())
+        filters.update({"scope": scope, "season": season, "week": week, "status": status})
         view = transaction_center(data, filters)
         filters["page"] = view["page"]
         filters["per_page"] = view["per_page"]
@@ -240,6 +262,13 @@ def create_transactions_router(
             _option(str(value), f"{value} per page", view["per_page"])
             for value in (10, 25, 50)
         )
+        scope_options = "".join(
+            _option(value, label, scope) for value, label in (
+                ("current_activity", "Current activity"),
+                ("current_season", "Current season"),
+                ("all_history", "All league history"),
+            )
+        )
         refresh_query = _query(filters)
         refresh_alert = ""
         if refresh == "success":
@@ -258,6 +287,28 @@ def create_transactions_router(
                 ("Most Active Team", summary["most_active_team"], f'{summary["most_active_count"]} transactions'),
                 ("Most Recent Transaction", summary["most_recent"], ""),
             )
+        )
+        archive = HistoricalAssetGraph(historical_store, LEAGUE_ID, data).transaction_archive()
+        if scope == "current_season":
+            active_season = int((data.get("league") or {}).get("season") or datetime.now().year)
+            archive = [row for row in archive if row["season"] == active_season]
+        elif scope != "all_history":
+            archive = []
+        if season is not None:
+            archive = [row for row in archive if row["season"] == season]
+        if week is not None:
+            archive = [row for row in archive if row["week"] == week]
+        if status:
+            archive = [row for row in archive if row["status"] == status]
+        if transaction_type:
+            archive = [row for row in archive if row["type"] == transaction_type]
+        if search:
+            archive = [row for row in archive if search.casefold() in str(row).casefold()]
+        archive_rows = "".join(_historical_archive_row(row) for row in archive[:500])
+        archive_table_body = archive_rows or '<tr><td colspan="6">No archived transactions match these filters.</td></tr>'
+        archive_panel = (
+            f'<section class="card"><h2>Historical Archive</h2><p>{len(archive)} archived transactions match this scope. Results are newest first and sourced from immutable Sleeper history.</p><div style="overflow-x:auto"><table><thead><tr><th>Season</th><th>Timestamp</th><th>Type</th><th>Status</th><th>Assets</th><th>Details</th></tr></thead><tbody>{archive_table_body}</tbody></table></div></section>'
+            if scope != "current_activity" else ""
         )
         body = f"""
 {TRANSACTIONS_CSS}
@@ -281,12 +332,17 @@ def create_transactions_router(
     <div class="tx-field"><label for="date_to">To date</label><input id="date_to" type="date" name="date_to" value="{escape(date_to)}"></div>
     <div class="tx-field"><label for="q">Search</label><input id="q" name="q" value="{escape(search)}" placeholder="Team, owner, player, or draft pick"></div>
     <div class="tx-field"><label for="per_page">Page size</label><select id="per_page" name="per_page">{page_options}</select></div>
+    <div class="tx-field"><label for="scope">History scope</label><select id="scope" name="scope">{scope_options}</select></div>
+    <div class="tx-field"><label for="season">Season</label><input id="season" type="number" name="season" value="{escape(str(season or ""))}" min="2021"></div>
+    <div class="tx-field"><label for="week">Week</label><input id="week" type="number" name="week" value="{escape(str(week or ""))}" min="1" max="18"></div>
+    <div class="tx-field"><label for="status">Status</label><select id="status" name="status">{_option("", "All statuses", status)}{_option("complete", "Completed", status)}{_option("failed", "Failed", status)}{_option("pending", "Pending", status)}</select></div>
     <input type="hidden" name="sort" value="{escape(sort)}"><input type="hidden" name="direction" value="{escape(direction)}">
     <div class="tx-filter-actions"><button type="submit">Apply filters</button><a class="tx-reset" href="/transactions">Reset</a></div>
   </div>
 </form>
 {_transactions_table(view, filters)}
 {_pagination(view, filters)}
+{archive_panel}
 """
         return page("Transactions Center", body)
 
@@ -329,6 +385,7 @@ def create_transactions_router(
             value for value in (player.get("first_name"), player.get("last_name")) if value
         ) or player_id
         live = data_platform.player_report(player_id, data)
+        history = HistoricalAssetGraph(historical_store, LEAGUE_ID, data).player_dossier(player_id)
         consensus = live["consensus"]
         provider_values = "".join(
             f'<tr><td>{escape(str(row["provider"]))}</td><td>{escape(str(row["value"] if row["value"] is not None else row["availability"]))}</td><td>{escape(str(row["freshness"]))}</td><td>{escape(str(row["confidence"]))}%</td><td>{escape(str((live["provider_availability"].get(row["provider"]) or {}).get("reason", "Available")))}</td></tr>'
@@ -364,11 +421,24 @@ def create_transactions_router(
             "</div>"
             for transaction in view["transactions"]
         ) or '<div class="card muted">No cached transactions found for this player.</div>'
+        season_history = "".join(
+            f'<tr><td>{row["season"]}</td><td>{escape(row["status"].replace("_", " ").title())}</td><td>{escape(str(row["games_observed"]))}</td><td>{escape(str(row["starts"]))}</td><td>{escape(str(row["bench_appearances"]))}</td><td>{escape(str(row["fantasy_points"] if row["fantasy_points"] is not None else "Unavailable"))}</td><td>{escape(str(row["overall_rank"] or "Unavailable"))}</td><td>{escape(str(row["positional_rank"] or "Unavailable"))}</td><td>{escape(str(row["completeness_percentage"]))}%</td></tr>'
+            for row in history["season_summaries"]
+        ) or '<tr><td colspan="9">No supported annual observations are available.</td></tr>'
+        ownership_history = "".join(
+            f'<li>{escape(str(row["season"]))} Week {escape(str(row["week"] or "Unknown"))}: {escape(row["event_type"].replace("_", " ").title())} — {escape(row["event_status"])} <small>{escape(row["source_record_id"])}</small></li>'
+            for row in history["ownership_timeline"]
+        ) or '<li>No verified Day Traders ownership event is available.</li>'
+        origin = history["league_origin"]
+        historical_panel = f'''<section class="card"><h2>Connected Day Traders History</h2><p><b>League origin:</b> {escape(str(origin.get("event_type") or "Unavailable").replace("_", " ").title())}</p><p class="muted">Canonical identity: {escape(history["identity"]["canonical_id"])} · Resolution: {escape(history["identity"]["resolution_status"])} · <a href="/history/player/{escape(player_id)}">Open historical performance</a></p>
+<h3>Annual League History</h3><div style="overflow-x:auto"><table><thead><tr><th>Season</th><th>Status</th><th>Games</th><th>Starts</th><th>Bench</th><th>Points</th><th>Overall</th><th>Position</th><th>Complete</th></tr></thead><tbody>{season_history}</tbody></table></div>
+<h3>Ownership Timeline</h3><ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></section>'''
         body = f"""
 {TRANSACTIONS_CSS}
 <a class="back" href="/transactions">← Back to Transactions Center</a>
 {player_dossier(report, selected_team, teams)}
 {live_panel}
+{historical_panel}
 <h2>Recent Transactions</h2><div class="grid">{cards}</div>
 """
         return page(f"{name} — Player Intelligence", body)

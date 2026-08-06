@@ -1,5 +1,14 @@
 # DTOS Development Roadmap
 
+### Historical Asset Graph & Connected Dossiers - DTOS v1.7.6
+
+- Connect verified 2021–2026 Sleeper history to canonical player, pick, trade,
+  transaction, franchise, ownership, search, API, Brain, and DINS contracts.
+- Preserve unresolved identities and unsupported historical fields honestly;
+  failed or pending movements never change ownership.
+- Establish stable historical contracts for Asset Market v1.8.0 without
+  implementing Asset Market behavior.
+
 ### Brain Integration & Unified Decision Engine - DTOS v1.7.4
 
 - One cached public Brain contract for all canonical asset intelligence.

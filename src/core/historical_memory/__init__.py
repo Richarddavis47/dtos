@@ -9,11 +9,21 @@ from src.core.historical_memory.models import (
     Availability,
 )
 from src.core.historical_memory.store import HistoricalStore
+from src.core.historical_memory.graph import (
+    HistoricalAssetGraph,
+    canonical_event_id,
+    canonical_pick_id,
+    canonical_player_id,
+    canonical_trade_id,
+    canonical_transaction_id,
+)
 
 historical_store = HistoricalStore(HISTORY_DATABASE_FILE)
 
 __all__ = [
     "Availability", "DATABASE_MIGRATION_VERSION", "HISTORICAL_SCHEMA_VERSION",
     "PLAYER_HISTORY_SCHEMA_VERSION", "PREDICTION_MODEL_VERSION",
-    "HistoricalStore", "aggregate_production", "historical_store",
+    "HistoricalAssetGraph", "HistoricalStore", "aggregate_production",
+    "canonical_event_id", "canonical_pick_id", "canonical_player_id",
+    "canonical_trade_id", "canonical_transaction_id", "historical_store",
 ]
