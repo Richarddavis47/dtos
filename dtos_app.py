@@ -281,7 +281,9 @@ app.include_router(
     )
 )
 
-app.include_router(create_inspection_router(state=STATE, route_provider=lambda: app.routes))
+app.include_router(create_inspection_router(
+    state=STATE, route_provider=lambda: app.routes, league_id=LEAGUE_ID,
+))
 
 app.include_router(
     create_matchups_router(

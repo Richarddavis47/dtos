@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
+from services.history import canonical_history_progress
 from src.core.brain import brain_service
 from src.core.inspection import (
     INSPECTION_SCHEMA_VERSION,
@@ -30,6 +31,7 @@ def create_inspection_router(
     route_provider: Callable[[], Iterable[Any]] = tuple,
     artifact_root: Path | None = None,
     publication_resolver: GitHubPublicationResolver | None = None,
+    league_id: str | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/inspect", tags=["inspection"])
     public_base = os.getenv("DTOS_PUBLIC_URL", "https://dtos.onrender.com").rstrip("/")
@@ -41,6 +43,12 @@ def create_inspection_router(
 
     def engine() -> InspectionEngine:
         return InspectionEngine(state)
+
+    def historical_progress() -> dict[str, Any]:
+        selected = league_id or str(
+            ((state.get("data") or {}).get("league") or {}).get("league_id") or ""
+        )
+        return canonical_history_progress(selected)
 
     @router.get("")
     async def inspection_index() -> Any:
@@ -73,6 +81,7 @@ def create_inspection_router(
             "application_build": BUILD_NUMBER,
             "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
             "page": jsonable_encoder(page),
+            "historical_progress": historical_progress(),
             "visual_artifacts": {
                 viewport.name: (
                     {"url": f"{public_base}/api/inspect/visual/pages/{page_id}/{viewport.name}", "mode": "direct"}
@@ -247,6 +256,6 @@ def create_inspection_router(
         expected = sum(not page.excluded for page in pages)
         latest = current.get("version")
         identities_match = bool(current.get("identities_match"))
-        return {"application_version": VERSION, "application_build": BUILD_NUMBER, "current_production_commit": commit, "expected_release_tag": f"v{VERSION}", "inspection_schema_version": INSPECTION_SCHEMA_VERSION, "latest_completed_inspection_version": latest, "inspection_status": current.get("publication_status", "pending"), "publication_status": current.get("publication_status", "pending"), "published_manifest_url": current.get("published_manifest_url"), "full_bundle_url": current.get("full_bundle_url"), "checksums_url": current.get("checksums_url"), "total_pages_expected": expected, "total_pages_completed": completed, "total_visual_artifacts": current.get("total_visual_artifacts", 0), "failures": current.get("failures", []), "warnings": current.get("warnings", []), "generated_timestamp": current.get("generated_at"), "source_commit": current.get("commit_sha") or commit, "source_branch": branch, "identities_match": identities_match, "production_inspection_matches_deployment": identities_match and latest == VERSION and completed == expected}
+        return {"application_version": VERSION, "application_build": BUILD_NUMBER, "current_production_commit": commit, "expected_release_tag": f"v{VERSION}", "inspection_schema_version": INSPECTION_SCHEMA_VERSION, "latest_completed_inspection_version": latest, "inspection_status": current.get("publication_status", "pending"), "publication_status": current.get("publication_status", "pending"), "published_manifest_url": current.get("published_manifest_url"), "full_bundle_url": current.get("full_bundle_url"), "checksums_url": current.get("checksums_url"), "total_pages_expected": expected, "total_pages_completed": completed, "total_visual_artifacts": current.get("total_visual_artifacts", 0), "failures": current.get("failures", []), "warnings": current.get("warnings", []), "generated_timestamp": current.get("generated_at"), "source_commit": current.get("commit_sha") or commit, "source_branch": branch, "identities_match": identities_match, "production_inspection_matches_deployment": identities_match and latest == VERSION and completed == expected, "historical_progress": historical_progress()}
 
     return router

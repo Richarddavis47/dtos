@@ -1,6 +1,8 @@
-# DTOS v1.7.12 — Historical Enrichment Progress Contract
+# DTOS v1.7.13 — Canonical History Progress Presentation
 
-DTOS v1.7.12 separates bounded-batch telemetry from season-level enrichment progress. Batch sequence and counts remain in durable batch records; `completed_steps` is derived only from distinct completed player-week season checkpoints and can never exceed the requested season count.
+DTOS v1.7.13 makes the durable player-week enrichment progress contract the single presentation source for History, coverage, inspection, and DINS. Exact counters and season states remain primary; rounded percentages are secondary.
+
+The History page now distinguishes foundation import completion from player-week enrichment. A current-season `completed_with_pending` state is presented honestly as terminal and ready with expected evidence pending, without marking the active season complete or mutating historical state.
 
 Migration version 5 safely repairs inconsistent persisted job metadata, including the v1.7.11 `78/6` state, and records the prior value, repaired value, derivation, and season classification. The repair is idempotent and does not modify immutable evidence, record keys, provenance, leases, or batch rows.
 
