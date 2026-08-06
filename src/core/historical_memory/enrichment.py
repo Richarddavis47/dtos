@@ -44,61 +44,70 @@ def build_identity_context(store: HistoricalStore) -> IdentityContext:
     )
 
 
-def enrich_rows(
-    store: HistoricalStore, league_id: str, rows: list[dict[str, Any]],
-    scoring_settings: dict[str, Any],
-    identity_context: IdentityContext | None = None,
-) -> dict[str, int]:
-    """Persist versioned raw stats and reproducible league fantasy scoring."""
-    mapped = (
-        identity_context.gsis_to_dtos
-        if identity_context is not None
-        else build_identity_context(store).gsis_to_dtos
-    )
-    counts = {"written": 0, "unchanged": 0, "unresolved": 0}
+def prepare_enrichment_records(
+    league_id: str, rows: list[dict[str, Any]],
+    scoring_settings: dict[str, Any], identity_context: IdentityContext,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], int]:
+    """Prepare one bounded raw/derived batch without opening a transaction."""
+    mapped = identity_context.gsis_to_dtos
+    raw_records: list[dict[str, Any]] = []
+    derived_records: list[dict[str, Any]] = []
+    unresolved = 0
     retrieved = datetime.now(timezone.utc).isoformat()
     for row in rows:
         provider_player_id = str(row.get("provider_player_id") or "")
         player_id = mapped.get(provider_player_id)
         if not player_id:
-            counts["unresolved"] += 1
+            unresolved += 1
             continue
         season = int(row["season"])
         week = int(row["week"])
         provider_record_id = str(row["provider_record_id"])
-        raw_inserted = store.append(
-            record_key=(
+        raw_records.append({
+            "record_key": (
                 f"{league_id}:player_raw_week:{season}:{week}:"
                 f"{row['provider']}:{provider_record_id}:{IMPORTER_VERSION}"
             ),
-            entity_type="player_raw_week", league_id=league_id,
-            season=season, week=week, player_id=player_id,
-            source_record_id=provider_record_id, observed_at=retrieved,
-            retrieved_at=retrieved, provider=str(row["provider"]),
-            availability="observed", confidence=int(row["confidence"]),
-            calculation_method="provider_record",
-            schema_version=HISTORICAL_SCHEMA_VERSION, payload=row,
-        )
-        counts["written" if raw_inserted else "unchanged"] += 1
+            "entity_type": "player_raw_week", "league_id": league_id,
+            "season": season, "week": week, "player_id": player_id,
+            "source_record_id": provider_record_id, "observed_at": retrieved,
+            "retrieved_at": retrieved, "provider": str(row["provider"]),
+            "availability": "observed", "confidence": int(row["confidence"]),
+            "calculation_method": "provider_record",
+            "schema_version": HISTORICAL_SCHEMA_VERSION, "payload": row,
+        })
         scoring = calculate_fantasy_points(row["raw_stats"], scoring_settings)
-        fantasy_inserted = store.append(
-            record_key=(
+        derived_records.append({
+            "record_key": (
                 f"{league_id}:player_fantasy_week:{season}:{week}:"
                 f"{player_id}:{IMPORTER_VERSION}"
             ),
-            entity_type="player_fantasy_week", league_id=league_id,
-            season=season, week=week, player_id=player_id,
-            source_record_id=provider_record_id, observed_at=retrieved,
-            retrieved_at=retrieved, provider="DTOS",
-            availability=scoring["availability"],
-            confidence=int(scoring["confidence"]),
-            calculation_method="league_scoring_engine:1.1",
-            derived=True, schema_version=HISTORICAL_SCHEMA_VERSION,
-            payload={
+            "entity_type": "player_fantasy_week", "league_id": league_id,
+            "season": season, "week": week, "player_id": player_id,
+            "source_record_id": provider_record_id, "observed_at": retrieved,
+            "retrieved_at": retrieved, "provider": "DTOS",
+            "availability": scoring["availability"],
+            "confidence": int(scoring["confidence"]),
+            "calculation_method": "league_scoring_engine:1.1", "derived": True,
+            "schema_version": HISTORICAL_SCHEMA_VERSION,
+            "payload": {
                 **scoring, "scoring_settings": scoring_settings,
                 "raw_stats_provider": row["provider"],
                 "raw_stats_version": IMPORTER_VERSION,
             },
-        )
-        counts["written" if fantasy_inserted else "unchanged"] += 1
-    return counts
+        })
+    return raw_records, derived_records, unresolved
+
+
+def enrich_rows(
+    store: HistoricalStore, league_id: str, rows: list[dict[str, Any]],
+    scoring_settings: dict[str, Any],
+    identity_context: IdentityContext | None = None,
+) -> dict[str, int]:
+    """Persist one bounded batch through the shared transaction boundary."""
+    context = identity_context or build_identity_context(store)
+    raw_records, derived_records, unresolved = prepare_enrichment_records(
+        league_id, rows, scoring_settings, context,
+    )
+    written, unchanged = store.append_many([*raw_records, *derived_records])
+    return {"written": written, "unchanged": unchanged, "unresolved": unresolved}

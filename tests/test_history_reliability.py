@@ -15,6 +15,7 @@ from src.core.historical_memory.aggregation import aggregate_production
 from src.core.historical_memory.enrichment import (
     build_identity_context,
     enrich_rows,
+    prepare_enrichment_records,
 )
 from src.core.historical_memory.importer import HistoricalImporter
 from src.core.historical_memory.jobs import (
@@ -33,6 +34,22 @@ from src.core.historical_memory.scoring import calculate_fantasy_points
 from src.core.historical_memory.season_state import SeasonState, classify_season
 from src.core.historical_memory.store import HistoricalStore
 from tools.history_enrich import exit_code
+
+
+def streaming_provider(
+    rows: list[dict[str, Any]] | None = None,
+    error: Exception | None = None,
+) -> Mock:
+    async def batches(
+        _season: int, batch_size: int,
+    ):
+        if error is not None:
+            raise error
+        supplied = rows or []
+        for offset in range(0, len(supplied), batch_size):
+            yield supplied[offset:offset + batch_size]
+
+    return Mock(side_effect=batches)
 
 
 class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
@@ -284,8 +301,8 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
         with (
             patch.object(history_service, "historical_store", self.store),
             patch(
-                "services.history.NflverseProvider.weekly",
-                AsyncMock(side_effect=missing),
+                "services.history.NflverseProvider.weekly_batches",
+                streaming_provider(error=missing),
             ) as weekly,
         ):
             result = await history_service.enrich_player_history(
@@ -297,7 +314,7 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.store.jobs("L")[0]["failed_records"], 0)
         self.assertEqual(self.store.jobs("L")[0]["retry_count"], 0)
         self.assertEqual(exit_code(result), 0)
-        self.assertEqual(weekly.await_count, 0)
+        self.assertEqual(weekly.call_count, 0)
 
     async def test_future_is_not_requested_and_historical_404_fails(self) -> None:
         import services.history as history_service
@@ -307,10 +324,10 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
         missing = httpx.HTTPStatusError(
             "missing", request=request, response=response,
         )
-        weekly = AsyncMock(side_effect=missing)
+        weekly = streaming_provider(error=missing)
         with (
             patch.object(history_service, "historical_store", self.store),
-            patch("services.history.NflverseProvider.weekly", weekly),
+            patch("services.history.NflverseProvider.weekly_batches", weekly),
         ):
             future = await history_service.enrich_player_history(
                 "L", seasons={2027}, today=date(2026, 7, 28),
@@ -322,7 +339,8 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(future["pending"][0]["status"], "not_yet_available")
         self.assertEqual(historical["status"], "failed")
         self.assertEqual(exit_code(historical), 1)
-        self.assertEqual(weekly.await_count, 1)
+        self.assertEqual(weekly.call_count, 1)
+        self.assertEqual(weekly.call_args.args[0], 2024)
 
     async def test_pending_segment_can_transition_to_imported(self) -> None:
         import services.history as history_service
@@ -338,8 +356,8 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
         with (
             patch.object(history_service, "historical_store", self.store),
             patch(
-                "services.history.NflverseProvider.weekly",
-                AsyncMock(return_value=rows),
+                "services.history.NflverseProvider.weekly_batches",
+                streaming_provider(rows),
             ),
         ):
             pending = await history_service.enrich_player_history(
@@ -499,9 +517,10 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
             patch.object(
                 history_service, "build_identity_context", context_builder,
             ),
+            patch.object(history_service, "ENRICHMENT_BATCH_SIZE", 50),
             patch(
-                "services.history.NflverseProvider.weekly",
-                AsyncMock(return_value=rows),
+                "services.history.NflverseProvider.weekly_batches",
+                streaming_provider(rows),
             ),
         ):
             result = await history_service.enrich_player_history(
@@ -510,6 +529,46 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context_builder.call_count, 1)
         self.assertEqual(result["identity_context"]["batch_reuse_count"], 3)
         self.assertEqual(result["identity_context"]["gsis_count"], 1)
+
+    def test_v1710_compatible_evidence_retains_identical_record_keys(self) -> None:
+        self.store.upsert_identity(
+            "sleeper-1", "Sleeper", "sleeper-1", "Player", 100,
+            "2022-01-01", {"provider_ids": {"GSIS": "gsis-1"}},
+        )
+        row = normalize_nflverse_row({
+            "season": "2022", "week": "3", "player_id": "gsis-1",
+            "carries": "4", "rushing_yards": "21",
+        })
+        raw, derived, unresolved = prepare_enrichment_records(
+            "L", [row], {}, build_identity_context(self.store),
+        )
+        self.assertEqual(unresolved, 0)
+        self.assertEqual(
+            raw[0]["record_key"],
+            "L:player_raw_week:2022:3:nflverse:2022:3:gsis-1:1.2",
+        )
+        self.assertEqual(
+            derived[0]["record_key"],
+            "L:player_fantasy_week:2022:3:sleeper-1:1.2",
+        )
+
+    def test_replay_against_v1710_evidence_inserts_no_logical_duplicates(self) -> None:
+        self.store.upsert_identity(
+            "sleeper-1", "Sleeper", "sleeper-1", "Player", 100,
+            "2022-01-01", {"provider_ids": {"GSIS": "gsis-1"}},
+        )
+        row = normalize_nflverse_row({
+            "season": "2022", "week": "3", "player_id": "gsis-1",
+            "carries": "4", "rushing_yards": "21",
+        })
+        context = build_identity_context(self.store)
+        first = enrich_rows(self.store, "L", [row], {}, context)
+        replay = enrich_rows(self.store, "L", [row], {}, context)
+        self.assertEqual(first, {"written": 2, "unchanged": 0, "unresolved": 0})
+        self.assertEqual(replay, {"written": 0, "unchanged": 2, "unresolved": 0})
+        raw_count, _ = self.store.records("L", "player_raw_week")
+        derived_count, _ = self.store.records("L", "player_fantasy_week")
+        self.assertEqual((raw_count, derived_count), (1, 1))
 
     async def test_startup_skips_current_completed_enrichment_checkpoint(self) -> None:
         import services.history as history_service
@@ -527,32 +586,32 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
             importer_version="1.2", status="completed",
             completed_at="2023-01-01T00:00:00+00:00",
         )
-        weekly = AsyncMock(side_effect=AssertionError("redundant provider call"))
+        weekly = streaming_provider(error=AssertionError("redundant provider call"))
         with (
             patch.object(history_service, "historical_store", self.store),
-            patch("services.history.NflverseProvider.weekly", weekly),
+            patch("services.history.NflverseProvider.weekly_batches", weekly),
         ):
             result = await history_service.enrich_player_history(
                 "L", seasons={2022}, today=date(2023, 7, 1),
                 skip_current=True,
             )
         self.assertEqual(result["segments"][0]["status"], "current")
-        weekly.assert_not_awaited()
+        weekly.assert_not_called()
 
     async def test_preseason_pending_does_not_request_provider(self) -> None:
         import services.history as history_service
 
-        weekly = AsyncMock(side_effect=AssertionError("preseason provider call"))
+        weekly = streaming_provider(error=AssertionError("preseason provider call"))
         with (
             patch.object(history_service, "historical_store", self.store),
-            patch("services.history.NflverseProvider.weekly", weekly),
+            patch("services.history.NflverseProvider.weekly_batches", weekly),
         ):
             result = await history_service.enrich_player_history(
                 "L", seasons={2026}, today=date(2026, 7, 28),
                 skip_current=True,
             )
         self.assertEqual(result["pending"][0]["status"], "pending")
-        weekly.assert_not_awaited()
+        weekly.assert_not_called()
 
     async def test_failed_latest_attempt_preserves_completed_foundation(self) -> None:
         import services.history as history_service
