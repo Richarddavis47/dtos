@@ -574,6 +574,7 @@ def import_status(league_id: str) -> dict[str, Any]:
         progress = historical_store.enrichment_job_progress(job["job_id"])
         if progress is not None:
             job["progress"] = progress
+    canonical_progress = canonical_history_progress(league_id, jobs=jobs)
     return {
         "schema_version": HISTORICAL_SCHEMA_VERSION,
         "runs": runs,
@@ -585,6 +586,80 @@ def import_status(league_id: str) -> dict[str, Any]:
         "latest": runs[0] if runs else {
             "status": "waiting", "reason": "Historical backfill has not started."
         },
+        "canonical_progress": canonical_progress,
+    }
+
+
+def canonical_history_progress(
+    league_id: str, *, jobs: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Return the single presentation-ready player-week progress contract."""
+    candidates = jobs if jobs is not None else historical_store.jobs(league_id)
+    job = next(
+        (
+            row for row in candidates
+            if row.get("requested_data_types") == ["player_week"]
+        ),
+        None,
+    )
+    if job is None:
+        return {
+            "status": "waiting", "display_status": "Waiting",
+            "completed_steps": 0, "total_steps": 0, "percentage": None,
+            "completed_seasons": [], "pending_seasons": [],
+            "failed_seasons": [], "current_season": None,
+            "current_data_type": "player_week", "consistent": True,
+            "terminal": False,
+            "pending_reason": "Player-week enrichment has not started.",
+        }
+
+    progress = job.get("progress") or historical_store.enrichment_job_progress(
+        str(job["job_id"])
+    ) or {}
+    completed = int(progress.get("completed_steps") or 0)
+    total = int(progress.get("total_steps") or 0)
+    consistent = bool(progress.get("consistent")) and 0 <= completed <= total
+    pending = list(progress.get("pending_seasons") or [])
+    failed = list(progress.get("failed_seasons") or [])
+    raw_status = str(job.get("status") or "waiting")
+    status = raw_status
+    if not consistent:
+        status = "inconsistent"
+    elif raw_status in {"complete", "completed"}:
+        status = "completed" if completed == total else "completed_with_pending"
+    elif raw_status == "completed_with_pending" and completed == total:
+        status = "completed"
+    labels = {
+        "completed": "Completed",
+        "completed_with_pending": "Completed with pending season",
+        "running": "Running",
+        "failed": "Failed",
+        "inconsistent": "Inconsistent progress",
+        "waiting": "Waiting",
+    }
+    current_year = datetime.now().year
+    active_pending = current_year in pending
+    pending_reason = None
+    if pending:
+        pending_reason = (
+            "Active/current-season player-week evidence is not yet complete or available."
+            if active_pending else
+            "Player-week evidence is not yet complete or available."
+        )
+    return {
+        "status": status,
+        "display_status": labels.get(status, status.replace("_", " ").title()),
+        "completed_steps": completed,
+        "total_steps": total,
+        "percentage": round(100 * completed / total) if total else None,
+        "completed_seasons": list(progress.get("completed_seasons") or []),
+        "pending_seasons": pending,
+        "failed_seasons": failed,
+        "current_season": job.get("current_season"),
+        "current_data_type": job.get("current_data_type") or "player_week",
+        "consistent": consistent,
+        "terminal": status in {"completed", "completed_with_pending", "failed"},
+        "pending_reason": pending_reason,
     }
 
 

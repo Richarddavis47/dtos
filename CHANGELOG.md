@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7.13 - Canonical History Progress Presentation
+
+- Added one presentation-ready player-week enrichment progress contract shared by the History UI, progress and coverage APIs, inspection health, and DINS artifacts.
+- Distinguished completed foundation import work from the canonical enrichment state, exact season counters, completed seasons, and expected pending active-season evidence.
+- Preserved historical evidence, checkpoints, importer behavior, storage, and the durable v1.7.12 progress repair without mutation.
+
 ## v1.7.12 - Historical Enrichment Progress Contract
 
 - Separated enrichment batch sequence/counts from season-level job progress.
