@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Historical Import & Read-Model Lifecycle Stability - DTOS v1.7.8
+
+- Bound historical graph materialization to the indexes required by each read.
+- Recover expired importer leases automatically through persisted checkpoints.
+- Keep coverage compact, provider-free, observable, and safe under concurrent import.
+
 ### Historical Asset Graph Read-Path Optimization - DTOS v1.7.7
 
 - Build and index historical evidence once per deterministic dataset version.

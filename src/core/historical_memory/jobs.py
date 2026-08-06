@@ -143,6 +143,10 @@ def recover_stalled_jobs(store: HistoricalStore, league_id: str) -> int:
     """Queue jobs whose persisted lease expired; permanent failures stay failed."""
     now = utcnow()
     recovered = 0
+    locks_by_job = {
+        str(row["job_id"]): str(row["lock_key"])
+        for row in store.locks()
+    }
     for job in store.jobs(league_id):
         if job["status"] != "running" or not job.get("lock_expiration"):
             continue
@@ -152,6 +156,9 @@ def recover_stalled_jobs(store: HistoricalStore, league_id: str) -> int:
                 lock_expiration=None, last_error_type="worker_interrupted",
                 last_error_message="Worker lease expired; job is safe to resume.",
             )
+            lock_key = locks_by_job.get(str(job["job_id"]))
+            if lock_key:
+                store.release_lock(lock_key, str(job["job_id"]))
             recovered += 1
     return recovered
 

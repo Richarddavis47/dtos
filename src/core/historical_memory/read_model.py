@@ -19,7 +19,7 @@ from src.core.historical_memory.models import (
 from src.core.historical_memory.store import HistoricalStore
 
 READ_MODEL_VERSION = "1.0"
-MAX_CACHE_ENTRIES = 2
+MAX_CACHE_ENTRIES = 1
 
 
 def _now() -> str:
@@ -87,8 +87,9 @@ class HistoricalReadModelCache:
             self._misses += 1
             build_started = time.perf_counter()
             try:
+                # Keep construction lightweight. Individual read paths build only
+                # the indexes they need, under the graph's single-flight lock.
                 graph = HistoricalAssetGraph(store, league_id, data)
-                graph.prepare_indexes()
             except Exception as exc:
                 self._last_build_error = f"{type(exc).__name__}: {exc}"
                 previous = next(reversed(self._entries.values()), None)

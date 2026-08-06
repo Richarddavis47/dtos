@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.7.8 - Historical Import & Read-Model Lifecycle Stability
+
+- Replaced eager full-history graph hydration with lazy, route-specific indexes and compact SQLite coverage aggregation.
+- Reduced production-scale read-model peak allocation and retained only one immutable dataset generation per process.
+- Added automatic expired-worker lease recovery with checkpoint continuation and removal of stale lock records.
+- Added full-dataset memory, latency, provider-free read, concurrency, and worker-recovery regression coverage.
+
 ## v1.7.7 - Historical Asset Graph Read-Path Optimization
 
 - Added a single-flight, dataset-versioned Historical Asset Graph cache shared by historical APIs, dossiers, search, Team Headquarters, Transactions Center, and Front Office reads.

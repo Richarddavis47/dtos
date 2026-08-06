@@ -187,6 +187,29 @@ async def backfill_history(
         )
 
 
+async def wait_for_historical_lease(
+    league_id: str, *, poll_seconds: float = 30.0,
+) -> int:
+    """Wait for a live lease or atomically recover it after its heartbeat expires."""
+    while True:
+        locks = [
+            row for row in historical_store.locks()
+            if str(row.get("lock_key") or "").startswith(f"{league_id}:")
+        ]
+        if not locks:
+            return recover_stalled_jobs(historical_store, league_id)
+        expirations = [
+            datetime.fromisoformat(str(row["expires_at"]))
+            for row in locks if row.get("expires_at")
+        ]
+        if not expirations:
+            return 0
+        remaining = (min(expirations) - datetime.now(timezone.utc)).total_seconds()
+        if remaining <= 0:
+            return recover_stalled_jobs(historical_store, league_id)
+        await asyncio.sleep(min(remaining + 0.1, poll_seconds))
+
+
 async def ensure_history_backfill(fetch: Any, *, league_id: str = LEAGUE_ID) -> dict[str, Any]:
     recover_stalled_jobs(historical_store, league_id)
     foundation = historical_store.latest_completed_foundation(league_id)
@@ -207,6 +230,14 @@ async def ensure_history_backfill(fetch: Any, *, league_id: str = LEAGUE_ID) -> 
                 "enrichment": enrichment,
             }
     result = await backfill_history(fetch, league_id=league_id)
+    if result.get("status") == "blocked" and "Overlapping import lease" in (
+        result.get("errors") or []
+    ):
+        # A replacement worker can start before the terminated worker's lease
+        # expires. Wait for the persisted heartbeat to expire, then recover from
+        # checkpoints instead of leaving the deployment blocked indefinitely.
+        await wait_for_historical_lease(league_id)
+        result = await backfill_history(fetch, league_id=league_id)
     if result.get("status") == "complete":
         result["enrichment"] = await enrich_player_history(
             league_id, seasons=set(result.get("seasons") or []),
