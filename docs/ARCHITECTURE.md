@@ -4,6 +4,8 @@
 
 `src/core/valuation/universe.py` assembles current cached identity, ownership, provider, freshness, and existing valuation evidence into a read-only canonical universe. `routes/valuation.py` is the API presentation boundary. It does not synchronize providers, consume retained inspection snapshots, or modify intelligence output. See [VALUATION.md](VALUATION.md).
 
+`src/core/asset_market/` builds the bounded, versioned exchange read model over the canonical Valuation Universe, Brain, and Historical Asset Graph. `routes/market.py` owns presentation and never triggers provider synchronization. See [ASSET_MARKET.md](ASSET_MARKET.md).
+
 ```mermaid
 flowchart TD
     Browser[Browser or API client] --> FastAPI[FastAPI routes]

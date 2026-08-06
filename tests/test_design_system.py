@@ -5,7 +5,11 @@ import unittest
 
 from src.ui.design_system import DESIGN_SYSTEM_CSS, page_header, recommendation_panel
 from routes.teams import TEAM_HQ_CSS
-from tools.validation.smoke_http import validate_product_contract
+from tools.validation.smoke_http import (
+    validate_asset_market_contract,
+    validate_market_asset_contract,
+    validate_product_contract,
+)
 
 
 class DesignSystemTests(unittest.TestCase):
@@ -60,6 +64,46 @@ class DesignSystemTests(unittest.TestCase):
             validate_product_contract((valid + "<title>Team Detail</title>").encode(), "/teams/1")
         with self.assertRaisesRegex(AssertionError, "internal identifier"):
             validate_product_contract((valid + "<p>Roster ID: 1</p>").encode(), "/teams/1")
+
+    def test_market_directory_contract_is_shared_without_recommendation(self) -> None:
+        header = page_header(
+            "Asset Market", league_name="Dynasty League", last_updated="today",
+        )
+        market = (
+            header
+            + '<h2>Asset Market &amp; Dynasty Exchange</h2>'
+            + '<form aria-label="Asset Market filters"></form>'
+            + '<table><caption>Canonical dynasty asset rankings</caption></table>'
+            + '<p>Values remain separate; unavailable evidence is never substituted.</p>'
+            + '<p>Dataset <code>market-dataset-1</code></p>'
+        ).encode()
+        home_identity = validate_asset_market_contract(market, "/")
+        market_identity = validate_asset_market_contract(market, "/market")
+        self.assertEqual(home_identity, market_identity)
+
+    def test_market_detail_requires_canonical_brain_recommendation(self) -> None:
+        valid = {
+            "brain_snapshot_id": "brain-1",
+            "recommendation": {
+                "confidence": 82,
+                "brain_snapshot_id": "brain-1",
+                "decision_provenance": ["brain"],
+                "primary_reason": "Canonical evidence supports review.",
+                "supporting_evidence": ["Market evidence is current."],
+            },
+        }
+        validate_market_asset_contract(valid, "/api/market/assets/player:1")
+        invalid = {**valid, "recommendation": {"confidence": 82}}
+        with self.assertRaisesRegex(AssertionError, "metadata is missing"):
+            validate_market_asset_contract(invalid, "/api/market/assets/player:1")
+
+    def test_non_market_recommendation_contract_remains_required(self) -> None:
+        header = page_header(
+            "Trade Intelligence", league_name="Dynasty League",
+            last_updated="today",
+        )
+        with self.assertRaisesRegex(AssertionError, "recommendation contract"):
+            validate_product_contract(header.encode(), "/trades", recommendation=True)
 
 
 if __name__ == "__main__":

@@ -25,7 +25,7 @@ def create_hq_router(
     """Create the Commissioner Desk using shared application dependencies."""
     router = APIRouter(tags=["commissioner-desk"])
 
-    @router.get("/", response_class=HTMLResponse)
+    @router.get("/commissioner", response_class=HTMLResponse)
     async def commissioner_home(
         active_league: str = Query("", alias="league"),
         active_front_office: int | None = Query(None, alias="front_office"),

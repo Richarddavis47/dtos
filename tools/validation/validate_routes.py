@@ -8,6 +8,8 @@ from src.platform.validation.routes import HttpEndpoint, validate_routes
 
 REQUIRED_GET_PATHS = (
     "/",
+    "/market",
+    "/commissioner",
     "/teams",
     "/front-offices",
     "/api/front-offices",
@@ -18,6 +20,11 @@ REQUIRED_GET_PATHS = (
     "/picks",
     "/settings",
     "/api/status",
+    "/api/market",
+    "/api/market/assets",
+    "/api/market/search",
+    "/api/market/trending",
+    "/api/market/health",
     "/api/platform/health",
     "/api/intelligence",
     "/api/league",
@@ -31,6 +38,7 @@ REQUIRED_GET_PATHS = (
     "/api/inspect/site-map",
     "/api/inspect/health",
     "/api/inspect/schema",
+    "/api/inspect/market",
     "/api/inspect/visual/pages",
     "/api/inspect/releases/current",
 )

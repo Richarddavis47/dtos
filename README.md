@@ -1,6 +1,6 @@
 # DTOS
 
-DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns synchronized Sleeper league data into objective briefings, explainable franchise evaluations, transaction context, matchup views, and decision-support foundations.
+DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns synchronized Sleeper league data into an explainable Asset Market, objective briefings, franchise evaluations, transaction context, matchup views, and decision-support foundations.
 
 ## Current release
 

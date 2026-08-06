@@ -22,6 +22,7 @@ from src.core.inspection import (
     excluded_current_trade_pages,
 )
 from src.core.historical_memory import historical_store
+from src.core.asset_market import asset_market
 from src.core.inspection.publication import GitHubPublicationResolver
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 from src.core.valuation_intelligence import valuation_intelligence_report
@@ -185,6 +186,34 @@ def create_inspection_router(
                 "sample_assets": list((valuation_intelligence.get("assets") or {}).values())[:2],
             },
             "warnings": universe.freshness["reasons"],
+        })
+
+    @router.get("/market")
+    async def inspect_market() -> Any:
+        """Inspect the cached Asset Market without synchronization or mutation."""
+        selected = league_id or str(
+            ((state.get("data") or {}).get("league") or {}).get("league_id") or ""
+        )
+        market = asset_market(
+            state.get("data") or {}, state, historical_store, selected,
+        )
+        directory = market.directory(limit=5)
+        trending = market.trending(limit=3)
+        return jsonable_encoder({
+            "application_version": VERSION,
+            "application_build": BUILD_NUMBER,
+            "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
+            "page_name": "Asset Market & Dynasty Exchange",
+            "route": "/market",
+            "market_identity": market.identity(),
+            "market_health": market.health(),
+            "sample_rankings": directory["assets"],
+            "trending": trending,
+            "historical_progress": historical_progress(),
+            "warnings": (
+                [trending["unavailable_reason"]]
+                if trending["availability"] == "unavailable" else []
+            ),
         })
 
     @router.get("/brain")

@@ -12,6 +12,7 @@ from urllib.request import urlopen
 GENERIC_TEAM_LABEL = re.compile(r"\b(?:Team|Roster)\s+(?:[1-9]|10)\b|\bTeam Detail\b", re.IGNORECASE)
 GENERIC_PAGE_TITLE = re.compile(r"<title>\s*(?:Team|Player|Matchup)\s*(?:Detail)?\s*</title>", re.IGNORECASE)
 INTERNAL_LABEL = re.compile(r"\b(?:Roster ID|Player ID|Transaction ID|Sleeper ID|Franchise ID|Provider Key)\b", re.IGNORECASE)
+MARKET_DATASET = re.compile(r"Dataset\s*<code>([^<]+)</code>", re.IGNORECASE)
 
 
 def validate_team_identity(body: bytes, path: str) -> None:
@@ -35,6 +36,41 @@ def validate_product_contract(body: bytes, path: str, *, recommendation: bool = 
         raise AssertionError(f"{path}: exposes internal identifier label {match.group(0)!r}")
     if recommendation and 'data-dtos-component="recommendation"' not in html:
         raise AssertionError(f"{path}: shared recommendation contract is missing")
+
+
+def validate_asset_market_contract(body: bytes, path: str) -> str:
+    """Validate a directory surface and return its canonical dataset identity."""
+    validate_product_contract(body, path)
+    html = body.decode("utf-8", errors="replace")
+    for required in (
+        "Asset Market &amp; Dynasty Exchange",
+        'aria-label="Asset Market filters"',
+        "Canonical dynasty asset rankings",
+        "Values remain separate; unavailable evidence is never substituted.",
+    ):
+        if required not in html:
+            raise AssertionError(f"{path}: Asset Market contract is missing {required!r}")
+    match = MARKET_DATASET.search(html)
+    if match is None:
+        raise AssertionError(f"{path}: canonical market dataset identity is missing")
+    return match.group(1)
+
+
+def validate_market_asset_contract(payload: dict, path: str) -> None:
+    """Require canonical Brain metadata on an expanded market asset response."""
+    recommendation = payload.get("recommendation") or {}
+    required = (
+        "confidence", "brain_snapshot_id", "decision_provenance",
+        "primary_reason", "supporting_evidence",
+    )
+    missing = [name for name in required if recommendation.get(name) is None]
+    if missing:
+        raise AssertionError(
+            f"{path}: canonical Brain recommendation metadata is missing: "
+            + ", ".join(missing)
+        )
+    if payload.get("brain_snapshot_id") != recommendation.get("brain_snapshot_id"):
+        raise AssertionError(f"{path}: market detail and recommendation use different Brain snapshots")
 
 
 def get(base_url: str, path: str, expected: int = 200) -> bytes:
@@ -68,7 +104,7 @@ def main() -> int:
     args = parser.parse_args()
 
     major = (
-        "/", "/teams", "/matchups", "/transactions", "/picks", "/settings",
+        "/", "/market", "/commissioner", "/teams", "/matchups", "/transactions", "/picks", "/settings",
         "/health/live", "/health/ready", "/api/status", "/api/crawl",
         "/api/crawl/history", "/history",
         "/api/platform/health", "/api/intelligence", "/api/league",
@@ -79,13 +115,20 @@ def main() -> int:
         "/api/inspect/visual/pages", "/api/inspect/releases/current",
         "/api/valuation", "/api/valuation/status", "/api/valuation/providers",
         "/api/valuation/assets?limit=1", "/api/inspect/valuation",
+        "/api/market", "/api/market/health", "/api/market/assets?limit=1",
+        "/api/market/search?q=QB", "/api/market/trending", "/api/inspect/market",
     )
-    product_pages = {"/", "/teams", "/matchups", "/transactions", "/picks", "/settings", "/history", "/front-offices", "/trades"}
-    recommendation_pages = {"/", "/front-offices", "/trades"}
+    product_pages = {"/", "/market", "/commissioner", "/teams", "/matchups", "/transactions", "/picks", "/settings", "/history", "/front-offices", "/trades"}
+    recommendation_pages = {"/commissioner", "/front-offices", "/trades"}
+    market_pages: dict[str, str] = {}
     for path in major:
         body = get(args.base_url, path)
-        if path in product_pages:
+        if path in {"/", "/market"}:
+            market_pages[path] = validate_asset_market_contract(body, path)
+        elif path in product_pages:
             validate_product_contract(body, path, recommendation=path in recommendation_pages)
+    if market_pages["/"] != market_pages["/market"]:
+        raise AssertionError("/ and /market expose different canonical market datasets")
 
     league = json.loads(get(args.base_url, "/api/league"))
     teams = league.get("teams") or []
@@ -120,6 +163,15 @@ def main() -> int:
     valuation_asset = json.loads(get(args.base_url, f"/api/valuation/assets/player:{player_id}"))
     if str((valuation_asset.get("identity") or {}).get("sleeper_id")) != player_id:
         raise AssertionError("Valuation lookup did not preserve the canonical Sleeper identity.")
+    market = json.loads(get(args.base_url, "/api/market/health"))
+    if int((market.get("counts") or {}).get("total") or 0) < len(players):
+        raise AssertionError("Asset Market omits canonical cached players.")
+    if int(market.get("duplicate_asset_ids") or 0):
+        raise AssertionError("Asset Market contains duplicate canonical identities.")
+    market_asset = json.loads(get(args.base_url, f"/api/market/assets/player:{player_id}"))
+    validate_market_asset_contract(
+        market_asset, f"/api/market/assets/player:{player_id}",
+    )
     for roster_id in roster_ids:
         player_path = f"/players/{player_id}?front_office={roster_id}"
         validate_product_contract(get(args.base_url, player_path), player_path, recommendation=True)

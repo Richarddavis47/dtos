@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.8.0 - Asset Market & Dynasty Exchange
+
+- Replaced the primary homepage destination with a canonical, searchable Asset Market while retaining the Commissioner Desk at `/commissioner`.
+- Added deterministic player and draft-pick rankings, layered valuation filters, pagination, canonical Brain recommendations, and on-demand Historical Asset Graph dossiers.
+- Added provider-free market search across current assets, former players, teams, managers, trades, and transactions, with explicit unavailable and evidence states.
+- Added a versioned, single-flight, bounded read model plus market health, inspection, route, smoke, and regression contracts.
+
 ## v1.7.14 - Canonical Trade History Discovery
 
 - Derived DINS historical trade pages from completed durable Historical Memory records instead of current cached Sleeper transactions.
