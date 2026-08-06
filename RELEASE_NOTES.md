@@ -1,3 +1,13 @@
+# DTOS v1.7.14 — Canonical Trade History Discovery
+
+DTOS v1.7.14 makes Historical Trade Dossier discovery use the same durable Historical Memory dataset and completed-status contract as its detail routes. DINS no longer advertises current cached Sleeper transactions as historical dossiers when canonical historical evidence is absent.
+
+Current-only transactions remain available through current Transactions and Trade surfaces. Inspection discovery records a deterministic `canonical_historical_trade_unavailable` exclusion with the durable dataset version, rather than fabricating a dossier or capturing a known 404 route.
+
+Discovery remains read-only, bounded, deterministic, and provider-sync-free.
+
+---
+
 # DTOS v1.7.13 — Canonical History Progress Presentation
 
 DTOS v1.7.13 makes the durable player-week enrichment progress contract the single presentation source for History, coverage, inspection, and DINS. Exact counters and season states remain primary; rounded percentages are secondary.
