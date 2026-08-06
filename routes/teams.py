@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 
 from config import LEAGUE_ID
 from services.team_headquarters import CORE_POSITIONS, build_team_directory, build_team_headquarters
-from src.core.historical_memory import HistoricalAssetGraph, historical_store
+from src.core.historical_memory import historical_graph, historical_store
 from src.ui import recommendation_panel
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -214,7 +214,7 @@ def create_teams_router(
             for label, rank in roster.metrics["League Rankings"].items()
         )
         recommendation = view["unified_recommendation"]
-        franchise_history = HistoricalAssetGraph(
+        franchise_history = historical_graph(
             historical_store, LEAGUE_ID, data,
         ).franchise_history(str(team["roster_id"]))
         historical_seasons = len({row["season"] for row in franchise_history["standings"]})

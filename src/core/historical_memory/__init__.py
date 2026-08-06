@@ -17,6 +17,11 @@ from src.core.historical_memory.graph import (
     canonical_trade_id,
     canonical_transaction_id,
 )
+from src.core.historical_memory.read_model import (
+    HistoricalReadModelCache,
+    historical_graph,
+    historical_read_model_cache,
+)
 
 historical_store = HistoricalStore(HISTORY_DATABASE_FILE)
 
@@ -26,4 +31,5 @@ __all__ = [
     "HistoricalAssetGraph", "HistoricalStore", "aggregate_production",
     "canonical_event_id", "canonical_pick_id", "canonical_player_id",
     "canonical_trade_id", "canonical_transaction_id", "historical_store",
+    "HistoricalReadModelCache", "historical_graph", "historical_read_model_cache",
 ]

@@ -90,7 +90,7 @@ for the canonical page inventory, `/api/inspect/visual/pages/{page_id}/{viewport
 rendered evidence, `/api/inspect/health` for bundle readiness, and
 `/api/inspect/releases/current` for the release manifest. Supported viewports are
 `desktop`, `tablet`, and `mobile`. Artifact URLs are absolute and never expose local paths.
-# Historical Asset Graph API (v1.7.6)
+# Historical Asset Graph API (v1.7.7)
 
 Historical Asset Graph schema `1.0` exposes immutable cached history without
 provider I/O: `/api/history/assets`, asset identity/event/ownership children,
@@ -100,7 +100,7 @@ history, `/api/history/coverage`, and `/api/search`. HTML dossier routes are
 `/picks/{pick_id}`, `/trades/history/{transaction_id}`, and `/search`. See
 [HISTORICAL_ASSET_GRAPH.md](HISTORICAL_ASSET_GRAPH.md).
 
-# Brain, valuation, evidence intelligence, and calibration API (v1.7.6)
+# Brain, valuation, evidence intelligence, and calibration API (v1.7.7)
 
 The canonical intelligence contract is `/api/brain`. Asset, health, migration, and timeline resources live beneath that path. Existing `/api/valuation` resources are compatibility contracts and remain supported.
 

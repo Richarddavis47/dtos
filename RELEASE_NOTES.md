@@ -1,4 +1,16 @@
-# DTOS v1.7.6 — Historical Asset Graph & Connected Dossiers
+# DTOS v1.7.7 — Historical Asset Graph Read-Path Optimization
+
+DTOS v1.7.7 corrects the production read-path timeout discovered after v1.7.6 without changing historical outputs or synchronization behavior. A dataset-keyed read model now builds the normalized graph once per immutable history/current-identity version and reuses deterministic indexes across every historical consumer.
+
+The cache key includes league identity, historical dataset hash, historical schema, importer, graph, player-history/calculation, read-model, and current verified identity metadata. Concurrent first reads are single-flight, only complete models are published, a failed rebuild retains the prior valid model with an explicit stale diagnostic, and process memory is bounded to two dataset versions.
+
+Directory pagination occurs before dossier hydration. Player detail reads use asset, parent-transaction, player-week, season-total, trade, and pick-conversion indexes rather than reconstructing unrelated assets. Historical reads remain provider-free and never initiate Sleeper synchronization.
+
+Diagnostics expose build/load/query durations, build count, hits/misses, dataset version, asset/event counts, hydrated-record count, last successful build/error, and approximate model size through historical coverage and directory contracts.
+
+---
+
+## Previous release: v1.7.6 — Historical Asset Graph & Connected Dossiers
 
 DTOS v1.7.6 makes verified Day Traders history a connected application contract instead of an isolated report. The new Historical Asset Graph supplies stable player, pick, transaction, trade, event, and franchise identities to dossier pages, search, historical APIs, Team Headquarters, Front Office Intelligence, and the canonical Brain.
 

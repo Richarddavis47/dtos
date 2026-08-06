@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
@@ -381,6 +382,36 @@ class HistoricalStore:
                 (*values, limit, offset),
             ).fetchall()
         return count, [{**dict(row), "payload": json.loads(row["payload"])} for row in rows]
+
+    def dataset_version(self, league_id: str) -> str:
+        """Return a deterministic identity for every stored input to graph reads."""
+        with self.connection() as connection:
+            record = connection.execute(
+                """SELECT count(*), coalesce(max(id), 0),
+                coalesce(max(retrieved_at), '') FROM historical_records
+                WHERE league_id=?""",
+                (league_id,),
+            ).fetchone()
+            identities = connection.execute(
+                """SELECT count(*), coalesce(max(rowid), 0),
+                coalesce(max(valid_from), '') FROM player_identity""",
+            ).fetchone()
+            quality = connection.execute(
+                """SELECT issue_key, resolved FROM data_quality_issues
+                WHERE league_id=? ORDER BY issue_key""",
+                (league_id,),
+            ).fetchall()
+        source = json.dumps(
+            {
+                "league_id": league_id,
+                "records": tuple(record),
+                "identities": tuple(identities),
+                "quality": [tuple(row) for row in quality],
+            },
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        return hashlib.sha256(source.encode()).hexdigest()
 
     def upsert_identity(
         self, dtos_player_id: str, provider: str, provider_player_id: str,

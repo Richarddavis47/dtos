@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.7.7 - Historical Asset Graph Read-Path Optimization
+
+- Added a single-flight, dataset-versioned Historical Asset Graph cache shared by historical APIs, dossiers, search, Team Headquarters, Transactions Center, and Front Office reads.
+- Added bounded player, pick, event, transaction, trade, ownership, season-summary, and directory indexes with pagination before dossier hydration.
+- Added cache invalidation, stale-model recovery, bounded memory retention, build/query instrumentation, and production-scale performance regression coverage.
+- Preserved v1.7.6 historical schemas, ordering, provenance, missing-data disclosures, transaction rules, and provider-free read behavior.
+
 ## v1.7.6 - Historical Asset Graph & Connected Dossiers
 
 - Added a versioned, deterministic Historical Asset Graph connecting players, picks, transactions, trades, franchises, ownership intervals, and season summaries.

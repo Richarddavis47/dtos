@@ -5,7 +5,7 @@ from typing import Any
 
 from config import LEAGUE_ID
 from src.core.intelligence import intelligence_orchestrator
-from src.core.historical_memory import HistoricalAssetGraph, historical_store
+from src.core.historical_memory import historical_graph, historical_store
 
 
 def build_front_office_center(data: dict[str, Any], roster_id: int | None = None) -> dict[str, Any]:
@@ -17,7 +17,7 @@ def build_front_office_center(data: dict[str, Any], roster_id: int | None = None
     intelligence = intelligence_orchestrator.analyze(data, selected)
     model = intelligence.front_office_model
     reports = model.reports
-    graph = HistoricalAssetGraph(historical_store, LEAGUE_ID, data)
+    graph = historical_graph(historical_store, LEAGUE_ID, data)
     histories = {str(selected): graph.franchise_history(str(selected))}
     return {
         "active": reports[selected],

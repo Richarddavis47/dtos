@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from src.core.historical_memory import HistoricalAssetGraph, historical_store
+from src.core.historical_memory import historical_graph, historical_store
 from src.core.historical_memory.models import HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION
 
 
@@ -21,18 +21,22 @@ def create_historical_assets_router(
 ) -> APIRouter:
     router = APIRouter(tags=["historical-assets"])
 
-    def graph() -> HistoricalAssetGraph:
-        return HistoricalAssetGraph(historical_store, league_id, require_data())
+    def graph():
+        return historical_graph(historical_store, league_id, require_data())
 
     @router.get("/api/history/assets")
     async def asset_directory(
         asset_type: str | None = None, limit: int = Query(100, ge=1, le=500),
         offset: int = Query(0, ge=0),
     ) -> JSONResponse:
-        assets = graph().asset_directory()
-        if asset_type:
-            assets = [item for item in assets if item["asset_type"] == asset_type]
-        return _response("asset_directory", len(assets), assets[offset:offset + limit], limit=limit, offset=offset)
+        model = graph()
+        count, assets = model.asset_directory_page(
+            asset_type=asset_type, limit=limit, offset=offset,
+        )
+        return _response(
+            "asset_directory", count, assets, limit=limit, offset=offset,
+            read_model=model.query_metrics(),
+        )
 
     @router.get("/api/history/assets/{asset_id}")
     async def asset_identity(asset_id: str) -> JSONResponse:

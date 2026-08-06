@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.7.6"
-BUILD_NUMBER = 1706
-RELEASE_CODENAME = "Historical Asset Graph & Connected Dossiers"
+VERSION = "1.7.7"
+BUILD_NUMBER = 1707
+RELEASE_CODENAME = "Historical Asset Graph Read-Path Optimization"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

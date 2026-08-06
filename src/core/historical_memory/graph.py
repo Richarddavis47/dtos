@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import hashlib
+import sys
+import threading
+import time
 from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import Any
@@ -67,6 +70,80 @@ class HistoricalAssetGraph:
             str(row["provider_player_id"]): row for row in self._identity_rows
         }
         self._records_cache: dict[str, list[dict[str, Any]]] = {}
+        self._index_lock = threading.RLock()
+        self._events_all: list[dict[str, Any]] | None = None
+        self._events_by_asset: dict[str, list[dict[str, Any]]] = {}
+        self._events_by_parent: dict[str, list[dict[str, Any]]] = {}
+        self._player_rows_by_id: dict[str, list[dict[str, Any]]] | None = None
+        self._player_totals_by_season: dict[int, dict[str, float]] | None = None
+        self._directory_ids: dict[str, list[str]] | None = None
+        self._trade_dossiers_cache: list[dict[str, Any]] | None = None
+        self._trade_by_id: dict[str, dict[str, Any]] = {}
+        self._transaction_archive_cache: list[dict[str, Any]] | None = None
+        self._coverage_cache: dict[str, Any] | None = None
+        self._cache_metadata: dict[str, Any] = {}
+        self._query_count = 0
+        self._records_hydrated = 0
+        self._last_query_duration_ms: float | None = None
+        self._approximate_size_bytes = 0
+
+    @property
+    def index_event_count(self) -> int:
+        return len(self._events_all or ())
+
+    @property
+    def index_asset_count(self) -> int:
+        return sum(len(values) for values in (self._directory_ids or {}).values())
+
+    @property
+    def approximate_size_bytes(self) -> int:
+        return self._approximate_size_bytes
+
+    def set_cache_metadata(self, metadata: dict[str, Any]) -> None:
+        self._cache_metadata = metadata
+
+    def prepare_indexes(self) -> None:
+        """Build immutable lookup structures exactly once for this graph."""
+        self._ensure_event_indexes()
+        self._ensure_player_indexes()
+        self._ensure_directory_ids()
+        self._approximate_size_bytes = self._estimate_index_size()
+
+    def query_metrics(self) -> dict[str, Any]:
+        return {
+            **self._cache_metadata,
+            "query_count": self._query_count,
+            "query_duration_ms": self._last_query_duration_ms,
+            "records_hydrated": self._records_hydrated,
+        }
+
+    def _record_query(self, started: float, hydrated: int) -> None:
+        self._query_count += 1
+        self._records_hydrated = hydrated
+        self._last_query_duration_ms = round(
+            (time.perf_counter() - started) * 1000, 3,
+        )
+
+    def _estimate_index_size(self) -> int:
+        seen: set[int] = set()
+
+        def size(value: Any) -> int:
+            identity = id(value)
+            if identity in seen:
+                return 0
+            seen.add(identity)
+            total = sys.getsizeof(value)
+            if isinstance(value, dict):
+                total += sum(size(key) + size(item) for key, item in value.items())
+            elif isinstance(value, (list, tuple, set)):
+                total += sum(size(item) for item in value)
+            return total
+
+        return size((
+            self._records_cache, self._events_all, self._events_by_asset,
+            self._events_by_parent, self._player_rows_by_id,
+            self._player_totals_by_season, self._directory_ids,
+        ))
 
     def _records(self, entity_type: str) -> list[dict[str, Any]]:
         if entity_type not in self._records_cache:
@@ -108,7 +185,15 @@ class HistoricalAssetGraph:
             ],
         }
 
-    def events(self, *, asset_id: str | None = None) -> list[dict[str, Any]]:
+    def _ensure_event_indexes(self) -> None:
+        if self._events_all is not None:
+            return
+        with self._index_lock:
+            if self._events_all is not None:
+                return
+            self._build_event_indexes()
+
+    def _build_event_indexes(self) -> None:
         events: list[HistoricalAssetEvent] = []
         for row in self._records("draft_pick"):
             payload = row["payload"]
@@ -188,12 +273,32 @@ class HistoricalAssetGraph:
                     "completed", to_franchise=row.get("franchise_id"),
                     suffix=f"snapshot:{player}",
                 ))
-        result = [asdict(event) for event in events if asset_id is None or event.asset_id == asset_id]
+        result = [asdict(event) for event in events]
         result.sort(key=lambda item: (
             item["season"], item["week"] or 0, item["occurred_at"] or item["observed_at"],
             0 if item.get("from_franchise_id") and not item.get("to_franchise_id") else 1,
             item["event_id"],
         ))
+        by_asset: dict[str, list[dict[str, Any]]] = {}
+        by_parent: dict[str, list[dict[str, Any]]] = {}
+        for event in result:
+            by_asset.setdefault(event["asset_id"], []).append(event)
+            if event.get("parent_id"):
+                by_parent.setdefault(str(event["parent_id"]), []).append(event)
+        self._events_by_asset = by_asset
+        self._events_by_parent = by_parent
+        self._events_all = result
+
+    def events(self, *, asset_id: str | None = None) -> list[dict[str, Any]]:
+        started = time.perf_counter()
+        self._ensure_event_indexes()
+        rows = (
+            self._events_all or []
+            if asset_id is None
+            else self._events_by_asset.get(asset_id, [])
+        )
+        result = list(rows)
+        self._record_query(started, len(result))
         return result
 
     def ownership_intervals(self, asset_id: str) -> list[dict[str, Any]]:
@@ -245,7 +350,8 @@ class HistoricalAssetGraph:
 
     def player_season_summaries(self, player_id: str) -> list[dict[str, Any]]:
         raw_id = player_id.removeprefix("DTOS-P-")
-        rows = [row for row in self._records("player_week") if str(row.get("player_id")) == raw_id]
+        self._ensure_player_indexes()
+        rows = list((self._player_rows_by_id or {}).get(raw_id, []))
         league_settings = {
             int(row["season"]): row["payload"].get("scoring_settings") or {}
             for row in self._records("league_season")
@@ -253,11 +359,6 @@ class HistoricalAssetGraph:
         by_season: dict[int, list[dict[str, Any]]] = {}
         for row in rows:
             by_season.setdefault(int(row["season"]), []).append(row)
-        totals_by_season: dict[int, list[tuple[str, float]]] = {}
-        for row in self._records("player_week"):
-            points = row["payload"].get("fantasy_points")
-            if points is not None:
-                totals_by_season.setdefault(int(row["season"]), []).append((str(row.get("player_id")), float(points)))
         summaries = []
         current_year = datetime.now(timezone.utc).year
         for season, season_rows in sorted(by_season.items()):
@@ -265,9 +366,7 @@ class HistoricalAssetGraph:
             points = round(sum(float(row["payload"]["fantasy_points"]) for row in observed), 2) if observed else None
             weeks = {int(row["week"]) for row in season_rows if row.get("week")}
             expected = set(range(1, 19))
-            player_totals: dict[str, float] = {}
-            for candidate, value in totals_by_season.get(season, []):
-                player_totals[candidate] = player_totals.get(candidate, 0.0) + value
+            player_totals = (self._player_totals_by_season or {}).get(season, {})
             ordered = sorted(player_totals.items(), key=lambda item: (-item[1], item[0]))
             rank = next((index for index, item in enumerate(ordered, 1) if item[0] == raw_id), None)
             franchises = tuple(dict.fromkeys(str(row["franchise_id"]) for row in sorted(season_rows, key=lambda item: item.get("week") or 0) if row.get("franchise_id")))
@@ -290,6 +389,29 @@ class HistoricalAssetGraph:
             )
             summaries.append(asdict(summary))
         return summaries
+
+    def _ensure_player_indexes(self) -> None:
+        if self._player_rows_by_id is not None:
+            return
+        with self._index_lock:
+            if self._player_rows_by_id is not None:
+                return
+            rows_by_player: dict[str, list[dict[str, Any]]] = {}
+            totals_by_season: dict[int, dict[str, float]] = {}
+            for row in self._records("player_week"):
+                player_id = str(row.get("player_id") or "")
+                if not player_id:
+                    continue
+                rows_by_player.setdefault(player_id, []).append(row)
+                points = row["payload"].get("fantasy_points")
+                if points is not None:
+                    season = int(row["season"])
+                    totals = totals_by_season.setdefault(season, {})
+                    totals[player_id] = totals.get(player_id, 0.0) + float(points)
+            for rows in rows_by_player.values():
+                rows.sort(key=lambda row: (int(row["season"]), row.get("week") or 0, row["source_record_id"]))
+            self._player_rows_by_id = rows_by_player
+            self._player_totals_by_season = totals_by_season
 
     def player_dossier(self, player_id: str) -> dict[str, Any]:
         canonical_id = canonical_player_id(player_id.removeprefix("DTOS-P-"))
@@ -359,12 +481,20 @@ class HistoricalAssetGraph:
         }
 
     def trade_dossiers(self) -> list[dict[str, Any]]:
+        if self._trade_dossiers_cache is not None:
+            return list(self._trade_dossiers_cache)
+        with self._index_lock:
+            if self._trade_dossiers_cache is not None:
+                return list(self._trade_dossiers_cache)
+            return self._build_trade_dossiers()
+
+    def _build_trade_dossiers(self) -> list[dict[str, Any]]:
         dossiers = []
-        events = self.events()
+        self._ensure_event_indexes()
         for row in self._records("trade"):
             payload = row["payload"]
             trade_id = canonical_trade_id(self._source_league(row), row["source_record_id"])
-            trade_events = [event for event in events if event.get("parent_id") == trade_id]
+            trade_events = list(self._events_by_parent.get(trade_id, []))
             dossiers.append({
                 "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
                 "trade_id": trade_id, "transaction_id": row["source_record_id"],
@@ -381,12 +511,21 @@ class HistoricalAssetGraph:
                 "raw_transaction": payload,
             })
         dossiers.sort(key=lambda item: (item["season"], item["week"] or 0, item["occurred_at"], item["trade_id"]), reverse=True)
-        return dossiers
+        self._trade_dossiers_cache = dossiers
+        self._trade_by_id = {
+            key: dossier
+            for dossier in dossiers
+            for key in (dossier["trade_id"], dossier["transaction_id"])
+        }
+        return list(dossiers)
 
     def trade_dossier(self, transaction_id: str) -> dict[str, Any] | None:
-        return next((item for item in self.trade_dossiers() if transaction_id in {item["transaction_id"], item["trade_id"]}), None)
+        self.trade_dossiers()
+        return self._trade_by_id.get(transaction_id)
 
     def transaction_archive(self) -> list[dict[str, Any]]:
+        if self._transaction_archive_cache is not None:
+            return list(self._transaction_archive_cache)
         rows = [*self._records("transaction"), *self._records("trade")]
         result = []
         for row in rows:
@@ -407,7 +546,8 @@ class HistoricalAssetGraph:
                 "source": self._source(row), "raw": payload,
             })
         result.sort(key=lambda item: (item["season"], item["week"] or 0, item["occurred_at"], item["transaction_id"]), reverse=True)
-        return result
+        self._transaction_archive_cache = result
+        return list(result)
 
     def franchise_history(self, roster_id: str) -> dict[str, Any]:
         target = franchise_id(self.league_id, roster_id)
@@ -475,29 +615,82 @@ class HistoricalAssetGraph:
                 }
         return list(results.values())[:limit]
 
-    def asset_directory(self) -> list[dict[str, Any]]:
-        players = [
-            {
-                **identity,
-                "canonical_url": f"/players/{identity['sleeper_player_id']}",
-                "historical_availability": "available",
+    def _ensure_directory_ids(self) -> None:
+        if self._directory_ids is not None:
+            return
+        with self._index_lock:
+            if self._directory_ids is not None:
+                return
+            self._ensure_player_indexes()
+            player_ids = set((self.current_data.get("players") or {}))
+            player_ids.update((self._player_rows_by_id or {}))
+            player_ids.update(
+                str(row.get("player_id"))
+                for row in self._records("draft_pick") if row.get("player_id")
+            )
+            self._ensure_event_indexes()
+            pick_ids = {
+                asset_id for asset_id, events in self._events_by_asset.items()
+                if events and events[0]["asset_type"] == "pick"
             }
-            for identity in self._all_player_identities()
+            self._directory_ids = {
+                "player": sorted(str(value) for value in player_ids),
+                "pick": sorted(pick_ids),
+            }
+
+    def asset_directory_page(
+        self, *, asset_type: str | None = None, limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[int, list[dict[str, Any]]]:
+        started = time.perf_counter()
+        self._ensure_directory_ids()
+        kinds = (
+            (asset_type,) if asset_type in {"player", "pick"}
+            else () if asset_type
+            else ("player", "pick")
+        )
+        references = [
+            (kind, value)
+            for kind in kinds
+            for value in (self._directory_ids or {}).get(kind, [])
         ]
-        picks = []
-        for pick_id in sorted({event["asset_id"] for event in self.events() if event["asset_type"] == "pick"}):
-            dossier = self.pick_dossier(pick_id) or {}
-            picks.append({
+        selected = references[offset:offset + limit]
+        records = []
+        for kind, value in selected:
+            if kind == "player":
+                identity = self.player_identity(value)
+                records.append({
+                    **identity,
+                    "canonical_url": f"/players/{identity['sleeper_player_id']}",
+                    "historical_availability": "available",
+                })
+                continue
+            events = self._events_by_asset.get(value, [])
+            owners = [
+                event["to_franchise_id"] for event in events
+                if event.get("to_franchise_id")
+                and event["event_status"].casefold() in COMPLETED_STATUSES
+            ]
+            records.append({
                 "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
-                "canonical_id": pick_id, "asset_type": "pick",
-                "display_label": pick_id, "resolution_status": "resolved",
-                "canonical_url": f"/picks/{pick_id}",
+                "canonical_id": value, "asset_type": "pick",
+                "display_label": value, "resolution_status": "resolved",
+                "canonical_url": f"/picks/{value}",
                 "historical_availability": "available",
-                "current_owner": dossier.get("current_owner"),
+                "current_owner": owners[-1] if owners else None,
             })
-        return [*players, *picks]
+        self._record_query(started, len(records))
+        return len(references), records
+
+    def asset_directory(self) -> list[dict[str, Any]]:
+        total, records = self.asset_directory_page(limit=max(self.index_asset_count, 1))
+        if len(records) < total:
+            _, records = self.asset_directory_page(limit=total)
+        return records
 
     def coverage(self) -> dict[str, Any]:
+        if self._coverage_cache is not None:
+            return {**self._coverage_cache, "read_model": self.query_metrics()}
         entity_types = (
             "league_season", "franchise_identity", "season_standing", "weekly_roster",
             "matchup", "player_week", "transaction", "trade", "draft", "draft_pick",
@@ -516,7 +709,7 @@ class HistoricalAssetGraph:
         unresolved = [row for row in self._all_player_identities() if row["resolution_status"] == "unresolved"]
         quality = self.store.quality(self.league_id)
         latest = self.store.latest_completed_foundation(self.league_id)
-        return {
+        self._coverage_cache = {
             "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
             "historical_schema_version": HISTORICAL_SCHEMA_VERSION,
             "player_history_schema_version": PLAYER_HISTORY_SCHEMA_VERSION,
@@ -532,6 +725,7 @@ class HistoricalAssetGraph:
             "source_hashes_available": True,
             "status": "complete" if seasons and duplicate_event_ids == 0 else "incomplete",
         }
+        return {**self._coverage_cache, "read_model": self.query_metrics()}
 
     def _event(
         self, row: dict[str, Any], asset_id: str, asset_type: str,
