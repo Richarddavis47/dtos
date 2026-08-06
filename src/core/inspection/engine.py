@@ -17,7 +17,8 @@ from src.core.inspection.models import (
 from src.core.team_identity import team_name_for
 
 NAVIGATION = (
-    InspectionLink("Commissioner Desk", "/", "navigation"),
+    InspectionLink("Asset Market", "/market", "navigation"),
+    InspectionLink("Commissioner Desk", "/commissioner", "navigation"),
     InspectionLink("Teams", "/teams", "navigation"),
     InspectionLink("Front Offices", "/front-offices", "navigation"),
     InspectionLink("Trade Intelligence", "/trades", "navigation"),
@@ -454,6 +455,7 @@ class InspectionEngine:
     def _page_catalog() -> tuple[dict[str, str], ...]:
         return (
             {"key": "pages", "page_name": "Inspectable Pages", "page_route": "multiple", "inspection_route": "/api/inspect/pages", "scope": "catalog"},
+            {"key": "market", "page_name": "Asset Market", "page_route": "/market", "inspection_route": "/api/inspect/market", "scope": "league"},
             {"key": "team", "page_name": "Team Headquarters", "page_route": "/teams/{roster_id}", "inspection_route": "/api/inspect/team/{roster_id}", "scope": "team"},
             {"key": "player", "page_name": "Player Dossier", "page_route": "/players/{player_id}", "inspection_route": "/api/inspect/player/{player_id}", "scope": "player"},
             {"key": "front_office", "page_name": "Front Office Intelligence", "page_route": "/front-offices", "inspection_route": "/api/inspect/front-office/{roster_id}", "scope": "front_office"},

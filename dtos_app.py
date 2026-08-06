@@ -25,6 +25,7 @@ from routes.history import create_history_router
 from routes.historical_assets import create_historical_assets_router
 from routes.inspect import create_inspection_router
 from routes.matchups import create_matchups_router
+from routes.market import create_market_router
 from routes.settings import create_settings_router
 from routes.teams import create_teams_router
 from routes.trades import create_trades_router
@@ -200,7 +201,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     error_html = f'<div class="error"><b>Sync error:</b> {escape(error)}</div>' if error else ""
     league_name = str(((STATE.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
     standard_chrome = f"""<header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync"><button class="btn" type="submit">Sync League</button></form></header>
-<nav class="nav" aria-label="Primary navigation"><a href="/">Home</a><a href="/teams">Team HQ</a><a href="/trades">Trade Center</a><a href="/matchups">Matchups</a><a href="/transactions">Transactions</a><a href="/picks">Draft Capital</a><a href="/history">History</a><a href="/search">Search</a><a href="/front-offices">Front Office</a><a href="/brain">Brain</a><a href="/valuation/calibration">Calibration</a><a href="/settings">Settings</a></nav>{page_header(title, league_name=league_name, last_updated=str(sync))}"""
+<nav class="nav" aria-label="Primary navigation"><a href="/market">Market</a><a href="/commissioner">Commissioner</a><a href="/teams">Team HQ</a><a href="/trades">Trade Center</a><a href="/matchups">Matchups</a><a href="/transactions">Transactions</a><a href="/picks">Draft Capital</a><a href="/history">History</a><a href="/search">Search</a><a href="/front-offices">Front Office</a><a href="/brain">Brain</a><a href="/valuation/calibration">Calibration</a><a href="/settings">Settings</a></nav>{page_header(title, league_name=league_name, last_updated=str(sync))}"""
     footer = f'<footer class="footer"><b>League Sync:</b> {escape(str(sync))} · Intelligence is generated from the latest cached league state. Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'
     html = f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style></head>
 <body><main class="wrap">{"" if commissioner_chrome else standard_chrome}{error_html}{body}{"" if commissioner_chrome else footer}</main></body></html>"""
@@ -289,6 +290,15 @@ app.include_router(
     create_matchups_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
+        page=page,
+    )
+)
+
+app.include_router(
+    create_market_router(
+        require_data=require_data,
+        state=STATE,
+        league_id=LEAGUE_ID,
         page=page,
     )
 )

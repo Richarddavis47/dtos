@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Asset Market & Dynasty Exchange - DTOS v1.8.0
+
+- Make the Asset Market the primary DTOS destination without removing Commissioner workflows.
+- Unite canonical assets, distinct valuation layers, Brain guidance, ownership, and durable history through one provider-free read contract.
+- Keep rankings deterministic, detail hydration on demand, cache lifetime bounded, and unavailable evidence explicit.
+
 ### Canonical Trade History Discovery - DTOS v1.7.14
 
 - Generate inspectable historical trade routes only from completed durable Historical Memory records.

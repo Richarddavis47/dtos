@@ -15,6 +15,7 @@ CONSUMERS = (
     "Decision Engine", "Team Intelligence", "Championship Odds", "Playoff Odds",
     "Power Rankings", "Roster Intelligence", "League Intelligence", "Asset Intelligence",
     "Player Dossier",
+    "Asset Market",
 )
 
 

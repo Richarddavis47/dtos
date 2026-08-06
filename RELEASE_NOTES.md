@@ -1,3 +1,13 @@
+# DTOS v1.8.0 — Asset Market & Dynasty Exchange
+
+DTOS v1.8.0 introduces the Asset Market as the application’s primary destination. Players, free agents, retired players present in durable history, rookies, taxi assets, and owned draft picks are discoverable through one deterministic market contract. The Commissioner Desk remains available at `/commissioner`.
+
+The market preserves distinct market, intrinsic, league-adjusted, contender, and rebuilder layers. It consumes existing Valuation Universe and Brain contracts instead of recalculating intelligence in routes. Missing evidence remains unavailable and is never silently replaced. Canonical Brain recommendations expose confidence, snapshot identity, evidence, and reasoning.
+
+The read model is versioned, bounded, single-flight, and provider-sync-free. Directory pagination occurs before historical dossier hydration; player and pick history is loaded only for selected assets. Market health and DINS inspection expose dataset identity, cache state, build timing, duplicate identity checks, and read-path guarantees.
+
+---
+
 # DTOS v1.7.14 — Canonical Trade History Discovery
 
 DTOS v1.7.14 makes Historical Trade Dossier discovery use the same durable Historical Memory dataset and completed-status contract as its detail routes. DINS no longer advertises current cached Sleeper transactions as historical dossiers when canonical historical evidence is absent.
