@@ -1,4 +1,14 @@
-# DTOS v1.7.8 — Historical Import & Read-Model Lifecycle Stability
+# DTOS v1.7.9 — Historical Import Memory Stability
+
+DTOS v1.7.9 corrects the confirmed Render OOM mechanism without changing historical contracts. Coverage statistics are calculated directly from indexed SQLite records, asset details hydrate only their relevant source rows, and global graph hydration is blocked while an import owns the write lease.
+
+The importer fetches and persists one week at a time instead of retaining a season of raw Sleeper responses. Production-scale concurrency validation uses the retained 200 MB historical database and enforces a hard 450 MiB RSS ceiling with a target below 400 MiB.
+
+Historical outputs, ordering, provenance, unresolved identities, leases, checkpoints, and provider-free read behavior remain unchanged.
+
+---
+
+## Previous release: v1.7.8 — Historical Import & Read-Model Lifecycle Stability
 
 DTOS v1.7.8 stabilizes the production lifecycle discovered during v1.7.7 verification. Historical graph objects now start lightweight and construct only the route-specific indexes needed by asset, player, or coverage reads. Player directories use indexed identities without loading every weekly payload, player dossiers load only the requested player's weekly records, and coverage counts are aggregated directly in SQLite.
 

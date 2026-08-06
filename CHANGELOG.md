@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.7.9 - Historical Import Memory Stability
+
+- Replaced coverage event hydration with compact indexed SQLite aggregation and lazy identity resolution.
+- Added asset-specific player, pick, trade, franchise, and search reads that remain available during an active import without constructing the global graph.
+- Bounded Sleeper weekly retrieval to one week at a time and released normalized provider payloads after each persistence batch.
+- Added a retained-dataset 512 MB concurrency benchmark covering import, coverage, player, directory, and post-import read workloads.
+
 ## v1.7.8 - Historical Import & Read-Model Lifecycle Stability
 
 - Replaced eager full-history graph hydration with lazy, route-specific indexes and compact SQLite coverage aggregation.

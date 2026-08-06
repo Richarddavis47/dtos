@@ -156,8 +156,18 @@ class HistoricalAssetGraphTests(unittest.TestCase):
         self.assertEqual(len(events), len({event["event_id"] for event in events}))
         self.assertTrue(all(event["source_record_id"] for event in events))
         coverage = graph.coverage()
+        self.assertEqual(coverage["asset_event_count"], len(events))
         self.assertEqual(coverage["duplicate_event_ids"], 0)
         self.assertTrue(coverage["source_hashes_available"])
+
+    def test_asset_specific_event_output_matches_full_graph_output(self) -> None:
+        full_graph = self.graph()
+        full_events = [
+            event for event in full_graph.events()
+            if event["asset_id"] == "DTOS-P-p1"
+        ]
+        targeted_events = self.graph().events(asset_id="DTOS-P-p1")
+        self.assertEqual(targeted_events, full_events)
 
     def test_api_and_ui_share_canonical_ids_and_cross_links(self) -> None:
         app = FastAPI()

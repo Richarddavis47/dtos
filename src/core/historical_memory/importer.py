@@ -401,17 +401,11 @@ class HistoricalImporter:
                 }, player_id=str(pick.get("player_id") or "") or None)
             await flush("draft")
 
-        weekly_payloads = await asyncio.gather(*(
-            request
-            for week in range(1, max_week + 1)
-            for request in (
+        for week in range(1, max_week + 1):
+            matchups, transactions = await asyncio.gather(
                 self._fetch(f"/league/{source_league_id}/matchups/{week}"),
                 self._fetch(f"/league/{source_league_id}/transactions/{week}"),
             )
-        ))
-        for week in range(1, max_week + 1):
-            matchups = weekly_payloads[(week - 1) * 2]
-            transactions = weekly_payloads[(week - 1) * 2 + 1]
             if not matchups and not transactions:
                 continue
             append("league_week", str(week), {
@@ -477,6 +471,9 @@ class HistoricalImporter:
                     "trade_time_value_availability": "unavailable unless a contemporaneous valuation snapshot exists",
                 }, week=week, observed_at=_timestamp(transaction.get("created")) or retrieved)
             await flush(f"week_{week}")
+            # Do not retain raw provider responses after their bounded batch has
+            # been normalized and persisted.
+            del matchups, transactions, matchup_groups
 
         await asyncio.to_thread(
             self._quality_checks, run_id, root_league_id, season,

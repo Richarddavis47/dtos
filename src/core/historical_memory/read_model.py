@@ -18,7 +18,7 @@ from src.core.historical_memory.models import (
 )
 from src.core.historical_memory.store import HistoricalStore
 
-READ_MODEL_VERSION = "1.0"
+READ_MODEL_VERSION = "1.1"
 MAX_CACHE_ENTRIES = 1
 
 

@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Historical Import Memory Stability - DTOS v1.7.9
+
+- Keep historical coverage and detail reads responsive during a clean import.
+- Bound importer and read-model peak RSS below the production memory ceiling.
+- Preserve provider-free deterministic historical contracts and recovery state.
+
 ### Historical Import & Read-Model Lifecycle Stability - DTOS v1.7.8
 
 - Bound historical graph materialization to the indexes required by each read.
