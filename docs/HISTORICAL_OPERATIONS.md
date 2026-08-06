@@ -1,8 +1,19 @@
 # Historical Import Operations
 
 DTOS v1.5.1 stores import jobs, granular checkpoints, and leases in the same SQLite
-database as historical evidence. Production must set `DTOS_HISTORY_DB_FILE` to a
-durable Render disk path; temporary storage cannot survive redeployment.
+database as historical evidence. Production must set
+`DTOS_DURABLE_HISTORY_REQUIRED=true`,
+`DTOS_HISTORY_STORAGE_ROOT=/var/data/dtos`, and
+`DTOS_HISTORY_DB_FILE=/var/data/dtos/dtos_history.sqlite3`. The application
+requires the root to be a real mounted filesystem, requires the database to be
+contained beneath it, probes write access safely, and returns not-ready with a
+specific reason rather than creating an ephemeral substitute.
+
+The SQLite database durably contains records, jobs, checkpoints, leases,
+heartbeats, quality issues, and reconciliation inputs. The adjacent
+`historical_read_model_manifest.json` records read-model and dataset identity;
+hydrated graphs remain bounded in memory. Sleeper caches, source, logs, and
+temporary provider payloads must remain outside this directory.
 
 ## First-run persistence
 

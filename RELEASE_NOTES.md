@@ -1,3 +1,13 @@
+# DTOS v1.7.10 — Durable Historical Storage
+
+DTOS v1.7.10 makes Historical League Memory restart-safe on a single Render instance. Production now requires an explicitly mounted and writable durable-storage root; the historical database must resolve beneath that root, and startup readiness fails with a clear reason instead of creating an ephemeral substitute.
+
+The SQLite database remains the canonical durable home for immutable records, import jobs, checkpoints, leases, heartbeats, data-quality issues, reconciliation evidence, and dataset-version inputs. First-time initialization is built beside the target and atomically installed without replacing an existing database. WAL journaling, full synchronous durability, foreign keys, and a bounded busy timeout support the single-instance deployment contract.
+
+Historical graphs remain bounded process-local objects to avoid persisting large hydrated payloads. A small, atomic read-model manifest on the durable disk records the cache identity, dataset version, schema version, and successful generation timestamp so restarts retain deterministic rebuild provenance. Temporary Sleeper caches, provider payloads, source files, and logs remain outside the persistent disk.
+
+---
+
 # DTOS v1.7.9 — Historical Import Memory Stability
 
 DTOS v1.7.9 corrects the confirmed Render OOM mechanism without changing historical contracts. Coverage statistics are calculated directly from indexed SQLite records, asset details hydrate only their relevant source rows, and global graph hydration is blocked while an import owns the write lease.

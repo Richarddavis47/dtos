@@ -23,6 +23,18 @@ def _number(name: str, default: float, minimum: float) -> float:
         raise ValueError(f"{name} must be numeric, received {raw!r}.") from exc
 
 
+def _boolean(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    normalized = raw.strip().casefold()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise ValueError(f"{name} must be a boolean, received {raw!r}.")
+
+
 @dataclass(frozen=True)
 class Settings:
     league_id: str
@@ -36,6 +48,8 @@ class Settings:
     market_cache_ttl: float
     data_warehouse_file: Path
     history_database_file: Path
+    history_storage_root: Path
+    durable_history_required: bool
     background_start_delay: float
 
     @classmethod
@@ -58,6 +72,11 @@ class Settings:
             market_cache_ttl=_number("DTOS_MARKET_CACHE_TTL", 3600, 0),
             data_warehouse_file=Path(os.getenv("DTOS_DATA_WAREHOUSE_FILE", str(Path(gettempdir()) / "dtos_data_history.json"))),
             history_database_file=Path(os.getenv("DTOS_HISTORY_DB_FILE", str(Path(gettempdir()) / "dtos_history.sqlite3"))),
+            history_storage_root=Path(os.getenv("DTOS_HISTORY_STORAGE_ROOT", "/var/data/dtos")),
+            durable_history_required=_boolean(
+                "DTOS_DURABLE_HISTORY_REQUIRED",
+                default=bool(os.getenv("RENDER")),
+            ),
             background_start_delay=_number(
                 "DTOS_BACKGROUND_START_DELAY",
                 30,
@@ -78,4 +97,6 @@ INTELLIGENCE_CACHE_TTL = SETTINGS.intelligence_cache_ttl
 MARKET_CACHE_TTL = SETTINGS.market_cache_ttl
 DATA_WAREHOUSE_FILE = SETTINGS.data_warehouse_file
 HISTORY_DATABASE_FILE = SETTINGS.history_database_file
+HISTORY_STORAGE_ROOT = SETTINGS.history_storage_root
+DURABLE_HISTORY_REQUIRED = SETTINGS.durable_history_required
 BACKGROUND_START_DELAY = SETTINGS.background_start_delay

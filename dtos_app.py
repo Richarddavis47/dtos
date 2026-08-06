@@ -46,6 +46,7 @@ from src.platform.observability import (
     mark_startup_complete,
     runtime_metrics,
 )
+from src.core.historical_memory import historical_storage_status
 from src.ui import DESIGN_SYSTEM_CSS, page_header
 
 _PROCESS_STARTED = perf_counter()
@@ -66,6 +67,11 @@ async def background_sync() -> None:
 
 async def deployment_maintenance() -> None:
     """Start required data promptly and defer optional cached maintenance."""
+    if not historical_storage_status.healthy:
+        runtime_metrics.mark_not_ready(historical_storage_status.reason)
+        runtime_metrics.mark_background("historical_storage", "failed")
+        return
+    runtime_metrics.mark_background("historical_storage", "ready")
     if STATE.get("data"):
         runtime_metrics.mark_ready("Cached league data loaded.")
         runtime_metrics.mark_background("deployment_delay", "waiting")
@@ -96,6 +102,11 @@ async def deployment_maintenance() -> None:
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     runtime_metrics.mark_not_ready("Loading cached league data.")
+    if not historical_storage_status.healthy:
+        runtime_metrics.mark_not_ready(historical_storage_status.reason)
+        mark_startup_complete(_PROCESS_STARTED)
+        yield
+        return
     load_cache()
     mark_startup_complete(_PROCESS_STARTED)
     if STATE.get("data"):

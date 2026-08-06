@@ -5,6 +5,7 @@ import hashlib
 import json
 import threading
 import time
+from pathlib import Path
 from collections import OrderedDict
 from datetime import datetime, timezone
 from typing import Any
@@ -113,8 +114,30 @@ class HistoricalReadModelCache:
             self._entries[key] = graph
             while len(self._entries) > self.max_entries:
                 self._entries.popitem(last=False)
+            self._persist_manifest(store, key, dataset_version)
             graph.set_cache_metadata(self.metadata(dataset_version))
             return graph
+
+    def _persist_manifest(
+        self, store: HistoricalStore, key: str, dataset_version: str,
+    ) -> None:
+        """Atomically persist the rebuild identity, never the hydrated graph."""
+        target = store.path.parent / "historical_read_model_manifest.json"
+        temporary = Path(f"{target}.{threading.get_ident()}.tmp")
+        payload = {
+            "schema_version": READ_MODEL_VERSION,
+            "cache_key": key,
+            "dataset_version": dataset_version,
+            "generated_at": self._last_successful_build,
+        }
+        try:
+            temporary.write_text(
+                json.dumps(payload, sort_keys=True, separators=(",", ":")),
+                encoding="utf-8",
+            )
+            temporary.replace(target)
+        finally:
+            temporary.unlink(missing_ok=True)
 
     def metadata(self, dataset_version: str | None = None) -> dict[str, Any]:
         graph = self._entries.get(self._active_key or "")

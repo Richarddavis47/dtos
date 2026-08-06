@@ -1,5 +1,9 @@
 """Historical League Memory and Player Performance Intelligence."""
-from config import HISTORY_DATABASE_FILE
+from config import (
+    DURABLE_HISTORY_REQUIRED,
+    HISTORY_DATABASE_FILE,
+    HISTORY_STORAGE_ROOT,
+)
 from src.core.historical_memory.aggregation import aggregate_production
 from src.core.historical_memory.models import (
     DATABASE_MIGRATION_VERSION,
@@ -9,6 +13,7 @@ from src.core.historical_memory.models import (
     Availability,
 )
 from src.core.historical_memory.store import HistoricalStore
+from src.core.historical_memory.storage import validate_historical_storage
 from src.core.historical_memory.graph import (
     HistoricalAssetGraph,
     canonical_event_id,
@@ -23,7 +28,15 @@ from src.core.historical_memory.read_model import (
     historical_read_model_cache,
 )
 
-historical_store = HistoricalStore(HISTORY_DATABASE_FILE)
+historical_storage_status = validate_historical_storage(
+    database=HISTORY_DATABASE_FILE,
+    root=HISTORY_STORAGE_ROOT,
+    required=DURABLE_HISTORY_REQUIRED,
+)
+historical_store = HistoricalStore(
+    HISTORY_DATABASE_FILE,
+    initialize=historical_storage_status.healthy,
+)
 
 __all__ = [
     "Availability", "DATABASE_MIGRATION_VERSION", "HISTORICAL_SCHEMA_VERSION",
@@ -32,4 +45,5 @@ __all__ = [
     "canonical_event_id", "canonical_pick_id", "canonical_player_id",
     "canonical_trade_id", "canonical_transaction_id", "historical_store",
     "HistoricalReadModelCache", "historical_graph", "historical_read_model_cache",
+    "historical_storage_status",
 ]

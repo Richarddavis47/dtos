@@ -12,6 +12,7 @@ from services.asset_intelligence import player_asset_index
 from src.core.data_platform import data_platform
 from src.core.intelligence import intelligence_orchestrator
 from src.platform.observability import environment_summary, runtime_metrics
+from src.core.historical_memory import historical_storage_status
 
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -60,6 +61,7 @@ def create_api_router(
                 "deployment": deployment_metadata(),
                 "reason": runtime_metrics.readiness_reason,
                 "runtime": runtime_metrics.health(),
+                "historical_storage": historical_storage_status.public(),
             },
             status_code=status_code,
         )

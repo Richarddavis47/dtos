@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import hashlib
 import sqlite3
+import os
 from contextlib import contextmanager
 from pathlib import Path
 from threading import RLock
@@ -137,19 +138,48 @@ CREATE TABLE IF NOT EXISTS import_locks (
 
 
 class HistoricalStore:
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, *, initialize: bool = True) -> None:
         self.path = path
         self._lock = RLock()
+        self.initialization_error: str | None = None
+        if not initialize:
+            self.initialization_error = "Historical storage validation failed."
+            return
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        if not self.path.exists():
+            self._initialize_atomically()
         self.migrate()
+
+    def _initialize_atomically(self) -> None:
+        temporary = self.path.with_name(f".{self.path.name}.{os.getpid()}.tmp")
+        try:
+            connection = sqlite3.connect(temporary, timeout=30)
+            try:
+                connection.executescript(SCHEMA)
+                connection.executemany(
+                    "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, datetime('now'))",
+                    ((version,) for version in range(1, DATABASE_MIGRATION_VERSION + 1)),
+                )
+                connection.commit()
+            finally:
+                connection.close()
+            if self.path.exists():
+                return
+            os.replace(temporary, self.path)
+        finally:
+            temporary.unlink(missing_ok=True)
 
     @contextmanager
     def connection(self) -> Iterator[sqlite3.Connection]:
+        if self.initialization_error:
+            raise RuntimeError(self.initialization_error)
         connection = sqlite3.connect(self.path, timeout=30)
         connection.row_factory = sqlite3.Row
         try:
             connection.execute("PRAGMA foreign_keys=ON")
             connection.execute("PRAGMA journal_mode=WAL")
+            connection.execute("PRAGMA synchronous=FULL")
+            connection.execute("PRAGMA busy_timeout=30000")
             yield connection
             connection.commit()
         finally:

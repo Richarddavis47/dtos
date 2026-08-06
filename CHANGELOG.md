@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.7.10 - Durable Historical Storage
+
+- Added a strict production storage boundary that validates the Render disk mount, path containment, and writable state without silently creating an ephemeral fallback.
+- Added atomic first-time SQLite initialization and durable single-instance journaling settings while preserving existing databases, checkpoints, leases, reconciliation state, and historical records.
+- Added a versioned durable Historical Asset Graph read-model manifest and explicit storage health in readiness responses.
+- Kept temporary league caches, source, logs, and unrelated application state outside the persistent disk.
+
 ## v1.7.9 - Historical Import Memory Stability
 
 - Replaced coverage event hydration with compact indexed SQLite aggregation and lazy identity resolution.
