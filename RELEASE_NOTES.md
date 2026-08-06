@@ -1,3 +1,13 @@
+# DTOS v1.7.12 — Historical Enrichment Progress Contract
+
+DTOS v1.7.12 separates bounded-batch telemetry from season-level enrichment progress. Batch sequence and counts remain in durable batch records; `completed_steps` is derived only from distinct completed player-week season checkpoints and can never exceed the requested season count.
+
+Migration version 5 safely repairs inconsistent persisted job metadata, including the v1.7.11 `78/6` state, and records the prior value, repaired value, derivation, and season classification. The repair is idempotent and does not modify immutable evidence, record keys, provenance, leases, or batch rows.
+
+Import diagnostics now expose completed, pending, and failed seasons with an explicit consistency flag. Foundation imports retain their established category-level progress semantics.
+
+---
+
 # DTOS v1.7.11 — Historical Enrichment Batch Persistence
 
 DTOS v1.7.11 makes historical player enrichment durable and efficient on the persistent Render volume. Nflverse weekly data is consumed as bounded batches, while each batch atomically persists raw evidence, derived fantasy scoring, durable progress, and lease renewal.

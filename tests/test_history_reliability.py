@@ -60,6 +60,45 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
     def tearDown(self) -> None:
         self.temp.cleanup()
 
+    def enrichment_job(self, seasons: tuple[int, ...]) -> ImportJob:
+        job = ImportJob(
+            self.store, "L", seasons, ("player_week",),
+            requested_by="test", provider="nflverse",
+        )
+        job.create()
+        self.assertTrue(job.acquire())
+        return job
+
+    def enrichment_checkpoint(
+        self, job: ImportJob, season: int, status: str = "completed",
+    ) -> None:
+        self.store.checkpoint(
+            checkpoint_key=f"L:{season}:player_week:nflverse:1.2",
+            job_id=job.job_id, league_id="L", season=season, week=None,
+            data_type="player_week", provider="nflverse",
+            importer_version="1.2", status=status,
+            completed_at=utcnow().isoformat(),
+        )
+
+    def commit_empty_enrichment_batch(
+        self, job: ImportJob, season: int, sequence: int,
+    ) -> dict[str, int]:
+        now = utcnow()
+        return self.store.commit_enrichment_batch(
+            raw_records=[], derived_records=[],
+            progress={
+                "batch_key": f"L:{season}:nflverse:{sequence}:1.2",
+                "job_id": job.job_id, "lease_owner": job.worker_identity,
+                "league_id": "L", "season": season, "week": 1,
+                "provider": "nflverse", "batch_sequence": sequence,
+                "raw_records_received": 0,
+                "batch_started_at": now.isoformat(),
+                "batch_completed_at": now.isoformat(),
+                "last_durable_event_identity": None,
+            },
+            lease_expires_at=(now + timedelta(minutes=15)).isoformat(),
+        )
+
     async def test_transient_failure_retries_and_permanent_does_not(self) -> None:
         transient = AsyncMock(side_effect=[httpx.ConnectError("dns"), {"ok": True}])
         result, retries = await with_retry(
@@ -164,6 +203,122 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
         ) as connection:
             self.assertEqual(self.store.append_many(records), (0, 100))
             self.assertEqual(connection.call_count, 1)
+
+    def test_batch_sequence_never_advances_season_progress(self) -> None:
+        job = self.enrichment_job((2021, 2022))
+        self.commit_empty_enrichment_batch(job, 2021, 78)
+        stored = self.store.jobs("L")[0]
+        self.assertEqual((stored["completed_steps"], stored["total_steps"]), (0, 2))
+        self.assertEqual(self.store.enrichment_batches("L")[0]["batch_sequence"], 78)
+
+    def test_completed_season_advances_once_and_replay_does_not_advance(self) -> None:
+        job = self.enrichment_job((2021, 2022))
+        self.enrichment_checkpoint(job, 2021)
+        self.enrichment_checkpoint(job, 2021)
+        self.commit_empty_enrichment_batch(job, 2021, 1)
+        self.commit_empty_enrichment_batch(job, 2021, 1)
+        stored = self.store.jobs("L")[0]
+        self.assertEqual((stored["completed_steps"], stored["total_steps"]), (1, 2))
+
+    def test_six_seasons_never_exceed_six_completed_steps(self) -> None:
+        seasons = tuple(range(2021, 2027))
+        job = self.enrichment_job(seasons)
+        for season in seasons:
+            self.enrichment_checkpoint(job, season)
+        stored = self.store.jobs("L")[0]
+        self.assertEqual((stored["completed_steps"], stored["total_steps"]), (6, 6))
+        with self.assertRaisesRegex(ValueError, "completed_steps"):
+            self.store.update_job(job.job_id, completed_steps=7)
+
+    def test_partial_and_pending_progress_is_checkpoint_derived(self) -> None:
+        job = self.enrichment_job((2021, 2022, 2023))
+        self.enrichment_checkpoint(job, 2021)
+        self.enrichment_checkpoint(job, 2022, "pending")
+        progress = self.store.enrichment_job_progress(job.job_id)
+        self.assertEqual(progress["completed_steps"], 1)
+        self.assertEqual(progress["total_steps"], 3)
+        self.assertEqual(progress["completed_seasons"], [2021])
+        self.assertEqual(progress["pending_seasons"], [2022])
+        self.assertTrue(progress["consistent"])
+
+    def test_invalid_persisted_progress_repairs_idempotently_without_evidence_changes(self) -> None:
+        job = self.enrichment_job(tuple(range(2021, 2027)))
+        for season in range(2021, 2026):
+            self.enrichment_checkpoint(job, season)
+        self.commit_empty_enrichment_batch(job, 2021, 1)
+        with self.store.connection() as connection:
+            connection.execute(
+                "UPDATE import_jobs SET completed_steps=78 WHERE job_id=?",
+                (job.job_id,),
+            )
+        before_count, _ = self.store.records("L", "player_raw_week")
+        before_batches = self.store.enrichment_batches("L")
+        reopened = HistoricalStore(self.store.path)
+        repaired = reopened.jobs("L")[0]
+        self.assertEqual((repaired["completed_steps"], repaired["total_steps"]), (5, 6))
+        self.assertEqual(len(reopened.progress_repairs()), 1)
+        self.assertEqual(reopened.progress_repairs()[0]["previous_completed_steps"], 78)
+        self.assertEqual(reopened.progress_repairs()[0]["details"]["pending_seasons"], [])
+        self.assertEqual(reopened.records("L", "player_raw_week")[0], before_count)
+        self.assertEqual(reopened.enrichment_batches("L"), before_batches)
+        reopened_again = HistoricalStore(self.store.path)
+        self.assertEqual(len(reopened_again.progress_repairs()), 1)
+        self.assertEqual(reopened_again.jobs("L")[0]["completed_steps"], 5)
+
+    def test_pending_season_remains_pending_during_progress_repair(self) -> None:
+        job = self.enrichment_job((2021, 2022))
+        self.enrichment_checkpoint(job, 2021)
+        self.enrichment_checkpoint(job, 2022, "pending")
+        with self.store.connection() as connection:
+            connection.execute(
+                "UPDATE import_jobs SET completed_steps=78 WHERE job_id=?",
+                (job.job_id,),
+            )
+        reopened = HistoricalStore(self.store.path)
+        progress = reopened.enrichment_job_progress(job.job_id)
+        self.assertEqual(progress["completed_steps"], 1)
+        self.assertEqual(progress["pending_seasons"], [2022])
+
+    def test_completion_status_rejects_contradictory_counters(self) -> None:
+        job = self.enrichment_job((2021, 2022))
+        self.enrichment_checkpoint(job, 2021)
+        with self.assertRaisesRegex(ValueError, "consistent progress"):
+            self.store.update_job(job.job_id, status="completed")
+
+        foundation = ImportJob(
+            self.store, "foundation", (2021, 2022),
+            ("league_season", "matchup"), requested_by="test",
+        )
+        foundation.create()
+        self.store.update_job(
+            foundation.job_id, completed_steps=2, status="completed",
+        )
+        self.assertEqual(self.store.jobs("foundation")[0]["status"], "completed")
+
+        mixed = ImportJob(
+            self.store, "mixed", (2021, 2022),
+            ("player_week", "matchup"), requested_by="test",
+        )
+        mixed.create()
+        self.store.update_job(mixed.job_id, completed_steps=2, status="completed")
+        self.assertEqual(self.store.jobs("mixed")[0]["status"], "completed")
+
+        with self.assertRaisesRegex(ValueError, "completed_steps"):
+            self.store.update_job(foundation.job_id, completed_steps=5)
+
+    def test_import_status_exposes_the_same_canonical_progress(self) -> None:
+        import services.history as history_service
+
+        job = self.enrichment_job((2021, 2022))
+        self.enrichment_checkpoint(job, 2021)
+        self.enrichment_checkpoint(job, 2022, "pending")
+        with patch.object(history_service, "historical_store", self.store):
+            status = history_service.import_status("L")
+        job_status = next(row for row in status["jobs"] if row["job_id"] == job.job_id)
+        self.assertEqual(job_status["completed_steps"], 1)
+        self.assertEqual(job_status["progress"]["completed_steps"], 1)
+        self.assertEqual(job_status["progress"]["pending_seasons"], [2022])
+        self.assertTrue(job_status["progress"]["consistent"])
 
     async def test_checkpoint_and_job_state_survive_store_restart(self) -> None:
         job = ImportJob(self.store, "L", (2022,), ("matchup",))

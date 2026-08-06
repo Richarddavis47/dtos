@@ -157,6 +157,17 @@ CREATE TABLE IF NOT EXISTS enrichment_batches (
 );
 CREATE INDEX IF NOT EXISTS idx_enrichment_batches_scope
 ON enrichment_batches(league_id, season, provider, batch_sequence);
+CREATE TABLE IF NOT EXISTS enrichment_progress_repairs (
+  job_id TEXT PRIMARY KEY,
+  repaired_at TEXT NOT NULL,
+  previous_completed_steps INTEGER NOT NULL,
+  repaired_completed_steps INTEGER NOT NULL,
+  previous_total_steps INTEGER NOT NULL,
+  repaired_total_steps INTEGER NOT NULL,
+  derivation TEXT NOT NULL,
+  details TEXT NOT NULL,
+  FOREIGN KEY(job_id) REFERENCES import_jobs(job_id)
+);
 """
 
 
@@ -215,6 +226,7 @@ class HistoricalStore:
                 "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, datetime('now'))",
                 ((version,) for version in range(1, DATABASE_MIGRATION_VERSION + 1)),
             )
+            self._repair_enrichment_progress(connection)
 
     def create_job(self, job: dict[str, Any]) -> None:
         columns = tuple(job)
@@ -237,6 +249,34 @@ class HistoricalStore:
             for value in fields.values()
         ]
         with self._lock, self.connection() as connection:
+            current = connection.execute(
+                """SELECT total_steps,completed_steps,requested_data_types
+                FROM import_jobs WHERE job_id=?""",
+                (job_id,),
+            ).fetchone()
+            if current is None:
+                return
+            total_steps = int(fields.get("total_steps", current["total_steps"]))
+            completed_steps = int(
+                fields.get("completed_steps", current["completed_steps"])
+            )
+            if not 0 <= completed_steps <= total_steps:
+                raise ValueError(
+                    "Historical job progress must satisfy "
+                    "0 <= completed_steps <= total_steps."
+                )
+            player_week_only = (
+                json.loads(current["requested_data_types"]) == ["player_week"]
+            )
+            if (
+                player_week_only
+                and fields.get("status") in {"complete", "completed"}
+                and completed_steps != total_steps
+            ):
+                raise ValueError(
+                    "A completed historical job must have internally "
+                    "consistent progress counters."
+                )
             connection.execute(
                 f"UPDATE import_jobs SET {assignments} WHERE job_id=?",
                 (*values, job_id),
@@ -275,6 +315,148 @@ class HistoricalStore:
                     records_written, records_unchanged, error,
                 ),
             )
+            self._synchronize_enrichment_job_progress(connection, job_id)
+
+    @staticmethod
+    def _enrichment_scope(row: sqlite3.Row) -> tuple[list[int], str] | None:
+        data_types = json.loads(row["requested_data_types"])
+        if data_types != ["player_week"]:
+            return None
+        return [int(season) for season in json.loads(row["requested_seasons"])], str(
+            row["importer_version"]
+        )
+
+    @staticmethod
+    def _enrichment_season_states(
+        connection: sqlite3.Connection, row: sqlite3.Row,
+    ) -> dict[str, list[int]]:
+        scope = HistoricalStore._enrichment_scope(row)
+        if scope is None:
+            return {"completed": [], "pending": [], "failed": []}
+        requested, importer_version = scope
+        if not requested:
+            return {"completed": [], "pending": [], "failed": []}
+        placeholders = ",".join("?" for _ in requested)
+        checkpoints = connection.execute(
+            f"""SELECT season,status FROM import_checkpoints
+            WHERE league_id=? AND data_type='player_week'
+            AND provider='nflverse' AND importer_version=? AND week IS NULL
+            AND season IN ({placeholders})""",
+            (row["league_id"], importer_version, *requested),
+        ).fetchall()
+        statuses = {int(item["season"]): str(item["status"]) for item in checkpoints}
+        pending_statuses = {"pending", "not_yet_available", "unsupported"}
+        return {
+            "completed": sorted(
+                season for season in requested if statuses.get(season) == "completed"
+            ),
+            "pending": sorted(
+                season for season in requested
+                if statuses.get(season) in pending_statuses
+            ),
+            "failed": sorted(
+                season for season in requested if statuses.get(season) == "failed"
+            ),
+        }
+
+    @classmethod
+    def _synchronize_enrichment_job_progress(
+        cls, connection: sqlite3.Connection, job_id: str,
+    ) -> int | None:
+        row = connection.execute(
+            "SELECT * FROM import_jobs WHERE job_id=?", (job_id,),
+        ).fetchone()
+        if row is None or cls._enrichment_scope(row) is None:
+            return None
+        requested, _ = cls._enrichment_scope(row) or ([], "")
+        states = cls._enrichment_season_states(connection, row)
+        completed_steps = len(states["completed"])
+        total_steps = len(requested)
+        connection.execute(
+            "UPDATE import_jobs SET total_steps=?,completed_steps=? WHERE job_id=?",
+            (total_steps, completed_steps, job_id),
+        )
+        return completed_steps
+
+    def synchronize_enrichment_job_progress(self, job_id: str) -> int | None:
+        """Derive job-level progress from durable season checkpoints."""
+        with self._lock, self.connection() as connection:
+            return self._synchronize_enrichment_job_progress(connection, job_id)
+
+    def enrichment_job_progress(self, job_id: str) -> dict[str, Any] | None:
+        with self.connection() as connection:
+            row = connection.execute(
+                "SELECT * FROM import_jobs WHERE job_id=?", (job_id,),
+            ).fetchone()
+            if row is None or self._enrichment_scope(row) is None:
+                return None
+            requested, _ = self._enrichment_scope(row) or ([], "")
+            states = self._enrichment_season_states(connection, row)
+        completed_steps = len(states["completed"])
+        return {
+            "total_steps": len(requested),
+            "completed_steps": completed_steps,
+            "completed_seasons": states["completed"],
+            "pending_seasons": states["pending"],
+            "failed_seasons": states["failed"],
+            "consistent": (
+                int(row["completed_steps"]) == completed_steps
+                and int(row["total_steps"]) == len(requested)
+                and 0 <= completed_steps <= len(requested)
+            ),
+        }
+
+    @classmethod
+    def _repair_enrichment_progress(cls, connection: sqlite3.Connection) -> int:
+        repaired = 0
+        jobs = connection.execute("SELECT * FROM import_jobs").fetchall()
+        for row in jobs:
+            scope = cls._enrichment_scope(row)
+            if scope is None:
+                continue
+            requested, _ = scope
+            states = cls._enrichment_season_states(connection, row)
+            derived = len(states["completed"])
+            expected_total = len(requested)
+            previous = int(row["completed_steps"])
+            previous_total = int(row["total_steps"])
+            if previous == derived and previous_total == expected_total:
+                continue
+            connection.execute(
+                "UPDATE import_jobs SET total_steps=?,completed_steps=? WHERE job_id=?",
+                (expected_total, derived, row["job_id"]),
+            )
+            connection.execute(
+                """INSERT OR IGNORE INTO enrichment_progress_repairs(
+                job_id,repaired_at,previous_completed_steps,
+                repaired_completed_steps,previous_total_steps,
+                repaired_total_steps,derivation,details)
+                VALUES (?,datetime('now'),?,?,?,?,?,?)""",
+                (
+                    row["job_id"], previous, derived, previous_total,
+                    expected_total,
+                    "distinct completed requested-season checkpoints",
+                    json.dumps(
+                        {
+                            "completed_seasons": states["completed"],
+                            "pending_seasons": states["pending"],
+                            "failed_seasons": states["failed"],
+                        },
+                        separators=(",", ":"), sort_keys=True,
+                    ),
+                ),
+            )
+            repaired += 1
+        return repaired
+
+    def progress_repairs(self) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                "SELECT * FROM enrichment_progress_repairs ORDER BY repaired_at,job_id"
+            ).fetchall()
+        return [
+            {**dict(row), "details": json.loads(row["details"])} for row in rows
+        ]
 
     def checkpoints(self, league_id: str) -> list[dict[str, Any]]:
         with self.connection() as connection:
@@ -493,13 +675,13 @@ class HistoricalStore:
             )
             connection.execute(
                 """UPDATE import_jobs SET current_season=?,current_week=?,
-                current_data_type='player_week',completed_steps=?,
+                current_data_type='player_week',
                 inserted_records=inserted_records+?,
                 unchanged_records=unchanged_records+?,last_progress_at=?,
                 lock_expiration=? WHERE job_id=?""",
                 (
                     progress["season"], progress.get("week"),
-                    progress["batch_sequence"], total, duplicates,
+                    total, duplicates,
                     progress["batch_completed_at"], lease_expires_at,
                     progress["job_id"],
                 ),
