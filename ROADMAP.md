@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Durable Historical Storage - DTOS v1.7.10
+
+- Validate the production mount, database containment, and writable state before readiness.
+- Persist historical records, checkpoints, leases, reconciliation inputs, and read-model identity across restarts.
+- Prove checkpoint-safe restart recovery on the single-instance Render deployment.
+
 ### Historical Import Memory Stability - DTOS v1.7.9
 
 - Keep historical coverage and detail reads responsive during a clean import.
