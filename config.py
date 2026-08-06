@@ -50,6 +50,7 @@ class Settings:
     history_database_file: Path
     history_storage_root: Path
     durable_history_required: bool
+    enrichment_batch_size: int
     background_start_delay: float
 
     @classmethod
@@ -77,6 +78,9 @@ class Settings:
                 "DTOS_DURABLE_HISTORY_REQUIRED",
                 default=bool(os.getenv("RENDER")),
             ),
+            enrichment_batch_size=min(
+                1000, _integer("DTOS_ENRICHMENT_BATCH_SIZE", 250, 25),
+            ),
             background_start_delay=_number(
                 "DTOS_BACKGROUND_START_DELAY",
                 30,
@@ -99,4 +103,5 @@ DATA_WAREHOUSE_FILE = SETTINGS.data_warehouse_file
 HISTORY_DATABASE_FILE = SETTINGS.history_database_file
 HISTORY_STORAGE_ROOT = SETTINGS.history_storage_root
 DURABLE_HISTORY_REQUIRED = SETTINGS.durable_history_required
+ENRICHMENT_BATCH_SIZE = SETTINGS.enrichment_batch_size
 BACKGROUND_START_DELAY = SETTINGS.background_start_delay

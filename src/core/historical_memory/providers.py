@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import csv
-import io
 from dataclasses import dataclass
+from collections.abc import AsyncIterator
 from typing import Any, Protocol
 
 import httpx
@@ -55,12 +55,32 @@ class NflverseProvider:
         self.client = client
 
     async def weekly(self, season: int) -> list[dict[str, Any]]:
-        response = await self.client.get(self.url_template.format(season=season))
-        response.raise_for_status()
-        return [
-            normalize_nflverse_row(row)
-            for row in csv.DictReader(io.StringIO(response.text))
-        ]
+        rows: list[dict[str, Any]] = []
+        async for batch in self.weekly_batches(season, 1000):
+            rows.extend(batch)
+        return rows
+
+    async def weekly_batches(
+        self, season: int, batch_size: int,
+    ) -> AsyncIterator[list[dict[str, Any]]]:
+        """Stream and normalize a bounded number of provider rows at a time."""
+        url = self.url_template.format(season=season)
+        async with self.client.stream("GET", url) as response:
+            response.raise_for_status()
+            lines = response.aiter_lines()
+            header_line = await anext(lines)
+            fieldnames = next(csv.reader([header_line]))
+            batch: list[dict[str, Any]] = []
+            async for line in lines:
+                if not line:
+                    continue
+                row = next(csv.DictReader([line], fieldnames=fieldnames))
+                batch.append(normalize_nflverse_row(row))
+                if len(batch) >= batch_size:
+                    yield batch
+                    batch = []
+            if batch:
+                yield batch
 
 
 @dataclass(frozen=True)

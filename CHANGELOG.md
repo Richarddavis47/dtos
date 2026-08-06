@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.7.11 - Historical Enrichment Batch Persistence
+
+- Streamed nflverse enrichment data in bounded configurable batches instead of retaining an entire season payload.
+- Added durable, atomic batch progress that commits raw evidence, derived scoring, checkpoint metadata, and lease renewal together.
+- Preserved importer version 1.2 record identities so replaying v1.7.10 evidence remains idempotent and creates no logical duplicates.
+- Added database migration version 4 and regression coverage for streaming, checkpoint reuse, identity reuse, and v1.7.10-compatible record keys.
+
 ## v1.7.10 - Durable Historical Storage
 
 - Added a strict production storage boundary that validates the Render disk mount, path containment, and writable state without silently creating an ephemeral fallback.

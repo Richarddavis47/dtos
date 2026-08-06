@@ -101,6 +101,7 @@ class ImportJob:
     requested_by: str = "automatic_recovery"
     job_id: str = ""
     worker_identity: str = ""
+    provider: str = "Sleeper"
 
     def create(self) -> str:
         self.job_id = self.job_id or uuid4().hex
@@ -124,7 +125,7 @@ class ImportJob:
         now = utcnow()
         lock_key = (
             f"{self.league_id}:{','.join(map(str, self.seasons))}:"
-            f"{','.join(self.data_types)}:Sleeper:{IMPORTER_VERSION}"
+            f"{','.join(self.data_types)}:{self.provider}:{IMPORTER_VERSION}"
         )
         acquired = self.store.acquire_lock(
             lock_key, self.job_id, self.worker_identity, now.isoformat(),
@@ -137,6 +138,13 @@ class ImportJob:
                 lock_expiration=(now + timedelta(minutes=lease_minutes)).isoformat(),
             )
         return acquired
+
+    def release(self) -> None:
+        lock_key = (
+            f"{self.league_id}:{','.join(map(str, self.seasons))}:"
+            f"{','.join(self.data_types)}:{self.provider}:{IMPORTER_VERSION}"
+        )
+        self.store.release_lock(lock_key, self.job_id)
 
 
 def recover_stalled_jobs(store: HistoricalStore, league_id: str) -> int:

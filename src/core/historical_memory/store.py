@@ -134,6 +134,29 @@ CREATE TABLE IF NOT EXISTS import_locks (
   acquired_at TEXT NOT NULL,
   expires_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS enrichment_batches (
+  batch_key TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  lease_owner TEXT NOT NULL,
+  league_id TEXT NOT NULL,
+  season INTEGER NOT NULL,
+  week INTEGER,
+  provider TEXT NOT NULL,
+  batch_sequence INTEGER NOT NULL,
+  raw_records_received INTEGER NOT NULL,
+  raw_records_inserted INTEGER NOT NULL,
+  derived_records_inserted INTEGER NOT NULL,
+  duplicate_records_ignored INTEGER NOT NULL,
+  batch_started_at TEXT NOT NULL,
+  batch_completed_at TEXT NOT NULL,
+  last_durable_event_identity TEXT,
+  total_committed_records INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  error TEXT,
+  UNIQUE(job_id, season, provider, batch_sequence)
+);
+CREATE INDEX IF NOT EXISTS idx_enrichment_batches_scope
+ON enrichment_batches(league_id, season, provider, batch_sequence);
 """
 
 
@@ -378,6 +401,130 @@ class HistoricalStore:
             )
             written = connection.total_changes - before
         return written, len(records) - written
+
+    @staticmethod
+    def _record_values(records: list[dict[str, Any]]) -> list[tuple[Any, ...]]:
+        return [
+            (
+                record["record_key"], record["entity_type"], record["league_id"],
+                record.get("season"), record.get("week"),
+                record.get("franchise_id"), record.get("player_id"),
+                record["source_record_id"], record["observed_at"],
+                record["retrieved_at"], record["provider"],
+                record["availability"], record["confidence"],
+                record["calculation_method"], int(record.get("derived", False)),
+                record["schema_version"], json.dumps(
+                    record["payload"], separators=(",", ":"), sort_keys=True,
+                    default=lambda value: getattr(value, "value", str(value)),
+                ),
+            )
+            for record in records
+        ]
+
+    def _insert_enrichment_records(
+        self, connection: sqlite3.Connection, records: list[dict[str, Any]],
+    ) -> int:
+        before = connection.total_changes
+        connection.executemany(
+            """INSERT OR IGNORE INTO historical_records(
+            record_key, entity_type, league_id, season, week, franchise_id,
+            player_id, source_record_id, observed_at, retrieved_at, provider,
+            availability, confidence, calculation_method, derived,
+            schema_version, payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            self._record_values(records),
+        )
+        return connection.total_changes - before
+
+    def commit_enrichment_batch(
+        self, *, raw_records: list[dict[str, Any]],
+        derived_records: list[dict[str, Any]], progress: dict[str, Any],
+        lease_expires_at: str,
+    ) -> dict[str, int]:
+        """Commit evidence, progress, and lease renewal in one transaction."""
+        with self._lock, self.connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            lease = connection.execute(
+                """SELECT 1 FROM import_locks WHERE job_id=?
+                AND worker_identity=? AND expires_at>?""",
+                (
+                    progress["job_id"], progress["lease_owner"],
+                    progress["batch_started_at"],
+                ),
+            ).fetchone()
+            if lease is None:
+                raise RuntimeError("Enrichment lease is absent, expired, or owned by another worker.")
+            existing = connection.execute(
+                "SELECT * FROM enrichment_batches WHERE batch_key=? AND status='completed'",
+                (progress["batch_key"],),
+            ).fetchone()
+            if existing is not None:
+                return {
+                    "raw_inserted": int(existing["raw_records_inserted"]),
+                    "derived_inserted": int(existing["derived_records_inserted"]),
+                    "duplicates": int(existing["duplicate_records_ignored"]),
+                }
+            raw_inserted = self._insert_enrichment_records(connection, raw_records)
+            derived_inserted = self._insert_enrichment_records(connection, derived_records)
+            duplicates = len(raw_records) + len(derived_records) - raw_inserted - derived_inserted
+            total = raw_inserted + derived_inserted
+            connection.execute(
+                """INSERT INTO enrichment_batches(
+                batch_key,job_id,lease_owner,league_id,season,week,provider,
+                batch_sequence,raw_records_received,raw_records_inserted,
+                derived_records_inserted,duplicate_records_ignored,
+                batch_started_at,batch_completed_at,last_durable_event_identity,
+                total_committed_records,status,error)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL)""",
+                (
+                    progress["batch_key"], progress["job_id"],
+                    progress["lease_owner"], progress["league_id"],
+                    progress["season"], progress.get("week"),
+                    progress["provider"], progress["batch_sequence"],
+                    progress["raw_records_received"], raw_inserted,
+                    derived_inserted, duplicates, progress["batch_started_at"],
+                    progress["batch_completed_at"],
+                    progress.get("last_durable_event_identity"), total,
+                    "completed",
+                ),
+            )
+            connection.execute(
+                "UPDATE import_locks SET expires_at=? WHERE job_id=? AND worker_identity=?",
+                (lease_expires_at, progress["job_id"], progress["lease_owner"]),
+            )
+            connection.execute(
+                """UPDATE import_jobs SET current_season=?,current_week=?,
+                current_data_type='player_week',completed_steps=?,
+                inserted_records=inserted_records+?,
+                unchanged_records=unchanged_records+?,last_progress_at=?,
+                lock_expiration=? WHERE job_id=?""",
+                (
+                    progress["season"], progress.get("week"),
+                    progress["batch_sequence"], total, duplicates,
+                    progress["batch_completed_at"], lease_expires_at,
+                    progress["job_id"],
+                ),
+            )
+        return {
+            "raw_inserted": raw_inserted,
+            "derived_inserted": derived_inserted,
+            "duplicates": duplicates,
+        }
+
+    def enrichment_batches(
+        self, league_id: str, *, season: int | None = None,
+    ) -> list[dict[str, Any]]:
+        clauses = ["league_id=?"]
+        values: list[Any] = [league_id]
+        if season is not None:
+            clauses.append("season=?")
+            values.append(season)
+        with self.connection() as connection:
+            rows = connection.execute(
+                f"""SELECT * FROM enrichment_batches WHERE {' AND '.join(clauses)}
+                ORDER BY season,batch_sequence""",
+                values,
+            ).fetchall()
+        return [dict(row) for row in rows]
 
     def records(
         self,

@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import asdict
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 import httpx
 
-from config import LEAGUE_ID, REQUEST_TIMEOUT
+from config import ENRICHMENT_BATCH_SIZE, LEAGUE_ID, REQUEST_TIMEOUT
 from src.core.historical_memory import (
     HISTORICAL_SCHEMA_VERSION,
     PLAYER_HISTORY_SCHEMA_VERSION,
@@ -20,7 +20,7 @@ from src.core.historical_memory import (
 from src.core.historical_memory.importer import HistoricalImporter
 from src.core.historical_memory.enrichment import (
     build_identity_context,
-    enrich_rows,
+    prepare_enrichment_records,
 )
 from src.core.historical_memory.jobs import (
     ImportJob,
@@ -266,13 +266,20 @@ async def enrich_player_history(
     }
     job = ImportJob(
         historical_store, league_id, tuple(selected), ("player_week",),
-        requested_by="player_enrichment",
+        requested_by="player_enrichment", provider="nflverse",
     )
     job.create()
-    historical_store.update_job(
-        job.job_id, status="running", started_at=utcnow().isoformat(),
-        last_progress_at=utcnow().isoformat(),
-    )
+    if not job.acquire():
+        historical_store.update_job(
+            job.job_id, status="blocked",
+            last_error_message="Overlapping enrichment lease is active.",
+        )
+        return {"provider": "nflverse", "status": "blocked", "errors": []}
+    completed_batches = {
+        (int(row["season"]), int(row["batch_sequence"]))
+        for row in historical_store.enrichment_batches(league_id)
+        if row["provider"] == "nflverse" and row["status"] == "completed"
+    }
     async with httpx.AsyncClient(
         timeout=httpx.Timeout(max(REQUEST_TIMEOUT, 60)),
         follow_redirects=True,
@@ -331,7 +338,6 @@ async def enrich_player_history(
                 })
                 continue
             try:
-                rows = await provider.weekly(season)
                 _, season_rows = historical_store.records(
                     league_id, "league_season", season=season, limit=1,
                 )
@@ -340,14 +346,64 @@ async def enrich_player_history(
                     if season_rows else {}
                 )
                 result = {"written": 0, "unchanged": 0, "unresolved": 0}
-                for offset in range(0, len(rows), 50):
+                batch_sequence = 0
+                async for rows in provider.weekly_batches(
+                    season, ENRICHMENT_BATCH_SIZE,
+                ):
+                    batch_sequence += 1
                     identity_context_reuses += 1
-                    batch = await asyncio.to_thread(
-                        enrich_rows, historical_store, league_id,
-                        rows[offset:offset + 50], settings, identity_context,
+                    if (season, batch_sequence) in completed_batches:
+                        rows.clear()
+                        continue
+                    raw_records, derived_records, unresolved = (
+                        prepare_enrichment_records(
+                            league_id, rows, settings, identity_context,
+                        )
                     )
-                    for key in result:
-                        result[key] += batch[key]
+                    started_at = utcnow()
+                    completed_at = utcnow()
+                    last_identity = next(
+                        (
+                            record["record_key"]
+                            for record in reversed(derived_records or raw_records)
+                        ),
+                        None,
+                    )
+                    batch = await asyncio.to_thread(
+                        historical_store.commit_enrichment_batch,
+                        raw_records=raw_records,
+                        derived_records=derived_records,
+                        progress={
+                            "batch_key": (
+                                f"{league_id}:{season}:nflverse:"
+                                f"{batch_sequence}:{IMPORTER_VERSION}"
+                            ),
+                            "job_id": job.job_id,
+                            "lease_owner": job.worker_identity,
+                            "league_id": league_id, "season": season,
+                            "week": max(
+                                (int(row["week"]) for row in rows if row.get("week")),
+                                default=None,
+                            ),
+                            "provider": "nflverse",
+                            "batch_sequence": batch_sequence,
+                            "raw_records_received": len(rows),
+                            "batch_started_at": started_at.isoformat(),
+                            "batch_completed_at": completed_at.isoformat(),
+                            "last_durable_event_identity": last_identity,
+                        },
+                        lease_expires_at=(
+                            completed_at + timedelta(minutes=15)
+                        ).isoformat(),
+                    )
+                    result["written"] += (
+                        batch["raw_inserted"] + batch["derived_inserted"]
+                    )
+                    result["unchanged"] += batch["duplicates"]
+                    result["unresolved"] += unresolved
+                    rows.clear()
+                    raw_records.clear()
+                    derived_records.clear()
                     await asyncio.sleep(0)
                 for key in totals:
                     totals[key] += result[key]
@@ -430,6 +486,7 @@ async def enrich_player_history(
             None,
         ),
     )
+    job.release()
     return {
         "provider": "nflverse", "seasons": selected, **totals,
         "segments": segments, "pending": pending, "errors": errors,

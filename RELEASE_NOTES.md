@@ -1,3 +1,13 @@
+# DTOS v1.7.11 — Historical Enrichment Batch Persistence
+
+DTOS v1.7.11 makes historical player enrichment durable and efficient on the persistent Render volume. Nflverse weekly data is consumed as bounded batches, while each batch atomically persists raw evidence, derived fantasy scoring, durable progress, and lease renewal.
+
+Importer identity remains at version 1.2. Existing v1.7.10 record keys therefore remain canonical, completed work can be replayed safely, and logically duplicate evidence is ignored instead of rewritten.
+
+The new migration adds durable batch-progress records without changing historical API schemas, canonical identities, provider provenance, scoring outputs, or immutable historical evidence.
+
+---
+
 # DTOS v1.7.10 — Durable Historical Storage
 
 DTOS v1.7.10 makes Historical League Memory restart-safe on a single Render instance. Production now requires an explicitly mounted and writable durable-storage root; the historical database must resolve beneath that root, and startup readiness fails with a clear reason instead of creating an ephemeral substitute.
