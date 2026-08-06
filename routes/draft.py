@@ -8,6 +8,7 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
 from services.asset_intelligence import build_pick_reports
+from src.core.historical_memory import canonical_pick_id
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -42,8 +43,11 @@ def create_draft_router(
         for pick, report in build_pick_reports(data, sorted_picks):
             roster_id = str(pick.get("roster_id"))
             owner_id = str(pick.get("owner_id"))
+            pick_id = canonical_pick_id(
+                pick.get("season", "UNKNOWN"), pick.get("round", "UNKNOWN"), roster_id,
+            )
             rows.append(
-                f'<tr><td>{escape(str(pick.get("season", "")))}</td>'
+                f'<tr><td><a href="/picks/{escape(pick_id)}">{escape(str(pick.get("season", "")))}</a></td>'
                 f'<td>{escape(str(pick.get("round", "")))}</td>'
                 f'<td>{escape(roster_names.get(roster_id, roster_id))}</td>'
                 f'<td>{escape(roster_names.get(owner_id, owner_id))}</td>'

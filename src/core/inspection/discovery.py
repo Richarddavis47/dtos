@@ -86,6 +86,20 @@ def _representatives(path: str, data: dict[str, Any]) -> tuple[dict[str, Any], .
         return tuple({"franchise_id:path": item} for item in identities)
     if "{player_id}" in path:
         return tuple({"player_id": item} for item in _players(data))
+    if "{pick_id}" in path:
+        picks = sorted({
+            f"PICK-{row.get('season')}-R{row.get('round')}-ORIG{row.get('roster_id')}"
+            for row in data.get("traded_picks") or ()
+            if row.get("season") and row.get("round") and row.get("roster_id")
+        })
+        return tuple({"pick_id": quote(item, safe="")} for item in picks[:4])
+    if "{transaction_id}" in path:
+        transactions = data.get("transactions") or ()
+        identifiers = sorted({
+            str(row.get("transaction_id")) for row in transactions
+            if isinstance(row, dict) and row.get("type") == "trade" and row.get("transaction_id")
+        })
+        return tuple({"transaction_id": quote(item, safe="")} for item in identifiers[:3])
     if "{matchup_id}" in path:
         matchups = data.get("matchups") or ()
         if isinstance(matchups, dict):
@@ -122,7 +136,7 @@ def discover_pages(routes: Iterable[Any], state: dict[str, Any]) -> tuple[Discov
             discovered.append(DiscoveredPage(
                 "history-player", _name(route), path, path, "dynamic", "unsupported",
                 "unsupported", excluded=True,
-                exclusion_reason="The synchronized league cache does not identify which players have Historical Memory observations; use the inspected League History page and historical crawl index.",
+                exclusion_reason="Connected historical performance is inspected through the canonical Player Dossier; this compatibility route requires a player with imported weekly observations.",
             ))
             continue
         fixtures = _representatives(path, data)
@@ -170,7 +184,10 @@ def uncovered_public_routes(routes: Iterable[Any], state: dict[str, Any]) -> tup
 
 def unsupported_dynamic_patterns(routes: Iterable[Any]) -> tuple[str, ...]:
     """Flag public HTML parameters for which DINS has no fixture strategy."""
-    supported = {"roster_id", "player_id", "matchup_id", "franchise_id"}
+    supported = {
+        "roster_id", "player_id", "matchup_id", "franchise_id", "pick_id",
+        "transaction_id",
+    }
     failures = []
     for route, canonical_path in _http_routes(routes):
         if "GET" not in (route.methods or set()):

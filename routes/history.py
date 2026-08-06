@@ -48,7 +48,7 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
 <div class="summary-grid"><article class="metric"><b>{seasons['count']}</b><span>Seasons</span></article><article class="metric"><b>{standings['count']}</b><span>Standing Records</span></article><article class="metric"><b>{quality['blocking_count']}</b><span>Blocking Issues</span></article><article class="metric"><b>{escape(str(status['latest'].get('status')))}</b><span>Import Status</span></article></div>
 <div class="card"><h3>Historical Import Reliability</h3><p><b>{escape(completeness['status'])}</b> · {escape(str(progress if progress is not None else 'Unknown'))}% step progress</p><p class="muted">Current segment: {escape(str(latest_job.get('current_season') or 'waiting'))} / {escape(str(latest_job.get('current_data_type') or 'waiting'))}. Retry count: {escape(str(latest_job.get('retry_count') or 0))}. Last progress: {escape(str(latest_job.get('last_progress_at') or 'No persisted progress yet'))}.</p><p>Provider coverage: {escape(', '.join(item['name'] for item in providers['providers']))}</p></div>
 <h3>Season Memory</h3><div class="grid">{season_cards}</div>
-<p><a class="btn" href="/api/crawl/history">Open Historical API</a></p>
+<p><a class="btn" href="/api/crawl/history">Open Historical API</a> <a class="btn" href="/api/history/coverage">Historical Coverage</a> <a class="btn" href="/search">Search Historical Assets</a></p>
 """
         return page("League History", body)
 
@@ -63,7 +63,7 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
         )
         return page(
             f"{career.get('player_name') or 'Player'} — Historical Performance",
-            f'<h2>Historical Performance</h2><p class="muted">Weekly gaps are not connected or converted to zero.</p><div class="grid">{seasons}</div><div class="card"><h3>Usage</h3><p>{escape(career["usage"]["reason"])}</p></div>',
+            f'<a class="back" href="/players/{escape(player_id)}">← Back to connected Player Dossier</a><h2>Historical Performance</h2><p class="muted">Weekly gaps are not connected or converted to zero.</p><div class="grid">{seasons}</div><div class="card"><h3>Usage</h3><p>{escape(career["usage"]["reason"])}</p></div>',
         )
 
     @router.get("/history/team/{franchise_id:path}", response_class=HTMLResponse)

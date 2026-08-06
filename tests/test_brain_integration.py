@@ -41,7 +41,8 @@ class BrainIntegrationTests(unittest.TestCase):
         brain = brain_service(self.data)
         decision = brain.decision("Trade Intelligence", ("1", "2"), trade_complexity=5)
         self.assertNotEqual(decision.confidence.value, decision.confidence.evidence_confidence)
-        self.assertEqual(len(decision.confidence.rationale), 4)
+        self.assertGreaterEqual(len(decision.confidence.rationale), 4)
+        self.assertTrue(any("Historical" in item for item in decision.confidence.rationale))
         self.assertGreater(decision.confidence.complexity_penalty, 0)
 
     def test_migration_and_health_have_no_legacy_or_duplicate_consumers(self) -> None:

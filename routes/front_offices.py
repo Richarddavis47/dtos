@@ -31,7 +31,17 @@ def create_front_offices_router(*, ensure_fresh: Callable[[], Awaitable[None]], 
     async def front_offices_api(front_office: int | None = None) -> JSONResponse:
         await ensure_fresh()
         result = view(front_office)
-        payload = {"active_front_office": result["active"].roster_id, "organizations": [asdict(item) for item in result["reports"]], "compatibilities": [asdict(item) for item in result["compatibilities"]], "relationships": [asdict(item) for item in result["relationships"]], **recommendation_contract(result["unified_recommendation"], result.get("brain_recommendation"))}
+        history = {
+            roster_id: {
+                "franchise_id": item["franchise_id"],
+                "identity_records": len(item["identities"]),
+                "standing_records": len(item["standings"]),
+                "transaction_records": len(item["transactions"]),
+                "detail_url": f'/api/history/franchises/{roster_id}',
+            }
+            for roster_id, item in result["franchise_histories"].items()
+        }
+        payload = {"active_front_office": result["active"].roster_id, "organizations": [asdict(item) for item in result["reports"]], "compatibilities": [asdict(item) for item in result["compatibilities"]], "relationships": [asdict(item) for item in result["relationships"]], "historical_contract_version": result["historical_contract_version"], "franchise_history": history, **recommendation_contract(result["unified_recommendation"], result.get("brain_recommendation"))}
         return JSONResponse(jsonable_encoder(payload))
 
     return router

@@ -1,4 +1,23 @@
-# DTOS v1.7.5 — League Payload Memory Safety
+# DTOS v1.7.6 — Historical Asset Graph & Connected Dossiers
+
+DTOS v1.7.6 makes verified Day Traders history a connected application contract instead of an isolated report. The new Historical Asset Graph supplies stable player, pick, transaction, trade, event, and franchise identities to dossier pages, search, historical APIs, Team Headquarters, Front Office Intelligence, and the canonical Brain.
+
+Historical ingestion now archives traded-pick snapshots and attaches source league, season, record identity, retrieval time, schema/importer versions, source hashes, provenance, and availability to normalized payloads. Completed movements can produce ownership intervals; failed and pending movements remain visible evidence but cannot change ownership.
+
+Player season summaries retain the matching season's scoring-settings version and distinguish missing observations from zero. The active 2026 season is explicitly in progress. Historical value-at-event remains unavailable unless DTOS has a timestamped valuation snapshot; current values are never silently backdated.
+
+New contracts include `/api/history/assets`, asset event and ownership endpoints, player historical endpoints, `/api/picks/{pick_id}`, historical Trade Dossiers, franchise history, coverage reporting, and unified `/api/search`. HTML Pick and Trade Dossiers provide corresponding connected navigation.
+
+Known honest limitations:
+
+- Sleeper matchup history supplies league-scored points but not lossless raw NFL stat components or historical advanced usage.
+- Historical matchup payloads do not distinguish taxi and reserve assignments; those states remain explicitly unavailable unless independently sourced.
+- Older or retired Sleeper IDs without verified metadata remain searchable as unresolved IDs and are never assigned guessed names.
+- Value at trade remains unavailable without a contemporaneous valuation observation.
+
+---
+
+## Previous release: v1.7.5 — League Payload Memory Safety
 
 This corrective release keeps `/api/league` focused on league data and a compact Brain summary. Full canonical asset intelligence and timelines remain available through `/api/brain`. The change prevents a 35 MB compatibility response from materializing the full Brain and its duplicated timeline during every request, eliminating the production memory-pressure path observed during v1.7.4 verification.
 
