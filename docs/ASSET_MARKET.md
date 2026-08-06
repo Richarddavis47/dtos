@@ -32,7 +32,9 @@ Routes format existing contracts; they do not compute new valuations or recommen
 
 ## Determinism and performance
 
-The read-model key includes application/build/schema identity, league synchronization state, Brain generation, valuation schema, and durable historical dataset version. Rebuilds are single-flight. A failed rebuild can retain the last valid immutable model while health reports the failure. The cache is process-local and bounded to one current and one last-valid market model.
+The read-model key includes application/build/schema identity, league synchronization state, Brain generation, valuation schema, league identity, and a private durable database-generation namespace. Rebuilds are single-flight. A failed rebuild can retain the last valid immutable model while health reports the failure. The cache is process-local and bounded to one current and one last-valid market model.
+
+Historical detail/search reads keep their own logical dataset version, so committed evidence becomes visible without rebuilding compact summaries that do not depend on that evidence. The private database UUID is persisted inside SQLite and is never returned by public APIs, logs, inspection, or DINS.
 
 Directory filtering, sorting, ranking, and pagination use compact summaries. Full provider evidence and historical dossiers hydrate only after a canonical asset is selected. Warm reads perform no provider calls.
 

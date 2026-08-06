@@ -11,6 +11,7 @@ from typing import Any
 from app_metadata import BUILD_NUMBER, VERSION
 from src.core.brain import brain_service
 from src.core.historical_memory import historical_graph
+from src.core.historical_memory.models import DATABASE_MIGRATION_VERSION
 from src.core.historical_memory.store import HistoricalStore
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 
@@ -150,7 +151,7 @@ class AssetMarket:
             "application_build": BUILD_NUMBER,
             "market_schema_version": MARKET_SCHEMA_VERSION,
             "league_id": self.league_id,
-            "historical_dataset_version": self.dataset_version,
+            "historical_dataset_version": self.store.dataset_version(self.league_id),
             "market_generation": self.generated_at,
             "brain_generation": self.brain_generation,
             "valuation_generation": (
@@ -224,6 +225,7 @@ class AssetMarket:
         wants_pick = "pick" in normalized or "draft" in normalized
         position = next((
             value for phrase, value in (
+                ("qb", "QB"), ("rb", "RB"), ("wr", "WR"), ("te", "TE"),
                 ("quarterback", "QB"), ("running back", "RB"),
                 ("wide receiver", "WR"), ("tight end", "TE"),
             ) if phrase in normalized
@@ -256,7 +258,12 @@ class AssetMarket:
                 for token in tokens
             ))
         ]
-        history = historical_graph(self.store, self.league_id, self.data).search(query, limit)
+        history = (
+            historical_graph(self.store, self.league_id, self.data).search(
+                query, limit - len(rows),
+            )
+            if len(rows) < limit else []
+        )
         extras = [
             {
                 "asset_id": row["canonical_id"], "asset_type": row["result_type"],
@@ -329,6 +336,7 @@ class AssetMarket:
             return None
         brain_asset = self._brain.asset(asset_id)
         decision = self._brain.decision("Asset Market", (asset_id,))
+        historical_dataset_version = self.store.dataset_version(self.league_id)
         graph = historical_graph(self.store, self.league_id, self.data)
         if row["asset_type"] == "player":
             raw_id = asset_id.removeprefix("player:")
@@ -350,7 +358,7 @@ class AssetMarket:
             "value_layers": {
                 name: {
                     **layer, "scale": "DTOS 0-10000 normalized scale",
-                    "dataset_version": self.dataset_version,
+                    "dataset_version": historical_dataset_version,
                     "brain_snapshot_id": decision.brain_snapshot_id,
                     "provider_coverage": row["provider_coverage"],
                     "agreement": row["agreement"],
@@ -429,23 +437,15 @@ class AssetMarketCache:
         self.build_count = 0
         self.hits = 0
         self.last_error: str | None = None
+        self.last_miss_reason: str | None = None
 
     @staticmethod
     def store_identity(store: HistoricalStore) -> str:
-        """Return a private instance/file-generation namespace for cache isolation."""
-        path = store.path.resolve()
-        try:
-            stat = path.stat()
-        except OSError as exc:
-            raise RuntimeError("Active HistoricalStore backing database is unavailable.") from exc
-        if not path.is_file():
-            raise RuntimeError("Active HistoricalStore backing database is unavailable.")
+        """Return a private instance/durable-generation cache namespace."""
         payload = {
             "instance": id(store),
-            "path": str(path),
-            "device": stat.st_dev,
-            "inode": stat.st_ino,
-            "created": stat.st_ctime_ns,
+            "database_uuid": store.database_uuid(),
+            "database_schema": DATABASE_MIGRATION_VERSION,
         }
         return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
@@ -462,7 +462,6 @@ class AssetMarketCache:
             "sync": state.get("last_sync"),
             "brain": (data.get("valuation_intelligence") or {}).get("generated_at"),
             "valuation": (data.get("valuation_intelligence") or {}).get("schema_version"),
-            "history": store.dataset_version(league_id),
         }
         key = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
         return key, store_identity
@@ -488,6 +487,10 @@ class AssetMarketCache:
                 self.hits += 1
                 return self._market
             try:
+                self.last_miss_reason = (
+                    "cold_start" if self._market is None
+                    else "canonical_market_inputs_changed"
+                )
                 market = AssetMarket(data, state, store, league_id)
             except Exception as exc:
                 self.last_error = str(exc)
@@ -507,6 +510,7 @@ class AssetMarketCache:
         return {
             "build_count": self.build_count, "cache_hits": self.hits,
             "cache_key": self._key, "last_error": self.last_error,
+            "last_miss_reason": self.last_miss_reason,
             "last_valid_model": self._market is not None,
         }
 

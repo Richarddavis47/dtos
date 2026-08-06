@@ -147,7 +147,7 @@ class AssetMarketTests(unittest.TestCase):
         refreshed = AssetMarketCache().get(self.data, self.state, self.store, self.league_id)
         self.assertEqual(refreshed.trending()["biggest_risers"][0]["magnitude"], 20)
 
-    def test_cache_is_single_flight_and_invalidates_by_dataset(self) -> None:
+    def test_cache_is_single_flight_and_history_reads_track_dataset(self) -> None:
         results = []
         threads = [threading.Thread(target=lambda: results.append(
             self.cache.get(self.data, self.state, self.store, self.league_id)
@@ -158,10 +158,17 @@ class AssetMarketTests(unittest.TestCase):
             thread.join()
         self.assertTrue(all(result is self.market for result in results))
         self.assertEqual(self.cache.build_count, 1)
+        original_store_identity = self.cache.store_identity(self.store)
         self._append("player_week", "new-evidence", "10213", {"fantasy_points": 20.0})
-        self.assertIsNot(
+        self.assertEqual(original_store_identity, self.cache.store_identity(self.store))
+        self.assertIs(
             self.cache.get(self.data, self.state, self.store, self.league_id),
             self.market,
+        )
+        self.assertEqual(self.cache.build_count, 1)
+        self.assertEqual(
+            self.market.detail("player:10213")["historical_dataset_version"],
+            self.store.dataset_version(self.league_id),
         )
 
     def test_api_ui_agree_and_reads_never_sync(self) -> None:
@@ -268,10 +275,12 @@ class AssetMarketTests(unittest.TestCase):
         first_market = self.cache.get(
             self.data, self.state, first_store, self.league_id,
         )
+        first_uuid = first_store.database_uuid()
         path.unlink()
         with self.assertRaisesRegex(RuntimeError, "backing database is unavailable"):
             self.cache.get(self.data, self.state, first_store, self.league_id)
         recreated_store = HistoricalStore(path)
+        self.assertNotEqual(recreated_store.database_uuid(), first_uuid)
         recreated_market = self.cache.get(
             self.data, self.state, recreated_store, self.league_id,
         )
@@ -280,6 +289,37 @@ class AssetMarketTests(unittest.TestCase):
             self.cache.get(self.data, self.state, recreated_store, self.league_id),
             recreated_market,
         )
+
+    def test_durable_uuid_survives_writes_checkpoints_and_store_restart(self) -> None:
+        database_uuid = self.store.database_uuid()
+        namespace = self.cache.store_identity(self.store)
+        self._append(
+            "player_week", "uuid-stability", "10213",
+            {"fantasy_points": 21.0},
+        )
+        with self.store.connection() as connection:
+            connection.execute("PRAGMA wal_checkpoint(PASSIVE)")
+        restarted = HistoricalStore(self.store.path)
+        self.assertEqual(self.store.database_uuid(), database_uuid)
+        self.assertEqual(restarted.database_uuid(), database_uuid)
+        self.assertEqual(self.cache.store_identity(self.store), namespace)
+        self.assertNotEqual(
+            self.cache.store_identity(restarted), namespace,
+            "Separate store instances must not share a process-global model.",
+        )
+
+    def test_repeated_query_surfaces_do_not_rebuild_market(self) -> None:
+        for _ in range(5):
+            self.market.directory(limit=1)
+            self.market.search("QB", limit=1)
+            self.market.detail("player:10213", 1)
+            self.market.trending(limit=1)
+            self.assertIs(
+                self.cache.get(self.data, self.state, self.store, self.league_id),
+                self.market,
+            )
+        self.assertEqual(self.cache.build_count, 1)
+        self.assertGreaterEqual(self.cache.hits, 5)
 
 
 if __name__ == "__main__":

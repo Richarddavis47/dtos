@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.8.1 - Asset Market Cache Stability
+
+- Added a private durable database UUID that survives ordinary SQLite/WAL activity and changes only for a genuinely recreated HistoricalStore database.
+- Prevented unrelated enrichment commits from rebuilding the compact 12,000+ asset directory while retaining live historical dataset identity and on-demand detail/search invalidation.
+- Avoided unnecessary historical discovery for already-satisfied current-asset searches and added cache-generation, replacement, concurrency, and path-disclosure regressions.
+
 ## v1.8.0 - Asset Market & Dynasty Exchange
 
 - Replaced the primary homepage destination with a canonical, searchable Asset Market while retaining the Commissioner Desk at `/commissioner`.

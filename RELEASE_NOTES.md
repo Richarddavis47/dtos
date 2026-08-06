@@ -1,3 +1,13 @@
+# DTOS v1.8.1 — Asset Market Cache Stability
+
+DTOS v1.8.1 corrects the production performance blocker discovered after v1.8.0. Instrumentation proved that ongoing enrichment changed the logical Historical Memory dataset version on every commit, causing the compact 12,331-asset market model to rebuild repeatedly even though those writes did not change its directory summaries.
+
+HistoricalStore now owns a private random database UUID persisted inside SQLite. It remains stable across reads, writes, WAL checkpoints, vacuum-compatible maintenance, and controlled restarts, while a recreated database receives a new identity. The process cache additionally retains store-instance isolation and never exposes paths or the private UUID.
+
+Compact market invalidation now follows only inputs that can change compact output. Historical search, detail dossiers, and response metadata continue to consume the independently versioned durable Historical Asset Graph. Current-asset searches skip historical discovery once the requested page is already satisfied.
+
+---
+
 # DTOS v1.8.0 — Asset Market & Dynasty Exchange
 
 DTOS v1.8.0 introduces the Asset Market as the application’s primary destination. Players, free agents, retired players present in durable history, rookies, taxi assets, and owned draft picks are discoverable through one deterministic market contract. The Commissioner Desk remains available at `/commissioner`.
