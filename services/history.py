@@ -275,6 +275,7 @@ async def enrich_player_history(
             last_error_message="Overlapping enrichment lease is active.",
         )
         return {"provider": "nflverse", "status": "blocked", "errors": []}
+    historical_store.synchronize_enrichment_job_progress(job.job_id)
     completed_batches = {
         (int(row["season"]), int(row["batch_sequence"]))
         for row in historical_store.enrichment_batches(league_id)
@@ -473,7 +474,9 @@ async def enrich_player_history(
         else "complete"
     )
     historical_store.update_job(
-        job.job_id, status=status, completed_at=utcnow().isoformat(),
+        job.job_id,
+        status="completed" if status == "complete" else status,
+        completed_at=utcnow().isoformat(),
         inserted_records=totals["written"],
         unchanged_records=totals["unchanged"],
         skipped_records=totals["unresolved"],
@@ -566,11 +569,17 @@ def player_history_evidence(league_id: str, player_id: str) -> dict[str, Any]:
 def import_status(league_id: str) -> dict[str, Any]:
     runs = historical_store.import_status(league_id)
     foundation = historical_store.latest_completed_foundation(league_id)
+    jobs = historical_store.jobs(league_id)
+    for job in jobs:
+        progress = historical_store.enrichment_job_progress(job["job_id"])
+        if progress is not None:
+            job["progress"] = progress
     return {
         "schema_version": HISTORICAL_SCHEMA_VERSION,
         "runs": runs,
-        "jobs": historical_store.jobs(league_id),
+        "jobs": jobs,
         "checkpoints": historical_store.checkpoints(league_id),
+        "progress_repairs": historical_store.progress_repairs(),
         "latest_attempt": runs[0] if runs else None,
         "latest_completed_foundation": foundation,
         "latest": runs[0] if runs else {

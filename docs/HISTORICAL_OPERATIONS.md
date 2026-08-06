@@ -75,6 +75,27 @@ being classified by calendar year alone.
 Scheduled synchronization and an operator-requested rerun re-evaluate pending
 segments. A later published file replaces the checkpoint with `completed`
 without duplicating immutable player-week records.
+
+## Player enrichment progress contract
+
+Player-week enrichment maintains two independent durable progress layers. The
+`enrichment_batches` table records batch sequence, counts, timing, and the last
+durable event identity. Job-level `completed_steps` counts only distinct
+requested seasons whose player-week checkpoint is `completed`; pending,
+not-yet-available, unsupported, and failed seasons never increment it.
+
+The import-status contract reports completed, pending, and failed season lists
+alongside the stored counters and a consistency indicator. `completed` requires
+all requested player-week seasons to be complete. `completed_with_pending`
+identifies the remaining pending seasons, while `failed` retains the failed
+season checkpoint and error. Running and recoverable jobs retain the latest
+committed batch and checkpoint so restart recovery never depends on in-memory
+progress.
+
+Migration repair derives counters from durable checkpoints, records its before
+and after values in `enrichment_progress_repairs`, and never rewrites immutable
+historical evidence.
+
 4. Retry incomplete work after its persisted retry eligibility time.
 5. Require zero blocking data-quality issues before declaring completion.
 6. Compare categories with the v1.5.0 local 30,051-record reference; explain provider

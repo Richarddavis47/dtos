@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.7.12 - Historical Enrichment Progress Contract
+
+- Separated enrichment batch sequence/counts from season-level job progress.
+- Derived player-week completion exclusively from distinct durable completed-season checkpoints and enforced bounded counters.
+- Added an idempotent migration repair with an audit record for inconsistent persisted progress such as `78/6`, without rewriting historical evidence.
+- Added explicit completed, pending, and failed season details to import-status progress diagnostics while preserving foundation workflow semantics.
+
 ## v1.7.11 - Historical Enrichment Batch Persistence
 
 - Streamed nflverse enrichment data in bounded configurable batches instead of retaining an entire season payload.
