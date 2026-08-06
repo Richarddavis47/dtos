@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Historical Asset Graph Read-Path Optimization - DTOS v1.7.7
+
+- Build and index historical evidence once per deterministic dataset version.
+- Keep warm asset-directory and player-dossier reads within production latency
+  targets without provider calls, stale unbounded caches, or contract drift.
+
 ### Historical Asset Graph & Connected Dossiers - DTOS v1.7.6
 
 - Connect verified 2021–2026 Sleeper history to canonical player, pick, trade,

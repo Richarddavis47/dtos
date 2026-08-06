@@ -2,6 +2,12 @@
 
 DTOS v1.7.6 introduces Historical Asset Graph schema `1.0`, preserves the backward-compatible Historical Memory schema `1.0`, adds Player History schema `2.0`, and advances the importer to `1.2`. The graph is a deterministic read model over DTOS's immutable SQLite historical records; it never synchronizes Sleeper or changes state during a request.
 
+## Read-model lifecycle (v1.7.7)
+
+The process-local read model is keyed by league, historical dataset content identity, all relevant schema/importer/calculation versions, and verified current identity metadata. It builds once under a lock, publishes only after every index is complete, retains at most two versions, and invalidates automatically when stored history or identity inputs change. Multi-worker deployments independently build the same deterministic model per worker.
+
+Directory requests filter and paginate stable player/pick references before hydrating summaries. Detail requests use indexed asset events, parent transactions, player weeks, season totals, ownership evidence, trades, and conversions. Cache and query diagnostics are returned by `/api/history/coverage`; directory responses include the same read-model metadata. No read method imports or invokes provider synchronization.
+
 ## Identity contracts
 
 - Players: `DTOS-P-{Sleeper player ID}`
