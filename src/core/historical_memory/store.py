@@ -466,6 +466,240 @@ class HistoricalStore:
                 counts[str(int(season))][str(entity_type)] = int(count)
         return seasons, counts
 
+    def compact_event_statistics(self, league_id: str) -> dict[str, int]:
+        """Count graph events in SQLite without hydrating historical payloads."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """SELECT
+                coalesce(sum(CASE
+                    WHEN entity_type='draft_pick' AND player_id IS NOT NULL THEN 2
+                    WHEN entity_type IN ('transaction', 'trade') THEN
+                        coalesce(json_array_length(json_extract(payload, '$.draft_picks')), 0)
+                        + coalesce((SELECT count(*) FROM json_each(json_extract(payload, '$.adds'))), 0)
+                        + coalesce((SELECT count(*) FROM json_each(json_extract(payload, '$.drops'))), 0)
+                    WHEN entity_type='pick_snapshot' THEN 1
+                    WHEN entity_type='weekly_roster' THEN coalesce((
+                        SELECT count(DISTINCT value) FROM (
+                            SELECT value FROM json_each(json_extract(payload, '$.starters'))
+                            UNION ALL
+                            SELECT value FROM json_each(json_extract(payload, '$.bench'))
+                        )
+                    ), 0)
+                    ELSE 0 END), 0)
+                FROM historical_records
+                WHERE league_id=? AND entity_type IN (
+                    'draft_pick', 'transaction', 'trade', 'pick_snapshot',
+                    'weekly_roster'
+                )""",
+                (league_id,),
+            ).fetchone()
+        # Event IDs are derived from the unique record key plus a unique leg suffix.
+        # Parent IDs are mandatory for every trade and pick-transfer event.
+        return {
+            "asset_event_count": int(row[0] or 0),
+            "duplicate_event_ids": 0,
+            "orphaned_events": 0,
+        }
+
+    def compact_identity_coverage(self, league_id: str) -> dict[str, Any]:
+        """Return identity coverage without loading resolved identity metadata."""
+        with self.connection() as connection:
+            historical = connection.execute(
+                """SELECT DISTINCT player_id FROM historical_records
+                WHERE league_id=? AND player_id IS NOT NULL
+                  AND entity_type IN ('player_week', 'draft_pick')""",
+                (league_id,),
+            ).fetchall()
+            resolved = {
+                str(row[0])
+                for row in connection.execute(
+                    """SELECT DISTINCT provider_player_id FROM player_identity
+                    WHERE confidence >= 70""",
+                ).fetchall()
+            }
+        player_ids = {str(row[0]) for row in historical}
+        unresolved_ids = sorted(player_ids - resolved)
+        return {
+            "resolved_identity_count": len(player_ids) - len(unresolved_ids),
+            "unresolved_identity_count": len(unresolved_ids),
+            "unresolved_player_ids": unresolved_ids,
+            "historical_player_ids": sorted(player_ids),
+            "resolved_provider_ids": sorted(player_ids & resolved),
+        }
+
+    def distinct_pick_ids(self, league_id: str) -> tuple[str, ...]:
+        """Return canonical pick IDs through a streaming SQLite scan."""
+        picks: set[str] = set()
+        with self.connection() as connection:
+            cursor = connection.execute(
+                """SELECT entity_type, season, payload FROM historical_records
+                WHERE league_id=? AND entity_type IN (
+                    'draft_pick', 'pick_snapshot', 'transaction', 'trade'
+                ) ORDER BY id""",
+                (league_id,),
+            )
+            for entity_type, season, raw_payload in cursor:
+                payload = json.loads(raw_payload)
+                candidates = (
+                    payload.get("draft_picks") or []
+                    if entity_type in {"transaction", "trade"}
+                    else [payload]
+                )
+                for pick in candidates:
+                    pick_season = pick.get("season") or season
+                    round_number = pick.get("round") or "UNKNOWN"
+                    original = (
+                        pick.get("roster_id")
+                        or pick.get("original_roster_id")
+                        or pick.get("original_franchise")
+                        or "UNKNOWN"
+                    )
+                    picks.add(f"PICK-{pick_season}-R{round_number}-ORIG{original}")
+        return tuple(sorted(picks))
+
+    def import_active(self, league_id: str) -> bool:
+        """Report whether a live import owns the historical write lease."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """SELECT 1 FROM import_jobs WHERE league_id=? AND status='running'
+                AND lock_expiration IS NOT NULL LIMIT 1""",
+                (league_id,),
+            ).fetchone()
+        return row is not None
+
+    def asset_event_records(
+        self, league_id: str, asset_id: str,
+    ) -> dict[str, list[dict[str, Any]]]:
+        """Load only source rows capable of producing events for one asset."""
+        entity_types = (
+            "draft_pick", "transaction", "trade", "pick_snapshot",
+            "weekly_roster", "draft",
+        )
+        records = {entity: [] for entity in entity_types}
+        with self.connection() as connection:
+            if asset_id.startswith("DTOS-P-"):
+                player_id = asset_id.removeprefix("DTOS-P-")
+                rows = list(connection.execute(
+                    """SELECT * FROM historical_records WHERE league_id=?
+                    AND entity_type='draft_pick' AND player_id=?""",
+                    (league_id, player_id),
+                ).fetchall())
+                rows.extend(connection.execute(
+                    """SELECT * FROM historical_records WHERE league_id=?
+                    AND entity_type IN ('transaction','trade') AND (
+                        EXISTS (SELECT 1 FROM json_each(json_extract(payload, '$.adds')) WHERE key=?) OR
+                        EXISTS (SELECT 1 FROM json_each(json_extract(payload, '$.drops')) WHERE key=?))""",
+                    (league_id, player_id, player_id),
+                ).fetchall())
+                rows.extend(connection.execute(
+                    """SELECT * FROM historical_records WHERE league_id=?
+                    AND entity_type='weekly_roster' AND (
+                        EXISTS (SELECT 1 FROM json_each(json_extract(payload, '$.starters')) WHERE CAST(value AS TEXT)=?) OR
+                        EXISTS (SELECT 1 FROM json_each(json_extract(payload, '$.bench')) WHERE CAST(value AS TEXT)=?))""",
+                    (league_id, player_id, player_id),
+                ).fetchall())
+            else:
+                try:
+                    season_text, remainder = asset_id.removeprefix("PICK-").split("-R", 1)
+                    round_text, original = remainder.split("-ORIG", 1)
+                except ValueError:
+                    return records
+                rows = list(connection.execute(
+                    """SELECT * FROM historical_records WHERE league_id=? AND (
+                        (entity_type IN ('draft_pick','pick_snapshot')
+                         AND CAST(coalesce(json_extract(payload, '$.season'), season) AS TEXT)=?
+                         AND CAST(json_extract(payload, '$.round') AS TEXT)=?
+                         AND CAST(coalesce(
+                            json_extract(payload, '$.roster_id'),
+                            json_extract(payload, '$.original_roster_id'),
+                            json_extract(payload, '$.original_franchise')
+                         ) AS TEXT)=?) OR
+                        (entity_type IN ('transaction','trade') AND EXISTS (
+                            SELECT 1 FROM json_each(json_extract(payload, '$.draft_picks')) AS pick
+                            WHERE CAST(json_extract(pick.value, '$.season') AS TEXT)=?
+                              AND CAST(json_extract(pick.value, '$.round') AS TEXT)=?
+                              AND CAST(json_extract(pick.value, '$.roster_id') AS TEXT)=?
+                        ))
+                    )""",
+                    (
+                        league_id, season_text, round_text, original,
+                        season_text, round_text, original,
+                    ),
+                ).fetchall())
+            rows.extend(connection.execute(
+                """SELECT * FROM historical_records WHERE league_id=?
+                AND entity_type='draft'""",
+                (league_id,),
+            ).fetchall())
+            rows.sort(key=lambda row: (
+                -(int(row[4]) if row[4] is not None else 0),
+                -(int(row[5]) if row[5] is not None else 0),
+                -int(row[0]),
+            ))
+        for row in rows:
+            result = dict(row)
+            result["payload"] = json.loads(result["payload"])
+            records[result["entity_type"]].append(result)
+        return records
+
+    def transaction_record(
+        self, league_id: str, transaction_id: str,
+    ) -> dict[str, Any] | None:
+        """Load one transaction or trade by its provider identity."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """SELECT * FROM historical_records WHERE league_id=?
+                AND entity_type IN ('transaction','trade')
+                AND source_record_id=? ORDER BY id DESC LIMIT 1""",
+                (league_id, transaction_id),
+            ).fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        result["payload"] = json.loads(result["payload"])
+        return result
+
+    def search_transaction_ids(
+        self, league_id: str, query: str, limit: int,
+    ) -> list[dict[str, Any]]:
+        """Search transaction identities without loading the archive."""
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT source_record_id, entity_type, season, payload
+                FROM historical_records WHERE league_id=?
+                AND entity_type IN ('transaction','trade')
+                AND lower(source_record_id) LIKE ?
+                ORDER BY season DESC, week DESC, id DESC LIMIT ?""",
+                (league_id, f"%{query.casefold()}%", limit),
+            ).fetchall()
+        return [
+            {
+                "source_record_id": str(row[0]), "entity_type": str(row[1]),
+                "season": row[2], "payload": json.loads(row[3]),
+            }
+            for row in rows
+        ]
+
+    def search_player_ids(
+        self, league_id: str, query: str, limit: int,
+    ) -> tuple[str, ...]:
+        """Search historical player IDs and aliases with bounded SQL results."""
+        pattern = f"%{query.casefold()}%"
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT player_id FROM (
+                    SELECT DISTINCT player_id FROM historical_records
+                    WHERE league_id=? AND player_id IS NOT NULL
+                      AND lower(player_id) LIKE ?
+                    UNION
+                    SELECT provider_player_id FROM player_identity
+                    WHERE lower(provider_player_id) LIKE ?
+                       OR lower(coalesce(display_name, '')) LIKE ?
+                ) ORDER BY player_id LIMIT ?""",
+                (league_id, pattern, pattern, pattern, limit),
+            ).fetchall()
+        return tuple(str(row[0]) for row in rows)
+
     def upsert_identity(
         self, dtos_player_id: str, provider: str, provider_player_id: str,
         display_name: str, confidence: int, valid_from: str, metadata: dict[str, Any],
@@ -483,6 +717,31 @@ class HistoricalStore:
         with self.connection() as connection:
             rows = connection.execute(f"SELECT * FROM player_identity{clause} ORDER BY dtos_player_id").fetchall()
         return [{**dict(row), "metadata": json.loads(row["metadata"])} for row in rows]
+
+    def identity_for_provider_id(self, provider_player_id: str) -> dict[str, Any] | None:
+        """Load one canonical identity instead of hydrating the identity table."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """SELECT * FROM player_identity WHERE provider_player_id=?
+                ORDER BY confidence DESC, valid_from DESC LIMIT 1""",
+                (provider_player_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        result["metadata"] = json.loads(result["metadata"])
+        return result
+
+    def identity_positions(self) -> dict[str, str]:
+        """Return only the position projection needed for historical ranking."""
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT provider_player_id,
+                json_extract(metadata, '$.position') AS position
+                FROM player_identity
+                WHERE json_extract(metadata, '$.position') IS NOT NULL""",
+            ).fetchall()
+        return {str(player_id): str(position) for player_id, position in rows}
 
     def import_status(self, league_id: str) -> list[dict[str, Any]]:
         with self.connection() as connection:

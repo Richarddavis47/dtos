@@ -91,10 +91,49 @@ class HistoricalLifecycleStabilityTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(
             self.store, "entity_counts_by_season",
             wraps=self.store.entity_counts_by_season,
-        ) as counts:
+        ) as counts, patch.object(
+            graph, "_ensure_event_indexes",
+            side_effect=AssertionError("coverage hydrated the global graph"),
+        ):
             result = graph.coverage()
         counts.assert_called_once()
         self.assertEqual(result["status"], "incomplete")
+
+    def test_global_graph_hydration_is_blocked_during_active_import(self) -> None:
+        job = ImportJob(self.store, self.league_id, (2025,), ("matchup",))
+        job.create()
+        self.assertTrue(job.acquire())
+        graph = HistoricalAssetGraph(self.store, self.league_id, {"players": {}})
+        with self.assertRaisesRegex(RuntimeError, "indexed read path"):
+            graph.events()
+        self.assertIn("counts_by_season", graph.coverage())
+
+    def test_asset_specific_reads_remain_available_during_import(self) -> None:
+        observed = "2025-09-01T00:00:00+00:00"
+        self.store.append(
+            record_key="roster", entity_type="weekly_roster",
+            league_id=self.league_id, season=2025, week=1,
+            franchise_id=f"{self.league_id}:franchise:1", player_id=None,
+            source_record_id="roster", observed_at=observed,
+            retrieved_at=observed, provider="Sleeper", availability="observed",
+            confidence=100, calculation_method="provider_record",
+            schema_version="1.0", payload={"starters": ["p1"], "bench": []},
+        )
+        job = ImportJob(self.store, self.league_id, (2025,), ("matchup",))
+        job.create()
+        self.assertTrue(job.acquire())
+        graph = HistoricalAssetGraph(
+            self.store, self.league_id,
+            {"players": {"p1": {"full_name": "Player One", "position": "WR"}}},
+        )
+        with patch(
+            "services.sleeper.sleeper_get",
+            side_effect=AssertionError("historical read attempted provider I/O"),
+        ):
+            events = graph.events(asset_id="DTOS-P-p1")
+            directory = graph.asset_directory_page(limit=1)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(directory[1][0]["canonical_id"], "DTOS-P-p1")
 
 
 if __name__ == "__main__":

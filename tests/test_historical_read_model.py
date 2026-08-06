@@ -191,7 +191,9 @@ class HistoricalReadModelTests(unittest.TestCase):
         self.assertLess(asset_duration, 1)
         self.assertLess(player_duration, 2)
         self.assertEqual(cache.metadata()["build_count"], 1)
-        self.assertEqual(cache.metadata()["event_count"], 30_000)
+        # Asset-specific reads retain only this player's three snapshots rather
+        # than hydrating all 30,000 roster events into the process cache.
+        self.assertEqual(cache.metadata()["event_count"], 3)
         self.assertGreater(cache.metadata()["approximate_model_bytes"], 0)
 
 
