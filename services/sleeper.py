@@ -4,6 +4,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
+import tempfile
 import threading
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
@@ -17,6 +19,7 @@ from src.core.data_platform.normalization import PlayerIdentityResolver
 from src.core.data_platform.provider_activation import refresh_public_market
 from src.core.intelligence.cache import intelligence_cache
 from src.core.provider_network import build_provider_network
+from src.platform.lifecycle import lifecycle_coordinator
 from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence
 from services.history import capture_current_state, player_history_evidence
@@ -62,15 +65,36 @@ def load_cache() -> None:
 
 
 def save_cache() -> None:
+    temporary_path = None
     try:
-        CACHE_FILE.write_text(
-            json.dumps(
-                {k: v for k, v in STATE.items() if not k.endswith("syncing")}
-            ),
-            encoding="utf-8",
-        )
+        CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        payload = {k: v for k, v in STATE.items() if not k.endswith("syncing")}
+        encoder = json.JSONEncoder(separators=(",", ":"), ensure_ascii=False)
+        with lifecycle_coordinator.phase("cache_persistence") as phase:
+            phase.update({
+                "serialization_state": "streaming",
+                "cache_entry_count": len(payload),
+            })
+            with tempfile.NamedTemporaryFile(
+                "w", encoding="utf-8", dir=CACHE_FILE.parent,
+                prefix=f".{CACHE_FILE.name}.", suffix=".tmp", delete=False,
+            ) as handle:
+                temporary_path = handle.name
+                for chunk in encoder.iterencode(payload):
+                    handle.write(chunk)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, CACHE_FILE)
+            temporary_path = None
+            phase["serialization_state"] = "complete"
     except Exception as exc:  # pragma: no cover
         logger.warning("Could not save cache: %s", exc)
+    finally:
+        if temporary_path is not None:
+            try:
+                os.unlink(temporary_path)
+            except OSError:
+                pass
 
 
 async def sleeper_get(client: httpx.AsyncClient, path: str) -> Any:
@@ -89,6 +113,8 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
             return STATE
         STATE["syncing"] = True
         try:
+            lifecycle_context = lifecycle_coordinator.phase("sleeper_sync")
+            lifecycle_context.__enter__()
             timeout = httpx.Timeout(REQUEST_TIMEOUT)
             async with httpx.AsyncClient(
                 timeout=timeout, headers=request_headers()
@@ -319,6 +345,12 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                     "reason": None,
                 }
             previous_data = STATE.get("data") or {}
+            retained_history = {
+                "calibration_state": previous_data.get("calibration_state") or {},
+                "calibration_history": previous_data.get("calibration_history") or [],
+                "provider_reliability_history": previous_data.get("provider_reliability_history") or [],
+                "valuation_intelligence_timeline": previous_data.get("valuation_intelligence_timeline") or {},
+            }
             STATE["data"] = {
                 "league": league,
                 "scoring_settings": league.get("scoring_settings") or {},
@@ -338,18 +370,27 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 "trending_players": {"adds": trending_adds, "drops": trending_drops, "source": "Sleeper", "updated_at": utcnow().isoformat()},
                 "players_fetched_at": players_fetched_at,
                 "market_data": market_data,
-                "calibration_state": previous_data.get("calibration_state") or {},
-                "calibration_history": previous_data.get("calibration_history") or [],
-                "provider_reliability_history": previous_data.get("provider_reliability_history") or [],
-                "valuation_intelligence_timeline": previous_data.get("valuation_intelligence_timeline") or {},
+                **retained_history,
             }
+            # Drop synchronization-only references before provider, valuation,
+            # and persistence phases allocate their own bounded working sets.
+            del previous_data, retained_history, cached_players
+            del history_by_player, user_by_id, matchup_by_roster, resolver
             STATE["last_sync"] = synced_at
             STATE["last_error"] = None
             STATE["transactions_last_sync"] = synced_at
             STATE["transactions_last_error"] = None
             try:
-                await asyncio.to_thread(build_provider_network, STATE["data"], STATE)
-                await asyncio.to_thread(build_valuation_intelligence, STATE["data"], STATE)
+                with lifecycle_coordinator.phase("provider_network") as phase:
+                    await asyncio.to_thread(build_provider_network, STATE["data"], STATE)
+                    phase["provider_count"] = len(
+                        (STATE["data"].get("provider_network") or {}).get("providers") or []
+                    )
+                with lifecycle_coordinator.phase("valuation_intelligence") as phase:
+                    await asyncio.to_thread(build_valuation_intelligence, STATE["data"], STATE)
+                    phase["canonical_generation"] = (
+                        STATE["data"].get("valuation_intelligence") or {}
+                    ).get("generated_at")
                 await asyncio.to_thread(audit_market_calibration, STATE["data"], STATE, apply=True)
             except Exception:
                 logger.exception("Provider network or automated market calibration audit failed")
@@ -364,6 +405,8 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
             logger.exception("Sleeper sync failed")
         finally:
             STATE["syncing"] = False
+            if "lifecycle_context" in locals():
+                lifecycle_context.__exit__(None, None, None)
         return STATE
 
 

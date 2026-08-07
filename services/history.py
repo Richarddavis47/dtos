@@ -22,6 +22,7 @@ from src.core.historical_memory.enrichment import (
     build_identity_context,
     prepare_enrichment_records,
 )
+from src.platform.lifecycle import lifecycle_coordinator
 from src.core.historical_memory.jobs import (
     ImportJob,
     completeness_report,
@@ -356,47 +357,60 @@ async def enrich_player_history(
                     if (season, batch_sequence) in completed_batches:
                         rows.clear()
                         continue
-                    raw_records, derived_records, unresolved = (
-                        prepare_enrichment_records(
-                            league_id, rows, settings, identity_context,
-                        )
-                    )
-                    started_at = utcnow()
-                    completed_at = utcnow()
-                    last_identity = next(
-                        (
-                            record["record_key"]
-                            for record in reversed(derived_records or raw_records)
-                        ),
-                        None,
-                    )
-                    batch = await asyncio.to_thread(
-                        historical_store.commit_enrichment_batch,
-                        raw_records=raw_records,
-                        derived_records=derived_records,
-                        progress={
-                            "batch_key": (
-                                f"{league_id}:{season}:nflverse:"
-                                f"{batch_sequence}:{IMPORTER_VERSION}"
-                            ),
-                            "job_id": job.job_id,
-                            "lease_owner": job.worker_identity,
-                            "league_id": league_id, "season": season,
-                            "week": max(
-                                (int(row["week"]) for row in rows if row.get("week")),
-                                default=None,
-                            ),
-                            "provider": "nflverse",
+                    with lifecycle_coordinator.phase("historical_import") as phase:
+                        phase.update({
+                            "historical_job_state": "batch_persistence",
+                            "season": season,
                             "batch_sequence": batch_sequence,
                             "raw_records_received": len(rows),
-                            "batch_started_at": started_at.isoformat(),
-                            "batch_completed_at": completed_at.isoformat(),
-                            "last_durable_event_identity": last_identity,
-                        },
-                        lease_expires_at=(
-                            completed_at + timedelta(minutes=15)
-                        ).isoformat(),
-                    )
+                        })
+                        raw_records, derived_records, unresolved = (
+                            prepare_enrichment_records(
+                                league_id, rows, settings, identity_context,
+                            )
+                        )
+                        started_at = utcnow()
+                        completed_at = utcnow()
+                        last_identity = next(
+                            (
+                                record["record_key"]
+                                for record in reversed(derived_records or raw_records)
+                            ),
+                            None,
+                        )
+                        batch = await asyncio.to_thread(
+                            historical_store.commit_enrichment_batch,
+                            raw_records=raw_records,
+                            derived_records=derived_records,
+                            progress={
+                                "batch_key": (
+                                    f"{league_id}:{season}:nflverse:"
+                                    f"{batch_sequence}:{IMPORTER_VERSION}"
+                                ),
+                                "job_id": job.job_id,
+                                "lease_owner": job.worker_identity,
+                                "league_id": league_id, "season": season,
+                                "week": max(
+                                    (int(row["week"]) for row in rows if row.get("week")),
+                                    default=None,
+                                ),
+                                "provider": "nflverse",
+                                "batch_sequence": batch_sequence,
+                                "raw_records_received": len(rows),
+                                "batch_started_at": started_at.isoformat(),
+                                "batch_completed_at": completed_at.isoformat(),
+                                "last_durable_event_identity": last_identity,
+                            },
+                            lease_expires_at=(
+                                completed_at + timedelta(minutes=15)
+                            ).isoformat(),
+                        )
+                        phase.update({
+                            "written": (
+                                batch["raw_inserted"] + batch["derived_inserted"]
+                            ),
+                            "unchanged": batch["duplicates"],
+                        })
                     result["written"] += (
                         batch["raw_inserted"] + batch["derived_inserted"]
                     )
@@ -507,8 +521,17 @@ async def enrich_player_history(
 def start_background_backfill(fetch: Any) -> asyncio.Task[dict[str, Any]]:
     global _BACKFILL_TASK
     if _BACKFILL_TASK is None or _BACKFILL_TASK.done():
+        async def coordinated_backfill() -> dict[str, Any]:
+            with lifecycle_coordinator.phase("historical_import") as phase:
+                result = await ensure_history_backfill(fetch)
+                phase.update({
+                    "historical_job_state": result.get("status"),
+                    "season_count": len(result.get("seasons") or []),
+                })
+                return result
+
         _BACKFILL_TASK = asyncio.create_task(
-            ensure_history_backfill(fetch), name="dtos-history-worker",
+            coordinated_backfill(), name="dtos-history-worker",
         )
     return _BACKFILL_TASK
 
