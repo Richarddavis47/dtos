@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.parse import quote
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 GIB = 1024**3
 MIB = 1024**2
@@ -65,16 +65,26 @@ class Monitor:
         self.peak = max(self.peak, _cgroup("memory.current"))
 
 
-def _request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes, float]:
+def _diagnostic_request(
+    path: str, expected: tuple[int, ...] = (200,),
+) -> tuple[int, bytes, float, float]:
     started = time.perf_counter()
+    request = Request(BASE_URL + path, headers={"X-DTOS-Diagnostics": "1"})
     try:
-        with urlopen(BASE_URL + path, timeout=60) as response:
+        with urlopen(request, timeout=60) as response:
             status, body = response.status, response.read()
+            server_ms = float(response.headers.get("X-DTOS-Request-Duration", 0))
     except HTTPError as exc:
         status, body = exc.code, exc.read()
+        server_ms = float(exc.headers.get("X-DTOS-Request-Duration", 0))
     elapsed = (time.perf_counter() - started) * 1000
     if status not in expected:
         raise AssertionError(f"{path}: HTTP {status}, expected {expected}")
+    return status, body, elapsed, server_ms
+
+
+def _request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes, float]:
+    status, body, elapsed, _server_ms = _diagnostic_request(path, expected)
     return status, body, elapsed
 
 
@@ -130,18 +140,54 @@ def _market_health() -> dict:
     return json.loads(_request("/api/market/health")[1])
 
 
-def _cold_build() -> tuple[dict, float, int]:
+def _cold_build() -> tuple[dict, float, int, dict[str, object]]:
     started = time.perf_counter()
     attempts = 0
+    warming_client: list[float] = []
+    warming_server: list[float] = []
+    health_latency: list[float] = []
+    liveness_latency: list[float] = []
+    phases: set[str] = set()
     deadline = time.monotonic() + 60
     while time.monotonic() < deadline:
         attempts += 1
-        status, _body, elapsed = _request("/api/market/assets?limit=50", (200, 503))
+        status, _body, elapsed, server_ms = _diagnostic_request(
+            "/api/market/assets?limit=50", (200, 503),
+        )
         if status == 200:
-            return _market_health(), (time.perf_counter() - started) * 1000, attempts
+            return (
+                _market_health(),
+                (time.perf_counter() - started) * 1000,
+                attempts,
+                {
+                    "warming_client_max_ms": round(max(warming_client, default=0), 3),
+                    "warming_server_max_ms": round(max(warming_server, default=0), 3),
+                    "health_max_ms": round(max(health_latency, default=0), 3),
+                    "liveness_max_ms": round(max(liveness_latency, default=0), 3),
+                    "background_phases": sorted(phases),
+                },
+            )
+        warming_client.append(elapsed)
+        warming_server.append(server_ms)
         if elapsed >= 500:
             raise AssertionError(f"warming response exceeded 500ms: {elapsed:.3f}ms")
-        health = _market_health()
+        if server_ms >= 50:
+            raise AssertionError(
+                f"warming server time exceeded 50ms: {server_ms:.3f}ms"
+            )
+        _health_status, health_body, health_ms, _ = _diagnostic_request(
+            "/api/market/health",
+        )
+        health_latency.append(health_ms)
+        health = json.loads(health_body)
+        phases.add(str((health.get("cache") or {}).get("build_phase")))
+        _live_status, _live_body, live_ms, _ = _diagnostic_request("/health/live")
+        liveness_latency.append(live_ms)
+        if health_ms >= 500 or live_ms >= 500:
+            raise AssertionError(
+                f"background responsiveness failed: health={health_ms:.3f}ms "
+                f"liveness={live_ms:.3f}ms"
+            )
         error = (health.get("cache") or {}).get("last_error")
         if error:
             raise AssertionError(f"market build failed: {error}")
@@ -216,13 +262,14 @@ def main() -> int:
                 raise AssertionError("metadata-only health constructed the market")
             padding = _pad_to_production_baseline()
             before_cold = _cgroup("memory.current")
-            health, build_ms, attempts = _cold_build()
+            health, build_ms, attempts, responsiveness = _cold_build()
             cold_peak = monitor.peak
             summary["phases"]["cold_market"] = {
                 "timestamp": time.time(), "duration_ms": round(build_ms, 3), "attempts": attempts,
                 "memory_before": before_cold, "memory_current": _cgroup("memory.current"),
                 "memory_peak": cold_peak, "build_count": (health.get("cache") or {}).get("build_count"),
                 "generation": (health.get("cache") or {}).get("market_generation"),
+                "responsiveness": responsiveness,
             }
             if cold_peak >= COLD_MAX:
                 raise AssertionError(f"cold-build cgroup peak {cold_peak} exceeds 1.5 GiB")
@@ -236,7 +283,7 @@ def main() -> int:
             _mutate_generation()
             process = _start_server(log)
             _wait_ready()
-            replacement, replacement_ms, replacement_attempts = _cold_build()
+            replacement, replacement_ms, replacement_attempts, replacement_responsiveness = _cold_build()
             second_generation = (replacement.get("cache") or {}).get("market_generation")
             if second_generation == first_generation:
                 raise AssertionError("generation replacement did not publish a new identity")
@@ -247,6 +294,7 @@ def main() -> int:
                 "timestamp": time.time(), "duration_ms": round(replacement_ms, 3),
                 "attempts": replacement_attempts, "generation_changed": True,
                 "active_generations": len(artifacts), "memory_current": _cgroup("memory.current"),
+                "responsiveness": replacement_responsiveness,
             }
             _stop_server(process)
             process = None

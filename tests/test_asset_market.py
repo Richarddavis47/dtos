@@ -4,6 +4,7 @@ from __future__ import annotations
 import gc
 import tempfile
 import threading
+import time
 import unittest
 import weakref
 from contextlib import contextmanager
@@ -15,7 +16,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 from routes.market import create_market_router
-from src.core.asset_market import AssetMarketCache, MarketWarmingError
+from src.core.asset_market import (
+    AssetMarketCache, MarketWarmingError, asset_market_cache,
+)
 from src.core.asset_market.read_model import (
     MarketMemoryBudgetError, build_read_model, enforce_memory_budget,
 )
@@ -39,6 +42,8 @@ def _brain_asset(asset_id: str, market: int, contender: int, rebuilder: int) -> 
 
 class AssetMarketTests(unittest.TestCase):
     def setUp(self) -> None:
+        asset_market_cache.wait_for_background()
+        asset_market_cache.clear()
         self.temp = tempfile.TemporaryDirectory()
         self.store = HistoricalStore(Path(self.temp.name) / "history.sqlite3")
         self.league_id = "league-1"
@@ -88,7 +93,19 @@ class AssetMarketTests(unittest.TestCase):
         self.market = self.cache.get(self.data, self.state, self.store, self.league_id)
 
     def tearDown(self) -> None:
+        asset_market_cache.wait_for_background()
+        asset_market_cache.clear()
         self.temp.cleanup()
+
+    @staticmethod
+    def _ready_get(client: TestClient, path: str):
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            response = client.get(path)
+            if response.status_code != 503:
+                return response
+            time.sleep(0.01)
+        raise AssertionError(f"Asset Market did not publish for {path}")
 
     def _append(
         self, entity_type: str, source: str, player_id: str | None,
@@ -122,6 +139,22 @@ class AssetMarketTests(unittest.TestCase):
             loaded = restarted.get(self.data, self.state, self.store, self.league_id)
         self.assertEqual(loaded._artifact_path, first_path)
         self.assertEqual(loaded.directory(limit=4), self.market.directory(limit=4))
+
+    def test_background_generation_preserves_identity_and_serialized_output(self) -> None:
+        background = AssetMarketCache()
+        with self.assertRaises(MarketWarmingError):
+            background.get(
+                self.data, self.state, self.store, self.league_id,
+                background=True,
+            )
+        self.assertTrue(background.wait_for_background())
+        loaded = background.get(
+            self.data, self.state, self.store, self.league_id,
+            background=True,
+        )
+        self.assertEqual(loaded.generated_at, self.market.generated_at)
+        self.assertEqual(loaded.directory(limit=4), self.market.directory(limit=4))
+        self.assertEqual(loaded.detail("player:10213", 1), self.market.detail("player:10213", 1))
 
     def test_directory_pages_before_detail_hydration(self) -> None:
         with patch.object(
@@ -158,11 +191,11 @@ class AssetMarketTests(unittest.TestCase):
         entered = threading.Event()
         release = threading.Event()
 
-        def construct(*_args: object) -> None:
+        def prepare(*_args: object) -> None:
             entered.set()
             release.wait(1)
 
-        with patch.object(cache, "_construct", side_effect=construct) as build:
+        with patch.object(cache, "_prepare_generation", side_effect=prepare) as build:
             with self.assertRaises(MarketWarmingError):
                 cache.get(
                     self.data, changed_state, self.store, self.league_id,
@@ -291,13 +324,13 @@ class AssetMarketTests(unittest.TestCase):
         with patch("routes.market.historical_store", self.store):
             client = TestClient(app)
             with patch("services.sleeper.sync_sleeper", new=AsyncMock()) as sync:
-                self.assertEqual(client.get("/").status_code, 200)
-                self.assertIn("Asset Market", client.get("/market").text)
-                self.assertEqual(client.get("/api/market").status_code, 200)
-                self.assertEqual(client.get("/api/market/assets?limit=2").json()["limit"], 2)
-                self.assertEqual(client.get("/api/market/assets/player:10213").status_code, 200)
-                self.assertEqual(client.get("/api/market/search?q=Josh%20Allen").status_code, 200)
-                self.assertEqual(client.get("/api/market/trending").status_code, 200)
+                self.assertEqual(self._ready_get(client, "/").status_code, 200)
+                self.assertIn("Asset Market", self._ready_get(client, "/market").text)
+                self.assertEqual(self._ready_get(client, "/api/market").status_code, 200)
+                self.assertEqual(self._ready_get(client, "/api/market/assets?limit=2").json()["limit"], 2)
+                self.assertEqual(self._ready_get(client, "/api/market/assets/player:10213").status_code, 200)
+                self.assertEqual(self._ready_get(client, "/api/market/search?q=Josh%20Allen").status_code, 200)
+                self.assertEqual(self._ready_get(client, "/api/market/trending").status_code, 200)
                 sync.assert_not_awaited()
 
     def test_detail_identity_is_canonical_across_asset_types_and_repeated_reads(self) -> None:
@@ -334,8 +367,11 @@ class AssetMarketTests(unittest.TestCase):
         ))
         with patch("routes.market.historical_store", self.store):
             client = TestClient(app)
-            payload = client.get("/api/market/assets/player:10213").json()
-            html = client.get(
+            payload = self._ready_get(
+                client, "/api/market/assets/player:10213",
+            ).json()
+            html = self._ready_get(
+                client,
                 "/market?selected=player%3A10213&front_office=1",
             ).text
         snapshot = payload["recommendation"]["brain_snapshot_id"]
