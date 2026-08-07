@@ -14,6 +14,7 @@ from src.core.historical_memory import historical_graph
 from src.core.historical_memory.models import DATABASE_MIGRATION_VERSION
 from src.core.historical_memory.store import HistoricalStore
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
+from src.platform.lifecycle import lifecycle_coordinator
 
 MARKET_SCHEMA_VERSION = "1.0"
 SORT_FIELDS = {
@@ -26,6 +27,10 @@ SORT_FIELDS = {
     "risk": "risk_score",
     "liquidity": "liquidity_score",
 }
+
+
+class MarketWarmingError(RuntimeError):
+    """Raised when no safe market snapshot exists during a heavy lifecycle phase."""
 
 
 def _layer_value(asset: dict[str, Any], name: str) -> float | None:
@@ -490,6 +495,7 @@ class AssetMarketCache:
         self.hits = 0
         self.last_error: str | None = None
         self.last_miss_reason: str | None = None
+        self._health_metadata: dict[str, Any] = {}
 
     @staticmethod
     def store_identity(store: HistoricalStore) -> str:
@@ -522,6 +528,15 @@ class AssetMarketCache:
         self, data: dict[str, Any], state: dict[str, Any],
         store: HistoricalStore, league_id: str,
     ) -> AssetMarket:
+        if not lifecycle_coordinator.market_build_allowed():
+            with self._lock:
+                if self._market is not None and self._market.store is store:
+                    self.hits += 1
+                    self.last_miss_reason = "heavy_phase_last_valid"
+                    return self._market
+            raise MarketWarmingError(
+                "Asset Market is warming while canonical data maintenance completes."
+            )
         try:
             key, store_identity = self.key(data, state, store, league_id)
         except Exception:
@@ -532,8 +547,9 @@ class AssetMarketCache:
                     self._market = None
             raise
         if key == self._key and self._market is not None:
-            self.hits += 1
-            return self._market
+            with self._lock:
+                self.hits += 1
+                return self._market
         with self._lock:
             if key == self._key and self._market is not None:
                 self.hits += 1
@@ -543,7 +559,13 @@ class AssetMarketCache:
                     "cold_start" if self._market is None
                     else "canonical_market_inputs_changed"
                 )
-                market = AssetMarket(data, state, store, league_id)
+                with lifecycle_coordinator.phase("asset_market_build") as phase:
+                    market = AssetMarket(data, state, store, league_id)
+                    phase.update({
+                        "asset_count": len(market.assets),
+                        "canonical_generation": market.generated_at,
+                        "build_duration_ms": market.build_duration_ms,
+                    })
             except Exception as exc:
                 self.last_error = str(exc)
                 if (
@@ -556,14 +578,53 @@ class AssetMarketCache:
             self._store_identity = store_identity
             self.build_count += 1
             self.last_error = None
+            health = market.health()
+            self._health_metadata = {
+                key: health[key] for key in (
+                    "application_version", "application_build",
+                    "market_schema_version", "league_id",
+                    "historical_dataset_version", "market_generation",
+                    "brain_generation", "valuation_generation", "generated_at",
+                    "status", "counts", "duplicate_asset_ids",
+                    "build_duration_ms", "read_contract", "search_index",
+                ) if key in health
+            }
             return market
 
     def metrics(self) -> dict[str, Any]:
+        with self._lock:
+            market = self._market
+            return {
+                "status": "ready" if market is not None else "warming",
+                "build_count": self.build_count, "cache_hits": self.hits,
+                "last_error": self.last_error,
+                "last_miss_reason": self.last_miss_reason,
+                "last_valid_model": market is not None,
+                "market_generation": market.generated_at if market else None,
+                "brain_generation": market.brain_generation if market else None,
+                "historical_dataset_version": market.dataset_version if market else None,
+                "asset_count": len(market.assets) if market else 0,
+                "build_duration_ms": market.build_duration_ms if market else None,
+                "last_successful_build": market.generated_at if market else None,
+                "build_active": (
+                    lifecycle_coordinator.snapshot()["phase"]
+                    == "asset_market_build"
+                ),
+                "lifecycle": lifecycle_coordinator.snapshot(),
+            }
+
+    def health(self) -> dict[str, Any]:
+        """Return bounded retained build metadata without hydrating a model."""
+        with self._lock:
+            metadata = dict(self._health_metadata)
+        cache = self.metrics()
         return {
-            "build_count": self.build_count, "cache_hits": self.hits,
-            "cache_key": self._key, "last_error": self.last_error,
-            "last_miss_reason": self.last_miss_reason,
-            "last_valid_model": self._market is not None,
+            **metadata,
+            "status": metadata.get("status") or cache["status"],
+            "availability": "available" if cache["last_valid_model"] else "warming",
+            "counts": dict(metadata.get("counts") or {}),
+            "duplicate_asset_ids": int(metadata.get("duplicate_asset_ids") or 0),
+            "cache": cache,
         }
 
     def clear(self) -> None:
@@ -571,6 +632,7 @@ class AssetMarketCache:
             self._key = None
             self._store_identity = None
             self._market = None
+            self._health_metadata = {}
 
 
 asset_market_cache = AssetMarketCache()

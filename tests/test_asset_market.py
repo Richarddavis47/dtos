@@ -1,9 +1,11 @@
 """Asset Market canonical contracts, ranking, search, and read isolation."""
 from __future__ import annotations
 
+import gc
 import tempfile
 import threading
 import unittest
+import weakref
 from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
@@ -172,6 +174,21 @@ class AssetMarketTests(unittest.TestCase):
             self.market.detail("player:10213")["historical_dataset_version"],
             self.store.dataset_version(self.league_id),
         )
+
+    def test_generation_replacement_releases_superseded_market(self) -> None:
+        cache = AssetMarketCache()
+        previous = cache.get(self.data, self.state, self.store, self.league_id)
+        expected_assets = previous.directory()["assets"]
+        reference = weakref.ref(previous)
+        changed_state = {**self.state, "last_sync": "2026-08-07T00:00:00+00:00"}
+        current = cache.get(
+            self.data, changed_state, self.store, self.league_id,
+        )
+        del previous
+        gc.collect()
+        self.assertIsNone(reference())
+        self.assertEqual(current.directory()["assets"], expected_assets)
+        self.assertEqual(cache.build_count, 2)
 
     def test_api_ui_agree_and_reads_never_sync(self) -> None:
         app = FastAPI()

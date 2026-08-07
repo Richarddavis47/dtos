@@ -1,3 +1,15 @@
+# DTOS v1.8.3 — Production Memory Lifecycle
+
+DTOS v1.8.3 coordinates its largest in-process memory phases instead of allowing their peaks to overlap. Initial Sleeper synchronization and cache persistence finish before historical backfill begins, and cold Asset Market construction is deferred while synchronization, valuation, persistence, or historical work is active.
+
+`/api/market/health` is now a metadata-only readiness surface. It reports retained generation, count, build, cache, lifecycle, and bounded memory information without constructing a market model or triggering providers, Brain evaluation, historical hydration, or synchronization. Ordinary warm reads remain lock-light, and a last-valid market remains available during unsafe rebuild windows.
+
+Cache persistence now incrementally encodes JSON to a same-directory temporary file, flushes and synchronizes it, and atomically replaces the prior cache only after success. Failed writes retain the previous valid cache and remove temporary artifacts.
+
+The lifecycle coordinator records bounded process RSS, virtual memory, system availability, and Linux cgroup current/limit values at phase boundaries. It never publishes host paths, database identities, secrets, or raw payloads.
+
+No Asset Market formulas, rankings, canonical Brain snapshots, historical outputs, provider behavior, infrastructure, or pricing changed in this release.
+
 # DTOS v1.8.2 — Asset Market Query Performance
 
 DTOS v1.8.2 removes repeated aggregate database work from warm Asset Market reads. HistoricalStore now computes each league's canonical dataset identity once under concurrency and invalidates it only after a successful committed evidence, identity, quality, migration, or repair change. Durable database UUIDs continue detecting same-path database replacement without exposing private storage details.

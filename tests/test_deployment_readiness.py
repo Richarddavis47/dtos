@@ -104,8 +104,8 @@ class DeploymentReadinessTests(unittest.TestCase):
         async def wait(_: float) -> None:
             events.append("delay")
 
-        async def completed() -> dict:
-            events.append("work")
+        async def completed(name: str) -> dict:
+            events.append(name)
             return {}
 
         original_data = dtos_app.STATE.get("data")
@@ -119,18 +119,18 @@ class DeploymentReadinessTests(unittest.TestCase):
                 dtos_app,
                 "start_sleeper_sync",
                 side_effect=lambda *args, **kwargs: asyncio.create_task(
-                    completed()
+                    completed("sleeper")
                 ),
             ), patch.object(
                 dtos_app,
                 "start_background_backfill",
-                side_effect=lambda _: asyncio.create_task(completed()),
+                side_effect=lambda _: asyncio.create_task(completed("history")),
             ):
                 asyncio.run(dtos_app.deployment_maintenance())
         finally:
             dtos_app.STATE["data"] = original_data
         self.assertEqual(events[0], "delay")
-        self.assertEqual(events.count("work"), 2)
+        self.assertEqual(events, ["delay", "sleeper", "history"])
 
     def test_uncached_failed_sync_remains_not_ready(self) -> None:
         async def completed() -> dict:

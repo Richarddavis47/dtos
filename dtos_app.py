@@ -92,11 +92,12 @@ async def deployment_maintenance() -> None:
 
     runtime_metrics.mark_background("deployment_delay", "complete")
     runtime_metrics.mark_background("sleeper_sync", "running")
-    runtime_metrics.mark_background("history_backfill", "running")
     sleeper_task = start_sleeper_sync()
-    history_task = start_background_backfill(direct_fetch)
-    await asyncio.gather(sleeper_task, history_task, return_exceptions=True)
+    await asyncio.gather(sleeper_task, return_exceptions=True)
     runtime_metrics.mark_background("sleeper_sync", "complete")
+    runtime_metrics.mark_background("history_backfill", "running")
+    history_task = start_background_backfill(direct_fetch)
+    await asyncio.gather(history_task, return_exceptions=True)
     runtime_metrics.mark_background("history_backfill", "complete")
 
 

@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Production Memory Lifecycle - DTOS v1.8.3
+
+- Serialize synchronization, persistence, historical import, and cold market construction through one bounded lifecycle contract.
+- Make market health metadata-only and serve the last valid market while a new canonical generation is unsafe to build.
+- Stream cache persistence atomically and record bounded RSS/cgroup telemetry at memory-intensive phase boundaries.
+
 ### Asset Market Query Performance - DTOS v1.8.2
 
 - Reuse canonical historical dataset identity across unchanged reads and invalidate only after committed input changes.

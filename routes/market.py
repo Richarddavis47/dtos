@@ -10,7 +10,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse
 
 from app_metadata import VERSION
-from src.core.asset_market import asset_market, asset_market_cache
+from src.core.asset_market import MarketWarmingError, asset_market, asset_market_cache
 from src.core.historical_memory import historical_store
 
 RequireData = Callable[[], dict[str, Any]]
@@ -29,7 +29,10 @@ def create_market_router(
     router = APIRouter(tags=["asset-market"])
 
     def model():
-        return asset_market(require_data(), state, historical_store, league_id)
+        try:
+            return asset_market(require_data(), state, historical_store, league_id)
+        except MarketWarmingError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     @router.get("/api/market")
     async def market_index() -> Any:
@@ -41,7 +44,14 @@ def create_market_router(
 
     @router.get("/api/market/health")
     async def market_health() -> Any:
-        return {**model().health(), "cache": asset_market_cache.metrics()}
+        health = asset_market_cache.health()
+        return {
+            "application_version": VERSION, **health,
+            "reason": (
+                None if health["status"] == "ready"
+                else "Awaiting a safe Asset Market snapshot."
+            ),
+        }
 
     @router.get("/api/market/assets")
     async def market_assets(

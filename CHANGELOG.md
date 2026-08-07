@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.8.3 - Production Memory Lifecycle
+
+- Added one process-local lifecycle coordinator that prevents overlapping synchronization, provider, valuation, historical-import, persistence, and market-build memory peaks.
+- Changed Asset Market health to report bounded retained metadata without constructing assets, indexes, recommendations, or historical dossiers.
+- Serialized startup maintenance and replaced whole-string cache serialization with durable incremental encoding and atomic replacement.
+- Added bounded RSS, available-memory, and Linux cgroup telemetry at lifecycle boundaries plus warming, last-valid, persistence-failure, and startup-order regressions.
+
 ## v1.8.2 - Asset Market Query Performance
 
 - Memoized canonical Historical Memory dataset identities with committed-write invalidation, cross-league isolation, and durable database-generation detection.
