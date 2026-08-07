@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import unittest
 from collections import deque
+from unittest.mock import patch
 
 from tools.validation.linux_market_cgroup_gate import (
     _identity,
@@ -64,6 +65,18 @@ class RestartReuseValidationTests(unittest.TestCase):
         queue = deque(responses)
         return lambda _path: queue.popleft()
 
+    @staticmethod
+    def _probe():
+        return 200, b"{}", 1.0, 0.5
+
+    @staticmethod
+    def _load():
+        return 0.25, 0.5, 0.75
+
+    @staticmethod
+    def _memory():
+        return 1_073_741_824
+
     def test_successful_artifact_loading(self) -> None:
         request = self._request([
             _response(503, {"detail": DETAIL}, self.warming_profile),
@@ -71,6 +84,8 @@ class RestartReuseValidationTests(unittest.TestCase):
         ])
         result = _restart_reuse(
             self.identity, self.body, request=request, sleeper=lambda _seconds: None,
+            event_probe=self._probe, load_observer=self._load,
+            memory_observer=self._memory,
         )
         self.assertEqual(result["warming_attempts"], 1)
         self.assertEqual(result["artifact_loads"], 1)
@@ -82,7 +97,9 @@ class RestartReuseValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "exceeded 60 seconds"):
             _restart_reuse(
                 self.identity, self.body, request=lambda _path: response,
-                clock=clock, sleeper=clock.sleep,
+                clock=clock, sleeper=clock.sleep, event_probe=self._probe,
+                load_observer=self._load,
+                memory_observer=self._memory,
             )
 
     def test_incompatible_artifact_identity(self) -> None:
@@ -91,6 +108,9 @@ class RestartReuseValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "identity mismatch"):
             _restart_reuse(
                 self.identity, self.body, request=lambda _path: response,
+                event_probe=self._probe,
+                load_observer=self._load,
+                memory_observer=self._memory,
             )
 
     def test_accidental_rebuild(self) -> None:
@@ -99,6 +119,9 @@ class RestartReuseValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "reconstruction"):
             _restart_reuse(
                 self.identity, self.body, request=lambda _path: response,
+                event_probe=self._probe,
+                load_observer=self._load,
+                memory_observer=self._memory,
             )
 
     def test_load_failure(self) -> None:
@@ -107,7 +130,50 @@ class RestartReuseValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "load failed"):
             _restart_reuse(
                 self.identity, self.body, request=lambda _path: response,
+                event_probe=self._probe,
+                load_observer=self._load,
+                memory_observer=self._memory,
             )
+
+    def test_injected_load_observer_supports_platform_without_getloadavg(self) -> None:
+        request = self._request([
+            _response(503, {"detail": DETAIL}, self.warming_profile),
+            (200, self.body, {}, 3.0, 2.0, self.ready_profile),
+        ])
+        with patch.object(
+            __import__("os"), "getloadavg", side_effect=AssertionError("unavailable"),
+            create=True,
+        ):
+            result = _restart_reuse(
+                self.identity, self.body, request=request,
+                sleeper=lambda _seconds: None, event_probe=self._probe,
+                load_observer=self._load,
+                memory_observer=self._memory,
+            )
+        self.assertEqual(result["warming_samples"][0]["runner_load"], [0.25, 0.5, 0.75])
+        self.assertEqual(
+            result["warming_samples"][0]["cgroup_memory_current"],
+            1_073_741_824,
+        )
+
+    def test_injected_memory_observer_avoids_host_cgroup_access(self) -> None:
+        request = self._request([
+            _response(503, {"detail": DETAIL}, self.warming_profile),
+            (200, self.body, {}, 3.0, 2.0, self.ready_profile),
+        ])
+        with patch(
+            "tools.validation.linux_market_cgroup_gate._cgroup",
+            side_effect=AssertionError("host cgroup unavailable"),
+        ):
+            result = _restart_reuse(
+                self.identity, self.body, request=request,
+                sleeper=lambda _seconds: None, event_probe=self._probe,
+                load_observer=self._load, memory_observer=self._memory,
+            )
+        self.assertEqual(
+            result["warming_samples"][0]["cgroup_memory_current"],
+            1_073_741_824,
+        )
 
     def test_retry_header_normalization_is_case_insensitive(self) -> None:
         self.assertEqual(

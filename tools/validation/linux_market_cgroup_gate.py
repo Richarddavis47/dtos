@@ -525,7 +525,11 @@ def _identity(payload: dict[str, object]) -> dict[str, object]:
 def _restart_reuse(
     expected_identity: dict[str, object], expected_body: bytes,
     *, request=_profiled_request, clock=time.monotonic, sleeper=time.sleep,
+    event_probe=None, load_observer=None, memory_observer=None,
 ) -> dict[str, object]:
+    event_probe = event_probe or (lambda: _diagnostic_request("/health/live"))
+    load_observer = load_observer or os.getloadavg
+    memory_observer = memory_observer or (lambda: _cgroup("memory.current"))
     started = clock()
     samples: list[dict[str, object]] = []
     while clock() - started < 60:
@@ -552,6 +556,7 @@ def _restart_reuse(
                 "identity_match": True, "output_equivalent": True,
                 "artifact_loads": profile.get("artifact_load_total"),
                 "market_constructions": profile.get("market_construction_total"),
+                "hydration_stages": profile.get("hydration_stages") or {},
             }
         try:
             payload = json.loads(body)
@@ -566,11 +571,6 @@ def _restart_reuse(
             )
         if headers.get("retry-after") != "5":
             raise AssertionError("restart warming omitted Retry-After: 5")
-        if client_ms >= 500 or server_ms >= 50:
-            raise AssertionError(
-                "restart warming latency gate failed: "
-                f"client={client_ms:.3f}ms server={server_ms:.3f}ms"
-            )
         if int(profile.get("market_construction_total") or 0):
             raise AssertionError("restart began market reconstruction")
         if int(profile.get("market_object_build_total") or 0):
@@ -581,12 +581,22 @@ def _restart_reuse(
             )
         if profile.get("market_build_phase") == "building":
             raise AssertionError("restart artifact was incompatible and triggered a rebuild")
+        _live_status, _live_body, live_client_ms, live_server_ms = event_probe()
         samples.append({
             "client_ms": round(client_ms, 3), "server_ms": round(server_ms, 3),
             "response_bytes": len(body),
             "artifact_loads": profile.get("artifact_load_total"),
             "market_constructions": profile.get("market_construction_total"),
             "build_phase": profile.get("market_build_phase"),
+            "event_loop_client_ms": round(live_client_ms, 3),
+            "event_loop_server_ms": round(live_server_ms, 3),
+            "lifecycle_lock_ms": profile.get("lifecycle_lock_ms", 0.0),
+            "cache_lookup_ms": profile.get("cache_lookup_ms", 0.0),
+            "active_threads": profile.get("active_threads"),
+            "thread_pool_threads": profile.get("thread_pool_threads"),
+            "runner_load": [round(value, 3) for value in load_observer()],
+            "cgroup_memory_current": memory_observer(),
+            "hydration_stages": profile.get("hydration_stages") or {},
         })
         sleeper(0.05)
     raise AssertionError("durable market artifact reuse exceeded 60 seconds")
@@ -687,14 +697,55 @@ def main() -> int:
             expected_identity = _identity(json.loads(pre_restart_body))
             _stop_server(process)
             process = None
-            process = _start_server(log)
-            _wait_ready()
-            restart_result = _restart_reuse(expected_identity, pre_restart_body)
-            reuse_health = _market_health()
-            if (reuse_health.get("cache") or {}).get("market_generation") != second_generation:
-                raise AssertionError("restart reused a different market generation")
+            restart_cycles: list[dict[str, object]] = []
+            restart_samples: list[dict[str, object]] = []
+            reuse_health: dict[str, object] = {}
+            while len(restart_samples) < 10 and len(restart_cycles) < 12:
+                process = _start_server(log)
+                _wait_ready()
+                cycle = _restart_reuse(expected_identity, pre_restart_body)
+                restart_cycles.append(cycle)
+                restart_samples.extend(cycle["warming_samples"])
+                reuse_health = _market_health()
+                if (reuse_health.get("cache") or {}).get("market_generation") != second_generation:
+                    raise AssertionError("restart reused a different market generation")
+                if len(restart_samples) < 10:
+                    _stop_server(process)
+                    process = None
+            if len(restart_samples) < 10:
+                raise AssertionError(
+                    f"only {len(restart_samples)} restart warming samples were captured"
+                )
+            failed_restart_samples = [
+                sample for sample in restart_samples
+                if float(sample["server_ms"]) >= 50
+                or float(sample["client_ms"]) >= 500
+            ]
+            if failed_restart_samples:
+                summary["phases"]["restart_reuse"] = {
+                    "timestamp": time.time(), "cycles": restart_cycles,
+                    "warming_samples": restart_samples,
+                    "failed_samples": failed_restart_samples,
+                    "memory_current": _cgroup("memory.current"),
+                }
+                raise ExpansionLatencyFailure(
+                    "restart warming latency gate failed: "
+                    f"failed_samples={json.dumps(failed_restart_samples, sort_keys=True)}",
+                    {
+                        "cycles": restart_cycles,
+                        "samples": restart_samples,
+                        "failed_samples": failed_restart_samples,
+                    },
+                )
+            restart_server_values = [
+                float(sample["server_ms"]) for sample in restart_samples
+            ]
             summary["phases"]["restart_reuse"] = {
-                "timestamp": time.time(), **restart_result,
+                "timestamp": time.time(), "cycles": restart_cycles,
+                "warming_samples": restart_samples,
+                "server_median_ms": round(statistics.median(restart_server_values), 3),
+                "server_p95_ms": round(_percentile(restart_server_values, 0.95), 3),
+                "server_maximum_ms": round(max(restart_server_values), 3),
                 "generation_match": True, "memory_current": _cgroup("memory.current"),
             }
             summary.update({
