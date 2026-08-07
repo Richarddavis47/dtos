@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.7.10 stores verified Sleeper history, checkpoints, leases, and read-model provenance on a validated durable production mount without permitting an ephemeral fallback. See the [Historical Asset Graph](docs/HISTORICAL_ASSET_GRAPH.md) and [canonical Brain integration](docs/BRAIN_ARCHITECTURE.md).
+DTOS v1.8.5 bounds player-week enrichment by evaluating durable checkpoints before identity preparation, streaming a compact current-identity projection, and treating unchanged identity observations as no-ops. It preserves verified Sleeper history, checkpoints, leases, and read-model provenance on the validated durable production mount. See the [Historical Asset Graph](docs/HISTORICAL_ASSET_GRAPH.md) and [canonical Brain integration](docs/BRAIN_ARCHITECTURE.md).
 
 DTOS v1.6.7 publishes immutable production DINS bundles through GitHub Releases and
 validates them dynamically without changing the inspected commit. DTOS v1.6.6 corrected Team Headquarters mobile overflow while preserving Product

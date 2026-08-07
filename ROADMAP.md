@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Bounded Historical Identity Context - DTOS v1.8.5
+
+- Evaluate durable enrichment checkpoints before allocating identity context or requesting providers.
+- Stream one compact current-identity projection and stop unchanged synchronization observations from creating versions.
+- Invalidate enrichment through durable semantic mapping generations while preserving the honest `5/6` state.
+
 ### Bounded Asset Market Construction - DTOS v1.8.4
 
 - Stream the canonical asset universe into one atomic durable market generation without retaining duplicate process-wide collections.
