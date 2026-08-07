@@ -12,13 +12,19 @@ from fastapi import Request
 
 from dtos_app import app
 from services.sleeper import STATE
-from src.core.asset_market.engine import AssetMarketCache, asset_market_cache
+from src.core.asset_market.engine import AssetMarket, AssetMarketCache, asset_market_cache
 from src.core.historical_memory.store import HistoricalStore
 from src.platform.lifecycle import LifecycleCoordinator, lifecycle_coordinator
 
 _profile: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
     "market_validation_profile", default=None,
 )
+_counter_lock = threading.Lock()
+_counters = {
+    "market_construction_total": 0,
+    "artifact_load_total": 0,
+    "market_object_build_total": 0,
+}
 
 
 def _timed(name: str, function: Callable[..., Any]) -> Callable[..., Any]:
@@ -38,6 +44,14 @@ def _timed(name: str, function: Callable[..., Any]) -> Callable[..., Any]:
     return wrapped
 
 
+def _counted(name: str, function: Callable[..., Any]) -> Callable[..., Any]:
+    def wrapped(*args: Any, **kwargs: Any) -> Any:
+        with _counter_lock:
+            _counters[name] += 1
+        return function(*args, **kwargs)
+    return wrapped
+
+
 AssetMarketCache.request_marker = staticmethod(_timed(
     "request_marker", AssetMarketCache.request_marker,
 ))
@@ -48,7 +62,21 @@ AssetMarketCache.key = classmethod(_timed(
 AssetMarketCache.durable_generation = staticmethod(_timed(
     "durable_generation", AssetMarketCache.durable_generation,
 ))
-AssetMarketCache._construct = _timed("market_construction", AssetMarketCache._construct)
+AssetMarketCache._construct = _timed(
+    "market_construction",
+    _counted("market_construction_total", AssetMarketCache._construct),
+)
+_asset_market_init = AssetMarket.__init__
+
+
+def _profiled_market_init(self: AssetMarket, *args: Any, **kwargs: Any) -> None:
+    counter = "artifact_load_total" if kwargs.get("load_existing") else "market_object_build_total"
+    with _counter_lock:
+        _counters[counter] += 1
+    _asset_market_init(self, *args, **kwargs)
+
+
+AssetMarket.__init__ = _profiled_market_init
 HistoricalStore.dataset_version = _timed(
     "dataset_version", HistoricalStore.dataset_version,
 )
@@ -71,6 +99,7 @@ async def validation_profile(request: Request, call_next):
     get_ms = float(profile.get("market_get_ms", 0.0))
     marker_ms = float(profile.get("request_marker_ms", 0.0))
     lifecycle_ms = float(profile.get("lifecycle_lock_ms", 0.0))
+    cache = asset_market_cache.metrics()
     profile.update({
         "cache_lookup_ms": round(max(0.0, get_ms - marker_ms - lifecycle_ms), 3),
         "active_threads": threading.active_count(),
@@ -83,6 +112,9 @@ async def validation_profile(request: Request, call_next):
         ),
         "sleeper_syncing": bool(STATE.get("syncing")),
         "transactions_syncing": bool(STATE.get("transactions_syncing")),
+        "market_build_phase": cache.get("build_phase"),
+        "market_last_error": cache.get("last_error"),
+        **_counters,
     })
     encoded = base64.urlsafe_b64encode(
         json.dumps(profile, sort_keys=True, separators=(",", ":")).encode()

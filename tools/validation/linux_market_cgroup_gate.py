@@ -346,7 +346,7 @@ def _mutate_generation(marker: str) -> None:
 
 def _profiled_request(
     path: str, *, method: str = "GET",
-) -> tuple[int, bytes, float, float, dict[str, object]]:
+) -> tuple[int, bytes, dict[str, str], float, float, dict[str, object]]:
     started = time.perf_counter()
     request = Request(
         BASE_URL + path,
@@ -363,7 +363,11 @@ def _profiled_request(
         encoded = response.headers.get("X-DTOS-Validation-Profile", "")
         profile = json.loads(base64.urlsafe_b64decode(encoded).decode())
         status = response.status
-    return status, body, (time.perf_counter() - started) * 1000, server_ms, profile
+        headers = dict(response.headers.items())
+    return (
+        status, body, headers,
+        (time.perf_counter() - started) * 1000, server_ms, profile,
+    )
 
 
 def _replacement_profile(
@@ -376,7 +380,7 @@ def _replacement_profile(
     before_history = _history_metrics()
     samples: list[dict[str, object]] = []
     for sequence in range(1, 11):
-        status, body, client_ms, server_ms, profile = _profiled_request(
+        status, body, headers, client_ms, server_ms, profile = _profiled_request(
             "/api/market/assets?limit=50",
         )
         payload = json.loads(body)
@@ -387,6 +391,8 @@ def _replacement_profile(
             raise AssertionError(
                 f"replacement request did not use bounded warming contract: {status}"
             )
+        if headers.get("Retry-After") != "5":
+            raise AssertionError("replacement warming omitted Retry-After: 5")
         health = _market_health()
         cache = health.get("cache") or {}
         _live_status, _live_body, live_client_ms, live_server_ms = (
@@ -482,6 +488,87 @@ def _replacement_profile(
     return final_health, result
 
 
+def _identity(payload: dict[str, object]) -> dict[str, object]:
+    return {
+        name: payload.get(name)
+        for name in (
+            "application_version", "application_build", "market_schema_version",
+            "league_id", "historical_dataset_version", "market_generation",
+            "brain_generation", "valuation_generation",
+        )
+    }
+
+
+def _restart_reuse(
+    expected_identity: dict[str, object], expected_body: bytes,
+    *, request=_profiled_request, clock=time.monotonic, sleeper=time.sleep,
+) -> dict[str, object]:
+    started = clock()
+    samples: list[dict[str, object]] = []
+    while clock() - started < 60:
+        status, body, headers, client_ms, server_ms, profile = request(
+            "/api/market/assets?limit=50",
+        )
+        if status == 200:
+            payload = json.loads(body)
+            actual_identity = _identity(payload)
+            if actual_identity != expected_identity:
+                raise AssertionError(
+                    "restart artifact identity mismatch: "
+                    f"expected={expected_identity} actual={actual_identity}"
+                )
+            if body != expected_body:
+                raise AssertionError("restart artifact output differs from published output")
+            if int(profile.get("market_construction_total") or 0) != 0:
+                raise AssertionError("restart accidentally rebuilt the market")
+            if int(profile.get("artifact_load_total") or 0) != 1:
+                raise AssertionError("restart did not load exactly one durable artifact")
+            return {
+                "duration_ms": round((clock() - started) * 1000, 3),
+                "warming_attempts": len(samples), "warming_samples": samples,
+                "identity_match": True, "output_equivalent": True,
+                "artifact_loads": profile.get("artifact_load_total"),
+                "market_constructions": profile.get("market_construction_total"),
+            }
+        try:
+            payload = json.loads(body)
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            raise AssertionError("malformed restart warming response") from exc
+        if status != 503 or payload != {
+            "detail": "Asset Market generation is building safely in the "
+            "background; retry shortly.",
+        }:
+            raise AssertionError(
+                f"restart returned unrelated response: HTTP {status} body={body[:200]!r}"
+            )
+        if headers.get("Retry-After") != "5":
+            raise AssertionError("restart warming omitted Retry-After: 5")
+        if client_ms >= 500 or server_ms >= 50:
+            raise AssertionError(
+                "restart warming latency gate failed: "
+                f"client={client_ms:.3f}ms server={server_ms:.3f}ms"
+            )
+        if int(profile.get("market_construction_total") or 0):
+            raise AssertionError("restart began market reconstruction")
+        if int(profile.get("market_object_build_total") or 0):
+            raise AssertionError("restart constructed a new market object")
+        if profile.get("market_last_error"):
+            raise AssertionError(
+                f"restart artifact load failed: {profile['market_last_error']}"
+            )
+        if profile.get("market_build_phase") == "building":
+            raise AssertionError("restart artifact was incompatible and triggered a rebuild")
+        samples.append({
+            "client_ms": round(client_ms, 3), "server_ms": round(server_ms, 3),
+            "response_bytes": len(body),
+            "artifact_loads": profile.get("artifact_load_total"),
+            "market_constructions": profile.get("market_construction_total"),
+            "build_phase": profile.get("market_build_phase"),
+        })
+        sleeper(0.05)
+    raise AssertionError("durable market artifact reuse exceeded 60 seconds")
+
+
 def main() -> int:
     if sys.platform != "linux":
         raise RuntimeError("Linux cgroup validation must run on Linux")
@@ -571,18 +658,20 @@ def main() -> int:
                 "active_generations": len(artifacts), "memory_current": _cgroup("memory.current"),
                 "profile": replacement_profile,
             }
+            _pre_status, pre_restart_body, _pre_ms = _request(
+                "/api/market/assets?limit=50",
+            )
+            expected_identity = _identity(json.loads(pre_restart_body))
             _stop_server(process)
             process = None
             process = _start_server(log)
             _wait_ready()
-            status, _body, reuse_ms = _request("/api/market/assets?limit=50", (200, 503))
-            if status != 200:
-                raise AssertionError("compatible durable market generation was not reused after restart")
+            restart_result = _restart_reuse(expected_identity, pre_restart_body)
             reuse_health = _market_health()
             if (reuse_health.get("cache") or {}).get("market_generation") != second_generation:
                 raise AssertionError("restart reused a different market generation")
             summary["phases"]["restart_reuse"] = {
-                "timestamp": time.time(), "duration_ms": round(reuse_ms, 3),
+                "timestamp": time.time(), **restart_result,
                 "generation_match": True, "memory_current": _cgroup("memory.current"),
             }
             summary.update({
