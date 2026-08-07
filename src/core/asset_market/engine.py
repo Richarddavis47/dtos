@@ -818,8 +818,14 @@ class AssetMarketCache:
             )
             with self._lock:
                 if self._market is not None and self._market.store is store:
-                    self.hits += 1
-                    return self._market
+                    # Retain the complete last-valid model for atomic fallback,
+                    # but never serialize it while a CPU-heavy replacement is
+                    # active. The bounded warming contract avoids durable reads
+                    # and request-thread contention until publication.
+                    raise MarketWarmingError(
+                        "Asset Market generation is building safely in the "
+                        "background; retry shortly."
+                    )
             raise MarketWarmingError(
                 "Asset Market generation is building safely in the background; retry shortly."
             )
@@ -896,10 +902,14 @@ class AssetMarketCache:
         with self._lock:
             metadata = dict(self._health_metadata)
         cache = self.metrics()
+        refreshing = bool(cache["build_active"])
         return {
             **metadata,
-            "status": metadata.get("status") or cache["status"],
-            "availability": "available" if cache["last_valid_model"] else "warming",
+            "status": "warming" if refreshing else metadata.get("status") or cache["status"],
+            "availability": (
+                "last_valid_refreshing" if refreshing and cache["last_valid_model"]
+                else "available" if cache["last_valid_model"] else "warming"
+            ),
             "counts": dict(metadata.get("counts") or {}),
             "duplicate_asset_ids": int(metadata.get("duplicate_asset_ids") or 0),
             "cache": cache,

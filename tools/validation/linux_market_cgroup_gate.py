@@ -353,7 +353,11 @@ def _profiled_request(
         headers={"X-DTOS-Diagnostics": "1"},
         method=method,
     )
-    with urlopen(request, timeout=60) as response:
+    try:
+        response = urlopen(request, timeout=60)
+    except HTTPError as exc:
+        response = exc
+    with response:
         body = response.read()
         server_ms = float(response.headers.get("X-DTOS-Request-Duration", 0))
         encoded = response.headers.get("X-DTOS-Validation-Profile", "")
@@ -376,6 +380,13 @@ def _replacement_profile(
             "/api/market/assets?limit=50",
         )
         payload = json.loads(body)
+        if status != 503 or payload != {
+            "detail": "Asset Market generation is building safely in the "
+            "background; retry shortly.",
+        }:
+            raise AssertionError(
+                f"replacement request did not use bounded warming contract: {status}"
+            )
         health = _market_health()
         cache = health.get("cache") or {}
         _live_status, _live_body, live_client_ms, live_server_ms = (
@@ -409,7 +420,7 @@ def _replacement_profile(
             "runner_load": [round(value, 3) for value in os.getloadavg()],
             "cgroup_memory_current": _cgroup("memory.current"),
             "response_bytes": len(body),
-            "served_generation": payload.get("market_generation"),
+            "served_generation": cache.get("market_generation"),
             "build_count": cache.get("build_count"),
             "build_phase": cache.get("build_phase"),
             "build_active": cache.get("build_active"),

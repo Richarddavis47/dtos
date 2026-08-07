@@ -123,16 +123,55 @@ class AsyncMarketGenerationTests(unittest.TestCase):
         with patch.object(
             self.cache, "key", side_effect=RuntimeError("fixture preparation failure"),
         ):
-            served = self.cache.get(
-                self.data, self.state, self.store, "league-1", background=True,
-            )
-            self.assertIs(served, previous)
+            with self.assertRaises(MarketWarmingError):
+                self.cache.get(
+                    self.data, self.state, self.store, "league-1", background=True,
+                )
             self.assertTrue(self.cache.wait_for_background())
         health = self.cache.health()["cache"]
         self.assertEqual(health["build_phase"], "failed")
         self.assertEqual(health["refresh_state"], "failed")
         self.assertEqual(health["last_error"], "fixture preparation failure")
         self.assertTrue(health["last_valid_model"])
+
+    def test_replacement_requests_are_bounded_and_do_no_durable_work(self) -> None:
+        previous = SimpleNamespace(
+            store=self.store, generated_at="prior", assets=(),
+            brain_generation="brain-prior", dataset_version="history-prior",
+            build_duration_ms=1.0,
+        )
+        self.cache._market = previous  # type: ignore[assignment]
+        self.cache._request_marker = ("previous",)
+        entered, release, _worker_ids, key = self._blocked_preparation()
+        caller = threading.get_ident()
+        durable_threads: list[int] = []
+
+        def durable(*_args):
+            durable_threads.append(threading.get_ident())
+            return "worker-only"
+
+        try:
+            with patch.object(self.cache, "key", side_effect=key), patch.object(
+                self.cache, "durable_generation", side_effect=durable,
+            ):
+                samples = []
+                for _ in range(10):
+                    started = time.perf_counter()
+                    with self.assertRaisesRegex(
+                        MarketWarmingError, "building safely in the background",
+                    ):
+                        self.cache.get(
+                            self.data, self.state, self.store, "league-1",
+                            background=True,
+                        )
+                    samples.append((time.perf_counter() - started) * 1000)
+                self.assertTrue(entered.wait(1))
+                self.assertTrue(all(sample < 50 for sample in samples), samples)
+                self.assertNotIn(caller, durable_threads)
+                self.assertIs(self.cache._market, previous)
+                self.assertEqual(self.cache.health()["availability"], "last_valid_refreshing")
+        finally:
+            release.set()
 
     def test_unrelated_endpoints_remain_responsive_during_preparation(self) -> None:
         entered, release, _worker_ids, key = self._blocked_preparation()
