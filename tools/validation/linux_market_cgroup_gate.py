@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import signal
+import statistics
 import subprocess
 import sys
 import threading
@@ -23,6 +24,12 @@ BASE_URL = "http://127.0.0.1:8767"
 CGROUP = Path("/sys/fs/cgroup")
 OUTPUT = Path(os.environ.get("DTOS_BENCHMARK_OUTPUT", "/output/summary.json"))
 FIXTURE = Path(os.environ.get("DTOS_FIXTURE_ROOT", "/fixture"))
+
+
+class ExpansionLatencyFailure(AssertionError):
+    def __init__(self, message: str, result: dict[str, object]) -> None:
+        super().__init__(message)
+        self.result = result
 
 
 def _cgroup(name: str) -> int:
@@ -195,21 +202,130 @@ def _cold_build() -> tuple[dict, float, int, dict[str, object]]:
     raise AssertionError("cold market build exceeded 60 seconds")
 
 
-def _latencies() -> dict[str, float]:
+def _history_metrics() -> dict[str, object]:
+    payload = json.loads(_request("/api/history/coverage")[1])
+    return dict(payload.get("read_model") or {})
+
+
+def _percentile(values: list[float], percentile: float) -> float:
+    ordered = sorted(values)
+    index = max(
+        0,
+        min(len(ordered) - 1, int(len(ordered) * percentile + 0.999) - 1),
+    )
+    return ordered[index]
+
+
+def _public_error(exc: BaseException) -> dict[str, str]:
+    message = str(exc).replace(str(FIXTURE), "<fixture>").replace(BASE_URL, "<server>")
+    return {"type": type(exc).__name__, "message": message}
+
+
+def _profile_expansion(path: str) -> dict[str, object]:
+    # The first request intentionally hydrates the selected player's bounded
+    # historical summary. Only subsequent stable-cache reads are gated.
+    _diagnostic_request(path)
+    baseline = _history_metrics()
+    baseline_health = _market_health()
+    samples: list[dict[str, object]] = []
+    identities: list[tuple[object, object, object]] = []
+    previous = baseline
+    for sequence in range(1, 11):
+        status, body, client_ms, server_ms = _diagnostic_request(path)
+        current = _history_metrics()
+        payload = json.loads(body)
+        cache = (_market_health().get("cache") or {})
+        query_count = int(current.get("query_count") or 0) - int(
+            previous.get("query_count") or 0
+        )
+        sqlite_ms = (
+            float(current.get("query_duration_ms") or 0)
+            if query_count else 0.0
+        )
+        identity = (
+            payload.get("market_generation"),
+            payload.get("brain_snapshot_id"),
+            payload.get("historical_dataset_version"),
+        )
+        identities.append(identity)
+        samples.append({
+            "sequence": sequence,
+            "status": status,
+            "client_ms": round(client_ms, 3),
+            "server_ms": round(server_ms, 3),
+            "network_and_client_ms": round(max(0.0, client_ms - server_ms), 3),
+            "sqlite_query_count": query_count,
+            "sqlite_ms": round(sqlite_ms, 3),
+            "response_bytes": len(body),
+            "market_cache_status": cache.get("status"),
+            "market_build_count": cache.get("build_count"),
+            "player_summary_build_count": current.get("player_summary_build_count"),
+            "player_summary_cache_hits": current.get("player_summary_cache_hits"),
+            "runner_load": [round(value, 3) for value in os.getloadavg()],
+        })
+        previous = current
+    client_values = [float(sample["client_ms"]) for sample in samples]
+    server_values = [float(sample["server_ms"]) for sample in samples]
+    result = {
+        "warmup_completed": True,
+        "samples": samples,
+        "median_ms": round(statistics.median(client_values), 3),
+        "p95_ms": round(_percentile(client_values, 0.95), 3),
+        "maximum_ms": round(max(client_values), 3),
+        "server_median_ms": round(statistics.median(server_values), 3),
+        "server_maximum_ms": round(max(server_values), 3),
+        "dataset_generation_stable": len({identity[0] for identity in identities}) == 1,
+        "brain_snapshot_stable": len({identity[1] for identity in identities}) == 1,
+        "historical_dataset_stable": len({identity[2] for identity in identities}) == 1,
+        "market_build_count_stable": all(
+            sample["market_build_count"]
+            == (baseline_health.get("cache") or {}).get("build_count")
+            for sample in samples
+        ),
+        "player_summary_build_count_stable": all(
+            sample["player_summary_build_count"] == baseline.get("player_summary_build_count")
+            for sample in samples
+        ),
+        "player_summary_cache_hits_increased": int(
+            samples[-1]["player_summary_cache_hits"] or 0
+        ) >= int(baseline.get("player_summary_cache_hits") or 0) + len(samples),
+    }
+    if result["median_ms"] >= 1000 or result["maximum_ms"] >= 1000:
+        slow = [sample for sample in samples if float(sample["client_ms"]) >= 1000]
+        result["failed_samples"] = slow
+        raise ExpansionLatencyFailure(
+            "expansion latency gate failed: "
+            f"median={result['median_ms']:.3f}ms maximum={result['maximum_ms']:.3f}ms "
+            f"failed_samples={json.dumps(slow, sort_keys=True)}",
+            result,
+        )
+    for field in (
+        "dataset_generation_stable", "brain_snapshot_stable",
+        "historical_dataset_stable", "market_build_count_stable",
+        "player_summary_build_count_stable", "player_summary_cache_hits_increased",
+    ):
+        if not result[field]:
+            raise AssertionError(f"expansion identity/cache invariant failed: {field}")
+    return result
+
+
+def _latencies() -> dict[str, object]:
     endpoints = {
         "directory": "/api/market/assets?limit=50",
         "search": "/api/market/search?q=Validation%20Player%2010213",
-        "expansion": f"/api/market/assets/{quote('player:10213', safe=':')}",
         "trending": "/api/market/trending",
         "health": "/api/market/health",
     }
     values = {}
     for name, path in endpoints.items():
         values[name] = round(_request(path)[2], 3)
-    limits = {"directory": 1000, "search": 500, "expansion": 1000, "trending": 1000, "health": 500}
+    limits = {"directory": 1000, "search": 500, "trending": 1000, "health": 500}
     for name, value in values.items():
         if value >= limits[name]:
             raise AssertionError(f"{name} latency {value:.3f}ms exceeds {limits[name]}ms")
+    values["expansion"] = _profile_expansion(
+        f"/api/market/assets/{quote('player:10213', safe=':')}"
+    )
     return values
 
 
@@ -241,11 +357,16 @@ def main() -> int:
         "memory_max": memory_max,
         "fixture": {"assets": 12_322, "historical_records": 30_726, "progress": "5/6"},
         "phases": {},
+        "passed": False,
+        "completed": False,
+        "exit_code": 1,
+        "errors": [],
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     log_path = OUTPUT.parent / "server.log"
     padding: list[bytearray] = []
     process = None
+    failure: BaseException | None = None
     try:
         with log_path.open("w", encoding="utf-8") as log, Monitor() as monitor:
             process = _start_server(log)
@@ -273,8 +394,16 @@ def main() -> int:
             }
             if cold_peak >= COLD_MAX:
                 raise AssertionError(f"cold-build cgroup peak {cold_peak} exceeds 1.5 GiB")
+            try:
+                latency_result = _latencies()
+            except ExpansionLatencyFailure as exc:
+                summary["phases"]["warm_requests"] = {
+                    "timestamp": time.time(), "latency_ms": {"expansion": exc.result},
+                    "memory_current": _cgroup("memory.current"),
+                }
+                raise
             summary["phases"]["warm_requests"] = {
-                "timestamp": time.time(), "latency_ms": _latencies(),
+                "timestamp": time.time(), "latency_ms": latency_result,
                 "memory_current": _cgroup("memory.current"),
             }
             first_generation = (health.get("cache") or {}).get("market_generation")
@@ -322,11 +451,30 @@ def main() -> int:
             })
             if int(summary["margin_below_limit"]) < 500 * MIB:
                 raise AssertionError("memory margin below 2 GiB is less than 500 MiB")
+            summary["completed"] = True
+    except BaseException as exc:
+        failure = exc
+        summary["errors"] = [{
+            **_public_error(exc),
+            "phase": next(reversed(summary["phases"]), "initialization"),
+        }]
     finally:
         if process is not None:
-            _stop_server(process)
+            try:
+                _stop_server(process)
+            except BaseException as exc:
+                summary["errors"] = [
+                    *list(summary.get("errors") or []),
+                    {**_public_error(exc), "phase": "cleanup"},
+                ]
+                summary["passed"] = False
+                summary["exit_code"] = 1
+                failure = failure or exc
         padding.clear()
         OUTPUT.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    if failure is not None:
+        print(f"{type(failure).__name__}: {failure}", file=sys.stderr)
+        return 1
     return 0
 
 

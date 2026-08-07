@@ -58,7 +58,12 @@ jobs:
           import json
           from pathlib import Path
           result = json.loads(Path('benchmark-output/summary.json').read_text())
+          for field in ('schema', 'passed', 'completed', 'exit_code', 'errors', 'phases'):
+              assert field in result, f'missing result field: {field}'
+          print(json.dumps(result, indent=2, sort_keys=True))
           assert result['passed'] is True
+          assert result['completed'] is True
+          assert result['exit_code'] == 0
           assert result['memory_max'] == 2 * 1024**3
           assert result['memory_peak'] < int(1.5 * 1024**3)
           assert result['margin_below_limit'] >= 500 * 1024**2
@@ -69,11 +74,17 @@ jobs:
           assert responsive['health_max_ms'] < 500
           assert responsive['liveness_max_ms'] < 500
           assert cold['build_count'] == 1
+          expansion = result['phases']['warm_requests']['latency_ms']['expansion']
+          assert len(expansion['samples']) == 10
+          assert expansion['median_ms'] < 1000
+          assert expansion['maximum_ms'] < 1000
+          assert expansion['dataset_generation_stable'] is True
+          assert expansion['brain_snapshot_stable'] is True
+          assert expansion['player_summary_build_count_stable'] is True
           text = json.dumps(result).casefold()
           assert not any(value in text for value in (
               '/home/runner', '/fixture/', 'localhost', '127.0.0.1', 'token'
           ))
-          print(json.dumps(result, indent=2, sort_keys=True))
           PY
       - name: Upload sanitized summary only
         if: always() && hashFiles('benchmark-output/summary.json') != ''
