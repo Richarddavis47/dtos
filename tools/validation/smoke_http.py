@@ -4,7 +4,8 @@ from __future__ import annotations
 import argparse
 import json
 import re
-from time import perf_counter
+from time import perf_counter, sleep
+from typing import Callable
 from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.request import urlopen
@@ -13,6 +14,13 @@ GENERIC_TEAM_LABEL = re.compile(r"\b(?:Team|Roster)\s+(?:[1-9]|10)\b|\bTeam Deta
 GENERIC_PAGE_TITLE = re.compile(r"<title>\s*(?:Team|Player|Matchup)\s*(?:Detail)?\s*</title>", re.IGNORECASE)
 INTERNAL_LABEL = re.compile(r"\b(?:Roster ID|Player ID|Transaction ID|Sleeper ID|Franchise ID|Provider Key)\b", re.IGNORECASE)
 MARKET_DATASET = re.compile(r"Dataset\s*<code>([^<]+)</code>", re.IGNORECASE)
+MARKET_WARMING_DETAIL = (
+    "Asset Market generation is building safely in the background; retry shortly."
+)
+MARKET_WARMING_PATHS = frozenset(("/", "/market"))
+MARKET_WARMING_DEADLINE_SECONDS = 60.0
+MARKET_WARMING_RESPONSE_LIMIT_SECONDS = 0.5
+MARKET_WARMING_INTERVAL_SECONDS = 0.5
 
 
 def validate_team_identity(body: bytes, path: str) -> None:
@@ -73,16 +81,18 @@ def validate_market_asset_contract(payload: dict, path: str) -> None:
         raise AssertionError(f"{path}: market detail and recommendation use different Brain snapshots")
 
 
-def get(base_url: str, path: str, expected: int = 200) -> bytes:
+def _request(base_url: str, path: str) -> tuple[int, bytes, dict[str, str], float]:
     started = perf_counter()
     print(f"HTTP smoke requesting: {path}", flush=True)
     try:
         with urlopen(base_url.rstrip("/") + path, timeout=60) as response:
             status = response.status
             body = response.read()
+            headers = dict(response.headers.items())
     except HTTPError as exc:
         status = exc.code
         body = exc.read()
+        headers = dict(exc.headers.items())
     except TimeoutError as exc:
         elapsed = perf_counter() - started
         raise AssertionError(
@@ -93,9 +103,97 @@ def get(base_url: str, path: str, expected: int = 200) -> bytes:
         f"HTTP smoke completed: {path} status={status} elapsed={elapsed:.3f}s",
         flush=True,
     )
+    return status, body, headers, elapsed
+
+
+def get(base_url: str, path: str, expected: int = 200) -> bytes:
+    status, body, _headers, _elapsed = _request(base_url, path)
     if status != expected:
         raise AssertionError(f"{path}: expected HTTP {expected}, received {status}; body={body[:300]!r}")
     return body
+
+
+def get_market_page(
+    base_url: str,
+    path: str,
+    *,
+    request: Callable[[str, str], tuple[int, bytes, dict[str, str], float]] = _request,
+    sleeper: Callable[[float], None] = sleep,
+    clock: Callable[[], float] = perf_counter,
+) -> bytes:
+    """Allow only the exact bounded cold-market warming lifecycle."""
+    if path not in MARKET_WARMING_PATHS:
+        raise AssertionError(f"{path}: is not an Asset Market warming surface")
+    started = clock()
+    attempts = 0
+    observed_generation: str | None = None
+    while True:
+        attempts += 1
+        status, body, headers, elapsed = request(base_url, path)
+        if status == 200:
+            duration = clock() - started
+            print(
+                "Asset Market warming completed: "
+                f"path={path} duration={duration:.3f}s attempts={attempts} "
+                f"final_status=200 generation={observed_generation or 'published-page-contract'}",
+                flush=True,
+            )
+            return body
+        if status != 503:
+            raise AssertionError(
+                f"{path}: expected HTTP 200 or exact Asset Market warming 503, "
+                f"received {status}; body={body[:300]!r}"
+            )
+        if elapsed > MARKET_WARMING_RESPONSE_LIMIT_SECONDS:
+            raise AssertionError(
+                f"{path}: Asset Market warming response exceeded 500ms ({elapsed:.3f}s)"
+            )
+        try:
+            payload = json.loads(body)
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            raise AssertionError(f"{path}: malformed Asset Market warming response") from exc
+        if payload != {"detail": MARKET_WARMING_DETAIL}:
+            raise AssertionError(
+                f"{path}: unrelated or malformed HTTP 503; body={body[:300]!r}"
+            )
+        retry_after = next(
+            (value for name, value in headers.items() if name.casefold() == "retry-after"),
+            None,
+        )
+        if retry_after != "5":
+            raise AssertionError(f"{path}: warming response omitted canonical Retry-After: 5")
+
+        health_status, health_body, _health_headers, _health_elapsed = request(
+            base_url, "/api/market/health",
+        )
+        if health_status != 200:
+            raise AssertionError(
+                f"{path}: Market health failed during warming: HTTP {health_status}"
+            )
+        try:
+            health = json.loads(health_body)
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            raise AssertionError(f"{path}: malformed Market health during warming") from exc
+        cache = health.get("cache") or {}
+        if cache.get("last_error"):
+            raise AssertionError(
+                f"{path}: Asset Market build failed during warming: {cache['last_error']}"
+            )
+        if health.get("status") != "warming" or not cache.get("build_active"):
+            raise AssertionError(
+                f"{path}: inconsistent Asset Market warming generation: {health!r}"
+            )
+        generation = cache.get("market_generation")
+        if generation is not None:
+            if observed_generation is not None and generation != observed_generation:
+                raise AssertionError(f"{path}: Asset Market generation changed during warming")
+            observed_generation = str(generation)
+        duration = clock() - started
+        if duration >= MARKET_WARMING_DEADLINE_SECONDS:
+            raise AssertionError(
+                f"{path}: Asset Market warming exceeded 60s after {attempts} attempts"
+            )
+        sleeper(min(MARKET_WARMING_INTERVAL_SECONDS, MARKET_WARMING_DEADLINE_SECONDS - duration))
 
 
 def main() -> int:
@@ -122,13 +220,20 @@ def main() -> int:
     recommendation_pages = {"/commissioner", "/front-offices", "/trades"}
     market_pages: dict[str, str] = {}
     for path in major:
-        body = get(args.base_url, path)
         if path in {"/", "/market"}:
+            body = get_market_page(args.base_url, path)
             market_pages[path] = validate_asset_market_contract(body, path)
-        elif path in product_pages:
+        else:
+            body = get(args.base_url, path)
+        if path in product_pages and path not in {"/", "/market"}:
             validate_product_contract(body, path, recommendation=path in recommendation_pages)
     if market_pages["/"] != market_pages["/market"]:
         raise AssertionError("/ and /market expose different canonical market datasets")
+    print(
+        "Asset Market page contract ready: "
+        f"generation={market_pages['/']} final_status=200",
+        flush=True,
+    )
 
     league = json.loads(get(args.base_url, "/api/league"))
     teams = league.get("teams") or []

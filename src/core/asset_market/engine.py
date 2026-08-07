@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
 import threading
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from app_metadata import BUILD_NUMBER, VERSION
@@ -14,6 +16,12 @@ from src.core.historical_memory import historical_graph
 from src.core.historical_memory.models import DATABASE_MIGRATION_VERSION
 from src.core.historical_memory.store import HistoricalStore
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
+from src.core.asset_market.read_model import (
+    MARKET_READ_MODEL_SCHEMA,
+    MarketMemoryBudgetError,
+    MarketReadModel,
+    build_read_model,
+)
 from src.platform.lifecycle import lifecycle_coordinator
 
 MARKET_SCHEMA_VERSION = "1.0"
@@ -31,6 +39,10 @@ SORT_FIELDS = {
 
 class MarketWarmingError(RuntimeError):
     """Raised when no safe market snapshot exists during a heavy lifecycle phase."""
+
+
+class _BuildDeferred(RuntimeError):
+    """Internal signal that a guarded background build was safely deferred."""
 
 
 def _layer_value(asset: dict[str, Any], name: str) -> float | None:
@@ -129,7 +141,8 @@ class AssetMarket:
 
     def __init__(
         self, data: dict[str, Any], state: dict[str, Any],
-        store: HistoricalStore, league_id: str,
+        store: HistoricalStore, league_id: str, *, generation: str,
+        artifact_path: Path, load_existing: bool = False,
     ) -> None:
         started = time.perf_counter()
         self.data = data
@@ -137,53 +150,35 @@ class AssetMarket:
         self.store = store
         self.league_id = league_id
         self.dataset_version = store.dataset_version(league_id)
-        universe = ValuationUniverse(data, state)
         brain = brain_service(data)
         self._brain = brain
         self.brain_generation = brain.report.get("generated_at")
         self.generated_at = datetime.now(timezone.utc).isoformat()
-        self.assets = tuple(
-            _summary(asset, brain.asset(asset["asset_id"]))
-            for asset in universe.assets
-        )
-        self.by_id = {row["asset_id"]: row for row in self.assets}
-        self._canonical = {row["asset_id"]: row for row in universe.assets}
-        self._search_index = tuple(
-            (row, " ".join((
-                row["asset_id"], row["display_name"],
-                str(row.get("position") or ""), str(row.get("nfl_team") or ""),
-                str((row.get("owner") or {}).get("team_name") or ""),
-                str((row.get("owner") or {}).get("owner") or ""),
-                row["availability"],
-            )).casefold())
-            for row in self.assets
-        )
-        current_players = set(data.get("players") or {})
-        self._historical_player_search = tuple(
-            {
-                "asset_id": f"DTOS-P-{identity['provider_player_id']}",
-                "asset_type": "player",
-                "display_name": identity.get("display_name")
-                or f"Unresolved Sleeper player {identity['provider_player_id']}",
-                "position": (identity.get("metadata") or {}).get("position"),
-                "nfl_team": None, "owner": None,
-                "resolution_status": (
-                    "resolved" if int(identity.get("confidence") or 0) >= 70
-                    else "unresolved"
-                ),
-                "market_value": None, "contender_value": None,
-                "rebuilder_value": None, "confidence": 0,
-                "canonical_url": f"/players/{identity['provider_player_id']}",
-                "historical_availability": "available",
-                "search_text": " ".join((
-                    str(identity["provider_player_id"]),
-                    str(identity.get("display_name") or ""),
-                    f"DTOS-P-{identity['provider_player_id']}",
-                )).casefold(),
-            }
-            for identity in store.identities()
-            if str(identity["provider_player_id"]) not in current_players
-        )
+        if load_existing:
+            self._read_model = MarketReadModel(artifact_path)
+            metadata = self._read_model.metadata()
+            self.generated_at = str(metadata["generated_at"])
+            self.brain_generation = metadata.get("brain_generation")
+        else:
+            universe = ValuationUniverse.streaming(data, state)
+
+            def rows():
+                for asset in universe.iter_assets():
+                    yield _summary(asset, brain.asset(asset["asset_id"])), asset
+
+            self._read_model = build_read_model(
+                artifact_path, generation, rows(), {
+                    "generated_at": self.generated_at,
+                    "brain_generation": self.brain_generation,
+                    "historical_dataset_version": self.dataset_version,
+                    "valuation_generation": (
+                        (data.get("valuation_intelligence") or {}).get("generated_at")
+                    ),
+                },
+            )
+        self.assets = self._read_model.assets
+        self.by_id = self._read_model.by_id
+        self._artifact_path = artifact_path
         self.build_duration_ms = round((time.perf_counter() - started) * 1000, 3)
 
     def identity(
@@ -223,9 +218,10 @@ class AssetMarket:
             },
             "dataset_identity_cache": self.store.dataset_version_metrics(),
             "search_index": {
-                "current_assets": len(self._search_index),
-                "historical_players": len(self._historical_player_search),
-                "normalization": "build_time",
+                "current_assets": len(self.assets),
+                "historical_players": "on_demand",
+                "normalization": "durable_build_time",
+                "storage": "bounded_sqlite",
             },
         }
 
@@ -239,30 +235,36 @@ class AssetMarket:
         round_number: int | None = None,
     ) -> dict[str, Any]:
         layer = SORT_FIELDS.get(sort, "market_value")
-        rows = [row for row in self.assets if (
-            (not asset_type or row["asset_type"] == asset_type)
-            and (not position or str(row.get("position") or "").casefold() == position.casefold())
-            and (not availability or row["availability"] == availability)
-            and (owner is None or int((row.get("owner") or {}).get("roster_id") or 0) == owner)
-            and (year is None or row.get("year") == year)
-            and (round_number is None or row.get("round") == round_number)
-            and (age_min is None or row.get("age") is not None and float(row["age"]) >= age_min)
-            and (age_max is None or row.get("age") is not None and float(row["age"]) <= age_max)
-            and (minimum is None or row["values"].get(layer) is not None and row["values"][layer] >= minimum)
-            and (maximum is None or row["values"].get(layer) is not None and row["values"][layer] <= maximum)
-        )]
-        reverse = direction.casefold() != "asc"
-        rows.sort(
-            key=lambda row: (
-                row["values"].get(layer) is not None,
-                row["values"].get(layer) if row["values"].get(layer) is not None else float("-inf"),
-                row["asset_id"],
-            ),
-            reverse=reverse,
+        columns = {
+            "market_value": "market_value", "intrinsic_dtos_value": "intrinsic_value",
+            "league_adjusted_value": "league_value", "contender_value": "contender_value",
+            "rebuilder_value": "rebuilder_value", "confidence_score": "confidence_value",
+            "risk_score": "risk_value", "liquidity_score": "liquidity_value",
+        }
+        column = columns[layer]
+        where: list[str] = []
+        parameters: list[Any] = []
+        for value, expression in (
+            (asset_type, "asset_type=?"), (position, "position=?"),
+            (availability, "availability=?"), (owner, "owner_id=?"),
+            (year, "year=?"), (round_number, "round_number=?"),
+        ):
+            if value is not None:
+                where.append(expression)
+                parameters.append(value)
+        for value, expression in (
+            (age_min, "age>=?"), (age_max, "age<=?"),
+            (minimum, f"{column}>=?"), (maximum, f"{column}<=?"),
+        ):
+            if value is not None:
+                where.append(expression)
+                parameters.append(value)
+        total, page = self._read_model.query(
+            where, parameters, column, direction, limit, offset,
         )
-        page = [dict(row, rank=index + 1) for index, row in enumerate(rows)][offset:offset + limit]
+        page = [dict(row, rank=offset + index + 1) for index, row in enumerate(page)]
         return {
-            **self.identity(), "total": len(rows), "offset": offset,
+            **self.identity(), "total": total, "offset": offset,
             "limit": limit, "sort": sort, "direction": direction,
             "tie_breaker": "canonical_asset_id", "assets": page,
         }
@@ -291,18 +293,22 @@ class AssetMarket:
         tokens = tuple(
             token for token in normalized.split() if token and token not in ignored
         )
-        rows = [
-            row for row, search_text in self._search_index
-            if (not wants_free_agent or row["availability"] == "day_traders_free_agent")
-            and (not wants_taxi or row["availability"] == "taxi")
-            and (not wants_rookie or row["rookie"])
-            and (not wants_pick or row["asset_type"] == "pick")
-            and (not position or row.get("position") == position)
-            and (not tokens or all(
-                token in search_text
-                for token in tokens
-            ))
-        ]
+        clauses: list[str] = []
+        parameters: list[Any] = []
+        if wants_free_agent:
+            clauses.append("availability=?")
+            parameters.append("day_traders_free_agent")
+        if wants_taxi:
+            clauses.append("availability=?")
+            parameters.append("taxi")
+        if wants_rookie:
+            clauses.append("rookie=1")
+        if wants_pick:
+            clauses.append("asset_type='pick'")
+        if position:
+            clauses.append("position=?")
+            parameters.append(position)
+        rows = self._read_model.search(tokens, clauses, parameters, limit)
         historical_resolution = bool(
             needle and tokens and not rows
             and not any((
@@ -310,13 +316,32 @@ class AssetMarket:
                 position is not None,
             ))
         )
-        extras = [
-            {key: value for key, value in row.items() if key != "search_text"}
-            for row in self._historical_player_search
-            if historical_resolution
-            and all(token in row["search_text"] for token in tokens)
-            if _market_id_from_history(str(row["asset_id"])) not in self.by_id
-        ]
+        current_players = self.data.get("players") or {}
+        extras = []
+        if historical_resolution:
+            for identity in self.store.identities():
+                provider_id = str(identity["provider_player_id"])
+                search_text = " ".join((
+                    provider_id, str(identity.get("display_name") or ""),
+                    f"DTOS-P-{provider_id}",
+                )).casefold()
+                if provider_id in current_players or not all(token in search_text for token in tokens):
+                    continue
+                asset_id = f"DTOS-P-{provider_id}"
+                if _market_id_from_history(asset_id) in self.by_id:
+                    continue
+                extras.append({
+                    "asset_id": asset_id, "asset_type": "player",
+                    "display_name": identity.get("display_name")
+                    or f"Unresolved Sleeper player {provider_id}",
+                    "position": (identity.get("metadata") or {}).get("position"),
+                    "nfl_team": None, "owner": None,
+                    "resolution_status": "resolved" if int(identity.get("confidence") or 0) >= 70 else "unresolved",
+                    "market_value": None, "contender_value": None,
+                    "rebuilder_value": None, "confidence": 0,
+                    "canonical_url": f"/players/{provider_id}",
+                    "historical_availability": "available",
+                })
         existing = {row["asset_id"] for row in extras}
         transaction_query = bool(
             needle and (
@@ -399,9 +424,8 @@ class AssetMarket:
         else:
             _, season, round_number, original = asset_id.split(":", 3)
             history = graph.pick_dossier(f"PICK-{season}-R{round_number}-ORIG{original}")
-        canonical_layers = dict(
-            (self._canonical.get(asset_id) or {}).get("layers") or {}
-        )
+        canonical = self._read_model.canonical(asset_id) or {}
+        canonical_layers = dict(canonical.get("layers") or {})
         canonical_layers.update({
             name: {**(canonical_layers.get(name) or {}), **layer}
             for name, layer in ((brain_asset or {}).get("valuation_layers") or {}).items()
@@ -432,7 +456,7 @@ class AssetMarket:
                 for name, layer in canonical_layers.items()
             },
             "providers": list(
-                (self._canonical.get(asset_id) or {}).get("providers") or []
+                canonical.get("providers") or []
             ),
             "front_office": front_office,
             "recommendation": {
@@ -454,7 +478,10 @@ class AssetMarket:
         timeline = (self.data.get("valuation_intelligence") or {}).get("timeline") or {}
         comparable = []
         for asset_id, observations in timeline.items():
-            if asset_id not in self.by_id or not isinstance(observations, list) or len(observations) < 2:
+            if not isinstance(observations, list) or len(observations) < 2:
+                continue
+            asset = self.by_id.get(asset_id)
+            if asset is None:
                 continue
             first, last = observations[0], observations[-1]
             start = first.get("confidence")
@@ -462,7 +489,7 @@ class AssetMarket:
             if start is None or end is None or first.get("timestamp") == last.get("timestamp"):
                 continue
             comparable.append({
-                "asset": self.by_id[asset_id], "starting_observation": first,
+                "asset": asset, "starting_observation": first,
                 "ending_observation": last, "direction": "rising" if end > start else "falling" if end < start else "stable",
                 "magnitude": end - start, "measurement": "canonical evidence confidence",
                 "reason": "Comparable timestamped Brain observations are available.",
@@ -488,6 +515,7 @@ class AssetMarketCache:
 
     def __init__(self) -> None:
         self._lock = threading.RLock()
+        self._build_lock = threading.Lock()
         self._key: str | None = None
         self._store_identity: str | None = None
         self._market: AssetMarket | None = None
@@ -496,6 +524,8 @@ class AssetMarketCache:
         self.last_error: str | None = None
         self.last_miss_reason: str | None = None
         self._health_metadata: dict[str, Any] = {}
+        self._building = False
+        self._build_thread: threading.Thread | None = None
 
     @staticmethod
     def store_identity(store: HistoricalStore) -> str:
@@ -524,9 +554,112 @@ class AssetMarketCache:
         key = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
         return key, store_identity
 
+    @staticmethod
+    def durable_generation(
+        data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str,
+    ) -> str:
+        payload = {
+            "version": VERSION, "build": BUILD_NUMBER,
+            "market_schema": MARKET_SCHEMA_VERSION,
+            "read_model_schema": MARKET_READ_MODEL_SCHEMA,
+            "league_id": league_id, "database_uuid": store.database_uuid(),
+            "sync": state.get("last_sync"),
+            "brain": (data.get("valuation_intelligence") or {}).get("generated_at"),
+            "valuation": (data.get("valuation_intelligence") or {}).get("schema_version"),
+            "historical": store.dataset_version(league_id),
+        }
+        return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+
+    @staticmethod
+    def artifact_path(store: HistoricalStore, generation: str) -> Path:
+        return store.path.with_name(f".{store.path.stem}.asset-market-{generation[:20]}.sqlite3")
+
+    @staticmethod
+    def _compatible(path: Path, generation: str) -> bool:
+        if not path.is_file():
+            return False
+        try:
+            metadata = MarketReadModel(path).metadata()
+            return bool(metadata.get("complete")) and metadata.get("generation") == generation
+        except (OSError, sqlite3.Error, ValueError, json.JSONDecodeError):
+            return False
+
+    def _publish(
+        self, market: AssetMarket, key: str, store_identity: str,
+    ) -> AssetMarket:
+        with self._lock:
+            previous = self._market
+            self._market, self._key = market, key
+            self._store_identity = store_identity
+            self.build_count += 1
+            self.last_error = None
+            health = market.health()
+            self._health_metadata = {
+                name: health[name] for name in (
+                    "application_version", "application_build",
+                    "market_schema_version", "league_id",
+                    "historical_dataset_version", "market_generation",
+                    "brain_generation", "valuation_generation", "generated_at",
+                    "status", "counts", "duplicate_asset_ids",
+                    "build_duration_ms", "read_contract", "search_index",
+                ) if name in health
+            }
+        if previous is not None and previous._artifact_path != market._artifact_path:
+            try:
+                previous._artifact_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+        pattern = f".{market.store.path.stem}.asset-market-*.sqlite3"
+        for artifact in market.store.path.parent.glob(pattern):
+            if artifact != market._artifact_path:
+                try:
+                    artifact.unlink(missing_ok=True)
+                except OSError:
+                    pass
+        return market
+
+    def _construct(
+        self, data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str, key: str,
+        store_identity: str, generation: str, path: Path,
+    ) -> AssetMarket:
+        with self._build_lock:
+            with self._lock:
+                if key == self._key and self._market is not None:
+                    self.hits += 1
+                    return self._market
+                self._building = True
+            try:
+                with lifecycle_coordinator.phase("asset_market_build") as phase:
+                    market = AssetMarket(
+                        data, state, store, league_id, generation=generation,
+                        artifact_path=path,
+                    )
+                    phase.update({
+                        "asset_count": len(market.assets),
+                        "canonical_generation": market.generated_at,
+                        "build_duration_ms": market.build_duration_ms,
+                        "storage": "bounded_sqlite",
+                    })
+                return self._publish(market, key, store_identity)
+            finally:
+                with self._lock:
+                    self._building = False
+
+    def _background_construct(self, *args: Any) -> None:
+        try:
+            self._construct(*args)
+        except Exception as exc:
+            with self._lock:
+                self.last_error = str(exc)
+        finally:
+            with self._lock:
+                self._build_thread = None
+
     def get(
         self, data: dict[str, Any], state: dict[str, Any],
-        store: HistoricalStore, league_id: str,
+        store: HistoricalStore, league_id: str, *, background: bool = False,
     ) -> AssetMarket:
         if not lifecycle_coordinator.market_build_allowed():
             with self._lock:
@@ -546,6 +679,8 @@ class AssetMarketCache:
                     self._store_identity = None
                     self._market = None
             raise
+        generation = self.durable_generation(data, state, store, league_id)
+        path = self.artifact_path(store, generation)
         if key == self._key and self._market is not None:
             with self._lock:
                 self.hits += 1
@@ -554,42 +689,41 @@ class AssetMarketCache:
             if key == self._key and self._market is not None:
                 self.hits += 1
                 return self._market
-            try:
-                self.last_miss_reason = (
-                    "cold_start" if self._market is None
-                    else "canonical_market_inputs_changed"
-                )
-                with lifecycle_coordinator.phase("asset_market_build") as phase:
-                    market = AssetMarket(data, state, store, league_id)
-                    phase.update({
-                        "asset_count": len(market.assets),
-                        "canonical_generation": market.generated_at,
-                        "build_duration_ms": market.build_duration_ms,
-                    })
-            except Exception as exc:
-                self.last_error = str(exc)
-                if (
-                    self._market is not None
-                    and self._store_identity == store_identity
-                ):
-                    return self._market
-                raise
-            self._market, self._key = market, key
-            self._store_identity = store_identity
-            self.build_count += 1
-            self.last_error = None
-            health = market.health()
-            self._health_metadata = {
-                key: health[key] for key in (
-                    "application_version", "application_build",
-                    "market_schema_version", "league_id",
-                    "historical_dataset_version", "market_generation",
-                    "brain_generation", "valuation_generation", "generated_at",
-                    "status", "counts", "duplicate_asset_ids",
-                    "build_duration_ms", "read_contract", "search_index",
-                ) if key in health
-            }
-            return market
+            self.last_miss_reason = (
+                "cold_start" if self._market is None
+                else "canonical_market_inputs_changed"
+            )
+        if self._compatible(path, generation):
+            market = AssetMarket(
+                data, state, store, league_id, generation=generation,
+                artifact_path=path, load_existing=True,
+            )
+            return self._publish(market, key, store_identity)
+        args = (data, state, store, league_id, key, store_identity, generation, path)
+        if background:
+            with self._lock:
+                if self._build_thread is None:
+                    self._build_thread = threading.Thread(
+                        target=self._background_construct, args=args,
+                        name="dtos-market-builder", daemon=True,
+                    )
+                    self._build_thread.start()
+            if self._market is not None and self._store_identity == store_identity:
+                return self._market
+            raise MarketWarmingError(
+                "Asset Market generation is building safely in the background; retry shortly."
+            )
+        try:
+            return self._construct(*args)
+        except (MarketMemoryBudgetError, _BuildDeferred) as exc:
+            if self._market is not None and self._store_identity == store_identity:
+                return self._market
+            raise MarketWarmingError(str(exc)) from exc
+        except Exception as exc:
+            self.last_error = str(exc)
+            if self._market is not None and self._store_identity == store_identity:
+                return self._market
+            raise
 
     def metrics(self) -> dict[str, Any]:
         with self._lock:
@@ -606,10 +740,7 @@ class AssetMarketCache:
                 "asset_count": len(market.assets) if market else 0,
                 "build_duration_ms": market.build_duration_ms if market else None,
                 "last_successful_build": market.generated_at if market else None,
-                "build_active": (
-                    lifecycle_coordinator.snapshot()["phase"]
-                    == "asset_market_build"
-                ),
+                "build_active": self._building,
                 "lifecycle": lifecycle_coordinator.snapshot(),
             }
 
@@ -642,4 +773,4 @@ def asset_market(
     data: dict[str, Any], state: dict[str, Any], store: HistoricalStore,
     league_id: str,
 ) -> AssetMarket:
-    return asset_market_cache.get(data, state, store, league_id)
+    return asset_market_cache.get(data, state, store, league_id, background=True)

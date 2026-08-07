@@ -32,7 +32,9 @@ def create_market_router(
         try:
             return asset_market(require_data(), state, historical_store, league_id)
         except MarketWarmingError as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
+            raise HTTPException(
+                status_code=503, detail=str(exc), headers={"Retry-After": "5"},
+            ) from exc
 
     @router.get("/api/market")
     async def market_index() -> Any:

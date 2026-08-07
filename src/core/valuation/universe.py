@@ -4,7 +4,7 @@ from __future__ import annotations
 import csv
 import io
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Iterator
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.valuation.calibration import cached_market_consensus
@@ -157,14 +157,40 @@ class ValuationUniverse:
                 self.by_id[str(row["identity"]["sleeper_id"])] = row
 
     def _build(self) -> list[dict[str, Any]]:
+        return list(self.iter_assets())
+
+    def iter_assets(self) -> Iterator[dict[str, Any]]:
+        """Yield canonical assets without retaining another complete universe."""
         players = self.data.get("normalized_players") or self.data.get("players") or {}
         owners = _owners(self.data)
         providers, distributions = _provider_context(self.data)
         provider_status = ((self.data.get("market_data") or {}).get("provider_status") or {})
         consensus = cached_market_consensus(self.data.get("market_data") or {}, (str(key) for key in players))
-        assets = [self._player(str(player_id), row, owners.get(str(player_id)), consensus.get(str(player_id)), providers, distributions, provider_status) for player_id, row in sorted(players.items(), key=lambda item: str(item[0])) if isinstance(row, dict)]
-        assets.extend(self._pick(row) for row in sorted(self.data.get("pick_ledger") or [], key=lambda item: (int(item.get("season") or 0), int(item.get("round") or 0), int(item.get("original_roster_id") or 0))))
-        return assets
+        for player_id, row in sorted(players.items(), key=lambda item: str(item[0])):
+            if isinstance(row, dict):
+                yield self._player(
+                    str(player_id), row, owners.get(str(player_id)),
+                    consensus.get(str(player_id)), providers, distributions,
+                    provider_status,
+                )
+        for row in sorted(
+            self.data.get("pick_ledger") or [],
+            key=lambda item: (
+                int(item.get("season") or 0), int(item.get("round") or 0),
+                int(item.get("original_roster_id") or 0),
+            ),
+        ):
+            yield self._pick(row)
+
+    @classmethod
+    def streaming(cls, data: dict[str, Any], state: dict[str, Any]) -> ValuationUniverse:
+        """Create only the lightweight context required for bounded iteration."""
+        universe = object.__new__(cls)
+        universe.data = data
+        universe.state = state
+        universe.generated_at = _now()
+        universe.freshness = _freshness(data, state, universe.generated_at)
+        return universe
 
     def _player(self, player_id: str, player: dict[str, Any], owner: dict[str, Any] | None, consensus: tuple[int | None, int, CalibrationStatus] | None, providers: dict[str, Any], distributions: dict[str, tuple[float, ...]], provider_status: dict[str, Any]) -> dict[str, Any]:
         market, market_confidence, calibration = consensus or (None, 0, CalibrationStatus.INSUFFICIENT_DATA)

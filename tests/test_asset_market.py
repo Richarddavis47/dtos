@@ -15,7 +15,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 from routes.market import create_market_router
-from src.core.asset_market import AssetMarketCache
+from src.core.asset_market import AssetMarketCache, MarketWarmingError
+from src.core.asset_market.read_model import (
+    MarketMemoryBudgetError, build_read_model, enforce_memory_budget,
+)
 from src.core.historical_memory.store import HistoricalStore
 from src.core.historical_memory import historical_graph
 
@@ -108,6 +111,94 @@ class AssetMarketTests(unittest.TestCase):
         self.assertEqual(self.market.by_id["player:10213"]["availability"], "rostered")
         self.assertEqual(self.market.by_id["player:2"]["availability"], "day_traders_free_agent")
         self.assertEqual(self.market.by_id["player:3"]["availability"], "retired")
+
+    def test_durable_compatible_generation_survives_process_cache_restart(self) -> None:
+        first_path = self.market._artifact_path
+        restarted = AssetMarketCache()
+        with patch(
+            "src.core.asset_market.engine.build_read_model",
+            side_effect=AssertionError("compatible durable generation must not rebuild"),
+        ):
+            loaded = restarted.get(self.data, self.state, self.store, self.league_id)
+        self.assertEqual(loaded._artifact_path, first_path)
+        self.assertEqual(loaded.directory(limit=4), self.market.directory(limit=4))
+
+    def test_directory_pages_before_detail_hydration(self) -> None:
+        with patch.object(
+            self.market._read_model, "canonical",
+            side_effect=AssertionError("directory must not hydrate canonical detail"),
+        ):
+            result = self.market.directory(limit=2)
+        self.assertEqual(len(result["assets"]), 2)
+        self.assertEqual(result["total"], 4)
+
+    def test_search_reads_compact_rows_without_full_universe_iteration(self) -> None:
+        with patch(
+            "src.core.asset_market.read_model.AssetSequence.__iter__",
+            side_effect=AssertionError("search must use the durable index"),
+        ):
+            result = self.market.search("Josh Allen", 10)
+        self.assertEqual(result["results"][0]["asset_id"], "player:10213")
+
+    def test_memory_guard_refuses_unsafe_stage_before_allocation(self) -> None:
+        with patch(
+            "src.core.asset_market.read_model.memory_snapshot",
+            return_value={
+                "rss_bytes": 1, "vms_bytes": 1, "system_available_bytes": 1,
+                "cgroup_current_bytes": 1500 * 1024 * 1024,
+                "cgroup_limit_bytes": 2048 * 1024 * 1024,
+            },
+        ):
+            with self.assertRaises(MarketMemoryBudgetError):
+                enforce_memory_budget("fixture", 64 * 1024 * 1024)
+
+    def test_concurrent_cold_requests_share_one_background_build(self) -> None:
+        cache = AssetMarketCache()
+        changed_state = {**self.state, "last_sync": "background-fixture"}
+        entered = threading.Event()
+        release = threading.Event()
+
+        def construct(*_args: object) -> None:
+            entered.set()
+            release.wait(1)
+
+        with patch.object(cache, "_construct", side_effect=construct) as build:
+            with self.assertRaises(MarketWarmingError):
+                cache.get(
+                    self.data, changed_state, self.store, self.league_id,
+                    background=True,
+                )
+            self.assertTrue(entered.wait(1))
+            first_thread = cache._build_thread
+            with self.assertRaises(MarketWarmingError):
+                cache.get(
+                    self.data, changed_state, self.store, self.league_id,
+                    background=True,
+                )
+            self.assertIs(cache._build_thread, first_thread)
+            self.assertEqual(build.call_count, 1)
+            release.set()
+            if first_thread:
+                first_thread.join(timeout=1)
+
+    def test_front_office_detail_changes_do_not_duplicate_market_generation(self) -> None:
+        first = self.market.detail("player:10213", 1)
+        second = self.market.detail("player:10213", 2)
+        self.assertEqual(first["market_generation"], second["market_generation"])
+        self.assertEqual(self.cache.build_count, 1)
+
+    def test_failed_atomic_rebuild_preserves_valid_generation_and_removes_partial(self) -> None:
+        target = self.market._artifact_path
+        before = target.read_bytes()
+
+        def failed_rows():
+            yield self.market.by_id["player:10213"], self.market._read_model.canonical("player:10213")
+            raise RuntimeError("fixture build failure")
+
+        with self.assertRaisesRegex(RuntimeError, "fixture build failure"):
+            build_read_model(target, "replacement", failed_rows(), {})
+        self.assertEqual(target.read_bytes(), before)
+        self.assertFalse(any(target.parent.glob(f".{target.name}.*.partial")))
 
     def test_stable_ranking_and_explicit_tie_breaker(self) -> None:
         result = self.market.directory(sort="market")

@@ -1,0 +1,98 @@
+name: Temporary v1.8.4 Linux market cgroup gate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dtos-v1.8.4-bounded-market-construction
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v1.8.4-market-cgroup-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  market-memory:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build pinned Python 3.12 validation image
+        run: >-
+          docker build
+          --file tools/validation/Dockerfile.market-cgroup
+          --tag dtos-market-cgroup:${{ github.sha }}
+          .
+
+      - name: Generate sanitized production-scale fixture
+        run: |
+          docker volume create dtos-market-fixture
+          docker run --rm \
+            --mount source=dtos-market-fixture,target=/fixture \
+            --env DTOS_FIXTURE_ROOT=/fixture \
+            dtos-market-cgroup:${{ github.sha }} \
+            python -m tools.validation.generate_sanitized_market_fixture
+
+      - name: Verify fixture contains no repository or production identity
+        run: |
+          docker run --rm \
+            --mount source=dtos-market-fixture,target=/fixture,readonly \
+            dtos-market-cgroup:${{ github.sha }} \
+            python -c "import json,pathlib; p=json.loads(pathlib.Path('/fixture/dtos_cache.json').read_text()); assert p['data']['league']['league_id']=='validation-league-1804'; assert p['data']['league']['name']=='Sanitized Production-Scale Validation League'"
+
+      - name: Run 2 GiB Linux cgroup lifecycle gate
+        run: |
+          mkdir -p benchmark-output
+          docker run --rm \
+            --name dtos-v184-market-cgroup \
+            --memory 2g \
+            --memory-swap 2g \
+            --cpus 2 \
+            --pids-limit 512 \
+            --mount source=dtos-market-fixture,target=/fixture \
+            --mount type=bind,source="${PWD}/benchmark-output",target=/output \
+            --env DTOS_FIXTURE_ROOT=/fixture \
+            --env DTOS_BENCHMARK_OUTPUT=/output/summary.json \
+            --env DTOS_CACHE_FILE=/fixture/dtos_cache.json \
+            --env DTOS_HISTORY_DB_FILE=/fixture/dtos_history.sqlite3 \
+            --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
+            --env DTOS_DURABLE_HISTORY_REQUIRED=true \
+            --env SLEEPER_LEAGUE_ID=validation-league-1804 \
+            --env DTOS_BACKGROUND_START_DELAY=3600 \
+            --env DTOS_LOG_FORMAT=json \
+            dtos-market-cgroup:${{ github.sha }}
+
+      - name: Validate and print sanitized summary
+        if: always()
+        run: |
+          test -f benchmark-output/summary.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('benchmark-output/summary.json')
+          result = json.loads(path.read_text())
+          assert result.get('passed') is True
+          assert result.get('memory_max') == 2 * 1024**3
+          assert result.get('memory_peak', 2 * 1024**3) < int(1.5 * 1024**3)
+          assert result.get('margin_below_limit', 0) >= 500 * 1024**2
+          text = path.read_text()
+          forbidden = ('/home/runner', '/fixture/', 'localhost', '127.0.0.1', 'github_token')
+          assert not any(value in text.casefold() for value in forbidden)
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload sanitized benchmark evidence only
+        if: always() && hashFiles('benchmark-output/summary.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: v1.8.4-linux-market-cgroup-${{ github.sha }}
+          path: benchmark-output/summary.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Remove validation fixture volume
+        if: always()
+        run: docker volume rm -f dtos-market-fixture || true
