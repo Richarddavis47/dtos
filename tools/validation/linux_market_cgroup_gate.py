@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import base64
 import signal
 import statistics
 import subprocess
@@ -97,7 +98,7 @@ def _request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes,
 
 def _start_server(log) -> subprocess.Popen:
     process = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "dtos_app:app", "--host", "127.0.0.1", "--port", "8767", "--workers", "1"],
+        [sys.executable, "-m", "uvicorn", "tools.validation.market_profile_app:app", "--host", "127.0.0.1", "--port", "8767", "--workers", "1"],
         stdout=log,
         stderr=subprocess.STDOUT,
         start_new_session=True,
@@ -336,11 +337,138 @@ def _pad_to_production_baseline() -> list[bytearray]:
     return padding
 
 
-def _mutate_generation() -> None:
+def _mutate_generation(marker: str) -> None:
     cache_path = FIXTURE / "dtos_cache.json"
     payload = json.loads(cache_path.read_text(encoding="utf-8"))
-    payload["last_sync"] = "2026-08-07T00:01:00+00:00"
+    payload["last_sync"] = marker
     cache_path.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+
+
+def _profiled_request(
+    path: str, *, method: str = "GET",
+) -> tuple[int, bytes, float, float, dict[str, object]]:
+    started = time.perf_counter()
+    request = Request(
+        BASE_URL + path,
+        headers={"X-DTOS-Diagnostics": "1"},
+        method=method,
+    )
+    with urlopen(request, timeout=60) as response:
+        body = response.read()
+        server_ms = float(response.headers.get("X-DTOS-Request-Duration", 0))
+        encoded = response.headers.get("X-DTOS-Validation-Profile", "")
+        profile = json.loads(base64.urlsafe_b64decode(encoded).decode())
+        status = response.status
+    return status, body, (time.perf_counter() - started) * 1000, server_ms, profile
+
+
+def _replacement_profile(
+    first_generation: object, first_build_count: int,
+) -> tuple[dict[str, object], dict[str, object]]:
+    marker = f"validation-generation-{time.time_ns()}"
+    _profiled_request(
+        f"/__validation__/replace-generation?marker={quote(marker)}", method="POST",
+    )
+    before_history = _history_metrics()
+    samples: list[dict[str, object]] = []
+    for sequence in range(1, 11):
+        status, body, client_ms, server_ms, profile = _profiled_request(
+            "/api/market/assets?limit=50",
+        )
+        payload = json.loads(body)
+        health = _market_health()
+        cache = health.get("cache") or {}
+        _live_status, _live_body, live_client_ms, live_server_ms = (
+            _diagnostic_request("/health/live")
+        )
+        samples.append({
+            "sequence": sequence,
+            "status": status,
+            "client_ms": round(client_ms, 3),
+            "server_ms": round(server_ms, 3),
+            "event_loop_client_ms": round(live_client_ms, 3),
+            "event_loop_server_ms": round(live_server_ms, 3),
+            "lifecycle_lock_ms": profile.get("lifecycle_lock_ms", 0.0),
+            "cache_lookup_ms": profile.get("cache_lookup_ms", 0.0),
+            "request_marker_ms": profile.get("request_marker_ms", 0.0),
+            "response_processing_ms": round(
+                max(0.0, server_ms - float(profile.get("market_get_ms", 0.0))), 3,
+            ),
+            "request_thread_calls": {
+                name: profile.get(f"{name}_calls", 0)
+                for name in (
+                    "cache_key", "durable_generation", "dataset_version",
+                    "database_uuid", "market_construction",
+                )
+            },
+            "active_threads": profile.get("active_threads"),
+            "thread_pool_threads": profile.get("thread_pool_threads"),
+            "worker_alive": profile.get("worker_alive"),
+            "sleeper_syncing": profile.get("sleeper_syncing"),
+            "transactions_syncing": profile.get("transactions_syncing"),
+            "runner_load": [round(value, 3) for value in os.getloadavg()],
+            "cgroup_memory_current": _cgroup("memory.current"),
+            "response_bytes": len(body),
+            "served_generation": payload.get("market_generation"),
+            "build_count": cache.get("build_count"),
+            "build_phase": cache.get("build_phase"),
+            "build_active": cache.get("build_active"),
+        })
+    after_history = _history_metrics()
+    deadline = time.monotonic() + 60
+    final_health: dict[str, object] = {}
+    while time.monotonic() < deadline:
+        final_health = _market_health()
+        final_cache = final_health.get("cache") or {}
+        if not final_cache.get("build_active"):
+            break
+        time.sleep(0.05)
+    final_cache = final_health.get("cache") or {}
+    client_values = [float(sample["client_ms"]) for sample in samples]
+    server_values = [float(sample["server_ms"]) for sample in samples]
+    result = {
+        "samples": samples,
+        "median_client_ms": round(statistics.median(client_values), 3),
+        "p95_client_ms": round(_percentile(client_values, 0.95), 3),
+        "maximum_client_ms": round(max(client_values), 3),
+        "median_server_ms": round(statistics.median(server_values), 3),
+        "p95_server_ms": round(_percentile(server_values, 0.95), 3),
+        "maximum_server_ms": round(max(server_values), 3),
+        "sqlite_query_count": int(after_history.get("query_count") or 0)
+        - int(before_history.get("query_count") or 0),
+        "last_valid_generation_stable": all(
+            sample["served_generation"] == first_generation for sample in samples
+        ),
+        "replacement_builds": int(final_cache.get("build_count") or 0)
+        - first_build_count,
+        "new_generation_published": final_cache.get("market_generation")
+        != first_generation,
+        "request_thread_generation_work": any(
+            any(int(count or 0) for count in sample["request_thread_calls"].values())
+            for sample in samples
+        ),
+    }
+    _mutate_generation(marker)
+    failures = [sample for sample in samples if float(sample["server_ms"]) >= 50]
+    if failures:
+        result["failed_samples"] = failures
+        raise ExpansionLatencyFailure(
+            "replacement warming server gate failed: "
+            f"maximum={result['maximum_server_ms']:.3f}ms "
+            f"failed_samples={json.dumps(failures, sort_keys=True)}",
+            result,
+        )
+    if result["replacement_builds"] != 1:
+        raise AssertionError(
+            f"expected exactly one replacement build, got {result['replacement_builds']}"
+        )
+    if not result["last_valid_generation_stable"]:
+        raise AssertionError("last-valid generation changed during replacement warming")
+    if not result["new_generation_published"]:
+        raise AssertionError("replacement generation was not published")
+    if result["request_thread_generation_work"] or result["sqlite_query_count"]:
+        raise AssertionError("replacement warming performed request-thread generation work")
+    return final_health, result
 
 
 def main() -> int:
@@ -407,12 +535,19 @@ def main() -> int:
                 "memory_current": _cgroup("memory.current"),
             }
             first_generation = (health.get("cache") or {}).get("market_generation")
-            _stop_server(process)
-            process = None
-            _mutate_generation()
-            process = _start_server(log)
-            _wait_ready()
-            replacement, replacement_ms, replacement_attempts, replacement_responsiveness = _cold_build()
+            first_build_count = int((health.get("cache") or {}).get("build_count") or 0)
+            replacement_started = time.perf_counter()
+            try:
+                replacement, replacement_profile = _replacement_profile(
+                    first_generation, first_build_count,
+                )
+            except ExpansionLatencyFailure as exc:
+                summary["phases"]["generation_replacement"] = {
+                    "timestamp": time.time(), "profile": exc.result,
+                    "memory_current": _cgroup("memory.current"),
+                }
+                raise
+            replacement_ms = (time.perf_counter() - replacement_started) * 1000
             second_generation = (replacement.get("cache") or {}).get("market_generation")
             if second_generation == first_generation:
                 raise AssertionError("generation replacement did not publish a new identity")
@@ -421,9 +556,9 @@ def main() -> int:
                 raise AssertionError(f"expected one active market generation, found {len(artifacts)}")
             summary["phases"]["generation_replacement"] = {
                 "timestamp": time.time(), "duration_ms": round(replacement_ms, 3),
-                "attempts": replacement_attempts, "generation_changed": True,
+                "attempts": 10, "generation_changed": True,
                 "active_generations": len(artifacts), "memory_current": _cgroup("memory.current"),
-                "responsiveness": replacement_responsiveness,
+                "profile": replacement_profile,
             }
             _stop_server(process)
             process = None
