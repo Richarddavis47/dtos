@@ -5,7 +5,11 @@ import json
 import unittest
 from collections import deque
 
-from tools.validation.linux_market_cgroup_gate import _identity, _restart_reuse
+from tools.validation.linux_market_cgroup_gate import (
+    _identity,
+    _normalized_headers,
+    _restart_reuse,
+)
 
 
 DETAIL = "Asset Market generation is building safely in the background; retry shortly."
@@ -25,7 +29,7 @@ def _response(
     status: int, payload: dict[str, object], profile: dict[str, object],
     *, client_ms: float = 2.0, server_ms: float = 1.0,
 ):
-    headers = {"Retry-After": "5"} if status == 503 else {}
+    headers = {"retry-after": "5"} if status == 503 else {}
     return status, json.dumps(payload, separators=(",", ":")).encode(), headers, client_ms, server_ms, profile
 
 
@@ -104,6 +108,19 @@ class RestartReuseValidationTests(unittest.TestCase):
             _restart_reuse(
                 self.identity, self.body, request=lambda _path: response,
             )
+
+    def test_retry_header_normalization_is_case_insensitive(self) -> None:
+        self.assertEqual(
+            _normalized_headers([("rEtRy-AfTeR", "5")])["retry-after"], "5",
+        )
+
+    def test_duplicate_or_conflicting_retry_headers_fail(self) -> None:
+        for values in (("5", "5"), ("5", "10")):
+            with self.subTest(values=values):
+                with self.assertRaisesRegex(AssertionError, "duplicate"):
+                    _normalized_headers([
+                        ("Retry-After", values[0]), ("retry-after", values[1]),
+                    ])
 
 
 if __name__ == "__main__":

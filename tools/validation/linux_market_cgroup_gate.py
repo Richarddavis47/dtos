@@ -33,6 +33,25 @@ class ExpansionLatencyFailure(AssertionError):
         self.result = result
 
 
+def _normalized_headers(items) -> dict[str, str]:
+    """Normalize HTTP names while rejecting ambiguous retry instructions."""
+    normalized: dict[str, str] = {}
+    retry_values: list[str] = []
+    for raw_name, raw_value in items:
+        name, value = str(raw_name).casefold(), str(raw_value)
+        if name == "retry-after":
+            retry_values.append(value)
+        elif name not in normalized:
+            normalized[name] = value
+    if len(retry_values) > 1:
+        raise AssertionError(
+            f"warming response contains duplicate Retry-After headers: {retry_values}"
+        )
+    if retry_values:
+        normalized["retry-after"] = retry_values[0]
+    return normalized
+
+
 def _cgroup(name: str) -> int:
     path = CGROUP / name
     if not path.is_file():
@@ -82,12 +101,16 @@ def _diagnostic_request(
         with urlopen(request, timeout=60) as response:
             status, body = response.status, response.read()
             server_ms = float(response.headers.get("X-DTOS-Request-Duration", 0))
+            headers = _normalized_headers(response.headers.items())
     except HTTPError as exc:
         status, body = exc.code, exc.read()
         server_ms = float(exc.headers.get("X-DTOS-Request-Duration", 0))
+        headers = _normalized_headers(exc.headers.items())
     elapsed = (time.perf_counter() - started) * 1000
     if status not in expected:
         raise AssertionError(f"{path}: HTTP {status}, expected {expected}")
+    if status == 503 and headers.get("retry-after") != "5":
+        raise AssertionError("warming response omitted canonical Retry-After: 5")
     return status, body, elapsed, server_ms
 
 
@@ -363,7 +386,7 @@ def _profiled_request(
         encoded = response.headers.get("X-DTOS-Validation-Profile", "")
         profile = json.loads(base64.urlsafe_b64decode(encoded).decode())
         status = response.status
-        headers = dict(response.headers.items())
+        headers = _normalized_headers(response.headers.items())
     return (
         status, body, headers,
         (time.perf_counter() - started) * 1000, server_ms, profile,
@@ -391,7 +414,7 @@ def _replacement_profile(
             raise AssertionError(
                 f"replacement request did not use bounded warming contract: {status}"
             )
-        if headers.get("Retry-After") != "5":
+        if headers.get("retry-after") != "5":
             raise AssertionError("replacement warming omitted Retry-After: 5")
         health = _market_health()
         cache = health.get("cache") or {}
@@ -541,7 +564,7 @@ def _restart_reuse(
             raise AssertionError(
                 f"restart returned unrelated response: HTTP {status} body={body[:200]!r}"
             )
-        if headers.get("Retry-After") != "5":
+        if headers.get("retry-after") != "5":
             raise AssertionError("restart warming omitted Retry-After: 5")
         if client_ms >= 500 or server_ms >= 50:
             raise AssertionError(
