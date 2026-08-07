@@ -531,3 +531,14 @@ DTOS now enumerates every cached Sleeper player and canonical future pick once, 
 # DTOS v1.7.1 - Automated Market Calibration Dashboard
 
 DTOS now audits every canonical player and draft pick whenever market providers refresh. The new calibration dashboard summarizes integrity, freshness, provider coverage, category health, high-impact differences, and explainable recommendations. Automatic changes are limited to small category-level model adjustments and require fresh evidence from multiple providers, sufficient sample size, high confidence, and a complete asset universe. No individual player or pick can be manually overridden by this system.
+# DTOS v1.8.5 — Bounded Historical Identity Context
+
+DTOS v1.8.5 removes the historical-enrichment OOM path identified in production. Player-week enrichment now creates its diagnosable job and lease, evaluates durable season checkpoints, and constructs identity state only when eligible provider work remains.
+
+The identity context uses a compact, streamed current-identity projection backed by the existing primary key. It no longer loads or decodes the complete version history. Normal Sleeper synchronization is idempotent for unchanged identities, while material identity and mapping changes advance separate durable generations.
+
+The release intentionally does not delete or compact existing identity history. Migration 7 adds only small metadata structures, validates free space before applying changes, and preserves historical records, provenance, checkpoints, leases, and the canonical `5/6` enrichment state.
+
+Validation covers checkpoint-first startup, semantic generation stability, bounded projection, recoverable preparation, disk safety, full regression behavior, and the Linux 2 GiB cgroup contract. Historical duplicate compaction remains a separately approved future migration.
+
+---

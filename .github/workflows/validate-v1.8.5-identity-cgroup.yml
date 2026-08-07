@@ -1,0 +1,79 @@
+name: Temporary v1.8.5 Linux identity cgroup gate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dtos-v1.8.5-bounded-identity-context
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v1.8.5-identity-cgroup-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  identity-memory:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production Python 3.12 image
+        run: >-
+          docker build --file tools/validation/Dockerfile.market-cgroup
+          --tag dtos-identity-cgroup:${{ github.sha }} .
+      - name: Generate sanitized two-million-version fixture
+        run: |
+          docker volume create dtos-identity-fixture
+          docker run --rm \
+            --mount source=dtos-identity-fixture,target=/fixture \
+            --env DTOS_FIXTURE_ROOT=/fixture \
+            dtos-identity-cgroup:${{ github.sha }} \
+            python -m tools.validation.generate_sanitized_identity_fixture
+      - name: Run 2 GiB Linux cgroup gate
+        run: |
+          mkdir -p benchmark-output
+          docker run --rm \
+            --name dtos-v185-identity-cgroup \
+            --memory 2g --memory-swap 2g --cpus 2 --pids-limit 512 \
+            --mount source=dtos-identity-fixture,target=/fixture \
+            --mount type=bind,source="${PWD}/benchmark-output",target=/output \
+            --env DTOS_BENCHMARK_OUTPUT=/output/summary.json \
+            --env DTOS_CACHE_FILE=/fixture/dtos_cache.json \
+            --env DTOS_HISTORY_DB_FILE=/fixture/dtos_history.sqlite3 \
+            --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
+            --env DTOS_DURABLE_HISTORY_REQUIRED=true \
+            --env SLEEPER_LEAGUE_ID=validation-league-1804 \
+            --env DTOS_BACKGROUND_START_DELAY=3600 \
+            --env DTOS_LOG_FORMAT=json \
+            dtos-identity-cgroup:${{ github.sha }} \
+            python -m tools.validation.linux_identity_cgroup_gate
+      - name: Validate sanitized evidence
+        if: always()
+        run: |
+          test -f benchmark-output/summary.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('benchmark-output/summary.json').read_text())
+          assert result['passed'] is True
+          assert result['memory_max'] == 2 * 1024**3
+          assert result['memory_peak'] < int(1.5 * 1024**3)
+          assert result['margin_below_limit'] >= 500 * 1024**2
+          assert result['phases']['eligible_context']['incremental_peak'] < 40 * 1024**2
+          text = json.dumps(result).casefold()
+          assert not any(value in text for value in ('/home/runner', '/fixture/', 'localhost', '127.0.0.1', 'token'))
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
+      - name: Upload sanitized summary only
+        if: always() && hashFiles('benchmark-output/summary.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: v1.8.5-linux-identity-cgroup-${{ github.sha }}
+          path: benchmark-output/summary.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove fixture
+        if: always()
+        run: docker volume rm -f dtos-identity-fixture || true

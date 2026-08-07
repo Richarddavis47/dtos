@@ -258,13 +258,6 @@ async def enrich_player_history(
     errors: list[str] = []
     segments: list[dict[str, Any]] = []
     identity_context_reuses = 0
-    identity_context = await asyncio.to_thread(
-        build_identity_context, historical_store,
-    )
-    current_checkpoints = {
-        (row["season"], row["data_type"], row["provider"]): row
-        for row in historical_store.checkpoints(league_id)
-    }
     job = ImportJob(
         historical_store, league_id, tuple(selected), ("player_week",),
         requested_by="player_enrichment", provider="nflverse",
@@ -276,7 +269,129 @@ async def enrich_player_history(
             last_error_message="Overlapping enrichment lease is active.",
         )
         return {"provider": "nflverse", "status": "blocked", "errors": []}
+    generations = historical_store.identity_generations()
+    mapping_generation = generations["mapping"]
+    current_checkpoints = {
+        (row["season"], row["data_type"], row["provider"]): row
+        for row in historical_store.checkpoints(league_id)
+    }
+    eligible: list[int] = []
+    skipped: list[int] = []
+    pending_seasons: list[int] = []
+    for season in selected:
+        classification = classify_season(season, today=current_date)
+        checkpoint_key = (
+            f"{league_id}:{season}:player_week:nflverse:{IMPORTER_VERSION}"
+        )
+        existing_checkpoint = current_checkpoints.get(
+            (season, "player_week", "nflverse"),
+        )
+        checkpoint_current = (
+            skip_current
+            and existing_checkpoint is not None
+            and existing_checkpoint["status"] == "completed"
+            and existing_checkpoint["importer_version"] == IMPORTER_VERSION
+            and int(existing_checkpoint.get("identity_generation") or 0)
+            == mapping_generation
+        )
+        if checkpoint_current:
+            skipped.append(season)
+            segments.append({
+                "season": season, "status": "current", "provider": "nflverse",
+                "reason": "Completed checkpoint and identity mapping generation are current.",
+                "checked_at": utcnow().isoformat(),
+                "identity_generation": mapping_generation,
+            })
+            continue
+        if classification.state.value in {
+            "pre_regular", "future", "unsupported",
+        }:
+            availability = classify_nflverse_404(classification)
+            checked_at = utcnow().isoformat()
+            historical_store.checkpoint(
+                checkpoint_key=checkpoint_key, job_id=job.job_id,
+                league_id=league_id, season=season, week=None,
+                data_type="player_week", provider="nflverse",
+                importer_version=IMPORTER_VERSION,
+                status=availability.status, completed_at=checked_at,
+                error=availability.reason,
+                identity_generation=mapping_generation,
+            )
+            pending_seasons.append(season)
+            segments.append({
+                "season": season, "status": availability.status,
+                "provider": "nflverse", "reason": availability.reason,
+                "checked_at": checked_at,
+                "next_eligible_at": availability.next_eligible_at,
+                "identity_generation": mapping_generation,
+            })
+            continue
+        eligible.append(season)
+    projected_identity_count = historical_store.current_identity_count() if eligible else 0
+    historical_store.update_job(
+        job.job_id, eligible_seasons=eligible, skipped_seasons=skipped,
+        pending_seasons=pending_seasons, identity_generation=mapping_generation,
+        context_build_state="pending" if eligible else "not_required",
+        projected_identity_count=projected_identity_count,
+        last_progress_at=utcnow().isoformat(),
+    )
     historical_store.synchronize_enrichment_job_progress(job.job_id)
+    if not eligible:
+        pending = [
+            segment for segment in segments
+            if segment["status"] in {
+                "pending", "not_yet_available", "unsupported",
+            }
+        ]
+        status = "completed_with_pending" if pending else "complete"
+        historical_store.update_job(
+            job.job_id,
+            status="completed" if status == "complete" else status,
+            completed_at=utcnow().isoformat(), last_progress_at=utcnow().isoformat(),
+            context_build_state="not_required",
+            next_retry_at=next(
+                (
+                    segment["next_eligible_at"] for segment in pending
+                    if segment.get("next_eligible_at")
+                ),
+                None,
+            ),
+        )
+        job.release()
+        return {
+            "provider": "nflverse", "seasons": selected, **totals,
+            "segments": segments, "pending": pending, "errors": [],
+            "status": status,
+            "identity_context": {
+                "canonical_count": 0, "gsis_count": 0,
+                "latest_identity_at": None, "build_ms": 0.0,
+                "batch_reuse_count": 0, "state": "not_required",
+                "identity_generation": mapping_generation,
+            },
+        }
+    historical_store.update_job(
+        job.job_id, context_build_state="building",
+        last_progress_at=utcnow().isoformat(),
+    )
+    try:
+        identity_context = await asyncio.to_thread(
+            build_identity_context, historical_store,
+        )
+    except Exception as exc:
+        historical_store.update_job(
+            job.job_id, status="failed", failed_at=utcnow().isoformat(),
+            context_build_state="failed", last_error_type=type(exc).__name__,
+            last_error_message=str(exc), last_error_context="identity_context",
+            last_progress_at=utcnow().isoformat(),
+        )
+        job.release()
+        raise
+    historical_store.update_job(
+        job.job_id, context_build_state="complete",
+        context_build_duration_ms=identity_context.build_ms,
+        projected_identity_count=identity_context.canonical_count,
+        last_progress_at=utcnow().isoformat(),
+    )
     completed_batches = {
         (int(row["season"]), int(row["batch_sequence"]))
         for row in historical_store.enrichment_batches(league_id)
@@ -288,7 +403,7 @@ async def enrich_player_history(
         headers={"User-Agent": "DTOS/1.5.1 historical-enrichment"},
     ) as client:
         provider = NflverseProvider(client)
-        for season in selected:
+        for season in eligible:
             classification = classify_season(season, today=current_date)
             checkpoint_key = (
                 f"{league_id}:{season}:player_week:nflverse:{IMPORTER_VERSION}"
@@ -297,48 +412,6 @@ async def enrich_player_history(
                 job.job_id, current_season=season, current_data_type="player_week",
                 last_progress_at=utcnow().isoformat(),
             )
-            existing_checkpoint = current_checkpoints.get(
-                (season, "player_week", "nflverse"),
-            )
-            checkpoint_current = (
-                skip_current
-                and existing_checkpoint is not None
-                and existing_checkpoint["status"] == "completed"
-                and existing_checkpoint["importer_version"] == IMPORTER_VERSION
-                and (
-                    identity_context.latest_identity_at is None
-                    or str(existing_checkpoint.get("completed_at") or "")
-                    >= identity_context.latest_identity_at
-                )
-            )
-            if checkpoint_current:
-                segments.append({
-                    "season": season, "status": "current",
-                    "provider": "nflverse",
-                    "reason": "Completed checkpoint and identity context are current.",
-                    "checked_at": utcnow().isoformat(),
-                })
-                continue
-            if classification.state.value in {
-                "pre_regular", "future", "unsupported",
-            }:
-                availability = classify_nflverse_404(classification)
-                checked_at = utcnow().isoformat()
-                historical_store.checkpoint(
-                    checkpoint_key=checkpoint_key, job_id=job.job_id,
-                    league_id=league_id, season=season, week=None,
-                    data_type="player_week", provider="nflverse",
-                    importer_version=IMPORTER_VERSION,
-                    status=availability.status, completed_at=checked_at,
-                    error=availability.reason,
-                )
-                segments.append({
-                    "season": season, "status": availability.status,
-                    "provider": "nflverse", "reason": availability.reason,
-                    "checked_at": checked_at,
-                    "next_eligible_at": availability.next_eligible_at,
-                })
-                continue
             try:
                 _, season_rows = historical_store.records(
                     league_id, "league_season", season=season, limit=1,
@@ -430,6 +503,7 @@ async def enrich_player_history(
                     importer_version=IMPORTER_VERSION, status="completed",
                     completed_at=checked_at, records_written=result["written"],
                     records_unchanged=result["unchanged"],
+                    identity_generation=mapping_generation,
                 )
                 segments.append({
                     "season": season, "status": "imported",
@@ -444,6 +518,7 @@ async def enrich_player_history(
                         data_type="player_week", provider="nflverse",
                         importer_version=IMPORTER_VERSION, status="failed",
                         completed_at=utcnow().isoformat(), error=str(exc),
+                        identity_generation=mapping_generation,
                     )
                     continue
                 count, _ = historical_store.records(
@@ -460,6 +535,7 @@ async def enrich_player_history(
                     importer_version=IMPORTER_VERSION,
                     status=availability.status, completed_at=checked_at,
                     error=availability.reason,
+                    identity_generation=mapping_generation,
                 )
                 segments.append({
                     "season": season, "status": availability.status,
@@ -477,6 +553,7 @@ async def enrich_player_history(
                     data_type="player_week", provider="nflverse",
                     importer_version=IMPORTER_VERSION, status="failed",
                     completed_at=utcnow().isoformat(), error=str(exc),
+                    identity_generation=mapping_generation,
                 )
     pending = [
         segment for segment in segments

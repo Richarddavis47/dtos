@@ -5,6 +5,7 @@ import json
 import hashlib
 import sqlite3
 import os
+import shutil
 from uuid import uuid4
 from contextlib import contextmanager
 from pathlib import Path
@@ -56,6 +57,15 @@ CREATE TABLE IF NOT EXISTS player_identity (
   PRIMARY KEY(provider, provider_player_id, valid_from)
 );
 CREATE INDEX IF NOT EXISTS idx_identity_dtos ON player_identity(dtos_player_id);
+CREATE TABLE IF NOT EXISTS current_player_identity (
+  provider TEXT NOT NULL,
+  provider_player_id TEXT NOT NULL,
+  dtos_player_id TEXT NOT NULL,
+  confidence INTEGER NOT NULL,
+  gsis_id TEXT,
+  identity_generation INTEGER NOT NULL,
+  PRIMARY KEY(provider, provider_player_id)
+);
 CREATE TABLE IF NOT EXISTS import_runs (
   run_id TEXT PRIMARY KEY,
   league_id TEXT NOT NULL,
@@ -109,6 +119,13 @@ CREATE TABLE IF NOT EXISTS import_jobs (
   requested_by TEXT NOT NULL,
   worker_identity TEXT,
   lock_expiration TEXT,
+  eligible_seasons TEXT NOT NULL DEFAULT '[]',
+  skipped_seasons TEXT NOT NULL DEFAULT '[]',
+  pending_seasons TEXT NOT NULL DEFAULT '[]',
+  identity_generation INTEGER NOT NULL DEFAULT 0,
+  context_build_state TEXT,
+  projected_identity_count INTEGER NOT NULL DEFAULT 0,
+  context_build_duration_ms REAL,
   schema_version TEXT NOT NULL,
   importer_version TEXT NOT NULL
 );
@@ -128,6 +145,7 @@ CREATE TABLE IF NOT EXISTS import_checkpoints (
   records_written INTEGER NOT NULL DEFAULT 0,
   records_unchanged INTEGER NOT NULL DEFAULT 0,
   error TEXT,
+  identity_generation INTEGER NOT NULL DEFAULT 0,
   FOREIGN KEY(job_id) REFERENCES import_jobs(job_id)
 );
 CREATE INDEX IF NOT EXISTS idx_import_checkpoints_scope
@@ -233,6 +251,35 @@ class HistoricalStore:
     def migrate(self) -> None:
         with self._lock, self.connection() as connection:
             connection.executescript(SCHEMA)
+            required_columns = [
+                ("import_checkpoints", "identity_generation"),
+                ("import_jobs", "eligible_seasons"),
+                ("import_jobs", "skipped_seasons"),
+                ("import_jobs", "pending_seasons"),
+                ("import_jobs", "identity_generation"),
+                ("import_jobs", "context_build_state"),
+                ("import_jobs", "projected_identity_count"),
+                ("import_jobs", "context_build_duration_ms"),
+            ]
+            if any(
+                not self._has_column(connection, table, column)
+                for table, column in required_columns
+            ):
+                self._require_migration_capacity()
+            self._ensure_column(
+                connection, "import_checkpoints", "identity_generation",
+                "INTEGER NOT NULL DEFAULT 0",
+            )
+            for name, definition in (
+                ("eligible_seasons", "TEXT NOT NULL DEFAULT '[]'"),
+                ("skipped_seasons", "TEXT NOT NULL DEFAULT '[]'"),
+                ("pending_seasons", "TEXT NOT NULL DEFAULT '[]'"),
+                ("identity_generation", "INTEGER NOT NULL DEFAULT 0"),
+                ("context_build_state", "TEXT"),
+                ("projected_identity_count", "INTEGER NOT NULL DEFAULT 0"),
+                ("context_build_duration_ms", "REAL"),
+            ):
+                self._ensure_column(connection, "import_jobs", name, definition)
             connection.executemany(
                 "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, datetime('now'))",
                 ((version,) for version in range(1, DATABASE_MIGRATION_VERSION + 1)),
@@ -241,8 +288,88 @@ class HistoricalStore:
                 "INSERT OR IGNORE INTO database_metadata(key,value) VALUES ('database_uuid',?)",
                 (uuid4().hex,),
             )
+            connection.execute(
+                "INSERT OR IGNORE INTO database_metadata(key,value) "
+                "VALUES ('identity_generation','0')",
+            )
+            connection.execute(
+                "INSERT OR IGNORE INTO database_metadata(key,value) "
+                "VALUES ('identity_mapping_generation','0')",
+            )
+            if connection.execute(
+                """SELECT 1 FROM player_identity LIMIT 1""",
+            ).fetchone() is not None and connection.execute(
+                """SELECT value FROM database_metadata
+                WHERE key='current_identity_projection_version'""",
+            ).fetchone() is None:
+                self._rebuild_current_identity_projection(connection)
             self._repair_enrichment_progress(connection)
         self._invalidate_dataset_version()
+
+    @staticmethod
+    def _has_column(
+        connection: sqlite3.Connection, table: str, column: str,
+    ) -> bool:
+        return column in {
+            str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")
+        }
+
+    def _require_migration_capacity(self) -> None:
+        required = 16 * 1024 * 1024
+        available = shutil.disk_usage(self.path.parent).free
+        if available < required:
+            raise RuntimeError(
+                "Historical schema migration requires at least 16 MiB of free "
+                "space for metadata-only SQLite changes."
+            )
+
+    @classmethod
+    def _rebuild_current_identity_projection(
+        cls, connection: sqlite3.Connection,
+    ) -> int:
+        generation = cls._generation(connection, "identity_mapping_generation")
+        connection.execute("DELETE FROM current_player_identity")
+        connection.execute(
+            """WITH latest AS (
+                SELECT provider,provider_player_id,max(valid_from) AS valid_from
+                FROM player_identity GROUP BY provider,provider_player_id
+            )
+            INSERT INTO current_player_identity(
+                provider,provider_player_id,dtos_player_id,confidence,gsis_id,
+                identity_generation)
+            SELECT identity.provider,identity.provider_player_id,
+                   identity.dtos_player_id,identity.confidence,
+                   coalesce(
+                     json_extract(identity.metadata,'$.provider_ids.GSIS'),
+                     json_extract(identity.metadata,'$.provider_ids.gsis_id')
+                   ),?
+            FROM latest JOIN player_identity AS identity
+              ON identity.provider=latest.provider
+             AND identity.provider_player_id=latest.provider_player_id
+             AND identity.valid_from=latest.valid_from""",
+            (generation,),
+        )
+        count = int(connection.execute(
+            "SELECT count(*) FROM current_player_identity",
+        ).fetchone()[0])
+        connection.execute(
+            """INSERT INTO database_metadata(key,value)
+            VALUES ('current_identity_projection_version','1')
+            ON CONFLICT(key) DO UPDATE SET value=excluded.value""",
+        )
+        return count
+
+    def rebuild_current_identity_projection(self) -> int:
+        """Rebuild the compact current mapping without rewriting identity history."""
+        with self._lock, self.connection() as connection:
+            return self._rebuild_current_identity_projection(connection)
+
+    @staticmethod
+    def _ensure_column(
+        connection: sqlite3.Connection, table: str, column: str, definition: str,
+    ) -> None:
+        if not HistoricalStore._has_column(connection, table, column):
+            connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
     def _invalidate_dataset_version(self, league_id: str | None = None) -> None:
         """Invalidate only after a durable input mutation has committed."""
@@ -344,23 +471,31 @@ class HistoricalStore:
         season: int, week: int | None, data_type: str, provider: str,
         importer_version: str, status: str, completed_at: str | None = None,
         records_written: int = 0, records_unchanged: int = 0,
-        error: str | None = None,
+        error: str | None = None, identity_generation: int | None = None,
     ) -> None:
         with self._lock, self.connection() as connection:
+            checkpoint_generation = (
+                self._generation(connection, "identity_mapping_generation")
+                if identity_generation is None and data_type == "player_week"
+                else int(identity_generation or 0)
+            )
             connection.execute(
                 """INSERT INTO import_checkpoints(
                 checkpoint_key,job_id,league_id,season,week,data_type,provider,
                 importer_version,status,completed_at,records_written,
-                records_unchanged,error) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                records_unchanged,error,identity_generation)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(checkpoint_key) DO UPDATE SET
                 job_id=excluded.job_id,status=excluded.status,
                 completed_at=excluded.completed_at,
                 records_written=excluded.records_written,
-                records_unchanged=excluded.records_unchanged,error=excluded.error""",
+                records_unchanged=excluded.records_unchanged,error=excluded.error,
+                identity_generation=excluded.identity_generation""",
                 (
                     checkpoint_key, job_id, league_id, season, week, data_type,
                     provider, importer_version, status, completed_at,
                     records_written, records_unchanged, error,
+                    checkpoint_generation,
                 ),
             )
             self._synchronize_enrichment_job_progress(connection, job_id)
@@ -1143,20 +1278,151 @@ class HistoricalStore:
             ).fetchall()
         return tuple(str(row[0]) for row in rows)
 
+    @staticmethod
+    def _identity_mapping_signature(
+        dtos_player_id: str, confidence: int, metadata: dict[str, Any],
+    ) -> tuple[str, int, str, str]:
+        provider_ids = metadata.get("provider_ids") or {}
+        return (
+            dtos_player_id,
+            confidence,
+            str(provider_ids.get("GSIS") or ""),
+            str(provider_ids.get("gsis_id") or ""),
+        )
+
+    @staticmethod
+    def _metadata_json(metadata: dict[str, Any]) -> str:
+        return json.dumps(metadata, separators=(",", ":"), sort_keys=True)
+
+    @staticmethod
+    def _generation(connection: sqlite3.Connection, key: str) -> int:
+        row = connection.execute(
+            "SELECT value FROM database_metadata WHERE key=?", (key,),
+        ).fetchone()
+        return int(row[0]) if row is not None else 0
+
+    @classmethod
+    def _advance_generation(
+        cls, connection: sqlite3.Connection, key: str,
+    ) -> int:
+        generation = cls._generation(connection, key) + 1
+        connection.execute(
+            "INSERT INTO database_metadata(key,value) VALUES (?,?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (key, str(generation)),
+        )
+        return generation
+
+    def identity_generations(self) -> dict[str, int]:
+        with self.connection() as connection:
+            return {
+                "semantic": self._generation(connection, "identity_generation"),
+                "mapping": self._generation(
+                    connection, "identity_mapping_generation",
+                ),
+            }
+
     def upsert_identity(
         self, dtos_player_id: str, provider: str, provider_player_id: str,
         display_name: str, confidence: int, valid_from: str, metadata: dict[str, Any],
-    ) -> None:
+    ) -> bool:
+        metadata_json = self._metadata_json(metadata)
         with self._lock, self.connection() as connection:
+            previous = connection.execute(
+                """SELECT * FROM player_identity WHERE provider=?
+                AND provider_player_id=? ORDER BY valid_from DESC LIMIT 1""",
+                (provider, provider_player_id),
+            ).fetchone()
+            if previous is not None:
+                previous_metadata = json.loads(previous["metadata"])
+                unchanged = (
+                    str(previous["dtos_player_id"]) == dtos_player_id
+                    and str(previous["display_name"] or "") == display_name
+                    and int(previous["confidence"]) == confidence
+                    and self._metadata_json(previous_metadata) == metadata_json
+                )
+                if unchanged:
+                    return False
+                previous_mapping = self._identity_mapping_signature(
+                    str(previous["dtos_player_id"]),
+                    int(previous["confidence"]), previous_metadata,
+                )
+                connection.execute(
+                    """UPDATE player_identity SET valid_to=? WHERE provider=?
+                    AND provider_player_id=? AND valid_from=? AND valid_to IS NULL""",
+                    (valid_from, provider, provider_player_id, previous["valid_from"]),
+                )
+            else:
+                previous_mapping = None
             cursor = connection.execute(
                 """INSERT OR IGNORE INTO player_identity(
                 dtos_player_id, provider, provider_player_id, display_name,
                 confidence, valid_from, metadata) VALUES (?,?,?,?,?,?,?)""",
-                (dtos_player_id, provider, provider_player_id, display_name, confidence, valid_from, json.dumps(metadata, sort_keys=True)),
+                (
+                    dtos_player_id, provider, provider_player_id, display_name,
+                    confidence, valid_from, metadata_json,
+                ),
             )
             inserted = cursor.rowcount == 1
+            if inserted:
+                self._advance_generation(connection, "identity_generation")
+                current_mapping = self._identity_mapping_signature(
+                    dtos_player_id, confidence, metadata,
+                )
+                if previous_mapping != current_mapping:
+                    mapping_generation = self._advance_generation(
+                        connection, "identity_mapping_generation",
+                    )
+                else:
+                    mapping_generation = self._generation(
+                        connection, "identity_mapping_generation",
+                    )
+                connection.execute(
+                    """INSERT INTO current_player_identity(
+                    provider,provider_player_id,dtos_player_id,confidence,gsis_id,
+                    identity_generation) VALUES (?,?,?,?,?,?)
+                    ON CONFLICT(provider,provider_player_id) DO UPDATE SET
+                    dtos_player_id=excluded.dtos_player_id,
+                    confidence=excluded.confidence,gsis_id=excluded.gsis_id,
+                    identity_generation=excluded.identity_generation""",
+                    (
+                        provider, provider_player_id, dtos_player_id, confidence,
+                        current_mapping[2] or current_mapping[3] or None,
+                        mapping_generation,
+                    ),
+                )
         if inserted:
             self._invalidate_dataset_version()
+        return inserted
+
+    def current_identity_count(self) -> int:
+        with self.connection() as connection:
+            return int(connection.execute(
+                "SELECT count(*) FROM current_player_identity",
+            ).fetchone()[0])
+
+    def identity_version_count(self) -> int:
+        with self.connection() as connection:
+            return int(connection.execute(
+                "SELECT count(*) FROM player_identity",
+            ).fetchone()[0])
+
+    def iter_current_identity_mappings(
+        self, *, batch_size: int = 512,
+    ) -> Iterator[dict[str, Any]]:
+        """Stream one compact latest row per provider identity."""
+        with self.connection() as connection:
+            cursor = connection.execute(
+                """SELECT provider,provider_player_id,dtos_player_id,confidence,
+                gsis_id FROM current_player_identity
+                ORDER BY provider,provider_player_id,dtos_player_id""",
+            )
+            while True:
+                rows = cursor.fetchmany(batch_size)
+                if not rows:
+                    break
+                for row in rows:
+                    yield dict(row)
 
     def identities(self, unresolved_only: bool = False) -> list[dict[str, Any]]:
         clause = " WHERE confidence < 70" if unresolved_only else ""
@@ -1269,6 +1535,10 @@ class HistoricalStore:
 
 
 def _decode_job(row: dict[str, Any]) -> dict[str, Any]:
-    for key in ("requested_seasons", "requested_data_types"):
-        row[key] = json.loads(row[key])
+    for key in (
+        "requested_seasons", "requested_data_types", "eligible_seasons",
+        "skipped_seasons", "pending_seasons",
+    ):
+        if key in row:
+            row[key] = json.loads(row[key])
     return row

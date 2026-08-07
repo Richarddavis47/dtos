@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.8.5 - Bounded Historical Identity Context
+
+- Evaluates durable player-week checkpoints before constructing enrichment identity state.
+- Streams one compact current identity projection instead of hydrating identity history.
+- Treats unchanged identity observations as no-ops and advances durable semantic generations only for material changes.
+- Persists enrichment preparation, lease, generation, and context-build diagnostics.
+- Adds a metadata-only migration with a fail-safe disk-capacity gate; existing identity history remains untouched.
+
 ## v1.8.4 - Bounded Asset Market Construction
 
 - Replaced process-resident Asset Market universe copies with a streaming, atomic SQLite read model that paginates, filters, and searches before hydration.

@@ -26,20 +26,17 @@ class IdentityContext:
 def build_identity_context(store: HistoricalStore) -> IdentityContext:
     started = perf_counter()
     resolved: dict[str, str] = {}
-    identities = store.identities()
-    latest: str | None = None
-    for identity in identities:
-        valid_from = str(identity.get("valid_from") or "")
-        latest = max(latest, valid_from) if latest else valid_from or None
-        provider_ids = identity["metadata"].get("provider_ids") or {}
-        candidate = provider_ids.get("GSIS") or provider_ids.get("gsis_id")
-        if candidate and identity["confidence"] >= 70:
+    canonical_count = 0
+    for identity in store.iter_current_identity_mappings():
+        canonical_count += 1
+        candidate = identity.get("gsis_id")
+        if candidate and int(identity["confidence"]) >= 70:
             resolved[str(candidate)] = str(identity["dtos_player_id"])
     return IdentityContext(
         gsis_to_dtos=resolved,
-        canonical_count=len(identities),
+        canonical_count=canonical_count,
         gsis_count=len(resolved),
-        latest_identity_at=latest,
+        latest_identity_at=None,
         build_ms=round((perf_counter() - started) * 1000, 3),
     )
 
