@@ -1,3 +1,15 @@
+# DTOS v1.8.4 — Bounded Asset Market Construction
+
+DTOS v1.8.4 removes the production OOM path in the first cold Asset Market request. Profiling found four simultaneous universe-wide representations: full canonical valuation envelopes, compact summaries, an ID dictionary, and duplicated normalized search strings. The old builder retained roughly 260 MB locally and exceeded the 2 GB Render cgroup when added to the synchronized production baseline.
+
+The market now streams canonical assets directly into an atomic, versioned SQLite read model on the existing durable storage. Directory filtering, ordering, and pagination run in SQL before JSON hydration; search uses the indexed compact representation; expanded dossiers hydrate only the selected canonical asset and its history. Compatible generations survive process restarts without rebuilding.
+
+Cold requests start one bounded background build and receive an explicit retryable warming response. A cgroup-aware guard checks available construction budget before and between stages and defers safely rather than risking worker termination. Market health remains metadata-only.
+
+No market formulas, public schemas, ordering, Brain snapshots, valuation layers, historical evidence, provider behavior, infrastructure, or pricing changed.
+
+---
+
 # DTOS v1.8.3 — Production Memory Lifecycle
 
 DTOS v1.8.3 coordinates its largest in-process memory phases instead of allowing their peaks to overlap. Initial Sleeper synchronization and cache persistence finish before historical backfill begins, and cold Asset Market construction is deferred while synchronization, valuation, persistence, or historical work is active.

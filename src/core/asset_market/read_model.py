@@ -1,0 +1,328 @@
+"""Atomic, disk-backed Asset Market directory and search read model."""
+from __future__ import annotations
+
+import gc
+import json
+import os
+import sqlite3
+import sys
+import time
+from collections import Counter
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Callable
+
+from src.platform.lifecycle import memory_snapshot
+
+MARKET_READ_MODEL_SCHEMA = "2.0"
+TARGET_CGROUP_BYTES = 1536 * 1024 * 1024
+HARD_CGROUP_BYTES = 1740 * 1024 * 1024
+RESERVED_BYTES = 500 * 1024 * 1024
+DEFAULT_STAGE_ESTIMATE = 128 * 1024 * 1024
+
+SCHEMA = """
+CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE assets (
+  asset_id TEXT PRIMARY KEY,
+  asset_type TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  position TEXT,
+  nfl_team TEXT,
+  age REAL,
+  status TEXT,
+  availability TEXT NOT NULL,
+  owner_id INTEGER,
+  year INTEGER,
+  round_number INTEGER,
+  rookie INTEGER NOT NULL,
+  market_value REAL,
+  intrinsic_value REAL,
+  league_value REAL,
+  contender_value REAL,
+  rebuilder_value REAL,
+  confidence_value REAL,
+  risk_value REAL,
+  liquidity_value REAL,
+  search_text TEXT NOT NULL,
+  summary_json TEXT NOT NULL,
+  canonical_json TEXT NOT NULL
+);
+CREATE INDEX idx_market_type ON assets(asset_type);
+CREATE INDEX idx_market_position ON assets(position);
+CREATE INDEX idx_market_availability ON assets(availability);
+CREATE INDEX idx_market_owner ON assets(owner_id);
+CREATE INDEX idx_market_year_round ON assets(year, round_number);
+CREATE INDEX idx_market_value ON assets(market_value, asset_id);
+CREATE INDEX idx_intrinsic_value ON assets(intrinsic_value, asset_id);
+CREATE INDEX idx_contender_value ON assets(contender_value, asset_id);
+CREATE INDEX idx_rebuilder_value ON assets(rebuilder_value, asset_id);
+"""
+
+
+class MarketMemoryBudgetError(RuntimeError):
+    """Raised before a market stage would violate the cgroup safety budget."""
+
+
+def _json(value: Any) -> str:
+    return json.dumps(value, separators=(",", ":"), sort_keys=True, default=str)
+
+
+def _json_object(value: str) -> dict[str, Any]:
+    decoded = json.loads(value)
+    return decoded if isinstance(decoded, dict) else {}
+
+
+def enforce_memory_budget(stage: str, estimate: int = DEFAULT_STAGE_ESTIMATE) -> dict[str, Any]:
+    """Refuse a stage before the process can approach the platform OOM limit."""
+    snapshot = memory_snapshot()
+    current = snapshot.get("cgroup_current_bytes")
+    limit = snapshot.get("cgroup_limit_bytes")
+    if current and limit:
+        safe_limit = min(TARGET_CGROUP_BYTES, max(0, int(limit) - RESERVED_BYTES))
+        if int(current) >= HARD_CGROUP_BYTES or int(current) + estimate > safe_limit:
+            raise MarketMemoryBudgetError(
+                f"Asset Market stage {stage} deferred by the memory safety budget."
+            )
+    return snapshot
+
+
+def _object_counts() -> dict[str, int]:
+    counts = Counter(type(item).__name__ for item in gc.get_objects())
+    return {name: counts.get(name, 0) for name in ("dict", "list", "tuple", "str")}
+
+
+class AssetSequence(Sequence[dict[str, Any]]):
+    """Compatibility sequence backed by bounded SQLite reads."""
+
+    def __init__(self, model: MarketReadModel) -> None:
+        self.model = model
+
+    def __len__(self) -> int:
+        return self.model.asset_count
+
+    def __getitem__(self, index: int | slice) -> dict[str, Any] | list[dict[str, Any]]:
+        if isinstance(index, slice):
+            start, stop, step = index.indices(len(self))
+            rows = self.model.fetch_summaries(stop - start, start)
+            return rows[::step]
+        if index < 0:
+            index += len(self)
+        rows = self.model.fetch_summaries(1, index)
+        if not rows:
+            raise IndexError(index)
+        return rows[0]
+
+    def __iter__(self) -> Iterator[dict[str, Any]]:
+        for offset in range(0, len(self), 250):
+            yield from self.model.fetch_summaries(250, offset)
+
+
+class AssetMapping(Mapping[str, dict[str, Any]]):
+    """Compatibility ID mapping without an in-memory universe-sized dictionary."""
+
+    def __init__(self, model: MarketReadModel) -> None:
+        self.model = model
+
+    def __len__(self) -> int:
+        return self.model.asset_count
+
+    def __iter__(self) -> Iterator[str]:
+        with self.model.connection() as connection:
+            for row in connection.execute("SELECT asset_id FROM assets ORDER BY asset_id"):
+                yield str(row[0])
+
+    def __getitem__(self, key: str) -> dict[str, Any]:
+        row = self.model.summary(key)
+        if row is None:
+            raise KeyError(key)
+        return row
+
+
+class MarketReadModel:
+    """One compatible immutable SQLite market generation."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        with self.connection() as connection:
+            metadata = dict(connection.execute("SELECT key, value FROM metadata"))
+            self.asset_count = int(metadata.get("asset_count", "0"))
+        self.assets = AssetSequence(self)
+        self.by_id = AssetMapping(self)
+
+    @contextmanager
+    def connection(self) -> Iterator[sqlite3.Connection]:
+        connection = sqlite3.connect(self.path, timeout=30)
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA query_only=ON")
+        try:
+            yield connection
+        finally:
+            connection.close()
+
+    def metadata(self) -> dict[str, Any]:
+        with self.connection() as connection:
+            values = dict(connection.execute("SELECT key, value FROM metadata"))
+        return {key: json.loads(value) for key, value in values.items()}
+
+    def fetch_summaries(self, limit: int, offset: int = 0) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                "SELECT summary_json FROM assets ORDER BY asset_id LIMIT ? OFFSET ?",
+                (limit, offset),
+            ).fetchall()
+        return [_json_object(str(row[0])) for row in rows]
+
+    def summary(self, asset_id: str) -> dict[str, Any] | None:
+        with self.connection() as connection:
+            row = connection.execute(
+                "SELECT summary_json FROM assets WHERE asset_id=?", (asset_id,),
+            ).fetchone()
+        return _json_object(str(row[0])) if row else None
+
+    def canonical(self, asset_id: str) -> dict[str, Any] | None:
+        with self.connection() as connection:
+            row = connection.execute(
+                "SELECT canonical_json FROM assets WHERE asset_id=?", (asset_id,),
+            ).fetchone()
+        return _json_object(str(row[0])) if row else None
+
+    def query(
+        self, where: list[str], parameters: list[Any], order_column: str,
+        direction: str, limit: int, offset: int,
+    ) -> tuple[int, list[dict[str, Any]]]:
+        clause = " AND ".join(where) if where else "1=1"
+        order = "ASC" if direction.casefold() == "asc" else "DESC"
+        null_order = "ASC" if order == "DESC" else "DESC"
+        with self.connection() as connection:
+            total = int(connection.execute(
+                f"SELECT COUNT(*) FROM assets WHERE {clause}", parameters,
+            ).fetchone()[0])
+            rows = connection.execute(
+                f"SELECT summary_json FROM assets WHERE {clause} "
+                f"ORDER BY ({order_column} IS NULL) {null_order}, {order_column} {order}, "
+                f"asset_id {order} LIMIT ? OFFSET ?",
+                (*parameters, limit, offset),
+            ).fetchall()
+        return total, [_json_object(str(row[0])) for row in rows]
+
+    def search(self, tokens: tuple[str, ...], clauses: list[str], params: list[Any], limit: int) -> list[dict[str, Any]]:
+        where = list(clauses)
+        parameters = list(params)
+        for token in tokens:
+            where.append("search_text LIKE ?")
+            parameters.append(f"%{token}%")
+        condition = " AND ".join(where) if where else "1=1"
+        with self.connection() as connection:
+            rows = connection.execute(
+                f"SELECT summary_json FROM assets WHERE {condition} "
+                "ORDER BY display_name COLLATE NOCASE, asset_id LIMIT ?",
+                (*parameters, limit),
+            ).fetchall()
+        return [_json_object(str(row[0])) for row in rows]
+
+
+def build_read_model(
+    target: Path, generation: str, rows: Iterator[tuple[dict[str, Any], dict[str, Any]]],
+    metadata: dict[str, Any], stage_observer: Callable[[dict[str, Any]], None] | None = None,
+) -> MarketReadModel:
+    """Stream one generation to SQLite, then publish it atomically."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_name(f".{target.name}.{os.getpid()}.partial")
+    temporary.unlink(missing_ok=True)
+    stages: list[dict[str, Any]] = []
+
+    def observe(stage: str, started: float, before: dict[str, Any], count: int) -> None:
+        after = memory_snapshot()
+        row = {
+            "stage": stage, "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+            "memory_before": before, "memory_after": after, "rows": count,
+            "object_counts": _object_counts(),
+        }
+        stages.append(row)
+        if stage_observer:
+            stage_observer(row)
+
+    try:
+        before = enforce_memory_budget("artifact_initialization", 32 * 1024 * 1024)
+        started = time.perf_counter()
+        connection = sqlite3.connect(temporary, timeout=30)
+        try:
+            connection.executescript(SCHEMA)
+            connection.execute("PRAGMA journal_mode=DELETE")
+            connection.execute("PRAGMA synchronous=FULL")
+            observe("artifact_initialization", started, before, 0)
+            count = 0
+            started = time.perf_counter()
+            before = enforce_memory_budget("canonical_asset_iteration")
+            for summary, canonical in rows:
+                values = summary.get("values") or {}
+                owner = summary.get("owner") or {}
+                search_text = " ".join((
+                    str(summary["asset_id"]), str(summary["display_name"]),
+                    str(summary.get("position") or ""), str(summary.get("nfl_team") or ""),
+                    str(owner.get("team_name") or ""), str(owner.get("owner") or ""),
+                    str(summary["availability"]),
+                )).casefold()
+                connection.execute(
+                    "INSERT INTO assets VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (
+                        summary["asset_id"], summary["asset_type"], summary["display_name"],
+                        summary.get("position"), summary.get("nfl_team"), summary.get("age"),
+                        summary.get("status"), summary["availability"], owner.get("roster_id"),
+                        summary.get("year"), summary.get("round"), int(bool(summary.get("rookie"))),
+                        values.get("market_value"), values.get("intrinsic_dtos_value"),
+                        values.get("league_adjusted_value"), values.get("contender_value"),
+                        values.get("rebuilder_value"), values.get("confidence_score"),
+                        values.get("risk_score"), values.get("liquidity_score"), search_text,
+                        _json(summary), _json(canonical),
+                    ),
+                )
+                count += 1
+                if count % 250 == 0:
+                    connection.commit()
+                    enforce_memory_budget("canonical_asset_iteration")
+            observe("canonical_asset_iteration", started, before, count)
+            started = time.perf_counter()
+            before = enforce_memory_budget("model_publication", 16 * 1024 * 1024)
+            complete_metadata = {
+                **metadata, "generation": generation, "schema_version": MARKET_READ_MODEL_SCHEMA,
+                "asset_count": count, "complete": True, "build_stages": stages,
+            }
+            connection.executemany(
+                "INSERT INTO metadata(key,value) VALUES (?,?)",
+                ((key, _json(value)) for key, value in complete_metadata.items()),
+            )
+            connection.commit()
+            connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            connection.close()
+            os.replace(temporary, target)
+            observe("model_publication", started, before, count)
+        finally:
+            try:
+                connection.close()
+            except UnboundLocalError:
+                pass
+        return MarketReadModel(target)
+    except Exception:
+        temporary.unlink(missing_ok=True)
+        raise
+
+
+def approximate_size(value: Any) -> int:
+    """Bounded diagnostic for one object graph without retaining references."""
+    seen: set[int] = set()
+
+    def walk(item: Any) -> int:
+        identity = id(item)
+        if identity in seen:
+            return 0
+        seen.add(identity)
+        size = sys.getsizeof(item)
+        if isinstance(item, dict):
+            size += sum(walk(key) + walk(child) for key, child in item.items())
+        elif isinstance(item, (list, tuple, set)):
+            size += sum(walk(child) for child in item)
+        return size
+
+    return walk(value)

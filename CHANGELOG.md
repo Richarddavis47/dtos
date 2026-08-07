@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.8.4 - Bounded Asset Market Construction
+
+- Replaced process-resident Asset Market universe copies with a streaming, atomic SQLite read model that paginates, filters, and searches before hydration.
+- Added cgroup-aware construction budgets, single-flight background warming, durable compatible-generation reuse, and bounded stage-level allocation telemetry.
+- Preserved canonical Brain, valuation, ranking, history, provenance, and provider-free read contracts while reducing retained cold-build memory to a few megabytes.
+
 ## v1.8.3 - Production Memory Lifecycle
 
 - Added one process-local lifecycle coordinator that prevents overlapping synchronization, provider, valuation, historical-import, persistence, and market-build memory peaks.

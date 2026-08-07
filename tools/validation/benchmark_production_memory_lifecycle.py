@@ -151,8 +151,15 @@ def main() -> int:
         monitor._sample_once()
 
     measured_peak = monitor.peak_cgroup or monitor.peak_rss
+    artifact_metadata = replacement._read_model.metadata()
+    artifact_bytes = replacement._artifact_path.stat().st_size
     result = {
         "asset_count": len(replacement.assets),
+        "market_artifact_bytes": artifact_bytes,
+        "market_artifact_bytes_per_asset": round(
+            artifact_bytes / max(1, len(replacement.assets)), 2,
+        ),
+        "market_build_stages": artifact_metadata.get("build_stages") or [],
         "platform": os.name,
         "cgroup_available": bool(monitor.peak_cgroup),
         "peak_rss_bytes": monitor.peak_rss,

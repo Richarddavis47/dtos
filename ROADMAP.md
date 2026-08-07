@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Bounded Asset Market Construction - DTOS v1.8.4
+
+- Stream the canonical asset universe into one atomic durable market generation without retaining duplicate process-wide collections.
+- Apply indexed filtering, ranking, search, and pagination before bounded detail hydration.
+- Guard every cold-build stage against the Linux cgroup budget and reuse compatible generations after restart.
+
 ### Production Memory Lifecycle - DTOS v1.8.3
 
 - Serialize synchronization, persistence, historical import, and cold market construction through one bounded lifecycle contract.
