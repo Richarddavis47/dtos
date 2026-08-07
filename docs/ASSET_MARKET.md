@@ -36,6 +36,8 @@ The read-model key includes application/build/schema identity, league synchroniz
 
 Historical detail/search reads keep their own logical dataset version, so committed evidence becomes visible without rebuilding compact summaries that do not depend on that evidence. The private database UUID is persisted inside SQLite and is never returned by public APIs, logs, inspection, or DINS.
 
+HistoricalStore memoizes that logical dataset identity per league and durable database generation. Only successful committed writes invalidate it; failed, rolled-back, and unchanged writes retain the existing identity. Search text and former-player aliases are normalized once when the compact market is built. Selected-player dossiers use a bounded dataset-versioned LRU inside the Historical Graph, never a process-global provider or recommendation cache.
+
 Directory filtering, sorting, ranking, and pagination use compact summaries. Full provider evidence and historical dossiers hydrate only after a canonical asset is selected. Warm reads perform no provider calls.
 
 ## Sorting and filtering

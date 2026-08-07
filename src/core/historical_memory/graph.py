@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import hashlib
+import copy
 import sys
 import threading
 import time
 from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import Any
+from collections import OrderedDict
 
 from src.core.historical_memory.models import (
     HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
@@ -23,6 +25,7 @@ from src.core.historical_memory.store import HistoricalStore
 
 COMPLETED_STATUSES = {"complete", "completed"}
 FAILED_STATUSES = {"failed", "failure"}
+PLAYER_DOSSIER_CACHE_LIMIT = 128
 
 
 def canonical_player_id(sleeper_player_id: str) -> str:
@@ -79,6 +82,9 @@ class HistoricalAssetGraph:
         self._trade_by_id: dict[str, dict[str, Any]] = {}
         self._transaction_archive_cache: list[dict[str, Any]] | None = None
         self._coverage_cache: dict[str, Any] | None = None
+        self._player_dossiers: OrderedDict[tuple[str, str, str, str], dict[str, Any]] = OrderedDict()
+        self._player_dossier_build_count = 0
+        self._player_dossier_hits = 0
         self._cache_metadata: dict[str, Any] = {}
         self._query_count = 0
         self._records_hydrated = 0
@@ -117,6 +123,10 @@ class HistoricalAssetGraph:
             "query_count": self._query_count,
             "query_duration_ms": self._last_query_duration_ms,
             "records_hydrated": self._records_hydrated,
+            "player_summary_build_count": self._player_dossier_build_count,
+            "player_summary_cache_hits": self._player_dossier_hits,
+            "player_summary_cache_entries": len(self._player_dossiers),
+            "player_summary_cache_limit": PLAYER_DOSSIER_CACHE_LIMIT,
         }
 
     def _record_query(self, started: float, hydrated: int) -> None:
@@ -430,6 +440,29 @@ class HistoricalAssetGraph:
 
     def player_dossier(self, player_id: str) -> dict[str, Any]:
         canonical_id = canonical_player_id(player_id.removeprefix("DTOS-P-"))
+        cache_key = (
+            self.league_id,
+            str(self._cache_metadata.get("dataset_version") or "unversioned"),
+            HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
+            canonical_id,
+        )
+        with self._index_lock:
+            cached = self._player_dossiers.get(cache_key)
+            if cached is not None:
+                self._player_dossier_hits += 1
+                self._player_dossiers.move_to_end(cache_key)
+                return copy.deepcopy(cached)
+            dossier = self._build_player_dossier(player_id, canonical_id)
+            self._player_dossiers[cache_key] = dossier
+            self._player_dossiers.move_to_end(cache_key)
+            while len(self._player_dossiers) > PLAYER_DOSSIER_CACHE_LIMIT:
+                self._player_dossiers.popitem(last=False)
+            self._player_dossier_build_count += 1
+            return copy.deepcopy(dossier)
+
+    def _build_player_dossier(
+        self, player_id: str, canonical_id: str,
+    ) -> dict[str, Any]:
         events = self.events(asset_id=canonical_id)
         draft_events = [event for event in events if "draft_selection" in event["event_type"]]
         origin = draft_events[0] if draft_events else None

@@ -180,6 +180,8 @@ class HistoricalStore:
     def __init__(self, path: Path, *, initialize: bool = True) -> None:
         self.path = path
         self._lock = RLock()
+        self._dataset_versions: dict[tuple[str, str], str] = {}
+        self._dataset_version_computations = 0
         self.initialization_error: str | None = None
         if not initialize:
             self.initialization_error = "Historical storage validation failed."
@@ -240,6 +242,27 @@ class HistoricalStore:
                 (uuid4().hex,),
             )
             self._repair_enrichment_progress(connection)
+        self._invalidate_dataset_version()
+
+    def _invalidate_dataset_version(self, league_id: str | None = None) -> None:
+        """Invalidate only after a durable input mutation has committed."""
+        with self._lock:
+            if league_id is None:
+                self._dataset_versions.clear()
+                return
+            self._dataset_versions = {
+                key: value
+                for key, value in self._dataset_versions.items()
+                if key[1] != league_id
+            }
+
+    def dataset_version_metrics(self) -> dict[str, int]:
+        """Return safe counters without exposing durable private identities."""
+        with self._lock:
+            return {
+                "computations": self._dataset_version_computations,
+                "cached_leagues": len(self._dataset_versions),
+            }
 
     def database_uuid(self) -> str:
         """Return the private durable generation identity for this database."""
@@ -575,7 +598,10 @@ class HistoricalStore:
                 schema_version, payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 values,
             )
-            return cursor.rowcount == 1
+            inserted = cursor.rowcount == 1
+        if inserted:
+            self._invalidate_dataset_version(league_id)
+        return inserted
 
     def append_many(self, records: list[dict[str, Any]]) -> tuple[int, int]:
         """Append one bounded batch in one transaction on a worker thread."""
@@ -607,6 +633,9 @@ class HistoricalStore:
                 values,
             )
             written = connection.total_changes - before
+        if written:
+            for league_id in {str(record["league_id"]) for record in records}:
+                self._invalidate_dataset_version(league_id)
         return written, len(records) - written
 
     @staticmethod
@@ -711,6 +740,8 @@ class HistoricalStore:
                     progress["job_id"],
                 ),
             )
+        if raw_inserted or derived_inserted:
+            self._invalidate_dataset_version(str(progress["league_id"]))
         return {
             "raw_inserted": raw_inserted,
             "derived_inserted": derived_inserted,
@@ -769,33 +800,42 @@ class HistoricalStore:
 
     def dataset_version(self, league_id: str) -> str:
         """Return a deterministic identity for every stored input to graph reads."""
-        with self.connection() as connection:
-            record = connection.execute(
-                """SELECT count(*), coalesce(max(id), 0),
-                coalesce(max(retrieved_at), '') FROM historical_records
-                WHERE league_id=?""",
-                (league_id,),
-            ).fetchone()
-            identities = connection.execute(
-                """SELECT count(*), coalesce(max(rowid), 0),
-                coalesce(max(valid_from), '') FROM player_identity""",
-            ).fetchone()
-            quality = connection.execute(
-                """SELECT issue_key, resolved FROM data_quality_issues
-                WHERE league_id=? ORDER BY issue_key""",
-                (league_id,),
-            ).fetchall()
-        source = json.dumps(
-            {
-                "league_id": league_id,
-                "records": tuple(record),
-                "identities": tuple(identities),
-                "quality": [tuple(row) for row in quality],
-            },
-            separators=(",", ":"),
-            sort_keys=True,
-        )
-        return hashlib.sha256(source.encode()).hexdigest()
+        database_uuid = self.database_uuid()
+        cache_key = (database_uuid, league_id)
+        with self._lock:
+            cached = self._dataset_versions.get(cache_key)
+            if cached is not None:
+                return cached
+            with self.connection() as connection:
+                record = connection.execute(
+                    """SELECT count(*), coalesce(max(id), 0),
+                    coalesce(max(retrieved_at), '') FROM historical_records
+                    WHERE league_id=?""",
+                    (league_id,),
+                ).fetchone()
+                identities = connection.execute(
+                    """SELECT count(*), coalesce(max(rowid), 0),
+                    coalesce(max(valid_from), '') FROM player_identity""",
+                ).fetchone()
+                quality = connection.execute(
+                    """SELECT issue_key, resolved FROM data_quality_issues
+                    WHERE league_id=? ORDER BY issue_key""",
+                    (league_id,),
+                ).fetchall()
+            source = json.dumps(
+                {
+                    "league_id": league_id,
+                    "records": tuple(record),
+                    "identities": tuple(identities),
+                    "quality": [tuple(row) for row in quality],
+                },
+                separators=(",", ":"),
+                sort_keys=True,
+            )
+            version = hashlib.sha256(source.encode()).hexdigest()
+            self._dataset_versions[cache_key] = version
+            self._dataset_version_computations += 1
+            return version
 
     def distinct_player_ids(self, league_id: str) -> tuple[str, ...]:
         """Return graph player identities without materializing record payloads."""
@@ -1108,12 +1148,15 @@ class HistoricalStore:
         display_name: str, confidence: int, valid_from: str, metadata: dict[str, Any],
     ) -> None:
         with self._lock, self.connection() as connection:
-            connection.execute(
+            cursor = connection.execute(
                 """INSERT OR IGNORE INTO player_identity(
                 dtos_player_id, provider, provider_player_id, display_name,
                 confidence, valid_from, metadata) VALUES (?,?,?,?,?,?,?)""",
                 (dtos_player_id, provider, provider_player_id, display_name, confidence, valid_from, json.dumps(metadata, sort_keys=True)),
             )
+            inserted = cursor.rowcount == 1
+        if inserted:
+            self._invalidate_dataset_version()
 
     def identities(self, unresolved_only: bool = False) -> list[dict[str, Any]]:
         clause = " WHERE confidence < 70" if unresolved_only else ""
@@ -1222,6 +1265,7 @@ class HistoricalStore:
                 VALUES (?,?,?,?,?,?,?)""",
                 (issue_key, run_id, league_id, season, severity, category, detail),
             )
+        self._invalidate_dataset_version(league_id)
 
 
 def _decode_job(row: dict[str, Any]) -> dict[str, Any]:

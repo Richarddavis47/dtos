@@ -4,6 +4,7 @@ from __future__ import annotations
 import tempfile
 import threading
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
@@ -14,6 +15,7 @@ from fastapi.testclient import TestClient
 from routes.market import create_market_router
 from src.core.asset_market import AssetMarketCache
 from src.core.historical_memory.store import HistoricalStore
+from src.core.historical_memory import historical_graph
 
 
 def _brain_asset(asset_id: str, market: int, contender: int, rebuilder: int) -> dict:
@@ -320,6 +322,188 @@ class AssetMarketTests(unittest.TestCase):
             )
         self.assertEqual(self.cache.build_count, 1)
         self.assertGreaterEqual(self.cache.hits, 5)
+
+    def test_dataset_identity_is_single_flight_and_commit_invalidated(self) -> None:
+        initial = self.store.dataset_version(self.league_id)
+        computations = self.store.dataset_version_metrics()["computations"]
+        versions: list[str] = []
+        threads = [threading.Thread(target=lambda: versions.append(
+            self.store.dataset_version(self.league_id)
+        )) for _ in range(8)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        self.assertEqual(versions, [initial] * 8)
+        self.assertEqual(
+            self.store.dataset_version_metrics()["computations"], computations,
+        )
+        self._append(
+            "player_week", "identity-invalidation", "10213",
+            {"fantasy_points": 22.0},
+        )
+        changed = self.store.dataset_version(self.league_id)
+        self.assertNotEqual(changed, initial)
+        self.assertEqual(
+            self.store.dataset_version_metrics()["computations"],
+            computations + 1,
+        )
+        self.assertFalse(self.store.append(
+            record_key="player_week:identity-invalidation",
+            entity_type="player_week", league_id=self.league_id,
+            source_record_id="identity-invalidation",
+            observed_at="2025-09-01T00:00:00+00:00",
+            retrieved_at="2025-09-01T00:00:00+00:00", provider="Sleeper",
+            availability="available", confidence=100,
+            calculation_method="provider_observation", schema_version="2.0",
+            payload={"fantasy_points": 22.0}, season=2025, week=1,
+            player_id="10213",
+        ))
+        self.assertEqual(self.store.dataset_version(self.league_id), changed)
+        self.assertEqual(
+            self.store.dataset_version_metrics()["computations"],
+            computations + 1,
+        )
+
+    def test_search_routes_only_true_historical_queries_to_retained_aliases(self) -> None:
+        with patch("src.core.asset_market.engine.historical_graph") as graph:
+            self.assertEqual(
+                self.market.search("Josh Allen")["results"][0]["asset_id"],
+                "player:10213",
+            )
+            self.assertEqual(self.market.search("no-such-player")["count"], 0)
+            self.assertEqual(
+                self.market.search("Former Player")["results"][0]["asset_id"],
+                "DTOS-P-99",
+            )
+            graph.assert_not_called()
+        with patch.object(self.market._brain, "asset") as asset, patch.object(
+            self.market._brain, "decision",
+        ) as decision:
+            self.market.search("QB")
+            asset.assert_not_called()
+            decision.assert_not_called()
+
+    def test_request_layers_resolve_dataset_identity_once(self) -> None:
+        with patch.object(
+            self.store, "dataset_version",
+            wraps=self.store.dataset_version,
+        ) as version:
+            self.market.search("Josh Allen")
+            self.assertEqual(version.call_count, 1)
+        with patch.object(
+            self.store, "dataset_version",
+            wraps=self.store.dataset_version,
+        ) as version:
+            self.market.detail("player:10213", 1)
+            self.assertEqual(version.call_count, 1)
+
+    def test_player_dossier_cache_is_single_flight_and_bounded(self) -> None:
+        dataset_version = self.store.dataset_version(self.league_id)
+        graph = historical_graph(
+            self.store, self.league_id, self.data, dataset_version,
+        )
+        first = graph.player_dossier("10213")
+        results: list[dict] = []
+        threads = [threading.Thread(target=lambda: results.append(
+            graph.player_dossier("10213")
+        )) for _ in range(6)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        self.assertTrue(all(result == first for result in results))
+        metrics = graph.query_metrics()
+        self.assertEqual(metrics["player_summary_build_count"], 1)
+        self.assertEqual(metrics["player_summary_cache_hits"], 6)
+        self.assertLessEqual(
+            metrics["player_summary_cache_entries"],
+            metrics["player_summary_cache_limit"],
+        )
+
+    def test_player_dossier_cache_eviction_is_bounded_and_failures_are_not_cached(self) -> None:
+        dataset_version = self.store.dataset_version(self.league_id)
+        graph = historical_graph(
+            self.store, self.league_id, self.data, dataset_version,
+        )
+        graph._player_dossiers.clear()
+        with patch.object(
+            graph, "_build_player_dossier",
+            side_effect=lambda player_id, canonical_id: {
+                "identity": canonical_id, "player_id": player_id,
+            },
+        ) as build:
+            for player_id in range(130):
+                graph.player_dossier(str(player_id))
+            self.assertEqual(len(graph._player_dossiers), 128)
+            retained = [key[-1] for key in graph._player_dossiers]
+            self.assertNotIn("DTOS-P-0", retained)
+            self.assertNotIn("DTOS-P-1", retained)
+            self.assertEqual(retained[-1], "DTOS-P-129")
+            self.assertEqual(build.call_count, 130)
+        graph._player_dossiers.clear()
+        with patch.object(
+            graph, "_build_player_dossier",
+            side_effect=RuntimeError("incomplete summary"),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "incomplete summary"):
+                graph.player_dossier("failed")
+        self.assertFalse(any(key[-1] == "DTOS-P-failed" for key in graph._player_dossiers))
+
+    def test_warm_market_reads_do_not_repeat_dataset_aggregate_queries(self) -> None:
+        self.store.dataset_version(self.league_id)
+        statements: list[str] = []
+        original_connection = self.store.connection
+
+        @contextmanager
+        def traced_connection():
+            with original_connection() as connection:
+                connection.set_trace_callback(statements.append)
+                yield connection
+
+        with patch.object(self.store, "connection", traced_connection):
+            for _ in range(5):
+                self.market.search("QB")
+                self.market.detail("player:10213", 1)
+        aggregates = [
+            statement for statement in statements
+            if "coalesce(max(id)" in statement
+            or "coalesce(max(rowid)" in statement
+            or "SELECT issue_key, resolved" in statement
+        ]
+        self.assertEqual(aggregates, [])
+
+    def test_dataset_identity_cache_is_cross_league_and_rollback_safe(self) -> None:
+        first = self.store.dataset_version(self.league_id)
+        other = self.store.dataset_version("league-2")
+        computations = self.store.dataset_version_metrics()["computations"]
+        with self.assertRaises(RuntimeError):
+            with self.store.connection() as connection:
+                connection.execute(
+                    """INSERT INTO historical_records(
+                    record_key,entity_type,league_id,source_record_id,
+                    observed_at,retrieved_at,provider,availability,confidence,
+                    calculation_method,schema_version,payload)
+                    VALUES ('rolled-back','player_week',?,'rolled-back',
+                    '2025-01-01','2025-01-01','fixture','available',100,
+                    'fixture','2.0','{}')""",
+                    (self.league_id,),
+                )
+                raise RuntimeError("rollback")
+        self.assertEqual(self.store.dataset_version(self.league_id), first)
+        self.assertEqual(self.store.dataset_version("league-2"), other)
+        self.assertEqual(
+            self.store.dataset_version_metrics()["computations"], computations,
+        )
+        self._append(
+            "player_week", "cross-league-change", "10213",
+            {"fantasy_points": 23.0},
+        )
+        self.assertEqual(self.store.dataset_version("league-2"), other)
+        self.assertEqual(
+            self.store.dataset_version_metrics()["computations"], computations,
+        )
+        self.assertNotEqual(self.store.dataset_version(self.league_id), first)
 
 
 if __name__ == "__main__":
