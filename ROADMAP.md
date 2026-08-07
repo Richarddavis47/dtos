@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Asset Market Query Performance - DTOS v1.8.2
+
+- Reuse canonical historical dataset identity across unchanged reads and invalidate only after committed input changes.
+- Route search through normalized compact documents before bounded historical alias resolution.
+- Reuse bounded dataset-versioned player summaries for warm expansion without changing public output.
+
 ### Asset Market Cache Stability - DTOS v1.8.1
 
 - Give each historical database a private, durable generation UUID.

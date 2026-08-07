@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.8.2 - Asset Market Query Performance
+
+- Memoized canonical Historical Memory dataset identities with committed-write invalidation, cross-league isolation, and durable database-generation detection.
+- Added build-time compact search documents so current, structured, empty, and no-result queries avoid unnecessary Historical Graph discovery and per-asset normalization.
+- Added a bounded, single-flight, dataset-versioned player-dossier cache while preserving canonical Brain snapshots, serialized outputs, provenance, and provider-free reads.
+
 ## v1.8.1 - Asset Market Cache Stability
 
 - Added a private durable database UUID that survives ordinary SQLite/WAL activity and changes only for a genuinely recreated HistoricalStore database.

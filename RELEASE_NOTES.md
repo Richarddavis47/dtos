@@ -1,3 +1,13 @@
+# DTOS v1.8.2 — Asset Market Query Performance
+
+DTOS v1.8.2 removes repeated aggregate database work from warm Asset Market reads. HistoricalStore now computes each league's canonical dataset identity once under concurrency and invalidates it only after a successful committed evidence, identity, quality, migration, or repair change. Durable database UUIDs continue detecting same-path database replacement without exposing private storage details.
+
+Asset Market search retains normalized compact documents at model construction. Current players, structured filters, empty searches, future picks, free agents, and no-result queries remain inside the compact index; retained historical aliases provide former-player discovery without constructing full dossiers or recommendations.
+
+Historical Graph player dossiers now use a bounded dataset-versioned LRU with single-flight first construction. Repeated expansion preserves byte-equivalent canonical history, Brain identity, recommendation provenance, and API contracts while avoiding repeated ownership, season-summary, and positional preparation.
+
+---
+
 # DTOS v1.8.1 — Asset Market Cache Stability
 
 DTOS v1.8.1 corrects the production performance blocker discovered after v1.8.0. Instrumentation proved that ongoing enrichment changed the logical Historical Memory dataset version on every commit, causing the compact 12,331-asset market model to rebuild repeatedly even though those writes did not change its directory summaries.

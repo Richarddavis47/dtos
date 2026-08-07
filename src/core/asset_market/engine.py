@@ -143,15 +143,55 @@ class AssetMarket:
         )
         self.by_id = {row["asset_id"]: row for row in self.assets}
         self._canonical = {row["asset_id"]: row for row in universe.assets}
+        self._search_index = tuple(
+            (row, " ".join((
+                row["asset_id"], row["display_name"],
+                str(row.get("position") or ""), str(row.get("nfl_team") or ""),
+                str((row.get("owner") or {}).get("team_name") or ""),
+                str((row.get("owner") or {}).get("owner") or ""),
+                row["availability"],
+            )).casefold())
+            for row in self.assets
+        )
+        current_players = set(data.get("players") or {})
+        self._historical_player_search = tuple(
+            {
+                "asset_id": f"DTOS-P-{identity['provider_player_id']}",
+                "asset_type": "player",
+                "display_name": identity.get("display_name")
+                or f"Unresolved Sleeper player {identity['provider_player_id']}",
+                "position": (identity.get("metadata") or {}).get("position"),
+                "nfl_team": None, "owner": None,
+                "resolution_status": (
+                    "resolved" if int(identity.get("confidence") or 0) >= 70
+                    else "unresolved"
+                ),
+                "market_value": None, "contender_value": None,
+                "rebuilder_value": None, "confidence": 0,
+                "canonical_url": f"/players/{identity['provider_player_id']}",
+                "historical_availability": "available",
+                "search_text": " ".join((
+                    str(identity["provider_player_id"]),
+                    str(identity.get("display_name") or ""),
+                    f"DTOS-P-{identity['provider_player_id']}",
+                )).casefold(),
+            }
+            for identity in store.identities()
+            if str(identity["provider_player_id"]) not in current_players
+        )
         self.build_duration_ms = round((time.perf_counter() - started) * 1000, 3)
 
-    def identity(self, brain_snapshot_id: str | None = None) -> dict[str, Any]:
+    def identity(
+        self, brain_snapshot_id: str | None = None,
+        dataset_version: str | None = None,
+    ) -> dict[str, Any]:
         identity = {
             "application_version": VERSION,
             "application_build": BUILD_NUMBER,
             "market_schema_version": MARKET_SCHEMA_VERSION,
             "league_id": self.league_id,
-            "historical_dataset_version": self.store.dataset_version(self.league_id),
+            "historical_dataset_version": dataset_version
+            or self.store.dataset_version(self.league_id),
             "market_generation": self.generated_at,
             "brain_generation": self.brain_generation,
             "valuation_generation": (
@@ -175,6 +215,12 @@ class AssetMarket:
             "read_contract": {
                 "provider_sync": False, "pagination_before_hydration": True,
                 "single_flight": True, "detail_history_hydration": "on_demand",
+            },
+            "dataset_identity_cache": self.store.dataset_version_metrics(),
+            "search_index": {
+                "current_assets": len(self._search_index),
+                "historical_players": len(self._historical_player_search),
+                "normalization": "build_time",
             },
         }
 
@@ -241,45 +287,43 @@ class AssetMarket:
             token for token in normalized.split() if token and token not in ignored
         )
         rows = [
-            row for row in self.assets
+            row for row, search_text in self._search_index
             if (not wants_free_agent or row["availability"] == "day_traders_free_agent")
             and (not wants_taxi or row["availability"] == "taxi")
             and (not wants_rookie or row["rookie"])
             and (not wants_pick or row["asset_type"] == "pick")
             and (not position or row.get("position") == position)
             and (not tokens or all(
-                token in " ".join((
-                    row["asset_id"], row["display_name"],
-                    str(row.get("position") or ""), str(row.get("nfl_team") or ""),
-                    str((row.get("owner") or {}).get("team_name") or ""),
-                    str((row.get("owner") or {}).get("owner") or ""),
-                    row["availability"],
-                )).casefold()
+                token in search_text
                 for token in tokens
             ))
         ]
-        history = (
-            historical_graph(self.store, self.league_id, self.data).search(
-                query, limit - len(rows),
-            )
-            if len(rows) < limit else []
+        historical_resolution = bool(
+            needle and tokens and not rows
+            and not any((
+                wants_free_agent, wants_taxi, wants_rookie, wants_pick,
+                position is not None,
+            ))
         )
         extras = [
-            {
-                "asset_id": row["canonical_id"], "asset_type": row["result_type"],
-                "display_name": row["display_label"], "position": None,
-                "nfl_team": None, "owner": None,
-                "resolution_status": row["resolution_status"],
-                "market_value": None, "contender_value": None,
-                "rebuilder_value": None, "confidence": 0,
-                "canonical_url": row["canonical_url"],
-                "historical_availability": row["historical_availability"],
-            }
-            for row in history
-            if _market_id_from_history(str(row["canonical_id"])) not in self.by_id
+            {key: value for key, value in row.items() if key != "search_text"}
+            for row in self._historical_player_search
+            if historical_resolution
+            and all(token in row["search_text"] for token in tokens)
+            if _market_id_from_history(str(row["asset_id"])) not in self.by_id
         ]
         existing = {row["asset_id"] for row in extras}
-        for transaction in self.store.search_transaction_ids(self.league_id, query, limit):
+        transaction_query = bool(
+            needle and (
+                "trade" in normalized or "transaction" in normalized
+                or normalized.startswith("tx ")
+            )
+        )
+        transactions = (
+            self.store.search_transaction_ids(self.league_id, query, limit)
+            if transaction_query else []
+        )
+        for transaction in transactions:
             transaction_id = transaction["source_record_id"]
             source_league = str(
                 (transaction.get("payload") or {}).get("source_league_id")
@@ -328,7 +372,11 @@ class AssetMarket:
         combined = sorted([*compact, *extras], key=lambda row: (
             str(row.get("display_name") or "").casefold(), str(row["asset_id"]),
         ))[:limit]
-        return {**self.identity(), "query": query, "count": len(combined), "results": combined}
+        dataset_version = self.store.dataset_version(self.league_id)
+        return {
+            **self.identity(dataset_version=dataset_version), "query": query,
+            "count": len(combined), "results": combined,
+        }
 
     def detail(self, asset_id: str, front_office: int | None = None) -> dict[str, Any] | None:
         row = self.by_id.get(asset_id)
@@ -337,7 +385,9 @@ class AssetMarket:
         brain_asset = self._brain.asset(asset_id)
         decision = self._brain.decision("Asset Market", (asset_id,))
         historical_dataset_version = self.store.dataset_version(self.league_id)
-        graph = historical_graph(self.store, self.league_id, self.data)
+        graph = historical_graph(
+            self.store, self.league_id, self.data, historical_dataset_version,
+        )
         if row["asset_type"] == "player":
             raw_id = asset_id.removeprefix("player:")
             history = graph.player_dossier(raw_id)
@@ -353,7 +403,9 @@ class AssetMarket:
             if isinstance(layer, dict)
         })
         return {
-            **self.identity(decision.brain_snapshot_id), "asset": row,
+            **self.identity(
+                decision.brain_snapshot_id, historical_dataset_version,
+            ), "asset": row,
             "valuation": brain_asset,
             "value_layers": {
                 name: {

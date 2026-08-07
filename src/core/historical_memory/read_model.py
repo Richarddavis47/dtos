@@ -59,8 +59,9 @@ class HistoricalReadModelCache:
 
     def cache_key(
         self, store: HistoricalStore, league_id: str, data: dict[str, Any],
+        dataset_version: str | None = None,
     ) -> tuple[str, str]:
-        dataset_version = store.dataset_version(league_id)
+        dataset_version = dataset_version or store.dataset_version(league_id)
         source = "|".join((
             str(store.path.resolve()), league_id, dataset_version, HISTORICAL_SCHEMA_VERSION,
             IMPORTER_VERSION, HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
@@ -71,9 +72,12 @@ class HistoricalReadModelCache:
 
     def get(
         self, store: HistoricalStore, league_id: str, data: dict[str, Any],
+        dataset_version: str | None = None,
     ) -> HistoricalAssetGraph:
         started = time.perf_counter()
-        key, dataset_version = self.cache_key(store, league_id, data)
+        key, dataset_version = self.cache_key(
+            store, league_id, data, dataset_version,
+        )
         with self._lock:
             graph = self._entries.get(key)
             if graph is not None:
@@ -141,6 +145,7 @@ class HistoricalReadModelCache:
 
     def metadata(self, dataset_version: str | None = None) -> dict[str, Any]:
         graph = self._entries.get(self._active_key or "")
+        graph_metrics = graph.query_metrics() if graph else {}
         return {
             "status": "ready" if graph else "empty",
             "read_model_version": READ_MODEL_VERSION,
@@ -155,6 +160,15 @@ class HistoricalReadModelCache:
             "last_build_error": self._last_build_error,
             "entry_count": len(self._entries),
             "max_entries": self.max_entries,
+            "player_summary_build_count": graph_metrics.get(
+                "player_summary_build_count", 0,
+            ),
+            "player_summary_cache_hits": graph_metrics.get(
+                "player_summary_cache_hits", 0,
+            ),
+            "player_summary_cache_entries": graph_metrics.get(
+                "player_summary_cache_entries", 0,
+            ),
             "asset_count": graph.index_asset_count if graph else 0,
             "event_count": graph.index_event_count if graph else 0,
             "approximate_model_bytes": graph.approximate_size_bytes if graph else 0,
@@ -171,5 +185,8 @@ historical_read_model_cache = HistoricalReadModelCache()
 
 def historical_graph(
     store: HistoricalStore, league_id: str, data: dict[str, Any],
+    dataset_version: str | None = None,
 ) -> HistoricalAssetGraph:
-    return historical_read_model_cache.get(store, league_id, data)
+    return historical_read_model_cache.get(
+        store, league_id, data, dataset_version,
+    )

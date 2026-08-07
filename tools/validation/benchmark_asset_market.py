@@ -17,14 +17,16 @@ from src.core.historical_memory import historical_store
 
 def _measure(operation: Callable[[], Any], count: int = 5) -> dict[str, Any]:
     durations = []
+    result = None
     for _ in range(count):
         started = perf_counter()
-        operation()
+        result = operation()
         durations.append(round((perf_counter() - started) * 1000, 3))
     return {
         "runs_ms": durations,
         "median_ms": round(median(durations), 3),
         "maximum_ms": max(durations),
+        "response_bytes": len(json.dumps(result, separators=(",", ":"), default=str)),
     }
 
 
@@ -46,12 +48,7 @@ def main() -> int:
         "directory": _measure(lambda: cache.get(
             data, STATE, historical_store, LEAGUE_ID,
         ).directory(limit=50)),
-        "search": _measure(lambda: cache.get(
-            data, STATE, historical_store, LEAGUE_ID,
-        ).search("QB", 50)),
-        "expansion": _measure(lambda: cache.get(
-            data, STATE, historical_store, LEAGUE_ID,
-        ).detail(f"player:{player_id}", 1)),
+        "search": {},
         "trending": _measure(lambda: cache.get(
             data, STATE, historical_store, LEAGUE_ID,
         ).trending(10)),
@@ -59,6 +56,34 @@ def main() -> int:
         "rss_bytes": psutil.Process(os.getpid()).memory_info().rss,
         "provider_synchronization": False,
     }
+    historical_ids = set(historical_store.distinct_player_ids(LEAGUE_ID))
+    former = next(iter(sorted(historical_ids - set(data.get("players") or {}))), None)
+    queries = {
+        "broad": "QB", "exact_player": "Bijan Robinson",
+        "partial_player": "Bijan", "future_pick": "2028 1st",
+        "free_agent": "free agent tight ends",
+        "historical_player": former or "historical-player-not-found",
+        "no_result": "zzzz-no-canonical-asset-zzzz",
+    }
+    for query in queries.values():
+        cache.get(data, STATE, historical_store, LEAGUE_ID).search(query, 50)
+    cache.get(data, STATE, historical_store, LEAGUE_ID).detail(
+        f"player:{player_id}", 1,
+    )
+    before_identity = historical_store.dataset_version_metrics()
+    results["search"] = {
+        name: _measure(lambda query=query: cache.get(
+            data, STATE, historical_store, LEAGUE_ID,
+        ).search(query, 50))
+        for name, query in queries.items()
+    }
+    results["expansion"] = _measure(lambda: cache.get(
+        data, STATE, historical_store, LEAGUE_ID,
+    ).detail(f"player:{player_id}", 1))
+    results["dataset_identity_before"] = before_identity
+    results["dataset_identity_after"] = historical_store.dataset_version_metrics()
+    results["cache"] = cache.metrics()
+    results["rss_bytes"] = psutil.Process(os.getpid()).memory_info().rss
     print(json.dumps(results, indent=2, sort_keys=True))
     return 0
 
