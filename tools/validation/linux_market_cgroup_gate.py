@@ -62,6 +62,17 @@ def _cgroup(name: str) -> int:
     return int(value)
 
 
+def _cgroup_cpu() -> dict[str, int | bool]:
+    path = CGROUP / "cpu.stat"
+    if not path.is_file():
+        raise RuntimeError("required cgroup metric unavailable: cpu.stat")
+    values: dict[str, int | bool] = {"available": True}
+    for line in path.read_text(encoding="ascii").splitlines():
+        name, value = line.split()
+        values[name] = int(value)
+    return values
+
+
 def _rss_high_water(pid: int) -> int:
     status = Path(f"/proc/{pid}/status").read_text(encoding="utf-8")
     for line in status.splitlines():
@@ -526,10 +537,15 @@ def _restart_reuse(
     expected_identity: dict[str, object], expected_body: bytes,
     *, request=_profiled_request, clock=time.monotonic, sleeper=time.sleep,
     event_probe=None, load_observer=None, memory_observer=None,
+    cpu_observer=None,
 ) -> dict[str, object]:
     event_probe = event_probe or (lambda: _diagnostic_request("/health/live"))
     load_observer = load_observer or os.getloadavg
     memory_observer = memory_observer or (lambda: _cgroup("memory.current"))
+    cpu_observer = cpu_observer or (
+        _cgroup_cpu if sys.platform == "linux"
+        else lambda: {"available": False}
+    )
     started = clock()
     samples: list[dict[str, object]] = []
     while clock() - started < 60:
@@ -596,6 +612,9 @@ def _restart_reuse(
             "thread_pool_threads": profile.get("thread_pool_threads"),
             "runner_load": [round(value, 3) for value in load_observer()],
             "cgroup_memory_current": memory_observer(),
+            "cgroup_cpu": cpu_observer(),
+            "preparation_active": profile.get("preparation_active") or {},
+            "preparation_events": profile.get("preparation_events") or [],
             "hydration_stages": profile.get("hydration_stages") or {},
         })
         sleeper(0.05)
