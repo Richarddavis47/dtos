@@ -789,6 +789,31 @@ class AssetMarketCache:
             )
             self._build_thread.start()
 
+    def begin_warming_guard(
+        self, data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str,
+    ) -> bool:
+        """Start or observe generation using only bounded in-memory state."""
+        allowed = lifecycle_coordinator.market_build_allowed()
+        request_marker = self.request_marker(data, state, store, league_id)
+        with self._lock:
+            market = self._market
+            current = (
+                market is not None and market.store is store
+                and request_marker == self._request_marker
+            )
+            if current:
+                return False
+            if self._refresh_state == "failed" or self._build_phase == "failed":
+                return False
+            active = self._build_thread is not None
+        if active:
+            return True
+        if not allowed:
+            return market is None or market.store is not store
+        self._start_background(data, state, store, league_id, request_marker)
+        return True
+
     def get(
         self, data: dict[str, Any], state: dict[str, Any],
         store: HistoricalStore, league_id: str, *, background: bool = False,

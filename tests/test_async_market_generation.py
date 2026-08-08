@@ -218,6 +218,46 @@ class AsyncMarketGenerationTests(unittest.TestCase):
         start.assert_not_called()
         self.assertFalse(self.cache.health()["cache"]["build_active"])
 
+    def test_early_guard_starts_single_flight_without_durable_reads(self) -> None:
+        entered, release, _worker_ids, key = self._blocked_preparation()
+        try:
+            with patch.object(self.cache, "key", side_effect=key), patch.object(
+                self.cache, "durable_generation",
+                side_effect=AssertionError("request performed durable generation"),
+            ):
+                self.assertTrue(self.cache.begin_warming_guard(
+                    self.data, self.state, self.store, "league-1",
+                ))
+                self.assertTrue(entered.wait(1))
+                self.assertTrue(self.cache.begin_warming_guard(
+                    self.data, self.state, self.store, "league-1",
+                ))
+                self.assertEqual(self.cache.health()["cache"]["build_count"], 0)
+        finally:
+            release.set()
+
+    def test_early_guard_passes_through_current_generation(self) -> None:
+        marker = self.cache.request_marker(
+            self.data, self.state, self.store, "league-1",
+        )
+        self.cache._market = SimpleNamespace(store=self.store)  # type: ignore[assignment]
+        self.cache._request_marker = marker
+        with patch.object(self.cache, "_start_background") as start:
+            self.assertFalse(self.cache.begin_warming_guard(
+                self.data, self.state, self.store, "league-1",
+            ))
+        start.assert_not_called()
+
+    def test_early_guard_does_not_hide_failed_generation(self) -> None:
+        self.cache._build_phase = "failed"
+        self.cache._refresh_state = "failed"
+        self.cache.last_error = "controlled failure"
+        with patch.object(self.cache, "_start_background") as start:
+            self.assertFalse(self.cache.begin_warming_guard(
+                self.data, self.state, self.store, "league-1",
+            ))
+        start.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

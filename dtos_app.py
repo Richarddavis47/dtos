@@ -42,11 +42,14 @@ from services.sleeper import (
 )
 from services.history import direct_fetch, start_background_backfill
 from services.fois import fois_service
+from src.core.asset_market import asset_market_cache
+from src.core.historical_memory import historical_store
 from src.platform.observability import (
     install_observability,
     mark_startup_complete,
     runtime_metrics,
 )
+from src.platform.market_warming import AssetMarketWarmingMiddleware
 from src.core.historical_memory import historical_storage_status
 from src.ui import DESIGN_SYSTEM_CSS, page_header
 
@@ -135,6 +138,14 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title=APPLICATION_NAME, version=VERSION, lifespan=lifespan)
+app.add_middleware(
+    AssetMarketWarmingMiddleware,
+    cache=asset_market_cache,
+    data_provider=lambda: STATE.get("data") or {},
+    state=STATE,
+    store=historical_store,
+    league_id=LEAGUE_ID,
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
