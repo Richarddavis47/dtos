@@ -627,6 +627,7 @@ def _restart_reuse(
             "preparation_active": profile.get("preparation_active") or {},
             "preparation_events": profile.get("preparation_events") or [],
             "hydration_stages": profile.get("hydration_stages") or {},
+            "response_trace": profile.get("response_trace") or {},
         })
         sleeper(0.05)
     raise AssertionError("durable market artifact reuse exceeded 60 seconds")
