@@ -154,11 +154,13 @@ class AssetMarket:
         self._brain = brain
         self.brain_generation = brain.report.get("generated_at")
         self.generated_at = datetime.now(timezone.utc).isoformat()
+        self._prepared_health: dict[str, Any] | None = None
         if load_existing:
             self._read_model = MarketReadModel(artifact_path)
             metadata = self._read_model.metadata()
             self.generated_at = str(metadata["generated_at"])
             self.brain_generation = metadata.get("brain_generation")
+            self._prepared_health = self._read_model.cooperative_summary_metadata()
         else:
             universe = ValuationUniverse.streaming(data, state)
 
@@ -191,7 +193,7 @@ class AssetMarket:
             "market_schema_version": MARKET_SCHEMA_VERSION,
             "league_id": self.league_id,
             "historical_dataset_version": dataset_version
-            or self.store.dataset_version(self.league_id),
+            or self.dataset_version,
             "market_generation": self.generated_at,
             "brain_generation": self.brain_generation,
             "valuation_generation": (
@@ -204,13 +206,13 @@ class AssetMarket:
         return identity
 
     def health(self) -> dict[str, Any]:
-        counts: dict[str, int] = {"total": len(self.assets)}
-        for row in self.assets:
-            key = row["asset_type"] if row["asset_type"] == "pick" else row["availability"]
-            counts[key] = counts.get(key, 0) + 1
+        prepared = self._prepared_health
+        if prepared is None:
+            prepared = self._read_model.cooperative_summary_metadata()
+            self._prepared_health = prepared
         return {
-            **self.identity(), "status": "ready", "counts": counts,
-            "duplicate_asset_ids": len(self.assets) - len(self.by_id),
+            **self.identity(), "status": "ready", "counts": prepared["counts"],
+            "duplicate_asset_ids": prepared["duplicate_asset_ids"],
             "build_duration_ms": self.build_duration_ms,
             "read_contract": {
                 "provider_sync": False, "pagination_before_hydration": True,
@@ -614,6 +616,17 @@ class AssetMarketCache:
         request_marker: tuple[Any, ...] | None = None,
         epoch: int | None = None,
     ) -> AssetMarket:
+        health = market.health()
+        prepared_health = {
+            name: health[name] for name in (
+                "application_version", "application_build",
+                "market_schema_version", "league_id",
+                "historical_dataset_version", "market_generation",
+                "brain_generation", "valuation_generation", "generated_at",
+                "status", "counts", "duplicate_asset_ids",
+                "build_duration_ms", "read_contract", "search_index",
+            ) if name in health
+        }
         with self._lock:
             if epoch is not None and epoch != self._epoch:
                 raise _BuildDeferred("Asset Market generation was superseded.")
@@ -624,17 +637,7 @@ class AssetMarketCache:
             self.build_count += 1
             self.last_error = None
             self._refresh_state = "ready"
-            health = market.health()
-            self._health_metadata = {
-                name: health[name] for name in (
-                    "application_version", "application_build",
-                    "market_schema_version", "league_id",
-                    "historical_dataset_version", "market_generation",
-                    "brain_generation", "valuation_generation", "generated_at",
-                    "status", "counts", "duplicate_asset_ids",
-                    "build_duration_ms", "read_contract", "search_index",
-                ) if name in health
-            }
+            self._health_metadata = prepared_health
         if previous is not None and previous._artifact_path != market._artifact_path:
             try:
                 previous._artifact_path.unlink(missing_ok=True)

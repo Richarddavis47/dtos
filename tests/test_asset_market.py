@@ -140,6 +140,34 @@ class AssetMarketTests(unittest.TestCase):
         self.assertEqual(loaded._artifact_path, first_path)
         self.assertEqual(loaded.directory(limit=4), self.market.directory(limit=4))
 
+    def test_artifact_metadata_hydration_yields_between_bounded_chunks(self) -> None:
+        yields: list[int] = []
+        chunks: list[dict[str, object]] = []
+        result = self.market._read_model.cooperative_summary_metadata(
+            chunk_size=1,
+            yield_control=lambda: yields.append(1),
+            chunk_observer=chunks.append,
+        )
+        self.assertEqual(result["counts"], self.market.health()["counts"])
+        self.assertEqual(result["duplicate_asset_ids"], 0)
+        self.assertEqual(len(chunks), len(self.market.assets))
+        self.assertEqual(len(yields), len(chunks))
+        self.assertTrue(all(int(chunk["rows"]) <= 1 for chunk in chunks))
+
+    def test_publication_performs_no_bulk_summary_reconstruction(self) -> None:
+        published = AssetMarketCache()
+        with patch.object(
+            self.market._read_model,
+            "cooperative_summary_metadata",
+            side_effect=AssertionError("publication must use prepared metadata"),
+        ):
+            result = published._publish(
+                self.market, "fixture-key", "fixture-store",
+            )
+        self.assertIs(result, self.market)
+        self.assertIs(published._market, self.market)
+        self.assertEqual(published.health()["cache"]["build_count"], 1)
+
     def test_background_generation_preserves_identity_and_serialized_output(self) -> None:
         background = AssetMarketCache()
         with self.assertRaises(MarketWarmingError):
