@@ -45,7 +45,7 @@ _trace_context: contextvars.ContextVar[str | None] = contextvars.ContextVar(
 
 def _scope_trace_id(scope: dict[str, Any]) -> str | None:
     for name, value in scope.get("headers") or []:
-        if name.casefold() == b"x-dtos-trace-id":
+        if name.lower() == b"x-dtos-trace-id":
             return value.decode("ascii", "replace")
     return None
 
