@@ -10,15 +10,21 @@ import time
 from contextlib import contextmanager
 from typing import Any, Callable
 
-from fastapi import Request
+from fastapi import HTTPException, Request
+from fastapi.exception_handlers import http_exception_handler
+from fastapi.responses import JSONResponse, Response
+from starlette.background import BackgroundTask
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.cors import CORSMiddleware
 
 from dtos_app import app
-from services.sleeper import STATE
+from services.sleeper import LEAGUE_ID, STATE
 import src.core.asset_market.engine as market_engine
 import src.core.asset_market.read_model as market_read_model
 from src.core.asset_market.engine import AssetMarket, AssetMarketCache, asset_market_cache
 from src.core.asset_market.read_model import MarketReadModel
 from src.core.historical_memory.store import HistoricalStore
+from src.core.historical_memory import historical_store
 from src.platform.lifecycle import LifecycleCoordinator, lifecycle_coordinator
 
 _profile: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
@@ -28,6 +34,90 @@ _counter_lock = threading.Lock()
 _preparation_active: dict[str, Any] = {}
 _preparation_events: list[dict[str, Any]] = []
 _handoff_started: float | None = None
+_handoff_trace_id: str | None = None
+_response_mode = os.getenv("DTOS_MARKET_PROFILE_MODE", "normal")
+_traces: dict[str, list[dict[str, Any]]] = {}
+_trace_lock = threading.Lock()
+_trace_context: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "market_trace_id", default=None,
+)
+
+
+def _scope_trace_id(scope: dict[str, Any]) -> str | None:
+    for name, value in scope.get("headers") or []:
+        if name.casefold() == b"x-dtos-trace-id":
+            return value.decode("ascii", "replace")
+    return None
+
+
+def _trace(name: str, trace_id: str | None = None, **details: Any) -> None:
+    identity = trace_id or _trace_context.get()
+    if not identity:
+        return
+    event = {
+        "name": name,
+        "wall": round(time.perf_counter(), 6),
+        "thread_cpu": round(time.thread_time(), 6),
+        "thread_id": threading.get_ident(),
+        "thread_name": threading.current_thread().name,
+        **details,
+    }
+    with _trace_lock:
+        _traces.setdefault(identity, []).append(event)
+
+
+def _start_market_worker() -> None:
+    _trace("deferred_worker_start")
+    try:
+        asset_market_cache.get(
+            STATE.get("data") or {}, STATE, historical_store, LEAGUE_ID,
+            background=True,
+        )
+    except market_engine.MarketWarmingError:
+        pass
+
+
+def _warming_response(*, background: bool = False) -> JSONResponse:
+    return JSONResponse(
+        status_code=503,
+        content={
+            "detail": "Asset Market generation is building safely in the "
+            "background; retry shortly.",
+        },
+        headers={"Retry-After": "5", "X-DTOS-Market-Refresh": "refreshing"},
+        background=BackgroundTask(_start_market_worker) if background else None,
+    )
+
+
+if _response_mode == "prestarted_idle_thread":
+    idle = threading.Thread(target=lambda: None, name="dtos-validation-idle")
+    idle.start()
+    idle.join()
+
+
+_thread_init = threading.Thread.__init__
+_thread_start = threading.Thread.start
+
+
+def _profiled_thread_init(self: threading.Thread, *args: Any, **kwargs: Any) -> None:
+    name = kwargs.get("name")
+    if name == "dtos-market-builder":
+        _trace("thread_construction_entry")
+    _thread_init(self, *args, **kwargs)
+    if self.name == "dtos-market-builder":
+        _trace("thread_construction_return")
+
+
+def _profiled_thread_start(self: threading.Thread) -> None:
+    if self.name != "dtos-market-builder":
+        return _thread_start(self)
+    _trace("thread_start_entry")
+    _thread_start(self)
+    _trace("thread_start_return", started_signal=self._started.is_set())
+
+
+threading.Thread.__init__ = _profiled_thread_init
+threading.Thread.start = _profiled_thread_start
 _counters = {
     "market_construction_total": 0,
     "artifact_load_total": 0,
@@ -177,15 +267,21 @@ _prepare_generation = AssetMarketCache._prepare_generation
 
 
 def _profiled_start_background(self: AssetMarketCache, *args: Any, **kwargs: Any) -> Any:
-    global _handoff_started
+    global _handoff_started, _handoff_trace_id
+    _trace("start_background_entry")
     _handoff_started = time.perf_counter()
-    return _start_background(self, *args, **kwargs)
+    _handoff_trace_id = _trace_context.get()
+    result = _start_background(self, *args, **kwargs)
+    _trace("start_background_return")
+    return result
 
 
 def _profiled_background_construct(
     self: AssetMarketCache, *args: Any, **kwargs: Any,
 ) -> Any:
-    global _handoff_started
+    global _handoff_started, _handoff_trace_id
+    token = _trace_context.set(_handoff_trace_id)
+    _trace("worker_bootstrap_entry")
     worker_started = time.perf_counter()
     handoff_ms = (
         (worker_started - _handoff_started) * 1000
@@ -207,7 +303,12 @@ def _profiled_background_construct(
         })
         del _preparation_events[:-24]
     _handoff_started = None
-    return _background_construct(self, *args, **kwargs)
+    try:
+        return _background_construct(self, *args, **kwargs)
+    finally:
+        _trace("worker_bootstrap_return")
+        _trace_context.reset(token)
+        _handoff_trace_id = None
 
 
 AssetMarketCache._start_background = _profiled_start_background
@@ -321,10 +422,27 @@ LifecycleCoordinator.market_build_allowed = _timed(
 
 @app.middleware("http")
 async def validation_profile(request: Request, call_next):
+    trace_id = request.headers.get("X-DTOS-Trace-ID")
+    trace_token = _trace_context.set(trace_id)
+    _trace("validation_middleware_entry")
     profile: dict[str, Any] = {}
     token = _profile.set(profile)
     try:
-        response = await call_next(request)
+        if request.url.path == "/api/market/assets" and _response_mode in {
+            "direct_response", "post_body_worker",
+        } and not asset_market_cache.metrics().get("market_generation"):
+            _trace("lifecycle_cache_checks")
+            if _response_mode == "direct_response":
+                _start_market_worker()
+                _trace("route_response_construction", mode=_response_mode)
+                response = _warming_response()
+            else:
+                _trace("route_response_construction", mode=_response_mode)
+                response = _warming_response(background=True)
+        else:
+            _trace("call_next_entry")
+            response = await call_next(request)
+            _trace("call_next_return", status=response.status_code)
     finally:
         _profile.reset(token)
     get_ms = float(profile.get("market_get_ms", 0.0))
@@ -354,6 +472,9 @@ async def validation_profile(request: Request, call_next):
         json.dumps(profile, sort_keys=True, separators=(",", ":")).encode()
     ).decode()
     response.headers["X-DTOS-Validation-Profile"] = encoded
+    response.headers["X-DTOS-Trace-ID"] = trace_id or ""
+    _trace("validation_middleware_return", status=response.status_code)
+    _trace_context.reset(trace_token)
     return response
 
 
@@ -367,3 +488,118 @@ async def replace_generation(marker: str) -> dict[str, Any]:
         "previous_build_count": before.get("build_count"),
         "lifecycle": lifecycle_coordinator.snapshot().get("phase"),
     }
+
+
+@app.get("/__validation__/trace/{trace_id}")
+async def response_trace(trace_id: str) -> dict[str, Any]:
+    with _trace_lock:
+        events = [dict(event) for event in _traces.get(trace_id, [])]
+    return {"trace_id": trace_id, "mode": _response_mode, "events": events}
+
+
+_http_handler = app.exception_handlers.get(HTTPException, http_exception_handler)
+
+
+async def _profiled_http_handler(request: Request, exc: HTTPException) -> Response:
+    _trace("http_exception_handler_entry")
+    response = await _http_handler(request, exc)
+    _trace("http_exception_handler_return", status=response.status_code)
+    return response
+
+
+app.add_exception_handler(HTTPException, _profiled_http_handler)
+
+
+_response_call = Response.__call__
+
+
+async def _profiled_response_call(
+    self: Response, scope: dict[str, Any], receive: Callable[..., Any],
+    send: Callable[..., Any],
+) -> None:
+    trace_id = _scope_trace_id(scope)
+    token = _trace_context.set(trace_id)
+    _trace("response_call_entry")
+    try:
+        await _response_call(self, scope, receive, send)
+    finally:
+        _trace("response_call_return")
+        _trace_context.reset(token)
+
+
+Response.__call__ = _profiled_response_call
+
+_base_middleware_call = BaseHTTPMiddleware.__call__
+_cors_middleware_call = CORSMiddleware.__call__
+
+
+async def _profiled_base_middleware_call(
+    self: BaseHTTPMiddleware, scope: dict[str, Any], receive: Callable[..., Any],
+    send: Callable[..., Any],
+) -> None:
+    trace_id = _scope_trace_id(scope)
+    token = _trace_context.set(trace_id)
+    label = getattr(self.dispatch_func, "__name__", type(self).__name__)
+    _trace("middleware_entry", middleware=label)
+    try:
+        await _base_middleware_call(self, scope, receive, send)
+    finally:
+        _trace("middleware_return", middleware=label)
+        _trace_context.reset(token)
+
+
+async def _profiled_cors_middleware_call(
+    self: CORSMiddleware, scope: dict[str, Any], receive: Callable[..., Any],
+    send: Callable[..., Any],
+) -> None:
+    trace_id = _scope_trace_id(scope)
+    token = _trace_context.set(trace_id)
+    _trace("middleware_entry", middleware="CORSMiddleware")
+    try:
+        await _cors_middleware_call(self, scope, receive, send)
+    finally:
+        _trace("middleware_return", middleware="CORSMiddleware")
+        _trace_context.reset(token)
+
+
+BaseHTTPMiddleware.__call__ = _profiled_base_middleware_call
+CORSMiddleware.__call__ = _profiled_cors_middleware_call
+
+
+class _TraceASGI:
+    def __init__(self, wrapped: Any) -> None:
+        self.wrapped = wrapped
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.wrapped, name)
+
+    async def __call__(
+        self, scope: dict[str, Any], receive: Callable[..., Any],
+        send: Callable[..., Any],
+    ) -> None:
+        trace_id = _scope_trace_id(scope)
+        if not trace_id or scope.get("path", "").startswith("/__validation__/trace/"):
+            await self.wrapped(scope, receive, send)
+            return
+        token = _trace_context.set(trace_id)
+        _trace("asgi_request_entry")
+
+        async def traced_send(message: dict[str, Any]) -> None:
+            kind = message.get("type")
+            if kind == "http.response.start":
+                _trace("asgi_response_start", status=message.get("status"))
+            elif kind == "http.response.body":
+                _trace(
+                    "asgi_response_body", bytes=len(message.get("body") or b""),
+                    more=bool(message.get("more_body")),
+                )
+            await send(message)
+
+        try:
+            await self.wrapped(scope, receive, traced_send)
+        finally:
+            _trace("final_request_completion")
+            _trace_context.reset(token)
+
+
+app = _TraceASGI(app)

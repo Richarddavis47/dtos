@@ -10,6 +10,7 @@ import subprocess
 import sys
 import threading
 import time
+from uuid import uuid4
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.parse import quote
@@ -130,12 +131,15 @@ def _request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes,
     return status, body, elapsed
 
 
-def _start_server(log) -> subprocess.Popen:
+def _start_server(log, mode: str = "normal") -> subprocess.Popen:
+    environment = os.environ.copy()
+    environment["DTOS_MARKET_PROFILE_MODE"] = mode
     process = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "tools.validation.market_profile_app:app", "--host", "127.0.0.1", "--port", "8767", "--workers", "1"],
         stdout=log,
         stderr=subprocess.STDOUT,
         start_new_session=True,
+        env=environment,
     )
     deadline = time.monotonic() + 60
     while time.monotonic() < deadline:
@@ -382,9 +386,10 @@ def _profiled_request(
     path: str, *, method: str = "GET",
 ) -> tuple[int, bytes, dict[str, str], float, float, dict[str, object]]:
     started = time.perf_counter()
+    trace_id = uuid4().hex
     request = Request(
         BASE_URL + path,
-        headers={"X-DTOS-Diagnostics": "1"},
+        headers={"X-DTOS-Diagnostics": "1", "X-DTOS-Trace-ID": trace_id},
         method=method,
     )
     try:
@@ -398,6 +403,12 @@ def _profiled_request(
         profile = json.loads(base64.urlsafe_b64decode(encoded).decode())
         status = response.status
         headers = _normalized_headers(response.headers.items())
+    try:
+        trace_request = Request(BASE_URL + f"/__validation__/trace/{trace_id}")
+        with urlopen(trace_request, timeout=10) as trace_response:
+            profile["response_trace"] = json.loads(trace_response.read())
+    except OSError as exc:
+        profile["response_trace_error"] = type(exc).__name__
     return (
         status, body, headers,
         (time.perf_counter() - started) * 1000, server_ms, profile,
@@ -621,6 +632,30 @@ def _restart_reuse(
     raise AssertionError("durable market artifact reuse exceeded 60 seconds")
 
 
+def _response_stack_experiments(
+    log, expected_identity: dict[str, object], expected_body: bytes,
+) -> dict[str, object]:
+    """Run validation-only first-response variants against one durable artifact."""
+    results: dict[str, object] = {}
+    for mode in (
+        "normal", "prestarted_idle_thread", "direct_response",
+        "post_body_worker",
+    ):
+        cycles: list[dict[str, object]] = []
+        for _sequence in range(3):
+            process = _start_server(log, mode)
+            try:
+                _wait_ready()
+                cycles.append(_restart_reuse(expected_identity, expected_body))
+            finally:
+                _stop_server(process)
+        samples = [
+            sample for cycle in cycles for sample in cycle["warming_samples"]
+        ]
+        results[mode] = {"cycles": cycles, "warming_samples": samples}
+    return results
+
+
 def main() -> int:
     if sys.platform != "linux":
         raise RuntimeError("Linux cgroup validation must run on Linux")
@@ -747,6 +782,14 @@ def main() -> int:
                     "failed_samples": failed_restart_samples,
                     "memory_current": _cgroup("memory.current"),
                 }
+                if process is not None:
+                    _stop_server(process)
+                    process = None
+                summary["phases"]["response_stack_experiments"] = (
+                    _response_stack_experiments(
+                        log, expected_identity, pre_restart_body,
+                    )
+                )
                 raise ExpansionLatencyFailure(
                     "restart warming latency gate failed: "
                     f"failed_samples={json.dumps(failed_restart_samples, sort_keys=True)}",
