@@ -514,6 +514,24 @@ async def _profiled_http_handler(request: Request, exc: HTTPException) -> Respon
 app.add_exception_handler(HTTPException, _profiled_http_handler)
 
 
+def _profiled_route_app(route_app: Callable[..., Any]) -> Callable[..., Any]:
+    async def wrapped(
+        scope: dict[str, Any], receive: Callable[..., Any],
+        send: Callable[..., Any],
+    ) -> None:
+        _trace("route_entry", route="/api/market/assets")
+        try:
+            await route_app(scope, receive, send)
+        finally:
+            _trace("route_return", route="/api/market/assets")
+    return wrapped
+
+
+for _route in app.routes:
+    if getattr(_route, "path", None) == "/api/market/assets":
+        _route.app = _profiled_route_app(_route.app)
+
+
 _response_call = Response.__call__
 
 
