@@ -434,11 +434,16 @@ class AssetMarketTests(unittest.TestCase):
             },
             store=other_store,
         )
+        first_assets = self.market.directory(limit=4)["assets"]
         other_market = self.cache.get(
             self.data, self.state, other_store, self.league_id,
         )
         self.assertIsNot(other_market, self.market)
-        self.assertEqual(other_market.dataset_version, self.market.dataset_version)
+        self.assertNotEqual(other_market.dataset_version, self.market.dataset_version)
+        self.assertEqual(
+            other_market.directory(limit=4)["assets"],
+            first_assets,
+        )
         public = str({**other_market.health(), "cache": self.cache.metrics()})
         self.assertNotIn(str(other_path), public)
         self.assertNotIn(str(other_path.parent), public)
@@ -535,6 +540,106 @@ class AssetMarketTests(unittest.TestCase):
         self.assertEqual(
             self.store.dataset_version_metrics()["computations"],
             computations + 1,
+        )
+
+    def test_semantic_generation_uses_only_bounded_metadata_queries(self) -> None:
+        statements: list[str] = []
+        original_connection = self.store.connection
+
+        @contextmanager
+        def traced_connection():
+            with original_connection() as connection:
+                connection.set_trace_callback(statements.append)
+                yield connection
+
+        self.store._invalidate_dataset_version(self.league_id)
+        with patch.object(self.store, "connection", traced_connection):
+            version = self.store.dataset_version(self.league_id)
+        self.assertTrue(version)
+        semantic_queries = "\n".join(statements).casefold()
+        self.assertNotIn("from historical_records", semantic_queries)
+        self.assertNotIn("from player_identity", semantic_queries)
+        self.assertNotIn("from data_quality_issues", semantic_queries)
+        self.assertNotIn("count(", semantic_queries)
+        self.assertNotIn("max(", semantic_queries)
+        self.assertIn("database_metadata", semantic_queries)
+
+    def test_domain_markers_advance_once_per_material_transaction(self) -> None:
+        initial = self.store.semantic_generation_markers(self.league_id)
+        records = [
+            {
+                "record_key": f"marker:{index}", "entity_type": "player_week",
+                "league_id": self.league_id, "season": 2025, "week": 2,
+                "player_id": str(index), "source_record_id": f"marker:{index}",
+                "observed_at": "2025-09-08T00:00:00+00:00",
+                "retrieved_at": "2025-09-08T00:00:00+00:00",
+                "provider": "fixture", "availability": "available",
+                "confidence": 100, "calculation_method": "fixture",
+                "schema_version": "2.0", "payload": {"fantasy_points": index},
+            }
+            for index in range(8)
+        ]
+        self.assertEqual(self.store.append_many(records), (8, 0))
+        changed = self.store.semantic_generation_markers(self.league_id)
+        self.assertEqual(
+            changed["historical_records"], initial["historical_records"] + 1,
+        )
+        self.assertEqual(self.store.append_many(records), (0, 8))
+        self.assertEqual(
+            self.store.semantic_generation_markers(self.league_id), changed,
+        )
+
+    def test_marker_rollback_and_restart_are_durable(self) -> None:
+        initial = self.store.semantic_generation_markers(self.league_id)
+        with self.assertRaisesRegex(RuntimeError, "controlled rollback"):
+            with self.store.connection() as connection:
+                self.store._advance_generation(
+                    connection,
+                    self.store._record_generation_key(self.league_id),
+                )
+                raise RuntimeError("controlled rollback")
+        self.store._invalidate_dataset_version(self.league_id)
+        self.assertEqual(
+            self.store.semantic_generation_markers(self.league_id), initial,
+        )
+        restarted = HistoricalStore(self.store.path)
+        self.assertEqual(
+            restarted.semantic_generation_markers(self.league_id), initial,
+        )
+
+    def test_quality_and_identity_markers_ignore_unchanged_writes(self) -> None:
+        initial = self.store.semantic_generation_markers(self.league_id)
+        self.store.add_quality_issue(
+            "marker-quality", "run", self.league_id, 2025,
+            "warning", "fixture", "Fixture issue.",
+        )
+        quality = self.store.semantic_generation_markers(self.league_id)
+        self.assertEqual(
+            quality["quality_reconciliation"],
+            initial["quality_reconciliation"] + 1,
+        )
+        self.store.add_quality_issue(
+            "marker-quality", "run", self.league_id, 2025,
+            "warning", "fixture", "Fixture issue.",
+        )
+        self.assertEqual(
+            self.store.semantic_generation_markers(self.league_id), quality,
+        )
+        self.assertTrue(self.store.upsert_identity(
+            "DTOS-P-marker", "Sleeper", "marker", "Marker", 100,
+            "2026-01-01T00:00:00+00:00", {"position": "WR"},
+        ))
+        identity = self.store.semantic_generation_markers(self.league_id)
+        self.assertEqual(
+            identity["canonical_identities"],
+            quality["canonical_identities"] + 1,
+        )
+        self.assertFalse(self.store.upsert_identity(
+            "DTOS-P-marker", "Sleeper", "marker", "Marker", 100,
+            "2026-01-01T00:00:00+00:00", {"position": "WR"},
+        ))
+        self.assertEqual(
+            self.store.semantic_generation_markers(self.league_id), identity,
         )
 
     def test_search_routes_only_true_historical_queries_to_retained_aliases(self) -> None:

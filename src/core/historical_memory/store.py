@@ -195,6 +195,10 @@ CREATE TABLE IF NOT EXISTS enrichment_progress_repairs (
 
 
 class HistoricalStore:
+    _RECORD_GENERATION_PREFIX = "semantic_generation:records:"
+    _IDENTITY_GENERATION_KEY = "semantic_generation:identities"
+    _QUALITY_GENERATION_PREFIX = "semantic_generation:quality:"
+
     def __init__(self, path: Path, *, initialize: bool = True) -> None:
         self.path = path
         self._lock = RLock()
@@ -295,6 +299,11 @@ class HistoricalStore:
             connection.execute(
                 "INSERT OR IGNORE INTO database_metadata(key,value) "
                 "VALUES ('identity_mapping_generation','0')",
+            )
+            connection.execute(
+                "INSERT OR IGNORE INTO database_metadata(key,value) "
+                "VALUES (?, '0')",
+                (self._IDENTITY_GENERATION_KEY,),
             )
             if connection.execute(
                 """SELECT 1 FROM player_identity LIMIT 1""",
@@ -734,6 +743,10 @@ class HistoricalStore:
                 values,
             )
             inserted = cursor.rowcount == 1
+            if inserted:
+                self._advance_generation(
+                    connection, self._record_generation_key(league_id),
+                )
         if inserted:
             self._invalidate_dataset_version(league_id)
         return inserted
@@ -757,20 +770,31 @@ class HistoricalStore:
             )
             for record in records
         ]
+        changed_leagues: set[str] = set()
         with self._lock, self.connection() as connection:
-            before = connection.total_changes
-            connection.executemany(
-                """INSERT OR IGNORE INTO historical_records(
-                record_key, entity_type, league_id, season, week, franchise_id,
-                player_id, source_record_id, observed_at, retrieved_at, provider,
-                availability, confidence, calculation_method, derived,
-                schema_version, payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                values,
-            )
-            written = connection.total_changes - before
-        if written:
-            for league_id in {str(record["league_id"]) for record in records}:
-                self._invalidate_dataset_version(league_id)
+            written = 0
+            league_values: dict[str, list[tuple[Any, ...]]] = {}
+            for value in values:
+                league_values.setdefault(str(value[2]), []).append(value)
+            for league_id, scoped_values in league_values.items():
+                before = connection.total_changes
+                connection.executemany(
+                    """INSERT OR IGNORE INTO historical_records(
+                    record_key, entity_type, league_id, season, week, franchise_id,
+                    player_id, source_record_id, observed_at, retrieved_at, provider,
+                    availability, confidence, calculation_method, derived,
+                    schema_version, payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    scoped_values,
+                )
+                scoped_written = connection.total_changes - before
+                written += scoped_written
+                if scoped_written:
+                    changed_leagues.add(league_id)
+                    self._advance_generation(
+                        connection, self._record_generation_key(league_id),
+                    )
+        for league_id in changed_leagues:
+            self._invalidate_dataset_version(league_id)
         return written, len(records) - written
 
     @staticmethod
@@ -838,6 +862,11 @@ class HistoricalStore:
             derived_inserted = self._insert_enrichment_records(connection, derived_records)
             duplicates = len(raw_records) + len(derived_records) - raw_inserted - derived_inserted
             total = raw_inserted + derived_inserted
+            if total:
+                self._advance_generation(
+                    connection,
+                    self._record_generation_key(str(progress["league_id"])),
+                )
             connection.execute(
                 """INSERT INTO enrichment_batches(
                 batch_key,job_id,lease_owner,league_id,season,week,provider,
@@ -935,34 +964,42 @@ class HistoricalStore:
 
     def dataset_version(self, league_id: str) -> str:
         """Return a deterministic identity for every stored input to graph reads."""
-        database_uuid = self.database_uuid()
+        if not self.path.exists() or not self.path.is_file():
+            raise RuntimeError("HistoricalStore backing database is unavailable.")
+        record_key = self._record_generation_key(league_id)
+        quality_key = self._quality_generation_key(league_id)
+        keys = (
+            "database_uuid", record_key,
+            self._IDENTITY_GENERATION_KEY, quality_key,
+        )
+        with self._lock, self.connection() as connection:
+            connection.executemany(
+                "INSERT OR IGNORE INTO database_metadata(key,value) VALUES (?, '0')",
+                ((key,) for key in keys[1:]),
+            )
+            values = dict(connection.execute(
+                "SELECT key,value FROM database_metadata "
+                "WHERE key IN (?,?,?,?)",
+                keys,
+            ))
+        database_uuid = str(values.get("database_uuid") or "")
+        if not database_uuid:
+            raise RuntimeError("HistoricalStore database generation identity is missing.")
         cache_key = (database_uuid, league_id)
         with self._lock:
             cached = self._dataset_versions.get(cache_key)
             if cached is not None:
                 return cached
-            with self.connection() as connection:
-                record = connection.execute(
-                    """SELECT count(*), coalesce(max(id), 0),
-                    coalesce(max(retrieved_at), '') FROM historical_records
-                    WHERE league_id=?""",
-                    (league_id,),
-                ).fetchone()
-                identities = connection.execute(
-                    """SELECT count(*), coalesce(max(rowid), 0),
-                    coalesce(max(valid_from), '') FROM player_identity""",
-                ).fetchone()
-                quality = connection.execute(
-                    """SELECT issue_key, resolved FROM data_quality_issues
-                    WHERE league_id=? ORDER BY issue_key""",
-                    (league_id,),
-                ).fetchall()
             source = json.dumps(
                 {
+                    "database_uuid": database_uuid,
+                    "database_schema": DATABASE_MIGRATION_VERSION,
                     "league_id": league_id,
-                    "records": tuple(record),
-                    "identities": tuple(identities),
-                    "quality": [tuple(row) for row in quality],
+                    "historical_records_generation": int(values[record_key]),
+                    "canonical_identity_generation": int(
+                        values[self._IDENTITY_GENERATION_KEY]
+                    ),
+                    "quality_reconciliation_generation": int(values[quality_key]),
                 },
                 separators=(",", ":"),
                 sort_keys=True,
@@ -971,6 +1008,25 @@ class HistoricalStore:
             self._dataset_versions[cache_key] = version
             self._dataset_version_computations += 1
             return version
+
+    def semantic_generation_markers(self, league_id: str) -> dict[str, int]:
+        """Return bounded durable counters without reading semantic archives."""
+        self.dataset_version(league_id)
+        keys = (
+            self._record_generation_key(league_id),
+            self._IDENTITY_GENERATION_KEY,
+            self._quality_generation_key(league_id),
+        )
+        with self.connection() as connection:
+            values = dict(connection.execute(
+                "SELECT key,value FROM database_metadata WHERE key IN (?,?,?)",
+                keys,
+            ))
+        return {
+            "historical_records": int(values[keys[0]]),
+            "canonical_identities": int(values[keys[1]]),
+            "quality_reconciliation": int(values[keys[2]]),
+        }
 
     def distinct_player_ids(self, league_id: str) -> tuple[str, ...]:
         """Return graph player identities without materializing record payloads."""
@@ -1302,6 +1358,14 @@ class HistoricalStore:
         return int(row[0]) if row is not None else 0
 
     @classmethod
+    def _record_generation_key(cls, league_id: str) -> str:
+        return f"{cls._RECORD_GENERATION_PREFIX}{league_id}"
+
+    @classmethod
+    def _quality_generation_key(cls, league_id: str) -> str:
+        return f"{cls._QUALITY_GENERATION_PREFIX}{league_id}"
+
+    @classmethod
     def _advance_generation(
         cls, connection: sqlite3.Connection, key: str,
     ) -> int:
@@ -1366,6 +1430,9 @@ class HistoricalStore:
             inserted = cursor.rowcount == 1
             if inserted:
                 self._advance_generation(connection, "identity_generation")
+                self._advance_generation(
+                    connection, self._IDENTITY_GENERATION_KEY,
+                )
                 current_mapping = self._identity_mapping_signature(
                     dtos_player_id, confidence, metadata,
                 )
@@ -1524,14 +1591,32 @@ class HistoricalStore:
         self, issue_key: str, run_id: str, league_id: str, season: int | None,
         severity: str, category: str, detail: str,
     ) -> None:
-        with self.connection() as connection:
-            connection.execute(
-                """INSERT OR REPLACE INTO data_quality_issues(
-                issue_key,run_id,league_id,season,severity,category,detail)
-                VALUES (?,?,?,?,?,?,?)""",
-                (issue_key, run_id, league_id, season, severity, category, detail),
-            )
-        self._invalidate_dataset_version(league_id)
+        values = (issue_key, run_id, league_id, season, severity, category, detail)
+        changed = False
+        with self._lock, self.connection() as connection:
+            previous = connection.execute(
+                """SELECT issue_key,run_id,league_id,season,severity,category,
+                detail,resolved FROM data_quality_issues WHERE issue_key=?""",
+                (issue_key,),
+            ).fetchone()
+            material = (*values, 0)
+            if previous is None or tuple(previous) != material:
+                connection.execute(
+                    """INSERT INTO data_quality_issues(
+                    issue_key,run_id,league_id,season,severity,category,detail,resolved)
+                    VALUES (?,?,?,?,?,?,?,0)
+                    ON CONFLICT(issue_key) DO UPDATE SET
+                    run_id=excluded.run_id,league_id=excluded.league_id,
+                    season=excluded.season,severity=excluded.severity,
+                    category=excluded.category,detail=excluded.detail,resolved=0""",
+                    values,
+                )
+                self._advance_generation(
+                    connection, self._quality_generation_key(league_id),
+                )
+                changed = True
+        if changed:
+            self._invalidate_dataset_version(league_id)
 
 
 def _decode_job(row: dict[str, Any]) -> dict[str, Any]:
