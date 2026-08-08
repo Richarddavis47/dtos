@@ -1,3 +1,15 @@
+# DTOS v1.8.6 — Asynchronous Market Generation
+
+DTOS v1.8.6 removes archive-wide durable-generation preparation from cold Asset Market request execution. The first request now claims one process-local background worker using retained in-memory lifecycle state and immediately returns the canonical retryable warming response.
+
+The worker performs database UUID lookup, historical dataset calculation, identity archive aggregation, cache-key resolution, compatible-artifact loading, bounded construction, and atomic publication away from the event loop. Market health reports the current preparation phase, refresh state, duration, served generation, and failures without hydrating product state.
+
+Compatible last-valid generations continue serving while a replacement is prepared. Incompatible store instances warm safely. Completed generations preserve existing rankings, ordering, Brain snapshots, valuation layers, historical provenance, serialization, and provider-free read behavior.
+
+No infrastructure, storage, compute plan, pricing, database schema, valuation formula, ranking, or historical evidence changed.
+
+---
+
 # DTOS v1.8.4 — Bounded Asset Market Construction
 
 DTOS v1.8.4 removes the production OOM path in the first cold Asset Market request. Profiling found four simultaneous universe-wide representations: full canonical valuation envelopes, compact summaries, an ID dictionary, and duplicated normalized search strings. The old builder retained roughly 260 MB locally and exceeded the 2 GB Render cgroup when added to the synchronized production baseline.

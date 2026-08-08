@@ -8,10 +8,10 @@ import sqlite3
 import sys
 import time
 from collections import Counter
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from src.platform.lifecycle import memory_snapshot
 
@@ -172,6 +172,70 @@ class MarketReadModel:
                 (limit, offset),
             ).fetchall()
         return [_json_object(str(row[0])) for row in rows]
+
+    def cooperative_summary_metadata(
+        self,
+        *,
+        chunk_size: int = 64,
+        yield_control: Callable[[], None] | None = None,
+        chunk_observer: Callable[[dict[str, Any]], None] | None = None,
+    ) -> dict[str, Any]:
+        """Prepare compact generation metadata without retaining decoded rows.
+
+        Artifact rows remain disk-backed. Each bounded batch is decoded, reduced,
+        and released before yielding the interpreter to request-serving threads.
+        """
+        if chunk_size < 1:
+            raise ValueError("chunk_size must be positive")
+        release = yield_control or (lambda: time.sleep(0))
+        counts: dict[str, int] = {"total": 0}
+        seen: set[str] = set()
+        duplicates = 0
+        offset = 0
+        chunks = 0
+        maximum_chunk_ms = 0.0
+        while True:
+            started = time.perf_counter()
+            with self.connection() as connection:
+                rows = connection.execute(
+                    "SELECT asset_id, summary_json FROM assets "
+                    "ORDER BY asset_id LIMIT ? OFFSET ?",
+                    (chunk_size, offset),
+                ).fetchall()
+            if not rows:
+                break
+            for row in rows:
+                asset_id = str(row[0])
+                summary = _json_object(str(row[1]))
+                key = (
+                    summary["asset_type"]
+                    if summary["asset_type"] == "pick"
+                    else summary["availability"]
+                )
+                counts[key] = counts.get(key, 0) + 1
+                if asset_id in seen:
+                    duplicates += 1
+                else:
+                    seen.add(asset_id)
+            counts["total"] += len(rows)
+            offset += len(rows)
+            chunks += 1
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            maximum_chunk_ms = max(maximum_chunk_ms, elapsed_ms)
+            if chunk_observer:
+                chunk_observer({
+                    "sequence": chunks,
+                    "rows": len(rows),
+                    "duration_ms": round(elapsed_ms, 3),
+                })
+            del rows
+            release()
+        return {
+            "counts": counts,
+            "duplicate_asset_ids": duplicates,
+            "chunks": chunks,
+            "maximum_chunk_ms": round(maximum_chunk_ms, 3),
+        }
 
     def summary(self, asset_id: str) -> dict[str, Any] | None:
         with self.connection() as connection:

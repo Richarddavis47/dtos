@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.8.6 - Asynchronous Market Generation
+
+- Moves cold cache-key, durable generation, identity aggregation, artifact discovery, construction, and publication into one background worker.
+- Returns bounded Asset Market warming responses using only retained in-memory lifecycle and build state.
+- Preserves a labeled last-valid generation during compatible replacement and publishes completed replacements atomically.
+- Adds preparation, loading, building, publishing, failure, duration, and refresh diagnostics to metadata-only market health.
+- Keeps liveness, historical reads, and market health responsive during production-scale identity aggregation.
+
 ## v1.8.5 - Bounded Historical Identity Context
 
 - Evaluates durable player-week checkpoints before constructing enrichment identity state.

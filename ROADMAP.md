@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Asynchronous Market Generation - DTOS v1.8.6
+
+- Claim cold builds from bounded in-memory state and return warming immediately.
+- Move durable generation and archive aggregation off request/event-loop execution.
+- Expose single-flight background phases and errors through metadata-only health.
+- Preserve deterministic outputs and atomic last-valid generation replacement.
+
 ### Bounded Historical Identity Context - DTOS v1.8.5
 
 - Evaluate durable enrichment checkpoints before allocating identity context or requesting providers.

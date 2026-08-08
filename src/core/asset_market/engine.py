@@ -154,11 +154,13 @@ class AssetMarket:
         self._brain = brain
         self.brain_generation = brain.report.get("generated_at")
         self.generated_at = datetime.now(timezone.utc).isoformat()
+        self._prepared_health: dict[str, Any] | None = None
         if load_existing:
             self._read_model = MarketReadModel(artifact_path)
             metadata = self._read_model.metadata()
             self.generated_at = str(metadata["generated_at"])
             self.brain_generation = metadata.get("brain_generation")
+            self._prepared_health = self._read_model.cooperative_summary_metadata()
         else:
             universe = ValuationUniverse.streaming(data, state)
 
@@ -191,7 +193,7 @@ class AssetMarket:
             "market_schema_version": MARKET_SCHEMA_VERSION,
             "league_id": self.league_id,
             "historical_dataset_version": dataset_version
-            or self.store.dataset_version(self.league_id),
+            or self.dataset_version,
             "market_generation": self.generated_at,
             "brain_generation": self.brain_generation,
             "valuation_generation": (
@@ -204,13 +206,13 @@ class AssetMarket:
         return identity
 
     def health(self) -> dict[str, Any]:
-        counts: dict[str, int] = {"total": len(self.assets)}
-        for row in self.assets:
-            key = row["asset_type"] if row["asset_type"] == "pick" else row["availability"]
-            counts[key] = counts.get(key, 0) + 1
+        prepared = self._prepared_health
+        if prepared is None:
+            prepared = self._read_model.cooperative_summary_metadata()
+            self._prepared_health = prepared
         return {
-            **self.identity(), "status": "ready", "counts": counts,
-            "duplicate_asset_ids": len(self.assets) - len(self.by_id),
+            **self.identity(), "status": "ready", "counts": prepared["counts"],
+            "duplicate_asset_ids": prepared["duplicate_asset_ids"],
             "build_duration_ms": self.build_duration_ms,
             "read_contract": {
                 "provider_sync": False, "pagination_before_hydration": True,
@@ -526,6 +528,30 @@ class AssetMarketCache:
         self._health_metadata: dict[str, Any] = {}
         self._building = False
         self._build_thread: threading.Thread | None = None
+        self._build_phase = "idle"
+        self._build_started_at: str | None = None
+        self._build_started_monotonic: float | None = None
+        self._build_duration_ms: float | None = None
+        self._refresh_state = "idle"
+        self._request_marker: tuple[Any, ...] | None = None
+        self._epoch = 0
+
+    @staticmethod
+    def request_marker(
+        data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str,
+    ) -> tuple[Any, ...]:
+        """Return a bounded process-local input marker without durable reads."""
+        valuation = data.get("valuation_intelligence") or {}
+        return (
+            VERSION, BUILD_NUMBER, MARKET_SCHEMA_VERSION, league_id,
+            id(store), id(data), state.get("last_sync"),
+            valuation.get("generated_at"), valuation.get("schema_version"),
+        )
+
+    def _set_build_phase(self, phase: str) -> None:
+        with self._lock:
+            self._build_phase = phase
 
     @staticmethod
     def store_identity(store: HistoricalStore) -> str:
@@ -587,24 +613,31 @@ class AssetMarketCache:
 
     def _publish(
         self, market: AssetMarket, key: str, store_identity: str,
+        request_marker: tuple[Any, ...] | None = None,
+        epoch: int | None = None,
     ) -> AssetMarket:
+        health = market.health()
+        prepared_health = {
+            name: health[name] for name in (
+                "application_version", "application_build",
+                "market_schema_version", "league_id",
+                "historical_dataset_version", "market_generation",
+                "brain_generation", "valuation_generation", "generated_at",
+                "status", "counts", "duplicate_asset_ids",
+                "build_duration_ms", "read_contract", "search_index",
+            ) if name in health
+        }
         with self._lock:
+            if epoch is not None and epoch != self._epoch:
+                raise _BuildDeferred("Asset Market generation was superseded.")
             previous = self._market
             self._market, self._key = market, key
             self._store_identity = store_identity
+            self._request_marker = request_marker
             self.build_count += 1
             self.last_error = None
-            health = market.health()
-            self._health_metadata = {
-                name: health[name] for name in (
-                    "application_version", "application_build",
-                    "market_schema_version", "league_id",
-                    "historical_dataset_version", "market_generation",
-                    "brain_generation", "valuation_generation", "generated_at",
-                    "status", "counts", "duplicate_asset_ids",
-                    "build_duration_ms", "read_contract", "search_index",
-                ) if name in health
-            }
+            self._refresh_state = "ready"
+            self._health_metadata = prepared_health
         if previous is not None and previous._artifact_path != market._artifact_path:
             try:
                 previous._artifact_path.unlink(missing_ok=True)
@@ -623,39 +656,163 @@ class AssetMarketCache:
         self, data: dict[str, Any], state: dict[str, Any],
         store: HistoricalStore, league_id: str, key: str,
         store_identity: str, generation: str, path: Path,
+        request_marker: tuple[Any, ...] | None = None,
+        epoch: int | None = None,
+        lifecycle_managed: bool = False,
     ) -> AssetMarket:
         with self._build_lock:
             with self._lock:
                 if key == self._key and self._market is not None:
                     self.hits += 1
                     return self._market
-                self._building = True
-            try:
+            def construct() -> AssetMarket:
+                market = AssetMarket(
+                    data, state, store, league_id, generation=generation,
+                    artifact_path=path,
+                )
+                return market
+
+            if lifecycle_managed:
+                market = construct()
+            else:
                 with lifecycle_coordinator.phase("asset_market_build") as phase:
-                    market = AssetMarket(
-                        data, state, store, league_id, generation=generation,
-                        artifact_path=path,
-                    )
+                    market = construct()
                     phase.update({
                         "asset_count": len(market.assets),
                         "canonical_generation": market.generated_at,
                         "build_duration_ms": market.build_duration_ms,
                         "storage": "bounded_sqlite",
                     })
-                return self._publish(market, key, store_identity)
-            finally:
-                with self._lock:
-                    self._building = False
+            if epoch is not None:
+                self._set_build_phase("publishing")
+            return self._publish(
+                market, key, store_identity, request_marker, epoch,
+            )
 
-    def _background_construct(self, *args: Any) -> None:
+    def _prepare_generation(
+        self, data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str,
+        request_marker: tuple[Any, ...], epoch: int,
+        phase: dict[str, Any],
+    ) -> None:
+        key, store_identity = self.key(data, state, store, league_id)
+        generation = self.durable_generation(data, state, store, league_id)
+        path = self.artifact_path(store, generation)
+        with self._lock:
+            if epoch != self._epoch:
+                raise _BuildDeferred("Asset Market generation was superseded.")
+            if key == self._key and self._market is not None:
+                self.hits += 1
+                self._request_marker = request_marker
+                self._refresh_state = "ready"
+                self._build_phase = "ready"
+                return
+        if self._compatible(path, generation):
+            self._set_build_phase("loading_artifact")
+            market = AssetMarket(
+                data, state, store, league_id, generation=generation,
+                artifact_path=path, load_existing=True,
+            )
+            self._set_build_phase("publishing")
+            self._publish(
+                market, key, store_identity, request_marker, epoch,
+            )
+        else:
+            self._set_build_phase("building")
+            market = self._construct(
+                data, state, store, league_id, key, store_identity,
+                generation, path, request_marker, epoch,
+                lifecycle_managed=True,
+            )
+        phase.update({
+                    "asset_count": len(market.assets),
+                    "canonical_generation": market.generated_at,
+                    "build_duration_ms": market.build_duration_ms,
+                    "storage": "bounded_sqlite",
+        })
+
+    def _background_construct(
+        self, data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str,
+        request_marker: tuple[Any, ...], epoch: int,
+    ) -> None:
         try:
-            self._construct(*args)
+            self._set_build_phase("preparing_generation")
+            with lifecycle_coordinator.phase("asset_market_build") as phase:
+                self._prepare_generation(
+                    data, state, store, league_id, request_marker, epoch, phase,
+                )
+            self._set_build_phase("ready")
+        except _BuildDeferred:
+            with self._lock:
+                if epoch == self._epoch:
+                    self._build_phase = "idle"
         except Exception as exc:
             with self._lock:
                 self.last_error = str(exc)
+                self._build_phase = "failed"
+                self._refresh_state = "failed"
         finally:
             with self._lock:
-                self._build_thread = None
+                if epoch == self._epoch:
+                    if self._build_started_monotonic is not None:
+                        self._build_duration_ms = round(
+                            (time.monotonic() - self._build_started_monotonic) * 1000,
+                            3,
+                        )
+                if self._build_thread is threading.current_thread():
+                    self._building = False
+                    self._build_thread = None
+                    if epoch != self._epoch:
+                        self._build_phase = "idle"
+
+    def _start_background(
+        self, data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str,
+        request_marker: tuple[Any, ...],
+    ) -> None:
+        with self._lock:
+            if self._build_thread is not None:
+                return
+            epoch = self._epoch
+            self._building = True
+            self._build_phase = "preparing_generation"
+            self._build_started_at = datetime.now(timezone.utc).isoformat()
+            self._build_started_monotonic = time.monotonic()
+            self._build_duration_ms = None
+            self._refresh_state = "refreshing"
+            self.last_error = None
+            self._build_thread = threading.Thread(
+                target=self._background_construct,
+                args=(data, state, store, league_id, request_marker, epoch),
+                name="dtos-market-builder", daemon=True,
+            )
+            self._build_thread.start()
+
+    def begin_warming_guard(
+        self, data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str,
+    ) -> bool:
+        """Start or observe generation using only bounded in-memory state."""
+        allowed = lifecycle_coordinator.market_build_allowed()
+        request_marker = self.request_marker(data, state, store, league_id)
+        with self._lock:
+            market = self._market
+            current = (
+                market is not None and market.store is store
+                and request_marker == self._request_marker
+            )
+            if current:
+                return False
+            if self._refresh_state == "failed" or self._build_phase == "failed":
+                return False
+            active = self._build_thread is not None
+        if active:
+            return True
+        if not allowed:
+            return market is None or market.store is not store
+        self._start_background(data, state, store, league_id, request_marker)
+        return True
 
     def get(
         self, data: dict[str, Any], state: dict[str, Any],
@@ -669,6 +826,36 @@ class AssetMarketCache:
                     return self._market
             raise MarketWarmingError(
                 "Asset Market is warming while canonical data maintenance completes."
+            )
+        request_marker = self.request_marker(data, state, store, league_id)
+        if background:
+            with self._lock:
+                market = self._market
+                if (
+                    market is not None and market.store is store
+                    and request_marker == self._request_marker
+                ):
+                    self.hits += 1
+                    return market
+                self.last_miss_reason = (
+                    "cold_start" if market is None
+                    else "canonical_market_inputs_changed"
+                )
+            self._start_background(
+                data, state, store, league_id, request_marker,
+            )
+            with self._lock:
+                if self._market is not None and self._market.store is store:
+                    # Retain the complete last-valid model for atomic fallback,
+                    # but never serialize it while a CPU-heavy replacement is
+                    # active. The bounded warming contract avoids durable reads
+                    # and request-thread contention until publication.
+                    raise MarketWarmingError(
+                        "Asset Market generation is building safely in the "
+                        "background; retry shortly."
+                    )
+            raise MarketWarmingError(
+                "Asset Market generation is building safely in the background; retry shortly."
             )
         try:
             key, store_identity = self.key(data, state, store, league_id)
@@ -699,22 +886,11 @@ class AssetMarketCache:
                 artifact_path=path, load_existing=True,
             )
             return self._publish(market, key, store_identity)
-        args = (data, state, store, league_id, key, store_identity, generation, path)
-        if background:
-            with self._lock:
-                if self._build_thread is None:
-                    self._build_thread = threading.Thread(
-                        target=self._background_construct, args=args,
-                        name="dtos-market-builder", daemon=True,
-                    )
-                    self._build_thread.start()
-            if self._market is not None and self._store_identity == store_identity:
-                return self._market
-            raise MarketWarmingError(
-                "Asset Market generation is building safely in the background; retry shortly."
-            )
         try:
-            return self._construct(*args)
+            return self._construct(
+                data, state, store, league_id, key, store_identity,
+                generation, path, request_marker,
+            )
         except (MarketMemoryBudgetError, _BuildDeferred) as exc:
             if self._market is not None and self._store_identity == store_identity:
                 return self._market
@@ -741,6 +917,11 @@ class AssetMarketCache:
                 "build_duration_ms": market.build_duration_ms if market else None,
                 "last_successful_build": market.generated_at if market else None,
                 "build_active": self._building,
+                "build_phase": self._build_phase,
+                "build_started_at": self._build_started_at,
+                "background_duration_ms": self._build_duration_ms,
+                "refresh_state": self._refresh_state,
+                "served_generation": market.generated_at if market else None,
                 "lifecycle": lifecycle_coordinator.snapshot(),
             }
 
@@ -749,10 +930,14 @@ class AssetMarketCache:
         with self._lock:
             metadata = dict(self._health_metadata)
         cache = self.metrics()
+        refreshing = bool(cache["build_active"])
         return {
             **metadata,
-            "status": metadata.get("status") or cache["status"],
-            "availability": "available" if cache["last_valid_model"] else "warming",
+            "status": "warming" if refreshing else metadata.get("status") or cache["status"],
+            "availability": (
+                "last_valid_refreshing" if refreshing and cache["last_valid_model"]
+                else "available" if cache["last_valid_model"] else "warming"
+            ),
             "counts": dict(metadata.get("counts") or {}),
             "duplicate_asset_ids": int(metadata.get("duplicate_asset_ids") or 0),
             "cache": cache,
@@ -760,10 +945,28 @@ class AssetMarketCache:
 
     def clear(self) -> None:
         with self._lock:
+            self._epoch += 1
             self._key = None
             self._store_identity = None
             self._market = None
             self._health_metadata = {}
+            self._request_marker = None
+            active = self._build_thread is not None
+            self._building = active
+            self._build_phase = "superseded" if active else "idle"
+            self._build_started_at = None
+            self._build_started_monotonic = None
+            self._build_duration_ms = None
+            self._refresh_state = "idle"
+
+    def wait_for_background(self, timeout: float = 5.0) -> bool:
+        """Wait for the tracked worker without acquiring any durable state."""
+        with self._lock:
+            thread = self._build_thread
+        if thread is None:
+            return True
+        thread.join(timeout=timeout)
+        return not thread.is_alive()
 
 
 asset_market_cache = AssetMarketCache()

@@ -32,8 +32,17 @@ def create_market_router(
         try:
             return asset_market(require_data(), state, historical_store, league_id)
         except MarketWarmingError as exc:
+            cache = asset_market_cache.metrics()
+            headers = {
+                "Retry-After": "5",
+                "X-DTOS-Market-Refresh": str(cache.get("refresh_state") or "warming"),
+            }
+            if cache.get("last_valid_model"):
+                headers["X-DTOS-Last-Valid-Generation"] = str(
+                    cache.get("market_generation") or "retained"
+                )
             raise HTTPException(
-                status_code=503, detail=str(exc), headers={"Retry-After": "5"},
+                status_code=503, detail=str(exc), headers=headers,
             ) from exc
 
     @router.get("/api/market")
