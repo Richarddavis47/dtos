@@ -403,6 +403,7 @@ def _profiled_request(
         profile = json.loads(base64.urlsafe_b64decode(encoded).decode())
         status = response.status
         headers = _normalized_headers(response.headers.items())
+    client_ms = (time.perf_counter() - started) * 1000
     try:
         trace_request = Request(BASE_URL + f"/__validation__/trace/{trace_id}")
         with urlopen(trace_request, timeout=10) as trace_response:
@@ -411,7 +412,7 @@ def _profiled_request(
         profile["response_trace_error"] = type(exc).__name__
     return (
         status, body, headers,
-        (time.perf_counter() - started) * 1000, server_ms, profile,
+        client_ms, server_ms, profile,
     )
 
 

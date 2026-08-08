@@ -139,9 +139,13 @@ def _timed(name: str, function: Callable[..., Any]) -> Callable[..., Any]:
     def wrapped(*args: Any, **kwargs: Any) -> Any:
         profile = _profile.get()
         started = time.perf_counter()
+        if name in {"request_marker", "market_get", "lifecycle_lock"}:
+            _trace(f"{name}_entry")
         try:
             return function(*args, **kwargs)
         finally:
+            if name in {"request_marker", "market_get", "lifecycle_lock"}:
+                _trace(f"{name}_return")
             if profile is not None:
                 profile[f"{name}_calls"] = int(profile.get(f"{name}_calls", 0)) + 1
                 profile[f"{name}_ms"] = round(
