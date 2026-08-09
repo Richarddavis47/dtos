@@ -20,13 +20,36 @@ def _response(status: int, payload: object, *, elapsed: float = 0.1):
     return status, body, headers, elapsed
 
 
-def _warming_health(*, error: str | None = None) -> dict:
+def _warming_health(
+    *, error: str | None = None, build_active: bool = True,
+    phase: str = "asset_market_build", build_count: int = 0,
+) -> dict:
     return {
         "status": "warming",
         "cache": {
-            "build_active": True,
+            "build_active": build_active,
+            "build_count": build_count,
             "last_error": error,
             "market_generation": None,
+            "lifecycle": {
+                "phase": phase,
+                "market_build_allowed": phase not in {
+                    "sleeper_sync", "provider_network", "valuation_intelligence",
+                    "cache_persistence", "historical_import",
+                },
+            },
+        },
+    }
+
+
+def _ready_health(*, build_count: int = 1) -> dict:
+    return {
+        "status": "ready",
+        "cache": {
+            "build_active": False, "build_count": build_count,
+            "last_valid_model": True,
+            "last_error": None, "market_generation": "generation-1",
+            "lifecycle": {"phase": "idle", "market_build_allowed": True},
         },
     }
 
@@ -141,6 +164,65 @@ class MarketWarmingValidationTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(AssertionError, "page header"):
             validate_asset_market_contract(body, "/")
+
+    def test_registered_lifecycle_blocker_transitions_to_one_build(self) -> None:
+        request = _Requests(**{
+            "_": [
+                _response(503, {"detail": MARKET_WARMING_DETAIL}),
+                _response(503, {"detail": MARKET_WARMING_DETAIL}),
+                _response(200, _market_page()),
+            ],
+            "_api_market_health": [
+                _response(200, _warming_health(
+                    build_active=False, phase="historical_import", build_count=4,
+                )),
+                _response(200, _warming_health(
+                    build_active=True, phase="asset_market_build", build_count=4,
+                )),
+                _response(200, _ready_health(build_count=5)),
+            ],
+        })
+        clock = _Clock()
+        body = get_market_page(
+            "http://dtos", "/", request=request,
+            sleeper=clock.sleep, clock=clock,
+        )
+        self.assertEqual(validate_asset_market_contract(body, "/"), "generation-1")
+
+    def test_idle_warming_without_active_build_fails(self) -> None:
+        request = _Requests(**{
+            "_market": [_response(503, {"detail": MARKET_WARMING_DETAIL})],
+            "_api_market_health": [
+                _response(200, _warming_health(
+                    build_active=False, phase="idle",
+                )),
+            ],
+        })
+        with self.assertRaisesRegex(AssertionError, "stale Asset Market warming"):
+            get_market_page("http://dtos", "/market", request=request)
+
+    def test_market_build_cannot_overlap_registered_blocker(self) -> None:
+        request = _Requests(**{
+            "_": [_response(503, {"detail": MARKET_WARMING_DETAIL})],
+            "_api_market_health": [
+                _response(200, _warming_health(
+                    build_active=True, phase="sleeper_sync",
+                )),
+            ],
+        })
+        with self.assertRaisesRegex(AssertionError, "overlaps lifecycle blocker"):
+            get_market_page("http://dtos", "/", request=request)
+
+    def test_response_started_before_atomic_publication_accepts_ready_health(self) -> None:
+        request = _Requests(**{
+            "_": [
+                _response(503, {"detail": MARKET_WARMING_DETAIL}),
+                _response(200, _market_page()),
+            ],
+            "_api_market_health": [_response(200, _ready_health())],
+        })
+        body = get_market_page("http://dtos", "/", request=request)
+        self.assertEqual(validate_asset_market_contract(body, "/"), "generation-1")
 
 
 if __name__ == "__main__":

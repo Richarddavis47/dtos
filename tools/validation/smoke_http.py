@@ -10,6 +10,8 @@ from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.request import urlopen
 
+from src.platform.lifecycle import MARKET_BUILD_BLOCKERS
+
 GENERIC_TEAM_LABEL = re.compile(r"\b(?:Team|Roster)\s+(?:[1-9]|10)\b|\bTeam Detail\b", re.IGNORECASE)
 GENERIC_PAGE_TITLE = re.compile(r"<title>\s*(?:Team|Player|Matchup)\s*(?:Detail)?\s*</title>", re.IGNORECASE)
 INTERNAL_LABEL = re.compile(r"\b(?:Roster ID|Player ID|Transaction ID|Sleeper ID|Franchise ID|Provider Key)\b", re.IGNORECASE)
@@ -127,10 +129,33 @@ def get_market_page(
     started = clock()
     attempts = 0
     observed_generation: str | None = None
+    blocker_seen = False
+    eligible_seen = False
+    initial_build_count: int | None = None
     while True:
         attempts += 1
         status, body, headers, elapsed = request(base_url, path)
         if status == 200:
+            if blocker_seen:
+                health_status, health_body, _headers, _elapsed = request(
+                    base_url, "/api/market/health",
+                )
+                if health_status != 200:
+                    raise AssertionError(
+                        f"{path}: Market health failed after lifecycle warming"
+                    )
+                health = json.loads(health_body)
+                cache = health.get("cache") or {}
+                final_count = int(cache.get("build_count") or 0)
+                if not eligible_seen or initial_build_count is None:
+                    raise AssertionError(
+                        f"{path}: lifecycle blocker never transitioned to eligibility"
+                    )
+                if final_count != initial_build_count + 1:
+                    raise AssertionError(
+                        f"{path}: expected exactly one post-blocker market build; "
+                        f"build_count={final_count}, initial={initial_build_count}"
+                    )
             duration = clock() - started
             print(
                 "Asset Market warming completed: "
@@ -179,10 +204,45 @@ def get_market_page(
             raise AssertionError(
                 f"{path}: Asset Market build failed during warming: {cache['last_error']}"
             )
-        if health.get("status") != "warming" or not cache.get("build_active"):
+        lifecycle = cache.get("lifecycle") or {}
+        build_active = bool(cache.get("build_active"))
+        build_allowed = lifecycle.get("market_build_allowed")
+        phase = str(lifecycle.get("phase") or "idle")
+        ready_after_response = (
+            health.get("status") == "ready"
+            and not build_active
+            and bool(cache.get("last_valid_model"))
+            and build_allowed is True
+            and phase == "idle"
+        )
+        if health.get("status") not in {"warming", "ready"}:
             raise AssertionError(
                 f"{path}: inconsistent Asset Market warming generation: {health!r}"
             )
+        if ready_after_response:
+            if blocker_seen:
+                eligible_seen = True
+        elif build_active:
+            if build_allowed is False:
+                raise AssertionError(
+                    f"{path}: market construction overlaps lifecycle blocker {phase!r}"
+                )
+            if blocker_seen:
+                eligible_seen = True
+        else:
+            if build_allowed is not False or phase not in MARKET_BUILD_BLOCKERS:
+                raise AssertionError(
+                    f"{path}: stale Asset Market warming without active build or "
+                    f"registered lifecycle blocker: {health!r}"
+                )
+            blocker_seen = True
+            count = int(cache.get("build_count") or 0)
+            if initial_build_count is None:
+                initial_build_count = count
+            elif count != initial_build_count:
+                raise AssertionError(
+                    f"{path}: market build count changed while lifecycle remained blocked"
+                )
         generation = cache.get("market_generation")
         if generation is not None:
             if observed_generation is not None and generation != observed_generation:
@@ -193,7 +253,11 @@ def get_market_page(
             raise AssertionError(
                 f"{path}: Asset Market warming exceeded 60s after {attempts} attempts"
             )
-        sleeper(min(MARKET_WARMING_INTERVAL_SECONDS, MARKET_WARMING_DEADLINE_SECONDS - duration))
+        if not ready_after_response:
+            sleeper(min(
+                MARKET_WARMING_INTERVAL_SECONDS,
+                MARKET_WARMING_DEADLINE_SECONDS - duration,
+            ))
 
 
 def main() -> int:

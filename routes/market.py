@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse
 from app_metadata import VERSION
 from src.core.asset_market import MarketWarmingError, asset_market, asset_market_cache
 from src.core.historical_memory import historical_store
+from services.history import history_progress_contracts
 
 RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[..., HTMLResponse]
@@ -48,10 +49,14 @@ def create_market_router(
     @router.get("/api/market")
     async def market_index() -> Any:
         market = model()
-        return {**market.health(), "endpoints": [
+        return {
+            **market.health(),
+            "historical_progress": history_progress_contracts(league_id),
+            "endpoints": [
             "/api/market/assets", "/api/market/assets/{asset_id}",
             "/api/market/search", "/api/market/trending", "/api/market/health",
-        ]}
+            ],
+        }
 
     @router.get("/api/market/health")
     async def market_health() -> Any:
@@ -76,19 +81,22 @@ def create_market_router(
         year: int | None = None,
         round_number: int | None = Query(None, alias="round"),
     ) -> Any:
-        return jsonable_encoder(model().directory(
+        result = model().directory(
             offset=offset, limit=limit, sort=sort, direction=direction,
             asset_type=asset_type, position=position, availability=availability,
             owner=owner, minimum=minimum, maximum=maximum,
             age_min=age_min, age_max=age_max, year=year,
             round_number=round_number,
-        ))
+        )
+        result["historical_progress"] = history_progress_contracts(league_id)
+        return jsonable_encoder(result)
 
     @router.get("/api/market/assets/{asset_id:path}")
     async def market_asset(asset_id: str, front_office: int | None = None) -> Any:
         result = model().detail(asset_id, front_office)
         if result is None:
             raise HTTPException(404, "Canonical market asset not found.")
+        result["historical_progress"] = history_progress_contracts(league_id)
         return jsonable_encoder(result)
 
     @router.get("/api/market/search")

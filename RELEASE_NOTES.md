@@ -554,3 +554,12 @@ The release intentionally does not delete or compact existing identity history. 
 Validation covers checkpoint-first startup, semantic generation stability, bounded projection, recoverable preparation, disk safety, full regression behavior, and the Linux 2 GiB cgroup contract. Historical duplicate compaction remains a separately approved future migration.
 
 ---
+# DTOS v1.8.7 - Canonical Historical Progress Selection
+
+DTOS v1.8.7 makes durable season checkpoints the source of truth for league-wide historical progress. A narrow current-season refresh remains visible as job-specific `0/1` progress but can no longer replace the configured 2021-2026 league contract of `5/6` with 2026 honestly pending.
+
+The same canonical serializer now supplies history APIs, the History page, readiness, inspection, DINS, and Asset Market historical metadata. Foundation progress and active maintenance remain separately labeled. Smoke validation also recognizes the exact bounded Asset Market warming state during registered heavy lifecycle phases, then requires eligibility, exactly one background generation, and eventual HTTP 200.
+
+No historical evidence, checkpoints, leases, market ranking, player universe, infrastructure, storage, or pricing changed.
+
+---

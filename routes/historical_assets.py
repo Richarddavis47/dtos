@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from services.history import canonical_history_progress
+from services.history import history_progress_contracts
 from src.core.historical_memory import historical_graph, historical_store
 from src.core.historical_memory.models import HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION
 
@@ -175,9 +175,11 @@ def create_historical_assets_router(
 
     @router.get("/api/history/coverage")
     async def historical_coverage() -> JSONResponse:
+        progress = history_progress_contracts(league_id)
         return JSONResponse(jsonable_encoder({
             **graph().coverage(),
-            "canonical_progress": canonical_history_progress(league_id),
+            "canonical_progress": progress["canonical_history_progress"],
+            **progress,
         }))
 
     @router.get("/api/search")

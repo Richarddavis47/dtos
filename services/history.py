@@ -9,7 +9,12 @@ from typing import Any
 
 import httpx
 
-from config import ENRICHMENT_BATCH_SIZE, LEAGUE_ID, REQUEST_TIMEOUT
+from config import (
+    ENRICHMENT_BATCH_SIZE,
+    HISTORICAL_START_SEASON,
+    LEAGUE_ID,
+    REQUEST_TIMEOUT,
+)
 from src.core.historical_memory import (
     HISTORICAL_SCHEMA_VERSION,
     PLAYER_HISTORY_SCHEMA_VERSION,
@@ -40,6 +45,9 @@ from src.core.valuation import VALUATION_SCHEMA_VERSION, normalize_value
 
 _BACKFILL_LOCK = asyncio.Lock()
 _BACKFILL_TASK: asyncio.Task[dict[str, Any]] | None = None
+_ACTIVE_ENRICHMENT_STATUSES = frozenset({
+    "queued", "running", "partially_complete", "retry_wait", "recoverable", "stale",
+})
 
 
 def _now() -> str:
@@ -674,7 +682,9 @@ def import_status(league_id: str) -> dict[str, Any]:
         progress = historical_store.enrichment_job_progress(job["job_id"])
         if progress is not None:
             job["progress"] = progress
-    canonical_progress = canonical_history_progress(league_id, jobs=jobs)
+    progress_contracts = history_progress_contracts(
+        league_id, jobs=jobs, foundation=foundation,
+    )
     return {
         "schema_version": HISTORICAL_SCHEMA_VERSION,
         "runs": runs,
@@ -686,59 +696,123 @@ def import_status(league_id: str) -> dict[str, Any]:
         "latest": runs[0] if runs else {
             "status": "waiting", "reason": "Historical backfill has not started."
         },
-        "canonical_progress": canonical_progress,
+        "canonical_progress": progress_contracts["canonical_history_progress"],
+        **progress_contracts,
+    }
+
+
+def history_progress_contracts(
+    league_id: str, *, jobs: list[dict[str, Any]] | None = None,
+    foundation: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Return canonical and scoped progress through one shared serializer."""
+    candidates = jobs if jobs is not None else historical_store.jobs(league_id)
+    latest_enrichment = next(
+        (row for row in candidates if row.get("requested_data_types") == ["player_week"]),
+        None,
+    )
+    active_enrichment = next(
+        (
+            row for row in candidates
+            if row.get("requested_data_types") == ["player_week"]
+            and row.get("status") in _ACTIVE_ENRICHMENT_STATUSES
+        ),
+        None,
+    )
+    latest_job_progress = _job_progress_contract(latest_enrichment)
+    active_job_progress = _job_progress_contract(active_enrichment)
+    foundation_run = foundation or historical_store.latest_completed_foundation(
+        league_id,
+    )
+    return {
+        "canonical_history_progress": canonical_history_progress(
+            league_id, jobs=candidates,
+        ),
+        "latest_job_progress": latest_job_progress,
+        "active_job_progress": active_job_progress,
+        "foundation_progress": {
+            "status": str((foundation_run or {}).get("status") or "waiting"),
+            "run_id": (foundation_run or {}).get("run_id"),
+            "completed_at": (foundation_run or {}).get("completed_at"),
+        },
+    }
+
+
+def _job_progress_contract(job: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Serialize one job's own scope without promoting it to league progress."""
+    if job is None:
+        return None
+    progress = job.get("progress") or historical_store.enrichment_job_progress(
+        str(job["job_id"]),
+    ) or {}
+    return {
+        "job_id": job.get("job_id"),
+        "status": job.get("status"),
+        "requested_seasons": list(job.get("requested_seasons") or []),
+        "requested_data_types": list(job.get("requested_data_types") or []),
+        "completed_steps": int(progress.get("completed_steps") or 0),
+        "total_steps": int(progress.get("total_steps") or 0),
+        "completed_seasons": list(progress.get("completed_seasons") or []),
+        "pending_seasons": list(progress.get("pending_seasons") or []),
+        "failed_seasons": list(progress.get("failed_seasons") or []),
+        "current_season": job.get("current_season"),
+        "current_data_type": job.get("current_data_type") or "player_week",
+        "consistent": bool(progress.get("consistent", True)),
+        "last_progress_at": job.get("last_progress_at"),
     }
 
 
 def canonical_history_progress(
     league_id: str, *, jobs: list[dict[str, Any]] | None = None,
+    current_year: int | None = None,
 ) -> dict[str, Any]:
-    """Return the single presentation-ready player-week progress contract."""
+    """Return league progress from the configured durable checkpoint universe."""
+    selected_year = current_year or datetime.now().year
+    seasons = tuple(range(HISTORICAL_START_SEASON, selected_year + 1))
+    state = historical_store.canonical_enrichment_progress(
+        league_id, seasons, provider="nflverse", importer_version=IMPORTER_VERSION,
+    )
+    completed_seasons = list(state["completed_seasons"])
+    pending = list(state["pending_seasons"])
+    failed = list(state["failed_seasons"])
+    invalidated = list(state["invalidated_seasons"])
+    missing = list(state["missing_seasons"])
+    completed = len(completed_seasons)
+    total = len(seasons)
     candidates = jobs if jobs is not None else historical_store.jobs(league_id)
-    job = next(
+    active = next(
         (
             row for row in candidates
             if row.get("requested_data_types") == ["player_week"]
+            and row.get("status") in _ACTIVE_ENRICHMENT_STATUSES
         ),
         None,
     )
-    if job is None:
-        return {
-            "status": "waiting", "display_status": "Waiting",
-            "completed_steps": 0, "total_steps": 0, "percentage": None,
-            "completed_seasons": [], "pending_seasons": [],
-            "failed_seasons": [], "current_season": None,
-            "current_data_type": "player_week", "consistent": True,
-            "terminal": False,
-            "pending_reason": "Player-week enrichment has not started.",
-        }
-
-    progress = job.get("progress") or historical_store.enrichment_job_progress(
-        str(job["job_id"])
-    ) or {}
-    completed = int(progress.get("completed_steps") or 0)
-    total = int(progress.get("total_steps") or 0)
-    consistent = bool(progress.get("consistent")) and 0 <= completed <= total
-    pending = list(progress.get("pending_seasons") or [])
-    failed = list(progress.get("failed_seasons") or [])
-    raw_status = str(job.get("status") or "waiting")
-    status = raw_status
-    if not consistent:
-        status = "inconsistent"
-    elif raw_status in {"complete", "completed"}:
-        status = "completed" if completed == total else "completed_with_pending"
-    elif raw_status == "completed_with_pending" and completed == total:
+    if failed:
+        status = "failed"
+    elif completed == total:
         status = "completed"
+    elif pending and completed + len(pending) == total:
+        status = "completed_with_pending"
+    elif active is not None:
+        status = "running"
+    elif completed or invalidated or missing:
+        status = "incomplete"
+    else:
+        status = "waiting"
+    consistent = 0 <= completed <= total and not set(completed_seasons).intersection(
+        {*pending, *failed, *invalidated, *missing},
+    )
     labels = {
         "completed": "Completed",
         "completed_with_pending": "Completed with pending season",
         "running": "Running",
         "failed": "Failed",
         "inconsistent": "Inconsistent progress",
+        "incomplete": "Incomplete",
         "waiting": "Waiting",
     }
-    current_year = datetime.now().year
-    active_pending = current_year in pending
+    active_pending = selected_year in pending
     pending_reason = None
     if pending:
         pending_reason = (
@@ -752,19 +826,24 @@ def canonical_history_progress(
         "completed_steps": completed,
         "total_steps": total,
         "percentage": round(100 * completed / total) if total else None,
-        "completed_seasons": list(progress.get("completed_seasons") or []),
+        "completed_seasons": completed_seasons,
         "pending_seasons": pending,
         "failed_seasons": failed,
-        "current_season": job.get("current_season"),
-        "current_data_type": job.get("current_data_type") or "player_week",
+        "invalidated_seasons": invalidated,
+        "missing_seasons": missing,
+        "current_season": selected_year if selected_year in pending else None,
+        "current_data_type": "player_week",
         "consistent": consistent,
         "terminal": status in {"completed", "completed_with_pending", "failed"},
         "pending_reason": pending_reason,
+        "configured_seasons": list(seasons),
+        "identity_generation": state["identity_generation"],
+        "semantic_generations": state["semantic_generations"],
     }
 
 
 def import_completeness(league_id: str) -> dict[str, Any]:
-    seasons = tuple(range(2021, datetime.now().year + 1))
+    seasons = tuple(range(HISTORICAL_START_SEASON, datetime.now().year + 1))
     return {
         "schema_version": HISTORICAL_SCHEMA_VERSION,
         **completeness_report(historical_store, league_id, seasons),

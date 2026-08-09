@@ -18,7 +18,7 @@ DETAIL = "Asset Market generation is building safely in the background; retry sh
 
 def _published(generation: str = "market-2") -> dict[str, object]:
     return {
-        "application_version": "1.8.6", "application_build": 1806,
+        "application_version": "1.8.7", "application_build": 1807,
         "market_schema_version": "1.0", "league_id": "league-1",
         "historical_dataset_version": "history-1",
         "market_generation": generation, "brain_generation": "brain-1",

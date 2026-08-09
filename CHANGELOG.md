@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.8.7 - Canonical Historical Progress Selection
+
+- Derives league-wide player-week progress from the configured season universe and durable checkpoints instead of the newest enrichment job.
+- Separates canonical history, latest refresh job, active job, and foundation progress without mutating historical evidence.
+- Aligns history, coverage, readiness, inspection, DINS, and Asset Market metadata on one progress serializer.
+- Extends smoke validation to poll exact warming during registered lifecycle blockers before requiring one market build and HTTP 200.
+
 ## v1.8.6 - Asynchronous Market Generation
 
 - Moves cold cache-key, durable generation, identity aggregation, artifact discovery, construction, and publication into one background worker.
