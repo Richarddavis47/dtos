@@ -223,9 +223,15 @@ def _archive_cache_assessment(
     before_inactive = before.get("inactive_file_bytes")
     after_inactive = after.get("inactive_file_bytes")
     progress = coverage.get("canonical_progress") or {}
+    counts_by_season = coverage.get("counts_by_season") or {}
+    canonical_record_count = sum(
+        int((counts or {}).get("player_week") or 0)
+        for counts in counts_by_season.values()
+        if isinstance(counts, dict)
+    ) if isinstance(counts_by_season, dict) else 0
     coverage_valid = (
         coverage_status == 200
-        and int(coverage.get("asset_event_count") or 0) == expected_records
+        and canonical_record_count == expected_records
         and int(progress.get("completed_steps") or 0) == 5
         and int(progress.get("total_steps") or 0) == 6
         and progress.get("status") == "completed_with_pending"
@@ -264,6 +270,7 @@ def _archive_cache_assessment(
         "inactive_file_after_bytes": after_inactive,
         "inactive_file_growth_bytes": growth,
         "coverage_valid": coverage_valid,
+        "canonical_historical_record_count": canonical_record_count,
     }
 
 
@@ -285,6 +292,9 @@ def _record_archive_assessment(
         "coverage": {
             "status": coverage_status,
             "asset_event_count": coverage.get("asset_event_count"),
+            "canonical_historical_record_count": assessment[
+                "canonical_historical_record_count"
+            ],
             "canonical_progress": coverage.get("canonical_progress"),
             "query_scope": coverage.get("read_model"),
             "provider_synchronization": False,

@@ -66,12 +66,27 @@ class ArchiveCacheValidationTests(unittest.TestCase):
     @staticmethod
     def coverage(status: str = "completed_with_pending") -> dict:
         return {
-            "asset_event_count": 30_726,
+            "asset_event_count": 0,
+            "counts_by_season": {
+                str(season): {"player_week": count}
+                for season, count in zip(
+                    range(2021, 2026), (6146, 6145, 6145, 6145, 6145), strict=True,
+                )
+            },
             "canonical_progress": {
                 "status": status, "completed_steps": 5, "total_steps": 6,
             },
             "read_model": {"query_count": 3, "rows_read": 30_726},
         }
+
+    def test_archive_contract_counts_records_not_derived_graph_events(self) -> None:
+        result = _archive_cache_assessment(
+            self.snapshot(3 * 1024 * 1024),
+            self.snapshot(3 * 1024 * 1024),
+            coverage_status=200, coverage=self.coverage(),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["canonical_historical_record_count"], 30_726)
 
     def test_archive_cache_mode_a_newly_warmed(self) -> None:
         result = _archive_cache_assessment(
