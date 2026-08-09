@@ -109,20 +109,27 @@ def _diagnostic_request(
 ) -> tuple[int, bytes, float, float]:
     started = time.perf_counter()
     request = Request(BASE_URL + path, headers={"X-DTOS-Diagnostics": "1"})
+    raw_headers: list[tuple[str, str]] = []
     try:
         with urlopen(request, timeout=60) as response:
             status, body = response.status, response.read()
             server_ms = float(response.headers.get("X-DTOS-Request-Duration", 0))
-            headers = _normalized_headers(response.headers.items())
+            raw_headers = [(str(name), str(value)) for name, value in response.headers.items()]
+            headers = _normalized_headers(raw_headers)
     except HTTPError as exc:
         status, body = exc.code, exc.read()
         server_ms = float(exc.headers.get("X-DTOS-Request-Duration", 0))
-        headers = _normalized_headers(exc.headers.items())
+        raw_headers = [(str(name), str(value)) for name, value in exc.headers.items()]
+        headers = _normalized_headers(raw_headers)
     elapsed = (time.perf_counter() - started) * 1000
     if status not in expected:
         raise AssertionError(f"{path}: HTTP {status}, expected {expected}")
     if status == 503 and headers.get("retry-after") != "5":
-        raise AssertionError("warming response omitted canonical Retry-After: 5")
+        raise AssertionError(
+            "warming response omitted canonical Retry-After: 5; "
+            f"path={path!r}, raw_headers={raw_headers!r}, "
+            f"normalized_headers={headers!r}"
+        )
     return status, body, elapsed, server_ms
 
 
