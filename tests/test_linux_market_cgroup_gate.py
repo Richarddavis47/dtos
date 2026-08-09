@@ -41,6 +41,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _restart_reuse,
     _record_archive_assessment,
     _start_server,
+    _startup_memory_within_limit,
     _warm_historical_archive,
 )
 
@@ -172,6 +173,14 @@ class ArchiveCacheValidationTests(unittest.TestCase):
         self.assertFalse(_archive_cache_retained(
             self.snapshot(threshold - 1), threshold,
         ))
+
+    def test_startup_gate_uses_verified_effective_working_set(self) -> None:
+        snapshot = self.snapshot(800 * 1024 * 1024)
+        snapshot["raw_cgroup_bytes"] = 1_300 * 1024 * 1024
+        snapshot["effective_working_set_bytes"] = 500 * 1024 * 1024
+        self.assertTrue(_startup_memory_within_limit(snapshot))
+        snapshot["effective_working_set_bytes"] = 1_300 * 1024 * 1024
+        self.assertFalse(_startup_memory_within_limit(snapshot))
 
     def test_generated_history_matches_application_league_contract(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

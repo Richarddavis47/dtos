@@ -356,6 +356,15 @@ def _archive_cache_retained(snapshot: dict[str, object], threshold: int) -> bool
     )
 
 
+def _startup_memory_within_limit(snapshot: dict[str, object]) -> bool:
+    """Apply the startup ceiling to the verified effective working set."""
+    return (
+        snapshot.get("accounting_mode") == "cgroup_working_set"
+        and isinstance(snapshot.get("effective_working_set_bytes"), int)
+        and int(snapshot["effective_working_set_bytes"]) < STARTUP_MAX
+    )
+
+
 def _combined_read_audit() -> dict[str, object]:
     """Run the observed production audit plus supported overlapping reads."""
     sequential_paths = (
@@ -1514,13 +1523,21 @@ def main() -> int:
             ready_ms = _wait_ready()
             _application_fixture_contract(fixture_contract)
             memory_evidence.append(_memory_evidence("fixture_ready"))
-            startup_current = _cgroup("memory.current")
+            startup_snapshot = _memory_evidence("application_startup")
+            memory_evidence.append(startup_snapshot)
+            startup_current = int(startup_snapshot["raw_cgroup_bytes"] or 0)
             summary["phases"]["startup"] = {
                 "timestamp": time.time(), "duration_ms": round(ready_ms, 3),
-                "memory_current": startup_current, "process_rss_high_water": _rss_high_water(process.pid),
+                "memory_current": startup_current,
+                "effective_working_set_bytes": startup_snapshot.get(
+                    "effective_working_set_bytes"
+                ),
+                "process_rss_high_water": _rss_high_water(process.pid),
             }
-            if startup_current >= STARTUP_MAX:
-                raise AssertionError(f"startup memory {startup_current} exceeds 1.2 GiB")
+            if not _startup_memory_within_limit(startup_snapshot):
+                raise AssertionError(
+                    "startup effective working set exceeds 1.2 GiB"
+                )
             cold_health = _market_health()
             if int((cold_health.get("cache") or {}).get("build_count") or 0) != 0:
                 raise AssertionError("metadata-only health constructed the market")
