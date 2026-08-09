@@ -140,6 +140,19 @@ class AssetMarketTests(unittest.TestCase):
             loaded = restarted.get(self.data, self.state, self.store, self.league_id)
         self.assertEqual(loaded._artifact_path, first_path)
         self.assertEqual(loaded.directory(limit=4), self.market.directory(limit=4))
+        self.assertEqual(
+            restarted._request_marker,
+            restarted.request_marker(self.data, self.state, self.store, self.league_id),
+        )
+        with patch.object(restarted, "_start_background") as worker:
+            self.assertIs(
+                restarted.get(
+                    self.data, self.state, self.store, self.league_id,
+                    background=True,
+                ),
+                loaded,
+            )
+        worker.assert_not_called()
 
     def test_timestamp_only_sync_and_brain_changes_reuse_artifact(self) -> None:
         changed = copy.deepcopy(self.data)
@@ -181,13 +194,30 @@ class AssetMarketTests(unittest.TestCase):
         changed["valuation_intelligence"]["assets"]["player:10213"][
             "valuation_layers"
         ]["market_value"]["value"] = 9301
-        replacement = AssetMarketCache().get(
+        expected = self.cache.artifact_contract(
+            changed, self.state, self.store, self.league_id,
+        )
+        generation = self.cache.durable_generation(
+            changed, self.state, self.store, self.league_id, expected,
+        )
+        artifact, reason = self.cache._discover_artifact(
+            self.store, generation, expected,
+        )
+        self.assertIsNone(artifact)
+        self.assertEqual(reason, "brain_semantic_output_changed")
+        replacement_cache = AssetMarketCache()
+        replacement = replacement_cache.get(
             changed, self.state, self.store, self.league_id,
         )
         self.assertNotEqual(replacement._artifact_path, self.market._artifact_path)
         self.assertEqual(
             replacement.by_id["player:10213"]["values"]["market_value"], 9301,
         )
+        self.assertIs(
+            replacement_cache.get(changed, self.state, self.store, self.league_id),
+            replacement,
+        )
+        self.assertEqual(replacement_cache.build_count, 1)
 
     def test_ownership_change_invalidates_artifact(self) -> None:
         changed = copy.deepcopy(self.data)
@@ -421,17 +451,82 @@ class AssetMarketTests(unittest.TestCase):
     def test_generation_replacement_releases_superseded_market(self) -> None:
         cache = AssetMarketCache()
         previous = cache.get(self.data, self.state, self.store, self.league_id)
-        expected_assets = previous.directory()["assets"]
+        old_confidence = previous.by_id["player:10213"]["confidence"]
         reference = weakref.ref(previous)
-        changed_state = {**self.state, "last_sync": "2026-08-07T00:00:00+00:00"}
+        changed_data = copy.deepcopy(self.data)
+        changed_data["valuation_intelligence"]["assets"]["player:10213"][
+            "scores"
+        ]["confidence"] += 1
+        changed_data["valuation_intelligence"]["generated_at"] = (
+            "2026-08-07T00:00:00+00:00"
+        )
         current = cache.get(
-            self.data, changed_state, self.store, self.league_id,
+            changed_data, self.state, self.store, self.league_id,
         )
         del previous
         gc.collect()
         self.assertIsNone(reference())
-        self.assertEqual(current.directory()["assets"], expected_assets)
+        new_confidence = current.by_id["player:10213"]["confidence"]
+        self.assertNotEqual(new_confidence, old_confidence)
         self.assertEqual(cache.build_count, 2)
+
+    def test_failed_publication_does_not_expose_marker_or_model(self) -> None:
+        cache = AssetMarketCache()
+        market = cache.get(self.data, self.state, self.store, self.league_id)
+        marker = cache._request_marker
+        key = cache._key
+        changed = copy.deepcopy(self.data)
+        changed["valuation_intelligence"]["generated_at"] = "new-generation"
+        replacement = AssetMarketCache().get(
+            changed, self.state, self.store, self.league_id,
+        )
+        cache._epoch = 2
+        with self.assertRaisesRegex(RuntimeError, "superseded"):
+            cache._publish(
+                replacement, "replacement-key", cache.store_identity(self.store),
+                cache.request_marker(changed, self.state, self.store, self.league_id),
+                epoch=1,
+            )
+        self.assertIs(cache._market, market)
+        self.assertEqual(cache._request_marker, marker)
+        self.assertEqual(cache._key, key)
+
+    def test_nonsemantic_markers_start_no_replacement_worker(self) -> None:
+        cache = AssetMarketCache()
+        market = cache.get(self.data, self.state, self.store, self.league_id)
+        original_generated_at = self.data["valuation_intelligence"]["generated_at"]
+        self.data["valuation_intelligence"]["generated_at"] = "later-observation"
+        try:
+            with patch.object(cache, "_start_background") as worker:
+                result = cache.get(
+                    self.data, {**self.state, "last_sync": "later-sync"},
+                    self.store, self.league_id, background=True,
+                )
+        finally:
+            self.data["valuation_intelligence"]["generated_at"] = original_generated_at
+        self.assertIs(result, market)
+        worker.assert_not_called()
+        self.assertEqual(cache.build_count, 1)
+
+    def test_semantic_identity_is_deterministic_across_revert(self) -> None:
+        baseline = self.cache.artifact_contract(
+            self.data, self.state, self.store, self.league_id,
+        )
+        changed = copy.deepcopy(self.data)
+        changed["valuation_intelligence"]["assets"]["player:10213"]["scores"][
+            "confidence"
+        ] += 1
+        material = self.cache.artifact_contract(
+            changed, self.state, self.store, self.league_id,
+        )
+        reverted = self.cache.artifact_contract(
+            copy.deepcopy(self.data), self.state, self.store, self.league_id,
+        )
+        self.assertNotEqual(
+            baseline["brain_semantic_output_digest"],
+            material["brain_semantic_output_digest"],
+        )
+        self.assertEqual(baseline, reverted)
 
     def test_api_ui_agree_and_reads_never_sync(self) -> None:
         app = FastAPI()

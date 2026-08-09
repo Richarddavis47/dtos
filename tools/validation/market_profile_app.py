@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import copy
 import contextvars
 import json
 import os
@@ -19,7 +20,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from config import CACHE_FILE, HISTORY_DATABASE_FILE, HISTORY_STORAGE_ROOT
 from dtos_app import app
-from services.sleeper import LEAGUE_ID, STATE
+from services.sleeper import LEAGUE_ID, STATE, save_cache
 import src.core.asset_market.engine as market_engine
 import src.core.asset_market.read_model as market_read_model
 from src.core.asset_market.engine import AssetMarket, AssetMarketCache, asset_market_cache
@@ -483,15 +484,66 @@ async def validation_profile(request: Request, call_next):
     return response
 
 
-@app.post("/__validation__/replace-generation")
-async def replace_generation(marker: str) -> dict[str, Any]:
-    """Change only the in-memory canonical marker for controlled validation."""
+@app.post("/__validation__/nonsemantic-refresh")
+async def nonsemantic_refresh(marker: str) -> dict[str, Any]:
+    """Change only timestamp state to prove semantic artifact reuse."""
     before = asset_market_cache.metrics()
     STATE["last_sync"] = marker
     return {
         "previous_generation": before.get("market_generation"),
         "previous_build_count": before.get("build_count"),
         "lifecycle": lifecycle_coordinator.snapshot().get("phase"),
+    }
+
+
+@app.post("/__validation__/material-market-change")
+async def material_market_change(marker: str) -> dict[str, Any]:
+    """Change one consumed confidence value and durably retain the fixture state."""
+    data = copy.deepcopy(STATE.get("data") or {})
+    report = data.get("valuation_intelligence") or {}
+    asset = (report.get("assets") or {}).get("player:10213") or {}
+    scores = asset.get("scores") or {}
+    before = int(scores.get("confidence") or 0)
+    scores["confidence"] = min(100, before + 1) if before < 100 else before - 1
+    report["generated_at"] = marker
+    STATE["data"] = data
+    STATE["last_sync"] = marker
+    save_cache()
+    return {
+        "asset_id": "player:10213", "field": "scores.confidence",
+        "before": before, "after": scores["confidence"],
+    }
+
+
+@app.get("/__validation__/semantic-market-contract")
+async def semantic_market_contract() -> dict[str, Any]:
+    """Expose sanitized semantic identities and compatibility for the fixture."""
+    data = STATE.get("data") or {}
+    contract = AssetMarketCache.artifact_contract(
+        data, STATE, historical_store, LEAGUE_ID,
+    )
+    generation = AssetMarketCache.durable_generation(
+        data, STATE, historical_store, LEAGUE_ID, contract,
+    )
+    _artifact, reason = AssetMarketCache._discover_artifact(
+        historical_store, generation, contract,
+    )
+    return {
+        "semantic_generation": generation,
+        "semantic_identities": {
+            name: value for name, value in contract.items()
+            if name.endswith("_digest") and name != "database_identity_digest"
+        },
+        "raw_identities": {
+            "last_sync": STATE.get("last_sync"),
+            "brain_generated_at": (
+                (data.get("valuation_intelligence") or {}).get("generated_at")
+            ),
+            "historical_record_generation": historical_store.semantic_generation_markers(
+                LEAGUE_ID,
+            ).get("historical_records"),
+        },
+        "artifact_compatibility": reason,
     }
 
 

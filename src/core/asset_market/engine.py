@@ -582,8 +582,7 @@ class AssetMarketCache:
         valuation = data.get("valuation_intelligence") or {}
         return (
             VERSION, BUILD_NUMBER, MARKET_SCHEMA_VERSION, league_id,
-            id(store), id(data), state.get("last_sync"),
-            valuation.get("generated_at"), valuation.get("schema_version"),
+            id(store), id(data), valuation.get("schema_version"),
         )
 
     def _set_build_phase(self, phase: str) -> None:
@@ -1067,7 +1066,9 @@ class AssetMarketCache:
                 artifact_path=path, load_existing=True,
                 compatibility=contract,
             )
-            return self._publish(market, key, store_identity)
+            return self._publish(
+                market, key, store_identity, request_marker,
+            )
         try:
             return self._construct(
                 data, state, store, league_id, key, store_identity,

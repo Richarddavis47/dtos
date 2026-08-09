@@ -542,11 +542,49 @@ def _pad_to_production_baseline() -> list[bytearray]:
     return padding
 
 
-def _mutate_generation(marker: str) -> None:
-    cache_path = FIXTURE / "dtos_cache.json"
-    payload = json.loads(cache_path.read_text(encoding="utf-8"))
-    payload["last_sync"] = marker
-    cache_path.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+def _semantic_contract() -> dict[str, object]:
+    return json.loads(_request("/__validation__/semantic-market-contract")[1])
+
+
+def _nonsemantic_reuse(
+    first_generation: object, first_build_count: int, expected_body: bytes,
+) -> dict[str, object]:
+    before = _semantic_contract()
+    marker = f"validation-nonsemantic-{time.time_ns()}"
+    _profiled_request(
+        f"/__validation__/nonsemantic-refresh?marker={quote(marker)}", method="POST",
+    )
+    bodies = [_request("/api/market/assets?limit=50")[1] for _ in range(3)]
+    after = _semantic_contract()
+    health = _market_health()
+    cache = health.get("cache") or {}
+    if before.get("semantic_generation") != after.get("semantic_generation"):
+        raise AssertionError("non-semantic refresh changed semantic generation")
+    if after.get("artifact_compatibility") != "compatible":
+        raise AssertionError("non-semantic refresh rejected retained artifact")
+    if any(body != expected_body for body in bodies):
+        raise AssertionError("non-semantic refresh changed serialized market output")
+    if int(cache.get("build_count") or 0) != first_build_count:
+        raise AssertionError("non-semantic refresh published a replacement")
+    if cache.get("build_active") or cache.get("market_generation") != first_generation:
+        raise AssertionError("non-semantic refresh started a replacement worker")
+    if (
+        (before.get("raw_identities") or {}).get("last_sync")
+        == (after.get("raw_identities") or {}).get("last_sync")
+    ):
+        raise AssertionError("non-semantic fixture mutation did not change raw identity")
+    return {
+        "classification": "non_semantic_reuse",
+        "semantic_generation_stable": True,
+        "serialized_output_unchanged": True,
+        "artifact_compatibility": "compatible",
+        "replacement_workers": 0,
+        "replacement_builds": 0,
+        "raw_before": before.get("raw_identities"),
+        "raw_after": after.get("raw_identities"),
+        "semantic_before": before.get("semantic_identities"),
+        "semantic_after": after.get("semantic_identities"),
+    }
 
 
 def _profiled_request(
@@ -584,12 +622,23 @@ def _profiled_request(
 
 
 def _replacement_profile(
-    first_generation: object, first_build_count: int,
+    first_generation: object, first_build_count: int, expected_body: bytes,
 ) -> tuple[dict[str, object], dict[str, object]]:
-    marker = f"validation-generation-{time.time_ns()}"
+    before_semantic = _semantic_contract()
+    marker = f"validation-material-{time.time_ns()}"
     _profiled_request(
-        f"/__validation__/replace-generation?marker={quote(marker)}", method="POST",
+        f"/__validation__/material-market-change?marker={quote(marker)}", method="POST",
     )
+    changed_semantic = _semantic_contract()
+    if (
+        before_semantic.get("semantic_generation")
+        == changed_semantic.get("semantic_generation")
+    ):
+        raise AssertionError("material fixture mutation did not change semantic digest")
+    if changed_semantic.get("artifact_compatibility") != "brain_semantic_output_changed":
+        raise AssertionError(
+            "material artifact mismatch reason was not brain_semantic_output_changed"
+        )
     before_history = _history_metrics()
     samples: list[dict[str, object]] = []
     for sequence in range(1, 11):
@@ -678,7 +727,6 @@ def _replacement_profile(
             for sample in samples
         ),
     }
-    _mutate_generation(marker)
     failures = [sample for sample in samples if float(sample["server_ms"]) >= 50]
     if failures:
         result["failed_samples"] = failures
@@ -698,6 +746,28 @@ def _replacement_profile(
         raise AssertionError("replacement generation was not published")
     if result["request_thread_generation_work"] or result["sqlite_query_count"]:
         raise AssertionError("replacement warming performed request-thread generation work")
+    _status, final_body, _elapsed = _request("/api/market/assets?limit=50")
+    before_rows = {
+        row["asset_id"]: row for row in json.loads(expected_body).get("assets") or []
+    }
+    after_rows = {
+        row["asset_id"]: row for row in json.loads(final_body).get("assets") or []
+    }
+    changed_assets = [
+        asset_id for asset_id in sorted(before_rows)
+        if before_rows[asset_id] != after_rows.get(asset_id)
+    ]
+    if changed_assets != ["player:10213"]:
+        raise AssertionError(
+            f"material replacement changed unexpected assets: {changed_assets}"
+        )
+    result.update({
+        "semantic_before": before_semantic.get("semantic_identities"),
+        "semantic_after": changed_semantic.get("semantic_identities"),
+        "incompatibility_reason": changed_semantic.get("artifact_compatibility"),
+        "changed_assets": changed_assets,
+        "controlled_output_difference": True,
+    })
     return final_health, result
 
 
@@ -896,10 +966,20 @@ def main() -> int:
             }
             first_generation = (health.get("cache") or {}).get("market_generation")
             first_build_count = int((health.get("cache") or {}).get("build_count") or 0)
+            _baseline_status, baseline_body, _baseline_ms = _request(
+                "/api/market/assets?limit=50",
+            )
+            nonsemantic = _nonsemantic_reuse(
+                first_generation, first_build_count, baseline_body,
+            )
+            summary["phases"]["nonsemantic_reuse"] = {
+                "timestamp": time.time(), **nonsemantic,
+                "memory_current": _cgroup("memory.current"),
+            }
             replacement_started = time.perf_counter()
             try:
                 replacement, replacement_profile = _replacement_profile(
-                    first_generation, first_build_count,
+                    first_generation, first_build_count, baseline_body,
                 )
             except ExpansionLatencyFailure as exc:
                 summary["phases"]["generation_replacement"] = {
