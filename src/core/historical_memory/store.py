@@ -150,6 +150,37 @@ CREATE TABLE IF NOT EXISTS import_checkpoints (
 );
 CREATE INDEX IF NOT EXISTS idx_import_checkpoints_scope
 ON import_checkpoints(league_id, season, data_type, provider, importer_version);
+CREATE TABLE IF NOT EXISTS checkpoint_compatibility_audit (
+  audit_id INTEGER PRIMARY KEY,
+  checkpoint_key TEXT NOT NULL,
+  league_id TEXT NOT NULL,
+  season INTEGER NOT NULL,
+  old_compatibility_state TEXT,
+  new_compatibility_state TEXT NOT NULL,
+  dependency_digest TEXT,
+  verification_outcome TEXT NOT NULL,
+  reason_code TEXT NOT NULL,
+  first_mismatch TEXT,
+  verified_at TEXT NOT NULL,
+  release_version TEXT NOT NULL,
+  model_version TEXT NOT NULL,
+  UNIQUE(checkpoint_key, dependency_digest, verification_outcome, reason_code)
+);
+CREATE INDEX IF NOT EXISTS idx_checkpoint_compatibility_scope
+ON checkpoint_compatibility_audit(league_id, season, checkpoint_key);
+CREATE TABLE IF NOT EXISTS identity_mapping_audit (
+  audit_id INTEGER PRIMARY KEY,
+  canonical_player_digest TEXT NOT NULL,
+  prior_signature_digest TEXT,
+  resulting_signature_digest TEXT NOT NULL,
+  prior_generation INTEGER NOT NULL,
+  resulting_generation INTEGER NOT NULL,
+  changed_at TEXT NOT NULL,
+  workflow_run_id TEXT,
+  committed INTEGER NOT NULL DEFAULT 1
+);
+CREATE INDEX IF NOT EXISTS idx_identity_mapping_audit_generation
+ON identity_mapping_audit(resulting_generation, canonical_player_digest);
 CREATE TABLE IF NOT EXISTS import_locks (
   lock_key TEXT PRIMARY KEY,
   job_id TEXT NOT NULL,
@@ -257,6 +288,10 @@ class HistoricalStore:
             connection.executescript(SCHEMA)
             required_columns = [
                 ("import_checkpoints", "identity_generation"),
+                ("import_checkpoints", "identity_dependency_digest"),
+                ("import_checkpoints", "compatibility_status"),
+                ("import_checkpoints", "compatibility_reason"),
+                ("import_checkpoints", "compatibility_mismatch"),
                 ("import_jobs", "eligible_seasons"),
                 ("import_jobs", "skipped_seasons"),
                 ("import_jobs", "pending_seasons"),
@@ -274,6 +309,13 @@ class HistoricalStore:
                 connection, "import_checkpoints", "identity_generation",
                 "INTEGER NOT NULL DEFAULT 0",
             )
+            for name, definition in (
+                ("identity_dependency_digest", "TEXT"),
+                ("compatibility_status", "TEXT"),
+                ("compatibility_reason", "TEXT"),
+                ("compatibility_mismatch", "TEXT"),
+            ):
+                self._ensure_column(connection, "import_checkpoints", name, definition)
             for name, definition in (
                 ("eligible_seasons", "TEXT NOT NULL DEFAULT '[]'"),
                 ("skipped_seasons", "TEXT NOT NULL DEFAULT '[]'"),
@@ -313,6 +355,7 @@ class HistoricalStore:
             ).fetchone() is None:
                 self._rebuild_current_identity_projection(connection)
             self._repair_enrichment_progress(connection)
+            self._migrate_legacy_checkpoint_compatibility(connection)
         self._invalidate_dataset_version()
 
     @staticmethod
@@ -488,23 +531,44 @@ class HistoricalStore:
                 if identity_generation is None and data_type == "player_week"
                 else int(identity_generation or 0)
             )
+            dependency_digest: str | None = None
+            compatibility_status: str | None = None
+            compatibility_reason: str | None = None
+            compatibility_mismatch: str | None = None
+            if data_type == "player_week" and provider == "nflverse":
+                if status == "completed":
+                    valid, compatibility_reason, compatibility_mismatch, dependency_digest = (
+                        self._verify_legacy_checkpoint(connection, league_id, season)
+                    )
+                    compatibility_status = "compatible" if valid else "invalid"
+                elif status in {"pending", "not_yet_available", "unsupported"}:
+                    compatibility_status = "pending"
+                    compatibility_reason = "pending_source_data"
             connection.execute(
                 """INSERT INTO import_checkpoints(
                 checkpoint_key,job_id,league_id,season,week,data_type,provider,
                 importer_version,status,completed_at,records_written,
-                records_unchanged,error,identity_generation)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                records_unchanged,error,identity_generation,
+                identity_dependency_digest,compatibility_status,
+                compatibility_reason,compatibility_mismatch)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(checkpoint_key) DO UPDATE SET
                 job_id=excluded.job_id,status=excluded.status,
                 completed_at=excluded.completed_at,
                 records_written=excluded.records_written,
                 records_unchanged=excluded.records_unchanged,error=excluded.error,
-                identity_generation=excluded.identity_generation""",
+                identity_generation=excluded.identity_generation,
+                identity_dependency_digest=excluded.identity_dependency_digest,
+                compatibility_status=excluded.compatibility_status,
+                compatibility_reason=excluded.compatibility_reason,
+                compatibility_mismatch=excluded.compatibility_mismatch""",
                 (
                     checkpoint_key, job_id, league_id, season, week, data_type,
                     provider, importer_version, status, completed_at,
                     records_written, records_unchanged, error,
-                    checkpoint_generation,
+                    checkpoint_generation, dependency_digest,
+                    compatibility_status, compatibility_reason,
+                    compatibility_mismatch,
                 ),
             )
             self._synchronize_enrichment_job_progress(connection, job_id)
@@ -613,11 +677,11 @@ class HistoricalStore:
             }
         placeholders = ",".join("?" for _ in requested)
         with self.connection() as connection:
-            mapping_generation = self._generation(
-                connection, "identity_mapping_generation",
-            )
+            mapping_generation = self._generation(connection, "identity_mapping_generation")
             rows = connection.execute(
-                f"""SELECT season,status,identity_generation,error,completed_at
+                f"""SELECT season,status,identity_generation,error,completed_at,
+                identity_dependency_digest,compatibility_status,
+                compatibility_reason,compatibility_mismatch
                 FROM import_checkpoints WHERE league_id=?
                 AND data_type='player_week' AND provider=?
                 AND importer_version=? AND week IS NULL
@@ -639,6 +703,7 @@ class HistoricalStore:
         pending: list[int] = []
         failed: list[int] = []
         invalidated: list[int] = []
+        compatibility: dict[str, dict[str, Any]] = {}
         missing: list[int] = []
         for season in requested:
             checkpoint = checkpoints.get(season)
@@ -646,17 +711,36 @@ class HistoricalStore:
                 missing.append(season)
                 continue
             status = str(checkpoint["status"])
+            reason = str(checkpoint["compatibility_reason"] or "")
             if status == "completed":
-                if int(checkpoint["identity_generation"] or 0) == mapping_generation:
+                current_digest = self._season_identity_dependency_digest(
+                    league_id, season,
+                )
+                stored_digest = str(checkpoint["identity_dependency_digest"] or "")
+                if (
+                    checkpoint["compatibility_status"] == "compatible"
+                    and stored_digest
+                    and stored_digest == current_digest
+                ):
                     completed.append(season)
                 else:
                     invalidated.append(season)
+                    reason = (
+                        "referenced_identity_dependency_changed"
+                        if stored_digest else "legacy_checkpoint_requires_verification"
+                    )
             elif status in pending_statuses:
                 pending.append(season)
+                reason = "pending_source_data"
             elif status == "failed":
                 failed.append(season)
             else:
                 missing.append(season)
+            compatibility[str(season)] = {
+                "status": "compatible" if season in completed else status,
+                "reason_code": reason or "compatible",
+                "first_mismatch": checkpoint["compatibility_mismatch"],
+            }
         return {
             "completed_seasons": completed,
             "pending_seasons": pending,
@@ -669,7 +753,111 @@ class HistoricalStore:
                 "canonical_identities": identity_generation,
                 "quality_reconciliation": quality_generation,
             },
+            "compatibility": compatibility,
         }
+
+    @staticmethod
+    def _digest(value: Any) -> str:
+        encoded = json.dumps(value, separators=(",", ":"), sort_keys=True).encode()
+        return hashlib.sha256(encoded).hexdigest()
+
+    @classmethod
+    def _season_dependency_digest(
+        cls, connection: sqlite3.Connection, league_id: str, season: int,
+    ) -> tuple[str, str | None]:
+        player_rows = connection.execute(
+            """SELECT DISTINCT player_id FROM historical_records
+            WHERE league_id=? AND season=? AND player_id IS NOT NULL
+            AND entity_type IN ('player_week','player_raw_week','player_fantasy_week')
+            ORDER BY player_id""",
+            (league_id, season),
+        ).fetchall()
+        players = [str(row[0]) for row in player_rows]
+        dependencies: list[tuple[str, str, str, int, str]] = []
+        first_unresolved: str | None = None
+        for offset in range(0, len(players), 500):
+            batch = players[offset:offset + 500]
+            placeholders = ",".join("?" for _ in batch)
+            if not batch:
+                continue
+            rows = connection.execute(
+                f"""SELECT provider,provider_player_id,dtos_player_id,
+                confidence,coalesce(gsis_id,'') FROM current_player_identity
+                WHERE dtos_player_id IN ({placeholders})
+                ORDER BY dtos_player_id,provider,provider_player_id""",
+                batch,
+            ).fetchall()
+            resolved = {str(row[2]) for row in rows}
+            if first_unresolved is None:
+                missing = next((player for player in batch if player not in resolved), None)
+                if missing is not None:
+                    first_unresolved = cls._digest(missing)[:16]
+            dependencies.extend(tuple(row) for row in rows)
+        return cls._digest(dependencies), first_unresolved
+
+    def _season_identity_dependency_digest(self, league_id: str, season: int) -> str:
+        with self.connection() as connection:
+            return self._season_dependency_digest(connection, league_id, season)[0]
+
+    @classmethod
+    def _verify_legacy_checkpoint(
+        cls, connection: sqlite3.Connection, league_id: str, season: int,
+    ) -> tuple[bool, str, str | None, str]:
+        evidence = int(connection.execute(
+            """SELECT count(*) FROM historical_records WHERE league_id=?
+            AND season=? AND entity_type IN
+            ('player_week','player_raw_week','player_fantasy_week')""",
+            (league_id, season),
+        ).fetchone()[0])
+        if evidence == 0:
+            return False, "evidence_incomplete", None, ""
+        duplicate = connection.execute(
+            """SELECT record_key FROM historical_records WHERE league_id=?
+            AND season=? GROUP BY record_key HAVING count(*) > 1 LIMIT 1""",
+            (league_id, season),
+        ).fetchone()
+        if duplicate is not None:
+            return False, "evidence_incomplete", cls._digest(duplicate[0])[:16], ""
+        digest, unresolved = cls._season_dependency_digest(connection, league_id, season)
+        if unresolved:
+            return False, "identity_resolution_failed", unresolved, digest
+        return True, "compatible", None, digest
+
+    @classmethod
+    def _migrate_legacy_checkpoint_compatibility(
+        cls, connection: sqlite3.Connection,
+    ) -> int:
+        rows = connection.execute(
+            """SELECT checkpoint_key,league_id,season,compatibility_status,
+            identity_dependency_digest FROM import_checkpoints
+            WHERE data_type='player_week' AND provider='nflverse'
+            AND week IS NULL AND status='completed'
+            AND (compatibility_status IS NULL OR identity_dependency_digest IS NULL)"""
+        ).fetchall()
+        migrated = 0
+        for row in rows:
+            valid, reason, mismatch, digest = cls._verify_legacy_checkpoint(
+                connection, str(row["league_id"]), int(row["season"]),
+            )
+            new_state = "compatible" if valid else "invalid"
+            connection.execute(
+                """UPDATE import_checkpoints SET identity_dependency_digest=?,
+                compatibility_status=?,compatibility_reason=?,compatibility_mismatch=?
+                WHERE checkpoint_key=?""",
+                (digest or None, new_state, reason, mismatch, row["checkpoint_key"]),
+            )
+            connection.execute(
+                """INSERT OR IGNORE INTO checkpoint_compatibility_audit(
+                checkpoint_key,league_id,season,old_compatibility_state,
+                new_compatibility_state,dependency_digest,verification_outcome,
+                reason_code,first_mismatch,verified_at,release_version,model_version)
+                VALUES (?,?,?,?,?,?,?,?,?,datetime('now'),'1.8.8','season_identity_v1')""",
+                (row["checkpoint_key"], row["league_id"], row["season"],
+                 row["compatibility_status"], new_state, digest or None,
+                 "passed" if valid else "failed", reason, mismatch),
+            )
+            migrated += 1
+        return migrated
 
     @classmethod
     def _repair_enrichment_progress(cls, connection: sqlite3.Connection) -> int:
@@ -1462,6 +1650,7 @@ class HistoricalStore:
     def upsert_identity(
         self, dtos_player_id: str, provider: str, provider_player_id: str,
         display_name: str, confidence: int, valid_from: str, metadata: dict[str, Any],
+        *, workflow_run_id: str | None = None,
     ) -> bool:
         metadata_json = self._metadata_json(metadata)
         with self._lock, self.connection() as connection:
@@ -1510,8 +1699,24 @@ class HistoricalStore:
                     dtos_player_id, confidence, metadata,
                 )
                 if previous_mapping != current_mapping:
+                    prior_generation = self._generation(
+                        connection, "identity_mapping_generation",
+                    )
                     mapping_generation = self._advance_generation(
                         connection, "identity_mapping_generation",
+                    )
+                    connection.execute(
+                        """INSERT INTO identity_mapping_audit(
+                        canonical_player_digest,prior_signature_digest,
+                        resulting_signature_digest,prior_generation,
+                        resulting_generation,changed_at,workflow_run_id,committed)
+                        VALUES (?,?,?,?,?,?,?,1)""",
+                        (
+                            self._digest(dtos_player_id)[:24],
+                            self._digest(previous_mapping) if previous_mapping else None,
+                            self._digest(current_mapping), prior_generation,
+                            mapping_generation, valid_from, workflow_run_id,
+                        ),
                     )
                 else:
                     mapping_generation = self._generation(

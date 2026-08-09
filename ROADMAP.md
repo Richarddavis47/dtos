@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Season-Scoped Historical Checkpoint Compatibility - DTOS v1.8.8
+
+- Validate completed seasons against only the canonical mappings referenced by their evidence.
+- Verify and migrate legacy checkpoint metadata without replaying immutable events.
+- Audit compatibility decisions and committed material identity-mapping changes.
+
 ### Canonical Historical Progress Selection - DTOS v1.8.7
 
 - Durable configured-season checkpoint progress shared by APIs, UI, readiness, inspection, DINS, and Asset Market metadata.

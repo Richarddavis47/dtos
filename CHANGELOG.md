@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.8.8 - Season-Scoped Historical Checkpoint Compatibility
+
+- Replaced global identity-generation checkpoint invalidation with deterministic season-scoped dependency identities.
+- Added verified, metadata-only legacy checkpoint migration and compatibility audit records.
+- Added a durable audit ledger for committed material identity-mapping changes.
+- Added explicit sanitized compatibility reasons across canonical historical progress diagnostics.
+- Preserved importer 1.2 event identities, immutable evidence, and the canonical 2026 pending state.
+
 ## v1.8.7 - Canonical Historical Progress Selection
 
 - Derives league-wide player-week progress from the configured season universe and durable checkpoints instead of the newest enrichment job.
