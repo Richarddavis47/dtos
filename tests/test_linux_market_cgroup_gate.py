@@ -32,6 +32,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _configured_fixture_contract,
     _combined_read_audit,
     _diagnostic_request,
+    _effective_memory_margin,
     _identity,
     _material_target_comparison,
     _material_target_search_path,
@@ -181,6 +182,13 @@ class ArchiveCacheValidationTests(unittest.TestCase):
         self.assertTrue(_startup_memory_within_limit(snapshot))
         snapshot["effective_working_set_bytes"] = 1_300 * 1024 * 1024
         self.assertFalse(_startup_memory_within_limit(snapshot))
+
+    def test_memory_reserve_uses_verified_effective_peak(self) -> None:
+        limit = 2 * 1024**3
+        self.assertEqual(
+            _effective_memory_margin(limit, 1_300 * 1024**2),
+            748 * 1024**2,
+        )
 
     def test_generated_history_matches_application_league_contract(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

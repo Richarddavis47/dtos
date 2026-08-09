@@ -365,6 +365,11 @@ def _startup_memory_within_limit(snapshot: dict[str, object]) -> bool:
     )
 
 
+def _effective_memory_margin(memory_limit: int, effective_peak: int) -> int:
+    """Return allocatable margin after verified reclaimable file cache."""
+    return memory_limit - effective_peak
+
+
 def _combined_read_audit() -> dict[str, object]:
     """Run the observed production audit plus supported overlapping reads."""
     sequential_paths = (
@@ -1732,18 +1737,25 @@ def main() -> int:
                 "server_maximum_ms": round(max(restart_server_values), 3),
                 "generation_match": True, "memory_current": _cgroup("memory.current"),
             }
+            raw_peak = max(monitor.peak, _cgroup("memory.peak"))
+            effective_peak = monitor.effective_peak
+            effective_margin = _effective_memory_margin(
+                memory_max, effective_peak,
+            )
             summary.update({
                 "memory_current": _cgroup("memory.current"),
-                "memory_peak": max(monitor.peak, _cgroup("memory.peak")),
-                "margin_below_limit": memory_max - max(monitor.peak, _cgroup("memory.peak")),
+                "memory_peak": raw_peak,
+                "effective_memory_peak": effective_peak,
+                "raw_margin_below_limit": memory_max - raw_peak,
+                "margin_below_limit": effective_margin,
                 "container_restart_count": 0,
                 "worker_count": 1,
                 "provider_synchronization": False,
-                "exit_code": 0,
-                "passed": True,
             })
-            if int(summary["margin_below_limit"]) < 500 * MIB:
+            if effective_margin < 500 * MIB:
                 raise AssertionError("memory margin below 2 GiB is less than 500 MiB")
+            summary["exit_code"] = 0
+            summary["passed"] = True
             summary["completed"] = True
     except BaseException as exc:
         failure = exc
