@@ -74,6 +74,23 @@ class CanonicalHistoryProgressTests(unittest.TestCase):
         return result
 
     def checkpoint(self, job: ImportJob, season: int, status: str) -> None:
+        if status == "completed":
+            observed = utcnow().isoformat()
+            player_id = f"player-{season}"
+            self.store.upsert_identity(
+                player_id, "Sleeper", player_id, f"Player {season}", 100,
+                observed, {"provider_ids": {"GSIS": f"gsis-{season}"}},
+            )
+            self.store.append(
+                record_key=f"L:player_week:{season}:1:{player_id}:1.2",
+                entity_type="player_week", league_id="L", season=season,
+                week=1, player_id=player_id,
+                source_record_id=f"{season}:1:{player_id}",
+                observed_at=observed, retrieved_at=observed,
+                provider="nflverse", availability="observed", confidence=100,
+                calculation_method="player_week_enrichment",
+                schema_version="1.0", payload={"points": 1.0},
+            )
         self.store.checkpoint(
             checkpoint_key=f"L:{season}:player_week:nflverse:{IMPORTER_VERSION}",
             job_id=job.job_id, league_id="L", season=season, week=None,
@@ -128,10 +145,13 @@ class CanonicalHistoryProgressTests(unittest.TestCase):
             self.checkpoint(job, season, "completed")
         self.checkpoint(job, 2026, "pending")
         before = self.store.records("L", limit=1)[0]
-        self.store.upsert_identity("p1", "Sleeper", "p1", "Player", 100, utcnow().isoformat(), {})
+        self.store.upsert_identity(
+            "replacement", "Sleeper", "player-2021", "Replacement", 100,
+            utcnow().isoformat(), {"provider_ids": {"GSIS": "new-gsis"}},
+        )
         result = self.canonical()
-        self.assertEqual(result["completed_steps"], 0)
-        self.assertEqual(result["invalidated_seasons"], [2021, 2022, 2023, 2024, 2025])
+        self.assertEqual(result["completed_steps"], 4)
+        self.assertEqual(result["invalidated_seasons"], [2021])
         self.assertEqual(self.store.records("L", limit=1)[0], before)
 
     def test_overlapping_jobs_and_failed_job_counters_do_not_double_count(self) -> None:

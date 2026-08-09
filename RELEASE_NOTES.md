@@ -563,3 +563,10 @@ The same canonical serializer now supplies history APIs, the History page, readi
 No historical evidence, checkpoints, leases, market ranking, player universe, infrastructure, storage, or pricing changed.
 
 ---
+# DTOS v1.8.8 - Season-Scoped Historical Checkpoint Compatibility
+
+DTOS v1.8.8 corrects over-broad historical checkpoint invalidation. Each completed player-week season now stores a deterministic digest of only the canonical mappings referenced by that season. Unrelated current-player synchronization no longer invalidates immutable seasons.
+
+Legacy checkpoints migrate only after evidence presence, identity resolution, uniqueness, provenance, and record-key validation. Migration updates checkpoint and audit metadata only; importer version 1.2 event identities remain unchanged. Compatibility diagnostics expose precise sanitized reason codes, and committed material identity remaps are recorded in a durable audit ledger.
+
+The canonical state remains five completed seasons (2021-2025) with 2026 honestly pending.
