@@ -256,9 +256,9 @@ AssetMarketCache.artifact_path = staticmethod(_preparation_stage(
     "artifact_path_resolution", AssetMarketCache.artifact_path,
     gil_heavy=True,
 ))
-AssetMarketCache._compatible = staticmethod(_stage(
+AssetMarketCache._discover_artifact = classmethod(_stage(
     "artifact_compatibility_lookup", _preparation_stage(
-        "compatibility_validation", AssetMarketCache._compatible,
+        "compatibility_validation", AssetMarketCache._discover_artifact.__func__,
         gil_heavy=False,
     ),
 ))
