@@ -552,6 +552,14 @@ _NONSEMANTIC_VOLATILE_PATHS = {
     "historical_records",
     "$.valuation_generation",
 }
+_MATERIAL_PUBLICATION_ENVELOPE_PATHS = {
+    "$.brain_generation",
+    "$.generated_at",
+    "$.historical_progress.canonical_history_progress.semantic_generations."
+    "historical_records",
+    "$.market_generation",
+    "$.valuation_generation",
+}
 
 
 def _json_differences(
@@ -675,6 +683,62 @@ def _material_target_comparison(
             + json.dumps(differences, sort_keys=True)
         )
     return differences
+
+
+def _material_first_page_comparison(
+    before_body: bytes, after_body: bytes, *,
+    old_market_generation: object, new_market_generation: object,
+) -> dict[str, object]:
+    """Require identical ordered rows and audit exact publication metadata changes."""
+    before = json.loads(before_body)
+    after = json.loads(after_body)
+    before_assets = before.get("assets") or []
+    after_assets = after.get("assets") or []
+    before_asset_bytes = json.dumps(
+        before_assets, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+    ).encode()
+    after_asset_bytes = json.dumps(
+        after_assets, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+    ).encode()
+    if before_asset_bytes != after_asset_bytes:
+        raise AssertionError(
+            "material replacement changed unrelated first-page assets: "
+            + json.dumps(
+                _json_differences(before_assets, after_assets, "$.assets"),
+                sort_keys=True,
+            )
+        )
+    before_envelope = dict(before)
+    after_envelope = dict(after)
+    before_envelope.pop("assets", None)
+    after_envelope.pop("assets", None)
+    envelope_differences = _json_differences(before_envelope, after_envelope)
+    unexpected = [
+        difference for difference in envelope_differences
+        if difference["path"] not in _MATERIAL_PUBLICATION_ENVELOPE_PATHS
+    ]
+    if unexpected:
+        raise AssertionError(
+            "material publication changed unexpected envelope paths: "
+            + json.dumps(unexpected, sort_keys=True)
+        )
+    if before.get("market_generation") != old_market_generation:
+        raise AssertionError("pre-publication response used an unexpected generation")
+    if after.get("market_generation") != new_market_generation:
+        raise AssertionError("post-publication response used a stale generation")
+    if old_market_generation == new_market_generation:
+        raise AssertionError("material publication did not change market generation")
+    if after.get("generated_at") != new_market_generation:
+        raise AssertionError("post-publication generated_at conflicts with generation")
+    return {
+        "asset_count": len(before_assets),
+        "asset_digest_before": hashlib.sha256(before_asset_bytes).hexdigest(),
+        "asset_digest_after": hashlib.sha256(after_asset_bytes).hexdigest(),
+        "asset_order": [row.get("asset_id") for row in before_assets],
+        "envelope_changed_paths": envelope_differences,
+        "old_market_generation": old_market_generation,
+        "new_market_generation": new_market_generation,
+    }
 
 
 def _nonsemantic_reuse(
@@ -915,8 +979,11 @@ def _replacement_profile(
     if published_artifact.get("generation") != changed_semantic.get("semantic_generation"):
         raise AssertionError("validator sampled before the new semantic generation published")
     _status, final_body, _elapsed = _request("/api/market/assets?limit=50")
-    if final_body != expected_body:
-        raise AssertionError("material replacement changed unrelated first-page rows")
+    first_page_comparison = _material_first_page_comparison(
+        expected_body, final_body,
+        old_market_generation=first_generation,
+        new_market_generation=final_cache.get("market_generation"),
+    )
     _target_status, target_after_body, _target_elapsed = _request(
         "/api/market/search?q=Validation%20Player%2010213&limit=50",
     )
@@ -942,6 +1009,7 @@ def _replacement_profile(
         "mutation": mutation,
         "target_row_differences": target_differences,
         "published_semantic_generation": published_artifact.get("generation"),
+        "first_page_comparison": first_page_comparison,
     })
     return final_health, result
 

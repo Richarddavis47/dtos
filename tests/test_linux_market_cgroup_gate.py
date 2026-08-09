@@ -22,6 +22,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _diagnostic_request,
     _identity,
     _material_target_comparison,
+    _material_first_page_comparison,
     _nonsemantic_payload_comparison,
     _normalized_headers,
     _restart_reuse,
@@ -502,6 +503,62 @@ class RestartReuseValidationTests(unittest.TestCase):
         body = json.dumps({"results": []}).encode()
         with self.assertRaisesRegex(AssertionError, "target is unavailable"):
             _material_target_comparison(body, body)
+
+    def test_material_first_page_separates_rows_from_publication_envelope(self) -> None:
+        before = {
+            "market_generation": "market-old", "generated_at": "market-old",
+            "brain_generation": "brain-old", "valuation_generation": None,
+            "total": 2, "offset": 0, "limit": 50, "sort": "market",
+            "assets": [{"asset_id": "player:1"}, {"asset_id": "player:2"}],
+        }
+        after = json.loads(json.dumps(before))
+        after.update({
+            "market_generation": "market-new", "generated_at": "market-new",
+            "brain_generation": "brain-new", "valuation_generation": "value-new",
+        })
+        evidence = _material_first_page_comparison(
+            json.dumps(before).encode(), json.dumps(after).encode(),
+            old_market_generation="market-old", new_market_generation="market-new",
+        )
+        self.assertEqual(evidence["asset_digest_before"], evidence["asset_digest_after"])
+        self.assertEqual(evidence["asset_order"], ["player:1", "player:2"])
+
+    def test_material_first_page_rejects_row_change_or_reorder(self) -> None:
+        before = {
+            "market_generation": "old", "generated_at": "old",
+            "assets": [{"asset_id": "player:1", "value": 1}, {"asset_id": "player:2", "value": 2}],
+        }
+        changed = json.loads(json.dumps(before))
+        changed.update({"market_generation": "new", "generated_at": "new"})
+        reordered = json.loads(json.dumps(changed))
+        reordered["assets"].reverse()
+        changed["assets"][0]["value"] = 2
+        for after in (changed, reordered):
+            with self.subTest(after=after), self.assertRaisesRegex(
+                AssertionError, "first-page assets",
+            ):
+                _material_first_page_comparison(
+                    json.dumps(before).encode(), json.dumps(after).encode(),
+                    old_market_generation="old", new_market_generation="new",
+                )
+
+    def test_material_first_page_rejects_unknown_or_stale_envelope(self) -> None:
+        before = {"market_generation": "old", "generated_at": "old", "assets": []}
+        unexpected = {
+            "market_generation": "new", "generated_at": "new", "total": 2,
+            "assets": [],
+        }
+        with self.assertRaisesRegex(AssertionError, "unexpected envelope"):
+            _material_first_page_comparison(
+                json.dumps(before).encode(), json.dumps(unexpected).encode(),
+                old_market_generation="old", new_market_generation="new",
+            )
+        stale = {"market_generation": "old", "generated_at": "old", "assets": []}
+        with self.assertRaisesRegex(AssertionError, "stale generation"):
+            _material_first_page_comparison(
+                json.dumps(before).encode(), json.dumps(stale).encode(),
+                old_market_generation="old", new_market_generation="new",
+            )
 
 
 if __name__ == "__main__":
