@@ -43,6 +43,7 @@ jobs:
             --env DTOS_CACHE_FILE=/fixture/dtos_cache.json \
             --env DTOS_HISTORY_DB_FILE=/fixture/dtos_history.sqlite3 \
             --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
+            --env DTOS_BACKGROUND_START_DELAY=300 \
             --env SLEEPER_LEAGUE_ID=validation-league-1804 \
             dtos-market-cgroup:validation \
             python -m tools.validation.linux_market_cgroup_gate

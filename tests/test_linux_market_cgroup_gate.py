@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import json
 import os
+import sqlite3
 import sys
 import tempfile
 import unittest
 from collections import deque
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -15,6 +17,7 @@ from tools.validation.generate_sanitized_market_fixture import (
     HISTORICAL_COUNT,
     LEAGUE_ID,
     _history,
+    _record_provider,
     material_market_fixture_change,
 )
 from src.core.historical_memory.store import HistoricalStore
@@ -37,6 +40,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _restart_reuse,
     _record_archive_assessment,
     _start_server,
+    _warm_historical_archive,
 )
 
 
@@ -143,9 +147,13 @@ class ArchiveCacheValidationTests(unittest.TestCase):
             _record_archive_assessment(
                 phases, self.snapshot(0), self.snapshot(0),
                 coverage_status=200, coverage=self.coverage(), duration_ms=2.0,
+                archive_scan={"record_count": 30_726},
             )
         self.assertIn("archive_warming", phases)
         self.assertFalse(phases["archive_warming"]["assessment"]["passed"])
+        self.assertEqual(
+            phases["archive_warming"]["archive_scan"]["record_count"], 30_726,
+        )
 
     def test_malformed_metrics_fail_closed(self) -> None:
         result = _archive_cache_assessment(
@@ -181,6 +189,28 @@ class ArchiveCacheValidationTests(unittest.TestCase):
         self.assertEqual(count, HISTORICAL_COUNT)
         self.assertEqual(progress["completed_seasons"], list(range(2021, 2026)))
         self.assertEqual(progress["pending_seasons"], [2026])
+
+    def test_production_fixture_player_week_evidence_matches_checkpoints(self) -> None:
+        self.assertEqual(_record_provider("player_week"), "nflverse")
+        self.assertEqual(_record_provider("valuation_snapshot"), "sanitized")
+
+    def test_archive_warm_scans_real_history_without_decoding_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "history.sqlite3"
+            with closing(sqlite3.connect(path)) as connection:
+                connection.execute(
+                    "CREATE TABLE historical_records (payload TEXT NOT NULL)"
+                )
+                connection.executemany(
+                    "INSERT INTO historical_records VALUES (?)",
+                    [("payload",), ("evidence",)],
+                )
+                connection.commit()
+            with patch.dict(os.environ, {"DTOS_HISTORY_DB_FILE": str(path)}):
+                result = _warm_historical_archive()
+        self.assertEqual(result["record_count"], 2)
+        self.assertGreater(result["payload_bytes_scanned"], 0)
+        self.assertGreater(result["database_pages"], 0)
 
     @patch("tools.validation.linux_market_cgroup_gate._cgroup_values")
     @patch("tools.validation.linux_market_cgroup_gate._memory_evidence")

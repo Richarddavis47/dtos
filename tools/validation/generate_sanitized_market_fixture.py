@@ -183,6 +183,11 @@ def _record_payload(entity_type: str, index: int) -> tuple[str | None, str]:
     return (player_id if entity_type in {"player_week", "player_raw_week", "player_fantasy_week"} else None), json.dumps(payload, separators=(",", ":"))
 
 
+def _record_provider(entity_type: str) -> str:
+    """Match completed player-week checkpoint provenance in sanitized evidence."""
+    return "nflverse" if entity_type == "player_week" else "sanitized"
+
+
 def _production_history(path: Path) -> None:
     """Create the complete sanitized production database shape used by CI."""
     HistoricalStore(path)
@@ -226,12 +231,13 @@ def _production_history(path: Path) -> None:
         for index in range(count):
             season = 2026 if entity_type in {"league_season_snapshot", "prediction", "team_intelligence_snapshot", "valuation_snapshot", "weekly_roster_snapshot"} else 2021 + index % 5
             player_id, payload = _record_payload(entity_type, index)
+            provider = _record_provider(entity_type)
             rows.append((
                 f"production-fixture:{entity_type}:{index}", entity_type,
                 LEAGUE_ID, season, index % 18 + 1,
                 f"franchise:{index % 10 + 1}", player_id,
                 f"production-{entity_type}-{index}", STAMP, STAMP,
-                "sanitized", "available", 100, "deterministic_fixture", 0,
+                provider, "available", 100, "deterministic_fixture", 0,
                 "1.0", payload,
             ))
             if len(rows) == 2_000:

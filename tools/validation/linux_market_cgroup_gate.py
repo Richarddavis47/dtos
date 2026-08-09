@@ -13,6 +13,7 @@ import subprocess
 import sys
 import threading
 import time
+from contextlib import closing
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from uuid import uuid4
 from pathlib import Path
@@ -166,6 +167,8 @@ def _memory_state() -> dict[str, object]:
     return {
         "raw_cgroup_bytes": current,
         "inactive_file_bytes": inactive,
+        "active_file_bytes": int(stats.get("active_file", 0)),
+        "file_bytes": int(stats.get("file", 0)),
         "effective_working_set_bytes": current - inactive,
         "anonymous_bytes": int(stats.get("anon", 0)),
         "memory_events": {
@@ -180,6 +183,30 @@ def _archive_size() -> int:
         "DTOS_HISTORY_DB_FILE", str(FIXTURE / "dtos_history.sqlite3"),
     ))
     return configured.stat().st_size if configured.is_file() else 0
+
+
+def _warm_historical_archive() -> dict[str, object]:
+    """Read real historical payload pages without retaining decoded records."""
+    configured = Path(os.environ.get(
+        "DTOS_HISTORY_DB_FILE", str(FIXTURE / "dtos_history.sqlite3"),
+    ))
+    started = time.perf_counter()
+    with closing(sqlite3.connect(
+        f"file:{configured.as_posix()}?mode=ro", uri=True,
+    )) as connection:
+        row = connection.execute(
+            "SELECT count(*), coalesce(sum(length(payload)), 0) "
+            "FROM historical_records"
+        ).fetchone()
+        pages = int(connection.execute("PRAGMA page_count").fetchone()[0])
+        page_size = int(connection.execute("PRAGMA page_size").fetchone()[0])
+    return {
+        "record_count": int(row[0]),
+        "payload_bytes_scanned": int(row[1]),
+        "database_pages": pages,
+        "page_size_bytes": page_size,
+        "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+    }
 
 
 def _memory_evidence(phase: str) -> dict[str, object]:
@@ -197,6 +224,8 @@ def _memory_evidence(phase: str) -> dict[str, object]:
         return {
             "raw_cgroup_bytes": None,
             "inactive_file_bytes": None,
+            "active_file_bytes": None,
+            "file_bytes": None,
             "anonymous_bytes": None,
             "effective_working_set_bytes": None,
             "memory_events": None,
@@ -283,6 +312,7 @@ def _record_archive_assessment(
     phases: dict[str, object], before: dict[str, object],
     after: dict[str, object], *, coverage_status: int,
     coverage: dict[str, object], duration_ms: float,
+    archive_scan: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Persist bounded evidence before enforcing the archive-cache gate."""
     assessment = _archive_cache_assessment(
@@ -294,6 +324,7 @@ def _record_archive_assessment(
         "before": before,
         "after": after,
         "assessment": assessment,
+        "archive_scan": archive_scan,
         "coverage": {
             "status": coverage_status,
             "asset_event_count": coverage.get("asset_event_count"),
@@ -1491,6 +1522,7 @@ def main() -> int:
             if archive_warmed:
                 archive_before = _memory_evidence("before_coverage")
                 memory_evidence.append(archive_before)
+                archive_scan = _warm_historical_archive()
                 coverage_status, coverage_body, coverage_ms = _request(
                     "/api/history/coverage",
                 )
@@ -1505,7 +1537,7 @@ def main() -> int:
                 _record_archive_assessment(
                     phases, archive_before, archive_after,
                     coverage_status=coverage_status, coverage=coverage,
-                    duration_ms=coverage_ms,
+                    duration_ms=coverage_ms, archive_scan=archive_scan,
                 )
             before_cold = _cgroup("memory.current")
             health, build_ms, attempts, responsiveness = _cold_build()
