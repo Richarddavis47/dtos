@@ -686,6 +686,13 @@ def _material_target_comparison(
     return differences
 
 
+def _material_target_search_path(asset_id: str = "player:10213") -> str:
+    """Use the public canonical-ID search contract for an unambiguous target."""
+    if not asset_id.startswith("player:") or not asset_id.removeprefix("player:"):
+        raise AssertionError("material target must be a canonical player asset ID")
+    return f"/api/market/search?q={quote(asset_id, safe='')}&limit=50"
+
+
 def _material_first_page_comparison(
     before_body: bytes, after_body: bytes, *,
     old_market_generation: object, new_market_generation: object,
@@ -832,7 +839,7 @@ def _replacement_profile(
 ) -> tuple[dict[str, object], dict[str, object]]:
     before_semantic = _semantic_contract()
     _target_status, target_before_body, _target_elapsed = _request(
-        "/api/market/search?q=Validation%20Player%2010213&limit=50",
+        _material_target_search_path(),
     )
     marker = f"validation-material-{time.time_ns()}"
     mutation_status, mutation_body, _headers, _client, _server, _profile = _profiled_request(
@@ -995,7 +1002,7 @@ def _replacement_profile(
     ):
         raise AssertionError("directory historical provenance conflicts with artifact manifest")
     _target_status, target_after_body, _target_elapsed = _request(
-        "/api/market/search?q=Validation%20Player%2010213&limit=50",
+        _material_target_search_path(),
     )
     target_differences = _material_target_comparison(
         target_before_body, target_after_body,

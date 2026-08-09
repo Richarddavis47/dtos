@@ -22,6 +22,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _diagnostic_request,
     _identity,
     _material_target_comparison,
+    _material_target_search_path,
     _material_first_page_comparison,
     _nonsemantic_payload_comparison,
     _normalized_headers,
@@ -503,6 +504,26 @@ class RestartReuseValidationTests(unittest.TestCase):
         body = json.dumps({"results": []}).encode()
         with self.assertRaisesRegex(AssertionError, "target is unavailable"):
             _material_target_comparison(body, body)
+
+    def test_material_target_search_uses_canonical_public_asset_id(self) -> None:
+        self.assertEqual(
+            _material_target_search_path(),
+            "/api/market/search?q=player%3A10213&limit=50",
+        )
+
+    def test_material_target_comparison_rejects_ambiguous_name_results(self) -> None:
+        body = json.dumps({
+            "results": [
+                {"asset_id": "player:10213"},
+                {"asset_id": "player:v10213"},
+            ],
+        }).encode()
+        with self.assertRaisesRegex(AssertionError, "unavailable"):
+            _material_target_comparison(body, body)
+
+    def test_material_target_search_rejects_noncanonical_target(self) -> None:
+        with self.assertRaisesRegex(AssertionError, "canonical player asset ID"):
+            _material_target_search_path("Validation Player 10213")
 
     def test_material_first_page_separates_rows_from_publication_envelope(self) -> None:
         before = {
