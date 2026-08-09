@@ -564,6 +564,9 @@ class AssetMarketTests(unittest.TestCase):
                     first["historical_dataset_version"], self.market.dataset_version,
                 )
                 self.assertEqual(
+                    first["historical_dataset_version_scope"], "live_store",
+                )
+                self.assertEqual(
                     first["valuation_generation"],
                     self.data["valuation_intelligence"]["generated_at"],
                 )

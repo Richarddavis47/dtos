@@ -584,6 +584,7 @@ async def market_artifact() -> dict[str, Any]:
         "generated_at": metadata.get("generated_at"),
         "schema_version": metadata.get("schema_version"),
         "asset_count": metadata.get("asset_count"),
+        "historical_dataset_version": metadata.get("historical_dataset_version"),
     }
 
 

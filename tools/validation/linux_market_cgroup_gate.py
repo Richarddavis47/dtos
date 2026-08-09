@@ -557,6 +557,7 @@ _MATERIAL_PUBLICATION_ENVELOPE_PATHS = {
     "$.generated_at",
     "$.historical_progress.canonical_history_progress.semantic_generations."
     "historical_records",
+    "$.historical_dataset_version",
     "$.market_generation",
     "$.valuation_generation",
 }
@@ -730,6 +731,10 @@ def _material_first_page_comparison(
         raise AssertionError("material publication did not change market generation")
     if after.get("generated_at") != new_market_generation:
         raise AssertionError("post-publication generated_at conflicts with generation")
+    if before.get("historical_dataset_version_scope") != "artifact_build" or (
+        after.get("historical_dataset_version_scope") != "artifact_build"
+    ):
+        raise AssertionError("directory historical identity is not artifact provenance")
     return {
         "asset_count": len(before_assets),
         "asset_digest_before": hashlib.sha256(before_asset_bytes).hexdigest(),
@@ -984,6 +989,11 @@ def _replacement_profile(
         old_market_generation=first_generation,
         new_market_generation=final_cache.get("market_generation"),
     )
+    if (
+        published_artifact.get("historical_dataset_version")
+        != json.loads(final_body).get("historical_dataset_version")
+    ):
+        raise AssertionError("directory historical provenance conflicts with artifact manifest")
     _target_status, target_after_body, _target_elapsed = _request(
         "/api/market/search?q=Validation%20Player%2010213&limit=50",
     )
@@ -1020,7 +1030,8 @@ def _identity(payload: dict[str, object]) -> dict[str, object]:
         for name in (
             "application_version", "application_build", "market_schema_version",
             "league_id", "historical_dataset_version", "market_generation",
-            "brain_generation", "valuation_generation",
+            "historical_dataset_version_scope", "brain_generation",
+            "valuation_generation",
         )
     }
 

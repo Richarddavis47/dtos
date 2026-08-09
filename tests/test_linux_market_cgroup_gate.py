@@ -508,6 +508,8 @@ class RestartReuseValidationTests(unittest.TestCase):
         before = {
             "market_generation": "market-old", "generated_at": "market-old",
             "brain_generation": "brain-old", "valuation_generation": None,
+            "historical_dataset_version": "history-old",
+            "historical_dataset_version_scope": "artifact_build",
             "total": 2, "offset": 0, "limit": 50, "sort": "market",
             "assets": [{"asset_id": "player:1"}, {"asset_id": "player:2"}],
         }
@@ -515,6 +517,7 @@ class RestartReuseValidationTests(unittest.TestCase):
         after.update({
             "market_generation": "market-new", "generated_at": "market-new",
             "brain_generation": "brain-new", "valuation_generation": "value-new",
+            "historical_dataset_version": "history-new",
         })
         evidence = _material_first_page_comparison(
             json.dumps(before).encode(), json.dumps(after).encode(),
@@ -526,6 +529,7 @@ class RestartReuseValidationTests(unittest.TestCase):
     def test_material_first_page_rejects_row_change_or_reorder(self) -> None:
         before = {
             "market_generation": "old", "generated_at": "old",
+            "historical_dataset_version_scope": "artifact_build",
             "assets": [{"asset_id": "player:1", "value": 1}, {"asset_id": "player:2", "value": 2}],
         }
         changed = json.loads(json.dumps(before))
@@ -543,9 +547,13 @@ class RestartReuseValidationTests(unittest.TestCase):
                 )
 
     def test_material_first_page_rejects_unknown_or_stale_envelope(self) -> None:
-        before = {"market_generation": "old", "generated_at": "old", "assets": []}
+        before = {
+            "market_generation": "old", "generated_at": "old",
+            "historical_dataset_version_scope": "artifact_build", "assets": [],
+        }
         unexpected = {
             "market_generation": "new", "generated_at": "new", "total": 2,
+            "historical_dataset_version_scope": "artifact_build",
             "assets": [],
         }
         with self.assertRaisesRegex(AssertionError, "unexpected envelope"):
@@ -553,7 +561,10 @@ class RestartReuseValidationTests(unittest.TestCase):
                 json.dumps(before).encode(), json.dumps(unexpected).encode(),
                 old_market_generation="old", new_market_generation="new",
             )
-        stale = {"market_generation": "old", "generated_at": "old", "assets": []}
+        stale = {
+            "market_generation": "old", "generated_at": "old",
+            "historical_dataset_version_scope": "artifact_build", "assets": [],
+        }
         with self.assertRaisesRegex(AssertionError, "stale generation"):
             _material_first_page_comparison(
                 json.dumps(before).encode(), json.dumps(stale).encode(),

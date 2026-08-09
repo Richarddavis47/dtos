@@ -223,6 +223,7 @@ class AssetMarket:
         self, brain_snapshot_id: str | None = None,
         dataset_version: str | None = None,
     ) -> dict[str, Any]:
+        dataset_scope = "live_store" if dataset_version is not None else "artifact_build"
         identity = {
             "application_version": VERSION,
             "application_build": BUILD_NUMBER,
@@ -230,6 +231,7 @@ class AssetMarket:
             "league_id": self.league_id,
             "historical_dataset_version": dataset_version
             or self.dataset_version,
+            "historical_dataset_version_scope": dataset_scope,
             "market_generation": self.generated_at,
             "brain_generation": self.brain_generation,
             "valuation_generation": (
