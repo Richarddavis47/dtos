@@ -21,6 +21,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _configured_fixture_contract,
     _diagnostic_request,
     _identity,
+    _material_target_comparison,
     _nonsemantic_payload_comparison,
     _normalized_headers,
     _restart_reuse,
@@ -476,6 +477,31 @@ class RestartReuseValidationTests(unittest.TestCase):
                 _nonsemantic_payload_comparison(
                     json.dumps(before).encode(), json.dumps(after).encode(),
                 )
+
+    def test_material_target_comparison_requires_exact_controlled_row_change(self) -> None:
+        before = {"results": [{
+            "asset_id": "player:10213",
+            "values": {"intrinsic_dtos_value": 20, "league_adjusted_value": 20},
+            "confidence": 0,
+        }]}
+        after = json.loads(json.dumps(before))
+        after["results"][0]["values"].update({
+            "intrinsic_dtos_value": 30, "league_adjusted_value": 30,
+        })
+        differences = _material_target_comparison(
+            json.dumps(before).encode(), json.dumps(after).encode(),
+        )
+        self.assertEqual(len(differences), 2)
+        after["results"][0]["confidence"] = 1
+        with self.assertRaisesRegex(AssertionError, "unexpected target fields"):
+            _material_target_comparison(
+                json.dumps(before).encode(), json.dumps(after).encode(),
+            )
+
+    def test_material_target_comparison_rejects_missing_target(self) -> None:
+        body = json.dumps({"results": []}).encode()
+        with self.assertRaisesRegex(AssertionError, "target is unavailable"):
+            _material_target_comparison(body, body)
 
 
 if __name__ == "__main__":

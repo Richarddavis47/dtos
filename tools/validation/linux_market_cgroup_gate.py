@@ -652,6 +652,31 @@ def _nonsemantic_payload_comparison(before_body: bytes, after_body: bytes) -> di
     }
 
 
+def _material_target_comparison(
+    before_body: bytes, after_body: bytes,
+) -> list[dict[str, object]]:
+    before_rows = json.loads(before_body).get("results") or []
+    after_rows = json.loads(after_body).get("results") or []
+    expected_ids = ["player:10213"]
+    if [row.get("asset_id") for row in before_rows] != expected_ids:
+        raise AssertionError("material target is unavailable in compact market search")
+    if [row.get("asset_id") for row in after_rows] != expected_ids:
+        raise AssertionError("published material target is unavailable in compact search")
+    differences = _json_differences(
+        before_rows[0], after_rows[0], "$.assets[player:10213]",
+    )
+    expected_paths = {
+        "$.assets[player:10213].values.intrinsic_dtos_value",
+        "$.assets[player:10213].values.league_adjusted_value",
+    }
+    if {difference["path"] for difference in differences} != expected_paths:
+        raise AssertionError(
+            "material replacement changed unexpected target fields: "
+            + json.dumps(differences, sort_keys=True)
+        )
+    return differences
+
+
 def _nonsemantic_reuse(
     first_generation: object, first_build_count: int, expected_body: bytes,
 ) -> dict[str, object]:
@@ -737,6 +762,9 @@ def _replacement_profile(
     first_generation: object, first_build_count: int, expected_body: bytes,
 ) -> tuple[dict[str, object], dict[str, object]]:
     before_semantic = _semantic_contract()
+    _target_status, target_before_body, _target_elapsed = _request(
+        "/api/market/search?q=Validation%20Player%2010213&limit=50",
+    )
     marker = f"validation-material-{time.time_ns()}"
     mutation_status, mutation_body, _headers, _client, _server, _profile = _profiled_request(
         f"/__validation__/material-market-change?marker={quote(marker)}", method="POST",
@@ -883,21 +911,19 @@ def _replacement_profile(
         raise AssertionError("replacement generation was not published")
     if result["request_thread_generation_work"] or result["sqlite_query_count"]:
         raise AssertionError("replacement warming performed request-thread generation work")
+    published_artifact = _artifact_state()
+    if published_artifact.get("generation") != changed_semantic.get("semantic_generation"):
+        raise AssertionError("validator sampled before the new semantic generation published")
     _status, final_body, _elapsed = _request("/api/market/assets?limit=50")
-    before_rows = {
-        row["asset_id"]: row for row in json.loads(expected_body).get("assets") or []
-    }
-    after_rows = {
-        row["asset_id"]: row for row in json.loads(final_body).get("assets") or []
-    }
-    changed_assets = [
-        asset_id for asset_id in sorted(before_rows)
-        if before_rows[asset_id] != after_rows.get(asset_id)
-    ]
-    if changed_assets != ["player:10213"]:
-        raise AssertionError(
-            f"material replacement changed unexpected assets: {changed_assets}"
-        )
+    if final_body != expected_body:
+        raise AssertionError("material replacement changed unrelated first-page rows")
+    _target_status, target_after_body, _target_elapsed = _request(
+        "/api/market/search?q=Validation%20Player%2010213&limit=50",
+    )
+    target_differences = _material_target_comparison(
+        target_before_body, target_after_body,
+    )
+    changed_assets = ["player:10213"]
     repeat_bodies = [_request("/api/market/assets?limit=50")[1] for _ in range(3)]
     repeated_health = _market_health()
     repeated_cache = repeated_health.get("cache") or {}
@@ -914,6 +940,8 @@ def _replacement_profile(
         "changed_assets": changed_assets,
         "controlled_output_difference": True,
         "mutation": mutation,
+        "target_row_differences": target_differences,
+        "published_semantic_generation": published_artifact.get("generation"),
     })
     return final_health, result
 
