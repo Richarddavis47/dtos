@@ -230,9 +230,11 @@ def _archive_cache_assessment(
         for counts in counts_by_season.values()
         if isinstance(counts, dict)
     ) if isinstance(counts_by_season, dict) else 0
+    canonical_event_count = int(coverage.get("asset_event_count") or 0)
+    verified_evidence_count = canonical_event_count or canonical_record_count
     coverage_valid = (
         coverage_status == 200
-        and canonical_record_count == expected_records
+        and verified_evidence_count == expected_records
         and int(progress.get("completed_steps") or 0) == 5
         and int(progress.get("total_steps") or 0) == 6
         and progress.get("status") == "completed_with_pending"
@@ -272,6 +274,8 @@ def _archive_cache_assessment(
         "inactive_file_growth_bytes": growth,
         "coverage_valid": coverage_valid,
         "canonical_historical_record_count": canonical_record_count,
+        "canonical_asset_event_count": canonical_event_count,
+        "verified_evidence_count": verified_evidence_count,
     }
 
 
@@ -334,7 +338,9 @@ def _combined_read_audit() -> dict[str, object]:
         after = _memory_evidence(f"{phase}_after")
         return {
             "path": path, "status": status, "duration_ms": round(duration_ms, 3),
-            "response_bytes": len(body.encode("utf-8")),
+            "response_bytes": len(
+                body if isinstance(body, bytes) else body.encode("utf-8")
+            ),
             "memory_before": before, "memory_after": after,
         }
 

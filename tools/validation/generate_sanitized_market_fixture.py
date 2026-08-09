@@ -364,7 +364,10 @@ def main() -> int:
     summary = {
         "fixture": "sanitized-generated-v1",
         "assets": ASSET_COUNT,
-        "historical_records": HISTORICAL_COUNT,
+        "historical_records": (
+            PRODUCTION_HISTORICAL_RECORDS if production_shaped
+            else HISTORICAL_COUNT
+        ),
         "database_shape": "production" if production_shaped else "compact",
         "historical_progress": "5/6",
         "generated_at": datetime.now(UTC).isoformat(),

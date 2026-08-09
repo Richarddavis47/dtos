@@ -89,6 +89,18 @@ class ArchiveCacheValidationTests(unittest.TestCase):
         self.assertTrue(result["passed"])
         self.assertEqual(result["canonical_historical_record_count"], 30_726)
 
+    def test_production_archive_contract_uses_canonical_asset_events(self) -> None:
+        coverage = self.coverage()
+        coverage["asset_event_count"] = 30_726
+        coverage["counts_by_season"] = {"2021": {"player_week": 25_308}}
+        result = _archive_cache_assessment(
+            self.snapshot(3 * 1024 * 1024),
+            self.snapshot(3 * 1024 * 1024),
+            coverage_status=200, coverage=coverage,
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["verified_evidence_count"], 30_726)
+
     def test_archive_cache_mode_a_newly_warmed(self) -> None:
         result = _archive_cache_assessment(
             self.snapshot(1 * 1024 * 1024),

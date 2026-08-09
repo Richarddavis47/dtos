@@ -27,7 +27,7 @@ jobs:
           docker run --rm \
             --volume "$PWD/.validation/fixture-${{ matrix.scenario }}:/fixture" \
             --env DTOS_FIXTURE_ROOT=/fixture \
-            --env DTOS_PRODUCTION_SHAPED_FIXTURE=${{ matrix.scenario == 'combined-read' && '1' || '0' }} \
+            --env DTOS_PRODUCTION_SHAPED_FIXTURE=${{ matrix.scenario != 'ordinary' && '1' || '0' }} \
             dtos-market-cgroup:validation \
             python -m tools.validation.generate_sanitized_market_fixture
           docker run --rm \
@@ -39,7 +39,7 @@ jobs:
             --env DTOS_BENCHMARK_OUTPUT=/output/summary.json \
             --env DTOS_ARCHIVE_WARMED=${{ matrix.scenario == 'archive-warmed' && '1' || '0' }} \
             --env DTOS_COMBINED_READ=${{ matrix.scenario == 'combined-read' && '1' || '0' }} \
-            --env DTOS_PRODUCTION_SHAPED_FIXTURE=${{ matrix.scenario == 'combined-read' && '1' || '0' }} \
+            --env DTOS_PRODUCTION_SHAPED_FIXTURE=${{ matrix.scenario != 'ordinary' && '1' || '0' }} \
             --env DTOS_CACHE_FILE=/fixture/dtos_cache.json \
             --env DTOS_HISTORY_DB_FILE=/fixture/dtos_history.sqlite3 \
             --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
