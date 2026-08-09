@@ -26,6 +26,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _artifact_state,
     _application_fixture_contract,
     _configured_fixture_contract,
+    _combined_read_audit,
     _diagnostic_request,
     _identity,
     _material_target_comparison,
@@ -168,6 +169,32 @@ class ArchiveCacheValidationTests(unittest.TestCase):
         self.assertEqual(count, HISTORICAL_COUNT)
         self.assertEqual(progress["completed_seasons"], list(range(2021, 2026)))
         self.assertEqual(progress["pending_seasons"], [2026])
+
+    @patch("tools.validation.linux_market_cgroup_gate._cgroup_values")
+    @patch("tools.validation.linux_market_cgroup_gate._memory_evidence")
+    @patch("tools.validation.linux_market_cgroup_gate._request")
+    def test_combined_read_audit_runs_complete_and_overlapping_cycles(
+        self, request, memory_evidence, cgroup_values,
+    ) -> None:
+        request.return_value = (200, '{"status":"ok"}', 2.0)
+        memory_evidence.side_effect = lambda phase: {
+            "lifecycle_phase": phase, "raw_cgroup_bytes": 1_000,
+        }
+        cgroup_values.return_value = {
+            "oom": 0, "oom_kill": 0, "oom_group_kill": 0,
+        }
+        result = _combined_read_audit()
+        self.assertEqual(len(result["cycles"]), 2)
+        self.assertEqual(request.call_count, 20)
+        self.assertEqual(
+            {sample["path"] for sample in result["cycles"][0]["overlapping"]},
+            {
+                "/api/history/coverage", "/api/market/health",
+                "/api/market/assets?limit=50",
+                "/api/market/assets/player:10213",
+                "/api/market/search?q=QB&limit=50",
+            },
+        )
 
 
 def _published(generation: str = "market-2") -> dict[str, object]:

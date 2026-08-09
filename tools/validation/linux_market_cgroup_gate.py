@@ -13,6 +13,7 @@ import subprocess
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from uuid import uuid4
 from pathlib import Path
 from urllib.error import HTTPError
@@ -312,6 +313,60 @@ def _archive_cache_retained(snapshot: dict[str, object], threshold: int) -> bool
         and isinstance(snapshot.get("inactive_file_bytes"), int)
         and int(snapshot["inactive_file_bytes"]) >= threshold
     )
+
+
+def _combined_read_audit() -> dict[str, object]:
+    """Run the observed production audit plus supported overlapping reads."""
+    sequential_paths = (
+        "/health/ready", "/api/history/coverage", "/api/market/health",
+        "/api/market/assets?limit=1", "/api/market/search?q=QB&limit=1",
+    )
+    overlapping_paths = (
+        "/api/history/coverage", "/api/market/health",
+        "/api/market/assets?limit=50",
+        "/api/market/assets/player:10213",
+        "/api/market/search?q=QB&limit=50",
+    )
+
+    def observed(path: str, phase: str) -> dict[str, object]:
+        before = _memory_evidence(f"{phase}_before")
+        status, body, duration_ms = _request(path)
+        after = _memory_evidence(f"{phase}_after")
+        return {
+            "path": path, "status": status, "duration_ms": round(duration_ms, 3),
+            "response_bytes": len(body.encode("utf-8")),
+            "memory_before": before, "memory_after": after,
+        }
+
+    cycles = []
+    for cycle_index in range(2):
+        sequential = []
+        for index, path in enumerate(sequential_paths):
+            sample = observed(path, f"combined_{cycle_index}_sequential_{index}")
+            sequential.append(sample)
+            if sample["status"] != 200:
+                raise AssertionError(f"combined audit failed: {path}={sample['status']}")
+        overlapping = []
+        with ThreadPoolExecutor(max_workers=len(overlapping_paths)) as executor:
+            futures = {
+                executor.submit(
+                    observed, path, f"combined_{cycle_index}_overlap_{index}",
+                ): path
+                for index, path in enumerate(overlapping_paths)
+            }
+            for future in as_completed(futures):
+                sample = future.result()
+                overlapping.append(sample)
+                if sample["status"] != 200:
+                    raise AssertionError(
+                        f"combined overlap failed: {sample['path']}={sample['status']}"
+                    )
+        overlapping.sort(key=lambda sample: overlapping_paths.index(sample["path"]))
+        cycles.append({"sequential": sequential, "overlapping": overlapping})
+    events = _cgroup_values("memory.events")
+    if any(int(events.get(name) or 0) for name in ("oom", "oom_kill", "oom_group_kill")):
+        raise AssertionError(f"combined audit recorded OOM events: {events}")
+    return {"cycles": cycles, "memory_events": events}
 
 
 class Monitor:
@@ -1380,6 +1435,7 @@ def main() -> int:
 
     fixture_contract = _configured_fixture_contract()
     archive_warmed = os.environ.get("DTOS_ARCHIVE_WARMED") == "1"
+    combined_read = os.environ.get("DTOS_COMBINED_READ") == "1"
     summary: dict[str, object] = {
         "schema": "dtos-linux-market-memory-v1",
         "memory_max": memory_max,
@@ -1387,7 +1443,10 @@ def main() -> int:
             "assets": 12_322, "historical_records": 30_726, "progress": "5/6",
             "configuration": fixture_contract,
         },
-        "scenario": "archive_warmed" if archive_warmed else "ordinary",
+        "scenario": (
+            "combined_read" if combined_read else
+            "archive_warmed" if archive_warmed else "ordinary"
+        ),
         "phases": {},
         "passed": False,
         "completed": False,
@@ -1472,6 +1531,20 @@ def main() -> int:
                 "timestamp": time.time(), "latency_ms": latency_result,
                 "memory_current": _cgroup("memory.current"),
             }
+            if combined_read:
+                combined_before = _memory_evidence("combined_read_before")
+                memory_evidence.append(combined_before)
+                combined_result = _combined_read_audit()
+                combined_after = _memory_evidence("combined_read_after")
+                memory_evidence.append(combined_after)
+                summary["phases"]["combined_read"] = {
+                    "timestamp": time.time(), "before": combined_before,
+                    "after": combined_after, **combined_result,
+                }
+                if monitor.effective_peak >= COLD_MAX:
+                    raise AssertionError(
+                        "combined-read effective working set exceeded the 1.5 GiB ceiling"
+                    )
             first_generation = (health.get("cache") or {}).get("market_generation")
             first_build_count = int((health.get("cache") or {}).get("build_count") or 0)
             _baseline_status, baseline_body, _baseline_ms = _request(

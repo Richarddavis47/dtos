@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scenario: [ordinary, archive-warmed]
+        scenario: [ordinary, archive-warmed, combined-read]
     steps:
       - uses: actions/checkout@v4
       - name: Build production-equivalent image
@@ -30,6 +30,8 @@ jobs:
             --volume "$PWD/.validation/linux-market-${{ matrix.scenario }}:/output" \
             --env DTOS_BENCHMARK_OUTPUT=/output/summary.json \
             --env DTOS_ARCHIVE_WARMED=${{ matrix.scenario == 'archive-warmed' && '1' || '0' }} \
+            --env DTOS_COMBINED_READ=${{ matrix.scenario == 'combined-read' && '1' || '0' }} \
+            --env DTOS_PRODUCTION_SHAPED_FIXTURE=${{ matrix.scenario == 'combined-read' && '1' || '0' }} \
             --env DTOS_CACHE_FILE=/fixture/dtos_cache.json \
             --env DTOS_HISTORY_DB_FILE=/fixture/dtos_history.sqlite3 \
             --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
