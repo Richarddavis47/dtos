@@ -598,6 +598,79 @@ class HistoricalStore:
             ),
         }
 
+    def canonical_enrichment_progress(
+        self, league_id: str, seasons: tuple[int, ...], *,
+        provider: str, importer_version: str,
+    ) -> dict[str, Any]:
+        """Derive league progress from durable season checkpoints, not jobs."""
+        requested = tuple(sorted({int(season) for season in seasons}))
+        if not requested:
+            return {
+                "completed_seasons": [], "pending_seasons": [],
+                "failed_seasons": [], "invalidated_seasons": [],
+                "missing_seasons": [], "identity_generation": 0,
+                "semantic_generations": {},
+            }
+        placeholders = ",".join("?" for _ in requested)
+        with self.connection() as connection:
+            mapping_generation = self._generation(
+                connection, "identity_mapping_generation",
+            )
+            rows = connection.execute(
+                f"""SELECT season,status,identity_generation,error,completed_at
+                FROM import_checkpoints WHERE league_id=?
+                AND data_type='player_week' AND provider=?
+                AND importer_version=? AND week IS NULL
+                AND season IN ({placeholders})""",
+                (league_id, provider, importer_version, *requested),
+            ).fetchall()
+            record_generation = self._generation(
+                connection, self._record_generation_key(league_id),
+            )
+            identity_generation = self._generation(
+                connection, self._IDENTITY_GENERATION_KEY,
+            )
+            quality_generation = self._generation(
+                connection, self._quality_generation_key(league_id),
+            )
+        checkpoints = {int(row["season"]): row for row in rows}
+        pending_statuses = {"pending", "not_yet_available", "unsupported"}
+        completed: list[int] = []
+        pending: list[int] = []
+        failed: list[int] = []
+        invalidated: list[int] = []
+        missing: list[int] = []
+        for season in requested:
+            checkpoint = checkpoints.get(season)
+            if checkpoint is None:
+                missing.append(season)
+                continue
+            status = str(checkpoint["status"])
+            if status == "completed":
+                if int(checkpoint["identity_generation"] or 0) == mapping_generation:
+                    completed.append(season)
+                else:
+                    invalidated.append(season)
+            elif status in pending_statuses:
+                pending.append(season)
+            elif status == "failed":
+                failed.append(season)
+            else:
+                missing.append(season)
+        return {
+            "completed_seasons": completed,
+            "pending_seasons": pending,
+            "failed_seasons": failed,
+            "invalidated_seasons": invalidated,
+            "missing_seasons": missing,
+            "identity_generation": mapping_generation,
+            "semantic_generations": {
+                "historical_records": record_generation,
+                "canonical_identities": identity_generation,
+                "quality_reconciliation": quality_generation,
+            },
+        }
+
     @classmethod
     def _repair_enrichment_progress(cls, connection: sqlite3.Connection) -> int:
         repaired = 0

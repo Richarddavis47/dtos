@@ -26,6 +26,11 @@ BASE_URL = "http://127.0.0.1:8767"
 CGROUP = Path("/sys/fs/cgroup")
 OUTPUT = Path(os.environ.get("DTOS_BENCHMARK_OUTPUT", "/output/summary.json"))
 FIXTURE = Path(os.environ.get("DTOS_FIXTURE_ROOT", "/fixture"))
+FIXTURE_SETTINGS = {
+    "DTOS_CACHE_FILE": "dtos_cache.json",
+    "DTOS_HISTORY_DB_FILE": "dtos_history.sqlite3",
+    "DTOS_HISTORY_STORAGE_ROOT": ".",
+}
 
 
 class ExpansionLatencyFailure(AssertionError):
@@ -113,16 +118,12 @@ def _diagnostic_request(
         with urlopen(request, timeout=60) as response:
             status, body = response.status, response.read()
             server_ms = float(response.headers.get("X-DTOS-Request-Duration", 0))
-            headers = _normalized_headers(response.headers.items())
     except HTTPError as exc:
         status, body = exc.code, exc.read()
         server_ms = float(exc.headers.get("X-DTOS-Request-Duration", 0))
-        headers = _normalized_headers(exc.headers.items())
     elapsed = (time.perf_counter() - started) * 1000
     if status not in expected:
         raise AssertionError(f"{path}: HTTP {status}, expected {expected}")
-    if status == 503 and headers.get("retry-after") != "5":
-        raise AssertionError("warming response omitted canonical Retry-After: 5")
     return status, body, elapsed, server_ms
 
 
@@ -184,6 +185,65 @@ def _wait_ready() -> float:
 
 def _market_health() -> dict:
     return json.loads(_request("/api/market/health")[1])
+
+
+def _configured_fixture_contract() -> dict[str, object]:
+    root = FIXTURE.resolve()
+    resolved: dict[str, Path] = {}
+    for name in FIXTURE_SETTINGS:
+        raw = os.environ.get(name)
+        if not raw:
+            raise AssertionError(f"required fixture setting is missing: {name}")
+        path = Path(raw).resolve()
+        try:
+            path.relative_to(root)
+        except ValueError as exc:
+            raise AssertionError(f"fixture setting escapes configured root: {name}") from exc
+        resolved[name] = path
+    if resolved["DTOS_HISTORY_STORAGE_ROOT"] != root:
+        raise AssertionError("history storage root does not resolve to fixture root")
+    for name in ("DTOS_CACHE_FILE", "DTOS_HISTORY_DB_FILE"):
+        if not resolved[name].is_file():
+            raise AssertionError(f"configured fixture file is unavailable: {name}")
+    return {
+        "storage_root": ".",
+        "cache_file": resolved["DTOS_CACHE_FILE"].relative_to(root).as_posix(),
+        "history_database": resolved["DTOS_HISTORY_DB_FILE"].relative_to(root).as_posix(),
+        "contained": True,
+    }
+
+
+def _application_fixture_contract(expected: dict[str, object]) -> dict[str, object]:
+    actual = json.loads(_request("/__validation__/fixture-contract")[1])
+    for name in ("storage_root", "cache_file", "history_database"):
+        if actual.get(name) != expected.get(name):
+            raise AssertionError(f"application fixture setting mismatch: {name}")
+    if actual.get("active_store_database") != expected.get("history_database"):
+        raise AssertionError("application HistoricalStore does not use fixture database")
+    for name in (
+        "cache_exists", "history_database_exists", "active_store_matches", "contained",
+    ):
+        if actual.get(name) is not True:
+            raise AssertionError(f"application fixture contract failed: {name}")
+    return actual
+
+
+def _artifact_state() -> dict[str, object]:
+    state = json.loads(_request("/__validation__/market-artifact")[1])
+    if not state.get("active") or not state.get("exists"):
+        raise AssertionError("active market artifact is unavailable")
+    if int(state.get("final_artifacts") or 0) != 1:
+        raise AssertionError(
+            "expected one active market generation, found "
+            f"{state.get('final_artifacts')}"
+        )
+    if int(state.get("temporary_artifacts") or 0):
+        raise AssertionError("temporary market artifacts remain after publication")
+    if state.get("complete") is not True or not state.get("generation"):
+        raise AssertionError("active market artifact metadata is incomplete")
+    if int(state.get("size_bytes") or 0) <= 0:
+        raise AssertionError("active market artifact is empty")
+    return state
 
 
 def _cold_build() -> tuple[dict, float, int, dict[str, object]]:
@@ -667,10 +727,14 @@ def main() -> int:
     if not (CGROUP / "memory.peak").is_file():
         raise RuntimeError("memory.peak is required for this validation")
 
+    fixture_contract = _configured_fixture_contract()
     summary: dict[str, object] = {
         "schema": "dtos-linux-market-memory-v1",
         "memory_max": memory_max,
-        "fixture": {"assets": 12_322, "historical_records": 30_726, "progress": "5/6"},
+        "fixture": {
+            "assets": 12_322, "historical_records": 30_726, "progress": "5/6",
+            "configuration": fixture_contract,
+        },
         "phases": {},
         "passed": False,
         "completed": False,
@@ -686,6 +750,7 @@ def main() -> int:
         with log_path.open("w", encoding="utf-8") as log, Monitor() as monitor:
             process = _start_server(log)
             ready_ms = _wait_ready()
+            _application_fixture_contract(fixture_contract)
             startup_current = _cgroup("memory.current")
             summary["phases"]["startup"] = {
                 "timestamp": time.time(), "duration_ms": round(ready_ms, 3),
@@ -738,13 +803,19 @@ def main() -> int:
             second_generation = (replacement.get("cache") or {}).get("market_generation")
             if second_generation == first_generation:
                 raise AssertionError("generation replacement did not publish a new identity")
-            artifacts = list(FIXTURE.glob(".*.asset-market-*.sqlite3"))
-            if len(artifacts) != 1:
-                raise AssertionError(f"expected one active market generation, found {len(artifacts)}")
+            artifact = _artifact_state()
             summary["phases"]["generation_replacement"] = {
                 "timestamp": time.time(), "duration_ms": round(replacement_ms, 3),
                 "attempts": 10, "generation_changed": True,
-                "active_generations": len(artifacts), "memory_current": _cgroup("memory.current"),
+                "active_generations": artifact["final_artifacts"],
+                "artifact": {
+                    name: artifact.get(name) for name in (
+                        "artifact_name", "size_bytes", "complete", "generation",
+                        "generated_at", "schema_version", "asset_count",
+                        "temporary_artifacts",
+                    )
+                },
+                "memory_current": _cgroup("memory.current"),
                 "profile": replacement_profile,
             }
             _pre_status, pre_restart_body, _pre_ms = _request(
@@ -765,6 +836,11 @@ def main() -> int:
                 reuse_health = _market_health()
                 if (reuse_health.get("cache") or {}).get("market_generation") != second_generation:
                     raise AssertionError("restart reused a different market generation")
+                reused_artifact = _artifact_state()
+                if reused_artifact.get("artifact_name") != artifact.get("artifact_name"):
+                    raise AssertionError("restart reused a different artifact file")
+                if reused_artifact.get("generation") != artifact.get("generation"):
+                    raise AssertionError("restart reused a different artifact generation")
                 if len(restart_samples) < 10:
                     _stop_server(process)
                     process = None

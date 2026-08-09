@@ -17,6 +17,7 @@ from starlette.background import BackgroundTask
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
+from config import CACHE_FILE, HISTORY_DATABASE_FILE, HISTORY_STORAGE_ROOT
 from dtos_app import app
 from services.sleeper import LEAGUE_ID, STATE
 import src.core.asset_market.engine as market_engine
@@ -491,6 +492,61 @@ async def replace_generation(marker: str) -> dict[str, Any]:
         "previous_generation": before.get("market_generation"),
         "previous_build_count": before.get("build_count"),
         "lifecycle": lifecycle_coordinator.snapshot().get("phase"),
+    }
+
+
+@app.get("/__validation__/market-artifact")
+async def market_artifact() -> dict[str, Any]:
+    """Describe the active artifact without exposing its backing directory."""
+    with asset_market_cache._lock:
+        market = asset_market_cache._market
+    if market is None:
+        return {"active": False, "final_artifacts": 0, "temporary_artifacts": 0}
+    target = market._artifact_path
+    pattern = f".{market.store.path.stem}.asset-market-*.sqlite3"
+    final_artifacts = list(target.parent.glob(pattern))
+    temporary_artifacts = list(target.parent.glob(f".{target.name}.*.partial"))
+    metadata = MarketReadModel(target).metadata() if target.is_file() else {}
+    return {
+        "active": True,
+        "artifact_name": target.name,
+        "exists": target.is_file(),
+        "size_bytes": target.stat().st_size if target.is_file() else 0,
+        "final_artifacts": len(final_artifacts),
+        "temporary_artifacts": len(temporary_artifacts),
+        "complete": metadata.get("complete") is True,
+        "generation": metadata.get("generation"),
+        "generated_at": metadata.get("generated_at"),
+        "schema_version": metadata.get("schema_version"),
+        "asset_count": metadata.get("asset_count"),
+    }
+
+
+@app.get("/__validation__/fixture-contract")
+async def fixture_contract() -> dict[str, Any]:
+    """Expose relative fixture identities for validation without local paths."""
+    root = HISTORY_STORAGE_ROOT.resolve()
+
+    def relative(path) -> str | None:
+        try:
+            return path.resolve().relative_to(root).as_posix() or "."
+        except ValueError:
+            return None
+
+    return {
+        "storage_root": ".",
+        "cache_file": relative(CACHE_FILE),
+        "history_database": relative(HISTORY_DATABASE_FILE),
+        "active_store_database": relative(historical_store.path),
+        "cache_exists": CACHE_FILE.is_file(),
+        "history_database_exists": HISTORY_DATABASE_FILE.is_file(),
+        "active_store_matches": (
+            historical_store.path.resolve() == HISTORY_DATABASE_FILE.resolve()
+        ),
+        "contained": all(
+            relative(path) is not None
+            for path in (CACHE_FILE, HISTORY_DATABASE_FILE, historical_store.path)
+        ),
     }
 
 

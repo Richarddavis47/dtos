@@ -13,6 +13,7 @@ from src.core.data_platform import data_platform
 from src.core.intelligence import intelligence_orchestrator
 from src.platform.observability import environment_summary, runtime_metrics
 from src.core.historical_memory import historical_storage_status
+from services.history import history_progress_contracts
 
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -62,6 +63,7 @@ def create_api_router(
                 "reason": runtime_metrics.readiness_reason,
                 "runtime": runtime_metrics.health(),
                 "historical_storage": historical_storage_status.public(),
+                **history_progress_contracts(league_id),
             },
             status_code=status_code,
         )

@@ -51,6 +51,7 @@ class Settings:
     history_storage_root: Path
     durable_history_required: bool
     enrichment_batch_size: int
+    historical_start_season: int
     background_start_delay: float
 
     @classmethod
@@ -81,6 +82,9 @@ class Settings:
             enrichment_batch_size=min(
                 1000, _integer("DTOS_ENRICHMENT_BATCH_SIZE", 250, 25),
             ),
+            historical_start_season=_integer(
+                "DTOS_HISTORICAL_START_SEASON", 2021, 2000,
+            ),
             background_start_delay=_number(
                 "DTOS_BACKGROUND_START_DELAY",
                 30,
@@ -104,4 +108,5 @@ HISTORY_DATABASE_FILE = SETTINGS.history_database_file
 HISTORY_STORAGE_ROOT = SETTINGS.history_storage_root
 DURABLE_HISTORY_REQUIRED = SETTINGS.durable_history_required
 ENRICHMENT_BATCH_SIZE = SETTINGS.enrichment_batch_size
+HISTORICAL_START_SEASON = SETTINGS.historical_start_season
 BACKGROUND_START_DELAY = SETTINGS.background_start_delay

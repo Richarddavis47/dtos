@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import copy
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 from fastapi import FastAPI
@@ -13,6 +15,9 @@ from routes.historical_assets import create_historical_assets_router
 from routes.history import create_history_router
 from routes.inspect import create_inspection_router
 from services.history import canonical_history_progress
+from src.core.historical_memory.jobs import ImportJob, utcnow
+from src.core.historical_memory.models import IMPORTER_VERSION
+from src.core.historical_memory.store import HistoricalStore
 
 
 def progress_contract(**changes: object) -> dict[str, object]:
@@ -52,10 +57,41 @@ def job(status: str, progress: dict[str, object]) -> dict[str, object]:
 
 
 class CanonicalHistoryProgressTests(unittest.TestCase):
-    def test_pending_active_season_is_an_honest_terminal_state(self) -> None:
-        result = canonical_history_progress(
-            "L", jobs=[job("completed_with_pending", progress_contract())],
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.store = HistoricalStore(Path(self.temporary.name) / "history.sqlite3")
+
+    def create_job(
+        self, seasons: tuple[int, ...], *, status: str = "completed_with_pending",
+    ) -> ImportJob:
+        result = ImportJob(
+            self.store, "L", seasons, ("player_week",),
+            requested_by="test", provider="nflverse",
         )
+        result.create()
+        self.store.update_job(result.job_id, status=status)
+        return result
+
+    def checkpoint(self, job: ImportJob, season: int, status: str) -> None:
+        self.store.checkpoint(
+            checkpoint_key=f"L:{season}:player_week:nflverse:{IMPORTER_VERSION}",
+            job_id=job.job_id, league_id="L", season=season, week=None,
+            data_type="player_week", provider="nflverse",
+            importer_version=IMPORTER_VERSION, status=status,
+            completed_at=utcnow().isoformat(),
+        )
+
+    def canonical(self) -> dict[str, object]:
+        with patch("services.history.historical_store", self.store):
+            return canonical_history_progress("L", current_year=2026)
+
+    def test_pending_active_season_is_an_honest_terminal_state(self) -> None:
+        broad = self.create_job(tuple(range(2021, 2027)))
+        for season in range(2021, 2026):
+            self.checkpoint(broad, season, "completed")
+        self.checkpoint(broad, 2026, "pending")
+        result = self.canonical()
         self.assertEqual(result["status"], "completed_with_pending")
         self.assertEqual((result["completed_steps"], result["total_steps"]), (5, 6))
         self.assertEqual(result["completed_seasons"], [2021, 2022, 2023, 2024, 2025])
@@ -63,35 +99,50 @@ class CanonicalHistoryProgressTests(unittest.TestCase):
         self.assertTrue(result["terminal"])
         self.assertIn("current-season", str(result["pending_reason"]))
 
-    def test_completed_running_failed_and_inconsistent_states_stay_distinct(self) -> None:
-        complete = progress_contract(
-            completed_steps=6, pending_seasons=[], completed_seasons=list(range(2021, 2027)),
-        )
-        self.assertEqual(
-            canonical_history_progress("L", jobs=[job("completed", complete)])["status"],
-            "completed",
-        )
-        running = progress_contract(completed_steps=2, pending_seasons=[], percentage=33)
-        self.assertEqual(
-            canonical_history_progress("L", jobs=[job("running", running)])["status"],
-            "running",
-        )
-        failed = progress_contract(completed_steps=2, pending_seasons=[], failed_seasons=[2023])
-        self.assertEqual(
-            canonical_history_progress("L", jobs=[job("failed", failed)])["status"],
-            "failed",
-        )
-        corrupt = progress_contract(completed_steps=78, consistent=False)
-        result = canonical_history_progress("L", jobs=[job("completed", corrupt)])
-        self.assertEqual(result["status"], "inconsistent")
-        self.assertNotEqual(result["display_status"], "Completed")
+    def test_latest_narrow_job_does_not_replace_six_season_progress(self) -> None:
+        broad = self.create_job(tuple(range(2021, 2027)))
+        for season in range(2021, 2026):
+            self.checkpoint(broad, season, "completed")
+        self.checkpoint(broad, 2026, "pending")
+        narrow = self.create_job((2026,))
+        self.checkpoint(narrow, 2026, "pending")
+        with patch("services.history.historical_store", self.store):
+            status = __import__("services.history", fromlist=["import_status"]).import_status("L")
+        self.assertEqual(status["canonical_history_progress"]["completed_steps"], 5)
+        self.assertEqual(status["canonical_history_progress"]["total_steps"], 6)
+        self.assertEqual(status["latest_job_progress"]["completed_steps"], 0)
+        self.assertEqual(status["latest_job_progress"]["total_steps"], 1)
 
-    def test_non_player_week_jobs_are_not_the_canonical_enrichment_source(self) -> None:
-        foundation = job("completed", progress_contract(completed_steps=66, total_steps=66))
-        foundation["requested_data_types"] = ["league_season", "player_week"]
-        result = canonical_history_progress("L", jobs=[foundation])
-        self.assertEqual(result["status"], "waiting")
+    def test_completed_current_checkpoint_transitions_to_six_of_six(self) -> None:
+        job = self.create_job(tuple(range(2021, 2027)))
+        for season in range(2021, 2027):
+            self.checkpoint(job, season, "completed")
+        self.store.update_job(job.job_id, status="completed")
+        result = self.canonical()
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual((result["completed_steps"], result["total_steps"]), (6, 6))
+
+    def test_invalidated_checkpoint_reduces_progress_without_mutating_evidence(self) -> None:
+        job = self.create_job(tuple(range(2021, 2027)))
+        for season in range(2021, 2026):
+            self.checkpoint(job, season, "completed")
+        self.checkpoint(job, 2026, "pending")
+        before = self.store.records("L", limit=1)[0]
+        self.store.upsert_identity("p1", "Sleeper", "p1", "Player", 100, utcnow().isoformat(), {})
+        result = self.canonical()
         self.assertEqual(result["completed_steps"], 0)
+        self.assertEqual(result["invalidated_seasons"], [2021, 2022, 2023, 2024, 2025])
+        self.assertEqual(self.store.records("L", limit=1)[0], before)
+
+    def test_overlapping_jobs_and_failed_job_counters_do_not_double_count(self) -> None:
+        first = self.create_job(tuple(range(2021, 2027)))
+        second = self.create_job((2024, 2025, 2026), status="failed")
+        for season in range(2021, 2026):
+            self.checkpoint(first if season < 2024 else second, season, "completed")
+        self.checkpoint(second, 2026, "pending")
+        result = self.canonical()
+        self.assertEqual(result["completed_steps"], 5)
+        self.assertEqual(result["completed_seasons"], [2021, 2022, 2023, 2024, 2025])
 
 
 class HistoryPresentationTests(unittest.TestCase):
@@ -101,6 +152,14 @@ class HistoryPresentationTests(unittest.TestCase):
             "jobs": [persisted],
             "latest": {"status": "complete"},
             "canonical_progress": canonical,
+            "canonical_history_progress": canonical,
+            "latest_job_progress": {
+                "status": canonical["status"],
+                "completed_steps": canonical["completed_steps"],
+                "total_steps": canonical["total_steps"],
+                "current_season": canonical.get("current_season"),
+                "current_data_type": "player_week",
+            },
         }
         app = FastAPI()
 
@@ -166,8 +225,14 @@ class HistoricalInspectionContractTests(unittest.TestCase):
 
         graph = Mock()
         graph.coverage.return_value = {"asset_event_count": 30726}
-        with patch("routes.inspect.canonical_history_progress", return_value=canonical), patch(
-            "routes.historical_assets.canonical_history_progress", return_value=canonical,
+        contracts = {
+            "canonical_history_progress": canonical,
+            "latest_job_progress": {"completed_steps": 0, "total_steps": 1},
+            "active_job_progress": None,
+            "foundation_progress": {"status": "complete"},
+        }
+        with patch("routes.inspect.history_progress_contracts", return_value=contracts), patch(
+            "routes.historical_assets.history_progress_contracts", return_value=contracts,
         ), patch("routes.historical_assets.historical_graph", return_value=graph):
             app.include_router(create_inspection_router(
                 state=state, route_provider=lambda: app.routes, league_id="L",
@@ -181,8 +246,11 @@ class HistoricalInspectionContractTests(unittest.TestCase):
             page = client.get("/api/inspect/pages/history").json()
             coverage = client.get("/api/history/coverage").json()
         self.assertEqual(health["historical_progress"], canonical)
+        self.assertEqual(health["history_progress_contracts"], contracts)
         self.assertEqual(page["historical_progress"], canonical)
+        self.assertEqual(page["history_progress_contracts"], contracts)
         self.assertEqual(coverage["canonical_progress"], canonical)
+        self.assertEqual(coverage["latest_job_progress"]["total_steps"], 1)
         self.assertEqual(coverage["asset_event_count"], 30726)
 
 

@@ -1,0 +1,45 @@
+name: Linux Asset Market lifecycle
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cgroup-lifecycle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production-equivalent image
+        run: docker build --file tools/validation/Dockerfile.market-cgroup --tag dtos-market-cgroup:validation .
+      - name: Run 2 GiB cgroup lifecycle
+        run: |
+          mkdir -p .validation/linux-market
+          docker run --rm \
+            --memory 2g \
+            --memory-swap 2g \
+            --cpus 2 \
+            --volume "$PWD/.validation/linux-market:/output" \
+            --env DTOS_BENCHMARK_OUTPUT=/output/summary.json \
+            --env DTOS_CACHE_FILE=/fixture/dtos_cache.json \
+            --env DTOS_HISTORY_DB_FILE=/fixture/dtos_history.sqlite3 \
+            --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
+            dtos-market-cgroup:validation \
+            sh -c "python -m tools.validation.generate_sanitized_market_fixture && python -m tools.validation.linux_market_cgroup_gate"
+      - name: Verify sanitized result
+        if: always()
+        run: |
+          test -f .validation/linux-market/summary.json
+          python -c "import json, pathlib; p=json.loads(pathlib.Path('.validation/linux-market/summary.json').read_text()); assert p.get('completed') is True and p.get('passed') is True and p.get('exit_code') == 0"
+      - name: Upload sanitized benchmark summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-market-lifecycle-summary
+          path: .validation/linux-market/summary.json
+          if-no-files-found: error
+          retention-days: 14

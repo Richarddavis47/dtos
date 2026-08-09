@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Canonical Historical Progress Selection - DTOS v1.8.7
+
+- Durable configured-season checkpoint progress shared by APIs, UI, readiness, inspection, DINS, and Asset Market metadata.
+- Separate canonical, latest-job, active-job, and foundation progress contracts.
+- Lifecycle-aware bounded market warming validation.
+
 ### Asynchronous Market Generation - DTOS v1.8.6
 
 - Claim cold builds from bounded in-memory state and return warming immediately.

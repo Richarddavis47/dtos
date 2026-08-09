@@ -2,11 +2,18 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 import unittest
 from collections import deque
+from pathlib import Path
 from unittest.mock import patch
 
 from tools.validation.linux_market_cgroup_gate import (
+    _artifact_state,
+    _application_fixture_contract,
+    _configured_fixture_contract,
+    _diagnostic_request,
     _identity,
     _normalized_headers,
     _restart_reuse,
@@ -18,7 +25,7 @@ DETAIL = "Asset Market generation is building safely in the background; retry sh
 
 def _published(generation: str = "market-2") -> dict[str, object]:
     return {
-        "application_version": "1.8.6", "application_build": 1806,
+        "application_version": "1.8.7", "application_build": 1807,
         "market_schema_version": "1.0", "league_id": "league-1",
         "historical_dataset_version": "history-1",
         "market_generation": generation, "brain_generation": "brain-1",
@@ -43,6 +50,24 @@ class _Clock:
 
     def sleep(self, seconds: float) -> None:
         self.value += seconds
+
+
+class _ReadyResponse:
+    status = 503
+    headers = {
+        "Content-Type": "application/json",
+        "X-DTOS-Request-Duration": "2.5",
+    }
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args) -> None:
+        return None
+
+    @staticmethod
+    def read() -> bytes:
+        return b'{"detail":"Waiting for the initial Sleeper dataset."}'
 
 
 class RestartReuseValidationTests(unittest.TestCase):
@@ -187,6 +212,102 @@ class RestartReuseValidationTests(unittest.TestCase):
                     _normalized_headers([
                         ("Retry-After", values[0]), ("retry-after", values[1]),
                     ])
+
+    def test_readiness_503_does_not_require_market_retry_header(self) -> None:
+        with patch(
+            "tools.validation.linux_market_cgroup_gate.urlopen",
+            return_value=_ReadyResponse(),
+        ):
+            status, body, _client_ms, server_ms = _diagnostic_request(
+                "/health/ready", (200, 503),
+            )
+        self.assertEqual(status, 503)
+        self.assertIn(b"initial Sleeper dataset", body)
+        self.assertEqual(server_ms, 2.5)
+
+    def test_artifact_discovery_uses_application_contract(self) -> None:
+        payload = {
+            "active": True,
+            "artifact_name": ".history.asset-market-generation.sqlite3",
+            "exists": True,
+            "size_bytes": 4096,
+            "final_artifacts": 1,
+            "temporary_artifacts": 0,
+            "complete": True,
+            "generation": "generation-1",
+        }
+        response = (200, json.dumps(payload).encode(), 1.0)
+        with patch(
+            "tools.validation.linux_market_cgroup_gate._request",
+            return_value=response,
+        ):
+            state = _artifact_state()
+        self.assertEqual(state["generation"], "generation-1")
+        self.assertNotIn("directory", state)
+
+    def test_artifact_discovery_rejects_partial_or_missing_state(self) -> None:
+        invalid = (
+            {"active": False, "final_artifacts": 0, "temporary_artifacts": 0},
+            {
+                "active": True, "exists": True, "size_bytes": 4096,
+                "final_artifacts": 1, "temporary_artifacts": 1,
+                "complete": True, "generation": "generation-1",
+            },
+        )
+        for payload in invalid:
+            with self.subTest(payload=payload), patch(
+                "tools.validation.linux_market_cgroup_gate._request",
+                return_value=(200, json.dumps(payload).encode(), 1.0),
+            ), self.assertRaises(AssertionError):
+                _artifact_state()
+
+    def test_explicit_fixture_configuration_is_contained(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cache = root / "dtos_cache.json"
+            history = root / "dtos_history.sqlite3"
+            cache.write_text("{}", encoding="utf-8")
+            history.write_bytes(b"fixture")
+            environment = {
+                "DTOS_CACHE_FILE": str(cache),
+                "DTOS_HISTORY_DB_FILE": str(history),
+                "DTOS_HISTORY_STORAGE_ROOT": str(root),
+            }
+            with patch.dict(os.environ, environment, clear=False), patch(
+                "tools.validation.linux_market_cgroup_gate.FIXTURE", root,
+            ):
+                contract = _configured_fixture_contract()
+        self.assertEqual(contract["cache_file"], "dtos_cache.json")
+        self.assertEqual(contract["history_database"], "dtos_history.sqlite3")
+        self.assertTrue(contract["contained"])
+
+    def test_missing_explicit_fixture_setting_cannot_use_default(self) -> None:
+        with patch.dict(os.environ, {}, clear=True), self.assertRaisesRegex(
+            AssertionError, "required fixture setting is missing",
+        ):
+            _configured_fixture_contract()
+
+    def test_application_and_validator_fixture_contracts_must_match(self) -> None:
+        expected = {
+            "storage_root": ".", "cache_file": "dtos_cache.json",
+            "history_database": "dtos_history.sqlite3", "contained": True,
+        }
+        actual = {
+            **expected, "active_store_database": "dtos_history.sqlite3",
+            "cache_exists": True, "history_database_exists": True,
+            "active_store_matches": True,
+        }
+        with patch(
+            "tools.validation.linux_market_cgroup_gate._request",
+            return_value=(200, json.dumps(actual).encode(), 1.0),
+        ):
+            self.assertEqual(_application_fixture_contract(expected), actual)
+        leaked = {**actual, "active_store_database": "default.sqlite3"}
+        with patch(
+            "tools.validation.linux_market_cgroup_gate._request",
+            return_value=(200, json.dumps(leaked).encode(), 1.0),
+        ), self.assertRaisesRegex(AssertionError, "HistoricalStore"):
+            _application_fixture_contract(expected)
 
 
 if __name__ == "__main__":

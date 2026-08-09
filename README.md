@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.8.6 returns cold Asset Market warming responses immediately and resolves durable generation, identity archives, compatible artifacts, construction, and publication in one single-flight background worker. Liveness, market health, and historical reads remain responsive while the canonical generation is prepared, and compatible last-valid generations remain available during atomic replacement. See the [Historical Asset Graph](docs/HISTORICAL_ASSET_GRAPH.md) and [canonical Brain integration](docs/BRAIN_ARCHITECTURE.md).
+DTOS v1.8.7 derives canonical league-wide historical progress from durable season checkpoints while keeping narrow refresh-job and foundation progress separate. Asset Market warming remains bounded across registered lifecycle blockers and proceeds through one eligible background generation. See the [Historical Asset Graph](docs/HISTORICAL_ASSET_GRAPH.md) and [canonical Brain integration](docs/BRAIN_ARCHITECTURE.md).
 
 DTOS v1.6.7 publishes immutable production DINS bundles through GitHub Releases and
 validates them dynamically without changing the inspected commit. DTOS v1.6.6 corrected Team Headquarters mobile overflow while preserving Product
