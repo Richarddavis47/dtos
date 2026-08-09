@@ -6,6 +6,7 @@ import os
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from src.core.historical_memory.store import HistoricalStore
 
@@ -13,6 +14,33 @@ ASSET_COUNT = 12_322
 HISTORICAL_COUNT = 30_726
 LEAGUE_ID = "validation-league-1804"
 STAMP = "2026-08-07T00:00:00+00:00"
+
+
+def material_market_fixture_change(
+    current: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Change one attached value consumed by the canonical valuation universe."""
+    normalized = current.get("normalized_players")
+    if not isinstance(normalized, dict):
+        raise ValueError("Canonical normalized-player map is unavailable.")
+    target = normalized.get("10213")
+    if not isinstance(target, dict):
+        raise ValueError("Canonical fixture asset player:10213 is unavailable.")
+    if "dtos_value" not in target or not isinstance(target["dtos_value"], (int, float)):
+        raise ValueError("Canonical fixture dtos_value is unavailable.")
+    data = json.loads(json.dumps(current))
+    attached = data["normalized_players"]["10213"]
+    before = attached["dtos_value"]
+    after = before + 1 if before < 100 else before - 1
+    attached["dtos_value"] = after
+    if data["normalized_players"]["10213"]["dtos_value"] != after:
+        raise ValueError("Canonical fixture mutation was not attached.")
+    return data, {
+        "asset_id": "player:10213",
+        "field": "normalized_players.10213.dtos_value",
+        "before": before, "after": after, "attached": True,
+        "changed_canonical_fields": 1,
+    }
 
 
 def _player(index: int) -> dict:

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import base64
-import copy
 import contextvars
 import json
 import os
@@ -28,6 +27,9 @@ from src.core.asset_market.read_model import MarketReadModel
 from src.core.historical_memory.store import HistoricalStore
 from src.core.historical_memory import historical_store
 from src.platform.lifecycle import LifecycleCoordinator, lifecycle_coordinator
+from tools.validation.generate_sanitized_market_fixture import (
+    material_market_fixture_change,
+)
 
 _profile: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
     "market_validation_profile", default=None,
@@ -486,9 +488,24 @@ async def validation_profile(request: Request, call_next):
 
 @app.post("/__validation__/nonsemantic-refresh")
 async def nonsemantic_refresh(marker: str) -> dict[str, Any]:
-    """Change only timestamp state to prove semantic artifact reuse."""
+    """Change temporal synchronization/history state without market content."""
     before = asset_market_cache.metrics()
+    data = STATE.get("data") or {}
+    report = data.setdefault("valuation_intelligence", {})
+    report["generated_at"] = marker
     STATE["last_sync"] = marker
+    record_key = f"validation:history-only:{marker}"
+    historical_store.append(
+        record_key=record_key, entity_type="transaction", league_id=LEAGUE_ID,
+        source_record_id=marker, observed_at=marker, retrieved_at=marker,
+        provider="SanitizedFixture", availability="available", confidence=100,
+        calculation_method="validation_observation", schema_version="1.0",
+        payload={"type": "history_only_validation"},
+    )
+    with historical_store.connection() as connection:
+        connection.execute(
+            "DELETE FROM historical_records WHERE record_key = ?", (record_key,),
+        )
     return {
         "previous_generation": before.get("market_generation"),
         "previous_build_count": before.get("build_count"),
@@ -498,21 +515,17 @@ async def nonsemantic_refresh(marker: str) -> dict[str, Any]:
 
 @app.post("/__validation__/material-market-change")
 async def material_market_change(marker: str) -> dict[str, Any]:
-    """Change one consumed confidence value and durably retain the fixture state."""
-    data = copy.deepcopy(STATE.get("data") or {})
-    report = data.get("valuation_intelligence") or {}
-    asset = (report.get("assets") or {}).get("player:10213") or {}
-    scores = asset.get("scores") or {}
-    before = int(scores.get("confidence") or 0)
-    scores["confidence"] = min(100, before + 1) if before < 100 else before - 1
-    report["generated_at"] = marker
+    """Change one attached canonical player value and retain the fixture state."""
+    current = STATE.get("data")
+    if not isinstance(current, dict):
+        raise HTTPException(409, "Canonical fixture data is unavailable.")
+    try:
+        data, evidence = material_market_fixture_change(current)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
     STATE["data"] = data
-    STATE["last_sync"] = marker
     save_cache()
-    return {
-        "asset_id": "player:10213", "field": "scores.confidence",
-        "before": before, "after": scores["confidence"],
-    }
+    return {**evidence, "marker": marker}
 
 
 @app.get("/__validation__/semantic-market-contract")

@@ -568,11 +568,15 @@ def _nonsemantic_reuse(
         raise AssertionError("non-semantic refresh published a replacement")
     if cache.get("build_active") or cache.get("market_generation") != first_generation:
         raise AssertionError("non-semantic refresh started a replacement worker")
-    if (
-        (before.get("raw_identities") or {}).get("last_sync")
-        == (after.get("raw_identities") or {}).get("last_sync")
+    before_raw = before.get("raw_identities") or {}
+    after_raw = after.get("raw_identities") or {}
+    for field in (
+        "last_sync", "brain_generated_at", "historical_record_generation",
     ):
-        raise AssertionError("non-semantic fixture mutation did not change raw identity")
+        if before_raw.get(field) == after_raw.get(field):
+            raise AssertionError(
+                f"non-semantic fixture mutation did not change raw identity: {field}"
+            )
     return {
         "classification": "non_semantic_reuse",
         "semantic_generation_stable": True,
@@ -580,8 +584,8 @@ def _nonsemantic_reuse(
         "artifact_compatibility": "compatible",
         "replacement_workers": 0,
         "replacement_builds": 0,
-        "raw_before": before.get("raw_identities"),
-        "raw_after": after.get("raw_identities"),
+        "raw_before": before_raw,
+        "raw_after": after_raw,
         "semantic_before": before.get("semantic_identities"),
         "semantic_after": after.get("semantic_identities"),
     }
@@ -626,9 +630,24 @@ def _replacement_profile(
 ) -> tuple[dict[str, object], dict[str, object]]:
     before_semantic = _semantic_contract()
     marker = f"validation-material-{time.time_ns()}"
-    _profiled_request(
+    mutation_status, mutation_body, _headers, _client, _server, _profile = _profiled_request(
         f"/__validation__/material-market-change?marker={quote(marker)}", method="POST",
     )
+    mutation = json.loads(mutation_body)
+    if mutation_status != 200:
+        raise AssertionError("material fixture mutation was rejected")
+    if mutation.get("asset_id") != "player:10213" or mutation.get("attached") is not True:
+        raise AssertionError("material fixture target is missing or detached")
+    if mutation.get("field") != "normalized_players.10213.dtos_value":
+        raise AssertionError("material fixture changed an unexpected canonical field")
+    if int(mutation.get("changed_canonical_fields") or 0) != 1:
+        raise AssertionError("material fixture did not change exactly one canonical input")
+    if not isinstance(mutation.get("before"), (int, float)) or not isinstance(
+        mutation.get("after"), (int, float),
+    ):
+        raise AssertionError("material fixture scalar evidence is unavailable")
+    if mutation["before"] == mutation["after"]:
+        raise AssertionError("material fixture scalar did not change")
     changed_semantic = _semantic_contract()
     if (
         before_semantic.get("semantic_generation")
@@ -639,6 +658,16 @@ def _replacement_profile(
         raise AssertionError(
             "material artifact mismatch reason was not brain_semantic_output_changed"
         )
+    before_digests = before_semantic.get("semantic_identities") or {}
+    after_digests = changed_semantic.get("semantic_identities") or {}
+    for stable in ("asset_universe_digest", "ownership_dependency_digest"):
+        if before_digests.get(stable) != after_digests.get(stable):
+            raise AssertionError(f"material fixture changed unrelated digest: {stable}")
+    if (
+        before_digests.get("brain_semantic_output_digest")
+        == after_digests.get("brain_semantic_output_digest")
+    ):
+        raise AssertionError("material fixture did not change Brain/valuation digest")
     before_history = _history_metrics()
     samples: list[dict[str, object]] = []
     for sequence in range(1, 11):
@@ -761,12 +790,22 @@ def _replacement_profile(
         raise AssertionError(
             f"material replacement changed unexpected assets: {changed_assets}"
         )
+    repeat_bodies = [_request("/api/market/assets?limit=50")[1] for _ in range(3)]
+    repeated_health = _market_health()
+    repeated_cache = repeated_health.get("cache") or {}
+    if any(body != final_body for body in repeat_bodies):
+        raise AssertionError("repeated material state changed serialized output")
+    if int(repeated_cache.get("build_count") or 0) != first_build_count + 1:
+        raise AssertionError("repeated material state started another construction")
+    if repeated_cache.get("build_active"):
+        raise AssertionError("repeated material state started another worker")
     result.update({
         "semantic_before": before_semantic.get("semantic_identities"),
         "semantic_after": changed_semantic.get("semantic_identities"),
         "incompatibility_reason": changed_semantic.get("artifact_compatibility"),
         "changed_assets": changed_assets,
         "controlled_output_difference": True,
+        "mutation": mutation,
     })
     return final_health, result
 

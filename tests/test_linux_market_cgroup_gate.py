@@ -10,6 +10,10 @@ from collections import deque
 from pathlib import Path
 from unittest.mock import patch
 
+from src.core.valuation.universe import ValuationUniverse
+from tools.validation.generate_sanitized_market_fixture import (
+    material_market_fixture_change,
+)
 from tools.validation.linux_market_cgroup_gate import (
     StartupFailure,
     _artifact_state,
@@ -390,6 +394,52 @@ class RestartReuseValidationTests(unittest.TestCase):
         self.assertEqual(evidence["termination"], "running")
         self.assertEqual(evidence["observations"][0]["status"], 200)
         self.assertNotIn(str(Path(sys.executable).parent), json.dumps(evidence))
+
+    def test_material_fixture_mutation_updates_attached_canonical_input(self) -> None:
+        source = {
+            "normalized_players": {
+                "10213": {"name": "Bijan Robinson", "dtos_value": 91},
+            },
+        }
+        changed, evidence = material_market_fixture_change(source)
+        self.assertEqual(source["normalized_players"]["10213"]["dtos_value"], 91)
+        self.assertEqual(changed["normalized_players"]["10213"]["dtos_value"], 92)
+        self.assertTrue(evidence["attached"])
+        self.assertEqual(evidence["changed_canonical_fields"], 1)
+
+    def test_material_fixture_mutation_changes_only_expected_market_row(self) -> None:
+        source = {
+            "normalized_players": {
+                "10213": {
+                    "name": "Bijan Robinson", "position": "RB", "dtos_value": 91,
+                },
+                "4046": {
+                    "name": "Josh Allen", "position": "QB", "dtos_value": 95,
+                },
+            },
+        }
+        changed, _evidence = material_market_fixture_change(source)
+        with patch("src.core.valuation.universe._now", return_value="fixture-time"):
+            before = {
+                row["asset_id"]: row
+                for row in ValuationUniverse.streaming(source, {}).iter_assets()
+            }
+            after = {
+                row["asset_id"]: row
+                for row in ValuationUniverse.streaming(changed, {}).iter_assets()
+            }
+        changed_rows = sorted(
+            asset_id for asset_id in before if before[asset_id] != after[asset_id]
+        )
+        self.assertEqual(changed_rows, ["player:10213"])
+
+    def test_material_fixture_mutation_rejects_missing_or_detached_target(self) -> None:
+        invalid = ({}, {"normalized_players": {}}, {
+            "normalized_players": {"10213": {"dtos_value": None}},
+        })
+        for source in invalid:
+            with self.subTest(source=source), self.assertRaises(ValueError):
+                material_market_fixture_change(source)
 
 
 if __name__ == "__main__":
