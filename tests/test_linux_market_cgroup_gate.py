@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import json
 import os
+import sqlite3
 import sys
 import tempfile
 import unittest
 from collections import deque
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -15,6 +17,8 @@ from tools.validation.generate_sanitized_market_fixture import (
     HISTORICAL_COUNT,
     LEAGUE_ID,
     _history,
+    _record_payload,
+    _record_provider,
     material_market_fixture_change,
 )
 from src.core.historical_memory.store import HistoricalStore
@@ -26,7 +30,9 @@ from tools.validation.linux_market_cgroup_gate import (
     _artifact_state,
     _application_fixture_contract,
     _configured_fixture_contract,
+    _combined_read_audit,
     _diagnostic_request,
+    _effective_memory_margin,
     _identity,
     _material_target_comparison,
     _material_target_search_path,
@@ -36,6 +42,8 @@ from tools.validation.linux_market_cgroup_gate import (
     _restart_reuse,
     _record_archive_assessment,
     _start_server,
+    _startup_memory_within_limit,
+    _warm_historical_archive,
 )
 
 
@@ -88,6 +96,18 @@ class ArchiveCacheValidationTests(unittest.TestCase):
         self.assertTrue(result["passed"])
         self.assertEqual(result["canonical_historical_record_count"], 30_726)
 
+    def test_production_archive_contract_uses_canonical_asset_events(self) -> None:
+        coverage = self.coverage()
+        coverage["asset_event_count"] = 30_726
+        coverage["counts_by_season"] = {"2021": {"player_week": 25_308}}
+        result = _archive_cache_assessment(
+            self.snapshot(3 * 1024 * 1024),
+            self.snapshot(3 * 1024 * 1024),
+            coverage_status=200, coverage=coverage,
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["verified_evidence_count"], 30_726)
+
     def test_archive_cache_mode_a_newly_warmed(self) -> None:
         result = _archive_cache_assessment(
             self.snapshot(1 * 1024 * 1024),
@@ -130,9 +150,13 @@ class ArchiveCacheValidationTests(unittest.TestCase):
             _record_archive_assessment(
                 phases, self.snapshot(0), self.snapshot(0),
                 coverage_status=200, coverage=self.coverage(), duration_ms=2.0,
+                archive_scan={"record_count": 30_726},
             )
         self.assertIn("archive_warming", phases)
         self.assertFalse(phases["archive_warming"]["assessment"]["passed"])
+        self.assertEqual(
+            phases["archive_warming"]["archive_scan"]["record_count"], 30_726,
+        )
 
     def test_malformed_metrics_fail_closed(self) -> None:
         result = _archive_cache_assessment(
@@ -151,6 +175,21 @@ class ArchiveCacheValidationTests(unittest.TestCase):
             self.snapshot(threshold - 1), threshold,
         ))
 
+    def test_startup_gate_uses_verified_effective_working_set(self) -> None:
+        snapshot = self.snapshot(800 * 1024 * 1024)
+        snapshot["raw_cgroup_bytes"] = 1_300 * 1024 * 1024
+        snapshot["effective_working_set_bytes"] = 500 * 1024 * 1024
+        self.assertTrue(_startup_memory_within_limit(snapshot))
+        snapshot["effective_working_set_bytes"] = 1_300 * 1024 * 1024
+        self.assertFalse(_startup_memory_within_limit(snapshot))
+
+    def test_memory_reserve_uses_verified_effective_peak(self) -> None:
+        limit = 2 * 1024**3
+        self.assertEqual(
+            _effective_memory_margin(limit, 1_300 * 1024**2),
+            748 * 1024**2,
+        )
+
     def test_generated_history_matches_application_league_contract(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "history.sqlite3"
@@ -168,6 +207,58 @@ class ArchiveCacheValidationTests(unittest.TestCase):
         self.assertEqual(count, HISTORICAL_COUNT)
         self.assertEqual(progress["completed_seasons"], list(range(2021, 2026)))
         self.assertEqual(progress["pending_seasons"], [2026])
+
+    def test_production_fixture_player_week_evidence_matches_checkpoints(self) -> None:
+        self.assertEqual(_record_provider("player_week"), "nflverse")
+        self.assertEqual(_record_provider("valuation_snapshot"), "sanitized")
+        player_id, _payload = _record_payload("player_week", 12_321)
+        self.assertEqual(player_id, "v00104")
+
+    def test_archive_warm_scans_real_history_without_decoding_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "history.sqlite3"
+            with closing(sqlite3.connect(path)) as connection:
+                connection.execute(
+                    "CREATE TABLE historical_records (payload TEXT NOT NULL)"
+                )
+                connection.executemany(
+                    "INSERT INTO historical_records VALUES (?)",
+                    [("payload",), ("evidence",)],
+                )
+                connection.commit()
+            with patch.dict(os.environ, {"DTOS_HISTORY_DB_FILE": str(path)}):
+                result = _warm_historical_archive()
+        self.assertEqual(result["record_count"], 2)
+        self.assertGreater(result["payload_bytes_scanned"], 0)
+        self.assertEqual(result["hotset_records"], 2)
+        self.assertGreater(result["hotset_payload_bytes"], 0)
+        self.assertGreater(result["database_pages"], 0)
+
+    @patch("tools.validation.linux_market_cgroup_gate._cgroup_values")
+    @patch("tools.validation.linux_market_cgroup_gate._memory_evidence")
+    @patch("tools.validation.linux_market_cgroup_gate._request")
+    def test_combined_read_audit_runs_complete_and_overlapping_cycles(
+        self, request, memory_evidence, cgroup_values,
+    ) -> None:
+        request.return_value = (200, '{"status":"ok"}', 2.0)
+        memory_evidence.side_effect = lambda phase: {
+            "lifecycle_phase": phase, "raw_cgroup_bytes": 1_000,
+        }
+        cgroup_values.return_value = {
+            "oom": 0, "oom_kill": 0, "oom_group_kill": 0,
+        }
+        result = _combined_read_audit()
+        self.assertEqual(len(result["cycles"]), 2)
+        self.assertEqual(request.call_count, 20)
+        self.assertEqual(
+            {sample["path"] for sample in result["cycles"][0]["overlapping"]},
+            {
+                "/api/history/coverage", "/api/market/health",
+                "/api/market/assets?limit=50",
+                "/api/market/assets/player:10213",
+                "/api/market/search?q=QB&limit=50",
+            },
+        )
 
 
 def _published(generation: str = "market-2") -> dict[str, object]:

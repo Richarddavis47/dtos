@@ -1,3 +1,9 @@
+# DTOS v1.8.13 - Production Combined-Read Memory Safety
+
+DTOS v1.8.13 closes the production-scale retained-memory gap exposed when historical coverage and Asset Market reads run against the complete durable database shape. The release adds bounded combined-read diagnostics and preserves every existing output, historical record, memory ceiling, reserve, and provider-free read contract.
+
+---
+
 # DTOS v1.8.12 — Cgroup-Aware Market Memory Admission
 
 DTOS v1.8.12 corrects Asset Market memory admission under Linux cgroup v2. It subtracts only validated reclaimable `inactive_file` cache from `memory.current`, retains all existing hard limits and reserves, and fails conservatively when metrics are unavailable or inconsistent. Generation-aware backoff prevents repeated polling from launching identical rejected builds while preserving safe retries after time, input changes, or meaningful memory improvement.

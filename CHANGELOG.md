@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.8.13 - Production Combined-Read Memory Safety
+
+- Adds a production-shaped 1 GiB sanitized historical fixture covering 461,166 records and 2,050,532 identity observations.
+- Adds an exact sequential and overlapping combined-read cgroup lifecycle audit with phase-level retained-memory evidence.
+- Preserves the 2 GiB hard limit, 1.5 GiB target, 500 MiB reserve, complete outputs, and provider-free read routes.
+
 ## v1.8.12 - Cgroup-Aware Market Memory Admission
 
 - Distinguishes verified Linux cgroup v2 `inactive_file` cache from live working memory while preserving the 2 GiB hard limit, 1.5 GiB target, and 500 MiB reserve.

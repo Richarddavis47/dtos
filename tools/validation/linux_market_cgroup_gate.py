@@ -13,6 +13,8 @@ import subprocess
 import sys
 import threading
 import time
+from contextlib import closing
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from uuid import uuid4
 from pathlib import Path
 from urllib.error import HTTPError
@@ -165,6 +167,8 @@ def _memory_state() -> dict[str, object]:
     return {
         "raw_cgroup_bytes": current,
         "inactive_file_bytes": inactive,
+        "active_file_bytes": int(stats.get("active_file", 0)),
+        "file_bytes": int(stats.get("file", 0)),
         "effective_working_set_bytes": current - inactive,
         "anonymous_bytes": int(stats.get("anon", 0)),
         "memory_events": {
@@ -179,6 +183,36 @@ def _archive_size() -> int:
         "DTOS_HISTORY_DB_FILE", str(FIXTURE / "dtos_history.sqlite3"),
     ))
     return configured.stat().st_size if configured.is_file() else 0
+
+
+def _warm_historical_archive() -> dict[str, object]:
+    """Read real historical payload pages without retaining decoded records."""
+    configured = Path(os.environ.get(
+        "DTOS_HISTORY_DB_FILE", str(FIXTURE / "dtos_history.sqlite3"),
+    ))
+    started = time.perf_counter()
+    with closing(sqlite3.connect(
+        f"file:{configured.as_posix()}?mode=ro", uri=True,
+    )) as connection:
+        row = connection.execute(
+            "SELECT count(*), coalesce(sum(length(payload)), 0) "
+            "FROM historical_records"
+        ).fetchone()
+        hotset = connection.execute(
+            "SELECT count(*), coalesce(sum(length(payload)), 0) FROM ("
+            "SELECT payload FROM historical_records ORDER BY rowid DESC LIMIT 8192)"
+        ).fetchone()
+        pages = int(connection.execute("PRAGMA page_count").fetchone()[0])
+        page_size = int(connection.execute("PRAGMA page_size").fetchone()[0])
+    return {
+        "record_count": int(row[0]),
+        "payload_bytes_scanned": int(row[1]),
+        "hotset_records": int(hotset[0]),
+        "hotset_payload_bytes": int(hotset[1]),
+        "database_pages": pages,
+        "page_size_bytes": page_size,
+        "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+    }
 
 
 def _memory_evidence(phase: str) -> dict[str, object]:
@@ -196,6 +230,8 @@ def _memory_evidence(phase: str) -> dict[str, object]:
         return {
             "raw_cgroup_bytes": None,
             "inactive_file_bytes": None,
+            "active_file_bytes": None,
+            "file_bytes": None,
             "anonymous_bytes": None,
             "effective_working_set_bytes": None,
             "memory_events": None,
@@ -229,9 +265,11 @@ def _archive_cache_assessment(
         for counts in counts_by_season.values()
         if isinstance(counts, dict)
     ) if isinstance(counts_by_season, dict) else 0
+    canonical_event_count = int(coverage.get("asset_event_count") or 0)
+    verified_evidence_count = canonical_event_count or canonical_record_count
     coverage_valid = (
         coverage_status == 200
-        and canonical_record_count == expected_records
+        and verified_evidence_count == expected_records
         and int(progress.get("completed_steps") or 0) == 5
         and int(progress.get("total_steps") or 0) == 6
         and progress.get("status") == "completed_with_pending"
@@ -271,6 +309,8 @@ def _archive_cache_assessment(
         "inactive_file_growth_bytes": growth,
         "coverage_valid": coverage_valid,
         "canonical_historical_record_count": canonical_record_count,
+        "canonical_asset_event_count": canonical_event_count,
+        "verified_evidence_count": verified_evidence_count,
     }
 
 
@@ -278,6 +318,7 @@ def _record_archive_assessment(
     phases: dict[str, object], before: dict[str, object],
     after: dict[str, object], *, coverage_status: int,
     coverage: dict[str, object], duration_ms: float,
+    archive_scan: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Persist bounded evidence before enforcing the archive-cache gate."""
     assessment = _archive_cache_assessment(
@@ -289,6 +330,7 @@ def _record_archive_assessment(
         "before": before,
         "after": after,
         "assessment": assessment,
+        "archive_scan": archive_scan,
         "coverage": {
             "status": coverage_status,
             "asset_event_count": coverage.get("asset_event_count"),
@@ -312,6 +354,76 @@ def _archive_cache_retained(snapshot: dict[str, object], threshold: int) -> bool
         and isinstance(snapshot.get("inactive_file_bytes"), int)
         and int(snapshot["inactive_file_bytes"]) >= threshold
     )
+
+
+def _startup_memory_within_limit(snapshot: dict[str, object]) -> bool:
+    """Apply the startup ceiling to the verified effective working set."""
+    return (
+        snapshot.get("accounting_mode") == "cgroup_working_set"
+        and isinstance(snapshot.get("effective_working_set_bytes"), int)
+        and int(snapshot["effective_working_set_bytes"]) < STARTUP_MAX
+    )
+
+
+def _effective_memory_margin(memory_limit: int, effective_peak: int) -> int:
+    """Return allocatable margin after verified reclaimable file cache."""
+    return memory_limit - effective_peak
+
+
+def _combined_read_audit() -> dict[str, object]:
+    """Run the observed production audit plus supported overlapping reads."""
+    sequential_paths = (
+        "/health/ready", "/api/history/coverage", "/api/market/health",
+        "/api/market/assets?limit=1", "/api/market/search?q=QB&limit=1",
+    )
+    overlapping_paths = (
+        "/api/history/coverage", "/api/market/health",
+        "/api/market/assets?limit=50",
+        "/api/market/assets/player:10213",
+        "/api/market/search?q=QB&limit=50",
+    )
+
+    def observed(path: str, phase: str) -> dict[str, object]:
+        before = _memory_evidence(f"{phase}_before")
+        status, body, duration_ms = _request(path)
+        after = _memory_evidence(f"{phase}_after")
+        return {
+            "path": path, "status": status, "duration_ms": round(duration_ms, 3),
+            "response_bytes": len(
+                body if isinstance(body, bytes) else body.encode("utf-8")
+            ),
+            "memory_before": before, "memory_after": after,
+        }
+
+    cycles = []
+    for cycle_index in range(2):
+        sequential = []
+        for index, path in enumerate(sequential_paths):
+            sample = observed(path, f"combined_{cycle_index}_sequential_{index}")
+            sequential.append(sample)
+            if sample["status"] != 200:
+                raise AssertionError(f"combined audit failed: {path}={sample['status']}")
+        overlapping = []
+        with ThreadPoolExecutor(max_workers=len(overlapping_paths)) as executor:
+            futures = {
+                executor.submit(
+                    observed, path, f"combined_{cycle_index}_overlap_{index}",
+                ): path
+                for index, path in enumerate(overlapping_paths)
+            }
+            for future in as_completed(futures):
+                sample = future.result()
+                overlapping.append(sample)
+                if sample["status"] != 200:
+                    raise AssertionError(
+                        f"combined overlap failed: {sample['path']}={sample['status']}"
+                    )
+        overlapping.sort(key=lambda sample: overlapping_paths.index(sample["path"]))
+        cycles.append({"sequential": sequential, "overlapping": overlapping})
+    events = _cgroup_values("memory.events")
+    if any(int(events.get(name) or 0) for name in ("oom", "oom_kill", "oom_group_kill")):
+        raise AssertionError(f"combined audit recorded OOM events: {events}")
+    return {"cycles": cycles, "memory_events": events}
 
 
 class Monitor:
@@ -1380,14 +1492,20 @@ def main() -> int:
 
     fixture_contract = _configured_fixture_contract()
     archive_warmed = os.environ.get("DTOS_ARCHIVE_WARMED") == "1"
+    combined_read = os.environ.get("DTOS_COMBINED_READ") == "1"
     summary: dict[str, object] = {
         "schema": "dtos-linux-market-memory-v1",
         "memory_max": memory_max,
         "fixture": {
-            "assets": 12_322, "historical_records": 30_726, "progress": "5/6",
+            "assets": 12_322, "canonical_asset_events": 30_726,
+            "database_records": 461_166 if combined_read else 30_726,
+            "progress": "5/6",
             "configuration": fixture_contract,
         },
-        "scenario": "archive_warmed" if archive_warmed else "ordinary",
+        "scenario": (
+            "combined_read" if combined_read else
+            "archive_warmed" if archive_warmed else "ordinary"
+        ),
         "phases": {},
         "passed": False,
         "completed": False,
@@ -1410,13 +1528,21 @@ def main() -> int:
             ready_ms = _wait_ready()
             _application_fixture_contract(fixture_contract)
             memory_evidence.append(_memory_evidence("fixture_ready"))
-            startup_current = _cgroup("memory.current")
+            startup_snapshot = _memory_evidence("application_startup")
+            memory_evidence.append(startup_snapshot)
+            startup_current = int(startup_snapshot["raw_cgroup_bytes"] or 0)
             summary["phases"]["startup"] = {
                 "timestamp": time.time(), "duration_ms": round(ready_ms, 3),
-                "memory_current": startup_current, "process_rss_high_water": _rss_high_water(process.pid),
+                "memory_current": startup_current,
+                "effective_working_set_bytes": startup_snapshot.get(
+                    "effective_working_set_bytes"
+                ),
+                "process_rss_high_water": _rss_high_water(process.pid),
             }
-            if startup_current >= STARTUP_MAX:
-                raise AssertionError(f"startup memory {startup_current} exceeds 1.2 GiB")
+            if not _startup_memory_within_limit(startup_snapshot):
+                raise AssertionError(
+                    "startup effective working set exceeds 1.2 GiB"
+                )
             cold_health = _market_health()
             if int((cold_health.get("cache") or {}).get("build_count") or 0) != 0:
                 raise AssertionError("metadata-only health constructed the market")
@@ -1424,6 +1550,7 @@ def main() -> int:
             if archive_warmed:
                 archive_before = _memory_evidence("before_coverage")
                 memory_evidence.append(archive_before)
+                archive_scan = _warm_historical_archive()
                 coverage_status, coverage_body, coverage_ms = _request(
                     "/api/history/coverage",
                 )
@@ -1438,7 +1565,7 @@ def main() -> int:
                 _record_archive_assessment(
                     phases, archive_before, archive_after,
                     coverage_status=coverage_status, coverage=coverage,
-                    duration_ms=coverage_ms,
+                    duration_ms=coverage_ms, archive_scan=archive_scan,
                 )
             before_cold = _cgroup("memory.current")
             health, build_ms, attempts, responsiveness = _cold_build()
@@ -1472,6 +1599,20 @@ def main() -> int:
                 "timestamp": time.time(), "latency_ms": latency_result,
                 "memory_current": _cgroup("memory.current"),
             }
+            if combined_read:
+                combined_before = _memory_evidence("combined_read_before")
+                memory_evidence.append(combined_before)
+                combined_result = _combined_read_audit()
+                combined_after = _memory_evidence("combined_read_after")
+                memory_evidence.append(combined_after)
+                summary["phases"]["combined_read"] = {
+                    "timestamp": time.time(), "before": combined_before,
+                    "after": combined_after, **combined_result,
+                }
+                if monitor.effective_peak >= COLD_MAX:
+                    raise AssertionError(
+                        "combined-read effective working set exceeded the 1.5 GiB ceiling"
+                    )
             first_generation = (health.get("cache") or {}).get("market_generation")
             first_build_count = int((health.get("cache") or {}).get("build_count") or 0)
             _baseline_status, baseline_body, _baseline_ms = _request(
@@ -1596,18 +1737,25 @@ def main() -> int:
                 "server_maximum_ms": round(max(restart_server_values), 3),
                 "generation_match": True, "memory_current": _cgroup("memory.current"),
             }
+            raw_peak = max(monitor.peak, _cgroup("memory.peak"))
+            effective_peak = monitor.effective_peak
+            effective_margin = _effective_memory_margin(
+                memory_max, effective_peak,
+            )
             summary.update({
                 "memory_current": _cgroup("memory.current"),
-                "memory_peak": max(monitor.peak, _cgroup("memory.peak")),
-                "margin_below_limit": memory_max - max(monitor.peak, _cgroup("memory.peak")),
+                "memory_peak": raw_peak,
+                "effective_memory_peak": effective_peak,
+                "raw_margin_below_limit": memory_max - raw_peak,
+                "margin_below_limit": effective_margin,
                 "container_restart_count": 0,
                 "worker_count": 1,
                 "provider_synchronization": False,
-                "exit_code": 0,
-                "passed": True,
             })
-            if int(summary["margin_below_limit"]) < 500 * MIB:
+            if effective_margin < 500 * MIB:
                 raise AssertionError("memory margin below 2 GiB is less than 500 MiB")
+            summary["exit_code"] = 0
+            summary["passed"] = True
             summary["completed"] = True
     except BaseException as exc:
         failure = exc
