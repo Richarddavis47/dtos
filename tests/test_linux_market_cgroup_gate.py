@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import tempfile
 import unittest
 from collections import deque
@@ -10,6 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from tools.validation.linux_market_cgroup_gate import (
+    StartupFailure,
     _artifact_state,
     _application_fixture_contract,
     _configured_fixture_contract,
@@ -17,6 +19,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _identity,
     _normalized_headers,
     _restart_reuse,
+    _start_server,
 )
 
 
@@ -68,6 +71,18 @@ class _ReadyResponse:
     @staticmethod
     def read() -> bytes:
         return b'{"detail":"Waiting for the initial Sleeper dataset."}'
+
+
+class _FakeProcess:
+    def __init__(self, returncodes) -> None:
+        self.returncodes = deque(returncodes)
+        self.returncode = None
+        self.pid = 1234
+
+    def poll(self):
+        if self.returncodes:
+            self.returncode = self.returncodes.popleft()
+        return self.returncode
 
 
 class RestartReuseValidationTests(unittest.TestCase):
@@ -308,6 +323,73 @@ class RestartReuseValidationTests(unittest.TestCase):
             return_value=(200, json.dumps(leaked).encode(), 1.0),
         ), self.assertRaisesRegex(AssertionError, "HistoricalStore"):
             _application_fixture_contract(expected)
+
+    def test_startup_exit_preserves_sanitized_log_and_exit_code(self) -> None:
+        process = _FakeProcess([1])
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+            log.write('Traceback\n  File "/app/private/module.py", line 1\nboom\n')
+            log.flush()
+            evidence: dict[str, object] = {}
+            with self.assertRaises(StartupFailure) as raised:
+                _start_server(
+                    log, evidence=evidence,
+                    popen_factory=lambda *_args, **_kwargs: process,
+                    request_observer=lambda _path: (200, b"", 1.0),
+                    memory_observer=lambda: 128,
+                )
+        self.assertEqual(raised.exception.process, process)
+        self.assertEqual(evidence["exit_code"], 1)
+        self.assertEqual(evidence["termination"], "natural_exit")
+        self.assertIn("Traceback", evidence["server_log_tail"])
+        self.assertNotIn("/app/private", evidence["server_log_tail"])
+
+    def test_startup_timeout_preserves_process_for_cleanup(self) -> None:
+        clock = _Clock()
+        process = _FakeProcess([None] * 300)
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+            evidence: dict[str, object] = {}
+            with self.assertRaisesRegex(StartupFailure, "60 seconds") as raised:
+                _start_server(
+                    log, evidence=evidence,
+                    popen_factory=lambda *_args, **_kwargs: process,
+                    request_observer=lambda _path: (_ for _ in ()).throw(
+                        ConnectionRefusedError()
+                    ),
+                    clock=clock, sleeper=clock.sleep,
+                    memory_observer=lambda: 256,
+                )
+        self.assertEqual(raised.exception.process, process)
+        self.assertEqual(evidence["termination"], "startup_timeout")
+        self.assertGreater(len(evidence["observations"]), 0)
+
+    def test_missing_executable_is_reported_as_launch_failure(self) -> None:
+        def missing(*_args, **_kwargs):
+            raise FileNotFoundError("missing executable")
+
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+            evidence: dict[str, object] = {}
+            with self.assertRaisesRegex(StartupFailure, "could not start"):
+                _start_server(
+                    log, evidence=evidence, popen_factory=missing,
+                    memory_observer=lambda: 64,
+                )
+        self.assertEqual(evidence["termination"], "launch_failure")
+        self.assertEqual(evidence["exception_type"], "FileNotFoundError")
+
+    def test_successful_startup_records_bounded_observation(self) -> None:
+        process = _FakeProcess([None])
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+            evidence: dict[str, object] = {}
+            result = _start_server(
+                log, evidence=evidence,
+                popen_factory=lambda *_args, **_kwargs: process,
+                request_observer=lambda _path: (200, b"{}", 1.25),
+                memory_observer=lambda: 512,
+            )
+        self.assertIs(result, process)
+        self.assertEqual(evidence["termination"], "running")
+        self.assertEqual(evidence["observations"][0]["status"], 200)
+        self.assertNotIn(str(Path(sys.executable).parent), json.dumps(evidence))
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import base64
+import re
 import signal
 import statistics
 import subprocess
@@ -37,6 +38,56 @@ class ExpansionLatencyFailure(AssertionError):
     def __init__(self, message: str, result: dict[str, object]) -> None:
         super().__init__(message)
         self.result = result
+
+
+class StartupFailure(RuntimeError):
+    """Preserve the original startup failure and its bounded evidence."""
+
+    def __init__(
+        self, message: str, evidence: dict[str, object],
+        process: subprocess.Popen | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.evidence = evidence
+        self.process = process
+
+
+def _sanitize_server_log(value: str, *, limit: int = 200) -> str:
+    """Return a bounded diagnostic tail without paths, identities, or secrets."""
+    lines = value.splitlines()[-limit:]
+    sanitized = "\n".join(lines)
+    sanitized = re.sub(
+        r'(?i)(authorization|cookie|token|password|secret)([=: ]+)\S+',
+        r'\1\2<redacted>', sanitized,
+    )
+    sanitized = re.sub(
+        r'(?i)(file\s+["\'])(?:[A-Za-z]:\\|/)[^"\']*[\\/]([^\\/"\']+)(["\'])',
+        r'\1<path>/\2\3', sanitized,
+    )
+    sanitized = re.sub(
+        r'(?<![\w.-])(?:[A-Za-z]:\\[^\s"\']+|/(?:app|fixture|home|tmp|var)/[^\s"\']+)',
+        '<path>', sanitized,
+    )
+    sanitized = re.sub(
+        r'\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b',
+        '<database-id>', sanitized,
+    )
+    return sanitized[-32_768:]
+
+
+def _bounded_log_tail(log) -> str:
+    try:
+        log.flush()
+        if log.readable():
+            log.seek(0)
+            value = log.read()
+            log.seek(0, os.SEEK_END)
+            return _sanitize_server_log(value)
+        return _sanitize_server_log(Path(log.name).read_text(
+            encoding="utf-8", errors="replace",
+        ))
+    except (AttributeError, OSError):
+        return ""
 
 
 def _normalized_headers(items) -> dict[str, str]:
@@ -132,28 +183,84 @@ def _request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes,
     return status, body, elapsed
 
 
-def _start_server(log, mode: str = "normal") -> subprocess.Popen:
+def _start_server(
+    log, mode: str = "normal", *, evidence: dict[str, object] | None = None,
+    popen_factory=subprocess.Popen, request_observer=_request,
+    clock=time.monotonic, sleeper=time.sleep, memory_observer=None,
+) -> subprocess.Popen:
+    evidence = evidence if evidence is not None else {}
+    memory_observer = memory_observer or (lambda: _cgroup("memory.current"))
     environment = os.environ.copy()
     environment["DTOS_MARKET_PROFILE_MODE"] = mode
-    process = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "tools.validation.market_profile_app:app", "--host", "127.0.0.1", "--port", "8767", "--workers", "1"],
-        stdout=log,
-        stderr=subprocess.STDOUT,
-        start_new_session=True,
-        env=environment,
-    )
-    deadline = time.monotonic() + 60
-    while time.monotonic() < deadline:
+    command = [
+        sys.executable, "-m", "uvicorn",
+        "tools.validation.market_profile_app:app", "--host", "127.0.0.1",
+        "--port", "8767", "--workers", "1",
+    ]
+    evidence.update({
+        "command": [Path(command[0]).name, *command[1:]],
+        "mode": mode,
+        "fixture": {
+            "cache_file": Path(environment.get("DTOS_CACHE_FILE", "")).name,
+            "history_database": Path(
+                environment.get("DTOS_HISTORY_DB_FILE", "")
+            ).name,
+            "storage_root": ".",
+        },
+        "observations": [],
+        "memory_at_launch": memory_observer(),
+        "termination": "launching",
+    })
+    try:
+        process = popen_factory(
+            command, stdout=log, stderr=subprocess.STDOUT,
+            start_new_session=True, env=environment,
+        )
+    except OSError as exc:
+        evidence.update({
+            "exit_code": None, "termination": "launch_failure",
+            "exception_type": type(exc).__name__,
+            "message": _sanitize_server_log(str(exc)),
+            "server_log_tail": _bounded_log_tail(log),
+        })
+        raise StartupFailure("application executable could not start", evidence) from exc
+    evidence["pid_recorded"] = True
+    deadline = clock() + 60
+    while clock() < deadline:
         if process.poll() is not None:
-            raise RuntimeError(f"application exited during startup: {process.returncode}")
+            returncode = process.returncode
+            evidence.update({
+                "exit_code": returncode,
+                "termination": "signal" if returncode < 0 else "natural_exit",
+                "memory_at_exit": memory_observer(),
+                "server_log_tail": _bounded_log_tail(log),
+            })
+            raise StartupFailure(
+                f"application exited during startup: {returncode}", evidence, process,
+            )
         try:
-            status, _body, _elapsed = _request("/health/live")
+            status, _body, elapsed = request_observer("/health/live")
+            evidence["observations"].append({
+                "endpoint": "/health/live", "status": status,
+                "client_ms": round(elapsed, 3),
+            })
             if status == 200:
+                evidence.update({"exit_code": None, "termination": "running"})
                 return process
-        except OSError:
-            pass
-        time.sleep(0.25)
-    raise RuntimeError("application did not become live within 60 seconds")
+        except OSError as exc:
+            evidence["observations"].append({
+                "endpoint": "/health/live", "status": "connection_error",
+                "error": type(exc).__name__,
+            })
+        sleeper(0.25)
+    evidence.update({
+        "exit_code": process.poll(), "termination": "startup_timeout",
+        "memory_at_exit": memory_observer(),
+        "server_log_tail": _bounded_log_tail(log),
+    })
+    raise StartupFailure(
+        "application did not become live within 60 seconds", evidence, process,
+    )
 
 
 def _stop_server(process: subprocess.Popen) -> None:
@@ -746,9 +853,10 @@ def main() -> int:
     padding: list[bytearray] = []
     process = None
     failure: BaseException | None = None
+    startup_evidence: dict[str, object] = {}
     try:
         with log_path.open("w", encoding="utf-8") as log, Monitor() as monitor:
-            process = _start_server(log)
+            process = _start_server(log, evidence=startup_evidence)
             ready_ms = _wait_ready()
             _application_fixture_contract(fixture_contract)
             startup_current = _cgroup("memory.current")
@@ -903,6 +1011,10 @@ def main() -> int:
             summary["completed"] = True
     except BaseException as exc:
         failure = exc
+        if isinstance(exc, StartupFailure):
+            process = exc.process
+            startup_evidence = exc.evidence
+        summary["startup_evidence"] = startup_evidence
         summary["errors"] = [{
             **_public_error(exc),
             "phase": next(reversed(summary["phases"]), "initialization"),
@@ -920,6 +1032,15 @@ def main() -> int:
                 summary["exit_code"] = 1
                 failure = failure or exc
         padding.clear()
+        if log_path.is_file():
+            sanitized_log = _sanitize_server_log(log_path.read_text(
+                encoding="utf-8", errors="replace",
+            ))
+            log_path.write_text(sanitized_log + ("\n" if sanitized_log else ""), encoding="utf-8")
+            summary["server_log"] = {
+                "artifact": "server.log", "line_count": len(sanitized_log.splitlines()),
+                "bounded": True, "sanitized": True,
+            }
         OUTPUT.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
     if failure is not None:
         print(f"{type(failure).__name__}: {failure}", file=sys.stderr)
