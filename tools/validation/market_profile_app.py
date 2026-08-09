@@ -17,6 +17,7 @@ from starlette.background import BackgroundTask
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
+from config import CACHE_FILE, HISTORY_DATABASE_FILE, HISTORY_STORAGE_ROOT
 from dtos_app import app
 from services.sleeper import LEAGUE_ID, STATE
 import src.core.asset_market.engine as market_engine
@@ -518,6 +519,34 @@ async def market_artifact() -> dict[str, Any]:
         "generated_at": metadata.get("generated_at"),
         "schema_version": metadata.get("schema_version"),
         "asset_count": metadata.get("asset_count"),
+    }
+
+
+@app.get("/__validation__/fixture-contract")
+async def fixture_contract() -> dict[str, Any]:
+    """Expose relative fixture identities for validation without local paths."""
+    root = HISTORY_STORAGE_ROOT.resolve()
+
+    def relative(path) -> str | None:
+        try:
+            return path.resolve().relative_to(root).as_posix() or "."
+        except ValueError:
+            return None
+
+    return {
+        "storage_root": ".",
+        "cache_file": relative(CACHE_FILE),
+        "history_database": relative(HISTORY_DATABASE_FILE),
+        "active_store_database": relative(historical_store.path),
+        "cache_exists": CACHE_FILE.is_file(),
+        "history_database_exists": HISTORY_DATABASE_FILE.is_file(),
+        "active_store_matches": (
+            historical_store.path.resolve() == HISTORY_DATABASE_FILE.resolve()
+        ),
+        "contained": all(
+            relative(path) is not None
+            for path in (CACHE_FILE, HISTORY_DATABASE_FILE, historical_store.path)
+        ),
     }
 
 

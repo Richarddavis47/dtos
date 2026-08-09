@@ -27,6 +27,9 @@ jobs:
             --cpus 2 \
             --volume "$PWD/.validation/linux-market:/output" \
             --env DTOS_BENCHMARK_OUTPUT=/output/summary.json \
+            --env DTOS_CACHE_FILE=/fixture/dtos_cache.json \
+            --env DTOS_HISTORY_DB_FILE=/fixture/dtos_history.sqlite3 \
+            --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
             dtos-market-cgroup:validation \
             sh -c "python -m tools.validation.generate_sanitized_market_fixture && python -m tools.validation.linux_market_cgroup_gate"
       - name: Verify sanitized result

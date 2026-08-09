@@ -26,6 +26,11 @@ BASE_URL = "http://127.0.0.1:8767"
 CGROUP = Path("/sys/fs/cgroup")
 OUTPUT = Path(os.environ.get("DTOS_BENCHMARK_OUTPUT", "/output/summary.json"))
 FIXTURE = Path(os.environ.get("DTOS_FIXTURE_ROOT", "/fixture"))
+FIXTURE_SETTINGS = {
+    "DTOS_CACHE_FILE": "dtos_cache.json",
+    "DTOS_HISTORY_DB_FILE": "dtos_history.sqlite3",
+    "DTOS_HISTORY_STORAGE_ROOT": ".",
+}
 
 
 class ExpansionLatencyFailure(AssertionError):
@@ -180,6 +185,47 @@ def _wait_ready() -> float:
 
 def _market_health() -> dict:
     return json.loads(_request("/api/market/health")[1])
+
+
+def _configured_fixture_contract() -> dict[str, object]:
+    root = FIXTURE.resolve()
+    resolved: dict[str, Path] = {}
+    for name in FIXTURE_SETTINGS:
+        raw = os.environ.get(name)
+        if not raw:
+            raise AssertionError(f"required fixture setting is missing: {name}")
+        path = Path(raw).resolve()
+        try:
+            path.relative_to(root)
+        except ValueError as exc:
+            raise AssertionError(f"fixture setting escapes configured root: {name}") from exc
+        resolved[name] = path
+    if resolved["DTOS_HISTORY_STORAGE_ROOT"] != root:
+        raise AssertionError("history storage root does not resolve to fixture root")
+    for name in ("DTOS_CACHE_FILE", "DTOS_HISTORY_DB_FILE"):
+        if not resolved[name].is_file():
+            raise AssertionError(f"configured fixture file is unavailable: {name}")
+    return {
+        "storage_root": ".",
+        "cache_file": resolved["DTOS_CACHE_FILE"].relative_to(root).as_posix(),
+        "history_database": resolved["DTOS_HISTORY_DB_FILE"].relative_to(root).as_posix(),
+        "contained": True,
+    }
+
+
+def _application_fixture_contract(expected: dict[str, object]) -> dict[str, object]:
+    actual = json.loads(_request("/__validation__/fixture-contract")[1])
+    for name in ("storage_root", "cache_file", "history_database"):
+        if actual.get(name) != expected.get(name):
+            raise AssertionError(f"application fixture setting mismatch: {name}")
+    if actual.get("active_store_database") != expected.get("history_database"):
+        raise AssertionError("application HistoricalStore does not use fixture database")
+    for name in (
+        "cache_exists", "history_database_exists", "active_store_matches", "contained",
+    ):
+        if actual.get(name) is not True:
+            raise AssertionError(f"application fixture contract failed: {name}")
+    return actual
 
 
 def _artifact_state() -> dict[str, object]:
@@ -681,10 +727,14 @@ def main() -> int:
     if not (CGROUP / "memory.peak").is_file():
         raise RuntimeError("memory.peak is required for this validation")
 
+    fixture_contract = _configured_fixture_contract()
     summary: dict[str, object] = {
         "schema": "dtos-linux-market-memory-v1",
         "memory_max": memory_max,
-        "fixture": {"assets": 12_322, "historical_records": 30_726, "progress": "5/6"},
+        "fixture": {
+            "assets": 12_322, "historical_records": 30_726, "progress": "5/6",
+            "configuration": fixture_contract,
+        },
         "phases": {},
         "passed": False,
         "completed": False,
@@ -700,6 +750,7 @@ def main() -> int:
         with log_path.open("w", encoding="utf-8") as log, Monitor() as monitor:
             process = _start_server(log)
             ready_ms = _wait_ready()
+            _application_fixture_contract(fixture_contract)
             startup_current = _cgroup("memory.current")
             summary["phases"]["startup"] = {
                 "timestamp": time.time(), "duration_ms": round(ready_ms, 3),
