@@ -16,6 +16,9 @@ from tools.validation.generate_sanitized_market_fixture import (
 )
 from tools.validation.linux_market_cgroup_gate import (
     StartupFailure,
+    _archive_cache_assessment,
+    _archive_cache_retained,
+    _archive_material_threshold,
     _artifact_state,
     _application_fixture_contract,
     _configured_fixture_contract,
@@ -27,11 +30,107 @@ from tools.validation.linux_market_cgroup_gate import (
     _nonsemantic_payload_comparison,
     _normalized_headers,
     _restart_reuse,
+    _record_archive_assessment,
     _start_server,
 )
 
 
 DETAIL = "Asset Market generation is building safely in the background; retry shortly."
+
+
+class ArchiveCacheValidationTests(unittest.TestCase):
+    @staticmethod
+    def snapshot(inactive: object, *, size: int = 40 * 1024 * 1024) -> dict:
+        return {
+            "raw_cgroup_bytes": 900 * 1024 * 1024,
+            "inactive_file_bytes": inactive,
+            "anonymous_bytes": 400 * 1024 * 1024,
+            "effective_working_set_bytes": (
+                900 * 1024 * 1024 - inactive
+                if isinstance(inactive, int) else None
+            ),
+            "memory_events": {"oom": 0, "oom_kill": 0, "oom_group_kill": 0},
+            "archive_size_bytes": size,
+            "accounting_mode": (
+                "cgroup_working_set" if isinstance(inactive, int)
+                else "conservative"
+            ),
+            "timestamp": 1.0,
+            "lifecycle_phase": "fixture",
+        }
+
+    @staticmethod
+    def coverage(status: str = "completed_with_pending") -> dict:
+        return {
+            "asset_event_count": 30_726,
+            "canonical_progress": {
+                "status": status, "completed_steps": 5, "total_steps": 6,
+            },
+            "read_model": {"query_count": 3, "rows_read": 30_726},
+        }
+
+    def test_archive_cache_mode_a_newly_warmed(self) -> None:
+        result = _archive_cache_assessment(
+            self.snapshot(1 * 1024 * 1024),
+            self.snapshot(4 * 1024 * 1024),
+            coverage_status=200, coverage=self.coverage(),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["establishment_mode"], "newly_warmed")
+
+    def test_archive_cache_mode_b_already_resident(self) -> None:
+        result = _archive_cache_assessment(
+            self.snapshot(3 * 1024 * 1024),
+            self.snapshot(3 * 1024 * 1024),
+            coverage_status=200, coverage=self.coverage(),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["establishment_mode"], "already_resident")
+
+    def test_tiny_unrelated_cache_fails_fixture_threshold(self) -> None:
+        threshold = _archive_material_threshold(40 * 1024 * 1024)
+        self.assertEqual(threshold, 2 * 1024 * 1024)
+        result = _archive_cache_assessment(
+            self.snapshot(128 * 1024), self.snapshot(160 * 1024),
+            coverage_status=200, coverage=self.coverage(),
+        )
+        self.assertFalse(result["passed"])
+
+    def test_coverage_failure_cannot_qualify_either_mode(self) -> None:
+        result = _archive_cache_assessment(
+            self.snapshot(4 * 1024 * 1024),
+            self.snapshot(8 * 1024 * 1024),
+            coverage_status=503, coverage=self.coverage(),
+        )
+        self.assertFalse(result["passed"])
+        self.assertFalse(result["coverage_valid"])
+
+    def test_evidence_is_recorded_before_failed_assertion(self) -> None:
+        phases: dict[str, object] = {}
+        with self.assertRaises(AssertionError):
+            _record_archive_assessment(
+                phases, self.snapshot(0), self.snapshot(0),
+                coverage_status=200, coverage=self.coverage(), duration_ms=2.0,
+            )
+        self.assertIn("archive_warming", phases)
+        self.assertFalse(phases["archive_warming"]["assessment"]["passed"])
+
+    def test_malformed_metrics_fail_closed(self) -> None:
+        result = _archive_cache_assessment(
+            self.snapshot(None), self.snapshot(None),
+            coverage_status=200, coverage=self.coverage(),
+        )
+        self.assertFalse(result["passed"])
+        self.assertIn("metrics", result["reason"])
+
+    def test_archive_cache_must_remain_before_replacement(self) -> None:
+        threshold = _archive_material_threshold(40 * 1024 * 1024)
+        self.assertTrue(_archive_cache_retained(
+            self.snapshot(threshold), threshold,
+        ))
+        self.assertFalse(_archive_cache_retained(
+            self.snapshot(threshold - 1), threshold,
+        ))
 
 
 def _published(generation: str = "market-2") -> dict[str, object]:
