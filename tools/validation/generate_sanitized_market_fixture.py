@@ -136,14 +136,28 @@ def _cache(path: Path) -> None:
 def _history(path: Path) -> None:
     HistoricalStore(path)
     connection = sqlite3.connect(path)
+    identities = [
+        ("sleeper", player_id, player_id, 100, None, 0)
+        for player_id in dict(_player(index) for index in range(1, ASSET_COUNT + 1))
+    ]
+    connection.executemany(
+        "INSERT INTO current_player_identity "
+        "(provider,provider_player_id,dtos_player_id,confidence,gsis_id,"
+        "identity_generation) VALUES (?,?,?,?,?,?)",
+        identities,
+    )
     rows = []
     for index in range(HISTORICAL_COUNT):
         season = 2021 + index % 5
-        player_id = "10213" if index % 500 == 0 else f"v{index % ASSET_COUNT + 1:05d}"
+        player_index = index % ASSET_COUNT + 1
+        player_id = (
+            "10213" if index % 500 == 0 or player_index == 1
+            else f"v{player_index:05d}"
+        )
         rows.append((
             f"validation:{index}", "player_week", LEAGUE_ID, season,
             index % 18 + 1, f"franchise:{index % 10 + 1}", player_id,
-            f"validation-{index}", STAMP, STAMP, "SanitizedFixture", "available",
+            f"validation-{index}", STAMP, STAMP, "nflverse", "available",
             100, "deterministic_fixture", 0, "1.0",
             json.dumps({"fantasy_points": float(index % 50), "fixture": True}, separators=(",", ":")),
         ))
@@ -183,14 +197,40 @@ def _history(path: Path) -> None:
             "(checkpoint_key,job_id,league_id,season,data_type,provider,importer_version,status,"
             "completed_at,records_written,records_unchanged) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
             (
-                f"{LEAGUE_ID}:{season}:player_week:SanitizedFixture:1.2", job_id,
-                LEAGUE_ID, season, "player_week", "SanitizedFixture", "1.2", "completed",
+                f"{LEAGUE_ID}:{season}:player_week:nflverse:1.2", job_id,
+                LEAGUE_ID, season, "player_week", "nflverse", "1.2", "completed",
                 STAMP, HISTORICAL_COUNT // 5, 0,
             ),
         )
+    connection.execute(
+        "INSERT INTO import_checkpoints "
+        "(checkpoint_key,job_id,league_id,season,data_type,provider,importer_version,status,"
+        "completed_at,records_written,records_unchanged) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        (
+            f"{LEAGUE_ID}:2026:player_week:nflverse:1.2", job_id,
+            LEAGUE_ID, 2026, "player_week", "nflverse", "1.2", "pending",
+            None, 0, 0,
+        ),
+    )
     connection.commit()
     connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     connection.close()
+    store = HistoricalStore(path)
+    progress = store.canonical_enrichment_progress(
+        LEAGUE_ID, tuple(range(2021, 2027)),
+        provider="nflverse", importer_version="1.2",
+    )
+    with store.connection() as verification:
+        record_count = int(verification.execute(
+            "SELECT count(*) FROM historical_records WHERE league_id=?",
+            (LEAGUE_ID,),
+        ).fetchone()[0])
+    if record_count != HISTORICAL_COUNT:
+        raise RuntimeError("sanitized historical record count is inconsistent")
+    if progress["completed_seasons"] != list(range(2021, 2026)) or progress[
+        "pending_seasons"
+    ] != [2026]:
+        raise RuntimeError("sanitized historical progress is inconsistent")
 
 
 def main() -> int:

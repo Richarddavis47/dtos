@@ -12,8 +12,12 @@ from unittest.mock import patch
 
 from src.core.valuation.universe import ValuationUniverse
 from tools.validation.generate_sanitized_market_fixture import (
+    HISTORICAL_COUNT,
+    LEAGUE_ID,
+    _history,
     material_market_fixture_change,
 )
+from src.core.historical_memory.store import HistoricalStore
 from tools.validation.linux_market_cgroup_gate import (
     StartupFailure,
     _archive_cache_assessment,
@@ -131,6 +135,24 @@ class ArchiveCacheValidationTests(unittest.TestCase):
         self.assertFalse(_archive_cache_retained(
             self.snapshot(threshold - 1), threshold,
         ))
+
+    def test_generated_history_matches_application_league_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "history.sqlite3"
+            _history(path)
+            store = HistoricalStore(path)
+            progress = store.canonical_enrichment_progress(
+                LEAGUE_ID, tuple(range(2021, 2027)),
+                provider="nflverse", importer_version="1.2",
+            )
+            with store.connection() as connection:
+                count = int(connection.execute(
+                    "SELECT count(*) FROM historical_records WHERE league_id=?",
+                    (LEAGUE_ID,),
+                ).fetchone()[0])
+        self.assertEqual(count, HISTORICAL_COUNT)
+        self.assertEqual(progress["completed_seasons"], list(range(2021, 2026)))
+        self.assertEqual(progress["pending_seasons"], [2026])
 
 
 def _published(generation: str = "market-2") -> dict[str, object]:
@@ -389,11 +411,12 @@ class RestartReuseValidationTests(unittest.TestCase):
             cache = root / "dtos_cache.json"
             history = root / "dtos_history.sqlite3"
             cache.write_text("{}", encoding="utf-8")
-            history.write_bytes(b"fixture")
+            HistoricalStore(history)
             environment = {
                 "DTOS_CACHE_FILE": str(cache),
                 "DTOS_HISTORY_DB_FILE": str(history),
                 "DTOS_HISTORY_STORAGE_ROOT": str(root),
+                "SLEEPER_LEAGUE_ID": "validation-league-1804",
             }
             with patch.dict(os.environ, environment, clear=False), patch(
                 "tools.validation.linux_market_cgroup_gate.FIXTURE", root,
@@ -402,6 +425,7 @@ class RestartReuseValidationTests(unittest.TestCase):
         self.assertEqual(contract["cache_file"], "dtos_cache.json")
         self.assertEqual(contract["history_database"], "dtos_history.sqlite3")
         self.assertTrue(contract["contained"])
+        self.assertEqual(contract["league_id"], "validation-league-1804")
 
     def test_missing_explicit_fixture_setting_cannot_use_default(self) -> None:
         with patch.dict(os.environ, {}, clear=True), self.assertRaisesRegex(
@@ -413,11 +437,16 @@ class RestartReuseValidationTests(unittest.TestCase):
         expected = {
             "storage_root": ".", "cache_file": "dtos_cache.json",
             "history_database": "dtos_history.sqlite3", "contained": True,
+            "league_id": "validation-league-1804",
+            "database_identity_digest": "sanitized-digest",
+            "file_identity_digest": "sanitized-file-digest",
+            "history_database_size": 1024,
         }
         actual = {
             **expected, "active_store_database": "dtos_history.sqlite3",
             "cache_exists": True, "history_database_exists": True,
             "active_store_matches": True,
+            "cache_league_id": "validation-league-1804",
         }
         with patch(
             "tools.validation.linux_market_cgroup_gate._request",

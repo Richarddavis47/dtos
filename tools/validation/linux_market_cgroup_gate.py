@@ -7,6 +7,7 @@ import base64
 import hashlib
 import re
 import signal
+import sqlite3
 import statistics
 import subprocess
 import sys
@@ -486,21 +487,47 @@ def _configured_fixture_contract() -> dict[str, object]:
     for name in ("DTOS_CACHE_FILE", "DTOS_HISTORY_DB_FILE"):
         if not resolved[name].is_file():
             raise AssertionError(f"configured fixture file is unavailable: {name}")
+    league_id = os.environ.get("SLEEPER_LEAGUE_ID")
+    if league_id != "validation-league-1804":
+        raise AssertionError("configured fixture league identity is unavailable")
+    history_stat = resolved["DTOS_HISTORY_DB_FILE"].stat()
+    connection = sqlite3.connect(resolved["DTOS_HISTORY_DB_FILE"])
+    try:
+        database_uuid = str(connection.execute(
+            "SELECT value FROM database_metadata WHERE key='database_uuid'",
+        ).fetchone()[0])
+    finally:
+        connection.close()
     return {
         "storage_root": ".",
         "cache_file": resolved["DTOS_CACHE_FILE"].relative_to(root).as_posix(),
         "history_database": resolved["DTOS_HISTORY_DB_FILE"].relative_to(root).as_posix(),
         "contained": True,
+        "league_id": league_id,
+        "file_identity_digest": hashlib.sha256(
+            f"{history_stat.st_dev}:{history_stat.st_ino}".encode()
+        ).hexdigest(),
+        "database_identity_digest": hashlib.sha256(
+            json.dumps(database_uuid).encode()
+        ).hexdigest(),
+        "history_database_size": history_stat.st_size,
     }
 
 
 def _application_fixture_contract(expected: dict[str, object]) -> dict[str, object]:
     actual = json.loads(_request("/__validation__/fixture-contract")[1])
-    for name in ("storage_root", "cache_file", "history_database"):
+    for name in ("storage_root", "cache_file", "history_database", "league_id"):
         if actual.get(name) != expected.get(name):
             raise AssertionError(f"application fixture setting mismatch: {name}")
     if actual.get("active_store_database") != expected.get("history_database"):
         raise AssertionError("application HistoricalStore does not use fixture database")
+    if actual.get("cache_league_id") != expected.get("league_id"):
+        raise AssertionError("application cache uses a different fixture league")
+    for name in (
+        "database_identity_digest", "file_identity_digest", "history_database_size",
+    ):
+        if actual.get(name) != expected.get(name):
+            raise AssertionError(f"application fixture identity mismatch: {name}")
     for name in (
         "cache_exists", "history_database_exists", "active_store_matches", "contained",
     ):
