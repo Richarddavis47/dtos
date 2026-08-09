@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.8.12 - Cgroup-Aware Market Memory Admission
+
+- Distinguishes verified Linux cgroup v2 `inactive_file` cache from live working memory while preserving the 2 GiB hard limit, 1.5 GiB target, and 500 MiB reserve.
+- Adds fail-closed cgroup metric validation, memory-event and construction-growth safeguards, and sanitized admission diagnostics.
+- Adds bounded generation-aware retry backoff so repeated directory polling cannot launch identical memory-rejected workers.
+
 ## v1.8.11 - Retained Asset Market Summary Contract
 
 - Made `/api/market` an immediate metadata-only index over retained Asset Market health.

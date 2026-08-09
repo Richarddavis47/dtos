@@ -63,6 +63,13 @@ CREATE INDEX idx_rebuilder_value ON assets(rebuilder_value, asset_id);
 class MarketMemoryBudgetError(RuntimeError):
     """Raised before a market stage would violate the cgroup safety budget."""
 
+    def __init__(self, stage: str, observation: dict[str, Any]) -> None:
+        super().__init__(
+            f"Asset Market stage {stage} deferred by the memory safety budget."
+        )
+        self.stage = stage
+        self.observation = observation
+
 
 def _json(value: Any) -> str:
     return json.dumps(value, separators=(",", ":"), sort_keys=True, default=str)
@@ -73,18 +80,107 @@ def _json_object(value: str) -> dict[str, Any]:
     return decoded if isinstance(decoded, dict) else {}
 
 
-def enforce_memory_budget(stage: str, estimate: int = DEFAULT_STAGE_ESTIMATE) -> dict[str, Any]:
-    """Refuse a stage before the process can approach the platform OOM limit."""
-    snapshot = memory_snapshot()
+def memory_admission(
+    snapshot: dict[str, Any], estimate: int = DEFAULT_STAGE_ESTIMATE, *,
+    baseline_events: dict[str, int] | None = None,
+    baseline_effective: int | None = None,
+) -> dict[str, Any]:
+    """Calculate bounded cgroup admission without discounting unknown memory."""
     current = snapshot.get("cgroup_current_bytes")
     limit = snapshot.get("cgroup_limit_bytes")
-    if current and limit:
-        safe_limit = min(TARGET_CGROUP_BYTES, max(0, int(limit) - RESERVED_BYTES))
-        if int(current) >= HARD_CGROUP_BYTES or int(current) + estimate > safe_limit:
-            raise MarketMemoryBudgetError(
-                f"Asset Market stage {stage} deferred by the memory safety budget."
-            )
-    return snapshot
+    inactive = snapshot.get("cgroup_inactive_file_bytes")
+    events = snapshot.get("cgroup_memory_events")
+    valid_current = isinstance(current, int) and current >= 0
+    valid_cgroup = (
+        valid_current and isinstance(limit, int) and limit > 0
+    )
+    valid_inactive = (
+        valid_cgroup and isinstance(inactive, int)
+        and 0 <= inactive <= current
+    )
+    valid_events = (
+        isinstance(events, dict)
+        and all(
+            isinstance(events.get(name), int) and events[name] >= 0
+            for name in ("oom", "oom_kill")
+        )
+    )
+    working_set_metrics = valid_inactive and valid_events
+    accounting_mode = (
+        "cgroup_working_set" if working_set_metrics else "conservative"
+    )
+    effective = current - inactive if working_set_metrics else current
+    finite_limit = limit if valid_cgroup else None
+    safe_limit = (
+        min(TARGET_CGROUP_BYTES, max(0, finite_limit - RESERVED_BYTES))
+        if finite_limit is not None
+        else TARGET_CGROUP_BYTES if valid_current else None
+    )
+    predicted = effective + estimate if isinstance(effective, int) else None
+    event_deltas: dict[str, int] = {}
+    if isinstance(events, dict) and baseline_events is not None:
+        for name in ("oom", "oom_kill", "oom_group_kill"):
+            current_event = events.get(name)
+            baseline_event = baseline_events.get(name)
+            if isinstance(current_event, int) and isinstance(baseline_event, int):
+                event_deltas[name] = current_event - baseline_event
+    reason = "admitted"
+    admitted = True
+    if not valid_current or safe_limit is None or predicted is None:
+        admitted = True
+        reason = "conservative_non_cgroup"
+    elif any(delta > 0 for delta in event_deltas.values()):
+        admitted = False
+        reason = "memory_event_advanced"
+    elif current >= HARD_CGROUP_BYTES:
+        admitted = False
+        reason = "raw_emergency_boundary"
+    elif (
+        baseline_effective is not None
+        and effective - baseline_effective > DEFAULT_STAGE_ESTIMATE
+    ):
+        admitted = False
+        reason = "observed_growth_exceeded_estimate"
+    elif predicted > safe_limit:
+        admitted = False
+        reason = "predicted_effective_usage_exceeds_target"
+    return {
+        "raw_cgroup_bytes": current,
+        "inactive_file_bytes": inactive if working_set_metrics else None,
+        "effective_working_set_bytes": effective,
+        "stage_estimate_bytes": estimate,
+        "predicted_effective_bytes": predicted,
+        "target_ceiling_bytes": safe_limit,
+        "raw_headroom_bytes": (
+            finite_limit - current if valid_cgroup else None
+        ),
+        "effective_headroom_bytes": (
+            safe_limit - effective
+            if safe_limit is not None and isinstance(effective, int) else None
+        ),
+        "accounting_mode": accounting_mode,
+        "memory_event_deltas": event_deltas,
+        "admitted": admitted,
+        "reason": reason,
+    }
+
+
+def enforce_memory_budget(
+    stage: str, estimate: int = DEFAULT_STAGE_ESTIMATE, *,
+    baseline_events: dict[str, int] | None = None,
+    baseline_effective: int | None = None,
+    observer: Callable[[], dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Refuse a stage before the process can approach the platform OOM limit."""
+    snapshot = (observer or memory_snapshot)()
+    admission = memory_admission(
+        snapshot, estimate, baseline_events=baseline_events,
+        baseline_effective=baseline_effective,
+    )
+    result = {**snapshot, "admission": admission}
+    if not admission["admitted"]:
+        raise MarketMemoryBudgetError(stage, admission)
+    return result
 
 
 def _object_counts() -> dict[str, int]:
@@ -309,6 +405,8 @@ def build_read_model(
 
     try:
         before = enforce_memory_budget("artifact_initialization", 32 * 1024 * 1024)
+        baseline_events = dict(before.get("cgroup_memory_events") or {})
+        baseline_effective = before["admission"].get("effective_working_set_bytes")
         started = time.perf_counter()
         connection = sqlite3.connect(temporary, timeout=30)
         try:
@@ -318,7 +416,10 @@ def build_read_model(
             observe("artifact_initialization", started, before, 0)
             count = 0
             started = time.perf_counter()
-            before = enforce_memory_budget("canonical_asset_iteration")
+            before = enforce_memory_budget(
+                "canonical_asset_iteration", baseline_events=baseline_events,
+                baseline_effective=baseline_effective,
+            )
             for summary, canonical in rows:
                 values = summary.get("values") or {}
                 owner = summary.get("owner") or {}
@@ -345,10 +446,17 @@ def build_read_model(
                 count += 1
                 if count % 250 == 0:
                     connection.commit()
-                    enforce_memory_budget("canonical_asset_iteration")
+                    enforce_memory_budget(
+                        "canonical_asset_iteration", baseline_events=baseline_events,
+                        baseline_effective=baseline_effective,
+                    )
             observe("canonical_asset_iteration", started, before, count)
             started = time.perf_counter()
-            before = enforce_memory_budget("model_publication", 16 * 1024 * 1024)
+            before = enforce_memory_budget(
+                "model_publication", 16 * 1024 * 1024,
+                baseline_events=baseline_events,
+                baseline_effective=baseline_effective,
+            )
             complete_metadata = {
                 **metadata, "generation": generation, "schema_version": MARKET_READ_MODEL_SCHEMA,
                 "asset_count": count, "complete": True, "build_stages": stages,

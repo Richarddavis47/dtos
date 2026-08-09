@@ -22,6 +22,7 @@ from src.core.asset_market import (
 )
 from src.core.asset_market.read_model import (
     MarketMemoryBudgetError, build_read_model, enforce_memory_budget,
+    memory_admission,
 )
 from src.core.historical_memory.store import HistoricalStore
 from src.core.historical_memory import historical_graph
@@ -365,6 +366,144 @@ class AssetMarketTests(unittest.TestCase):
         ):
             with self.assertRaises(MarketMemoryBudgetError):
                 enforce_memory_budget("fixture", 64 * 1024 * 1024)
+
+    @staticmethod
+    def _cgroup_snapshot(*, current: int, inactive: int | None) -> dict:
+        return {
+            "rss_bytes": 400 * 1024 * 1024,
+            "vms_bytes": 1,
+            "system_available_bytes": 1,
+            "cgroup_current_bytes": current,
+            "cgroup_limit_bytes": 2048 * 1024 * 1024,
+            "cgroup_inactive_file_bytes": inactive,
+            "cgroup_memory_events": {
+                "low": 0, "high": 0, "max": 0,
+                "oom": 0, "oom_kill": 0, "oom_group_kill": 0,
+            },
+        }
+
+    def test_memory_admission_discounts_only_inactive_file(self) -> None:
+        result = memory_admission(self._cgroup_snapshot(
+            current=1500 * 1024 * 1024,
+            inactive=1050 * 1024 * 1024,
+        ))
+        self.assertTrue(result["admitted"])
+        self.assertEqual(result["accounting_mode"], "cgroup_working_set")
+        self.assertEqual(
+            result["effective_working_set_bytes"], 450 * 1024 * 1024,
+        )
+
+    def test_memory_admission_rejects_same_raw_usage_without_reclaimable_cache(self) -> None:
+        result = memory_admission(self._cgroup_snapshot(
+            current=1500 * 1024 * 1024, inactive=0,
+        ))
+        self.assertFalse(result["admitted"])
+        self.assertEqual(
+            result["reason"], "predicted_effective_usage_exceeds_target",
+        )
+
+    def test_memory_admission_fails_conservatively_for_invalid_stat(self) -> None:
+        result = memory_admission(self._cgroup_snapshot(
+            current=1500 * 1024 * 1024, inactive=None,
+        ))
+        self.assertFalse(result["admitted"])
+        self.assertEqual(result["accounting_mode"], "conservative")
+
+    def test_memory_admission_rejects_oom_event_advance(self) -> None:
+        snapshot = self._cgroup_snapshot(
+            current=800 * 1024 * 1024, inactive=300 * 1024 * 1024,
+        )
+        snapshot["cgroup_memory_events"]["oom"] = 2
+        result = memory_admission(
+            snapshot, baseline_events={"oom": 1, "oom_kill": 0},
+        )
+        self.assertFalse(result["admitted"])
+        self.assertEqual(result["reason"], "memory_event_advanced")
+
+    def test_memory_admission_rejects_inconsistent_inactive_file(self) -> None:
+        result = memory_admission(self._cgroup_snapshot(
+            current=600 * 1024 * 1024, inactive=700 * 1024 * 1024,
+        ))
+        self.assertEqual(result["accounting_mode"], "conservative")
+        self.assertEqual(
+            result["effective_working_set_bytes"], 600 * 1024 * 1024,
+        )
+
+    def test_memory_admission_uses_safe_ceiling_for_invalid_max(self) -> None:
+        snapshot = self._cgroup_snapshot(
+            current=1500 * 1024 * 1024, inactive=1000 * 1024 * 1024,
+        )
+        snapshot["cgroup_limit_bytes"] = None
+        result = memory_admission(snapshot)
+        self.assertFalse(result["admitted"])
+        self.assertEqual(result["accounting_mode"], "conservative")
+
+    def test_memory_admission_rejects_growth_beyond_stage_estimate(self) -> None:
+        result = memory_admission(
+            self._cgroup_snapshot(
+                current=800 * 1024 * 1024, inactive=0,
+            ),
+            baseline_effective=600 * 1024 * 1024,
+        )
+        self.assertFalse(result["admitted"])
+        self.assertEqual(result["reason"], "observed_growth_exceeded_estimate")
+
+    def test_memory_backoff_expires_or_clears_after_material_improvement(self) -> None:
+        now = [100.0]
+        snapshots = [self._cgroup_snapshot(
+            current=1500 * 1024 * 1024, inactive=0,
+        )]
+        cache = AssetMarketCache(
+            clock=lambda: now[0], memory_observer=lambda: snapshots[-1],
+        )
+        marker = ("fixture",)
+        error = MarketMemoryBudgetError("fixture", memory_admission(snapshots[-1]))
+        cache._record_memory_backoff(marker, error)
+        self.assertTrue(cache._memory_backoff_active(marker))
+        snapshots.append(self._cgroup_snapshot(
+            current=1400 * 1024 * 1024, inactive=100 * 1024 * 1024,
+        ))
+        self.assertFalse(cache._memory_backoff_active(marker))
+        cache._record_memory_backoff(marker, error)
+        now[0] += 31.0
+        self.assertFalse(cache._memory_backoff_active(marker))
+
+    def test_memory_backoff_does_not_cross_request_generation(self) -> None:
+        cache = AssetMarketCache(
+            clock=lambda: 100.0,
+            memory_observer=lambda: self._cgroup_snapshot(
+                current=1500 * 1024 * 1024, inactive=0,
+            ),
+        )
+        error = MarketMemoryBudgetError(
+            "fixture", memory_admission(cache._memory_observer()),
+        )
+        cache._record_memory_backoff(("old",), error)
+        self.assertFalse(cache._memory_backoff_active(("new",)))
+
+    def test_repeated_requests_start_one_worker_during_memory_backoff(self) -> None:
+        snapshot = self._cgroup_snapshot(
+            current=1500 * 1024 * 1024, inactive=0,
+        )
+        cache = AssetMarketCache(
+            clock=lambda: 100.0, memory_observer=lambda: snapshot,
+        )
+        marker = cache.request_marker(
+            self.data, self.state, self.store, self.league_id,
+        )
+        error = MarketMemoryBudgetError("fixture", memory_admission(snapshot))
+        with patch.object(cache, "_prepare_generation", side_effect=error):
+            cache._start_background(
+                self.data, self.state, self.store, self.league_id, marker,
+            )
+            self.assertTrue(cache.wait_for_background())
+            for _ in range(3):
+                cache._start_background(
+                    self.data, self.state, self.store, self.league_id, marker,
+                )
+        self.assertEqual(cache.attempted_constructions, 1)
+        self.assertEqual(cache.failed_constructions, 1)
+        self.assertEqual(cache.metrics()["build_phase"], "memory_backoff")
 
     def test_concurrent_cold_requests_share_one_background_build(self) -> None:
         cache = AssetMarketCache()

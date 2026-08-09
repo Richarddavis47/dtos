@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import base64
 import contextvars
+import hashlib
 import json
 import os
 import threading
@@ -604,6 +605,18 @@ async def fixture_contract() -> dict[str, Any]:
         "cache_file": relative(CACHE_FILE),
         "history_database": relative(HISTORY_DATABASE_FILE),
         "active_store_database": relative(historical_store.path),
+        "league_id": LEAGUE_ID,
+        "cache_league_id": (
+            ((STATE.get("data") or {}).get("league") or {}).get("league_id")
+        ),
+        "database_identity_digest": market_engine._digest(
+            historical_store.database_uuid()
+        ),
+        "file_identity_digest": hashlib.sha256(
+            f"{HISTORY_DATABASE_FILE.stat().st_dev}:"
+            f"{HISTORY_DATABASE_FILE.stat().st_ino}".encode()
+        ).hexdigest(),
+        "history_database_size": HISTORY_DATABASE_FILE.stat().st_size,
         "cache_exists": CACHE_FILE.is_file(),
         "history_database_exists": HISTORY_DATABASE_FILE.is_file(),
         "active_store_matches": (

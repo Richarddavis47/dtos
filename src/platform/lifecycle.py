@@ -33,22 +33,44 @@ def _integer_file(*paths: str) -> int | None:
     return None
 
 
-def memory_snapshot() -> dict[str, int | None]:
+def _key_value_file(path: str) -> dict[str, int] | None:
+    try:
+        values: dict[str, int] = {}
+        for line in Path(path).read_text(encoding="utf-8").splitlines():
+            key, raw = line.split(maxsplit=1)
+            value = int(raw)
+            if value < 0:
+                return None
+            values[key] = value
+        return values or None
+    except (OSError, ValueError):
+        return None
+
+
+def memory_snapshot() -> dict[str, Any]:
     """Return numeric process/cgroup telemetry without host path disclosure."""
     process = psutil.Process(os.getpid())
     info = process.memory_info()
+    current = _integer_file(
+        "/sys/fs/cgroup/memory.current",
+        "/sys/fs/cgroup/memory/memory.usage_in_bytes",
+    )
+    limit = _integer_file(
+        "/sys/fs/cgroup/memory.max",
+        "/sys/fs/cgroup/memory/memory.limit_in_bytes",
+    )
+    stat = _key_value_file("/sys/fs/cgroup/memory.stat")
+    events = _key_value_file("/sys/fs/cgroup/memory.events")
     return {
         "rss_bytes": int(info.rss),
         "vms_bytes": int(info.vms),
         "system_available_bytes": int(psutil.virtual_memory().available),
-        "cgroup_current_bytes": _integer_file(
-            "/sys/fs/cgroup/memory.current",
-            "/sys/fs/cgroup/memory/memory.usage_in_bytes",
+        "cgroup_current_bytes": current,
+        "cgroup_limit_bytes": limit,
+        "cgroup_inactive_file_bytes": (
+            stat.get("inactive_file") if stat is not None else None
         ),
-        "cgroup_limit_bytes": _integer_file(
-            "/sys/fs/cgroup/memory.max",
-            "/sys/fs/cgroup/memory/memory.limit_in_bytes",
-        ),
+        "cgroup_memory_events": events,
     }
 
 

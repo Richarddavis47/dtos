@@ -7,6 +7,7 @@ import base64
 import hashlib
 import re
 import signal
+import sqlite3
 import statistics
 import subprocess
 import sys
@@ -23,6 +24,7 @@ MIB = 1024**2
 MEMORY_MAX = 2 * GIB
 STARTUP_MAX = int(1.2 * GIB)
 COLD_MAX = int(1.5 * GIB)
+RAW_EMERGENCY_MAX = 1740 * MIB
 BASELINE = int(1.03 * GIB)
 BASE_URL = "http://127.0.0.1:8767"
 CGROUP = Path("/sys/fs/cgroup")
@@ -139,9 +141,183 @@ def _rss_high_water(pid: int) -> int:
     return 0
 
 
+def _cgroup_values(name: str) -> dict[str, int]:
+    path = CGROUP / name
+    if not path.is_file():
+        raise RuntimeError(f"required cgroup metric unavailable: {name}")
+    values: dict[str, int] = {}
+    for line in path.read_text(encoding="ascii").splitlines():
+        key, raw = line.split()
+        value = int(raw)
+        if value < 0:
+            raise RuntimeError(f"invalid cgroup metric: {name}/{key}")
+        values[key] = value
+    return values
+
+
+def _memory_state() -> dict[str, object]:
+    current = _cgroup("memory.current")
+    stats = _cgroup_values("memory.stat")
+    events = _cgroup_values("memory.events")
+    inactive = int(stats.get("inactive_file", 0))
+    if inactive > current:
+        raise RuntimeError("inactive_file exceeds memory.current")
+    return {
+        "raw_cgroup_bytes": current,
+        "inactive_file_bytes": inactive,
+        "effective_working_set_bytes": current - inactive,
+        "anonymous_bytes": int(stats.get("anon", 0)),
+        "memory_events": {
+            key: int(events.get(key, 0))
+            for key in ("oom", "oom_kill", "oom_group_kill")
+        },
+    }
+
+
+def _archive_size() -> int:
+    configured = Path(os.environ.get(
+        "DTOS_HISTORY_DB_FILE", str(FIXTURE / "dtos_history.sqlite3"),
+    ))
+    return configured.stat().st_size if configured.is_file() else 0
+
+
+def _memory_evidence(phase: str) -> dict[str, object]:
+    """Return a sanitized snapshot even when strict cgroup parsing fails."""
+    try:
+        state = _memory_state()
+        return {
+            **state,
+            "archive_size_bytes": _archive_size(),
+            "accounting_mode": "cgroup_working_set",
+            "timestamp": time.time(),
+            "lifecycle_phase": phase,
+        }
+    except (OSError, RuntimeError, TypeError, ValueError) as exc:
+        return {
+            "raw_cgroup_bytes": None,
+            "inactive_file_bytes": None,
+            "anonymous_bytes": None,
+            "effective_working_set_bytes": None,
+            "memory_events": None,
+            "archive_size_bytes": _archive_size(),
+            "accounting_mode": "conservative",
+            "metric_error": type(exc).__name__,
+            "timestamp": time.time(),
+            "lifecycle_phase": phase,
+        }
+
+
+def _archive_material_threshold(archive_size: int) -> int:
+    """Use five percent of the archive, bounded from 64 KiB to 8 MiB."""
+    return max(64 * 1024, min(8 * MIB, max(0, archive_size) // 20))
+
+
+def _archive_cache_assessment(
+    before: dict[str, object], after: dict[str, object], *,
+    coverage_status: int, coverage: dict[str, object],
+    expected_records: int = 30_726,
+) -> dict[str, object]:
+    """Classify a verified archive read as newly warmed or already resident."""
+    archive_size = int(before.get("archive_size_bytes") or 0)
+    threshold = _archive_material_threshold(archive_size)
+    before_inactive = before.get("inactive_file_bytes")
+    after_inactive = after.get("inactive_file_bytes")
+    progress = coverage.get("canonical_progress") or {}
+    counts_by_season = coverage.get("counts_by_season") or {}
+    canonical_record_count = sum(
+        int((counts or {}).get("player_week") or 0)
+        for counts in counts_by_season.values()
+        if isinstance(counts, dict)
+    ) if isinstance(counts_by_season, dict) else 0
+    coverage_valid = (
+        coverage_status == 200
+        and canonical_record_count == expected_records
+        and int(progress.get("completed_steps") or 0) == 5
+        and int(progress.get("total_steps") or 0) == 6
+        and progress.get("status") == "completed_with_pending"
+    )
+    metrics_valid = (
+        before.get("accounting_mode") == "cgroup_working_set"
+        and after.get("accounting_mode") == "cgroup_working_set"
+        and isinstance(before_inactive, int)
+        and isinstance(after_inactive, int)
+    )
+    growth = (
+        after_inactive - before_inactive if metrics_valid else None
+    )
+    mode = None
+    if coverage_valid and metrics_valid and growth is not None and growth >= threshold:
+        mode = "newly_warmed"
+    elif (
+        coverage_valid and metrics_valid
+        and before_inactive >= threshold and after_inactive >= threshold
+    ):
+        mode = "already_resident"
+    reason = (
+        f"archive cache established via {mode}"
+        if mode else
+        "coverage contract invalid" if not coverage_valid else
+        "cgroup metrics unavailable or malformed" if not metrics_valid else
+        "inactive_file did not meet the fixture-derived threshold"
+    )
+    return {
+        "passed": mode is not None,
+        "establishment_mode": mode,
+        "reason": reason,
+        "archive_size_bytes": archive_size,
+        "material_threshold_bytes": threshold,
+        "inactive_file_before_bytes": before_inactive,
+        "inactive_file_after_bytes": after_inactive,
+        "inactive_file_growth_bytes": growth,
+        "coverage_valid": coverage_valid,
+        "canonical_historical_record_count": canonical_record_count,
+    }
+
+
+def _record_archive_assessment(
+    phases: dict[str, object], before: dict[str, object],
+    after: dict[str, object], *, coverage_status: int,
+    coverage: dict[str, object], duration_ms: float,
+) -> dict[str, object]:
+    """Persist bounded evidence before enforcing the archive-cache gate."""
+    assessment = _archive_cache_assessment(
+        before, after, coverage_status=coverage_status, coverage=coverage,
+    )
+    phases["archive_warming"] = {
+        "timestamp": time.time(),
+        "duration_ms": round(duration_ms, 3),
+        "before": before,
+        "after": after,
+        "assessment": assessment,
+        "coverage": {
+            "status": coverage_status,
+            "asset_event_count": coverage.get("asset_event_count"),
+            "canonical_historical_record_count": assessment[
+                "canonical_historical_record_count"
+            ],
+            "canonical_progress": coverage.get("canonical_progress"),
+            "query_scope": coverage.get("read_model"),
+            "provider_synchronization": False,
+            "historical_mutation": False,
+        },
+    }
+    if not assessment["passed"]:
+        raise AssertionError(str(assessment["reason"]))
+    return assessment
+
+
+def _archive_cache_retained(snapshot: dict[str, object], threshold: int) -> bool:
+    return (
+        snapshot.get("accounting_mode") == "cgroup_working_set"
+        and isinstance(snapshot.get("inactive_file_bytes"), int)
+        and int(snapshot["inactive_file_bytes"]) >= threshold
+    )
+
+
 class Monitor:
     def __init__(self) -> None:
         self.peak = _cgroup("memory.current")
+        self.effective_peak = int(_memory_state()["effective_working_set_bytes"])
         self.samples = 0
         self.stop = threading.Event()
         self.thread = threading.Thread(target=self._run, daemon=True)
@@ -149,6 +325,10 @@ class Monitor:
     def _run(self) -> None:
         while not self.stop.wait(0.01):
             self.peak = max(self.peak, _cgroup("memory.current"))
+            self.effective_peak = max(
+                self.effective_peak,
+                int(_memory_state()["effective_working_set_bytes"]),
+            )
             self.samples += 1
 
     def __enter__(self):
@@ -159,6 +339,10 @@ class Monitor:
         self.stop.set()
         self.thread.join(timeout=2)
         self.peak = max(self.peak, _cgroup("memory.current"))
+        self.effective_peak = max(
+            self.effective_peak,
+            int(_memory_state()["effective_working_set_bytes"]),
+        )
 
 
 def _diagnostic_request(
@@ -313,21 +497,47 @@ def _configured_fixture_contract() -> dict[str, object]:
     for name in ("DTOS_CACHE_FILE", "DTOS_HISTORY_DB_FILE"):
         if not resolved[name].is_file():
             raise AssertionError(f"configured fixture file is unavailable: {name}")
+    league_id = os.environ.get("SLEEPER_LEAGUE_ID")
+    if league_id != "validation-league-1804":
+        raise AssertionError("configured fixture league identity is unavailable")
+    history_stat = resolved["DTOS_HISTORY_DB_FILE"].stat()
+    connection = sqlite3.connect(resolved["DTOS_HISTORY_DB_FILE"])
+    try:
+        database_uuid = str(connection.execute(
+            "SELECT value FROM database_metadata WHERE key='database_uuid'",
+        ).fetchone()[0])
+    finally:
+        connection.close()
     return {
         "storage_root": ".",
         "cache_file": resolved["DTOS_CACHE_FILE"].relative_to(root).as_posix(),
         "history_database": resolved["DTOS_HISTORY_DB_FILE"].relative_to(root).as_posix(),
         "contained": True,
+        "league_id": league_id,
+        "file_identity_digest": hashlib.sha256(
+            f"{history_stat.st_dev}:{history_stat.st_ino}".encode()
+        ).hexdigest(),
+        "database_identity_digest": hashlib.sha256(
+            json.dumps(database_uuid).encode()
+        ).hexdigest(),
+        "history_database_size": history_stat.st_size,
     }
 
 
 def _application_fixture_contract(expected: dict[str, object]) -> dict[str, object]:
     actual = json.loads(_request("/__validation__/fixture-contract")[1])
-    for name in ("storage_root", "cache_file", "history_database"):
+    for name in ("storage_root", "cache_file", "history_database", "league_id"):
         if actual.get(name) != expected.get(name):
             raise AssertionError(f"application fixture setting mismatch: {name}")
     if actual.get("active_store_database") != expected.get("history_database"):
         raise AssertionError("application HistoricalStore does not use fixture database")
+    if actual.get("cache_league_id") != expected.get("league_id"):
+        raise AssertionError("application cache uses a different fixture league")
+    for name in (
+        "database_identity_digest", "file_identity_digest", "history_database_size",
+    ):
+        if actual.get(name) != expected.get(name):
+            raise AssertionError(f"application fixture identity mismatch: {name}")
     for name in (
         "cache_exists", "history_database_exists", "active_store_matches", "contained",
     ):
@@ -928,6 +1138,9 @@ def _replacement_profile(
             "transactions_syncing": profile.get("transactions_syncing"),
             "runner_load": [round(value, 3) for value in os.getloadavg()],
             "cgroup_memory_current": _cgroup("memory.current"),
+            "memory_evidence": _memory_evidence(
+                f"replacement_warming_{sequence}"
+            ),
             "response_bytes": len(body),
             "served_generation": cache.get("market_generation"),
             "build_count": cache.get("build_count"),
@@ -1166,6 +1379,7 @@ def main() -> int:
         raise RuntimeError("memory.peak is required for this validation")
 
     fixture_contract = _configured_fixture_contract()
+    archive_warmed = os.environ.get("DTOS_ARCHIVE_WARMED") == "1"
     summary: dict[str, object] = {
         "schema": "dtos-linux-market-memory-v1",
         "memory_max": memory_max,
@@ -1173,11 +1387,13 @@ def main() -> int:
             "assets": 12_322, "historical_records": 30_726, "progress": "5/6",
             "configuration": fixture_contract,
         },
+        "scenario": "archive_warmed" if archive_warmed else "ordinary",
         "phases": {},
         "passed": False,
         "completed": False,
         "exit_code": 1,
         "errors": [],
+        "memory_evidence": [],
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     log_path = OUTPUT.parent / "server.log"
@@ -1185,11 +1401,15 @@ def main() -> int:
     process = None
     failure: BaseException | None = None
     startup_evidence: dict[str, object] = {}
+    memory_evidence = summary["memory_evidence"]
+    assert isinstance(memory_evidence, list)
+    memory_evidence.append(_memory_evidence("container_startup"))
     try:
         with log_path.open("w", encoding="utf-8") as log, Monitor() as monitor:
             process = _start_server(log, evidence=startup_evidence)
             ready_ms = _wait_ready()
             _application_fixture_contract(fixture_contract)
+            memory_evidence.append(_memory_evidence("fixture_ready"))
             startup_current = _cgroup("memory.current")
             summary["phases"]["startup"] = {
                 "timestamp": time.time(), "duration_ms": round(ready_ms, 3),
@@ -1201,6 +1421,25 @@ def main() -> int:
             if int((cold_health.get("cache") or {}).get("build_count") or 0) != 0:
                 raise AssertionError("metadata-only health constructed the market")
             padding = _pad_to_production_baseline()
+            if archive_warmed:
+                archive_before = _memory_evidence("before_coverage")
+                memory_evidence.append(archive_before)
+                coverage_status, coverage_body, coverage_ms = _request(
+                    "/api/history/coverage",
+                )
+                archive_after = _memory_evidence("after_coverage")
+                memory_evidence.append(archive_after)
+                try:
+                    coverage = json.loads(coverage_body)
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    coverage = {}
+                phases = summary["phases"]
+                assert isinstance(phases, dict)
+                _record_archive_assessment(
+                    phases, archive_before, archive_after,
+                    coverage_status=coverage_status, coverage=coverage,
+                    duration_ms=coverage_ms,
+                )
             before_cold = _cgroup("memory.current")
             health, build_ms, attempts, responsiveness = _cold_build()
             cold_peak = monitor.peak
@@ -1208,11 +1447,19 @@ def main() -> int:
                 "timestamp": time.time(), "duration_ms": round(build_ms, 3), "attempts": attempts,
                 "memory_before": before_cold, "memory_current": _cgroup("memory.current"),
                 "memory_peak": cold_peak, "build_count": (health.get("cache") or {}).get("build_count"),
+                "effective_memory_peak": monitor.effective_peak,
                 "generation": (health.get("cache") or {}).get("market_generation"),
                 "responsiveness": responsiveness,
             }
-            if cold_peak >= COLD_MAX:
-                raise AssertionError(f"cold-build cgroup peak {cold_peak} exceeds 1.5 GiB")
+            raw_ceiling = RAW_EMERGENCY_MAX if archive_warmed else COLD_MAX
+            if cold_peak >= raw_ceiling:
+                raise AssertionError(
+                    f"cold-build cgroup peak {cold_peak} exceeds {raw_ceiling}"
+                )
+            if monitor.effective_peak >= COLD_MAX:
+                raise AssertionError(
+                    f"effective working-set peak {monitor.effective_peak} exceeds 1.5 GiB"
+                )
             try:
                 latency_result = _latencies()
             except ExpansionLatencyFailure as exc:
@@ -1238,6 +1485,17 @@ def main() -> int:
                 "memory_current": _cgroup("memory.current"),
             }
             replacement_started = time.perf_counter()
+            before_replacement = _memory_evidence("before_replacement")
+            memory_evidence.append(before_replacement)
+            if archive_warmed and not _archive_cache_retained(
+                before_replacement,
+                int((summary["phases"]["archive_warming"])["assessment"][
+                    "material_threshold_bytes"
+                ]),
+            ):
+                raise AssertionError(
+                    "archive cache was not retained immediately before replacement"
+                )
             try:
                 replacement, replacement_profile = _replacement_profile(
                     first_generation, first_build_count, baseline_body,
@@ -1267,6 +1525,7 @@ def main() -> int:
                 "memory_current": _cgroup("memory.current"),
                 "profile": replacement_profile,
             }
+            memory_evidence.append(_memory_evidence("post_publication"))
             _pre_status, pre_restart_body, _pre_ms = _request(
                 "/api/market/assets?limit=50",
             )
@@ -1373,6 +1632,7 @@ def main() -> int:
                 summary["exit_code"] = 1
                 failure = failure or exc
         padding.clear()
+        memory_evidence.append(_memory_evidence("post_cleanup"))
         if log_path.is_file():
             sanitized_log = _sanitize_server_log(log_path.read_text(
                 encoding="utf-8", errors="replace",

@@ -1,3 +1,11 @@
+# DTOS v1.8.12 — Cgroup-Aware Market Memory Admission
+
+DTOS v1.8.12 corrects Asset Market memory admission under Linux cgroup v2. It subtracts only validated reclaimable `inactive_file` cache from `memory.current`, retains all existing hard limits and reserves, and fails conservatively when metrics are unavailable or inconsistent. Generation-aware backoff prevents repeated polling from launching identical rejected builds while preserving safe retries after time, input changes, or meaningful memory improvement.
+
+The release does not change market calculations, historical data, infrastructure, or public product output.
+
+---
+
 # DTOS v1.8.11 — Retained Asset Market Summary Contract
 
 DTOS v1.8.11 makes `/api/market` a bounded metadata-only summary that returns retained lifecycle, availability, generation, provenance, historical progress, and subresource links without constructing or loading an Asset Market model. It remains HTTP 200 during cold startup, warming, replacement, and safely failed replacement states.
