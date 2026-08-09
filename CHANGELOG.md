@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.8.11 - Retained Asset Market Summary Contract
+
+- Made `/api/market` an immediate metadata-only index over retained Asset Market health.
+- Preserved honest cold, warming, ready, replacement, and failed-replacement states without starting market work.
+- Kept directory warming, live-store search/detail provenance, memory safety, and semantic compatibility unchanged.
+
 ## v1.8.10 - Asset Market Health Dataset Scope
 
 - Added the canonical `artifact_build` dataset-version scope to retained Asset Market health metadata.

@@ -40,7 +40,11 @@ from services.sleeper import (
     sync_sleeper,
     sync_transactions,
 )
-from services.history import direct_fetch, start_background_backfill
+from services.history import (
+    direct_fetch,
+    history_progress_contracts,
+    start_background_backfill,
+)
 from services.fois import fois_service
 from src.core.asset_market import asset_market_cache
 from src.core.historical_memory import historical_store
@@ -102,6 +106,7 @@ async def deployment_maintenance() -> None:
     history_task = start_background_backfill(direct_fetch)
     await asyncio.gather(history_task, return_exceptions=True)
     runtime_metrics.mark_background("history_backfill", "complete")
+    await asyncio.to_thread(history_progress_contracts, LEAGUE_ID)
 
 
 @asynccontextmanager
@@ -113,6 +118,7 @@ async def lifespan(_: FastAPI):
         yield
         return
     load_cache()
+    await asyncio.to_thread(history_progress_contracts, LEAGUE_ID)
     mark_startup_complete(_PROCESS_STARTED)
     if STATE.get("data"):
         runtime_metrics.mark_ready("Cached league data loaded.")

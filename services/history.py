@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 from dataclasses import asdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from threading import RLock
 from typing import Any
 
 import httpx
@@ -43,6 +45,8 @@ from src.core.historical_memory.season_state import classify_season
 from src.core.intelligence import intelligence_orchestrator
 from src.core.valuation import VALUATION_SCHEMA_VERSION, normalize_value
 
+_PROGRESS_CACHE_LOCK = RLock()
+_RETAINED_PROGRESS: dict[str, dict[str, Any]] = {}
 _BACKFILL_LOCK = asyncio.Lock()
 _BACKFILL_TASK: asyncio.Task[dict[str, Any]] | None = None
 _ACTIVE_ENRICHMENT_STATUSES = frozenset({
@@ -724,7 +728,7 @@ def history_progress_contracts(
     foundation_run = foundation or historical_store.latest_completed_foundation(
         league_id,
     )
-    return {
+    result = {
         "canonical_history_progress": canonical_history_progress(
             league_id, jobs=candidates,
         ),
@@ -734,6 +738,35 @@ def history_progress_contracts(
             "status": str((foundation_run or {}).get("status") or "waiting"),
             "run_id": (foundation_run or {}).get("run_id"),
             "completed_at": (foundation_run or {}).get("completed_at"),
+        },
+    }
+    with _PROGRESS_CACHE_LOCK:
+        _RETAINED_PROGRESS[league_id] = copy.deepcopy(result)
+    return result
+
+
+def retained_history_progress_contracts(league_id: str) -> dict[str, Any]:
+    """Return the last canonical progress snapshot without durable-store access."""
+    with _PROGRESS_CACHE_LOCK:
+        progress = _RETAINED_PROGRESS.get(league_id)
+        if progress is not None:
+            return copy.deepcopy(progress)
+    return {
+        "canonical_history_progress": {
+            "status": "waiting",
+            "display_status": "Historical progress not yet retained",
+            "completed_steps": 0,
+            "total_steps": 0,
+            "completed_seasons": [],
+            "pending_seasons": [],
+            "consistent": True,
+            "terminal": False,
+            "reason": "Canonical historical progress has not been loaded yet.",
+        },
+        "latest_job_progress": None,
+        "active_job_progress": None,
+        "foundation_progress": {
+            "status": "waiting", "run_id": None, "completed_at": None,
         },
     }
 

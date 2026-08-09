@@ -1,3 +1,11 @@
+# DTOS v1.8.11 — Retained Asset Market Summary Contract
+
+DTOS v1.8.11 makes `/api/market` a bounded metadata-only summary that returns retained lifecycle, availability, generation, provenance, historical progress, and subresource links without constructing or loading an Asset Market model. It remains HTTP 200 during cold startup, warming, replacement, and safely failed replacement states.
+
+Directory routes keep their established bounded-warming behavior. Search and detail remain `live_store`; retained directory, health, and artifact metadata remain `artifact_build`. No provider, SQLite, artifact, digest, or historical work was added to the summary route.
+
+---
+
 # DTOS v1.8.10 — Asset Market Health Dataset Scope
 
 DTOS v1.8.10 completes the Asset Market historical provenance contract by exposing `historical_dataset_version_scope: artifact_build` wherever market health exposes a retained artifact dataset version. The version and scope are published atomically with the active model and remain consistent through compatible restart loading, non-semantic reuse, replacement warming, and failed publication.
