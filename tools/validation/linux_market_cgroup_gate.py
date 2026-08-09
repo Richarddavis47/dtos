@@ -23,6 +23,7 @@ MIB = 1024**2
 MEMORY_MAX = 2 * GIB
 STARTUP_MAX = int(1.2 * GIB)
 COLD_MAX = int(1.5 * GIB)
+RAW_EMERGENCY_MAX = 1740 * MIB
 BASELINE = int(1.03 * GIB)
 BASE_URL = "http://127.0.0.1:8767"
 CGROUP = Path("/sys/fs/cgroup")
@@ -139,9 +140,43 @@ def _rss_high_water(pid: int) -> int:
     return 0
 
 
+def _cgroup_values(name: str) -> dict[str, int]:
+    path = CGROUP / name
+    if not path.is_file():
+        raise RuntimeError(f"required cgroup metric unavailable: {name}")
+    values: dict[str, int] = {}
+    for line in path.read_text(encoding="ascii").splitlines():
+        key, raw = line.split()
+        value = int(raw)
+        if value < 0:
+            raise RuntimeError(f"invalid cgroup metric: {name}/{key}")
+        values[key] = value
+    return values
+
+
+def _memory_state() -> dict[str, object]:
+    current = _cgroup("memory.current")
+    stats = _cgroup_values("memory.stat")
+    events = _cgroup_values("memory.events")
+    inactive = int(stats.get("inactive_file", 0))
+    if inactive > current:
+        raise RuntimeError("inactive_file exceeds memory.current")
+    return {
+        "raw_cgroup_bytes": current,
+        "inactive_file_bytes": inactive,
+        "effective_working_set_bytes": current - inactive,
+        "anonymous_bytes": int(stats.get("anon", 0)),
+        "memory_events": {
+            key: int(events.get(key, 0))
+            for key in ("oom", "oom_kill", "oom_group_kill")
+        },
+    }
+
+
 class Monitor:
     def __init__(self) -> None:
         self.peak = _cgroup("memory.current")
+        self.effective_peak = int(_memory_state()["effective_working_set_bytes"])
         self.samples = 0
         self.stop = threading.Event()
         self.thread = threading.Thread(target=self._run, daemon=True)
@@ -149,6 +184,10 @@ class Monitor:
     def _run(self) -> None:
         while not self.stop.wait(0.01):
             self.peak = max(self.peak, _cgroup("memory.current"))
+            self.effective_peak = max(
+                self.effective_peak,
+                int(_memory_state()["effective_working_set_bytes"]),
+            )
             self.samples += 1
 
     def __enter__(self):
@@ -159,6 +198,10 @@ class Monitor:
         self.stop.set()
         self.thread.join(timeout=2)
         self.peak = max(self.peak, _cgroup("memory.current"))
+        self.effective_peak = max(
+            self.effective_peak,
+            int(_memory_state()["effective_working_set_bytes"]),
+        )
 
 
 def _diagnostic_request(
@@ -1166,6 +1209,7 @@ def main() -> int:
         raise RuntimeError("memory.peak is required for this validation")
 
     fixture_contract = _configured_fixture_contract()
+    archive_warmed = os.environ.get("DTOS_ARCHIVE_WARMED") == "1"
     summary: dict[str, object] = {
         "schema": "dtos-linux-market-memory-v1",
         "memory_max": memory_max,
@@ -1173,6 +1217,7 @@ def main() -> int:
             "assets": 12_322, "historical_records": 30_726, "progress": "5/6",
             "configuration": fixture_contract,
         },
+        "scenario": "archive_warmed" if archive_warmed else "ordinary",
         "phases": {},
         "passed": False,
         "completed": False,
@@ -1201,6 +1246,28 @@ def main() -> int:
             if int((cold_health.get("cache") or {}).get("build_count") or 0) != 0:
                 raise AssertionError("metadata-only health constructed the market")
             padding = _pad_to_production_baseline()
+            if archive_warmed:
+                archive_before = _memory_state()
+                coverage_status, coverage_body, coverage_ms = _request(
+                    "/api/history/coverage",
+                )
+                archive_after = _memory_state()
+                if coverage_status != 200 or not coverage_body:
+                    raise AssertionError("archive warming coverage read failed")
+                inactive_growth = int(
+                    archive_after["inactive_file_bytes"]
+                ) - int(archive_before["inactive_file_bytes"])
+                if inactive_growth < 64 * 1024:
+                    raise AssertionError(
+                        "archive warming did not materially increase inactive_file"
+                    )
+                summary["phases"]["archive_warming"] = {
+                    "timestamp": time.time(),
+                    "duration_ms": round(coverage_ms, 3),
+                    "before": archive_before,
+                    "after": archive_after,
+                    "inactive_file_growth_bytes": inactive_growth,
+                }
             before_cold = _cgroup("memory.current")
             health, build_ms, attempts, responsiveness = _cold_build()
             cold_peak = monitor.peak
@@ -1208,11 +1275,19 @@ def main() -> int:
                 "timestamp": time.time(), "duration_ms": round(build_ms, 3), "attempts": attempts,
                 "memory_before": before_cold, "memory_current": _cgroup("memory.current"),
                 "memory_peak": cold_peak, "build_count": (health.get("cache") or {}).get("build_count"),
+                "effective_memory_peak": monitor.effective_peak,
                 "generation": (health.get("cache") or {}).get("market_generation"),
                 "responsiveness": responsiveness,
             }
-            if cold_peak >= COLD_MAX:
-                raise AssertionError(f"cold-build cgroup peak {cold_peak} exceeds 1.5 GiB")
+            raw_ceiling = RAW_EMERGENCY_MAX if archive_warmed else COLD_MAX
+            if cold_peak >= raw_ceiling:
+                raise AssertionError(
+                    f"cold-build cgroup peak {cold_peak} exceeds {raw_ceiling}"
+                )
+            if monitor.effective_peak >= COLD_MAX:
+                raise AssertionError(
+                    f"effective working-set peak {monitor.effective_peak} exceeds 1.5 GiB"
+                )
             try:
                 latency_result = _latencies()
             except ExpansionLatencyFailure as exc:

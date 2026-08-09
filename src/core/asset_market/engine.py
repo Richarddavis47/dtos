@@ -21,8 +21,9 @@ from src.core.asset_market.read_model import (
     MarketMemoryBudgetError,
     MarketReadModel,
     build_read_model,
+    memory_admission,
 )
-from src.platform.lifecycle import lifecycle_coordinator
+from src.platform.lifecycle import lifecycle_coordinator, memory_snapshot
 
 MARKET_SCHEMA_VERSION = "1.0"
 SORT_FIELDS = {
@@ -42,6 +43,9 @@ _TRANSIENT_SEMANTIC_FIELDS = frozenset({
     "sleeper_sync_timestamp", "updated_at", "valuation_timestamp",
     "data_age", "freshness", "last_changed", "sleeper_data_age_hours",
 })
+
+MEMORY_ADMISSION_BACKOFF_SECONDS = 30.0
+MEMORY_ADMISSION_IMPROVEMENT_BYTES = 64 * 1024 * 1024
 
 
 def _semantic_value(value: Any) -> Any:
@@ -186,6 +190,7 @@ class AssetMarket:
         self.brain_generation = brain.report.get("generated_at")
         self.generated_at = datetime.now(timezone.utc).isoformat()
         self._prepared_health: dict[str, Any] | None = None
+        self._memory_admission: dict[str, Any] | None = None
         if load_existing:
             self._read_model = MarketReadModel(artifact_path)
             metadata = self._read_model.metadata()
@@ -214,6 +219,21 @@ class AssetMarket:
                     "compatibility": compatibility or {},
                 },
             )
+        metadata = self._read_model.metadata()
+        stages = list(metadata.get("build_stages") or [])
+        if stages:
+            before = stages[-1].get("memory_before") or {}
+            admission = before.get("admission") or {}
+            allowed = {
+                "raw_cgroup_bytes", "inactive_file_bytes",
+                "effective_working_set_bytes", "stage_estimate_bytes",
+                "predicted_effective_bytes", "target_ceiling_bytes",
+                "raw_headroom_bytes", "effective_headroom_bytes",
+                "accounting_mode", "memory_event_deltas", "admitted", "reason",
+            }
+            self._memory_admission = {
+                key: value for key, value in admission.items() if key in allowed
+            }
         self.assets = self._read_model.assets
         self.by_id = self._read_model.by_id
         self._artifact_path = artifact_path
@@ -263,6 +283,7 @@ class AssetMarket:
                 "normalization": "durable_build_time",
                 "storage": "bounded_sqlite",
             },
+            "memory_admission": dict(self._memory_admission or {}),
         }
 
     def directory(
@@ -553,7 +574,7 @@ class AssetMarket:
 class AssetMarketCache:
     """Single-flight last-valid cache keyed by every canonical input identity."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, clock: Any = None, memory_observer: Any = None) -> None:
         self._lock = threading.RLock()
         self._build_lock = threading.Lock()
         self._key: str | None = None
@@ -573,7 +594,67 @@ class AssetMarketCache:
         self._refresh_state = "idle"
         self._artifact_compatibility = "artifact_not_found"
         self._request_marker: tuple[Any, ...] | None = None
+        self._requested_generation: str | None = None
+        self._memory_backoff: dict[str, Any] | None = None
+        self.attempted_constructions = 0
+        self.failed_constructions = 0
+        self._clock = clock or time.monotonic
+        self._memory_observer = memory_observer or memory_snapshot
         self._epoch = 0
+
+    def _memory_backoff_active(
+        self, request_marker: tuple[Any, ...],
+    ) -> bool:
+        """Return whether a failed admission still applies to this request."""
+        with self._lock:
+            backoff = dict(self._memory_backoff or {})
+        if not backoff:
+            return False
+        now = float(self._clock())
+        if backoff.get("request_marker") != request_marker or now >= float(
+            backoff.get("expires_monotonic", 0.0)
+        ):
+            with self._lock:
+                self._memory_backoff = None
+            return False
+        try:
+            current = memory_admission(self._memory_observer(), estimate=0)
+            previous = int(backoff.get("effective_working_set_bytes") or 0)
+            improved = previous - int(
+                current.get("effective_working_set_bytes") or 0
+            )
+            if current.get("admitted") and improved >= MEMORY_ADMISSION_IMPROVEMENT_BYTES:
+                with self._lock:
+                    self._memory_backoff = None
+                return False
+        except (OSError, TypeError, ValueError):
+            pass
+        with self._lock:
+            self._build_phase = "memory_backoff"
+            self._refresh_state = "memory_backoff"
+        return True
+
+    def _record_memory_backoff(
+        self, request_marker: tuple[Any, ...], error: MarketMemoryBudgetError,
+    ) -> None:
+        observation = dict(error.observation)
+        now = float(self._clock())
+        with self._lock:
+            self._memory_backoff = {
+                "request_marker": request_marker,
+                "requested_generation": self._requested_generation,
+                "reason": observation.get("reason", "memory_admission_failed"),
+                "accounting_mode": observation.get("accounting_mode"),
+                "raw_cgroup_bytes": observation.get("raw_cgroup_bytes"),
+                "inactive_file_bytes": observation.get("inactive_file_bytes"),
+                "effective_working_set_bytes": observation.get(
+                    "effective_working_set_bytes"
+                ),
+                "target_ceiling_bytes": observation.get("target_ceiling_bytes"),
+                "predicted_effective_bytes": observation.get("predicted_effective_bytes"),
+                "retry_after_seconds": MEMORY_ADMISSION_BACKOFF_SECONDS,
+                "expires_monotonic": now + MEMORY_ADMISSION_BACKOFF_SECONDS,
+            }
 
     @staticmethod
     def request_marker(
@@ -788,6 +869,7 @@ class AssetMarketCache:
                 "brain_generation", "valuation_generation", "generated_at",
                 "status", "counts", "duplicate_asset_ids",
                 "build_duration_ms", "read_contract", "search_index",
+                "memory_admission",
             ) if name in health
         }
         with self._lock:
@@ -797,6 +879,7 @@ class AssetMarketCache:
             self._market, self._key = market, key
             self._store_identity = store_identity
             self._request_marker = request_marker
+            self._memory_backoff = None
             self.build_count += 1
             self.last_error = None
             self._refresh_state = "ready"
@@ -864,6 +947,8 @@ class AssetMarketCache:
         generation = self.durable_generation(
             data, state, store, league_id, contract,
         )
+        with self._lock:
+            self._requested_generation = generation
         expected_path = self.artifact_path(store, generation)
         artifact, compatibility = self._discover_artifact(
             store, generation, contract,
@@ -921,8 +1006,16 @@ class AssetMarketCache:
             with self._lock:
                 if epoch == self._epoch:
                     self._build_phase = "idle"
+        except MarketMemoryBudgetError as exc:
+            with self._lock:
+                self.failed_constructions += 1
+                self.last_error = str(exc)
+                self._build_phase = "memory_backoff"
+                self._refresh_state = "memory_backoff"
+            self._record_memory_backoff(request_marker, exc)
         except Exception as exc:
             with self._lock:
+                self.failed_constructions += 1
                 self.last_error = str(exc)
                 self._build_phase = "failed"
                 self._refresh_state = "failed"
@@ -931,7 +1024,7 @@ class AssetMarketCache:
                 if epoch == self._epoch:
                     if self._build_started_monotonic is not None:
                         self._build_duration_ms = round(
-                            (time.monotonic() - self._build_started_monotonic) * 1000,
+                            (self._clock() - self._build_started_monotonic) * 1000,
                             3,
                         )
                 if self._build_thread is threading.current_thread():
@@ -944,24 +1037,28 @@ class AssetMarketCache:
         self, data: dict[str, Any], state: dict[str, Any],
         store: HistoricalStore, league_id: str,
         request_marker: tuple[Any, ...],
-    ) -> None:
+    ) -> bool:
+        if self._memory_backoff_active(request_marker):
+            return False
         with self._lock:
             if self._build_thread is not None:
-                return
+                return False
             epoch = self._epoch
             self._building = True
             self._build_phase = "preparing_generation"
             self._build_started_at = datetime.now(timezone.utc).isoformat()
-            self._build_started_monotonic = time.monotonic()
+            self._build_started_monotonic = self._clock()
             self._build_duration_ms = None
             self._refresh_state = "refreshing"
             self.last_error = None
+            self.attempted_constructions += 1
             self._build_thread = threading.Thread(
                 target=self._background_construct,
                 args=(data, state, store, league_id, request_marker, epoch),
                 name="dtos-market-builder", daemon=True,
             )
             self._build_thread.start()
+            return True
 
     def begin_warming_guard(
         self, data: dict[str, Any], state: dict[str, Any],
@@ -970,6 +1067,8 @@ class AssetMarketCache:
         """Start or observe generation using only bounded in-memory state."""
         allowed = lifecycle_coordinator.market_build_allowed()
         request_marker = self.request_marker(data, state, store, league_id)
+        if self._memory_backoff_active(request_marker):
+            return True
         with self._lock:
             market = self._market
             current = (
@@ -1093,6 +1192,8 @@ class AssetMarketCache:
             return {
                 "status": "ready" if market is not None else "warming",
                 "build_count": self.build_count, "cache_hits": self.hits,
+                "attempted_constructions": self.attempted_constructions,
+                "failed_constructions": self.failed_constructions,
                 "last_error": self.last_error,
                 "last_miss_reason": self.last_miss_reason,
                 "last_valid_model": market is not None,
@@ -1112,6 +1213,26 @@ class AssetMarketCache:
                 "background_duration_ms": self._build_duration_ms,
                 "refresh_state": self._refresh_state,
                 "artifact_compatibility": self._artifact_compatibility,
+                "requested_generation": self._requested_generation,
+                "memory_admission_backoff": (
+                    {
+                        key: value for key, value in self._memory_backoff.items()
+                        if key not in {
+                            "request_marker", "expires_monotonic",
+                            "retry_after_seconds",
+                        }
+                    } | {
+                        "active": True,
+                        "retry_after_seconds": max(
+                            0.0,
+                            round(
+                                float(self._memory_backoff["expires_monotonic"])
+                                - float(self._clock()),
+                                3,
+                            ),
+                        ),
+                    } if self._memory_backoff else None
+                ),
                 "served_generation": market.generated_at if market else None,
                 "lifecycle": lifecycle_coordinator.snapshot(),
             }
@@ -1142,6 +1263,8 @@ class AssetMarketCache:
             self._market = None
             self._health_metadata = {}
             self._request_marker = None
+            self._requested_generation = None
+            self._memory_backoff = None
             active = self._build_thread is not None
             self._building = active
             self._build_phase = "superseded" if active else "idle"

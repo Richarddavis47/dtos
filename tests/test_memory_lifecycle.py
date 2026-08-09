@@ -17,7 +17,9 @@ from fastapi.testclient import TestClient
 from routes.market import create_market_router
 from services import sleeper
 from src.core.asset_market import AssetMarketCache, MarketWarmingError, asset_market_cache
-from src.platform.lifecycle import LifecycleCoordinator, lifecycle_coordinator
+from src.platform.lifecycle import (
+    LifecycleCoordinator, _key_value_file, lifecycle_coordinator,
+)
 
 
 class MemoryLifecycleTests(unittest.TestCase):
@@ -139,6 +141,20 @@ class MemoryLifecycleTests(unittest.TestCase):
         encoded = json.dumps(payload)
         self.assertNotIn(str(Path.home()), encoded)
         self.assertNotIn("database", encoded.casefold())
+
+    def test_cgroup_key_value_parser_is_bounded_and_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "memory.stat"
+            target.write_text("anon 42\ninactive_file 99\n", encoding="utf-8")
+            self.assertEqual(_key_value_file(target), {
+                "anon": 42, "inactive_file": 99,
+            })
+            target.write_text("inactive_file -1\n", encoding="utf-8")
+            self.assertIsNone(_key_value_file(target))
+            target.write_text("inactive_file invalid\n", encoding="utf-8")
+            self.assertIsNone(_key_value_file(target))
+            target.unlink()
+            self.assertIsNone(_key_value_file(target))
 
 
 if __name__ == "__main__":
