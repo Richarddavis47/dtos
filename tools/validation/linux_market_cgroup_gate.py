@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 import os
 import base64
+import hashlib
+import re
 import signal
 import statistics
 import subprocess
@@ -37,6 +39,56 @@ class ExpansionLatencyFailure(AssertionError):
     def __init__(self, message: str, result: dict[str, object]) -> None:
         super().__init__(message)
         self.result = result
+
+
+class StartupFailure(RuntimeError):
+    """Preserve the original startup failure and its bounded evidence."""
+
+    def __init__(
+        self, message: str, evidence: dict[str, object],
+        process: subprocess.Popen | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.evidence = evidence
+        self.process = process
+
+
+def _sanitize_server_log(value: str, *, limit: int = 200) -> str:
+    """Return a bounded diagnostic tail without paths, identities, or secrets."""
+    lines = value.splitlines()[-limit:]
+    sanitized = "\n".join(lines)
+    sanitized = re.sub(
+        r'(?i)(authorization|cookie|token|password|secret)([=: ]+)\S+',
+        r'\1\2<redacted>', sanitized,
+    )
+    sanitized = re.sub(
+        r'(?i)(file\s+["\'])(?:[A-Za-z]:\\|/)[^"\']*[\\/]([^\\/"\']+)(["\'])',
+        r'\1<path>/\2\3', sanitized,
+    )
+    sanitized = re.sub(
+        r'(?<![\w.-])(?:[A-Za-z]:\\[^\s"\']+|/(?:app|fixture|home|tmp|var)/[^\s"\']+)',
+        '<path>', sanitized,
+    )
+    sanitized = re.sub(
+        r'\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b',
+        '<database-id>', sanitized,
+    )
+    return sanitized[-32_768:]
+
+
+def _bounded_log_tail(log) -> str:
+    try:
+        log.flush()
+        if log.readable():
+            log.seek(0)
+            value = log.read()
+            log.seek(0, os.SEEK_END)
+            return _sanitize_server_log(value)
+        return _sanitize_server_log(Path(log.name).read_text(
+            encoding="utf-8", errors="replace",
+        ))
+    except (AttributeError, OSError):
+        return ""
 
 
 def _normalized_headers(items) -> dict[str, str]:
@@ -132,28 +184,84 @@ def _request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes,
     return status, body, elapsed
 
 
-def _start_server(log, mode: str = "normal") -> subprocess.Popen:
+def _start_server(
+    log, mode: str = "normal", *, evidence: dict[str, object] | None = None,
+    popen_factory=subprocess.Popen, request_observer=_request,
+    clock=time.monotonic, sleeper=time.sleep, memory_observer=None,
+) -> subprocess.Popen:
+    evidence = evidence if evidence is not None else {}
+    memory_observer = memory_observer or (lambda: _cgroup("memory.current"))
     environment = os.environ.copy()
     environment["DTOS_MARKET_PROFILE_MODE"] = mode
-    process = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "tools.validation.market_profile_app:app", "--host", "127.0.0.1", "--port", "8767", "--workers", "1"],
-        stdout=log,
-        stderr=subprocess.STDOUT,
-        start_new_session=True,
-        env=environment,
-    )
-    deadline = time.monotonic() + 60
-    while time.monotonic() < deadline:
+    command = [
+        sys.executable, "-m", "uvicorn",
+        "tools.validation.market_profile_app:app", "--host", "127.0.0.1",
+        "--port", "8767", "--workers", "1",
+    ]
+    evidence.update({
+        "command": [Path(command[0]).name, *command[1:]],
+        "mode": mode,
+        "fixture": {
+            "cache_file": Path(environment.get("DTOS_CACHE_FILE", "")).name,
+            "history_database": Path(
+                environment.get("DTOS_HISTORY_DB_FILE", "")
+            ).name,
+            "storage_root": ".",
+        },
+        "observations": [],
+        "memory_at_launch": memory_observer(),
+        "termination": "launching",
+    })
+    try:
+        process = popen_factory(
+            command, stdout=log, stderr=subprocess.STDOUT,
+            start_new_session=True, env=environment,
+        )
+    except OSError as exc:
+        evidence.update({
+            "exit_code": None, "termination": "launch_failure",
+            "exception_type": type(exc).__name__,
+            "message": _sanitize_server_log(str(exc)),
+            "server_log_tail": _bounded_log_tail(log),
+        })
+        raise StartupFailure("application executable could not start", evidence) from exc
+    evidence["pid_recorded"] = True
+    deadline = clock() + 60
+    while clock() < deadline:
         if process.poll() is not None:
-            raise RuntimeError(f"application exited during startup: {process.returncode}")
+            returncode = process.returncode
+            evidence.update({
+                "exit_code": returncode,
+                "termination": "signal" if returncode < 0 else "natural_exit",
+                "memory_at_exit": memory_observer(),
+                "server_log_tail": _bounded_log_tail(log),
+            })
+            raise StartupFailure(
+                f"application exited during startup: {returncode}", evidence, process,
+            )
         try:
-            status, _body, _elapsed = _request("/health/live")
+            status, _body, elapsed = request_observer("/health/live")
+            evidence["observations"].append({
+                "endpoint": "/health/live", "status": status,
+                "client_ms": round(elapsed, 3),
+            })
             if status == 200:
+                evidence.update({"exit_code": None, "termination": "running"})
                 return process
-        except OSError:
-            pass
-        time.sleep(0.25)
-    raise RuntimeError("application did not become live within 60 seconds")
+        except OSError as exc:
+            evidence["observations"].append({
+                "endpoint": "/health/live", "status": "connection_error",
+                "error": type(exc).__name__,
+            })
+        sleeper(0.25)
+    evidence.update({
+        "exit_code": process.poll(), "termination": "startup_timeout",
+        "memory_at_exit": memory_observer(),
+        "server_log_tail": _bounded_log_tail(log),
+    })
+    raise StartupFailure(
+        "application did not become live within 60 seconds", evidence, process,
+    )
 
 
 def _stop_server(process: subprocess.Popen) -> None:
@@ -435,11 +543,261 @@ def _pad_to_production_baseline() -> list[bytearray]:
     return padding
 
 
-def _mutate_generation(marker: str) -> None:
-    cache_path = FIXTURE / "dtos_cache.json"
-    payload = json.loads(cache_path.read_text(encoding="utf-8"))
-    payload["last_sync"] = marker
-    cache_path.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+def _semantic_contract() -> dict[str, object]:
+    return json.loads(_request("/__validation__/semantic-market-contract")[1])
+
+
+_NONSEMANTIC_VOLATILE_PATHS = {
+    "$.historical_progress.canonical_history_progress.semantic_generations."
+    "historical_records",
+    "$.valuation_generation",
+}
+_MATERIAL_PUBLICATION_ENVELOPE_PATHS = {
+    "$.brain_generation",
+    "$.generated_at",
+    "$.historical_progress.canonical_history_progress.semantic_generations."
+    "historical_records",
+    "$.historical_dataset_version",
+    "$.market_generation",
+    "$.valuation_generation",
+}
+
+
+def _json_differences(
+    before: object, after: object, path: str = "$",
+) -> list[dict[str, object]]:
+    differences: list[dict[str, object]] = []
+    if type(before) is not type(after):
+        return [{"path": path, "before": before, "after": after}]
+    if isinstance(before, dict) and isinstance(after, dict):
+        for key in sorted(set(before) | set(after)):
+            child = f"{path}.{key}"
+            if key not in before:
+                differences.append({"path": child, "before": "<missing>", "after": after[key]})
+            elif key not in after:
+                differences.append({"path": child, "before": before[key], "after": "<missing>"})
+            else:
+                differences.extend(_json_differences(before[key], after[key], child))
+        return differences
+    if isinstance(before, list) and isinstance(after, list):
+        if len(before) != len(after):
+            differences.append({
+                "path": f"{path}.length", "before": len(before), "after": len(after),
+            })
+        for index, (left, right) in enumerate(zip(before, after)):
+            differences.extend(_json_differences(left, right, f"{path}[{index}]"))
+        return differences
+    if before != after:
+        differences.append({"path": path, "before": before, "after": after})
+    return differences
+
+
+def _canonical_digest(value: object) -> str:
+    encoded = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+    ).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _nonsemantic_payload_comparison(before_body: bytes, after_body: bytes) -> dict[str, object]:
+    """Compare product content while explicitly auditing two volatile fields."""
+    before = json.loads(before_body)
+    after = json.loads(after_body)
+    differences = _json_differences(before, after)
+    unexpected = [
+        difference for difference in differences
+        if difference["path"] not in _NONSEMANTIC_VOLATILE_PATHS
+    ]
+    if unexpected:
+        raise AssertionError(
+            "non-semantic refresh changed unapproved response paths: "
+            + json.dumps(unexpected, sort_keys=True)
+        )
+    for difference in differences:
+        path = str(difference["path"])
+        before_value, after_value = difference["before"], difference["after"]
+        if path.endswith(".historical_records") and not all(
+            isinstance(value, int) and value >= 0 for value in (before_value, after_value)
+        ):
+            raise AssertionError("historical record generation is not a nonnegative integer")
+        if path == "$.valuation_generation" and not all(
+            value is None or isinstance(value, str) for value in (before_value, after_value)
+        ):
+            raise AssertionError("valuation generation is not nullable text")
+    before_stable = json.loads(before_body)
+    after_stable = json.loads(after_body)
+    before_stable.pop("valuation_generation", None)
+    after_stable.pop("valuation_generation", None)
+    for payload in (before_stable, after_stable):
+        generations = (
+            payload.get("historical_progress", {})
+            .get("canonical_history_progress", {})
+            .get("semantic_generations", {})
+        )
+        generations.pop("historical_records", None)
+    before_rows = before.get("assets") or []
+    after_rows = after.get("assets") or []
+    before_ids = [row.get("asset_id") for row in before_rows]
+    after_ids = [row.get("asset_id") for row in after_rows]
+    row_digest_before = _canonical_digest(before_rows)
+    row_digest_after = _canonical_digest(after_rows)
+    stable_digest_before = _canonical_digest(before_stable)
+    stable_digest_after = _canonical_digest(after_stable)
+    if before_ids != after_ids or row_digest_before != row_digest_after:
+        raise AssertionError("non-semantic refresh changed market rows or ordering")
+    if stable_digest_before != stable_digest_after:
+        raise AssertionError("non-semantic refresh changed stable response contract")
+    return {
+        "changed_path_count": len(differences),
+        "changed_paths": differences,
+        "asset_row_ids_changed": [],
+        "row_order_changed": False,
+        "row_digest_before": row_digest_before,
+        "row_digest_after": row_digest_after,
+        "stable_digest_before": stable_digest_before,
+        "stable_digest_after": stable_digest_after,
+        "raw_digest_before": _canonical_digest(before),
+        "raw_digest_after": _canonical_digest(after),
+    }
+
+
+def _material_target_comparison(
+    before_body: bytes, after_body: bytes,
+) -> list[dict[str, object]]:
+    before_rows = json.loads(before_body).get("results") or []
+    after_rows = json.loads(after_body).get("results") or []
+    expected_ids = ["player:10213"]
+    if [row.get("asset_id") for row in before_rows] != expected_ids:
+        raise AssertionError("material target is unavailable in compact market search")
+    if [row.get("asset_id") for row in after_rows] != expected_ids:
+        raise AssertionError("published material target is unavailable in compact search")
+    differences = _json_differences(
+        before_rows[0], after_rows[0], "$.assets[player:10213]",
+    )
+    expected_paths = {
+        "$.assets[player:10213].values.intrinsic_dtos_value",
+        "$.assets[player:10213].values.league_adjusted_value",
+    }
+    if {difference["path"] for difference in differences} != expected_paths:
+        raise AssertionError(
+            "material replacement changed unexpected target fields: "
+            + json.dumps(differences, sort_keys=True)
+        )
+    return differences
+
+
+def _material_target_search_path(asset_id: str = "player:10213") -> str:
+    """Use the public canonical-ID search contract for an unambiguous target."""
+    if not asset_id.startswith("player:") or not asset_id.removeprefix("player:"):
+        raise AssertionError("material target must be a canonical player asset ID")
+    return f"/api/market/search?q={quote(asset_id, safe='')}&limit=50"
+
+
+def _material_first_page_comparison(
+    before_body: bytes, after_body: bytes, *,
+    old_market_generation: object, new_market_generation: object,
+) -> dict[str, object]:
+    """Require identical ordered rows and audit exact publication metadata changes."""
+    before = json.loads(before_body)
+    after = json.loads(after_body)
+    before_assets = before.get("assets") or []
+    after_assets = after.get("assets") or []
+    before_asset_bytes = json.dumps(
+        before_assets, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+    ).encode()
+    after_asset_bytes = json.dumps(
+        after_assets, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+    ).encode()
+    if before_asset_bytes != after_asset_bytes:
+        raise AssertionError(
+            "material replacement changed unrelated first-page assets: "
+            + json.dumps(
+                _json_differences(before_assets, after_assets, "$.assets"),
+                sort_keys=True,
+            )
+        )
+    before_envelope = dict(before)
+    after_envelope = dict(after)
+    before_envelope.pop("assets", None)
+    after_envelope.pop("assets", None)
+    envelope_differences = _json_differences(before_envelope, after_envelope)
+    unexpected = [
+        difference for difference in envelope_differences
+        if difference["path"] not in _MATERIAL_PUBLICATION_ENVELOPE_PATHS
+    ]
+    if unexpected:
+        raise AssertionError(
+            "material publication changed unexpected envelope paths: "
+            + json.dumps(unexpected, sort_keys=True)
+        )
+    if before.get("market_generation") != old_market_generation:
+        raise AssertionError("pre-publication response used an unexpected generation")
+    if after.get("market_generation") != new_market_generation:
+        raise AssertionError("post-publication response used a stale generation")
+    if old_market_generation == new_market_generation:
+        raise AssertionError("material publication did not change market generation")
+    if after.get("generated_at") != new_market_generation:
+        raise AssertionError("post-publication generated_at conflicts with generation")
+    if before.get("historical_dataset_version_scope") != "artifact_build" or (
+        after.get("historical_dataset_version_scope") != "artifact_build"
+    ):
+        raise AssertionError("directory historical identity is not artifact provenance")
+    return {
+        "asset_count": len(before_assets),
+        "asset_digest_before": hashlib.sha256(before_asset_bytes).hexdigest(),
+        "asset_digest_after": hashlib.sha256(after_asset_bytes).hexdigest(),
+        "asset_order": [row.get("asset_id") for row in before_assets],
+        "envelope_changed_paths": envelope_differences,
+        "old_market_generation": old_market_generation,
+        "new_market_generation": new_market_generation,
+    }
+
+
+def _nonsemantic_reuse(
+    first_generation: object, first_build_count: int, expected_body: bytes,
+) -> dict[str, object]:
+    before = _semantic_contract()
+    marker = f"validation-nonsemantic-{time.time_ns()}"
+    _profiled_request(
+        f"/__validation__/nonsemantic-refresh?marker={quote(marker)}", method="POST",
+    )
+    bodies = [_request("/api/market/assets?limit=50")[1] for _ in range(3)]
+    after = _semantic_contract()
+    health = _market_health()
+    cache = health.get("cache") or {}
+    if before.get("semantic_generation") != after.get("semantic_generation"):
+        raise AssertionError("non-semantic refresh changed semantic generation")
+    if after.get("artifact_compatibility") != "compatible":
+        raise AssertionError("non-semantic refresh rejected retained artifact")
+    comparisons = [
+        _nonsemantic_payload_comparison(expected_body, body) for body in bodies
+    ]
+    if int(cache.get("build_count") or 0) != first_build_count:
+        raise AssertionError("non-semantic refresh published a replacement")
+    if cache.get("build_active") or cache.get("market_generation") != first_generation:
+        raise AssertionError("non-semantic refresh started a replacement worker")
+    before_raw = before.get("raw_identities") or {}
+    after_raw = after.get("raw_identities") or {}
+    for field in (
+        "last_sync", "brain_generated_at", "historical_record_generation",
+    ):
+        if before_raw.get(field) == after_raw.get(field):
+            raise AssertionError(
+                f"non-semantic fixture mutation did not change raw identity: {field}"
+            )
+    return {
+        "classification": "non_semantic_reuse",
+        "semantic_generation_stable": True,
+        "serialized_output_unchanged": True,
+        "artifact_compatibility": "compatible",
+        "replacement_workers": 0,
+        "replacement_builds": 0,
+        "raw_before": before_raw,
+        "raw_after": after_raw,
+        "semantic_before": before.get("semantic_identities"),
+        "semantic_after": after.get("semantic_identities"),
+        "payload_comparison": comparisons[0],
+    }
 
 
 def _profiled_request(
@@ -477,12 +835,51 @@ def _profiled_request(
 
 
 def _replacement_profile(
-    first_generation: object, first_build_count: int,
+    first_generation: object, first_build_count: int, expected_body: bytes,
 ) -> tuple[dict[str, object], dict[str, object]]:
-    marker = f"validation-generation-{time.time_ns()}"
-    _profiled_request(
-        f"/__validation__/replace-generation?marker={quote(marker)}", method="POST",
+    before_semantic = _semantic_contract()
+    _target_status, target_before_body, _target_elapsed = _request(
+        _material_target_search_path(),
     )
+    marker = f"validation-material-{time.time_ns()}"
+    mutation_status, mutation_body, _headers, _client, _server, _profile = _profiled_request(
+        f"/__validation__/material-market-change?marker={quote(marker)}", method="POST",
+    )
+    mutation = json.loads(mutation_body)
+    if mutation_status != 200:
+        raise AssertionError("material fixture mutation was rejected")
+    if mutation.get("asset_id") != "player:10213" or mutation.get("attached") is not True:
+        raise AssertionError("material fixture target is missing or detached")
+    if mutation.get("field") != "normalized_players.10213.dtos_value":
+        raise AssertionError("material fixture changed an unexpected canonical field")
+    if int(mutation.get("changed_canonical_fields") or 0) != 1:
+        raise AssertionError("material fixture did not change exactly one canonical input")
+    if not isinstance(mutation.get("before"), (int, float)) or not isinstance(
+        mutation.get("after"), (int, float),
+    ):
+        raise AssertionError("material fixture scalar evidence is unavailable")
+    if mutation["before"] == mutation["after"]:
+        raise AssertionError("material fixture scalar did not change")
+    changed_semantic = _semantic_contract()
+    if (
+        before_semantic.get("semantic_generation")
+        == changed_semantic.get("semantic_generation")
+    ):
+        raise AssertionError("material fixture mutation did not change semantic digest")
+    if changed_semantic.get("artifact_compatibility") != "brain_semantic_output_changed":
+        raise AssertionError(
+            "material artifact mismatch reason was not brain_semantic_output_changed"
+        )
+    before_digests = before_semantic.get("semantic_identities") or {}
+    after_digests = changed_semantic.get("semantic_identities") or {}
+    for stable in ("asset_universe_digest", "ownership_dependency_digest"):
+        if before_digests.get(stable) != after_digests.get(stable):
+            raise AssertionError(f"material fixture changed unrelated digest: {stable}")
+    if (
+        before_digests.get("brain_semantic_output_digest")
+        == after_digests.get("brain_semantic_output_digest")
+    ):
+        raise AssertionError("material fixture did not change Brain/valuation digest")
     before_history = _history_metrics()
     samples: list[dict[str, object]] = []
     for sequence in range(1, 11):
@@ -571,7 +968,6 @@ def _replacement_profile(
             for sample in samples
         ),
     }
-    _mutate_generation(marker)
     failures = [sample for sample in samples if float(sample["server_ms"]) >= 50]
     if failures:
         result["failed_samples"] = failures
@@ -591,6 +987,47 @@ def _replacement_profile(
         raise AssertionError("replacement generation was not published")
     if result["request_thread_generation_work"] or result["sqlite_query_count"]:
         raise AssertionError("replacement warming performed request-thread generation work")
+    published_artifact = _artifact_state()
+    if published_artifact.get("generation") != changed_semantic.get("semantic_generation"):
+        raise AssertionError("validator sampled before the new semantic generation published")
+    _status, final_body, _elapsed = _request("/api/market/assets?limit=50")
+    first_page_comparison = _material_first_page_comparison(
+        expected_body, final_body,
+        old_market_generation=first_generation,
+        new_market_generation=final_cache.get("market_generation"),
+    )
+    if (
+        published_artifact.get("historical_dataset_version")
+        != json.loads(final_body).get("historical_dataset_version")
+    ):
+        raise AssertionError("directory historical provenance conflicts with artifact manifest")
+    _target_status, target_after_body, _target_elapsed = _request(
+        _material_target_search_path(),
+    )
+    target_differences = _material_target_comparison(
+        target_before_body, target_after_body,
+    )
+    changed_assets = ["player:10213"]
+    repeat_bodies = [_request("/api/market/assets?limit=50")[1] for _ in range(3)]
+    repeated_health = _market_health()
+    repeated_cache = repeated_health.get("cache") or {}
+    if any(body != final_body for body in repeat_bodies):
+        raise AssertionError("repeated material state changed serialized output")
+    if int(repeated_cache.get("build_count") or 0) != first_build_count + 1:
+        raise AssertionError("repeated material state started another construction")
+    if repeated_cache.get("build_active"):
+        raise AssertionError("repeated material state started another worker")
+    result.update({
+        "semantic_before": before_semantic.get("semantic_identities"),
+        "semantic_after": changed_semantic.get("semantic_identities"),
+        "incompatibility_reason": changed_semantic.get("artifact_compatibility"),
+        "changed_assets": changed_assets,
+        "controlled_output_difference": True,
+        "mutation": mutation,
+        "target_row_differences": target_differences,
+        "published_semantic_generation": published_artifact.get("generation"),
+        "first_page_comparison": first_page_comparison,
+    })
     return final_health, result
 
 
@@ -600,7 +1037,8 @@ def _identity(payload: dict[str, object]) -> dict[str, object]:
         for name in (
             "application_version", "application_build", "market_schema_version",
             "league_id", "historical_dataset_version", "market_generation",
-            "brain_generation", "valuation_generation",
+            "historical_dataset_version_scope", "brain_generation",
+            "valuation_generation",
         )
     }
 
@@ -746,9 +1184,10 @@ def main() -> int:
     padding: list[bytearray] = []
     process = None
     failure: BaseException | None = None
+    startup_evidence: dict[str, object] = {}
     try:
         with log_path.open("w", encoding="utf-8") as log, Monitor() as monitor:
-            process = _start_server(log)
+            process = _start_server(log, evidence=startup_evidence)
             ready_ms = _wait_ready()
             _application_fixture_contract(fixture_contract)
             startup_current = _cgroup("memory.current")
@@ -788,10 +1227,20 @@ def main() -> int:
             }
             first_generation = (health.get("cache") or {}).get("market_generation")
             first_build_count = int((health.get("cache") or {}).get("build_count") or 0)
+            _baseline_status, baseline_body, _baseline_ms = _request(
+                "/api/market/assets?limit=50",
+            )
+            nonsemantic = _nonsemantic_reuse(
+                first_generation, first_build_count, baseline_body,
+            )
+            summary["phases"]["nonsemantic_reuse"] = {
+                "timestamp": time.time(), **nonsemantic,
+                "memory_current": _cgroup("memory.current"),
+            }
             replacement_started = time.perf_counter()
             try:
                 replacement, replacement_profile = _replacement_profile(
-                    first_generation, first_build_count,
+                    first_generation, first_build_count, baseline_body,
                 )
             except ExpansionLatencyFailure as exc:
                 summary["phases"]["generation_replacement"] = {
@@ -903,6 +1352,10 @@ def main() -> int:
             summary["completed"] = True
     except BaseException as exc:
         failure = exc
+        if isinstance(exc, StartupFailure):
+            process = exc.process
+            startup_evidence = exc.evidence
+        summary["startup_evidence"] = startup_evidence
         summary["errors"] = [{
             **_public_error(exc),
             "phase": next(reversed(summary["phases"]), "initialization"),
@@ -920,6 +1373,15 @@ def main() -> int:
                 summary["exit_code"] = 1
                 failure = failure or exc
         padding.clear()
+        if log_path.is_file():
+            sanitized_log = _sanitize_server_log(log_path.read_text(
+                encoding="utf-8", errors="replace",
+            ))
+            log_path.write_text(sanitized_log + ("\n" if sanitized_log else ""), encoding="utf-8")
+            summary["server_log"] = {
+                "artifact": "server.log", "line_count": len(sanitized_log.splitlines()),
+                "bounded": True, "sanitized": True,
+            }
         OUTPUT.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
     if failure is not None:
         print(f"{type(failure).__name__}: {failure}", file=sys.stderr)

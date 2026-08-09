@@ -3,20 +3,31 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import tempfile
 import unittest
 from collections import deque
 from pathlib import Path
 from unittest.mock import patch
 
+from src.core.valuation.universe import ValuationUniverse
+from tools.validation.generate_sanitized_market_fixture import (
+    material_market_fixture_change,
+)
 from tools.validation.linux_market_cgroup_gate import (
+    StartupFailure,
     _artifact_state,
     _application_fixture_contract,
     _configured_fixture_contract,
     _diagnostic_request,
     _identity,
+    _material_target_comparison,
+    _material_target_search_path,
+    _material_first_page_comparison,
+    _nonsemantic_payload_comparison,
     _normalized_headers,
     _restart_reuse,
+    _start_server,
 )
 
 
@@ -25,7 +36,7 @@ DETAIL = "Asset Market generation is building safely in the background; retry sh
 
 def _published(generation: str = "market-2") -> dict[str, object]:
     return {
-        "application_version": "1.8.8", "application_build": 1808,
+        "application_version": "1.8.9", "application_build": 1809,
         "market_schema_version": "1.0", "league_id": "league-1",
         "historical_dataset_version": "history-1",
         "market_generation": generation, "brain_generation": "brain-1",
@@ -68,6 +79,18 @@ class _ReadyResponse:
     @staticmethod
     def read() -> bytes:
         return b'{"detail":"Waiting for the initial Sleeper dataset."}'
+
+
+class _FakeProcess:
+    def __init__(self, returncodes) -> None:
+        self.returncodes = deque(returncodes)
+        self.returncode = None
+        self.pid = 1234
+
+    def poll(self):
+        if self.returncodes:
+            self.returncode = self.returncodes.popleft()
+        return self.returncode
 
 
 class RestartReuseValidationTests(unittest.TestCase):
@@ -308,6 +331,266 @@ class RestartReuseValidationTests(unittest.TestCase):
             return_value=(200, json.dumps(leaked).encode(), 1.0),
         ), self.assertRaisesRegex(AssertionError, "HistoricalStore"):
             _application_fixture_contract(expected)
+
+    def test_startup_exit_preserves_sanitized_log_and_exit_code(self) -> None:
+        process = _FakeProcess([1])
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+            log.write('Traceback\n  File "/app/private/module.py", line 1\nboom\n')
+            log.flush()
+            evidence: dict[str, object] = {}
+            with self.assertRaises(StartupFailure) as raised:
+                _start_server(
+                    log, evidence=evidence,
+                    popen_factory=lambda *_args, **_kwargs: process,
+                    request_observer=lambda _path: (200, b"", 1.0),
+                    memory_observer=lambda: 128,
+                )
+        self.assertEqual(raised.exception.process, process)
+        self.assertEqual(evidence["exit_code"], 1)
+        self.assertEqual(evidence["termination"], "natural_exit")
+        self.assertIn("Traceback", evidence["server_log_tail"])
+        self.assertNotIn("/app/private", evidence["server_log_tail"])
+
+    def test_startup_timeout_preserves_process_for_cleanup(self) -> None:
+        clock = _Clock()
+        process = _FakeProcess([None] * 300)
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+            evidence: dict[str, object] = {}
+            with self.assertRaisesRegex(StartupFailure, "60 seconds") as raised:
+                _start_server(
+                    log, evidence=evidence,
+                    popen_factory=lambda *_args, **_kwargs: process,
+                    request_observer=lambda _path: (_ for _ in ()).throw(
+                        ConnectionRefusedError()
+                    ),
+                    clock=clock, sleeper=clock.sleep,
+                    memory_observer=lambda: 256,
+                )
+        self.assertEqual(raised.exception.process, process)
+        self.assertEqual(evidence["termination"], "startup_timeout")
+        self.assertGreater(len(evidence["observations"]), 0)
+
+    def test_missing_executable_is_reported_as_launch_failure(self) -> None:
+        def missing(*_args, **_kwargs):
+            raise FileNotFoundError("missing executable")
+
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+            evidence: dict[str, object] = {}
+            with self.assertRaisesRegex(StartupFailure, "could not start"):
+                _start_server(
+                    log, evidence=evidence, popen_factory=missing,
+                    memory_observer=lambda: 64,
+                )
+        self.assertEqual(evidence["termination"], "launch_failure")
+        self.assertEqual(evidence["exception_type"], "FileNotFoundError")
+
+    def test_successful_startup_records_bounded_observation(self) -> None:
+        process = _FakeProcess([None])
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+            evidence: dict[str, object] = {}
+            result = _start_server(
+                log, evidence=evidence,
+                popen_factory=lambda *_args, **_kwargs: process,
+                request_observer=lambda _path: (200, b"{}", 1.25),
+                memory_observer=lambda: 512,
+            )
+        self.assertIs(result, process)
+        self.assertEqual(evidence["termination"], "running")
+        self.assertEqual(evidence["observations"][0]["status"], 200)
+        self.assertNotIn(str(Path(sys.executable).parent), json.dumps(evidence))
+
+    def test_material_fixture_mutation_updates_attached_canonical_input(self) -> None:
+        source = {
+            "normalized_players": {
+                "10213": {"name": "Bijan Robinson", "dtos_value": 91},
+            },
+        }
+        changed, evidence = material_market_fixture_change(source)
+        self.assertEqual(source["normalized_players"]["10213"]["dtos_value"], 91)
+        self.assertEqual(changed["normalized_players"]["10213"]["dtos_value"], 92)
+        self.assertTrue(evidence["attached"])
+        self.assertEqual(evidence["changed_canonical_fields"], 1)
+
+    def test_material_fixture_mutation_changes_only_expected_market_row(self) -> None:
+        source = {
+            "normalized_players": {
+                "10213": {
+                    "name": "Bijan Robinson", "position": "RB", "dtos_value": 91,
+                },
+                "4046": {
+                    "name": "Josh Allen", "position": "QB", "dtos_value": 95,
+                },
+            },
+        }
+        changed, _evidence = material_market_fixture_change(source)
+        with patch("src.core.valuation.universe._now", return_value="fixture-time"):
+            before = {
+                row["asset_id"]: row
+                for row in ValuationUniverse.streaming(source, {}).iter_assets()
+            }
+            after = {
+                row["asset_id"]: row
+                for row in ValuationUniverse.streaming(changed, {}).iter_assets()
+            }
+        changed_rows = sorted(
+            asset_id for asset_id in before if before[asset_id] != after[asset_id]
+        )
+        self.assertEqual(changed_rows, ["player:10213"])
+
+    def test_material_fixture_mutation_rejects_missing_or_detached_target(self) -> None:
+        invalid = ({}, {"normalized_players": {}}, {
+            "normalized_players": {"10213": {"dtos_value": None}},
+        })
+        for source in invalid:
+            with self.subTest(source=source), self.assertRaises(ValueError):
+                material_market_fixture_change(source)
+
+    def test_nonsemantic_payload_comparison_allows_only_named_volatile_fields(self) -> None:
+        before = _published()
+        before.update({
+            "valuation_generation": None,
+            "historical_progress": {"canonical_history_progress": {
+                "semantic_generations": {"historical_records": 3},
+            }},
+        })
+        after = json.loads(json.dumps(before))
+        after["valuation_generation"] = "generated-later"
+        after["historical_progress"]["canonical_history_progress"][
+            "semantic_generations"
+        ]["historical_records"] = 4
+        evidence = _nonsemantic_payload_comparison(
+            json.dumps(before).encode(), json.dumps(after).encode(),
+        )
+        self.assertEqual(evidence["changed_path_count"], 2)
+        self.assertEqual(evidence["row_digest_before"], evidence["row_digest_after"])
+        self.assertEqual(evidence["stable_digest_before"], evidence["stable_digest_after"])
+        self.assertNotEqual(evidence["raw_digest_before"], evidence["raw_digest_after"])
+
+    def test_nonsemantic_payload_comparison_rejects_row_or_stable_changes(self) -> None:
+        before = {"assets": [{"asset_id": "player:10213", "value": 90}], "total": 1}
+        for after in (
+            {"assets": [{"asset_id": "player:10213", "value": 91}], "total": 1},
+            {"assets": [{"asset_id": "player:10213", "value": 90}], "total": 2},
+            {"assets": [{"asset_id": "player:2", "value": 90}], "total": 1},
+        ):
+            with self.subTest(after=after), self.assertRaisesRegex(
+                AssertionError, "unapproved response paths",
+            ):
+                _nonsemantic_payload_comparison(
+                    json.dumps(before).encode(), json.dumps(after).encode(),
+                )
+
+    def test_material_target_comparison_requires_exact_controlled_row_change(self) -> None:
+        before = {"results": [{
+            "asset_id": "player:10213",
+            "values": {"intrinsic_dtos_value": 20, "league_adjusted_value": 20},
+            "confidence": 0,
+        }]}
+        after = json.loads(json.dumps(before))
+        after["results"][0]["values"].update({
+            "intrinsic_dtos_value": 30, "league_adjusted_value": 30,
+        })
+        differences = _material_target_comparison(
+            json.dumps(before).encode(), json.dumps(after).encode(),
+        )
+        self.assertEqual(len(differences), 2)
+        after["results"][0]["confidence"] = 1
+        with self.assertRaisesRegex(AssertionError, "unexpected target fields"):
+            _material_target_comparison(
+                json.dumps(before).encode(), json.dumps(after).encode(),
+            )
+
+    def test_material_target_comparison_rejects_missing_target(self) -> None:
+        body = json.dumps({"results": []}).encode()
+        with self.assertRaisesRegex(AssertionError, "target is unavailable"):
+            _material_target_comparison(body, body)
+
+    def test_material_target_search_uses_canonical_public_asset_id(self) -> None:
+        self.assertEqual(
+            _material_target_search_path(),
+            "/api/market/search?q=player%3A10213&limit=50",
+        )
+
+    def test_material_target_comparison_rejects_ambiguous_name_results(self) -> None:
+        body = json.dumps({
+            "results": [
+                {"asset_id": "player:10213"},
+                {"asset_id": "player:v10213"},
+            ],
+        }).encode()
+        with self.assertRaisesRegex(AssertionError, "unavailable"):
+            _material_target_comparison(body, body)
+
+    def test_material_target_search_rejects_noncanonical_target(self) -> None:
+        with self.assertRaisesRegex(AssertionError, "canonical player asset ID"):
+            _material_target_search_path("Validation Player 10213")
+
+    def test_material_first_page_separates_rows_from_publication_envelope(self) -> None:
+        before = {
+            "market_generation": "market-old", "generated_at": "market-old",
+            "brain_generation": "brain-old", "valuation_generation": None,
+            "historical_dataset_version": "history-old",
+            "historical_dataset_version_scope": "artifact_build",
+            "total": 2, "offset": 0, "limit": 50, "sort": "market",
+            "assets": [{"asset_id": "player:1"}, {"asset_id": "player:2"}],
+        }
+        after = json.loads(json.dumps(before))
+        after.update({
+            "market_generation": "market-new", "generated_at": "market-new",
+            "brain_generation": "brain-new", "valuation_generation": "value-new",
+            "historical_dataset_version": "history-new",
+        })
+        evidence = _material_first_page_comparison(
+            json.dumps(before).encode(), json.dumps(after).encode(),
+            old_market_generation="market-old", new_market_generation="market-new",
+        )
+        self.assertEqual(evidence["asset_digest_before"], evidence["asset_digest_after"])
+        self.assertEqual(evidence["asset_order"], ["player:1", "player:2"])
+
+    def test_material_first_page_rejects_row_change_or_reorder(self) -> None:
+        before = {
+            "market_generation": "old", "generated_at": "old",
+            "historical_dataset_version_scope": "artifact_build",
+            "assets": [{"asset_id": "player:1", "value": 1}, {"asset_id": "player:2", "value": 2}],
+        }
+        changed = json.loads(json.dumps(before))
+        changed.update({"market_generation": "new", "generated_at": "new"})
+        reordered = json.loads(json.dumps(changed))
+        reordered["assets"].reverse()
+        changed["assets"][0]["value"] = 2
+        for after in (changed, reordered):
+            with self.subTest(after=after), self.assertRaisesRegex(
+                AssertionError, "first-page assets",
+            ):
+                _material_first_page_comparison(
+                    json.dumps(before).encode(), json.dumps(after).encode(),
+                    old_market_generation="old", new_market_generation="new",
+                )
+
+    def test_material_first_page_rejects_unknown_or_stale_envelope(self) -> None:
+        before = {
+            "market_generation": "old", "generated_at": "old",
+            "historical_dataset_version_scope": "artifact_build", "assets": [],
+        }
+        unexpected = {
+            "market_generation": "new", "generated_at": "new", "total": 2,
+            "historical_dataset_version_scope": "artifact_build",
+            "assets": [],
+        }
+        with self.assertRaisesRegex(AssertionError, "unexpected envelope"):
+            _material_first_page_comparison(
+                json.dumps(before).encode(), json.dumps(unexpected).encode(),
+                old_market_generation="old", new_market_generation="new",
+            )
+        stale = {
+            "market_generation": "old", "generated_at": "old",
+            "historical_dataset_version_scope": "artifact_build", "assets": [],
+        }
+        with self.assertRaisesRegex(AssertionError, "stale generation"):
+            _material_first_page_comparison(
+                json.dumps(before).encode(), json.dumps(stale).encode(),
+                old_market_generation="old", new_market_generation="new",
+            )
 
 
 if __name__ == "__main__":

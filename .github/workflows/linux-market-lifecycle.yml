@@ -40,6 +40,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-market-lifecycle-summary
-          path: .validation/linux-market/summary.json
+          path: |
+            .validation/linux-market/summary.json
+            .validation/linux-market/server.log
           if-no-files-found: error
           retention-days: 14

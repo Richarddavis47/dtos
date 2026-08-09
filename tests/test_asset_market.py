@@ -1,6 +1,7 @@
 """Asset Market canonical contracts, ranking, search, and read isolation."""
 from __future__ import annotations
 
+import copy
 import gc
 import tempfile
 import threading
@@ -139,6 +140,126 @@ class AssetMarketTests(unittest.TestCase):
             loaded = restarted.get(self.data, self.state, self.store, self.league_id)
         self.assertEqual(loaded._artifact_path, first_path)
         self.assertEqual(loaded.directory(limit=4), self.market.directory(limit=4))
+        self.assertEqual(
+            restarted._request_marker,
+            restarted.request_marker(self.data, self.state, self.store, self.league_id),
+        )
+        with patch.object(restarted, "_start_background") as worker:
+            self.assertIs(
+                restarted.get(
+                    self.data, self.state, self.store, self.league_id,
+                    background=True,
+                ),
+                loaded,
+            )
+        worker.assert_not_called()
+
+    def test_timestamp_only_sync_and_brain_changes_reuse_artifact(self) -> None:
+        changed = copy.deepcopy(self.data)
+        changed["valuation_intelligence"]["generated_at"] = (
+            "2026-08-07T12:34:56+00:00"
+        )
+        state = {**self.state, "last_sync": "2026-08-07T12:34:55+00:00"}
+        restarted = AssetMarketCache()
+        with patch(
+            "src.core.asset_market.engine.build_read_model",
+            side_effect=AssertionError("timestamp-only changes must reuse"),
+        ):
+            loaded = restarted.get(changed, state, self.store, self.league_id)
+        self.assertEqual(loaded._artifact_path, self.market._artifact_path)
+        self.assertEqual(
+            restarted.health()["cache"]["artifact_compatibility"], "compatible",
+        )
+
+    def test_history_only_observation_reuses_compact_artifact(self) -> None:
+        self._append("transaction", "history-only-transaction", None, {
+            "transaction_id": "history-only-transaction", "type": "waiver",
+        })
+        restarted = AssetMarketCache()
+        with patch(
+            "src.core.asset_market.engine.build_read_model",
+            side_effect=AssertionError("history-only evidence must not rebuild"),
+        ):
+            loaded = restarted.get(
+                self.data, self.state, self.store, self.league_id,
+            )
+        self.assertEqual(loaded._artifact_path, self.market._artifact_path)
+        self.assertEqual(
+            loaded.detail("player:10213")["historical_dataset_version"],
+            self.store.dataset_version(self.league_id),
+        )
+
+    def test_material_brain_value_change_invalidates_artifact(self) -> None:
+        changed = copy.deepcopy(self.data)
+        changed["valuation_intelligence"]["assets"]["player:10213"][
+            "valuation_layers"
+        ]["market_value"]["value"] = 9301
+        expected = self.cache.artifact_contract(
+            changed, self.state, self.store, self.league_id,
+        )
+        generation = self.cache.durable_generation(
+            changed, self.state, self.store, self.league_id, expected,
+        )
+        artifact, reason = self.cache._discover_artifact(
+            self.store, generation, expected,
+        )
+        self.assertIsNone(artifact)
+        self.assertEqual(reason, "brain_semantic_output_changed")
+        replacement_cache = AssetMarketCache()
+        replacement = replacement_cache.get(
+            changed, self.state, self.store, self.league_id,
+        )
+        self.assertNotEqual(replacement._artifact_path, self.market._artifact_path)
+        self.assertEqual(
+            replacement.by_id["player:10213"]["values"]["market_value"], 9301,
+        )
+        self.assertIs(
+            replacement_cache.get(changed, self.state, self.store, self.league_id),
+            replacement,
+        )
+        self.assertEqual(replacement_cache.build_count, 1)
+
+    def test_ownership_change_invalidates_artifact(self) -> None:
+        changed = copy.deepcopy(self.data)
+        changed["teams"][0]["players"] = []
+        replacement = AssetMarketCache().get(
+            changed, self.state, self.store, self.league_id,
+        )
+        self.assertNotEqual(replacement._artifact_path, self.market._artifact_path)
+        self.assertEqual(
+            replacement.by_id["player:10213"]["availability"],
+            "day_traders_free_agent",
+        )
+
+    def test_consumed_provider_value_invalidates_artifact(self) -> None:
+        changed = copy.deepcopy(self.data)
+        changed["market_data"]["providers"] = {
+            "FantasyCalc": {
+                "10213": {"value": 9000, "confidence": 80, "rank": 1},
+            },
+        }
+        replacement = AssetMarketCache().get(
+            changed, self.state, self.store, self.league_id,
+        )
+        self.assertNotEqual(replacement._artifact_path, self.market._artifact_path)
+        providers = replacement._read_model.canonical("player:10213")["providers"]
+        self.assertEqual(providers[2]["raw_value"], 9000.0)
+
+    def test_artifact_discovery_reports_corrupt_and_never_discloses_path(self) -> None:
+        other = HistoricalStore(Path(self.temp.name) / "corrupt-history.sqlite3")
+        candidate = other.path.with_name(
+            f".{other.path.stem}.asset-market-corrupt.sqlite3"
+        )
+        candidate.write_bytes(b"not sqlite")
+        expected = self.cache.artifact_contract(
+            self.data, self.state, other, self.league_id,
+        )
+        path, reason = self.cache._discover_artifact(
+            other, "missing-generation", expected,
+        )
+        self.assertIsNone(path)
+        self.assertEqual(reason, "artifact_corrupt")
+        self.assertNotIn(str(candidate.parent), reason)
 
     def test_artifact_metadata_hydration_yields_between_bounded_chunks(self) -> None:
         yields: list[int] = []
@@ -330,17 +451,82 @@ class AssetMarketTests(unittest.TestCase):
     def test_generation_replacement_releases_superseded_market(self) -> None:
         cache = AssetMarketCache()
         previous = cache.get(self.data, self.state, self.store, self.league_id)
-        expected_assets = previous.directory()["assets"]
+        old_confidence = previous.by_id["player:10213"]["confidence"]
         reference = weakref.ref(previous)
-        changed_state = {**self.state, "last_sync": "2026-08-07T00:00:00+00:00"}
+        changed_data = copy.deepcopy(self.data)
+        changed_data["valuation_intelligence"]["assets"]["player:10213"][
+            "scores"
+        ]["confidence"] += 1
+        changed_data["valuation_intelligence"]["generated_at"] = (
+            "2026-08-07T00:00:00+00:00"
+        )
         current = cache.get(
-            self.data, changed_state, self.store, self.league_id,
+            changed_data, self.state, self.store, self.league_id,
         )
         del previous
         gc.collect()
         self.assertIsNone(reference())
-        self.assertEqual(current.directory()["assets"], expected_assets)
+        new_confidence = current.by_id["player:10213"]["confidence"]
+        self.assertNotEqual(new_confidence, old_confidence)
         self.assertEqual(cache.build_count, 2)
+
+    def test_failed_publication_does_not_expose_marker_or_model(self) -> None:
+        cache = AssetMarketCache()
+        market = cache.get(self.data, self.state, self.store, self.league_id)
+        marker = cache._request_marker
+        key = cache._key
+        changed = copy.deepcopy(self.data)
+        changed["valuation_intelligence"]["generated_at"] = "new-generation"
+        replacement = AssetMarketCache().get(
+            changed, self.state, self.store, self.league_id,
+        )
+        cache._epoch = 2
+        with self.assertRaisesRegex(RuntimeError, "superseded"):
+            cache._publish(
+                replacement, "replacement-key", cache.store_identity(self.store),
+                cache.request_marker(changed, self.state, self.store, self.league_id),
+                epoch=1,
+            )
+        self.assertIs(cache._market, market)
+        self.assertEqual(cache._request_marker, marker)
+        self.assertEqual(cache._key, key)
+
+    def test_nonsemantic_markers_start_no_replacement_worker(self) -> None:
+        cache = AssetMarketCache()
+        market = cache.get(self.data, self.state, self.store, self.league_id)
+        original_generated_at = self.data["valuation_intelligence"]["generated_at"]
+        self.data["valuation_intelligence"]["generated_at"] = "later-observation"
+        try:
+            with patch.object(cache, "_start_background") as worker:
+                result = cache.get(
+                    self.data, {**self.state, "last_sync": "later-sync"},
+                    self.store, self.league_id, background=True,
+                )
+        finally:
+            self.data["valuation_intelligence"]["generated_at"] = original_generated_at
+        self.assertIs(result, market)
+        worker.assert_not_called()
+        self.assertEqual(cache.build_count, 1)
+
+    def test_semantic_identity_is_deterministic_across_revert(self) -> None:
+        baseline = self.cache.artifact_contract(
+            self.data, self.state, self.store, self.league_id,
+        )
+        changed = copy.deepcopy(self.data)
+        changed["valuation_intelligence"]["assets"]["player:10213"]["scores"][
+            "confidence"
+        ] += 1
+        material = self.cache.artifact_contract(
+            changed, self.state, self.store, self.league_id,
+        )
+        reverted = self.cache.artifact_contract(
+            copy.deepcopy(self.data), self.state, self.store, self.league_id,
+        )
+        self.assertNotEqual(
+            baseline["brain_semantic_output_digest"],
+            material["brain_semantic_output_digest"],
+        )
+        self.assertEqual(baseline, reverted)
 
     def test_api_ui_agree_and_reads_never_sync(self) -> None:
         app = FastAPI()
@@ -376,6 +562,9 @@ class AssetMarketTests(unittest.TestCase):
                 self.assertEqual(first["market_generation"], second["market_generation"])
                 self.assertEqual(
                     first["historical_dataset_version"], self.market.dataset_version,
+                )
+                self.assertEqual(
+                    first["historical_dataset_version_scope"], "live_store",
                 )
                 self.assertEqual(
                     first["valuation_generation"],

@@ -570,3 +570,12 @@ DTOS v1.8.8 corrects over-broad historical checkpoint invalidation. Each complet
 Legacy checkpoints migrate only after evidence presence, identity resolution, uniqueness, provenance, and record-key validation. Migration updates checkpoint and audit metadata only; importer version 1.2 event identities remain unchanged. Compatibility diagnostics expose precise sanitized reason codes, and committed material identity remaps are recorded in a durable audit ledger.
 
 The canonical state remains five completed seasons (2021-2025) with 2026 honestly pending.
+# DTOS v1.8.9 — Semantic Asset Market Artifact Identity
+
+DTOS v1.8.9 narrows durable Asset Market compatibility to the semantic inputs that can change compact market rows and canonical decisions. Repeated synchronization timestamps, Brain generation timestamps, unrelated historical observations, checkpoints, audits, and global archive generations no longer force a market reconstruction when the consumed content is unchanged.
+
+The durable manifest records deterministic digests for the canonical asset universe, Brain and valuation output, ownership and identity dependencies, and provider evidence. Artifact discovery now inspects final candidates through the configured storage contract, rejects incompatible manifests before row hydration, and reports precise sanitized reason codes without exposing paths or database identities.
+
+Asset detail history continues reading the current HistoricalStore, so compatible directory reuse never hides newly captured evidence. Historical capture, immutable record identities, importer 1.2, checkpoint compatibility, canonical `5/6` progress, lifecycle warming, single-flight construction, and atomic publication remain unchanged.
+
+---

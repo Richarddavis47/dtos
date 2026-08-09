@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.8.9 - Semantic Asset Market Artifact Identity
+
+- Replaced timestamp and archive-wide Asset Market artifact invalidation with deterministic semantic content identities.
+- Separated compact directory compatibility from live historical-detail reads so current evidence remains visible without unnecessary reconstruction.
+- Added bounded manifest discovery with precise sanitized rejection reasons for corrupt, incomplete, cross-store, cross-league, schema, and semantic mismatches.
+- Preserved single-flight construction, atomic publication, durable restart reuse, and all historical capture and checkpoint contracts.
+
 ## v1.8.8 - Season-Scoped Historical Checkpoint Compatibility
 
 - Replaced global identity-generation checkpoint invalidation with deterministic season-scoped dependency identities.
