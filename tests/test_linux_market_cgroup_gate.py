@@ -7,6 +7,7 @@ from collections import deque
 from unittest.mock import patch
 
 from tools.validation.linux_market_cgroup_gate import (
+    _diagnostic_request,
     _identity,
     _normalized_headers,
     _restart_reuse,
@@ -43,6 +44,24 @@ class _Clock:
 
     def sleep(self, seconds: float) -> None:
         self.value += seconds
+
+
+class _ReadyResponse:
+    status = 503
+    headers = {
+        "Content-Type": "application/json",
+        "X-DTOS-Request-Duration": "2.5",
+    }
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args) -> None:
+        return None
+
+    @staticmethod
+    def read() -> bytes:
+        return b'{"detail":"Waiting for the initial Sleeper dataset."}'
 
 
 class RestartReuseValidationTests(unittest.TestCase):
@@ -187,6 +206,18 @@ class RestartReuseValidationTests(unittest.TestCase):
                     _normalized_headers([
                         ("Retry-After", values[0]), ("retry-after", values[1]),
                     ])
+
+    def test_readiness_503_does_not_require_market_retry_header(self) -> None:
+        with patch(
+            "tools.validation.linux_market_cgroup_gate.urlopen",
+            return_value=_ReadyResponse(),
+        ):
+            status, body, _client_ms, server_ms = _diagnostic_request(
+                "/health/ready", (200, 503),
+            )
+        self.assertEqual(status, 503)
+        self.assertIn(b"initial Sleeper dataset", body)
+        self.assertEqual(server_ms, 2.5)
 
 
 if __name__ == "__main__":
