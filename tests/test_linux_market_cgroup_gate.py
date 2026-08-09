@@ -21,6 +21,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _configured_fixture_contract,
     _diagnostic_request,
     _identity,
+    _nonsemantic_payload_comparison,
     _normalized_headers,
     _restart_reuse,
     _start_server,
@@ -440,6 +441,41 @@ class RestartReuseValidationTests(unittest.TestCase):
         for source in invalid:
             with self.subTest(source=source), self.assertRaises(ValueError):
                 material_market_fixture_change(source)
+
+    def test_nonsemantic_payload_comparison_allows_only_named_volatile_fields(self) -> None:
+        before = _published()
+        before.update({
+            "valuation_generation": None,
+            "historical_progress": {"canonical_history_progress": {
+                "semantic_generations": {"historical_records": 3},
+            }},
+        })
+        after = json.loads(json.dumps(before))
+        after["valuation_generation"] = "generated-later"
+        after["historical_progress"]["canonical_history_progress"][
+            "semantic_generations"
+        ]["historical_records"] = 4
+        evidence = _nonsemantic_payload_comparison(
+            json.dumps(before).encode(), json.dumps(after).encode(),
+        )
+        self.assertEqual(evidence["changed_path_count"], 2)
+        self.assertEqual(evidence["row_digest_before"], evidence["row_digest_after"])
+        self.assertEqual(evidence["stable_digest_before"], evidence["stable_digest_after"])
+        self.assertNotEqual(evidence["raw_digest_before"], evidence["raw_digest_after"])
+
+    def test_nonsemantic_payload_comparison_rejects_row_or_stable_changes(self) -> None:
+        before = {"assets": [{"asset_id": "player:10213", "value": 90}], "total": 1}
+        for after in (
+            {"assets": [{"asset_id": "player:10213", "value": 91}], "total": 1},
+            {"assets": [{"asset_id": "player:10213", "value": 90}], "total": 2},
+            {"assets": [{"asset_id": "player:2", "value": 90}], "total": 1},
+        ):
+            with self.subTest(after=after), self.assertRaisesRegex(
+                AssertionError, "unapproved response paths",
+            ):
+                _nonsemantic_payload_comparison(
+                    json.dumps(before).encode(), json.dumps(after).encode(),
+                )
 
 
 if __name__ == "__main__":

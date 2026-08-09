@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import base64
+import hashlib
 import re
 import signal
 import statistics
@@ -546,6 +547,111 @@ def _semantic_contract() -> dict[str, object]:
     return json.loads(_request("/__validation__/semantic-market-contract")[1])
 
 
+_NONSEMANTIC_VOLATILE_PATHS = {
+    "$.historical_progress.canonical_history_progress.semantic_generations."
+    "historical_records",
+    "$.valuation_generation",
+}
+
+
+def _json_differences(
+    before: object, after: object, path: str = "$",
+) -> list[dict[str, object]]:
+    differences: list[dict[str, object]] = []
+    if type(before) is not type(after):
+        return [{"path": path, "before": before, "after": after}]
+    if isinstance(before, dict) and isinstance(after, dict):
+        for key in sorted(set(before) | set(after)):
+            child = f"{path}.{key}"
+            if key not in before:
+                differences.append({"path": child, "before": "<missing>", "after": after[key]})
+            elif key not in after:
+                differences.append({"path": child, "before": before[key], "after": "<missing>"})
+            else:
+                differences.extend(_json_differences(before[key], after[key], child))
+        return differences
+    if isinstance(before, list) and isinstance(after, list):
+        if len(before) != len(after):
+            differences.append({
+                "path": f"{path}.length", "before": len(before), "after": len(after),
+            })
+        for index, (left, right) in enumerate(zip(before, after)):
+            differences.extend(_json_differences(left, right, f"{path}[{index}]"))
+        return differences
+    if before != after:
+        differences.append({"path": path, "before": before, "after": after})
+    return differences
+
+
+def _canonical_digest(value: object) -> str:
+    encoded = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+    ).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _nonsemantic_payload_comparison(before_body: bytes, after_body: bytes) -> dict[str, object]:
+    """Compare product content while explicitly auditing two volatile fields."""
+    before = json.loads(before_body)
+    after = json.loads(after_body)
+    differences = _json_differences(before, after)
+    unexpected = [
+        difference for difference in differences
+        if difference["path"] not in _NONSEMANTIC_VOLATILE_PATHS
+    ]
+    if unexpected:
+        raise AssertionError(
+            "non-semantic refresh changed unapproved response paths: "
+            + json.dumps(unexpected, sort_keys=True)
+        )
+    for difference in differences:
+        path = str(difference["path"])
+        before_value, after_value = difference["before"], difference["after"]
+        if path.endswith(".historical_records") and not all(
+            isinstance(value, int) and value >= 0 for value in (before_value, after_value)
+        ):
+            raise AssertionError("historical record generation is not a nonnegative integer")
+        if path == "$.valuation_generation" and not all(
+            value is None or isinstance(value, str) for value in (before_value, after_value)
+        ):
+            raise AssertionError("valuation generation is not nullable text")
+    before_stable = json.loads(before_body)
+    after_stable = json.loads(after_body)
+    before_stable.pop("valuation_generation", None)
+    after_stable.pop("valuation_generation", None)
+    for payload in (before_stable, after_stable):
+        generations = (
+            payload.get("historical_progress", {})
+            .get("canonical_history_progress", {})
+            .get("semantic_generations", {})
+        )
+        generations.pop("historical_records", None)
+    before_rows = before.get("assets") or []
+    after_rows = after.get("assets") or []
+    before_ids = [row.get("asset_id") for row in before_rows]
+    after_ids = [row.get("asset_id") for row in after_rows]
+    row_digest_before = _canonical_digest(before_rows)
+    row_digest_after = _canonical_digest(after_rows)
+    stable_digest_before = _canonical_digest(before_stable)
+    stable_digest_after = _canonical_digest(after_stable)
+    if before_ids != after_ids or row_digest_before != row_digest_after:
+        raise AssertionError("non-semantic refresh changed market rows or ordering")
+    if stable_digest_before != stable_digest_after:
+        raise AssertionError("non-semantic refresh changed stable response contract")
+    return {
+        "changed_path_count": len(differences),
+        "changed_paths": differences,
+        "asset_row_ids_changed": [],
+        "row_order_changed": False,
+        "row_digest_before": row_digest_before,
+        "row_digest_after": row_digest_after,
+        "stable_digest_before": stable_digest_before,
+        "stable_digest_after": stable_digest_after,
+        "raw_digest_before": _canonical_digest(before),
+        "raw_digest_after": _canonical_digest(after),
+    }
+
+
 def _nonsemantic_reuse(
     first_generation: object, first_build_count: int, expected_body: bytes,
 ) -> dict[str, object]:
@@ -562,8 +668,9 @@ def _nonsemantic_reuse(
         raise AssertionError("non-semantic refresh changed semantic generation")
     if after.get("artifact_compatibility") != "compatible":
         raise AssertionError("non-semantic refresh rejected retained artifact")
-    if any(body != expected_body for body in bodies):
-        raise AssertionError("non-semantic refresh changed serialized market output")
+    comparisons = [
+        _nonsemantic_payload_comparison(expected_body, body) for body in bodies
+    ]
     if int(cache.get("build_count") or 0) != first_build_count:
         raise AssertionError("non-semantic refresh published a replacement")
     if cache.get("build_active") or cache.get("market_generation") != first_generation:
@@ -588,6 +695,7 @@ def _nonsemantic_reuse(
         "raw_after": after_raw,
         "semantic_before": before.get("semantic_identities"),
         "semantic_after": after.get("semantic_identities"),
+        "payload_comparison": comparisons[0],
     }
 
 
