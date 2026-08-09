@@ -783,7 +783,8 @@ class AssetMarketCache:
             name: health[name] for name in (
                 "application_version", "application_build",
                 "market_schema_version", "league_id",
-                "historical_dataset_version", "market_generation",
+                "historical_dataset_version", "historical_dataset_version_scope",
+                "market_generation",
                 "brain_generation", "valuation_generation", "generated_at",
                 "status", "counts", "duplicate_asset_ids",
                 "build_duration_ms", "read_contract", "search_index",
@@ -1098,6 +1099,10 @@ class AssetMarketCache:
                 "market_generation": market.generated_at if market else None,
                 "brain_generation": market.brain_generation if market else None,
                 "historical_dataset_version": market.dataset_version if market else None,
+                "historical_dataset_version_scope": (
+                    self._health_metadata.get("historical_dataset_version_scope")
+                    if market else None
+                ),
                 "asset_count": len(market.assets) if market else 0,
                 "build_duration_ms": market.build_duration_ms if market else None,
                 "last_successful_build": market.generated_at if market else None,

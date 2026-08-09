@@ -130,6 +130,27 @@ class AssetMarketTests(unittest.TestCase):
         self.assertEqual(self.market.by_id["player:2"]["availability"], "day_traders_free_agent")
         self.assertEqual(self.market.by_id["player:3"]["availability"], "retired")
 
+    def test_published_health_exposes_atomic_artifact_dataset_scope(self) -> None:
+        health = self.cache.health()
+        expected = (self.market.dataset_version, "artifact_build")
+        self.assertEqual(
+            (health["historical_dataset_version"],
+             health["historical_dataset_version_scope"]), expected,
+        )
+        self.assertEqual(
+            (health["cache"]["historical_dataset_version"],
+             health["cache"]["historical_dataset_version_scope"]), expected,
+        )
+
+    def test_cold_warming_health_does_not_fabricate_dataset_scope(self) -> None:
+        health = AssetMarketCache().health()
+        self.assertIsNone(health.get("historical_dataset_version"))
+        self.assertIsNone(health.get("historical_dataset_version_scope"))
+        self.assertIsNone(health["cache"].get("historical_dataset_version"))
+        self.assertIsNone(
+            health["cache"].get("historical_dataset_version_scope"),
+        )
+
     def test_durable_compatible_generation_survives_process_cache_restart(self) -> None:
         first_path = self.market._artifact_path
         restarted = AssetMarketCache()
@@ -153,6 +174,13 @@ class AssetMarketTests(unittest.TestCase):
                 loaded,
             )
         worker.assert_not_called()
+        health = restarted.health()
+        self.assertEqual(
+            health["historical_dataset_version_scope"], "artifact_build",
+        )
+        self.assertEqual(
+            health["cache"]["historical_dataset_version_scope"], "artifact_build",
+        )
 
     def test_timestamp_only_sync_and_brain_changes_reuse_artifact(self) -> None:
         changed = copy.deepcopy(self.data)
@@ -169,6 +197,10 @@ class AssetMarketTests(unittest.TestCase):
         self.assertEqual(loaded._artifact_path, self.market._artifact_path)
         self.assertEqual(
             restarted.health()["cache"]["artifact_compatibility"], "compatible",
+        )
+        self.assertEqual(
+            restarted.health()["historical_dataset_version_scope"],
+            "artifact_build",
         )
 
     def test_history_only_observation_reuses_compact_artifact(self) -> None:
@@ -475,6 +507,10 @@ class AssetMarketTests(unittest.TestCase):
         market = cache.get(self.data, self.state, self.store, self.league_id)
         marker = cache._request_marker
         key = cache._key
+        health_pair = (
+            cache.health()["historical_dataset_version"],
+            cache.health()["historical_dataset_version_scope"],
+        )
         changed = copy.deepcopy(self.data)
         changed["valuation_intelligence"]["generated_at"] = "new-generation"
         replacement = AssetMarketCache().get(
@@ -490,6 +526,32 @@ class AssetMarketTests(unittest.TestCase):
         self.assertIs(cache._market, market)
         self.assertEqual(cache._request_marker, marker)
         self.assertEqual(cache._key, key)
+        self.assertEqual(
+            (cache.health()["historical_dataset_version"],
+             cache.health()["historical_dataset_version_scope"]),
+            health_pair,
+        )
+
+    def test_last_valid_warming_health_retains_dataset_scope_pair(self) -> None:
+        with self.cache._lock:
+            self.cache._building = True
+            self.cache._build_phase = "building"
+        try:
+            health = self.cache.health()
+        finally:
+            with self.cache._lock:
+                self.cache._building = False
+                self.cache._build_phase = "idle"
+        expected = (self.market.dataset_version, "artifact_build")
+        self.assertEqual(health["availability"], "last_valid_refreshing")
+        self.assertEqual(
+            (health["historical_dataset_version"],
+             health["historical_dataset_version_scope"]), expected,
+        )
+        self.assertEqual(
+            (health["cache"]["historical_dataset_version"],
+             health["cache"]["historical_dataset_version_scope"]), expected,
+        )
 
     def test_nonsemantic_markers_start_no_replacement_worker(self) -> None:
         cache = AssetMarketCache()
@@ -541,9 +603,30 @@ class AssetMarketTests(unittest.TestCase):
                 self.assertEqual(self._ready_get(client, "/").status_code, 200)
                 self.assertIn("Asset Market", self._ready_get(client, "/market").text)
                 self.assertEqual(self._ready_get(client, "/api/market").status_code, 200)
-                self.assertEqual(self._ready_get(client, "/api/market/assets?limit=2").json()["limit"], 2)
+                directory = self._ready_get(
+                    client, "/api/market/assets?limit=2",
+                ).json()
+                self.assertEqual(directory["limit"], 2)
+                self.assertEqual(
+                    directory["historical_dataset_version_scope"],
+                    "artifact_build",
+                )
+                health = self._ready_get(client, "/api/market/health").json()
+                self.assertEqual(
+                    health["historical_dataset_version_scope"],
+                    "artifact_build",
+                )
+                self.assertEqual(
+                    health["cache"]["historical_dataset_version_scope"],
+                    "artifact_build",
+                )
                 self.assertEqual(self._ready_get(client, "/api/market/assets/player:10213").status_code, 200)
-                self.assertEqual(self._ready_get(client, "/api/market/search?q=Josh%20Allen").status_code, 200)
+                search = self._ready_get(
+                    client, "/api/market/search?q=Josh%20Allen",
+                ).json()
+                self.assertEqual(
+                    search["historical_dataset_version_scope"], "live_store",
+                )
                 self.assertEqual(self._ready_get(client, "/api/market/trending").status_code, 200)
                 sync.assert_not_awaited()
 

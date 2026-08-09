@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.8.10 - Asset Market Health Dataset Scope
+
+- Added the canonical `artifact_build` dataset-version scope to retained Asset Market health metadata.
+- Published the historical dataset version and scope atomically across cold construction, compatible artifact loading, replacement, and last-valid warming.
+- Preserved `live_store` semantics for search and detail responses without adding request-time database or provider work.
+
 ## v1.8.9 - Semantic Asset Market Artifact Identity
 
 - Replaced timestamp and archive-wide Asset Market artifact invalidation with deterministic semantic content identities.
