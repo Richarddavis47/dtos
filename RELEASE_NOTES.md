@@ -1,3 +1,11 @@
+# DTOS v1.8.10 — Asset Market Health Dataset Scope
+
+DTOS v1.8.10 completes the Asset Market historical provenance contract by exposing `historical_dataset_version_scope: artifact_build` wherever market health exposes a retained artifact dataset version. The version and scope are published atomically with the active model and remain consistent through compatible restart loading, non-semantic reuse, replacement warming, and failed publication.
+
+Search and asset-detail responses continue to expose current `live_store` history. Directory and retained-artifact responses remain `artifact_build`. This correction adds no request-thread database work, provider synchronization, archive scanning, semantic invalidation, or market-output changes.
+
+---
+
 # DTOS v1.8.6 — Asynchronous Market Generation
 
 DTOS v1.8.6 removes archive-wide durable-generation preparation from cold Asset Market request execution. The first request now claims one process-local background worker using retained in-memory lifecycle state and immediately returns the canonical retryable warming response.
