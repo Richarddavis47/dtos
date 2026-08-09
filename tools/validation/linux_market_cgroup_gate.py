@@ -198,11 +198,17 @@ def _warm_historical_archive() -> dict[str, object]:
             "SELECT count(*), coalesce(sum(length(payload)), 0) "
             "FROM historical_records"
         ).fetchone()
+        hotset = connection.execute(
+            "SELECT count(*), coalesce(sum(length(payload)), 0) FROM ("
+            "SELECT payload FROM historical_records ORDER BY rowid DESC LIMIT 8192)"
+        ).fetchone()
         pages = int(connection.execute("PRAGMA page_count").fetchone()[0])
         page_size = int(connection.execute("PRAGMA page_size").fetchone()[0])
     return {
         "record_count": int(row[0]),
         "payload_bytes_scanned": int(row[1]),
+        "hotset_records": int(hotset[0]),
+        "hotset_payload_bytes": int(hotset[1]),
         "database_pages": pages,
         "page_size_bytes": page_size,
         "duration_ms": round((time.perf_counter() - started) * 1000, 3),

@@ -149,11 +149,14 @@ def _cache(path: Path) -> None:
 
 def _record_payload(entity_type: str, index: int) -> tuple[str | None, str]:
     """Return deterministic production-shaped identity and valid graph payload."""
-    player_id = f"v{index % ASSET_COUNT + 1:05d}"
-    if index % ASSET_COUNT == 0:
+    player_id = f"v{index % PRODUCTION_CURRENT_IDENTITIES + 1:05d}"
+    if index % PRODUCTION_CURRENT_IDENTITIES == 0:
         player_id = "10213"
     if entity_type == "weekly_roster":
-        players = [f"v{(index * 30 + offset) % ASSET_COUNT + 1:05d}" for offset in range(30)]
+        players = [
+            f"v{(index * 30 + offset) % PRODUCTION_CURRENT_IDENTITIES + 1:05d}"
+            for offset in range(30)
+        ]
         return None, json.dumps({"starters": players[:10], "bench": players[10:]}, separators=(",", ":"))
     if entity_type == "draft_pick":
         return player_id, json.dumps({
@@ -171,7 +174,9 @@ def _record_payload(entity_type: str, index: int) -> tuple[str | None, str]:
         global_index = index if entity_type == "transaction" else 1_641 + index
         adds = {player_id: index % 10 + 1}
         if global_index < 647:
-            adds[f"v{(index + 7000) % ASSET_COUNT + 1:05d}"] = (index + 1) % 10 + 1
+            adds[
+                f"v{(index + 7000) % PRODUCTION_CURRENT_IDENTITIES + 1:05d}"
+            ] = (index + 1) % 10 + 1
         return None, json.dumps({
             "type": entity_type, "status": "complete", "adds": adds,
             "drops": {}, "draft_picks": [], "roster_ids": [1, 2],

@@ -17,6 +17,7 @@ from tools.validation.generate_sanitized_market_fixture import (
     HISTORICAL_COUNT,
     LEAGUE_ID,
     _history,
+    _record_payload,
     _record_provider,
     material_market_fixture_change,
 )
@@ -193,6 +194,8 @@ class ArchiveCacheValidationTests(unittest.TestCase):
     def test_production_fixture_player_week_evidence_matches_checkpoints(self) -> None:
         self.assertEqual(_record_provider("player_week"), "nflverse")
         self.assertEqual(_record_provider("valuation_snapshot"), "sanitized")
+        player_id, _payload = _record_payload("player_week", 12_321)
+        self.assertEqual(player_id, "v00104")
 
     def test_archive_warm_scans_real_history_without_decoding_rows(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -210,6 +213,8 @@ class ArchiveCacheValidationTests(unittest.TestCase):
                 result = _warm_historical_archive()
         self.assertEqual(result["record_count"], 2)
         self.assertGreater(result["payload_bytes_scanned"], 0)
+        self.assertEqual(result["hotset_records"], 2)
+        self.assertGreater(result["hotset_payload_bytes"], 0)
         self.assertGreater(result["database_pages"], 0)
 
     @patch("tools.validation.linux_market_cgroup_gate._cgroup_values")
