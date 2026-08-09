@@ -12,7 +12,10 @@ from fastapi.responses import HTMLResponse
 from app_metadata import VERSION
 from src.core.asset_market import MarketWarmingError, asset_market, asset_market_cache
 from src.core.historical_memory import historical_store
-from services.history import history_progress_contracts
+from services.history import (
+    history_progress_contracts,
+    retained_history_progress_contracts,
+)
 
 RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[..., HTMLResponse]
@@ -48,10 +51,11 @@ def create_market_router(
 
     @router.get("/api/market")
     async def market_index() -> Any:
-        market = model()
+        """Return retained lifecycle metadata without requiring a market model."""
+        health = asset_market_cache.health()
         return {
-            **market.health(),
-            "historical_progress": history_progress_contracts(league_id),
+            **health,
+            "historical_progress": retained_history_progress_contracts(league_id),
             "endpoints": [
             "/api/market/assets", "/api/market/assets/{asset_id}",
             "/api/market/search", "/api/market/trending", "/api/market/health",

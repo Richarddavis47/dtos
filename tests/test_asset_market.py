@@ -630,6 +630,105 @@ class AssetMarketTests(unittest.TestCase):
                 self.assertEqual(self._ready_get(client, "/api/market/trending").status_code, 200)
                 sync.assert_not_awaited()
 
+    def test_market_summary_is_retained_metadata_only_in_every_lifecycle_state(self) -> None:
+        app = FastAPI()
+        app.include_router(create_market_router(
+            require_data=lambda: self.data, state=self.state,
+            league_id=self.league_id,
+            page=lambda title, body: HTMLResponse(f"<h1>{title}</h1>{body}"),
+        ))
+        progress = {
+            "canonical_history_progress": {
+                "status": "completed_with_pending",
+                "completed_steps": 5,
+                "total_steps": 6,
+                "completed_seasons": [2021, 2022, 2023, 2024, 2025],
+                "pending_seasons": [2026],
+                "consistent": True,
+            },
+        }
+        states = (
+            {
+                "status": "warming", "availability": "warming",
+                "counts": {}, "cache": {"build_active": False},
+            },
+            {
+                "status": "warming", "availability": "warming",
+                "counts": {}, "cache": {"build_active": True},
+            },
+            {
+                "status": "ready", "availability": "available",
+                "historical_dataset_version": "dataset-one",
+                "historical_dataset_version_scope": "artifact_build",
+                "market_generation": "market-one", "counts": {"assets": 4},
+                "cache": {"build_active": False, "build_count": 1},
+            },
+            {
+                "status": "warming", "availability": "last_valid_refreshing",
+                "historical_dataset_version": "dataset-one",
+                "historical_dataset_version_scope": "artifact_build",
+                "market_generation": "market-one", "counts": {"assets": 4},
+                "cache": {"build_active": True, "build_count": 1},
+            },
+            {
+                "status": "ready", "availability": "available",
+                "last_error": "replacement failed",
+                "historical_dataset_version": "dataset-one",
+                "historical_dataset_version_scope": "artifact_build",
+                "market_generation": "market-one", "counts": {"assets": 4},
+                "cache": {"build_active": False, "build_count": 1},
+            },
+            {
+                "status": "failed", "availability": "warming",
+                "last_error": "cold build failed", "counts": {},
+                "cache": {"build_active": False, "build_count": 0},
+            },
+        )
+        client = TestClient(app)
+        with (
+            patch.object(asset_market_cache, "get") as get,
+            patch.object(asset_market_cache, "_start_background") as worker,
+            patch(
+                "routes.market.retained_history_progress_contracts",
+                return_value=progress,
+            ) as retained,
+        ):
+            for state in states:
+                with self.subTest(state=state["status"], availability=state["availability"]):
+                    with patch.object(asset_market_cache, "health", return_value=state):
+                        response = client.get("/api/market")
+                    self.assertEqual(response.status_code, 200)
+                    payload = response.json()
+                    self.assertEqual(payload["historical_progress"], progress)
+                    self.assertEqual(payload["endpoints"][0], "/api/market/assets")
+                    if "historical_dataset_version" in payload:
+                        self.assertEqual(
+                            payload["historical_dataset_version_scope"],
+                            "artifact_build",
+                        )
+            get.assert_not_called()
+            worker.assert_not_called()
+            self.assertEqual(retained.call_count, len(states))
+
+    def test_market_summary_repeated_reads_do_not_change_cache_counters(self) -> None:
+        app = FastAPI()
+        app.include_router(create_market_router(
+            require_data=lambda: self.data, state=self.state,
+            league_id=self.league_id,
+            page=lambda title, body: HTMLResponse(f"<h1>{title}</h1>{body}"),
+        ))
+        before = asset_market_cache.metrics()
+        with patch(
+            "routes.market.retained_history_progress_contracts",
+            return_value={"canonical_history_progress": {"status": "waiting"}},
+        ):
+            client = TestClient(app)
+            for _ in range(5):
+                self.assertEqual(client.get("/api/market").status_code, 200)
+        after = asset_market_cache.metrics()
+        for field in ("build_count", "cache_hits", "build_active"):
+            self.assertEqual(after[field], before[field])
+
     def test_detail_identity_is_canonical_across_asset_types_and_repeated_reads(self) -> None:
         for asset_id in (
             "player:10213", "player:2", "player:3", "pick:2028:1:1",
