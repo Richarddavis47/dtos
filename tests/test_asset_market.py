@@ -1,6 +1,7 @@
 """Asset Market canonical contracts, ranking, search, and read isolation."""
 from __future__ import annotations
 
+import copy
 import gc
 import tempfile
 import threading
@@ -139,6 +140,96 @@ class AssetMarketTests(unittest.TestCase):
             loaded = restarted.get(self.data, self.state, self.store, self.league_id)
         self.assertEqual(loaded._artifact_path, first_path)
         self.assertEqual(loaded.directory(limit=4), self.market.directory(limit=4))
+
+    def test_timestamp_only_sync_and_brain_changes_reuse_artifact(self) -> None:
+        changed = copy.deepcopy(self.data)
+        changed["valuation_intelligence"]["generated_at"] = (
+            "2026-08-07T12:34:56+00:00"
+        )
+        state = {**self.state, "last_sync": "2026-08-07T12:34:55+00:00"}
+        restarted = AssetMarketCache()
+        with patch(
+            "src.core.asset_market.engine.build_read_model",
+            side_effect=AssertionError("timestamp-only changes must reuse"),
+        ):
+            loaded = restarted.get(changed, state, self.store, self.league_id)
+        self.assertEqual(loaded._artifact_path, self.market._artifact_path)
+        self.assertEqual(
+            restarted.health()["cache"]["artifact_compatibility"], "compatible",
+        )
+
+    def test_history_only_observation_reuses_compact_artifact(self) -> None:
+        self._append("transaction", "history-only-transaction", None, {
+            "transaction_id": "history-only-transaction", "type": "waiver",
+        })
+        restarted = AssetMarketCache()
+        with patch(
+            "src.core.asset_market.engine.build_read_model",
+            side_effect=AssertionError("history-only evidence must not rebuild"),
+        ):
+            loaded = restarted.get(
+                self.data, self.state, self.store, self.league_id,
+            )
+        self.assertEqual(loaded._artifact_path, self.market._artifact_path)
+        self.assertEqual(
+            loaded.detail("player:10213")["historical_dataset_version"],
+            self.store.dataset_version(self.league_id),
+        )
+
+    def test_material_brain_value_change_invalidates_artifact(self) -> None:
+        changed = copy.deepcopy(self.data)
+        changed["valuation_intelligence"]["assets"]["player:10213"][
+            "valuation_layers"
+        ]["market_value"]["value"] = 9301
+        replacement = AssetMarketCache().get(
+            changed, self.state, self.store, self.league_id,
+        )
+        self.assertNotEqual(replacement._artifact_path, self.market._artifact_path)
+        self.assertEqual(
+            replacement.by_id["player:10213"]["values"]["market_value"], 9301,
+        )
+
+    def test_ownership_change_invalidates_artifact(self) -> None:
+        changed = copy.deepcopy(self.data)
+        changed["teams"][0]["players"] = []
+        replacement = AssetMarketCache().get(
+            changed, self.state, self.store, self.league_id,
+        )
+        self.assertNotEqual(replacement._artifact_path, self.market._artifact_path)
+        self.assertEqual(
+            replacement.by_id["player:10213"]["availability"],
+            "day_traders_free_agent",
+        )
+
+    def test_consumed_provider_value_invalidates_artifact(self) -> None:
+        changed = copy.deepcopy(self.data)
+        changed["market_data"]["providers"] = {
+            "FantasyCalc": {
+                "10213": {"value": 9000, "confidence": 80, "rank": 1},
+            },
+        }
+        replacement = AssetMarketCache().get(
+            changed, self.state, self.store, self.league_id,
+        )
+        self.assertNotEqual(replacement._artifact_path, self.market._artifact_path)
+        providers = replacement._read_model.canonical("player:10213")["providers"]
+        self.assertEqual(providers[2]["raw_value"], 9000.0)
+
+    def test_artifact_discovery_reports_corrupt_and_never_discloses_path(self) -> None:
+        other = HistoricalStore(Path(self.temp.name) / "corrupt-history.sqlite3")
+        candidate = other.path.with_name(
+            f".{other.path.stem}.asset-market-corrupt.sqlite3"
+        )
+        candidate.write_bytes(b"not sqlite")
+        expected = self.cache.artifact_contract(
+            self.data, self.state, other, self.league_id,
+        )
+        path, reason = self.cache._discover_artifact(
+            other, "missing-generation", expected,
+        )
+        self.assertIsNone(path)
+        self.assertEqual(reason, "artifact_corrupt")
+        self.assertNotIn(str(candidate.parent), reason)
 
     def test_artifact_metadata_hydration_yields_between_bounded_chunks(self) -> None:
         yields: list[int] = []

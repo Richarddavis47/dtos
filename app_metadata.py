@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.8.8"
-BUILD_NUMBER = 1808
-RELEASE_CODENAME = "Season-Scoped Historical Checkpoint Compatibility"
+VERSION = "1.8.9"
+BUILD_NUMBER = 1809
+RELEASE_CODENAME = "Semantic Asset Market Artifact Identity"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

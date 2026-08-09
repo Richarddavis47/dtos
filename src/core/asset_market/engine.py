@@ -36,6 +36,36 @@ SORT_FIELDS = {
     "liquidity": "liquidity_score",
 }
 
+_TRANSIENT_SEMANTIC_FIELDS = frozenset({
+    "generated_at", "generation_timestamp", "last_sync", "last_updated",
+    "observed_at", "provider_refresh_timestamp", "retrieved_at",
+    "sleeper_sync_timestamp", "updated_at", "valuation_timestamp",
+    "data_age", "freshness", "last_changed", "sleeper_data_age_hours",
+})
+
+
+def _semantic_value(value: Any) -> Any:
+    """Return deterministic market content without observation metadata."""
+    if isinstance(value, dict):
+        return {
+            str(key): _semantic_value(child)
+            for key, child in sorted(value.items(), key=lambda item: str(item[0]))
+            if str(key) not in _TRANSIENT_SEMANTIC_FIELDS
+        }
+    if isinstance(value, (list, tuple)):
+        return [_semantic_value(child) for child in value]
+    if isinstance(value, set):
+        return sorted(_semantic_value(child) for child in value)
+    return value
+
+
+def _digest(value: Any) -> str:
+    encoded = json.dumps(
+        _semantic_value(value), separators=(",", ":"), sort_keys=True,
+        default=lambda item: getattr(item, "value", str(item)),
+    ).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
 
 class MarketWarmingError(RuntimeError):
     """Raised when no safe market snapshot exists during a heavy lifecycle phase."""
@@ -143,6 +173,7 @@ class AssetMarket:
         self, data: dict[str, Any], state: dict[str, Any],
         store: HistoricalStore, league_id: str, *, generation: str,
         artifact_path: Path, load_existing: bool = False,
+        compatibility: dict[str, Any] | None = None,
     ) -> None:
         started = time.perf_counter()
         self.data = data
@@ -176,6 +207,11 @@ class AssetMarket:
                     "valuation_generation": (
                         (data.get("valuation_intelligence") or {}).get("generated_at")
                     ),
+                    "semantic_identity": {
+                        key: value for key, value in (compatibility or {}).items()
+                        if key.endswith("_digest") or key == "asset_count"
+                    },
+                    "compatibility": compatibility or {},
                 },
             )
         self.assets = self._read_model.assets
@@ -533,6 +569,7 @@ class AssetMarketCache:
         self._build_started_monotonic: float | None = None
         self._build_duration_ms: float | None = None
         self._refresh_state = "idle"
+        self._artifact_compatibility = "artifact_not_found"
         self._request_marker: tuple[Any, ...] | None = None
         self._epoch = 0
 
@@ -584,32 +621,156 @@ class AssetMarketCache:
     def durable_generation(
         data: dict[str, Any], state: dict[str, Any],
         store: HistoricalStore, league_id: str,
+        contract: dict[str, Any] | None = None,
     ) -> str:
-        payload = {
+        payload = contract or AssetMarketCache.artifact_contract(
+            data, state, store, league_id,
+        )
+        return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+
+    @staticmethod
+    def artifact_contract(
+        data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str,
+    ) -> dict[str, Any]:
+        return {
             "version": VERSION, "build": BUILD_NUMBER,
             "market_schema": MARKET_SCHEMA_VERSION,
             "read_model_schema": MARKET_READ_MODEL_SCHEMA,
-            "league_id": league_id, "database_uuid": store.database_uuid(),
-            "sync": state.get("last_sync"),
-            "brain": (data.get("valuation_intelligence") or {}).get("generated_at"),
-            "valuation": (data.get("valuation_intelligence") or {}).get("schema_version"),
-            "historical": store.dataset_version(league_id),
+            "league_id": league_id,
+            "database_identity_digest": _digest(store.database_uuid()),
+            **AssetMarketCache.semantic_identities(data, state),
         }
-        return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+
+    @staticmethod
+    def semantic_identities(
+        data: dict[str, Any], state: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Digest exactly the canonical content persisted in compact market rows."""
+        brain = brain_service(data)
+        universe = ValuationUniverse.streaming(data, state)
+        universe_hash = hashlib.sha256()
+        output_hash = hashlib.sha256()
+        ownership_hash = hashlib.sha256()
+        provider_hash = hashlib.sha256()
+        asset_count = 0
+        for asset in universe.iter_assets():
+            brain_asset = brain.asset(asset["asset_id"])
+            summary = _summary(asset, brain_asset)
+            identity = asset.get("identity") or {}
+            universe_hash.update(_digest({
+                "asset_id": asset["asset_id"],
+                "asset_type": asset["asset_type"],
+                "identity": {
+                    key: value for key, value in identity.items()
+                    if key not in {"current_owner", "free_agent"}
+                },
+            }).encode())
+            output_hash.update(_digest({
+                "asset_id": asset["asset_id"],
+                "summary": {
+                    key: value for key, value in summary.items()
+                    if key not in {"availability", "provider_count"}
+                },
+                "brain": brain_asset,
+                "valuation_layers": asset.get("valuation_layers") or {},
+                "comparison": asset.get("comparison") or {},
+            }).encode())
+            ownership_hash.update(_digest({
+                "asset_id": asset["asset_id"],
+                "owner": identity.get("current_owner"),
+                "availability": summary["availability"],
+            }).encode())
+            provider_hash.update(_digest({
+                "asset_id": asset["asset_id"], "providers": asset.get("providers") or [],
+            }).encode())
+            asset_count += 1
+        return {
+            "asset_universe_digest": universe_hash.hexdigest(),
+            "brain_semantic_output_digest": output_hash.hexdigest(),
+            "ownership_dependency_digest": ownership_hash.hexdigest(),
+            "provider_evidence_digest": provider_hash.hexdigest(),
+            "asset_count": asset_count,
+            "valuation_schema": (
+                (data.get("valuation_intelligence") or {}).get("schema_version")
+            ),
+        }
 
     @staticmethod
     def artifact_path(store: HistoricalStore, generation: str) -> Path:
         return store.path.with_name(f".{store.path.stem}.asset-market-{generation[:20]}.sqlite3")
 
     @staticmethod
-    def _compatible(path: Path, generation: str) -> bool:
-        if not path.is_file():
-            return False
-        try:
-            metadata = MarketReadModel(path).metadata()
-            return bool(metadata.get("complete")) and metadata.get("generation") == generation
-        except (OSError, sqlite3.Error, ValueError, json.JSONDecodeError):
-            return False
+    def _artifact_candidates(store: HistoricalStore) -> list[Path]:
+        pattern = f".{store.path.stem}.asset-market-*.sqlite3"
+        return sorted(
+            path for path in store.path.parent.glob(pattern)
+            if path.is_file() and ".partial" not in path.name
+        )
+
+    @classmethod
+    def _discover_artifact(
+        cls, store: HistoricalStore, generation: str,
+        expected: dict[str, Any],
+    ) -> tuple[Path | None, str]:
+        """Inspect bounded manifests and select one compatible final artifact."""
+        candidates = cls._artifact_candidates(store)
+        if not candidates:
+            return None, "artifact_not_found"
+        corrupt = incomplete = incompatible = False
+        mismatch_reasons: list[str] = []
+        compatible: list[Path] = []
+        for path in candidates:
+            try:
+                metadata = MarketReadModel(path).metadata()
+            except (OSError, sqlite3.Error, ValueError, json.JSONDecodeError):
+                corrupt = True
+                continue
+            if not bool(metadata.get("complete")):
+                incomplete = True
+                continue
+            if metadata.get("schema_version") != MARKET_READ_MODEL_SCHEMA:
+                incompatible = True
+                mismatch_reasons.append("schema_incompatible")
+                continue
+            contract = metadata.get("compatibility") or {}
+            if metadata.get("generation") == generation and contract == expected:
+                compatible.append(path)
+            else:
+                incompatible = True
+                if not isinstance(contract, dict) or not contract:
+                    mismatch_reasons.append("schema_incompatible")
+                    continue
+                reason = "semantic_identity_changed"
+                for field, code in (
+                    ("database_identity_digest", "database_identity_changed"),
+                    ("league_id", "league_identity_changed"),
+                    ("asset_universe_digest", "asset_universe_changed"),
+                    ("brain_semantic_output_digest", "brain_semantic_output_changed"),
+                    ("ownership_dependency_digest", "ownership_dependency_changed"),
+                    ("provider_evidence_digest", "provider_evidence_changed"),
+                ):
+                    if contract.get(field) != expected.get(field):
+                        reason = code
+                        break
+                if any(
+                    contract.get(field) != expected.get(field)
+                    for field in (
+                        "version", "build", "market_schema", "read_model_schema",
+                        "valuation_schema",
+                    )
+                ):
+                    reason = "schema_incompatible"
+                mismatch_reasons.append(reason)
+        if compatible:
+            return compatible[-1], "compatible"
+        if corrupt:
+            return None, "artifact_corrupt"
+        if incomplete:
+            return None, "artifact_incomplete"
+        if incompatible:
+            return None, sorted(mismatch_reasons)[0]
+        return None, "artifact_not_found"
 
     def _publish(
         self, market: AssetMarket, key: str, store_identity: str,
@@ -656,6 +817,7 @@ class AssetMarketCache:
         self, data: dict[str, Any], state: dict[str, Any],
         store: HistoricalStore, league_id: str, key: str,
         store_identity: str, generation: str, path: Path,
+        contract: dict[str, Any],
         request_marker: tuple[Any, ...] | None = None,
         epoch: int | None = None,
         lifecycle_managed: bool = False,
@@ -668,7 +830,7 @@ class AssetMarketCache:
             def construct() -> AssetMarket:
                 market = AssetMarket(
                     data, state, store, league_id, generation=generation,
-                    artifact_path=path,
+                    artifact_path=path, compatibility=contract,
                 )
                 return market
 
@@ -696,8 +858,17 @@ class AssetMarketCache:
         phase: dict[str, Any],
     ) -> None:
         key, store_identity = self.key(data, state, store, league_id)
-        generation = self.durable_generation(data, state, store, league_id)
-        path = self.artifact_path(store, generation)
+        contract = self.artifact_contract(data, state, store, league_id)
+        generation = self.durable_generation(
+            data, state, store, league_id, contract,
+        )
+        expected_path = self.artifact_path(store, generation)
+        artifact, compatibility = self._discover_artifact(
+            store, generation, contract,
+        )
+        path = artifact or expected_path
+        with self._lock:
+            self._artifact_compatibility = compatibility
         with self._lock:
             if epoch != self._epoch:
                 raise _BuildDeferred("Asset Market generation was superseded.")
@@ -707,11 +878,12 @@ class AssetMarketCache:
                 self._refresh_state = "ready"
                 self._build_phase = "ready"
                 return
-        if self._compatible(path, generation):
+        if artifact is not None:
             self._set_build_phase("loading_artifact")
             market = AssetMarket(
                 data, state, store, league_id, generation=generation,
                 artifact_path=path, load_existing=True,
+                compatibility=contract,
             )
             self._set_build_phase("publishing")
             self._publish(
@@ -721,7 +893,7 @@ class AssetMarketCache:
             self._set_build_phase("building")
             market = self._construct(
                 data, state, store, league_id, key, store_identity,
-                generation, path, request_marker, epoch,
+                generation, path, contract, request_marker, epoch,
                 lifecycle_managed=True,
             )
         phase.update({
@@ -866,8 +1038,17 @@ class AssetMarketCache:
                     self._store_identity = None
                     self._market = None
             raise
-        generation = self.durable_generation(data, state, store, league_id)
-        path = self.artifact_path(store, generation)
+        contract = self.artifact_contract(data, state, store, league_id)
+        generation = self.durable_generation(
+            data, state, store, league_id, contract,
+        )
+        expected_path = self.artifact_path(store, generation)
+        artifact, compatibility = self._discover_artifact(
+            store, generation, contract,
+        )
+        path = artifact or expected_path
+        with self._lock:
+            self._artifact_compatibility = compatibility
         if key == self._key and self._market is not None:
             with self._lock:
                 self.hits += 1
@@ -880,16 +1061,17 @@ class AssetMarketCache:
                 "cold_start" if self._market is None
                 else "canonical_market_inputs_changed"
             )
-        if self._compatible(path, generation):
+        if artifact is not None:
             market = AssetMarket(
                 data, state, store, league_id, generation=generation,
                 artifact_path=path, load_existing=True,
+                compatibility=contract,
             )
             return self._publish(market, key, store_identity)
         try:
             return self._construct(
                 data, state, store, league_id, key, store_identity,
-                generation, path, request_marker,
+                generation, path, contract, request_marker,
             )
         except (MarketMemoryBudgetError, _BuildDeferred) as exc:
             if self._market is not None and self._store_identity == store_identity:
@@ -921,6 +1103,7 @@ class AssetMarketCache:
                 "build_started_at": self._build_started_at,
                 "background_duration_ms": self._build_duration_ms,
                 "refresh_state": self._refresh_state,
+                "artifact_compatibility": self._artifact_compatibility,
                 "served_generation": market.generated_at if market else None,
                 "lifecycle": lifecycle_coordinator.snapshot(),
             }
