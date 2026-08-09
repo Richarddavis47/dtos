@@ -182,6 +182,24 @@ def _market_health() -> dict:
     return json.loads(_request("/api/market/health")[1])
 
 
+def _artifact_state() -> dict[str, object]:
+    state = json.loads(_request("/__validation__/market-artifact")[1])
+    if not state.get("active") or not state.get("exists"):
+        raise AssertionError("active market artifact is unavailable")
+    if int(state.get("final_artifacts") or 0) != 1:
+        raise AssertionError(
+            "expected one active market generation, found "
+            f"{state.get('final_artifacts')}"
+        )
+    if int(state.get("temporary_artifacts") or 0):
+        raise AssertionError("temporary market artifacts remain after publication")
+    if state.get("complete") is not True or not state.get("generation"):
+        raise AssertionError("active market artifact metadata is incomplete")
+    if int(state.get("size_bytes") or 0) <= 0:
+        raise AssertionError("active market artifact is empty")
+    return state
+
+
 def _cold_build() -> tuple[dict, float, int, dict[str, object]]:
     started = time.perf_counter()
     attempts = 0
@@ -734,13 +752,19 @@ def main() -> int:
             second_generation = (replacement.get("cache") or {}).get("market_generation")
             if second_generation == first_generation:
                 raise AssertionError("generation replacement did not publish a new identity")
-            artifacts = list(FIXTURE.glob(".*.asset-market-*.sqlite3"))
-            if len(artifacts) != 1:
-                raise AssertionError(f"expected one active market generation, found {len(artifacts)}")
+            artifact = _artifact_state()
             summary["phases"]["generation_replacement"] = {
                 "timestamp": time.time(), "duration_ms": round(replacement_ms, 3),
                 "attempts": 10, "generation_changed": True,
-                "active_generations": len(artifacts), "memory_current": _cgroup("memory.current"),
+                "active_generations": artifact["final_artifacts"],
+                "artifact": {
+                    name: artifact.get(name) for name in (
+                        "artifact_name", "size_bytes", "complete", "generation",
+                        "generated_at", "schema_version", "asset_count",
+                        "temporary_artifacts",
+                    )
+                },
+                "memory_current": _cgroup("memory.current"),
                 "profile": replacement_profile,
             }
             _pre_status, pre_restart_body, _pre_ms = _request(
@@ -761,6 +785,11 @@ def main() -> int:
                 reuse_health = _market_health()
                 if (reuse_health.get("cache") or {}).get("market_generation") != second_generation:
                     raise AssertionError("restart reused a different market generation")
+                reused_artifact = _artifact_state()
+                if reused_artifact.get("artifact_name") != artifact.get("artifact_name"):
+                    raise AssertionError("restart reused a different artifact file")
+                if reused_artifact.get("generation") != artifact.get("generation"):
+                    raise AssertionError("restart reused a different artifact generation")
                 if len(restart_samples) < 10:
                     _stop_server(process)
                     process = None

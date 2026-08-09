@@ -494,6 +494,33 @@ async def replace_generation(marker: str) -> dict[str, Any]:
     }
 
 
+@app.get("/__validation__/market-artifact")
+async def market_artifact() -> dict[str, Any]:
+    """Describe the active artifact without exposing its backing directory."""
+    with asset_market_cache._lock:
+        market = asset_market_cache._market
+    if market is None:
+        return {"active": False, "final_artifacts": 0, "temporary_artifacts": 0}
+    target = market._artifact_path
+    pattern = f".{market.store.path.stem}.asset-market-*.sqlite3"
+    final_artifacts = list(target.parent.glob(pattern))
+    temporary_artifacts = list(target.parent.glob(f".{target.name}.*.partial"))
+    metadata = MarketReadModel(target).metadata() if target.is_file() else {}
+    return {
+        "active": True,
+        "artifact_name": target.name,
+        "exists": target.is_file(),
+        "size_bytes": target.stat().st_size if target.is_file() else 0,
+        "final_artifacts": len(final_artifacts),
+        "temporary_artifacts": len(temporary_artifacts),
+        "complete": metadata.get("complete") is True,
+        "generation": metadata.get("generation"),
+        "generated_at": metadata.get("generated_at"),
+        "schema_version": metadata.get("schema_version"),
+        "asset_count": metadata.get("asset_count"),
+    }
+
+
 @app.get("/__validation__/trace/{trace_id}")
 async def response_trace(trace_id: str) -> dict[str, Any]:
     with _trace_lock:

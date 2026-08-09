@@ -7,6 +7,7 @@ from collections import deque
 from unittest.mock import patch
 
 from tools.validation.linux_market_cgroup_gate import (
+    _artifact_state,
     _diagnostic_request,
     _identity,
     _normalized_headers,
@@ -218,6 +219,42 @@ class RestartReuseValidationTests(unittest.TestCase):
         self.assertEqual(status, 503)
         self.assertIn(b"initial Sleeper dataset", body)
         self.assertEqual(server_ms, 2.5)
+
+    def test_artifact_discovery_uses_application_contract(self) -> None:
+        payload = {
+            "active": True,
+            "artifact_name": ".history.asset-market-generation.sqlite3",
+            "exists": True,
+            "size_bytes": 4096,
+            "final_artifacts": 1,
+            "temporary_artifacts": 0,
+            "complete": True,
+            "generation": "generation-1",
+        }
+        response = (200, json.dumps(payload).encode(), 1.0)
+        with patch(
+            "tools.validation.linux_market_cgroup_gate._request",
+            return_value=response,
+        ):
+            state = _artifact_state()
+        self.assertEqual(state["generation"], "generation-1")
+        self.assertNotIn("directory", state)
+
+    def test_artifact_discovery_rejects_partial_or_missing_state(self) -> None:
+        invalid = (
+            {"active": False, "final_artifacts": 0, "temporary_artifacts": 0},
+            {
+                "active": True, "exists": True, "size_bytes": 4096,
+                "final_artifacts": 1, "temporary_artifacts": 1,
+                "complete": True, "generation": "generation-1",
+            },
+        )
+        for payload in invalid:
+            with self.subTest(payload=payload), patch(
+                "tools.validation.linux_market_cgroup_gate._request",
+                return_value=(200, json.dumps(payload).encode(), 1.0),
+            ), self.assertRaises(AssertionError):
+                _artifact_state()
 
 
 if __name__ == "__main__":
