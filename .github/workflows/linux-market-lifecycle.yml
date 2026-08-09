@@ -23,11 +23,19 @@ jobs:
       - name: Run 2 GiB cgroup lifecycle
         run: |
           mkdir -p .validation/linux-market-${{ matrix.scenario }}
+          mkdir -p .validation/fixture-${{ matrix.scenario }}
+          docker run --rm \
+            --volume "$PWD/.validation/fixture-${{ matrix.scenario }}:/fixture" \
+            --env DTOS_FIXTURE_ROOT=/fixture \
+            --env DTOS_PRODUCTION_SHAPED_FIXTURE=${{ matrix.scenario == 'combined-read' && '1' || '0' }} \
+            dtos-market-cgroup:validation \
+            python -m tools.validation.generate_sanitized_market_fixture
           docker run --rm \
             --memory 2g \
             --memory-swap 2g \
             --cpus 2 \
             --volume "$PWD/.validation/linux-market-${{ matrix.scenario }}:/output" \
+            --volume "$PWD/.validation/fixture-${{ matrix.scenario }}:/fixture" \
             --env DTOS_BENCHMARK_OUTPUT=/output/summary.json \
             --env DTOS_ARCHIVE_WARMED=${{ matrix.scenario == 'archive-warmed' && '1' || '0' }} \
             --env DTOS_COMBINED_READ=${{ matrix.scenario == 'combined-read' && '1' || '0' }} \
@@ -37,7 +45,7 @@ jobs:
             --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
             --env SLEEPER_LEAGUE_ID=validation-league-1804 \
             dtos-market-cgroup:validation \
-            sh -c "python -m tools.validation.generate_sanitized_market_fixture && python -m tools.validation.linux_market_cgroup_gate"
+            python -m tools.validation.linux_market_cgroup_gate
       - name: Verify sanitized result
         if: always()
         run: |

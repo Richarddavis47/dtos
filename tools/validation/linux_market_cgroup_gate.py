@@ -1440,7 +1440,9 @@ def main() -> int:
         "schema": "dtos-linux-market-memory-v1",
         "memory_max": memory_max,
         "fixture": {
-            "assets": 12_322, "historical_records": 30_726, "progress": "5/6",
+            "assets": 12_322, "canonical_asset_events": 30_726,
+            "database_records": 461_166 if combined_read else 30_726,
+            "progress": "5/6",
             "configuration": fixture_contract,
         },
         "scenario": (
