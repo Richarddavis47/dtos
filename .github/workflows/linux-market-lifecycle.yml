@@ -4,12 +4,20 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      scenario:
+        description: Lifecycle scenario to run
+        required: true
+        default: all
+        type: choice
+        options: [all, ordinary, archive-warmed, combined-read]
 
 permissions:
   contents: read
 
 jobs:
   cgroup-lifecycle:
+    if: ${{ inputs.scenario == '' || inputs.scenario == 'all' || matrix.scenario == inputs.scenario }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:

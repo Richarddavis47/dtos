@@ -33,25 +33,33 @@ STAMP = "2026-08-07T00:00:00+00:00"
 def material_market_fixture_change(
     current: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Change one attached value consumed by the canonical valuation universe."""
-    normalized = current.get("normalized_players")
-    if not isinstance(normalized, dict):
-        raise ValueError("Canonical normalized-player map is unavailable.")
-    target = normalized.get("10213")
-    if not isinstance(target, dict):
-        raise ValueError("Canonical fixture asset player:10213 is unavailable.")
-    if "dtos_value" not in target or not isinstance(target["dtos_value"], (int, float)):
-        raise ValueError("Canonical fixture dtos_value is unavailable.")
+    """Change one attached Brain layer consumed by the compact market contract."""
+    intelligence = current.get("valuation_intelligence")
+    assets = intelligence.get("assets") if isinstance(intelligence, dict) else None
+    target = assets.get("player:10213") if isinstance(assets, dict) else None
+    layers = target.get("valuation_layers") if isinstance(target, dict) else None
+    contender = layers.get("contender_value") if isinstance(layers, dict) else None
+    if not isinstance(contender, dict) or not isinstance(
+        contender.get("value"), (int, float),
+    ):
+        raise ValueError(
+            "Canonical fixture Brain contender value for player:10213 is unavailable."
+        )
     data = json.loads(json.dumps(current))
-    attached = data["normalized_players"]["10213"]
-    before = attached["dtos_value"]
-    after = before + 1 if before < 100 else before - 1
-    attached["dtos_value"] = after
-    if data["normalized_players"]["10213"]["dtos_value"] != after:
+    attached = data["valuation_intelligence"]["assets"]["player:10213"][
+        "valuation_layers"
+    ]["contender_value"]
+    before = attached["value"]
+    after = before + 100 if before <= 900 else before - 100
+    attached["value"] = after
+    if attached["value"] != after:
         raise ValueError("Canonical fixture mutation was not attached.")
     return data, {
         "asset_id": "player:10213",
-        "field": "normalized_players.10213.dtos_value",
+        "field": (
+            "valuation_intelligence.assets.player:10213.valuation_layers."
+            "contender_value.value"
+        ),
         "before": before, "after": after, "attached": True,
         "changed_canonical_fields": 1,
     }
