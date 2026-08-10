@@ -230,6 +230,48 @@ class AsyncMarketGenerationTests(unittest.TestCase):
         self.assertFalse(health["lifecycle"]["market_build_allowed"])
         lifecycle_coordinator.complete_startup(epoch, "Fixture ready.")
 
+    def test_restart_missing_artifact_reconciles_after_startup_transition(self) -> None:
+        epoch = lifecycle_coordinator.begin_startup("Fixture synchronization.")
+        with patch.object(self.cache, "_start_background", return_value=True) as start:
+            self.assertTrue(self.cache.reconcile(
+                self.data, self.state, self.store, "league-1",
+            ))
+            start.assert_not_called()
+            lifecycle_coordinator.complete_startup(epoch, "Fixture ready.")
+            self.assertTrue(self.cache.reconcile(
+                self.data, self.state, self.store, "league-1",
+            ))
+        start.assert_called_once()
+
+    def test_reconciliation_deduplicates_concurrent_scheduler_calls(self) -> None:
+        entered, release, _worker_ids, key = self._blocked_preparation()
+        try:
+            with patch.object(self.cache, "key", side_effect=key):
+                callers = [threading.Thread(target=self.cache.reconcile, args=(
+                    self.data, self.state, self.store, "league-1",
+                )) for _ in range(12)]
+                for caller in callers:
+                    caller.start()
+                self.assertTrue(entered.wait(1))
+                for caller in callers:
+                    caller.join(timeout=0.1)
+                self.assertEqual(self.cache.attempted_constructions, 1)
+                health = self.cache.health()["cache"]
+                self.assertEqual(health["scheduler_state"], "building")
+                self.assertEqual(health["scheduler_skip_reason"], "single_flight_active")
+        finally:
+            release.set()
+
+    def test_reconciliation_without_canonical_data_fails_closed(self) -> None:
+        with patch.object(self.cache, "_start_background") as start:
+            self.assertFalse(self.cache.reconcile(
+                {}, self.state, self.store, "league-1",
+            ))
+        start.assert_not_called()
+        health = self.cache.health()["cache"]
+        self.assertEqual(health["scheduler_state"], "blocked")
+        self.assertEqual(health["scheduler_skip_reason"], "canonical_data_unavailable")
+
     def test_early_guard_starts_single_flight_without_durable_reads(self) -> None:
         entered, release, _worker_ids, key = self._blocked_preparation()
         try:

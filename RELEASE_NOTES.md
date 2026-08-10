@@ -1,4 +1,10 @@
-# DTOS v1.9.2 — Intelligence Presentation & Data Utilization
+# DTOS v1.9.3 — Asset Market Restart Lifecycle Correction
+
+DTOS now deterministically schedules one background Asset Market build when startup or restart finishes without a compatible durable artifact. The correction closes an orchestration hole where the market could become eligible while remaining model-less and idle. It does not change valuation, Historical Memory, FOIS, or v1.9.2 presentation behavior.
+
+## Previous release
+
+### v1.9.2 — Intelligence Presentation & Data Utilization
 
 DTOS now turns more existing Brain, FOIS, Asset Market, and Historical Memory evidence into readable product guidance. Human-facing pages lead with names, ranks, values, confidence, availability, and outcomes; technical provenance remains accessible without replacing the decision meaning. This release does not add an intelligence engine or change canonical valuation behavior.
 

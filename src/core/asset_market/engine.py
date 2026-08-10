@@ -597,6 +597,9 @@ class AssetMarketCache:
         self._requested_generation: str | None = None
         self._memory_backoff: dict[str, Any] | None = None
         self.attempted_constructions = 0
+        self._scheduler_state = "idle"
+        self._scheduler_last_invoked: str | None = None
+        self._scheduler_skip_reason: str | None = None
         self.failed_constructions = 0
         self._clock = clock or time.monotonic
         self._memory_observer = memory_observer or memory_snapshot
@@ -883,6 +886,8 @@ class AssetMarketCache:
             self.build_count += 1
             self.last_error = None
             self._refresh_state = "ready"
+            self._scheduler_state = "ready"
+            self._scheduler_skip_reason = None
             self._health_metadata = prepared_health
         if previous is not None and previous._artifact_path != market._artifact_path:
             try:
@@ -1006,12 +1011,16 @@ class AssetMarketCache:
             with self._lock:
                 if epoch == self._epoch:
                     self._build_phase = "idle"
+                    self._scheduler_state = "idle"
+                    self._scheduler_skip_reason = "generation_superseded"
         except MarketMemoryBudgetError as exc:
             with self._lock:
                 self.failed_constructions += 1
                 self.last_error = str(exc)
                 self._build_phase = "memory_backoff"
                 self._refresh_state = "memory_backoff"
+                self._scheduler_state = "blocked"
+                self._scheduler_skip_reason = "memory_backoff"
             self._record_memory_backoff(request_marker, exc)
         except Exception as exc:
             with self._lock:
@@ -1019,6 +1028,8 @@ class AssetMarketCache:
                 self.last_error = str(exc)
                 self._build_phase = "failed"
                 self._refresh_state = "failed"
+                self._scheduler_state = "failed"
+                self._scheduler_skip_reason = "build_failed"
         finally:
             with self._lock:
                 if epoch == self._epoch:
@@ -1039,9 +1050,14 @@ class AssetMarketCache:
         request_marker: tuple[Any, ...],
     ) -> bool:
         if self._memory_backoff_active(request_marker):
+            with self._lock:
+                self._scheduler_state = "blocked"
+                self._scheduler_skip_reason = "memory_backoff"
             return False
         with self._lock:
             if self._build_thread is not None:
+                self._scheduler_state = "building"
+                self._scheduler_skip_reason = "single_flight_active"
                 return False
             epoch = self._epoch
             self._building = True
@@ -1052,12 +1068,15 @@ class AssetMarketCache:
             self._refresh_state = "refreshing"
             self.last_error = None
             self.attempted_constructions += 1
+            self._scheduler_state = "queued"
+            self._scheduler_skip_reason = None
             self._build_thread = threading.Thread(
                 target=self._background_construct,
                 args=(data, state, store, league_id, request_marker, epoch),
                 name="dtos-market-builder", daemon=True,
             )
             self._build_thread.start()
+            self._scheduler_state = "building"
             return True
 
     def begin_warming_guard(
@@ -1065,9 +1084,15 @@ class AssetMarketCache:
         store: HistoricalStore, league_id: str,
     ) -> bool:
         """Start or observe generation using only bounded in-memory state."""
+        invoked_at = datetime.now(timezone.utc).isoformat()
         allowed = lifecycle_coordinator.market_build_allowed()
         request_marker = self.request_marker(data, state, store, league_id)
+        with self._lock:
+            self._scheduler_last_invoked = invoked_at
         if self._memory_backoff_active(request_marker):
+            with self._lock:
+                self._scheduler_state = "blocked"
+                self._scheduler_skip_reason = "memory_backoff"
             return True
         with self._lock:
             market = self._market
@@ -1076,16 +1101,39 @@ class AssetMarketCache:
                 and request_marker == self._request_marker
             )
             if current:
+                self._scheduler_state = "ready"
+                self._scheduler_skip_reason = "current_generation"
                 return False
             if self._refresh_state == "failed" or self._build_phase == "failed":
+                self._scheduler_state = "failed"
+                self._scheduler_skip_reason = "build_failed"
                 return False
             active = self._build_thread is not None
         if active:
+            with self._lock:
+                self._scheduler_state = "building"
+                self._scheduler_skip_reason = "single_flight_active"
             return True
         if not allowed:
+            with self._lock:
+                self._scheduler_state = "blocked"
+                self._scheduler_skip_reason = "lifecycle_prerequisite"
             return market is None or market.store is not store
         self._start_background(data, state, store, league_id, request_marker)
         return True
+
+    def reconcile(
+        self, data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str,
+    ) -> bool:
+        """Enforce the model-less eligible-state single-flight invariant."""
+        if not data:
+            with self._lock:
+                self._scheduler_last_invoked = datetime.now(timezone.utc).isoformat()
+                self._scheduler_state = "blocked"
+                self._scheduler_skip_reason = "canonical_data_unavailable"
+            return False
+        return self.begin_warming_guard(data, state, store, league_id)
 
     def get(
         self, data: dict[str, Any], state: dict[str, Any],
@@ -1234,6 +1282,12 @@ class AssetMarketCache:
                     } if self._memory_backoff else None
                 ),
                 "served_generation": market.generated_at if market else None,
+                "build_queued": bool(
+                    self._build_thread is not None and not self._build_thread.is_alive()
+                ),
+                "scheduler_state": self._scheduler_state,
+                "scheduler_last_invoked": self._scheduler_last_invoked,
+                "scheduler_skip_reason": self._scheduler_skip_reason,
                 "lifecycle": lifecycle_coordinator.snapshot(),
             }
 
@@ -1272,6 +1326,9 @@ class AssetMarketCache:
             self._build_started_monotonic = None
             self._build_duration_ms = None
             self._refresh_state = "idle"
+            self._scheduler_state = "idle"
+            self._scheduler_last_invoked = None
+            self._scheduler_skip_reason = None
 
     def wait_for_background(self, timeout: float = 5.0) -> bool:
         """Wait for the tracked worker without acquiring any durable state."""

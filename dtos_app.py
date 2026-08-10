@@ -80,8 +80,11 @@ async def background_sync() -> None:
                 await fois_service.generate(STATE["data"])
             except Exception:
                 runtime_metrics.mark_background("fois_generation", "failed")
-            else:
-                runtime_metrics.mark_background("fois_generation", "complete")
+        else:
+            runtime_metrics.mark_background("fois_generation", "complete")
+        asset_market_cache.reconcile(
+            STATE.get("data") or {}, STATE, historical_store, LEAGUE_ID,
+        )
 
 
 async def deployment_maintenance(startup_epoch: int | None = None) -> None:
@@ -158,6 +161,9 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
         else "Canonical startup generation established."
     )
     lifecycle_coordinator.complete_startup(epoch, startup_reason)
+    asset_market_cache.reconcile(
+        STATE.get("data") or {}, STATE, historical_store, LEAGUE_ID,
+    )
 
 
 async def startup_and_periodic_maintenance(startup_epoch: int) -> None:
