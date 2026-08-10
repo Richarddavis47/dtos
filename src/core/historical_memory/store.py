@@ -1236,6 +1236,44 @@ class HistoricalStore:
             ).fetchall()
         return count, [{**dict(row), "payload": json.loads(row["payload"])} for row in rows]
 
+    def season_player_leaders(
+        self, league_id: str, season: int, *, limit: int = 40,
+    ) -> tuple[int, list[dict[str, Any]]]:
+        """Aggregate a season's player production without hydrating weekly rows."""
+        with self.connection() as connection:
+            count = int(connection.execute(
+                """SELECT count(*) FROM historical_records
+                WHERE league_id=? AND entity_type='player_week' AND season=?""",
+                (league_id, season),
+            ).fetchone()[0])
+            rows = connection.execute(
+                """WITH totals AS (
+                    SELECT player_id,
+                           SUM(CAST(json_extract(payload, '$.fantasy_points') AS REAL)) AS points
+                    FROM historical_records
+                    WHERE league_id=? AND entity_type='player_week' AND season=?
+                      AND player_id IS NOT NULL
+                      AND json_extract(payload, '$.fantasy_points') IS NOT NULL
+                    GROUP BY player_id
+                )
+                SELECT totals.player_id, totals.points,
+                       identities.display_name,
+                       json_extract(identities.metadata, '$.position') AS position
+                FROM totals
+                LEFT JOIN player_identity AS identities
+                  ON identities.rowid = (
+                    SELECT candidate.rowid FROM player_identity AS candidate
+                    WHERE candidate.provider='Sleeper'
+                      AND candidate.provider_player_id=totals.player_id
+                    ORDER BY candidate.confidence DESC, candidate.valid_from DESC
+                    LIMIT 1
+                  )
+                ORDER BY totals.points DESC, totals.player_id
+                LIMIT ?""",
+                (league_id, season, limit),
+            ).fetchall()
+        return count, [dict(row) for row in rows]
+
     def dataset_version(self, league_id: str) -> str:
         """Return a deterministic identity for every stored input to graph reads."""
         if not self.path.exists() or not self.path.is_file():

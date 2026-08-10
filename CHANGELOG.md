@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.9.5 - History Read-Path Performance
+
+- Replaced full-archive construction on season subroutes with bounded, section-specific Historical Memory reads.
+- Moved season read-model construction off the event loop and added request-safe section caching keyed by durable dataset identity.
+- Aggregated season leaders in SQLite with one bounded identity join instead of hydrating every player-week record and issuing identity N+1 queries.
+- Preserved historical schemas, ordering, provenance, canonical progress, and provider-free read behavior.
+
 ## v1.9.4 - Valuation, FOIS & League History Corrections
 
 - Completed independent intrinsic, contender, and rebuilder valuation layers for supported active players and draft picks, with explicit evidence limitations for genuinely unavailable assets.

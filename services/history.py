@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
+from collections import OrderedDict
 from dataclasses import asdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -649,31 +650,65 @@ def history_records(
 
 
 def season_archive(league_id: str, season: int) -> dict[str, Any]:
-    """Build a bounded, provider-free season read model from Historical Memory."""
-    league = history_records(league_id, "league_season", season=season, limit=1)
-    standings = history_records(
-        league_id, "season_standing", season=season, limit=100,
-    )
+    """Compose cached section read models without provider access."""
+    sections = {
+        name: season_archive_section(league_id, season, name)
+        for name in (
+            "identity", "standings", "playoffs", "weeks", "transactions",
+            "draft", "leaders",
+        )
+    }
+    identity = sections["identity"]
+    standings = sections["standings"]
+    playoffs = sections["playoffs"]
+    weeks = sections["weeks"]
+    transactions = sections["transactions"]
+    draft = sections["draft"]
+    leaders = sections["leaders"]
+    expected = {
+        "standings": bool(standings["standings"]),
+        "playoffs": bool(playoffs["result"].get("champion_roster_id")),
+        "weekly_results": bool(weeks["weeks"]),
+        "transactions": bool(transactions["count"]),
+        "draft": bool(draft["drafts"] or draft["picks"]),
+        "player_production": bool(leaders["player_week_count"]),
+    }
+    current = season == date.today().year
+    complete = all(expected.values()) and not current
+    return {
+        "schema_version": HISTORICAL_SCHEMA_VERSION,
+        "season": season,
+        "state": "current" if current else "complete" if complete else "partial",
+        "display_status": "Current Season" if current else "Complete" if complete else "Partial",
+        "league_name": identity["league_name"],
+        "champion": playoffs["champion"],
+        "runner_up": playoffs["runner_up"],
+        "standings": standings["standings"],
+        "playoffs": {"result": playoffs["result"], "brackets": playoffs["brackets"]},
+        "weeks": weeks["weeks"],
+        "transactions": transactions["records"],
+        "draft": {"drafts": draft["drafts"], "picks": draft["picks"]},
+        "leaders": leaders["leaders"],
+        "availability": expected,
+        "counts": {
+            "standings": len(standings["standings"]),
+            "matchups": weeks["count"],
+            "transactions": transactions["count"],
+            "draft_picks": draft["pick_count"],
+            "player_weeks": leaders["player_week_count"],
+        },
+        "provider_requests": 0,
+    }
+
+
+_SEASON_SECTION_CACHE: OrderedDict[tuple[int, str, str, int, str], dict[str, Any]] = OrderedDict()
+_SEASON_SECTION_CACHE_LOCK = RLock()
+_SEASON_SECTION_CACHE_LIMIT = 96
+
+
+def _season_names(league_id: str, season: int) -> dict[int, dict[str, str]]:
     identities = history_records(
         league_id, "franchise_identity", season=season, limit=100,
-    )
-    playoffs = history_records(
-        league_id, "playoff_result", season=season, limit=10,
-    )
-    brackets = history_records(
-        league_id, "playoff_bracket", season=season, limit=10,
-    )
-    matchups = history_records(league_id, "matchup", season=season, limit=500)
-    transactions = history_records(
-        league_id, "transaction", season=season, limit=1000,
-    )
-    trades = history_records(league_id, "trade", season=season, limit=1000)
-    drafts = history_records(league_id, "draft", season=season, limit=20)
-    draft_picks = history_records(
-        league_id, "draft_pick", season=season, limit=500,
-    )
-    player_weeks = history_records(
-        league_id, "player_week", season=season, limit=10000,
     )
     names: dict[int, dict[str, str]] = {}
     for row in identities["records"]:
@@ -681,131 +716,90 @@ def season_archive(league_id: str, season: int) -> dict[str, Any]:
         roster_id = int(payload.get("sleeper_roster_id") or 0)
         if roster_id:
             names[roster_id] = {
-                "team_name": str(
-                    payload.get("dtos_display_name") or "Unassigned Franchise"
-                ),
-                "gm_name": str(
-                    payload.get("sleeper_username") or "Unassigned GM"
-                ),
+                "team_name": str(payload.get("dtos_display_name") or "Unassigned Franchise"),
+                "gm_name": str(payload.get("sleeper_username") or "Unassigned GM"),
                 "franchise_id": str(payload.get("franchise_id") or ""),
             }
+    return names
 
-    standing_rows = []
-    for row in sorted(
-        standings["records"],
-        key=lambda item: int(item["payload"].get("rank") or 999),
-    ):
-        payload = row["payload"]
-        roster_id = int(payload.get("roster_id") or 0)
-        standing_rows.append({
-            "rank": payload.get("rank"),
-            "roster_id": roster_id,
-            **names.get(roster_id, {
-                "team_name": "Unassigned Franchise",
-                "gm_name": "Unassigned GM",
-                "franchise_id": row.get("franchise_id") or "",
-            }),
-            "wins": payload.get("wins"),
-            "losses": payload.get("losses"),
-            "ties": payload.get("ties"),
-            "points_for": payload.get("points_for"),
-            "points_against": payload.get("points_against"),
-            "postseason_finish": None,
-        })
-    placement = next(
-        (
-            row["payload"] for row in playoffs["records"]
-            if row["payload"].get("champion_roster_id") is not None
-        ),
-        {},
-    )
-    places = {
-        int(roster_id): int(place)
-        for place, roster_id in (placement.get("placements") or {}).items()
-    }
-    for row in standing_rows:
-        row["postseason_finish"] = places.get(row["roster_id"])
 
-    weekly: dict[int, list[dict[str, Any]]] = {}
-    for row in matchups["records"]:
-        payload = row["payload"]
-        sides = [int(value) for value in payload.get("franchises") or []]
-        weekly.setdefault(int(row.get("week") or 0), []).append({
-            "matchup_id": payload.get("matchup_id"),
-            "teams": [
-                {
-                    "roster_id": roster_id,
-                    **names.get(roster_id, {
-                        "team_name": "Unassigned Franchise",
-                        "gm_name": "Unassigned GM",
-                        "franchise_id": "",
-                    }),
-                    "score": (payload.get("team_points") or {}).get(str(roster_id)),
-                }
-                for roster_id in sides
-            ],
-            "winner_roster_id": payload.get("winner"),
-            "tie": bool(payload.get("tie")),
-            "postseason": bool(payload.get("postseason_context")),
-        })
+def season_archive_section(league_id: str, season: int, section: str) -> dict[str, Any]:
+    """Return one bounded season section, cached by the durable dataset identity."""
+    version = historical_store.dataset_version(league_id)
+    key = (id(historical_store), version, league_id, season, section)
+    with _SEASON_SECTION_CACHE_LOCK:
+        cached = _SEASON_SECTION_CACHE.get(key)
+        if cached is not None:
+            _SEASON_SECTION_CACHE.move_to_end(key)
+            return copy.deepcopy(cached)
+    value = _build_season_archive_section(league_id, season, section)
+    with _SEASON_SECTION_CACHE_LOCK:
+        _SEASON_SECTION_CACHE[key] = copy.deepcopy(value)
+        _SEASON_SECTION_CACHE.move_to_end(key)
+        while len(_SEASON_SECTION_CACHE) > _SEASON_SECTION_CACHE_LIMIT:
+            _SEASON_SECTION_CACHE.popitem(last=False)
+    return value
 
-    totals: dict[str, float] = {}
-    for row in player_weeks["records"]:
-        points = row["payload"].get("fantasy_points")
-        if points is not None and row.get("player_id"):
-            player_id = str(row["player_id"])
-            totals[player_id] = totals.get(player_id, 0.0) + float(points)
-    leaders = []
-    positions = historical_store.identity_positions()
-    for player_id, points in sorted(
-        totals.items(), key=lambda item: (-item[1], item[0]),
-    ):
-        identity = historical_store.identity_for_provider_id(player_id) or {}
-        leaders.append({
-            "player_id": player_id,
-            "player_name": identity.get("display_name") or f"Player {player_id}",
-            "position": positions.get(player_id),
-            "fantasy_points": round(points, 2),
-        })
 
-    current = season == date.today().year
-    league_payload = league["records"][0]["payload"] if league["records"] else {}
-    expected = {
-        "standings": bool(standing_rows),
-        "playoffs": bool(placement.get("champion_roster_id")),
-        "weekly_results": bool(weekly),
-        "transactions": bool(transactions["count"] or trades["count"]),
-        "draft": bool(drafts["count"] or draft_picks["count"]),
-        "player_production": bool(player_weeks["count"]),
-    }
-    complete = all(expected.values()) and not current
-    return {
-        "schema_version": HISTORICAL_SCHEMA_VERSION,
-        "season": season,
-        "state": "current" if current else "complete" if complete else "partial",
-        "display_status": "Current Season" if current else "Complete" if complete else "Partial",
-        "league_name": league_payload.get("league_name") or "Sleeper League",
-        "champion": names.get(int(placement.get("champion_roster_id") or 0)),
-        "runner_up": names.get(int(placement.get("runner_up_roster_id") or 0)),
-        "standings": standing_rows,
-        "playoffs": {"result": placement, "brackets": brackets["records"]},
-        "weeks": [
-            {"week": week, "matchups": rows}
-            for week, rows in sorted(weekly.items()) if week
-        ],
-        "transactions": [*trades["records"], *transactions["records"]],
-        "draft": {"drafts": drafts["records"], "picks": draft_picks["records"]},
-        "leaders": leaders[:40],
-        "availability": expected,
-        "counts": {
-            "standings": len(standing_rows),
-            "matchups": matchups["count"],
-            "transactions": transactions["count"] + trades["count"],
-            "draft_picks": draft_picks["count"],
-            "player_weeks": player_weeks["count"],
-        },
-        "provider_requests": 0,
-    }
+def _build_season_archive_section(
+    league_id: str, season: int, section: str,
+) -> dict[str, Any]:
+    names = _season_names(league_id, season) if section in {"identity", "standings", "playoffs", "weeks"} else {}
+    if section == "identity":
+        league = history_records(league_id, "league_season", season=season, limit=1)
+        payload = league["records"][0]["payload"] if league["records"] else {}
+        return {"league_name": payload.get("league_name") or "Sleeper League", "names": names}
+    if section == "playoffs":
+        playoffs = history_records(league_id, "playoff_result", season=season, limit=10)
+        brackets = history_records(league_id, "playoff_bracket", season=season, limit=10)
+        placement = next((row["payload"] for row in playoffs["records"] if row["payload"].get("champion_roster_id") is not None), {})
+        return {
+            "result": placement, "brackets": brackets["records"],
+            "champion": names.get(int(placement.get("champion_roster_id") or 0)),
+            "runner_up": names.get(int(placement.get("runner_up_roster_id") or 0)),
+        }
+    if section == "standings":
+        standings = history_records(league_id, "season_standing", season=season, limit=100)
+        playoff = season_archive_section(league_id, season, "playoffs")["result"]
+        places = {int(roster_id): int(place) for place, roster_id in (playoff.get("placements") or {}).items()}
+        rows = []
+        for record in sorted(standings["records"], key=lambda item: int(item["payload"].get("rank") or 999)):
+            payload = record["payload"]
+            roster_id = int(payload.get("roster_id") or 0)
+            rows.append({
+                "rank": payload.get("rank"), "roster_id": roster_id,
+                **names.get(roster_id, {"team_name": "Unassigned Franchise", "gm_name": "Unassigned GM", "franchise_id": record.get("franchise_id") or ""}),
+                "wins": payload.get("wins"), "losses": payload.get("losses"),
+                "ties": payload.get("ties"), "points_for": payload.get("points_for"),
+                "points_against": payload.get("points_against"),
+                "postseason_finish": places.get(roster_id),
+            })
+        return {"standings": rows}
+    if section == "weeks":
+        matchups = history_records(league_id, "matchup", season=season, limit=500)
+        weekly: dict[int, list[dict[str, Any]]] = {}
+        for record in matchups["records"]:
+            payload = record["payload"]
+            sides = [int(value) for value in payload.get("franchises") or []]
+            weekly.setdefault(int(record.get("week") or 0), []).append({
+                "matchup_id": payload.get("matchup_id"),
+                "teams": [{"roster_id": roster_id, **names.get(roster_id, {"team_name": "Unassigned Franchise", "gm_name": "Unassigned GM", "franchise_id": ""}), "score": (payload.get("team_points") or {}).get(str(roster_id))} for roster_id in sides],
+                "winner_roster_id": payload.get("winner"), "tie": bool(payload.get("tie")),
+                "postseason": bool(payload.get("postseason_context")),
+            })
+        return {"weeks": [{"week": week, "matchups": rows} for week, rows in sorted(weekly.items()) if week], "count": matchups["count"]}
+    if section == "transactions":
+        transactions = history_records(league_id, "transaction", season=season, limit=1000)
+        trades = history_records(league_id, "trade", season=season, limit=1000)
+        return {"records": [*trades["records"], *transactions["records"]], "count": trades["count"] + transactions["count"]}
+    if section == "draft":
+        drafts = history_records(league_id, "draft", season=season, limit=20)
+        picks = history_records(league_id, "draft_pick", season=season, limit=500)
+        return {"drafts": drafts["records"], "picks": picks["records"], "pick_count": picks["count"]}
+    if section == "leaders":
+        count, rows = historical_store.season_player_leaders(league_id, season, limit=40)
+        return {"player_week_count": count, "leaders": [{"player_id": str(row["player_id"]), "player_name": row.get("display_name") or f"Player {row['player_id']}", "position": row.get("position"), "fantasy_points": round(float(row["points"]), 2)} for row in rows]}
+    raise ValueError(f"Unsupported season archive section: {section}")
 
 
 def season_index(league_id: str) -> dict[str, Any]:
