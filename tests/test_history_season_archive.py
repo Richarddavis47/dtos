@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 
@@ -135,6 +136,66 @@ class SeasonArchiveTests(unittest.TestCase):
                 result = season_archive_section("L", 2025, "leaders")
         self.assertEqual(result["player_week_count"], 1)
         self.assertEqual(result["leaders"][0]["player_name"], "Player One")
+
+    def test_leader_query_plan_is_season_scoped(self) -> None:
+        query = """SELECT player_id,
+        SUM(CAST(json_extract(payload, '$.fantasy_points') AS REAL)) AS points
+        FROM historical_records INDEXED BY idx_history_season_player
+        WHERE league_id=? AND entity_type='player_week' AND season=?
+        AND player_id IS NOT NULL
+        GROUP BY player_id ORDER BY points DESC,player_id LIMIT 40"""
+        with self.store.connection() as connection:
+            plan = " ".join(
+                str(row[3]) for row in connection.execute(
+                    "EXPLAIN QUERY PLAN " + query, ("L", 2025),
+                )
+            )
+        self.assertIn("idx_history_season_player", plan)
+        self.assertIn("league_id=? AND entity_type=? AND season=?", plan)
+
+    def test_leader_identity_resolution_uses_one_bounded_query(self) -> None:
+        statements: list[str] = []
+        original_connection = self.store.connection
+
+        @contextmanager
+        def traced_connection():
+            with original_connection() as connection:
+                connection.set_trace_callback(statements.append)
+                yield connection
+
+        with patch.object(self.store, "connection", traced_connection):
+            count, leaders = self.store.season_player_leaders("L", 2025)
+        selects = [
+            statement for statement in statements
+            if statement.lstrip().upper().startswith(("SELECT", "WITH"))
+        ]
+        self.assertEqual(count, 1)
+        self.assertEqual(len(leaders), 1)
+        self.assertEqual(len(selects), 3)
+        self.assertEqual(sum("current_player_identity" in item for item in selects), 1)
+
+    def test_optimized_leaders_match_reference_semantics(self) -> None:
+        count, rows = self.store.records(
+            "L", "player_week", season=2025, limit=10_000,
+        )
+        totals: dict[str, float] = {}
+        for row in rows:
+            player_id = str(row["player_id"])
+            totals[player_id] = totals.get(player_id, 0.0) + float(
+                row["payload"]["fantasy_points"]
+            )
+        expected = [
+            (player_id, round(points, 2))
+            for player_id, points in sorted(
+                totals.items(), key=lambda item: (-item[1], item[0]),
+            )
+        ]
+        optimized_count, optimized = self.store.season_player_leaders("L", 2025)
+        self.assertEqual(optimized_count, count)
+        self.assertEqual(
+            [(row["player_id"], round(float(row["points"]), 2)) for row in optimized],
+            expected,
+        )
 
     def test_section_cache_is_scoped_to_store_and_dataset_generation(self) -> None:
         with patch("services.history.historical_store", self.store):
