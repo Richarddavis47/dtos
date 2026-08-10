@@ -15,6 +15,8 @@ from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.fois.registry import DEFAULT_METRIC_REGISTRY
 from src.core.fois.service import FOISService, fois_enabled
 
+PageRenderer = Callable[[str, str], HTMLResponse]
+
 
 def _metadata(score: Any | None = None) -> dict[str, Any]:
     deployment = deployment_metadata()
@@ -50,7 +52,12 @@ def _summary(score: Any) -> dict[str, Any]:
     }
 
 
-def create_fois_router(*, service: FOISService, require_data: Callable[[], dict[str, Any]]) -> APIRouter:
+def create_fois_router(
+    *,
+    service: FOISService,
+    require_data: Callable[[], dict[str, Any]],
+    page: PageRenderer | None = None,
+) -> APIRouter:
     router = APIRouter(tags=["fois"])
 
     def require_enabled() -> None:
@@ -221,17 +228,64 @@ def create_fois_router(*, service: FOISService, require_data: Callable[[], dict[
 
     @router.get("/fois", response_class=HTMLResponse)
     async def fois_page(league_id: str = Query(default="")) -> HTMLResponse:
-        scores = service.repository.league(league_id, FOIS_MODEL_VERSION) if league_id else ()
+        try:
+            data = require_data()
+        except HTTPException as exc:
+            if exc.status_code != 503:
+                raise
+            data = {}
+        loaded_league = data.get("league") or {}
+        loaded_league_id = str(loaded_league.get("league_id") or "")
+        requested_league_id = league_id.strip()
+        persisted_leagues = service.repository.league_ids(FOIS_MODEL_VERSION)
+        selected_league_id = (
+            requested_league_id
+            or loaded_league_id
+            or (persisted_leagues[0] if len(persisted_leagues) == 1 else "")
+        )
+        scores = (
+            service.repository.league(selected_league_id, FOIS_MODEL_VERSION)
+            if selected_league_id else ()
+        )
+        valid_selection = bool(
+            selected_league_id
+            and (scores or selected_league_id == loaded_league_id)
+        )
+        if not valid_selection:
+            scores = ()
+
         cards = "".join(
-            f'<article class="card"><h2>{escape(score.gm_name or "GM")}</h2>'
+            f'<article class="card"><h3>{escape(score.gm_name or "GM")}</h3>'
             f'<p class="score">{score.overall_score if score.overall_score is not None else "Insufficient Evidence"} '
             f'{escape(score.overall_letter_grade or "")}</p><p>Confidence: {score.confidence:.0f}%</p>'
             f'<p>Current Team Score: {score.current_team_score if score.current_team_score is not None else "Unavailable"}</p>'
             f'<a href="/api/fois/leagues/{escape(score.league_id)}/gms/{escape(score.gm_id or "")}">Executive Profile</a></article>'
             for score in scores
-        ) or '<section class="empty-state"><h2>FOIS is ready</h2><p>Generate the persisted league model to view executive profiles.</p></section>'
-        return HTMLResponse('<main><header><p class="eyebrow">Front Office Intelligence System</p>'
-                            '<h1>General Manager Intelligence</h1><p>GM Quality Is Not Team Quality.</p></header>'
-                            f'<section class="card-grid">{cards}</section></main>')
+        )
+        status = service.status()
+        if not selected_league_id:
+            content = ('<section class="empty-state" data-dtos-component="empty-state">'
+                       '<h2>No valid league is loaded</h2><p>Synchronize a league before opening Front Office Intelligence.</p></section>')
+        elif not valid_selection:
+            content = ('<section class="empty-state" data-dtos-component="empty-state">'
+                       '<h2>League unavailable</h2><p>The requested league is not loaded and has no persisted FOIS profiles.</p></section>')
+        elif status.get("state") in {"running", "waiting"} and not scores:
+            content = ('<section class="empty-state" data-dtos-component="empty-state">'
+                       '<h2>FOIS generation pending</h2><p>Executive profiles will appear after cached FOIS generation completes.</p></section>')
+        elif not scores:
+            content = ('<section class="empty-state" data-dtos-component="empty-state">'
+                       '<h2>FOIS data unavailable</h2><p>No persisted executive profiles exist for this league.</p></section>')
+        else:
+            content = f'<section id="executive-profiles" class="card-grid">{cards}</section>'
+
+        body = (
+            '<nav class="ds-breadcrumbs" aria-label="FOIS sections">'
+            '<a href="#gm-rankings">GM Rankings</a><a href="#executive-profiles">Executive Profiles</a>'
+            '<a href="/history">Franchise and GM History</a></nav>'
+            '<section id="gm-rankings"><h2>GM Rankings</h2>'
+            '<p class="muted">GM Quality Is Not Team Quality. Rankings preserve evidence confidence and completeness.</p>'
+            f'{content}</section>'
+        )
+        return page("Front Office Intelligence System", body) if page else HTMLResponse(body)
 
     return router

@@ -1,3 +1,18 @@
+# DTOS v1.9.1 — FOIS Presentation Contract Correction
+
+DTOS v1.9.1 completes the public presentation contract for the Front Office Intelligence System introduced in v1.9.0. The `/fois` page now uses the shared DTOS page header, selects the active loaded league when no query parameter is supplied, presents persisted executive profiles, and provides a functional GM Rankings action.
+
+The release does not change FOIS scores, evidence, model outputs, persistence, startup scheduling, Historical Memory, or Asset Market behavior. Explicit unavailable leagues and genuinely missing or pending FOIS data remain honest, distinct states.
+
+## Validation focus
+
+- Shared page-header and primary-action contracts at desktop, tablet, and mobile.
+- Canonical loaded-league selection and explicit valid-league override.
+- Ten persisted production GM profiles visible without a league query parameter.
+- FOIS output equivalence and v1.9.0 startup-correction preservation.
+
+## Previous release
+
 # DTOS v1.9.0 — FOIS General Manager Intelligence System
 
 DTOS now evaluates the executive responsible for a franchise during a specific

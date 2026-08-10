@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.9.1 - FOIS Presentation Contract Correction
+
+- Routed `/fois` through the canonical DTOS shared page header and navigation contract.
+- Resolved an omitted league parameter through the current loaded-league state so persisted profiles render by default.
+- Added a functional GM Rankings primary action and distinct pending, unavailable, and no-league states.
+- Preserved FOIS scoring, persistence, startup orchestration, Historical Memory, and Asset Market behavior.
+
 ## v1.9.0 - FOIS General Manager Intelligence System
 
 - Promoted the v1.6 FOIS foundation into a tenure-scoped General Manager

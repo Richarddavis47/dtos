@@ -25,6 +25,15 @@ class PagePresentation:
 
 def _presentation(title: str) -> PagePresentation:
     normalized = title.casefold()
+    if "front office intelligence system" in normalized:
+        return PagePresentation(
+            "Evaluate General Manager performance using results, process, context, recovery, and complete league history.",
+            "General Manager intelligence",
+            "View GM Rankings",
+            "#gm-rankings",
+            "League History",
+            "/history",
+        )
     if "headquarters" in normalized or normalized == "teams":
         return PagePresentation("Understand this franchise's direction, strengths, and next move.", "Front Office direction", "Open Trade Center", "/trades")
     if "player intelligence" in normalized or "player dossier" in normalized:
