@@ -1,6 +1,7 @@
 """Minimal, honest historical league and player views."""
 from __future__ import annotations
 
+import asyncio
 from datetime import date
 from html import escape
 from typing import Callable
@@ -16,6 +17,7 @@ from services.history import (
     player_career,
     provider_coverage,
     season_archive,
+    season_archive_section,
     season_index,
 )
 
@@ -67,40 +69,56 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
 
     @router.get("/api/history/seasons/{season}")
     async def history_season_api(season: int) -> dict:
-        archive = season_archive(league_id, season)
+        archive = await asyncio.to_thread(season_archive, league_id, season)
         if not archive["standings"] and not archive["weeks"]:
             raise HTTPException(404, "No historical season evidence is available.")
         return archive
 
     @router.get("/api/history/seasons/{season}/standings")
     async def history_season_standings(season: int) -> dict:
-        archive = await history_season_api(season)
-        return {"season": season, "standings": archive["standings"]}
+        section = await asyncio.to_thread(
+            season_archive_section, league_id, season, "standings",
+        )
+        return {"season": season, "standings": section["standings"]}
 
     @router.get("/api/history/seasons/{season}/playoffs")
     async def history_season_playoffs(season: int) -> dict:
-        archive = await history_season_api(season)
-        return {"season": season, "playoffs": archive["playoffs"]}
+        section = await asyncio.to_thread(
+            season_archive_section, league_id, season, "playoffs",
+        )
+        return {"season": season, "playoffs": {
+            "result": section["result"], "brackets": section["brackets"],
+        }}
 
     @router.get("/api/history/seasons/{season}/weeks")
     async def history_season_weeks(season: int) -> dict:
-        archive = await history_season_api(season)
-        return {"season": season, "weeks": archive["weeks"]}
+        section = await asyncio.to_thread(
+            season_archive_section, league_id, season, "weeks",
+        )
+        return {"season": season, "weeks": section["weeks"]}
 
     @router.get("/api/history/seasons/{season}/transactions")
     async def history_season_transactions(season: int) -> dict:
-        archive = await history_season_api(season)
-        return {"season": season, "transactions": archive["transactions"]}
+        section = await asyncio.to_thread(
+            season_archive_section, league_id, season, "transactions",
+        )
+        return {"season": season, "transactions": section["records"]}
 
     @router.get("/api/history/seasons/{season}/draft")
     async def history_season_draft(season: int) -> dict:
-        archive = await history_season_api(season)
-        return {"season": season, "draft": archive["draft"]}
+        section = await asyncio.to_thread(
+            season_archive_section, league_id, season, "draft",
+        )
+        return {"season": season, "draft": {
+            "drafts": section["drafts"], "picks": section["picks"],
+        }}
 
     @router.get("/api/history/seasons/{season}/leaders")
     async def history_season_leaders(season: int) -> dict:
-        archive = await history_season_api(season)
-        return {"season": season, "leaders": archive["leaders"]}
+        section = await asyncio.to_thread(
+            season_archive_section, league_id, season, "leaders",
+        )
+        return {"season": season, "leaders": section["leaders"]}
 
     @router.get("/history/{season:int}", response_class=HTMLResponse)
     async def history_season_page(season: int) -> HTMLResponse:

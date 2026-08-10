@@ -1,3 +1,13 @@
+# DTOS v1.9.5 — History Read-Path Performance
+
+DTOS v1.9.5 makes season History pages responsive by building only the requested
+section, offloading database-backed read-model work from the event loop, and
+aggregating player leaders in a bounded SQL query. It preserves the v1.9.4
+historical evidence, schemas, ordering, provenance, canonical `5/6` progress,
+valuation behavior, and FOIS model unchanged.
+
+## Previous release
+
 # DTOS v1.9.4 — Valuation, FOIS & League History Corrections
 
 DTOS v1.9.4 completes independent intrinsic, contender, and rebuilder valuation

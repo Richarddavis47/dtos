@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 from routes.history import create_history_router
-from services.history import season_archive
+from services.history import season_archive, season_archive_section
 from src.core.historical_memory.store import HistoricalStore
 
 
@@ -107,6 +107,44 @@ class SeasonArchiveTests(unittest.TestCase):
         self.assertEqual(archive["counts"]["transactions"], 1)
         self.assertEqual(archive["counts"]["draft_picks"], 1)
         self.assertEqual(archive["leaders"][0]["player_name"], "Player One")
+
+    def test_standings_section_does_not_hydrate_unrelated_evidence(self) -> None:
+        calls: list[str | None] = []
+        original = self.store.records
+
+        def observed_records(league_id, entity_type=None, **kwargs):
+            calls.append(entity_type)
+            return original(league_id, entity_type, **kwargs)
+
+        with patch("services.history.historical_store", self.store):
+            with patch.object(self.store, "records", side_effect=observed_records):
+                result = season_archive_section("L", 2025, "standings")
+        self.assertEqual(len(result["standings"]), 2)
+        self.assertNotIn("player_week", calls)
+        self.assertNotIn("transaction", calls)
+        self.assertNotIn("trade", calls)
+        self.assertNotIn("matchup", calls)
+        self.assertNotIn("draft_pick", calls)
+
+    def test_leaders_use_database_aggregation_without_identity_n_plus_one(self) -> None:
+        with patch("services.history.historical_store", self.store):
+            with patch.object(
+                self.store, "identity_for_provider_id",
+                side_effect=AssertionError("identity N+1 is prohibited"),
+            ):
+                result = season_archive_section("L", 2025, "leaders")
+        self.assertEqual(result["player_week_count"], 1)
+        self.assertEqual(result["leaders"][0]["player_name"], "Player One")
+
+    def test_section_cache_is_scoped_to_store_and_dataset_generation(self) -> None:
+        with patch("services.history.historical_store", self.store):
+            first = season_archive_section("L", 2025, "draft")
+            again = season_archive_section("L", 2025, "draft")
+            self.assertEqual(first, again)
+            self._append("draft_pick", "draft-1:2", {"pick_no": 2})
+            changed = season_archive_section("L", 2025, "draft")
+        self.assertEqual(len(first["picks"]), 1)
+        self.assertEqual(len(changed["picks"]), 2)
 
     def test_routes_are_clickable_and_consistent(self) -> None:
         app = FastAPI()
