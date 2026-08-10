@@ -22,6 +22,7 @@ from src.core.fois.engine import FOISEngine
 from src.core.fois.facts import FOISFacts, SeasonResult, TradeFact
 from src.core.fois.identity import identity_from_team
 from src.core.fois.models import MetricStatus
+from src.core.fois.scoring import calibrate_process_score
 from src.core.fois.repository import FOISRepository
 from src.core.fois.service import FOISService
 
@@ -66,6 +67,15 @@ def facts(
 
 
 class FOISFoundationTests(unittest.TestCase):
+    def test_neutral_process_evidence_is_not_graded_as_failure(self) -> None:
+        self.assertEqual(calibrate_process_score(50), 70)
+
+    def test_confidence_does_not_reduce_executive_score(self) -> None:
+        high = FOISEngine().evaluate(facts(seasons=10))
+        low = FOISEngine().evaluate(facts(seasons=1))
+        self.assertLess(low.confidence, high.confidence)
+        self.assertGreater(low.overall_score, 0)
+        self.assertNotEqual(low.overall_score, low.confidence)
     def test_configuration_weights_are_versioned_and_total_one_hundred(self) -> None:
         self.assertEqual(sum(DEFAULT_FOIS_CONFIGURATION.category_weights.values()), 100)
         invalid = replace(

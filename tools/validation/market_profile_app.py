@@ -30,6 +30,7 @@ import src.core.asset_market.engine as market_engine
 import src.core.asset_market.read_model as market_read_model
 from src.core.asset_market.engine import AssetMarket, AssetMarketCache, asset_market_cache
 from src.core.asset_market.read_model import MarketReadModel
+from src.core.brain import brain_service
 from src.core.historical_memory.store import HistoricalStore
 from src.core.historical_memory import historical_store
 from src.platform.lifecycle import LifecycleCoordinator, lifecycle_coordinator
@@ -633,13 +634,23 @@ async def material_market_change(marker: str) -> dict[str, Any]:
     current = STATE.get("data")
     if not isinstance(current, dict):
         raise HTTPException(409, "Canonical fixture data is unavailable.")
+    report = current.get("valuation_intelligence") or {}
+    target = (report.get("assets") or {}).get("player:10213")
+    consumed_attached = brain_service(current).asset("player:10213") is target
     try:
         data, evidence = material_market_fixture_change(current)
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc
     STATE["data"] = data
     save_cache()
-    return {**evidence, "marker": marker}
+    return {
+        **evidence, "marker": marker,
+        "canonical_path": (
+            "valuation_intelligence.assets.player:10213.valuation_layers."
+            "contender_value.value"
+        ),
+        "consumed_attached": consumed_attached,
+    }
 
 
 @app.get("/__validation__/semantic-market-contract")

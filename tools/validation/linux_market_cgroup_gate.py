@@ -1016,8 +1016,8 @@ def _material_target_comparison(
         before_rows[0], after_rows[0], "$.assets[player:10213]",
     )
     expected_paths = {
-        "$.assets[player:10213].values.intrinsic_dtos_value",
-        "$.assets[player:10213].values.league_adjusted_value",
+        "$.assets[player:10213].contender_value",
+        "$.assets[player:10213].values.contender_value",
     }
     if {difference["path"] for difference in differences} != expected_paths:
         raise AssertionError(
@@ -1191,7 +1191,12 @@ def _replacement_profile(
         raise AssertionError("material fixture mutation was rejected")
     if mutation.get("asset_id") != "player:10213" or mutation.get("attached") is not True:
         raise AssertionError("material fixture target is missing or detached")
-    if mutation.get("field") != "normalized_players.10213.dtos_value":
+    if mutation.get("consumed_attached") is not True:
+        raise AssertionError("Asset Market Brain did not consume the attached fixture object")
+    if mutation.get("field") != (
+        "valuation_intelligence.assets.player:10213.valuation_layers."
+        "contender_value.value"
+    ):
         raise AssertionError("material fixture changed an unexpected canonical field")
     if int(mutation.get("changed_canonical_fields") or 0) != 1:
         raise AssertionError("material fixture did not change exactly one canonical input")

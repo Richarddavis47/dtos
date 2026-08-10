@@ -1,3 +1,14 @@
+# DTOS v1.9.4 — Valuation, FOIS & League History Corrections
+
+DTOS v1.9.4 completes independent intrinsic, contender, and rebuilder valuation
+layers for supported active assets, corrects the FOIS centered-score calibration
+without conflating score and confidence, and adds provider-free year-level league
+archives backed by immutable Historical Memory. Unsupported layers retain honest
+evidence limitations, prior FOIS snapshots retain their model versions, and the
+active 2026 season remains explicitly current rather than final.
+
+## Previous release
+
 # DTOS v1.9.3 — Asset Market Restart Lifecycle Correction
 
 DTOS now deterministically schedules one background Asset Market build when startup or restart finishes without a compatible durable artifact. The correction closes an orchestration hole where the market could become eligible while remaining model-less and idle. It does not change valuation, Historical Memory, FOIS, or v1.9.2 presentation behavior.

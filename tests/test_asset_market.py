@@ -28,7 +28,10 @@ from src.core.historical_memory.store import HistoricalStore
 from src.core.historical_memory import historical_graph
 
 
-def _brain_asset(asset_id: str, market: int, contender: int, rebuilder: int) -> dict:
+def _brain_asset(
+    asset_id: str, market: int | None, contender: int | None,
+    rebuilder: int | None,
+) -> dict:
     return {
         "asset_id": asset_id, "scores": {"coverage": 75, "confidence": 80, "agreement": 70},
         "valuation_layers": {
@@ -72,7 +75,7 @@ class AssetMarketTests(unittest.TestCase):
                 "assets": {
                     "player:10213": _brain_asset("player:10213", 9200, 9500, 7000),
                     "player:2": _brain_asset("player:2", 5000, 4200, 6800),
-                    "player:3": _brain_asset("player:3", 5000, 5500, 1800),
+                    "player:3": _brain_asset("player:3", 5000, None, None),
                     "pick:2028:1:1": _brain_asset("pick:2028:1:1", 6000, 5000, 7500),
                 },
                 "timeline": {}, "summary": {}, "diagnostics": {},
@@ -580,7 +583,26 @@ class AssetMarketTests(unittest.TestCase):
     def test_contender_and_rebuilder_views_diverge_from_canonical_layers(self) -> None:
         contender = self.market.directory(sort="contender")["assets"]
         rebuilder = self.market.directory(sort="rebuilder")["assets"]
+        self.assertEqual(contender[0]["asset_id"], "player:10213")
+        self.assertEqual(rebuilder[0]["asset_id"], "pick:2028:1:1")
         self.assertNotEqual(contender[0]["asset_id"], rebuilder[0]["asset_id"])
+
+    def test_directory_and_detail_use_the_same_canonical_brain_layers(self) -> None:
+        directory = {
+            row["asset_id"]: row for row in self.market.directory(limit=10)["assets"]
+        }
+        for asset_id in ("player:10213", "player:2", "pick:2028:1:1"):
+            detail = self.market.detail(asset_id)
+            for layer in ("contender_value", "rebuilder_value"):
+                self.assertEqual(
+                    directory[asset_id]["values"][layer],
+                    detail["value_layers"][layer]["value"],
+                )
+
+    def test_retired_asset_has_no_contextual_ranking_value_without_evidence(self) -> None:
+        row = self.market.by_id["player:3"]
+        self.assertIsNone(row["values"]["contender_value"])
+        self.assertIsNone(row["values"]["rebuilder_value"])
 
     def test_trending_requires_two_timestamped_observations(self) -> None:
         result = self.market.trending()

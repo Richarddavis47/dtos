@@ -57,8 +57,48 @@ class ValuationUniverseTests(unittest.TestCase):
         layers = self.universe.by_id["player:1"]["layers"]
         self.assertEqual(tuple(layers), LAYER_NAMES)
         for layer in layers.values():
-            self.assertEqual(set(layer), {"value", "source", "version", "generated_at", "confidence", "availability"})
+            self.assertEqual(
+                set(layer),
+                {
+                    "value", "source", "version", "generated_at", "confidence",
+                    "availability", "reason", "limitations",
+                },
+            )
         self.assertNotEqual(layers["market_value"]["source"], layers["intrinsic_dtos_value"]["source"])
+
+    def test_active_player_receives_independent_canonical_layers(self) -> None:
+        layers = self.universe.by_id["player:1"]["layers"]
+        self.assertEqual(layers["intrinsic_dtos_value"]["value"], 800)
+        self.assertIsNotNone(layers["contender_value"]["value"])
+        self.assertIsNotNone(layers["rebuilder_value"]["value"])
+        self.assertNotEqual(
+            layers["contender_value"]["source"],
+            layers["rebuilder_value"]["source"],
+        )
+
+    def test_inactive_player_remains_honestly_unavailable(self) -> None:
+        layers = self.universe.by_id["player:2"]["layers"]
+        self.assertIsNone(layers["intrinsic_dtos_value"]["value"])
+        self.assertIn("retired", layers["intrinsic_dtos_value"]["reason"])
+
+    def test_pick_receives_distinct_contender_and_rebuilder_layers(self) -> None:
+        layers = self.universe.by_id["pick:2027:1:4"]["layers"]
+        self.assertIsNotNone(layers["contender_value"]["value"])
+        self.assertIsNotNone(layers["rebuilder_value"]["value"])
+        self.assertNotEqual(
+            layers["contender_value"]["value"],
+            layers["rebuilder_value"]["value"],
+        )
+
+    def test_status_audits_layer_coverage_and_missing_causes(self) -> None:
+        status = self.universe.status()
+        self.assertEqual(status["layer_coverage"]["intrinsic_dtos_value"], 2)
+        self.assertEqual(status["layer_coverage"]["contender_value"], 2)
+        self.assertEqual(status["layer_coverage"]["rebuilder_value"], 2)
+        self.assertEqual(status["layer_coverage"]["all_four"], 1)
+        reasons = status["missing_layer_reasons"]["intrinsic_dtos_value"]
+        self.assertEqual(sum(reasons.values()), 1)
+        self.assertTrue(any("retired" in reason for reason in reasons))
 
     def test_provider_abstraction_includes_available_and_unavailable_sources(self) -> None:
         rows = self.universe.by_id["player:1"]["providers"]

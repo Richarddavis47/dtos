@@ -4,6 +4,13 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      scenario:
+        description: Lifecycle scenario to run
+        required: true
+        default: all
+        type: choice
+        options: [all, ordinary, archive-warmed, combined-read]
 
 permissions:
   contents: read
@@ -15,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scenario: [ordinary, archive-warmed, combined-read]
+        scenario: ${{ fromJSON((inputs.scenario == '' || inputs.scenario == 'all') && '["ordinary","archive-warmed","combined-read"]' || format('["{0}"]', inputs.scenario)) }}
     steps:
       - uses: actions/checkout@v4
       - name: Build production-equivalent image

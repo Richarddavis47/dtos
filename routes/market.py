@@ -22,9 +22,15 @@ RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[..., HTMLResponse]
 
 
-def _value(row: dict[str, Any], name: str) -> str:
+def _value(
+    row: dict[str, Any], name: str,
+    layers: dict[str, Any] | None = None,
+) -> str:
     value = row["values"].get(name)
-    return "Not yet supported by available evidence" if value is None else f"{value:,.0f}"
+    if value is not None:
+        return f"{value:,.0f}"
+    layer = (layers or {}).get(name) or {}
+    return str(layer.get("reason") or "Insufficient DTOS evidence")
 
 
 def create_market_router(
@@ -150,7 +156,8 @@ def create_market_router(
         if detail:
             asset, recommendation = detail["asset"], detail["recommendation"]
             history = detail.get("history") or {}
-            expanded = f'''<section class="card" id="selected-asset" tabindex="-1"><p class="eyebrow">Expanded Asset</p><h2>{escape(asset["display_name"])}</h2><p><code>{escape(asset["asset_id"])}</code> · {escape(str(asset.get("position") or asset["asset_type"]))} · {escape(str(asset.get("nfl_team") or "No NFL team"))}</p><div class="summary-grid"><article class="metric"><b>{_value(asset, "market_value")}</b><span>Market</span></article><article class="metric"><b>{_value(asset, "intrinsic_dtos_value")}</b><span>Intrinsic</span></article><article class="metric"><b>{_value(asset, "contender_value")}</b><span>Contender</span></article><article class="metric"><b>{_value(asset, "rebuilder_value")}</b><span>Rebuilder</span></article></div><details><summary>Show reasoning and evidence</summary><p>{escape(recommendation["primary_reason"])}</p><p>Decision confidence: {recommendation["confidence"]}/100</p><p>Brain snapshot: <code>{escape(recommendation["brain_snapshot_id"])}</code></p><p>Market generation: <code>{escape(detail["market_generation"])}</code></p><p>Valuation generation: <code>{escape(str(detail.get("valuation_generation") or "Unavailable"))}</code></p><p>Historical dataset: <code>{escape(detail["historical_dataset_version"])}</code></p><p>Missing evidence: {escape(", ".join(recommendation["missing_evidence"]) or "None reported")}</p></details><p>Historical availability: {escape(asset["historical_availability"])}</p><p><a href="{escape(asset["canonical_url"])}">Open canonical dossier</a> · <a href="/trades?front_office={front_office or 1}">Trade Intelligence</a> · Historical evidence records: {len(history.get("events") or history.get("ownership_intervals") or [])}</p></section>'''
+            layers = detail.get("value_layers") or {}
+            expanded = f'''<section class="card" id="selected-asset" tabindex="-1"><p class="eyebrow">Expanded Asset</p><h2>{escape(asset["display_name"])}</h2><p><code>{escape(asset["asset_id"])}</code> · {escape(str(asset.get("position") or asset["asset_type"]))} · {escape(str(asset.get("nfl_team") or "No NFL team"))}</p><div class="summary-grid"><article class="metric"><b>{escape(_value(asset, "market_value", layers))}</b><span>Market</span></article><article class="metric"><b>{escape(_value(asset, "intrinsic_dtos_value", layers))}</b><span>Intrinsic</span></article><article class="metric"><b>{escape(_value(asset, "contender_value", layers))}</b><span>Contender</span></article><article class="metric"><b>{escape(_value(asset, "rebuilder_value", layers))}</b><span>Rebuilder</span></article></div><details><summary>Show reasoning and evidence</summary><p>{escape(recommendation["primary_reason"])}</p><p>Decision confidence: {recommendation["confidence"]}/100</p><p>Brain snapshot: <code>{escape(recommendation["brain_snapshot_id"])}</code></p><p>Market generation: <code>{escape(detail["market_generation"])}</code></p><p>Valuation generation: <code>{escape(str(detail.get("valuation_generation") or "Unavailable"))}</code></p><p>Historical dataset: <code>{escape(detail["historical_dataset_version"])}</code></p><p>Missing evidence: {escape(", ".join(recommendation["missing_evidence"]) or "None reported")}</p></details><p>Historical availability: {escape(asset["historical_availability"])}</p><p><a href="{escape(asset["canonical_url"])}">Open canonical dossier</a> · <a href="/trades?front_office={front_office or 1}">Trade Intelligence</a> · Historical evidence records: {len(history.get("events") or history.get("ownership_intervals") or [])}</p></section>'''
         def options(values: Any, selected_value: str) -> str:
             return "".join(
                 f'<option value="{value}" {"selected" if selected_value == value else ""}>{label}</option>'

@@ -140,7 +140,7 @@ def _summary(asset: dict[str, Any], brain_asset: dict[str, Any] | None) -> dict[
     values = {name: _layer_value(asset, name) for name in LAYER_NAMES}
     brain_layers = (brain_asset or {}).get("valuation_layers") or {}
     for name, layer in brain_layers.items():
-        if name in values and values[name] is None and isinstance(layer, dict):
+        if name in values and isinstance(layer, dict):
             value = layer.get("value")
             values[name] = float(value) if value is not None else None
     owner = identity.get("current_owner") or {}

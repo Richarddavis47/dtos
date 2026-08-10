@@ -12,15 +12,16 @@ from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
-from src.core.valuation.universe import ValuationUniverse
 from tools.validation.generate_sanitized_market_fixture import (
     HISTORICAL_COUNT,
     LEAGUE_ID,
     _history,
     _record_payload,
     _record_provider,
+    fixture_valuation_intelligence,
     material_market_fixture_change,
 )
+from src.core.brain import brain_service
 from src.core.historical_memory.store import HistoricalStore
 from tools.validation.linux_market_cgroup_gate import (
     StartupFailure,
@@ -634,14 +635,18 @@ class RestartReuseValidationTests(unittest.TestCase):
         self.assertNotIn(str(Path(sys.executable).parent), json.dumps(evidence))
 
     def test_material_fixture_mutation_updates_attached_canonical_input(self) -> None:
-        source = {
-            "normalized_players": {
-                "10213": {"name": "Bijan Robinson", "dtos_value": 91},
-            },
-        }
+        source = {"valuation_intelligence": fixture_valuation_intelligence()}
+        target = source["valuation_intelligence"]["assets"]["player:10213"]
+        self.assertIs(brain_service(source).asset("player:10213"), target)
         changed, evidence = material_market_fixture_change(source)
-        self.assertEqual(source["normalized_players"]["10213"]["dtos_value"], 91)
-        self.assertEqual(changed["normalized_players"]["10213"]["dtos_value"], 92)
+        original = source["valuation_intelligence"]["assets"]["player:10213"]
+        mutated = changed["valuation_intelligence"]["assets"]["player:10213"]
+        self.assertEqual(
+            original["valuation_layers"]["contender_value"]["value"], 450,
+        )
+        self.assertEqual(
+            mutated["valuation_layers"]["contender_value"]["value"], 550,
+        )
         self.assertTrue(evidence["attached"])
         self.assertEqual(evidence["changed_canonical_fields"], 1)
 
@@ -655,25 +660,19 @@ class RestartReuseValidationTests(unittest.TestCase):
                     "name": "Josh Allen", "position": "QB", "dtos_value": 95,
                 },
             },
+            "valuation_intelligence": fixture_valuation_intelligence(),
         }
         changed, _evidence = material_market_fixture_change(source)
-        with patch("src.core.valuation.universe._now", return_value="fixture-time"):
-            before = {
-                row["asset_id"]: row
-                for row in ValuationUniverse.streaming(source, {}).iter_assets()
-            }
-            after = {
-                row["asset_id"]: row
-                for row in ValuationUniverse.streaming(changed, {}).iter_assets()
-            }
-        changed_rows = sorted(
-            asset_id for asset_id in before if before[asset_id] != after[asset_id]
-        )
-        self.assertEqual(changed_rows, ["player:10213"])
+        before = source["valuation_intelligence"]["assets"]
+        after = changed["valuation_intelligence"]["assets"]
+        self.assertEqual(set(before), set(after))
+        self.assertNotEqual(before["player:10213"], after["player:10213"])
 
     def test_material_fixture_mutation_rejects_missing_or_detached_target(self) -> None:
-        invalid = ({}, {"normalized_players": {}}, {
-            "normalized_players": {"10213": {"dtos_value": None}},
+        invalid = ({}, {"valuation_intelligence": {"assets": {}}}, {
+            "valuation_intelligence": {"assets": {"player:10213": {
+                "valuation_layers": {"contender_value": {"value": None}},
+            }}},
         })
         for source in invalid:
             with self.subTest(source=source), self.assertRaises(ValueError):
@@ -717,13 +716,13 @@ class RestartReuseValidationTests(unittest.TestCase):
     def test_material_target_comparison_requires_exact_controlled_row_change(self) -> None:
         before = {"results": [{
             "asset_id": "player:10213",
-            "values": {"intrinsic_dtos_value": 20, "league_adjusted_value": 20},
+            "contender_value": 20,
+            "values": {"contender_value": 20},
             "confidence": 0,
         }]}
         after = json.loads(json.dumps(before))
-        after["results"][0]["values"].update({
-            "intrinsic_dtos_value": 30, "league_adjusted_value": 30,
-        })
+        after["results"][0]["contender_value"] = 30
+        after["results"][0]["values"]["contender_value"] = 30
         differences = _material_target_comparison(
             json.dumps(before).encode(), json.dumps(after).encode(),
         )

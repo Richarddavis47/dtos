@@ -15,6 +15,16 @@ def clamp(value: float) -> float:
     return round(max(0.0, min(100.0, value)), 2)
 
 
+def calibrate_process_score(value: float) -> float:
+    """Map a centered performance signal onto the documented executive scale.
+
+    FOIS evidence metrics commonly use 50 as neutral league performance. The
+    former implementation graded that neutral midpoint as an academic 50/F.
+    Confidence and completeness remain separate and never reduce this score.
+    """
+    return clamp(70 + (value - 50) * .75)
+
+
 def letter_grade(
     score: float | None,
     configuration: FrontOfficeScoringConfiguration,
@@ -46,9 +56,10 @@ def aggregate_metrics(
             0.0, 0.0, (), ("Missing data is excluded rather than scored as zero.",),
         )
     total_metric_weight = sum(metric.metric_weight for metric in included)
-    normalized = sum(
+    evidence_score = sum(
         metric.normalized_score * metric.metric_weight for metric in included
     ) / total_metric_weight
+    normalized = calibrate_process_score(evidence_score)
     evidence = tuple(dict.fromkeys(
         reference for metric in included for reference in metric.evidence_references
     ))
@@ -58,7 +69,7 @@ def aggregate_metrics(
     return FrontOfficeCategoryScore(
         category_key,
         category_name,
-        round(mean(metric.raw_value for metric in included if metric.raw_value is not None), 2),
+        round(evidence_score, 2),
         round(normalized, 2),
         category_weight,
         round(normalized * category_weight / 100, 2),
