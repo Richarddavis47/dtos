@@ -207,6 +207,41 @@ class DeploymentReadinessTests(unittest.TestCase):
             dtos_app.STATE["data"] = original_data
             dtos_app.STATE["last_error"] = original_error
 
+    def test_fois_failure_does_not_block_canonical_startup(self) -> None:
+        async def completed() -> dict:
+            return {}
+
+        original_data = dtos_app.STATE.get("data")
+        original_error = dtos_app.STATE.get("last_error")
+        dtos_app.STATE["data"] = {"teams": []}
+        dtos_app.STATE["last_error"] = None
+        try:
+            with patch.object(
+                dtos_app.asyncio, "sleep", new_callable=AsyncMock,
+            ), patch.object(
+                dtos_app, "start_sleeper_sync",
+                side_effect=lambda *args, **kwargs: asyncio.create_task(completed()),
+            ), patch.object(
+                dtos_app, "start_background_backfill",
+                side_effect=lambda _: asyncio.create_task(completed()),
+            ), patch.object(
+                dtos_app, "history_progress_contracts",
+            ), patch.object(
+                dtos_app.fois_service, "generate", new_callable=AsyncMock,
+                side_effect=ValueError("invalid optional evidence"),
+            ):
+                asyncio.run(dtos_app.deployment_maintenance())
+            fence = lifecycle_coordinator.snapshot()["startup_fence"]
+            self.assertEqual(fence["state"], "complete")
+            self.assertTrue(lifecycle_coordinator.market_build_allowed())
+            self.assertEqual(
+                runtime_metrics.health()["background_tasks"]["fois_generation"],
+                "failed",
+            )
+        finally:
+            dtos_app.STATE["data"] = original_data
+            dtos_app.STATE["last_error"] = original_error
+
     def test_periodic_interval_begins_only_after_startup_epoch(self) -> None:
         events: list[str] = []
         epoch = lifecycle_coordinator.begin_startup("Fixture startup.")

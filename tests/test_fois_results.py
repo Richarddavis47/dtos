@@ -321,6 +321,27 @@ class FOISResultsTests(unittest.TestCase):
             self.assertEqual(result["matchup_wins"], 1)
             self.assertEqual(result["league_size"], 10)
 
+    def test_results_history_ignores_standing_without_roster_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = HistoricalStore(Path(directory) / "history.sqlite3")
+            store.append(
+                record_key="invalid-standing",
+                entity_type="season_standing",
+                league_id="league",
+                source_record_id="invalid",
+                observed_at="2025-01-01",
+                retrieved_at="2025-01-01",
+                provider="SanitizedFixture",
+                availability="available",
+                confidence=100,
+                calculation_method="fixture",
+                schema_version="1.0",
+                payload={"fixture": True, "value": 1},
+                season=2024,
+            )
+
+            self.assertEqual(load_results_history(store, "league"), {})
+
     def test_results_api_exposes_timeline_cycles_and_explanations(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             service = FOISService(

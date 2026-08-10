@@ -56,6 +56,11 @@ def load_results_history(
         payload = row["payload"]
         season = int(row["season"])
         roster_id = str(payload.get("roster_id") or "")
+        if not roster_id.isdigit() or int(roster_id) < 1:
+            # Historical Memory can contain provider evidence that is valid for
+            # other consumers but is not a usable franchise standing. FOIS must
+            # not let that optional evidence block canonical application startup.
+            continue
         playoff = playoff_by_season.get(season, {})
         placements = {
             int(place): int(roster)

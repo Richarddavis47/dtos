@@ -76,8 +76,12 @@ async def background_sync() -> None:
         await start_sleeper_sync()
         if STATE.get("data"):
             runtime_metrics.mark_background("fois_generation", "running")
-            await fois_service.generate(STATE["data"])
-            runtime_metrics.mark_background("fois_generation", "complete")
+            try:
+                await fois_service.generate(STATE["data"])
+            except Exception:
+                runtime_metrics.mark_background("fois_generation", "failed")
+            else:
+                runtime_metrics.mark_background("fois_generation", "complete")
 
 
 async def deployment_maintenance(startup_epoch: int | None = None) -> None:
@@ -140,8 +144,14 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     runtime_metrics.mark_background("history_backfill", "complete")
     await asyncio.to_thread(history_progress_contracts, LEAGUE_ID)
     runtime_metrics.mark_background("fois_generation", "running")
-    await fois_service.generate(STATE["data"])
-    runtime_metrics.mark_background("fois_generation", "complete")
+    try:
+        await fois_service.generate(STATE["data"])
+    except Exception:
+        # FOIS is an optional persisted intelligence projection. Its failure is
+        # observable, but cannot hold canonical readiness or Asset Market idle.
+        runtime_metrics.mark_background("fois_generation", "failed")
+    else:
+        runtime_metrics.mark_background("fois_generation", "complete")
     startup_reason = (
         "Cached canonical generation established after refresh reached a terminal failure."
         if STATE.get("last_error")
