@@ -11,6 +11,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from services.history import history_progress_contracts
 from src.core.historical_memory import historical_graph, historical_store
 from src.core.historical_memory.models import HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION
+from services.fois import fois_service
+from src.core.fois.models import FOIS_MODEL_VERSION
 
 
 RequireData = Callable[[], dict[str, Any]]
@@ -185,11 +187,38 @@ def create_historical_assets_router(
     @router.get("/api/search")
     async def unified_search(q: str = "", limit: int = Query(50, ge=1, le=100)) -> JSONResponse:
         rows = graph().search(q, limit)
+        needle = q.casefold().strip()
+        if needle:
+            for score in fois_service.repository.league(league_id, FOIS_MODEL_VERSION):
+                if needle in (score.gm_name or "").casefold():
+                    rows.append({
+                        "canonical_id": score.gm_id,
+                        "result_type": "general_manager",
+                        "display_label": score.gm_name,
+                        "resolution_status": "resolved",
+                        "canonical_url": f"/fois?league_id={league_id}",
+                        "historical_availability": score.evidence_state,
+                        "match_reason": "canonical GM name",
+                        "executive_score": score.overall_score,
+                        "franchise_id": score.franchise_id,
+                    })
+                    if len(rows) >= limit:
+                        break
         return _response("unified_search", len(rows), rows, query=q)
 
     @router.get("/search", response_class=HTMLResponse)
     async def search_page(q: str = "") -> HTMLResponse:
         rows = graph().search(q)
+        needle = q.casefold().strip()
+        if needle:
+            rows.extend({
+                "canonical_url": f"/fois?league_id={league_id}",
+                "display_label": score.gm_name,
+                "result_type": "general_manager",
+                "resolution_status": score.evidence_state,
+                "match_reason": "canonical GM name",
+            } for score in fois_service.repository.league(league_id, FOIS_MODEL_VERSION)
+              if needle in (score.gm_name or "").casefold())
         results = "".join(
             f'<li><a href="{escape(str(row["canonical_url"]))}">{escape(str(row["display_label"]))}</a> <span class="pill">{escape(str(row["result_type"]))}</span><br><small>{escape(str(row["resolution_status"]))} · {escape(str(row["match_reason"]))}</small></li>'
             for row in rows

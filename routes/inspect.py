@@ -26,6 +26,8 @@ from src.core.asset_market import asset_market
 from src.core.inspection.publication import GitHubPublicationResolver
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 from src.core.valuation_intelligence import valuation_intelligence_report
+from services.fois import fois_service
+from src.core.fois.models import FOIS_MODEL_VERSION
 
 
 def create_inspection_router(
@@ -147,6 +149,35 @@ def create_inspection_router(
     @router.get("/trades")
     async def inspect_trades() -> Any:
         return jsonable_encoder(engine().trades())
+
+    @router.get("/fois")
+    async def inspect_fois() -> Any:
+        """Inspect persisted FOIS summaries without generation or provider access."""
+        selected = league_id or str(((state.get("data") or {}).get("league") or {}).get("league_id") or "")
+        scores = fois_service.repository.league(selected, FOIS_MODEL_VERSION) if selected else ()
+        return jsonable_encoder({
+            "application_version": VERSION,
+            "application_build": BUILD_NUMBER,
+            "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
+            "page_name": "FOIS League Overview",
+            "route": "/fois",
+            "sections": ["Executive Rankings", "GM Quality vs Team Quality", "Evidence Confidence"],
+            "cards": [{"gm_name": row.gm_name, "executive_score": row.overall_score,
+                       "current_team_score": row.current_team_score,
+                       "confidence": row.confidence, "evidence_state": row.evidence_state}
+                      for row in scores],
+            "tables": ["GM Rankings"], "charts": ["Executive Score by Category"],
+            "buttons": ["Executive Profile", "Compare GMs"],
+            "navigation": ["Commissioner Desk", "Team Headquarters", "Front Office"],
+            "links": [{"label": "FOIS", "route": "/fois"}],
+            "empty_states": [] if scores else ["FOIS generation has not completed."],
+            "placeholder_actions": [],
+            "warnings": [warning for row in scores for warning in row.warnings],
+            "page_metrics": {"card_count": len(scores), "button_count": 2,
+                             "table_count": 1, "chart_count": 1},
+            "last_updated": max((row.generated_at for row in scores), default=None),
+            "fois_model_version": FOIS_MODEL_VERSION,
+        })
 
     @router.get("/valuation")
     async def inspect_valuation() -> Any:

@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.9.0 - FOIS General Manager Intelligence System
+
+- Promoted the v1.6 FOIS foundation into a tenure-scoped General Manager
+  Intelligence System with permanent GM/franchise separation and immutable
+  takeover context.
+- Added full-history Results, impact-weighted process/outcome/recovery evidence,
+  production Trading, Roster Construction, and Drafting contracts, confidence,
+  completeness, honest missing-evidence states, and model versioning.
+- Added append-only FOIS snapshots, evidence provenance, executive profiles,
+  resumes, comparisons, franchise ownership history, category APIs, a compact UI,
+  and Front Office integration without adding a second Brain or history store.
+
 ## v1.8.15 - Relevant Player Universe
 
 - Adds one canonical Relevant Player Universe spanning durable league history, current ownership, reserve states, and the top 150 canonically ranked free agents.

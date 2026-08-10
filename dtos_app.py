@@ -74,6 +74,10 @@ async def background_sync() -> None:
     while True:
         await asyncio.sleep(SYNC_MINUTES * 60)
         await start_sleeper_sync()
+        if STATE.get("data"):
+            runtime_metrics.mark_background("fois_generation", "running")
+            await fois_service.generate(STATE["data"])
+            runtime_metrics.mark_background("fois_generation", "complete")
 
 
 async def deployment_maintenance(startup_epoch: int | None = None) -> None:
@@ -135,6 +139,9 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     await asyncio.gather(history_task, return_exceptions=True)
     runtime_metrics.mark_background("history_backfill", "complete")
     await asyncio.to_thread(history_progress_contracts, LEAGUE_ID)
+    runtime_metrics.mark_background("fois_generation", "running")
+    await fois_service.generate(STATE["data"])
+    runtime_metrics.mark_background("fois_generation", "complete")
     startup_reason = (
         "Cached canonical generation established after refresh reached a terminal failure."
         if STATE.get("last_error")
@@ -275,7 +282,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     error_html = f'<div class="error"><b>Sync error:</b> {escape(error)}</div>' if error else ""
     league_name = str(((STATE.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
     standard_chrome = f"""<header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync"><button class="btn" type="submit">Sync League</button></form></header>
-<nav class="nav" aria-label="Primary navigation"><a href="/market">Market</a><a href="/commissioner">Commissioner</a><a href="/teams">Team HQ</a><a href="/trades">Trade Center</a><a href="/matchups">Matchups</a><a href="/transactions">Transactions</a><a href="/picks">Draft Capital</a><a href="/history">History</a><a href="/search">Search</a><a href="/front-offices">Front Office</a><a href="/brain">Brain</a><a href="/valuation/calibration">Calibration</a><a href="/settings">Settings</a></nav>{page_header(title, league_name=league_name, last_updated=str(sync))}"""
+<nav class="nav" aria-label="Primary navigation"><a href="/market">Market</a><a href="/commissioner">Commissioner</a><a href="/teams">Team HQ</a><a href="/trades">Trade Center</a><a href="/matchups">Matchups</a><a href="/transactions">Transactions</a><a href="/picks">Draft Capital</a><a href="/history">History</a><a href="/search">Search</a><a href="/front-offices">Front Office</a><a href="/fois">FOIS</a><a href="/brain">Brain</a><a href="/valuation/calibration">Calibration</a><a href="/settings">Settings</a></nav>{page_header(title, league_name=league_name, last_updated=str(sync))}"""
     footer = f'<footer class="footer"><b>League Sync:</b> {escape(str(sync))} · Intelligence is generated from the latest cached league state. Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'
     html = f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style></head>
 <body><main class="wrap">{"" if commissioner_chrome else standard_chrome}{error_html}{body}{"" if commissioner_chrome else footer}</main></body></html>"""

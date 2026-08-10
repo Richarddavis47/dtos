@@ -32,8 +32,8 @@ DEFAULT_FOIS_CONFIGURATION = FrontOfficeScoringConfiguration(
     championship_probability_ceiling=50.0,
     rebuild_duration_thresholds=(2, 3),
     grade_thresholds=DEFAULT_GRADE_THRESHOLDS,
-    feature_flags={"advanced_trade_outcomes": False, "draft_slot_model": False},
-    created_at="2026-07-30T00:00:00+00:00",
+    feature_flags={"advanced_trade_outcomes": True, "draft_slot_model": True},
+    created_at="2026-08-09T00:00:00+00:00",
     active=True,
 )
 

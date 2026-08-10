@@ -68,7 +68,9 @@ class FOISEngine:
         self.results_scorer = ResultsScorer(configuration)
 
     def evaluate(self, facts: FOISFacts, *, generated_at: str | None = None) -> FrontOfficeIntelligenceScore:
-        completed = tuple(sorted(facts.completed_seasons, key=lambda row: row.season))[-10:]
+        # Full tenure is canonical. Trailing windows are presentation views and
+        # must never replace early seasons in the executive score.
+        completed = tuple(sorted(facts.completed_seasons, key=lambda row: row.season))
         start = completed[0].season if completed else 0
         end = completed[-1].season if completed else 0
         season_confidence = clamp(len(completed) / 10 * 100)
@@ -151,10 +153,48 @@ class FOISEngine:
                     evidence_ids,
                     directionality=Directionality.CONTEXTUAL,
                 )
+            process = [row.process_score for row in facts.trades if row.process_score is not None]
+            outcomes = [row.outcome_score for row in facts.trades if row.outcome_score is not None]
+            recovery = [row.recovery_score for row in facts.trades if row.recovery_score is not None]
+            impact_total = sum(max(0.01, row.impact_weight) for row in facts.trades)
+            if process:
+                weighted = sum(
+                    (row.process_score or 0) * max(0.01, row.impact_weight)
+                    for row in facts.trades if row.process_score is not None
+                ) / sum(max(0.01, row.impact_weight) for row in facts.trades if row.process_score is not None)
+                calculated["value_captured_at_transaction_time"] = _metric(
+                    "value_captured_at_transaction_time", "Decision quality at transaction time",
+                    "Impact-weighted process quality using contemporaneous evidence.",
+                    round(weighted, 2), clamp(weighted), len(process),
+                    clamp(len(process) / 10 * 100), clamp(len(process) / trade_count * 100),
+                    f"{len(process)} of {trade_count} trades have transaction-time process evidence; impact weight {impact_total:.2f}.",
+                    evidence_ids,
+                )
+            if outcomes:
+                calculated["subsequent_asset_value_change"] = _metric(
+                    "subsequent_asset_value_change", "Long-term trade outcome",
+                    "Observed outcome kept separate from transaction-time decision quality.",
+                    round(mean(outcomes), 2), clamp(mean(outcomes)), len(outcomes),
+                    clamp(len(outcomes) / 10 * 100), clamp(len(outcomes) / trade_count * 100),
+                    "Outcome evidence is credited without rewriting the original process assessment.", evidence_ids,
+                )
+            if recovery:
+                calculated["recovery_from_unsuccessful_trades"] = _metric(
+                    "recovery_from_unsuccessful_trades", "Recovery from unsuccessful trades",
+                    "Quality and speed of evidence-backed recovery after value loss.",
+                    round(mean(recovery), 2), clamp(mean(recovery)), len(recovery),
+                    clamp(len(recovery) / 5 * 100), clamp(len(recovery) / trade_count * 100),
+                    "Recovery is scored independently; repeated reckless attempts do not erase poor initial process.", evidence_ids,
+                )
         roster = facts.roster_metrics or {}
         for key, label in (
             ("starting_lineup_strength", "Starting-lineup strength"),
             ("roster_flexibility", "Roster flexibility"),
+            ("depth", "Depth"),
+            ("positional_balance", "Positional balance"),
+            ("injury_resilience", "Injury resilience"),
+            ("asset_liquidity", "Asset liquidity"),
+            ("competitive_window_coherence", "Competitive-window coherence"),
         ):
             if roster.get(key) is not None:
                 calculated[key] = _metric(
@@ -162,6 +202,26 @@ class FOISEngine:
                     roster[key], clamp(float(roster[key])), 1, 70, 100,
                     f"Reuses the existing DTOS league-relative value of {roster[key]}/100 without recalculating roster intelligence.",
                     evidence_ids,
+                )
+        if facts.drafts:
+            values = [row.value_over_expected for row in facts.drafts if row.value_over_expected is not None]
+            processes = [row.process_score for row in facts.drafts if row.process_score is not None]
+            if values:
+                score = clamp(50 + mean(values))
+                calculated["value_over_expected_draft_slot"] = _metric(
+                    "value_over_expected_draft_slot", "Value over expected draft slot",
+                    "Value captured relative to transaction-time draft-slot expectation.",
+                    round(mean(values), 2), score, len(values), clamp(len(values) * 20),
+                    clamp(len(values) / len(facts.drafts) * 100),
+                    "Draft outcomes use the evidence available for each historical selection.", evidence_ids,
+                )
+            if processes:
+                calculated["pick_value_realization"] = _metric(
+                    "pick_value_realization", "Draft process quality",
+                    "Selection process separated from later player outcome.",
+                    round(mean(processes), 2), clamp(mean(processes)), len(processes),
+                    clamp(len(processes) * 20), clamp(len(processes) / len(facts.drafts) * 100),
+                    "Process evidence is graded independently from injury and later outcome variance.", evidence_ids,
                 )
         categories = []
         for category, definitions in self.registry.items():
@@ -194,8 +254,18 @@ class FOISEngine:
             if overall is not None
             else "FOIS is provisional because no supported category has sufficient historical evidence."
         )
-        key_source = f"{facts.league_id}|{facts.franchise_id}|{start}|{end}|{self.configuration.model_version}"
+        key_source = f"{facts.league_id}|{facts.franchise_id}|{facts.tenure_id or facts.owner_id}|{start}|{end}|{self.configuration.model_version}"
         score_key = hashlib.sha256(key_source.encode()).hexdigest()
+        evidence_state = (
+            "insufficient_evidence" if overall is None else
+            "provisional" if provisional else "available"
+        )
+        strengths = tuple(row.category_name for row in sorted(
+            available, key=lambda row: row.normalized_score or 0, reverse=True
+        )[:2])
+        weaknesses = tuple(row.category_name for row in sorted(
+            available, key=lambda row: row.normalized_score or 0
+        )[:1])
         return FrontOfficeIntelligenceScore(
             VERSION, facts.league_id, facts.franchise_id, facts.owner_id, start, end,
             len(completed), overall, letter_grade(overall, self.configuration),
@@ -203,6 +273,17 @@ class FOISEngine:
             self.configuration.model_version,
             generated_at or datetime.now(timezone.utc).isoformat(),
             evidence_ids, warnings, provisional, score_key,
+            facts.gm_id or facts.owner_id,
+            facts.gm_name,
+            facts.tenure_id,
+            facts.tenure_started_at,
+            evidence_state,
+            facts.brain_snapshot_id,
+            facts.brain_version,
+            current_team_score=facts.current_team_score,
+            management_momentum="Stable" if completed else "Unavailable",
+            strengths=strengths,
+            weaknesses=weaknesses,
         )
 
     @staticmethod

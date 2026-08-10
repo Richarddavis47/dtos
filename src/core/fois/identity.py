@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 
 from src.core.team_identity import canonical_team_name
 
@@ -13,6 +14,15 @@ class FranchiseIdentity:
     owner_id: str | None
     owner_name: str
     franchise_name: str
+
+    @property
+    def gm_id(self) -> str:
+        subject = self.owner_id or "unassigned"
+        return f"{self.league_id}:gm:{subject}"
+
+    def tenure_id(self, started_at: str) -> str:
+        source = f"{self.league_id}|{self.franchise_id}|{self.gm_id}|{started_at}"
+        return hashlib.sha256(source.encode()).hexdigest()[:24]
 
 
 def identity_from_team(league_id: str, team: dict) -> FranchiseIdentity:

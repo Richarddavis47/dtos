@@ -13,15 +13,17 @@ from typing import Any
 
 from src.core.fois.configuration import DEFAULT_FOIS_CONFIGURATION
 from src.core.fois.engine import FOISEngine
-from src.core.fois.facts import DraftFact, FOISFacts, SeasonResult, TradeFact
+from src.core.fois.facts import DraftFact, FOISFacts, SeasonResult, TradeFact, WaiverFact
 from src.core.fois.identity import identity_from_team
+from src.core.fois.models import GMTenure, TakeoverSnapshot
 from src.core.fois.repository import FOISRepository
+from src.core.brain import brain_service
 
 LOGGER = logging.getLogger("dtos.fois")
 
 
 def fois_enabled() -> bool:
-    return os.getenv("DTOS_FOIS_ENABLED", "0").casefold() in {"1", "true", "yes", "on"}
+    return os.getenv("DTOS_FOIS_ENABLED", "1").casefold() in {"1", "true", "yes", "on"}
 
 
 class FOISService:
@@ -44,6 +46,7 @@ class FOISService:
             "last_duration_ms": None,
             "last_error": None,
             "model_version": DEFAULT_FOIS_CONFIGURATION.model_version,
+            "request_time_provider_calls": 0,
         }
 
     @property
@@ -99,14 +102,51 @@ class FOISService:
             else {}
         )
         scores = []
+        teams = data.get("teams") or ()
+        canonical_brain = None
+        if teams and supplied_history is None:
+            canonical_brain = brain_service(data)
         for team in data.get("teams") or ():
             identity = identity_from_team(league_id, team)
             roster_id = str(team.get("roster_id") or "")
             rows = history.get(roster_id) or {}
-            seasons = tuple(SeasonResult(**row) for row in rows.get("seasons") or ())
+            owner_by_season = rows.get("owner_by_season") or {}
+            current_owner = identity.owner_id
+            seasons = tuple(
+                SeasonResult(**row) for row in rows.get("seasons") or ()
+                if current_owner is None or owner_by_season.get(str(row.get("season"))) in {None, current_owner}
+            )
             trades = tuple(TradeFact(**row) for row in rows.get("trades") or ())
             drafts = tuple(DraftFact(**row) for row in rows.get("drafts") or ())
-            roster_metrics = rows.get("roster_metrics")
+            waivers = tuple(WaiverFact(**row) for row in rows.get("waivers") or ())
+            roster_metrics = dict(rows.get("roster_metrics") or {})
+            asset_ids = tuple(
+                str(player.get("id") or player.get("player_id"))
+                for player in team.get("players") or ()
+                if isinstance(player, dict) and (player.get("id") or player.get("player_id"))
+            )
+            brain_decision = (
+                canonical_brain.decision("FOIS", asset_ids)
+                if canonical_brain is not None else None
+            )
+            brain_snapshot_id = brain_decision.brain_snapshot_id if brain_decision else None
+            brain_version = brain_decision.brain_version if brain_decision else None
+            started_at = str(rows.get("tenure_started_at") or f"{min((row.season for row in seasons), default=int(league.get('season') or 0))}-01-01")
+            tenure = GMTenure(
+                identity.tenure_id(started_at), league_id, identity.franchise_id,
+                identity.gm_id, identity.owner_name, started_at,
+            )
+            takeover_context = dict(rows.get("takeover_context") or {})
+            takeover = TakeoverSnapshot(
+                hashlib.sha256(f"takeover|{tenure.tenure_id}".encode()).hexdigest(),
+                tenure.tenure_id, started_at, brain_snapshot_id,
+                rows.get("competitive_window"),
+                tuple(sorted(str(asset) for asset in team.get("players") or ())),
+                tuple(sorted(str(pick) for pick in rows.get("draft_pick_ids") or ())),
+                tuple(sorted(str(item) for item in rows.get("inherited_obligations") or ())),
+                takeover_context,
+            )
+            self.repository.ensure_tenure(tenure, takeover)
             history_source = (
                 "explicit FOIS facts"
                 if supplied_history is not None
@@ -121,6 +161,15 @@ class FOISService:
                 ),
                 ownership_changes=int(rows.get("ownership_changes") or 0),
                 expected_seasons=rows.get("expected_seasons"),
+                gm_id=identity.gm_id,
+                gm_name=identity.owner_name,
+                tenure_id=tenure.tenure_id,
+                tenure_started_at=started_at,
+                brain_snapshot_id=brain_snapshot_id,
+                brain_version=brain_version,
+                current_team_score=rows.get("current_team_score") or roster_metrics.get("current_team_score"),
+                competitive_window=rows.get("competitive_window"),
+                waivers=waivers,
             )
             score = self.engine.evaluate(facts)
             fingerprint = hashlib.sha256(

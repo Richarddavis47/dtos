@@ -459,5 +459,6 @@ class InspectionEngine:
             {"key": "team", "page_name": "Team Headquarters", "page_route": "/teams/{roster_id}", "inspection_route": "/api/inspect/team/{roster_id}", "scope": "team"},
             {"key": "player", "page_name": "Player Dossier", "page_route": "/players/{player_id}", "inspection_route": "/api/inspect/player/{player_id}", "scope": "player"},
             {"key": "front_office", "page_name": "Front Office Intelligence", "page_route": "/front-offices", "inspection_route": "/api/inspect/front-office/{roster_id}", "scope": "front_office"},
+            {"key": "fois", "page_name": "FOIS General Manager Intelligence", "page_route": "/fois", "inspection_route": "/api/inspect/fois", "scope": "league"},
             {"key": "trades", "page_name": "Trade Intelligence", "page_route": "/trades", "inspection_route": "/api/inspect/trades", "scope": "league"},
         )
