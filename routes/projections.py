@@ -26,7 +26,11 @@ def create_projections_router(*, service: ProjectionService) -> APIRouter:
 
     @router.get("/providers")
     async def providers() -> dict[str, Any]:
-        return envelope({"providers": provider_registry()})
+        return envelope({"providers": provider_registry(), "health": service.health().get("external_provider")})
+
+    @router.get("/accuracy")
+    async def accuracy() -> dict[str, Any]:
+        return envelope({"accuracy": service.accuracy()})
 
     @router.get("/players/{player_id}")
     async def player(player_id: str) -> dict[str, Any]:

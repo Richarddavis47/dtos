@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.10.1"
-BUILD_NUMBER = 1101
-RELEASE_CODENAME = "Projection Generation Production-Shape Correction"
+VERSION = "1.10.2"
+BUILD_NUMBER = 1102
+RELEASE_CODENAME = "Sleeper Projection Sync & System-Wide Forward Intelligence"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

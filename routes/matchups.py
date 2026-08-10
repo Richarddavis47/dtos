@@ -82,6 +82,12 @@ def create_matchups_router(
         left, right = sides[0], sides[1]
         projected = matchup_projection(d, sides)
         projection_summary = (
+            f'<section class="card"><h3>Sleeper vs DTOS Starter Projections</h3><div class="matchup-summary-grid">'
+            f'<div class="metric"><b>{projected["sides"][0]["sleeper_total"]:.1f}</b><span>{escape(left["team"])} Sleeper Projection · {escape(projected["sides"][0]["sleeper_coverage"])} {escape(projected["sides"][0]["sleeper_status"])}</span></div>'
+            f'<div class="metric"><b>{projected["sides"][1]["sleeper_total"]:.1f}</b><span>{escape(right["team"])} Sleeper Projection · {escape(projected["sides"][1]["sleeper_coverage"])} {escape(projected["sides"][1]["sleeper_status"])}</span></div>'
+            f'<div class="metric"><b>{projected["sides"][0]["dtos_total"]:.1f}</b><span>{escape(left["team"])} DTOS Projection · {escape(projected["sides"][0]["dtos_coverage"])} {escape(projected["sides"][0]["dtos_status"])}</span></div>'
+            f'<div class="metric"><b>{projected["sides"][1]["dtos_total"]:.1f}</b><span>{escape(right["team"])} DTOS Projection · {escape(projected["sides"][1]["dtos_coverage"])} {escape(projected["sides"][1]["dtos_status"])}</span></div>'
+            f'</div></section>'
             f'<section class="card"><h3>Projected Starter Outlook · {escape(projected["status"])}</h3><div class="matchup-summary-grid">'
             f'<div class="metric"><b>{projected["sides"][0]["projected"]:.1f}</b><span>{escape(left["team"])} Projection</span></div>'
             f'<div class="metric"><b>{projected["sides"][1]["projected"]:.1f}</b><span>{escape(right["team"])} Projection</span></div>'

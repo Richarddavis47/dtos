@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.10.2 - Sleeper Projection Sync & System-Wide Forward Intelligence
+
+- Added the optional, undocumented Sleeper bulk weekly projection feed as defensively parsed external evidence with a provider kill switch, immutable durable snapshots, freshness, fingerprints, single-flight synchronization, and stale fallback.
+- Added league-scoring reconciliation and a bounded canonical consensus that keeps Sleeper, DTOS, and consensus projections separately attributed.
+- Extended projection health, provider, accuracy, matchup starter, team-total, Brain, and valuation contracts without request-time provider calls.
+- Added semantic no-change detection so observational refreshes do not regenerate Projection Intelligence, Brain, or Asset Market state.
+- Preserved startup readiness, historical isolation, source-pure partial coverage, and the independent DTOS Forward Production fallback.
+
 ## v1.9.6 - Historical Player Leaders Query Optimization
 
 - Added a measured league/entity/season/player index for bounded player-week aggregation.

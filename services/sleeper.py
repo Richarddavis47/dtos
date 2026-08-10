@@ -20,6 +20,7 @@ from src.core.data_platform.provider_activation import refresh_public_market
 from src.core.intelligence.cache import intelligence_cache
 from src.core.provider_network import build_provider_network
 from src.core.projection_intelligence import projection_service
+from src.core.projection_intelligence.sleeper_provider import SleeperProjectionClient
 from src.platform.lifecycle import lifecycle_coordinator
 from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence
@@ -47,6 +48,10 @@ STATE: dict[str, Any] = {
 }
 SYNC_LOCK = threading.Lock()
 TRANSACTIONS_SYNC_LOCK = asyncio.Lock()
+SLEEPER_PROJECTION_CLIENT = SleeperProjectionClient(
+    enabled=os.getenv("DTOS_SLEEPER_PROJECTIONS_ENABLED", "1").strip().lower()
+    not in {"0", "false", "no", "off"}
+)
 
 
 def utcnow() -> datetime:
@@ -158,6 +163,19 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 market_data = await refresh_public_market(
                     client, (STATE.get("data") or {}).get("market_data")
                 )
+                projection_payload = None
+                projection_bytes = 0
+                projection_claimed = projection_service.begin_external_refresh()
+                if projection_claimed:
+                    try:
+                        projection_payload, projection_bytes = await SLEEPER_PROJECTION_CLIENT.fetch(
+                            client,
+                            season=int((nfl_state or {}).get("season") or league.get("season") or utcnow().year),
+                            week=matchup_week,
+                        )
+                    except Exception as exc:
+                        projection_service.fail_external_refresh(exc)
+                        logger.warning("Optional Sleeper projection refresh failed: %s", type(exc).__name__)
 
             user_by_id = {str(u.get("user_id")): u for u in users}
             team_rows = []
@@ -400,9 +418,20 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                         (STATE["data"].get("provider_network") or {}).get("providers") or []
                     )
                 try:
-                    await asyncio.to_thread(
-                        projection_service.generate, STATE["data"], LEAGUE_ID,
-                    )
+                    if projection_payload is not None:
+                        await asyncio.to_thread(
+                            projection_service.ingest_sleeper,
+                            projection_payload,
+                            data=STATE["data"],
+                            league_id=LEAGUE_ID,
+                            season=int((nfl_state or {}).get("season") or league.get("season") or utcnow().year),
+                            week=matchup_week,
+                            response_bytes=projection_bytes,
+                        )
+                    else:
+                        await asyncio.to_thread(
+                            projection_service.generate, STATE["data"], LEAGUE_ID,
+                        )
                 except Exception:
                     logger.exception(
                         "Projection generation failed; canonical intelligence will publish an explicit unavailable state"

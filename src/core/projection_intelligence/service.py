@@ -12,9 +12,12 @@ from statistics import mean, pstdev
 from typing import Any
 
 from config import CACHE_FILE
+from src.core.projection_intelligence.sleeper_provider import (
+    PARSER_VERSION, SOURCE_CLASSIFICATION, freshness_state, parse_projection_feed,
+)
 
-PROJECTION_SCHEMA_VERSION = "1.0"
-PROJECTION_MODEL_VERSION = "dtos-forward-production-1"
+PROJECTION_SCHEMA_VERSION = "1.1"
+PROJECTION_MODEL_VERSION = "dtos-forward-production-2"
 
 
 class ProjectionInputError(ValueError):
@@ -33,10 +36,12 @@ def _digest(value: Any) -> str:
 def provider_registry() -> list[dict[str, Any]]:
     return [
         {
-            "provider_id": "sleeper_projections", "provider_name": "Sleeper",
-            "evidence_family": "projection", "supported_projection_types": [],
-            "availability_state": "unsupported", "licensing_state": "not_documented",
-            "reason": "No approved projection interface is documented by Sleeper.",
+            "provider_id": "sleeper_projections", "provider_name": "Sleeper Projection",
+            "evidence_family": "optional_external_projection",
+            "supported_projection_types": ["weekly", "projected_statistics"],
+            "availability_state": "optional", "licensing_state": "undocumented",
+            "source_classification": SOURCE_CLASSIFICATION,
+            "reason": "Undocumented source; DTOS remains fully functional without it.",
         },
         {
             "provider_id": "dtos_forward_production", "provider_name": "DTOS Forward Production Model",
@@ -67,6 +72,14 @@ class ProjectionService:
         self._normalization: dict[str, Any] = {}
         self._generations = 0
         self._external_requests = 0
+        self._external_bytes = 0
+        self._external_failures = 0
+        self._external_semantic_changes = 0
+        self._external_state = "Unavailable"
+        self._external_last_attempt: str | None = None
+        self._external_last_success: str | None = None
+        self._external_fingerprint: str | None = None
+        self._refreshing = False
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:
@@ -79,12 +92,87 @@ class ProjectionService:
         with closing(self._connect()) as connection:
             connection.execute("CREATE TABLE IF NOT EXISTS projection_snapshots (snapshot_id TEXT PRIMARY KEY, league_id TEXT NOT NULL, season INTEGER NOT NULL, week INTEGER, generated_at TEXT NOT NULL, payload TEXT NOT NULL)")
             connection.execute("CREATE TABLE IF NOT EXISTS projection_actuals (snapshot_id TEXT NOT NULL, player_id TEXT NOT NULL, actual_points REAL NOT NULL, recorded_at TEXT NOT NULL, PRIMARY KEY(snapshot_id, player_id))")
+            connection.execute("CREATE TABLE IF NOT EXISTS sleeper_projection_snapshots (fingerprint TEXT PRIMARY KEY, season INTEGER NOT NULL, week INTEGER NOT NULL, retrieved_at TEXT NOT NULL, payload TEXT NOT NULL)")
             connection.commit()
             row = connection.execute("SELECT payload FROM projection_snapshots ORDER BY generated_at DESC LIMIT 1").fetchone()
+            external = connection.execute("SELECT fingerprint, retrieved_at FROM sleeper_projection_snapshots ORDER BY retrieved_at DESC LIMIT 1").fetchone()
         if row:
             self._snapshot = json.loads(row["payload"])
             self._generation_state = "ready"
             self._last_success_at = self._snapshot.get("generated_at")
+        if external:
+            self._external_fingerprint = external["fingerprint"]
+            self._external_last_success = external["retrieved_at"]
+            self._external_state = freshness_state(external["retrieved_at"])
+
+    def _external_snapshot(self) -> dict[str, Any] | None:
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT payload FROM sleeper_projection_snapshots ORDER BY retrieved_at DESC LIMIT 1"
+            ).fetchone()
+        return json.loads(row["payload"]) if row else None
+
+    def begin_external_refresh(self) -> bool:
+        """Claim the single-flight refresh slot."""
+        with self._lock:
+            if self._refreshing:
+                return False
+            self._refreshing = True
+            self._external_last_attempt = _now()
+            self._external_requests += 1
+            return True
+
+    def fail_external_refresh(self, exc: Exception) -> None:
+        with self._lock:
+            self._refreshing = False
+            self._external_failures += 1
+            self._external_state = "Stale" if self._external_fingerprint else "Unavailable"
+            self._last_error_type = type(exc).__name__
+            self._last_error_message = (
+                str(exc) if isinstance(exc, (ProjectionInputError, ValueError, RuntimeError))
+                else "Sleeper projection synchronization failed."
+            )
+            self._last_error_at = _now()
+
+    def ingest_sleeper(
+        self, payload: Any, *, data: dict[str, Any], league_id: str, season: int, week: int,
+        response_bytes: int = 0,
+    ) -> bool:
+        """Persist immutable external evidence and regenerate only on semantic change."""
+        scoring = data.get("scoring_settings") or (data.get("league") or {}).get("scoring_settings") or {}
+        retrieved_at = _now()
+        try:
+            rows, fingerprint, report = parse_projection_feed(
+                payload, season=season, week=week, scoring=scoring,
+            )
+            changed = fingerprint != self._external_fingerprint
+            snapshot = {
+                "provider_id": "sleeper_projections", "source_classification": SOURCE_CLASSIFICATION,
+                "parser_version": PARSER_VERSION, "season": season, "week": week,
+                "retrieved_at": retrieved_at, "semantic_fingerprint": fingerprint,
+                "players": rows, "normalization": report,
+            }
+            with closing(self._connect()) as connection:
+                connection.execute(
+                    "INSERT OR IGNORE INTO sleeper_projection_snapshots VALUES (?, ?, ?, ?, ?)",
+                    (fingerprint, season, week, retrieved_at, json.dumps(snapshot, sort_keys=True, separators=(",", ":"))),
+                )
+                connection.commit()
+            with self._lock:
+                self._refreshing = False
+                self._external_bytes += max(0, response_bytes)
+                self._external_fingerprint = fingerprint
+                self._external_last_success = retrieved_at
+                self._external_state = "Fresh"
+                self._last_error_type = self._last_error_message = self._last_error_at = None
+                if changed:
+                    self._external_semantic_changes += 1
+            if changed:
+                self.generate(data, league_id)
+            return changed
+        except Exception as exc:
+            self.fail_external_refresh(exc)
+            raise
 
     @staticmethod
     def _players(data: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -237,7 +325,45 @@ class ProjectionService:
         week_value = data.get("week") or data.get("leg")
         week = int(week_value) if week_value not in (None, "") else None
         players, normalization = self._players(data)
-        projections = {str(player.get("id") or player.get("player_id")): self._project(player, scoring, season, week) for player in players}
+        external_snapshot = self._external_snapshot()
+        external_players = (
+            (external_snapshot or {}).get("players") or {}
+            if (external_snapshot or {}).get("season") == season and (external_snapshot or {}).get("week") == week
+            else {}
+        )
+        projections = {}
+        for player in players:
+            player_id = str(player.get("id") or player.get("player_id"))
+            projection = self._project(player, scoring, season, week)
+            evidence = external_players.get(player_id)
+            sleeper_value = (evidence or {}).get("league_projection")
+            dtos_value = projection.get("weekly_projected_points")
+            if sleeper_value is not None and dtos_value is not None:
+                difference = round(float(dtos_value) - float(sleeper_value), 2)
+                magnitude = abs(difference)
+                agreement = "High" if magnitude <= 2 else "Moderate" if magnitude <= 5 else "Low"
+                reliability = .35 if freshness_state((external_snapshot or {}).get("retrieved_at")) == "Fresh" else .2
+                canonical = round(float(dtos_value) * (1 - reliability) + float(sleeper_value) * reliability, 2)
+                projection.update({
+                    "sleeper_projection": round(float(sleeper_value), 2),
+                    "dtos_projection": dtos_value, "canonical_projection": canonical,
+                    "projection_difference": difference,
+                    "projection_difference_percent": round(difference / abs(float(sleeper_value)) * 100, 2) if sleeper_value else None,
+                    "projection_agreement": agreement,
+                    "sleeper_evidence_fingerprint": (external_snapshot or {}).get("semantic_fingerprint"),
+                    "sleeper_freshness": freshness_state((external_snapshot or {}).get("retrieved_at")),
+                    "sources": ["dtos_forward_production", "sleeper_projections"],
+                    "weekly_projected_points": canonical,
+                })
+            else:
+                projection.update({
+                    "sleeper_projection": sleeper_value,
+                    "dtos_projection": dtos_value,
+                    "canonical_projection": dtos_value,
+                    "projection_difference": None,
+                    "sleeper_freshness": freshness_state((external_snapshot or {}).get("retrieved_at")),
+                })
+            projections[player_id] = projection
         identity = {"league_id": league_id, "season": season, "week": week, "model_version": PROJECTION_MODEL_VERSION, "scoring": scoring, "players": projections}
         snapshot_id = _digest(identity)
         generated_at = _now()
@@ -249,6 +375,7 @@ class ProjectionService:
             "league_id": league_id, "season": season, "week": week, "generated_at": generated_at,
             "projection_snapshot_id": snapshot_id, "players": projections,
             "providers": provider_registry(), "scoring_settings": scoring,
+            "sleeper_evidence_snapshot_id": (external_snapshot or {}).get("semantic_fingerprint"),
         }
         payload = json.dumps(snapshot, sort_keys=True, separators=(",", ":"))
         with closing(self._connect()) as connection:
@@ -300,6 +427,18 @@ class ProjectionService:
             "snapshot_id": (snapshot or {}).get("projection_snapshot_id"), "generated_at": (snapshot or {}).get("generated_at"),
             "players": len(players), "projected_players": available, "coverage": round(available / len(players) * 100, 2) if players else 0,
             "generations": self._generations, "external_requests": self._external_requests,
+            "external_bytes": self._external_bytes,
+            "external_failures": self._external_failures,
+            "external_semantic_changes": self._external_semantic_changes,
+            "external_provider": {
+                "status": self._external_state,
+                "classification": SOURCE_CLASSIFICATION,
+                "refreshing": self._refreshing,
+                "last_attempt": self._external_last_attempt,
+                "last_success": self._external_last_success,
+                "semantic_fingerprint": self._external_fingerprint,
+                "parser_version": PARSER_VERSION,
+            },
             "last_error_type": self._last_error_type,
             "last_error_message": self._last_error_message,
             "last_error_at": self._last_error_at,

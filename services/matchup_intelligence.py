@@ -5,6 +5,7 @@ from statistics import mean
 from typing import Any
 
 from src.core.intelligence import intelligence_orchestrator
+from src.core.projection_intelligence import projection_service
 
 
 def matchup_player_values(
@@ -49,13 +50,47 @@ def matchup_projection(
         ceiling = sum(item.ceiling or 0 for item in projections)
         confidence = round(mean(item.confidence for item in projections)) if projections else 0
         position_totals: dict[str, float] = {}
+        player_rows = []
+        sleeper_total = 0.0
+        sleeper_available = 0
+        dtos_total = 0.0
+        dtos_available = 0
         for player, value in zip(lineup, values):
+            player_id = str(player.get("id") or "")
+            canonical = projection_service.player(player_id) or {}
+            sleeper_value = canonical.get("sleeper_projection")
+            dtos_value = canonical.get("dtos_projection")
+            if sleeper_value is not None:
+                sleeper_total += float(sleeper_value)
+                sleeper_available += 1
+            if dtos_value is not None:
+                dtos_total += float(dtos_value)
+                dtos_available += 1
+            player_rows.append({
+                "player_id": player_id, "name": player.get("name"),
+                "position": player.get("position"), "nfl_team": player.get("nfl_team"),
+                "sleeper_projection": sleeper_value, "dtos_projection": dtos_value,
+                "canonical_projection": canonical.get("canonical_projection"),
+                "actual_points": player.get("points"),
+                "projection_status": canonical.get("status") or "unavailable",
+                "agreement": canonical.get("projection_agreement"),
+            })
             if value is None:
                 continue
             position = str(player.get("position") or "Other")
             position_totals[position] = position_totals.get(position, 0) + (value.projection.projected_points or 0)
             player_edges.append(((value.projection.ceiling or 0) - (value.projection.floor or 0), value.name, side.get("team")))
-        summaries.append({"roster_id": roster_id, "team": side.get("team"), "projected": round(total, 2), "floor": round(floor, 2), "ceiling": round(ceiling, 2), "confidence": confidence, "positions": position_totals})
+        summaries.append({
+            "roster_id": roster_id, "team": side.get("team"),
+            "projected": round(total, 2), "canonical_total": round(total, 2),
+            "sleeper_total": round(sleeper_total, 2), "dtos_total": round(dtos_total, 2),
+            "sleeper_coverage": f"{sleeper_available}/{len(lineup)}",
+            "dtos_coverage": f"{dtos_available}/{len(lineup)}",
+            "sleeper_status": "Complete" if sleeper_available == len(lineup) else "Partial",
+            "dtos_status": "Complete" if dtos_available == len(lineup) else "Partial",
+            "floor": round(floor, 2), "ceiling": round(ceiling, 2),
+            "confidence": confidence, "positions": position_totals, "players": player_rows,
+        })
     advantages = []
     if len(summaries) == 2:
         for position in sorted(set(summaries[0]["positions"]) | set(summaries[1]["positions"])):
