@@ -6,6 +6,8 @@ from typing import Any
 from config import LEAGUE_ID
 from src.core.intelligence import intelligence_orchestrator
 from src.core.historical_memory import historical_graph, historical_store
+from services.fois import fois_service
+from src.core.fois.models import FOIS_MODEL_VERSION
 
 
 def build_front_office_center(data: dict[str, Any], roster_id: int | None = None) -> dict[str, Any]:
@@ -19,6 +21,14 @@ def build_front_office_center(data: dict[str, Any], roster_id: int | None = None
     reports = model.reports
     graph = historical_graph(historical_store, LEAGUE_ID, data)
     histories = {str(selected): graph.franchise_history(str(selected))}
+    league_id = str((data.get("league") or {}).get("league_id") or LEAGUE_ID)
+    selected_team = next((row for row in teams if int(row.get("roster_id") or 0) == selected), {})
+    owner_id = selected_team.get("owner_id") or selected_team.get("user_id")
+    gm_id = f"{league_id}:gm:{owner_id}" if owner_id is not None else None
+    fois_score = (
+        fois_service.repository.score_for_gm(league_id, gm_id, FOIS_MODEL_VERSION)
+        if gm_id else None
+    )
     return {
         "active": reports[selected],
         "reports": tuple(reports[key] for key in sorted(reports)),
@@ -30,4 +40,19 @@ def build_front_office_center(data: dict[str, Any], roster_id: int | None = None
         "decision_confidence": intelligence.brain_decision.confidence,
         "historical_contract_version": histories[next(iter(histories))]["schema_version"] if histories else None,
         "franchise_histories": histories,
+        "fois": ({
+            "gm_id": fois_score.gm_id,
+            "gm_name": fois_score.gm_name,
+            "executive_score": fois_score.overall_score,
+            "grade": fois_score.overall_letter_grade,
+            "confidence": fois_score.confidence,
+            "strongest_category": fois_score.strongest_category,
+            "weakest_category": fois_score.weakest_category,
+            "management_momentum": fois_score.management_momentum,
+            "snapshot_id": fois_score.score_key,
+            "model_version": fois_score.model_version,
+        } if fois_score else {
+            "evidence_state": "unavailable",
+            "reason": "No persisted FOIS executive snapshot is available.",
+        }),
     }

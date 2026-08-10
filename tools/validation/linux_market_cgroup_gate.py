@@ -57,6 +57,12 @@ class StartupFailure(RuntimeError):
         self.process = process
 
 
+class ColdBuildFailure(AssertionError):
+    def __init__(self, message: str, evidence: dict[str, object]) -> None:
+        super().__init__(message)
+        self.evidence = evidence
+
+
 def _sanitize_server_log(value: str, *, limit: int = 200) -> str:
     """Return a bounded diagnostic tail without paths, identities, or secrets."""
     lines = value.splitlines()[-limit:]
@@ -728,7 +734,20 @@ def _cold_build() -> tuple[dict, float, int, dict[str, object]]:
         if error:
             raise AssertionError(f"market build failed: {error}")
         time.sleep(0.5)
-    raise AssertionError("cold market build exceeded 60 seconds")
+    profile: dict[str, object] = {}
+    try:
+        status, body, _elapsed = _request("/__validation__/cold-build-profile")
+        if status == 200:
+            profile = json.loads(body)
+    except (OSError, ValueError, json.JSONDecodeError):
+        profile = {"capture": "unavailable"}
+    raise ColdBuildFailure("cold market build exceeded 60 seconds", {
+        "attempts": attempts,
+        "warming_client_max_ms": round(max(warming_client, default=0), 3),
+        "warming_server_max_ms": round(max(warming_server, default=0), 3),
+        "background_phases": sorted(phases),
+        "profile": profile,
+    })
 
 
 def _history_metrics() -> dict[str, object]:
@@ -1568,7 +1587,18 @@ def main() -> int:
                     duration_ms=coverage_ms, archive_scan=archive_scan,
                 )
             before_cold = _cgroup("memory.current")
-            health, build_ms, attempts, responsiveness = _cold_build()
+            try:
+                health, build_ms, attempts, responsiveness = _cold_build()
+            except ColdBuildFailure as exc:
+                summary["phases"]["cold_market"] = {
+                    "timestamp": time.time(), "failed": True,
+                    "diagnostics": exc.evidence,
+                    "memory_current": _cgroup("memory.current"),
+                    "effective_memory_current": _memory_state().get(
+                        "effective_working_set_bytes"
+                    ),
+                }
+                raise
             cold_peak = monitor.peak
             summary["phases"]["cold_market"] = {
                 "timestamp": time.time(), "duration_ms": round(build_ms, 3), "attempts": attempts,

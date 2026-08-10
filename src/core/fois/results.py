@@ -49,7 +49,7 @@ class ResultsScorer:
         all_seasons = tuple(
             sorted(facts.completed_seasons, key=lambda row: row.season)
         )
-        seasons = all_seasons[-10:]
+        seasons = all_seasons
         analysis = self.analyzer.analyze(
             all_seasons,
             ownership_changes=facts.ownership_changes,

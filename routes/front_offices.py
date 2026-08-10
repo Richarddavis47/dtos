@@ -41,7 +41,7 @@ def create_front_offices_router(*, ensure_fresh: Callable[[], Awaitable[None]], 
             }
             for roster_id, item in result["franchise_histories"].items()
         }
-        payload = {"active_front_office": result["active"].roster_id, "organizations": [asdict(item) for item in result["reports"]], "compatibilities": [asdict(item) for item in result["compatibilities"]], "relationships": [asdict(item) for item in result["relationships"]], "historical_contract_version": result["historical_contract_version"], "franchise_history": history, **recommendation_contract(result["unified_recommendation"], result.get("brain_recommendation"))}
+        payload = {"active_front_office": result["active"].roster_id, "organizations": [asdict(item) for item in result["reports"]], "compatibilities": [asdict(item) for item in result["compatibilities"]], "relationships": [asdict(item) for item in result["relationships"]], "historical_contract_version": result["historical_contract_version"], "franchise_history": history, "fois": result["fois"], **recommendation_contract(result["unified_recommendation"], result.get("brain_recommendation"))}
         return JSONResponse(jsonable_encoder(payload))
 
     return router

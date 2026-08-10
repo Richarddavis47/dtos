@@ -12,10 +12,12 @@ from src.core.historical_memory import historical_store
 
 
 def _database_path() -> Path:
+    storage_root = os.getenv("DTOS_HISTORY_STORAGE_ROOT")
+    default = Path(storage_root) / "dtos_fois.sqlite3" if storage_root else Path(gettempdir()) / "dtos_fois.sqlite3"
     return Path(
         os.getenv(
             "DTOS_FOIS_DB_FILE",
-            str(Path(gettempdir()) / "dtos_fois.sqlite3"),
+            str(default),
         )
     )
 

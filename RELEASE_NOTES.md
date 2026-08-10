@@ -1,3 +1,20 @@
+# DTOS v1.9.0 — FOIS General Manager Intelligence System
+
+DTOS now evaluates the executive responsible for a franchise during a specific
+tenure—not merely the current team. FOIS separates results, decision process,
+context, and recovery; keeps GM quality distinct from current team quality; and
+uses the canonical Brain, Competitive Window, Asset Universe, Relevant Player
+Universe, and immutable Historical Memory as evidence sources.
+
+Versioned tenure identities and takeover snapshots prevent new owners from
+inheriting prior-owner decisions or scores. Full-history evaluation has no hard
+ten-year cap. Trading, roster construction, drafting, Results, confidence,
+completeness, evidence provenance, Executive Profiles, resumes, comparisons, and
+franchise GM history are available through persisted read-only FOIS contracts.
+Missing evidence remains visibly unavailable rather than becoming a failing grade.
+
+## Previous release: v1.8.15
+
 # DTOS v1.8.15 - Relevant Player Universe
 
 DTOS now retains active model state only for players relevant to imported league history, current ownership, or the top 150 available canonical free agents. Every retained player carries explicit reason codes, while retired and former players required by immutable evidence remain directly discoverable. The durable migration derives membership from existing history without replaying providers or changing historical events, checkpoints, provenance, or the canonical 5/6 progress contract.

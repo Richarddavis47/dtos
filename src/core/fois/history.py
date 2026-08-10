@@ -28,11 +28,14 @@ def load_results_history(
         if row.get("season") is not None
     }
     owners: dict[str, set[str]] = defaultdict(set)
+    owner_by_roster_season: dict[tuple[str, int], str] = {}
     for row in identities:
         roster_id = str(row["payload"].get("sleeper_roster_id") or "")
         owner_id = str(row["payload"].get("owner_id") or "")
         if roster_id and owner_id:
             owners[roster_id].add(owner_id)
+            if row.get("season") is not None:
+                owner_by_roster_season[(roster_id, int(row["season"]))] = owner_id
     records: dict[tuple[str, int], list[int]] = defaultdict(lambda: [0, 0])
     for row in matchups:
         payload = row["payload"]
@@ -53,6 +56,11 @@ def load_results_history(
         payload = row["payload"]
         season = int(row["season"])
         roster_id = str(payload.get("roster_id") or "")
+        if not roster_id.isdigit() or int(roster_id) < 1:
+            # Historical Memory can contain provider evidence that is valid for
+            # other consumers but is not a usable franchise standing. FOIS must
+            # not let that optional evidence block canonical application startup.
+            continue
         playoff = playoff_by_season.get(season, {})
         placements = {
             int(place): int(roster)
@@ -79,6 +87,34 @@ def load_results_history(
             "matchup_wins": matchup_wins if matchup_wins + matchup_losses else None,
             "matchup_losses": matchup_losses if matchup_wins + matchup_losses else None,
             "complete": row.get("availability") not in {"incomplete", "unavailable"},
+        })
+        histories[roster_id].setdefault("owner_by_season", {})[str(season)] = (
+            owner_by_roster_season.get((roster_id, season))
+        )
+    _, trades = store.records(league_id, "trade", limit=100_000)
+    for row in trades:
+        payload = row["payload"]
+        season = int(row.get("season") or 0)
+        for roster_id in payload.get("roster_ids") or ():
+            histories[str(roster_id)]["trades"].append({
+                "transaction_id": str(row["source_record_id"]),
+                "season": season,
+                "strategically_productive": None,
+                "market_overpay_percent": None,
+                "championship_outlook_delta": None,
+                "partner_id": None,
+            })
+    _, draft_picks = store.records(league_id, "draft_pick", limit=100_000)
+    for row in draft_picks:
+        payload = row["payload"]
+        roster_id = str(payload.get("roster_id") or "")
+        if not roster_id:
+            continue
+        histories[roster_id]["drafts"].append({
+            "draft_id": str(payload.get("draft_id") or row["source_record_id"]),
+            "season": int(row.get("season") or 0),
+            "pick_number": payload.get("pick_no"),
+            "value_over_expected": None,
         })
     for roster_id, history in histories.items():
         history["seasons"].sort(key=lambda row: row["season"])

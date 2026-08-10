@@ -5,8 +5,11 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-FOIS_MODEL_VERSION = "1.1"
-FOIS_METRIC_DEFINITION_VERSION = "1.1"
+FOIS_MODEL_VERSION = "2.0"
+FOIS_CATEGORY_DEFINITION_VERSION = "2.0"
+FOIS_METRIC_DEFINITION_VERSION = "2.0"
+FOIS_CONFIGURATION_VERSION = "2.0"
+FOIS_EVIDENCE_VERSION = "1.0"
 
 
 class MetricStatus(str, Enum):
@@ -103,6 +106,72 @@ class FrontOfficeIntelligenceScore:
     warnings: tuple[str, ...]
     provisional: bool
     score_key: str
+    gm_id: str | None = None
+    gm_name: str | None = None
+    tenure_id: str | None = None
+    tenure_started_at: str | None = None
+    evidence_state: str = "provisional"
+    brain_snapshot_id: str | None = None
+    brain_version: str | None = None
+    category_definition_version: str = FOIS_CATEGORY_DEFINITION_VERSION
+    configuration_version: str = FOIS_CONFIGURATION_VERSION
+    evidence_version: str = FOIS_EVIDENCE_VERSION
+    current_team_score: float | None = None
+    management_momentum: str = "Unavailable"
+    strengths: tuple[str, ...] = ()
+    weaknesses: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class GMTenure:
+    tenure_id: str
+    league_id: str
+    franchise_id: str
+    gm_id: str
+    gm_name: str
+    started_at: str
+    ended_at: str | None = None
+    active: bool = True
+
+
+@dataclass(frozen=True)
+class TakeoverSnapshot:
+    takeover_id: str
+    tenure_id: str
+    captured_at: str
+    brain_snapshot_id: str | None
+    competitive_window: str | None
+    roster_asset_ids: tuple[str, ...]
+    draft_pick_ids: tuple[str, ...]
+    inherited_obligations: tuple[str, ...]
+    context: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class DecisionAssessment:
+    decision_id: str
+    decision_type: str
+    process_score: float | None
+    outcome_score: float | None
+    context_score: float | None
+    recovery_score: float | None
+    overall_score: float | None
+    impact_weight: float
+    evidence_references: tuple[str, ...]
+    explanation: str
+
+
+@dataclass(frozen=True)
+class ExecutiveProfile:
+    score: FrontOfficeIntelligenceScore
+    tenure: GMTenure
+    takeover: TakeoverSnapshot | None
+    current_team_score: float | None
+    category_ranks: dict[str, int | None]
+    management_style: dict[str, str]
+    resume: dict[str, Any]
+    decision_assessments: tuple[DecisionAssessment, ...]
+    limitations: tuple[str, ...]
 
 
 @dataclass(frozen=True)
