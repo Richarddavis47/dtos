@@ -13,6 +13,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 
 from services.matchup_intelligence import matchup_player_values, matchup_projection
+from src.ui.intelligence_presentation import matchup_state
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -48,10 +49,11 @@ def create_matchups_router(
                 continue
             left, right = sides[0], sides[1]
             projected = matchup_projection(d, sides, player_values)
-            if left["points"] == right["points"]:
-                status = "Tied"
-            else:
-                status = "Live score"
+            status = matchup_state(
+                left=float(left["points"]), right=float(right["points"]),
+                week=int(d.get("week") or 0),
+                season_started=not bool(d.get("preseason")),
+            )
             cards.append(
                 f'<a class="matchup-card" href="/matchups/{escape(matchup_id)}">'
                 f'<div class="matchup-label"><span class="matchup-number">Matchup {escape(matchup_id)}</span><span class="matchup-status">{status}</span></div>'
@@ -90,7 +92,17 @@ def create_matchups_router(
             f'<div class="metric"><b>{escape(projected["confidence"])}</b><span>Projection Confidence · {projected["missing"]} missing</span></div></div></section>'
         )
         margin = abs(float(left["points"]) - float(right["points"]))
-        if left["points"] == right["points"]:
+        state_label = matchup_state(
+            left=float(left["points"]), right=float(right["points"]),
+            week=int(d.get("week") or 0),
+            season_started=not bool(d.get("preseason")),
+        )
+        if state_label == "Not Started":
+            headline = "Matchup has not started"
+            hero_state = "not-started"
+            banner_state = "upcoming"
+            left_score_state = right_score_state = ""
+        elif left["points"] == right["points"]:
             headline = "Matchup is tied"
             hero_state = "tied-game"
             banner_state = "tied"

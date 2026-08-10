@@ -228,7 +228,7 @@ def unsupported_dynamic_patterns(routes: Iterable[Any]) -> tuple[str, ...]:
     """Flag public HTML parameters for which DINS has no fixture strategy."""
     supported = {
         "roster_id", "player_id", "matchup_id", "franchise_id", "pick_id",
-        "transaction_id",
+        "transaction_id", "gm_id",
     }
     failures = []
     for route, canonical_path in _http_routes(routes):

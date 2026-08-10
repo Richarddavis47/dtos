@@ -16,6 +16,7 @@ from services.history import (
     history_progress_contracts,
     retained_history_progress_contracts,
 )
+from src.ui.intelligence_presentation import available
 
 RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[..., HTMLResponse]
@@ -23,7 +24,7 @@ PageRenderer = Callable[..., HTMLResponse]
 
 def _value(row: dict[str, Any], name: str) -> str:
     value = row["values"].get(name)
-    return "Unavailable" if value is None else f"{value:,.0f}"
+    return "Not yet supported by available evidence" if value is None else f"{value:,.0f}"
 
 
 def create_market_router(
@@ -137,7 +138,7 @@ def create_market_router(
             def shown(name: str) -> str:
                 value = values.get(name)
                 fallback = row.get(name)
-                return str(value if value is not None else fallback if fallback is not None else "Unavailable")
+                return available(value if value is not None else fallback)
             table_rows.append(
                 f'''<tr><td>{row.get("rank") or index}</td><td><a href="/market?{escape(query)}">{escape(str(row.get("display_name") or asset_id))}</a><br><code>{escape(asset_id)}</code></td><td>{escape(str(owner.get("team_name") or owner.get("owner") or "Unrostered"))}</td><td>{escape(shown("market_value"))}</td><td>{escape(shown("intrinsic_dtos_value"))}</td><td>{escape(shown("contender_value"))}</td><td>{escape(shown("rebuilder_value"))}</td><td>{escape(str(row.get("confidence") or 0))}</td><td>{escape(str(row.get("agreement") or 0))}</td><td>{escape(str(row.get("evidence_coverage") or 0))}</td></tr>'''
             )

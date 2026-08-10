@@ -14,6 +14,7 @@ from src.core.fois.configuration import DEFAULT_FOIS_CONFIGURATION
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.fois.registry import DEFAULT_METRIC_REGISTRY
 from src.core.fois.service import FOISService, fois_enabled
+from src.ui.intelligence_presentation import exact_rank, human_status, technical_details
 
 PageRenderer = Callable[[str, str], HTMLResponse]
 
@@ -254,13 +255,17 @@ def create_fois_router(
         if not valid_selection:
             scores = ()
 
+        ranked_scores = sorted(scores, key=lambda row: (
+            -(row.overall_score if row.overall_score is not None else -1),
+            -row.confidence, row.gm_id or "",
+        ))
         cards = "".join(
-            f'<article class="card"><h3>{escape(score.gm_name or "GM")}</h3>'
+            f'<article class="card"><p class="eyebrow">{exact_rank(rank, len(ranked_scores))}</p><h3>{escape(score.gm_name or "GM")}</h3>'
             f'<p class="score">{score.overall_score if score.overall_score is not None else "Insufficient Evidence"} '
             f'{escape(score.overall_letter_grade or "")}</p><p>Confidence: {score.confidence:.0f}%</p>'
-            f'<p>Current Team Score: {score.current_team_score if score.current_team_score is not None else "Unavailable"}</p>'
-            f'<a href="/api/fois/leagues/{escape(score.league_id)}/gms/{escape(score.gm_id or "")}">Executive Profile</a></article>'
-            for score in scores
+            f'<p>Current Team Score: {score.current_team_score if score.current_team_score is not None else "Not yet supported by available evidence"}</p>'
+            f'<a href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}" data-api-profile="/api/fois/leagues/{escape(score.league_id)}/gms/{escape(score.gm_id or "")}">Open Executive Profile</a></article>'
+            for rank, score in enumerate(ranked_scores, 1)
         )
         status = service.status()
         if not selected_league_id:
@@ -287,5 +292,30 @@ def create_fois_router(
             f'{content}</section>'
         )
         return page("Front Office Intelligence System", body) if page else HTMLResponse(body)
+
+    @router.get("/fois/gms/{gm_id}", response_class=HTMLResponse)
+    async def gm_profile_page(gm_id: str, league_id: str = Query(default="")) -> HTMLResponse:
+        data = require_data()
+        selected_league = league_id.strip() or str((data.get("league") or {}).get("league_id") or "")
+        score = gm_score(selected_league, gm_id)
+        rankings = sorted(league_scores(selected_league), key=lambda row: (
+            -(row.overall_score if row.overall_score is not None else -1),
+            -row.confidence, row.gm_id or "",
+        ))
+        rank = next((index for index, row in enumerate(rankings, 1) if row.gm_id == gm_id), None)
+        categories = "".join(
+            f'<article class="card"><h3>{escape(item.category_name)}</h3>'
+            f'<p class="score">{item.normalized_score if item.normalized_score is not None else "Insufficient evidence"} {escape(item.letter_grade or "")}</p>'
+            f'<p>{escape(item.explanation)}</p><p>Confidence {item.confidence:.0f}% · Evidence completeness {item.completeness:.0f}%</p></article>'
+            for item in score.category_scores
+        )
+        strengths = "".join(f"<li>{escape(item)}</li>" for item in score.strengths) or "<li>No evidence-supported strength is established yet.</li>"
+        weaknesses = "".join(f"<li>{escape(item)}</li>" for item in score.weaknesses) or "<li>No evidence-supported weakness is established yet.</li>"
+        details = technical_details((("GM identity", score.gm_id), ("FOIS model", score.model_version), ("Brain snapshot", score.brain_snapshot_id), ("Generated", score.generated_at)))
+        body = f'''<a class="back" href="/fois?league_id={escape(selected_league)}">← GM Rankings</a><p class="eyebrow">Executive Profile</p><h2>{escape(score.gm_name or "General Manager")}</h2>
+<div class="summary-grid"><article class="metric"><b>{exact_rank(rank, len(rankings))}</b><span>League Rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not ranked"}</b><span>Executive Score</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Confidence</span></article><article class="metric"><b>{human_status(score.evidence_state)}</b><span>Evidence State</span></article></div>
+<section class="card"><h3>Executive Summary</h3><p>{escape(score.executive_summary)}</p><p><b>Management momentum:</b> {escape(human_status(score.management_momentum))}</p></section>
+<div class="card-grid">{categories}</div><div class="grid"><section class="card"><h3>Evidence-supported strengths</h3><ul>{strengths}</ul></section><section class="card"><h3>Evidence-supported opportunities</h3><ul>{weaknesses}</ul></section></div>{details}'''
+        return page(f"{score.gm_name or 'GM'} — Executive Profile", body) if page else HTMLResponse(body)
 
     return router
