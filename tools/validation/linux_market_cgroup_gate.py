@@ -879,6 +879,17 @@ def _historical_leader_performance() -> dict[str, object]:
             "response_bytes": len(cold_body),
             "cache_result": "miss_then_hit",
         }
+    if os.environ.get("DTOS_PRODUCTION_SHAPED_FIXTURE") != "1":
+        return {
+            "full_season_2021": {
+                "status": "not_applicable",
+                "reason": "compact_player_week_fixture",
+            },
+            "concurrent_health": [],
+            "cache_entries_cleared_before_full": 0,
+            "seasons": seasons,
+            "provider_synchronization": False,
+        }
     clear_status, clear_body, _clear_ms = _request(
         "/__validation__/history-cache/clear",
     )
@@ -1837,9 +1848,14 @@ def main() -> int:
                 "generation_match": True, "memory_current": _cgroup("memory.current"),
             }
             summary["phases"]["historical_leaders"] = {
-                "timestamp": time.time(), **_historical_leader_performance(),
-                "memory_current": _cgroup("memory.current"),
+                "timestamp": time.time(), "status": "running",
             }
+            summary["phases"]["historical_leaders"].update(
+                _historical_leader_performance()
+            )
+            summary["phases"]["historical_leaders"].update({
+                "status": "completed", "memory_current": _cgroup("memory.current"),
+            })
             raw_peak = max(monitor.peak, _cgroup("memory.peak"))
             effective_peak = monitor.effective_peak
             effective_margin = _effective_memory_margin(

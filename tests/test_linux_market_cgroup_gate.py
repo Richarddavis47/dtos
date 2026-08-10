@@ -34,6 +34,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _combined_read_audit,
     _diagnostic_request,
     _effective_memory_margin,
+    _historical_leader_performance,
     _identity,
     _material_target_comparison,
     _material_target_search_path,
@@ -96,6 +97,25 @@ class ArchiveCacheValidationTests(unittest.TestCase):
         )
         self.assertTrue(result["passed"])
         self.assertEqual(result["canonical_historical_record_count"], 30_726)
+
+    def test_compact_fixture_skips_only_full_archive_gate(self) -> None:
+        leader_body = json.dumps({"leaders": []})
+        with (
+            patch.dict(os.environ, {"DTOS_PRODUCTION_SHAPED_FIXTURE": "0"}),
+            patch(
+                "tools.validation.linux_market_cgroup_gate._request",
+                side_effect=[(200, leader_body, 1.0)] * 12,
+            ) as request,
+        ):
+            result = _historical_leader_performance()
+        self.assertEqual(request.call_count, 12)
+        self.assertEqual(result["full_season_2021"]["status"], "not_applicable")
+        self.assertEqual(
+            result["full_season_2021"]["reason"], "compact_player_week_fixture",
+        )
+        self.assertEqual(set(result["seasons"]), {
+            "2021", "2022", "2023", "2024", "2025", "2026",
+        })
 
     def test_production_archive_contract_uses_canonical_asset_events(self) -> None:
         coverage = self.coverage()
