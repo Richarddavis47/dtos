@@ -18,8 +18,13 @@ from starlette.background import BackgroundTask
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
+# Diagnostic comparison only: disable FOIS before importing the application.
+if os.getenv("DTOS_VALIDATION_SUPPRESS_FOIS") == "1":
+    os.environ["DTOS_FOIS_ENABLED"] = "0"
+
 from config import CACHE_FILE, HISTORY_DATABASE_FILE, HISTORY_STORAGE_ROOT
 from dtos_app import app
+from services.fois import fois_service
 from services.sleeper import LEAGUE_ID, STATE, save_cache
 import src.core.asset_market.engine as market_engine
 import src.core.asset_market.read_model as market_read_model
@@ -46,6 +51,59 @@ _trace_lock = threading.Lock()
 _trace_context: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "market_trace_id", default=None,
 )
+_cold_phase_events: list[dict[str, Any]] = []
+_cold_phase_active: dict[str, Any] = {}
+_cold_started = time.perf_counter()
+
+
+def _working_memory() -> int | None:
+    try:
+        current = int(open("/sys/fs/cgroup/memory.current", encoding="ascii").read())
+        values = {}
+        with open("/sys/fs/cgroup/memory.stat", encoding="ascii") as handle:
+            for line in handle:
+                key, value = line.split()
+                values[key] = int(value)
+        return max(0, current - values.get("inactive_file", 0))
+    except (OSError, ValueError):
+        return None
+
+
+def _record_cold_phase(name: str, started: float, **details: Any) -> None:
+    event = {
+        "name": name,
+        "elapsed_ms": round((time.perf_counter() - started) * 1000, 3),
+        "cumulative_ms": round((time.perf_counter() - _cold_started) * 1000, 3),
+        "effective_working_set_bytes": _working_memory(),
+        "thread_name": threading.current_thread().name,
+        "background": threading.current_thread() is not threading.main_thread(),
+        "active_threads": threading.active_count(),
+        **details,
+    }
+    with _counter_lock:
+        _cold_phase_events.append(event)
+        del _cold_phase_events[:-128]
+
+
+def _cold_stage(name: str, function: Callable[..., Any]) -> Callable[..., Any]:
+    def wrapped(*args: Any, **kwargs: Any) -> Any:
+        started = time.perf_counter()
+        with _counter_lock:
+            _cold_phase_active.clear()
+            _cold_phase_active.update({"name": name, "started_ms": round(
+                (started - _cold_started) * 1000, 3,
+            )})
+        error = None
+        try:
+            return function(*args, **kwargs)
+        except BaseException as exc:
+            error = type(exc).__name__
+            raise
+        finally:
+            _record_cold_phase(name, started, error=error)
+            with _counter_lock:
+                _cold_phase_active.clear()
+    return wrapped
 
 
 def _scope_trace_id(scope: dict[str, Any]) -> str | None:
@@ -385,6 +443,46 @@ AssetMarket.health = _stage("compact_summary_reconstruction", AssetMarket.health
 AssetMarketCache._publish = _stage("object_publication", AssetMarketCache._publish)
 market_engine.brain_service = _stage("brain_snapshot_lookup", market_engine.brain_service)
 
+_build_read_model = market_engine.build_read_model
+
+
+def _profiled_build_read_model(*args: Any, **kwargs: Any) -> Any:
+    observer = kwargs.get("stage_observer")
+
+    def observe(row: dict[str, Any]) -> None:
+        _record_cold_phase(
+            f"asset_market_{row.get('stage')}", time.perf_counter(),
+            measured_duration_ms=row.get("duration_ms"), rows=row.get("rows"),
+            memory_before=row.get("memory_before"), memory_after=row.get("memory_after"),
+        )
+        if observer:
+            observer(row)
+
+    kwargs["stage_observer"] = observe
+    return _build_read_model(*args, **kwargs)
+
+
+market_engine.build_read_model = _cold_stage(
+    "asset_market_cold_construction", _profiled_build_read_model,
+)
+
+_fois_generate = fois_service.generate
+
+
+async def _profiled_fois_generate(data: dict[str, Any]) -> Any:
+    started = time.perf_counter()
+    try:
+        return await _fois_generate(data)
+    finally:
+        _record_cold_phase(
+            "fois_startup_generation", started,
+            suppressed=os.getenv("DTOS_VALIDATION_SUPPRESS_FOIS") == "1",
+            records=fois_service.status().get("records", 0),
+        )
+
+
+fois_service.generate = _profiled_fois_generate
+
 _read_model_connection = MarketReadModel.connection
 
 
@@ -485,6 +583,21 @@ async def validation_profile(request: Request, call_next):
     _trace("validation_middleware_return", status=response.status_code)
     _trace_context.reset(trace_token)
     return response
+
+
+@app.get("/__validation__/cold-build-profile")
+async def cold_build_profile() -> dict[str, Any]:
+    """Return bounded sanitized phase evidence for lifecycle validation."""
+    with _counter_lock:
+        events = [dict(event) for event in _cold_phase_events]
+        active = dict(_cold_phase_active)
+    return {
+        "fois_suppressed": os.getenv("DTOS_VALIDATION_SUPPRESS_FOIS") == "1",
+        "active_phase": active,
+        "events": events,
+        "market": asset_market_cache.metrics(),
+        "fois": fois_service.status(),
+    }
 
 
 @app.post("/__validation__/nonsemantic-refresh")
