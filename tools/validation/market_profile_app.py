@@ -25,6 +25,7 @@ if os.getenv("DTOS_VALIDATION_SUPPRESS_FOIS") == "1":
 from config import CACHE_FILE, HISTORY_DATABASE_FILE, HISTORY_STORAGE_ROOT
 from dtos_app import app
 from services.fois import fois_service
+from services.history import _SEASON_SECTION_CACHE, _SEASON_SECTION_CACHE_LOCK
 from services.sleeper import LEAGUE_ID, STATE, save_cache
 import src.core.asset_market.engine as market_engine
 import src.core.asset_market.read_model as market_read_model
@@ -751,6 +752,15 @@ async def fixture_contract() -> dict[str, Any]:
             for path in (CACHE_FILE, HISTORY_DATABASE_FILE, historical_store.path)
         ),
     }
+
+
+@app.get("/__validation__/history-cache/clear")
+async def clear_history_cache() -> dict[str, int]:
+    """Reset only process-local History read models for a genuine cold-read gate."""
+    with _SEASON_SECTION_CACHE_LOCK:
+        entries = len(_SEASON_SECTION_CACHE)
+        _SEASON_SECTION_CACHE.clear()
+    return {"cleared_entries": entries}
 
 
 @app.get("/__validation__/trace/{trace_id}")

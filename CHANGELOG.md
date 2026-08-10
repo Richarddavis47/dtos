@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.9.6 - Historical Player Leaders Query Optimization
+
+- Added a measured league/entity/season/player index for bounded player-week aggregation.
+- Split season statistical aggregation from one canonical bulk identity-enrichment query.
+- Removed correlated per-leader identity sorting while preserving totals, ordering, names, positions, and warm section caching.
+- Preserved all v1.9.5 section isolation and event-loop offloading behavior.
+
 ## v1.9.5 - History Read-Path Performance
 
 - Replaced full-archive construction on season subroutes with bounded, section-specific Historical Memory reads.

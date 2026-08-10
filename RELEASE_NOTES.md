@@ -1,3 +1,12 @@
+# DTOS v1.9.6 — Historical Player Leaders Query Optimization
+
+DTOS v1.9.6 removes the final cold History bottleneck by using a measured
+season-scoped player aggregation index and one bounded canonical identity query.
+Historical totals, names, positions, ordering, presentation, progress, FOIS,
+valuation, and Asset Market behavior remain unchanged.
+
+## Previous release
+
 # DTOS v1.9.5 — History Read-Path Performance
 
 DTOS v1.9.5 makes season History pages responsive by building only the requested

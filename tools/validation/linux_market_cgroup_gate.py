@@ -857,6 +857,76 @@ def _profile_expansion(path: str) -> dict[str, object]:
     return result
 
 
+def _historical_leader_performance() -> dict[str, object]:
+    """Gate cold/warm season leaders and event-loop responsiveness after restart."""
+    seasons: dict[str, object] = {}
+    for season in range(2021, 2027):
+        path = f"/api/history/seasons/{season}/leaders"
+        cold_status, cold_body, cold_ms = _request(path, expected=(200,))
+        warm_status, warm_body, warm_ms = _request(path, expected=(200,))
+        cold_payload = json.loads(cold_body)
+        warm_payload = json.loads(warm_body)
+        if cold_payload != warm_payload:
+            raise AssertionError(f"leader output changed after caching for {season}")
+        if cold_ms >= 15_000 or warm_ms >= 1_000:
+            raise AssertionError(
+                f"leader latency gate failed for {season}: cold={cold_ms:.3f} warm={warm_ms:.3f}"
+            )
+        seasons[str(season)] = {
+            "cold_ms": round(cold_ms, 3), "warm_ms": round(warm_ms, 3),
+            "status": cold_status, "warm_status": warm_status,
+            "leader_count": len(cold_payload.get("leaders") or []),
+            "response_bytes": len(cold_body),
+            "cache_result": "miss_then_hit",
+        }
+    if os.environ.get("DTOS_PRODUCTION_SHAPED_FIXTURE") != "1":
+        return {
+            "full_season_2021": {
+                "status": "not_applicable",
+                "reason": "compact_player_week_fixture",
+            },
+            "concurrent_health": [],
+            "cache_entries_cleared_before_full": 0,
+            "seasons": seasons,
+            "provider_synchronization": False,
+        }
+    clear_status, clear_body, _clear_ms = _request(
+        "/__validation__/history-cache/clear",
+    )
+    cleared = json.loads(clear_body).get("cleared_entries")
+    if clear_status != 200 or not isinstance(cleared, int) or cleared <= 0:
+        raise AssertionError("History cache did not enter a verified cold state")
+    health_samples: list[dict[str, object]] = []
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        full_future = executor.submit(_request, "/api/history/seasons/2021")
+        for path in ("/health/live", "/health/ready", "/api/status"):
+            status, body, elapsed_ms = _request(path)
+            health_samples.append({
+                "path": path, "status": status, "latency_ms": round(elapsed_ms, 3),
+                "response_bytes": len(body),
+            })
+        full_status, full_body, full_ms = full_future.result()
+    if full_status != 200 or full_ms >= 15_000:
+        raise AssertionError(
+            f"cold full-season gate failed: status={full_status} duration_ms={full_ms:.3f}"
+        )
+    if any(
+        sample["status"] != 200 or float(sample["latency_ms"]) >= 2_000
+        for sample in health_samples
+    ):
+        raise AssertionError("lightweight endpoint stalled during cold History read")
+    return {
+        "full_season_2021": {
+            "latency_ms": round(full_ms, 3), "status": full_status,
+            "response_bytes": len(full_body),
+        },
+        "concurrent_health": health_samples,
+        "cache_entries_cleared_before_full": cleared,
+        "seasons": seasons,
+        "provider_synchronization": False,
+    }
+
+
 def _latencies() -> dict[str, object]:
     endpoints = {
         "directory": "/api/market/assets?limit=50",
@@ -1777,6 +1847,15 @@ def main() -> int:
                 "server_maximum_ms": round(max(restart_server_values), 3),
                 "generation_match": True, "memory_current": _cgroup("memory.current"),
             }
+            summary["phases"]["historical_leaders"] = {
+                "timestamp": time.time(), "status": "running",
+            }
+            summary["phases"]["historical_leaders"].update(
+                _historical_leader_performance()
+            )
+            summary["phases"]["historical_leaders"].update({
+                "status": "completed", "memory_current": _cgroup("memory.current"),
+            })
             raw_peak = max(monitor.peak, _cgroup("memory.peak"))
             effective_peak = monitor.effective_peak
             effective_margin = _effective_memory_margin(

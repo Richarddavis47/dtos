@@ -241,6 +241,8 @@ def _record_payload(entity_type: str, index: int) -> tuple[str | None, str]:
             "drops": {}, "draft_picks": [], "roster_ids": [1, 2],
         }, separators=(",", ":"))
     payload = {"fixture": True, "value": index % 10_000}
+    if entity_type == "player_week":
+        payload["fantasy_points"] = float(index % 50)
     if entity_type == "valuation_snapshot":
         # Valid evidence pages reproduce the production database/cache footprint.
         payload["evidence"] = "v" * 1_650

@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS historical_records (
 );
 CREATE INDEX IF NOT EXISTS idx_history_entity ON historical_records(league_id, entity_type, season, week);
 CREATE INDEX IF NOT EXISTS idx_history_player ON historical_records(league_id, player_id, season, week);
+CREATE INDEX IF NOT EXISTS idx_history_season_player
+ON historical_records(league_id, entity_type, season, player_id);
 CREATE INDEX IF NOT EXISTS idx_history_franchise ON historical_records(league_id, franchise_id, season, week);
 CREATE TABLE IF NOT EXISTS player_identity (
   dtos_player_id TEXT NOT NULL,
@@ -1239,40 +1241,59 @@ class HistoricalStore:
     def season_player_leaders(
         self, league_id: str, season: int, *, limit: int = 40,
     ) -> tuple[int, list[dict[str, Any]]]:
-        """Aggregate a season's player production without hydrating weekly rows."""
+        """Aggregate once and enrich the bounded result with one identity query."""
         with self.connection() as connection:
             count = int(connection.execute(
                 """SELECT count(*) FROM historical_records
                 WHERE league_id=? AND entity_type='player_week' AND season=?""",
                 (league_id, season),
             ).fetchone()[0])
-            rows = connection.execute(
-                """WITH totals AS (
-                    SELECT player_id,
-                           SUM(CAST(json_extract(payload, '$.fantasy_points') AS REAL)) AS points
-                    FROM historical_records
-                    WHERE league_id=? AND entity_type='player_week' AND season=?
-                      AND player_id IS NOT NULL
-                      AND json_extract(payload, '$.fantasy_points') IS NOT NULL
-                    GROUP BY player_id
-                )
-                SELECT totals.player_id, totals.points,
-                       identities.display_name,
-                       json_extract(identities.metadata, '$.position') AS position
-                FROM totals
-                LEFT JOIN player_identity AS identities
-                  ON identities.rowid = (
-                    SELECT candidate.rowid FROM player_identity AS candidate
-                    WHERE candidate.provider='Sleeper'
-                      AND candidate.provider_player_id=totals.player_id
-                    ORDER BY candidate.confidence DESC, candidate.valid_from DESC
-                    LIMIT 1
-                  )
-                ORDER BY totals.points DESC, totals.player_id
+            totals = connection.execute(
+                """SELECT player_id,
+                          SUM(CAST(json_extract(payload, '$.fantasy_points') AS REAL)) AS points
+                FROM historical_records INDEXED BY idx_history_season_player
+                WHERE league_id=? AND entity_type='player_week' AND season=?
+                  AND player_id IS NOT NULL
+                  AND json_extract(payload, '$.fantasy_points') IS NOT NULL
+                GROUP BY player_id
+                ORDER BY points DESC, player_id
                 LIMIT ?""",
                 (league_id, season, limit),
             ).fetchall()
-        return count, [dict(row) for row in rows]
+            provider_ids = [str(row["player_id"]) for row in totals]
+            identities: dict[str, dict[str, Any]] = {}
+            if provider_ids:
+                placeholders = ",".join("?" for _ in provider_ids)
+                rows = connection.execute(
+                    f"""WITH requested AS (
+                        SELECT provider_player_id,dtos_player_id,confidence
+                        FROM current_player_identity
+                        WHERE provider_player_id IN ({placeholders})
+                    ), ranked AS (
+                        SELECT requested.provider_player_id,
+                               identity.display_name,
+                               json_extract(identity.metadata, '$.position') AS position,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY requested.provider_player_id
+                                   ORDER BY requested.confidence DESC,
+                                            identity.confidence DESC,
+                                            identity.valid_from DESC
+                               ) AS preference
+                        FROM requested
+                        JOIN player_identity AS identity INDEXED BY idx_identity_dtos
+                          ON identity.dtos_player_id=requested.dtos_player_id
+                    )
+                    SELECT provider_player_id,display_name,position
+                    FROM ranked WHERE preference=1""",
+                    provider_ids,
+                ).fetchall()
+                identities = {
+                    str(row["provider_player_id"]): dict(row) for row in rows
+                }
+        return count, [
+            {**dict(row), **identities.get(str(row["player_id"]), {})}
+            for row in totals
+        ]
 
     def dataset_version(self, league_id: str) -> str:
         """Return a deterministic identity for every stored input to graph reads."""
