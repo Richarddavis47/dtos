@@ -82,6 +82,55 @@ class LifecycleCoordinator:
         self._phase: str | None = None
         self._owner: int | None = None
         self._history: deque[dict[str, Any]] = deque(maxlen=history_limit)
+        self._startup_epoch = 0
+        self._startup_state = "complete"
+        self._startup_reason = "Startup coordination has not begun."
+        self._startup_started_at: str | None = None
+        self._startup_completed_at: str | None = None
+
+    def begin_startup(self, reason: str) -> int:
+        """Open a process startup fence before canonical work begins."""
+        with self._condition:
+            self._startup_epoch += 1
+            self._startup_state = "running"
+            self._startup_reason = reason
+            self._startup_started_at = _utcnow()
+            self._startup_completed_at = None
+            self._condition.notify_all()
+            return self._startup_epoch
+
+    def update_startup(self, epoch: int, reason: str) -> None:
+        """Update bounded public-safe startup progress for the active epoch."""
+        with self._condition:
+            if epoch == self._startup_epoch and self._startup_state == "running":
+                self._startup_reason = reason
+                self._condition.notify_all()
+
+    def complete_startup(self, epoch: int, reason: str) -> bool:
+        """Close the active startup fence exactly once."""
+        with self._condition:
+            if epoch != self._startup_epoch or self._startup_state != "running":
+                return False
+            self._startup_state = "complete"
+            self._startup_reason = reason
+            self._startup_completed_at = _utcnow()
+            self._condition.notify_all()
+            return True
+
+    def fail_startup(self, epoch: int, reason: str) -> bool:
+        """Fail closed when canonical startup cannot reach a terminal state."""
+        with self._condition:
+            if epoch != self._startup_epoch or self._startup_state != "running":
+                return False
+            self._startup_state = "failed"
+            self._startup_reason = reason
+            self._startup_completed_at = _utcnow()
+            self._condition.notify_all()
+            return True
+
+    def startup_complete(self) -> bool:
+        with self._condition:
+            return self._startup_state == "complete"
 
     @contextmanager
     def phase(self, name: str) -> Iterator[dict[str, Any]]:
@@ -117,13 +166,26 @@ class LifecycleCoordinator:
 
     def market_build_allowed(self) -> bool:
         with self._condition:
-            return self._phase not in MARKET_BUILD_BLOCKERS
+            return (
+                self._startup_state == "complete"
+                and self._phase not in MARKET_BUILD_BLOCKERS
+            )
 
     def snapshot(self) -> dict[str, Any]:
         with self._condition:
             return {
                 "phase": self._phase or "idle",
-                "market_build_allowed": self._phase not in MARKET_BUILD_BLOCKERS,
+                "market_build_allowed": (
+                    self._startup_state == "complete"
+                    and self._phase not in MARKET_BUILD_BLOCKERS
+                ),
+                "startup_fence": {
+                    "epoch": self._startup_epoch,
+                    "state": self._startup_state,
+                    "reason": self._startup_reason,
+                    "started_at": self._startup_started_at,
+                    "completed_at": self._startup_completed_at,
+                },
                 "recent_phases": list(self._history),
                 "memory": memory_snapshot(),
             }
@@ -133,6 +195,11 @@ class LifecycleCoordinator:
             self._phase = None
             self._owner = None
             self._history.clear()
+            self._startup_epoch = 0
+            self._startup_state = "complete"
+            self._startup_reason = "Startup coordination has not begun."
+            self._startup_started_at = None
+            self._startup_completed_at = None
             self._condition.notify_all()
 
 

@@ -23,6 +23,7 @@ def _response(status: int, payload: object, *, elapsed: float = 0.1):
 def _warming_health(
     *, error: str | None = None, build_active: bool = True,
     phase: str = "asset_market_build", build_count: int = 0,
+    startup_state: str = "complete", startup_reason: str = "Canonical state ready.",
 ) -> dict:
     return {
         "status": "warming",
@@ -33,9 +34,12 @@ def _warming_health(
             "market_generation": None,
             "lifecycle": {
                 "phase": phase,
-                "market_build_allowed": phase not in {
+                "market_build_allowed": startup_state == "complete" and phase not in {
                     "sleeper_sync", "provider_network", "valuation_intelligence",
                     "cache_persistence", "historical_import",
+                },
+                "startup_fence": {
+                    "state": startup_state, "reason": startup_reason,
                 },
             },
         },
@@ -200,6 +204,42 @@ class MarketWarmingValidationTests(unittest.TestCase):
         })
         with self.assertRaisesRegex(AssertionError, "stale Asset Market warming"):
             get_market_page("http://dtos", "/market", request=request)
+
+    def test_running_startup_fence_is_a_bounded_registered_blocker(self) -> None:
+        request = _Requests(**{
+            "_": [
+                _response(503, {"detail": MARKET_WARMING_DETAIL}),
+                _response(503, {"detail": MARKET_WARMING_DETAIL}),
+                _response(200, _market_page()),
+            ],
+            "_api_market_health": [
+                _response(200, _warming_health(
+                    build_active=False, phase="idle", startup_state="running",
+                    startup_reason="Synchronizing canonical state.",
+                )),
+                _response(200, _warming_health(
+                    build_active=True, phase="asset_market_build",
+                )),
+                _response(200, _ready_health(build_count=1)),
+            ],
+        })
+        clock = _Clock()
+        body = get_market_page(
+            "http://dtos", "/", request=request,
+            sleeper=clock.sleep, clock=clock,
+        )
+        self.assertEqual(validate_asset_market_contract(body, "/"), "generation-1")
+
+    def test_failed_startup_fence_fails_immediately(self) -> None:
+        request = _Requests(**{
+            "_": [_response(503, {"detail": MARKET_WARMING_DETAIL})],
+            "_api_market_health": [_response(200, _warming_health(
+                build_active=False, phase="idle", startup_state="failed",
+                startup_reason="Canonical synchronization failed.",
+            ))],
+        })
+        with self.assertRaisesRegex(AssertionError, "startup fence failed"):
+            get_market_page("http://dtos", "/", request=request)
 
     def test_market_build_cannot_overlap_registered_blocker(self) -> None:
         request = _Requests(**{

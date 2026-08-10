@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.8.14 - Deterministic Asset Market Restart Lifecycle
+
+- Establishes a process startup epoch that keeps Asset Market generation fenced until durable storage, canonical synchronization, Brain/valuation generation, cache persistence, and bounded historical maintenance have completed.
+- Consolidates startup-adjacent synchronization into one deterministic cycle and begins periodic refresh timing only after that cycle reaches its terminal state.
+- Defers durable artifact discovery until canonical startup inputs are stable, while retaining precise missing, incomplete, corrupt, and incompatible classifications.
+- Fsyncs completed Asset Market artifacts before atomic rename and persists the containing-directory rename on supported platforms.
+- Exposes bounded startup-fence state and reason through existing lifecycle-aware market health metadata.
+
 ## v1.8.13 - Production Combined-Read Memory Safety
 
 - Adds a production-shaped 1 GiB sanitized historical fixture covering 461,166 records and 2,050,532 identity observations.

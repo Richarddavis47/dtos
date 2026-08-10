@@ -80,6 +80,24 @@ def _json_object(value: str) -> dict[str, Any]:
     return decoded if isinstance(decoded, dict) else {}
 
 
+def _fsync_file(path: Path) -> None:
+    """Make a completed artifact durable before its atomic publication."""
+    with path.open("r+b") as artifact:
+        artifact.flush()
+        os.fsync(artifact.fileno())
+
+
+def _fsync_directory(path: Path) -> None:
+    """Persist a POSIX directory rename; Windows has no directory fsync."""
+    if os.name == "nt":
+        return
+    descriptor = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def memory_admission(
     snapshot: dict[str, Any], estimate: int = DEFAULT_STAGE_ESTIMATE, *,
     baseline_events: dict[str, int] | None = None,
@@ -468,7 +486,9 @@ def build_read_model(
             connection.commit()
             connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
             connection.close()
+            _fsync_file(temporary)
             os.replace(temporary, target)
+            _fsync_directory(target.parent)
             observe("model_publication", started, before, count)
         finally:
             try:

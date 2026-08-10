@@ -1,4 +1,10 @@
-# DTOS v1.8.13 - Production Combined-Read Memory Safety
+# DTOS v1.8.14 - Deterministic Asset Market Restart Lifecycle
+
+DTOS v1.8.14 makes Asset Market restart behavior a single deterministic lifecycle. The application now completes one canonical startup epoch before it evaluates durable market artifacts or permits market construction. A compatible artifact loads once without reconstruction; incompatible, corrupt, incomplete, and missing candidates retain distinct diagnostics.
+
+The release also prevents request freshness and delayed deployment maintenance from creating duplicate startup-adjacent synchronizations. Normal periodic refresh begins after the startup epoch and continues to publish exactly one safe replacement when semantic market inputs genuinely change. Existing memory, backoff, historical `5/6`, dataset-scope, provider-free read, and output contracts are unchanged.
+
+## Previous release: v1.8.13
 
 DTOS v1.8.13 closes the production-scale retained-memory gap exposed when historical coverage and Asset Market reads run against the complete durable database shape. The release adds bounded combined-read diagnostics and preserves every existing output, historical record, memory ceiling, reserve, and provider-free read contract.
 

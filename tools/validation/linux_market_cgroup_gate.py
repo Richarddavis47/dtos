@@ -1676,7 +1676,10 @@ def main() -> int:
             restart_cycles: list[dict[str, object]] = []
             restart_samples: list[dict[str, object]] = []
             reuse_health: dict[str, object] = {}
-            while len(restart_samples) < 10 and len(restart_cycles) < 12:
+            while (
+                (len(restart_samples) < 10 or len(restart_cycles) < 2)
+                and len(restart_cycles) < 12
+            ):
                 process = _start_server(log)
                 _wait_ready()
                 cycle = _restart_reuse(expected_identity, pre_restart_body)
@@ -1690,13 +1693,15 @@ def main() -> int:
                     raise AssertionError("restart reused a different artifact file")
                 if reused_artifact.get("generation") != artifact.get("generation"):
                     raise AssertionError("restart reused a different artifact generation")
-                if len(restart_samples) < 10:
+                if len(restart_samples) < 10 or len(restart_cycles) < 2:
                     _stop_server(process)
                     process = None
             if len(restart_samples) < 10:
                 raise AssertionError(
                     f"only {len(restart_samples)} restart warming samples were captured"
                 )
+            if len(restart_cycles) < 2:
+                raise AssertionError("fewer than two controlled restart cycles completed")
             failed_restart_samples = [
                 sample for sample in restart_samples
                 if float(sample["server_ms"]) >= 50
