@@ -54,6 +54,7 @@ from src.platform.observability import (
     runtime_metrics,
 )
 from src.platform.market_warming import AssetMarketWarmingMiddleware
+from src.platform.lifecycle import lifecycle_coordinator
 from src.core.historical_memory import historical_storage_status
 from src.ui import DESIGN_SYSTEM_CSS, page_header
 
@@ -64,26 +65,40 @@ _INSPECTION_REQUEST: ContextVar[bool] = ContextVar("dtos_inspection_request", de
 async def ensure_fresh() -> None:
     if _INSPECTION_REQUEST.get():
         return
+    if not lifecycle_coordinator.startup_complete():
+        return
     await ensure_data_fresh()
 
 
 async def background_sync() -> None:
     while True:
         await asyncio.sleep(SYNC_MINUTES * 60)
-        await sync_sleeper()
+        await start_sleeper_sync()
 
 
-async def deployment_maintenance() -> None:
+async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     """Start required data promptly and defer optional cached maintenance."""
+    epoch = startup_epoch or lifecycle_coordinator.begin_startup(
+        "Validating durable storage and cached canonical state."
+    )
+    cached_generation_available = bool(STATE.get("data"))
     if not historical_storage_status.healthy:
         runtime_metrics.mark_not_ready(historical_storage_status.reason)
         runtime_metrics.mark_background("historical_storage", "failed")
+        lifecycle_coordinator.fail_startup(epoch, historical_storage_status.reason)
         return
     runtime_metrics.mark_background("historical_storage", "ready")
     if STATE.get("data"):
         runtime_metrics.mark_ready("Cached league data loaded.")
         runtime_metrics.mark_background("deployment_delay", "waiting")
         await asyncio.sleep(BACKGROUND_START_DELAY)
+        lifecycle_coordinator.update_startup(
+            epoch, "Synchronizing canonical Sleeper and provider state."
+        )
+        runtime_metrics.mark_background("sleeper_sync", "running")
+        sleeper_task = start_sleeper_sync()
+        await asyncio.gather(sleeper_task, return_exceptions=True)
+        runtime_metrics.mark_background("sleeper_sync", "complete")
     else:
         runtime_metrics.mark_not_ready("Waiting for the initial Sleeper dataset.")
         runtime_metrics.mark_background("sleeper_sync", "running")
@@ -93,27 +108,71 @@ async def deployment_maintenance() -> None:
             runtime_metrics.mark_not_ready(
                 "Initial Sleeper synchronization did not produce league data."
             )
+            lifecycle_coordinator.fail_startup(
+                epoch, "Initial Sleeper synchronization produced no league data."
+            )
             return
         runtime_metrics.mark_ready("Initial Sleeper dataset loaded.")
         await asyncio.sleep(BACKGROUND_START_DELAY)
 
+    if STATE.get("last_error"):
+        if not cached_generation_available or not STATE.get("data"):
+            reason = "Canonical Sleeper synchronization did not complete successfully."
+            runtime_metrics.mark_not_ready(reason)
+            lifecycle_coordinator.fail_startup(epoch, reason)
+            return
+        lifecycle_coordinator.update_startup(
+            epoch,
+            "Refresh reached a terminal failure; retaining the cached canonical generation.",
+        )
+
     runtime_metrics.mark_background("deployment_delay", "complete")
-    runtime_metrics.mark_background("sleeper_sync", "running")
-    sleeper_task = start_sleeper_sync()
-    await asyncio.gather(sleeper_task, return_exceptions=True)
-    runtime_metrics.mark_background("sleeper_sync", "complete")
+    lifecycle_coordinator.update_startup(
+        epoch, "Completing bounded historical maintenance."
+    )
     runtime_metrics.mark_background("history_backfill", "running")
     history_task = start_background_backfill(direct_fetch)
     await asyncio.gather(history_task, return_exceptions=True)
     runtime_metrics.mark_background("history_backfill", "complete")
     await asyncio.to_thread(history_progress_contracts, LEAGUE_ID)
+    startup_reason = (
+        "Cached canonical generation established after refresh reached a terminal failure."
+        if STATE.get("last_error")
+        else "Canonical startup generation established."
+    )
+    lifecycle_coordinator.complete_startup(epoch, startup_reason)
+
+
+async def startup_and_periodic_maintenance(startup_epoch: int) -> None:
+    """Complete one startup epoch before beginning the refresh interval."""
+    try:
+        await deployment_maintenance(startup_epoch)
+    except asyncio.CancelledError:
+        raise
+    except Exception as exc:
+        lifecycle_coordinator.fail_startup(
+            startup_epoch,
+            f"Canonical startup failed: {type(exc).__name__}.",
+        )
+        runtime_metrics.mark_not_ready(
+            f"Canonical startup failed: {type(exc).__name__}."
+        )
+        return
+    if lifecycle_coordinator.startup_complete():
+        await background_sync()
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     runtime_metrics.mark_not_ready("Loading cached league data.")
+    startup_epoch = lifecycle_coordinator.begin_startup(
+        "Loading cached canonical state."
+    )
     if not historical_storage_status.healthy:
         runtime_metrics.mark_not_ready(historical_storage_status.reason)
+        lifecycle_coordinator.fail_startup(
+            startup_epoch, historical_storage_status.reason,
+        )
         mark_startup_complete(_PROCESS_STARTED)
         yield
         return
@@ -127,17 +186,14 @@ async def lifespan(_: FastAPI):
             "Waiting for the initial Sleeper dataset."
         )
     maintenance_task = asyncio.create_task(
-        deployment_maintenance(),
+        startup_and_periodic_maintenance(startup_epoch),
         name="dtos-deployment-maintenance",
     )
-    task = asyncio.create_task(background_sync())
     try:
         yield
     finally:
-        task.cancel()
         maintenance_task.cancel()
         await asyncio.gather(
-            task,
             maintenance_task,
             return_exceptions=True,
         )

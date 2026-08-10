@@ -94,6 +94,37 @@ class MemoryLifecycleTests(unittest.TestCase):
                 cache.get({}, {}, object(), "league-1")
         self.assertEqual(cache.build_count, 0)
 
+    def test_startup_fence_blocks_market_until_canonical_epoch_completes(self) -> None:
+        coordinator = LifecycleCoordinator()
+        epoch = coordinator.begin_startup("Synchronizing canonical state.")
+        self.assertFalse(coordinator.market_build_allowed())
+        snapshot = coordinator.snapshot()["startup_fence"]
+        self.assertEqual(snapshot["state"], "running")
+        self.assertEqual(snapshot["epoch"], epoch)
+        self.assertTrue(coordinator.complete_startup(epoch, "Canonical state ready."))
+        self.assertTrue(coordinator.market_build_allowed())
+        self.assertEqual(
+            coordinator.snapshot()["startup_fence"]["state"], "complete",
+        )
+
+    def test_stale_startup_epoch_cannot_open_current_fence(self) -> None:
+        coordinator = LifecycleCoordinator()
+        stale = coordinator.begin_startup("First epoch.")
+        current = coordinator.begin_startup("Replacement epoch.")
+        self.assertFalse(coordinator.complete_startup(stale, "Stale completion."))
+        self.assertFalse(coordinator.market_build_allowed())
+        self.assertTrue(coordinator.complete_startup(current, "Current completion."))
+
+    def test_failed_startup_fence_fails_market_closed(self) -> None:
+        coordinator = LifecycleCoordinator()
+        epoch = coordinator.begin_startup("Starting.")
+        self.assertTrue(coordinator.fail_startup(epoch, "Controlled failure."))
+        self.assertFalse(coordinator.market_build_allowed())
+        self.assertEqual(
+            coordinator.snapshot()["startup_fence"]["reason"],
+            "Controlled failure.",
+        )
+
     def test_no_model_market_request_returns_bounded_warming_response(self) -> None:
         app = FastAPI()
         app.include_router(create_market_router(

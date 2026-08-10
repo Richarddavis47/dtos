@@ -14,16 +14,19 @@ from src.platform.observability import (
     install_observability,
     runtime_metrics,
 )
+from src.platform.lifecycle import lifecycle_coordinator
 
 
 class DeploymentReadinessTests(unittest.TestCase):
     def setUp(self) -> None:
+        lifecycle_coordinator.reset()
         self.original_ready = runtime_metrics.ready
         self.original_reason = runtime_metrics.readiness_reason
         self.original_ready_at = runtime_metrics.ready_at
         self.original_background = dict(runtime_metrics.background_tasks)
 
     def tearDown(self) -> None:
+        lifecycle_coordinator.reset()
         runtime_metrics.ready = self.original_ready
         runtime_metrics.readiness_reason = self.original_reason
         runtime_metrics.ready_at = self.original_ready_at
@@ -163,6 +166,63 @@ class DeploymentReadinessTests(unittest.TestCase):
         )
         backfill.assert_not_called()
         delay.assert_not_called()
+
+    def test_request_freshness_does_not_start_competing_startup_sync(self) -> None:
+        epoch = lifecycle_coordinator.begin_startup("Fixture startup.")
+        with patch.object(dtos_app, "ensure_data_fresh") as fresh:
+            asyncio.run(dtos_app.ensure_fresh())
+        fresh.assert_not_called()
+        lifecycle_coordinator.complete_startup(epoch, "Fixture ready.")
+        with patch.object(
+            dtos_app, "ensure_data_fresh", new_callable=AsyncMock,
+        ) as fresh:
+            asyncio.run(dtos_app.ensure_fresh())
+        fresh.assert_awaited_once_with()
+
+    def test_cached_generation_remains_eligible_after_terminal_refresh_failure(self) -> None:
+        async def failed_refresh() -> dict:
+            dtos_app.STATE["last_error"] = "ConnectError: fixture offline"
+            return dtos_app.STATE
+
+        async def completed() -> dict:
+            return {}
+
+        original_data = dtos_app.STATE.get("data")
+        original_error = dtos_app.STATE.get("last_error")
+        dtos_app.STATE["data"] = {"teams": []}
+        dtos_app.STATE["last_error"] = None
+        try:
+            with patch.object(dtos_app.asyncio, "sleep", new_callable=AsyncMock), patch.object(
+                dtos_app, "start_sleeper_sync",
+                side_effect=lambda *args, **kwargs: asyncio.create_task(failed_refresh()),
+            ), patch.object(
+                dtos_app, "start_background_backfill",
+                side_effect=lambda _: asyncio.create_task(completed()),
+            ), patch.object(dtos_app, "history_progress_contracts"):
+                asyncio.run(dtos_app.deployment_maintenance())
+            fence = lifecycle_coordinator.snapshot()["startup_fence"]
+            self.assertEqual(fence["state"], "complete")
+            self.assertTrue(lifecycle_coordinator.market_build_allowed())
+        finally:
+            dtos_app.STATE["data"] = original_data
+            dtos_app.STATE["last_error"] = original_error
+
+    def test_periodic_interval_begins_only_after_startup_epoch(self) -> None:
+        events: list[str] = []
+        epoch = lifecycle_coordinator.begin_startup("Fixture startup.")
+
+        async def deployment(startup_epoch: int) -> None:
+            events.append("startup")
+            lifecycle_coordinator.complete_startup(startup_epoch, "Ready.")
+
+        async def periodic() -> None:
+            events.append("periodic")
+
+        with patch.object(
+            dtos_app, "deployment_maintenance", side_effect=deployment,
+        ), patch.object(dtos_app, "background_sync", side_effect=periodic):
+            asyncio.run(dtos_app.startup_and_periodic_maintenance(epoch))
+        self.assertEqual(events, ["startup", "periodic"])
 
 
 if __name__ == "__main__":

@@ -218,6 +218,18 @@ class AsyncMarketGenerationTests(unittest.TestCase):
         start.assert_not_called()
         self.assertFalse(self.cache.health()["cache"]["build_active"])
 
+    def test_startup_requests_cannot_launch_generation_worker(self) -> None:
+        epoch = lifecycle_coordinator.begin_startup("Fixture synchronization.")
+        with patch.object(self.cache, "_start_background") as start:
+            self.assertTrue(self.cache.begin_warming_guard(
+                self.data, self.state, self.store, "league-1",
+            ))
+        start.assert_not_called()
+        health = self.cache.health()["cache"]
+        self.assertEqual(health["lifecycle"]["startup_fence"]["state"], "running")
+        self.assertFalse(health["lifecycle"]["market_build_allowed"])
+        lifecycle_coordinator.complete_startup(epoch, "Fixture ready.")
+
     def test_early_guard_starts_single_flight_without_durable_reads(self) -> None:
         entered, release, _worker_ids, key = self._blocked_preparation()
         try:

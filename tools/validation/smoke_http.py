@@ -205,6 +205,18 @@ def get_market_page(
                 f"{path}: Asset Market build failed during warming: {cache['last_error']}"
             )
         lifecycle = cache.get("lifecycle") or {}
+        startup_fence = lifecycle.get("startup_fence") or {}
+        startup_state = startup_fence.get("state")
+        startup_reason = startup_fence.get("reason")
+        startup_blocked = (
+            startup_state == "running"
+            and isinstance(startup_reason, str)
+            and bool(startup_reason.strip())
+        )
+        if startup_state == "failed":
+            raise AssertionError(
+                f"{path}: Asset Market startup fence failed: {startup_reason!r}"
+            )
         build_active = bool(cache.get("build_active"))
         build_allowed = lifecycle.get("market_build_allowed")
         phase = str(lifecycle.get("phase") or "idle")
@@ -230,7 +242,8 @@ def get_market_page(
             if blocker_seen:
                 eligible_seen = True
         else:
-            if build_allowed is not False or phase not in MARKET_BUILD_BLOCKERS:
+            registered_blocker = phase in MARKET_BUILD_BLOCKERS or startup_blocked
+            if build_allowed is not False or not registered_blocker:
                 raise AssertionError(
                     f"{path}: stale Asset Market warming without active build or "
                     f"registered lifecycle blocker: {health!r}"
