@@ -13,6 +13,7 @@ from src.core.historical_memory import historical_graph, historical_store
 from src.core.historical_memory.models import HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION
 from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
+from src.ui.intelligence_presentation import event_label, human_status, technical_details
 
 
 RequireData = Callable[[], dict[str, Any]]
@@ -115,17 +116,19 @@ def create_historical_assets_router(
         if dossier is None:
             raise HTTPException(404, "Pick not found")
         rows = "".join(
-            f'<tr><td>{escape(str(item["season"]))}</td><td>{escape(str(item["event_type"]))}</td><td>{escape(str(item.get("from_franchise_id") or "Unavailable"))}</td><td>{escape(str(item.get("to_franchise_id") or "Unavailable"))}</td><td>{escape(str(item["event_status"]))}</td></tr>'
+            f'<tr><td>{escape(str(item["season"]))}</td><td>{escape(event_label(item["event_type"]))}</td><td>{escape(str(item.get("from_franchise_name") or item.get("from_franchise_id") or "Original owner"))}</td><td>{escape(str(item.get("to_franchise_name") or item.get("to_franchise_id") or "Current owner"))}</td><td>{escape(human_status(item["event_status"]))}</td></tr>'
             for item in dossier["events"]
         ) or '<tr><td colspan="5">No verified ownership events are available.</td></tr>'
         selected = (
             f'<a href="{escape(dossier["selected_player_url"])}">{escape(dossier["selected_player_id"])}</a>'
             if dossier.get("selected_player_url") else "Not exercised"
         )
-        body = f'''<a class="back" href="/picks">← Back to Draft Capital</a><h2>{escape(pick_id)}</h2>
+        pick_title = f'{dossier.get("season", "Future")} Round {dossier.get("round", "?")} Pick'
+        details = technical_details((("Canonical pick identity", pick_id), ("Slot status", dossier.get("slot_status"))))
+        body = f'''<a class="back" href="/picks">← Back to Draft Capital</a><h2>{escape(pick_title)}</h2>
 <div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(str(dossier.get("current_owner") or "Unknown"))}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article></div>
 <div class="card"><h3>Pick Conversion</h3><p>{selected}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
-<div class="card"><h3>Ownership Chain</h3><table><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div>'''
+<div class="card"><h3>Ownership Chain</h3><table><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div>{details}'''
         return page(f"{pick_id} — Pick Dossier", body)
 
     @router.get("/api/trades/history/{transaction_id}")
@@ -220,7 +223,7 @@ def create_historical_assets_router(
             } for score in fois_service.repository.league(league_id, FOIS_MODEL_VERSION)
               if needle in (score.gm_name or "").casefold())
         results = "".join(
-            f'<li><a href="{escape(str(row["canonical_url"]))}">{escape(str(row["display_label"]))}</a> <span class="pill">{escape(str(row["result_type"]))}</span><br><small>{escape(str(row["resolution_status"]))} · {escape(str(row["match_reason"]))}</small></li>'
+            f'<li><a href="{escape(str(row["canonical_url"]))}">{escape(str(row["display_label"]))}</a> <span class="pill">{escape(str(row["result_type"]).replace("_", " ").title())}</span><br><small>{escape(human_status(row.get("historical_availability") or row.get("resolution_status")))}</small></li>'
             for row in rows
         ) or "<li>No matching current or historical assets were found.</li>"
         body = f'''<h2>DTOS Search</h2><form method="get"><label for="q">Players, picks, franchises, trades, or transaction IDs</label><input id="q" name="q" value="{escape(q)}"><button class="btn" type="submit">Search</button></form><div class="card"><ul>{results}</ul></div>'''

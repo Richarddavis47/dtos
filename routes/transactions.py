@@ -8,6 +8,7 @@ from urllib.parse import parse_qsl, quote, urlencode
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from src.ui.intelligence_presentation import available, human_status, technical_details
 
 from components.asset_intelligence import player_dossier
 from config import LEAGUE_ID
@@ -399,7 +400,7 @@ def create_transactions_router(
         fantasycalc = live["provider_details"].get("FantasyCalc") or {}
         trend_value = fantasycalc.get("trend_30_day")
         trend_label = f"{trend_value:+}" if isinstance(trend_value, (int, float)) else "No historical provider trend is available."
-        consensus_value = consensus["value"] if consensus["value"] is not None else "No enabled market provider returned a value for this player."
+        consensus_value = consensus["value"] if consensus["value"] is not None else "No enabled market provider currently has a supported value for this player."
         attribution = " · ".join(
             f'<a href="{escape(str(item["url"]))}" target="_blank" rel="noopener">{escape(str(item["label"]))}</a>'
             for item in live["attribution"].values()
@@ -408,7 +409,7 @@ def create_transactions_router(
         bye_week = metadata.get("bye_week") if metadata.get("bye_week") is not None else reasons["bye_week"]
         live_panel = f'''<section class="card"><h2>Live Data &amp; Market</h2>
 <div class="grid"><div><div class="muted">Market Consensus</div><div class="stat">{escape(str(consensus_value))}</div><p>Confidence {consensus["confidence"]}% · Agreement {consensus["agreement"]}%</p><p>30-day trend: {escape(str(trend_label))}</p></div>
-<div><div class="muted">Canonical Player Identity</div><p><b>{escape(str(normalized["position"]))}</b> · {escape(str(normalized["nfl_team"]))} · {escape(str(normalized["status"]))}</p><p>Age: {escape(str(metadata.get("age") if metadata.get("age") is not None else "Sleeper metadata does not provide age."))}</p><p>Depth chart: {escape(str(depth_role))} · Bye: {escape(str(bye_week))}</p></div></div>
+<div><div class="muted">Player Context</div><p><b>{escape(str(normalized["position"]))}</b> · {escape(str(normalized["nfl_team"]))} · {escape(human_status(normalized["status"]))}</p><p>Age: {escape(available(metadata.get("age"), reason="Age is not supplied by the current source."))}</p><p>Depth chart: {escape(str(depth_role))} · Bye: {escape(str(bye_week))}</p></div></div>
 <table><thead><tr><th>Provider</th><th>Value / State</th><th>Freshness</th><th>Confidence</th><th>Availability reason</th></tr></thead><tbody>{provider_values}</tbody></table>
 <h3>League Context</h3><div class="grid"><div><b>Trending</b><p>{league_context["trending_adds"]} adds · {league_context["trending_drops"]} drops (Sleeper, last cached window)</p></div><div><b>Ownership</b><p>{escape(str(league_context["owned_by"] or "Not rostered in the active league."))}</p></div><div><b>Transactions</b><p>{league_context["transaction_count"]} cached league transactions</p></div></div>
 <h3>Data Availability</h3><ul><li><b>ADP:</b> {escape(str(reasons["adp"]))}</li><li><b>Current projections:</b> {escape(str(reasons["projection"]))}</li><li><b>Production:</b> {escape(str(reasons["production"]))}</li><li><b>Usage:</b> {escape(str(reasons["usage"]))}</li></ul>
@@ -422,7 +423,7 @@ def create_transactions_router(
             for transaction in view["transactions"]
         ) or '<div class="card muted">No cached transactions found for this player.</div>'
         season_history = "".join(
-            f'<tr><td>{row["season"]}</td><td>{escape(row["status"].replace("_", " ").title())}</td><td>{escape(str(row["games_observed"]))}</td><td>{escape(str(row["starts"]))}</td><td>{escape(str(row["bench_appearances"]))}</td><td>{escape(str(row["fantasy_points"] if row["fantasy_points"] is not None else "Unavailable"))}</td><td>{escape(str(row["overall_rank"] or "Unavailable"))}</td><td>{escape(str(row["positional_rank"] or "Unavailable"))}</td><td>{escape(str(row["completeness_percentage"]))}%</td></tr>'
+            f'<tr><td>{row["season"]}</td><td>{escape(human_status(row["status"]))}</td><td>{escape(str(row["games_observed"]))}</td><td>{escape(str(row["starts"]))}</td><td>{escape(str(row["bench_appearances"]))}</td><td>{escape(available(row["fantasy_points"], reason="No verified production"))}</td><td>{escape(available(row["overall_rank"], reason="Not ranked"))}</td><td>{escape(available(row["positional_rank"], reason="Not ranked"))}</td><td>{escape(str(row["completeness_percentage"]))}%</td></tr>'
             for row in history["season_summaries"]
         ) or '<tr><td colspan="9">No supported annual observations are available.</td></tr>'
         ownership_history = "".join(
@@ -430,7 +431,8 @@ def create_transactions_router(
             for row in history["ownership_timeline"]
         ) or '<li>No verified Day Traders ownership event is available.</li>'
         origin = history["league_origin"]
-        historical_panel = f'''<section class="card"><h2>Connected Day Traders History</h2><p><b>League origin:</b> {escape(str(origin.get("event_type") or "Unavailable").replace("_", " ").title())}</p><p class="muted">Canonical identity: {escape(history["identity"]["canonical_id"])} · Resolution: {escape(history["identity"]["resolution_status"])} · <a href="/history/player/{escape(player_id)}">Open historical performance</a></p>
+        historical_details = technical_details((("Canonical identity", history["identity"]["canonical_id"]), ("Identity resolution", history["identity"]["resolution_status"])))
+        historical_panel = f'''<section class="card"><h2>Day Traders Career History</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}">Open complete historical performance</a></p>{historical_details}
 <h3>Annual League History</h3><div style="overflow-x:auto"><table><thead><tr><th>Season</th><th>Status</th><th>Games</th><th>Starts</th><th>Bench</th><th>Points</th><th>Overall</th><th>Position</th><th>Complete</th></tr></thead><tbody>{season_history}</tbody></table></div>
 <h3>Ownership Timeline</h3><ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></section>'''
         body = f"""

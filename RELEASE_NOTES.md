@@ -1,4 +1,10 @@
-# DTOS v1.9.1 — FOIS Presentation Contract Correction
+# DTOS v1.9.2 — Intelligence Presentation & Data Utilization
+
+DTOS now turns more existing Brain, FOIS, Asset Market, and Historical Memory evidence into readable product guidance. Human-facing pages lead with names, ranks, values, confidence, availability, and outcomes; technical provenance remains accessible without replacing the decision meaning. This release does not add an intelligence engine or change canonical valuation behavior.
+
+## Previous release
+
+### v1.9.1 — FOIS Presentation Contract Correction
 
 DTOS v1.9.1 completes the public presentation contract for the Front Office Intelligence System introduced in v1.9.0. The `/fois` page now uses the shared DTOS page header, selects the active loaded league when no query parameter is supplied, presents persisted executive profiles, and provides a functional GM Rankings action.
 

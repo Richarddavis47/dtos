@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.9.2 - Intelligence Presentation & Data Utilization
+
+- Added reusable human-first status, availability, rank, and technical-detail presentation contracts.
+- Upgraded player history, pick lineage, search, matchup state, and FOIS executive presentation using existing canonical intelligence.
+- Added a human Executive Profile with explicit league rank, category evidence, confidence, strengths, and opportunities.
+- Documented the site-wide presentation audit and Human Meaning First policy.
+
 ## v1.9.1 - FOIS Presentation Contract Correction
 
 - Routed `/fois` through the canonical DTOS shared page header and navigation contract.
