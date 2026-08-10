@@ -1,3 +1,25 @@
+# DTOS v1.10.2 — Sleeper Projection Sync & System-Wide Forward Intelligence
+
+DTOS now treats Sleeper's undocumented bulk weekly projection service as optional
+external evidence. Background synchronization retrieves one bounded weekly data
+set, validates its schema and identities, converts projected statistics with the
+league's scoring rules, fingerprints semantic content, and persists immutable
+last-valid evidence. Feed failure never blocks readiness or erases DTOS's own
+Forward Production model.
+
+Player and matchup contracts distinguish **Sleeper Projection**, **DTOS
+Projection**, and the bounded **DTOS Consensus Projection**. Source-pure team
+totals disclose starter coverage; the canonical Brain continues to consume one
+Projection Intelligence snapshot. Identical feed content causes no downstream
+regeneration.
+
+The Sleeper projection interface is undocumented and may change or disappear.
+DTOS therefore classifies it as “Sleeper Unofficial Projection Feed — Optional
+External Evidence,” provides a kill switch, retains stale evidence safely, and
+continues independently when it is unavailable.
+
+## Previous release
+
 # DTOS v1.10.1 — Projection Generation Production-Shape Correction
 
 DTOS now accepts the canonical production player mapping as well as sequence
