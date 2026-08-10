@@ -656,3 +656,9 @@ Notable DTOS changes are recorded here from the repository's Git history.
 - Migrated application intelligence consumers through the Intelligence Orchestrator and added explainable Decision Confidence.
 - Added Brain health, migration, asset, timeline, dashboard, and DINS inspection contracts.
 - Retained the v1.7.3 valuation APIs as backwards-compatible adapters and added permanent cross-consumer consistency tests.
+# v1.10.0 - Live Projection Intelligence & Forward Production Engine
+
+- Added one persisted canonical projection snapshot used by Brain and matchup intelligence.
+- Added league-scoring-aware forward production, immutable snapshots, provider health, coverage, and accuracy foundations.
+- Added read-only Projection Intelligence APIs with explicit provider provenance and no request-time provider access.
+- Documented that Sleeper remains the league/roster/matchup source; no approved Sleeper projection feed was found.

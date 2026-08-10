@@ -40,6 +40,12 @@ class Projection:
     updated_at: str | None
     effective_week: int | None
     limitations: tuple[str, ...] = ()
+    projection_snapshot_id: str | None = None
+    rest_of_season_points: float | None = None
+    rest_of_season_games: int | None = None
+    season_projected_points: float | None = None
+    agreement: int | None = None
+    freshness: str = "unavailable"
 
 
 @dataclass(frozen=True)

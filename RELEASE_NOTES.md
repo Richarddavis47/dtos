@@ -1,4 +1,21 @@
-# DTOS v1.9.6 — Historical Player Leaders Query Optimization
+# DTOS v1.10.0 — Live Projection Intelligence & Forward Production Engine
+
+DTOS now persists a canonical Forward Production snapshot and reuses it across
+Brain decisions, player valuation profiles, and Matchups. Projection evidence is
+league-scoring aware, immutable, freshness-labelled, and failure-isolated.
+
+Sleeper's documented public API does not expose an approved projection feed.
+Sleeper therefore remains DTOS's canonical league, roster, matchup, identity,
+transaction, draft, and NFL-state source. Projections are explicitly attributed
+to the DTOS Forward Production Model; they are never called Sleeper projections.
+
+Read-only endpoints are available at `/api/projections`, `/api/projections/health`,
+`/api/projections/providers`, `/api/projections/players/{player_id}`, and
+`/api/projections/weeks/{week}`. No endpoint performs external provider work.
+
+## Previous release
+
+### DTOS v1.9.6 — Historical Player Leaders Query Optimization
 
 DTOS v1.9.6 removes the final cold History bottleneck by using a measured
 season-scoped player aggregation index and one bounded canonical identity query.

@@ -7,6 +7,7 @@ from statistics import mean, pstdev
 from typing import Any
 
 from src.core.player_value_projection.models import DataStatus, ProductionContext, ProductionWindow, Projection
+from src.core.projection_intelligence import projection_service
 
 
 class WeeklyProjectionProvider(ABC):
@@ -41,6 +42,21 @@ class InternalProjectionProvider(WeeklyProjectionProvider):
     """Disclosed fallback; never represented as a live projection feed."""
 
     def project(self, player: dict[str, Any], redraft_score: int, scoring: dict[str, Any], week: int | None) -> Projection:
+        player_id = str(player.get("id") or player.get("player_id") or "")
+        canonical = projection_service.player(player_id)
+        if canonical is not None and canonical.get("week") == week:
+            status = DataStatus.UNAVAILABLE if canonical.get("status") in {"bye", "unavailable"} else DataStatus.CACHED
+            return Projection(
+                canonical.get("weekly_projected_points"), canonical.get("weekly_floor"),
+                canonical.get("weekly_median"), canonical.get("weekly_ceiling"),
+                int(canonical.get("projection_confidence") or 0), 0.0, 0.0,
+                0.0, str(canonical.get("expected_usage") or "Unavailable"), None,
+                "DTOS Forward Production Model", status, canonical.get("generated_at"),
+                week, tuple(canonical.get("limitations") or ()),
+                canonical.get("projection_snapshot_id"), canonical.get("rest_of_season_points"),
+                canonical.get("rest_of_season_games"), canonical.get("season_projected_points"),
+                canonical.get("projection_agreement"), "fresh",
+            )
         position = str(player.get("position") or "").upper()
         base = {"QB": 17.0, "RB": 11.0, "WR": 10.5, "TE": 8.0}.get(position, 6.0)
         role = (redraft_score - 50) * .16

@@ -31,6 +31,7 @@ from routes.teams import create_teams_router
 from routes.trades import create_trades_router
 from routes.transactions import create_transactions_router
 from routes.valuation import create_valuation_router
+from routes.projections import create_projections_router
 from services.sleeper import (
     LEAGUE_ID,
     STATE,
@@ -48,6 +49,7 @@ from services.history import (
 from services.fois import fois_service
 from src.core.asset_market import asset_market_cache
 from src.core.historical_memory import historical_store
+from src.core.projection_intelligence import projection_service
 from src.platform.observability import (
     install_observability,
     mark_startup_complete,
@@ -74,6 +76,14 @@ async def background_sync() -> None:
     while True:
         await asyncio.sleep(SYNC_MINUTES * 60)
         await start_sleeper_sync()
+        if STATE.get("data"):
+            runtime_metrics.mark_background("projection_generation", "running")
+            try:
+                await asyncio.to_thread(projection_service.generate, STATE["data"], LEAGUE_ID)
+            except Exception:
+                runtime_metrics.mark_background("projection_generation", "failed")
+            else:
+                runtime_metrics.mark_background("projection_generation", "complete")
         if STATE.get("data"):
             runtime_metrics.mark_background("fois_generation", "running")
             try:
@@ -146,6 +156,13 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     await asyncio.gather(history_task, return_exceptions=True)
     runtime_metrics.mark_background("history_backfill", "complete")
     await asyncio.to_thread(history_progress_contracts, LEAGUE_ID)
+    runtime_metrics.mark_background("projection_generation", "running")
+    try:
+        await asyncio.to_thread(projection_service.generate, STATE["data"], LEAGUE_ID)
+    except Exception:
+        runtime_metrics.mark_background("projection_generation", "failed")
+    else:
+        runtime_metrics.mark_background("projection_generation", "complete")
     runtime_metrics.mark_background("fois_generation", "running")
     try:
         await fois_service.generate(STATE["data"])
@@ -330,6 +347,8 @@ app.include_router(
         page=page,
     )
 )
+
+app.include_router(create_projections_router(service=projection_service))
 
 app.include_router(
     create_crawl_router(
