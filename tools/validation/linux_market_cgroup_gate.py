@@ -1190,6 +1190,8 @@ def _replacement_profile(
         raise AssertionError("material fixture mutation was rejected")
     if mutation.get("asset_id") != "player:10213" or mutation.get("attached") is not True:
         raise AssertionError("material fixture target is missing or detached")
+    if mutation.get("consumed_attached") is not True:
+        raise AssertionError("Asset Market Brain did not consume the attached fixture object")
     if mutation.get("field") != (
         "valuation_intelligence.assets.player:10213.valuation_layers."
         "contender_value.value"

@@ -30,6 +30,56 @@ LEAGUE_ID = "validation-league-1804"
 STAMP = "2026-08-07T00:00:00+00:00"
 
 
+def fixture_valuation_intelligence() -> dict[str, Any]:
+    """Return the attached canonical Brain snapshot consumed by Asset Market."""
+    def layer(value: int | None, source: str) -> dict[str, Any]:
+        return {
+            "value": value, "source": source, "version": "1.0",
+            "generated_at": STAMP, "confidence": 80,
+            "availability": "available" if value is not None else "unavailable",
+            "reason": None if value is not None else "No provider market evidence.",
+            "limitations": [] if value is not None else ["No provider market evidence."],
+        }
+
+    asset_id = "player:10213"
+    return {
+        "application_version": "validation",
+        "application_build": 0,
+        "commit": "sanitized-validation",
+        "schema_version": "1.0",
+        "generated_at": STAMP,
+        "availability": "available",
+        "asset_count": 1,
+        "assets": {asset_id: {
+            "asset_id": asset_id,
+            "asset_type": "player",
+            "display_name": "Validation Player 10213",
+            "scores": {"coverage": 75, "confidence": 80, "agreement": 70},
+            "valuation_layers": {
+                "market_value": layer(None, "Provider consensus"),
+                "intrinsic_dtos_value": layer(20, "DTOS intrinsic"),
+                "league_adjusted_value": layer(20, "DTOS league adjustment"),
+                "contender_value": layer(450, "DTOS contender model"),
+                "rebuilder_value": layer(600, "DTOS rebuilder model"),
+            },
+            "categories": [{"name": "Metadata", "available": True}],
+            "evidence_sources": [],
+            "provider_count": 0,
+            "independent_family_count": 0,
+            "missing_evidence": ["Market"],
+            "diagnostics": ["Missing market support"],
+            "explanation": "Sanitized canonical Brain fixture evidence.",
+        }},
+        "timeline": {},
+        "summary": {
+            "average_coverage": 75, "average_confidence": 80,
+            "average_agreement": 70,
+        },
+        "diagnostics": {},
+        "safety": {"external_requests_during_build": 0, "unsafe_adjustments": 0},
+    }
+
+
 def material_market_fixture_change(
     current: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -144,6 +194,7 @@ def _cache(path: Path) -> None:
         "trending_players": [],
         "players_fetched_at": STAMP,
         "market_data": {"providers": {}, "provider_status": {}},
+        "valuation_intelligence": fixture_valuation_intelligence(),
     }
     payload = {
         "data": data,

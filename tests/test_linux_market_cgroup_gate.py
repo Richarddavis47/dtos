@@ -18,8 +18,10 @@ from tools.validation.generate_sanitized_market_fixture import (
     _history,
     _record_payload,
     _record_provider,
+    fixture_valuation_intelligence,
     material_market_fixture_change,
 )
+from src.core.brain import brain_service
 from src.core.historical_memory.store import HistoricalStore
 from tools.validation.linux_market_cgroup_gate import (
     StartupFailure,
@@ -633,19 +635,17 @@ class RestartReuseValidationTests(unittest.TestCase):
         self.assertNotIn(str(Path(sys.executable).parent), json.dumps(evidence))
 
     def test_material_fixture_mutation_updates_attached_canonical_input(self) -> None:
-        source = {
-            "valuation_intelligence": {"assets": {"player:10213": {
-                "valuation_layers": {"contender_value": {"value": 910}},
-            }}},
-        }
+        source = {"valuation_intelligence": fixture_valuation_intelligence()}
+        target = source["valuation_intelligence"]["assets"]["player:10213"]
+        self.assertIs(brain_service(source).asset("player:10213"), target)
         changed, evidence = material_market_fixture_change(source)
         original = source["valuation_intelligence"]["assets"]["player:10213"]
         mutated = changed["valuation_intelligence"]["assets"]["player:10213"]
         self.assertEqual(
-            original["valuation_layers"]["contender_value"]["value"], 910,
+            original["valuation_layers"]["contender_value"]["value"], 450,
         )
         self.assertEqual(
-            mutated["valuation_layers"]["contender_value"]["value"], 810,
+            mutated["valuation_layers"]["contender_value"]["value"], 550,
         )
         self.assertTrue(evidence["attached"])
         self.assertEqual(evidence["changed_canonical_fields"], 1)
@@ -660,14 +660,7 @@ class RestartReuseValidationTests(unittest.TestCase):
                     "name": "Josh Allen", "position": "QB", "dtos_value": 95,
                 },
             },
-            "valuation_intelligence": {"assets": {
-                "player:10213": {
-                    "asset_id": "player:10213",
-                    "valuation_layers": {
-                        "contender_value": {"value": 910},
-                    },
-                },
-            }},
+            "valuation_intelligence": fixture_valuation_intelligence(),
         }
         changed, _evidence = material_market_fixture_change(source)
         before = source["valuation_intelligence"]["assets"]
