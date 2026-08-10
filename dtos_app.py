@@ -76,14 +76,11 @@ async def background_sync() -> None:
     while True:
         await asyncio.sleep(SYNC_MINUTES * 60)
         await start_sleeper_sync()
-        if STATE.get("data"):
-            runtime_metrics.mark_background("projection_generation", "running")
-            try:
-                await asyncio.to_thread(projection_service.generate, STATE["data"], LEAGUE_ID)
-            except Exception:
-                runtime_metrics.mark_background("projection_generation", "failed")
-            else:
-                runtime_metrics.mark_background("projection_generation", "complete")
+        projection_status = projection_service.health().get("status")
+        runtime_metrics.mark_background(
+            "projection_generation",
+            "complete" if projection_status in {"ready", "stale"} else "failed",
+        )
         if STATE.get("data"):
             runtime_metrics.mark_background("fois_generation", "running")
             try:
@@ -156,13 +153,11 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     await asyncio.gather(history_task, return_exceptions=True)
     runtime_metrics.mark_background("history_backfill", "complete")
     await asyncio.to_thread(history_progress_contracts, LEAGUE_ID)
-    runtime_metrics.mark_background("projection_generation", "running")
-    try:
-        await asyncio.to_thread(projection_service.generate, STATE["data"], LEAGUE_ID)
-    except Exception:
-        runtime_metrics.mark_background("projection_generation", "failed")
-    else:
-        runtime_metrics.mark_background("projection_generation", "complete")
+    projection_status = projection_service.health().get("status")
+    runtime_metrics.mark_background(
+        "projection_generation",
+        "complete" if projection_status in {"ready", "stale"} else "failed",
+    )
     runtime_metrics.mark_background("fois_generation", "running")
     try:
         await fois_service.generate(STATE["data"])

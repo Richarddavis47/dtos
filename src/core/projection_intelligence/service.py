@@ -220,6 +220,7 @@ class ProjectionService:
             raise
         with self._lock:
             self._snapshot = snapshot
+            data["projection_intelligence"] = snapshot
             self._normalization = normalization
             self._generation_state = "ready"
             self._last_error_type = None

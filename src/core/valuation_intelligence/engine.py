@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime, timezone
+import hashlib
+import json
 from statistics import mean, pstdev
 from typing import Any, Mapping
 
@@ -15,6 +17,25 @@ EVIDENCE_CATEGORIES = ("Market", "Trades", "Performance", "Historical", "League 
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _semantic_generation(assets: list[dict[str, Any]]) -> str:
+    """Fingerprint canonical intelligence while excluding observation metadata."""
+    def stable(value: Any) -> Any:
+        if isinstance(value, dict):
+            return {
+                key: stable(item)
+                for key, item in value.items()
+                if key not in {"generated_at", "updated_at"}
+            }
+        if isinstance(value, list):
+            return [stable(item) for item in value]
+        return value
+
+    payload = json.dumps(
+        stable(assets), sort_keys=True, separators=(",", ":"), default=str,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def _category(name: str) -> str:
@@ -132,6 +153,17 @@ def build_valuation_intelligence(data: dict[str, Any], state: dict[str, Any]) ->
     provider_by_id = {row["provider_id"]: row for row in network.get("providers") or []}
     consensus_by_asset = {row["asset_id"]: row for row in (network.get("consensus") or {}).get("sample") or []}
     reports = [_score_asset(asset, evidence_by_asset[asset["asset_id"]], provider_by_id, consensus_by_asset.get(asset["asset_id"])) for asset in universe.assets]
+    projection_snapshot = data.get("projection_intelligence") or {}
+    projections = projection_snapshot.get("players") or {}
+    for row in reports:
+        if not row["asset_id"].startswith("player:"):
+            continue
+        projection = projections.get(row["asset_id"].removeprefix("player:"))
+        if projection is None:
+            continue
+        row["forward_production"] = projection
+        row["projection_confidence"] = projection.get("projection_confidence")
+        row["projection_snapshot_id"] = projection.get("projection_snapshot_id")
     by_id = {row["asset_id"]: row for row in reports}
 
     prior_timeline = data.get("valuation_intelligence_timeline") or {}
@@ -152,7 +184,9 @@ def build_valuation_intelligence(data: dict[str, Any], state: dict[str, Any]) ->
         return [row["asset_id"] for row in sorted(reports, key=lambda item: (item["scores"][key], item["asset_id"]), reverse=reverse)[:25]]
     result = {
         "application_version": VERSION, "application_build": BUILD_NUMBER, "commit": deployment_metadata()["commit"],
-        "schema_version": INTELLIGENCE_SCHEMA_VERSION, "generated_at": generated_at, "availability": "available",
+        "schema_version": INTELLIGENCE_SCHEMA_VERSION, "generated_at": generated_at,
+        "semantic_generation": _semantic_generation(reports),
+        "availability": "available",
         "asset_count": len(reports), "assets": by_id, "timeline": timeline,
         "summary": {
             "average_coverage": round(mean(row["scores"]["coverage"] for row in reports), 2) if reports else 0,
