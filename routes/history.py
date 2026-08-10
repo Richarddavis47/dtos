@@ -1,6 +1,7 @@
 """Minimal, honest historical league and player views."""
 from __future__ import annotations
 
+from datetime import date
 from html import escape
 from typing import Callable
 
@@ -14,6 +15,8 @@ from services.history import (
     import_status,
     player_career,
     provider_coverage,
+    season_archive,
+    season_index,
 )
 
 PageRenderer = Callable[[str, str], HTMLResponse]
@@ -45,7 +48,7 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
             if progress["pending_seasons"] else ""
         )
         season_cards = "".join(
-            f'<article class="card"><h3>{row["season"]}</h3><p>{escape(str(row["payload"].get("league_name") or "Sleeper League"))}</p><p class="muted">Scoring and roster settings preserved with provenance.</p></article>'
+            f'<article class="card"><h3><a href="/history/{row["season"]}">{row["season"]}</a></h3><p>{escape(str(row["payload"].get("league_name") or "Sleeper League"))}</p><p class="muted">{"Current Season" if int(row["season"]) == date.today().year else "Open standings, results, draft, transactions, and player leaders."}</p></article>'
             for row in seasons["records"]
         ) or '<article class="card"><p class="muted">Historical import is waiting or no season records are available.</p></article>'
         body = f"""
@@ -57,6 +60,93 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
 <p><a class="btn" href="/api/crawl/history">Open Historical API</a> <a class="btn" href="/api/history/coverage">Historical Coverage</a> <a class="btn" href="/search">Search Historical Assets</a></p>
 """
         return page("League History", body)
+
+    @router.get("/api/history/seasons")
+    async def history_season_index() -> dict:
+        return season_index(league_id)
+
+    @router.get("/api/history/seasons/{season}")
+    async def history_season_api(season: int) -> dict:
+        archive = season_archive(league_id, season)
+        if not archive["standings"] and not archive["weeks"]:
+            raise HTTPException(404, "No historical season evidence is available.")
+        return archive
+
+    @router.get("/api/history/seasons/{season}/standings")
+    async def history_season_standings(season: int) -> dict:
+        archive = await history_season_api(season)
+        return {"season": season, "standings": archive["standings"]}
+
+    @router.get("/api/history/seasons/{season}/playoffs")
+    async def history_season_playoffs(season: int) -> dict:
+        archive = await history_season_api(season)
+        return {"season": season, "playoffs": archive["playoffs"]}
+
+    @router.get("/api/history/seasons/{season}/weeks")
+    async def history_season_weeks(season: int) -> dict:
+        archive = await history_season_api(season)
+        return {"season": season, "weeks": archive["weeks"]}
+
+    @router.get("/api/history/seasons/{season}/transactions")
+    async def history_season_transactions(season: int) -> dict:
+        archive = await history_season_api(season)
+        return {"season": season, "transactions": archive["transactions"]}
+
+    @router.get("/api/history/seasons/{season}/draft")
+    async def history_season_draft(season: int) -> dict:
+        archive = await history_season_api(season)
+        return {"season": season, "draft": archive["draft"]}
+
+    @router.get("/api/history/seasons/{season}/leaders")
+    async def history_season_leaders(season: int) -> dict:
+        archive = await history_season_api(season)
+        return {"season": season, "leaders": archive["leaders"]}
+
+    @router.get("/history/{season:int}", response_class=HTMLResponse)
+    async def history_season_page(season: int) -> HTMLResponse:
+        archive = await history_season_api(season)
+        standings = "".join(
+            "<tr>"
+            f'<td>{row.get("rank") or "—"}</td>'
+            f'<td><a href="/history/team/{escape(str(row.get("franchise_id") or ""))}">{escape(row["team_name"])}</a></td>'
+            f'<td>{escape(row["gm_name"])}</td>'
+            f'<td>{row.get("wins") if row.get("wins") is not None else "—"}-{row.get("losses") if row.get("losses") is not None else "—"}</td>'
+            f'<td>{row.get("points_for") if row.get("points_for") is not None else "Unavailable"}</td>'
+            f'<td>{row.get("points_against") if row.get("points_against") is not None else "Unavailable"}</td>'
+            f'<td>{row.get("postseason_finish") or "—"}</td></tr>'
+            for row in archive["standings"]
+        )
+        weeks = "".join(
+            f'<details><summary>Week {week["week"]} — {len(week["matchups"])} matchups</summary>'
+            + "".join(
+                "<p>" + " vs ".join(
+                    f'{escape(team["team_name"])} {team.get("score") if team.get("score") is not None else "Unavailable"}'
+                    for team in matchup["teams"]
+                ) + "</p>"
+                for matchup in week["matchups"]
+            ) + "</details>"
+            for week in archive["weeks"]
+        ) or '<p class="muted">Weekly matchup evidence is unavailable.</p>'
+        leaders = "".join(
+            f'<li><a href="/history/player/{escape(row["player_id"])}">{escape(row["player_name"])}</a> — {escape(str(row.get("position") or "Unknown"))} — {row["fantasy_points"]}</li>'
+            for row in archive["leaders"][:12]
+        ) or '<li>Historical player scoring is unavailable.</li>'
+        champion = archive.get("champion") or {}
+        runner_up = archive.get("runner_up") or {}
+        status_detail = ", ".join(
+            name.replace("_", " ").title()
+            for name, available in archive["availability"].items() if available
+        ) or "No supported historical segments are available."
+        body = f"""
+<a class="back" href="/history">← History Index</a><h2>{season} Season Archive</h2>
+<p><b>Status:</b> {escape(archive['display_status'])}</p><p class="muted">{escape(status_detail)}</p>
+<div class="summary-grid"><article class="metric"><b>{escape(str(champion.get('team_name') or 'Pending / unavailable'))}</b><span>Champion</span></article><article class="metric"><b>{escape(str(runner_up.get('team_name') or 'Pending / unavailable'))}</b><span>Runner-up</span></article><article class="metric"><b>{archive['counts']['matchups']}</b><span>Matchups</span></article><article class="metric"><b>{archive['counts']['transactions']}</b><span>Transactions</span></article></div>
+<section class="card"><h3>Final Standings</h3><table><thead><tr><th>Rank</th><th>Team</th><th>GM</th><th>Record</th><th>PF</th><th>PA</th><th>Postseason</th></tr></thead><tbody>{standings}</tbody></table></section>
+<section class="card"><h3>Weekly Results</h3>{weeks}</section>
+<section class="card"><h3>Season Leaders</h3><ol>{leaders}</ol></section>
+<div class="grid"><article class="card"><h3>Draft</h3><p>{archive['counts']['draft_picks']} recorded selections.</p><a href="/api/history/seasons/{season}/draft">Open draft archive</a></article><article class="card"><h3>Transactions</h3><p>{archive['counts']['transactions']} recorded moves.</p><a href="/api/history/seasons/{season}/transactions">Open transaction archive</a></article><article class="card"><h3>Postseason</h3><p>{'Verified results available.' if archive['availability']['playoffs'] else 'Verified bracket results unavailable.'}</p><a href="/api/history/seasons/{season}/playoffs">Open postseason evidence</a></article></div>
+"""
+        return page(f"{season} Season Archive", body)
 
     @router.get("/history/player/{player_id}", response_class=HTMLResponse)
     async def player_history_page(player_id: str) -> HTMLResponse:

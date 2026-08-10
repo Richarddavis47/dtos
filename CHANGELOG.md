@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.9.4 - Valuation, FOIS & League History Corrections
+
+- Completed independent intrinsic, contender, and rebuilder valuation layers for supported active players and draft picks, with explicit evidence limitations for genuinely unavailable assets.
+- Corrected the FOIS centered-score calibration while preserving confidence and completeness as separate evidence-quality measures and retaining prior model snapshots under their original versions.
+- Added provider-free season archives with human standings, verified postseason results, weekly matchups, transactions, drafts, player leaders, and explicit current/partial completeness states.
+- Routed Asset Market, Brain valuation intelligence, rankings, history presentation, APIs, and inspection discovery through the corrected canonical contracts.
+
 ## v1.9.3 - Asset Market Restart Lifecycle Correction
 
 - Added lifecycle-driven Asset Market reconciliation after startup and periodic synchronization.

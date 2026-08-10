@@ -33,7 +33,14 @@ def _number(value: Any) -> float | None:
         return None
 
 
-def _layer(value: int | float | None, source: str, generated_at: str, confidence: int = 0) -> dict[str, Any]:
+def _layer(
+    value: int | float | None,
+    source: str,
+    generated_at: str,
+    confidence: int = 0,
+    *,
+    reason: str | None = None,
+) -> dict[str, Any]:
     return {
         "value": value,
         "source": source,
@@ -41,6 +48,8 @@ def _layer(value: int | float | None, source: str, generated_at: str, confidence
         "generated_at": generated_at,
         "confidence": max(0, min(100, confidence)),
         "availability": "available" if value is not None else "unavailable",
+        "reason": None if value is not None else reason or "Insufficient DTOS evidence.",
+        "limitations": [] if value is not None else [reason or "Insufficient DTOS evidence."],
     }
 
 
@@ -159,6 +168,16 @@ class ValuationUniverse:
     def _build(self) -> list[dict[str, Any]]:
         return list(self.iter_assets())
 
+    def _player_context(self) -> dict[str, dict[str, Any]]:
+        """Retain the richest synchronized player row without changing identity."""
+        result: dict[str, dict[str, Any]] = {}
+        for team in self.data.get("teams") or []:
+            for player in team.get("players") or []:
+                player_id = str(player.get("id") or player.get("player_id") or "")
+                if player_id:
+                    result[player_id] = dict(player)
+        return result
+
     def iter_assets(self) -> Iterator[dict[str, Any]]:
         """Yield canonical assets without retaining another complete universe."""
         players = self.data.get("normalized_players") or self.data.get("players") or {}
@@ -171,13 +190,17 @@ class ValuationUniverse:
                 if str(player_id) in allowed
             }
         owners = _owners(self.data)
+        player_context = self._player_context()
         providers, distributions = _provider_context(self.data)
         provider_status = ((self.data.get("market_data") or {}).get("provider_status") or {})
         consensus = cached_market_consensus(self.data.get("market_data") or {}, (str(key) for key in players))
         for player_id, row in sorted(players.items(), key=lambda item: str(item[0])):
             if isinstance(row, dict):
+                merged = {**row, **player_context.get(str(player_id), {})}
+                merged.setdefault("id", str(player_id))
+                merged.setdefault("team", row.get("nfl_team") or row.get("team"))
                 yield self._player(
-                    str(player_id), row, owners.get(str(player_id)),
+                    str(player_id), merged, owners.get(str(player_id)),
                     consensus.get(str(player_id)), providers, distributions,
                     provider_status,
                 )
@@ -201,9 +224,50 @@ class ValuationUniverse:
         return universe
 
     def _player(self, player_id: str, player: dict[str, Any], owner: dict[str, Any] | None, consensus: tuple[int | None, int, CalibrationStatus] | None, providers: dict[str, Any], distributions: dict[str, tuple[float, ...]], provider_status: dict[str, Any]) -> dict[str, Any]:
+        from src.core.asset_intelligence import AssetContext, evaluate_player
+
         market, market_confidence, calibration = consensus or (None, 0, CalibrationStatus.INSUFFICIENT_DATA)
         raw_intrinsic = next((_number(player.get(key)) for key in ("dtos_value", "dynasty_value") if _number(player.get(key)) is not None), None)
-        intrinsic = normalize_internal(raw_intrinsic) if raw_intrinsic is not None and raw_intrinsic <= 100 else int(raw_intrinsic) if raw_intrinsic is not None else None
+        position = str(player.get("position") or "").upper()
+        status = str(player.get("status") or "Unknown")
+        active = position in {"QB", "RB", "WR", "TE"} and status.casefold() not in {
+            "inactive", "retired", "deceased",
+        }
+        report = None
+        if active:
+            context = AssetContext(
+                str((self.data.get("league") or {}).get("league_id") or "unknown"),
+                int((owner or {}).get("roster_id") or 0),
+                self.data.get("league_settings") or self.data.get("scoring_settings") or {},
+            )
+            report = evaluate_player(player, context)
+        if raw_intrinsic is not None:
+            intrinsic = normalize_internal(raw_intrinsic) if raw_intrinsic <= 100 else int(raw_intrinsic)
+        elif report is not None:
+            intrinsic = normalize_internal(report.core_values.dynasty.score)
+        else:
+            intrinsic = None
+        contender = None
+        rebuilder = None
+        liquidity = None
+        risk_score = None
+        age_curve = None
+        if report is not None:
+            risk_score = int(report.risk.score)
+            contender = normalize_internal(round(
+                report.core_values.redraft.score * .55
+                + report.core_values.dynasty.score * .25
+                + (100 - report.risk.score) * .20
+            ))
+            peak = {"QB": 29, "RB": 24, "WR": 26, "TE": 27}.get(position, 26)
+            age = _number(player.get("age"))
+            age_curve = 50 if age is None else max(10, min(95, round(80 - max(age - peak, 0) * 9 + max(peak - age, 0) * 2)))
+            liquidity = round((market / 10 if market is not None else report.core_values.dynasty.score) * .65 + market_confidence * .20 + (100 - report.risk.score) * .15)
+            rebuilder = normalize_internal(round(
+                report.core_values.dynasty.score * .55
+                + age_curve * .30
+                + liquidity * .15
+            ))
         adjustment_category = {"QB": "Quarterbacks", "RB": "Running Backs", "WR": "Wide Receivers", "TE": "Tight Ends"}.get(str(player.get("position") or "").upper())
         adjustments = ((self.data.get("calibration_state") or {}).get("adjustments") or {})
         multiplier = float(adjustments.get(adjustment_category, adjustments.get("All Assets", 1.0)))
@@ -215,14 +279,19 @@ class ValuationUniverse:
         layers = {name: _layer(None, "Unavailable", self.generated_at) for name in LAYER_NAMES}
         layers.update({
             "market_value": _layer(market, "Provider consensus", self.generated_at, market_confidence),
-            "intrinsic_dtos_value": _layer(intrinsic, "DTOS existing valuation", self.generated_at, 70 if intrinsic is not None else 0),
+            "intrinsic_dtos_value": _layer(intrinsic, "DTOS canonical intrinsic engine", self.generated_at, report.core_values.dynasty.confidence if report is not None else 70 if intrinsic is not None else 0, reason="Player is retired, unsupported, or lacks active-career DTOS evidence."),
             "league_adjusted_value": _layer(league_adjusted, f"DTOS intrinsic value with {adjustment_category or 'All Assets'} model calibration", self.generated_at, 65 if league_adjusted is not None else 0),
+            "contender_value": _layer(contender, "DTOS Brain near-term championship utility model", self.generated_at, report.core_values.redraft.confidence if report is not None else 0, reason="Near-term production and active-career evidence are insufficient."),
+            "rebuilder_value": _layer(rebuilder, "DTOS Brain long-horizon retention model", self.generated_at, report.core_values.dynasty.confidence if report is not None else 0, reason="Long-horizon active-career evidence is insufficient."),
+            "liquidity_score": _layer(liquidity, "DTOS evidence-backed tradability model", self.generated_at, market_confidence if market is not None else 40 if liquidity is not None else 0),
+            "risk_score": _layer(risk_score, "DTOS canonical risk evidence", self.generated_at, report.core_values.dynasty.confidence if report is not None else 0),
+            "age_curve_score": _layer(age_curve, "DTOS position-specific longevity curve", self.generated_at, 70 if age_curve is not None else 0),
+            "future_value": _layer(rebuilder, "DTOS Brain long-horizon retention model", self.generated_at, report.core_values.dynasty.confidence if report is not None else 0),
             "confidence_score": _layer(market_confidence, "Provider coverage and freshness", self.generated_at, market_confidence),
             "provider_consensus": _layer(market, "Canonical provider consensus", self.generated_at, market_confidence),
             "current_production_value": _layer(_number(player.get("fantasy_points")), "Sleeper cached player metadata", self.generated_at, 50 if player.get("fantasy_points") is not None else 0),
         })
         name = player.get("name") or player.get("full_name") or " ".join(filter(None, (player.get("first_name"), player.get("last_name")))) or player_id
-        status = str(player.get("status") or "Unknown")
         return {
             "asset_id": f"player:{player_id}", "asset_type": "player",
             "identity": {"player_name": name, "position": player.get("position"), "nfl_team": player.get("nfl_team") or player.get("team"), "sleeper_id": player_id, "current_owner": owner, "free_agent": owner is None, "draft_pick_description": None, "year": None, "round": None, "projected_slot": None, "rookie_class": player.get("years_exp") == 0, "age": player.get("age"), "status": status},
@@ -245,6 +314,8 @@ class ValuationUniverse:
         layers.update({
             "intrinsic_dtos_value": _layer(intrinsic, "DTOS deterministic pick value", self.generated_at, 70),
             "league_adjusted_value": _layer(league_adjusted, f"DTOS deterministic pick value with {pick_category} model calibration", self.generated_at, 65),
+            "contender_value": _layer(round(intrinsic * (.92 if season <= datetime.now().year + 1 else .82)), "DTOS Brain near-term pick utility model", self.generated_at, 65),
+            "rebuilder_value": _layer(round(intrinsic * (1.04 if season >= datetime.now().year + 1 else .98)), "DTOS Brain long-horizon pick utility model", self.generated_at, 70),
             "future_value": _layer(intrinsic, "DTOS deterministic pick value", self.generated_at, 70),
             "confidence_score": _layer(70, "Deterministic pick identity", self.generated_at, 70),
         })
@@ -260,7 +331,40 @@ class ValuationUniverse:
 
     def status(self) -> dict[str, Any]:
         counts = {"players": sum(row["asset_type"] == "player" for row in self.assets), "picks": sum(row["asset_type"] == "pick" for row in self.assets), "total": len(self.assets)}
-        return {"schema_version": UNIVERSE_SCHEMA_VERSION, "freshness": self.freshness, "counts": counts, "duplicate_identities": len(self.assets) - len({row["asset_id"] for row in self.assets}), "inspection_ready": all(row["audit"]["inspection_ready"] for row in self.assets), "relevant_player_universe": self.data.get("relevant_player_universe")}
+        audited_layers = (
+            "market_value", "intrinsic_dtos_value", "contender_value",
+            "rebuilder_value",
+        )
+        layer_coverage = {
+            name: sum(
+                (row["layers"].get(name) or {}).get("value") is not None
+                for row in self.assets
+            )
+            for name in audited_layers
+        }
+        missing_reasons: dict[str, dict[str, int]] = {}
+        for name in audited_layers:
+            reasons: dict[str, int] = {}
+            for row in self.assets:
+                layer = row["layers"].get(name) or {}
+                if layer.get("value") is None:
+                    reason = str(layer.get("reason") or "Insufficient DTOS evidence.")
+                    reasons[reason] = reasons.get(reason, 0) + 1
+            missing_reasons[name] = reasons
+        all_four = sum(all(
+            (row["layers"].get(name) or {}).get("value") is not None
+            for name in audited_layers
+        ) for row in self.assets)
+        return {
+            "schema_version": UNIVERSE_SCHEMA_VERSION,
+            "freshness": self.freshness,
+            "counts": counts,
+            "layer_coverage": {**layer_coverage, "all_four": all_four},
+            "missing_layer_reasons": missing_reasons,
+            "duplicate_identities": len(self.assets) - len({row["asset_id"] for row in self.assets}),
+            "inspection_ready": all(row["audit"]["inspection_ready"] for row in self.assets),
+            "relevant_player_universe": self.data.get("relevant_player_universe"),
+        }
 
     def providers(self) -> dict[str, Any]:
         statuses = ((self.data.get("market_data") or {}).get("provider_status") or {})

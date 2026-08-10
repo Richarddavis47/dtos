@@ -109,6 +109,10 @@ def _representatives(
         else:
             identifiers = sorted({str(row.get("matchup_id")) for row in matchups if isinstance(row, dict) and row.get("matchup_id") is not None})
         return tuple({"matchup_id": item} for item in identifiers[:3])
+    if "{season}" in path:
+        return tuple(
+            {"season": str(season)} for season in range(2021, 2027)
+        )
     if "{" in path:
         return ()
     return ({},)
@@ -229,6 +233,7 @@ def unsupported_dynamic_patterns(routes: Iterable[Any]) -> tuple[str, ...]:
     supported = {
         "roster_id", "player_id", "matchup_id", "franchise_id", "pick_id",
         "transaction_id", "gm_id",
+        "season",
     }
     failures = []
     for route, canonical_path in _http_routes(routes):
