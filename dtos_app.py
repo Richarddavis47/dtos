@@ -353,6 +353,7 @@ app.include_router(
     create_fois_router(
         service=fois_service,
         require_data=require_data,
+        page=page,
     )
 )
 

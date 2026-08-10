@@ -189,6 +189,16 @@ class FOISRepository:
             ).fetchall()
         return tuple(_score(json.loads(row["payload"])) for row in rows)
 
+    def league_ids(self, model_version: str) -> tuple[str, ...]:
+        """Return persisted FOIS leagues without loading score payloads."""
+        with self._connection() as connection:
+            rows = connection.execute(
+                "SELECT DISTINCT league_id FROM fois_scores_v2 "
+                "WHERE model_version=? ORDER BY league_id",
+                (model_version,),
+            ).fetchall()
+        return tuple(str(row["league_id"]) for row in rows)
+
     def count(self) -> int:
         with self._connection() as connection:
             return int(connection.execute("SELECT COUNT(*) FROM fois_scores_v2").fetchone()[0])

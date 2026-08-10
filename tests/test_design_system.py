@@ -22,6 +22,7 @@ class DesignSystemTests(unittest.TestCase):
             "League Settings",
             "League History",
             "Trade Intelligence",
+            "Front Office Intelligence System",
             "Falcons Headquarters",
             "Bijan Robinson — Player Intelligence",
         ):
@@ -32,6 +33,16 @@ class DesignSystemTests(unittest.TestCase):
                 self.assertIn(f"<h1>{title}</h1>", html)
                 self.assertIn("League Sync", html)
                 self.assertIn('class="ds-action primary"', html)
+
+    def test_fois_header_uses_rankings_as_its_real_primary_action(self) -> None:
+        html = page_header(
+            "Front Office Intelligence System",
+            league_name="Dynasty League",
+            last_updated="today",
+        )
+        self.assertIn("Evaluate General Manager performance", html)
+        self.assertIn('href="#gm-rankings"', html)
+        self.assertIn(">View GM Rankings</a>", html)
 
     def test_recommendation_contract_is_explainable_and_collapsed(self) -> None:
         html = recommendation_panel(
