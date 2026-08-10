@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.8.15 - Relevant Player Universe
+
+- Adds one canonical Relevant Player Universe spanning durable league history, current ownership, reserve states, and the top 150 canonically ranked free agents.
+- Persists deterministic membership reasons and ranking-snapshot provenance without rewriting immutable historical evidence.
+- Routes valuation, Brain, Asset Market, search, and downstream consumers through the same membership contract while preserving pick assets.
+
 ## v1.8.14 - Deterministic Asset Market Restart Lifecycle
 
 - Establishes a process startup epoch that keeps Asset Market generation fenced until durable storage, canonical synchronization, Brain/valuation generation, cache persistence, and bounded historical maintenance have completed.

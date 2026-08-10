@@ -380,6 +380,18 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
             STATE["last_error"] = None
             STATE["transactions_last_sync"] = synced_at
             STATE["transactions_last_error"] = None
+            from src.core.historical_memory import historical_store
+            from src.core.relevant_players import (
+                apply_relevant_player_filter, build_relevant_player_universe,
+            )
+
+            STATE["data"]["relevant_player_universe"] = await asyncio.to_thread(
+                build_relevant_player_universe,
+                STATE["data"], historical_store, LEAGUE_ID,
+            )
+            apply_relevant_player_filter(
+                STATE["data"], STATE["data"]["relevant_player_universe"],
+            )
             try:
                 with lifecycle_coordinator.phase("provider_network") as phase:
                     await asyncio.to_thread(build_provider_network, STATE["data"], STATE)
