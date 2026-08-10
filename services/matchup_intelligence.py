@@ -66,4 +66,11 @@ def matchup_projection(
     largest = max(advantages, default=(0, "No projected positional edge"))[1]
     volatile = max(player_edges, default=(0, "Unavailable", ""))
     confidence = round(mean(item["confidence"] for item in summaries)) if summaries else 0
-    return {"sides": summaries, "largest_advantage": largest, "highest_volatility": f"{volatile[1]} ({volatile[2]})" if volatile[1] != "Unavailable" else "Unavailable", "confidence": "High" if confidence >= 75 else "Medium" if confidence >= 50 else "Low", "missing": missing, "status": "fallback" if summaries else "unavailable"}
+    snapshot_ids = sorted({
+        item.projection_snapshot_id
+        for roster_values in (values_by_roster or {}).values()
+        for item in roster_values.values()
+        if item.projection.projection_snapshot_id
+    })
+    projected_margin = round(abs(summaries[0]["projected"] - summaries[1]["projected"]), 2) if len(summaries) == 2 else None
+    return {"sides": summaries, "largest_advantage": largest, "highest_volatility": f"{volatile[1]} ({volatile[2]})" if volatile[1] != "Unavailable" else "Unavailable", "confidence": "High" if confidence >= 75 else "Medium" if confidence >= 50 else "Low", "missing": missing, "status": "canonical" if len(snapshot_ids) == 1 else "fallback" if summaries else "unavailable", "projection_snapshot_id": snapshot_ids[0] if len(snapshot_ids) == 1 else None, "snapshot_consistent": len(snapshot_ids) <= 1, "projected_margin": projected_margin, "win_probability": None}

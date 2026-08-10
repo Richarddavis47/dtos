@@ -70,12 +70,13 @@ def evaluate_player_values(context: Any, decision: Any, reports: dict[str, Any],
         historical = apply_historical_evidence(
             dynasty_base, report.profile.position, raw.get("historical_evidence"),
         )
-        dynasty = historical.adjusted_value
+        forward_value = max(0, min(1000, round((projection.projected_points or 0) * 35)))
+        dynasty = round(historical.adjusted_value * .90 + forward_value * .10)
         calibrated = calibrations[player_id]
         redraft = normalize_internal(report.core_values.redraft.score)
         team_fit = normalize_internal(report.core_values.team_fit.score)
-        contender = round(redraft * .50 + team_fit * .20 + calibrated.calibrated_value * .30)
-        rebuilder = round(calibrated.calibrated_value * .75 + team_fit * .15 + normalize_internal(100 - report.risk.score) * .10)
+        contender = round(redraft * .35 + team_fit * .15 + calibrated.calibrated_value * .30 + forward_value * .20)
+        rebuilder = round(calibrated.calibrated_value * .70 + team_fit * .15 + normalize_internal(100 - report.risk.score) * .10 + forward_value * .05)
         scarcity = max(0, min(100, round(100 - int(supplies.get(report.profile.position, 0)) / max(1, len(context.teams)) * 12)))
         liquidity = max(0, min(100, round(((consensus if consensus is not None else dynasty) / 10) * .65 + (market_report.consensus.confidence if market_report else 25) * .35)))
         gap = round(dynasty - consensus, 2) if consensus is not None else None
@@ -100,6 +101,7 @@ def evaluate_player_values(context: Any, decision: Any, reports: dict[str, Any],
             *calibrated.reasoning,
             *historical.evidence,
             f"Projection state is {projection.status.value} from {projection.source}.",
+            f"Forward Production contributes {forward_value}/1000 with a larger contender than rebuilder weight.",
             f"Projects {above_replacement:+.2f} points above roster-specific replacement.",
             f"Market state is {market_status.value}; raw provider values are normalized before comparison.",
         )
