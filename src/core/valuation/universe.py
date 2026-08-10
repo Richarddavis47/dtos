@@ -162,6 +162,14 @@ class ValuationUniverse:
     def iter_assets(self) -> Iterator[dict[str, Any]]:
         """Yield canonical assets without retaining another complete universe."""
         players = self.data.get("normalized_players") or self.data.get("players") or {}
+        relevance = self.data.get("relevant_player_universe") or {}
+        member_ids = relevance.get("member_ids")
+        if isinstance(member_ids, list):
+            allowed = {str(player_id) for player_id in member_ids}
+            players = {
+                player_id: row for player_id, row in players.items()
+                if str(player_id) in allowed
+            }
         owners = _owners(self.data)
         providers, distributions = _provider_context(self.data)
         provider_status = ((self.data.get("market_data") or {}).get("provider_status") or {})
@@ -252,7 +260,7 @@ class ValuationUniverse:
 
     def status(self) -> dict[str, Any]:
         counts = {"players": sum(row["asset_type"] == "player" for row in self.assets), "picks": sum(row["asset_type"] == "pick" for row in self.assets), "total": len(self.assets)}
-        return {"schema_version": UNIVERSE_SCHEMA_VERSION, "freshness": self.freshness, "counts": counts, "duplicate_identities": len(self.assets) - len({row["asset_id"] for row in self.assets}), "inspection_ready": all(row["audit"]["inspection_ready"] for row in self.assets)}
+        return {"schema_version": UNIVERSE_SCHEMA_VERSION, "freshness": self.freshness, "counts": counts, "duplicate_identities": len(self.assets) - len({row["asset_id"] for row in self.assets}), "inspection_ready": all(row["audit"]["inspection_ready"] for row in self.assets), "relevant_player_universe": self.data.get("relevant_player_universe")}
 
     def providers(self) -> dict[str, Any]:
         statuses = ((self.data.get("market_data") or {}).get("provider_status") or {})

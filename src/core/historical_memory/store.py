@@ -222,6 +222,19 @@ CREATE TABLE IF NOT EXISTS enrichment_progress_repairs (
   details TEXT NOT NULL,
   FOREIGN KEY(job_id) REFERENCES import_jobs(job_id)
 );
+CREATE TABLE IF NOT EXISTS relevant_player_universe (
+  league_id TEXT NOT NULL,
+  player_id TEXT NOT NULL,
+  reason_codes TEXT NOT NULL,
+  selection_rank INTEGER,
+  selection_value REAL,
+  ranking_snapshot_id TEXT,
+  generation TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY(league_id, player_id)
+);
+CREATE INDEX IF NOT EXISTS idx_relevant_player_universe_generation
+ON relevant_player_universe(league_id, generation, player_id);
 """
 
 
@@ -1300,6 +1313,68 @@ class HistoricalStore:
                 (league_id,),
             ).fetchall()
         return tuple(str(row[0]) for row in rows)
+
+    def relevant_player_reasons(self, league_id: str) -> dict[str, set[str]]:
+        """Derive league-scoped relevance without hydrating the global graph."""
+        reasons: dict[str, set[str]] = {}
+
+        def retain(value: Any, reason: str) -> None:
+            player_id = str(value or "")
+            if player_id and player_id not in {"0", "None"}:
+                reasons.setdefault(player_id, set()).add(reason)
+
+        with self.connection() as connection:
+            cursor = connection.execute(
+                """SELECT entity_type,player_id,payload FROM historical_records
+                WHERE league_id=? AND entity_type IN (
+                  'player_week','draft_pick','weekly_roster','transaction','trade'
+                ) ORDER BY id""",
+                (league_id,),
+            )
+            for entity_type, player_id, raw_payload in cursor:
+                payload = json.loads(raw_payload)
+                if player_id:
+                    retain(
+                        player_id,
+                        "historical_matchup" if entity_type == "player_week"
+                        else "historical_draft" if entity_type == "draft_pick"
+                        else "historical_identity_dependency",
+                    )
+                if entity_type == "weekly_roster":
+                    for key in ("players", "starters", "bench", "taxi", "reserve"):
+                        for value in payload.get(key) or []:
+                            retain(value, "historical_matchup" if key == "starters" else "historical_roster")
+                elif entity_type in {"transaction", "trade"}:
+                    for key in ("adds", "drops"):
+                        values = payload.get(key) or {}
+                        for value in values if isinstance(values, list) else values.keys():
+                            retain(value, "historical_transaction")
+        return reasons
+
+    def persist_relevant_player_universe(
+        self, league_id: str, rows: list[dict[str, Any]], generation: str,
+        updated_at: str,
+    ) -> None:
+        """Atomically replace only derived membership metadata."""
+        with self.connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                "DELETE FROM relevant_player_universe WHERE league_id=?",
+                (league_id,),
+            )
+            connection.executemany(
+                """INSERT INTO relevant_player_universe(
+                league_id,player_id,reason_codes,selection_rank,selection_value,
+                ranking_snapshot_id,generation,updated_at
+                ) VALUES (?,?,?,?,?,?,?,?)""",
+                [(
+                    league_id, row["player_id"],
+                    json.dumps(row["reason_codes"], separators=(",", ":")),
+                    row.get("selection_rank"), row.get("selection_value"),
+                    row.get("ranking_snapshot_id"), generation, updated_at,
+                ) for row in rows],
+            )
+            connection.commit()
 
     def player_week_totals(self, league_id: str) -> dict[int, dict[str, float]]:
         """Aggregate ranking inputs in SQLite without loading weekly payloads."""
