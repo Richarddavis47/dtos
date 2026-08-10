@@ -65,6 +65,9 @@ def create_market_router(
 
     @router.get("/api/market/health")
     async def market_health() -> Any:
+        asset_market_cache.reconcile(
+            state.get("data") or {}, state, historical_store, league_id,
+        )
         health = asset_market_cache.health()
         return {
             "application_version": VERSION, **health,

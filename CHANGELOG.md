@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.9.3 - Asset Market Restart Lifecycle Correction
+
+- Added lifecycle-driven Asset Market reconciliation after startup and periodic synchronization.
+- Enforced a single-flight self-healing invariant when construction is eligible but no model or compatible artifact exists.
+- Added sanitized scheduler state, invocation, and skip-reason diagnostics to market health.
+- Preserved background-only construction, bounded warming responses, memory gates, and v1.9.2 presentation behavior.
+
 ## v1.9.2 - Intelligence Presentation & Data Utilization
 
 - Added reusable human-first status, availability, rank, and technical-detail presentation contracts.
