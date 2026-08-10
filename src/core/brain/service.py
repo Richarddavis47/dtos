@@ -33,6 +33,7 @@ class BrainService:
         self._data = data
         self._report = valuation_intelligence_report(data)
         self._assets = self._report.get("assets") or {}
+        self._projected_assets: dict[str, dict[str, Any]] = {}
         self.latency_ms = round((perf_counter() - started) * 1000, 3)
 
     @property
@@ -44,15 +45,20 @@ class BrainService:
         asset = self._assets.get(canonical_id)
         if asset is None or not canonical_id.startswith("player:"):
             return asset
+        enriched = self._projected_assets.get(canonical_id)
+        if enriched is not None:
+            return enriched
         projection = projection_service.player(canonical_id.removeprefix("player:"))
         if projection is None:
             return asset
-        return {
+        enriched = {
             **asset,
             "forward_production": projection,
             "projection_confidence": projection.get("projection_confidence"),
             "projection_snapshot_id": projection.get("projection_snapshot_id"),
         }
+        self._projected_assets[canonical_id] = enriched
+        return enriched
 
     def assets(self, asset_ids: Iterable[str]) -> tuple[dict[str, Any], ...]:
         rows = (self.asset(asset_id) for asset_id in asset_ids)

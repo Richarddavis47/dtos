@@ -662,3 +662,8 @@ Notable DTOS changes are recorded here from the repository's Git history.
 - Added league-scoring-aware forward production, immutable snapshots, provider health, coverage, and accuracy foundations.
 - Added read-only Projection Intelligence APIs with explicit provider provenance and no request-time provider access.
 - Documented that Sleeper remains the league/roster/matchup source; no approved Sleeper projection feed was found.
+# v1.10.1 - Projection Generation Production-Shape Correction
+
+- Normalized canonical mapping- and sequence-shaped player containers without duplicate projection identities.
+- Added deterministic mapping-key fallback, identity-conflict rejection, relevant-universe filtering, and coverage diagnostics.
+- Added explicit generating, ready, failed, and stale health states with sanitized lifecycle errors.
