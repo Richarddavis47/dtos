@@ -716,15 +716,17 @@ class RestartReuseValidationTests(unittest.TestCase):
     def test_material_target_comparison_requires_exact_controlled_row_change(self) -> None:
         before = {"results": [{
             "asset_id": "player:10213",
+            "contender_value": 20,
             "values": {"contender_value": 20},
             "confidence": 0,
         }]}
         after = json.loads(json.dumps(before))
+        after["results"][0]["contender_value"] = 30
         after["results"][0]["values"]["contender_value"] = 30
         differences = _material_target_comparison(
             json.dumps(before).encode(), json.dumps(after).encode(),
         )
-        self.assertEqual(len(differences), 1)
+        self.assertEqual(len(differences), 2)
         after["results"][0]["confidence"] = 1
         with self.assertRaisesRegex(AssertionError, "unexpected target fields"):
             _material_target_comparison(

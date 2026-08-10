@@ -1016,6 +1016,7 @@ def _material_target_comparison(
         before_rows[0], after_rows[0], "$.assets[player:10213]",
     )
     expected_paths = {
+        "$.assets[player:10213].contender_value",
         "$.assets[player:10213].values.contender_value",
     }
     if {difference["path"] for difference in differences} != expected_paths:
