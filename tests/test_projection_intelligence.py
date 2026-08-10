@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 
 from routes.projections import create_projections_router
 from src.core.projection_intelligence.scoring import fantasy_points
-from src.core.projection_intelligence.service import ProjectionService, provider_registry
+from src.core.projection_intelligence.service import ProjectionInputError, ProjectionService, provider_registry
 
 
 def fixture() -> dict:
@@ -45,6 +45,62 @@ class ProjectionIntelligenceTests(unittest.TestCase):
         self.assertEqual(first["projection_snapshot_id"], second["projection_snapshot_id"])
         self.assertEqual(first["players"]["10"]["projection_snapshot_id"], first["projection_snapshot_id"])
 
+    def test_production_mapping_and_sequence_normalize_identically(self) -> None:
+        sequence = fixture()
+        players = [dict(player) for player in sequence["teams"][0]["players"]]
+        sequence["players"] = players
+        mapping = fixture()
+        mapping["players"] = {player["id"]: dict(player) for player in players}
+        first = self.service.generate(sequence, "league")
+        other = ProjectionService(Path(self.temporary.name) / "mapping.sqlite3")
+        second = other.generate(mapping, "league")
+        self.assertEqual(set(first["players"]), set(second["players"]))
+        self.assertEqual(other.health()["normalization"]["container_type"], "mapping")
+
+    def test_mapping_key_supplies_id_and_payload_id_may_stand_alone(self) -> None:
+        data = fixture()
+        data["teams"] = []
+        data["players"] = {"10": {"position": "QB"}, "20": {"id": "20", "position": "TE"}}
+        snapshot = self.service.generate(data, "league")
+        self.assertEqual(set(snapshot["players"]), {"10", "20"})
+
+    def test_conflicting_mapping_identity_fails_closed_and_is_sanitized(self) -> None:
+        data = fixture()
+        data["teams"] = []
+        data["players"] = {"10": {"id": "other", "position": "QB"}}
+        with self.assertRaises(ProjectionInputError):
+            self.service.generate(data, "league")
+        health = self.service.health()
+        self.assertEqual(health["status"], "failed")
+        self.assertEqual(health["last_error_type"], "ProjectionInputError")
+        self.assertNotIn(str(self.service._database_file), health["last_error_message"])
+
+    def test_malformed_values_are_skipped_without_duplicate_roster_projection(self) -> None:
+        data = fixture()
+        data["players"] = {"10": dict(data["teams"][0]["players"][0]), "bad": "not-a-player"}
+        snapshot = self.service.generate(data, "league")
+        self.assertEqual(len(snapshot["players"]), 3)
+        health = self.service.health()
+        self.assertEqual(health["normalization"]["malformed_records"], 1)
+        self.assertGreaterEqual(health["normalization"]["duplicate_references"], 1)
+
+    def test_empty_mapping_is_valid_but_nonempty_all_malformed_is_not(self) -> None:
+        data = fixture()
+        data["teams"] = []
+        data["players"] = {}
+        self.assertEqual(self.service.generate(data, "league")["players"], {})
+        data["players"] = {"bad": "value"}
+        with self.assertRaises(ProjectionInputError):
+            self.service.generate(data, "league")
+
+    def test_relevant_universe_filters_retired_or_irrelevant_players(self) -> None:
+        data = fixture()
+        data["teams"] = []
+        data["players"] = {"10": {"position": "QB"}, "retired": {"position": "WR", "status": "Inactive"}}
+        data["relevant_player_universe"] = {"member_ids": ["10"]}
+        snapshot = self.service.generate(data, "league")
+        self.assertEqual(set(snapshot["players"]), {"10"})
+
     def test_bye_is_not_zero_and_injury_lowers_confidence(self) -> None:
         snapshot = self.service.generate(fixture(), "league")
         self.assertIsNone(snapshot["players"]["30"]["weekly_projected_points"])
@@ -78,6 +134,11 @@ class ProjectionIntelligenceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.service.generate({"season": "invalid", "teams": []}, "league")
         self.assertEqual(self.service.snapshot(), snapshot)
+        self.assertEqual(self.service.health()["status"], "stale")
+        recovered = self.service.generate(fixture(), "league")
+        self.assertEqual(recovered, snapshot)
+        self.assertEqual(self.service.health()["status"], "ready")
+        self.assertIsNone(self.service.health()["last_error_type"])
 
     def test_accuracy_records_actual_without_rewriting_snapshot(self) -> None:
         snapshot = self.service.generate(fixture(), "league")

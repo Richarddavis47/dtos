@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import unittest
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -82,6 +83,44 @@ class PlayerValueProjectionTests(unittest.TestCase):
         self.assertEqual(len(summary["sides"]), 2)
         self.assertTrue(all(item["floor"] <= item["projected"] <= item["ceiling"] for item in summary["sides"]))
         self.assertNotIn("probability", summary)
+
+    def test_matchup_aggregation_uses_nested_projection_snapshot_contract(self) -> None:
+        teams = self.data["teams"][:2]
+        sides = [
+            {
+                "roster_id": team["roster_id"],
+                "team": team["team_name"],
+                "lineup": [
+                    {"id": player["id"], "position": player["position"]}
+                    for player in team["players"][:2]
+                ],
+            }
+            for team in teams
+        ]
+        values = self.orchestrator.matchup_player_values(
+            self.data,
+            tuple(side["roster_id"] for side in sides),
+        )
+        snapshot_id = "projection-snapshot-test"
+        values = {
+            roster_id: {
+                player_id: replace(
+                    profile,
+                    projection=replace(
+                        profile.projection,
+                        projection_snapshot_id=snapshot_id,
+                    ),
+                )
+                for player_id, profile in roster_values.items()
+            }
+            for roster_id, roster_values in values.items()
+        }
+
+        summary = matchup_projection(self.data, sides, values)
+
+        self.assertEqual(summary["status"], "canonical")
+        self.assertEqual(summary["projection_snapshot_id"], snapshot_id)
+        self.assertTrue(summary["snapshot_consistent"])
 
     def test_matchup_projection_skips_unrelated_trade_intelligence(self) -> None:
         teams = self.data["teams"][:2]

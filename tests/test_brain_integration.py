@@ -30,6 +30,37 @@ class BrainIntegrationTests(unittest.TestCase):
             self.assertEqual(decision.assets[0]["scores"], expected["scores"])
             self.assertEqual(decision.assets[0]["explanation"], expected["explanation"])
 
+    def test_projection_is_attached_before_canonical_brain_publication(self) -> None:
+        projection = {
+            "player_id": "1",
+            "weekly_projected_points": 18.5,
+            "projection_confidence": 72,
+            "projection_snapshot_id": "projection-semantic-1",
+            "generated_at": "observation-one",
+        }
+        self.data["projection_intelligence"] = {
+            "projection_snapshot_id": "projection-semantic-1",
+            "generated_at": "observation-one",
+            "players": {"1": projection},
+        }
+        first_report = build_valuation_intelligence(self.data, self.state)
+        first_asset = first_report["assets"]["player:1"]
+        brain = brain_service(self.data)
+
+        self.assertIs(brain.asset("player:1"), first_asset)
+        self.assertIs(brain.decision("Asset Market", ("1",)).assets[0], first_asset)
+        self.assertIs(first_asset["forward_production"], projection)
+
+        first_generation = first_report["semantic_generation"]
+        projection["generated_at"] = "observation-two"
+        metadata_report = build_valuation_intelligence(self.data, self.state)
+        self.assertEqual(metadata_report["semantic_generation"], first_generation)
+
+        projection["weekly_projected_points"] = 22.0
+        projection["projection_snapshot_id"] = "projection-semantic-2"
+        changed_report = build_valuation_intelligence(self.data, self.state)
+        self.assertNotEqual(changed_report["semantic_generation"], first_generation)
+
     def test_brain_reads_cache_without_network_or_recalculation(self) -> None:
         with patch("urllib.request.urlopen", side_effect=AssertionError("network call")):
             first = brain_service(self.data).asset("1")

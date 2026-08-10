@@ -17,6 +17,10 @@ PROJECTION_SCHEMA_VERSION = "1.0"
 PROJECTION_MODEL_VERSION = "dtos-forward-production-1"
 
 
+class ProjectionInputError(ValueError):
+    """A sanitized canonical-player input contract violation."""
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -55,7 +59,12 @@ class ProjectionService:
         self._database_file = database_file or Path(CACHE_FILE).with_name("dtos_projections.sqlite3")
         self._lock = threading.RLock()
         self._snapshot: dict[str, Any] | None = None
-        self._error: str | None = None
+        self._generation_state = "pending"
+        self._last_error_type: str | None = None
+        self._last_error_message: str | None = None
+        self._last_error_at: str | None = None
+        self._last_success_at: str | None = None
+        self._normalization: dict[str, Any] = {}
         self._generations = 0
         self._external_requests = 0
         self._initialize()
@@ -74,20 +83,87 @@ class ProjectionService:
             row = connection.execute("SELECT payload FROM projection_snapshots ORDER BY generated_at DESC LIMIT 1").fetchone()
         if row:
             self._snapshot = json.loads(row["payload"])
+            self._generation_state = "ready"
+            self._last_success_at = self._snapshot.get("generated_at")
 
     @staticmethod
-    def _players(data: dict[str, Any]) -> list[dict[str, Any]]:
+    def _players(data: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+        """Normalize mapping or sequence containers into unique player rows."""
         found: dict[str, dict[str, Any]] = {}
-        for player in data.get("players") or []:
-            player_id = str(player.get("id") or player.get("player_id") or "")
-            if player_id:
-                found[player_id] = player
+        malformed = 0
+        conflicts: list[str] = []
+        duplicates = 0
+        container = data.get("players")
+        source_items: list[tuple[str | None, Any]]
+        if container is None:
+            source_items = []
+            container_type = "absent"
+        elif isinstance(container, dict):
+            source_items = [(str(key), value) for key, value in container.items()]
+            container_type = "mapping"
+        elif isinstance(container, (list, tuple)):
+            source_items = [(None, value) for value in container]
+            container_type = "sequence"
+        else:
+            raise ProjectionInputError(
+                "Projection player container must be a mapping or sequence."
+            )
+        for mapping_key, value in source_items:
+            if not isinstance(value, dict):
+                malformed += 1
+                continue
+            payload_id = str(value.get("id") or value.get("player_id") or "")
+            player_id = payload_id or str(mapping_key or "")
+            if mapping_key and payload_id and mapping_key != payload_id:
+                conflicts.append(mapping_key)
+                continue
+            if not player_id:
+                malformed += 1
+                continue
+            row = dict(value)
+            row.setdefault("id", player_id)
+            if player_id in found:
+                duplicates += 1
+            found[player_id] = {**found.get(player_id, {}), **row}
         for team in data.get("teams") or []:
             for player in team.get("players") or []:
+                if not isinstance(player, dict):
+                    malformed += 1
+                    continue
                 player_id = str(player.get("id") or player.get("player_id") or "")
                 if player_id:
-                    found[player_id] = player
-        return list(found.values())
+                    if player_id in found:
+                        duplicates += 1
+                    found[player_id] = {**found.get(player_id, {}), **player}
+        if conflicts:
+            raise ProjectionInputError(
+                "Projection player mapping contained conflicting canonical identities."
+            )
+        if source_items and not found:
+            raise ProjectionInputError(
+                "Projection player container contained no valid player objects."
+            )
+        universe = data.get("relevant_player_universe") or {}
+        allowed = {str(value) for value in universe.get("member_ids") or ()}
+        if allowed:
+            found = {key: value for key, value in found.items() if key in allowed}
+        rostered = {
+            str(player.get("id") or player.get("player_id"))
+            for team in data.get("teams") or []
+            for player in team.get("players") or []
+            if isinstance(player, dict) and (player.get("id") or player.get("player_id"))
+        }
+        report = {
+            "container_type": container_type,
+            "source_records": len(source_items),
+            "normalized_players": len(found),
+            "malformed_records": malformed,
+            "duplicate_references": duplicates,
+            "identity_conflicts": len(conflicts),
+            "rostered_players": len(rostered & set(found)),
+            "free_agent_players": len(set(found) - rostered),
+        }
+        return [found[key] for key in sorted(found)], report
 
     @staticmethod
     def _project(player: dict[str, Any], scoring: dict[str, Any], season: int, week: int | None) -> dict[str, Any]:
@@ -128,12 +204,39 @@ class ProjectionService:
         }
 
     def generate(self, data: dict[str, Any], league_id: str) -> dict[str, Any]:
+        with self._lock:
+            self._generation_state = "generating"
+        try:
+            snapshot, normalization = self._generate(data, league_id)
+        except Exception as exc:
+            with self._lock:
+                self._generation_state = "stale" if self._snapshot else "failed"
+                self._last_error_type = type(exc).__name__
+                self._last_error_message = (
+                    str(exc) if isinstance(exc, ProjectionInputError)
+                    else "Projection generation failed while processing canonical player data."
+                )
+                self._last_error_at = _now()
+            raise
+        with self._lock:
+            self._snapshot = snapshot
+            data["projection_intelligence"] = snapshot
+            self._normalization = normalization
+            self._generation_state = "ready"
+            self._last_error_type = None
+            self._last_error_message = None
+            self._last_error_at = None
+            self._last_success_at = snapshot.get("generated_at")
+            self._generations += 1
+        return snapshot
+
+    def _generate(self, data: dict[str, Any], league_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
         league = data.get("league") or {}
         scoring = data.get("scoring_settings") or league.get("scoring_settings") or {}
         season = int(data.get("season") or league.get("season") or datetime.now().year)
         week_value = data.get("week") or data.get("leg")
         week = int(week_value) if week_value not in (None, "") else None
-        players = self._players(data)
+        players, normalization = self._players(data)
         projections = {str(player.get("id") or player.get("player_id")): self._project(player, scoring, season, week) for player in players}
         identity = {"league_id": league_id, "season": season, "week": week, "model_version": PROJECTION_MODEL_VERSION, "scoring": scoring, "players": projections}
         snapshot_id = _digest(identity)
@@ -155,11 +258,7 @@ class ProjectionService:
             else:
                 connection.execute("INSERT INTO projection_snapshots VALUES (?, ?, ?, ?, ?, ?)", (snapshot_id, league_id, season, week, generated_at, payload))
                 connection.commit()
-        with self._lock:
-            self._snapshot = snapshot
-            self._error = None
-            self._generations += 1
-        return snapshot
+        return snapshot, normalization
 
     def snapshot(self) -> dict[str, Any] | None:
         with self._lock:
@@ -196,11 +295,21 @@ class ProjectionService:
             if projection.get("weekly_projected_points") is not None:
                 by_position[position] = by_position.get(position, 0) + 1
         return {
-            "status": "ready" if snapshot else "pending", "schema_version": PROJECTION_SCHEMA_VERSION,
+            "status": self._generation_state, "generation_state": self._generation_state,
+            "schema_version": PROJECTION_SCHEMA_VERSION,
             "snapshot_id": (snapshot or {}).get("projection_snapshot_id"), "generated_at": (snapshot or {}).get("generated_at"),
             "players": len(players), "projected_players": available, "coverage": round(available / len(players) * 100, 2) if players else 0,
             "generations": self._generations, "external_requests": self._external_requests,
-            "last_error": self._error, "accuracy": self.accuracy(), "providers": provider_registry(), "position_coverage": by_position,
+            "last_error_type": self._last_error_type,
+            "last_error_message": self._last_error_message,
+            "last_error_at": self._last_error_at,
+            "last_success_at": self._last_success_at,
+            "normalization": dict(self._normalization),
+            "eligible_players": len(players),
+            "skipped_players": self._normalization.get("malformed_records", 0),
+            "stale_projections": 0 if self._generation_state == "ready" else len(players),
+            "accuracy": self.accuracy(), "providers": provider_registry(),
+            "position_coverage": by_position,
         }
 
 

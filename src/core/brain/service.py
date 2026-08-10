@@ -8,7 +8,6 @@ from typing import Any, Iterable
 from app_metadata import BUILD_NUMBER, VERSION
 from src.core.brain.contracts import BrainDecision, DecisionConfidence
 from src.core.valuation_intelligence import valuation_intelligence_report
-from src.core.projection_intelligence import projection_service
 
 BRAIN_SCHEMA_VERSION = "1.0"
 CONSUMERS = (
@@ -41,18 +40,7 @@ class BrainService:
 
     def asset(self, asset_id: str) -> dict[str, Any] | None:
         canonical_id = canonical_asset_id(asset_id)
-        asset = self._assets.get(canonical_id)
-        if asset is None or not canonical_id.startswith("player:"):
-            return asset
-        projection = projection_service.player(canonical_id.removeprefix("player:"))
-        if projection is None:
-            return asset
-        return {
-            **asset,
-            "forward_production": projection,
-            "projection_confidence": projection.get("projection_confidence"),
-            "projection_snapshot_id": projection.get("projection_snapshot_id"),
-        }
+        return self._assets.get(canonical_id)
 
     def assets(self, asset_ids: Iterable[str]) -> tuple[dict[str, Any], ...]:
         rows = (self.asset(asset_id) for asset_id in asset_ids)
@@ -110,9 +98,10 @@ class BrainService:
             ),
         )
         generated_at = self._report.get("generated_at")
+        semantic_generation = self._report.get("semantic_generation") or generated_at
         return BrainDecision(
             consumer, canonical_ids, assets, confidence, generated_at, VERSION,
-            BRAIN_SCHEMA_VERSION, f"{VERSION}:{generated_at or 'pending'}", generated_at,
+            BRAIN_SCHEMA_VERSION, f"{VERSION}:{semantic_generation or 'pending'}", generated_at,
             (
                 "DTOS Brain synchronized valuation-intelligence snapshot",
                 "Canonical Projection Intelligence snapshot (when available)",

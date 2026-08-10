@@ -19,6 +19,7 @@ from src.core.data_platform.normalization import PlayerIdentityResolver
 from src.core.data_platform.provider_activation import refresh_public_market
 from src.core.intelligence.cache import intelligence_cache
 from src.core.provider_network import build_provider_network
+from src.core.projection_intelligence import projection_service
 from src.platform.lifecycle import lifecycle_coordinator
 from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence
@@ -397,6 +398,14 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                     await asyncio.to_thread(build_provider_network, STATE["data"], STATE)
                     phase["provider_count"] = len(
                         (STATE["data"].get("provider_network") or {}).get("providers") or []
+                    )
+                try:
+                    await asyncio.to_thread(
+                        projection_service.generate, STATE["data"], LEAGUE_ID,
+                    )
+                except Exception:
+                    logger.exception(
+                        "Projection generation failed; canonical intelligence will publish an explicit unavailable state"
                     )
                 with lifecycle_coordinator.phase("valuation_intelligence") as phase:
                     await asyncio.to_thread(build_valuation_intelligence, STATE["data"], STATE)

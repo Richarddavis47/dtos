@@ -67,7 +67,7 @@ def matchup_projection(
     volatile = max(player_edges, default=(0, "Unavailable", ""))
     confidence = round(mean(item["confidence"] for item in summaries)) if summaries else 0
     snapshot_ids = sorted({
-        item.projection_snapshot_id
+        item.projection.projection_snapshot_id
         for roster_values in (values_by_roster or {}).values()
         for item in roster_values.values()
         if item.projection.projection_snapshot_id

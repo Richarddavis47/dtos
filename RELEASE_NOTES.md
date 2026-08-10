@@ -1,4 +1,17 @@
-# DTOS v1.10.0 — Live Projection Intelligence & Forward Production Engine
+# DTOS v1.10.1 — Projection Generation Production-Shape Correction
+
+DTOS now accepts the canonical production player mapping as well as sequence
+fixtures when generating Forward Production. Mapping keys safely supply missing
+player IDs, conflicting identities fail closed, roster duplicates are collapsed,
+and projection health exposes sanitized failure and recovery state.
+
+No projection formula, valuation weight, provider attribution, or matchup logic
+changed. Sleeper remains the canonical league/roster/matchup source, while
+projections remain attributed to the DTOS Forward Production Model.
+
+## Previous release
+
+### DTOS v1.10.0 — Live Projection Intelligence & Forward Production Engine
 
 DTOS now persists a canonical Forward Production snapshot and reuses it across
 Brain decisions, player valuation profiles, and Matchups. Projection evidence is
