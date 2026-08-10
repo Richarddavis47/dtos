@@ -17,13 +17,12 @@ permissions:
 
 jobs:
   cgroup-lifecycle:
-    if: ${{ inputs.scenario == '' || inputs.scenario == 'all' || matrix.scenario == inputs.scenario }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        scenario: [ordinary, archive-warmed, combined-read]
+        scenario: ${{ fromJSON((inputs.scenario == '' || inputs.scenario == 'all') && '["ordinary","archive-warmed","combined-read"]' || format('["{0}"]', inputs.scenario)) }}
     steps:
       - uses: actions/checkout@v4
       - name: Build production-equivalent image
