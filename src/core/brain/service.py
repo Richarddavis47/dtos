@@ -134,6 +134,10 @@ class BrainService:
             "cache": {"mode": "synchronized_snapshot", "hit": True, "read_latency_ms": self.latency_ms},
             "provider_health": self._report.get("availability", "pending"),
             "migration": self.migration(), "diagnostics": self._report.get("diagnostics") or {},
+            "semantic_digest": self._report.get("semantic_generation"),
+            "semantic_metrics": dict(
+                self._data.get("brain_semantic_metrics") or {}
+            ),
             "synchronization": {"external_requests": 0, "request_time_recalculation": False},
         }
 

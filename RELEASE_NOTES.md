@@ -1,3 +1,27 @@
+# DTOS v1.10.5 — Projection Semantic Compatibility Correction
+
+DTOS now treats semantically identical restored and freshly observed projection
+state as one canonical generation. Nested observation timestamps, transport
+latency, request counters, and restore metadata no longer invalidate the Brain or
+its durable Asset Market artifact. Stable values, confidence, evidence,
+ownership, ordering, and provider dependencies remain strict semantic inputs.
+
+Equivalent background refreshes retain the existing Brain report and market
+generation; material projection or valuation changes still publish exactly once.
+Projection, Brain, and Asset Market health expose compact semantic diagnostics
+and explicit change/no-change counters.
+
+## Previous release
+
+# DTOS v1.10.4 — Durable Projection & Asset Market Restoration
+
+DTOS restores the last valid Projection Intelligence snapshot and compatible
+Asset Market artifact from durable storage before background refresh. Original
+freshness timestamps and semantic identities survive restart, while bounded
+manifests and recovery preserve atomic publication.
+
+## Previous release
+
 # DTOS v1.10.3 — Sleeper Projection Provider Redirect Correction
 
 DTOS now safely follows the single relative redirect used by Sleeper's optional,

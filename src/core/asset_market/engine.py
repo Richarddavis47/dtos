@@ -16,6 +16,7 @@ from src.core.brain import brain_service
 from src.core.historical_memory import historical_graph
 from src.core.historical_memory.models import DATABASE_MIGRATION_VERSION
 from src.core.historical_memory.store import HistoricalStore
+from src.core.valuation_intelligence.engine import canonical_semantic_value
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 from src.core.asset_market.read_model import (
     MARKET_READ_MODEL_SCHEMA,
@@ -221,6 +222,7 @@ class AssetMarket:
                 },
             )
         metadata = self._read_model.metadata()
+        self.semantic_identity = dict(metadata.get("semantic_identity") or {})
         stages = list(metadata.get("build_stages") or [])
         if stages:
             before = stages[-1].get("memory_before") or {}
@@ -285,6 +287,10 @@ class AssetMarket:
                 "storage": "bounded_sqlite",
             },
             "memory_admission": dict(self._memory_admission or {}),
+            "semantic_identity": dict(self.semantic_identity),
+            "artifact_brain_semantic_digest": self.semantic_identity.get(
+                "brain_semantic_output_digest"
+            ),
         }
 
     def directory(
@@ -756,7 +762,7 @@ class AssetMarketCache:
                     if key not in {"current_owner", "free_agent"}
                 },
             }).encode())
-            output_hash.update(_digest({
+            output_hash.update(_digest(canonical_semantic_value({
                 "asset_id": asset["asset_id"],
                 "summary": {
                     key: value for key, value in summary.items()
@@ -765,15 +771,15 @@ class AssetMarketCache:
                 "brain": brain_asset,
                 "valuation_layers": asset.get("valuation_layers") or {},
                 "comparison": asset.get("comparison") or {},
-            }).encode())
+            })).encode())
             ownership_hash.update(_digest({
                 "asset_id": asset["asset_id"],
                 "owner": identity.get("current_owner"),
                 "availability": summary["availability"],
             }).encode())
-            provider_hash.update(_digest({
+            provider_hash.update(_digest(canonical_semantic_value({
                 "asset_id": asset["asset_id"], "providers": asset.get("providers") or [],
-            }).encode())
+            })).encode())
             asset_count += 1
         return {
             "asset_universe_digest": universe_hash.hexdigest(),
@@ -933,7 +939,8 @@ class AssetMarketCache:
                 "brain_generation", "valuation_generation", "generated_at",
                 "status", "counts", "duplicate_asset_ids",
                 "build_duration_ms", "read_contract", "search_index",
-                "memory_admission",
+                "memory_admission", "semantic_identity",
+                "artifact_brain_semantic_digest",
             ) if name in health
         }
         with self._lock:

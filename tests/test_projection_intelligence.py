@@ -152,11 +152,35 @@ class ProjectionIntelligenceTests(unittest.TestCase):
         first = self.service.snapshot()
         self.assertFalse(self.service.ingest_sleeper(payload, data=data, league_id="league", season=2026, week=4, response_bytes=100))
         self.assertEqual(self.service.snapshot(), first)
+        health = self.service.health()
+        self.assertEqual(health["projection_refreshes"], 2)
+        self.assertEqual(health["projection_semantic_changes"], 1)
+        self.assertEqual(health["projection_no_change_refreshes"], 1)
+        self.assertEqual(
+            health["projection_semantic_digest"], first["projection_snapshot_id"],
+        )
         row = first["players"]["10"]
         self.assertEqual(row["sources"], ["dtos_forward_production", "sleeper_projections"])
         self.assertIsNotNone(row["sleeper_projection"])
         restored = ProjectionService(Path(self.temporary.name) / "projections.sqlite3")
         self.assertEqual(restored.health()["external_provider"]["semantic_fingerprint"], first["sleeper_evidence_snapshot_id"])
+
+    def test_no_change_refresh_republishes_snapshot_into_replaced_state(self) -> None:
+        original = fixture()
+        payload = [{
+            "player_id": "10", "season": 2026, "week": 4,
+            "player": {"position": "QB"}, "stats": {"pts_ppr": 18},
+        }]
+        self.assertTrue(self.service.ingest_sleeper(
+            payload, data=original, league_id="league", season=2026, week=4,
+        ))
+        snapshot = self.service.snapshot()
+        replacement = fixture()
+        self.assertNotIn("projection_intelligence", replacement)
+        self.assertFalse(self.service.ingest_sleeper(
+            payload, data=replacement, league_id="league", season=2026, week=4,
+        ))
+        self.assertIs(replacement["projection_intelligence"], snapshot)
 
     def test_offline_restart_restores_canonical_snapshot_and_original_freshness(self) -> None:
         data = fixture()

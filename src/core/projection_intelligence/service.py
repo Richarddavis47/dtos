@@ -75,6 +75,8 @@ class ProjectionService:
         self._external_bytes = 0
         self._external_failures = 0
         self._external_semantic_changes = 0
+        self._external_no_change_refreshes = 0
+        self._projection_refreshes = 0
         self._external_state = "Unavailable"
         self._external_last_attempt: str | None = None
         self._external_last_success: str | None = None
@@ -165,6 +167,8 @@ class ProjectionService:
         scoring = data.get("scoring_settings") or (data.get("league") or {}).get("scoring_settings") or {}
         retrieved_at = _now()
         try:
+            with self._lock:
+                self._projection_refreshes += 1
             rows, fingerprint, report = parse_projection_feed(
                 payload, season=season, week=week, scoring=scoring,
             )
@@ -191,8 +195,16 @@ class ProjectionService:
                 self._last_error_type = self._last_error_message = self._last_error_at = None
                 if changed:
                     self._external_semantic_changes += 1
+                else:
+                    self._external_no_change_refreshes += 1
             if changed:
                 self.generate(data, league_id)
+            else:
+                # Synchronization replaces the application data dictionary.
+                # Republish the retained canonical snapshot even when external
+                # evidence is unchanged so downstream Brain inputs cannot
+                # temporarily lose Projection Intelligence.
+                self.restore_into(data)
             return changed
         except Exception as exc:
             self.fail_external_refresh(exc)
@@ -456,6 +468,12 @@ class ProjectionService:
             "external_bytes": self._external_bytes,
             "external_failures": self._external_failures,
             "external_semantic_changes": self._external_semantic_changes,
+            "projection_refreshes": self._projection_refreshes,
+            "projection_semantic_changes": self._external_semantic_changes,
+            "projection_no_change_refreshes": self._external_no_change_refreshes,
+            "projection_semantic_digest": (snapshot or {}).get(
+                "projection_snapshot_id"
+            ),
             "external_provider": {
                 "status": self._external_state,
                 "classification": SOURCE_CLASSIFICATION,

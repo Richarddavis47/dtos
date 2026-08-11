@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.10.5 - Projection Semantic Compatibility Correction
+
+- Canonicalized Brain and Asset Market semantic hashing to exclude only named observational metadata while retaining every value, confidence, ordering, ownership, and provider dependency.
+- Retained the currently published Brain report when a refresh produces the same semantic generation, preventing false downstream invalidation.
+- Added explicit projection refresh/change/no-change metrics and compact Brain/market semantic diagnostics.
+- Preserved v1.10.4 durable projection and Asset Market restoration, including offline startup and original freshness timestamps.
+
 ## v1.10.4 - Durable Projection & Asset Market Restoration
 
 - Anchored the normalized Sleeper cache and Projection Intelligence database to the configured durable storage root on production deployments while preserving every explicit path override.

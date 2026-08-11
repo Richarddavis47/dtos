@@ -372,6 +372,8 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 "calibration_history": previous_data.get("calibration_history") or [],
                 "provider_reliability_history": previous_data.get("provider_reliability_history") or [],
                 "valuation_intelligence_timeline": previous_data.get("valuation_intelligence_timeline") or {},
+                "valuation_intelligence": previous_data.get("valuation_intelligence") or {},
+                "brain_semantic_metrics": previous_data.get("brain_semantic_metrics") or {},
             }
             STATE["data"] = {
                 "league": league,

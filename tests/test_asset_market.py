@@ -228,6 +228,30 @@ class AssetMarketTests(unittest.TestCase):
             "artifact_build",
         )
 
+    def test_nested_observation_metadata_does_not_invalidate_artifact(self) -> None:
+        changed = copy.deepcopy(self.data)
+        asset = changed["valuation_intelligence"]["assets"]["player:10213"]
+        asset["valuation_layers"]["market_value"].update({
+            "generated_at": "2026-08-07T12:34:56+00:00",
+            "retrieved_at": "2026-08-07T12:34:55+00:00",
+        })
+        asset["evidence_sources"][0].update({
+            "observed_at": "2026-08-07T12:34:54+00:00",
+            "latency_ms": 987.654,
+        })
+        restarted = AssetMarketCache()
+        with patch(
+            "src.core.asset_market.engine.build_read_model",
+            side_effect=AssertionError("observation metadata must not rebuild"),
+        ):
+            loaded = restarted.get(
+                changed, self.state, self.store, self.league_id,
+            )
+        self.assertEqual(loaded._artifact_path, self.market._artifact_path)
+        self.assertEqual(
+            restarted.health()["cache"]["artifact_compatibility"], "compatible",
+        )
+
     def test_history_only_observation_reuses_compact_artifact(self) -> None:
         self._append("transaction", "history-only-transaction", None, {
             "transaction_id": "history-only-transaction", "type": "waiver",
