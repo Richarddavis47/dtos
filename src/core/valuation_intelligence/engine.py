@@ -36,6 +36,12 @@ _BRAIN_INPUT_FAMILIES = {
     "calibration_state": ("calibration_state",),
 }
 
+_ASSET_MARKET_REVISION_FAMILIES = (
+    "canonical_player_state",
+    "roster_ownership",
+    "relevant_player_universe",
+)
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -72,6 +78,21 @@ def _semantic_digest(value: Any) -> str:
         separators=(",", ":"), default=str,
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def asset_market_input_revision(
+    semantic_generation: str | None,
+    input_manifest: Mapping[str, Mapping[str, Any]],
+) -> str:
+    """Fingerprint only bounded semantic inputs needed to schedule the market."""
+    payload = {
+        "brain_semantic_generation": semantic_generation,
+        "input_families": {
+            family: (input_manifest.get(family) or {}).get("semantic_digest")
+            for family in _ASSET_MARKET_REVISION_FAMILIES
+        },
+    }
+    return _semantic_digest(payload)
 
 
 def brain_input_manifest(data: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
@@ -283,6 +304,9 @@ def build_valuation_intelligence(data: dict[str, Any], state: dict[str, Any]) ->
         "diagnostics": dict(diagnostics),
         "safety": {"external_requests_during_build": 0, "asset_integrity_score": 100 if len(by_id) == len(universe.assets) else 0, "unsafe_adjustments": 0, "independent_layers_preserved": True},
     }
+    data["asset_market_semantic_revision"] = asset_market_input_revision(
+        result["semantic_generation"], input_manifest,
+    )
     prior = data.get("valuation_intelligence")
     prior = prior if isinstance(prior, dict) else {}
     metrics = data.setdefault("brain_semantic_metrics", {})

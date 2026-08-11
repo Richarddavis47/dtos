@@ -829,3 +829,15 @@ Projection formulas, provider parsing, Brain valuation, FOIS, Matchups, and
 Historical Memory evidence remain unchanged.
 
 ## Previous release
+# DTOS v1.10.8 - Asset Market No-Op Invalidation Correction
+
+DTOS v1.10.8 prevents semantically unchanged synchronization cycles from
+starting Asset Market work. Scheduler identity now follows the retained Brain
+and bounded market dependencies rather than the identity of a newly allocated
+cache dictionary. A final semantic-generation guard also suppresses stale or
+duplicate requests before artifact loading or construction.
+
+Health metrics distinguish rebuild requests, no-op admission skips, and actual
+constructions while preserving existing counters and durable behavior.
+
+## Previous release

@@ -20,6 +20,7 @@ from tools.validation.generate_sanitized_market_fixture import (
     _record_provider,
     fixture_valuation_intelligence,
     material_market_fixture_change,
+    publish_fixture_market_revision,
 )
 from src.core.brain import brain_service
 from src.core.historical_memory.store import HistoricalStore
@@ -693,6 +694,24 @@ class RestartReuseValidationTests(unittest.TestCase):
         )
         self.assertTrue(evidence["attached"])
         self.assertEqual(evidence["changed_canonical_fields"], 1)
+        self.assertNotEqual(
+            evidence["brain_semantic_digest_before"],
+            evidence["brain_semantic_digest_after"],
+        )
+        self.assertNotEqual(
+            evidence["asset_market_semantic_revision_before"],
+            evidence["asset_market_semantic_revision_after"],
+        )
+        self.assertEqual(
+            changed["asset_market_semantic_revision"],
+            evidence["asset_market_semantic_revision_after"],
+        )
+
+    def test_fixture_publication_is_stable_for_identical_semantics(self) -> None:
+        source = {"valuation_intelligence": fixture_valuation_intelligence()}
+        first = publish_fixture_market_revision(source)
+        second = publish_fixture_market_revision(source)
+        self.assertEqual(second, first)
 
     def test_material_fixture_mutation_changes_only_expected_market_row(self) -> None:
         source = {

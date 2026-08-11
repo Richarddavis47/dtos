@@ -698,6 +698,9 @@ class AssetMarketTests(unittest.TestCase):
         changed_data["valuation_intelligence"]["generated_at"] = (
             "2026-08-07T00:00:00+00:00"
         )
+        changed_data["asset_market_semantic_revision"] = (
+            "material-confidence-change"
+        )
         current = cache.get(
             changed_data, self.state, self.store, self.league_id,
         )
@@ -775,6 +778,54 @@ class AssetMarketTests(unittest.TestCase):
         self.assertIs(result, market)
         worker.assert_not_called()
         self.assertEqual(cache.build_count, 1)
+
+    def test_replaced_data_object_with_same_semantic_revision_starts_no_worker(self) -> None:
+        cache = AssetMarketCache()
+        market = cache.get(self.data, self.state, self.store, self.league_id)
+        replacement = copy.deepcopy(self.data)
+        replacement["asset_market_semantic_revision"] = cache.request_marker(
+            self.data, self.state, self.store, self.league_id,
+        )[-1]
+        replacement["valuation_intelligence"]["generated_at"] = "later-observation"
+        before = cache.metrics()
+        with patch.object(cache, "_start_background") as worker:
+            result = cache.get(
+                replacement, {**self.state, "last_sync": "later-sync"},
+                self.store, self.league_id, background=True,
+            )
+            cache.reconcile(
+                replacement, {**self.state, "last_sync": "another-sync"},
+                self.store, self.league_id,
+            )
+        self.assertIs(result, market)
+        worker.assert_not_called()
+        after = cache.metrics()
+        self.assertEqual(after["attempted_constructions"], before["attempted_constructions"])
+        self.assertEqual(after["market_actual_constructions"], before["market_actual_constructions"])
+        self.assertEqual(after["market_generation"], before["market_generation"])
+
+    def test_final_semantic_admission_guard_skips_stale_request_marker(self) -> None:
+        cache = AssetMarketCache()
+        market = cache.get(self.data, self.state, self.store, self.league_id)
+        before = cache.metrics()
+        stale_marker = (*cache._request_marker[:-1], "stale-refresh-marker")
+        cache._start_background(
+            self.data, self.state, self.store, self.league_id, stale_marker,
+        )
+        self.assertTrue(cache.wait_for_background())
+        metrics = cache.metrics()
+        self.assertIs(cache._market, market)
+        self.assertEqual(metrics["market_rebuild_requests_noop"], 1)
+        self.assertEqual(metrics["market_rebuild_requests_semantic"], 0)
+        self.assertEqual(metrics["market_construction_admission_skips"], 1)
+        self.assertEqual(
+            metrics["market_actual_constructions"],
+            before["market_actual_constructions"],
+        )
+        self.assertEqual(metrics["build_count"], 1)
+        self.assertEqual(
+            metrics["durable_publications"], before["durable_publications"],
+        )
 
     def test_semantic_identity_is_deterministic_across_revert(self) -> None:
         baseline = self.cache.artifact_contract(

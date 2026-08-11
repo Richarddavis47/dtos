@@ -95,7 +95,7 @@ class MarketCalibrationDashboardTests(unittest.TestCase):
         build_provider_network(data, state)
         first = audit_market_calibration(data, state, apply=True)
         self.assertEqual(len(data["calibration_history"]), 1)
-        self.assertEqual(data["calibration_history"][0]["model_version"], "1.10.7")
+        self.assertEqual(data["calibration_history"][0]["model_version"], "1.10.8")
         self.assertEqual(calibration_report(data, state)["generated_at"], first["generated_at"])
 
     def test_api_dashboard_categories_recommendations_and_history(self) -> None:

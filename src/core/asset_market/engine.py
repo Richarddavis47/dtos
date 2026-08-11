@@ -16,7 +16,10 @@ from src.core.brain import brain_service
 from src.core.historical_memory import historical_graph
 from src.core.historical_memory.models import DATABASE_MIGRATION_VERSION
 from src.core.historical_memory.store import HistoricalStore
-from src.core.valuation_intelligence.engine import canonical_semantic_value
+from src.core.valuation_intelligence.engine import (
+    asset_market_input_revision,
+    canonical_semantic_value,
+)
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 from src.core.asset_market.read_model import (
     MARKET_READ_MODEL_SCHEMA,
@@ -222,6 +225,7 @@ class AssetMarket:
                 },
             )
         metadata = self._read_model.metadata()
+        self.semantic_generation = str(metadata["generation"])
         self.semantic_identity = dict(metadata.get("semantic_identity") or {})
         stages = list(metadata.get("build_stages") or [])
         if stages:
@@ -608,6 +612,11 @@ class AssetMarketCache:
         self._requested_generation: str | None = None
         self._memory_backoff: dict[str, Any] | None = None
         self.attempted_constructions = 0
+        self.rebuild_requests = 0
+        self.semantic_rebuild_requests = 0
+        self.noop_rebuild_requests = 0
+        self.construction_admission_skips = 0
+        self.actual_constructions = 0
         self._scheduler_state = "idle"
         self._scheduler_last_invoked: str | None = None
         self._scheduler_skip_reason: str | None = None
@@ -677,9 +686,15 @@ class AssetMarketCache:
     ) -> tuple[Any, ...]:
         """Return a bounded process-local input marker without durable reads."""
         valuation = data.get("valuation_intelligence") or {}
+        semantic_revision = data.get("asset_market_semantic_revision")
+        if not semantic_revision:
+            semantic_revision = asset_market_input_revision(
+                valuation.get("semantic_generation"),
+                valuation.get("input_manifest") or {},
+            )
         return (
             VERSION, BUILD_NUMBER, MARKET_SCHEMA_VERSION, league_id,
-            id(store), id(data), valuation.get("schema_version"),
+            id(store), valuation.get("schema_version"), semantic_revision,
         )
 
     def _set_build_phase(self, phase: str) -> None:
@@ -706,8 +721,9 @@ class AssetMarketCache:
             "version": VERSION, "build": BUILD_NUMBER,
             "market_schema": MARKET_SCHEMA_VERSION, "league_id": league_id,
             "store_namespace": store_identity,
-            "sync": state.get("last_sync"),
-            "brain": (data.get("valuation_intelligence") or {}).get("generated_at"),
+            "semantic_revision": cls.request_marker(
+                data, state, store, league_id,
+            )[-1],
             "valuation": (data.get("valuation_intelligence") or {}).get("schema_version"),
         }
         key = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
@@ -988,6 +1004,8 @@ class AssetMarketCache:
                     self.hits += 1
                     return self._market
             def construct() -> AssetMarket:
+                with self._lock:
+                    self.actual_constructions += 1
                 market = AssetMarket(
                     data, state, store, league_id, generation=generation,
                     artifact_path=path, compatibility=contract,
@@ -1037,12 +1055,29 @@ class AssetMarketCache:
         with self._lock:
             if epoch != self._epoch:
                 raise _BuildDeferred("Asset Market generation was superseded.")
+            if (
+                self._market is not None
+                and self._market.store is store
+                and self._market.semantic_generation == generation
+            ):
+                self.hits += 1
+                self.noop_rebuild_requests += 1
+                self.construction_admission_skips += 1
+                self._request_marker = request_marker
+                self._requested_generation = generation
+                self._artifact_compatibility = "compatible"
+                self._refresh_state = "ready"
+                self._build_phase = "ready"
+                self._scheduler_state = "ready"
+                self._scheduler_skip_reason = "semantic_generation_current"
+                return
             if key == self._key and self._market is not None:
                 self.hits += 1
                 self._request_marker = request_marker
                 self._refresh_state = "ready"
                 self._build_phase = "ready"
                 return
+            self.semantic_rebuild_requests += 1
         if artifact is not None:
             self._set_build_phase("loading_artifact")
             market = AssetMarket(
@@ -1142,6 +1177,7 @@ class AssetMarketCache:
             self._refresh_state = "refreshing"
             self.last_error = None
             self.attempted_constructions += 1
+            self.rebuild_requests += 1
             self._scheduler_state = "queued"
             self._scheduler_skip_reason = None
             self._build_thread = threading.Thread(
@@ -1360,6 +1396,11 @@ class AssetMarketCache:
                 "status": "ready" if market is not None else "warming",
                 "build_count": self.build_count, "cache_hits": self.hits,
                 "attempted_constructions": self.attempted_constructions,
+                "market_rebuild_requests": self.rebuild_requests,
+                "market_rebuild_requests_semantic": self.semantic_rebuild_requests,
+                "market_rebuild_requests_noop": self.noop_rebuild_requests,
+                "market_construction_admission_skips": self.construction_admission_skips,
+                "market_actual_constructions": self.actual_constructions,
                 "failed_constructions": self.failed_constructions,
                 "last_error": self.last_error,
                 "last_miss_reason": self.last_miss_reason,
