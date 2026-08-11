@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.10.6"
-BUILD_NUMBER = 1106
-RELEASE_CODENAME = "Brain No-Change Regeneration Correction"
+VERSION = "1.10.7"
+BUILD_NUMBER = 1107
+RELEASE_CODENAME = "Freshness Semantic Threshold Correction"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.10.7 - Freshness Semantic Threshold Correction
+
+- Replaced continuously decaying evidence freshness with a shared, versioned,
+  evidence-family-aware tier contract.
+- Preserved exact evidence age for health and diagnostics while stabilizing
+  Brain confidence, provider weights, explanations, and Asset Market identity
+  inside each semantic freshness tier.
+- Added deterministic same-tier, threshold-crossing, immutable-history, and
+  production confidence-drift regression coverage.
+
 ## v1.10.6 - Brain No-Change Regeneration Correction
 
 - Removed raw provider evidence age from Brain semantic identity while retaining every derived confidence, reliability, weight, score, rank, and valuation output as a strict semantic dependency.

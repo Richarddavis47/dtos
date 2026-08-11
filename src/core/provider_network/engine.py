@@ -8,6 +8,7 @@ from time import perf_counter
 from typing import Any
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
+from src.core.freshness import assess_freshness, freshness_policy_manifest
 from src.core.provider_network.contracts import EvidenceObservation
 from src.core.provider_network.registry import EVIDENCE_CONTRACT_VERSION, PROVIDER_REGISTRY_VERSION, provider_registry
 from src.core.provider_network.trades import observed_trades
@@ -18,20 +19,24 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _age_hours(value: str | None) -> float | None:
+def _age_hours(
+    value: str | None, evaluation_time: datetime | None = None,
+) -> float | None:
     if not value:
         return None
     try:
         observed = datetime.fromisoformat(str(value).replace("Z", "+00:00")).astimezone(timezone.utc)
     except ValueError:
         return None
-    return round(max(0.0, (datetime.now(timezone.utc) - observed).total_seconds() / 3600), 3)
+    now = evaluation_time or datetime.now(timezone.utc)
+    return round(max(0.0, (now - observed).total_seconds() / 3600), 3)
 
 
 def _reliability(provider: dict[str, Any], *, coverage: float, identity_rate: float, confidence: float, freshness_hours: float | None) -> dict[str, int]:
     prior = int(provider["default_reliability_prior"])
-    freshness_limit = provider.get("expected_freshness_hours")
-    freshness = 50 if freshness_hours is None else max(0, round(100 - (freshness_hours / max(float(freshness_limit or 24), 1)) * 50))
+    freshness = assess_freshness(
+        freshness_hours, provider.get("evidence_family"),
+    ).semantic_weight
     availability = 100 if provider["current_availability"] == "healthy" else 55 if provider["current_availability"] in {"cached_fallback", "waiting"} else 0
     overall = round(prior * .25 + freshness * .2 + min(100, coverage) * .2 + identity_rate * .2 + confidence * .1 + availability * .05)
     overall = max(0, min(100, overall))
@@ -71,13 +76,19 @@ def _consensus(observations: list[EvidenceObservation], reliability: dict[str, d
 def build_provider_network(data: dict[str, Any], state: dict[str, Any]) -> dict[str, Any]:
     """Build once during background synchronization; request handlers read this cache only."""
     started = perf_counter()
-    generated_at = _now()
+    evaluation_time = datetime.now(timezone.utc)
+    generated_at = evaluation_time.isoformat()
     universe_started = perf_counter()
     universe = ValuationUniverse(data, state)
     universe_ms = round((perf_counter() - universe_started) * 1000, 3)
     market_data = data.get("market_data") or {}
     statuses = market_data.get("provider_status") or {}
     registry = provider_registry(statuses)
+    prior_network = data.get("provider_network") or {}
+    prior_providers = {
+        row.get("provider_id"): row for row in prior_network.get("providers") or []
+        if isinstance(row, dict)
+    }
     provider_by_id = {row["provider_id"]: row for row in registry}
     observations: list[EvidenceObservation] = []
     unmatched: dict[str, int] = defaultdict(int)
@@ -104,7 +115,7 @@ def build_provider_network(data: dict[str, Any], state: dict[str, Any]) -> dict[
             provider_value = next((item for item in asset["providers"] if item["provider"] == provider_name), {})
             observed_at = row.get("updated_at") or statuses.get(provider_name, {}).get("last_refresh")
             provider_stamp[provider_id] = observed_at
-            observation = EvidenceObservation(asset_id, provider_id, definition["evidence_category"], float(raw) if raw is not None else None, provider_value.get("normalized_value"), int(row["position_rank"]) if str(row.get("position_rank") or "").isdigit() else None, int(row["rank"]) if str(row.get("rank") or "").isdigit() else None, str(row.get("tier")) if row.get("tier") is not None else None, "PPR", "superflex", 12, False, observed_at, observed_at, generated_at, _age_hours(observed_at), 1, int(row.get("confidence") or 65), "available", 100, "exact", str(row.get("source_version") or "current"), definition["official_source_url"], definition["evidence_family"], definition["redistribution"] in {"open_data_attributed", "derived_and_attributed", "derived"})
+            observation = EvidenceObservation(asset_id, provider_id, definition["evidence_category"], float(raw) if raw is not None else None, provider_value.get("normalized_value"), int(row["position_rank"]) if str(row.get("position_rank") or "").isdigit() else None, int(row["rank"]) if str(row.get("rank") or "").isdigit() else None, str(row.get("tier")) if row.get("tier") is not None else None, "PPR", "superflex", 12, False, observed_at, observed_at, generated_at, _age_hours(observed_at, evaluation_time), 1, int(row.get("confidence") or 65), "available", 100, "exact", str(row.get("source_version") or "current"), definition["official_source_url"], definition["evidence_family"], definition["redistribution"] in {"open_data_attributed", "derived_and_attributed", "derived"})
             observations.append(observation)
             provider_records[provider_id] += 1
             provider_exact[provider_id] += 1
@@ -120,6 +131,13 @@ def build_provider_network(data: dict[str, Any], state: dict[str, Any]) -> dict[
 
     reliability_started = perf_counter()
     reliability: dict[str, dict[str, int]] = {}
+    freshness_metrics: dict[str, dict[str, int]] = defaultdict(
+        lambda: {
+            "freshness_tier_changes": 0,
+            "freshness_same_tier_evaluations": 0,
+            "freshness_semantic_changes": 0,
+        },
+    )
     for definition in registry:
         provider_id = definition["provider_id"]
         records = provider_records[provider_id]
@@ -131,7 +149,20 @@ def build_provider_network(data: dict[str, Any], state: dict[str, Any]) -> dict[
         coverage = round(records * 100 / max(len(universe.assets), 1), 2)
         identity_rate = round(provider_exact[provider_id] * 100 / max(records + unmatched[provider_id], 1), 2) if records or unmatched[provider_id] else 0
         avg_confidence = mean(confidence_values[provider_id]) if confidence_values[provider_id] else definition["default_reliability_prior"]
-        reliability[provider_id] = _reliability(definition, coverage=coverage, identity_rate=identity_rate, confidence=avg_confidence, freshness_hours=_age_hours(provider_stamp.get(provider_id)))
+        provider_age = _age_hours(provider_stamp.get(provider_id), evaluation_time)
+        assessment = assess_freshness(provider_age, definition["evidence_family"])
+        reliability[provider_id] = _reliability(definition, coverage=coverage, identity_rate=identity_rate, confidence=avg_confidence, freshness_hours=provider_age)
+        definition["freshness_assessment"] = assessment.public_dict()
+        prior_assessment = (
+            prior_providers.get(provider_id, {}).get("freshness_assessment") or {}
+        )
+        if prior_assessment:
+            family_metrics = freshness_metrics[definition["evidence_family"]]
+            if prior_assessment.get("tier") == assessment.tier:
+                family_metrics["freshness_same_tier_evaluations"] += 1
+            else:
+                family_metrics["freshness_tier_changes"] += 1
+                family_metrics["freshness_semantic_changes"] += 1
         definition.update({"record_count": records, "coverage_percentage": coverage, "identity_match_rate": identity_rate, "unmatched_records": unmatched[provider_id], "reliability_score": reliability[provider_id]["overall"], "reliability_dimensions": reliability[provider_id], "effective_calibration_weight": round(reliability[provider_id]["overall"] / 100, 3) if definition["current_availability"] == "healthy" else 0.0, "confidence_contribution": round(avg_confidence, 1), "last_successful_refresh": provider_stamp.get(provider_id) or definition.get("last_successful_refresh")})
     reliability_ms = round((perf_counter() - reliability_started) * 1000, 3)
     consensus_started = perf_counter()
@@ -142,6 +173,8 @@ def build_provider_network(data: dict[str, Any], state: dict[str, Any]) -> dict[
         "application_version": VERSION, "application_build": BUILD_NUMBER, "commit": deployment["commit"],
         "provider_registry_version": PROVIDER_REGISTRY_VERSION, "evidence_contract_version": EVIDENCE_CONTRACT_VERSION,
         "generation_timestamp": generated_at, "freshness": universe.freshness, "availability": "available",
+        "freshness_policy": freshness_policy_manifest(),
+        "freshness_metrics": dict(freshness_metrics),
         "providers": registry,
         "provider_dependencies": [{"provider_id": row["provider_id"], "evidence_family": row["evidence_family"], "depends_on": row.get("depends_on") or []} for row in registry],
         "evidence": [row.public_dict() for row in observations],
