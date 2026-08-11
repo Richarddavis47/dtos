@@ -1,4 +1,19 @@
-# DTOS v1.10.6 — Brain No-Change Regeneration Correction
+# DTOS v1.10.7 — Freshness Semantic Threshold Correction
+
+DTOS v1.10.7 makes evidence age semantically stepwise. Exact age remains
+observable, but Brain output changes only at documented evidence-family quality
+boundaries. Same-tier provider refreshes now retain the canonical Brain and
+compatible Asset Market generation; meaningful threshold crossings still
+propagate exactly once.
+
+The policy distinguishes time-sensitive projections, slower dynasty-market
+evidence, league transaction evidence, performance data, and immutable
+historical facts. It is versioned as freshness policy 2.0.
+
+## Previous release
+
+DTOS v1.10.6 introduced bounded Brain input manifests and early semantic
+candidate comparison.
 
 DTOS now distinguishes raw provider-observation age from the derived Brain
 opinion. A periodic refresh that advances `freshness_age_hours` without changing

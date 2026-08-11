@@ -102,7 +102,7 @@ class ValuationIntelligenceTests(unittest.TestCase):
         self.assertEqual(metrics["brain_no_change_regenerations_skipped"], 1)
         self.assertEqual(metrics["brain_changed_asset_count"], 0)
 
-    def test_observation_age_without_derived_change_is_semantic_no_op(self) -> None:
+    def test_same_tier_observation_age_drift_is_semantic_no_op(self) -> None:
         data, state = fixture()
         with patch(
             "src.core.provider_network.engine._age_hours", return_value=0.0,
@@ -110,7 +110,7 @@ class ValuationIntelligenceTests(unittest.TestCase):
             build_provider_network(data, state)
             first = build_valuation_intelligence(data, state)
         with patch(
-            "src.core.provider_network.engine._age_hours", return_value=0.25,
+            "src.core.provider_network.engine._age_hours", return_value=30.0,
         ):
             build_provider_network(data, state)
             second = build_valuation_intelligence(data, state)
@@ -123,7 +123,7 @@ class ValuationIntelligenceTests(unittest.TestCase):
             1,
         )
 
-    def test_material_freshness_effect_still_changes_brain_once(self) -> None:
+    def test_freshness_tier_crossing_changes_brain_once(self) -> None:
         data, state = fixture()
         with patch(
             "src.core.provider_network.engine._age_hours", return_value=0.0,
@@ -131,7 +131,7 @@ class ValuationIntelligenceTests(unittest.TestCase):
             build_provider_network(data, state)
             first = build_valuation_intelligence(data, state)
         with patch(
-            "src.core.provider_network.engine._age_hours", return_value=24.0,
+            "src.core.provider_network.engine._age_hours", return_value=36.0,
         ):
             build_provider_network(data, state)
             changed = build_valuation_intelligence(data, state)
@@ -144,6 +144,57 @@ class ValuationIntelligenceTests(unittest.TestCase):
         self.assertEqual(
             data["brain_semantic_metrics"]["brain_semantic_changes"], 2,
         )
+
+    def test_production_confidence_drift_fixture_is_stable_within_tier(self) -> None:
+        data, state = fixture()
+        with patch(
+            "src.core.provider_network.engine._age_hours", return_value=0.25,
+        ):
+            build_provider_network(data, state)
+            first = build_valuation_intelligence(data, state)
+        with patch(
+            "src.core.provider_network.engine._age_hours", return_value=0.5,
+        ):
+            build_provider_network(data, state)
+            second = build_valuation_intelligence(data, state)
+        self.assertIs(second, first)
+        self.assertEqual(second["summary"]["average_confidence"], first["summary"]["average_confidence"])
+        self.assertEqual(data["brain_semantic_metrics"]["brain_changed_asset_count"], 0)
+
+    def test_exact_age_remains_observable_but_tier_and_weight_are_semantic(self) -> None:
+        data, state = fixture()
+        with patch(
+            "src.core.provider_network.engine._age_hours", return_value=2.5,
+        ):
+            build_provider_network(data, state)
+            report = build_valuation_intelligence(data, state)
+        source = report["assets"]["player:1"]["evidence_sources"][0]
+        self.assertEqual(source["freshness_age_hours"], 2.5)
+        self.assertEqual(source["freshness_tier"], "Fresh")
+        self.assertEqual(source["freshness_semantic_weight"], 100)
+        self.assertEqual(source["freshness_policy_version"], "2.0")
+        self.assertIn("Provider evidence freshness is Fresh.", report["assets"]["player:1"]["explanation"])
+
+    def test_provider_freshness_metrics_distinguish_same_tier_and_boundary(self) -> None:
+        data, state = fixture()
+        with patch(
+            "src.core.provider_network.engine._age_hours", return_value=1.0,
+        ):
+            build_provider_network(data, state)
+        with patch(
+            "src.core.provider_network.engine._age_hours", return_value=2.0,
+        ):
+            same = build_provider_network(data, state)
+        family = same["freshness_metrics"]["fantasycalc_observed_market"]
+        self.assertGreater(family["freshness_same_tier_evaluations"], 0)
+        self.assertEqual(family["freshness_semantic_changes"], 0)
+        with patch(
+            "src.core.provider_network.engine._age_hours", return_value=36.0,
+        ):
+            changed = build_provider_network(data, state)
+        family = changed["freshness_metrics"]["fantasycalc_observed_market"]
+        self.assertGreater(family["freshness_tier_changes"], 0)
+        self.assertGreater(family["freshness_semantic_changes"], 0)
 
     def test_brain_input_manifest_is_sanitized_and_deterministic(self) -> None:
         data, _, _ = self.build()
@@ -223,8 +274,8 @@ class ValuationIntelligenceTests(unittest.TestCase):
         for route in routes:
             response = client.get(route)
             self.assertEqual(response.status_code, 200, route)
-        self.assertEqual(response.json()["application_version"], "1.10.6")
-        self.assertEqual(response.json()["application_build"], 1106)
+        self.assertEqual(response.json()["application_version"], "1.10.7")
+        self.assertEqual(response.json()["application_build"], 1107)
         self.assertIsNotNone(client.get("/api/valuation/assets/player:1").json()["valuation_intelligence"])
         dashboard = client.get("/valuation/calibration")
         self.assertEqual(dashboard.status_code, 200)

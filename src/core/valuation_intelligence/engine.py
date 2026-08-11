@@ -9,6 +9,7 @@ from statistics import mean, pstdev
 from typing import Any, Mapping
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
+from src.core.freshness import assess_freshness, freshness_policy_manifest
 from src.core.valuation.universe import ValuationUniverse
 
 INTELLIGENCE_SCHEMA_VERSION = "1.0"
@@ -19,7 +20,8 @@ OBSERVATIONAL_FIELDS = frozenset({
     "freshness_recorded_at", "last_checked_at", "last_attempt",
     "last_success", "last_refresh", "request_id", "latency_ms",
     "cache_hits", "restore_count", "external_requests",
-    "freshness_age_hours", "generation_timestamp",
+    "freshness_age_hours", "age_hours", "generation_timestamp",
+    "hours_until_threshold",
 })
 
 _BRAIN_INPUT_FAMILIES = {
@@ -160,7 +162,11 @@ def _score_asset(asset: dict[str, Any], rows: list[dict[str, Any]], providers: d
     agreement = 35 if not normalized else 70 if len(normalized) == 1 else max(0, min(100, round(100 - (dispersion or 0) / 5)))
     reliabilities = [int((providers.get(provider_id) or {}).get("reliability_score") or 0) for provider_id in provider_ids]
     identity = [int(row.get("identity_match_confidence") or 0) for row in rows]
-    freshness = [max(0, 100 - min(100, round(float(row.get("freshness_age_hours") or 0) * 2))) for row in rows]
+    assessments = [
+        assess_freshness(row.get("freshness_age_hours"), row.get("evidence_family"))
+        for row in rows
+    ]
+    freshness = [assessment.semantic_weight for assessment in assessments]
     sample = min(100, len(rows) * 20)
     confidence = round(
         agreement * .30
@@ -173,12 +179,12 @@ def _score_asset(asset: dict[str, Any], rows: list[dict[str, Any]], providers: d
     confidence = max(0, min(100, confidence))
 
     contributions = []
-    for row in rows:
+    for row, assessment in zip(rows, assessments):
         provider = providers.get(str(row.get("provider_id"))) or {}
         reliability = int(provider.get("reliability_score") or 0)
-        fresh = max(0, 100 - min(100, round(float(row.get("freshness_age_hours") or 0) * 2)))
+        fresh = assessment.semantic_weight
         weight = round(reliability * .45 + fresh * .20 + int(row.get("confidence") or 0) * .20 + int(row.get("identity_match_confidence") or 0) * .15, 2)
-        contributions.append({"provider_id": row.get("provider_id"), "category": _category(str(row.get("evidence_category") or "")), "family": row.get("evidence_family"), "weight": weight, "normalized_value": row.get("normalized_value"), "freshness_age_hours": row.get("freshness_age_hours"), "reliability": reliability})
+        contributions.append({"provider_id": row.get("provider_id"), "category": _category(str(row.get("evidence_category") or "")), "family": row.get("evidence_family"), "weight": weight, "normalized_value": row.get("normalized_value"), "freshness_age_hours": row.get("freshness_age_hours"), "freshness_tier": assessment.tier, "freshness_semantic_weight": assessment.semantic_weight, "next_freshness_tier": assessment.next_tier, "next_freshness_threshold_hours": assessment.next_threshold_hours, "hours_until_threshold": assessment.hours_until_threshold, "freshness_policy_version": assessment.policy_version, "reliability": reliability})
 
     reasons = [f"{len(categories)} of {len(EVIDENCE_CATEGORIES)} evidence categories are represented."]
     reasons.append(f"{len(families)} independent provider {'family' if len(families) == 1 else 'families'} contribute evidence.")
@@ -187,6 +193,11 @@ def _score_asset(asset: dict[str, Any], rows: list[dict[str, Any]], providers: d
         reasons.append("No supported market-provider observation is available; confidence is intentionally limited.")
     if "Trades" in categories:
         reasons.append("Observed trade evidence contributes league-relevant market context.")
+    if assessments:
+        tier_names = sorted({assessment.tier for assessment in assessments})
+        reasons.append(
+            "Provider evidence freshness is " + " / ".join(tier_names) + "."
+        )
     explanation = " ".join(reasons) + f" Overall confidence is {confidence}/100 and coverage is {coverage}/100."
     missing = [name for name in EVIDENCE_CATEGORIES if name not in categories]
     diagnostics = []
@@ -257,6 +268,7 @@ def build_valuation_intelligence(data: dict[str, Any], state: dict[str, Any]) ->
         "application_version": VERSION, "application_build": BUILD_NUMBER, "commit": deployment_metadata()["commit"],
         "schema_version": INTELLIGENCE_SCHEMA_VERSION, "generated_at": generated_at,
         "semantic_generation": _semantic_generation(reports),
+        "freshness_policy": freshness_policy_manifest(),
         "input_manifest": input_manifest,
         "availability": "available",
         "asset_count": len(reports), "assets": by_id, "timeline": timeline,
