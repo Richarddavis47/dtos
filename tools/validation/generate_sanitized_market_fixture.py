@@ -9,6 +9,10 @@ from pathlib import Path
 from typing import Any
 
 from src.core.historical_memory.store import HistoricalStore
+from src.core.valuation_intelligence.engine import (
+    _semantic_generation,
+    asset_market_input_revision,
+)
 
 ASSET_COUNT = 12_322
 HISTORICAL_COUNT = 30_726
@@ -80,6 +84,24 @@ def fixture_valuation_intelligence() -> dict[str, Any]:
     }
 
 
+def publish_fixture_market_revision(data: dict[str, Any]) -> dict[str, str]:
+    """Publish fixture identity through the production semantic-revision contract."""
+    intelligence = data.get("valuation_intelligence")
+    assets = intelligence.get("assets") if isinstance(intelligence, dict) else None
+    if not isinstance(assets, dict) or not assets:
+        raise ValueError("Canonical fixture Brain assets are unavailable.")
+    semantic_generation = _semantic_generation(list(assets.values()))
+    intelligence["semantic_generation"] = semantic_generation
+    revision = asset_market_input_revision(
+        semantic_generation, intelligence.get("input_manifest") or {},
+    )
+    data["asset_market_semantic_revision"] = revision
+    return {
+        "brain_semantic_digest": semantic_generation,
+        "asset_market_semantic_revision": revision,
+    }
+
+
 def material_market_fixture_change(
     current: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -95,7 +117,9 @@ def material_market_fixture_change(
         raise ValueError(
             "Canonical fixture Brain contender value for player:10213 is unavailable."
         )
-    data = json.loads(json.dumps(current))
+    baseline = json.loads(json.dumps(current))
+    before_identity = publish_fixture_market_revision(baseline)
+    data = json.loads(json.dumps(baseline))
     attached = data["valuation_intelligence"]["assets"]["player:10213"][
         "valuation_layers"
     ]["contender_value"]
@@ -104,6 +128,14 @@ def material_market_fixture_change(
     attached["value"] = after
     if attached["value"] != after:
         raise ValueError("Canonical fixture mutation was not attached.")
+    after_identity = publish_fixture_market_revision(data)
+    if (
+        after_identity["brain_semantic_digest"]
+        == before_identity["brain_semantic_digest"]
+        or after_identity["asset_market_semantic_revision"]
+        == before_identity["asset_market_semantic_revision"]
+    ):
+        raise ValueError("Canonical fixture publication did not advance semantics.")
     return data, {
         "asset_id": "player:10213",
         "field": (
@@ -112,6 +144,18 @@ def material_market_fixture_change(
         ),
         "before": before, "after": after, "attached": True,
         "changed_canonical_fields": 1,
+        "brain_semantic_digest_before": before_identity[
+            "brain_semantic_digest"
+        ],
+        "brain_semantic_digest_after": after_identity[
+            "brain_semantic_digest"
+        ],
+        "asset_market_semantic_revision_before": before_identity[
+            "asset_market_semantic_revision"
+        ],
+        "asset_market_semantic_revision_after": after_identity[
+            "asset_market_semantic_revision"
+        ],
     }
 
 
@@ -196,6 +240,7 @@ def _cache(path: Path) -> None:
         "market_data": {"providers": {}, "provider_status": {}},
         "valuation_intelligence": fixture_valuation_intelligence(),
     }
+    publish_fixture_market_revision(data)
     payload = {
         "data": data,
         "last_sync": STAMP,
