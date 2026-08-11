@@ -10,7 +10,11 @@ from fastapi.testclient import TestClient
 from routes.valuation import create_valuation_router
 from src.core.provider_network import build_provider_network
 from src.core.valuation_intelligence import build_valuation_intelligence
-from src.core.valuation_intelligence.engine import resolve_asset_name
+from src.core.valuation_intelligence.engine import (
+    brain_input_manifest,
+    canonical_semantic_value,
+    resolve_asset_name,
+)
 from tests.test_provider_network import fixture
 
 
@@ -91,11 +95,75 @@ class ValuationIntelligenceTests(unittest.TestCase):
         second = build_valuation_intelligence(data, state)
         self.assertIs(second, first)
         self.assertIs(data["valuation_intelligence"], first)
+        metrics = data["brain_semantic_metrics"]
+        self.assertEqual(metrics["brain_regeneration_attempts"], 2)
+        self.assertEqual(metrics["brain_candidates_built"], 2)
+        self.assertEqual(metrics["brain_semantic_changes"], 1)
+        self.assertEqual(metrics["brain_no_change_regenerations_skipped"], 1)
+        self.assertEqual(metrics["brain_changed_asset_count"], 0)
+
+    def test_observation_age_without_derived_change_is_semantic_no_op(self) -> None:
+        data, state = fixture()
+        with patch(
+            "src.core.provider_network.engine._age_hours", return_value=0.0,
+        ):
+            build_provider_network(data, state)
+            first = build_valuation_intelligence(data, state)
+        with patch(
+            "src.core.provider_network.engine._age_hours", return_value=0.25,
+        ):
+            build_provider_network(data, state)
+            second = build_valuation_intelligence(data, state)
+
+        self.assertIs(second, first)
         self.assertEqual(
-            data["brain_semantic_metrics"], {
-                "brain_semantic_changes": 1,
-                "brain_no_change_regenerations_skipped": 1,
-            },
+            data["brain_semantic_metrics"][
+                "brain_no_change_regenerations_skipped"
+            ],
+            1,
+        )
+
+    def test_material_freshness_effect_still_changes_brain_once(self) -> None:
+        data, state = fixture()
+        with patch(
+            "src.core.provider_network.engine._age_hours", return_value=0.0,
+        ):
+            build_provider_network(data, state)
+            first = build_valuation_intelligence(data, state)
+        with patch(
+            "src.core.provider_network.engine._age_hours", return_value=24.0,
+        ):
+            build_provider_network(data, state)
+            changed = build_valuation_intelligence(data, state)
+
+        self.assertIsNot(changed, first)
+        self.assertNotEqual(
+            changed["assets"]["player:1"]["scores"],
+            first["assets"]["player:1"]["scores"],
+        )
+        self.assertEqual(
+            data["brain_semantic_metrics"]["brain_semantic_changes"], 2,
+        )
+
+    def test_brain_input_manifest_is_sanitized_and_deterministic(self) -> None:
+        data, _, _ = self.build()
+        first = brain_input_manifest(data)
+        data["provider_network"]["generation_timestamp"] = "later"
+        second = brain_input_manifest(data)
+        self.assertEqual(
+            first["market_provider_evidence"]["semantic_digest"],
+            second["market_provider_evidence"]["semantic_digest"],
+        )
+        self.assertNotIn("generation_timestamp", str(first))
+
+    def test_freshness_age_is_observational_but_derived_score_is_semantic(self) -> None:
+        self.assertEqual(
+            canonical_semantic_value({"freshness_age_hours": 0.25, "weight": 90}),
+            {"weight": 90},
+        )
+        self.assertNotEqual(
+            canonical_semantic_value({"freshness_age_hours": 0.25, "weight": 90}),
+            canonical_semantic_value({"freshness_age_hours": 0.25, "weight": 89}),
         )
 
     def test_equivalent_provider_refresh_retains_canonical_brain_report(self) -> None:
@@ -155,8 +223,8 @@ class ValuationIntelligenceTests(unittest.TestCase):
         for route in routes:
             response = client.get(route)
             self.assertEqual(response.status_code, 200, route)
-        self.assertEqual(response.json()["application_version"], "1.10.5")
-        self.assertEqual(response.json()["application_build"], 1105)
+        self.assertEqual(response.json()["application_version"], "1.10.6")
+        self.assertEqual(response.json()["application_build"], 1106)
         self.assertIsNotNone(client.get("/api/valuation/assets/player:1").json()["valuation_intelligence"])
         dashboard = client.get("/valuation/calibration")
         self.assertEqual(dashboard.status_code, 200)

@@ -1,3 +1,16 @@
+# DTOS v1.10.6 — Brain No-Change Regeneration Correction
+
+DTOS now distinguishes raw provider-observation age from the derived Brain
+opinion. A periodic refresh that advances `freshness_age_hours` without changing
+confidence, reliability, evidence weight, score, rank, or valuation retains the
+published Brain and compatible Asset Market generation. Once staleness becomes
+material to those derived outputs, normal semantic publication still occurs.
+
+Compact input-family fingerprints and bounded changed-asset diagnostics make
+future semantic differences attributable without exposing raw datasets.
+
+## Previous release
+
 # DTOS v1.10.5 — Projection Semantic Compatibility Correction
 
 DTOS now treats semantically identical restored and freshly observed projection
