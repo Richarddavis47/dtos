@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.10.6 - Brain No-Change Regeneration Correction
+
+- Removed raw provider evidence age from Brain semantic identity while retaining every derived confidence, reliability, weight, score, rank, and valuation output as a strict semantic dependency.
+- Added bounded Brain input-family manifests and per-asset semantic-change diagnostics without exposing raw provider, league, or player datasets.
+- Added explicit regeneration-attempt, candidate, no-change, changed-asset, and downstream-invalidation counters for production acceptance evidence.
+- Preserved projection semantics, valuation formulas, Asset Market construction, FOIS, Matchups, and Historical Memory unchanged.
+
 ## v1.10.5 - Projection Semantic Compatibility Correction
 
 - Canonicalized Brain and Asset Market semantic hashing to exclude only named observational metadata while retaining every value, confidence, ordering, ownership, and provider dependency.

@@ -19,7 +19,20 @@ OBSERVATIONAL_FIELDS = frozenset({
     "freshness_recorded_at", "last_checked_at", "last_attempt",
     "last_success", "last_refresh", "request_id", "latency_ms",
     "cache_hits", "restore_count", "external_requests",
+    "freshness_age_hours", "generation_timestamp",
 })
+
+_BRAIN_INPUT_FAMILIES = {
+    "canonical_player_state": ("normalized_players", "players"),
+    "projection_snapshot": ("projection_intelligence",),
+    "market_provider_evidence": ("provider_network",),
+    "historical_production": ("historical_summary", "historical_progress"),
+    "league_settings": ("league_settings", "scoring_settings", "roster_positions"),
+    "roster_ownership": ("teams", "owners", "pick_ledger", "traded_picks"),
+    "current_nfl_state": ("nfl_state", "week"),
+    "relevant_player_universe": ("relevant_player_universe",),
+    "calibration_state": ("calibration_state",),
+}
 
 
 def _now() -> str:
@@ -49,6 +62,50 @@ def _semantic_generation(assets: list[dict[str, Any]]) -> str:
         separators=(",", ":"), default=str,
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def _semantic_digest(value: Any) -> str:
+    payload = json.dumps(
+        canonical_semantic_value(value), sort_keys=True,
+        separators=(",", ":"), default=str,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def brain_input_manifest(data: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
+    """Return bounded fingerprints for canonical Brain input families."""
+    manifest: dict[str, dict[str, Any]] = {}
+    for family, keys in _BRAIN_INPUT_FAMILIES.items():
+        value = {key: data.get(key) for key in keys if key in data}
+        count = sum(len(item) for item in value.values() if isinstance(item, (dict, list, tuple)))
+        manifest[family] = {
+            "semantic_digest": _semantic_digest(value),
+            "record_count": count,
+            "input_keys": list(keys),
+        }
+    return manifest
+
+
+def _changed_assets(
+    prior: Mapping[str, Any], candidate: Mapping[str, Any], *, limit: int = 25,
+) -> tuple[int, list[dict[str, Any]]]:
+    prior_assets = prior.get("assets") if isinstance(prior.get("assets"), Mapping) else {}
+    candidate_assets = candidate.get("assets") if isinstance(candidate.get("assets"), Mapping) else {}
+    changed: list[dict[str, Any]] = []
+    count = 0
+    for asset_id in sorted(set(prior_assets) | set(candidate_assets)):
+        before = canonical_semantic_value(prior_assets.get(asset_id))
+        after = canonical_semantic_value(candidate_assets.get(asset_id))
+        if before == after:
+            continue
+        count += 1
+        if len(changed) < limit:
+            changed.append({
+                "asset_id": asset_id,
+                "before_digest": _semantic_digest(before),
+                "after_digest": _semantic_digest(after),
+            })
+    return count, changed
 
 
 def _category(name: str) -> str:
@@ -195,10 +252,12 @@ def build_valuation_intelligence(data: dict[str, Any], state: dict[str, Any]) ->
             diagnostics[diagnostic].append(row["asset_id"])
     def ranked(key: str, reverse: bool = True) -> list[str]:
         return [row["asset_id"] for row in sorted(reports, key=lambda item: (item["scores"][key], item["asset_id"]), reverse=reverse)[:25]]
+    input_manifest = brain_input_manifest(data)
     result = {
         "application_version": VERSION, "application_build": BUILD_NUMBER, "commit": deployment_metadata()["commit"],
         "schema_version": INTELLIGENCE_SCHEMA_VERSION, "generated_at": generated_at,
         "semantic_generation": _semantic_generation(reports),
+        "input_manifest": input_manifest,
         "availability": "available",
         "asset_count": len(reports), "assets": by_id, "timeline": timeline,
         "summary": {
@@ -215,15 +274,33 @@ def build_valuation_intelligence(data: dict[str, Any], state: dict[str, Any]) ->
     prior = data.get("valuation_intelligence")
     prior = prior if isinstance(prior, dict) else {}
     metrics = data.setdefault("brain_semantic_metrics", {})
+    metrics.setdefault("brain_regeneration_attempts", 0)
+    metrics.setdefault("brain_candidates_built", 0)
     metrics.setdefault("brain_semantic_changes", 0)
     metrics.setdefault("brain_no_change_regenerations_skipped", 0)
+    metrics.setdefault("brain_changed_asset_count", 0)
+    metrics.setdefault("brain_changed_league_field_count", 0)
+    metrics.setdefault("brain_downstream_invalidations", 0)
+    metrics["brain_regeneration_attempts"] += 1
+    metrics["brain_candidates_built"] += 1
     if (
         prior.get("availability") == "available"
         and prior.get("semantic_generation") == result["semantic_generation"]
     ):
         metrics["brain_no_change_regenerations_skipped"] += 1
+        metrics["brain_changed_asset_count"] = 0
+        metrics["brain_changed_league_field_count"] = 0
         return prior
+    changed_asset_count, changed_assets = _changed_assets(prior, result)
     metrics["brain_semantic_changes"] += 1
+    metrics["brain_changed_asset_count"] = changed_asset_count
+    metrics["brain_changed_league_field_count"] = sum(
+        1 for family, row in input_manifest.items()
+        if (prior.get("input_manifest") or {}).get(family, {}).get("semantic_digest")
+        not in {None, row["semantic_digest"]}
+    )
+    metrics["brain_downstream_invalidations"] += 1
+    metrics["brain_last_changed_assets"] = changed_assets
     data["valuation_intelligence"] = result
     data["valuation_intelligence_timeline"] = timeline
     return result
