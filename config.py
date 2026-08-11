@@ -49,6 +49,7 @@ class Settings:
     data_warehouse_file: Path
     history_database_file: Path
     history_storage_root: Path
+    projection_database_file: Path
     durable_history_required: bool
     enrichment_batch_size: int
     historical_start_season: int
@@ -62,11 +63,23 @@ class Settings:
         log_format = os.getenv("DTOS_LOG_FORMAT", "json").casefold()
         if log_format not in {"json", "text"}:
             raise ValueError("DTOS_LOG_FORMAT must be 'json' or 'text'.")
+        history_storage_root = Path(
+            os.getenv("DTOS_HISTORY_STORAGE_ROOT", "/var/data/dtos")
+        )
+        durable_required = _boolean(
+            "DTOS_DURABLE_HISTORY_REQUIRED",
+            default=bool(os.getenv("RENDER")),
+        )
+        default_cache = (
+            history_storage_root / "dtos_cache.json"
+            if durable_required else Path(gettempdir()) / "dtos_cache.json"
+        )
+        cache_file = Path(os.getenv("DTOS_CACHE_FILE", str(default_cache)))
         return cls(
             league_id=os.getenv("SLEEPER_LEAGUE_ID", "1313066632158924800"),
             sleeper_base=os.getenv("SLEEPER_BASE_URL", "https://api.sleeper.app/v1").rstrip("/"),
             sync_minutes=_integer("SYNC_MINUTES", 15, 5),
-            cache_file=Path(os.getenv("DTOS_CACHE_FILE", str(Path(gettempdir()) / "dtos_cache.json"))),
+            cache_file=cache_file,
             request_timeout=_number("SLEEPER_TIMEOUT", 30, 1),
             log_level=level,
             log_format=log_format,
@@ -74,11 +87,16 @@ class Settings:
             market_cache_ttl=_number("DTOS_MARKET_CACHE_TTL", 3600, 0),
             data_warehouse_file=Path(os.getenv("DTOS_DATA_WAREHOUSE_FILE", str(Path(gettempdir()) / "dtos_data_history.json"))),
             history_database_file=Path(os.getenv("DTOS_HISTORY_DB_FILE", str(Path(gettempdir()) / "dtos_history.sqlite3"))),
-            history_storage_root=Path(os.getenv("DTOS_HISTORY_STORAGE_ROOT", "/var/data/dtos")),
-            durable_history_required=_boolean(
-                "DTOS_DURABLE_HISTORY_REQUIRED",
-                default=bool(os.getenv("RENDER")),
-            ),
+            history_storage_root=history_storage_root,
+            projection_database_file=Path(os.getenv(
+                "DTOS_PROJECTION_DB_FILE",
+                str(
+                    history_storage_root / "dtos_projections.sqlite3"
+                    if durable_required
+                    else cache_file.with_name("dtos_projections.sqlite3")
+                ),
+            )),
+            durable_history_required=durable_required,
             enrichment_batch_size=min(
                 1000, _integer("DTOS_ENRICHMENT_BATCH_SIZE", 250, 25),
             ),
@@ -106,6 +124,7 @@ MARKET_CACHE_TTL = SETTINGS.market_cache_ttl
 DATA_WAREHOUSE_FILE = SETTINGS.data_warehouse_file
 HISTORY_DATABASE_FILE = SETTINGS.history_database_file
 HISTORY_STORAGE_ROOT = SETTINGS.history_storage_root
+PROJECTION_DATABASE_FILE = SETTINGS.projection_database_file
 DURABLE_HISTORY_REQUIRED = SETTINGS.durable_history_required
 ENRICHMENT_BATCH_SIZE = SETTINGS.enrichment_batch_size
 HISTORICAL_START_SEASON = SETTINGS.historical_start_season

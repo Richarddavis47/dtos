@@ -45,6 +45,34 @@ class ConfigurationTests(unittest.TestCase):
     def test_invalid_configuration_fails_fast(self) -> None:
         with patch.dict(os.environ, {"SYNC_MINUTES": "not-a-number"}, clear=False), self.assertRaisesRegex(ValueError, "SYNC_MINUTES"):
             Settings.from_environment()
+
+    def test_render_defaults_keep_cache_and_projection_database_on_durable_root(self) -> None:
+        values = {
+            "RENDER": "true",
+            "DTOS_HISTORY_STORAGE_ROOT": "/var/data/dtos",
+        }
+        with patch.dict(os.environ, values, clear=True):
+            settings = Settings.from_environment()
+        self.assertEqual(settings.cache_file, Path("/var/data/dtos/dtos_cache.json"))
+        self.assertEqual(
+            settings.projection_database_file,
+            Path("/var/data/dtos/dtos_projections.sqlite3"),
+        )
+
+    def test_explicit_cache_and_projection_paths_are_never_replaced(self) -> None:
+        values = {
+            "RENDER": "true",
+            "DTOS_HISTORY_STORAGE_ROOT": "/var/data/dtos",
+            "DTOS_CACHE_FILE": "configured/cache.json",
+            "DTOS_PROJECTION_DB_FILE": "configured/projections.sqlite3",
+        }
+        with patch.dict(os.environ, values, clear=True):
+            settings = Settings.from_environment()
+        self.assertEqual(settings.cache_file, Path("configured/cache.json"))
+        self.assertEqual(
+            settings.projection_database_file,
+            Path("configured/projections.sqlite3"),
+        )
         with patch.dict(os.environ, {"DTOS_LOG_FORMAT": "xml"}, clear=False), self.assertRaisesRegex(ValueError, "DTOS_LOG_FORMAT"):
             Settings.from_environment()
 

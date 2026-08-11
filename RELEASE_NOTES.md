@@ -760,3 +760,20 @@ The durable manifest records deterministic digests for the canonical asset unive
 Asset detail history continues reading the current HistoricalStore, so compatible directory reuse never hides newly captured evidence. Historical capture, immutable record identities, importer 1.2, checkpoint compatibility, canonical `5/6` progress, lifecycle warming, single-flight construction, and atomic publication remain unchanged.
 
 ---
+# DTOS v1.10.4 — Durable Projection & Asset Market Restoration
+
+DTOS now restores its normalized Sleeper state, last valid Sleeper projection
+evidence, canonical Projection Intelligence snapshot, and compatible Asset
+Market artifact from the configured durable production mount before optional
+background refresh. Original projection timestamps and semantic identities are
+preserved across restart.
+
+Asset Market publication now records an atomic checksum manifest. Startup uses
+bounded discovery with explicit pending, compatible, corrupt, incomplete, and
+incompatible outcomes. Health reports restore, construction, candidate, and
+publication counters without exposing private storage paths.
+
+Projection formulas, provider parsing, Brain valuation, FOIS, Matchups, and
+Historical Memory evidence remain unchanged.
+
+## Previous release

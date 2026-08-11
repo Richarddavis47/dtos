@@ -387,6 +387,30 @@ class RestartReuseValidationTests(unittest.TestCase):
         self.assertEqual(result["artifact_loads"], 1)
         self.assertEqual(result["market_constructions"], 0)
 
+    def test_immediate_compatible_artifact_restore_needs_no_warming(self) -> None:
+        result = _restart_reuse(
+            self.identity, self.body,
+            request=lambda _path: (
+                200, self.body, {}, 3.0, 2.0, self.ready_profile,
+            ),
+            event_probe=self._probe, load_observer=self._load,
+            memory_observer=self._memory,
+        )
+        self.assertEqual(result["restore_mode"], "immediate_compatible_artifact")
+        self.assertEqual(result["warming_attempts"], 0)
+        self.assertEqual(result["artifact_loads"], 1)
+        self.assertEqual(result["market_constructions"], 0)
+
+    def test_immediate_ready_without_artifact_load_fails(self) -> None:
+        profile = {**self.ready_profile, "artifact_load_total": 0}
+        with self.assertRaisesRegex(AssertionError, "exactly one durable artifact"):
+            _restart_reuse(
+                self.identity, self.body,
+                request=lambda _path: (200, self.body, {}, 3.0, 2.0, profile),
+                event_probe=self._probe, load_observer=self._load,
+                memory_observer=self._memory,
+            )
+
     def test_timeout(self) -> None:
         clock = _Clock()
         response = _response(503, {"detail": DETAIL}, self.warming_profile)

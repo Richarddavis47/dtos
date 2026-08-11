@@ -11,7 +11,7 @@ from pathlib import Path
 from statistics import mean, pstdev
 from typing import Any
 
-from config import CACHE_FILE
+from config import PROJECTION_DATABASE_FILE
 from src.core.projection_intelligence.sleeper_provider import (
     PARSER_VERSION, SOURCE_CLASSIFICATION, freshness_state, parse_projection_feed,
 )
@@ -61,7 +61,7 @@ def provider_registry() -> list[dict[str, Any]]:
 
 class ProjectionService:
     def __init__(self, database_file: Path | None = None) -> None:
-        self._database_file = database_file or Path(CACHE_FILE).with_name("dtos_projections.sqlite3")
+        self._database_file = database_file or Path(PROJECTION_DATABASE_FILE)
         self._lock = threading.RLock()
         self._snapshot: dict[str, Any] | None = None
         self._generation_state = "pending"
@@ -81,6 +81,8 @@ class ProjectionService:
         self._external_fingerprint: str | None = None
         self._refreshing = False
         self._external_transport: dict[str, Any] = {}
+        self._snapshot_restores = 0
+        self._restore_failures = 0
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:
@@ -97,14 +99,29 @@ class ProjectionService:
             connection.commit()
             row = connection.execute("SELECT payload FROM projection_snapshots ORDER BY generated_at DESC LIMIT 1").fetchone()
             external = connection.execute("SELECT fingerprint, retrieved_at FROM sleeper_projection_snapshots ORDER BY retrieved_at DESC LIMIT 1").fetchone()
-        if row:
-            self._snapshot = json.loads(row["payload"])
-            self._generation_state = "ready"
-            self._last_success_at = self._snapshot.get("generated_at")
-        if external:
-            self._external_fingerprint = external["fingerprint"]
-            self._external_last_success = external["retrieved_at"]
-            self._external_state = freshness_state(external["retrieved_at"])
+        try:
+            if row:
+                self._snapshot = json.loads(row["payload"])
+                self._generation_state = "ready"
+                self._last_success_at = self._snapshot.get("generated_at")
+                self._snapshot_restores = 1
+            if external:
+                self._external_fingerprint = external["fingerprint"]
+                self._external_last_success = external["retrieved_at"]
+                self._external_state = freshness_state(external["retrieved_at"])
+        except (TypeError, ValueError, json.JSONDecodeError):
+            self._snapshot = None
+            self._generation_state = "pending"
+            self._restore_failures += 1
+
+    def restore_into(self, data: dict[str, Any]) -> bool:
+        """Publish the durable canonical snapshot into cached application state."""
+        with self._lock:
+            snapshot = self._snapshot
+        if snapshot is None:
+            return False
+        data["projection_intelligence"] = snapshot
+        return True
 
     def _external_snapshot(self) -> dict[str, Any] | None:
         with closing(self._connect()) as connection:
@@ -434,6 +451,8 @@ class ProjectionService:
             "snapshot_id": (snapshot or {}).get("projection_snapshot_id"), "generated_at": (snapshot or {}).get("generated_at"),
             "players": len(players), "projected_players": available, "coverage": round(available / len(players) * 100, 2) if players else 0,
             "generations": self._generations, "external_requests": self._external_requests,
+            "snapshot_restores": self._snapshot_restores,
+            "restore_failures": self._restore_failures,
             "external_bytes": self._external_bytes,
             "external_failures": self._external_failures,
             "external_semantic_changes": self._external_semantic_changes,
