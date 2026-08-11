@@ -1,3 +1,16 @@
+# DTOS v1.10.3 — Sleeper Projection Provider Redirect Correction
+
+DTOS now safely follows the single relative redirect used by Sleeper's optional,
+undocumented projection service. The policy is scoped only to this provider,
+permits at most three HTTPS redirects to allowlisted Sleeper API hosts, rejects
+loops, missing locations, insecure downgrades, and host escape, and exposes only
+sanitized transport diagnostics.
+
+The projection parser, scoring conversion, consensus model, Brain, valuation,
+FOIS, Matchups, historical contracts, and shared HTTP client are unchanged.
+
+## Previous release
+
 # DTOS v1.10.2 — Sleeper Projection Sync & System-Wide Forward Intelligence
 
 DTOS now treats Sleeper's undocumented bulk weekly projection service as optional

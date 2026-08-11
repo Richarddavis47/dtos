@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.10.3 - Sleeper Projection Provider Redirect Correction
+
+- Added a provider-scoped, HTTPS-only, allowlisted, three-hop redirect policy for the undocumented Sleeper projection feed.
+- Preserved the shared HTTP client, projection parser, semantic snapshot contract, and every downstream intelligence formula unchanged.
+- Added sanitized redirect diagnostics and deterministic regressions for success, loops, excessive chains, missing locations, host escape, downgrade, and final-response failure.
+
 ## v1.10.2 - Sleeper Projection Sync & System-Wide Forward Intelligence
 
 - Added the optional, undocumented Sleeper bulk weekly projection feed as defensively parsed external evidence with a provider kill switch, immutable durable snapshots, freshness, fingerprints, single-flight synchronization, and stale fallback.

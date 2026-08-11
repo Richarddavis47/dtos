@@ -80,6 +80,7 @@ class ProjectionService:
         self._external_last_success: str | None = None
         self._external_fingerprint: str | None = None
         self._refreshing = False
+        self._external_transport: dict[str, Any] = {}
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:
@@ -122,7 +123,9 @@ class ProjectionService:
             self._external_requests += 1
             return True
 
-    def fail_external_refresh(self, exc: Exception) -> None:
+    def fail_external_refresh(
+        self, exc: Exception, *, transport_details: dict[str, Any] | None = None,
+    ) -> None:
         with self._lock:
             self._refreshing = False
             self._external_failures += 1
@@ -133,10 +136,13 @@ class ProjectionService:
                 else "Sleeper projection synchronization failed."
             )
             self._last_error_at = _now()
+            if transport_details is not None:
+                self._external_transport = dict(transport_details)
 
     def ingest_sleeper(
         self, payload: Any, *, data: dict[str, Any], league_id: str, season: int, week: int,
         response_bytes: int = 0,
+        transport_details: dict[str, Any] | None = None,
     ) -> bool:
         """Persist immutable external evidence and regenerate only on semantic change."""
         scoring = data.get("scoring_settings") or (data.get("league") or {}).get("scoring_settings") or {}
@@ -164,6 +170,7 @@ class ProjectionService:
                 self._external_fingerprint = fingerprint
                 self._external_last_success = retrieved_at
                 self._external_state = "Fresh"
+                self._external_transport = dict(transport_details or {})
                 self._last_error_type = self._last_error_message = self._last_error_at = None
                 if changed:
                     self._external_semantic_changes += 1
@@ -438,6 +445,7 @@ class ProjectionService:
                 "last_success": self._external_last_success,
                 "semantic_fingerprint": self._external_fingerprint,
                 "parser_version": PARSER_VERSION,
+                "transport": dict(self._external_transport),
             },
             "last_error_type": self._last_error_type,
             "last_error_message": self._last_error_message,
