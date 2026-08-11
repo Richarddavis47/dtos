@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.8 - Asset Market No-Op Invalidation Correction
+
+- Replaced process-local synchronized-data identity with a bounded semantic
+  Asset Market request revision.
+- Added a final semantic-generation admission guard so stale or duplicate
+  refresh requests cannot enter artifact loading or market construction.
+- Added explicit rebuild-request, admission-skip, and actual-construction
+  metrics for production zero-work verification.
+
 ## v1.10.7 - Freshness Semantic Threshold Correction
 
 - Replaced continuously decaying evidence freshness with a shared, versioned,

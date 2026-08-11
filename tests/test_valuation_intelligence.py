@@ -92,6 +92,7 @@ class ValuationIntelligenceTests(unittest.TestCase):
 
     def test_equivalent_regeneration_retains_canonical_brain_report(self) -> None:
         data, state, first = self.build()
+        revision = data["asset_market_semantic_revision"]
         second = build_valuation_intelligence(data, state)
         self.assertIs(second, first)
         self.assertIs(data["valuation_intelligence"], first)
@@ -101,6 +102,7 @@ class ValuationIntelligenceTests(unittest.TestCase):
         self.assertEqual(metrics["brain_semantic_changes"], 1)
         self.assertEqual(metrics["brain_no_change_regenerations_skipped"], 1)
         self.assertEqual(metrics["brain_changed_asset_count"], 0)
+        self.assertEqual(data["asset_market_semantic_revision"], revision)
 
     def test_same_tier_observation_age_drift_is_semantic_no_op(self) -> None:
         data, state = fixture()
@@ -109,6 +111,7 @@ class ValuationIntelligenceTests(unittest.TestCase):
         ):
             build_provider_network(data, state)
             first = build_valuation_intelligence(data, state)
+            revision = data["asset_market_semantic_revision"]
         with patch(
             "src.core.provider_network.engine._age_hours", return_value=30.0,
         ):
@@ -116,6 +119,7 @@ class ValuationIntelligenceTests(unittest.TestCase):
             second = build_valuation_intelligence(data, state)
 
         self.assertIs(second, first)
+        self.assertEqual(data["asset_market_semantic_revision"], revision)
         self.assertEqual(
             data["brain_semantic_metrics"][
                 "brain_no_change_regenerations_skipped"
@@ -231,6 +235,7 @@ class ValuationIntelligenceTests(unittest.TestCase):
 
     def test_material_change_publishes_one_new_semantic_report(self) -> None:
         data, state, first = self.build()
+        revision = data["asset_market_semantic_revision"]
         data["provider_network"]["evidence"] = [
             row for row in data["provider_network"]["evidence"]
             if row["canonical_asset_id"] != "player:1"
@@ -240,6 +245,7 @@ class ValuationIntelligenceTests(unittest.TestCase):
         self.assertNotEqual(
             changed["semantic_generation"], first["semantic_generation"],
         )
+        self.assertNotEqual(data["asset_market_semantic_revision"], revision)
         self.assertEqual(
             data["brain_semantic_metrics"]["brain_semantic_changes"], 2,
         )
@@ -274,8 +280,8 @@ class ValuationIntelligenceTests(unittest.TestCase):
         for route in routes:
             response = client.get(route)
             self.assertEqual(response.status_code, 200, route)
-        self.assertEqual(response.json()["application_version"], "1.10.7")
-        self.assertEqual(response.json()["application_build"], 1107)
+        self.assertEqual(response.json()["application_version"], "1.10.8")
+        self.assertEqual(response.json()["application_build"], 1108)
         self.assertIsNotNone(client.get("/api/valuation/assets/player:1").json()["valuation_intelligence"])
         dashboard = client.get("/valuation/calibration")
         self.assertEqual(dashboard.status_code, 200)
