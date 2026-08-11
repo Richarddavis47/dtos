@@ -1498,6 +1498,10 @@ def _restart_reuse(
             return {
                 "duration_ms": round((clock() - started) * 1000, 3),
                 "warming_attempts": len(samples), "warming_samples": samples,
+                "restore_mode": (
+                    "immediate_compatible_artifact" if not samples
+                    else "bounded_warming"
+                ),
                 "identity_match": True, "output_equivalent": True,
                 "artifact_loads": profile.get("artifact_load_total"),
                 "market_constructions": profile.get("market_construction_total"),
@@ -1781,10 +1785,7 @@ def main() -> int:
             restart_cycles: list[dict[str, object]] = []
             restart_samples: list[dict[str, object]] = []
             reuse_health: dict[str, object] = {}
-            while (
-                (len(restart_samples) < 10 or len(restart_cycles) < 2)
-                and len(restart_cycles) < 12
-            ):
+            while len(restart_cycles) < 12:
                 process = _start_server(log)
                 _wait_ready()
                 cycle = _restart_reuse(expected_identity, pre_restart_body)
@@ -1798,10 +1799,21 @@ def main() -> int:
                     raise AssertionError("restart reused a different artifact file")
                 if reused_artifact.get("generation") != artifact.get("generation"):
                     raise AssertionError("restart reused a different artifact generation")
-                if len(restart_samples) < 10 or len(restart_cycles) < 2:
+                immediate_cycles = all(
+                    item.get("restore_mode") == "immediate_compatible_artifact"
+                    for item in restart_cycles
+                )
+                enough_warming = len(restart_samples) >= 10
+                if len(restart_cycles) >= 2 and (immediate_cycles or enough_warming):
+                    break
+                if len(restart_cycles) < 12:
                     _stop_server(process)
                     process = None
-            if len(restart_samples) < 10:
+            immediate_cycles = bool(restart_cycles) and all(
+                item.get("restore_mode") == "immediate_compatible_artifact"
+                for item in restart_cycles
+            )
+            if len(restart_samples) < 10 and not immediate_cycles:
                 raise AssertionError(
                     f"only {len(restart_samples)} restart warming samples were captured"
                 )
@@ -1842,9 +1854,22 @@ def main() -> int:
             summary["phases"]["restart_reuse"] = {
                 "timestamp": time.time(), "cycles": restart_cycles,
                 "warming_samples": restart_samples,
-                "server_median_ms": round(statistics.median(restart_server_values), 3),
-                "server_p95_ms": round(_percentile(restart_server_values, 0.95), 3),
-                "server_maximum_ms": round(max(restart_server_values), 3),
+                "restore_mode": (
+                    "immediate_compatible_artifact" if immediate_cycles
+                    else "bounded_warming"
+                ),
+                "server_median_ms": (
+                    round(statistics.median(restart_server_values), 3)
+                    if restart_server_values else None
+                ),
+                "server_p95_ms": (
+                    round(_percentile(restart_server_values, 0.95), 3)
+                    if restart_server_values else None
+                ),
+                "server_maximum_ms": (
+                    round(max(restart_server_values), 3)
+                    if restart_server_values else None
+                ),
                 "generation_match": True, "memory_current": _cgroup("memory.current"),
             }
             summary["phases"]["historical_leaders"] = {
