@@ -165,16 +165,19 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 )
                 projection_payload = None
                 projection_bytes = 0
+                projection_transport = None
                 projection_claimed = projection_service.begin_external_refresh()
                 if projection_claimed:
                     try:
-                        projection_payload, projection_bytes = await SLEEPER_PROJECTION_CLIENT.fetch(
+                        projection_payload, projection_bytes, projection_transport = await SLEEPER_PROJECTION_CLIENT.fetch(
                             client,
                             season=int((nfl_state or {}).get("season") or league.get("season") or utcnow().year),
                             week=matchup_week,
                         )
                     except Exception as exc:
-                        projection_service.fail_external_refresh(exc)
+                        projection_service.fail_external_refresh(
+                            exc, transport_details=SLEEPER_PROJECTION_CLIENT.last_transport,
+                        )
                         logger.warning("Optional Sleeper projection refresh failed: %s", type(exc).__name__)
 
             user_by_id = {str(u.get("user_id")): u for u in users}
@@ -427,6 +430,7 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                             season=int((nfl_state or {}).get("season") or league.get("season") or utcnow().year),
                             week=matchup_week,
                             response_bytes=projection_bytes,
+                            transport_details=projection_transport,
                         )
                     else:
                         await asyncio.to_thread(

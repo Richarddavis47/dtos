@@ -14,6 +14,10 @@ from src.core.projection_intelligence.scoring import fantasy_points
 PROVIDER_ID = "sleeper_unofficial_projections"
 SOURCE_CLASSIFICATION = "Sleeper Unofficial Projection Feed — Optional External Evidence"
 PARSER_VERSION = "1.0"
+TRANSPORT_VERSION = "1.0"
+REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
+ALLOWED_PROJECTION_HOSTS = frozenset({"api.sleeper.app", "api.sleeper.com"})
+MAX_REDIRECTS = 3
 ALLOWED_STATS = frozenset({
     "pass_yd", "pass_td", "pass_int", "pass_2pt", "rush_yd", "rush_td",
     "rush_2pt", "rec", "rec_yd", "rec_td", "rec_2pt", "fum_lost",
@@ -23,6 +27,10 @@ ALLOWED_STATS = frozenset({
 
 class SleeperProjectionSchemaError(ValueError):
     """A sanitized contract error from the undocumented source."""
+
+
+class SleeperProjectionTransportError(RuntimeError):
+    """A sanitized bounded-transport contract failure."""
 
 
 def _digest(value: Any) -> str:
@@ -100,20 +108,71 @@ class SleeperProjectionClient:
 
     base_url: str = "https://api.sleeper.app"
     enabled: bool = True
+    last_transport: dict[str, Any] | None = None
 
     async def fetch(
         self, client: httpx.AsyncClient, *, season: int, week: int,
-    ) -> tuple[Any, int]:
+    ) -> tuple[Any, int, dict[str, Any]]:
         if not self.enabled:
             raise RuntimeError("Sleeper projection provider is disabled by its kill switch.")
         url = f"{self.base_url}/projections/nfl/{season}/{week}"
-        response = await client.get(url, params=[
+        params = [
             ("season_type", "regular"), ("position[]", "QB"),
             ("position[]", "RB"), ("position[]", "WR"),
             ("position[]", "TE"), ("position[]", "FLEX"),
-        ])
-        response.raise_for_status()
-        return response.json(), len(response.content)
+        ]
+        current = httpx.URL(url).copy_merge_params(params)
+        visited: set[str] = set()
+        redirects = 0
+        encountered = False
+        try:
+            while True:
+                marker = str(current)
+                if marker in visited:
+                    raise SleeperProjectionTransportError("Sleeper projection redirect loop detected.")
+                visited.add(marker)
+                response = await client.get(current)
+                if response.status_code not in REDIRECT_STATUSES:
+                    response.raise_for_status()
+                    details = {
+                        "redirect_encountered": encountered,
+                        "redirect_count": redirects,
+                        "final_status": response.status_code,
+                        "final_host_classification": "allowed_sleeper_host",
+                        "transport_version": TRANSPORT_VERSION,
+                    }
+                    self.last_transport = details
+                    return response.json(), len(response.content), details
+                encountered = True
+                location = response.headers.get("location")
+                if not location:
+                    raise SleeperProjectionTransportError(
+                        "Sleeper projection redirect omitted its Location header."
+                    )
+                redirects += 1
+                if redirects > MAX_REDIRECTS:
+                    raise SleeperProjectionTransportError(
+                        "Sleeper projection redirect limit exceeded."
+                    )
+                target = response.url.join(location)
+                if target.scheme != "https":
+                    raise SleeperProjectionTransportError(
+                        "Sleeper projection redirect attempted an insecure transport."
+                    )
+                if target.host not in ALLOWED_PROJECTION_HOSTS:
+                    raise SleeperProjectionTransportError(
+                        "Sleeper projection redirect targeted an unexpected host."
+                    )
+                current = target
+        except Exception:
+            self.last_transport = {
+                "redirect_encountered": encountered,
+                "redirect_count": redirects,
+                "final_status": None,
+                "final_host_classification": "rejected_or_unavailable",
+                "transport_version": TRANSPORT_VERSION,
+            }
+            raise
 
 
 def freshness_state(timestamp: str | None, *, now: datetime | None = None) -> str:
