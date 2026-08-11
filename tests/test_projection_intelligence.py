@@ -158,6 +158,28 @@ class ProjectionIntelligenceTests(unittest.TestCase):
         restored = ProjectionService(Path(self.temporary.name) / "projections.sqlite3")
         self.assertEqual(restored.health()["external_provider"]["semantic_fingerprint"], first["sleeper_evidence_snapshot_id"])
 
+    def test_offline_restart_restores_canonical_snapshot_and_original_freshness(self) -> None:
+        data = fixture()
+        payload = [{
+            "player_id": "10", "season": 2026, "week": 4,
+            "player": {"position": "QB"}, "stats": {"pts_ppr": 18},
+        }]
+        self.service.ingest_sleeper(
+            payload, data=data, league_id="league", season=2026, week=4,
+        )
+        before = self.service.snapshot()
+        before_updated = self.service.health()["external_provider"]["last_success"]
+        restored = ProjectionService(Path(self.temporary.name) / "projections.sqlite3")
+        cached_data: dict = {}
+        self.assertTrue(restored.restore_into(cached_data))
+        self.assertEqual(restored.snapshot(), before)
+        self.assertEqual(cached_data["projection_intelligence"], before)
+        health = restored.health()
+        self.assertEqual(health["snapshot_restores"], 1)
+        self.assertEqual(health["restore_failures"], 0)
+        self.assertEqual(health["external_requests"], 0)
+        self.assertEqual(health["external_provider"]["last_success"], before_updated)
+
     def test_external_failure_retains_snapshot_and_marks_stale(self) -> None:
         data = fixture()
         payload = [{"player_id": "10", "season": 2026, "week": 4, "player": {"position": "QB"}, "stats": {"pts_ppr": 18}}]

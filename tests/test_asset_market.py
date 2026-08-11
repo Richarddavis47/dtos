@@ -186,6 +186,27 @@ class AssetMarketTests(unittest.TestCase):
             health["cache"]["historical_dataset_version_scope"], "artifact_build",
         )
 
+    def test_startup_restore_uses_manifest_and_performs_no_construction(self) -> None:
+        manifest = AssetMarketCache.artifact_manifest_path(self.store)
+        self.assertTrue(manifest.is_file())
+        restarted = AssetMarketCache()
+        with patch(
+            "src.core.asset_market.engine.build_read_model",
+            side_effect=AssertionError("compatible startup restore must not build"),
+        ):
+            self.assertTrue(restarted.restore_compatible(
+                self.data, self.state, self.store, self.league_id,
+            ))
+        health = restarted.health()["cache"]
+        self.assertEqual(health["artifact_compatibility"], "compatible")
+        self.assertEqual(health["artifact_loads"], 1)
+        self.assertEqual(health["attempted_constructions"], 0)
+        self.assertGreaterEqual(health["artifact_candidates"], 1)
+
+    def test_cold_cache_reports_discovery_pending_before_bounded_discovery(self) -> None:
+        health = AssetMarketCache().health()["cache"]
+        self.assertEqual(health["artifact_compatibility"], "discovery_pending")
+
     def test_timestamp_only_sync_and_brain_changes_reuse_artifact(self) -> None:
         changed = copy.deepcopy(self.data)
         changed["valuation_intelligence"]["generated_at"] = (

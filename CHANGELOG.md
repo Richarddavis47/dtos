@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.10.4 - Durable Projection & Asset Market Restoration
+
+- Anchored the normalized Sleeper cache and Projection Intelligence database to the configured durable storage root on production deployments while preserving every explicit path override.
+- Restored the last valid canonical projection snapshot and compatible Asset Market artifact before background provider refresh, without changing projection, Brain, valuation, FOIS, or matchup formulas.
+- Added atomic Asset Market manifests, bounded manifest recovery, explicit discovery states, and restore/publication counters.
+
 ## v1.10.3 - Sleeper Projection Provider Redirect Correction
 
 - Added a provider-scoped, HTTPS-only, allowlisted, three-hop redirect policy for the undocumented Sleeper projection feed.

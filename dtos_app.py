@@ -212,6 +212,12 @@ async def lifespan(_: FastAPI):
         yield
         return
     load_cache()
+    if STATE.get("data"):
+        projection_service.restore_into(STATE["data"])
+        await asyncio.to_thread(
+            asset_market_cache.restore_compatible,
+            STATE["data"], STATE, historical_store, LEAGUE_ID,
+        )
     await asyncio.to_thread(history_progress_contracts, LEAGUE_ID)
     mark_startup_complete(_PROCESS_STARTED)
     if STATE.get("data"):

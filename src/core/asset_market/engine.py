@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sqlite3
 import threading
 import time
@@ -592,7 +593,11 @@ class AssetMarketCache:
         self._build_started_monotonic: float | None = None
         self._build_duration_ms: float | None = None
         self._refresh_state = "idle"
-        self._artifact_compatibility = "artifact_not_found"
+        self._artifact_compatibility = "discovery_pending"
+        self.artifact_candidates = 0
+        self.artifact_loads = 0
+        self.artifact_restore_failures = 0
+        self.durable_publications = 0
         self._request_marker: tuple[Any, ...] | None = None
         self._requested_generation: str | None = None
         self._memory_backoff: dict[str, Any] | None = None
@@ -786,12 +791,67 @@ class AssetMarketCache:
         return store.path.with_name(f".{store.path.stem}.asset-market-{generation[:20]}.sqlite3")
 
     @staticmethod
+    def artifact_manifest_path(store: HistoricalStore) -> Path:
+        return store.path.with_name(f".{store.path.stem}.asset-market-manifest.json")
+
+    @staticmethod
+    def _artifact_checksum(path: Path) -> str:
+        digest = hashlib.sha256()
+        with path.open("rb") as artifact:
+            while chunk := artifact.read(1024 * 1024):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    @classmethod
+    def _publish_artifact_manifest(
+        cls, store: HistoricalStore, artifact: Path, generation: str,
+    ) -> None:
+        manifest = cls.artifact_manifest_path(store)
+        temporary = manifest.with_name(f".{manifest.name}.{os.getpid()}.tmp")
+        payload = {
+            "schema_version": "1.0",
+            "generation": generation,
+            "artifact": artifact.name,
+            "size": artifact.stat().st_size,
+            "sha256": cls._artifact_checksum(artifact),
+            "published_at": datetime.now(timezone.utc).isoformat(),
+        }
+        try:
+            temporary.write_text(
+                json.dumps(payload, sort_keys=True, separators=(",", ":")),
+                encoding="utf-8",
+            )
+            with temporary.open("r+b") as handle:
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, manifest)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    @staticmethod
     def _artifact_candidates(store: HistoricalStore) -> list[Path]:
         pattern = f".{store.path.stem}.asset-market-*.sqlite3"
-        return sorted(
+        discovered = sorted(
             path for path in store.path.parent.glob(pattern)
             if path.is_file() and ".partial" not in path.name
         )
+        manifest = AssetMarketCache.artifact_manifest_path(store)
+        try:
+            payload = json.loads(manifest.read_text(encoding="utf-8"))
+            name = str(payload.get("artifact") or "")
+            candidate = store.path.parent / name
+            if (
+                name == Path(name).name and candidate.is_file()
+                and candidate in discovered
+                and candidate.stat().st_size == int(payload.get("size") or -1)
+                and AssetMarketCache._artifact_checksum(candidate)
+                == payload.get("sha256")
+            ):
+                discovered.remove(candidate)
+                discovered.append(candidate)
+        except (OSError, TypeError, ValueError, json.JSONDecodeError):
+            pass
+        return discovered
 
     @classmethod
     def _discover_artifact(
@@ -861,6 +921,7 @@ class AssetMarketCache:
         self, market: AssetMarket, key: str, store_identity: str,
         request_marker: tuple[Any, ...] | None = None,
         epoch: int | None = None,
+        *, artifact_loaded: bool = False,
     ) -> AssetMarket:
         health = market.health()
         prepared_health = {
@@ -889,6 +950,8 @@ class AssetMarketCache:
             self._scheduler_state = "ready"
             self._scheduler_skip_reason = None
             self._health_metadata = prepared_health
+            if artifact_loaded:
+                self.artifact_loads += 1
         if previous is not None and previous._artifact_path != market._artifact_path:
             try:
                 previous._artifact_path.unlink(missing_ok=True)
@@ -937,6 +1000,9 @@ class AssetMarketCache:
                     })
             if epoch is not None:
                 self._set_build_phase("publishing")
+            self._publish_artifact_manifest(store, path, generation)
+            with self._lock:
+                self.durable_publications += 1
             return self._publish(
                 market, key, store_identity, request_marker, epoch,
             )
@@ -980,6 +1046,7 @@ class AssetMarketCache:
             self._set_build_phase("publishing")
             self._publish(
                 market, key, store_identity, request_marker, epoch,
+                artifact_loaded=True,
             )
         else:
             self._set_build_phase("building")
@@ -1135,6 +1202,50 @@ class AssetMarketCache:
             return False
         return self.begin_warming_guard(data, state, store, league_id)
 
+    def restore_compatible(
+        self, data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str,
+    ) -> bool:
+        """Synchronously restore one compatible durable artifact without building."""
+        if not data:
+            return False
+        with self._lock:
+            self._artifact_compatibility = "discovery_pending"
+        try:
+            request_marker = self.request_marker(data, state, store, league_id)
+            key, store_identity = self.key(data, state, store, league_id)
+            contract = self.artifact_contract(data, state, store, league_id)
+            generation = self.durable_generation(
+                data, state, store, league_id, contract,
+            )
+            candidates = self._artifact_candidates(store)
+            with self._lock:
+                self.artifact_candidates = len(candidates)
+                self._requested_generation = generation
+            artifact, compatibility = self._discover_artifact(
+                store, generation, contract,
+            )
+            with self._lock:
+                self._artifact_compatibility = compatibility
+            if artifact is None:
+                return False
+            market = AssetMarket(
+                data, state, store, league_id, generation=generation,
+                artifact_path=artifact, load_existing=True,
+                compatibility=contract,
+            )
+            self._publish_artifact_manifest(store, artifact, generation)
+            self._publish(
+                market, key, store_identity, request_marker,
+                artifact_loaded=True,
+            )
+            return True
+        except Exception:
+            with self._lock:
+                self.artifact_restore_failures += 1
+                self._artifact_compatibility = "artifact_unreadable"
+            return False
+
     def get(
         self, data: dict[str, Any], state: dict[str, Any],
         store: HistoricalStore, league_id: str, *, background: bool = False,
@@ -1218,6 +1329,7 @@ class AssetMarketCache:
             )
             return self._publish(
                 market, key, store_identity, request_marker,
+                artifact_loaded=True,
             )
         try:
             return self._construct(
@@ -1261,6 +1373,10 @@ class AssetMarketCache:
                 "background_duration_ms": self._build_duration_ms,
                 "refresh_state": self._refresh_state,
                 "artifact_compatibility": self._artifact_compatibility,
+                "artifact_candidates": self.artifact_candidates,
+                "artifact_loads": self.artifact_loads,
+                "artifact_restore_failures": self.artifact_restore_failures,
+                "durable_publications": self.durable_publications,
                 "requested_generation": self._requested_generation,
                 "memory_admission_backoff": (
                     {
