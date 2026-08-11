@@ -14,26 +14,39 @@ from src.core.valuation.universe import ValuationUniverse
 INTELLIGENCE_SCHEMA_VERSION = "1.0"
 EVIDENCE_CATEGORIES = ("Market", "Trades", "Performance", "Historical", "League Context", "Team Context", "Projection", "Metadata")
 
+OBSERVATIONAL_FIELDS = frozenset({
+    "generated_at", "updated_at", "retrieved_at", "observed_at",
+    "freshness_recorded_at", "last_checked_at", "last_attempt",
+    "last_success", "last_refresh", "request_id", "latency_ms",
+    "cache_hits", "restore_count", "external_requests",
+})
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def canonical_semantic_value(value: Any) -> Any:
+    """Normalize semantic state without process or observation metadata."""
+    if isinstance(value, dict):
+        return {
+            key: canonical_semantic_value(item)
+            for key, item in sorted(value.items())
+            if key not in OBSERVATIONAL_FIELDS
+        }
+    if isinstance(value, (list, tuple)):
+        return [canonical_semantic_value(item) for item in value]
+    if isinstance(value, float):
+        return round(value, 8)
+    return value
+
+
 def _semantic_generation(assets: list[dict[str, Any]]) -> str:
     """Fingerprint canonical intelligence while excluding observation metadata."""
-    def stable(value: Any) -> Any:
-        if isinstance(value, dict):
-            return {
-                key: stable(item)
-                for key, item in value.items()
-                if key not in {"generated_at", "updated_at"}
-            }
-        if isinstance(value, list):
-            return [stable(item) for item in value]
-        return value
 
     payload = json.dumps(
-        stable(assets), sort_keys=True, separators=(",", ":"), default=str,
+        canonical_semantic_value(assets), sort_keys=True,
+        separators=(",", ":"), default=str,
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
 
@@ -199,6 +212,18 @@ def build_valuation_intelligence(data: dict[str, Any], state: dict[str, Any]) ->
         "diagnostics": dict(diagnostics),
         "safety": {"external_requests_during_build": 0, "asset_integrity_score": 100 if len(by_id) == len(universe.assets) else 0, "unsafe_adjustments": 0, "independent_layers_preserved": True},
     }
+    prior = data.get("valuation_intelligence")
+    prior = prior if isinstance(prior, dict) else {}
+    metrics = data.setdefault("brain_semantic_metrics", {})
+    metrics.setdefault("brain_semantic_changes", 0)
+    metrics.setdefault("brain_no_change_regenerations_skipped", 0)
+    if (
+        prior.get("availability") == "available"
+        and prior.get("semantic_generation") == result["semantic_generation"]
+    ):
+        metrics["brain_no_change_regenerations_skipped"] += 1
+        return prior
+    metrics["brain_semantic_changes"] += 1
     data["valuation_intelligence"] = result
     data["valuation_intelligence_timeline"] = timeline
     return result

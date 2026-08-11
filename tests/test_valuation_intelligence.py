@@ -86,6 +86,45 @@ class ValuationIntelligenceTests(unittest.TestCase):
         changed = build_valuation_intelligence(data, state)
         self.assertEqual(len(changed["timeline"]["player:1"]), 2)
 
+    def test_equivalent_regeneration_retains_canonical_brain_report(self) -> None:
+        data, state, first = self.build()
+        second = build_valuation_intelligence(data, state)
+        self.assertIs(second, first)
+        self.assertIs(data["valuation_intelligence"], first)
+        self.assertEqual(
+            data["brain_semantic_metrics"], {
+                "brain_semantic_changes": 1,
+                "brain_no_change_regenerations_skipped": 1,
+            },
+        )
+
+    def test_equivalent_provider_refresh_retains_canonical_brain_report(self) -> None:
+        data, state, first = self.build()
+        build_provider_network(data, state)
+        second = build_valuation_intelligence(data, state)
+        self.assertIs(second, first)
+        self.assertEqual(
+            data["brain_semantic_metrics"][
+                "brain_no_change_regenerations_skipped"
+            ],
+            1,
+        )
+
+    def test_material_change_publishes_one_new_semantic_report(self) -> None:
+        data, state, first = self.build()
+        data["provider_network"]["evidence"] = [
+            row for row in data["provider_network"]["evidence"]
+            if row["canonical_asset_id"] != "player:1"
+        ]
+        changed = build_valuation_intelligence(data, state)
+        self.assertIsNot(changed, first)
+        self.assertNotEqual(
+            changed["semantic_generation"], first["semantic_generation"],
+        )
+        self.assertEqual(
+            data["brain_semantic_metrics"]["brain_semantic_changes"], 2,
+        )
+
     def test_diagnostics_identify_missing_evidence(self) -> None:
         _, _, report = self.build()
         self.assertTrue(report["diagnostics"]["Missing evidence"])
@@ -116,8 +155,8 @@ class ValuationIntelligenceTests(unittest.TestCase):
         for route in routes:
             response = client.get(route)
             self.assertEqual(response.status_code, 200, route)
-        self.assertEqual(response.json()["application_version"], "1.10.4")
-        self.assertEqual(response.json()["application_build"], 1104)
+        self.assertEqual(response.json()["application_version"], "1.10.5")
+        self.assertEqual(response.json()["application_build"], 1105)
         self.assertIsNotNone(client.get("/api/valuation/assets/player:1").json()["valuation_intelligence"])
         dashboard = client.get("/valuation/calibration")
         self.assertEqual(dashboard.status_code, 200)
