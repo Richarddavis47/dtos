@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import tempfile
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -22,6 +24,22 @@ def request(fingerprint: str = "one", viewport: str = "mobile") -> CaptureReques
 
 
 class LiveVisualInspectionTests(unittest.TestCase):
+    def test_application_import_does_not_load_browser_capture_stack(self):
+        script = (
+            "import sys; import dtos_app; "
+            "assert 'src.core.inspection.live_browser' not in sys.modules; "
+            "assert 'playwright.sync_api' not in sys.modules; "
+            "assert 'tools.inspection.capture' not in sys.modules"
+        )
+        completed = subprocess.run(
+            [sys.executable, "-c", script],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+
     def test_capture_is_deduplicated_and_public_png_is_valid(self):
         calls = []
 
