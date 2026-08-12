@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
+from src.core.inspection.live import LiveInspection, external_mirror_policy, matchup_semantic
 
 LIVE_VISUAL_SCHEMA_VERSION = "1.0"
 LIVE_VIEWPORTS = {
@@ -56,6 +57,7 @@ class LiveVisualService:
         self._active: str | None = None
         self._browser_processes = 0
         self._last_error: str | None = None
+        self._required_keys: set[str] = set()
         self._manifest = self._load_manifest()
 
     @property
@@ -88,6 +90,7 @@ class LiveVisualService:
             added = 0
             for request in requests:
                 key = self.capture_key(request.surface_id, request.viewport)
+                self._required_keys.add(key)
                 current = (self._manifest.get("captures") or {}).get(key) or {}
                 identity = (request.surface_id, request.viewport, request.fingerprint)
                 if current.get("fingerprint") == request.fingerprint or identity in pending:
@@ -173,6 +176,7 @@ class LiveVisualService:
 
     def health(self, required: int = 0) -> dict[str, Any]:
         manifest = self.manifest()
+        required = max(required, len(self._required_keys))
         completed = manifest["capture_count"]
         return {
             "status": "complete" if completed >= required and manifest["pending"] == 0 else "pending",
@@ -212,6 +216,47 @@ def matchup_capture_requests(data: dict[str, Any], semantic: Callable[[str], dic
                 human_url=f"/matchups/{matchup_id}",
                 semantic_url=f"/api/inspect/live/matchups/{matchup_id}",
                 viewport=viewport, fingerprint=_digest({"contract": relevant, "viewport": viewport, "version": VERSION}),
+                canonical=canonical,
+            ))
+    return tuple(requests)
+
+
+def live_visual_capture_requests(inspector: LiveInspection) -> tuple[CaptureRequest, ...]:
+    """Derive core and current-matchup captures from canonical registration."""
+    identity = inspector.identity()
+    requests = list(matchup_capture_requests(
+        inspector.data,
+        lambda matchup_id: matchup_semantic(
+            inspector.data, matchup_id, inspector.projection_snapshot,
+        ),
+        identity,
+    ))
+    seen = {request.surface_id for request in requests}
+    for surface in inspector.surfaces:
+        if external_mirror_policy(surface) != "always" or not surface.human_url:
+            continue
+        if surface.surface_id in seen:
+            continue
+        seen.add(surface.surface_id)
+        canonical = {
+            "data_as_of": identity.get("inspection_generated_at"),
+            "projection_snapshot_id": identity.get("projection_snapshot_id"),
+            "brain_snapshot_id": identity.get("brain_snapshot_id"),
+            "market_generation": identity.get("asset_market_generation"),
+        }
+        relevant = {
+            "surface_id": surface.surface_id, "route": surface.route,
+            "semantic_url": surface.semantic_url, "version": VERSION,
+            "projection_snapshot_id": identity.get("projection_snapshot_id"),
+            "brain_snapshot_id": identity.get("brain_snapshot_id"),
+            "market_generation": identity.get("asset_market_generation"),
+        }
+        for viewport in LIVE_VIEWPORTS:
+            requests.append(CaptureRequest(
+                surface_id=surface.surface_id, title=surface.title,
+                human_url=surface.human_url, semantic_url=surface.semantic_url,
+                viewport=viewport,
+                fingerprint=_digest({**relevant, "viewport": viewport}),
                 canonical=canonical,
             ))
     return tuple(requests)
