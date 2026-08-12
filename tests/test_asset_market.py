@@ -356,6 +356,37 @@ class AssetMarketTests(unittest.TestCase):
         self.assertEqual(len(yields), len(chunks))
         self.assertTrue(all(int(chunk["rows"]) <= 1 for chunk in chunks))
 
+    def test_cold_construction_yields_between_bounded_chunks(self) -> None:
+        yields: list[int] = []
+
+        def rows():
+            for sequence in range(5):
+                yield ({
+                    "asset_id": f"player:{sequence}",
+                    "asset_type": "player",
+                    "display_name": f"Player {sequence}",
+                    "availability": "free_agent",
+                    "values": {},
+                }, {"asset_id": f"player:{sequence}"})
+
+        target = Path(self.temp.name) / "cooperative.sqlite3"
+        model = build_read_model(
+            target, "cooperative", rows(), {}, chunk_size=2,
+            yield_control=lambda: yields.append(1),
+        )
+        self.assertEqual(model.asset_count, 5)
+        self.assertEqual(yields, [1, 1, 1])
+
+    def test_semantic_generation_yields_without_changing_digest(self) -> None:
+        expected = self.cache.semantic_identities(self.data, self.state)
+        yields: list[int] = []
+        observed = self.cache.semantic_identities(
+            self.data, self.state, chunk_size=2,
+            yield_control=lambda: yields.append(1),
+        )
+        self.assertEqual(observed, expected)
+        self.assertEqual(len(yields), (int(observed["asset_count"]) + 1) // 2)
+
     def test_publication_performs_no_bulk_summary_reconstruction(self) -> None:
         published = AssetMarketCache()
         with patch.object(

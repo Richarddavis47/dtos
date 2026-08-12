@@ -403,8 +403,16 @@ class MarketReadModel:
 def build_read_model(
     target: Path, generation: str, rows: Iterator[tuple[dict[str, Any], dict[str, Any]]],
     metadata: dict[str, Any], stage_observer: Callable[[dict[str, Any]], None] | None = None,
+    *, chunk_size: int = 32, yield_control: Callable[[], None] | None = None,
 ) -> MarketReadModel:
     """Stream one generation to SQLite, then publish it atomically."""
+    if chunk_size < 1:
+        raise ValueError("chunk_size must be positive")
+    # A zero-duration sleep can immediately reacquire the interpreter under a
+    # constrained Linux cgroup. A bounded 10 ms handoff gives request-serving
+    # and health-check work a reliable scheduling opportunity without moving
+    # construction onto the request path.
+    release = yield_control or (lambda: time.sleep(0.010))
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_name(f".{target.name}.{os.getpid()}.partial")
     temporary.unlink(missing_ok=True)
@@ -468,6 +476,10 @@ def build_read_model(
                         "canonical_asset_iteration", baseline_events=baseline_events,
                         baseline_effective=baseline_effective,
                     )
+                if count % chunk_size == 0:
+                    release()
+            if count % chunk_size:
+                release()
             observe("canonical_asset_iteration", started, before, count)
             started = time.perf_counter()
             before = enforce_memory_budget(

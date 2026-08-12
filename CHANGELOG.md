@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.11 - Live Visual Inspection
+
+- Added durable, anonymous mobile and desktop screenshots of every current
+  matchup, captured from the real rendered DTOS production routes.
+- Added compact DOM presentation metadata, canonical projection reconciliation,
+  semantic fingerprints, single-flight capture, and last-valid failure behavior.
+- Added automatic post-deployment and material-matchup refresh scheduling while
+  preserving zero-work HTTP reads and v1.10.10 Live Product Inspection.
+
 ## v1.10.10 - Universal Live Product Inspection & Matchup Projection Presentation
 
 - Added a compact anonymous Live Product Inspection root derived automatically

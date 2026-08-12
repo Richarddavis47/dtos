@@ -22,12 +22,17 @@ class _Cache:
         self.starts = 0
         self.lock = threading.Lock()
 
-    def begin_warming_guard(self, *_args) -> bool:
+    def begin_warming_guard(self, *_args, start_background: bool = True) -> bool:
         with self.lock:
             self.calls += 1
+        return self.warming
+
+    def reconcile(self, *_args) -> bool:
+        with self.lock:
             if self.warming and self.starts == 0:
                 self.starts += 1
-        return self.warming
+                return True
+        return False
 
 
 def _app(cache: _Cache) -> FastAPI:
@@ -63,6 +68,41 @@ def _app(cache: _Cache) -> FastAPI:
 
 
 class MarketWarmingMiddlewareTests(unittest.TestCase):
+    def test_worker_is_scheduled_only_after_response_body_is_sent(self) -> None:
+        cache = _Cache()
+        app = _app(cache)
+        events: list[str] = []
+        original_reconcile = cache.reconcile
+
+        def reconcile(*args) -> bool:
+            events.append("worker")
+            return original_reconcile(*args)
+
+        cache.reconcile = reconcile  # type: ignore[method-assign]
+
+        async def receive():
+            return {"type": "http.request", "body": b"", "more_body": False}
+
+        async def send(message):
+            if message["type"] == "http.response.body":
+                events.append("body")
+
+        import asyncio
+        asyncio.run(app(
+            {
+                "type": "http", "asgi": {"version": "3.0"},
+                "http_version": "1.1", "method": "GET", "scheme": "http",
+                "path": "/api/market/assets", "raw_path": b"/api/market/assets",
+                "query_string": b"limit=50", "root_path": "",
+                "headers": [], "client": ("test", 1), "server": ("test", 80),
+            },
+            receive,
+            send,
+        ))
+        self.assertEqual(events[-1], "worker")
+        self.assertGreaterEqual(events.count("body"), 1)
+        self.assertNotIn("worker", events[:-1])
+
     def test_exact_get_and_head_paths_return_compact_contract(self) -> None:
         cache = _Cache()
         client = TestClient(_app(cache))

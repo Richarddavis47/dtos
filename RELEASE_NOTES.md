@@ -1,3 +1,19 @@
+# DTOS v1.10.11 — Live Visual Inspection
+
+DTOS now exposes current rendered product screenshots through the permanent
+`/api/inspect/live/visual` contract. Every current matchup is captured at mobile
+and desktop viewports from its real public route, validated against canonical
+Sleeper and DTOS projections, and served anonymously as a durable PNG.
+
+Capture work is asynchronous, single-flight, fingerprint-deduplicated, and
+preserves the previous valid image after failure. Ordinary inspection requests
+never launch a browser or mutate canonical application state.
+
+See `docs/LIVE_VISUAL_INSPECTION.md` for discovery, freshness, and future-release
+requirements.
+
+## Previous release
+
 # DTOS v1.10.10 — Universal Live Product Inspection & Matchup Projection Presentation
 
 DTOS now has one permanent current-production inspection entry point:
