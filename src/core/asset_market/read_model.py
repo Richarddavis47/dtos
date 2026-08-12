@@ -408,7 +408,11 @@ def build_read_model(
     """Stream one generation to SQLite, then publish it atomically."""
     if chunk_size < 1:
         raise ValueError("chunk_size must be positive")
-    release = yield_control or (lambda: time.sleep(0))
+    # A zero-duration sleep can immediately reacquire the interpreter under a
+    # constrained Linux cgroup. A bounded 1 ms handoff gives request-serving
+    # and health-check work a reliable scheduling opportunity without moving
+    # construction onto the request path.
+    release = yield_control or (lambda: time.sleep(0.001))
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_name(f".{target.name}.{os.getpid()}.partial")
     temporary.unlink(missing_ok=True)
