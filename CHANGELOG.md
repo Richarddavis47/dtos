@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.10.10 - Universal Live Product Inspection & Matchup Projection Presentation
+
+- Added a compact anonymous Live Product Inspection root derived automatically
+  from the canonical FastAPI route registry, with dynamic team, matchup, player,
+  pick, season, API, search, health, and semantic traversal contracts.
+- Added default-on public-surface participation and explicit approved exclusions,
+  shared with existing dynamic DINS page discovery.
+- Added canonical Sleeper and DTOS projection values, differences, explicit
+  missing states, coverage, and reconciled team totals to matchup presentation.
+- Preserved the v1.10.9 projection audit exports and all zero-side-effect lifecycle
+  contracts.
+
 ## v1.10.9 - Projection Intelligence Audit Export
 
 - Added bounded JSON and CSV exports for current matchup starters, canonical

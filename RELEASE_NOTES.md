@@ -1,3 +1,21 @@
+# DTOS v1.10.10 — Universal Live Product Inspection & Matchup Projection Presentation
+
+DTOS now has one permanent current-production inspection entry point:
+`/api/inspect/live`. Public GET routes register automatically through the
+canonical application router, while dynamic collections provide bounded links
+for teams, matchups, relevant players, picks, seasons, FOIS, and APIs. Approved
+machine/internal exclusions are explicit, and the inspection observer does not
+refresh or regenerate canonical DTOS state.
+
+Matchup starter cards now display exact Sleeper and DTOS projections alongside
+actual points, with explicit unavailable states and visible partial-coverage team
+totals. Semantic matchup inspection exposes displayed and canonical values for
+permanent reconciliation checks.
+
+See `docs/LIVE_PRODUCT_INSPECTION.md` for the traversal and developer contract.
+
+## Previous release
+
 # DTOS v1.10.9 — Projection Intelligence Audit Export
 
 DTOS v1.10.9 adds one trustworthy, read-only view of the projection and

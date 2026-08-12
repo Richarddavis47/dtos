@@ -20,6 +20,32 @@ RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[[str, str], HTMLResponse]
 
 
+def _projection_value(value: Any) -> str:
+    return f"{float(value):.2f}" if value is not None else "Unavailable"
+
+
+def _starter_projection_html(row: dict[str, Any] | None) -> str:
+    projection = row or {}
+    sleeper = projection.get("sleeper_projection")
+    dtos = projection.get("dtos_projection")
+    if sleeper is None and dtos is None:
+        return (
+            '<div class="starter-projections unavailable"><span>Projection unavailable</span>'
+            '<details><summary>Technical Details</summary><small>No canonical Sleeper or DTOS projection exists for this starter.</small></details></div>'
+        )
+    difference = None if sleeper is None or dtos is None else float(dtos) - float(sleeper)
+    difference_html = (
+        f'<span class="projection-difference">DTOS {difference:+.2f}</span>'
+        if difference is not None else ""
+    )
+    return (
+        '<div class="starter-projections">'
+        f'<span><small>Sleeper Projection</small><b>{_projection_value(sleeper)}</b></span>'
+        f'<span><small>DTOS Projection</small><b>{_projection_value(dtos)}</b></span>'
+        f'{difference_html}</div>'
+    )
+
+
 def create_matchups_router(
     *,
     ensure_fresh: EnsureFresh,
@@ -81,6 +107,13 @@ def create_matchups_router(
             return page(f"{side_name} — Matchup Awaiting Opponent", f'<a class="back" href="/matchups">← All Matchups</a><div class="card"><h2>{escape(side_name)}</h2><p class="muted">Opponent assignment is not complete. DTOS will update this page after Sleeper assigns both franchises.</p></div>')
         left, right = sides[0], sides[1]
         projected = matchup_projection(d, sides)
+        projected_by_roster = {
+            int(side.get("roster_id") or 0): {
+                str(player.get("player_id")): player
+                for player in side.get("players") or []
+            }
+            for side in projected.get("sides") or []
+        }
         projection_summary = (
             f'<section class="card"><h3>Sleeper vs DTOS Starter Projections</h3><div class="matchup-summary-grid">'
             f'<div class="metric"><b>{projected["sides"][0]["sleeper_total"]:.1f}</b><span>{escape(left["team"])} Sleeper Projection · {escape(projected["sides"][0]["sleeper_coverage"])} {escape(projected["sides"][0]["sleeper_status"])}</span></div>'
@@ -164,11 +197,15 @@ def create_matchups_router(
 
             left_html = (
                 f'<div class="battle-player"><b>{escape(lp["name"])}</b><span>{escape(lp["position"])} · {escape(lp["nfl_team"] or "—")}</span></div>'
-                f'<div class="battle-points">{left_points:.2f}</div><span class="battle-result">{left_result}</span>'
+                f'<div class="battle-points"><small>Actual</small>{left_points:.2f}</div>'
+                f'{_starter_projection_html(projected_by_roster.get(int(left.get("roster_id") or 0), {}).get(str(lp.get("id"))))}'
+                f'<span class="battle-result">{left_result}</span>'
             ) if lp else '<div class="battle-player"><b>Vacant</b><span>No starter assigned</span></div><div class="battle-points">—</div><span class="battle-result">Vacant</span>'
             right_html = (
                 f'<div class="battle-player"><b>{escape(rp["name"])}</b><span>{escape(rp["position"])} · {escape(rp["nfl_team"] or "—")}</span></div>'
-                f'<div class="battle-points">{right_points:.2f}</div><span class="battle-result">{right_result}</span>'
+                f'<div class="battle-points"><small>Actual</small>{right_points:.2f}</div>'
+                f'{_starter_projection_html(projected_by_roster.get(int(right.get("roster_id") or 0), {}).get(str(rp.get("id"))))}'
+                f'<span class="battle-result">{right_result}</span>'
             ) if rp else '<div class="battle-player"><b>Vacant</b><span>No starter assigned</span></div><div class="battle-points">—</div><span class="battle-result">Vacant</span>'
             if left_points > right_points:
                 edge_label = f'{left["owner"]} edge'
