@@ -632,7 +632,13 @@ class AssetMarketCache:
         self.failed_constructions = 0
         self._clock = clock or time.monotonic
         self._memory_observer = memory_observer or memory_snapshot
+        self._semantic_preparation: dict[str, Any] = {}
         self._epoch = 0
+
+    def _record_semantic_preparation(self, metrics: dict[str, Any]) -> None:
+        """Retain one bounded summary without retaining canonical asset data."""
+        with self._lock:
+            self._semantic_preparation = dict(metrics)
 
     def _memory_backoff_active(
         self, request_marker: tuple[Any, ...],
@@ -753,6 +759,7 @@ class AssetMarketCache:
     def artifact_contract(
         data: dict[str, Any], state: dict[str, Any],
         store: HistoricalStore, league_id: str,
+        *, semantic_metrics_observer: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
         return {
             "version": VERSION, "build": BUILD_NUMBER,
@@ -760,18 +767,57 @@ class AssetMarketCache:
             "read_model_schema": MARKET_READ_MODEL_SCHEMA,
             "league_id": league_id,
             "database_identity_digest": _digest(store.database_uuid()),
-            **AssetMarketCache.semantic_identities(data, state),
+            **AssetMarketCache.semantic_identities(
+                data, state, metrics_observer=semantic_metrics_observer,
+            ),
         }
 
     @staticmethod
     def semantic_identities(
         data: dict[str, Any], state: dict[str, Any],
-        *, chunk_size: int = 32, yield_control: Callable[[], None] | None = None,
+        *, chunk_size: int = 32, time_budget_ms: float = 5.0,
+        yield_control: Callable[[], None] | None = None,
+        clock: Callable[[], float] | None = None,
+        chunk_observer: Callable[[dict[str, Any]], None] | None = None,
+        metrics_observer: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
         """Digest exactly the canonical content persisted in compact market rows."""
         if chunk_size < 1:
             raise ValueError("chunk_size must be positive")
-        release = yield_control or (lambda: time.sleep(0.010))
+        if time_budget_ms <= 0:
+            raise ValueError("time_budget_ms must be positive")
+        release = yield_control or (lambda: time.sleep(0))
+        observe_time = clock or time.perf_counter
+        preparation_started = observe_time()
+        chunk_started = preparation_started
+        chunk_rows = 0
+        chunk_count = 0
+        yield_count = 0
+        maximum_chunk_ms = 0.0
+        maximum_rows = 0
+        over_budget_single_assets = 0
+
+        def finish_chunk(*, final: bool = False) -> None:
+            nonlocal chunk_started, chunk_rows, chunk_count, yield_count
+            nonlocal maximum_chunk_ms, maximum_rows
+            if not chunk_rows:
+                return
+            elapsed_ms = max(0.0, (observe_time() - chunk_started) * 1000)
+            chunk_count += 1
+            maximum_chunk_ms = max(maximum_chunk_ms, elapsed_ms)
+            maximum_rows = max(maximum_rows, chunk_rows)
+            if chunk_observer is not None:
+                chunk_observer({
+                    "sequence": chunk_count,
+                    "rows": chunk_rows,
+                    "duration_ms": round(elapsed_ms, 3),
+                    "final": final,
+                })
+            release()
+            yield_count += 1
+            chunk_started = observe_time()
+            chunk_rows = 0
+
         brain = brain_service(data)
         universe = ValuationUniverse.streaming(data, state)
         universe_hash = hashlib.sha256()
@@ -780,6 +826,7 @@ class AssetMarketCache:
         provider_hash = hashlib.sha256()
         asset_count = 0
         for asset in universe.iter_assets():
+            asset_started = observe_time()
             brain_asset = brain.asset(asset["asset_id"])
             summary = _summary(asset, brain_asset)
             identity = asset.get("identity") or {}
@@ -810,11 +857,15 @@ class AssetMarketCache:
                 "asset_id": asset["asset_id"], "providers": asset.get("providers") or [],
             })).encode())
             asset_count += 1
-            if asset_count % chunk_size == 0:
-                release()
-        if asset_count % chunk_size:
-            release()
-        return {
+            chunk_rows += 1
+            asset_ms = max(0.0, (observe_time() - asset_started) * 1000)
+            if asset_ms > time_budget_ms:
+                over_budget_single_assets += 1
+            elapsed_ms = max(0.0, (observe_time() - chunk_started) * 1000)
+            if elapsed_ms >= time_budget_ms or chunk_rows >= chunk_size:
+                finish_chunk()
+        finish_chunk(final=True)
+        identities = {
             "asset_universe_digest": universe_hash.hexdigest(),
             "brain_semantic_output_digest": output_hash.hexdigest(),
             "ownership_dependency_digest": ownership_hash.hexdigest(),
@@ -824,6 +875,21 @@ class AssetMarketCache:
                 (data.get("valuation_intelligence") or {}).get("schema_version")
             ),
         }
+        if metrics_observer is not None:
+            metrics_observer({
+                "chunk_count": chunk_count,
+                "maximum_chunk_duration_ms": round(maximum_chunk_ms, 3),
+                "maximum_assets_per_chunk": maximum_rows,
+                "yield_count": yield_count,
+                "asset_count": asset_count,
+                "time_budget_ms": float(time_budget_ms),
+                "row_limit": chunk_size,
+                "over_budget_single_assets": over_budget_single_assets,
+                "total_duration_ms": round(
+                    max(0.0, (observe_time() - preparation_started) * 1000), 3,
+                ),
+            })
+        return identities
 
     @staticmethod
     def artifact_path(store: HistoricalStore, generation: str) -> Path:
@@ -1056,7 +1122,10 @@ class AssetMarketCache:
         phase: dict[str, Any],
     ) -> None:
         key, store_identity = self.key(data, state, store, league_id)
-        contract = self.artifact_contract(data, state, store, league_id)
+        contract = self.artifact_contract(
+            data, state, store, league_id,
+            semantic_metrics_observer=self._record_semantic_preparation,
+        )
         generation = self.durable_generation(
             data, state, store, league_id, contract,
         )
@@ -1471,6 +1540,7 @@ class AssetMarketCache:
                 "scheduler_state": self._scheduler_state,
                 "scheduler_last_invoked": self._scheduler_last_invoked,
                 "scheduler_skip_reason": self._scheduler_skip_reason,
+                "semantic_preparation": dict(self._semantic_preparation),
                 "lifecycle": lifecycle_coordinator.snapshot(),
             }
 
@@ -1507,6 +1577,7 @@ class AssetMarketCache:
             self._request_marker = None
             self._requested_generation = None
             self._memory_backoff = None
+            self._semantic_preparation = {}
             active = self._build_thread is not None
             self._building = active
             self._build_phase = "superseded" if active else "idle"

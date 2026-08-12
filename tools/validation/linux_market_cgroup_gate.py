@@ -1686,6 +1686,9 @@ def main() -> int:
                 "effective_memory_peak": monitor.effective_peak,
                 "generation": (health.get("cache") or {}).get("market_generation"),
                 "responsiveness": responsiveness,
+                "semantic_preparation": dict(
+                    (health.get("cache") or {}).get("semantic_preparation") or {}
+                ),
             }
             raw_ceiling = RAW_EMERGENCY_MAX if archive_warmed else COLD_MAX
             if cold_peak >= raw_ceiling:

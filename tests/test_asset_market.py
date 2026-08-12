@@ -382,10 +382,72 @@ class AssetMarketTests(unittest.TestCase):
         yields: list[int] = []
         observed = self.cache.semantic_identities(
             self.data, self.state, chunk_size=2,
+            time_budget_ms=60_000,
             yield_control=lambda: yields.append(1),
         )
         self.assertEqual(observed, expected)
         self.assertEqual(len(yields), (int(observed["asset_count"]) + 1) // 2)
+
+    def test_semantic_generation_is_identical_across_time_budgets(self) -> None:
+        reference = self.cache.semantic_identities(
+            self.data, self.state, chunk_size=10_000,
+            time_budget_ms=60_000, yield_control=lambda: None,
+        )
+        configurations = ((1, 0.001), (2, 1.0), (10_000, 60_000))
+        for row_limit, budget_ms in configurations:
+            with self.subTest(row_limit=row_limit, budget_ms=budget_ms):
+                observed = self.cache.semantic_identities(
+                    self.data, self.state, chunk_size=row_limit,
+                    time_budget_ms=budget_ms, yield_control=lambda: None,
+                )
+                self.assertEqual(observed, reference)
+
+    def test_semantic_generation_time_budget_covers_variable_asset_complexity(self) -> None:
+        data = copy.deepcopy(self.data)
+        data["valuation_intelligence"]["assets"]["player:10213"].update({
+            "comparison": {
+                "windows": [{"values": list(range(100))} for _ in range(4)],
+            },
+            "provider_evidence": [
+                {"provider": f"provider-{index}", "values": list(range(40))}
+                for index in range(8)
+            ],
+        })
+        chunks: list[dict[str, object]] = []
+        metrics: list[dict[str, object]] = []
+        yields: list[int] = []
+
+        class StepClock:
+            value = 0.0
+
+            def __call__(self) -> float:
+                self.value += 0.001
+                return self.value
+
+        observed = self.cache.semantic_identities(
+            data, self.state, chunk_size=100, time_budget_ms=5,
+            yield_control=lambda: yields.append(1), clock=StepClock(),
+            chunk_observer=chunks.append, metrics_observer=metrics.append,
+        )
+        reference = self.cache.semantic_identities(
+            data, self.state, chunk_size=10_000, time_budget_ms=60_000,
+            yield_control=lambda: None,
+        )
+        self.assertEqual(observed, reference)
+        self.assertEqual(len(metrics), 1)
+        self.assertEqual(metrics[0]["yield_count"], len(yields))
+        self.assertEqual(metrics[0]["chunk_count"], len(chunks))
+        self.assertLess(int(metrics[0]["maximum_assets_per_chunk"]), 100)
+        self.assertEqual(metrics[0]["over_budget_single_assets"], 0)
+        self.assertTrue(all(int(chunk["rows"]) > 0 for chunk in chunks))
+
+    def test_semantic_generation_rejects_invalid_slice_configuration(self) -> None:
+        with self.assertRaisesRegex(ValueError, "chunk_size"):
+            self.cache.semantic_identities(self.data, self.state, chunk_size=0)
+        with self.assertRaisesRegex(ValueError, "time_budget_ms"):
+            self.cache.semantic_identities(
+                self.data, self.state, time_budget_ms=0,
+            )
 
     def test_publication_performs_no_bulk_summary_reconstruction(self) -> None:
         published = AssetMarketCache()
