@@ -287,6 +287,7 @@ def main() -> int:
         "/api/trades", "/openapi.json",
         "/api/inspect", "/api/inspect/pages", "/api/inspect/site-map",
         "/api/inspect/schema", "/api/inspect/health",
+        "/api/inspect/live", "/api/inspect/live/health",
         "/api/inspect/visual/pages", "/api/inspect/releases/current",
         "/api/valuation", "/api/valuation/status", "/api/valuation/providers",
         "/api/valuation/assets?limit=1", "/api/inspect/valuation",

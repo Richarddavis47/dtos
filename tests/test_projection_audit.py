@@ -27,7 +27,7 @@ class FakeMarket:
         return {"market_generation": "market-1"}
 
     def audit_identity(self):
-        return {"market_generation": "market-1", "brain_snapshot_id": "1.10.9:brain-1"}
+        return {"market_generation": "market-1", "brain_snapshot_id": "1.10.10:brain-1"}
 
     def directory(self, *, limit, sort):
         return {"assets": [{**self.assets[0], "rank": 1}]}
@@ -94,7 +94,7 @@ class ProjectionAuditTests(unittest.TestCase):
         self.assertEqual(result["players"][0]["dtos_minus_sleeper"], 2.09)
         self.assertIsNone(result["players"][1]["canonical_projection"])
         self.assertEqual(result["teams"][0]["sleeper_projected_total"], 17.91)
-        self.assertEqual(result["players"][0]["brain_snapshot_id"], "1.10.9:brain-1")
+        self.assertEqual(result["players"][0]["brain_snapshot_id"], "1.10.10:brain-1")
         self.assertEqual(result["fois"][0]["projection_snapshot_id"], "projection-1")
         self.assertEqual(data, original_data)
         self.assertEqual(snapshot, original_snapshot)

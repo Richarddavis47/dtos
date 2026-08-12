@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
@@ -28,6 +28,7 @@ from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 from src.core.valuation_intelligence import valuation_intelligence_report
 from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
+from src.core.inspection.live import LiveInspection, matchup_semantic
 
 
 def create_inspection_router(
@@ -37,6 +38,8 @@ def create_inspection_router(
     artifact_root: Path | None = None,
     publication_resolver: GitHubPublicationResolver | None = None,
     league_id: str | None = None,
+    projection_service: Any | None = None,
+    market_cache: Any | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/inspect", tags=["inspection"])
     public_base = os.getenv("DTOS_PUBLIC_URL", "https://dtos.onrender.com").rstrip("/")
@@ -48,6 +51,17 @@ def create_inspection_router(
 
     def engine() -> InspectionEngine:
         return InspectionEngine(state)
+
+    def live() -> LiveInspection:
+        data = state.get("data") or {}
+        selected = league_id or str((data.get("league") or {}).get("league_id") or "")
+        scores = fois_service.repository.league(selected, FOIS_MODEL_VERSION) if selected else ()
+        return LiveInspection(
+            state=state, routes=route_provider(), league_id=selected,
+            projection_snapshot=projection_service.snapshot() if projection_service else None,
+            market=market_cache.current() if market_cache else None,
+            fois_scores=tuple(scores),
+        )
 
     def progress_contracts() -> dict[str, Any]:
         selected = league_id or str(
@@ -65,6 +79,135 @@ def create_inspection_router(
     @router.get("/pages")
     async def inspect_pages() -> Any:
         return jsonable_encoder(engine().pages())
+
+    @router.get("/live")
+    async def live_root(refresh: bool = False) -> Any:
+        """Canonical current-production inspection entry point."""
+        # Refresh is inspection-read-model-only; route discovery is derived anew and
+        # never refreshes canonical application state.
+        return jsonable_encoder(live().root())
+
+    @router.get("/live/health")
+    async def live_health() -> Any:
+        return jsonable_encoder(live().health())
+
+    @router.get("/live/surfaces")
+    async def live_surfaces(
+        limit: int = Query(100, ge=1, le=250), offset: int = Query(0, ge=0),
+    ) -> Any:
+        inspector = live()
+        rows = [jsonable_encoder(row) for row in inspector.surfaces]
+        return inspector.page(rows, limit, offset, "surfaces")
+
+    @router.get("/live/surfaces/{surface_id}")
+    async def live_surface(surface_id: str) -> Any:
+        inspector = live()
+        row = next((item for item in inspector.surfaces if item.surface_id == surface_id), None)
+        if row is None:
+            raise HTTPException(404, "Public surface is not registered.")
+        return {"identity": inspector.identity(), "surface": jsonable_encoder(row),
+                "technical_details": {"source": "canonical_fastapi_router", "read_only": True}}
+
+    @router.get("/live/teams")
+    async def live_teams() -> Any:
+        inspector = live()
+        rows = [{
+            "roster_id": row.get("roster_id"), "team_name": row.get("team_name"),
+            "manager": row.get("owner"), "human_url": f"/teams/{row.get('roster_id')}",
+            "semantic_url": f"/api/inspect/team/{row.get('roster_id')}",
+            "front_office_url": f"/front-offices?front_office={row.get('roster_id')}",
+            "fois_url": f"/fois/gms/{row.get('owner_id')}" if row.get("owner_id") else "/fois",
+        } for row in inspector.data.get("teams") or []]
+        return {"identity": inspector.identity(), "count": len(rows), "teams": rows}
+
+    @router.get("/live/matchups")
+    async def live_matchups() -> Any:
+        inspector = live()
+        rows = []
+        for matchup_id, sides in sorted((inspector.data.get("matchups") or {}).items()):
+            rows.append({"matchup_id": str(matchup_id),
+                         "teams": [side.get("team") for side in sides],
+                         "human_url": f"/matchups/{matchup_id}",
+                         "semantic_url": f"/api/inspect/live/matchups/{matchup_id}",
+                         "status": "current"})
+        return {"identity": inspector.identity(), "count": len(rows), "matchups": rows}
+
+    @router.get("/live/matchups/{matchup_id}")
+    async def live_matchup(matchup_id: str) -> Any:
+        inspector = live()
+        result = matchup_semantic(inspector.data, matchup_id, inspector.projection_snapshot)
+        if result is None:
+            raise HTTPException(404, "Current matchup is unavailable.")
+        return {"identity": inspector.identity(), **result}
+
+    @router.get("/live/players")
+    async def live_players(
+        limit: int = Query(100, ge=1, le=250), offset: int = Query(0, ge=0),
+    ) -> Any:
+        inspector = live()
+        owned = {str(player.get("id") or player.get("player_id"))
+                 for team in inspector.data.get("teams") or []
+                 for player in team.get("players") or []}
+        projections = (inspector.projection_snapshot or {}).get("players") or {}
+        relevant = owned | set(projections)
+        rows = []
+        for player_id in sorted(relevant):
+            player = (inspector.data.get("players") or {}).get(player_id) or {}
+            rows.append({"player_id": player_id,
+                         "display_name": player.get("full_name") or player.get("first_name") or player_id,
+                         "position": player.get("position"), "nfl_team": player.get("team"),
+                         "ownership_state": "rostered" if player_id in owned else "free_agent",
+                         "human_url": f"/players/{player_id}",
+                         "semantic_url": f"/api/inspect/player/{player_id}"})
+        return {"identity": inspector.identity(), **inspector.page(rows, limit, offset, "players")}
+
+    @router.get("/live/picks")
+    async def live_picks(
+        limit: int = Query(100, ge=1, le=250), offset: int = Query(0, ge=0),
+    ) -> Any:
+        inspector = live()
+        source = (inspector.data.get("pick_ledger") or []) + (inspector.data.get("traded_picks") or [])
+        rows = []
+        seen = set()
+        for pick in source:
+            pick_id = str(pick.get("canonical_pick_id") or pick.get("pick_id") or
+                          f"PICK-{pick.get('season')}-R{pick.get('round')}-ORIG{pick.get('roster_id')}")
+            if pick_id in seen:
+                continue
+            seen.add(pick_id)
+            rows.append({"canonical_pick_id": pick_id, "season": pick.get("season"),
+                         "round": pick.get("round"), "original_owner": pick.get("roster_id"),
+                         "current_owner": pick.get("current_owner_id") or pick.get("owner_id"),
+                         "human_url": f"/picks/{pick_id}",
+                         "semantic_url": f"/api/inspect/live/picks?query={pick_id}"})
+        return {"identity": inspector.identity(), **inspector.page(rows, limit, offset, "picks")}
+
+    @router.get("/live/seasons")
+    async def live_seasons() -> Any:
+        inspector = live()
+        progress = history_progress_contracts(inspector.league_id)["canonical_history_progress"]
+        rows = [{"season": season, "status": "completed" if season in progress.get("completed_seasons", []) else "pending",
+                 "human_url": f"/history/{season}",
+                 "semantic_url": f"/api/crawl/history/seasons?season={season}"}
+                for season in progress.get("configured_seasons") or []]
+        return {"identity": inspector.identity(), "count": len(rows), "seasons": rows}
+
+    @router.get("/live/apis")
+    async def live_apis(
+        limit: int = Query(100, ge=1, le=250), offset: int = Query(0, ge=0),
+    ) -> Any:
+        inspector = live()
+        rows = [jsonable_encoder(row) for row in inspector.surfaces
+                if row.surface_type == "api" and row.inspection_enabled]
+        return {"identity": inspector.identity(), **inspector.page(rows, limit, offset, "apis")}
+
+    @router.get("/live/search")
+    async def live_search(q: str = Query(..., min_length=1), limit: int = Query(25, ge=1, le=100)) -> Any:
+        inspector = live()
+        needle = q.casefold()
+        rows = [jsonable_encoder(row) for row in inspector.surfaces
+                if needle in f"{row.title} {row.category} {row.route}".casefold()][:limit]
+        return {"identity": inspector.identity(), "query": q, "count": len(rows), "results": rows}
 
     def canonical_trade_discovery() -> dict[str, Any]:
         selected = league_id or str(
