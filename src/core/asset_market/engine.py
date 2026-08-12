@@ -1201,6 +1201,7 @@ class AssetMarketCache:
     def begin_warming_guard(
         self, data: dict[str, Any], state: dict[str, Any],
         store: HistoricalStore, league_id: str,
+        *, start_background: bool = True,
     ) -> bool:
         """Start or observe generation using only bounded in-memory state."""
         invoked_at = datetime.now(timezone.utc).isoformat()
@@ -1238,7 +1239,8 @@ class AssetMarketCache:
                 self._scheduler_state = "blocked"
                 self._scheduler_skip_reason = "lifecycle_prerequisite"
             return market is None or market.store is not store
-        self._start_background(data, state, store, league_id, request_marker)
+        if start_background:
+            self._start_background(data, state, store, league_id, request_marker)
         return True
 
     def reconcile(

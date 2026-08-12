@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
+from starlette.background import BackgroundTask
 from starlette.responses import JSONResponse, Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -38,6 +39,7 @@ class AssetMarketWarmingMiddleware:
             return
         if not self.cache.begin_warming_guard(
             self.data_provider(), self.state, self.store, self.league_id,
+            start_background=False,
         ):
             await self.app(scope, receive, send)
             return
@@ -45,13 +47,18 @@ class AssetMarketWarmingMiddleware:
             "Retry-After": "5",
             "X-DTOS-Market-Refresh": "refreshing",
         }
+        background = BackgroundTask(
+            self.cache.reconcile,
+            self.data_provider(), self.state, self.store, self.league_id,
+        )
         response: Response
         if scope["method"] == "HEAD":
-            response = Response(status_code=503, headers=headers)
+            response = Response(status_code=503, headers=headers, background=background)
         else:
             response = JSONResponse(
                 status_code=503,
                 content={"detail": MARKET_WARMING_DETAIL},
                 headers=headers,
+                background=background,
             )
         await response(scope, receive, send)
