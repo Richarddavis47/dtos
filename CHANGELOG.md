@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.9 - Projection Intelligence Audit Export
+
+- Added bounded JSON and CSV exports for current matchup starters, canonical
+  projections, valuation layers, FOIS context, reconciliation, and snapshot identity.
+- Reused only retained Projection Intelligence, Asset Market, and persisted FOIS
+  state; audit requests cannot synchronize providers or regenerate intelligence.
+- Added explicit unavailable states where no persisted canonical recommendation
+  exists, plus a clearly labeled static screenshot regression fixture.
+
 ## v1.10.8 - Asset Market No-Op Invalidation Correction
 
 - Replaced process-local synchronized-data identity with a bounded semantic

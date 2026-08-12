@@ -447,7 +447,7 @@ class ProjectionService:
                 errors.append(float(expected) - float(row["actual_points"]))
         return {"samples": len(errors), "mae": round(mean(abs(item) for item in errors), 3) if errors else None, "bias": round(mean(errors), 3) if errors else None, "rmse": round(mean(item * item for item in errors) ** .5, 3) if errors else None}
 
-    def health(self) -> dict[str, Any]:
+    def health(self, *, include_accuracy: bool = True) -> dict[str, Any]:
         snapshot = self.snapshot()
         players = (snapshot or {}).get("players") or {}
         by_position: dict[str, int] = {}
@@ -492,7 +492,8 @@ class ProjectionService:
             "eligible_players": len(players),
             "skipped_players": self._normalization.get("malformed_records", 0),
             "stale_projections": 0 if self._generation_state == "ready" else len(players),
-            "accuracy": self.accuracy(), "providers": provider_registry(),
+            "accuracy": self.accuracy() if include_accuracy else None,
+            "providers": provider_registry(),
             "position_coverage": by_position,
         }
 

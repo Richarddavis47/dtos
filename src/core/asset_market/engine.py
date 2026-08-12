@@ -270,6 +270,15 @@ class AssetMarket:
             identity["brain_snapshot_id"] = brain_snapshot_id
         return identity
 
+    def audit_identity(self) -> dict[str, Any]:
+        """Expose retained canonical identities without evaluation or durable reads."""
+        semantic = self._brain.report.get("semantic_generation")
+        return {
+            **self.identity(),
+            "brain_snapshot_id": f"{VERSION}:{semantic or 'pending'}",
+            "brain_semantic_generation": semantic,
+        }
+
     def health(self) -> dict[str, Any]:
         prepared = self._prepared_health
         if prepared is None:
@@ -1454,6 +1463,11 @@ class AssetMarketCache:
                 "scheduler_skip_reason": self._scheduler_skip_reason,
                 "lifecycle": lifecycle_coordinator.snapshot(),
             }
+
+    def current(self) -> AssetMarket | None:
+        """Return the retained immutable model without discovery or construction."""
+        with self._lock:
+            return self._market
 
     def health(self) -> dict[str, Any]:
         """Return bounded retained build metadata without hydrating a model."""

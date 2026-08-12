@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from app_metadata import APPLICATION_NAME, VERSION
 from config import BACKGROUND_START_DELAY, SYNC_MINUTES
 from routes.api import create_api_router
+from routes.audit import create_audit_router
 from routes.crawl import create_crawl_router
 from routes.draft import create_draft_router
 from routes.front_offices import create_front_offices_router
@@ -350,6 +351,12 @@ app.include_router(
 )
 
 app.include_router(create_projections_router(service=projection_service))
+app.include_router(create_audit_router(
+    require_data=require_data,
+    projection_service=projection_service,
+    market_cache=asset_market_cache,
+    fois_service=fois_service,
+))
 
 app.include_router(
     create_crawl_router(

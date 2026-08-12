@@ -1,3 +1,17 @@
+# DTOS v1.10.9 — Projection Intelligence Audit Export
+
+DTOS v1.10.9 adds one trustworthy, read-only view of the projection and
+intelligence numbers already used by the application. The JSON export at
+`/api/audit/projections/current` and its player-oriented CSV companion expose
+current matchup starters, projection differences, team reconciliation,
+valuation layers, FOIS context, provider diagnostics, and canonical snapshot
+identities without triggering synchronization or recalculation.
+
+See `docs/PROJECTION_INTELLIGENCE_AUDIT.md` for the contract and audit-only
+difference thresholds.
+
+## Previous release
+
 # DTOS v1.10.7 — Freshness Semantic Threshold Correction
 
 DTOS v1.10.7 makes evidence age semantically stepwise. Exact age remains
