@@ -39,6 +39,8 @@ REQUIRED_GET_PATHS = (
     "/api/inspect/health",
     "/api/inspect/live",
     "/api/inspect/live/health",
+    "/api/inspect/live/visual",
+    "/api/inspect/live/visual/health",
     "/api/inspect/schema",
     "/api/inspect/market",
     "/api/inspect/visual/pages",

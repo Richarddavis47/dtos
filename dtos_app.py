@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+import os
+from functools import partial
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from html import escape
@@ -14,7 +16,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from app_metadata import APPLICATION_NAME, VERSION
-from config import BACKGROUND_START_DELAY, SYNC_MINUTES
+from config import BACKGROUND_START_DELAY, HISTORY_STORAGE_ROOT, SYNC_MINUTES
 from routes.api import create_api_router
 from routes.audit import create_audit_router
 from routes.crawl import create_crawl_router
@@ -59,10 +61,37 @@ from src.platform.observability import (
 from src.platform.market_warming import AssetMarketWarmingMiddleware
 from src.platform.lifecycle import lifecycle_coordinator
 from src.core.historical_memory import historical_storage_status
+from src.core.inspection.live import LiveInspection, matchup_semantic
+from src.core.inspection.live_browser import capture_page
+from src.core.inspection.live_visual import LiveVisualService, matchup_capture_requests
 from src.ui import DESIGN_SYSTEM_CSS, page_header
 
 _PROCESS_STARTED = perf_counter()
 _INSPECTION_REQUEST: ContextVar[bool] = ContextVar("dtos_inspection_request", default=False)
+_PUBLIC_URL = os.getenv("DTOS_PUBLIC_URL", f"http://127.0.0.1:{os.getenv('PORT', '8000')}")
+live_visual_service = LiveVisualService(
+    HISTORY_STORAGE_ROOT / "live_visual",
+    partial(capture_page, _PUBLIC_URL) if os.getenv("RENDER") or os.getenv("DTOS_LIVE_VISUAL_CAPTURE") else None,
+)
+
+
+def schedule_live_visual_capture() -> int:
+    """Queue semantic changes after canonical maintenance; never block readiness."""
+    if not STATE.get("data"):
+        return 0
+    inspector = LiveInspection(
+        state=STATE, routes=app.routes, league_id=LEAGUE_ID,
+        projection_snapshot=projection_service.snapshot(),
+        market=asset_market_cache.current(), fois_scores=(),
+    )
+    requests = matchup_capture_requests(
+        inspector.data,
+        lambda matchup_id: matchup_semantic(inspector.data, matchup_id, inspector.projection_snapshot),
+        inspector.identity(),
+    )
+    queued = live_visual_service.schedule(requests)
+    runtime_metrics.mark_background("live_visual_capture", "running" if queued else "complete")
+    return queued
 
 
 async def ensure_fresh() -> None:
@@ -93,6 +122,7 @@ async def background_sync() -> None:
         asset_market_cache.reconcile(
             STATE.get("data") or {}, STATE, historical_store, LEAGUE_ID,
         )
+        schedule_live_visual_capture()
 
 
 async def deployment_maintenance(startup_epoch: int | None = None) -> None:
@@ -177,6 +207,7 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     asset_market_cache.reconcile(
         STATE.get("data") or {}, STATE, historical_store, LEAGUE_ID,
     )
+    schedule_live_visual_capture()
 
 
 async def startup_and_periodic_maintenance(startup_epoch: int) -> None:
@@ -410,6 +441,7 @@ app.include_router(
 app.include_router(create_inspection_router(
     state=STATE, route_provider=lambda: app.routes, league_id=LEAGUE_ID,
     projection_service=projection_service, market_cache=asset_market_cache,
+    live_visual_service=live_visual_service,
 ))
 
 app.include_router(

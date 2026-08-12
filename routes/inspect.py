@@ -9,6 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import FileResponse
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from services.history import history_progress_contracts
@@ -29,6 +30,7 @@ from src.core.valuation_intelligence import valuation_intelligence_report
 from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.inspection.live import LiveInspection, matchup_semantic
+from src.core.inspection.live_visual import LIVE_VIEWPORTS, LiveVisualService
 
 
 def create_inspection_router(
@@ -40,6 +42,7 @@ def create_inspection_router(
     league_id: str | None = None,
     projection_service: Any | None = None,
     market_cache: Any | None = None,
+    live_visual_service: LiveVisualService | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/inspect", tags=["inspection"])
     public_base = os.getenv("DTOS_PUBLIC_URL", "https://dtos.onrender.com").rstrip("/")
@@ -85,7 +88,63 @@ def create_inspection_router(
         """Canonical current-production inspection entry point."""
         # Refresh is inspection-read-model-only; route discovery is derived anew and
         # never refreshes canonical application state.
-        return jsonable_encoder(live().root())
+        result = jsonable_encoder(live().root())
+        result["visual_inspection"] = "/api/inspect/live/visual"
+        return result
+
+    @router.get("/live/visual")
+    async def live_visual_index() -> Any:
+        inspector = live()
+        eligibility = [{
+            "surface_id": row.surface_id, "title": row.title,
+            "human_url": row.human_url, "semantic_url": row.semantic_url,
+            "capture_policy": "representative_or_demand" if row.parameterized else "core_after_deployment",
+        } for row in inspector.surfaces
+            if row.inspection_enabled and row.dins_enabled and row.human_url]
+        if live_visual_service is None:
+            return {"status": "pending", "manifest": "/api/inspect/live/visual/manifest",
+                    "health": "/api/inspect/live/visual/health", "captures": [],
+                    "eligible_surfaces": eligibility}
+        result = live_visual_service.manifest()
+        result.update({"kind": "live_visual", "mutable": True,
+                       "manifest": "/api/inspect/live/visual/manifest",
+                       "health": "/api/inspect/live/visual/health",
+                       "projection_audit": "/api/audit/projections/current",
+                       "eligible_surfaces": eligibility})
+        return result
+
+    @router.get("/live/visual/manifest")
+    async def live_visual_manifest() -> Any:
+        return live_visual_service.manifest() if live_visual_service else {
+            "status": "pending", "captures": [], "capture_count": 0,
+        }
+
+    @router.get("/live/visual/health")
+    async def live_visual_health() -> Any:
+        required = len((state.get("data") or {}).get("matchups") or {}) * len(LIVE_VIEWPORTS)
+        return live_visual_service.health(required) if live_visual_service else {
+            "status": "pending", "required_captures": required, "completed": 0,
+            "browser_processes": 0,
+        }
+
+    @router.get("/live/visual/metadata/{surface_id}/{viewport}")
+    async def live_visual_metadata(surface_id: str, viewport: str) -> Any:
+        if viewport not in LIVE_VIEWPORTS:
+            raise HTTPException(404, "Visual viewport is not registered.")
+        row = live_visual_service.capture(surface_id, viewport) if live_visual_service else None
+        if row is None:
+            return {"status": "pending", "surface_id": surface_id, "viewport": viewport,
+                    "last_valid": None, "retry_after_seconds": 5}
+        return row
+
+    @router.get("/live/visual/captures/{surface_id}/{viewport}.png")
+    async def live_visual_png(surface_id: str, viewport: str) -> Any:
+        if viewport not in LIVE_VIEWPORTS:
+            raise HTTPException(404, "Visual viewport is not registered.")
+        path = live_visual_service.screenshot(surface_id, viewport) if live_visual_service else None
+        if path is None:
+            raise HTTPException(404, "No valid visual capture is available yet.")
+        return FileResponse(path, media_type="image/png", headers={"Cache-Control": "public, max-age=60"})
 
     @router.get("/live/health")
     async def live_health() -> Any:
@@ -129,6 +188,10 @@ def create_inspection_router(
                          "teams": [side.get("team") for side in sides],
                          "human_url": f"/matchups/{matchup_id}",
                          "semantic_url": f"/api/inspect/live/matchups/{matchup_id}",
+                         "visual": {
+                             viewport: f"/api/inspect/live/visual/captures/matchups-{matchup_id}/{viewport}.png"
+                             for viewport in LIVE_VIEWPORTS
+                         },
                          "status": "current"})
         return {"identity": inspector.identity(), "count": len(rows), "matchups": rows}
 
@@ -138,7 +201,10 @@ def create_inspection_router(
         result = matchup_semantic(inspector.data, matchup_id, inspector.projection_snapshot)
         if result is None:
             raise HTTPException(404, "Current matchup is unavailable.")
-        return {"identity": inspector.identity(), **result}
+        return {"identity": inspector.identity(), **result, "visual": {
+            viewport: f"/api/inspect/live/visual/captures/matchups-{matchup_id}/{viewport}.png"
+            for viewport in LIVE_VIEWPORTS
+        }, "projection_audit": "/api/audit/projections/current"}
 
     @router.get("/live/players")
     async def live_players(
@@ -207,6 +273,18 @@ def create_inspection_router(
         needle = q.casefold()
         rows = [jsonable_encoder(row) for row in inspector.surfaces
                 if needle in f"{row.title} {row.category} {row.route}".casefold()][:limit]
+        for matchup_id, sides in sorted((inspector.data.get("matchups") or {}).items()):
+            title = f"Matchup {matchup_id}: " + " vs ".join(str(side.get("team")) for side in sides)
+            if needle not in title.casefold():
+                continue
+            rows.insert(0, {
+                "surface_id": f"matchups-{matchup_id}", "title": title,
+                "human_url": f"/matchups/{matchup_id}",
+                "semantic_url": f"/api/inspect/live/matchups/{matchup_id}",
+                "visual": {viewport: f"/api/inspect/live/visual/captures/matchups-{matchup_id}/{viewport}.png"
+                           for viewport in LIVE_VIEWPORTS},
+            })
+        rows = rows[:limit]
         return {"identity": inspector.identity(), "query": q, "count": len(rows), "results": rows}
 
     def canonical_trade_discovery() -> dict[str, Any]:

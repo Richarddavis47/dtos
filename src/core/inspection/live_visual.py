@@ -1,0 +1,217 @@
+"""Durable, bounded Live Visual Inspection read model and capture queue."""
+from __future__ import annotations
+
+import hashlib
+import json
+import threading
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Callable, Iterable
+
+from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
+
+LIVE_VISUAL_SCHEMA_VERSION = "1.0"
+LIVE_VIEWPORTS = {
+    "mobile": {"width": 390, "height": 844},
+    "desktop": {"width": 1440, "height": 1000},
+}
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _digest(value: Any) -> str:
+    raw = json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _safe_id(value: str) -> str:
+    return "".join(char if char.isalnum() or char in "-_" else "-" for char in value)
+
+
+@dataclass(frozen=True)
+class CaptureRequest:
+    surface_id: str
+    title: str
+    human_url: str
+    semantic_url: str
+    viewport: str
+    fingerprint: str
+    canonical: dict[str, Any]
+
+
+class LiveVisualService:
+    """Single-flight durable screenshot service; HTTP reads never launch browsers."""
+
+    def __init__(
+        self, root: Path, capture: Callable[[CaptureRequest, Path], dict[str, Any]] | None = None,
+    ) -> None:
+        self.root = root
+        self._capture = capture
+        self._lock = threading.RLock()
+        self._worker: threading.Thread | None = None
+        self._queue: list[CaptureRequest] = []
+        self._active: str | None = None
+        self._browser_processes = 0
+        self._last_error: str | None = None
+        self._manifest = self._load_manifest()
+
+    @property
+    def manifest_path(self) -> Path:
+        return self.root / "manifest.json"
+
+    def _load_manifest(self) -> dict[str, Any]:
+        try:
+            value = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {"schema_version": LIVE_VISUAL_SCHEMA_VERSION, "captures": {}}
+        return value if isinstance(value, dict) else {"schema_version": LIVE_VISUAL_SCHEMA_VERSION, "captures": {}}
+
+    def _write_manifest(self) -> None:
+        self.root.mkdir(parents=True, exist_ok=True)
+        temporary = self.manifest_path.with_suffix(".tmp")
+        temporary.write_text(json.dumps(self._manifest, sort_keys=True, indent=2), encoding="utf-8")
+        temporary.replace(self.manifest_path)
+
+    @staticmethod
+    def capture_key(surface_id: str, viewport: str) -> str:
+        return f"{_safe_id(surface_id)}--{viewport}"
+
+    def schedule(self, requests: Iterable[CaptureRequest]) -> int:
+        """Deduplicate by surface, viewport, and semantic presentation fingerprint."""
+        if self._capture is None:
+            return 0
+        with self._lock:
+            pending = {(row.surface_id, row.viewport, row.fingerprint) for row in self._queue}
+            added = 0
+            for request in requests:
+                key = self.capture_key(request.surface_id, request.viewport)
+                current = (self._manifest.get("captures") or {}).get(key) or {}
+                identity = (request.surface_id, request.viewport, request.fingerprint)
+                if current.get("fingerprint") == request.fingerprint or identity in pending:
+                    continue
+                self._queue.append(request)
+                pending.add(identity)
+                added += 1
+            if self._queue and not (self._worker and self._worker.is_alive()):
+                self._worker = threading.Thread(target=self._run, name="dtos-live-visual", daemon=True)
+                self._worker.start()
+            return added
+
+    def _run(self) -> None:
+        while True:
+            with self._lock:
+                if not self._queue:
+                    self._active = None
+                    self._browser_processes = 0
+                    return
+                request = self._queue.pop(0)
+                self._active = self.capture_key(request.surface_id, request.viewport)
+                self._browser_processes = 1
+            folder = self.root / "captures" / _safe_id(request.surface_id)
+            folder.mkdir(parents=True, exist_ok=True)
+            final = folder / f"{request.viewport}.png"
+            temporary = folder / f".{request.viewport}.partial.png"
+            try:
+                result = self._capture(request, temporary) if self._capture else {}
+                temporary.replace(final)
+                deployment = deployment_metadata()
+                row = {
+                    "surface_id": request.surface_id, "title": request.title,
+                    "human_url": request.human_url, "semantic_url": request.semantic_url,
+                    "viewport": request.viewport, "status": "current",
+                    "captured_at": _now(), "data_as_of": request.canonical.get("data_as_of"),
+                    "fingerprint": request.fingerprint,
+                    "screenshot_url": f"/api/inspect/live/visual/captures/{_safe_id(request.surface_id)}/{request.viewport}.png",
+                    "metadata_url": f"/api/inspect/live/visual/metadata/{_safe_id(request.surface_id)}/{request.viewport}",
+                    "application_version": VERSION, "application_build": BUILD_NUMBER,
+                    "commit": deployment.get("commit"), "canonical": request.canonical,
+                    "presentation": result,
+                }
+                with self._lock:
+                    self._manifest.setdefault("captures", {})[self.capture_key(request.surface_id, request.viewport)] = row
+                    self._manifest.update({"schema_version": LIVE_VISUAL_SCHEMA_VERSION, "updated_at": _now()})
+                    self._last_error = None
+                    self._write_manifest()
+            except Exception as exc:  # last valid capture must survive
+                temporary.unlink(missing_ok=True)
+                with self._lock:
+                    self._last_error = f"{type(exc).__name__}: capture failed"
+                    current = (self._manifest.get("captures") or {}).get(self.capture_key(request.surface_id, request.viewport))
+                    if current:
+                        current["status"] = "stale"
+                        current["failure_reason"] = self._last_error
+                    self._write_manifest()
+
+    def capture(self, surface_id: str, viewport: str) -> dict[str, Any] | None:
+        with self._lock:
+            row = (self._manifest.get("captures") or {}).get(self.capture_key(surface_id, viewport))
+            return dict(row) if row else None
+
+    def screenshot(self, surface_id: str, viewport: str) -> Path | None:
+        row = self.capture(surface_id, viewport)
+        if not row:
+            return None
+        path = self.root / "captures" / _safe_id(surface_id) / f"{viewport}.png"
+        return path if path.is_file() else None
+
+    def manifest(self) -> dict[str, Any]:
+        with self._lock:
+            rows = list((self._manifest.get("captures") or {}).values())
+            return {
+                "status": "complete" if rows and not self._queue and not self._active else "pending",
+                "schema_version": LIVE_VISUAL_SCHEMA_VERSION,
+                "captures": rows, "capture_count": len(rows),
+                "current": sum(row.get("status") == "current" for row in rows),
+                "stale": sum(row.get("status") == "stale" for row in rows),
+                "pending": len(self._queue) + int(self._active is not None),
+                "failures": int(self._last_error is not None),
+                "last_capture": self._manifest.get("updated_at"),
+            }
+
+    def health(self, required: int = 0) -> dict[str, Any]:
+        manifest = self.manifest()
+        completed = manifest["capture_count"]
+        return {
+            "status": "complete" if completed >= required and manifest["pending"] == 0 else "pending",
+            "eligible_surfaces": required // len(LIVE_VIEWPORTS) if required else 0,
+            "required_captures": required, "completed": completed,
+            "stale": manifest["stale"], "pending": manifest["pending"],
+            "failures": manifest["failures"], "browser_processes": self._browser_processes,
+            "last_capture": manifest["last_capture"], "last_error": self._last_error,
+            "read_only_requests": True, "single_browser_worker": True,
+        }
+
+    def wait(self, timeout: float = 10) -> bool:
+        """Testing and shutdown boundary; HTTP routes never call this."""
+        worker = self._worker
+        if worker:
+            worker.join(timeout)
+        return not bool(worker and worker.is_alive())
+
+
+def matchup_capture_requests(data: dict[str, Any], semantic: Callable[[str], dict[str, Any] | None], identity: dict[str, Any]) -> tuple[CaptureRequest, ...]:
+    """Build mandatory current-matchup requests from canonical semantic output."""
+    requests = []
+    for matchup_id in sorted((data.get("matchups") or {}), key=lambda value: int(value)):
+        contract = semantic(str(matchup_id))
+        if contract is None:
+            continue
+        relevant = {"teams": contract.get("teams"), "status": contract.get("status")}
+        canonical = {
+            "data_as_of": identity.get("inspection_generated_at"),
+            "projection_snapshot_id": identity.get("projection_snapshot_id"),
+            "brain_snapshot_id": identity.get("brain_snapshot_id"),
+            "market_generation": identity.get("asset_market_generation"),
+        }
+        for viewport in LIVE_VIEWPORTS:
+            requests.append(CaptureRequest(
+                surface_id=f"matchups-{matchup_id}", title=f"Matchup {matchup_id}",
+                human_url=f"/matchups/{matchup_id}",
+                semantic_url=f"/api/inspect/live/matchups/{matchup_id}",
+                viewport=viewport, fingerprint=_digest({"contract": relevant, "viewport": viewport, "version": VERSION}),
+                canonical=canonical,
+            ))
+    return tuple(requests)
