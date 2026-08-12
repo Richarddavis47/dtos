@@ -9,7 +9,7 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from app_metadata import BUILD_NUMBER, VERSION
 from src.core.brain import brain_service
@@ -766,8 +766,12 @@ class AssetMarketCache:
     @staticmethod
     def semantic_identities(
         data: dict[str, Any], state: dict[str, Any],
+        *, chunk_size: int = 64, yield_control: Callable[[], None] | None = None,
     ) -> dict[str, Any]:
         """Digest exactly the canonical content persisted in compact market rows."""
+        if chunk_size < 1:
+            raise ValueError("chunk_size must be positive")
+        release = yield_control or (lambda: time.sleep(0.001))
         brain = brain_service(data)
         universe = ValuationUniverse.streaming(data, state)
         universe_hash = hashlib.sha256()
@@ -806,6 +810,10 @@ class AssetMarketCache:
                 "asset_id": asset["asset_id"], "providers": asset.get("providers") or [],
             })).encode())
             asset_count += 1
+            if asset_count % chunk_size == 0:
+                release()
+        if asset_count % chunk_size:
+            release()
         return {
             "asset_universe_digest": universe_hash.hexdigest(),
             "brain_semantic_output_digest": output_hash.hexdigest(),

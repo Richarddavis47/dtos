@@ -377,6 +377,16 @@ class AssetMarketTests(unittest.TestCase):
         self.assertEqual(model.asset_count, 5)
         self.assertEqual(yields, [1, 1, 1])
 
+    def test_semantic_generation_yields_without_changing_digest(self) -> None:
+        expected = self.cache.semantic_identities(self.data, self.state)
+        yields: list[int] = []
+        observed = self.cache.semantic_identities(
+            self.data, self.state, chunk_size=2,
+            yield_control=lambda: yields.append(1),
+        )
+        self.assertEqual(observed, expected)
+        self.assertEqual(len(yields), (int(observed["asset_count"]) + 1) // 2)
+
     def test_publication_performs_no_bulk_summary_reconstruction(self) -> None:
         published = AssetMarketCache()
         with patch.object(
