@@ -1,3 +1,21 @@
+# DTOS v1.10.12 — Permanent External Visual Mirror
+
+DTOS v1.10.12 permanently publishes the verified Live Product and Live Visual
+Inspection state as a compact GitHub release mirror. External assistants can start
+from one stable manifest, download individual current-page PNGs and semantic JSON,
+and reconcile matchup projections without rendering the Render origin or downloading
+the full DINS archive.
+
+The mirror copies exact verified captures, validates PNG dimensions and SHA-256,
+reconciles all matchup starters against semantic inspection and the projection audit,
+and sanitizes every public JSON artifact. Core public pages inherit capture and
+mirror eligibility from canonical route registration; entity-heavy pages remain
+bounded representative/on-demand surfaces. Release-triggered and hourly automation
+waits for matching production, Live Visual, and DINS completion before publishing.
+
+GitHub remains inspection-only. DTOS performs no request-time GitHub calls for the
+mirror, and mirror availability cannot affect canonical runtime health.
+
 # DTOS v1.10.11 — Live Visual Inspection
 
 DTOS now exposes current rendered product screenshots through the permanent

@@ -60,8 +60,8 @@ from src.platform.observability import (
 from src.platform.market_warming import AssetMarketWarmingMiddleware
 from src.platform.lifecycle import lifecycle_coordinator
 from src.core.historical_memory import historical_storage_status
-from src.core.inspection.live import LiveInspection, matchup_semantic
-from src.core.inspection.live_visual import LiveVisualService, matchup_capture_requests
+from src.core.inspection.live import LiveInspection
+from src.core.inspection.live_visual import LiveVisualService, live_visual_capture_requests
 from src.ui import DESIGN_SYSTEM_CSS, page_header
 
 _PROCESS_STARTED = perf_counter()
@@ -91,11 +91,7 @@ def schedule_live_visual_capture() -> int:
         projection_snapshot=projection_service.snapshot(),
         market=asset_market_cache.current(), fois_scores=(),
     )
-    requests = matchup_capture_requests(
-        inspector.data,
-        lambda matchup_id: matchup_semantic(inspector.data, matchup_id, inspector.projection_snapshot),
-        inspector.identity(),
-    )
+    requests = live_visual_capture_requests(inspector)
     queued = live_visual_service.schedule(requests)
     runtime_metrics.mark_background("live_visual_capture", "running" if queued else "complete")
     return queued

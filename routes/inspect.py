@@ -29,7 +29,7 @@ from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 from src.core.valuation_intelligence import valuation_intelligence_report
 from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
-from src.core.inspection.live import LiveInspection, matchup_semantic
+from src.core.inspection.live import LiveInspection, external_mirror_policy, matchup_semantic
 from src.core.inspection.live_visual import LIVE_VIEWPORTS, LiveVisualService
 
 
@@ -90,6 +90,11 @@ def create_inspection_router(
         # never refreshes canonical application state.
         result = jsonable_encoder(live().root())
         result["visual_inspection"] = "/api/inspect/live/visual"
+        result["external_visual_mirror"] = {
+            "current_manifest": "https://github.com/Richarddavis47/dtos/releases/latest/download/dtos-live-inspection-current.json",
+            "release_manifest": f"https://github.com/Richarddavis47/dtos/releases/download/v{VERSION}/dtos-v{VERSION}-visual-mirror-manifest.json",
+            "canonical_source": "live_dtos",
+        }
         return result
 
     @router.get("/live/visual")
@@ -98,7 +103,7 @@ def create_inspection_router(
         eligibility = [{
             "surface_id": row.surface_id, "title": row.title,
             "human_url": row.human_url, "semantic_url": row.semantic_url,
-            "capture_policy": "representative_or_demand" if row.parameterized else "core_after_deployment",
+            "capture_policy": external_mirror_policy(row),
         } for row in inspector.surfaces
             if row.inspection_enabled and row.dins_enabled and row.human_url]
         if live_visual_service is None:

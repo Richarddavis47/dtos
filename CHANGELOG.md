@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.10.12 - Permanent External Visual Mirror
+
+- Added a small immutable GitHub mirror of exact Live Visual PNGs, semantic page
+  contracts, current projection audit, and discovery metadata.
+- Added stable latest-release discovery plus deterministic, human-readable artifact
+  names and cross-artifact SHA-256 validation.
+- Made core visual capture and mirror eligibility inherit automatically from the
+  canonical public-surface registry.
+- Added bounded release/scheduled publication automation with no DTOS runtime
+  dependency on GitHub.
+
 ## v1.10.11 - Live Visual Inspection
 
 - Added durable, anonymous mobile and desktop screenshots of every current

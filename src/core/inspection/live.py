@@ -41,6 +41,13 @@ class PublicSurface:
     exclusion_reason: str | None = None
 
 
+def external_mirror_policy(surface: PublicSurface) -> str:
+    """Return the scalable mirror policy derived from canonical registration."""
+    if not surface.public or not surface.inspection_enabled or not surface.dins_enabled:
+        return "excluded"
+    return "representative_or_requested" if surface.parameterized else "always"
+
+
 def _slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.casefold()).strip("-") or "home"
 

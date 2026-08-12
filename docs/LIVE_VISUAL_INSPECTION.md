@@ -38,7 +38,12 @@ Every release must report both:
 
 - Live Product Inspection: Complete
 - Live Visual Inspection: Complete
+- External Visual Mirror: Complete
 
 The production gate requires every current matchup's mobile and desktop PNG,
 canonical DOM reconciliation, anonymous HTTP access, and deterministic browser
 cleanup before DINS publication.
+
+The verified captures are copied without re-rendering into the External Visual
+Inspection Mirror described in `EXTERNAL_VISUAL_MIRROR.md`. The mirror never
+becomes a runtime dependency or canonical data source.

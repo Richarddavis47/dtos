@@ -92,6 +92,7 @@ class LiveVisualInspectionTests(unittest.TestCase):
             health = client.get("/api/inspect/live/visual/health").json()
             pending = client.get("/api/inspect/live/visual/metadata/matchups-1/mobile").json()
             self.assertEqual(root["visual_inspection"], "/api/inspect/live/visual")
+            self.assertIn("current_manifest", root["external_visual_mirror"])
             self.assertEqual(health["status"], "pending")
             self.assertEqual(health["browser_processes"], 0)
             self.assertEqual(pending["status"], "pending")
