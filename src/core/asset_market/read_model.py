@@ -403,7 +403,7 @@ class MarketReadModel:
 def build_read_model(
     target: Path, generation: str, rows: Iterator[tuple[dict[str, Any], dict[str, Any]]],
     metadata: dict[str, Any], stage_observer: Callable[[dict[str, Any]], None] | None = None,
-    *, chunk_size: int = 64, yield_control: Callable[[], None] | None = None,
+    *, chunk_size: int = 32, yield_control: Callable[[], None] | None = None,
 ) -> MarketReadModel:
     """Stream one generation to SQLite, then publish it atomically."""
     if chunk_size < 1:

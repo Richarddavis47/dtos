@@ -766,7 +766,7 @@ class AssetMarketCache:
     @staticmethod
     def semantic_identities(
         data: dict[str, Any], state: dict[str, Any],
-        *, chunk_size: int = 64, yield_control: Callable[[], None] | None = None,
+        *, chunk_size: int = 32, yield_control: Callable[[], None] | None = None,
     ) -> dict[str, Any]:
         """Digest exactly the canonical content persisted in compact market rows."""
         if chunk_size < 1:
