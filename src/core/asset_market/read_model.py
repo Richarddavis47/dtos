@@ -409,10 +409,10 @@ def build_read_model(
     if chunk_size < 1:
         raise ValueError("chunk_size must be positive")
     # A zero-duration sleep can immediately reacquire the interpreter under a
-    # constrained Linux cgroup. A bounded 5 ms handoff gives request-serving
+    # constrained Linux cgroup. A bounded 10 ms handoff gives request-serving
     # and health-check work a reliable scheduling opportunity without moving
     # construction onto the request path.
-    release = yield_control or (lambda: time.sleep(0.005))
+    release = yield_control or (lambda: time.sleep(0.010))
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_name(f".{target.name}.{os.getpid()}.partial")
     temporary.unlink(missing_ok=True)

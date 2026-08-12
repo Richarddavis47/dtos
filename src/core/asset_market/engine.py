@@ -771,7 +771,7 @@ class AssetMarketCache:
         """Digest exactly the canonical content persisted in compact market rows."""
         if chunk_size < 1:
             raise ValueError("chunk_size must be positive")
-        release = yield_control or (lambda: time.sleep(0.005))
+        release = yield_control or (lambda: time.sleep(0.010))
         brain = brain_service(data)
         universe = ValuationUniverse.streaming(data, state)
         universe_hash = hashlib.sha256()
