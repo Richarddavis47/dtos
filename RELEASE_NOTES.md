@@ -1,3 +1,17 @@
+# DTOS v1.10.15 — Projection Snapshot Upgrade Compatibility
+
+DTOS v1.10.15 ensures a durable Forward Production snapshot is reused only when
+its schema, model, contract, and semantic policy match the running application.
+Incompatible or corrupt snapshots remain durable for diagnostics but are not
+published as current intelligence. Cached canonical and Sleeper inputs produce
+exactly one compatible replacement without a provider request.
+
+Projection health now reports the running application contract separately from
+the actual active and restored snapshot identities, including explicit restore,
+upgrade-generation, failure, and durable-publication counters.
+
+## Previous release
+
 # DTOS v1.10.14 — Player-Specific Projection Calibration
 
 DTOS v1.10.14 makes Forward Production genuinely player-specific. The model keeps
