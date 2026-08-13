@@ -8,16 +8,17 @@ import threading
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
-from statistics import mean, pstdev
+from statistics import mean, median
 from typing import Any
 
 from config import PROJECTION_DATABASE_FILE
+from src.core.projection_intelligence.calibration import calibrate, raw_projection
 from src.core.projection_intelligence.sleeper_provider import (
     PARSER_VERSION, SOURCE_CLASSIFICATION, freshness_state, parse_projection_feed,
 )
 
-PROJECTION_SCHEMA_VERSION = "1.1"
-PROJECTION_MODEL_VERSION = "dtos-forward-production-2"
+PROJECTION_SCHEMA_VERSION = "1.2"
+PROJECTION_MODEL_VERSION = "dtos-forward-production-3"
 
 
 class ProjectionInputError(ValueError):
@@ -291,41 +292,7 @@ class ProjectionService:
 
     @staticmethod
     def _project(player: dict[str, Any], scoring: dict[str, Any], season: int, week: int | None) -> dict[str, Any]:
-        player_id = str(player.get("id") or player.get("player_id"))
-        position = str(player.get("position") or "").upper()
-        bye = player.get("bye_week") == week and week is not None
-        availability = str(player.get("injury_status") or player.get("status") or "active").casefold()
-        unavailable = availability in {"out", "ir", "pup", "suspended", "inactive"}
-        recent = [float(value) for value in (player.get("fantasy_points_history") or player.get("recent_points") or []) if value is not None]
-        season_average = player.get("season_average") or player.get("fantasy_points_per_game")
-        base = float(season_average) if season_average is not None else (mean(recent[-5:]) if recent else {"QB": 16, "RB": 10, "WR": 9.5, "TE": 7}.get(position, 5))
-        reception = float(scoring.get("rec") or 0)
-        te_premium = float(scoring.get("bonus_rec_te") or scoring.get("rec_te") or 0) if position == "TE" else 0
-        pass_td = float(scoring.get("pass_td") or 4)
-        multiplier = 1 + ((reception - .5) * .10 if position != "QB" else (pass_td - 4) * .05) + te_premium * .06
-        median = None if bye else max(0.0, base * multiplier * (0 if unavailable else .72 if availability in {"doubtful", "questionable"} else 1))
-        spread = max(3.0, (pstdev(recent[-5:]) if len(recent[-5:]) > 1 else (median or 0) * .35))
-        confidence = max(20, min(82, 42 + len(recent[-5:]) * 7 - (20 if availability not in {"", "active", "none"} else 0)))
-        games = max(0, 18 - int(week or 1))
-        weekly = round(median, 2) if median is not None else None
-        status = "bye" if bye else "unavailable" if unavailable else "fallback"
-        return {
-            "player_id": player_id, "position": position, "week": week, "season": season,
-            "weekly_projected_points": weekly,
-            "weekly_floor": round(max(0, median - spread), 2) if median is not None else None,
-            "weekly_median": weekly,
-            "weekly_ceiling": round(median + spread * 1.35, 2) if median is not None else None,
-            "rest_of_season_points": round(median * games, 2) if median is not None else None,
-            "rest_of_season_games": games,
-            "season_projected_points": round(median * 17, 2) if median is not None else None,
-            "expected_points_per_game": weekly,
-            "expected_usage": "Observed recent production and canonical role proxy" if recent else "Low-information role prior",
-            "expected_role": player.get("roster_slot") or player.get("depth_chart_order") or "Unknown",
-            "projection_confidence": confidence, "projection_agreement": None,
-            "projection_coverage": "available" if weekly is not None else status,
-            "sources": ["dtos_forward_production"], "status": status,
-            "availability": availability, "limitations": ["No approved live external projection feed is configured."],
-        }
+        return raw_projection(player, scoring, season, week)
 
     def generate(self, data: dict[str, Any], league_id: str) -> dict[str, Any]:
         with self._lock:
@@ -373,32 +340,14 @@ class ProjectionService:
             projection = self._project(player, scoring, season, week)
             evidence = external_players.get(player_id)
             sleeper_value = (evidence or {}).get("league_projection")
-            dtos_value = projection.get("weekly_projected_points")
-            if sleeper_value is not None and dtos_value is not None:
-                difference = round(float(dtos_value) - float(sleeper_value), 2)
-                magnitude = abs(difference)
-                agreement = "High" if magnitude <= 2 else "Moderate" if magnitude <= 5 else "Low"
-                reliability = .35 if freshness_state((external_snapshot or {}).get("retrieved_at")) == "Fresh" else .2
-                canonical = round(float(dtos_value) * (1 - reliability) + float(sleeper_value) * reliability, 2)
-                projection.update({
-                    "sleeper_projection": round(float(sleeper_value), 2),
-                    "dtos_projection": dtos_value, "canonical_projection": canonical,
-                    "projection_difference": difference,
-                    "projection_difference_percent": round(difference / abs(float(sleeper_value)) * 100, 2) if sleeper_value else None,
-                    "projection_agreement": agreement,
-                    "sleeper_evidence_fingerprint": (external_snapshot or {}).get("semantic_fingerprint"),
-                    "sleeper_freshness": freshness_state((external_snapshot or {}).get("retrieved_at")),
-                    "sources": ["dtos_forward_production", "sleeper_projections"],
-                    "weekly_projected_points": canonical,
-                })
-            else:
-                projection.update({
-                    "sleeper_projection": sleeper_value,
-                    "dtos_projection": dtos_value,
-                    "canonical_projection": dtos_value,
-                    "projection_difference": None,
-                    "sleeper_freshness": freshness_state((external_snapshot or {}).get("retrieved_at")),
-                })
+            sleeper_freshness = freshness_state((external_snapshot or {}).get("retrieved_at"))
+            projection = calibrate(
+                projection, sleeper_value, sleeper_freshness=sleeper_freshness,
+            )
+            projection.update({
+                "sleeper_evidence_fingerprint": (external_snapshot or {}).get("semantic_fingerprint"),
+                "sleeper_freshness": sleeper_freshness,
+            })
             projections[player_id] = projection
         identity = {"league_id": league_id, "season": season, "week": week, "model_version": PROJECTION_MODEL_VERSION, "scoring": scoring, "players": projections}
         snapshot_id = _digest(identity)
@@ -451,12 +400,41 @@ class ProjectionService:
         snapshot = self.snapshot()
         players = (snapshot or {}).get("players") or {}
         by_position: dict[str, int] = {}
+        fallback_by_position: dict[str, int] = {}
+        value_counts: dict[str, int] = {}
         available = 0
         for projection in players.values():
             available += projection.get("weekly_projected_points") is not None
             position = str(projection.get("position") or "Other")
             if projection.get("weekly_projected_points") is not None:
                 by_position[position] = by_position.get(position, 0) + 1
+                value = f"{float(projection['weekly_projected_points']):.2f}"
+                value_counts[value] = value_counts.get(value, 0) + 1
+            if projection.get("fallback_state") in {"position_baseline", "role_adjusted_prior"}:
+                fallback_by_position[position] = fallback_by_position.get(position, 0) + 1
+        state_counts: dict[str, int] = {}
+        state_by_position: dict[str, dict[str, int]] = {}
+        for row in players.values():
+            state = str(row.get("fallback_state") or "missing")
+            position = str(row.get("position") or "Other")
+            state_counts[state] = state_counts.get(state, 0) + 1
+            position_states = state_by_position.setdefault(position, {})
+            position_states[state] = position_states.get(state, 0) + 1
+        player_specific = sum(
+            state_counts.get(state, 0)
+            for state in ("player_specific", "partially_individualized")
+        )
+        externally_calibrated_fallbacks = sum(
+            row.get("fallback_state") in {"position_baseline", "role_adjusted_prior"}
+            and row.get("sleeper_projection") is not None
+            for row in players.values()
+        )
+        projected = max(1, available)
+        sleeper_differences = [
+            abs(float(row["dtos_projection"]) - float(row["sleeper_projection"]))
+            for row in players.values()
+            if row.get("dtos_projection") is not None and row.get("sleeper_projection") is not None
+        ]
         return {
             "status": self._generation_state, "generation_state": self._generation_state,
             "schema_version": PROJECTION_SCHEMA_VERSION,
@@ -495,6 +473,29 @@ class ProjectionService:
             "accuracy": self.accuracy() if include_accuracy else None,
             "providers": provider_registry(),
             "position_coverage": by_position,
+            "projection_quality": {
+                "player_specific_players": player_specific,
+                "player_specific_rate": round(player_specific / projected * 100, 2),
+                "externally_calibrated_fallback_players": externally_calibrated_fallbacks,
+                "baseline_fallback_players": sum(fallback_by_position.values()),
+                "baseline_fallback_rate": round(sum(fallback_by_position.values()) / projected * 100, 2),
+                "fallback_by_position": fallback_by_position,
+                "raw_projection_states": state_counts,
+                "raw_projection_states_by_position": state_by_position,
+                "missing_projection_players": len(players) - available,
+                "unique_projection_values": len(value_counts),
+                "repeated_value_concentration": round(sum(count for count in value_counts.values() if count > 1) / projected * 100, 2),
+                "most_repeated_values": [
+                    {"value": float(value), "count": count}
+                    for value, count in sorted(value_counts.items(), key=lambda item: (-item[1], item[0]))[:10]
+                    if count > 1
+                ],
+                "mean_absolute_sleeper_difference": round(mean(sleeper_differences), 3) if sleeper_differences else None,
+                "median_absolute_sleeper_difference": round(median(sleeper_differences), 3) if sleeper_differences else None,
+                "meaningful_disagreements": sum(value >= 5 for value in sleeper_differences),
+                "large_disagreements": sum(value >= 8 for value in sleeper_differences),
+                "extreme_disagreements": sum(value >= 12 for value in sleeper_differences),
+            },
         }
 
 

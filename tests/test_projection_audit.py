@@ -72,7 +72,10 @@ def fixture():
     }
     snapshot = {
         "season": "2026", "week": 1, "projection_snapshot_id": "projection-1",
-        "players": {"10": {"sleeper_projection": 17.91, "dtos_projection": 20.0,
+        "players": {"10": {"sleeper_projection": 17.91, "raw_dtos_projection": 21.5,
+                            "dtos_projection": 20.0, "calibration_adjustment": -1.5,
+                            "calibration_reason": "External evidence moderates the raw forecast.",
+                            "fallback_state": "player_specific", "evidence_depth": 82,
                             "canonical_projection": 19.27, "weekly_floor": 14,
                             "weekly_median": 19.27, "weekly_ceiling": 25,
                             "projection_confidence": 84, "projection_agreement": "High",
@@ -82,6 +85,40 @@ def fixture():
 
 
 class ProjectionAuditTests(unittest.TestCase):
+    def test_player_calibration_restores_team_separation_without_copying_sleeper(self):
+        data, snapshot = fixture()
+        data["matchups"] = {"5": [{
+            "team": "Elite", "owner": "GM E", "roster_id": 1, "points": 0,
+            "lineup": [
+                {"id": "1", "name": "Elite One", "position": "RB", "slot": "RB"},
+                {"id": "2", "name": "Elite Two", "position": "WR", "slot": "WR"},
+            ],
+        }, {
+            "team": "Developing", "owner": "GM D", "roster_id": 2, "points": 0,
+            "lineup": [
+                {"id": "3", "name": "Reserve One", "position": "RB", "slot": "RB"},
+                {"id": "4", "name": "Reserve Two", "position": "WR", "slot": "WR"},
+            ],
+        }]}
+        snapshot["players"] = {
+            "1": {"sleeper_projection": 20.0, "raw_dtos_projection": 10.0,
+                  "dtos_projection": 17.0, "canonical_projection": 17.0},
+            "2": {"sleeper_projection": 18.0, "raw_dtos_projection": 10.0,
+                  "dtos_projection": 16.0, "canonical_projection": 16.0},
+            "3": {"sleeper_projection": 4.0, "raw_dtos_projection": 10.0,
+                  "dtos_projection": 5.0, "canonical_projection": 5.0},
+            "4": {"sleeper_projection": 3.0, "raw_dtos_projection": 10.0,
+                  "dtos_projection": 4.0, "canonical_projection": 4.0},
+        }
+        result = build_projection_audit(
+            data=data, projection_snapshot=snapshot, projection_health={"status": "ready"},
+            market=FakeMarket(), fois_scores=(), now="2026-08-11T00:00:00+00:00",
+        )
+        elite, developing = result["teams"]
+        self.assertEqual(elite["raw_dtos_projected_total"] - developing["raw_dtos_projected_total"], 0)
+        self.assertEqual(elite["dtos_projected_total"] - developing["dtos_projected_total"], 24)
+        self.assertNotEqual(elite["dtos_projected_total"], elite["sleeper_projected_total"])
+
     def test_export_is_read_only_complete_and_reconciled(self):
         data, snapshot = fixture()
         original_data, original_snapshot = copy.deepcopy(data), copy.deepcopy(snapshot)
@@ -92,8 +129,14 @@ class ProjectionAuditTests(unittest.TestCase):
         self.assertEqual(result["audit_summary"]["total_starters"], 2)
         self.assertEqual(result["audit_summary"]["starters_with_both"], 1)
         self.assertEqual(result["players"][0]["dtos_minus_sleeper"], 2.09)
+        self.assertEqual(result["players"][0]["raw_dtos_projection"], 21.5)
+        self.assertEqual(result["players"][0]["calibration_adjustment"], -1.5)
         self.assertIsNone(result["players"][1]["canonical_projection"])
         self.assertEqual(result["teams"][0]["sleeper_projected_total"], 17.91)
+        self.assertEqual(result["teams"][0]["raw_dtos_projected_total"], 21.5)
+        self.assertEqual(result["matchups"][0]["teams"][0]["dtos_projected_total"], 20.0)
+        distribution = result["audit_summary"]["position_distributions"]["QB"]
+        self.assertEqual(distribution["dtos_unique_values"], 1)
         self.assertEqual(result["players"][0]["brain_snapshot_id"], "1.10.11:brain-1")
         self.assertEqual(result["fois"][0]["projection_snapshot_id"], "projection-1")
         self.assertEqual(data, original_data)

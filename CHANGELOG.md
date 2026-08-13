@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.14 - Player-Specific Projection Calibration
+
+- Replaced final positional-default projection clusters with deterministic player,
+  role, production, and cached Sleeper-evidence calibration.
+- Preserved raw DTOS forecasts separately from calibrated canonical projections,
+  with confidence, evidence depth, fallback state, and disagreement explanations.
+- Expanded projection health and audit exports with fallback concentration,
+  disagreement, distribution, and calibration diagnostics.
+
 ## v1.10.13 - External Mirror Matchup Surface Classification Correction
 
 - Added one strict shared parser for numeric matchup-detail surface IDs.

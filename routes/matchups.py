@@ -38,11 +38,17 @@ def _starter_projection_html(row: dict[str, Any] | None) -> str:
         f'<span class="projection-difference">DTOS {difference:+.2f}</span>'
         if difference is not None else ""
     )
+    technical = (
+        f'<details><summary>Technical Details</summary><small>Raw DTOS: {_projection_value(projection.get("raw_dtos_projection"))}. '
+        f'Calibration: {_projection_value(projection.get("calibration_adjustment"))}. '
+        f'Confidence: {escape(str(projection.get("projection_confidence") or "Unavailable"))}%. '
+        f'{escape(str(projection.get("calibration_reason") or "No calibration explanation is available."))}</small></details>'
+    )
     return (
         '<div class="starter-projections">'
         f'<span><small>Sleeper Projection</small><b>{_projection_value(sleeper)}</b></span>'
         f'<span><small>DTOS Projection</small><b>{_projection_value(dtos)}</b></span>'
-        f'{difference_html}</div>'
+        f'{difference_html}</div>{technical}'
     )
 
 

@@ -65,6 +65,36 @@ class PlayerValueProjectionTests(unittest.TestCase):
         profiles = self.orchestrator.analyze(self.data, 1).player_values.values()
         self.assertTrue(any(item.contender.value != item.rebuilder.value for item in profiles))
 
+    def test_contender_value_is_more_weekly_sensitive_than_rebuilder_value(self) -> None:
+        canonical = {
+            "week": self.data.get("week"), "weekly_floor": 3.0, "weekly_median": 5.0,
+            "weekly_ceiling": 8.0, "projection_confidence": 80,
+            "expected_usage": "Canonical player-specific role", "status": "player_specific",
+            "generated_at": "2026-08-12T00:00:00+00:00", "projection_snapshot_id": "low",
+            "rest_of_season_points": 50.0, "rest_of_season_games": 10,
+            "season_projected_points": 85.0, "projection_agreement": "Moderate",
+        }
+        with patch(
+            "src.core.player_value_projection.providers.projection_service.player",
+            return_value={**canonical, "weekly_projected_points": 5.0},
+        ):
+            low = IntelligenceOrchestrator(
+                IntelligenceRegistry(), IntelligenceCache(default_ttl=60),
+            ).analyze(self.data, 1)
+        with patch(
+            "src.core.player_value_projection.providers.projection_service.player",
+            return_value={**canonical, "weekly_projected_points": 20.0,
+                          "weekly_median": 20.0, "projection_snapshot_id": "high"},
+        ):
+            high = IntelligenceOrchestrator(
+                IntelligenceRegistry(), IntelligenceCache(default_ttl=60),
+            ).analyze(self.data, 1)
+        player_id = next(iter(low.player_values))
+        contender_change = high.player_values[player_id].contender.value - low.player_values[player_id].contender.value
+        rebuilder_change = high.player_values[player_id].rebuilder.value - low.player_values[player_id].rebuilder.value
+        self.assertGreater(contender_change, rebuilder_change)
+        self.assertGreater(rebuilder_change, 0)
+
     def test_portrait_fallback_and_determinism(self) -> None:
         first = self.orchestrator.analyze(self.data, 1)
         second = self.orchestrator.analyze(self.data, 1)

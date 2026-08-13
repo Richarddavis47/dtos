@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from routes.projections import create_projections_router
+from src.core.projection_intelligence.calibration import calibrate, raw_projection
 from src.core.projection_intelligence.scoring import fantasy_points
 from src.core.projection_intelligence.service import ProjectionInputError, ProjectionService, provider_registry
 from src.core.projection_intelligence.sleeper_provider import (
@@ -252,6 +253,82 @@ class ProjectionIntelligenceTests(unittest.TestCase):
         self.assertEqual(accuracy["samples"], 1)
         self.assertEqual(accuracy["mae"], 2)
         self.assertEqual(self.service.snapshot(), snapshot)
+
+    def test_role_adjusted_priors_prevent_baseline_collapse(self) -> None:
+        scoring = {"rec": 1}
+        starter = raw_projection({"id": "1", "position": "RB", "team": "ATL", "roster_slot": "Starter"}, scoring, 2026, 1)
+        reserve = raw_projection({"id": "2", "position": "RB", "team": "ATL", "roster_slot": "Bench"}, scoring, 2026, 1)
+        free_agent = raw_projection({"id": "3", "position": "RB", "team": "FA"}, scoring, 2026, 1)
+        self.assertGreater(starter["raw_dtos_projection"], reserve["raw_dtos_projection"])
+        self.assertGreater(reserve["raw_dtos_projection"], free_agent["raw_dtos_projection"])
+        self.assertEqual(starter["fallback_state"], "role_adjusted_prior")
+
+    def test_elite_history_is_player_specific_and_preserved(self) -> None:
+        elite = raw_projection({
+            "id": "elite", "position": "WR", "team": "LAR", "roster_slot": "Starter",
+            "season_average": 20.5, "recent_points": [18, 22, 24, 19],
+        }, {"rec": 1}, 2026, 1)
+        generic = raw_projection({"id": "generic", "position": "WR", "team": "LAR", "roster_slot": "Starter"}, {"rec": 1}, 2026, 1)
+        self.assertEqual(elite["fallback_state"], "player_specific")
+        self.assertGreater(elite["raw_dtos_projection"], generic["raw_dtos_projection"] + 5)
+
+    def test_weak_evidence_uses_sleeper_more_than_strong_evidence(self) -> None:
+        weak = raw_projection({"id": "w", "position": "TE", "team": "ARI"}, {"rec": 1}, 2026, 1)
+        strong = raw_projection({
+            "id": "s", "position": "TE", "team": "ARI", "roster_slot": "Starter",
+            "season_average": 17, "recent_points": [16, 18, 17, 19],
+        }, {"rec": 1}, 2026, 1)
+        weak_result = calibrate(weak, 18, sleeper_freshness="Fresh")
+        strong_result = calibrate(strong, 12, sleeper_freshness="Fresh")
+        self.assertGreater(weak_result["calibration_weight_sleeper"], strong_result["calibration_weight_sleeper"])
+        self.assertGreater(abs(strong_result["dtos_projection"] - 12), 2)
+
+    def test_numeric_zero_is_distinct_from_missing_sleeper_evidence(self) -> None:
+        reserve = raw_projection({"id": "r", "position": "TE", "team": "NYJ", "roster_slot": "Bench"}, {"rec": 1}, 2026, 1)
+        zero = calibrate(reserve, 0, sleeper_freshness="Fresh")
+        missing = calibrate(reserve, None, sleeper_freshness="Fresh")
+        self.assertEqual(zero["sleeper_zero_state"], "verified_low_opportunity")
+        self.assertEqual(missing["sleeper_zero_state"], "missing")
+        self.assertLess(zero["dtos_projection"], missing["dtos_projection"])
+
+    def test_rookie_low_role_does_not_receive_full_position_prior(self) -> None:
+        rookie = raw_projection({
+            "id": "rookie", "position": "RB", "team": "DEN", "roster_slot": "Taxi",
+            "years_exp": 0, "depth_chart_order": 4,
+        }, {"rec": 1}, 2026, 1)
+        result = calibrate(rookie, 2.25, sleeper_freshness="Fresh")
+        self.assertLess(result["dtos_projection"], 5)
+        self.assertEqual(result["expected_role"], "Developmental reserve")
+
+    def test_large_disagreement_is_explained_and_auditable(self) -> None:
+        strong = raw_projection({
+            "id": "1", "position": "QB", "team": "BUF", "roster_slot": "Starter",
+            "season_average": 21, "recent_points": [20, 22, 24, 21],
+        }, {}, 2026, 1)
+        result = calibrate(strong, 8, sleeper_freshness="Fresh")
+        self.assertIsNotNone(result["large_disagreement"])
+        self.assertTrue(result["large_disagreement"]["supported_by"])
+        self.assertIn("Sleeper projects", result["calibration_reason"])
+        self.assertNotEqual(result["raw_dtos_projection"], result["dtos_projection"])
+
+    def test_calibration_is_deterministic(self) -> None:
+        raw = raw_projection({"id": "1", "position": "RB", "team": "ATL", "roster_slot": "Starter"}, {"rec": 1}, 2026, 1)
+        self.assertEqual(
+            calibrate(raw, 21.68, sleeper_freshness="Fresh"),
+            calibrate(raw, 21.68, sleeper_freshness="Fresh"),
+        )
+
+    def test_projection_health_reports_fallback_and_repetition(self) -> None:
+        snapshot = self.service.generate(fixture(), "league")
+        health = self.service.health(include_accuracy=False)
+        quality = health["projection_quality"]
+        self.assertEqual(quality["player_specific_players"], 3)
+        self.assertEqual(quality["externally_calibrated_fallback_players"], 0)
+        self.assertEqual(quality["raw_projection_states"]["partially_individualized"], 3)
+        self.assertEqual(quality["raw_projection_states_by_position"]["QB"]["partially_individualized"], 1)
+        self.assertIsNone(quality["median_absolute_sleeper_difference"])
+        self.assertGreaterEqual(quality["unique_projection_values"], 2)
+        self.assertEqual(snapshot["model_version"], "dtos-forward-production-3")
 
 
 if __name__ == "__main__":
