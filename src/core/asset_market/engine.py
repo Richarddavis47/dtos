@@ -1038,8 +1038,24 @@ class AssetMarketCache:
         return store.path.with_name(f".{store.path.stem}.asset-market-{generation[:20]}.sqlite3")
 
     @staticmethod
-    def artifact_manifest_path(store: HistoricalStore) -> Path:
-        return store.path.with_name(f".{store.path.stem}.asset-market-manifest.json")
+    def artifact_manifest_path(
+        store: HistoricalStore, league_id: str | None = None,
+    ) -> Path:
+        if league_id is None:
+            legacy = store.path.with_name(
+                f".{store.path.stem}.asset-market-manifest.json"
+            )
+            if legacy.exists():
+                return legacy
+            namespaced = sorted(store.path.parent.glob(
+                f".{store.path.stem}.asset-market-manifest-*.json"
+            ))
+            if len(namespaced) == 1:
+                return namespaced[0]
+        suffix = "" if league_id is None else f"-{_digest(str(league_id))[:16]}"
+        return store.path.with_name(
+            f".{store.path.stem}.asset-market-manifest{suffix}.json"
+        )
 
     @staticmethod
     def _artifact_checksum(path: Path) -> str:
@@ -1052,8 +1068,9 @@ class AssetMarketCache:
     @classmethod
     def _publish_artifact_manifest(
         cls, store: HistoricalStore, artifact: Path, generation: str,
+        league_id: str | None = None,
     ) -> None:
-        manifest = cls.artifact_manifest_path(store)
+        manifest = cls.artifact_manifest_path(store, league_id)
         temporary = manifest.with_name(f".{manifest.name}.{os.getpid()}.tmp")
         payload = {
             "schema_version": "1.0",
@@ -1076,13 +1093,15 @@ class AssetMarketCache:
             temporary.unlink(missing_ok=True)
 
     @staticmethod
-    def _artifact_candidates(store: HistoricalStore) -> list[Path]:
+    def _artifact_candidates(
+        store: HistoricalStore, league_id: str | None = None,
+    ) -> list[Path]:
         pattern = f".{store.path.stem}.asset-market-*.sqlite3"
         discovered = sorted(
             path for path in store.path.parent.glob(pattern)
             if path.is_file() and ".partial" not in path.name
         )
-        manifest = AssetMarketCache.artifact_manifest_path(store)
+        manifest = AssetMarketCache.artifact_manifest_path(store, league_id)
         try:
             payload = json.loads(manifest.read_text(encoding="utf-8"))
             name = str(payload.get("artifact") or "")
@@ -1106,7 +1125,7 @@ class AssetMarketCache:
         expected: dict[str, Any],
     ) -> tuple[Path | None, str]:
         """Inspect bounded manifests and select one compatible final artifact."""
-        candidates = cls._artifact_candidates(store)
+        candidates = cls._artifact_candidates(store, str(expected.get("league_id") or ""))
         if not candidates:
             return None, "artifact_not_found"
         corrupt = incomplete = incompatible = False
@@ -1205,13 +1224,9 @@ class AssetMarketCache:
                 previous._artifact_path.unlink(missing_ok=True)
             except OSError:
                 pass
-        pattern = f".{market.store.path.stem}.asset-market-*.sqlite3"
-        for artifact in market.store.path.parent.glob(pattern):
-            if artifact != market._artifact_path:
-                try:
-                    artifact.unlink(missing_ok=True)
-                except OSError:
-                    pass
+        # Other league generations share this durable store directory. They are
+        # intentionally retained for lazy restoration and must not be removed by
+        # publication from the currently active league cache.
         return market
 
     def _construct(
@@ -1250,7 +1265,7 @@ class AssetMarketCache:
                     })
             if epoch is not None:
                 self._set_build_phase("publishing")
-            self._publish_artifact_manifest(store, path, generation)
+            self._publish_artifact_manifest(store, path, generation, league_id)
             with self._lock:
                 self.durable_publications += 1
             return self._publish(
@@ -1519,7 +1534,7 @@ class AssetMarketCache:
             generation = self.durable_generation(
                 data, state, store, league_id, contract,
             )
-            candidates = self._artifact_candidates(store)
+            candidates = self._artifact_candidates(store, league_id)
             with self._lock:
                 self.artifact_candidates = len(candidates)
                 self._requested_generation = generation
@@ -1539,7 +1554,7 @@ class AssetMarketCache:
                 artifact_path=artifact, load_existing=True,
                 compatibility=contract,
             )
-            self._publish_artifact_manifest(store, artifact, generation)
+            self._publish_artifact_manifest(store, artifact, generation, league_id)
             self._publish(
                 market, key, store_identity, request_marker,
                 artifact_loaded=True,

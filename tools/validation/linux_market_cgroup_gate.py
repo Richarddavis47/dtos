@@ -643,7 +643,7 @@ def _configured_fixture_contract() -> dict[str, object]:
         if not resolved[name].is_file():
             raise AssertionError(f"configured fixture file is unavailable: {name}")
     league_id = os.environ.get("SLEEPER_LEAGUE_ID")
-    if league_id != "validation-league-1804":
+    if league_id != "1804000000000000000":
         raise AssertionError("configured fixture league identity is unavailable")
     history_stat = resolved["DTOS_HISTORY_DB_FILE"].stat()
     connection = sqlite3.connect(resolved["DTOS_HISTORY_DB_FILE"])

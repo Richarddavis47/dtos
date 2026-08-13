@@ -589,7 +589,7 @@ class RestartReuseValidationTests(unittest.TestCase):
                 "DTOS_CACHE_FILE": str(cache),
                 "DTOS_HISTORY_DB_FILE": str(history),
                 "DTOS_HISTORY_STORAGE_ROOT": str(root),
-                "SLEEPER_LEAGUE_ID": "validation-league-1804",
+                "SLEEPER_LEAGUE_ID": "1804000000000000000",
             }
             with patch.dict(os.environ, environment, clear=False), patch(
                 "tools.validation.linux_market_cgroup_gate.FIXTURE", root,
@@ -598,7 +598,7 @@ class RestartReuseValidationTests(unittest.TestCase):
         self.assertEqual(contract["cache_file"], "dtos_cache.json")
         self.assertEqual(contract["history_database"], "dtos_history.sqlite3")
         self.assertTrue(contract["contained"])
-        self.assertEqual(contract["league_id"], "validation-league-1804")
+        self.assertEqual(contract["league_id"], "1804000000000000000")
 
     def test_missing_explicit_fixture_setting_cannot_use_default(self) -> None:
         with patch.dict(os.environ, {}, clear=True), self.assertRaisesRegex(
@@ -610,7 +610,7 @@ class RestartReuseValidationTests(unittest.TestCase):
         expected = {
             "storage_root": ".", "cache_file": "dtos_cache.json",
             "history_database": "dtos_history.sqlite3", "contained": True,
-            "league_id": "validation-league-1804",
+            "league_id": "1804000000000000000",
             "database_identity_digest": "sanitized-digest",
             "file_identity_digest": "sanitized-file-digest",
             "history_database_size": 1024,
@@ -619,7 +619,7 @@ class RestartReuseValidationTests(unittest.TestCase):
             **expected, "active_store_database": "dtos_history.sqlite3",
             "cache_exists": True, "history_database_exists": True,
             "active_store_matches": True,
-            "cache_league_id": "validation-league-1804",
+            "cache_league_id": "1804000000000000000",
         }
         with patch(
             "tools.validation.linux_market_cgroup_gate._request",

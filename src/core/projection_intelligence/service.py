@@ -80,8 +80,16 @@ def provider_registry() -> list[dict[str, Any]]:
 
 
 class ProjectionService:
-    def __init__(self, database_file: Path | None = None) -> None:
+    def __init__(
+        self,
+        database_file: Path | None = None,
+        *,
+        league_id: str | None = None,
+        scoring_profile_id: str | None = None,
+    ) -> None:
         self._database_file = database_file or Path(PROJECTION_DATABASE_FILE)
+        self._league_id = str(league_id) if league_id is not None else None
+        self._scoring_profile_id = scoring_profile_id
         self._lock = threading.RLock()
         self._snapshot: dict[str, Any] | None = None
         self._generation_state = "pending"
@@ -128,7 +136,15 @@ class ProjectionService:
             connection.execute("CREATE TABLE IF NOT EXISTS projection_actuals (snapshot_id TEXT NOT NULL, player_id TEXT NOT NULL, actual_points REAL NOT NULL, recorded_at TEXT NOT NULL, PRIMARY KEY(snapshot_id, player_id))")
             connection.execute("CREATE TABLE IF NOT EXISTS sleeper_projection_snapshots (fingerprint TEXT PRIMARY KEY, season INTEGER NOT NULL, week INTEGER NOT NULL, retrieved_at TEXT NOT NULL, payload TEXT NOT NULL)")
             connection.commit()
-            row = connection.execute("SELECT payload FROM projection_snapshots ORDER BY generated_at DESC LIMIT 1").fetchone()
+            if self._league_id is None:
+                row = connection.execute(
+                    "SELECT payload FROM projection_snapshots ORDER BY generated_at DESC LIMIT 1"
+                ).fetchone()
+            else:
+                row = connection.execute(
+                    "SELECT payload FROM projection_snapshots WHERE league_id=? ORDER BY generated_at DESC LIMIT 1",
+                    (self._league_id,),
+                ).fetchone()
             external = connection.execute("SELECT fingerprint, retrieved_at FROM sleeper_projection_snapshots ORDER BY retrieved_at DESC LIMIT 1").fetchone()
         try:
             if row:
@@ -170,6 +186,10 @@ class ProjectionService:
         with self._lock:
             snapshot = self._snapshot
         if snapshot is None:
+            return False
+        snapshot_league = str(snapshot.get("league_id") or "")
+        requested_league = str((data.get("league") or {}).get("league_id") or "")
+        if requested_league and snapshot_league != requested_league:
             return False
         data["projection_intelligence"] = snapshot
         return True

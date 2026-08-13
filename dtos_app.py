@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import os
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from html import escape
+from pathlib import Path
 from time import perf_counter
 from typing import Any
 
@@ -15,7 +17,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from app_metadata import APPLICATION_NAME, VERSION
-from config import BACKGROUND_START_DELAY, HISTORY_STORAGE_ROOT, SYNC_MINUTES
+from config import (
+    BACKGROUND_START_DELAY, HISTORY_STORAGE_ROOT, MAX_WARM_LEAGUE_RUNTIMES,
+    SYNC_MINUTES,
+)
 from routes.api import create_api_router
 from routes.audit import create_audit_router
 from routes.crawl import create_crawl_router
@@ -26,6 +31,7 @@ from routes.hq import create_hq_router
 from routes.history import create_history_router
 from routes.historical_assets import create_historical_assets_router
 from routes.inspect import create_inspection_router
+from routes.league_runtime import create_league_runtime_router
 from routes.matchups import create_matchups_router
 from routes.market import create_market_router
 from routes.settings import create_settings_router
@@ -41,6 +47,7 @@ from services.sleeper import (
     load_cache,
     start_sleeper_sync,
     sync_sleeper,
+    sync_sleeper_league,
     sync_transactions,
 )
 from services.history import (
@@ -49,9 +56,11 @@ from services.history import (
     start_background_backfill,
 )
 from services.fois import fois_service
-from src.core.asset_market import asset_market_cache
+from src.core.asset_market import AssetMarketCache, asset_market_cache
+from src.core.league_runtime import LeagueRuntime, LeagueRuntimeManager, RuntimeState
 from src.core.historical_memory import historical_store
 from src.core.projection_intelligence import projection_service
+from src.core.projection_intelligence.service import ProjectionService
 from src.platform.observability import (
     install_observability,
     mark_startup_complete,
@@ -69,6 +78,25 @@ _INSPECTION_REQUEST: ContextVar[bool] = ContextVar("dtos_inspection_request", de
 _PUBLIC_URL = os.getenv("DTOS_PUBLIC_URL", f"http://127.0.0.1:{os.getenv('PORT', '8000')}")
 
 
+async def _hydrate_league_runtime(runtime: LeagueRuntime) -> dict[str, Any]:
+    """Hydrate one requested league without replacing the configured default."""
+    projections = ProjectionService(league_id=runtime.league_id)
+    runtime.projection_context = projections
+    runtime.market_context = AssetMarketCache()
+    await sync_sleeper_league(
+        runtime.league_id, runtime.state, force_players=False,
+        projections=projections,
+    )
+    return runtime.state.get("data") or {}
+
+
+league_runtime_manager = LeagueRuntimeManager(
+    max_warm=MAX_WARM_LEAGUE_RUNTIMES,
+    hydrator=_hydrate_league_runtime,
+)
+league_runtime_manager.attach_default(LEAGUE_ID, STATE, warm=bool(STATE.get("data")))
+
+
 def _capture_live_visual(request: Any, output: Any) -> dict[str, Any]:
     """Load the browser stack only inside the background capture worker."""
     from src.core.inspection.live_browser import capture_page
@@ -77,7 +105,9 @@ def _capture_live_visual(request: Any, output: Any) -> dict[str, Any]:
 
 
 live_visual_service = LiveVisualService(
-    HISTORY_STORAGE_ROOT / "live_visual",
+    HISTORY_STORAGE_ROOT / "live_visual" / (
+        "league-" + hashlib.sha256(str(LEAGUE_ID).encode()).hexdigest()[:16]
+    ),
     _capture_live_visual if os.getenv("RENDER") or os.getenv("DTOS_LIVE_VISUAL_CAPTURE") else None,
 )
 
@@ -247,6 +277,10 @@ async def lifespan(_: FastAPI):
         yield
         return
     load_cache()
+    default_runtime = league_runtime_manager.resident(LEAGUE_ID)
+    if default_runtime is not None and STATE.get("data"):
+        default_runtime.apply_data(STATE["data"])
+        default_runtime.status = RuntimeState.WARM
     if STATE.get("data"):
         projection_service.restore_into(STATE["data"])
         await asyncio.to_thread(
@@ -273,6 +307,7 @@ async def lifespan(_: FastAPI):
             maintenance_task,
             return_exceptions=True,
         )
+        await league_runtime_manager.shutdown()
 
 
 app = FastAPI(title=APPLICATION_NAME, version=VERSION, lifespan=lifespan)
@@ -375,6 +410,12 @@ app.include_router(
     )
 )
 
+app.include_router(create_league_runtime_router(
+    manager=league_runtime_manager,
+    import_enabled=os.getenv("DTOS_MULTI_LEAGUE_IMPORT_ENABLED", "0").strip().casefold()
+    in {"1", "true", "yes", "on"},
+))
+
 app.include_router(
     create_valuation_router(
         ensure_fresh=ensure_fresh,
@@ -443,6 +484,9 @@ app.include_router(
 
 app.include_router(create_inspection_router(
     state=STATE, route_provider=lambda: app.routes, league_id=LEAGUE_ID,
+    artifact_root=Path("static/inspection") / (
+        "league-" + hashlib.sha256(str(LEAGUE_ID).encode()).hexdigest()[:16]
+    ),
     projection_service=projection_service, market_cache=asset_market_cache,
     live_visual_service=live_visual_service,
 ))

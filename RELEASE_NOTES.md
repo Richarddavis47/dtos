@@ -1,3 +1,21 @@
+# DTOS v1.10.16 - Multi-League Runtime Foundation
+
+DTOS v1.10.16 introduces a lazy league-scoped runtime boundary while preserving
+the configured Day Traders league as the default. Runtime state, synchronization,
+projection context, Asset Market residency, and diagnostics now have explicit
+league identities rather than relying on a last-request-wins singleton contract.
+
+The manager retains at most two warm leagues by default, hydrates a league only
+when requested, collapses concurrent hydration, evicts inactive runtimes by LRU,
+and releases league-scoped background and market resources. Secondary-league
+import is deliberately feature-gated until enabled by deployment configuration.
+
+Durable Historical Memory remains one normalized league-indexed database. Asset
+Market artifacts and Live Inspection/Visual evidence are namespaced by league,
+while full release DINS remains limited to the designated validation league.
+
+## Previous release
+
 # DTOS v1.10.15 — Projection Snapshot Upgrade Compatibility
 
 DTOS v1.10.15 ensures a durable Forward Production snapshot is reused only when
