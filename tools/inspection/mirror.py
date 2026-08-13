@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import time
 from pathlib import Path
 from typing import Any, Callable
@@ -16,6 +17,13 @@ from app_metadata import BUILD_NUMBER, VERSION
 from tools.inspection.package import _validate_public_content
 
 Fetch = Callable[[str], bytes]
+_MATCHUP_DETAIL_SURFACE = re.compile(r"matchups-([1-9][0-9]*)\Z")
+
+
+def matchup_detail_id(surface_id: str) -> str | None:
+    """Return the numeric matchup ID only for canonical detail surfaces."""
+    match = _MATCHUP_DETAIL_SURFACE.fullmatch(surface_id)
+    return match.group(1) if match else None
 
 
 def _json_bytes(value: Any) -> bytes:
@@ -42,8 +50,9 @@ def _validate_json_values(value: Any) -> None:
 
 
 def _name(surface_id: str) -> str:
-    if surface_id.startswith("matchups-"):
-        return "matchup-" + surface_id.removeprefix("matchups-")
+    matchup_id = matchup_detail_id(surface_id)
+    if matchup_id is not None:
+        return "matchup-" + matchup_id
     return surface_id
 
 
@@ -151,10 +160,10 @@ def build_mirror(
         starter_count = sum(
             len(team.get("starters") or []) for team in semantic.get("teams") or []
         )
-        if surface_id.startswith("matchups-"):
+        matchup_id = matchup_detail_id(surface_id)
+        if matchup_id is not None:
             if starter_count != presentation.get("starter_count") or starter_count != 22:
                 raise RuntimeError(f"{surface_id} starter counts do not reconcile.")
-            matchup_id = surface_id.removeprefix("matchups-")
             for team in semantic.get("teams") or []:
                 for starter in team.get("starters") or []:
                     audit_row = audit_rows.get((matchup_id, str(team.get("roster_id")), str(starter.get("player_id"))))
@@ -196,6 +205,13 @@ def build_mirror(
         "projection_audit_url": f"{download}/dtos-projection-audit-current.json",
         "surface_catalog_url": f"{download}/dtos-live-surface-catalog.json",
         "entries": entries,
+        "matchup_directory": {
+            "surface_id": "matchups-page",
+            "entries": sorted({
+                row["surface_id"] for row in entries
+                if matchup_detail_id(str(row["surface_id"])) is not None
+            }),
+        },
         "catalog": catalog.get("eligible_surfaces") or [],
         "artifact_count": len(artifacts),
         "total_bytes": sum(row["bytes"] for row in artifacts),
@@ -231,7 +247,10 @@ def main() -> int:
     print(json.dumps({
         "status": result["status"], "version": result["version"],
         "artifacts": result["artifact_count"], "bytes": result["total_bytes"],
-        "matchup_captures": sum(row["surface_id"].startswith("matchups-") for row in result["entries"]),
+        "matchup_captures": sum(
+            matchup_detail_id(str(row["surface_id"])) is not None
+            for row in result["entries"]
+        ),
     }, indent=2))
     return 0
 

@@ -1,3 +1,17 @@
+# DTOS v1.10.13 — External Mirror Matchup Surface Classification Correction
+
+DTOS v1.10.13 corrects the external mirror's matchup-surface classifier. One
+shared strict parser now recognizes only `matchups-<numeric-id>` as a matchup
+detail. The public `matchups-page` directory remains mirrorable without being
+subjected to detail-only 22-starter validation.
+
+Individual matchup validation remains unchanged and strict: two teams, 22
+starters, visible Sleeper and DTOS projections, and semantic/audit reconciliation.
+The mirror manifest also exposes deterministic directory-to-detail traversal for
+GitHub-only inspection.
+
+## Previous release
+
 # DTOS v1.10.12 — Permanent External Visual Mirror
 
 DTOS v1.10.12 permanently publishes the verified Live Product and Live Visual

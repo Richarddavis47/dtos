@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.10.13 - External Mirror Matchup Surface Classification Correction
+
+- Added one strict shared parser for numeric matchup-detail surface IDs.
+- Kept `matchups-page` mirrorable as the directory without applying detail-only
+  22-starter reconciliation.
+- Added explicit matchup-directory traversal metadata and matching GitHub-only
+  verification coverage.
+
 ## v1.10.12 - Permanent External Visual Mirror
 
 - Added a small immutable GitHub mirror of exact Live Visual PNGs, semantic page

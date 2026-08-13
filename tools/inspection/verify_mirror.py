@@ -7,7 +7,7 @@ import json
 from typing import Any, Callable
 
 from app_metadata import BUILD_NUMBER, VERSION
-from tools.inspection.mirror import _fetcher
+from tools.inspection.mirror import _fetcher, matchup_detail_id
 
 
 def verify(url: str, fetch: Callable[[str], bytes] | None = None) -> dict[str, Any]:
@@ -32,14 +32,14 @@ def verify(url: str, fetch: Callable[[str], bytes] | None = None) -> dict[str, A
             raise RuntimeError("Mirrored PNG hash mismatch.")
         if not image.startswith(b"\x89PNG\r\n\x1a\n"):
             raise RuntimeError("Mirrored visual is not a PNG.")
-        if not str(entry.get("surface_id")).startswith("matchups-"):
+        matchup_id = matchup_detail_id(str(entry.get("surface_id")))
+        if matchup_id is None:
             continue
         matchup_images += 1
         semantic_url = str(entry["semantic_mirror_url"])
         if semantic_url not in semantic_cache:
             semantic_cache[semantic_url] = json.loads(fetch(semantic_url))
         semantic = semantic_cache[semantic_url]
-        matchup_id = str(entry["surface_id"]).removeprefix("matchups-")
         starters = [(team, starter) for team in semantic.get("teams") or []
                     for starter in team.get("starters") or []]
         if len(starters) != entry.get("starter_count") or len(starters) != 22:
@@ -56,6 +56,14 @@ def verify(url: str, fetch: Callable[[str], bytes] | None = None) -> dict[str, A
                     raise RuntimeError("Mirrored projection differs from projection audit.")
     if matchup_images == 0 or matchup_images % 2:
         raise RuntimeError("Mirrored matchup viewport inventory is incomplete.")
+    directory = manifest.get("matchup_directory") or {}
+    directory_entries = set(directory.get("entries") or [])
+    expected_entries = {
+        str(entry["surface_id"]) for entry in manifest.get("entries") or []
+        if matchup_detail_id(str(entry.get("surface_id"))) is not None
+    }
+    if directory.get("surface_id") != "matchups-page" or directory_entries != expected_entries:
+        raise RuntimeError("Mirrored matchup directory discovery is inconsistent.")
     return {
         "status": "complete", "version": VERSION,
         "artifacts_verified": len(manifest.get("entries") or []),

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import copy
 import gc
+import os
+import subprocess
 import tempfile
 import threading
 import time
@@ -24,6 +26,7 @@ from src.core.asset_market.read_model import (
     MarketMemoryBudgetError, build_read_model, enforce_memory_budget,
     memory_admission,
 )
+from src.core.asset_market.engine import SemanticWorkerError
 from src.core.historical_memory.store import HistoricalStore
 from src.core.historical_memory import historical_graph
 
@@ -377,15 +380,153 @@ class AssetMarketTests(unittest.TestCase):
         self.assertEqual(model.asset_count, 5)
         self.assertEqual(yields, [1, 1, 1])
 
-    def test_semantic_generation_yields_without_changing_digest(self) -> None:
+    def test_spawned_semantic_generation_matches_reference_digest(self) -> None:
         expected = self.cache.semantic_identities(self.data, self.state)
-        yields: list[int] = []
-        observed = self.cache.semantic_identities(
-            self.data, self.state, chunk_size=2,
-            yield_control=lambda: yields.append(1),
+        observed = self.cache._isolated_semantic_identities(
+            self.data, self.state,
+            self.cache.request_marker(
+                self.data, self.state, self.store, self.league_id,
+            ),
+            self.league_id,
         )
         self.assertEqual(observed, expected)
-        self.assertEqual(len(yields), (int(observed["asset_count"]) + 1) // 2)
+        metrics = self.cache.metrics()["semantic_preparation"]
+        self.assertEqual(metrics["execution"], "spawned_subprocess")
+        self.assertTrue(metrics["reaped"])
+        self.assertEqual(metrics["records"], expected["asset_count"])
+
+    def test_semantic_generation_is_deterministic_across_repeated_processes(self) -> None:
+        marker = self.cache.request_marker(
+            self.data, self.state, self.store, self.league_id,
+        )
+        first = self.cache._isolated_semantic_identities(
+            self.data, self.state, marker, self.league_id,
+        )
+        second = self.cache._isolated_semantic_identities(
+            self.data, self.state, marker, self.league_id,
+        )
+        self.assertEqual(second, first)
+
+    def test_semantic_process_handles_variable_asset_complexity(self) -> None:
+        data = copy.deepcopy(self.data)
+        data["valuation_intelligence"]["assets"]["player:10213"].update({
+            "comparison": {
+                "windows": [{"values": list(range(100))} for _ in range(4)],
+            },
+            "provider_evidence": [
+                {"provider": f"provider-{index}", "values": list(range(40))}
+                for index in range(8)
+            ],
+        })
+        observed = self.cache._isolated_semantic_identities(
+            data, self.state,
+            self.cache.request_marker(data, self.state, self.store, self.league_id),
+            self.league_id,
+        )
+        reference = self.cache.semantic_identities(data, self.state)
+        self.assertEqual(observed, reference)
+        self.assertLess(self.cache.metrics()["semantic_preparation"]["input_bytes"], 1_000_000)
+
+    def test_semantic_spawn_failure_is_sanitized_and_fails_closed(self) -> None:
+        def unavailable(*_args, **_kwargs):
+            raise FileNotFoundError("private worker path")
+
+        cache = AssetMarketCache(semantic_process_factory=unavailable)
+        with self.assertRaisesRegex(SemanticWorkerError, "FileNotFoundError"):
+            cache._isolated_semantic_identities(
+                self.data, self.state,
+                cache.request_marker(
+                    self.data, self.state, self.store, self.league_id,
+                ),
+                self.league_id,
+            )
+        metrics = cache.metrics()["semantic_preparation"]
+        self.assertEqual(metrics["failure"], "spawn_or_pipe_failure")
+        self.assertNotIn("private worker path", str(metrics))
+
+    def test_semantic_timeout_terminates_and_reaps_child(self) -> None:
+        class Sink:
+            def write(self, value):
+                return len(value)
+
+            def flush(self):
+                return None
+
+            def close(self):
+                return None
+
+        class TimedOut:
+            pid = os.getpid()
+            returncode = None
+
+            def __init__(self):
+                self.stdin = Sink()
+                self.terminated = False
+
+            def communicate(self, timeout=None):
+                if not self.terminated:
+                    raise subprocess.TimeoutExpired("semantic-worker", timeout)
+                self.returncode = -15
+                return b"", b""
+
+            def terminate(self):
+                self.terminated = True
+
+            def kill(self):
+                self.terminated = True
+
+            def wait(self, timeout=None):
+                self.returncode = -15
+                return self.returncode
+
+            def poll(self):
+                return self.returncode
+
+        process = TimedOut()
+        cache = AssetMarketCache(
+            semantic_process_factory=lambda *_args, **_kwargs: process,
+        )
+        with patch(
+            "src.core.asset_market.engine.SEMANTIC_CHILD_TIMEOUT_SECONDS", 0.001,
+        ), self.assertRaisesRegex(SemanticWorkerError, "timed out"):
+            cache._isolated_semantic_identities(
+                self.data, self.state,
+                cache.request_marker(
+                    self.data, self.state, self.store, self.league_id,
+                ),
+                self.league_id,
+            )
+        metrics = cache.metrics()["semantic_preparation"]
+        self.assertEqual(metrics["failure"], "timeout")
+        self.assertTrue(metrics["reaped"])
+        self.assertEqual(metrics["exit_status"], -15)
+
+    def test_semantic_output_contract_rejects_wrong_generation_and_digest(self) -> None:
+        valid = {
+            "protocol": "dtos-market-semantic-v1",
+            "request_generation": "request",
+            "status": "ok",
+            "digests": {
+                "asset_universe": "0" * 64,
+                "brain_semantic_output": "1" * 64,
+                "ownership_dependency": "2" * 64,
+                "provider_evidence": "3" * 64,
+            },
+            "asset_count": 2,
+            "valuation_schema_version": "1.0",
+            "timing": {"records": 2, "input_bytes": 100},
+        }
+        with self.assertRaisesRegex(SemanticWorkerError, "identity"):
+            self.cache._validate_semantic_output(
+                {**valid, "request_generation": "stale"},
+                "request", 2, "1.0", 100,
+            )
+        malformed = copy.deepcopy(valid)
+        malformed["digests"]["provider_evidence"] = "not-a-digest"
+        with self.assertRaisesRegex(SemanticWorkerError, "digest"):
+            self.cache._validate_semantic_output(
+                malformed, "request", 2, "1.0", 100,
+            )
 
     def test_publication_performs_no_bulk_summary_reconstruction(self) -> None:
         published = AssetMarketCache()
@@ -846,9 +987,10 @@ class AssetMarketTests(unittest.TestCase):
         self.assertTrue(cache.wait_for_background())
         metrics = cache.metrics()
         self.assertIs(cache._market, market)
-        self.assertEqual(metrics["market_rebuild_requests_noop"], 1)
+        self.assertEqual(metrics["market_rebuild_requests_noop"], 0)
         self.assertEqual(metrics["market_rebuild_requests_semantic"], 0)
-        self.assertEqual(metrics["market_construction_admission_skips"], 1)
+        self.assertEqual(metrics["market_construction_admission_skips"], 0)
+        self.assertEqual(metrics["scheduler_skip_reason"], "generation_superseded")
         self.assertEqual(
             metrics["market_actual_constructions"],
             before["market_actual_constructions"],
