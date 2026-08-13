@@ -188,6 +188,7 @@ def enforce_memory_budget(
     baseline_events: dict[str, int] | None = None,
     baseline_effective: int | None = None,
     observer: Callable[[], dict[str, Any]] | None = None,
+    decision_observer: Callable[[str, dict[str, Any], dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Refuse a stage before the process can approach the platform OOM limit."""
     snapshot = (observer or memory_snapshot)()
@@ -196,6 +197,8 @@ def enforce_memory_budget(
         baseline_effective=baseline_effective,
     )
     result = {**snapshot, "admission": admission}
+    if decision_observer:
+        decision_observer(stage, admission, result)
     if not admission["admitted"]:
         raise MarketMemoryBudgetError(stage, admission)
     return result
@@ -404,6 +407,7 @@ def build_read_model(
     target: Path, generation: str, rows: Iterator[tuple[dict[str, Any], dict[str, Any]]],
     metadata: dict[str, Any], stage_observer: Callable[[dict[str, Any]], None] | None = None,
     *, chunk_size: int = 32, yield_control: Callable[[], None] | None = None,
+    admission_observer: Callable[[str, dict[str, Any], dict[str, Any]], None] | None = None,
 ) -> MarketReadModel:
     """Stream one generation to SQLite, then publish it atomically."""
     if chunk_size < 1:
@@ -430,7 +434,10 @@ def build_read_model(
             stage_observer(row)
 
     try:
-        before = enforce_memory_budget("artifact_initialization", 32 * 1024 * 1024)
+        before = enforce_memory_budget(
+            "artifact_initialization", 32 * 1024 * 1024,
+            decision_observer=admission_observer,
+        )
         baseline_events = dict(before.get("cgroup_memory_events") or {})
         baseline_effective = before["admission"].get("effective_working_set_bytes")
         started = time.perf_counter()
@@ -445,6 +452,7 @@ def build_read_model(
             before = enforce_memory_budget(
                 "canonical_asset_iteration", baseline_events=baseline_events,
                 baseline_effective=baseline_effective,
+                decision_observer=admission_observer,
             )
             for summary, canonical in rows:
                 values = summary.get("values") or {}
@@ -475,6 +483,7 @@ def build_read_model(
                     enforce_memory_budget(
                         "canonical_asset_iteration", baseline_events=baseline_events,
                         baseline_effective=baseline_effective,
+                        decision_observer=admission_observer,
                     )
                 if count % chunk_size == 0:
                     release()
@@ -486,6 +495,7 @@ def build_read_model(
                 "model_publication", 16 * 1024 * 1024,
                 baseline_events=baseline_events,
                 baseline_effective=baseline_effective,
+                decision_observer=admission_observer,
             )
             complete_metadata = {
                 **metadata, "generation": generation, "schema_version": MARKET_READ_MODEL_SCHEMA,

@@ -1,3 +1,20 @@
+# DTOS v1.10.18 - Multi-League Resource Observability & Storage Hygiene
+
+DTOS v1.10.18 makes every significant Asset Market memory-admission decision
+durably diagnosable without changing the admission contract. The bounded journal
+records explicit decision reasons, cgroup working-set inputs, OOM deltas, browser
+process counts, and sanitized lifecycle context across restart and runtime
+eviction.
+
+An explicit diagnostic operation now attributes approximate retained memory to
+league runtime components without adding profiling work to normal requests.
+Asset Market publication also retains exactly one manifest-selected current
+artifact per league and safely removes complete stale generations only after
+atomic publication. Resource health reports artifact and durable-disk pressure
+with documented 20% warning and 10% critical free-space thresholds.
+
+## Previous release
+
 # DTOS v1.10.17 - Multi-League Consumer Integration
 
 DTOS v1.10.17 completes the product boundary introduced by the bounded runtime

@@ -38,6 +38,7 @@ from src.core.asset_market.semantic_contract import (
     reference_identities,
     semantic_record,
 )
+from src.core.asset_market.resource_diagnostics import resource_diagnostics
 from src.platform.lifecycle import lifecycle_coordinator, memory_snapshot
 
 MARKET_SCHEMA_VERSION = "1.0"
@@ -172,6 +173,7 @@ class AssetMarket:
         store: HistoricalStore, league_id: str, *, generation: str,
         artifact_path: Path, load_existing: bool = False,
         compatibility: dict[str, Any] | None = None,
+        admission_observer: Any = None,
     ) -> None:
         started = time.perf_counter()
         self.data = data
@@ -212,6 +214,7 @@ class AssetMarket:
                     },
                     "compatibility": compatibility or {},
                 },
+                admission_observer=admission_observer,
             )
         metadata = self._read_model.metadata()
         self.semantic_generation = str(metadata["generation"])
@@ -585,7 +588,7 @@ class AssetMarketCache:
 
     def __init__(
         self, *, clock: Any = None, memory_observer: Any = None,
-        semantic_process_factory: Any = None,
+        semantic_process_factory: Any = None, resource_context_provider: Any = None,
     ) -> None:
         self._lock = threading.RLock()
         self._build_lock = threading.Lock()
@@ -625,12 +628,50 @@ class AssetMarketCache:
         self._clock = clock or time.monotonic
         self._memory_observer = memory_observer or memory_snapshot
         self._semantic_process_factory = semantic_process_factory or subprocess.Popen
+        self._resource_context_provider = resource_context_provider or (lambda: {})
         self._semantic_preparation: dict[str, Any] = {}
         self._prepared_semantic_contract: tuple[
             tuple[Any, ...], dict[str, Any]
         ] | None = None
         self.semantic_child_count = 0
         self._epoch = 0
+        self.artifact_cleanup_count = 0
+        self.artifact_cleanup_failures = 0
+        self.diagnostic_write_failures = 0
+        self._admission_signatures: dict[tuple[str, str], tuple[bool, str]] = {}
+
+    def _resource_context(self) -> dict[str, Any]:
+        try:
+            return dict(self._resource_context_provider() or {})
+        except Exception:
+            return {}
+
+    def configure_resource_context_provider(self, provider: Any) -> None:
+        """Attach a bounded context observer without changing cache behavior."""
+        self._resource_context_provider = provider or (lambda: {})
+
+    def _record_admission(
+        self, league_id: str, stage: str, admission: dict[str, Any],
+        snapshot: dict[str, Any] | None = None, storage_root: Path | None = None,
+    ) -> None:
+        signature = (
+            bool(admission.get("admitted")), str(admission.get("reason") or "other"),
+        )
+        key = (str(league_id), stage)
+        if signature[0] and self._admission_signatures.get(key) == signature:
+            return
+        self._admission_signatures[key] = signature
+        context = {**self._resource_context(), **dict(snapshot or {})}
+        context.update({
+            "semantic_child_count": self.semantic_child_count,
+            "active_construction_count": int(self._building),
+        })
+        try:
+            resource_diagnostics.record(
+                league_id, stage, admission, context=context, root=storage_root,
+            )
+        except OSError:
+            self.diagnostic_write_failures += 1
 
     def _record_semantic_preparation(self, metrics: dict[str, Any]) -> None:
         """Retain one bounded summary without retaining canonical asset data."""
@@ -829,10 +870,15 @@ class AssetMarketCache:
     def _isolated_semantic_identities(
         self, data: dict[str, Any], state: dict[str, Any],
         request_marker: tuple[Any, ...], league_id: str,
+        storage_root: Path | None = None,
     ) -> dict[str, Any]:
         """Stream canonical records to one minimal spawned semantic worker."""
+        snapshot = self._memory_observer()
         admission = memory_admission(
-            self._memory_observer(), estimate=SEMANTIC_CHILD_MEMORY_ESTIMATE,
+            snapshot, estimate=SEMANTIC_CHILD_MEMORY_ESTIMATE,
+        )
+        self._record_admission(
+            league_id, "semantic_preparation", admission, snapshot, storage_root,
         )
         if not admission.get("admitted"):
             raise MarketMemoryBudgetError("semantic_preparation", admission)
@@ -1092,6 +1138,88 @@ class AssetMarketCache:
         finally:
             temporary.unlink(missing_ok=True)
 
+    @classmethod
+    def prune_stale_artifacts(
+        cls, store: HistoricalStore, *, protected: tuple[Path, ...] = (),
+    ) -> dict[str, Any]:
+        """Delete only complete artifacts not selected by any league manifest."""
+        directory = store.path.parent
+        manifests = list(directory.glob(
+            f".{store.path.stem}.asset-market-manifest*.json"
+        ))
+        active: set[Path] = {path.resolve() for path in protected}
+        selected: dict[str, tuple[str, Path]] = {}
+        for manifest in manifests:
+            try:
+                payload = json.loads(manifest.read_text(encoding="utf-8"))
+                name = str(payload.get("artifact") or "")
+                candidate = directory / name
+                if (
+                    name == Path(name).name and candidate.is_file()
+                    and candidate.stat().st_size == int(payload.get("size") or -1)
+                    and cls._artifact_checksum(candidate) == payload.get("sha256")
+                ):
+                    metadata = MarketReadModel(candidate).metadata()
+                    league = str(metadata.get("league_id") or "")
+                    published = str(payload.get("published_at") or "")
+                    if league and (
+                        league not in selected or published > selected[league][0]
+                    ):
+                        selected[league] = (published, candidate.resolve())
+            except (OSError, TypeError, ValueError, json.JSONDecodeError):
+                continue
+        active.update(item[1] for item in selected.values())
+        removed = failures = stale_bytes = 0
+        for candidate in directory.glob(
+            f".{store.path.stem}.asset-market-*.sqlite3"
+        ):
+            if ".partial" in candidate.name or candidate.resolve() in active:
+                continue
+            try:
+                metadata = MarketReadModel(candidate).metadata()
+                if not metadata.get("complete"):
+                    continue
+                size = candidate.stat().st_size
+                candidate.unlink()
+                stale_bytes += size
+                removed += 1
+            except (OSError, sqlite3.Error, ValueError, json.JSONDecodeError):
+                failures += 1
+        remaining = list(directory.glob(
+            f".{store.path.stem}.asset-market-*.sqlite3"
+        ))
+        active_existing = [path for path in remaining if path.resolve() in active]
+        stale_existing = [path for path in remaining if path.resolve() not in active]
+        return {
+            "removed": removed, "removed_bytes": stale_bytes,
+            "failures": failures, "artifact_count": len(remaining),
+            "artifact_bytes": sum(path.stat().st_size for path in remaining),
+            "active_count": len(active_existing),
+            "active_bytes": sum(path.stat().st_size for path in active_existing),
+            "stale_count": len(stale_existing),
+            "stale_bytes": sum(path.stat().st_size for path in stale_existing),
+        }
+
+    def cleanup_artifacts(
+        self, store: HistoricalStore, *, protected: tuple[Path, ...] = (),
+    ) -> dict[str, Any]:
+        """Run bounded non-fatal cleanup and retain scalar diagnostics."""
+        try:
+            cleanup = self.prune_stale_artifacts(store, protected=protected)
+            with self._lock:
+                self.artifact_cleanup_count += int(cleanup["removed"])
+                self.artifact_cleanup_failures += int(cleanup["failures"])
+            return cleanup
+        except Exception:
+            with self._lock:
+                self.artifact_cleanup_failures += 1
+            return {
+                "removed": 0, "removed_bytes": 0, "failures": 1,
+                "artifact_count": 0, "artifact_bytes": 0,
+                "active_count": 0, "active_bytes": 0,
+                "stale_count": 0, "stale_bytes": 0,
+            }
+
     @staticmethod
     def _artifact_candidates(
         store: HistoricalStore, league_id: str | None = None,
@@ -1224,6 +1352,9 @@ class AssetMarketCache:
                 previous._artifact_path.unlink(missing_ok=True)
             except OSError:
                 pass
+        self.cleanup_artifacts(
+            market.store, protected=(market._artifact_path,),
+        )
         # Other league generations share this durable store directory. They are
         # intentionally retained for lazy restoration and must not be removed by
         # publication from the currently active league cache.
@@ -1249,6 +1380,9 @@ class AssetMarketCache:
                 market = AssetMarket(
                     data, state, store, league_id, generation=generation,
                     artifact_path=path, compatibility=contract,
+                    admission_observer=lambda stage, decision, snapshot: self._record_admission(
+                        league_id, stage, decision, snapshot, store.path.parent,
+                    ),
                 )
                 return market
 
@@ -1294,7 +1428,7 @@ class AssetMarketCache:
                 "league_id": league_id,
                 "database_identity_digest": _digest(store.database_uuid()),
                 **self._isolated_semantic_identities(
-                    data, state, request_marker, league_id,
+                    data, state, request_marker, league_id, store.path.parent,
                 ),
             }
         if (
@@ -1528,7 +1662,7 @@ class AssetMarketCache:
                 "league_id": league_id,
                 "database_identity_digest": _digest(store.database_uuid()),
                 **self._isolated_semantic_identities(
-                    data, state, request_marker, league_id,
+                    data, state, request_marker, league_id, store.path.parent,
                 ),
             }
             generation = self.durable_generation(
@@ -1625,7 +1759,7 @@ class AssetMarketCache:
             "league_id": league_id,
             "database_identity_digest": _digest(store.database_uuid()),
             **self._isolated_semantic_identities(
-                data, state, request_marker, league_id,
+                data, state, request_marker, league_id, store.path.parent,
             ),
         }
         generation = self.durable_generation(
@@ -1712,6 +1846,9 @@ class AssetMarketCache:
                 "artifact_loads": self.artifact_loads,
                 "artifact_restore_failures": self.artifact_restore_failures,
                 "durable_publications": self.durable_publications,
+                "artifact_cleanup_count": self.artifact_cleanup_count,
+                "artifact_cleanup_failures": self.artifact_cleanup_failures,
+                "diagnostic_write_failures": self.diagnostic_write_failures,
                 "requested_generation": self._requested_generation,
                 "memory_admission_backoff": (
                     {
