@@ -22,11 +22,15 @@ PageRenderer = Callable[[str, str], HTMLResponse]
 
 def create_historical_assets_router(
     *, league_id: str, require_data: RequireData, page: PageRenderer,
+    league_resolver: Callable[[], str] | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["historical-assets"])
 
     def graph():
-        return historical_graph(historical_store, league_id, require_data())
+        return historical_graph(historical_store, selected_league(), require_data())
+
+    def selected_league() -> str:
+        return league_resolver() if league_resolver else league_id
 
     @router.get("/api/history/assets")
     async def asset_directory(
@@ -180,7 +184,8 @@ def create_historical_assets_router(
 
     @router.get("/api/history/coverage")
     async def historical_coverage() -> JSONResponse:
-        progress = history_progress_contracts(league_id)
+        selected = selected_league()
+        progress = history_progress_contracts(selected)
         return JSONResponse(jsonable_encoder({
             **graph().coverage(),
             "canonical_progress": progress["canonical_history_progress"],
@@ -190,16 +195,17 @@ def create_historical_assets_router(
     @router.get("/api/search")
     async def unified_search(q: str = "", limit: int = Query(50, ge=1, le=100)) -> JSONResponse:
         rows = graph().search(q, limit)
+        selected = selected_league()
         needle = q.casefold().strip()
         if needle:
-            for score in fois_service.repository.league(league_id, FOIS_MODEL_VERSION):
+            for score in fois_service.repository.league(selected, FOIS_MODEL_VERSION):
                 if needle in (score.gm_name or "").casefold():
                     rows.append({
                         "canonical_id": score.gm_id,
                         "result_type": "general_manager",
                         "display_label": score.gm_name,
                         "resolution_status": "resolved",
-                        "canonical_url": f"/fois?league_id={league_id}",
+                        "canonical_url": f"/fois?league_id={selected}",
                         "historical_availability": score.evidence_state,
                         "match_reason": "canonical GM name",
                         "executive_score": score.overall_score,
@@ -212,15 +218,16 @@ def create_historical_assets_router(
     @router.get("/search", response_class=HTMLResponse)
     async def search_page(q: str = "") -> HTMLResponse:
         rows = graph().search(q)
+        selected = selected_league()
         needle = q.casefold().strip()
         if needle:
             rows.extend({
-                "canonical_url": f"/fois?league_id={league_id}",
+                "canonical_url": f"/fois?league_id={selected}",
                 "display_label": score.gm_name,
                 "result_type": "general_manager",
                 "resolution_status": score.evidence_state,
                 "match_reason": "canonical GM name",
-            } for score in fois_service.repository.league(league_id, FOIS_MODEL_VERSION)
+            } for score in fois_service.repository.league(selected, FOIS_MODEL_VERSION)
               if needle in (score.gm_name or "").casefold())
         results = "".join(
             f'<li><a href="{escape(str(row["canonical_url"]))}">{escape(str(row["display_label"]))}</a> <span class="pill">{escape(str(row["result_type"]).replace("_", " ").title())}</span><br><small>{escape(human_status(row.get("historical_availability") or row.get("resolution_status")))}</small></li>'

@@ -19,9 +19,9 @@ def build_front_office_center(data: dict[str, Any], roster_id: int | None = None
     intelligence = intelligence_orchestrator.analyze(data, selected)
     model = intelligence.front_office_model
     reports = model.reports
-    graph = historical_graph(historical_store, LEAGUE_ID, data)
-    histories = {str(selected): graph.franchise_history(str(selected))}
     league_id = str((data.get("league") or {}).get("league_id") or LEAGUE_ID)
+    graph = historical_graph(historical_store, league_id, data)
+    histories = {str(selected): graph.franchise_history(str(selected))}
     selected_team = next((row for row in teams if int(row.get("roster_id") or 0) == selected), {})
     owner_id = selected_team.get("owner_id") or selected_team.get("user_id")
     gm_id = f"{league_id}:gm:{owner_id}" if owner_id is not None else None

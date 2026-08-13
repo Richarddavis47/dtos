@@ -15,13 +15,17 @@ from src.core.fois.models import FOIS_MODEL_VERSION
 def create_audit_router(
     *, require_data: Callable[[], dict[str, Any]], projection_service: Any,
     market_cache: Any, fois_service: Any,
+    context_resolver: Callable[[], Any | None] | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/audit", tags=["Audit"])
 
     def current() -> dict[str, Any]:
         data = require_data()
-        projection = projection_service.snapshot()
-        market = market_cache.current()
+        context = context_resolver() if context_resolver else None
+        projections = context.projection if context is not None else projection_service
+        selected_market = context.market if context is not None else market_cache
+        projection = projections.snapshot()
+        market = selected_market.current()
         if projection is None:
             raise HTTPException(503, "Projection Intelligence snapshot is unavailable.")
         if market is None:
@@ -30,7 +34,7 @@ def create_audit_router(
         scores = tuple(fois_service.repository.league(league_id, FOIS_MODEL_VERSION))
         return build_projection_audit(
             data=data, projection_snapshot=projection,
-            projection_health=projection_service.health(include_accuracy=False), market=market,
+            projection_health=projections.health(include_accuracy=False), market=market,
             fois_scores=scores,
         )
 

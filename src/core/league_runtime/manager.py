@@ -49,6 +49,7 @@ class LeagueRuntime:
     brain_context: Any = None
     market_context: Any = None
     fois_context: Any = None
+    canonical_context: Any = None
     lifecycle: dict[str, Any] = field(default_factory=dict)
     source_generations: dict[str, str] = field(default_factory=dict)
     cache_metadata: dict[str, Any] = field(default_factory=dict)
@@ -90,7 +91,7 @@ class LeagueRuntime:
             await asyncio.gather(*tasks, return_exceptions=True)
         for context in (
             self.market_context, self.projection_context, self.brain_context,
-            self.fois_context,
+            self.fois_context, self.canonical_context,
         ):
             closer = getattr(context, "close", None) or getattr(context, "clear", None)
             if callable(closer):
@@ -104,11 +105,12 @@ class LeagueRuntime:
         self.brain_context = None
         self.market_context = None
         self.fois_context = None
+        self.canonical_context = None
         self.status = RuntimeState.CLOSED
 
     def public_health(self) -> dict[str, Any]:
         data = self.state.get("data") or {}
-        return {
+        result = {
             "league_id": self.league_id,
             "status": self.status.value,
             "season": self.season,
@@ -120,6 +122,9 @@ class LeagueRuntime:
             "team_count": len(data.get("teams") or ()),
             "source_generations": dict(self.source_generations),
         }
+        if self.canonical_context is not None:
+            result["product"] = self.canonical_context.health()
+        return result
 
 
 Hydrator = Callable[[LeagueRuntime], Awaitable[dict[str, Any] | LeagueRuntime | None]]

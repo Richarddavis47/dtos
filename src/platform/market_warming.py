@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Any, Callable
+from urllib.parse import parse_qs
 
 from starlette.background import BackgroundTask
 from starlette.responses import JSONResponse, Response
@@ -30,10 +31,13 @@ class AssetMarketWarmingMiddleware:
         self.league_id = league_id
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        query = parse_qs(scope.get("query_string", b"").decode("latin-1"))
+        requested = (query.get("league_id") or query.get("league") or [None])[0]
         if (
             scope["type"] != "http"
             or scope.get("method") not in MARKET_WARMING_METHODS
             or scope.get("path") not in MARKET_WARMING_PATHS
+            or (requested is not None and str(requested) != str(self.league_id))
         ):
             await self.app(scope, receive, send)
             return

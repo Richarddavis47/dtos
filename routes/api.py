@@ -28,16 +28,20 @@ def create_api_router(
     sync_sleeper: SyncSleeper,
     state: dict[str, Any],
     league_id: str,
+    league_resolver: Callable[[], str] | None = None,
 ) -> APIRouter:
     """Create system routes using shared application dependencies."""
     router = APIRouter()
+
+    def selected_league() -> str:
+        return league_resolver() if league_resolver else league_id
 
     @router.get("/health")
     async def health() -> JSONResponse:
         status_code = 200 if runtime_metrics.ready else 503
         return JSONResponse({
             "status": "ready" if runtime_metrics.ready else "starting",
-            "league_id": league_id,
+            "league_id": selected_league(),
             "last_sync": state.get("last_sync"),
             "last_error": state.get("last_error"),
             "runtime": runtime_metrics.health(),
@@ -63,7 +67,7 @@ def create_api_router(
                 "reason": runtime_metrics.readiness_reason,
                 "runtime": runtime_metrics.health(),
                 "historical_storage": historical_storage_status.public(),
-                **history_progress_contracts(league_id),
+                **history_progress_contracts(selected_league()),
             },
             status_code=status_code,
         )
@@ -76,7 +80,7 @@ def create_api_router(
                 "version": VERSION,
                 "build": BUILD_NUMBER,
                 "deployment": deployment_metadata(),
-                "league_id": league_id,
+                "league_id": selected_league(),
                 "last_sync": state.get("last_sync"),
                 "last_error": state.get("last_error"),
                 "syncing": state.get("syncing"),
@@ -119,7 +123,7 @@ def create_api_router(
         from dataclasses import asdict
         from fastapi.encoders import jsonable_encoder
         data = state.get("data") or {}
-        context = {"asset": (data.get("players") or {}).get(key, {}), "market_data": data.get("market_data") or {}, "namespace": f"{league_id}:api"}
+        context = {"asset": (data.get("players") or {}).get(key, {}), "market_data": data.get("market_data") or {}, "namespace": f"{selected_league()}:api"}
         mode = "online" if context["market_data"].get("providers") else "offline"
         return JSONResponse(jsonable_encoder(asdict(data_platform.aggregate(category, key, context, mode=mode))))
 
@@ -128,7 +132,7 @@ def create_api_router(
         from dataclasses import asdict
         from fastapi.encoders import jsonable_encoder
         data = state.get("data") or {}
-        context = {"asset": (data.get("players") or {}).get(key, {}), "market_data": data.get("market_data") or {}, "namespace": f"{league_id}:api"}
+        context = {"asset": (data.get("players") or {}).get(key, {}), "market_data": data.get("market_data") or {}, "namespace": f"{selected_league()}:api"}
         mode = "online" if context["market_data"].get("providers") else "offline"
         rows = [asdict(data_platform.fetch(provider.metadata.name, key, context, mode=mode)) for provider in data_platform.registry.providers(category)]
         return JSONResponse(jsonable_encoder({"key": key, "category": category, "sources": rows}))
@@ -139,7 +143,7 @@ def create_api_router(
         from fastapi.encoders import jsonable_encoder
         data = state.get("data") or {}
         keys = (key,) if key else tuple(player_asset_index(data))[:100]
-        context = {"market_data": data.get("market_data") or {}, "namespace": f"{league_id}:refresh"}
+        context = {"market_data": data.get("market_data") or {}, "namespace": f"{selected_league()}:refresh"}
         return JSONResponse(jsonable_encoder({"results": [asdict(row) for row in data_platform.refresh(category, context, keys, provider_name=provider)]}))
 
     @router.get("/api/intelligence")

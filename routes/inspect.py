@@ -43,6 +43,7 @@ def create_inspection_router(
     projection_service: Any | None = None,
     market_cache: Any | None = None,
     live_visual_service: LiveVisualService | None = None,
+    context_resolver: Callable[[], Any | None] | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/inspect", tags=["inspection"])
     public_base = os.getenv("DTOS_PUBLIC_URL", "https://dtos.onrender.com").rstrip("/")
@@ -55,25 +56,47 @@ def create_inspection_router(
     def engine() -> InspectionEngine:
         return InspectionEngine(state)
 
-    def live() -> LiveInspection:
+    def dependencies() -> tuple[str, Any | None, Any | None]:
+        context = context_resolver() if context_resolver else None
         data = state.get("data") or {}
-        selected = league_id or str((data.get("league") or {}).get("league_id") or "")
+        selected = (
+            context.league_id if context is not None else
+            league_id or str((data.get("league") or {}).get("league_id") or "")
+        )
+        return (
+            selected,
+            context.projection if context is not None else projection_service,
+            context.market if context is not None else market_cache,
+        )
+
+    def live() -> LiveInspection:
+        selected, projections, selected_market = dependencies()
         scores = fois_service.repository.league(selected, FOIS_MODEL_VERSION) if selected else ()
         return LiveInspection(
             state=state, routes=route_provider(), league_id=selected,
-            projection_snapshot=projection_service.snapshot() if projection_service else None,
-            market=market_cache.current() if market_cache else None,
+            projection_snapshot=projections.snapshot() if projections else None,
+            market=selected_market.current() if selected_market else None,
             fois_scores=tuple(scores),
         )
 
     def progress_contracts() -> dict[str, Any]:
-        selected = league_id or str(
-            ((state.get("data") or {}).get("league") or {}).get("league_id") or ""
-        )
+        selected, _projections, _market = dependencies()
         return history_progress_contracts(selected)
 
     def historical_progress() -> dict[str, Any]:
         return progress_contracts()["canonical_history_progress"]
+
+    def visual_allowed() -> bool:
+        selected, _projections, _market = dependencies()
+        return not league_id or selected == league_id
+
+    def private_visual_state() -> dict[str, Any]:
+        return {
+            "status": "unavailable",
+            "reason": "Secondary league visual inspection is private and requires explicit authorization.",
+            "captures": [],
+            "capture_count": 0,
+        }
 
     @router.get("")
     async def inspection_index() -> Any:
@@ -99,6 +122,8 @@ def create_inspection_router(
 
     @router.get("/live/visual")
     async def live_visual_index() -> Any:
+        if not visual_allowed():
+            return private_visual_state()
         inspector = live()
         eligibility = [{
             "surface_id": row.surface_id, "title": row.title,
@@ -120,12 +145,16 @@ def create_inspection_router(
 
     @router.get("/live/visual/manifest")
     async def live_visual_manifest() -> Any:
+        if not visual_allowed():
+            return private_visual_state()
         return live_visual_service.manifest() if live_visual_service else {
             "status": "pending", "captures": [], "capture_count": 0,
         }
 
     @router.get("/live/visual/health")
     async def live_visual_health() -> Any:
+        if not visual_allowed():
+            return private_visual_state()
         required = len((state.get("data") or {}).get("matchups") or {}) * len(LIVE_VIEWPORTS)
         return live_visual_service.health(required) if live_visual_service else {
             "status": "pending", "required_captures": required, "completed": 0,
@@ -134,6 +163,8 @@ def create_inspection_router(
 
     @router.get("/live/visual/metadata/{surface_id}/{viewport}")
     async def live_visual_metadata(surface_id: str, viewport: str) -> Any:
+        if not visual_allowed():
+            raise HTTPException(404, "Secondary league visual capture is unavailable.")
         if viewport not in LIVE_VIEWPORTS:
             raise HTTPException(404, "Visual viewport is not registered.")
         row = live_visual_service.capture(surface_id, viewport) if live_visual_service else None
@@ -144,6 +175,8 @@ def create_inspection_router(
 
     @router.get("/live/visual/captures/{surface_id}/{viewport}.png")
     async def live_visual_png(surface_id: str, viewport: str) -> Any:
+        if not visual_allowed():
+            raise HTTPException(404, "Secondary league visual capture is unavailable.")
         if viewport not in LIVE_VIEWPORTS:
             raise HTTPException(404, "Visual viewport is not registered.")
         path = live_visual_service.screenshot(surface_id, viewport) if live_visual_service else None
@@ -293,9 +326,7 @@ def create_inspection_router(
         return {"identity": inspector.identity(), "query": q, "count": len(rows), "results": rows}
 
     def canonical_trade_discovery() -> dict[str, Any]:
-        selected = league_id or str(
-            ((state.get("data") or {}).get("league") or {}).get("league_id") or ""
-        )
+        selected, _projections, _market = dependencies()
         records = (
             historical_store.discoverable_trade_records(selected)
             if selected else []
@@ -379,7 +410,7 @@ def create_inspection_router(
     @router.get("/fois")
     async def inspect_fois() -> Any:
         """Inspect persisted FOIS summaries without generation or provider access."""
-        selected = league_id or str(((state.get("data") or {}).get("league") or {}).get("league_id") or "")
+        selected, _projections, _market = dependencies()
         scores = fois_service.repository.league(selected, FOIS_MODEL_VERSION) if selected else ()
         return jsonable_encoder({
             "application_version": VERSION,
@@ -453,11 +484,14 @@ def create_inspection_router(
     @router.get("/market")
     async def inspect_market() -> Any:
         """Inspect the cached Asset Market without synchronization or mutation."""
-        selected = league_id or str(
-            ((state.get("data") or {}).get("league") or {}).get("league_id") or ""
-        )
-        market = asset_market(
-            state.get("data") or {}, state, historical_store, selected,
+        selected, _projections, selected_cache = dependencies()
+        context = context_resolver() if context_resolver else None
+        market = (
+            selected_cache.get(
+                state.get("data") or {}, state, historical_store, selected,
+                background=True,
+            ) if context is not None else
+            asset_market(state.get("data") or {}, state, historical_store, selected)
         )
         directory = market.directory(limit=5)
         trending = market.trending(limit=3)
