@@ -259,6 +259,10 @@ class LeagueRuntimeManager:
     def resident(self, league_id: str) -> LeagueRuntime | None:
         return self._runtimes.get(str(league_id))
 
+    def resident_runtimes(self) -> tuple[LeagueRuntime, ...]:
+        """Return a stable process-local snapshot for explicit diagnostics."""
+        return tuple(self._runtimes.values())
+
     def attach_default(
         self, league_id: str, state: dict[str, Any], *, warm: bool = False,
     ) -> LeagueRuntime:

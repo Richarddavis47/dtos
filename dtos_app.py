@@ -58,6 +58,9 @@ from services.history import (
 from services.fois import fois_service
 from src.core.fois import FOIS_MODEL_VERSION
 from src.core.asset_market import AssetMarketCache, asset_market_cache
+from src.core.asset_market.resource_diagnostics import (
+    disk_health, resource_diagnostics, runtime_component_sizes,
+)
 from src.core.league_runtime import (
     CanonicalLeagueContext, LeagueRuntime, LeagueRuntimeManager, RuntimeState,
 )
@@ -95,7 +98,9 @@ def _publish_runtime_context(
     """Publish one complete canonical consumer context atomically."""
     data = runtime.state.get("data") or {}
     brain = BrainService(data)
-    market = runtime.market_context or AssetMarketCache()
+    market = runtime.market_context or AssetMarketCache(
+        resource_context_provider=_resource_context_snapshot,
+    )
     context = CanonicalLeagueContext(
         runtime=runtime,
         historical_store=historical_store,
@@ -148,6 +153,62 @@ default_league_runtime = league_runtime_manager.attach_default(
 # same object so artifact restoration and route serving share one owner.
 default_league_runtime.market_context = asset_market_cache
 runtime_state = RuntimeStateProxy(STATE)
+
+
+def _resource_context_snapshot() -> dict[str, Any]:
+    lifecycle = lifecycle_coordinator.snapshot()
+    manager = league_runtime_manager.health()
+    background = runtime_metrics.health().get("background_tasks") or {}
+    return {
+        "cgroup_limit_bytes": (lifecycle.get("memory") or {}).get("cgroup_limit_bytes"),
+        "runtime_count": manager["resident_runtime_count"],
+        "warm_runtime_count": manager["warm_runtime_count"],
+        "lifecycle_phase": lifecycle["phase"],
+        "startup_fence_state": lifecycle["startup_fence"]["state"],
+        "synchronization_state": background.get("sleeper_sync", "idle"),
+        "background_work": {
+            str(name): str(status) for name, status in background.items()
+        },
+    }
+
+
+asset_market_cache.configure_resource_context_provider(_resource_context_snapshot)
+
+
+def _resource_health() -> dict[str, Any]:
+    manager = league_runtime_manager.health()
+    storage = disk_health(historical_store.path)
+    caches = [
+        runtime.market_context
+        for runtime in league_runtime_manager.resident_runtimes()
+        if runtime.market_context is not None
+    ]
+    return {
+        "status": storage["status"],
+        "resident_runtime_count": manager["resident_runtime_count"],
+        "warm_runtime_count": manager["warm_runtime_count"],
+        "warm_runtime_limit": manager["warm_runtime_limit"],
+        "cache_count": len(caches),
+        "artifact_cleanup": {
+            "removed": sum(getattr(cache, "artifact_cleanup_count", 0) for cache in caches),
+            "failures": sum(getattr(cache, "artifact_cleanup_failures", 0) for cache in caches),
+        },
+        "admission": resource_diagnostics.health(),
+        "storage": storage,
+    }
+
+
+def _measure_resources() -> dict[str, Any]:
+    measurements = [
+        runtime_component_sizes(runtime)
+        for runtime in league_runtime_manager.resident_runtimes()
+    ]
+    return {
+        "status": "complete",
+        "runtime_count": len(measurements),
+        "runtimes": measurements,
+        "storage": disk_health(historical_store.path),
+    }
 
 
 def _capture_live_visual(request: Any, output: Any) -> dict[str, Any]:
@@ -341,6 +402,7 @@ async def lifespan(_: FastAPI):
         projection_service.restore_into(STATE["data"])
         if default_runtime is not None:
             _publish_runtime_context(default_runtime, projection_service)
+        await asyncio.to_thread(asset_market_cache.cleanup_artifacts, historical_store)
         await asyncio.to_thread(
             asset_market_cache.restore_compatible,
             STATE["data"], STATE, historical_store, LEAGUE_ID,
@@ -505,6 +567,8 @@ app.include_router(
 app.include_router(create_league_runtime_router(
     manager=league_runtime_manager,
     import_enabled=_MULTI_LEAGUE_IMPORT_ENABLED,
+    resource_health=_resource_health,
+    resource_measurement=_measure_resources,
 ))
 
 app.include_router(
@@ -593,6 +657,7 @@ app.include_router(create_inspection_router(
     projection_service=projection_service, market_cache=asset_market_cache,
     context_resolver=current_league_context,
     live_visual_service=live_visual_service,
+    resource_health=_resource_health,
 ))
 
 app.include_router(

@@ -13,12 +13,25 @@ from src.core.league_runtime import (
 
 def create_league_runtime_router(
     *, manager: LeagueRuntimeManager, import_enabled: bool = False,
+    resource_health: Any = None, resource_measurement: Any = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/leagues", tags=["league-runtime"])
 
     @router.get("/runtime")
     async def runtime_health() -> dict[str, Any]:
         return manager.health()
+
+    @router.get("/resources")
+    async def resources() -> dict[str, Any]:
+        return resource_health() if resource_health else {"status": "unavailable"}
+
+    @router.post("/resources/measure")
+    async def measure_resources() -> dict[str, Any]:
+        """Run explicit bounded deep sizing; normal health never invokes it."""
+        return (
+            resource_measurement()
+            if resource_measurement else {"status": "unavailable"}
+        )
 
     @router.get("/{league_id}/runtime")
     async def league_health(league_id: str) -> JSONResponse:

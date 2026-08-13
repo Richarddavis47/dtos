@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.10.18 - Multi-League Resource Observability & Storage Hygiene
+
+- Added bounded durable Asset Market admission history with explicit reason
+  codes, cgroup/OOM evidence, browser counts, and public-safe lifecycle context.
+- Added explicit diagnostic-only retained-memory attribution for league runtime,
+  projection, Brain, FOIS, player-catalog, and Market components.
+- Added manifest-safe one-current-artifact-per-league pruning with non-fatal
+  cleanup telemetry, disk health, and 30/100/300-league storage projections.
+- Added public-safe multi-league resource health without request-time provider,
+  Market-construction, Brain-generation, or deep-sizing work.
+
 ## v1.10.17 - Multi-League Consumer Integration
 
 - Added a request-scoped CanonicalLeagueContext that routes canonical crawl,
