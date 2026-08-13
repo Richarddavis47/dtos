@@ -130,6 +130,33 @@ def _cgroup(name: str) -> int:
     return int(value)
 
 
+def _cpu_stat() -> dict[str, int]:
+    """Read required Linux cgroup CPU scheduling evidence or fail closed."""
+    values: dict[str, int] = {}
+    try:
+        for line in Path("/sys/fs/cgroup/cpu.stat").read_text(
+            encoding="ascii",
+        ).splitlines():
+            name, raw = line.split(maxsplit=1)
+            values[name] = int(raw)
+    except (OSError, ValueError) as exc:
+        raise RuntimeError("required cgroup cpu.stat metrics are unavailable") from exc
+    required = {
+        "usage_usec", "user_usec", "system_usec", "nr_periods",
+        "nr_throttled", "throttled_usec",
+    }
+    if not required.issubset(values) or any(values[name] < 0 for name in required):
+        raise RuntimeError("required cgroup cpu.stat metrics are malformed")
+    return {name: values[name] for name in sorted(required)}
+
+
+def _cpu_delta(before: dict[str, int], after: dict[str, int]) -> dict[str, int]:
+    delta = {name: after[name] - before[name] for name in before}
+    if any(value < 0 for value in delta.values()):
+        raise RuntimeError("cgroup cpu.stat counters moved backwards")
+    return delta
+
+
 def _cgroup_cpu() -> dict[str, int | bool]:
     path = CGROUP / "cpu.stat"
     if not path.is_file():
@@ -1649,6 +1676,7 @@ def main() -> int:
     log_path = OUTPUT.parent / "server.log"
     padding: list[bytearray] = []
     process = None
+    cpu_before = _cpu_stat()
     failure: BaseException | None = None
     startup_evidence: dict[str, object] = {}
     memory_evidence = summary["memory_evidence"]
@@ -1940,6 +1968,7 @@ def main() -> int:
             effective_margin = _effective_memory_margin(
                 memory_max, effective_peak,
             )
+            cpu_after = _cpu_stat()
             summary.update({
                 "memory_current": _cgroup("memory.current"),
                 "memory_peak": raw_peak,
@@ -1949,6 +1978,12 @@ def main() -> int:
                 "container_restart_count": 0,
                 "worker_count": 1,
                 "provider_synchronization": False,
+                "parent_rss_high_water": _rss_high_water(process.pid),
+                "cpu_evidence": {
+                    "before": cpu_before,
+                    "after": cpu_after,
+                    "delta": _cpu_delta(cpu_before, cpu_after),
+                },
             })
             if effective_margin < 500 * MIB:
                 raise AssertionError("memory margin below 2 GiB is less than 500 MiB")

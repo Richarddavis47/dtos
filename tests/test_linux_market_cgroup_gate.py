@@ -32,6 +32,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _artifact_state,
     _application_fixture_contract,
     _configured_fixture_contract,
+    _cpu_delta,
     _combined_read_audit,
     _diagnostic_request,
     _effective_memory_margin,
@@ -55,6 +56,15 @@ DETAIL = "Asset Market generation is building safely in the background; retry sh
 
 
 class ArchiveCacheValidationTests(unittest.TestCase):
+    def test_cpu_stat_delta_rejects_counter_regression(self) -> None:
+        before = {"usage_usec": 10, "nr_throttled": 2}
+        self.assertEqual(
+            _cpu_delta(before, {"usage_usec": 15, "nr_throttled": 2}),
+            {"usage_usec": 5, "nr_throttled": 0},
+        )
+        with self.assertRaisesRegex(RuntimeError, "backwards"):
+            _cpu_delta(before, {"usage_usec": 9, "nr_throttled": 2})
+
     def test_padding_race_uses_one_memory_read_per_iteration(self) -> None:
         from tools.validation import linux_market_cgroup_gate as gate
 
