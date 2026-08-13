@@ -107,7 +107,9 @@ class ArtifactPruningTests(unittest.TestCase):
     def _artifact(self, store: HistoricalStore, league: str, generation: str) -> Path:
         path = AssetMarketCache.artifact_path(store, generation)
         build_read_model(
-            path, generation, iter(()), {"league_id": league, "complete": True},
+            path, generation, iter(()), {
+                "compatibility": {"league_id": league}, "complete": True,
+            },
         )
         return path
 

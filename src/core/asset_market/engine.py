@@ -1160,7 +1160,10 @@ class AssetMarketCache:
                     and cls._artifact_checksum(candidate) == payload.get("sha256")
                 ):
                     metadata = MarketReadModel(candidate).metadata()
-                    league = str(metadata.get("league_id") or "")
+                    league = str(
+                        (metadata.get("compatibility") or {}).get("league_id")
+                        or metadata.get("league_id") or ""
+                    )
                     published = str(payload.get("published_at") or "")
                     if league and (
                         league not in selected or published > selected[league][0]
