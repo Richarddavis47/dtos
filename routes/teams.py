@@ -214,8 +214,9 @@ def create_teams_router(
             for label, rank in roster.metrics["League Rankings"].items()
         )
         recommendation = view["unified_recommendation"]
+        selected_league = str((data.get("league") or {}).get("league_id") or LEAGUE_ID)
         franchise_history = historical_graph(
-            historical_store, LEAGUE_ID, data,
+            historical_store, selected_league, data,
         ).franchise_history(str(team["roster_id"]))
         historical_seasons = len({row["season"] for row in franchise_history["standings"]})
         historical_transactions = len(franchise_history["transactions"])

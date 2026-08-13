@@ -21,6 +21,7 @@ def create_hq_router(
     state: dict[str, Any],
     league_id: str,
     page: PageRenderer,
+    league_resolver: Callable[[], str] | None = None,
 ) -> APIRouter:
     """Create the Commissioner Desk using shared application dependencies."""
     router = APIRouter(tags=["commissioner-desk"])
@@ -34,7 +35,7 @@ def create_hq_router(
         await ensure_fresh()
         view = build_commissioner_desk(
             require_data(),
-            configured_league_id=league_id,
+            configured_league_id=(league_resolver() if league_resolver else league_id),
             active_league_id=active_league or None,
             active_roster_id=active_front_office,
             since=since or None,

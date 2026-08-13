@@ -10,7 +10,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse
 
 from app_metadata import VERSION
-from src.core.asset_market import MarketWarmingError, asset_market, asset_market_cache
+from src.core.asset_market import AssetMarketCache, MarketWarmingError, asset_market_cache
 from src.core.historical_memory import historical_store
 from services.history import (
     history_progress_contracts,
@@ -36,21 +36,32 @@ def _value(
 def create_market_router(
     *, require_data: RequireData, state: dict[str, Any], league_id: str,
     page: PageRenderer,
+    context_resolver: Callable[[], Any | None] | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["asset-market"])
 
+    def dependencies() -> tuple[dict[str, Any], str, AssetMarketCache]:
+        context = context_resolver() if context_resolver is not None else None
+        if context is None:
+            return state, league_id, asset_market_cache
+        return context.state, context.league_id, context.market
+
     def model():
+        selected_state, selected_league, cache = dependencies()
         try:
-            return asset_market(require_data(), state, historical_store, league_id)
+            return cache.get(
+                require_data(), selected_state, historical_store,
+                selected_league, background=True,
+            )
         except MarketWarmingError as exc:
-            cache = asset_market_cache.metrics()
+            metrics = cache.metrics()
             headers = {
                 "Retry-After": "5",
-                "X-DTOS-Market-Refresh": str(cache.get("refresh_state") or "warming"),
+                "X-DTOS-Market-Refresh": str(metrics.get("refresh_state") or "warming"),
             }
-            if cache.get("last_valid_model"):
+            if metrics.get("last_valid_model"):
                 headers["X-DTOS-Last-Valid-Generation"] = str(
-                    cache.get("market_generation") or "retained"
+                    metrics.get("market_generation") or "retained"
                 )
             raise HTTPException(
                 status_code=503, detail=str(exc), headers=headers,
@@ -59,10 +70,11 @@ def create_market_router(
     @router.get("/api/market")
     async def market_index() -> Any:
         """Return retained lifecycle metadata without requiring a market model."""
-        health = asset_market_cache.health()
+        _selected_state, selected_league, cache = dependencies()
+        health = cache.health()
         return {
             **health,
-            "historical_progress": retained_history_progress_contracts(league_id),
+            "historical_progress": retained_history_progress_contracts(selected_league),
             "endpoints": [
             "/api/market/assets", "/api/market/assets/{asset_id}",
             "/api/market/search", "/api/market/trending", "/api/market/health",
@@ -71,10 +83,12 @@ def create_market_router(
 
     @router.get("/api/market/health")
     async def market_health() -> Any:
-        asset_market_cache.reconcile(
-            state.get("data") or {}, state, historical_store, league_id,
+        selected_state, selected_league, cache = dependencies()
+        cache.reconcile(
+            selected_state.get("data") or {}, selected_state,
+            historical_store, selected_league,
         )
-        health = asset_market_cache.health()
+        health = cache.health()
         return {
             "application_version": VERSION, **health,
             "reason": (
@@ -102,7 +116,7 @@ def create_market_router(
             age_min=age_min, age_max=age_max, year=year,
             round_number=round_number,
         )
-        result["historical_progress"] = history_progress_contracts(league_id)
+        result["historical_progress"] = history_progress_contracts(dependencies()[1])
         return jsonable_encoder(result)
 
     @router.get("/api/market/assets/{asset_id:path}")
@@ -110,7 +124,7 @@ def create_market_router(
         result = model().detail(asset_id, front_office)
         if result is None:
             raise HTTPException(404, "Canonical market asset not found.")
-        result["historical_progress"] = history_progress_contracts(league_id)
+        result["historical_progress"] = history_progress_contracts(dependencies()[1])
         return jsonable_encoder(result)
 
     @router.get("/api/market/search")

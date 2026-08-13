@@ -24,16 +24,23 @@ from services.history import (
 PageRenderer = Callable[[str, str], HTMLResponse]
 
 
-def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
+def create_history_router(
+    *, league_id: str, page: PageRenderer,
+    league_resolver: Callable[[], str] | None = None,
+) -> APIRouter:
     router = APIRouter(tags=["history"])
+
+    def selected_league() -> str:
+        return league_resolver() if league_resolver else league_id
 
     @router.get("/history", response_class=HTMLResponse)
     async def league_history_page() -> HTMLResponse:
-        seasons = history_records(league_id, "league_season", limit=20)
-        standings = history_records(league_id, "season_standing", limit=100)
-        quality = data_quality(league_id)
-        status = import_status(league_id)
-        completeness = import_completeness(league_id)
+        selected = selected_league()
+        seasons = history_records(selected, "league_season", limit=20)
+        standings = history_records(selected, "season_standing", limit=100)
+        quality = data_quality(selected)
+        status = import_status(selected)
+        completeness = import_completeness(selected)
         providers = provider_coverage()
         latest_job = status["jobs"][0] if status["jobs"] else {}
         progress = status["canonical_history_progress"]
@@ -65,11 +72,11 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
 
     @router.get("/api/history/seasons")
     async def history_season_index() -> dict:
-        return season_index(league_id)
+        return season_index(selected_league())
 
     @router.get("/api/history/seasons/{season}")
     async def history_season_api(season: int) -> dict:
-        archive = await asyncio.to_thread(season_archive, league_id, season)
+        archive = await asyncio.to_thread(season_archive, selected_league(), season)
         if not archive["standings"] and not archive["weeks"]:
             raise HTTPException(404, "No historical season evidence is available.")
         return archive
@@ -77,14 +84,14 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
     @router.get("/api/history/seasons/{season}/standings")
     async def history_season_standings(season: int) -> dict:
         section = await asyncio.to_thread(
-            season_archive_section, league_id, season, "standings",
+            season_archive_section, selected_league(), season, "standings",
         )
         return {"season": season, "standings": section["standings"]}
 
     @router.get("/api/history/seasons/{season}/playoffs")
     async def history_season_playoffs(season: int) -> dict:
         section = await asyncio.to_thread(
-            season_archive_section, league_id, season, "playoffs",
+            season_archive_section, selected_league(), season, "playoffs",
         )
         return {"season": season, "playoffs": {
             "result": section["result"], "brackets": section["brackets"],
@@ -93,21 +100,21 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
     @router.get("/api/history/seasons/{season}/weeks")
     async def history_season_weeks(season: int) -> dict:
         section = await asyncio.to_thread(
-            season_archive_section, league_id, season, "weeks",
+            season_archive_section, selected_league(), season, "weeks",
         )
         return {"season": season, "weeks": section["weeks"]}
 
     @router.get("/api/history/seasons/{season}/transactions")
     async def history_season_transactions(season: int) -> dict:
         section = await asyncio.to_thread(
-            season_archive_section, league_id, season, "transactions",
+            season_archive_section, selected_league(), season, "transactions",
         )
         return {"season": season, "transactions": section["records"]}
 
     @router.get("/api/history/seasons/{season}/draft")
     async def history_season_draft(season: int) -> dict:
         section = await asyncio.to_thread(
-            season_archive_section, league_id, season, "draft",
+            season_archive_section, selected_league(), season, "draft",
         )
         return {"season": season, "draft": {
             "drafts": section["drafts"], "picks": section["picks"],
@@ -116,7 +123,7 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
     @router.get("/api/history/seasons/{season}/leaders")
     async def history_season_leaders(season: int) -> dict:
         section = await asyncio.to_thread(
-            season_archive_section, league_id, season, "leaders",
+            season_archive_section, selected_league(), season, "leaders",
         )
         return {"season": season, "leaders": section["leaders"]}
 
@@ -168,7 +175,7 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
 
     @router.get("/history/player/{player_id}", response_class=HTMLResponse)
     async def player_history_page(player_id: str) -> HTMLResponse:
-        career = player_career(league_id, player_id)
+        career = player_career(selected_league(), player_id)
         if not career["weekly_record_count"]:
             raise HTTPException(404, "No historical player observations are available.")
         seasons = "".join(
@@ -182,8 +189,9 @@ def create_history_router(*, league_id: str, page: PageRenderer) -> APIRouter:
 
     @router.get("/history/team/{franchise_id:path}", response_class=HTMLResponse)
     async def team_history_page(franchise_id: str) -> HTMLResponse:
-        snapshots = history_records(league_id, "team_intelligence_snapshot", franchise_id=franchise_id, limit=100)
-        identities = history_records(league_id, "franchise_identity", franchise_id=franchise_id, limit=100)
+        selected = selected_league()
+        snapshots = history_records(selected, "team_intelligence_snapshot", franchise_id=franchise_id, limit=100)
+        identities = history_records(selected, "franchise_identity", franchise_id=franchise_id, limit=100)
         if not snapshots["count"] and not identities["count"]:
             raise HTTPException(404, "No historical franchise observations are available.")
         names = "".join(

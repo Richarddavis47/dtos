@@ -1,3 +1,17 @@
+# DTOS v1.10.17 - Multi-League Consumer Integration
+
+DTOS v1.10.17 completes the product boundary introduced by the bounded runtime
+manager. An explicit league request now resolves one request-scoped canonical
+context and routes crawl, projections, Brain inputs, Asset Market, FOIS,
+historical reads, audits, and inspection through that exact runtime.
+
+Secondary league history remains honestly unavailable until its own dynasty
+chain is imported, and private secondary runtimes never trigger or expose Live
+Visual captures. Default routes retain the configured league contract, while
+concurrent A/B requests no longer depend on mutable process-global selection.
+
+## Previous release
+
 # DTOS v1.10.16 - Multi-League Runtime Foundation
 
 DTOS v1.10.16 introduces a lazy league-scoped runtime boundary while preserving

@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.10.17 - Multi-League Consumer Integration
+
+- Added a request-scoped CanonicalLeagueContext that routes canonical crawl,
+  projections, Brain, Asset Market, FOIS, history, audit, and inspection reads
+  through the explicitly requested hydrated LeagueRuntime.
+- Added league-scoped source-generation and product-readiness diagnostics while
+  preserving bounded two-runtime residency and derived-context eviction.
+- Prevented secondary/private league visual artifacts from being exposed or
+  generated through ordinary inspection routes.
+- Added explicit secondary routing, concurrency, feature-gate, and state
+  isolation regressions.
+
 ## v1.10.16 - Multi-League Runtime Foundation
 
 - Added a lazy bounded LeagueRuntimeManager with per-league single-flight, LRU

@@ -56,8 +56,12 @@ from services.history import (
     start_background_backfill,
 )
 from services.fois import fois_service
+from src.core.fois import FOIS_MODEL_VERSION
 from src.core.asset_market import AssetMarketCache, asset_market_cache
-from src.core.league_runtime import LeagueRuntime, LeagueRuntimeManager, RuntimeState
+from src.core.league_runtime import (
+    CanonicalLeagueContext, LeagueRuntime, LeagueRuntimeManager, RuntimeState,
+)
+from src.core.brain import BrainService
 from src.core.historical_memory import historical_store
 from src.core.projection_intelligence import projection_service
 from src.core.projection_intelligence.service import ProjectionService
@@ -68,6 +72,9 @@ from src.platform.observability import (
 )
 from src.platform.market_warming import AssetMarketWarmingMiddleware
 from src.platform.lifecycle import lifecycle_coordinator
+from src.platform.league_context import (
+    LeagueContextMiddleware, RuntimeStateProxy, current_league_context,
+)
 from src.core.historical_memory import historical_storage_status
 from src.core.inspection.live import LiveInspection
 from src.core.inspection.live_visual import LiveVisualService, live_visual_capture_requests
@@ -76,25 +83,71 @@ from src.ui import DESIGN_SYSTEM_CSS, page_header
 _PROCESS_STARTED = perf_counter()
 _INSPECTION_REQUEST: ContextVar[bool] = ContextVar("dtos_inspection_request", default=False)
 _PUBLIC_URL = os.getenv("DTOS_PUBLIC_URL", f"http://127.0.0.1:{os.getenv('PORT', '8000')}")
+_MULTI_LEAGUE_IMPORT_ENABLED = (
+    os.getenv("DTOS_MULTI_LEAGUE_IMPORT_ENABLED", "0").strip().casefold()
+    in {"1", "true", "yes", "on"}
+)
+
+
+def _publish_runtime_context(
+    runtime: LeagueRuntime, projections: ProjectionService,
+) -> CanonicalLeagueContext:
+    """Publish one complete canonical consumer context atomically."""
+    data = runtime.state.get("data") or {}
+    brain = BrainService(data)
+    market = runtime.market_context or AssetMarketCache()
+    context = CanonicalLeagueContext(
+        runtime=runtime,
+        historical_store=historical_store,
+        projection=projections,
+        brain=brain,
+        market=market,
+        fois_state=(
+            "ready" if fois_service.repository.league(
+                runtime.league_id, FOIS_MODEL_VERSION,
+            ) else "pending"
+        ),
+    )
+    runtime.projection_context = projections
+    runtime.brain_context = brain
+    runtime.market_context = market
+    runtime.fois_context = fois_service
+    context.refresh_generations()
+    runtime.canonical_context = context
+    return context
 
 
 async def _hydrate_league_runtime(runtime: LeagueRuntime) -> dict[str, Any]:
     """Hydrate one requested league without replacing the configured default."""
     projections = ProjectionService(league_id=runtime.league_id)
-    runtime.projection_context = projections
-    runtime.market_context = AssetMarketCache()
     await sync_sleeper_league(
         runtime.league_id, runtime.state, force_players=False,
         projections=projections,
     )
-    return runtime.state.get("data") or {}
+    data = runtime.state.get("data") or {}
+    runtime.apply_data(data)
+    projections = ProjectionService(
+        league_id=runtime.league_id,
+        scoring_profile_id=runtime.scoring_profile,
+    )
+    projections.restore_into(data)
+    await fois_service.generate(data)
+    _publish_runtime_context(runtime, projections)
+    return data
 
 
 league_runtime_manager = LeagueRuntimeManager(
     max_warm=MAX_WARM_LEAGUE_RUNTIMES,
     hydrator=_hydrate_league_runtime,
 )
-league_runtime_manager.attach_default(LEAGUE_ID, STATE, warm=bool(STATE.get("data")))
+default_league_runtime = league_runtime_manager.attach_default(
+    LEAGUE_ID, STATE, warm=bool(STATE.get("data")),
+)
+# The configured league predates LeagueRuntimeManager and already has one
+# canonical, durable Asset Market cache.  Its request context must expose that
+# same object so artifact restoration and route serving share one owner.
+default_league_runtime.market_context = asset_market_cache
+runtime_state = RuntimeStateProxy(STATE)
 
 
 def _capture_live_visual(request: Any, output: Any) -> dict[str, Any]:
@@ -128,6 +181,9 @@ def schedule_live_visual_capture() -> int:
 
 
 async def ensure_fresh() -> None:
+    context = current_league_context()
+    if context is not None and context.league_id != LEAGUE_ID:
+        return
     if _INSPECTION_REQUEST.get():
         return
     if not lifecycle_coordinator.startup_complete():
@@ -283,6 +339,8 @@ async def lifespan(_: FastAPI):
         default_runtime.status = RuntimeState.WARM
     if STATE.get("data"):
         projection_service.restore_into(STATE["data"])
+        if default_runtime is not None:
+            _publish_runtime_context(default_runtime, projection_service)
         await asyncio.to_thread(
             asset_market_cache.restore_compatible,
             STATE["data"], STATE, historical_store, LEAGUE_ID,
@@ -311,6 +369,12 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title=APPLICATION_NAME, version=VERSION, lifespan=lifespan)
+app.add_middleware(
+    LeagueContextMiddleware,
+    manager=league_runtime_manager,
+    default_league_id=LEAGUE_ID,
+    import_enabled=_MULTI_LEAGUE_IMPORT_ENABLED,
+)
 app.add_middleware(
     AssetMarketWarmingMiddleware,
     cache=asset_market_cache,
@@ -381,10 +445,12 @@ CSS += DESIGN_SYSTEM_CSS
 
 
 def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLResponse:
-    sync = STATE.get("last_sync") or "Never"
-    error = STATE.get("last_error")
+    context = current_league_context()
+    selected_state = context.state if context is not None else STATE
+    sync = selected_state.get("last_sync") or "Never"
+    error = selected_state.get("last_error")
     error_html = f'<div class="error"><b>Sync error:</b> {escape(error)}</div>' if error else ""
-    league_name = str(((STATE.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
+    league_name = str(((selected_state.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
     standard_chrome = f"""<header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync"><button class="btn" type="submit">Sync League</button></form></header>
 <nav class="nav" aria-label="Primary navigation"><a href="/market">Market</a><a href="/commissioner">Commissioner</a><a href="/teams">Team HQ</a><a href="/trades">Trade Center</a><a href="/matchups">Matchups</a><a href="/transactions">Transactions</a><a href="/picks">Draft Capital</a><a href="/history">History</a><a href="/search">Search</a><a href="/front-offices">Front Office</a><a href="/fois">FOIS</a><a href="/brain">Brain</a><a href="/valuation/calibration">Calibration</a><a href="/settings">Settings</a></nav>{page_header(title, league_name=league_name, last_updated=str(sync))}"""
     footer = f'<footer class="footer"><b>League Sync:</b> {escape(str(sync))} · Intelligence is generated from the latest cached league state. Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'
@@ -394,26 +460,51 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
 
 
 def require_data() -> dict[str, Any]:
-    data = STATE.get("data") or {}
+    context = current_league_context()
+    data = context.data if context is not None else STATE.get("data") or {}
     if not data:
         raise HTTPException(503, "DTOS has not completed its first Sleeper sync.")
     return data
+
+
+def current_league_id() -> str:
+    context = current_league_context()
+    return context.league_id if context is not None else LEAGUE_ID
+
+
+async def sync_current_league(*, force_players: bool = False) -> dict[str, Any]:
+    context = current_league_context()
+    if context is None or context.league_id == LEAGUE_ID:
+        return await sync_sleeper(force_players=force_players)
+    return await _hydrate_league_runtime(context.runtime)
+
+
+async def sync_current_transactions() -> bool:
+    context = current_league_context()
+    if context is None or context.league_id == LEAGUE_ID:
+        return await sync_transactions()
+    result = await sync_transactions(
+        state=context.state, league_id=context.league_id,
+    )
+    if result:
+        context.refresh_generations()
+    return result
 
 
 app.include_router(
     create_api_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
-        sync_sleeper=sync_sleeper,
-        state=STATE,
+        sync_sleeper=sync_current_league,
+        state=runtime_state,
         league_id=LEAGUE_ID,
+        league_resolver=current_league_id,
     )
 )
 
 app.include_router(create_league_runtime_router(
     manager=league_runtime_manager,
-    import_enabled=os.getenv("DTOS_MULTI_LEAGUE_IMPORT_ENABLED", "0").strip().casefold()
-    in {"1", "true", "yes", "on"},
+    import_enabled=_MULTI_LEAGUE_IMPORT_ENABLED,
 ))
 
 app.include_router(
@@ -425,18 +516,26 @@ app.include_router(
     )
 )
 
-app.include_router(create_projections_router(service=projection_service))
+def current_projection_service() -> ProjectionService:
+    context = current_league_context()
+    return context.projection if context is not None else projection_service
+
+
+app.include_router(create_projections_router(
+    service=projection_service, service_resolver=current_projection_service,
+))
 app.include_router(create_audit_router(
     require_data=require_data,
     projection_service=projection_service,
     market_cache=asset_market_cache,
     fois_service=fois_service,
+    context_resolver=current_league_context,
 ))
 
 app.include_router(
     create_crawl_router(
-        get_data=lambda: STATE.get("data") or {},
-        state=STATE,
+        get_data=require_data,
+        state=runtime_state,
         league_id=LEAGUE_ID,
     )
 )
@@ -469,25 +568,30 @@ app.include_router(
     create_hq_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
-        state=STATE,
+        state=runtime_state,
         league_id=LEAGUE_ID,
         page=page,
+        league_resolver=current_league_id,
     )
 )
 
-app.include_router(create_history_router(league_id=LEAGUE_ID, page=page))
+app.include_router(create_history_router(
+    league_id=LEAGUE_ID, page=page, league_resolver=current_league_id,
+))
 app.include_router(
     create_historical_assets_router(
         league_id=LEAGUE_ID, require_data=require_data, page=page,
+        league_resolver=current_league_id,
     )
 )
 
 app.include_router(create_inspection_router(
-    state=STATE, route_provider=lambda: app.routes, league_id=LEAGUE_ID,
+    state=runtime_state, route_provider=lambda: app.routes, league_id=LEAGUE_ID,
     artifact_root=Path("static/inspection") / (
         "league-" + hashlib.sha256(str(LEAGUE_ID).encode()).hexdigest()[:16]
     ),
     projection_service=projection_service, market_cache=asset_market_cache,
+    context_resolver=current_league_context,
     live_visual_service=live_visual_service,
 ))
 
@@ -502,9 +606,10 @@ app.include_router(
 app.include_router(
     create_market_router(
         require_data=require_data,
-        state=STATE,
+        state=runtime_state,
         league_id=LEAGUE_ID,
         page=page,
+        context_resolver=current_league_context,
     )
 )
 
@@ -520,7 +625,7 @@ app.include_router(
     create_teams_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
-        state=STATE,
+        state=runtime_state,
         page=page,
     )
 )
@@ -528,9 +633,9 @@ app.include_router(
 app.include_router(
     create_transactions_router(
         ensure_fresh=ensure_fresh,
-        refresh_transactions=sync_transactions,
+        refresh_transactions=sync_current_transactions,
         require_data=require_data,
-        state=STATE,
+        state=runtime_state,
         page=page,
     )
 )

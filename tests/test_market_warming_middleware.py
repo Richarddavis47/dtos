@@ -132,6 +132,14 @@ class MarketWarmingMiddlewareTests(unittest.TestCase):
         self.assertEqual(client.post("/market").status_code, 200)
         self.assertEqual(cache.calls, 0)
 
+    def test_explicit_secondary_league_bypasses_default_market_guard(self) -> None:
+        cache = _Cache()
+        client = TestClient(_app(cache))
+        response = client.get("/api/market/assets?league_id=secondary&limit=7")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["limit"], 7)
+        self.assertEqual(cache.calls, 0)
+
     def test_ready_generation_uses_normal_query_validation(self) -> None:
         cache = _Cache(warming=False)
         client = TestClient(_app(cache))

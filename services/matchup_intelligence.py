@@ -6,6 +6,7 @@ from typing import Any
 
 from src.core.intelligence import intelligence_orchestrator
 from src.core.projection_intelligence import projection_service
+from src.platform.league_context import current_league_context
 
 
 def matchup_player_values(
@@ -57,7 +58,9 @@ def matchup_projection(
         dtos_available = 0
         for player, value in zip(lineup, values):
             player_id = str(player.get("id") or "")
-            canonical = projection_service.player(player_id) or {}
+            context = current_league_context()
+            projections = context.projection if context is not None else projection_service
+            canonical = projections.player(player_id) or {}
             sleeper_value = canonical.get("sleeper_projection")
             dtos_value = canonical.get("dtos_projection")
             if sleeper_value is not None:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 from contextlib import closing
 import gc
 import json
@@ -8,20 +9,25 @@ from pathlib import Path
 import tempfile
 import unittest
 import weakref
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from routes.league_runtime import create_league_runtime_router
 from src.core.league_runtime import (
+    LeagueRuntime,
     LeagueRuntimeManager,
     LeagueRuntimeNotFound,
     RuntimeState,
     StructuredCacheKey,
     scoring_profile_id,
+    source_generations,
 )
+from src.core.asset_market import AssetMarketCache, asset_market_cache
 from services import sleeper as sleeper_service
 from src.core.projection_intelligence.service import ProjectionService
+from src.platform.league_context import LeagueContextMiddleware, current_league_context
 
 
 def league_data(league_id: str, *, points_per_reception: float = 1.0) -> dict:
@@ -63,6 +69,16 @@ class StructuredIdentityTests(unittest.TestCase):
     def test_invalid_structured_key_fails_closed(self) -> None:
         with self.assertRaises(ValueError):
             StructuredCacheKey("", 2026, "brain", "1", "g")
+
+    def test_consumer_generations_are_league_and_scoring_scoped(self) -> None:
+        a = source_generations(league_data("100"), "scoring-a")
+        b = source_generations(league_data("200"), "scoring-b")
+        self.assertEqual(set(a), {
+            "sleeper_canonical", "settings_scoring", "rosters", "matchups",
+            "picks", "transactions", "projections",
+        })
+        self.assertNotEqual(a["sleeper_canonical"], b["sleeper_canonical"])
+        self.assertNotEqual(a["settings_scoring"], b["settings_scoring"])
 
 
 class LeagueRuntimeManagerTests(unittest.IsolatedAsyncioTestCase):
@@ -220,10 +236,107 @@ class LeagueRuntimeRouteValidationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 422)
         self.assertEqual(manager.health()["resident_runtime_count"], 0)
 
+
+class LeagueConsumerContextTests(unittest.TestCase):
+    def test_default_runtime_and_context_share_canonical_market_cache(self) -> None:
+        import dtos_app
+
+        runtime = dtos_app.league_runtime_manager.resident(dtos_app.LEAGUE_ID)
+        self.assertIsNotNone(runtime)
+        self.assertIs(runtime.market_context, asset_market_cache)
+        if runtime.canonical_context is not None:
+            self.assertIs(runtime.canonical_context.market, asset_market_cache)
+
+    def test_secondary_context_receives_an_independent_market_cache(self) -> None:
+        import dtos_app
+
+        runtime = LeagueRuntime("200", state={"data": league_data("200")})
+        projection = ProjectionService(league_id="200")
+        context = dtos_app._publish_runtime_context(runtime, projection)
+
+        self.assertIsInstance(context.market, AssetMarketCache)
+        self.assertIs(runtime.market_context, context.market)
+        self.assertIsNot(context.market, asset_market_cache)
+
+    def _application(self, manager: LeagueRuntimeManager, *, enabled: bool = True) -> FastAPI:
+        if manager.resident("100") is None:
+            default_data = league_data("100")
+            runtime = manager.attach_default("100", {"data": default_data}, warm=True)
+            runtime.canonical_context = SimpleNamespace(
+                league_id="100", data=default_data, state=runtime.state,
+            )
+        application = FastAPI()
+        application.add_middleware(
+            LeagueContextMiddleware, manager=manager,
+            default_league_id="100", import_enabled=enabled,
+        )
+
+        @application.get("/consumer")
+        async def consumer() -> dict:
+            context = current_league_context()
+            return {
+                "league_id": context.league_id if context else None,
+                "team_league": context.data["teams"][0]["league_id"] if context else None,
+            }
+
+        return application
+
+    def test_explicit_secondary_request_uses_its_canonical_context(self) -> None:
+        async def hydrate(runtime):
+            data = league_data(runtime.league_id)
+            runtime.apply_data(data)
+            runtime.canonical_context = SimpleNamespace(
+                league_id=runtime.league_id, data=data, state=runtime.state,
+                health=lambda: {"status": "ready", "league_id": runtime.league_id},
+            )
+            return data
+
+        manager = LeagueRuntimeManager(max_warm=2, hydrator=hydrate)
+        with TestClient(self._application(manager)) as client:
+            response = client.get("/consumer?league_id=200")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"league_id": "200", "team_league": "200"})
+
+    def test_concurrent_a_b_requests_never_swap_context(self) -> None:
+        async def hydrate(runtime):
+            data = league_data(runtime.league_id)
+            runtime.apply_data(data)
+            runtime.canonical_context = SimpleNamespace(
+                league_id=runtime.league_id, data=data, state=runtime.state,
+            )
+            return data
+
+        manager = LeagueRuntimeManager(max_warm=2, hydrator=hydrate)
+        application = self._application(manager)
+        with TestClient(application) as client:
+            with concurrent.futures.ThreadPoolExecutor(2) as pool:
+                results = tuple(pool.map(
+                    lambda league: client.get(f"/consumer?league_id={league}").json(),
+                    ("100", "200"),
+                ))
+        self.assertEqual({row["league_id"] for row in results}, {"100", "200"})
+        self.assertTrue(all(row["league_id"] == row["team_league"] for row in results))
+
+    def test_disabled_gate_does_not_hydrate_secondary_consumer(self) -> None:
+        manager = LeagueRuntimeManager(max_warm=2, hydrator=None)
+        with TestClient(self._application(manager, enabled=False)) as client:
+            response = client.get("/consumer?league_id=200")
+        self.assertEqual(response.status_code, 403)
+        self.assertIsNone(manager.resident("200"))
+
 class LeagueRuntimeStressTests(unittest.IsolatedAsyncioTestCase):
     async def test_thirty_leagues_never_exceed_bound(self) -> None:
         async def hydrate(runtime):
-            return league_data(runtime.league_id)
+            data = league_data(runtime.league_id)
+            runtime.projection_context = {"league_id": runtime.league_id}
+            runtime.brain_context = {"league_id": runtime.league_id}
+            runtime.market_context = {"league_id": runtime.league_id}
+            runtime.fois_context = {"league_id": runtime.league_id}
+            runtime.canonical_context = SimpleNamespace(
+                league_id=runtime.league_id, data=data, state=runtime.state,
+                health=lambda: {"status": "ready", "league_id": runtime.league_id},
+            )
+            return data
 
         manager = LeagueRuntimeManager(max_warm=2, hydrator=hydrate)
         maximum = 0
@@ -235,6 +348,11 @@ class LeagueRuntimeStressTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(maximum, 2)
         self.assertEqual(health["resident_runtime_count"], 2)
         self.assertEqual(health["evictions"], 28)
+        self.assertEqual(sum(
+            manager.resident(str(number)).canonical_context is not None
+            for number in range(100, 130)
+            if manager.resident(str(number)) is not None
+        ), 2)
         await manager.shutdown()
 
     async def test_shutdown_cancels_tasks_and_drops_all_state(self) -> None:
