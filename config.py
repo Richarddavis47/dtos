@@ -54,6 +54,7 @@ class Settings:
     enrichment_batch_size: int
     historical_start_season: int
     background_start_delay: float
+    max_warm_league_runtimes: int
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -108,6 +109,9 @@ class Settings:
                 30,
                 0,
             ),
+            max_warm_league_runtimes=min(
+                3, _integer("DTOS_MAX_WARM_LEAGUE_RUNTIMES", 2, 1),
+            ),
         )
 
 
@@ -129,3 +133,4 @@ DURABLE_HISTORY_REQUIRED = SETTINGS.durable_history_required
 ENRICHMENT_BATCH_SIZE = SETTINGS.enrichment_batch_size
 HISTORICAL_START_SEASON = SETTINGS.historical_start_season
 BACKGROUND_START_DELAY = SETTINGS.background_start_delay
+MAX_WARM_LEAGUE_RUNTIMES = SETTINGS.max_warm_league_runtimes

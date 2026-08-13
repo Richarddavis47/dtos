@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.10.16 - Multi-League Runtime Foundation
+
+- Added a lazy bounded LeagueRuntimeManager with per-league single-flight, LRU
+  eviction, failure isolation, health metrics, and deterministic shutdown.
+- Added structured league/scoring cache identities and deterministic scoring
+  profiles for future shared projection evidence.
+- Scoped Sleeper state, locks, current-state caches, projection restoration,
+  Asset Market manifests, and inspection artifacts by league identity.
+- Added permanent A/B, concurrent, invalid-league, eviction, shutdown,
+  projection-restore, and 30-league residency regressions.
+
+
 ## v1.10.15 - Projection Snapshot Upgrade Compatibility
 
 - Added explicit schema, model, contract, and semantic-policy compatibility checks

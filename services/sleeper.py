@@ -9,6 +9,7 @@ import tempfile
 import threading
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -20,6 +21,7 @@ from src.core.data_platform.provider_activation import refresh_public_market
 from src.core.intelligence.cache import intelligence_cache
 from src.core.provider_network import build_provider_network
 from src.core.projection_intelligence import projection_service
+from src.core.projection_intelligence.service import ProjectionService
 from src.core.projection_intelligence.sleeper_provider import SleeperProjectionClient
 from src.platform.lifecycle import lifecycle_coordinator
 from src.core.valuation.automation import audit_market_calibration
@@ -48,6 +50,8 @@ STATE: dict[str, Any] = {
 }
 SYNC_LOCK = threading.Lock()
 TRANSACTIONS_SYNC_LOCK = asyncio.Lock()
+_LEAGUE_SYNC_LOCKS: dict[str, threading.Lock] = {}
+_LEAGUE_TRANSACTION_LOCKS: dict[str, asyncio.Lock] = {}
 SLEEPER_PROJECTION_CLIENT = SleeperProjectionClient(
     enabled=os.getenv("DTOS_SLEEPER_PROJECTIONS_ENABLED", "1").strip().lower()
     not in {"0", "false", "no", "off"}
@@ -58,23 +62,41 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def load_cache() -> None:
-    if not CACHE_FILE.exists():
+def league_cache_file(league_id: str) -> Path:
+    """Resolve a league-specific cache while retaining the legacy default path."""
+    if str(league_id) == str(LEAGUE_ID):
+        return CACHE_FILE
+    return CACHE_FILE.with_name(f"{CACHE_FILE.stem}.{league_id}{CACHE_FILE.suffix}")
+
+
+def load_cache(
+    *, state: dict[str, Any] | None = None, league_id: str = LEAGUE_ID,
+) -> None:
+    state = STATE if state is None else state
+    cache_file = league_cache_file(league_id)
+    if not cache_file.exists():
         return
     try:
-        payload = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
-        STATE.update(payload)
-        STATE["syncing"] = False
-        STATE["transactions_syncing"] = False
+        payload = json.loads(cache_file.read_text(encoding="utf-8"))
+        cached_league = str(((payload.get("data") or {}).get("league") or {}).get("league_id") or league_id)
+        if cached_league != str(league_id):
+            raise ValueError("Cached Sleeper league identity does not match the requested runtime.")
+        state.update(payload)
+        state["syncing"] = False
+        state["transactions_syncing"] = False
     except Exception as exc:  # pragma: no cover
         logger.warning("Could not load cache: %s", exc)
 
 
-def save_cache() -> None:
+def save_cache(
+    *, state: dict[str, Any] | None = None, league_id: str = LEAGUE_ID,
+) -> None:
+    state = STATE if state is None else state
+    cache_file = league_cache_file(league_id)
     temporary_path = None
     try:
-        CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        payload = {k: v for k, v in STATE.items() if not k.endswith("syncing")}
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        payload = {k: v for k, v in state.items() if not k.endswith("syncing")}
         encoder = json.JSONEncoder(separators=(",", ":"), ensure_ascii=False)
         with lifecycle_coordinator.phase("cache_persistence") as phase:
             phase.update({
@@ -82,15 +104,15 @@ def save_cache() -> None:
                 "cache_entry_count": len(payload),
             })
             with tempfile.NamedTemporaryFile(
-                "w", encoding="utf-8", dir=CACHE_FILE.parent,
-                prefix=f".{CACHE_FILE.name}.", suffix=".tmp", delete=False,
+                "w", encoding="utf-8", dir=cache_file.parent,
+                prefix=f".{cache_file.name}.", suffix=".tmp", delete=False,
             ) as handle:
                 temporary_path = handle.name
                 for chunk in encoder.iterencode(payload):
                     handle.write(chunk)
                 handle.flush()
                 os.fsync(handle.fileno())
-            os.replace(temporary_path, CACHE_FILE)
+            os.replace(temporary_path, cache_file)
             temporary_path = None
             phase["serialization_state"] = "complete"
     except Exception as exc:  # pragma: no cover
@@ -112,12 +134,19 @@ def request_headers() -> dict[str, str]:
     return {"User-Agent": f"{APPLICATION_NAME}/{VERSION} (+Front Office OS)"}
 
 
-async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
-    """Fetch and normalize the configured Sleeper league state."""
-    with SYNC_LOCK:
-        if STATE["syncing"]:
-            return STATE
-        STATE["syncing"] = True
+async def _sync_sleeper(
+    force_players: bool = False,
+    *,
+    league_id: str = LEAGUE_ID,
+    state: dict[str, Any] = STATE,
+    projections: ProjectionService = projection_service,
+) -> dict[str, Any]:
+    """Fetch and normalize one explicitly identified Sleeper league state."""
+    runtime_lock = _LEAGUE_SYNC_LOCKS.setdefault(str(league_id), threading.Lock())
+    with runtime_lock:
+        if state["syncing"]:
+            return state
+        state["syncing"] = True
         try:
             lifecycle_context = lifecycle_coordinator.phase("sleeper_sync")
             lifecycle_context.__enter__()
@@ -126,11 +155,11 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 timeout=timeout, headers=request_headers()
             ) as client:
                 league, users, rosters, traded_picks, drafts, nfl_state = await asyncio.gather(
-                    sleeper_get(client, f"/league/{LEAGUE_ID}"),
-                    sleeper_get(client, f"/league/{LEAGUE_ID}/users"),
-                    sleeper_get(client, f"/league/{LEAGUE_ID}/rosters"),
-                    sleeper_get(client, f"/league/{LEAGUE_ID}/traded_picks"),
-                    sleeper_get(client, f"/league/{LEAGUE_ID}/drafts"),
+                    sleeper_get(client, f"/league/{league_id}"),
+                    sleeper_get(client, f"/league/{league_id}/users"),
+                    sleeper_get(client, f"/league/{league_id}/rosters"),
+                    sleeper_get(client, f"/league/{league_id}/traded_picks"),
+                    sleeper_get(client, f"/league/{league_id}/drafts"),
                     sleeper_get(client, "/state/nfl"),
                 )
 
@@ -139,14 +168,14 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 matchup_week = week if season_type in {"regular", "post"} else 1
 
                 matchups, transactions, trending_adds, trending_drops = await asyncio.gather(
-                    sleeper_get(client, f"/league/{LEAGUE_ID}/matchups/{matchup_week}"),
-                    sleeper_get(client, f"/league/{LEAGUE_ID}/transactions/{matchup_week}"),
+                    sleeper_get(client, f"/league/{league_id}/matchups/{matchup_week}"),
+                    sleeper_get(client, f"/league/{league_id}/transactions/{matchup_week}"),
                     sleeper_get(client, "/players/nfl/trending/add?lookback_hours=24&limit=50"),
                     sleeper_get(client, "/players/nfl/trending/drop?lookback_hours=24&limit=50"),
                 )
 
-                cached_players = (STATE.get("data") or {}).get("players") or {}
-                players_fetched_at = (STATE.get("data") or {}).get("players_fetched_at")
+                cached_players = (state.get("data") or {}).get("players") or {}
+                players_fetched_at = (state.get("data") or {}).get("players_fetched_at")
                 players_stale = True
                 if players_fetched_at:
                     try:
@@ -161,12 +190,12 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                     players = cached_players
 
                 market_data = await refresh_public_market(
-                    client, (STATE.get("data") or {}).get("market_data")
+                    client, (state.get("data") or {}).get("market_data")
                 )
                 projection_payload = None
                 projection_bytes = 0
                 projection_transport = None
-                projection_claimed = projection_service.begin_external_refresh()
+                projection_claimed = projections.begin_external_refresh()
                 if projection_claimed:
                     try:
                         projection_payload, projection_bytes, projection_transport = await SLEEPER_PROJECTION_CLIENT.fetch(
@@ -175,7 +204,7 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                             week=matchup_week,
                         )
                     except Exception as exc:
-                        projection_service.fail_external_refresh(
+                        projections.fail_external_refresh(
                             exc, transport_details=SLEEPER_PROJECTION_CLIENT.last_transport,
                         )
                         logger.warning("Optional Sleeper projection refresh failed: %s", type(exc).__name__)
@@ -211,7 +240,7 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                     else:
                         roster_slot = "Bench"
                     if pid not in history_by_player:
-                        history_by_player[pid] = player_history_evidence(LEAGUE_ID, pid)
+                        history_by_player[pid] = player_history_evidence(league_id, pid)
                     player_rows.append({
                         "id": pid,
                         "name": full_name,
@@ -366,7 +395,7 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                     "records_retrieved": records,
                     "reason": None,
                 }
-            previous_data = STATE.get("data") or {}
+            previous_data = state.get("data") or {}
             retained_history = {
                 "calibration_state": previous_data.get("calibration_state") or {},
                 "calibration_history": previous_data.get("calibration_history") or [],
@@ -375,7 +404,7 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                 "valuation_intelligence": previous_data.get("valuation_intelligence") or {},
                 "brain_semantic_metrics": previous_data.get("brain_semantic_metrics") or {},
             }
-            STATE["data"] = {
+            state["data"] = {
                 "league": league,
                 "scoring_settings": league.get("scoring_settings") or {},
                 "league_settings": league.get("settings") or {},
@@ -400,35 +429,35 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
             # and persistence phases allocate their own bounded working sets.
             del previous_data, retained_history, cached_players
             del history_by_player, user_by_id, matchup_by_roster, resolver
-            STATE["last_sync"] = synced_at
-            STATE["last_error"] = None
-            STATE["transactions_last_sync"] = synced_at
-            STATE["transactions_last_error"] = None
+            state["last_sync"] = synced_at
+            state["last_error"] = None
+            state["transactions_last_sync"] = synced_at
+            state["transactions_last_error"] = None
             from src.core.historical_memory import historical_store
             from src.core.relevant_players import (
                 apply_relevant_player_filter, build_relevant_player_universe,
             )
 
-            STATE["data"]["relevant_player_universe"] = await asyncio.to_thread(
+            state["data"]["relevant_player_universe"] = await asyncio.to_thread(
                 build_relevant_player_universe,
-                STATE["data"], historical_store, LEAGUE_ID,
+                state["data"], historical_store, league_id,
             )
             apply_relevant_player_filter(
-                STATE["data"], STATE["data"]["relevant_player_universe"],
+                state["data"], state["data"]["relevant_player_universe"],
             )
             try:
                 with lifecycle_coordinator.phase("provider_network") as phase:
-                    await asyncio.to_thread(build_provider_network, STATE["data"], STATE)
+                    await asyncio.to_thread(build_provider_network, state["data"], state)
                     phase["provider_count"] = len(
-                        (STATE["data"].get("provider_network") or {}).get("providers") or []
+                        (state["data"].get("provider_network") or {}).get("providers") or []
                     )
                 try:
                     if projection_payload is not None:
                         await asyncio.to_thread(
-                            projection_service.ingest_sleeper,
+                            projections.ingest_sleeper,
                             projection_payload,
-                            data=STATE["data"],
-                            league_id=LEAGUE_ID,
+                            data=state["data"],
+                            league_id=league_id,
                             season=int((nfl_state or {}).get("season") or league.get("season") or utcnow().year),
                             week=matchup_week,
                             response_bytes=projection_bytes,
@@ -436,34 +465,34 @@ async def _sync_sleeper(force_players: bool = False) -> dict[str, Any]:
                         )
                     else:
                         await asyncio.to_thread(
-                            projection_service.generate, STATE["data"], LEAGUE_ID,
+                            projections.generate, state["data"], league_id,
                         )
                 except Exception:
                     logger.exception(
                         "Projection generation failed; canonical intelligence will publish an explicit unavailable state"
                     )
                 with lifecycle_coordinator.phase("valuation_intelligence") as phase:
-                    await asyncio.to_thread(build_valuation_intelligence, STATE["data"], STATE)
+                    await asyncio.to_thread(build_valuation_intelligence, state["data"], state)
                     phase["canonical_generation"] = (
-                        STATE["data"].get("valuation_intelligence") or {}
+                        state["data"].get("valuation_intelligence") or {}
                     ).get("generated_at")
-                await asyncio.to_thread(audit_market_calibration, STATE["data"], STATE, apply=True)
+                await asyncio.to_thread(audit_market_calibration, state["data"], state, apply=True)
             except Exception:
                 logger.exception("Provider network or automated market calibration audit failed")
-                STATE["data"]["calibration_error"] = "Provider evidence evaluation failed; no model adjustment was applied."
-            capture_current_state(STATE["data"], synced_at)
-            save_cache()
+                state["data"]["calibration_error"] = "Provider evidence evaluation failed; no model adjustment was applied."
+            capture_current_state(state["data"], synced_at)
+            save_cache(state=state, league_id=league_id)
             intelligence_cache.invalidate("snapshot:")
             intelligence_cache.invalidate("crawl:")
             logger.info("Sleeper sync complete: %s teams", len(team_rows))
         except Exception as exc:
-            STATE["last_error"] = f"{type(exc).__name__}: {exc}"
+            state["last_error"] = f"{type(exc).__name__}: {exc}"
             logger.exception("Sleeper sync failed")
         finally:
-            STATE["syncing"] = False
+            state["syncing"] = False
             if "lifecycle_context" in locals():
                 lifecycle_context.__exit__(None, None, None)
-        return STATE
+        return state
 
 
 async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
@@ -473,14 +502,38 @@ async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
     )
 
 
-async def sync_transactions() -> bool:
+async def sync_sleeper_league(
+    league_id: str,
+    state: dict[str, Any],
+    *,
+    force_players: bool = False,
+    projections: ProjectionService | None = None,
+) -> dict[str, Any]:
+    """Synchronize a league without replacing process-global league state."""
+    service = projections or ProjectionService(league_id=str(league_id))
+    return await asyncio.to_thread(
+        lambda: asyncio.run(_sync_sleeper(
+            force_players=force_players,
+            league_id=str(league_id),
+            state=state,
+            projections=service,
+        )),
+    )
+
+
+async def sync_transactions(
+    *, state: dict[str, Any] = STATE, league_id: str = LEAGUE_ID,
+) -> bool:
     """Refresh only the cached transaction list from Sleeper."""
-    async with TRANSACTIONS_SYNC_LOCK:
-        if STATE.get("transactions_syncing"):
+    transaction_lock = _LEAGUE_TRANSACTION_LOCKS.setdefault(
+        str(league_id), asyncio.Lock(),
+    )
+    async with transaction_lock:
+        if state.get("transactions_syncing"):
             return False
-        STATE["transactions_syncing"] = True
+        state["transactions_syncing"] = True
         try:
-            data = STATE.get("data") or {}
+            data = state.get("data") or {}
             if not data:
                 raise RuntimeError("League data must be loaded before refreshing transactions.")
             week = int(data.get("week") or 1)
@@ -489,22 +542,22 @@ async def sync_transactions() -> bool:
                 timeout=timeout, headers=request_headers()
             ) as client:
                 transactions = await sleeper_get(
-                    client, f"/league/{LEAGUE_ID}/transactions/{week}"
+                    client, f"/league/{league_id}/transactions/{week}"
                 )
             data["transactions"] = transactions
-            STATE["transactions_last_sync"] = utcnow().isoformat()
-            STATE["transactions_last_error"] = None
-            save_cache()
+            state["transactions_last_sync"] = utcnow().isoformat()
+            state["transactions_last_error"] = None
+            save_cache(state=state, league_id=league_id)
             intelligence_cache.invalidate("snapshot:")
             intelligence_cache.invalidate("crawl:")
             logger.info("Transaction sync complete: %s transactions", len(transactions))
             return True
         except Exception as exc:
-            STATE["transactions_last_error"] = f"{type(exc).__name__}: {exc}"
+            state["transactions_last_error"] = f"{type(exc).__name__}: {exc}"
             logger.exception("Transaction sync failed")
             return False
         finally:
-            STATE["transactions_syncing"] = False
+            state["transactions_syncing"] = False
 
 
 
