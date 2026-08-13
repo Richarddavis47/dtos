@@ -689,6 +689,7 @@ def _cold_build() -> tuple[dict, float, int, dict[str, object]]:
     warming_server: list[float] = []
     health_latency: list[float] = []
     liveness_latency: list[float] = []
+    browser_counts: list[int] = []
     phases: set[str] = set()
     deadline = time.monotonic() + 60
     while time.monotonic() < deadline:
@@ -707,6 +708,7 @@ def _cold_build() -> tuple[dict, float, int, dict[str, object]]:
                     "health_max_ms": round(max(health_latency, default=0), 3),
                     "liveness_max_ms": round(max(liveness_latency, default=0), 3),
                     "background_phases": sorted(phases),
+                    "browser_process_counts": browser_counts,
                 },
             )
         warming_client.append(elapsed)
@@ -725,6 +727,13 @@ def _cold_build() -> tuple[dict, float, int, dict[str, object]]:
         phases.add(str((health.get("cache") or {}).get("build_phase")))
         _live_status, _live_body, live_ms, _ = _diagnostic_request("/health/live")
         liveness_latency.append(live_ms)
+        _visual_status, visual_body, _visual_ms, _ = _diagnostic_request(
+            "/api/inspect/live/visual/health",
+        )
+        browser_count = int(json.loads(visual_body).get("browser_processes") or 0)
+        browser_counts.append(browser_count)
+        if browser_count:
+            raise AssertionError("browser process overlapped semantic preparation")
         if health_ms >= 500 or live_ms >= 500:
             raise AssertionError(
                 f"background responsiveness failed: health={health_ms:.3f}ms "
@@ -745,7 +754,8 @@ def _cold_build() -> tuple[dict, float, int, dict[str, object]]:
         "attempts": attempts,
         "warming_client_max_ms": round(max(warming_client, default=0), 3),
         "warming_server_max_ms": round(max(warming_server, default=0), 3),
-        "background_phases": sorted(phases),
+            "background_phases": sorted(phases),
+            "browser_process_counts": browser_counts,
         "profile": profile,
     })
 
@@ -949,8 +959,12 @@ def _latencies() -> dict[str, object]:
 
 def _pad_to_production_baseline() -> list[bytearray]:
     padding = []
-    while _cgroup("memory.current") < BASELINE:
-        padding.append(bytearray(min(16 * MIB, BASELINE - _cgroup("memory.current"))))
+    while True:
+        current = _cgroup("memory.current")
+        remaining = BASELINE - current
+        if remaining <= 0:
+            break
+        padding.append(bytearray(min(16 * MIB, remaining)))
     return padding
 
 
@@ -1168,6 +1182,7 @@ def _nonsemantic_reuse(
     first_generation: object, first_build_count: int, expected_body: bytes,
 ) -> dict[str, object]:
     before = _semantic_contract()
+    before_cache = (_market_health().get("cache") or {})
     marker = f"validation-nonsemantic-{time.time_ns()}"
     _profiled_request(
         f"/__validation__/nonsemantic-refresh?marker={quote(marker)}", method="POST",
@@ -1187,6 +1202,10 @@ def _nonsemantic_reuse(
         raise AssertionError("non-semantic refresh published a replacement")
     if cache.get("build_active") or cache.get("market_generation") != first_generation:
         raise AssertionError("non-semantic refresh started a replacement worker")
+    if int(cache.get("semantic_child_count") or 0) != int(
+        before_cache.get("semantic_child_count") or 0
+    ):
+        raise AssertionError("non-semantic refresh spawned a semantic child")
     before_raw = before.get("raw_identities") or {}
     after_raw = after.get("raw_identities") or {}
     for field in (
@@ -1202,6 +1221,7 @@ def _nonsemantic_reuse(
         "serialized_output_unchanged": True,
         "artifact_compatibility": "compatible",
         "replacement_workers": 0,
+        "semantic_children": 0,
         "replacement_builds": 0,
         "raw_before": before_raw,
         "raw_after": after_raw,
@@ -1249,6 +1269,7 @@ def _replacement_profile(
     first_generation: object, first_build_count: int, expected_body: bytes,
 ) -> tuple[dict[str, object], dict[str, object]]:
     before_semantic = _semantic_contract()
+    before_cache = (_market_health().get("cache") or {})
     _target_status, target_before_body, _target_elapsed = _request(
         _material_target_search_path(),
     )
@@ -1352,6 +1373,11 @@ def _replacement_profile(
             "build_count": cache.get("build_count"),
             "build_phase": cache.get("build_phase"),
             "build_active": cache.get("build_active"),
+            "semantic_child_count": cache.get("semantic_child_count"),
+            "semantic_preparation": cache.get("semantic_preparation"),
+            "browser_processes": int(json.loads(_request(
+                "/api/inspect/live/visual/health",
+            )[1]).get("browser_processes") or 0),
         })
     after_history = _history_metrics()
     deadline = time.monotonic() + 60
@@ -1380,6 +1406,8 @@ def _replacement_profile(
         ),
         "replacement_builds": int(final_cache.get("build_count") or 0)
         - first_build_count,
+        "semantic_children": int(final_cache.get("semantic_child_count") or 0)
+        - int(before_cache.get("semantic_child_count") or 0),
         "new_generation_published": final_cache.get("market_generation")
         != first_generation,
         "request_thread_generation_work": any(
@@ -1400,12 +1428,18 @@ def _replacement_profile(
         raise AssertionError(
             f"expected exactly one replacement build, got {result['replacement_builds']}"
         )
+    if result["semantic_children"] != 1:
+        raise AssertionError(
+            f"expected exactly one semantic child, got {result['semantic_children']}"
+        )
     if not result["last_valid_generation_stable"]:
         raise AssertionError("last-valid generation changed during replacement warming")
     if not result["new_generation_published"]:
         raise AssertionError("replacement generation was not published")
     if result["request_thread_generation_work"] or result["sqlite_query_count"]:
         raise AssertionError("replacement warming performed request-thread generation work")
+    if any(int(sample["browser_processes"]) for sample in samples):
+        raise AssertionError("browser process overlapped replacement semantic preparation")
     published_artifact = _artifact_state()
     if published_artifact.get("generation") != changed_semantic.get("semantic_generation"):
         raise AssertionError("validator sampled before the new semantic generation published")
@@ -1690,6 +1724,23 @@ def main() -> int:
                     (health.get("cache") or {}).get("semantic_preparation") or {}
                 ),
             }
+            reference_semantic = _semantic_contract().get("semantic_identities") or {}
+            published_semantic = health.get("semantic_identity") or {}
+            digest_fields = (
+                "asset_universe_digest", "brain_semantic_output_digest",
+                "ownership_dependency_digest", "provider_evidence_digest",
+            )
+            digest_equivalence = {
+                field: {
+                    "reference": reference_semantic.get(field),
+                    "subprocess": published_semantic.get(field),
+                    "equal": reference_semantic.get(field) == published_semantic.get(field),
+                }
+                for field in digest_fields
+            }
+            summary["phases"]["cold_market"]["digest_equivalence"] = digest_equivalence
+            if not all(row["equal"] for row in digest_equivalence.values()):
+                raise AssertionError("spawned semantic digests differ from reference contract")
             raw_ceiling = RAW_EMERGENCY_MAX if archive_warmed else COLD_MAX
             if cold_peak >= raw_ceiling:
                 raise AssertionError(

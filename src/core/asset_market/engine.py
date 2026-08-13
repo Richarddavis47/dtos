@@ -4,12 +4,17 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sqlite3
+import subprocess
+import sys
 import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
+
+import psutil
 
 from app_metadata import BUILD_NUMBER, VERSION
 from src.core.brain import brain_service
@@ -18,7 +23,6 @@ from src.core.historical_memory.models import DATABASE_MIGRATION_VERSION
 from src.core.historical_memory.store import HistoricalStore
 from src.core.valuation_intelligence.engine import (
     asset_market_input_revision,
-    canonical_semantic_value,
 )
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 from src.core.asset_market.read_model import (
@@ -27,6 +31,12 @@ from src.core.asset_market.read_model import (
     MarketReadModel,
     build_read_model,
     memory_admission,
+)
+from src.core.asset_market.semantic_contract import (
+    PROTOCOL_VERSION,
+    digest as _digest,
+    reference_identities,
+    semantic_record,
 )
 from src.platform.lifecycle import lifecycle_coordinator, memory_snapshot
 
@@ -42,38 +52,13 @@ SORT_FIELDS = {
     "liquidity": "liquidity_score",
 }
 
-_TRANSIENT_SEMANTIC_FIELDS = frozenset({
-    "generated_at", "generation_timestamp", "last_sync", "last_updated",
-    "observed_at", "provider_refresh_timestamp", "retrieved_at",
-    "sleeper_sync_timestamp", "updated_at", "valuation_timestamp",
-    "data_age", "freshness", "last_changed", "sleeper_data_age_hours",
-})
-
 MEMORY_ADMISSION_BACKOFF_SECONDS = 30.0
 MEMORY_ADMISSION_IMPROVEMENT_BYTES = 64 * 1024 * 1024
 
-
-def _semantic_value(value: Any) -> Any:
-    """Return deterministic market content without observation metadata."""
-    if isinstance(value, dict):
-        return {
-            str(key): _semantic_value(child)
-            for key, child in sorted(value.items(), key=lambda item: str(item[0]))
-            if str(key) not in _TRANSIENT_SEMANTIC_FIELDS
-        }
-    if isinstance(value, (list, tuple)):
-        return [_semantic_value(child) for child in value]
-    if isinstance(value, set):
-        return sorted(_semantic_value(child) for child in value)
-    return value
-
-
-def _digest(value: Any) -> str:
-    encoded = json.dumps(
-        _semantic_value(value), separators=(",", ":"), sort_keys=True,
-        default=lambda item: getattr(item, "value", str(item)),
-    ).encode()
-    return hashlib.sha256(encoded).hexdigest()
+SEMANTIC_CHILD_TIMEOUT_SECONDS = 30.0
+SEMANTIC_CHILD_MEMORY_ESTIMATE = 96 * 1024 * 1024
+SEMANTIC_STREAM_FLUSH_RECORDS = 16
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 class MarketWarmingError(RuntimeError):
@@ -82,6 +67,10 @@ class MarketWarmingError(RuntimeError):
 
 class _BuildDeferred(RuntimeError):
     """Internal signal that a guarded background build was safely deferred."""
+
+
+class SemanticWorkerError(RuntimeError):
+    """Raised when isolated semantic preparation fails closed."""
 
 
 def _layer_value(asset: dict[str, Any], name: str) -> float | None:
@@ -594,7 +583,10 @@ class AssetMarket:
 class AssetMarketCache:
     """Single-flight last-valid cache keyed by every canonical input identity."""
 
-    def __init__(self, *, clock: Any = None, memory_observer: Any = None) -> None:
+    def __init__(
+        self, *, clock: Any = None, memory_observer: Any = None,
+        semantic_process_factory: Any = None,
+    ) -> None:
         self._lock = threading.RLock()
         self._build_lock = threading.Lock()
         self._key: str | None = None
@@ -632,7 +624,12 @@ class AssetMarketCache:
         self.failed_constructions = 0
         self._clock = clock or time.monotonic
         self._memory_observer = memory_observer or memory_snapshot
+        self._semantic_process_factory = semantic_process_factory or subprocess.Popen
         self._semantic_preparation: dict[str, Any] = {}
+        self._prepared_semantic_contract: tuple[
+            tuple[Any, ...], dict[str, Any]
+        ] | None = None
+        self.semantic_child_count = 0
         self._epoch = 0
 
     def _record_semantic_preparation(self, metrics: dict[str, Any]) -> None:
@@ -775,121 +772,266 @@ class AssetMarketCache:
     @staticmethod
     def semantic_identities(
         data: dict[str, Any], state: dict[str, Any],
-        *, chunk_size: int = 32, time_budget_ms: float = 5.0,
-        yield_control: Callable[[], None] | None = None,
-        clock: Callable[[], float] | None = None,
-        chunk_observer: Callable[[dict[str, Any]], None] | None = None,
         metrics_observer: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
-        """Digest exactly the canonical content persisted in compact market rows."""
-        if chunk_size < 1:
-            raise ValueError("chunk_size must be positive")
-        if time_budget_ms <= 0:
-            raise ValueError("time_budget_ms must be positive")
-        release = yield_control or (lambda: time.sleep(0))
-        observe_time = clock or time.perf_counter
-        preparation_started = observe_time()
-        chunk_started = preparation_started
-        chunk_rows = 0
-        chunk_count = 0
-        yield_count = 0
-        maximum_chunk_ms = 0.0
-        maximum_rows = 0
-        over_budget_single_assets = 0
-
-        def finish_chunk(*, final: bool = False) -> None:
-            nonlocal chunk_started, chunk_rows, chunk_count, yield_count
-            nonlocal maximum_chunk_ms, maximum_rows
-            if not chunk_rows:
-                return
-            elapsed_ms = max(0.0, (observe_time() - chunk_started) * 1000)
-            chunk_count += 1
-            maximum_chunk_ms = max(maximum_chunk_ms, elapsed_ms)
-            maximum_rows = max(maximum_rows, chunk_rows)
-            if chunk_observer is not None:
-                chunk_observer({
-                    "sequence": chunk_count,
-                    "rows": chunk_rows,
-                    "duration_ms": round(elapsed_ms, 3),
-                    "final": final,
-                })
-            release()
-            yield_count += 1
-            chunk_started = observe_time()
-            chunk_rows = 0
-
-        brain = brain_service(data)
-        universe = ValuationUniverse.streaming(data, state)
-        universe_hash = hashlib.sha256()
-        output_hash = hashlib.sha256()
-        ownership_hash = hashlib.sha256()
-        provider_hash = hashlib.sha256()
-        asset_count = 0
-        for asset in universe.iter_assets():
-            asset_started = observe_time()
-            brain_asset = brain.asset(asset["asset_id"])
-            summary = _summary(asset, brain_asset)
-            identity = asset.get("identity") or {}
-            universe_hash.update(_digest({
-                "asset_id": asset["asset_id"],
-                "asset_type": asset["asset_type"],
-                "identity": {
-                    key: value for key, value in identity.items()
-                    if key not in {"current_owner", "free_agent"}
-                },
-            }).encode())
-            output_hash.update(_digest(canonical_semantic_value({
-                "asset_id": asset["asset_id"],
-                "summary": {
-                    key: value for key, value in summary.items()
-                    if key not in {"availability", "provider_count"}
-                },
-                "brain": brain_asset,
-                "valuation_layers": asset.get("valuation_layers") or {},
-                "comparison": asset.get("comparison") or {},
-            })).encode())
-            ownership_hash.update(_digest({
-                "asset_id": asset["asset_id"],
-                "owner": identity.get("current_owner"),
-                "availability": summary["availability"],
-            }).encode())
-            provider_hash.update(_digest(canonical_semantic_value({
-                "asset_id": asset["asset_id"], "providers": asset.get("providers") or [],
-            })).encode())
-            asset_count += 1
-            chunk_rows += 1
-            asset_ms = max(0.0, (observe_time() - asset_started) * 1000)
-            if asset_ms > time_budget_ms:
-                over_budget_single_assets += 1
-            elapsed_ms = max(0.0, (observe_time() - chunk_started) * 1000)
-            if elapsed_ms >= time_budget_ms or chunk_rows >= chunk_size:
-                finish_chunk()
-        finish_chunk(final=True)
-        identities = {
-            "asset_universe_digest": universe_hash.hexdigest(),
-            "brain_semantic_output_digest": output_hash.hexdigest(),
-            "ownership_dependency_digest": ownership_hash.hexdigest(),
-            "provider_evidence_digest": provider_hash.hexdigest(),
-            "asset_count": asset_count,
-            "valuation_schema": (
-                (data.get("valuation_intelligence") or {}).get("schema_version")
-            ),
-        }
+        """Reference implementation for exact subprocess equivalence tests."""
+        started = time.perf_counter()
+        identities = reference_identities(
+            AssetMarketCache._semantic_records(data, state),
+            (data.get("valuation_intelligence") or {}).get("schema_version"),
+        )
         if metrics_observer is not None:
             metrics_observer({
-                "chunk_count": chunk_count,
-                "maximum_chunk_duration_ms": round(maximum_chunk_ms, 3),
-                "maximum_assets_per_chunk": maximum_rows,
-                "yield_count": yield_count,
-                "asset_count": asset_count,
-                "time_budget_ms": float(time_budget_ms),
-                "row_limit": chunk_size,
-                "over_budget_single_assets": over_budget_single_assets,
-                "total_duration_ms": round(
-                    max(0.0, (observe_time() - preparation_started) * 1000), 3,
-                ),
+                "execution": "in_process_reference",
+                "asset_count": identities["asset_count"],
+                "total_duration_ms": round((time.perf_counter() - started) * 1000, 3),
             })
         return identities
+
+    @staticmethod
+    def _semantic_records(
+        data: dict[str, Any], state: dict[str, Any],
+    ) -> Any:
+        brain = brain_service(data)
+        universe = ValuationUniverse.streaming(data, state)
+        for sequence, asset in enumerate(universe.iter_assets()):
+            brain_asset = brain.asset(asset["asset_id"])
+            yield semantic_record(
+                asset, brain_asset, _summary(asset, brain_asset), sequence,
+            )
+
+    @staticmethod
+    def _expected_semantic_assets(data: dict[str, Any]) -> int:
+        players = data.get("normalized_players") or data.get("players") or {}
+        relevance = data.get("relevant_player_universe") or {}
+        member_ids = relevance.get("member_ids")
+        if isinstance(member_ids, list):
+            allowed = {str(player_id) for player_id in member_ids}
+            players = {
+                player_id: row for player_id, row in players.items()
+                if str(player_id) in allowed
+            }
+        return sum(isinstance(row, dict) for row in players.values()) + len(
+            data.get("pick_ledger") or []
+        )
+
+    @staticmethod
+    def _semantic_json(value: Any) -> bytes:
+        def fallback(item: Any) -> Any:
+            if isinstance(item, set):
+                return sorted(item)
+            return getattr(item, "value", str(item))
+
+        return (json.dumps(
+            value, sort_keys=True, separators=(",", ":"), default=fallback,
+        ) + "\n").encode("utf-8")
+
+    def _isolated_semantic_identities(
+        self, data: dict[str, Any], state: dict[str, Any],
+        request_marker: tuple[Any, ...], league_id: str,
+    ) -> dict[str, Any]:
+        """Stream canonical records to one minimal spawned semantic worker."""
+        admission = memory_admission(
+            self._memory_observer(), estimate=SEMANTIC_CHILD_MEMORY_ESTIMATE,
+        )
+        if not admission.get("admitted"):
+            raise MarketMemoryBudgetError("semantic_preparation", admission)
+        expected = self._expected_semantic_assets(data)
+        request_generation = hashlib.sha256(json.dumps(
+            request_marker, default=str, separators=(",", ":"),
+        ).encode()).hexdigest()
+        header = {
+            "protocol": PROTOCOL_VERSION,
+            "request_generation": request_generation,
+            "application_version": VERSION,
+            "application_build": BUILD_NUMBER,
+            "market_schema": MARKET_SCHEMA_VERSION,
+            "read_model_schema": MARKET_READ_MODEL_SCHEMA,
+            "valuation_schema": (
+                data.get("valuation_intelligence") or {}
+            ).get("schema_version"),
+            "league_identity": _digest(league_id),
+            "expected_asset_count": expected,
+        }
+        root = Path(__file__).resolve().parents[3]
+        child_environment = {
+            name: os.environ[name] for name in ("PATH", "SYSTEMROOT", "WINDIR")
+            if name in os.environ
+        }
+        child_environment.update({
+            "PYTHONPATH": str(root),
+            "PYTHONUNBUFFERED": "1",
+        })
+        started = time.perf_counter()
+        parent_cpu_started = time.process_time()
+        input_bytes = 0
+        records = 0
+        peak_child_rss = 0
+        process: Any = None
+        exit_status: int | None = None
+        failure: str | None = None
+        reaped = False
+        try:
+            process = self._semantic_process_factory(
+                [sys.executable, "-m", "src.core.asset_market.semantic_worker"],
+                cwd=root, env=child_environment, stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            with self._lock:
+                self.semantic_child_count += 1
+            child = psutil.Process(process.pid)
+            encoded = self._semantic_json(header)
+            process.stdin.write(encoded)
+            input_bytes += len(encoded)
+            for record in self._semantic_records(data, state):
+                encoded = self._semantic_json(record)
+                process.stdin.write(encoded)
+                input_bytes += len(encoded)
+                records += 1
+                if records % SEMANTIC_STREAM_FLUSH_RECORDS == 0:
+                    process.stdin.flush()
+                    try:
+                        peak_child_rss = max(
+                            peak_child_rss, int(child.memory_info().rss),
+                        )
+                    except (psutil.Error, OSError):
+                        pass
+            process.stdin.close()
+            process.stdin = None
+            elapsed = time.perf_counter() - started
+            remaining = max(0.001, SEMANTIC_CHILD_TIMEOUT_SECONDS - elapsed)
+            try:
+                stdout, stderr = process.communicate(timeout=remaining)
+            except subprocess.TimeoutExpired:
+                failure = "timeout"
+                process.terminate()
+                try:
+                    stdout, stderr = process.communicate(timeout=2.0)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    stdout, stderr = process.communicate(timeout=2.0)
+                raise SemanticWorkerError("Semantic preparation timed out.") from None
+            exit_status = process.returncode
+            reaped = True
+            if exit_status != 0:
+                failure = "nonzero_exit"
+                raise SemanticWorkerError(
+                    "Semantic preparation exited without a valid result."
+                )
+            try:
+                output = json.loads(stdout.decode("utf-8"))
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                failure = "malformed_output"
+                raise SemanticWorkerError(
+                    "Semantic preparation returned malformed output."
+                ) from None
+            try:
+                identities = self._validate_semantic_output(
+                    output, request_generation, expected,
+                    header["valuation_schema"], input_bytes,
+                )
+            except SemanticWorkerError:
+                failure = "invalid_output_contract"
+                raise
+            metrics = {
+                "execution": "spawned_subprocess",
+                "worker_pid": process.pid,
+                "request_generation": request_generation,
+                "input_bytes": input_bytes,
+                "output_bytes": len(stdout),
+                "records": records,
+                "child_duration_ms": (output.get("timing") or {}).get("duration_ms"),
+                "parent_duration_ms": round((time.perf_counter() - started) * 1000, 3),
+                "parent_cpu_ms": round((time.process_time() - parent_cpu_started) * 1000, 3),
+                "peak_child_rss_bytes": peak_child_rss or (
+                    output.get("timing") or {}
+                ).get("peak_rss_bytes"),
+                "child_cpu_ms": (output.get("timing") or {}).get("cpu_ms"),
+                "exit_status": exit_status,
+                "failure": None,
+                "reaped": reaped,
+                "memory_admission": admission,
+            }
+            self._record_semantic_preparation(metrics)
+            return identities
+        except (BrokenPipeError, OSError) as exc:
+            failure = failure or "spawn_or_pipe_failure"
+            raise SemanticWorkerError(
+                f"Semantic preparation failed: {type(exc).__name__}."
+            ) from None
+        finally:
+            if process is not None and process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=2.0)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=2.0)
+            if process is not None:
+                reaped = process.poll() is not None
+            if failure is not None:
+                self._record_semantic_preparation({
+                    "execution": "spawned_subprocess",
+                    "worker_pid": getattr(process, "pid", None),
+                    "request_generation": request_generation,
+                    "input_bytes": input_bytes,
+                    "output_bytes": 0,
+                    "records": records,
+                    "parent_duration_ms": round(
+                        (time.perf_counter() - started) * 1000, 3,
+                    ),
+                    "parent_cpu_ms": round(
+                        (time.process_time() - parent_cpu_started) * 1000, 3,
+                    ),
+                    "peak_child_rss_bytes": peak_child_rss,
+                    "exit_status": (
+                        process.poll() if process is not None else exit_status
+                    ),
+                    "failure": failure,
+                    "reaped": reaped,
+                    "memory_admission": admission,
+                })
+
+    @staticmethod
+    def _validate_semantic_output(
+        output: Any, request_generation: str, expected_assets: int,
+        valuation_schema: Any, input_bytes: int,
+    ) -> dict[str, Any]:
+        if not isinstance(output, dict):
+            raise SemanticWorkerError("Semantic preparation output is not an object.")
+        if (
+            output.get("protocol") != PROTOCOL_VERSION
+            or output.get("status") != "ok"
+            or output.get("request_generation") != request_generation
+            or output.get("asset_count") != expected_assets
+            or output.get("valuation_schema_version") != valuation_schema
+        ):
+            raise SemanticWorkerError("Semantic preparation output identity is invalid.")
+        timing = output.get("timing")
+        if (
+            not isinstance(timing, dict)
+            or timing.get("records") != expected_assets
+            or timing.get("input_bytes") != input_bytes
+        ):
+            raise SemanticWorkerError("Semantic preparation output metrics are invalid.")
+        digests = output.get("digests")
+        names = {
+            "asset_universe": "asset_universe_digest",
+            "brain_semantic_output": "brain_semantic_output_digest",
+            "ownership_dependency": "ownership_dependency_digest",
+            "provider_evidence": "provider_evidence_digest",
+        }
+        if not isinstance(digests, dict) or any(
+            not isinstance(digests.get(name), str)
+            or _SHA256.fullmatch(digests[name]) is None for name in names
+        ):
+            raise SemanticWorkerError("Semantic preparation returned an invalid digest.")
+        return {
+            target: digests[source] for source, target in names.items()
+        } | {
+            "asset_count": expected_assets,
+            "valuation_schema": valuation_schema,
+        }
 
     @staticmethod
     def artifact_path(store: HistoricalStore, generation: str) -> Path:
@@ -1122,10 +1264,29 @@ class AssetMarketCache:
         phase: dict[str, Any],
     ) -> None:
         key, store_identity = self.key(data, state, store, league_id)
-        contract = self.artifact_contract(
-            data, state, store, league_id,
-            semantic_metrics_observer=self._record_semantic_preparation,
-        )
+        with self._lock:
+            prepared = self._prepared_semantic_contract
+            if prepared is not None and prepared[0] == request_marker:
+                contract = dict(prepared[1])
+                self._prepared_semantic_contract = None
+            else:
+                contract = None
+        if contract is None:
+            contract = {
+                "version": VERSION, "build": BUILD_NUMBER,
+                "market_schema": MARKET_SCHEMA_VERSION,
+                "read_model_schema": MARKET_READ_MODEL_SCHEMA,
+                "league_id": league_id,
+                "database_identity_digest": _digest(store.database_uuid()),
+                **self._isolated_semantic_identities(
+                    data, state, request_marker, league_id,
+                ),
+            }
+        if (
+            epoch != self._epoch
+            or self.request_marker(data, state, store, league_id) != request_marker
+        ):
+            raise _BuildDeferred("Asset Market semantic generation was superseded.")
         generation = self.durable_generation(
             data, state, store, league_id, contract,
         )
@@ -1345,7 +1506,16 @@ class AssetMarketCache:
         try:
             request_marker = self.request_marker(data, state, store, league_id)
             key, store_identity = self.key(data, state, store, league_id)
-            contract = self.artifact_contract(data, state, store, league_id)
+            contract = {
+                "version": VERSION, "build": BUILD_NUMBER,
+                "market_schema": MARKET_SCHEMA_VERSION,
+                "read_model_schema": MARKET_READ_MODEL_SCHEMA,
+                "league_id": league_id,
+                "database_identity_digest": _digest(store.database_uuid()),
+                **self._isolated_semantic_identities(
+                    data, state, request_marker, league_id,
+                ),
+            }
             generation = self.durable_generation(
                 data, state, store, league_id, contract,
             )
@@ -1359,6 +1529,10 @@ class AssetMarketCache:
             with self._lock:
                 self._artifact_compatibility = compatibility
             if artifact is None:
+                with self._lock:
+                    self._prepared_semantic_contract = (
+                        request_marker, dict(contract),
+                    )
                 return False
             market = AssetMarket(
                 data, state, store, league_id, generation=generation,
@@ -1429,7 +1603,16 @@ class AssetMarketCache:
                     self._store_identity = None
                     self._market = None
             raise
-        contract = self.artifact_contract(data, state, store, league_id)
+        contract = {
+            "version": VERSION, "build": BUILD_NUMBER,
+            "market_schema": MARKET_SCHEMA_VERSION,
+            "read_model_schema": MARKET_READ_MODEL_SCHEMA,
+            "league_id": league_id,
+            "database_identity_digest": _digest(store.database_uuid()),
+            **self._isolated_semantic_identities(
+                data, state, request_marker, league_id,
+            ),
+        }
         generation = self.durable_generation(
             data, state, store, league_id, contract,
         )
@@ -1489,6 +1672,7 @@ class AssetMarketCache:
                 "market_rebuild_requests_noop": self.noop_rebuild_requests,
                 "market_construction_admission_skips": self.construction_admission_skips,
                 "market_actual_constructions": self.actual_constructions,
+                "semantic_child_count": self.semantic_child_count,
                 "failed_constructions": self.failed_constructions,
                 "last_error": self.last_error,
                 "last_miss_reason": self.last_miss_reason,
@@ -1578,6 +1762,7 @@ class AssetMarketCache:
             self._requested_generation = None
             self._memory_backoff = None
             self._semantic_preparation = {}
+            self._prepared_semantic_contract = None
             active = self._build_thread is not None
             self._building = active
             self._build_phase = "superseded" if active else "idle"

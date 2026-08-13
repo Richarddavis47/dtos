@@ -44,6 +44,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _normalized_headers,
     _restart_reuse,
     _record_archive_assessment,
+    _pad_to_production_baseline,
     _start_server,
     _startup_memory_within_limit,
     _warm_historical_archive,
@@ -54,6 +55,16 @@ DETAIL = "Asset Market generation is building safely in the background; retry sh
 
 
 class ArchiveCacheValidationTests(unittest.TestCase):
+    def test_padding_race_uses_one_memory_read_per_iteration(self) -> None:
+        from tools.validation import linux_market_cgroup_gate as gate
+
+        with patch.object(
+            gate, "_cgroup", side_effect=[gate.BASELINE - 1, gate.BASELINE + 1],
+        ) as observer:
+            padding = _pad_to_production_baseline()
+        self.assertEqual([len(item) for item in padding], [1])
+        self.assertEqual(observer.call_count, 2)
+
     @staticmethod
     def snapshot(inactive: object, *, size: int = 40 * 1024 * 1024) -> dict:
         return {

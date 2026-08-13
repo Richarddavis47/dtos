@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 import subprocess
 import sys
+import threading
 import unittest
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from PIL import Image
 
 from routes.inspect import create_inspection_router
 from src.core.inspection.live_visual import CaptureRequest, LiveVisualService
+from src.platform.lifecycle import lifecycle_coordinator
 
 
 def request(fingerprint: str = "one", viewport: str = "mobile") -> CaptureRequest:
@@ -24,6 +26,26 @@ def request(fingerprint: str = "one", viewport: str = "mobile") -> CaptureReques
 
 
 class LiveVisualInspectionTests(unittest.TestCase):
+    def tearDown(self):
+        lifecycle_coordinator.reset()
+
+    def test_browser_capture_waits_for_market_semantic_phase(self):
+        entered = threading.Event()
+
+        def capture(_item, output):
+            entered.set()
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            with lifecycle_coordinator.phase("asset_market_build"):
+                self.assertEqual(service.schedule([request()]), 1)
+                self.assertFalse(entered.wait(0.05))
+                self.assertEqual(service.health(1)["browser_processes"], 0)
+            self.assertTrue(service.wait())
+            self.assertTrue(entered.is_set())
+
     def test_application_import_does_not_load_browser_capture_stack(self):
         script = (
             "import sys; import dtos_app; "

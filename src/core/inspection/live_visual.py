@@ -11,6 +11,7 @@ from typing import Any, Callable, Iterable
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.inspection.live import LiveInspection, external_mirror_policy, matchup_semantic
+from src.platform.lifecycle import lifecycle_coordinator
 
 LIVE_VISUAL_SCHEMA_VERSION = "1.0"
 LIVE_VIEWPORTS = {
@@ -112,13 +113,25 @@ class LiveVisualService:
                     return
                 request = self._queue.pop(0)
                 self._active = self.capture_key(request.surface_id, request.viewport)
-                self._browser_processes = 1
+                self._browser_processes = 0
             folder = self.root / "captures" / _safe_id(request.surface_id)
             folder.mkdir(parents=True, exist_ok=True)
             final = folder / f"{request.viewport}.png"
             temporary = folder / f".{request.viewport}.partial.png"
             try:
-                result = self._capture(request, temporary) if self._capture else {}
+                with lifecycle_coordinator.phase("live_visual_capture") as phase:
+                    with self._lock:
+                        self._browser_processes = 1
+                    try:
+                        result = self._capture(request, temporary) if self._capture else {}
+                    finally:
+                        with self._lock:
+                            self._browser_processes = 0
+                    phase.update({
+                        "surface_id": request.surface_id,
+                        "viewport": request.viewport,
+                        "browser_processes": 1,
+                    })
                 temporary.replace(final)
                 deployment = deployment_metadata()
                 row = {
