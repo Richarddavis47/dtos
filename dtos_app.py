@@ -140,7 +140,13 @@ league_runtime_manager = LeagueRuntimeManager(
     max_warm=MAX_WARM_LEAGUE_RUNTIMES,
     hydrator=_hydrate_league_runtime,
 )
-league_runtime_manager.attach_default(LEAGUE_ID, STATE, warm=bool(STATE.get("data")))
+default_league_runtime = league_runtime_manager.attach_default(
+    LEAGUE_ID, STATE, warm=bool(STATE.get("data")),
+)
+# The configured league predates LeagueRuntimeManager and already has one
+# canonical, durable Asset Market cache.  Its request context must expose that
+# same object so artifact restoration and route serving share one owner.
+default_league_runtime.market_context = asset_market_cache
 runtime_state = RuntimeStateProxy(STATE)
 
 

@@ -16,6 +16,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from routes.league_runtime import create_league_runtime_router
 from src.core.league_runtime import (
+    LeagueRuntime,
     LeagueRuntimeManager,
     LeagueRuntimeNotFound,
     RuntimeState,
@@ -23,6 +24,7 @@ from src.core.league_runtime import (
     scoring_profile_id,
     source_generations,
 )
+from src.core.asset_market import AssetMarketCache, asset_market_cache
 from services import sleeper as sleeper_service
 from src.core.projection_intelligence.service import ProjectionService
 from src.platform.league_context import LeagueContextMiddleware, current_league_context
@@ -236,6 +238,26 @@ class LeagueRuntimeRouteValidationTests(unittest.TestCase):
 
 
 class LeagueConsumerContextTests(unittest.TestCase):
+    def test_default_runtime_and_context_share_canonical_market_cache(self) -> None:
+        import dtos_app
+
+        runtime = dtos_app.league_runtime_manager.resident(dtos_app.LEAGUE_ID)
+        self.assertIsNotNone(runtime)
+        self.assertIs(runtime.market_context, asset_market_cache)
+        if runtime.canonical_context is not None:
+            self.assertIs(runtime.canonical_context.market, asset_market_cache)
+
+    def test_secondary_context_receives_an_independent_market_cache(self) -> None:
+        import dtos_app
+
+        runtime = LeagueRuntime("200", state={"data": league_data("200")})
+        projection = ProjectionService(league_id="200")
+        context = dtos_app._publish_runtime_context(runtime, projection)
+
+        self.assertIsInstance(context.market, AssetMarketCache)
+        self.assertIs(runtime.market_context, context.market)
+        self.assertIsNot(context.market, asset_market_cache)
+
     def _application(self, manager: LeagueRuntimeManager, *, enabled: bool = True) -> FastAPI:
         if manager.resident("100") is None:
             default_data = league_data("100")
