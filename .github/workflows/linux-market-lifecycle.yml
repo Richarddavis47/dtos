@@ -45,7 +45,7 @@ jobs:
             --env DTOS_HISTORY_DB_FILE=/fixture/dtos_history.sqlite3 \
             --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
             --env DTOS_BACKGROUND_START_DELAY=0 \
-            --env SLEEPER_LEAGUE_ID=validation-league-1804 \
+            --env SLEEPER_LEAGUE_ID=1804000000000000000 \
             dtos-market-cgroup:validation \
             sh -c 'python -m tools.validation.generate_sanitized_market_fixture && python -m tools.validation.linux_market_cgroup_gate'
       - name: Verify sanitized result

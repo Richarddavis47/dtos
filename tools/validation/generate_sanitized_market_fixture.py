@@ -30,7 +30,7 @@ PRODUCTION_ENTITY_COUNTS = {
     "trade": 231, "transaction": 1_641, "valuation_snapshot": 347_122,
     "weekly_roster": 900, "weekly_roster_snapshot": 3_154,
 }
-LEAGUE_ID = "validation-league-1804"
+LEAGUE_ID = "1804000000000000000"
 STAMP = "2026-08-07T00:00:00+00:00"
 
 
