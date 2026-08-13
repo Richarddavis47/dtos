@@ -19,6 +19,25 @@ from src.core.projection_intelligence.sleeper_provider import (
 
 PROJECTION_SCHEMA_VERSION = "1.2"
 PROJECTION_MODEL_VERSION = "dtos-forward-production-3"
+PROJECTION_CONTRACT_VERSION = "1"
+PROJECTION_SEMANTIC_POLICY_VERSION = "1"
+
+
+def snapshot_compatibility(snapshot: Any) -> tuple[str, str]:
+    """Classify persisted metadata against the running projection contract."""
+    if not isinstance(snapshot, dict):
+        return "corrupt", "Projection snapshot payload is not an object."
+    if str(snapshot.get("schema_version") or "") != PROJECTION_SCHEMA_VERSION:
+        return "incompatible_schema", "Persisted projection schema differs from the required schema."
+    if str(snapshot.get("model_version") or "") != PROJECTION_MODEL_VERSION:
+        return "incompatible_model", "Persisted projection model differs from the required model."
+    if (
+        str(snapshot.get("contract_version") or "") != PROJECTION_CONTRACT_VERSION
+        or str(snapshot.get("semantic_policy_version") or "")
+        != PROJECTION_SEMANTIC_POLICY_VERSION
+    ):
+        return "incompatible_contract", "Persisted projection contract differs from the required contract."
+    return "compatible", "Persisted projection snapshot matches the running contract."
 
 
 class ProjectionInputError(ValueError):
@@ -85,7 +104,16 @@ class ProjectionService:
         self._refreshing = False
         self._external_transport: dict[str, Any] = {}
         self._snapshot_restores = 0
+        self._compatible_restores = 0
+        self._incompatible_restores = 0
         self._restore_failures = 0
+        self._upgrade_triggered_generations = 0
+        self._provider_triggered_generations = 0
+        self._failed_generations = 0
+        self._durable_publications = 0
+        self._compatibility = "missing"
+        self._compatibility_reason = "No durable projection snapshot is available."
+        self._restored_snapshot_identity: dict[str, Any] = {}
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:
@@ -104,18 +132,38 @@ class ProjectionService:
             external = connection.execute("SELECT fingerprint, retrieved_at FROM sleeper_projection_snapshots ORDER BY retrieved_at DESC LIMIT 1").fetchone()
         try:
             if row:
-                self._snapshot = json.loads(row["payload"])
-                self._generation_state = "ready"
-                self._last_success_at = self._snapshot.get("generated_at")
+                restored = json.loads(row["payload"])
                 self._snapshot_restores = 1
+                self._restored_snapshot_identity = {
+                    "schema_version": restored.get("schema_version"),
+                    "model_version": restored.get("model_version"),
+                    "contract_version": restored.get("contract_version"),
+                    "semantic_policy_version": restored.get("semantic_policy_version"),
+                    "snapshot_id": restored.get("projection_snapshot_id"),
+                    "generated_at": restored.get("generated_at"),
+                }
+                self._compatibility, self._compatibility_reason = snapshot_compatibility(restored)
+                self._restored_snapshot_identity["compatibility"] = self._compatibility
+                self._restored_snapshot_identity["compatibility_reason"] = self._compatibility_reason
+                if self._compatibility == "compatible":
+                    self._snapshot = restored
+                    self._generation_state = "ready"
+                    self._last_success_at = restored.get("generated_at")
+                    self._compatible_restores = 1
+                else:
+                    self._snapshot = None
+                    self._generation_state = "warming"
+                    self._incompatible_restores = 1
             if external:
                 self._external_fingerprint = external["fingerprint"]
                 self._external_last_success = external["retrieved_at"]
                 self._external_state = freshness_state(external["retrieved_at"])
         except (TypeError, ValueError, json.JSONDecodeError):
             self._snapshot = None
-            self._generation_state = "pending"
+            self._generation_state = "warming"
             self._restore_failures += 1
+            self._compatibility = "corrupt"
+            self._compatibility_reason = "Durable projection snapshot could not be decoded."
 
     def restore_into(self, data: dict[str, Any]) -> bool:
         """Publish the durable canonical snapshot into cached application state."""
@@ -198,8 +246,14 @@ class ProjectionService:
                     self._external_semantic_changes += 1
                 else:
                     self._external_no_change_refreshes += 1
-            if changed:
-                self.generate(data, league_id)
+            upgrade_required = self._snapshot is None and self._compatibility in {
+                "incompatible_schema", "incompatible_model", "incompatible_contract", "corrupt",
+            }
+            if changed or upgrade_required:
+                self.generate(
+                    data, league_id,
+                    trigger="provider_change" if changed else "model_upgrade",
+                )
             else:
                 # Synchronization replaces the application data dictionary.
                 # Republish the retained canonical snapshot even when external
@@ -294,14 +348,21 @@ class ProjectionService:
     def _project(player: dict[str, Any], scoring: dict[str, Any], season: int, week: int | None) -> dict[str, Any]:
         return raw_projection(player, scoring, season, week)
 
-    def generate(self, data: dict[str, Any], league_id: str) -> dict[str, Any]:
+    def generate(
+        self, data: dict[str, Any], league_id: str, *, trigger: str = "canonical",
+    ) -> dict[str, Any]:
         with self._lock:
             self._generation_state = "generating"
+            if trigger == "model_upgrade":
+                self._upgrade_triggered_generations += 1
+            elif trigger == "provider_change":
+                self._provider_triggered_generations += 1
         try:
-            snapshot, normalization = self._generate(data, league_id)
+            snapshot, normalization, published = self._generate(data, league_id)
         except Exception as exc:
             with self._lock:
                 self._generation_state = "stale" if self._snapshot else "failed"
+                self._failed_generations += 1
                 self._last_error_type = type(exc).__name__
                 self._last_error_message = (
                     str(exc) if isinstance(exc, ProjectionInputError)
@@ -319,9 +380,14 @@ class ProjectionService:
             self._last_error_at = None
             self._last_success_at = snapshot.get("generated_at")
             self._generations += 1
+            self._compatibility, self._compatibility_reason = snapshot_compatibility(snapshot)
+            if published:
+                self._durable_publications += 1
         return snapshot
 
-    def _generate(self, data: dict[str, Any], league_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    def _generate(
+        self, data: dict[str, Any], league_id: str,
+    ) -> tuple[dict[str, Any], dict[str, Any], bool]:
         league = data.get("league") or {}
         scoring = data.get("scoring_settings") or league.get("scoring_settings") or {}
         season = int(data.get("season") or league.get("season") or datetime.now().year)
@@ -349,7 +415,14 @@ class ProjectionService:
                 "sleeper_freshness": sleeper_freshness,
             })
             projections[player_id] = projection
-        identity = {"league_id": league_id, "season": season, "week": week, "model_version": PROJECTION_MODEL_VERSION, "scoring": scoring, "players": projections}
+        identity = {
+            "league_id": league_id, "season": season, "week": week,
+            "schema_version": PROJECTION_SCHEMA_VERSION,
+            "model_version": PROJECTION_MODEL_VERSION,
+            "contract_version": PROJECTION_CONTRACT_VERSION,
+            "semantic_policy_version": PROJECTION_SEMANTIC_POLICY_VERSION,
+            "scoring": scoring, "players": projections,
+        }
         snapshot_id = _digest(identity)
         generated_at = _now()
         for projection in projections.values():
@@ -357,6 +430,8 @@ class ProjectionService:
             projection["generated_at"] = generated_at
         snapshot = {
             "schema_version": PROJECTION_SCHEMA_VERSION, "model_version": PROJECTION_MODEL_VERSION,
+            "contract_version": PROJECTION_CONTRACT_VERSION,
+            "semantic_policy_version": PROJECTION_SEMANTIC_POLICY_VERSION,
             "league_id": league_id, "season": season, "week": week, "generated_at": generated_at,
             "projection_snapshot_id": snapshot_id, "players": projections,
             "providers": provider_registry(), "scoring_settings": scoring,
@@ -365,12 +440,27 @@ class ProjectionService:
         payload = json.dumps(snapshot, sort_keys=True, separators=(",", ":"))
         with closing(self._connect()) as connection:
             existing = connection.execute("SELECT payload FROM projection_snapshots WHERE snapshot_id=?", (snapshot_id,)).fetchone()
+            existing_snapshot = None
             if existing:
-                snapshot = json.loads(existing["payload"])
+                try:
+                    candidate = json.loads(existing["payload"])
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    candidate = None
+                if snapshot_compatibility(candidate)[0] == "compatible":
+                    existing_snapshot = candidate
+            published = existing_snapshot is None
+            if existing_snapshot is not None:
+                snapshot = existing_snapshot
+            elif existing:
+                connection.execute(
+                    "UPDATE projection_snapshots SET league_id=?, season=?, week=?, generated_at=?, payload=? WHERE snapshot_id=?",
+                    (league_id, season, week, generated_at, payload, snapshot_id),
+                )
+                connection.commit()
             else:
                 connection.execute("INSERT INTO projection_snapshots VALUES (?, ?, ?, ?, ?, ?)", (snapshot_id, league_id, season, week, generated_at, payload))
                 connection.commit()
-        return snapshot, normalization
+        return snapshot, normalization, published
 
     def snapshot(self) -> dict[str, Any] | None:
         with self._lock:
@@ -438,11 +528,30 @@ class ProjectionService:
         return {
             "status": self._generation_state, "generation_state": self._generation_state,
             "schema_version": PROJECTION_SCHEMA_VERSION,
+            "application_projection_schema": PROJECTION_SCHEMA_VERSION,
+            "application_projection_model": PROJECTION_MODEL_VERSION,
+            "application_projection_contract": PROJECTION_CONTRACT_VERSION,
+            "application_projection_semantic_policy": PROJECTION_SEMANTIC_POLICY_VERSION,
+            "active_snapshot_schema": (snapshot or {}).get("schema_version"),
+            "active_snapshot_model": (snapshot or {}).get("model_version"),
+            "active_snapshot_contract": (snapshot or {}).get("contract_version"),
+            "active_snapshot_semantic_policy": (snapshot or {}).get("semantic_policy_version"),
+            "active_snapshot_id": (snapshot or {}).get("projection_snapshot_id"),
+            "active_snapshot_generated_at": (snapshot or {}).get("generated_at"),
+            "compatibility": self._compatibility,
+            "compatibility_reason": self._compatibility_reason,
+            "restored_snapshot": dict(self._restored_snapshot_identity),
             "snapshot_id": (snapshot or {}).get("projection_snapshot_id"), "generated_at": (snapshot or {}).get("generated_at"),
             "players": len(players), "projected_players": available, "coverage": round(available / len(players) * 100, 2) if players else 0,
             "generations": self._generations, "external_requests": self._external_requests,
             "snapshot_restores": self._snapshot_restores,
+            "compatible_restores": self._compatible_restores,
+            "incompatible_restores": self._incompatible_restores,
             "restore_failures": self._restore_failures,
+            "upgrade_triggered_generations": self._upgrade_triggered_generations,
+            "provider_triggered_generations": self._provider_triggered_generations,
+            "failed_generations": self._failed_generations,
+            "durable_publications": self._durable_publications,
             "external_bytes": self._external_bytes,
             "external_failures": self._external_failures,
             "external_semantic_changes": self._external_semantic_changes,

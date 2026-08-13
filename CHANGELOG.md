@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.15 - Projection Snapshot Upgrade Compatibility
+
+- Added explicit schema, model, contract, and semantic-policy compatibility checks
+  before a durable Projection snapshot can become canonical.
+- Added one cached-input upgrade generation when the provider fingerprint is
+  unchanged but the running Projection contract advances.
+- Separated application and active-snapshot identity in projection health, with
+  compatible/incompatible restore and durable-publication lifecycle counters.
+
 ## v1.10.14 - Player-Specific Projection Calibration
 
 - Replaced final positional-default projection clusters with deterministic player,

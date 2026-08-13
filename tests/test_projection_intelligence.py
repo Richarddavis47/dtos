@@ -1,9 +1,14 @@
 """Canonical Projection Intelligence v1.10.0 regressions."""
 from __future__ import annotations
 
+import copy
+import gc
+import json
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -11,7 +16,12 @@ from fastapi.testclient import TestClient
 from routes.projections import create_projections_router
 from src.core.projection_intelligence.calibration import calibrate, raw_projection
 from src.core.projection_intelligence.scoring import fantasy_points
-from src.core.projection_intelligence.service import ProjectionInputError, ProjectionService, provider_registry
+from src.core.projection_intelligence.service import (
+    PROJECTION_CONTRACT_VERSION, PROJECTION_MODEL_VERSION,
+    PROJECTION_SCHEMA_VERSION, PROJECTION_SEMANTIC_POLICY_VERSION,
+    ProjectionInputError, ProjectionService, provider_registry,
+    snapshot_compatibility,
+)
 from src.core.projection_intelligence.sleeper_provider import (
     SOURCE_CLASSIFICATION, SleeperProjectionSchemaError, freshness_state,
     parse_projection_feed,
@@ -36,7 +46,142 @@ class ProjectionIntelligenceTests(unittest.TestCase):
         self.service = ProjectionService(Path(self.temporary.name) / "projections.sqlite3")
 
     def tearDown(self) -> None:
+        gc.collect()
         self.temporary.cleanup()
+
+    @staticmethod
+    def sleeper_payload() -> list[dict]:
+        return [{
+            "player_id": "10", "season": 2026, "week": 4,
+            "player": {"position": "QB"}, "stats": {"pts_ppr": 18},
+        }]
+
+    def persist_legacy_snapshot(self, *, schema: str = "1.1", model: str = "dtos-forward-production-2") -> dict:
+        self.service.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        )
+        snapshot = copy.deepcopy(self.service.snapshot())
+        snapshot["schema_version"] = schema
+        snapshot["model_version"] = model
+        snapshot.pop("contract_version", None)
+        snapshot.pop("semantic_policy_version", None)
+        for row in (snapshot.get("players") or {}).values():
+            for field in ("raw_dtos_projection", "calibration_reason", "fallback_state", "evidence_depth"):
+                row.pop(field, None)
+        with sqlite3.connect(self.service._database_file) as connection:
+            connection.execute(
+                "UPDATE projection_snapshots SET payload=?",
+                (json.dumps(snapshot, sort_keys=True, separators=(",", ":")),),
+            )
+            connection.commit()
+        return snapshot
+
+    def test_compatibility_classifier_is_future_model_and_schema_safe(self) -> None:
+        current = {
+            "schema_version": PROJECTION_SCHEMA_VERSION,
+            "model_version": PROJECTION_MODEL_VERSION,
+            "contract_version": PROJECTION_CONTRACT_VERSION,
+            "semantic_policy_version": PROJECTION_SEMANTIC_POLICY_VERSION,
+        }
+        self.assertEqual(snapshot_compatibility(current)[0], "compatible")
+        self.assertEqual(snapshot_compatibility({**current, "schema_version": "future"})[0], "incompatible_schema")
+        self.assertEqual(snapshot_compatibility({**current, "model_version": "future"})[0], "incompatible_model")
+        self.assertEqual(snapshot_compatibility({**current, "contract_version": "future"})[0], "incompatible_contract")
+        self.assertEqual(snapshot_compatibility(None)[0], "corrupt")
+
+    def test_legacy_snapshot_upgrades_once_with_unchanged_cached_provider(self) -> None:
+        legacy = self.persist_legacy_snapshot()
+        restored = ProjectionService(self.service._database_file)
+        before = restored.health(include_accuracy=False)
+        self.assertIsNone(restored.snapshot())
+        self.assertEqual(before["status"], "warming")
+        self.assertEqual(before["compatibility"], "incompatible_schema")
+        self.assertEqual(before["restored_snapshot"]["snapshot_id"], legacy["projection_snapshot_id"])
+        data = fixture()
+        self.assertFalse(restored.ingest_sleeper(
+            self.sleeper_payload(), data=data, league_id="league", season=2026, week=4,
+        ))
+        upgraded = restored.snapshot()
+        health = restored.health(include_accuracy=False)
+        self.assertEqual(upgraded["schema_version"], PROJECTION_SCHEMA_VERSION)
+        self.assertEqual(upgraded["model_version"], PROJECTION_MODEL_VERSION)
+        self.assertEqual(upgraded["contract_version"], PROJECTION_CONTRACT_VERSION)
+        self.assertIn("raw_dtos_projection", upgraded["players"]["10"])
+        self.assertIn("calibration_reason", upgraded["players"]["10"])
+        self.assertEqual(health["upgrade_triggered_generations"], 1)
+        self.assertEqual(health["provider_triggered_generations"], 0)
+        self.assertEqual(health["durable_publications"], 1)
+        self.assertEqual(health["external_requests"], 0)
+        self.assertEqual(health["compatibility"], "compatible")
+        self.assertFalse(restored.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        ))
+        self.assertEqual(restored.health()["upgrade_triggered_generations"], 1)
+        self.assertEqual(restored.health()["generations"], 1)
+
+    def test_persisted_model_mismatch_is_not_restored(self) -> None:
+        self.persist_legacy_snapshot(
+            schema=PROJECTION_SCHEMA_VERSION, model="future-model",
+        )
+        restored = ProjectionService(self.service._database_file)
+        self.assertIsNone(restored.snapshot())
+        self.assertEqual(restored.health()["compatibility"], "incompatible_model")
+
+    def test_persisted_contract_mismatch_is_not_restored(self) -> None:
+        self.persist_legacy_snapshot(
+            schema=PROJECTION_SCHEMA_VERSION, model=PROJECTION_MODEL_VERSION,
+        )
+        restored = ProjectionService(self.service._database_file)
+        self.assertIsNone(restored.snapshot())
+        self.assertEqual(restored.health()["compatibility"], "incompatible_contract")
+
+    def test_compatible_second_restart_preserves_identity_without_generation(self) -> None:
+        snapshot = self.service.generate(fixture(), "league")
+        restored = ProjectionService(self.service._database_file)
+        self.assertEqual(restored.snapshot(), snapshot)
+        health = restored.health(include_accuracy=False)
+        self.assertEqual(health["compatibility"], "compatible")
+        self.assertEqual(health["compatible_restores"], 1)
+        self.assertEqual(health["generations"], 0)
+        self.assertEqual(health["active_snapshot_schema"], PROJECTION_SCHEMA_VERSION)
+        self.assertEqual(health["active_snapshot_model"], PROJECTION_MODEL_VERSION)
+        self.assertEqual(health["snapshot_id"], snapshot["projection_snapshot_id"])
+        self.assertEqual(health["generated_at"], snapshot["generated_at"])
+        self.assertEqual(health["active_snapshot_id"], snapshot["projection_snapshot_id"])
+        self.assertEqual(health["active_snapshot_generated_at"], snapshot["generated_at"])
+
+    def test_corrupt_snapshot_fails_closed_and_cached_input_recovers(self) -> None:
+        self.service.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        )
+        with sqlite3.connect(self.service._database_file) as connection:
+            connection.execute("UPDATE projection_snapshots SET payload='{bad json'")
+            connection.commit()
+        restored = ProjectionService(self.service._database_file)
+        self.assertIsNone(restored.snapshot())
+        self.assertEqual(restored.health()["compatibility"], "corrupt")
+        restored.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        )
+        self.assertEqual(restored.health()["compatibility"], "compatible")
+
+    def test_failed_upgrade_preserves_legacy_durable_row_and_publishes_nothing(self) -> None:
+        legacy = self.persist_legacy_snapshot()
+        restored = ProjectionService(self.service._database_file)
+        with patch.object(restored, "_generate", side_effect=RuntimeError("bounded upgrade failure")):
+            with self.assertRaises(RuntimeError):
+                restored.ingest_sleeper(
+                    self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+                )
+        self.assertIsNone(restored.snapshot())
+        health = restored.health(include_accuracy=False)
+        self.assertEqual(health["failed_generations"], 1)
+        self.assertEqual(health["durable_publications"], 0)
+        with sqlite3.connect(self.service._database_file) as connection:
+            payload = json.loads(connection.execute(
+                "SELECT payload FROM projection_snapshots ORDER BY generated_at DESC LIMIT 1"
+            ).fetchone()[0])
+        self.assertEqual(payload["projection_snapshot_id"], legacy["projection_snapshot_id"])
 
     def test_league_scoring_uses_raw_stats_and_te_premium(self) -> None:
         stats = {"rec": 5, "rec_yd": 80, "rec_td": 1}
