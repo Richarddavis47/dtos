@@ -1,3 +1,19 @@
+# DTOS v1.10.14 — Player-Specific Projection Calibration
+
+DTOS v1.10.14 makes Forward Production genuinely player-specific. The model keeps
+its independent raw forecast, then calibrates it using evidence strength, current
+role, availability, recent production, and the cached Sleeper projection feed.
+Sleeper remains external evidence rather than copied truth; strong DTOS evidence
+can still support a documented disagreement.
+
+Projection APIs and audits now expose raw and calibrated DTOS values, adjustment,
+reason, confidence, fallback state, evidence depth, zero-versus-missing semantics,
+and large-disagreement diagnostics. The calibrated value flows once through the
+canonical Brain while Market Value, Historical Memory, FOIS history, Asset Market
+lifecycle, and request-time provider boundaries remain unchanged.
+
+## Previous release
+
 # DTOS v1.10.13 — External Mirror Matchup Surface Classification Correction
 
 DTOS v1.10.13 corrects the external mirror's matchup-surface classifier. One

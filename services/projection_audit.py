@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from statistics import mean, median
+from math import sqrt
+from statistics import mean, median, pstdev
 from typing import Any
 
 from app_metadata import BUILD_NUMBER, VERSION
@@ -43,6 +44,54 @@ def _bucket(value: float | None) -> str:
 
 def _unavailable(reason: str) -> dict[str, str]:
     return {"status": "unavailable", "reason": reason}
+
+
+def _ranks(values: list[float]) -> list[float]:
+    """Return deterministic average ranks for a small audit vector."""
+    ordered = sorted(range(len(values)), key=lambda index: (values[index], index))
+    result = [0.0] * len(values)
+    cursor = 0
+    while cursor < len(ordered):
+        end = cursor + 1
+        while end < len(ordered) and values[ordered[end]] == values[ordered[cursor]]:
+            end += 1
+        rank = (cursor + 1 + end) / 2
+        for index in ordered[cursor:end]:
+            result[index] = rank
+        cursor = end
+    return result
+
+
+def _spearman(left: list[float], right: list[float]) -> float | None:
+    if len(left) != len(right) or len(left) < 2:
+        return None
+    a, b = _ranks(left), _ranks(right)
+    a_mean, b_mean = mean(a), mean(b)
+    numerator = sum((x - a_mean) * (y - b_mean) for x, y in zip(a, b))
+    denominator = sqrt(sum((x - a_mean) ** 2 for x in a) * sum((y - b_mean) ** 2 for y in b))
+    return round(numerator / denominator, 4) if denominator else None
+
+
+def _position_distributions(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for position in sorted({str(row.get("position") or "Other") for row in rows}):
+        selected = [row for row in rows if str(row.get("position") or "Other") == position]
+        sleeper = [float(row["sleeper_projection"]) for row in selected if row.get("sleeper_projection") is not None and row.get("dtos_projection") is not None]
+        dtos = [float(row["dtos_projection"]) for row in selected if row.get("sleeper_projection") is not None and row.get("dtos_projection") is not None]
+        result[position] = {
+            "players": len(selected),
+            "dtos_mean": round(mean(dtos), 3) if dtos else None,
+            "dtos_median": round(median(dtos), 3) if dtos else None,
+            "dtos_standard_deviation": round(pstdev(dtos), 3) if len(dtos) > 1 else 0 if dtos else None,
+            "dtos_unique_values": len(set(dtos)),
+            "sleeper_mean": round(mean(sleeper), 3) if sleeper else None,
+            "sleeper_median": round(median(sleeper), 3) if sleeper else None,
+            "sleeper_standard_deviation": round(pstdev(sleeper), 3) if len(sleeper) > 1 else 0 if sleeper else None,
+            "rank_correlation": _spearman(sleeper, dtos),
+            "top_10_overlap": len(set(sorted(range(len(sleeper)), key=lambda i: (-sleeper[i], i))[:10]) & set(sorted(range(len(dtos)), key=lambda i: (-dtos[i], i))[:10])) if sleeper else 0,
+            "top_24_overlap": len(set(sorted(range(len(sleeper)), key=lambda i: (-sleeper[i], i))[:24]) & set(sorted(range(len(dtos)), key=lambda i: (-dtos[i], i))[:24])) if sleeper else 0,
+        }
+    return result
 
 
 def _rank_maps(market: Any) -> dict[str, dict[str, int]]:
@@ -118,6 +167,7 @@ def build_projection_audit(
                 values = dict(asset.get("values") or {})
                 sleeper = projection.get("sleeper_projection")
                 dtos = projection.get("dtos_projection")
+                raw_dtos = projection.get("raw_dtos_projection")
                 canonical = projection.get("canonical_projection", projection.get("weekly_projected_points"))
                 difference = _difference(dtos, sleeper)
                 pct = None
@@ -130,7 +180,16 @@ def build_projection_audit(
                     "position": player.get("position"), "nfl_team": player.get("nfl_team"),
                     "nfl_opponent": projection.get("opponent"), "lineup_slot": player.get("slot"),
                     "actual_points": player.get("points"), "sleeper_projection": sleeper,
-                    "dtos_projection": dtos, "canonical_projection": canonical,
+                    "raw_dtos_projection": raw_dtos,
+                    "dtos_projection": dtos, "calibrated_dtos_projection": dtos,
+                    "canonical_projection": canonical,
+                    "calibration_adjustment": projection.get("calibration_adjustment"),
+                    "calibration_reason": projection.get("calibration_reason"),
+                    "fallback_state": projection.get("fallback_state"),
+                    "evidence_depth": projection.get("evidence_depth"),
+                    "evidence_fields": projection.get("evidence_fields"),
+                    "large_disagreement": projection.get("large_disagreement"),
+                    "sleeper_zero_state": projection.get("sleeper_zero_state"),
                     "projection_floor": projection.get("weekly_floor"),
                     "projection_median": projection.get("weekly_median"),
                     "projection_ceiling": projection.get("weekly_ceiling"),
@@ -168,9 +227,11 @@ def build_projection_audit(
                 starters.append(row)
                 audited_players.append(row)
             sleeper_values = [_number(row["sleeper_projection"]) for row in starters]
+            raw_dtos_values = [_number(row["raw_dtos_projection"]) for row in starters]
             dtos_values = [_number(row["dtos_projection"]) for row in starters]
             canonical_values = [_number(row["canonical_projection"]) for row in starters]
             sleeper_total = round(sum(value for value in sleeper_values if value is not None), 3)
+            raw_dtos_total = round(sum(value for value in raw_dtos_values if value is not None), 3)
             dtos_total = round(sum(value for value in dtos_values if value is not None), 3)
             canonical_total = round(sum(value for value in canonical_values if value is not None), 3)
             team = {
@@ -179,6 +240,8 @@ def build_projection_audit(
                 "starters": starters, "sleeper_projected_total": sleeper_total,
                 "sleeper_full_precision_total": sleeper_total,
                 "sleeper_projection_coverage": sum(value is not None for value in sleeper_values),
+                "raw_dtos_projected_total": raw_dtos_total,
+                "raw_dtos_projection_coverage": sum(value is not None for value in raw_dtos_values),
                 "dtos_projected_total": dtos_total, "dtos_full_precision_total": dtos_total,
                 "dtos_projection_coverage": sum(value is not None for value in dtos_values),
                 "canonical_team_projection": canonical_total,
@@ -193,12 +256,17 @@ def build_projection_audit(
                 "market_generation": identity.get("market_generation"),
             }
             teams.append(team)
-            matchup_teams.append({key: team[key] for key in ("team", "gm", "roster_id", "actual_score", "canonical_team_projection")})
+            matchup_teams.append({key: team[key] for key in (
+                "team", "gm", "roster_id", "actual_score", "sleeper_projected_total",
+                "raw_dtos_projected_total", "dtos_projected_total", "canonical_team_projection",
+            )})
             team_projections.append(canonical_total)
         projected_margin = round(abs(team_projections[0] - team_projections[1]), 3) if len(team_projections) == 2 else None
         matchups.append({"matchup_id": str(matchup_id), "state": "current", "teams": matchup_teams, "projected_margin": projected_margin})
 
     differences = [row["dtos_minus_sleeper"] for row in audited_players if row["dtos_minus_sleeper"] is not None]
+    absolute_differences = [abs(value) for value in differences]
+    team_differences = [abs(float(row["dtos_projected_total"]) - float(row["sleeper_projected_total"])) for row in teams]
     by_name = {str(row.get("player_name")): row for row in audited_players}
     reference_players = []
     for name, reference in REFERENCE_PLAYERS.items():
@@ -235,6 +303,14 @@ def build_projection_audit(
             "missing_dtos": sum(row["dtos_projection"] is None for row in audited_players),
             "mean_absolute_difference": round(mean(abs(value) for value in differences), 3) if differences else None,
             "median_difference": round(median(differences), 3) if differences else None,
+            "median_absolute_difference": round(median(absolute_differences), 3) if absolute_differences else None,
+            "meaningful_disagreements": sum(value >= 5 for value in absolute_differences),
+            "large_disagreements": sum(value >= 8 for value in absolute_differences),
+            "extreme_disagreements": sum(value >= 12 for value in absolute_differences),
+            "unique_dtos_projection_values": len({row["dtos_projection"] for row in audited_players if row["dtos_projection"] is not None}),
+            "position_distributions": _position_distributions(audited_players),
+            "team_mean_absolute_difference": round(mean(team_differences), 3) if team_differences else None,
+            "team_largest_absolute_difference": round(max(team_differences), 3) if team_differences else None,
             "largest_positive_difference": max(differences, default=None),
             "largest_negative_difference": min(differences, default=None),
             "team_total_reconciliation_errors": 0,

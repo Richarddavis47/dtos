@@ -43,7 +43,10 @@ def create_audit_router(
         audit = current()
         columns = (
             "matchup_id", "team", "player_id", "player_name", "position",
-            "sleeper_projection", "dtos_projection", "canonical_projection",
+            "sleeper_projection", "raw_dtos_projection", "dtos_projection",
+            "calibrated_dtos_projection", "canonical_projection",
+            "calibration_adjustment", "calibration_reason", "fallback_state",
+            "evidence_depth",
             "dtos_minus_sleeper", "actual_points", "market_value",
             "intrinsic_dtos_value", "contender_value", "rebuilder_value",
             "overall_rank", "contender_rank", "rebuilder_rank",
