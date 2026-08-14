@@ -1,4 +1,19 @@
-# DTOS v1.10.18 - Multi-League Resource Observability & Storage Hygiene
+# DTOS v1.10.19 - Sleeper-Backed League Memory & Permanent Intelligence Checkpoints
+
+Sleeper and external providers are now formally the source of reconstructible
+facts; DTOS keeps those facts only as disposable caches. League history begins
+at the actual provider-discovered Year 1 rather than a DTOS calendar cutoff.
+Missing provider history is explicitly partial or unavailable and is never
+fabricated or secretly filled from legacy Historical Memory.
+
+DTOS now has a compact permanent intelligence checkpoint contract for meaningful
+trade, waiver, draft, NFL-event, and scheduled observations. Checkpoints preserve
+execution-time knowledge, source/model provenance, temporal confidence, and pick
+lineage without daily full-universe logging or hindsight rewrites. Fresh provider
+evidence remains mandatory for current Market Value. Existing Historical Memory
+remains untouched and reversible.
+
+## DTOS v1.10.18 - Multi-League Resource Observability & Storage Hygiene
 
 DTOS v1.10.18 makes every significant Asset Market memory-admission decision
 durably diagnosable without changing the admission contract. The bounded journal

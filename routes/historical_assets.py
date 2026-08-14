@@ -189,6 +189,13 @@ def create_historical_assets_router(
         return JSONResponse(jsonable_encoder({
             **graph().coverage(),
             "canonical_progress": progress["canonical_history_progress"],
+            "provider_memory_contract": {
+                "source_of_truth": "sleeper",
+                "completed_season_cache": "disposable",
+                "historical_memory_fallback": False,
+                "fixed_start_year": None,
+                "missing_evidence_behavior": "unavailable_or_partial",
+            },
             **progress,
         }))
 

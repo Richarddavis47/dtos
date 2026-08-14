@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.10.19 - Sleeper-Backed League Memory & Permanent Intelligence Checkpoints
+
+- Discover each dynasty league's actual Year 1 through Sleeper's season chain with no calendar cutoff.
+- Add compact, checksummed, disposable completed-season provider caches with honest partial/unavailable states.
+- Add an immutable, deduplicated IntelligenceCheckpoint store with provenance, temporal confidence, triggers, pick lineage, and storage contracts.
+- Separate current Market Value from historical evidence and prohibit stale historical fallback.
+- Expose public-safe ownership, completeness, cache, checkpoint, and storage diagnostics while preserving legacy Historical Memory unchanged.
+
 ## v1.10.18 - Multi-League Resource Observability & Storage Hygiene
 
 - Added bounded durable Asset Market admission history with explicit reason

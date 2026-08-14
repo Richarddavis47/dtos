@@ -55,6 +55,8 @@ class Settings:
     historical_start_season: int
     background_start_delay: float
     max_warm_league_runtimes: int
+    intelligence_checkpoint_file: Path
+    sleeper_season_cache_root: Path
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -112,6 +114,20 @@ class Settings:
             max_warm_league_runtimes=min(
                 3, _integer("DTOS_MAX_WARM_LEAGUE_RUNTIMES", 2, 1),
             ),
+            intelligence_checkpoint_file=Path(os.getenv(
+                "DTOS_INTELLIGENCE_CHECKPOINT_FILE",
+                str(
+                    history_storage_root / "dtos_intelligence.sqlite3"
+                    if durable_required else cache_file.with_name("dtos_intelligence.sqlite3")
+                ),
+            )),
+            sleeper_season_cache_root=Path(os.getenv(
+                "DTOS_SLEEPER_SEASON_CACHE_ROOT",
+                str(
+                    history_storage_root / "sleeper-season-cache"
+                    if durable_required else cache_file.with_name("sleeper-season-cache")
+                ),
+            )),
         )
 
 
@@ -134,3 +150,5 @@ ENRICHMENT_BATCH_SIZE = SETTINGS.enrichment_batch_size
 HISTORICAL_START_SEASON = SETTINGS.historical_start_season
 BACKGROUND_START_DELAY = SETTINGS.background_start_delay
 MAX_WARM_LEAGUE_RUNTIMES = SETTINGS.max_warm_league_runtimes
+INTELLIGENCE_CHECKPOINT_FILE = SETTINGS.intelligence_checkpoint_file
+SLEEPER_SEASON_CACHE_ROOT = SETTINGS.sleeper_season_cache_root
