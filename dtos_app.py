@@ -31,6 +31,7 @@ from routes.hq import create_hq_router
 from routes.history import create_history_router
 from routes.historical_assets import create_historical_assets_router
 from routes.inspect import create_inspection_router
+from routes.intelligence_memory import create_intelligence_memory_router
 from routes.league_runtime import create_league_runtime_router
 from routes.matchups import create_matchups_router
 from routes.market import create_market_router
@@ -81,6 +82,9 @@ from src.platform.league_context import (
 from src.core.historical_memory import historical_storage_status
 from src.core.inspection.live import LiveInspection
 from src.core.inspection.live_visual import LiveVisualService, live_visual_capture_requests
+from src.core.intelligence_memory import (
+    intelligence_checkpoint_store, sleeper_season_cache,
+)
 from src.ui import DESIGN_SYSTEM_CSS, page_header
 
 _PROCESS_STARTED = perf_counter()
@@ -195,6 +199,8 @@ def _resource_health() -> dict[str, Any]:
         },
         "admission": resource_diagnostics.health(),
         "storage": storage,
+        "intelligence_memory": intelligence_checkpoint_store.health(),
+        "sleeper_season_cache": sleeper_season_cache.health(),
     }
 
 
@@ -569,6 +575,11 @@ app.include_router(create_league_runtime_router(
     import_enabled=_MULTI_LEAGUE_IMPORT_ENABLED,
     resource_health=_resource_health,
     resource_measurement=_measure_resources,
+))
+
+app.include_router(create_intelligence_memory_router(
+    default_league_id=LEAGUE_ID,
+    secondary_import_enabled=_MULTI_LEAGUE_IMPORT_ENABLED,
 ))
 
 app.include_router(
