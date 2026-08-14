@@ -173,6 +173,11 @@ async def _sync_sleeper(
                     sleeper_get(client, "/players/nfl/trending/add?lookback_hours=24&limit=50"),
                     sleeper_get(client, "/players/nfl/trending/drop?lookback_hours=24&limit=50"),
                 )
+                draft_picks = []
+                for draft in drafts or ():
+                    draft_id = str(draft.get("draft_id") or "")
+                    if draft_id and str(draft.get("status") or "").casefold() == "complete":
+                        draft_picks.extend(await sleeper_get(client, f"/draft/{draft_id}/picks") or ())
 
                 cached_players = (state.get("data") or {}).get("players") or {}
                 players_fetched_at = (state.get("data") or {}).get("players_fetched_at")
@@ -414,6 +419,7 @@ async def _sync_sleeper(
                 "traded_picks": traded_picks,
                 "pick_ledger": pick_ledger,
                 "drafts": drafts,
+                "draft_picks": draft_picks,
                 "transactions": transactions,
                 "matchups": matchup_groups,
                 "nfl_state": nfl_state,
@@ -481,6 +487,13 @@ async def _sync_sleeper(
                 logger.exception("Provider network or automated market calibration audit failed")
                 state["data"]["calibration_error"] = "Provider evidence evaluation failed; no model adjustment was applied."
             capture_current_state(state["data"], synced_at)
+            from src.core.intelligence_memory import checkpoint_pipeline
+            try:
+                await asyncio.to_thread(
+                    checkpoint_pipeline.ingest_runtime, state["data"], observed_at=synced_at,
+                )
+            except Exception:
+                logger.exception("Intelligence checkpoint ingestion failed")
             save_cache(state=state, league_id=league_id)
             intelligence_cache.invalidate("snapshot:")
             intelligence_cache.invalidate("crawl:")
@@ -547,6 +560,11 @@ async def sync_transactions(
             data["transactions"] = transactions
             state["transactions_last_sync"] = utcnow().isoformat()
             state["transactions_last_error"] = None
+            from src.core.intelligence_memory import checkpoint_pipeline
+            await asyncio.to_thread(
+                checkpoint_pipeline.ingest_transactions, data, transactions,
+                observed_at=state["transactions_last_sync"],
+            )
             save_cache(state=state, league_id=league_id)
             intelligence_cache.invalidate("snapshot:")
             intelligence_cache.invalidate("crawl:")

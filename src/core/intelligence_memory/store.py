@@ -15,7 +15,7 @@ from .models import (
     SourceObservation,
 )
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 SCHEMA = """
@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS intelligence_checkpoints (
   asset_id TEXT NOT NULL,
   asset_type TEXT NOT NULL,
   league_id TEXT,
+  roster_id TEXT,
   scoring_profile_id TEXT,
   observed_at TEXT NOT NULL,
   season INTEGER NOT NULL,
@@ -81,8 +82,18 @@ class IntelligenceCheckpointStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as connection:
             connection.executescript(SCHEMA)
+            columns = {
+                str(row[1]) for row in connection.execute(
+                    "PRAGMA table_info(intelligence_checkpoints)"
+                ).fetchall()
+            }
+            if "roster_id" not in columns:
+                connection.execute(
+                    "ALTER TABLE intelligence_checkpoints ADD COLUMN roster_id TEXT"
+                )
             connection.execute(
-                "INSERT OR IGNORE INTO intelligence_metadata(key,value) VALUES('schema_version',?)",
+                """INSERT INTO intelligence_metadata(key,value) VALUES('schema_version',?)
+                ON CONFLICT(key) DO UPDATE SET value=excluded.value""",
                 (str(SCHEMA_VERSION),),
             )
 
@@ -107,6 +118,7 @@ class IntelligenceCheckpointStore:
             "asset_id": checkpoint.asset_id,
             "asset_type": checkpoint.asset_type,
             "league_id": checkpoint.league_id,
+            "roster_id": checkpoint.roster_id,
             "timestamp": checkpoint.timestamp,
             "trigger": checkpoint.trigger_type.value,
             "provenance": checkpoint.provenance_type.value,
@@ -132,7 +144,7 @@ class IntelligenceCheckpointStore:
         )
         values = (
             checkpoint_id, semantic_key, checkpoint.asset_id, checkpoint.asset_type,
-            checkpoint.league_id, checkpoint.scoring_profile_id, checkpoint.timestamp,
+            checkpoint.league_id, checkpoint.roster_id, checkpoint.scoring_profile_id, checkpoint.timestamp,
             checkpoint.season, checkpoint.week, checkpoint.trigger_type.value,
             checkpoint.provenance_type.value, checkpoint.dtos_value,
             checkpoint.intrinsic_value, checkpoint.contender_value,
@@ -145,13 +157,13 @@ class IntelligenceCheckpointStore:
         with self._lock, self._connect() as connection:
             cursor = connection.execute(
                 """INSERT OR IGNORE INTO intelligence_checkpoints(
-                checkpoint_id,semantic_key,asset_id,asset_type,league_id,
+                checkpoint_id,semantic_key,asset_id,asset_type,league_id,roster_id,
                 scoring_profile_id,observed_at,season,week,trigger_type,
                 provenance_type,dtos_value,intrinsic_value,contender_value,
                 rebuilder_value,market_value,confidence,evidence_completeness,
                 model_version,normalization_version,brain_identity,related_event_id,
                 knowledge_state,schema_version,observations_json)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 values,
             )
             inserted = cursor.rowcount == 1
@@ -170,6 +182,7 @@ class IntelligenceCheckpointStore:
 
     def checkpoints(
         self, *, league_id: str | None = None, asset_id: str | None = None,
+        roster_id: str | None = None,
         limit: int = 1000,
     ) -> list[IntelligenceCheckpoint]:
         clauses: list[str] = []
@@ -180,6 +193,9 @@ class IntelligenceCheckpointStore:
         if asset_id is not None:
             clauses.append("asset_id=?")
             values.append(str(asset_id))
+        if roster_id is not None:
+            clauses.append("roster_id=?")
+            values.append(str(roster_id))
         where = " WHERE " + " AND ".join(clauses) if clauses else ""
         with self._connect() as connection:
             rows = connection.execute(
@@ -195,6 +211,7 @@ class IntelligenceCheckpointStore:
         return IntelligenceCheckpoint(
             checkpoint_id=row["checkpoint_id"], asset_id=row["asset_id"],
             asset_type=row["asset_type"], league_id=row["league_id"],
+            roster_id=row["roster_id"],
             scoring_profile_id=row["scoring_profile_id"], timestamp=row["observed_at"],
             season=row["season"], week=row["week"],
             trigger_type=CheckpointTrigger(row["trigger_type"]),
@@ -208,6 +225,20 @@ class IntelligenceCheckpointStore:
             knowledge_state=row["knowledge_state"], schema_version=row["schema_version"],
             observations=observations,
         )
+
+    def event_exists(
+        self, *, league_id: str | None, event_id: str, asset_id: str,
+        trigger_type: str,
+    ) -> bool:
+        """Point-check canonical event identity before model-dependent capture."""
+        with self._connect() as connection:
+            row = connection.execute(
+                """SELECT 1 FROM intelligence_checkpoints
+                WHERE league_id IS ? AND related_event_id=? AND asset_id=?
+                AND trigger_type=? LIMIT 1""",
+                (league_id, event_id, asset_id, trigger_type),
+            ).fetchone()
+        return row is not None
 
     def put_lineage(self, lineage: PickLineage) -> tuple[PickLineage, bool]:
         with self._lock, self._connect() as connection:

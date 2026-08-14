@@ -1,3 +1,15 @@
+# DTOS v1.10.20 - Intelligence Checkpoint Runtime Integration
+
+DTOS now invokes its permanent intelligence-memory service from the canonical
+Sleeper synchronization boundary. Newly observed trades, waiver adds, drops,
+fantasy draft selections, and deterministic season benchmarks are captured once
+with event-time provenance and unavailable evidence represented honestly.
+Repeated synchronization is idempotent and ordinary read routes remain free of
+checkpoint writes. NFL event triggers without a reliable canonical source remain
+explicitly unconnected.
+
+## Previous release
+
 # DTOS v1.10.19 - Sleeper-Backed League Memory & Permanent Intelligence Checkpoints
 
 Sleeper and external providers are now formally the source of reconstructible
