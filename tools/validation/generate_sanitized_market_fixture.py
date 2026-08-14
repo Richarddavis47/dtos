@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Any
 
 from src.core.historical_memory.store import HistoricalStore
+from src.core.history_context.metadata import MinimalMetadataStore
+from src.core.history_context.season_cache import SleeperSeasonCache
 from src.core.valuation_intelligence.engine import (
     _semantic_generation,
     asset_market_input_revision,
@@ -470,6 +472,62 @@ def _history(path: Path) -> None:
         raise RuntimeError("sanitized historical progress is inconsistent")
 
 
+def _canonical_history_fixture(root: Path) -> None:
+    """Build provider-owned season caches plus tiny DTOS system metadata."""
+    cache = SleeperSeasonCache(root / "sleeper-season-cache")
+    buckets: dict[tuple[int, int, int], dict[str, float]] = {}
+    for index in range(HISTORICAL_COUNT):
+        season = 2021 + index % 5
+        week = index % 18 + 1
+        roster_id = index % 10 + 1
+        player_index = index % ASSET_COUNT + 1
+        player_id = "10213" if player_index == 1 else f"v{player_index:05d}"
+        buckets.setdefault((season, week, roster_id), {})[player_id] = float(index % 50)
+    for season in range(2021, 2026):
+        matchups: dict[str, list[dict[str, object]]] = {}
+        for week in range(1, 19):
+            rows = []
+            for roster_id in range(1, 11):
+                points = buckets.get((season, week, roster_id), {})
+                rows.append({
+                    "matchup_id": (roster_id + 1) // 2,
+                    "roster_id": roster_id,
+                    "points": sum(points.values()),
+                    "players_points": points,
+                    "starters": list(points)[:9],
+                })
+            matchups[str(week)] = rows
+        facts = {
+            "league": {
+                "league_id": LEAGUE_ID, "season": str(season),
+                "name": "Sanitized League", "total_rosters": 10,
+                "settings": {}, "scoring_settings": {}, "roster_positions": [],
+            },
+            "users": [
+                {"user_id": f"u{index}", "display_name": f"GM {index}"}
+                for index in range(1, 11)
+            ],
+            "rosters": [
+                {"roster_id": index, "owner_id": f"u{index}", "settings": {}}
+                for index in range(1, 11)
+            ],
+            "matchups": matchups, "transactions": {}, "drafts": [],
+            "draft_picks": [], "traded_picks": [], "winners_bracket": [],
+            "losers_bracket": [],
+        }
+        normalized = cache.normalize(LEAGUE_ID, season, facts)
+        cache.write(normalized)
+    metadata_path = Path(os.environ.get(
+        "DTOS_METADATA_DB_FILE", str(root / "dtos_metadata.sqlite3"),
+    ))
+    metadata = MinimalMetadataStore(metadata_path)
+    for season in range(2021, 2026):
+        cached = cache.read(LEAGUE_ID, season)
+        metadata.record_season_cache_checkpoint(
+            LEAGUE_ID, season, cached.checksum, cached.status,
+        )
+
+
 def main() -> int:
     root = Path(os.environ.get("DTOS_FIXTURE_ROOT", "/fixture")).resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -478,6 +536,7 @@ def main() -> int:
     _cache(cache)
     production_shaped = os.environ.get("DTOS_PRODUCTION_SHAPED_FIXTURE") == "1"
     (_production_history if production_shaped else _history)(history)
+    _canonical_history_fixture(root)
     summary = {
         "fixture": "sanitized-generated-v1",
         "assets": ASSET_COUNT,

@@ -4,10 +4,14 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Protocol
 
-from src.core.historical_memory.store import HistoricalStore
 from src.core.valuation.calibration import cached_market_consensus
+
+
+class RelevantPlayerStore(Protocol):
+    def relevant_player_reasons(self, league_id: str) -> dict[str, set[str]]: ...
+    def persist_relevant_player_universe(self, league_id: str, rows: list[dict[str, Any]], generation: str, updated_at: str) -> None: ...
 
 RELEVANT_PLAYER_SCHEMA_VERSION = "1.0"
 FREE_AGENT_LIMIT = 150
@@ -51,7 +55,7 @@ def _owned_reasons(data: dict[str, Any]) -> dict[str, set[str]]:
 
 
 def build_relevant_player_universe(
-    data: dict[str, Any], store: HistoricalStore, league_id: str,
+    data: dict[str, Any], store: RelevantPlayerStore, league_id: str,
     *, free_agent_limit: int = FREE_AGENT_LIMIT,
 ) -> dict[str, Any]:
     """Build and persist deterministic membership from cached and durable state."""

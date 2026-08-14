@@ -13,7 +13,10 @@ from typing import Any
 
 import psutil
 
-from config import HISTORY_STORAGE_ROOT, PROJECTION_DATABASE_FILE
+from config import (
+    HISTORY_DATABASE_FILE, HISTORY_STORAGE_ROOT, INTELLIGENCE_CHECKPOINT_FILE,
+    PROJECTION_DATABASE_FILE, SLEEPER_SEASON_CACHE_ROOT,
+)
 from src.core.asset_market.read_model import (
     HARD_CGROUP_BYTES, RESERVED_BYTES, TARGET_CGROUP_BYTES,
 )
@@ -268,11 +271,34 @@ def disk_health(history_database: Path) -> dict[str, Any]:
     stale_artifacts = [path for path in artifacts if path.name not in active]
     free_ratio = usage.free / usage.total if usage.total else 0.0
     status = "critical" if free_ratio < 0.10 else "warning" if free_ratio < 0.20 else "healthy"
+    cache_files = (
+        list(SLEEPER_SEASON_CACHE_ROOT.rglob("*.json.gz"))
+        if SLEEPER_SEASON_CACHE_ROOT.exists() else []
+    )
+    legacy_bytes = (
+        HISTORY_DATABASE_FILE.stat().st_size if HISTORY_DATABASE_FILE.exists() else 0
+    )
+    permanent_intelligence = (
+        INTELLIGENCE_CHECKPOINT_FILE.stat().st_size
+        if INTELLIGENCE_CHECKPOINT_FILE.exists() else 0
+    )
+    metadata_bytes = history_database.stat().st_size if history_database.exists() else 0
+    provider_cache_bytes = sum(path.stat().st_size for path in cache_files)
+    operational_artifact_bytes = sum(path.stat().st_size for path in artifacts)
     return {
         "status": status,
         "thresholds": {"warning_free_ratio": 0.20, "critical_free_ratio": 0.10},
         "disk": {"total": usage.total, "used": usage.used, "free": usage.free},
-        "historical_database_bytes": history_database.stat().st_size if history_database.exists() else 0,
+        "historical_database_bytes": legacy_bytes,
+        "storage_classes": {
+            "permanent_intelligence_bytes": permanent_intelligence,
+            "disposable_provider_cache_bytes": provider_cache_bytes,
+            "current_operational_artifact_bytes": operational_artifact_bytes,
+            "system_metadata_bytes": metadata_bytes,
+            "legacy_bytes": legacy_bytes,
+            "free_bytes": usage.free,
+            "automatic_prune_eligible": "disposable_provider_cache",
+        },
         "projection_database_bytes": projection.stat().st_size if projection.exists() else 0,
         "market_artifact_count": len(artifacts),
         "market_artifact_bytes": sum(path.stat().st_size for path in artifacts),

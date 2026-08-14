@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.10.23 - HistoricalStore Consumer & Writer Migration
+
+- Migrated canonical league-history consumers to disposable normalized Sleeper
+  season caches and current operational league contexts.
+- Preserved sparse DTOS-owned historical intelligence in IntelligenceCheckpoint
+  while removing recurring current-sync writes to the legacy provider archive.
+- Added a compact system metadata store for cache checkpoints and sync generations.
+- Added shadow-forbidden legacy read/write accounting and made legacy package
+  imports non-opening and non-initializing.
+- Preserved the legacy HistoricalStore database physically and non-destructively
+  for the separately authorized v1.10.24 retirement decision.
+
 ## v1.10.22 - Resource Admission & Heavy-Work Coordination
 
 - Replaced the static raw-memory emergency boundary with a deterministic,

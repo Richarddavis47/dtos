@@ -8,7 +8,7 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
 from services.asset_intelligence import build_pick_reports
-from src.core.historical_memory import canonical_pick_id
+from src.core.historical_memory.graph import canonical_pick_id
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]

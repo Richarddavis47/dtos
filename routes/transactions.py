@@ -15,7 +15,8 @@ from config import LEAGUE_ID
 from services.asset_intelligence import build_player_dossier
 from services.transactions import transaction_center
 from src.core.data_platform import data_platform
-from src.core.historical_memory import historical_graph, historical_store
+from src.core.historical_memory.read_model import historical_graph
+from src.core.history_context import canonical_history_store
 
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -290,7 +291,7 @@ def create_transactions_router(
             )
         )
         selected_league = str((data.get("league") or {}).get("league_id") or LEAGUE_ID)
-        archive = historical_graph(historical_store, selected_league, data).transaction_archive()
+        archive = historical_graph(canonical_history_store, selected_league, data).transaction_archive()
         if scope == "current_season":
             active_season = int((data.get("league") or {}).get("season") or datetime.now().year)
             archive = [row for row in archive if row["season"] == active_season]
@@ -388,7 +389,7 @@ def create_transactions_router(
         ) or player_id
         live = data_platform.player_report(player_id, data)
         selected_league = str((data.get("league") or {}).get("league_id") or LEAGUE_ID)
-        history = historical_graph(historical_store, selected_league, data).player_dossier(player_id)
+        history = historical_graph(canonical_history_store, selected_league, data).player_dossier(player_id)
         consensus = live["consensus"]
         provider_values = "".join(
             f'<tr><td>{escape(str(row["provider"]))}</td><td>{escape(str(row["value"] if row["value"] is not None else row["availability"]))}</td><td>{escape(str(row["freshness"]))}</td><td>{escape(str(row["confidence"]))}%</td><td>{escape(str((live["provider_availability"].get(row["provider"]) or {}).get("reason", "Available")))}</td></tr>'

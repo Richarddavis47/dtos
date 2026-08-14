@@ -26,7 +26,7 @@ from src.core.projection_intelligence.sleeper_provider import SleeperProjectionC
 from src.platform.lifecycle import lifecycle_coordinator
 from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence
-from services.history import capture_current_state, player_history_evidence
+from services.history import player_history_evidence
 from config import (
     CACHE_FILE,
     LEAGUE_ID,
@@ -456,14 +456,17 @@ async def _sync_sleeper(
             state["last_error"] = None
             state["transactions_last_sync"] = synced_at
             state["transactions_last_error"] = None
-            from src.core.historical_memory import historical_store
+            from src.core.history_context import (
+                canonical_history_store, minimal_metadata_store,
+            )
             from src.core.relevant_players import (
                 apply_relevant_player_filter, build_relevant_player_universe,
             )
 
+            canonical_history_store.update_current(league_id, state["data"])
             state["data"]["relevant_player_universe"] = await asyncio.to_thread(
                 build_relevant_player_universe,
-                state["data"], historical_store, league_id,
+                state["data"], canonical_history_store, league_id,
             )
             apply_relevant_player_filter(
                 state["data"], state["data"]["relevant_player_universe"],
@@ -515,7 +518,8 @@ async def _sync_sleeper(
             except Exception:
                 logger.exception("Provider network or automated market calibration audit failed")
                 state["data"]["calibration_error"] = "Provider evidence evaluation failed; no model adjustment was applied."
-            capture_current_state(state["data"], synced_at)
+            canonical_history_store.update_current(league_id, state["data"])
+            minimal_metadata_store.record_sync_generation(league_id, synced_at)
             from src.core.intelligence_memory import checkpoint_pipeline
             try:
                 await asyncio.to_thread(

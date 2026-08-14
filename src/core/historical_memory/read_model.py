@@ -17,7 +17,7 @@ from src.core.historical_memory.models import (
     IMPORTER_VERSION,
     PLAYER_HISTORY_SCHEMA_VERSION,
 )
-from src.core.historical_memory.store import HistoricalStore
+from src.core.history_context.store import CanonicalHistoryStore as HistoricalStore
 
 READ_MODEL_VERSION = "1.1"
 MAX_CACHE_ENTRIES = 1

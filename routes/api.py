@@ -12,8 +12,14 @@ from services.asset_intelligence import player_asset_index
 from src.core.data_platform import data_platform
 from src.core.intelligence import intelligence_orchestrator
 from src.platform.observability import environment_summary, runtime_metrics
-from src.core.historical_memory import historical_storage_status
+from config import DURABLE_HISTORY_REQUIRED, HISTORY_STORAGE_ROOT, METADATA_DATABASE_FILE
+from src.core.historical_memory.storage import validate_historical_storage
 from services.history import history_progress_contracts
+
+historical_storage_status = validate_historical_storage(
+    database=METADATA_DATABASE_FILE, root=HISTORY_STORAGE_ROOT,
+    required=DURABLE_HISTORY_REQUIRED,
+)
 
 
 EnsureFresh = Callable[[], Awaitable[None]]

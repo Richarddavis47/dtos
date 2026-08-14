@@ -5,7 +5,8 @@ from typing import Any
 
 from config import LEAGUE_ID
 from src.core.intelligence import intelligence_orchestrator
-from src.core.historical_memory import historical_graph, historical_store
+from src.core.historical_memory.read_model import historical_graph
+from src.core.history_context import canonical_history_store
 from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
 
@@ -20,7 +21,7 @@ def build_front_office_center(data: dict[str, Any], roster_id: int | None = None
     model = intelligence.front_office_model
     reports = model.reports
     league_id = str((data.get("league") or {}).get("league_id") or LEAGUE_ID)
-    graph = historical_graph(historical_store, league_id, data)
+    graph = historical_graph(canonical_history_store, league_id, data)
     histories = {str(selected): graph.franchise_history(str(selected))}
     selected_team = next((row for row in teams if int(row.get("roster_id") or 0) == selected), {})
     owner_id = selected_team.get("owner_id") or selected_team.get("user_id")

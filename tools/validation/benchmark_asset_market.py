@@ -12,7 +12,7 @@ import psutil
 from config import LEAGUE_ID
 from services.sleeper import STATE, load_cache
 from src.core.asset_market import AssetMarketCache
-from src.core.historical_memory import historical_store
+from src.core.history_context import canonical_history_store as historical_store
 
 
 def _measure(operation: Callable[[], Any], count: int = 5) -> dict[str, Any]:

@@ -9,7 +9,8 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from services.history import history_progress_contracts
-from src.core.historical_memory import historical_graph, historical_store
+from src.core.historical_memory.read_model import historical_graph
+from src.core.history_context import canonical_history_store
 from src.core.historical_memory.models import HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION
 from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
@@ -17,6 +18,7 @@ from src.ui.intelligence_presentation import event_label, human_status, technica
 
 
 RequireData = Callable[[], dict[str, Any]]
+historical_store = canonical_history_store
 PageRenderer = Callable[[str, str], HTMLResponse]
 
 

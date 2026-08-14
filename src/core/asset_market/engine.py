@@ -18,9 +18,9 @@ import psutil
 
 from app_metadata import BUILD_NUMBER, VERSION
 from src.core.brain import brain_service
-from src.core.historical_memory import historical_graph
+from src.core.historical_memory.read_model import historical_graph
 from src.core.historical_memory.models import DATABASE_MIGRATION_VERSION
-from src.core.historical_memory.store import HistoricalStore
+from src.core.history_context.store import CanonicalHistoryStore as HistoricalStore
 from src.core.valuation_intelligence.engine import (
     asset_market_input_revision,
 )

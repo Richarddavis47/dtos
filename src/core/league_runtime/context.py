@@ -10,12 +10,14 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from src.core.asset_market import AssetMarketCache
 from src.core.brain import BrainService
-from src.core.historical_memory import HistoricalStore
 from src.core.projection_intelligence.service import ProjectionService
+
+if TYPE_CHECKING:
+    from src.core.history_context.store import CanonicalHistoryStore
 
 from .manager import LeagueRuntime
 
@@ -48,7 +50,7 @@ class CanonicalLeagueContext:
     """Presentation-ready, league-scoped canonical product dependencies."""
 
     runtime: LeagueRuntime
-    historical_store: HistoricalStore
+    historical_store: "CanonicalHistoryStore"
     projection: ProjectionService
     brain: BrainService
     market: AssetMarketCache

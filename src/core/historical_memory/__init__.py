@@ -1,9 +1,9 @@
-"""Historical League Memory and Player Performance Intelligence."""
-from config import (
-    DURABLE_HISTORY_REQUIRED,
-    HISTORY_DATABASE_FILE,
-    HISTORY_STORAGE_ROOT,
-)
+"""Dormant legacy history algorithms and compatibility types.
+
+Importing this package must never open or initialize the retired provider
+archive.  The exported ``historical_store`` name is a compatibility alias for
+the canonical Sleeper-backed context during the v1.10.23 shadow period.
+"""
 from src.core.historical_memory.aggregation import aggregate_production
 from src.core.historical_memory.models import (
     DATABASE_MIGRATION_VERSION,
@@ -13,7 +13,6 @@ from src.core.historical_memory.models import (
     Availability,
 )
 from src.core.historical_memory.store import HistoricalStore
-from src.core.historical_memory.storage import validate_historical_storage
 from src.core.historical_memory.graph import (
     HistoricalAssetGraph,
     canonical_event_id,
@@ -28,15 +27,14 @@ from src.core.historical_memory.read_model import (
     historical_read_model_cache,
 )
 
-historical_storage_status = validate_historical_storage(
-    database=HISTORY_DATABASE_FILE,
-    root=HISTORY_STORAGE_ROOT,
-    required=DURABLE_HISTORY_REQUIRED,
-)
-historical_store = HistoricalStore(
-    HISTORY_DATABASE_FILE,
-    initialize=historical_storage_status.healthy,
-)
+from src.core.history_context.store import canonical_history_store
+
+historical_store = canonical_history_store
+historical_storage_status = {
+    "status": "dormant",
+    "mode": "shadow_forbidden",
+    "opened": False,
+}
 
 __all__ = [
     "Availability", "DATABASE_MIGRATION_VERSION", "HISTORICAL_SCHEMA_VERSION",

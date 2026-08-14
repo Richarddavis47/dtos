@@ -22,7 +22,9 @@ from starlette.middleware.cors import CORSMiddleware
 if os.getenv("DTOS_VALIDATION_SUPPRESS_FOIS") == "1":
     os.environ["DTOS_FOIS_ENABLED"] = "0"
 
-from config import CACHE_FILE, HISTORY_DATABASE_FILE, HISTORY_STORAGE_ROOT
+from config import (
+    CACHE_FILE, HISTORY_DATABASE_FILE, HISTORY_STORAGE_ROOT, METADATA_DATABASE_FILE,
+)
 from dtos_app import app
 from services.fois import fois_service
 from services.history import _SEASON_SECTION_CACHE, _SEASON_SECTION_CACHE_LOCK
@@ -32,8 +34,11 @@ import src.core.asset_market.read_model as market_read_model
 from src.core.asset_market.engine import AssetMarket, AssetMarketCache, asset_market_cache
 from src.core.asset_market.read_model import MarketReadModel
 from src.core.brain import brain_service
-from src.core.historical_memory.store import HistoricalStore
-from src.core.historical_memory import historical_store
+from src.core.history_context import (
+    CanonicalHistoryStore,
+    canonical_history_store as historical_store,
+    minimal_metadata_store,
+)
 from src.platform.lifecycle import LifecycleCoordinator, lifecycle_coordinator
 from tools.validation.generate_sanitized_market_fixture import (
     material_market_fixture_change,
@@ -506,20 +511,20 @@ def _profiled_connection(self: MarketReadModel):
 
 
 MarketReadModel.connection = _profiled_connection
-HistoricalStore.dataset_version = _timed(
+CanonicalHistoryStore.dataset_version = _timed(
     "dataset_version", _stage(
         "dataset_version_lookup",
         _preparation_stage(
-            "semantic_marker_read", HistoricalStore.dataset_version,
+            "semantic_marker_read", CanonicalHistoryStore.dataset_version,
             gil_heavy=False,
         ),
     ),
 )
-HistoricalStore.database_uuid = _timed(
+CanonicalHistoryStore.database_uuid = _timed(
     "database_uuid", _stage(
         "database_generation_read",
         _preparation_stage(
-            "database_uuid_read", HistoricalStore.database_uuid,
+            "database_uuid_read", CanonicalHistoryStore.database_uuid,
             gil_heavy=False,
         ),
     ),
@@ -610,18 +615,7 @@ async def nonsemantic_refresh(marker: str) -> dict[str, Any]:
     report = data.setdefault("valuation_intelligence", {})
     report["generated_at"] = marker
     STATE["last_sync"] = marker
-    record_key = f"validation:history-only:{marker}"
-    historical_store.append(
-        record_key=record_key, entity_type="transaction", league_id=LEAGUE_ID,
-        source_record_id=marker, observed_at=marker, retrieved_at=marker,
-        provider="SanitizedFixture", availability="available", confidence=100,
-        calculation_method="validation_observation", schema_version="1.0",
-        payload={"type": "history_only_validation"},
-    )
-    with historical_store.connection() as connection:
-        connection.execute(
-            "DELETE FROM historical_records WHERE record_key = ?", (record_key,),
-        )
+    minimal_metadata_store.record_sync_generation(LEAGUE_ID, marker)
     return {
         "previous_generation": before.get("market_generation"),
         "previous_build_count": before.get("build_count"),
@@ -678,9 +672,9 @@ async def semantic_market_contract() -> dict[str, Any]:
             "brain_generated_at": (
                 (data.get("valuation_intelligence") or {}).get("generated_at")
             ),
-            "historical_record_generation": historical_store.semantic_generation_markers(
+            "historical_cache_generation": historical_store.semantic_generations(
                 LEAGUE_ID,
-            ).get("historical_records"),
+            ).get("provider_cache"),
         },
         "artifact_compatibility": reason,
     }
@@ -728,7 +722,8 @@ async def fixture_contract() -> dict[str, Any]:
     return {
         "storage_root": ".",
         "cache_file": relative(CACHE_FILE),
-        "history_database": relative(HISTORY_DATABASE_FILE),
+        "legacy_history_database": relative(HISTORY_DATABASE_FILE),
+        "metadata_database": relative(METADATA_DATABASE_FILE),
         "active_store_database": relative(historical_store.path),
         "league_id": LEAGUE_ID,
         "cache_league_id": (
@@ -738,18 +733,25 @@ async def fixture_contract() -> dict[str, Any]:
             historical_store.database_uuid()
         ),
         "file_identity_digest": hashlib.sha256(
-            f"{HISTORY_DATABASE_FILE.stat().st_dev}:"
-            f"{HISTORY_DATABASE_FILE.stat().st_ino}".encode()
+            f"{METADATA_DATABASE_FILE.stat().st_dev}:"
+            f"{METADATA_DATABASE_FILE.stat().st_ino}".encode()
         ).hexdigest(),
-        "history_database_size": HISTORY_DATABASE_FILE.stat().st_size,
+        "legacy_history_database_size": (
+            HISTORY_DATABASE_FILE.stat().st_size if HISTORY_DATABASE_FILE.exists() else 0
+        ),
+        "metadata_database_size": METADATA_DATABASE_FILE.stat().st_size,
         "cache_exists": CACHE_FILE.is_file(),
-        "history_database_exists": HISTORY_DATABASE_FILE.is_file(),
+        "legacy_history_database_exists": HISTORY_DATABASE_FILE.is_file(),
+        "metadata_database_exists": METADATA_DATABASE_FILE.is_file(),
         "active_store_matches": (
-            historical_store.path.resolve() == HISTORY_DATABASE_FILE.resolve()
+            historical_store.path.resolve() == METADATA_DATABASE_FILE.resolve()
         ),
         "contained": all(
             relative(path) is not None
-            for path in (CACHE_FILE, HISTORY_DATABASE_FILE, historical_store.path)
+            for path in (
+                CACHE_FILE, HISTORY_DATABASE_FILE, METADATA_DATABASE_FILE,
+                historical_store.path,
+            )
         ),
     }
 
