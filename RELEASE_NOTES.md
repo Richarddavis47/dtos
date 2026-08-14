@@ -1,3 +1,15 @@
+# DTOS v1.10.22 - Resource Admission & Heavy-Work Coordination
+
+DTOS now distinguishes verified reclaimable Linux file cache from live memory
+pressure during Asset Market admission. The existing 500 MiB reserve, 1.5 GiB
+effective ceiling, OOM-event rejection, and 2 GiB runtime limit remain unchanged.
+
+One canonical heavy-work coordinator now gives an unavailable Asset Market first
+priority over optional Chromium and DINS capture. Visual work remains pending and
+starts after the market generation reaches a safe terminal state.
+
+## Previous release
+
 # DTOS v1.10.21 - Sleeper Canonical Projection Mirror
 
 Sleeper is now DTOS's canonical weekly fantasy projection provider. DTOS scores

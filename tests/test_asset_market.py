@@ -622,6 +622,32 @@ class AssetMarketTests(unittest.TestCase):
             result["reason"], "predicted_effective_usage_exceeds_target",
         )
 
+    def test_production_shape_admits_verified_reclaimable_file_cache(self) -> None:
+        result = memory_admission(self._cgroup_snapshot(
+            current=1_849_692_160, inactive=1_565_327_360,
+        ))
+        self.assertTrue(result["admitted"])
+        self.assertEqual(result["reason"], "admitted")
+        self.assertLess(
+            result["predicted_hard_pressure_bytes"],
+            result["hard_pressure_ceiling_bytes"],
+        )
+        self.assertEqual(result["hard_pressure_margin_bytes"], 256 * 1024**2)
+
+    def test_high_raw_low_reclaimable_cache_fails_hard_pressure(self) -> None:
+        result = memory_admission(self._cgroup_snapshot(
+            current=1_849_692_160, inactive=64 * 1024**2,
+        ))
+        self.assertFalse(result["admitted"])
+        self.assertEqual(result["reason"], "hard_cgroup_pressure")
+
+    def test_hard_pressure_fails_even_when_inactive_file_is_material(self) -> None:
+        result = memory_admission(self._cgroup_snapshot(
+            current=2_100_000_000, inactive=400_000_000,
+        ))
+        self.assertFalse(result["admitted"])
+        self.assertEqual(result["reason"], "hard_cgroup_pressure")
+
     def test_memory_admission_fails_conservatively_for_invalid_stat(self) -> None:
         result = memory_admission(self._cgroup_snapshot(
             current=1500 * 1024 * 1024, inactive=None,

@@ -46,6 +46,27 @@ class LiveVisualInspectionTests(unittest.TestCase):
             self.assertTrue(service.wait())
             self.assertTrue(entered.is_set())
 
+    def test_first_generation_reservation_defers_browser_until_market_ready(self):
+        entered = threading.Event()
+
+        def capture(_item, output):
+            entered.set()
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            lifecycle_coordinator.reserve_market_critical("No compatible market.")
+            self.assertEqual(service.schedule([request()]), 1)
+            self.assertFalse(entered.wait(0.1))
+            health = service.health(1)
+            self.assertEqual(health["browser_processes"], 0)
+            self.assertGreater(health["deferred_captures"], 0)
+            self.assertEqual(health["defer_reason"], "market_critical")
+            lifecycle_coordinator.release_market_critical()
+            self.assertTrue(service.wait())
+            self.assertTrue(entered.is_set())
+
     def test_application_import_does_not_load_browser_capture_stack(self):
         script = (
             "import sys; import dtos_app; "

@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.10.22 - Resource Admission & Heavy-Work Coordination
+
+- Replaced the static raw-memory emergency boundary with a deterministic,
+  reclaimable-cache-aware hard-pressure calculation while preserving the 2 GiB
+  cgroup limit, 1.5 GiB effective ceiling, and 500 MiB reserve.
+- Added versioned admission evidence for reclaimable allowance, predicted hard
+  pressure, and the absolute cgroup safety margin.
+- Prioritized first Asset Market generation work over Live Visual and DINS browser
+  capture without changing projection, market, or warming contracts.
+
 ## v1.10.21 - Sleeper Canonical Projection Mirror
 
 - Make league-scored Sleeper weekly projections the sole canonical production projection.

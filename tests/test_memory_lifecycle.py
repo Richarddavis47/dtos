@@ -73,6 +73,25 @@ class MemoryLifecycleTests(unittest.TestCase):
         self.assertEqual(maximum, 1)
         self.assertEqual(len(coordinator.snapshot()["recent_phases"]), 2)
 
+    def test_market_critical_reservation_defers_visual_without_browser_overlap(self) -> None:
+        coordinator = LifecycleCoordinator()
+        coordinator.reserve_market_critical("First market generation.")
+        self.assertFalse(coordinator.visual_capture_allowed())
+        coordinator.defer_visual_capture()
+        snapshot = coordinator.snapshot()["heavy_work"]
+        self.assertEqual(snapshot["state"], "MARKET_CRITICAL")
+        self.assertEqual(snapshot["visual_deferrals"], 1)
+        self.assertEqual(snapshot["visual_overlap_count"], 0)
+        coordinator.release_market_critical()
+        self.assertTrue(coordinator.visual_capture_allowed())
+
+    def test_market_critical_release_is_idempotent_after_failure(self) -> None:
+        coordinator = LifecycleCoordinator()
+        coordinator.reserve_market_critical("Fixture failure.")
+        coordinator.release_market_critical()
+        coordinator.release_market_critical()
+        self.assertEqual(coordinator.snapshot()["heavy_work"]["state"], "IDLE")
+
     def test_market_health_is_metadata_only_when_no_snapshot_exists(self) -> None:
         app = FastAPI()
         app.include_router(create_market_router(
