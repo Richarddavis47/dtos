@@ -1,3 +1,15 @@
+# DTOS v1.10.21 - Sleeper Canonical Projection Mirror
+
+Sleeper is now DTOS's canonical weekly fantasy projection provider. DTOS scores
+Sleeper projected football statistics using each league's actual scoring profile
+and never fabricates positional fallback points when provider evidence is
+missing. Legitimate zero projections remain distinct from unavailable evidence.
+
+The former DTOS weekly forecast remains legacy/research-only and has zero
+canonical production consumers.
+
+## Previous release
+
 # DTOS v1.10.20 - Intelligence Checkpoint Runtime Integration
 
 DTOS now invokes its permanent intelligence-memory service from the canonical

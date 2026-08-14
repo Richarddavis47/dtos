@@ -10,7 +10,7 @@ from app_metadata import VERSION
 from src.core.league_runtime.identity import scoring_profile_id
 
 from .models import CheckpointTrigger, EvidenceCompleteness, ProvenanceType
-from .models import PickLineage
+from .models import PickLineage, SourceObservation
 from .service import IntelligenceMemoryService
 
 
@@ -69,6 +69,37 @@ class CheckpointPipeline:
                                or (data.get("valuation_intelligence") or {}).get("brain_snapshot_id")),
         }
 
+    @staticmethod
+    def _projection_observations(
+        data: dict[str, Any], asset_id: str,
+    ) -> tuple[SourceObservation, ...]:
+        """Attach one compact canonical projection fact to a material event."""
+        if not asset_id.startswith("player:"):
+            return ()
+        projection = ((data.get("projection_intelligence") or {}).get("players") or {}).get(
+            asset_id.removeprefix("player:")
+        ) or {}
+        if not projection:
+            return ()
+        return (SourceObservation(
+            provider="Sleeper",
+            raw_value=projection.get("canonical_projection"),
+            normalized_value=projection.get("canonical_projection"),
+            observed_at=projection.get("source_timestamp") or projection.get("generated_at"),
+            source_identity=projection.get("sleeper_evidence_fingerprint"),
+            temporal_distance_seconds=None,
+            metadata={
+                "evidence_type": "canonical_weekly_projection",
+                "season": projection.get("season"),
+                "week": projection.get("week"),
+                "scoring_profile_id": projection.get("scoring_profile_id"),
+                "availability": projection.get("availability"),
+                "availability_state": projection.get("availability_state"),
+                "confidence": projection.get("projection_confidence"),
+                "freshness": projection.get("source_freshness"),
+            },
+        ),)
+
     def _capture(self, trigger: CheckpointTrigger, **values: Any) -> None:
         self._counts["checkpoints_attempted"] += 1
         event_id = str(values.get("event_id") or "")
@@ -126,6 +157,7 @@ class CheckpointPipeline:
                         timestamp=_timestamp(transaction.get("created"), fallback),
                         event_id=event_id, roster_id=roster_id,
                         confidence=85 if values["market_value"] is not None else 40,
+                        observations=self._projection_observations(data, asset_id),
                         **context, **values,
                     )
         return self.health()
@@ -157,6 +189,7 @@ class CheckpointPipeline:
                     timestamp=selection_time,
                     event_id=f"{draft_id}:{number}", roster_id=str(pick.get("roster_id") or "") or None,
                     confidence=85 if values["market_value"] is not None else 40,
+                    observations=self._projection_observations(data, f"player:{player_id}"),
                     knowledge_state=f"fantasy_draft_selection:{number}",
                     **context, **{k: v for k, v in values.items() if k != "knowledge_state"},
                 )

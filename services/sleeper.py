@@ -200,14 +200,31 @@ async def _sync_sleeper(
                 projection_payload = None
                 projection_bytes = 0
                 projection_transport = None
+                projection_week_payloads: list[tuple[int, Any]] = []
                 projection_claimed = projections.begin_external_refresh()
                 if projection_claimed:
+                    projection_season = int((nfl_state or {}).get("season") or league.get("season") or utcnow().year)
                     try:
                         projection_payload, projection_bytes, projection_transport = await SLEEPER_PROJECTION_CLIENT.fetch(
                             client,
-                            season=int((nfl_state or {}).get("season") or league.get("season") or utcnow().year),
+                            season=projection_season,
                             week=matchup_week,
                         )
+                        cached_weeks = set(projections.cached_weeks(projection_season))
+                        for projection_week in range(1, 19):
+                            if projection_week == matchup_week or projection_week in cached_weeks:
+                                continue
+                            try:
+                                week_payload, week_bytes, _week_transport = await SLEEPER_PROJECTION_CLIENT.fetch(
+                                    client, season=projection_season, week=projection_week,
+                                )
+                                projection_week_payloads.append((projection_week, week_payload))
+                                projection_bytes += week_bytes
+                            except Exception as exc:
+                                logger.info(
+                                    "Sleeper projection Week %s is unavailable: %s",
+                                    projection_week, type(exc).__name__,
+                                )
                     except Exception as exc:
                         projections.fail_external_refresh(
                             exc, transport_details=SLEEPER_PROJECTION_CLIENT.last_transport,
@@ -459,6 +476,16 @@ async def _sync_sleeper(
                     )
                 try:
                     if projection_payload is not None:
+                        scoring = state["data"].get("scoring_settings") or (
+                            state["data"].get("league") or {}
+                        ).get("scoring_settings") or {}
+                        for projection_week, week_payload in projection_week_payloads:
+                            await asyncio.to_thread(
+                                projections.cache_sleeper_week, week_payload,
+                                scoring=scoring,
+                                season=int((nfl_state or {}).get("season") or league.get("season") or utcnow().year),
+                                week=projection_week,
+                            )
                         await asyncio.to_thread(
                             projections.ingest_sleeper,
                             projection_payload,
@@ -470,9 +497,11 @@ async def _sync_sleeper(
                             transport_details=projection_transport,
                         )
                     else:
-                        await asyncio.to_thread(
-                            projections.generate, state["data"], league_id,
-                        )
+                        restored = projections.restore_into(state["data"])
+                        if not restored:
+                            await asyncio.to_thread(
+                                projections.generate, state["data"], league_id,
+                            )
                 except Exception:
                     logger.exception(
                         "Projection generation failed; canonical intelligence will publish an explicit unavailable state"

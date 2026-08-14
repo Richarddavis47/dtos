@@ -154,6 +154,33 @@ def build_projection_audit(
     teams: list[dict[str, Any]] = []
     matchups: list[dict[str, Any]] = []
 
+    roster_groups: dict[str, str] = {}
+    for team in data.get("teams") or ():
+        for group in ("lineup", "starters", "bench", "taxi", "reserve", "ir", "players"):
+            normalized = "starter" if group in {"lineup", "starters"} else group
+            for player in team.get(group) or ():
+                if isinstance(player, dict):
+                    player_id = str(player.get("id") or player.get("player_id") or "")
+                else:
+                    player_id = str(player or "")
+                if player_id:
+                    roster_groups.setdefault(player_id, normalized)
+    all_players = []
+    for player_id, projection in sorted(players.items()):
+        value = projection.get("canonical_projection")
+        group = roster_groups.get(str(player_id), "free_agent")
+        all_players.append({
+            "player_id": str(player_id), "position": projection.get("position"),
+            "team": projection.get("team"), "roster_group": group,
+            "canonical_projection": value, "provider": "Sleeper",
+            "availability": projection.get("availability"),
+            "availability_state": projection.get("availability_state"),
+            "source_freshness": projection.get("source_freshness"),
+            "scoring_profile_id": projection.get("scoring_profile_id"),
+        })
+    projected_all = [row for row in all_players if row["canonical_projection"] is not None]
+    unavailable_all = [row for row in all_players if row["canonical_projection"] is None]
+
     for matchup_id, sides in sorted((data.get("matchups") or {}).items(), key=lambda item: str(item[0])):
         matchup_teams = []
         team_projections = []
@@ -284,10 +311,32 @@ def build_projection_audit(
             "generated_at": generated_at, "application_version": VERSION,
             "application_build": BUILD_NUMBER, "brain_snapshot_id": brain_snapshot_id,
             "projection_snapshot_id": projection_snapshot.get("projection_snapshot_id"),
+            "projection_provider": projection_snapshot.get("canonical_provider") or "Sleeper",
+            "projection_schema_version": projection_snapshot.get("schema_version"),
+            "projection_model_version": projection_snapshot.get("model_version"),
+            "scoring_profile_id": projection_snapshot.get("scoring_profile_id"),
             "asset_market_generation": identity.get("market_generation"),
         },
         "provider_health": projection_health,
         "matchups": matchups, "teams": teams, "players": audited_players,
+        "all_players": all_players,
+        "all_player_audit": {
+            "eligible_players": len(all_players),
+            "projected_players": len(projected_all),
+            "projected_zero_players": sum(row["canonical_projection"] == 0 for row in projected_all),
+            "unavailable_players": len(unavailable_all),
+            "rostered_players": sum(row["roster_group"] != "free_agent" for row in all_players),
+            "free_agent_players": sum(row["roster_group"] == "free_agent" for row in all_players),
+            "starters": sum(row["roster_group"] == "starter" for row in all_players),
+            "bench": sum(row["roster_group"] == "bench" for row in all_players),
+            "taxi_reserve": sum(row["roster_group"] in {"taxi", "reserve", "ir"} for row in all_players),
+            "status_categories": {
+                state: sum(row["availability"] == state for row in all_players)
+                for state in sorted({str(row["availability"] or "unknown") for row in all_players})
+            },
+            "legacy_production_projection_consumers": 0,
+            "request_time_provider_calls": 0,
+        },
         "fois": _fois(fois_scores),
         "reference_fixture": {
             "classification": "static regression reference; not asserted as current-week truth",

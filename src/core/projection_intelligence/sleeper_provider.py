@@ -11,9 +11,9 @@ import httpx
 
 from src.core.projection_intelligence.scoring import fantasy_points
 
-PROVIDER_ID = "sleeper_unofficial_projections"
-SOURCE_CLASSIFICATION = "Sleeper Unofficial Projection Feed — Optional External Evidence"
-PARSER_VERSION = "1.0"
+PROVIDER_ID = "sleeper_projections"
+SOURCE_CLASSIFICATION = "Sleeper Canonical Weekly Projection Evidence"
+PARSER_VERSION = "2.0"
 TRANSPORT_VERSION = "1.0"
 REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 ALLOWED_PROJECTION_HOSTS = frozenset({"api.sleeper.app", "api.sleeper.com"})
@@ -95,7 +95,16 @@ def parse_projection_feed(
         rows[player_id] = row
     if payload and not rows:
         raise SleeperProjectionSchemaError("Sleeper projection response contained no valid records.")
-    fingerprint = _digest(rows)
+    fingerprint = _digest({
+        player_id: {
+            key: value for key, value in row.items()
+            if key in {
+                "player_id", "season", "week", "position", "team",
+                "opponent", "projected_stats",
+            }
+        }
+        for player_id, row in rows.items()
+    })
     return rows, fingerprint, {
         "received": len(payload), "accepted": len(rows),
         "malformed": malformed, "duplicates": duplicates,

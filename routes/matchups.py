@@ -26,29 +26,22 @@ def _projection_value(value: Any) -> str:
 
 def _starter_projection_html(row: dict[str, Any] | None) -> str:
     projection = row or {}
-    sleeper = projection.get("sleeper_projection")
-    dtos = projection.get("dtos_projection")
-    if sleeper is None and dtos is None:
+    sleeper = projection.get("canonical_projection")
+    if sleeper is None:
         return (
             '<div class="starter-projections unavailable"><span>Projection unavailable</span>'
-            '<details><summary>Technical Details</summary><small>No canonical Sleeper or DTOS projection exists for this starter.</small></details></div>'
+            '<details><summary>Technical Details</summary><small>No canonical Sleeper projection exists for this starter. DTOS does not fabricate a fallback.</small></details></div>'
         )
-    difference = None if sleeper is None or dtos is None else float(dtos) - float(sleeper)
-    difference_html = (
-        f'<span class="projection-difference">DTOS {difference:+.2f}</span>'
-        if difference is not None else ""
-    )
     technical = (
-        f'<details><summary>Technical Details</summary><small>Raw DTOS: {_projection_value(projection.get("raw_dtos_projection"))}. '
-        f'Calibration: {_projection_value(projection.get("calibration_adjustment"))}. '
+        f'<details><summary>Technical Details</summary><small>Provider: Sleeper. '
+        f'Availability: {escape(str(projection.get("projection_availability") or "projected"))}. '
         f'Confidence: {escape(str(projection.get("projection_confidence") or "Unavailable"))}%. '
-        f'{escape(str(projection.get("calibration_reason") or "No calibration explanation is available."))}</small></details>'
+        f'DTOS consumes this league-scored value without blending a separate weekly forecast.</small></details>'
     )
     return (
         '<div class="starter-projections">'
-        f'<span><small>Sleeper Projection</small><b>{_projection_value(sleeper)}</b></span>'
-        f'<span><small>DTOS Projection</small><b>{_projection_value(dtos)}</b></span>'
-        f'{difference_html}</div>{technical}'
+        f'<span><small>Sleeper canonical projection</small><b>{_projection_value(sleeper)}</b></span>'
+        f'</div>{technical}'
     )
 
 
@@ -121,11 +114,9 @@ def create_matchups_router(
             for side in projected.get("sides") or []
         }
         projection_summary = (
-            f'<section class="card"><h3>Sleeper vs DTOS Starter Projections</h3><div class="matchup-summary-grid">'
+            f'<section class="card"><h3>Canonical Sleeper Starter Projections</h3><div class="matchup-summary-grid">'
             f'<div class="metric"><b>{projected["sides"][0]["sleeper_total"]:.1f}</b><span>{escape(left["team"])} Sleeper Projection · {escape(projected["sides"][0]["sleeper_coverage"])} {escape(projected["sides"][0]["sleeper_status"])}</span></div>'
             f'<div class="metric"><b>{projected["sides"][1]["sleeper_total"]:.1f}</b><span>{escape(right["team"])} Sleeper Projection · {escape(projected["sides"][1]["sleeper_coverage"])} {escape(projected["sides"][1]["sleeper_status"])}</span></div>'
-            f'<div class="metric"><b>{projected["sides"][0]["dtos_total"]:.1f}</b><span>{escape(left["team"])} DTOS Projection · {escape(projected["sides"][0]["dtos_coverage"])} {escape(projected["sides"][0]["dtos_status"])}</span></div>'
-            f'<div class="metric"><b>{projected["sides"][1]["dtos_total"]:.1f}</b><span>{escape(right["team"])} DTOS Projection · {escape(projected["sides"][1]["dtos_coverage"])} {escape(projected["sides"][1]["dtos_status"])}</span></div>'
             f'</div></section>'
             f'<section class="card"><h3>Projected Starter Outlook · {escape(projected["status"])}</h3><div class="matchup-summary-grid">'
             f'<div class="metric"><b>{projected["sides"][0]["projected"]:.1f}</b><span>{escape(left["team"])} Projection</span></div>'
@@ -246,11 +237,11 @@ def create_matchups_router(
             lclass = 'leading' if lp and lpts > rpts else ('trailing' if lp and lpts < rpts else '')
             rclass = 'leading' if rp and rpts > lpts else ('trailing' if rp and rpts < lpts else '')
             left_player = (
-                f'<div class="bench-player {lclass}"><b>{escape(lp["name"])}</b><span>{escape(lp["position"])} · {escape(lp.get("nfl_team") or "—")}</span><strong>{lpts:.2f}</strong></div>'
+                f'<div class="bench-player {lclass}"><b>{escape(lp["name"])}</b><span>{escape(lp["position"])} · {escape(lp.get("nfl_team") or "—")}</span><strong>{lpts:.2f}</strong>{_starter_projection_html(projected_by_roster.get(int(left.get("roster_id") or 0), {}).get(str(lp.get("id"))))}</div>'
                 if lp else '<div class="bench-player empty"><b>—</b><span>No bench player</span><strong>—</strong></div>'
             )
             right_player = (
-                f'<div class="bench-player right {rclass}"><b>{escape(rp["name"])}</b><span>{escape(rp["position"])} · {escape(rp.get("nfl_team") or "—")}</span><strong>{rpts:.2f}</strong></div>'
+                f'<div class="bench-player right {rclass}"><b>{escape(rp["name"])}</b><span>{escape(rp["position"])} · {escape(rp.get("nfl_team") or "—")}</span><strong>{rpts:.2f}</strong>{_starter_projection_html(projected_by_roster.get(int(right.get("roster_id") or 0), {}).get(str(rp.get("id"))))}</div>'
                 if rp else '<div class="bench-player right empty"><b>—</b><span>No bench player</span><strong>—</strong></div>'
             )
             bench_rows.append(f'<div class="bench-row">{left_player}<div class="bench-vs">VS</div>{right_player}</div>')

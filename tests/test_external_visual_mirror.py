@@ -26,7 +26,7 @@ class ExternalVisualMirrorTests(unittest.TestCase):
     def fixture(self) -> dict[str, bytes]:
         starters = [{
             "player_id": str(index), "player_name": f"Player {index}",
-            "displayed": {"sleeper_projection": float(index), "dtos_projection": float(index + 1)},
+            "displayed": {"canonical_projection": float(index), "provider": "Sleeper"},
         } for index in range(1, 23)]
         semantic = {
             "teams": [{"roster_id": "1", "starters": starters[:11]},
@@ -52,14 +52,13 @@ class ExternalVisualMirrorTests(unittest.TestCase):
                     "screenshot_url": f"/png/{surface_id}/{viewport}",
                     "presentation": {"presentation_contract": {
                         "starter_count": starter_count,
-                        "sleeper_projection_visible": starter_count == 22,
-                        "dtos_projection_visible": starter_count == 22,
+                        "canonical_sleeper_projection_visible": starter_count == 22,
+                        "legacy_dtos_projection_visible": False,
                     }},
                 })
         audit = {"identity": {"projection_snapshot_id": "projection"}, "players": [
             {"matchup_id": matchup_id, "roster_id": "1" if index <= 11 else "2",
-             "player_id": str(index), "sleeper_projection": float(index),
-             "dtos_projection": float(index + 1)}
+             "player_id": str(index), "canonical_projection": float(index)}
             for matchup_id in ("1", "2") for index in range(1, 23)
         ]}
         live = {"identity": {
@@ -127,7 +126,7 @@ class ExternalVisualMirrorTests(unittest.TestCase):
     def test_projection_mismatch_fails_closed(self):
         fixture = self.fixture()
         audit = json.loads(fixture["/api/audit/projections/current"])
-        audit["players"][0]["dtos_projection"] = 999
+        audit["players"][0]["canonical_projection"] = 999
         fixture["/api/audit/projections/current"] = json.dumps(audit).encode()
         with tempfile.TemporaryDirectory() as folder:
             with self.assertRaisesRegex(RuntimeError, "projection audit"):

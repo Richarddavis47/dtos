@@ -101,7 +101,7 @@ def evaluate_player_values(context: Any, decision: Any, reports: dict[str, Any],
             *calibrated.reasoning,
             *historical.evidence,
             f"Projection state is {projection.status.value} from {projection.source}.",
-            f"Forward Production contributes {forward_value}/1000 with a larger contender than rebuilder weight.",
+            f"Canonical Sleeper weekly production contributes {forward_value}/1000 with a larger contender than rebuilder weight.",
             f"Projects {above_replacement:+.2f} points above roster-specific replacement.",
             f"Market state is {market_status.value}; raw provider values are normalized before comparison.",
         )

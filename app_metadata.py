@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.10.20"
-BUILD_NUMBER = 1120
-RELEASE_CODENAME = "Intelligence Checkpoint Runtime Integration"
+VERSION = "1.10.21"
+BUILD_NUMBER = 1121
+RELEASE_CODENAME = "Sleeper Canonical Projection Mirror"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

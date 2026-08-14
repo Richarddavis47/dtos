@@ -54,49 +54,69 @@ def matchup_projection(
         player_rows = []
         sleeper_total = 0.0
         sleeper_available = 0
-        dtos_total = 0.0
-        dtos_available = 0
+        canonical_total = 0.0
+        canonical_available = 0
         for player, value in zip(lineup, values):
             player_id = str(player.get("id") or "")
             context = current_league_context()
             projections = context.projection if context is not None else projection_service
             canonical = projections.player(player_id) or {}
-            sleeper_value = canonical.get("sleeper_projection")
-            dtos_value = canonical.get("dtos_projection")
-            if sleeper_value is not None:
-                sleeper_total += float(sleeper_value)
+            canonical_value = canonical.get("canonical_projection")
+            if canonical_value is not None:
+                sleeper_total += float(canonical_value)
                 sleeper_available += 1
-            if dtos_value is not None:
-                dtos_total += float(dtos_value)
-                dtos_available += 1
+                canonical_total += float(canonical_value)
+                canonical_available += 1
             player_rows.append({
                 "player_id": player_id, "name": player.get("name"),
                 "position": player.get("position"), "nfl_team": player.get("nfl_team"),
-                "sleeper_projection": sleeper_value, "dtos_projection": dtos_value,
-                "raw_dtos_projection": canonical.get("raw_dtos_projection"),
-                "calibration_adjustment": canonical.get("calibration_adjustment"),
-                "calibration_reason": canonical.get("calibration_reason"),
+                "sleeper_projection": canonical_value,
+                "canonical_projection": canonical_value,
+                "projection_provider": canonical.get("provider") or "Sleeper",
+                "projection_availability": canonical.get("availability_state"),
                 "projection_confidence": canonical.get("projection_confidence"),
                 "fallback_state": canonical.get("fallback_state"),
                 "evidence_depth": canonical.get("evidence_depth"),
-                "canonical_projection": canonical.get("canonical_projection"),
                 "actual_points": player.get("points"),
                 "projection_status": canonical.get("status") or "unavailable",
                 "agreement": canonical.get("projection_agreement"),
+                "roster_group": "starter",
             })
             if value is None:
                 continue
             position = str(player.get("position") or "Other")
             position_totals[position] = position_totals.get(position, 0) + (value.projection.projected_points or 0)
             player_edges.append(((value.projection.ceiling or 0) - (value.projection.floor or 0), value.name, side.get("team")))
+        seen = {str(row["player_id"]) for row in player_rows}
+        for group in ("bench", "taxi", "reserve", "ir"):
+            for player in side.get(group) or []:
+                player_id = str(player.get("id") or player.get("player_id") or "")
+                if not player_id or player_id in seen:
+                    continue
+                context = current_league_context()
+                service = context.projection if context is not None else projection_service
+                canonical = service.player(player_id) or {}
+                player_rows.append({
+                    "player_id": player_id, "name": player.get("name"),
+                    "position": player.get("position"), "nfl_team": player.get("nfl_team"),
+                    "sleeper_projection": canonical.get("canonical_projection"),
+                    "canonical_projection": canonical.get("canonical_projection"),
+                    "projection_provider": canonical.get("provider") or "Sleeper",
+                    "projection_availability": canonical.get("availability_state") or "unavailable",
+                    "projection_confidence": canonical.get("projection_confidence"),
+                    "projection_status": canonical.get("status") or "unavailable",
+                    "actual_points": player.get("points"), "roster_group": group,
+                })
+                seen.add(player_id)
         summaries.append({
             "roster_id": roster_id, "team": side.get("team"),
             "projected": round(total, 2), "canonical_total": round(total, 2),
-            "sleeper_total": round(sleeper_total, 2), "dtos_total": round(dtos_total, 2),
+            "sleeper_total": round(sleeper_total, 2),
+            "canonical_projection_total": round(canonical_total, 2),
             "sleeper_coverage": f"{sleeper_available}/{len(lineup)}",
-            "dtos_coverage": f"{dtos_available}/{len(lineup)}",
+            "canonical_projection_coverage": f"{canonical_available}/{len(lineup)}",
             "sleeper_status": "Complete" if sleeper_available == len(lineup) else "Partial",
-            "dtos_status": "Complete" if dtos_available == len(lineup) else "Partial",
+            "canonical_projection_status": "Complete" if canonical_available == len(lineup) else "Partial",
             "floor": round(floor, 2), "ceiling": round(ceiling, 2),
             "confidence": confidence, "positions": position_totals, "players": player_rows,
         })

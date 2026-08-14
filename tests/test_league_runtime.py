@@ -201,9 +201,9 @@ class LeaguePersistenceIsolationTests(unittest.TestCase):
             bootstrap = ProjectionService(database)
             with closing(bootstrap._connect()) as connection:
                 a = {
-                    "league_id": "100", "schema_version": "1.2",
-                    "model_version": "dtos-forward-production-3",
-                    "contract_version": "1", "semantic_policy_version": "1",
+                    "league_id": "100", "schema_version": "2.0",
+                    "model_version": "sleeper-canonical-weekly-1",
+                    "contract_version": "2", "semantic_policy_version": "2",
                     "projection_snapshot_id": "a", "generated_at": "2026-01-01T00:00:00+00:00",
                 }
                 b = {**a, "league_id": "200", "projection_snapshot_id": "b", "generated_at": "2026-01-02T00:00:00+00:00"}
