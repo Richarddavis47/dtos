@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.10.20 - Intelligence Checkpoint Runtime Integration
+
+- Connect canonical Sleeper transaction and fantasy-draft ingestion to permanent intelligence checkpoints.
+- Add idempotent trade, waiver, drop, draft, and scheduled checkpoint processing with league isolation.
+- Expose bounded checkpoint-pipeline health while preserving side-effect-free request routes.
+- Make permanent checkpoint evidence available to FOIS without treating reconstructed or unavailable evidence as definitive process quality.
+
 ## v1.10.19 - Sleeper-Backed League Memory & Permanent Intelligence Checkpoints
 
 - Discover each dynasty league's actual Year 1 through Sleeper's season chain with no calendar cutoff.

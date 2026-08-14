@@ -7,7 +7,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from src.core.intelligence_memory import (
-    DATA_OWNERSHIP, intelligence_checkpoint_store, sleeper_season_cache,
+    DATA_OWNERSHIP, checkpoint_pipeline, intelligence_checkpoint_store, sleeper_season_cache,
 )
 from src.core.intelligence_memory.sleeper_source import SleeperHistoricalSource
 
@@ -24,6 +24,7 @@ def create_intelligence_memory_router(
         return {
             "status": "healthy",
             "checkpoint_store": intelligence_checkpoint_store.health(),
+            "checkpoint_pipeline": checkpoint_pipeline.health(),
             "provider_cache": sleeper_season_cache.health(),
             "storage_estimates": intelligence_checkpoint_store.storage_estimates(),
             "data_ownership": DATA_OWNERSHIP,

@@ -18,6 +18,10 @@ from src.core.fois.identity import identity_from_team
 from src.core.fois.models import GMTenure, TakeoverSnapshot
 from src.core.fois.repository import FOISRepository
 from src.core.brain import brain_service
+from src.core.fois.models import FrontOfficeEvidence
+from src.core.intelligence_memory import (
+    fois_process_evidence, intelligence_checkpoint_store,
+)
 
 LOGGER = logging.getLogger("dtos.fois")
 
@@ -101,6 +105,9 @@ class FOISService:
             if self._history_loader is not None
             else {}
         )
+        permanent_checkpoints = intelligence_checkpoint_store.checkpoints(
+            league_id=league_id, limit=10_000,
+        )
         scores = []
         teams = data.get("teams") or ()
         canonical_brain = None
@@ -109,6 +116,25 @@ class FOISService:
         for team in data.get("teams") or ():
             identity = identity_from_team(league_id, team)
             roster_id = str(team.get("roster_id") or "")
+            roster_checkpoints = tuple(
+                row for row in permanent_checkpoints
+                if row.roster_id in {None, roster_id}
+            )
+            checkpoint_coverage = fois_process_evidence(roster_checkpoints)
+            checkpoint_evidence = tuple(FrontOfficeEvidence(
+                evidence_type=f"intelligence_checkpoint:{row.trigger_type.value}",
+                source_system="DTOS IntelligenceCheckpoint",
+                source_identifier=row.checkpoint_id,
+                description=("Definitive transaction-time evidence."
+                             if row.provenance_type.definitive_process_evidence
+                             else "Context-only evidence; excluded from definitive process grading."),
+                observed_value={"dtos_value": row.dtos_value, "market_value": row.market_value,
+                                "provenance": row.provenance_type.value,
+                                "completeness": row.evidence_completeness.value},
+                observed_at=row.timestamp, season=row.season, week=row.week,
+                transaction_id=row.related_event_id,
+                player_id=row.asset_id.removeprefix("player:") if row.asset_type == "player" else None,
+            ) for row in roster_checkpoints)
             rows = history.get(roster_id) or {}
             owner_by_season = rows.get("owner_by_season") or {}
             current_owner = identity.owner_id
@@ -156,8 +182,11 @@ class FOISService:
                 league_id, identity.franchise_id, identity.owner_id,
                 seasons, trades, drafts, roster_metrics,
                 data.get("league_settings") or league.get("settings") or {},
+                evidence=checkpoint_evidence,
                 warnings=(
                     f"Results source: {history_source}; unsupported categories remain unavailable.",
+                    f"Permanent checkpoint evidence: {checkpoint_coverage['status']} "
+                    f"({checkpoint_coverage['completeness']}% definitive).",
                 ),
                 ownership_changes=int(rows.get("ownership_changes") or 0),
                 expected_seasons=rows.get("expected_seasons"),

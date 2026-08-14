@@ -73,6 +73,7 @@ class IntelligenceCheckpoint:
     trigger_type: CheckpointTrigger
     provenance_type: ProvenanceType
     league_id: str | None = None
+    roster_id: str | None = None
     scoring_profile_id: str | None = None
     week: int | None = None
     dtos_value: float | int | None = None
