@@ -208,6 +208,11 @@ class CanonicalHistoryStore:
         for pick in facts.get("draft_picks") or []:
             pick_id = str(pick.get("pick_no") or pick.get("pick_id") or _digest(pick)[:16])
             rows.append(self._record(league_id, season, "draft_pick", pick_id, dict(pick), player_id=str(pick.get("player_id") or "") or None))
+        for pick in facts.get("traded_picks") or []:
+            source_id = str(pick.get("pick_id") or _digest(pick)[:16])
+            rows.append(self._record(
+                league_id, season, "pick_snapshot", source_id, dict(pick),
+            ))
         brackets = []
         for bracket_name in ("winners_bracket", "losers_bracket"):
             for row in facts.get(bracket_name) or []:
@@ -306,35 +311,122 @@ class CanonicalHistoryStore:
             values.update(str(row["player_id"]) for row in rows if row.get("player_id"))
         return sorted(values)
 
+    @staticmethod
+    def _canonical_pick_id(payload: dict[str, Any], season: int) -> str | None:
+        pick_season = payload.get("season") or season
+        round_number = payload.get("round")
+        original_roster = (
+            payload.get("roster_id") or payload.get("original_roster_id")
+            or payload.get("original_franchise")
+        )
+        if round_number in (None, "") or original_roster in (None, ""):
+            return None
+        return f"PICK-{pick_season}-R{round_number}-ORIG{original_roster}"
+
     def distinct_pick_ids(self, league_id: str) -> list[str]:
-        _, rows = self.records(league_id, "draft_pick", limit=1_000_000)
-        return sorted({str(row["source_record_id"]) for row in rows})
+        _, rows = self.records(league_id, None, limit=1_000_000)
+        picks: set[str] = set()
+        for row in rows:
+            payload = row.get("payload") or {}
+            candidates = (
+                payload.get("draft_picks") or []
+                if row["entity_type"] in {"transaction", "trade"}
+                else [payload] if row["entity_type"] in {"draft_pick", "pick_snapshot"}
+                else []
+            )
+            for candidate in candidates:
+                pick_id = self._canonical_pick_id(candidate, int(row["season"]))
+                if pick_id:
+                    picks.add(pick_id)
+        return sorted(picks)
 
     def search_player_ids(self, league_id: str, needle: str, limit: int) -> list[str]:
         query = needle.casefold()
-        return [row["dtos_player_id"] for row in self.identities()
-                if query in str(row.get("display_name") or "").casefold()][:limit]
+        matches = {
+            str(row["provider_player_id"])
+            for row in self.identities()
+            if query in str(row.get("provider_player_id") or "").casefold()
+            or query in str(row.get("display_name") or "").casefold()
+        }
+        for season in self._cache_index(league_id):
+            for row in self._season_records(league_id, season):
+                player_id = row.get("player_id")
+                if player_id is not None and query in str(player_id).casefold():
+                    matches.add(str(player_id))
+        return sorted(matches)[:limit]
 
-    def search_transaction_ids(self, league_id: str, needle: str, limit: int) -> list[str]:
+    def search_transaction_ids(self, league_id: str, needle: str, limit: int) -> list[dict[str, Any]]:
         _, rows = self.records(league_id, None, limit=1_000_000)
         query = needle.casefold()
-        return [str(row["source_record_id"]) for row in rows
-                if row["entity_type"] in {"trade", "transaction"}
-                and query in json.dumps(row["payload"], default=str).casefold()][:limit]
+        matches = [row for row in rows
+                   if row["entity_type"] in {"trade", "transaction"}
+                   and query in str(row["source_record_id"]).casefold()]
+        matches.sort(key=lambda row: (
+            int(row["season"]), int(row.get("week") or 0),
+            str(row.get("observed_at") or ""), str(row["source_record_id"]),
+        ), reverse=True)
+        return matches[:limit]
 
     def transaction_record(self, league_id: str, transaction_id: str) -> dict[str, Any] | None:
         _, rows = self.records(league_id, None, limit=1_000_000)
         return next((row for row in rows if row["entity_type"] in {"trade", "transaction"}
                      and str(row["source_record_id"]) == str(transaction_id)), None)
 
-    def discoverable_trade_records(self, league_id: str) -> list[dict[str, Any]]:
+    def discoverable_trade_records(self, league_id: str, limit: int = 3) -> list[dict[str, Any]]:
         _, rows = self.records(league_id, "trade", limit=1_000_000)
-        return rows
+        rows = [row for row in rows if str(
+            (row.get("payload") or {}).get("status") or "",
+        ).casefold() in {"complete", "completed"}]
+        rows.sort(key=lambda row: (
+            int(row["season"]), int(row.get("week") or 0),
+            str(row.get("observed_at") or ""), str(row["source_record_id"]),
+        ), reverse=True)
+        return rows[:limit]
 
-    def asset_event_records(self, league_id: str, asset_id: str) -> list[dict[str, Any]]:
+    def asset_event_records(
+        self, league_id: str, asset_id: str,
+    ) -> dict[str, list[dict[str, Any]]]:
+        entity_types = (
+            "draft_pick", "transaction", "trade", "pick_snapshot",
+            "weekly_roster", "draft",
+        )
+        result = {entity_type: [] for entity_type in entity_types}
         _, rows = self.records(league_id, None, limit=1_000_000)
-        return [row for row in rows if row.get("player_id") == asset_id
-                or asset_id in json.dumps(row.get("payload") or {}, default=str)]
+        if asset_id.startswith("DTOS-P-"):
+            player_id = asset_id.removeprefix("DTOS-P-")
+            selected = [row for row in rows if (
+                (row["entity_type"] == "draft_pick" and row.get("player_id") == player_id)
+                or (row["entity_type"] in {"transaction", "trade"} and (
+                    player_id in (row["payload"].get("adds") or {})
+                    or player_id in (row["payload"].get("drops") or {})
+                ))
+                or (row["entity_type"] == "weekly_roster" and player_id in {
+                    *map(str, row["payload"].get("starters") or ()),
+                    *map(str, row["payload"].get("bench") or ()),
+                })
+            )]
+        elif asset_id.startswith("PICK-"):
+            selected = []
+            for row in rows:
+                payload = row.get("payload") or {}
+                if row["entity_type"] in {"draft_pick", "pick_snapshot"}:
+                    if self._canonical_pick_id(payload, int(row["season"])) == asset_id:
+                        selected.append(row)
+                elif row["entity_type"] in {"transaction", "trade"} and any(
+                    self._canonical_pick_id(pick, int(row["season"])) == asset_id
+                    for pick in payload.get("draft_picks") or []
+                ):
+                    selected.append(row)
+        else:
+            selected = []
+        selected.extend(row for row in rows if row["entity_type"] == "draft")
+        selected.sort(key=lambda row: (
+            -int(row["season"]), -int(row.get("week") or 0),
+            str(row["entity_type"]), str(row["source_record_id"]),
+        ))
+        for row in selected:
+            result[row["entity_type"]].append(row)
+        return result
 
     def player_week_totals(self, league_id: str) -> dict[int, dict[str, float]]:
         _, rows = self.records(league_id, "player_week", limit=1_000_000)
@@ -343,19 +435,93 @@ class CanonicalHistoryStore:
             result[int(row["season"])][str(row["player_id"])] += float(row["payload"].get("fantasy_points") or 0)
         return {season: dict(players) for season, players in result.items()}
 
-    def entity_counts_by_season(self, league_id: str) -> tuple[list[int], dict[int, dict[str, int]]]:
+    def entity_counts_by_season(
+        self, league_id: str, entity_types: Iterable[str] | str | None = None,
+    ) -> tuple[list[int], dict[str, dict[str, int]]]:
+        """Return per-season counts using the legacy read-contract shape."""
+        requested = (
+            (str(entity_types),)
+            if isinstance(entity_types, str)
+            else tuple(str(value) for value in entity_types or ())
+        )
+        selected = set(requested)
         counts: dict[int, dict[str, int]] = defaultdict(lambda: defaultdict(int))
         for season in self._cache_index(league_id):
             for row in self._season_records(league_id, season):
-                counts[season][row["entity_type"]] += 1
-        return sorted(counts), {season: dict(values) for season, values in counts.items()}
+                entity_type = str(row["entity_type"])
+                if not selected or entity_type in selected:
+                    counts[season][entity_type] += 1
+        seasons = sorted(counts)
+        return seasons, {
+            str(season): {
+                entity_type: int(counts[season].get(entity_type, 0))
+                for entity_type in (requested or tuple(sorted(counts[season])))
+            }
+            for season in seasons
+        }
 
     def compact_event_statistics(self, league_id: str) -> dict[str, Any]:
-        seasons, counts = self.entity_counts_by_season(league_id)
-        return {"seasons": seasons, "counts": counts, "source": "sleeper_season_cache"}
+        event_ids: list[str] = []
+
+        def append_event_id(row: dict[str, Any], suffix: str = "") -> None:
+            source = "|".join(str(value) for value in (
+                league_id, row["entity_type"], row["season"], row.get("week") or "",
+                row["source_record_id"], suffix,
+            ))
+            event_ids.append("EVENT-" + hashlib.sha256(source.encode()).hexdigest()[:24].upper())
+
+        orphaned_events = 0
+        for season in self._cache_index(league_id):
+            for row in self._season_records(league_id, season):
+                payload = row.get("payload") or {}
+                if row["entity_type"] == "draft_pick" and row.get("player_id"):
+                    append_event_id(row)
+                    append_event_id(row, str(row["player_id"]))
+                elif row["entity_type"] in {"transaction", "trade"}:
+                    for player, roster in (payload.get("adds") or {}).items():
+                        append_event_id(row, f"add:{player}:{roster}")
+                    for player, roster in (payload.get("drops") or {}).items():
+                        append_event_id(row, f"drop:{player}:{roster}")
+                    for index, _pick in enumerate(payload.get("draft_picks") or []):
+                        append_event_id(row, f"pick:{index}")
+                        if not row.get("source_record_id"):
+                            orphaned_events += 1
+                elif row["entity_type"] == "pick_snapshot":
+                    append_event_id(row)
+                elif row["entity_type"] == "weekly_roster":
+                    players = dict.fromkeys([
+                        *(payload.get("starters") or []), *(payload.get("bench") or []),
+                    ])
+                    for player in players:
+                        append_event_id(row, f"snapshot:{player}")
+        return {
+            "asset_event_count": len(event_ids),
+            "duplicate_event_ids": len(event_ids) - len(set(event_ids)),
+            "orphaned_events": orphaned_events,
+        }
 
     def compact_identity_coverage(self, league_id: str) -> dict[str, Any]:
-        return {"canonical": len(self._identities), "unresolved": 0, "source": "operational_catalog"}
+        historical_player_ids: set[str] = set()
+        for season in self._cache_index(league_id):
+            for row in self._season_records(league_id, season):
+                if row["entity_type"] in {"player_week", "draft_pick"} and row.get("player_id"):
+                    historical_player_ids.add(str(row["player_id"]))
+        with self._lock:
+            resolved_provider_ids = {
+                str(identity.get("provider_player_id"))
+                for identity in self._identities.values()
+                if int(identity.get("confidence") or 0) >= 70
+                and identity.get("provider_player_id") is not None
+            }
+        resolved = historical_player_ids & resolved_provider_ids
+        unresolved = sorted(historical_player_ids - resolved)
+        return {
+            "resolved_identity_count": len(resolved),
+            "unresolved_identity_count": len(unresolved),
+            "unresolved_player_ids": unresolved,
+            "historical_player_ids": sorted(historical_player_ids),
+            "resolved_provider_ids": sorted(resolved),
+        }
 
 
 canonical_history_store = CanonicalHistoryStore()
