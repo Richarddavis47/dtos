@@ -88,6 +88,20 @@ class ResourceDiagnosticsTests(unittest.TestCase):
         self.assertTrue(row["admitted"])
         self.assertEqual(row["memory_current"], 1_798_828_032)
         self.assertEqual(row["inactive_file"], 1_527_832_576)
+        self.assertIn("reclaimable_allowance", row)
+        self.assertIn("predicted_hard_pressure_peak", row)
+
+    def test_legacy_admission_journal_rows_remain_readable(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / ".asset-market-admission-history.json"
+            path.write_text(
+                '{"schema_version":"1.0","decisions":[{"admitted":true,"reason":"admitted"}]}',
+                encoding="utf-8",
+            )
+            health = ResourceDiagnostics(root).health()
+            self.assertEqual(health["count"], 1)
+            self.assertEqual(health["latest"]["reason"], "admitted")
 
     def test_component_sizing_is_non_mutating_and_handles_missing_contexts(self) -> None:
         runtime = LeagueRuntime("123")

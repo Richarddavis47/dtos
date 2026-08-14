@@ -20,11 +20,12 @@ from src.core.asset_market.read_model import (
 
 GLOBAL_LIMIT = 100
 PER_LEAGUE_LIMIT = 20
-DIAGNOSTIC_SCHEMA = "1.0"
+DIAGNOSTIC_SCHEMA = "1.1"
 REASON_CODES = {
     "admitted": "admitted",
     "memory_event_advanced": "oom_event_advanced",
     "raw_emergency_boundary": "raw_emergency_boundary",
+    "hard_cgroup_pressure": "hard_cgroup_pressure",
     "observed_growth_exceeded_estimate": "stage_growth_exceeded",
     "predicted_effective_usage_exceeds_target": "predicted_effective_ceiling",
     "browser_overlap_guard": "browser_overlap_guard",
@@ -150,6 +151,12 @@ class ResourceDiagnostics:
             "target_effective_ceiling": TARGET_CGROUP_BYTES,
             "stage_estimate": admission.get("stage_estimate_bytes"),
             "predicted_effective_peak": admission.get("predicted_effective_bytes"),
+            "reclaimable_allowance": admission.get("reclaimable_allowance_bytes"),
+            "hard_pressure_margin": admission.get("hard_pressure_margin_bytes"),
+            "hard_pressure_ceiling": admission.get("hard_pressure_ceiling_bytes"),
+            "predicted_hard_pressure_peak": admission.get(
+                "predicted_hard_pressure_bytes"
+            ),
             "effective_headroom": admission.get("effective_headroom_bytes"),
             "memory_events": dict(safe_context.get("cgroup_memory_events") or {}),
             "memory_event_deltas": dict(admission.get("memory_event_deltas") or {}),

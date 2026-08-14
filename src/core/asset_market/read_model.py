@@ -20,6 +20,8 @@ TARGET_CGROUP_BYTES = 1536 * 1024 * 1024
 HARD_CGROUP_BYTES = 1740 * 1024 * 1024
 RESERVED_BYTES = 500 * 1024 * 1024
 DEFAULT_STAGE_ESTIMATE = 128 * 1024 * 1024
+HARD_PRESSURE_MARGIN_BYTES = 256 * 1024 * 1024
+MAX_RECLAIMABLE_FRACTION = 0.75
 
 SCHEMA = """
 CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -135,6 +137,18 @@ def memory_admission(
         else TARGET_CGROUP_BYTES if valid_current else None
     )
     predicted = effective + estimate if isinstance(effective, int) else None
+    reclaimable_allowance = (
+        min(inactive, int(inactive * MAX_RECLAIMABLE_FRACTION))
+        if working_set_metrics else 0
+    )
+    hard_pressure_ceiling = (
+        finite_limit - HARD_PRESSURE_MARGIN_BYTES
+        if finite_limit is not None else None
+    )
+    predicted_hard_pressure = (
+        current + estimate - reclaimable_allowance
+        if valid_current else None
+    )
     event_deltas: dict[str, int] = {}
     if isinstance(events, dict) and baseline_events is not None:
         for name in ("oom", "oom_kill", "oom_group_kill"):
@@ -150,9 +164,13 @@ def memory_admission(
     elif any(delta > 0 for delta in event_deltas.values()):
         admitted = False
         reason = "memory_event_advanced"
-    elif current >= HARD_CGROUP_BYTES:
+    elif (
+        hard_pressure_ceiling is not None
+        and predicted_hard_pressure is not None
+        and predicted_hard_pressure > hard_pressure_ceiling
+    ):
         admitted = False
-        reason = "raw_emergency_boundary"
+        reason = "hard_cgroup_pressure"
     elif (
         baseline_effective is not None
         and effective - baseline_effective > DEFAULT_STAGE_ESTIMATE
@@ -168,6 +186,10 @@ def memory_admission(
         "effective_working_set_bytes": effective,
         "stage_estimate_bytes": estimate,
         "predicted_effective_bytes": predicted,
+        "reclaimable_allowance_bytes": reclaimable_allowance,
+        "hard_pressure_margin_bytes": HARD_PRESSURE_MARGIN_BYTES,
+        "hard_pressure_ceiling_bytes": hard_pressure_ceiling,
+        "predicted_hard_pressure_bytes": predicted_hard_pressure,
         "target_ceiling_bytes": safe_limit,
         "raw_headroom_bytes": (
             finite_limit - current if valid_cgroup else None

@@ -228,6 +228,8 @@ class AssetMarket:
                 "effective_working_set_bytes", "stage_estimate_bytes",
                 "predicted_effective_bytes", "target_ceiling_bytes",
                 "raw_headroom_bytes", "effective_headroom_bytes",
+                "reclaimable_allowance_bytes", "hard_pressure_margin_bytes",
+                "hard_pressure_ceiling_bytes", "predicted_hard_pressure_bytes",
                 "accounting_mode", "memory_event_deltas", "admitted", "reason",
             }
             self._memory_admission = {
@@ -1539,6 +1541,7 @@ class AssetMarketCache:
                 self._scheduler_state = "failed"
                 self._scheduler_skip_reason = "build_failed"
         finally:
+            lifecycle_coordinator.release_market_critical()
             with self._lock:
                 if epoch == self._epoch:
                     if self._build_started_monotonic is not None:
@@ -1579,12 +1582,23 @@ class AssetMarketCache:
             self.rebuild_requests += 1
             self._scheduler_state = "queued"
             self._scheduler_skip_reason = None
+            lifecycle_coordinator.reserve_market_critical(
+                "Asset Market generation has no compatible published model."
+                if self._market is None else
+                "Asset Market semantic replacement is active."
+            )
             self._build_thread = threading.Thread(
                 target=self._background_construct,
                 args=(data, state, store, league_id, request_marker, epoch),
                 name="dtos-market-builder", daemon=True,
             )
-            self._build_thread.start()
+            try:
+                self._build_thread.start()
+            except BaseException:
+                self._build_thread = None
+                self._building = False
+                lifecycle_coordinator.release_market_critical()
+                raise
             self._scheduler_state = "building"
             return True
 

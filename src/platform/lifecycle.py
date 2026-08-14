@@ -88,6 +88,10 @@ class LifecycleCoordinator:
         self._startup_reason = "Startup coordination has not begun."
         self._startup_started_at: str | None = None
         self._startup_completed_at: str | None = None
+        self._market_critical = 0
+        self._market_critical_reason: str | None = None
+        self._visual_deferrals = 0
+        self._visual_overlap_count = 0
 
     def begin_startup(self, reason: str) -> int:
         """Open a process startup fence before canonical work begins."""
@@ -132,6 +136,34 @@ class LifecycleCoordinator:
     def startup_complete(self) -> bool:
         with self._condition:
             return self._startup_state == "complete"
+
+    def reserve_market_critical(self, reason: str) -> None:
+        """Prioritize a queued first/replacement Market generation over browsers."""
+        with self._condition:
+            self._market_critical += 1
+            self._market_critical_reason = reason
+            self._condition.notify_all()
+
+    def release_market_critical(self) -> None:
+        with self._condition:
+            self._market_critical = max(0, self._market_critical - 1)
+            if self._market_critical == 0:
+                self._market_critical_reason = None
+            self._condition.notify_all()
+
+    def visual_capture_allowed(self) -> bool:
+        with self._condition:
+            return self._market_critical == 0 and self._phase != "asset_market_build"
+
+    def defer_visual_capture(self) -> None:
+        with self._condition:
+            self._visual_deferrals += 1
+
+    def wait_for_visual_capture(self, timeout: float = 0.25) -> bool:
+        with self._condition:
+            if self._market_critical or self._phase == "asset_market_build":
+                self._condition.wait(timeout)
+            return self._market_critical == 0 and self._phase != "asset_market_build"
 
     @contextmanager
     def phase(self, name: str) -> Iterator[dict[str, Any]]:
@@ -187,6 +219,19 @@ class LifecycleCoordinator:
                     "started_at": self._startup_started_at,
                     "completed_at": self._startup_completed_at,
                 },
+                "heavy_work": {
+                    "state": (
+                        "MARKET_CRITICAL" if self._market_critical
+                        else "VISUAL_CAPTURE" if self._phase == "live_visual_capture"
+                        else "HISTORICAL_HEAVY" if self._phase == "historical_import"
+                        else "PROJECTION_HEAVY" if self._phase == "valuation_intelligence"
+                        else "IDLE" if self._phase is None else self._phase.upper()
+                    ),
+                    "market_critical": bool(self._market_critical),
+                    "market_critical_reason": self._market_critical_reason,
+                    "visual_deferrals": self._visual_deferrals,
+                    "visual_overlap_count": self._visual_overlap_count,
+                },
                 "recent_phases": list(self._history),
                 "memory": memory_snapshot(),
             }
@@ -201,6 +246,10 @@ class LifecycleCoordinator:
             self._startup_reason = "Startup coordination has not begun."
             self._startup_started_at = None
             self._startup_completed_at = None
+            self._market_critical = 0
+            self._market_critical_reason = None
+            self._visual_deferrals = 0
+            self._visual_overlap_count = 0
             self._condition.notify_all()
 
 

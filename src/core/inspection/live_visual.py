@@ -58,6 +58,7 @@ class LiveVisualService:
         self._active: str | None = None
         self._browser_processes = 0
         self._last_error: str | None = None
+        self._deferred_captures = 0
         self._required_keys: set[str] = set()
         self._manifest = self._load_manifest()
 
@@ -106,6 +107,12 @@ class LiveVisualService:
 
     def _run(self) -> None:
         while True:
+            if not lifecycle_coordinator.visual_capture_allowed():
+                with self._lock:
+                    self._deferred_captures += 1
+                lifecycle_coordinator.defer_visual_capture()
+                lifecycle_coordinator.wait_for_visual_capture()
+                continue
             with self._lock:
                 if not self._queue:
                     self._active = None
@@ -198,6 +205,11 @@ class LiveVisualService:
             "stale": manifest["stale"], "pending": manifest["pending"],
             "failures": manifest["failures"], "browser_processes": self._browser_processes,
             "last_capture": manifest["last_capture"], "last_error": self._last_error,
+            "deferred_captures": self._deferred_captures,
+            "defer_reason": (
+                "market_critical" if not lifecycle_coordinator.visual_capture_allowed()
+                else None
+            ),
             "read_only_requests": True, "single_browser_worker": True,
         }
 

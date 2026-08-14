@@ -146,6 +146,11 @@ def capture(base_url: str, output: Path, limit: int | None = None) -> dict[str, 
     if store.current_root.exists():
         shutil.rmtree(store.current_root)
     store.current_root.mkdir(parents=True, exist_ok=True)
+    market_health = _json(urljoin(base_url.rstrip("/") + "/", "api/market/health"))
+    if market_health.get("status") != "ready":
+        raise RuntimeError(
+            "DINS capture is deferred until Asset Market has a published generation."
+        )
     site_map = _json(urljoin(base_url.rstrip("/") + "/", "api/inspect/site-map"))
     status = _json(urljoin(base_url.rstrip("/") + "/", "api/status"))
     if status.get("version") != VERSION:
