@@ -29,6 +29,14 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
                     "rebuilder_value": {"value": 7050},
                 }}
             }},
+            "projection_intelligence": {"players": {"1": {
+                "canonical_projection": 18.25, "provider": "Sleeper",
+                "season": 2026, "week": 1, "scoring_profile_id": "profile-one",
+                "source_timestamp": "2026-09-01T00:00:00+00:00",
+                "source_freshness": "Fresh", "availability": "active",
+                "availability_state": "projected", "projection_confidence": 90,
+                "sleeper_evidence_fingerprint": "sleeper-week-one",
+            }}},
         }
 
     def tearDown(self) -> None:
@@ -45,6 +53,17 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         self.assertEqual(rows[0].dtos_value, 7200)
         self.assertEqual(self.pipeline.health()["duplicates_skipped"], 1)
         self.assertEqual(rows[0].roster_id, "2")
+
+    def test_material_player_event_keeps_only_compact_projection_evidence(self) -> None:
+        trade = {"transaction_id": "projection-T1", "type": "trade",
+                 "created": 1_750_000_000_000, "adds": {"1": 2}}
+        self.pipeline.ingest_transactions(self.data, [trade])
+        observation = self.store.checkpoints()[0].observations[0]
+        self.assertEqual(observation.provider, "Sleeper")
+        self.assertEqual(observation.normalized_value, 18.25)
+        self.assertEqual(observation.metadata["scoring_profile_id"], "profile-one")
+        self.assertNotIn("players", observation.metadata)
+        self.assertNotIn("payload", observation.metadata)
 
     def test_event_replay_after_model_change_remains_idempotent(self) -> None:
         trade = {"transaction_id": "T-model", "type": "trade", "created": 1_750_000_000_000,

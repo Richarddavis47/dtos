@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.10.21 - Sleeper Canonical Projection Mirror
+
+- Make league-scored Sleeper weekly projections the sole canonical production projection.
+- Cover relevant rostered and unowned players with explicit projected-zero and unavailable states.
+- Add scoring-profile identities, bounded Week 1-18 provider caching, and semantic no-change behavior.
+- Migrate canonical intelligence, matchup, audit, inspection, and market consumers away from the legacy forecast.
+- Keep provider caches disposable and permanent projection evidence compact and event-scoped.
+
 ## v1.10.20 - Intelligence Checkpoint Runtime Integration
 
 - Connect canonical Sleeper transaction and fantasy-draft ingestion to permanent intelligence checkpoints.

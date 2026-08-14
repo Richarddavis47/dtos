@@ -109,27 +109,23 @@ def matchup_semantic(
     teams = []
     for side in sides:
         starters = []
-        sleeper_total = dtos_total = 0.0
-        sleeper_count = dtos_count = 0
+        canonical_total = 0.0
+        canonical_count = 0
         for player in side.get("lineup") or []:
             player_id = str(player.get("id") or player.get("player_id") or "")
             row = projections.get(player_id) or {}
-            sleeper = row.get("sleeper_projection")
-            dtos = row.get("dtos_projection")
-            if sleeper is not None:
-                sleeper_total += float(sleeper)
-                sleeper_count += 1
-            if dtos is not None:
-                dtos_total += float(dtos)
-                dtos_count += 1
+            canonical = row.get("canonical_projection")
+            if canonical is not None:
+                canonical_total += float(canonical)
+                canonical_count += 1
             starters.append({
                 "player_id": player_id, "player_name": player.get("name"),
                 "position": player.get("position"), "nfl_team": player.get("nfl_team"),
                 "lineup_slot": player.get("slot"),
-                "displayed": {"sleeper_projection": sleeper, "dtos_projection": dtos,
-                              "actual_points": player.get("points")},
-                "canonical": {"sleeper_projection": sleeper, "dtos_projection": dtos},
-                "projection_state": "available" if sleeper is not None or dtos is not None else "unavailable",
+                "displayed": {"canonical_projection": canonical,
+                              "provider": "Sleeper", "actual_points": player.get("points")},
+                "canonical": {"canonical_projection": canonical, "provider": "Sleeper"},
+                "projection_state": "projected_zero" if canonical == 0 else "available" if canonical is not None else "unavailable",
                 "technical_details": {"projection_snapshot_id": row.get("projection_snapshot_id")},
             })
         count = len(starters)
@@ -137,14 +133,10 @@ def matchup_semantic(
             "roster_id": side.get("roster_id"), "team_name": side.get("team"),
             "manager": side.get("owner"), "actual_score": side.get("points"),
             "starters": starters,
-            "displayed_totals": {"sleeper_projection": round(sleeper_total, 2),
-                                 "dtos_projection": round(dtos_total, 2)},
-            "canonical_totals": {"sleeper_projection": round(sleeper_total, 2),
-                                 "dtos_projection": round(dtos_total, 2)},
-            "coverage": {"sleeper": f"{sleeper_count}/{count}",
-                         "dtos": f"{dtos_count}/{count}",
-                         "sleeper_status": "complete" if sleeper_count == count else "partial",
-                         "dtos_status": "complete" if dtos_count == count else "partial"},
+            "displayed_totals": {"canonical_projection": round(canonical_total, 2)},
+            "canonical_totals": {"canonical_projection": round(canonical_total, 2)},
+            "coverage": {"canonical": f"{canonical_count}/{count}",
+                         "canonical_status": "complete" if canonical_count == count else "partial"},
         })
     return {
         "surface_id": f"matchup-{matchup_id}", "surface_type": "matchup",

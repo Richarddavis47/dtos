@@ -12,15 +12,17 @@ from statistics import mean, median
 from typing import Any
 
 from config import PROJECTION_DATABASE_FILE
-from src.core.projection_intelligence.calibration import calibrate, raw_projection
 from src.core.projection_intelligence.sleeper_provider import (
     PARSER_VERSION, SOURCE_CLASSIFICATION, freshness_state, parse_projection_feed,
 )
+from src.core.projection_intelligence.scoring import fantasy_points
+from src.core.projection_intelligence.consumer_registry import projection_consumer_health
 
-PROJECTION_SCHEMA_VERSION = "1.2"
-PROJECTION_MODEL_VERSION = "dtos-forward-production-3"
-PROJECTION_CONTRACT_VERSION = "1"
-PROJECTION_SEMANTIC_POLICY_VERSION = "1"
+PROJECTION_SCHEMA_VERSION = "2.0"
+PROJECTION_MODEL_VERSION = "sleeper-canonical-weekly-1"
+PROJECTION_CONTRACT_VERSION = "2"
+PROJECTION_SEMANTIC_POLICY_VERSION = "2"
+PROVIDER_CACHE_SEASONS = 6
 
 
 def snapshot_compatibility(snapshot: Any) -> tuple[str, str]:
@@ -53,22 +55,36 @@ def _digest(value: Any) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
+def _projection_semantics(players: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Retain only fields that can change canonical weekly decisions."""
+    fields = (
+        "player_id", "position", "team", "opponent", "season", "week",
+        "provider_id", "scoring_profile_id", "canonical_projection",
+        "availability", "availability_state", "projection_confidence",
+        "source_freshness", "sleeper_evidence_fingerprint",
+    )
+    return {
+        player_id: {field: row.get(field) for field in fields}
+        for player_id, row in sorted(players.items())
+    }
+
+
 def provider_registry() -> list[dict[str, Any]]:
     return [
         {
             "provider_id": "sleeper_projections", "provider_name": "Sleeper Projection",
             "evidence_family": "optional_external_projection",
             "supported_projection_types": ["weekly", "projected_statistics"],
-            "availability_state": "optional", "licensing_state": "undocumented",
+            "availability_state": "canonical", "licensing_state": "undocumented",
             "source_classification": SOURCE_CLASSIFICATION,
-            "reason": "Undocumented source; DTOS remains fully functional without it.",
+            "reason": "Canonical weekly fantasy projection evidence, evaluated with the requested league scoring profile.",
         },
         {
             "provider_id": "dtos_forward_production", "provider_name": "DTOS Forward Production Model",
             "evidence_family": "internal_forward_model",
             "supported_projection_types": ["weekly", "rest_of_season", "season", "floor", "median", "ceiling", "role"],
-            "availability_state": "enabled", "licensing_state": "first_party",
-            "reason": "Deterministic model from cached canonical DTOS evidence; not a Sleeper projection.",
+            "availability_state": "legacy_non_canonical", "licensing_state": "first_party",
+            "reason": "Retained for rollback and research only; disconnected from every canonical production consumer.",
         },
         {
             "provider_id": "licensed_external_projection", "provider_name": "Licensed External Projection Provider",
@@ -194,11 +210,19 @@ class ProjectionService:
         data["projection_intelligence"] = snapshot
         return True
 
-    def _external_snapshot(self) -> dict[str, Any] | None:
+    def _external_snapshot(
+        self, *, season: int | None = None, week: int | None = None,
+    ) -> dict[str, Any] | None:
         with closing(self._connect()) as connection:
-            row = connection.execute(
-                "SELECT payload FROM sleeper_projection_snapshots ORDER BY retrieved_at DESC LIMIT 1"
-            ).fetchone()
+            if season is not None and week is not None:
+                row = connection.execute(
+                    "SELECT payload FROM sleeper_projection_snapshots WHERE season=? AND week=? "
+                    "ORDER BY retrieved_at DESC LIMIT 1", (season, week),
+                ).fetchone()
+            else:
+                row = connection.execute(
+                    "SELECT payload FROM sleeper_projection_snapshots ORDER BY retrieved_at DESC LIMIT 1"
+                ).fetchone()
         return json.loads(row["payload"]) if row else None
 
     def begin_external_refresh(self) -> bool:
@@ -210,6 +234,60 @@ class ProjectionService:
             self._external_last_attempt = _now()
             self._external_requests += 1
             return True
+
+    def cached_weeks(self, season: int) -> tuple[int, ...]:
+        """Return the bounded durable provider-week inventory without decoding payloads."""
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                "SELECT DISTINCT week FROM sleeper_projection_snapshots "
+                "WHERE season=? AND week BETWEEN 1 AND 18 ORDER BY week", (int(season),),
+            ).fetchall()
+        return tuple(int(row["week"]) for row in rows)
+
+    def cache_sleeper_week(
+        self, payload: Any, *, scoring: dict[str, Any], season: int, week: int,
+    ) -> dict[str, Any]:
+        """Persist one disposable provider week without publishing active state."""
+        with self._lock:
+            self._external_requests += 1
+        rows, fingerprint, report = parse_projection_feed(
+            payload, season=int(season), week=int(week), scoring=scoring,
+        )
+        snapshot = {
+            "provider_id": "sleeper_projections", "source_classification": SOURCE_CLASSIFICATION,
+            "parser_version": PARSER_VERSION, "season": int(season), "week": int(week),
+            "retrieved_at": _now(), "semantic_fingerprint": fingerprint,
+            "players": rows, "normalization": report,
+        }
+        with closing(self._connect()) as connection:
+            connection.execute(
+                "INSERT INTO sleeper_projection_snapshots VALUES (?, ?, ?, ?, ?) "
+                "ON CONFLICT(fingerprint) DO UPDATE SET retrieved_at=excluded.retrieved_at, payload=excluded.payload",
+                (fingerprint, int(season), int(week), snapshot["retrieved_at"],
+                 json.dumps(snapshot, sort_keys=True, separators=(",", ":"))),
+            )
+            self._prune_provider_cache(connection)
+            connection.commit()
+        return {"week": int(week), "players": len(rows), "semantic_fingerprint": fingerprint}
+
+    @staticmethod
+    def _prune_provider_cache(connection: sqlite3.Connection) -> None:
+        """Bound disposable evidence to one observation per week for six seasons."""
+        connection.execute(
+            "DELETE FROM sleeper_projection_snapshots WHERE fingerprint NOT IN ("
+            "SELECT fingerprint FROM (SELECT fingerprint, ROW_NUMBER() OVER ("
+            "PARTITION BY season, week ORDER BY retrieved_at DESC, fingerprint DESC"
+            ") AS ordinal FROM sleeper_projection_snapshots) WHERE ordinal=1)"
+        )
+        seasons = connection.execute(
+            "SELECT DISTINCT season FROM sleeper_projection_snapshots ORDER BY season DESC"
+        ).fetchall()
+        expired = [int(row["season"]) for row in seasons[PROVIDER_CACHE_SEASONS:]]
+        if expired:
+            connection.executemany(
+                "DELETE FROM sleeper_projection_snapshots WHERE season=?",
+                ((season,) for season in expired),
+            )
 
     def fail_external_refresh(
         self, exc: Exception, *, transport_details: dict[str, Any] | None = None,
@@ -250,9 +328,11 @@ class ProjectionService:
             }
             with closing(self._connect()) as connection:
                 connection.execute(
-                    "INSERT OR IGNORE INTO sleeper_projection_snapshots VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO sleeper_projection_snapshots VALUES (?, ?, ?, ?, ?) "
+                    "ON CONFLICT(fingerprint) DO UPDATE SET retrieved_at=excluded.retrieved_at, payload=excluded.payload",
                     (fingerprint, season, week, retrieved_at, json.dumps(snapshot, sort_keys=True, separators=(",", ":"))),
                 )
+                self._prune_provider_cache(connection)
                 connection.commit()
             with self._lock:
                 self._refreshing = False
@@ -266,20 +346,17 @@ class ProjectionService:
                     self._external_semantic_changes += 1
                 else:
                     self._external_no_change_refreshes += 1
-            upgrade_required = self._snapshot is None and self._compatibility in {
-                "incompatible_schema", "incompatible_model", "incompatible_contract", "corrupt",
-            }
-            if changed or upgrade_required:
-                self.generate(
-                    data, league_id,
-                    trigger="provider_change" if changed else "model_upgrade",
-                )
-            else:
-                # Synchronization replaces the application data dictionary.
-                # Republish the retained canonical snapshot even when external
-                # evidence is unchanged so downstream Brain inputs cannot
-                # temporarily lose Projection Intelligence.
-                self.restore_into(data)
+            upgrade_required = self._snapshot is None
+            # Re-evaluate bounded canonical status on every background sync.
+            # Stable semantics reuse the immutable snapshot ID and cause no
+            # downstream Brain/Market invalidation.
+            self.generate(
+                data, league_id,
+                trigger=(
+                    "provider_change" if changed else
+                    "model_upgrade" if upgrade_required else "canonical"
+                ),
+            )
             return changed
         except Exception as exc:
             self.fail_external_refresh(exc)
@@ -365,8 +442,68 @@ class ProjectionService:
         return [found[key] for key in sorted(found)], report
 
     @staticmethod
-    def _project(player: dict[str, Any], scoring: dict[str, Any], season: int, week: int | None) -> dict[str, Any]:
-        return raw_projection(player, scoring, season, week)
+    def _availability(player: dict[str, Any], evidence: dict[str, Any] | None) -> str:
+        status = str(
+            player.get("injury_status") or player.get("status") or "unknown"
+        ).strip().casefold()
+        if status in {"out", "ir", "pup", "suspended", "inactive", "retired"}:
+            return status
+        if status in {"questionable", "doubtful", "active"}:
+            return status
+        if not str(player.get("team") or player.get("nfl_team") or "").strip():
+            return "unsigned"
+        if evidence is None:
+            return "unavailable"
+        return "unknown" if status in {"", "none"} else status
+
+    @classmethod
+    def _canonical_projection(
+        cls, player: dict[str, Any], evidence: dict[str, Any] | None,
+        *, season: int, week: int | None, scoring_profile_id: str,
+        sleeper_freshness: str, evidence_fingerprint: str | None,
+    ) -> dict[str, Any]:
+        player_id = str(player.get("id") or player.get("player_id"))
+        value = (evidence or {}).get("league_projection")
+        projected = round(float(value), 2) if value is not None else None
+        availability = cls._availability(player, evidence)
+        state = "projected_zero" if projected == 0 else "projected" if projected is not None else "unavailable"
+        confidence = (
+            90 if projected is not None and sleeper_freshness == "Fresh" else
+            70 if projected is not None and sleeper_freshness == "Aging" else
+            45 if projected is not None else 0
+        )
+        return {
+            "player_id": player_id,
+            "position": str(player.get("position") or (evidence or {}).get("position") or "").upper(),
+            "team": player.get("team") or player.get("nfl_team") or (evidence or {}).get("team"),
+            "opponent": (evidence or {}).get("opponent"),
+            "season": season, "week": week,
+            "provider": "Sleeper", "provider_id": "sleeper_projections",
+            "scoring_profile_id": scoring_profile_id,
+            "canonical_projection": projected,
+            "weekly_projected_points": projected,
+            "weekly_median": projected,
+            "expected_points_per_game": projected,
+            "sleeper_projection": projected,
+            # Compatibility aliases are read-only mirrors of the canonical value;
+            # they are not independent DTOS forecasts.
+            "dtos_projection": projected,
+            "calibrated_dtos_projection": projected,
+            "raw_dtos_projection": None,
+            "projection_confidence": confidence,
+            "projection_coverage": "available" if projected is not None else "unavailable",
+            "availability": availability,
+            "availability_state": state,
+            "status": state,
+            "sleeper_zero_state": "numeric_zero" if projected == 0 else "projected" if projected is not None else "missing",
+            "source_timestamp": (evidence or {}).get("source_updated_at"),
+            "source_freshness": sleeper_freshness,
+            "sleeper_freshness": sleeper_freshness,
+            "sleeper_evidence_fingerprint": evidence_fingerprint,
+            "sources": ["sleeper_projections"],
+            "legacy_projection_state": "non_canonical",
+            "limitations": [] if projected is not None else ["Sleeper projection evidence is unavailable; DTOS does not fabricate a fallback."],
+        }
 
     def generate(
         self, data: dict[str, Any], league_id: str, *, trigger: str = "canonical",
@@ -414,34 +551,40 @@ class ProjectionService:
         week_value = data.get("week") or data.get("leg")
         week = int(week_value) if week_value not in (None, "") else None
         players, normalization = self._players(data)
-        external_snapshot = self._external_snapshot()
+        external_snapshot = self._external_snapshot(season=season, week=week)
         external_players = (
             (external_snapshot or {}).get("players") or {}
             if (external_snapshot or {}).get("season") == season and (external_snapshot or {}).get("week") == week
             else {}
         )
+        scoring_profile_id = self._scoring_profile_id or _digest(scoring)
         projections = {}
+        sleeper_freshness = freshness_state((external_snapshot or {}).get("retrieved_at"))
         for player in players:
             player_id = str(player.get("id") or player.get("player_id"))
-            projection = self._project(player, scoring, season, week)
             evidence = external_players.get(player_id)
-            sleeper_value = (evidence or {}).get("league_projection")
-            sleeper_freshness = freshness_state((external_snapshot or {}).get("retrieved_at"))
-            projection = calibrate(
-                projection, sleeper_value, sleeper_freshness=sleeper_freshness,
+            if evidence is not None:
+                evidence = {
+                    **evidence,
+                    "league_projection": fantasy_points(
+                        evidence.get("projected_stats") or {}, scoring,
+                        str(evidence.get("position") or player.get("position") or ""),
+                    ),
+                }
+            projections[player_id] = self._canonical_projection(
+                player, evidence, season=season, week=week,
+                scoring_profile_id=scoring_profile_id,
+                sleeper_freshness=sleeper_freshness,
+                evidence_fingerprint=(external_snapshot or {}).get("semantic_fingerprint"),
             )
-            projection.update({
-                "sleeper_evidence_fingerprint": (external_snapshot or {}).get("semantic_fingerprint"),
-                "sleeper_freshness": sleeper_freshness,
-            })
-            projections[player_id] = projection
         identity = {
             "league_id": league_id, "season": season, "week": week,
             "schema_version": PROJECTION_SCHEMA_VERSION,
             "model_version": PROJECTION_MODEL_VERSION,
             "contract_version": PROJECTION_CONTRACT_VERSION,
             "semantic_policy_version": PROJECTION_SEMANTIC_POLICY_VERSION,
-            "scoring": scoring, "players": projections,
+            "scoring_profile_id": scoring_profile_id,
+            "players": _projection_semantics(projections),
         }
         snapshot_id = _digest(identity)
         generated_at = _now()
@@ -455,6 +598,10 @@ class ProjectionService:
             "league_id": league_id, "season": season, "week": week, "generated_at": generated_at,
             "projection_snapshot_id": snapshot_id, "players": projections,
             "providers": provider_registry(), "scoring_settings": scoring,
+            "scoring_profile_id": scoring_profile_id,
+            "canonical_provider": "Sleeper",
+            "legacy_production_projection_consumers": 0,
+            "consumer_migration": projection_consumer_health(),
             "sleeper_evidence_snapshot_id": (external_snapshot or {}).get("semantic_fingerprint"),
         }
         payload = json.dumps(snapshot, sort_keys=True, separators=(",", ":"))
@@ -490,6 +637,73 @@ class ProjectionService:
         snapshot = self.snapshot()
         return (snapshot.get("players") or {}).get(str(player_id)) if snapshot else None
 
+    def week_snapshot(self, week: int) -> dict[str, Any] | None:
+        """Return a durable canonical week without provider access."""
+        if not 1 <= int(week) <= 18:
+            return None
+        snapshot = self.snapshot()
+        if snapshot and int(snapshot.get("week") or 0) == int(week):
+            return snapshot
+        league_id = self._league_id or str((snapshot or {}).get("league_id") or "")
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT payload FROM projection_snapshots WHERE league_id=? AND week=? "
+                "ORDER BY generated_at DESC LIMIT 1", (league_id, int(week)),
+            ).fetchone()
+        if row:
+            candidate = json.loads(row["payload"])
+            if snapshot_compatibility(candidate)[0] == "compatible":
+                return candidate
+        if not snapshot:
+            return None
+        season = int(snapshot.get("season") or 0)
+        external = self._external_snapshot(season=season, week=int(week))
+        if not external:
+            return None
+        scoring = snapshot.get("scoring_settings") or {}
+        scoring_profile_id = str(snapshot.get("scoring_profile_id") or _digest(scoring))
+        source_players = snapshot.get("players") or {}
+        evidence_players = external.get("players") or {}
+        freshness = freshness_state(external.get("retrieved_at"))
+        players: dict[str, Any] = {}
+        for player_id, prior in source_players.items():
+            evidence = evidence_players.get(player_id)
+            if evidence is not None:
+                evidence = {**evidence, "league_projection": fantasy_points(
+                    evidence.get("projected_stats") or {}, scoring,
+                    str(evidence.get("position") or prior.get("position") or ""),
+                )}
+            players[player_id] = self._canonical_projection(
+                prior, evidence, season=season, week=int(week),
+                scoring_profile_id=scoring_profile_id, sleeper_freshness=freshness,
+                evidence_fingerprint=external.get("semantic_fingerprint"),
+            )
+        identity = {
+            "league_id": league_id, "season": season, "week": int(week),
+            "schema_version": PROJECTION_SCHEMA_VERSION,
+            "model_version": PROJECTION_MODEL_VERSION,
+            "contract_version": PROJECTION_CONTRACT_VERSION,
+            "semantic_policy_version": PROJECTION_SEMANTIC_POLICY_VERSION,
+            "scoring_profile_id": scoring_profile_id,
+            "players": _projection_semantics(players),
+        }
+        snapshot_id = _digest(identity)
+        generated_at = str(external.get("retrieved_at") or _now())
+        for projection in players.values():
+            projection["projection_snapshot_id"] = snapshot_id
+            projection["generated_at"] = generated_at
+        return {
+            **{key: snapshot.get(key) for key in (
+                "schema_version", "model_version", "contract_version",
+                "semantic_policy_version", "league_id", "scoring_settings",
+                "scoring_profile_id", "canonical_provider",
+                "legacy_production_projection_consumers",
+            )},
+            "season": season, "week": int(week), "generated_at": generated_at,
+            "projection_snapshot_id": snapshot_id, "players": players,
+            "sleeper_evidence_snapshot_id": external.get("semantic_fingerprint"),
+        }
+
     def record_actual(self, snapshot_id: str, player_id: str, actual_points: float) -> None:
         with closing(self._connect()) as connection:
             connection.execute("INSERT OR IGNORE INTO projection_actuals VALUES (?, ?, ?, ?)", (snapshot_id, str(player_id), float(actual_points), _now()))
@@ -498,13 +712,68 @@ class ProjectionService:
     def accuracy(self) -> dict[str, Any]:
         with closing(self._connect()) as connection:
             rows = connection.execute("SELECT a.actual_points, s.payload, a.player_id FROM projection_actuals a JOIN projection_snapshots s ON s.snapshot_id=a.snapshot_id").fetchall()
-        errors = []
+        errors: list[float] = []
+        by_position: dict[str, list[float]] = {}
+        by_week: dict[str, list[float]] = {}
+        availability_misses = 0
         for row in rows:
-            projection = (json.loads(row["payload"]).get("players") or {}).get(row["player_id"]) or {}
+            snapshot = json.loads(row["payload"])
+            projection = (snapshot.get("players") or {}).get(row["player_id"]) or {}
             expected = projection.get("weekly_projected_points")
             if expected is not None:
-                errors.append(float(expected) - float(row["actual_points"]))
-        return {"samples": len(errors), "mae": round(mean(abs(item) for item in errors), 3) if errors else None, "bias": round(mean(errors), 3) if errors else None, "rmse": round(mean(item * item for item in errors) ** .5, 3) if errors else None}
+                error = float(expected) - float(row["actual_points"])
+                errors.append(error)
+                by_position.setdefault(str(projection.get("position") or "Other"), []).append(error)
+                by_week.setdefault(str(snapshot.get("week") or "unknown"), []).append(error)
+            elif float(row["actual_points"]) != 0:
+                availability_misses += 1
+        def summarize(values: list[float]) -> float:
+            return round(mean(abs(item) for item in values), 3)
+        return {
+            "samples": len(errors),
+            "mae": summarize(errors) if errors else None,
+            "median_absolute_error": round(median(abs(item) for item in errors), 3) if errors else None,
+            "bias": round(mean(errors), 3) if errors else None,
+            "rmse": round(mean(item * item for item in errors) ** .5, 3) if errors else None,
+            "positional_mae": {key: summarize(values) for key, values in sorted(by_position.items())},
+            "week_mae": {key: summarize(values) for key, values in sorted(by_week.items(), key=lambda item: int(item[0]) if item[0].isdigit() else 99)},
+            "availability_status_misses": availability_misses,
+            "research_only": True,
+        }
+
+    def storage(self) -> dict[str, Any]:
+        """Return bounded category counts and bytes without exposing local paths."""
+        with closing(self._connect()) as connection:
+            counts = {
+                "raw_shared_provider_rows": int(connection.execute(
+                    "SELECT COUNT(*) FROM sleeper_projection_snapshots"
+                ).fetchone()[0]),
+                "derived_scoring_profile_rows": int(connection.execute(
+                    "SELECT COUNT(*) FROM projection_snapshots"
+                ).fetchone()[0]),
+                "actual_evaluation_rows": int(connection.execute(
+                    "SELECT COUNT(*) FROM projection_actuals"
+                ).fetchone()[0]),
+            }
+            payload_bytes = {
+                "raw_shared_provider_bytes": int(connection.execute(
+                    "SELECT COALESCE(SUM(LENGTH(payload)), 0) FROM sleeper_projection_snapshots"
+                ).fetchone()[0]),
+                "derived_scoring_profile_bytes": int(connection.execute(
+                    "SELECT COALESCE(SUM(LENGTH(payload)), 0) FROM projection_snapshots"
+                ).fetchone()[0]),
+            }
+        return {
+            **counts, **payload_bytes,
+            "database_bytes": self._database_file.stat().st_size if self._database_file.exists() else 0,
+            "provider_cache_retention": {
+                "seasons": PROVIDER_CACHE_SEASONS,
+                "weeks_per_season": 18,
+                "maximum_week_snapshots": PROVIDER_CACHE_SEASONS * 18,
+                "classification": "disposable_provider_cache",
+            },
+            "legacy_projection_bytes": 0,
+        }
 
     def health(self, *, include_accuracy: bool = True) -> dict[str, Any]:
         snapshot = self.snapshot()
@@ -520,30 +789,29 @@ class ProjectionService:
                 by_position[position] = by_position.get(position, 0) + 1
                 value = f"{float(projection['weekly_projected_points']):.2f}"
                 value_counts[value] = value_counts.get(value, 0) + 1
-            if projection.get("fallback_state") in {"position_baseline", "role_adjusted_prior"}:
+            if projection.get("weekly_projected_points") is None:
                 fallback_by_position[position] = fallback_by_position.get(position, 0) + 1
         state_counts: dict[str, int] = {}
         state_by_position: dict[str, dict[str, int]] = {}
         for row in players.values():
-            state = str(row.get("fallback_state") or "missing")
+            state = str(row.get("availability_state") or "unavailable")
             position = str(row.get("position") or "Other")
             state_counts[state] = state_counts.get(state, 0) + 1
             position_states = state_by_position.setdefault(position, {})
             position_states[state] = position_states.get(state, 0) + 1
         player_specific = sum(
             state_counts.get(state, 0)
-            for state in ("player_specific", "partially_individualized")
+            for state in ("projected", "projected_zero")
         )
         externally_calibrated_fallbacks = sum(
-            row.get("fallback_state") in {"position_baseline", "role_adjusted_prior"}
-            and row.get("sleeper_projection") is not None
+            False
             for row in players.values()
         )
         projected = max(1, available)
         sleeper_differences = [
-            abs(float(row["dtos_projection"]) - float(row["sleeper_projection"]))
+            abs(float(row["canonical_projection"]) - float(row["sleeper_projection"]))
             for row in players.values()
-            if row.get("dtos_projection") is not None and row.get("sleeper_projection") is not None
+            if row.get("canonical_projection") is not None and row.get("sleeper_projection") is not None
         ]
         return {
             "status": self._generation_state, "generation_state": self._generation_state,
@@ -562,6 +830,10 @@ class ProjectionService:
             "compatibility_reason": self._compatibility_reason,
             "restored_snapshot": dict(self._restored_snapshot_identity),
             "snapshot_id": (snapshot or {}).get("projection_snapshot_id"), "generated_at": (snapshot or {}).get("generated_at"),
+            "canonical_provider": "Sleeper",
+            "scoring_profile_id": (snapshot or {}).get("scoring_profile_id"),
+            "legacy_production_projection_consumers": 0,
+            "consumer_migration": projection_consumer_health(),
             "players": len(players), "projected_players": available, "coverage": round(available / len(players) * 100, 2) if players else 0,
             "generations": self._generations, "external_requests": self._external_requests,
             "snapshot_restores": self._snapshot_restores,
@@ -590,6 +862,7 @@ class ProjectionService:
                 "semantic_fingerprint": self._external_fingerprint,
                 "parser_version": PARSER_VERSION,
                 "transport": dict(self._external_transport),
+                "cached_weeks": list(self.cached_weeks(int((snapshot or {}).get("season") or datetime.now().year))),
             },
             "last_error_type": self._last_error_type,
             "last_error_message": self._last_error_message,
@@ -601,6 +874,7 @@ class ProjectionService:
             "stale_projections": 0 if self._generation_state == "ready" else len(players),
             "accuracy": self.accuracy() if include_accuracy else None,
             "providers": provider_registry(),
+            "storage": self.storage(),
             "position_coverage": by_position,
             "projection_quality": {
                 "player_specific_players": player_specific,

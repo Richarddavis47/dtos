@@ -51,9 +51,8 @@ def verify(url: str, fetch: Callable[[str], bytes] | None = None) -> dict[str, A
             if expected is None:
                 raise RuntimeError("Mirrored starter is absent from projection audit.")
             displayed = starter.get("displayed") or {}
-            for field in ("sleeper_projection", "dtos_projection"):
-                if displayed.get(field) != expected.get(field):
-                    raise RuntimeError("Mirrored projection differs from projection audit.")
+            if displayed.get("canonical_projection") != expected.get("canonical_projection"):
+                raise RuntimeError("Mirrored canonical projection differs from projection audit.")
     if matchup_images == 0 or matchup_images % 2:
         raise RuntimeError("Mirrored matchup viewport inventory is incomplete.")
     directory = manifest.get("matchup_directory") or {}

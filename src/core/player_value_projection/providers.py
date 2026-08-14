@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
 from statistics import mean, pstdev
 from typing import Any
 
@@ -38,33 +37,44 @@ def scoring_multiplier(position: str, scoring: dict[str, Any]) -> float:
     return max(.75, min(1.35, 1 + (reception - .5) * .12 + te_bonus * .08))
 
 
-class InternalProjectionProvider(WeeklyProjectionProvider):
-    """Disclosed fallback; never represented as a live projection feed."""
+class SleeperCanonicalProjectionProvider(WeeklyProjectionProvider):
+    """Consume the active league's cached canonical Sleeper projection."""
+
+    name = "sleeper_canonical_weekly"
+    version = "1"
 
     def project(self, player: dict[str, Any], redraft_score: int, scoring: dict[str, Any], week: int | None) -> Projection:
         player_id = str(player.get("id") or player.get("player_id") or "")
-        canonical = projection_service.player(player_id)
+        try:
+            from src.platform.league_context import current_league_context
+            context = current_league_context()
+        except (ImportError, RuntimeError):
+            context = None
+        service = context.projection if context is not None else projection_service
+        canonical = service.player(player_id)
         if canonical is not None and canonical.get("week") == week:
-            status = DataStatus.UNAVAILABLE if canonical.get("status") in {"bye", "unavailable"} else DataStatus.CACHED
+            status = DataStatus.UNAVAILABLE if canonical.get("weekly_projected_points") is None else DataStatus.CACHED
             return Projection(
                 canonical.get("weekly_projected_points"), canonical.get("weekly_floor"),
                 canonical.get("weekly_median"), canonical.get("weekly_ceiling"),
                 int(canonical.get("projection_confidence") or 0), 0.0, 0.0,
-                0.0, str(canonical.get("expected_usage") or "Unavailable"), None,
-                "DTOS Forward Production Model", status, canonical.get("generated_at"),
+                0.0, "Sleeper canonical weekly projection" if status is DataStatus.CACHED else "Unavailable", None,
+                "Sleeper", status, canonical.get("generated_at"),
                 week, tuple(canonical.get("limitations") or ()),
                 canonical.get("projection_snapshot_id"), canonical.get("rest_of_season_points"),
                 canonical.get("rest_of_season_games"), canonical.get("season_projected_points"),
-                canonical.get("projection_agreement"), "fresh",
+                canonical.get("projection_agreement"), str(canonical.get("source_freshness") or "unavailable").lower(),
             )
-        position = str(player.get("position") or "").upper()
-        base = {"QB": 17.0, "RB": 11.0, "WR": 10.5, "TE": 8.0}.get(position, 6.0)
-        role = (redraft_score - 50) * .16
-        injury = -4.0 if str(player.get("injury_status") or player.get("status") or "").lower() not in {"", "active", "none"} else 0.0
-        median = max(0.0, (base + role + injury) * scoring_multiplier(position, scoring))
-        spread = max(3.0, median * .38)
-        now = datetime.now(timezone.utc).isoformat()
-        return Projection(round(median, 2), round(max(0, median - spread), 2), round(median, 2), round(median + spread * 1.45, 2), 45, 0.0, round(role, 2), injury, "Inferred from current-season Asset Intelligence role proxy", None, "DTOS disclosed internal projection", DataStatus.FALLBACK, now, week, ("Live projections, opponent model, snaps, and usage feeds are unavailable.",))
+        return Projection(
+            None, None, None, None, 0, 0.0, 0.0, 0.0,
+            "Sleeper projection unavailable", None, "Sleeper", DataStatus.UNAVAILABLE,
+            None, week, ("Sleeper projection evidence is unavailable; DTOS does not fabricate a positional fallback.",),
+        )
+
+
+# Compatibility import name for extensions; the implementation is no longer an
+# internal forecast and remains canonical Sleeper-only.
+InternalProjectionProvider = SleeperCanonicalProjectionProvider
 
 
 class CachedProductionProvider(ProductionProvider):
@@ -88,7 +98,7 @@ class CachedProductionProvider(ProductionProvider):
 
 class PlayerDataRegistry:
     def __init__(self) -> None:
-        self._projection: WeeklyProjectionProvider = InternalProjectionProvider()
+        self._projection: WeeklyProjectionProvider = SleeperCanonicalProjectionProvider()
         self._production: ProductionProvider = CachedProductionProvider()
 
     def projection(self) -> WeeklyProjectionProvider:

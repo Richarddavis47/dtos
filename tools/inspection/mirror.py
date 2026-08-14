@@ -170,11 +170,12 @@ def build_mirror(
                     if audit_row is None:
                         raise RuntimeError(f"{surface_id} starter is absent from the projection audit.")
                     displayed = starter.get("displayed") or {}
-                    for field in ("sleeper_projection", "dtos_projection"):
-                        if displayed.get(field) != audit_row.get(field):
-                            raise RuntimeError(f"{surface_id} {field} does not match the projection audit.")
-            if not presentation.get("sleeper_projection_visible") or not presentation.get("dtos_projection_visible"):
-                raise RuntimeError(f"{surface_id} does not visibly expose both projection sources.")
+                    if displayed.get("canonical_projection") != audit_row.get("canonical_projection"):
+                        raise RuntimeError(f"{surface_id} canonical projection does not match the projection audit.")
+            if not presentation.get("canonical_sleeper_projection_visible"):
+                raise RuntimeError(f"{surface_id} does not visibly expose canonical Sleeper projections.")
+            if presentation.get("legacy_dtos_projection_visible"):
+                raise RuntimeError(f"{surface_id} still exposes the legacy DTOS weekly projection label.")
         entries.append({
             "surface_id": surface_id, "title": row.get("title"),
             "human_url": row.get("human_url"), "semantic_url": row.get("semantic_url"),
@@ -185,8 +186,8 @@ def build_mirror(
             "bytes": screenshot_artifact["bytes"], "width": width, "height": height,
             "captured_at": row.get("captured_at"), "starter_count": starter_count,
             "projection_visibility": {
-                "sleeper": bool(presentation.get("sleeper_projection_visible")),
-                "dtos": bool(presentation.get("dtos_projection_visible")),
+                "canonical_sleeper": bool(presentation.get("canonical_sleeper_projection_visible")),
+                "legacy_dtos_absent": not bool(presentation.get("legacy_dtos_projection_visible")),
             },
         })
 

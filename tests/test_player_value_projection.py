@@ -4,6 +4,7 @@ from __future__ import annotations
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+from numbers import Real
 from pathlib import Path
 from unittest.mock import patch
 
@@ -21,21 +22,31 @@ class PlayerValueProjectionTests(unittest.TestCase):
         self.data = fixture_data()
         self.orchestrator = IntelligenceOrchestrator(IntelligenceRegistry(), IntelligenceCache(default_ttl=60))
 
-    def test_league_scoring_changes_same_player_projection(self) -> None:
+    def test_provider_consumes_pre_scored_canonical_value_without_recalculation(self) -> None:
         provider = InternalProjectionProvider()
-        player = {"position": "TE", "status": "Active"}
-        standard = provider.project(player, 65, {"rec": 0}, 1)
-        premium = provider.project(player, 65, {"rec": 1, "bonus_rec_te": .5}, 1)
-        self.assertGreater(premium.projected_points, standard.projected_points)
+        canonical = {
+            "week": 1, "weekly_projected_points": 17.5,
+            "projection_confidence": 90, "provider": "Sleeper",
+        }
+        with patch(
+            "src.core.player_value_projection.providers.projection_service.player",
+            return_value=canonical,
+        ):
+            standard = provider.project({"id": "te", "position": "TE"}, 65, {"rec": 0}, 1)
+            premium = provider.project({"id": "te", "position": "TE"}, 65, {"rec": 1}, 1)
+        self.assertEqual(standard.projected_points, 17.5)
+        self.assertEqual(premium.projected_points, 17.5)
+        self.assertEqual(standard.source, "Sleeper")
         self.assertNotEqual(scoring_multiplier("QB", {"pass_td": 6}), scoring_multiplier("QB", {"pass_td": 4}))
 
-    def test_projection_fallback_is_explicit_and_explainable(self) -> None:
+    def test_missing_projection_is_unavailable_without_fabricated_fallback(self) -> None:
         projection = InternalProjectionProvider().project({"position": "WR"}, 60, {"rec": 1}, 3)
-        self.assertEqual(projection.status, DataStatus.FALLBACK)
-        self.assertIn("internal", projection.source.lower())
+        self.assertEqual(projection.status, DataStatus.UNAVAILABLE)
+        self.assertEqual(projection.source, "Sleeper")
         self.assertTrue(projection.limitations)
-        self.assertLess(projection.floor, projection.median)
-        self.assertGreater(projection.ceiling, projection.median)
+        self.assertIsNone(projection.projected_points)
+        self.assertIsNone(projection.floor)
+        self.assertIsNone(projection.ceiling)
 
     def test_production_cached_and_unavailable_states_are_distinct(self) -> None:
         provider = CachedProductionProvider()
@@ -57,7 +68,11 @@ class PlayerValueProjectionTests(unittest.TestCase):
 
     def test_points_above_replacement_and_roster_marginal_value_are_exposed(self) -> None:
         profiles = self.orchestrator.analyze(self.data, 1).player_values.values()
-        self.assertTrue(all(isinstance(item.lineup.points_above_replacement, float) for item in profiles))
+        self.assertTrue(all(
+            item.lineup.points_above_replacement is None
+            or isinstance(item.lineup.points_above_replacement, Real)
+            for item in profiles
+        ))
         self.assertTrue(all(0 <= item.lineup.marginal_value <= 100 for item in profiles))
         self.assertTrue(any(item.lineup.role for item in profiles))
 

@@ -42,26 +42,21 @@ def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[s
                 expected_starters += len(team.get("starters") or [])
                 for starter in team.get("starters") or []:
                     displayed = starter.get("canonical") or {}
-                    sleeper = displayed.get("sleeper_projection")
-                    dtos = displayed.get("dtos_projection")
+                    canonical = displayed.get("canonical_projection")
                     matching_cards = [text for text in starter_cards
                                       if str(starter.get("player_name")) in text]
                     if not matching_cards:
                         mismatches.append("starter_card_missing")
                         continue
                     card_text = " ".join(matching_cards)
-                    if sleeper is not None and ("Sleeper Projection" not in card_text or
-                                                f"{float(sleeper):.2f}" not in card_text):
-                        mismatches.append("sleeper_projection_mismatch")
-                    if dtos is not None and ("DTOS Projection" not in card_text or
-                                             f"{float(dtos):.2f}" not in card_text):
-                        mismatches.append("dtos_projection_mismatch")
-                    if sleeper is None and dtos is None and "Projection unavailable" not in card_text:
+                    if canonical is not None and ("Sleeper canonical projection" not in card_text or
+                                                  f"{float(canonical):.2f}" not in card_text):
+                        mismatches.append("canonical_projection_mismatch")
+                    if canonical is None and "Projection unavailable" not in card_text:
                         mismatches.append("missing_projection_state_missing")
                 totals = team.get("canonical_totals") or {}
-                for source in ("sleeper_projection", "dtos_projection"):
-                    if f"{float(totals.get(source) or 0):.1f}" not in visible:
-                        mismatches.append(f"{source}_total_mismatch")
+                if f"{float(totals.get('canonical_projection') or 0):.1f}" not in visible:
+                    mismatches.append("canonical_projection_total_mismatch")
             if mismatches:
                 raise RuntimeError("Rendered matchup does not match canonical presentation")
             nodes = dom.get("nodes") or []
@@ -70,8 +65,8 @@ def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[s
                 "visible_text": visible[:20000],
                 "cards": [{"text": row.get("text"), "geometry": row.get("geometry")} for row in cards],
                 "presentation_contract": {
-                    "sleeper_projection_visible": "Sleeper Projection" in visible,
-                    "dtos_projection_visible": "DTOS Projection" in visible,
+                    "canonical_sleeper_projection_visible": "Sleeper canonical projection" in visible,
+                    "legacy_dtos_projection_visible": "DTOS Projection" in visible,
                     "starter_count": expected_starters,
                     "canonical_dom_mismatches": mismatches,
                     "team_totals_reconciled": not mismatches,

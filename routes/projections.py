@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from app_metadata import BUILD_NUMBER, VERSION
 from src.core.projection_intelligence.service import ProjectionService, provider_registry
@@ -22,9 +22,18 @@ def create_projections_router(
         return service_resolver() if service_resolver is not None else service
 
     @router.get("")
-    async def projections() -> dict[str, Any]:
+    async def projections(
+        offset: int = Query(default=0, ge=0),
+        limit: int = Query(default=100, ge=1, le=500),
+    ) -> dict[str, Any]:
         snapshot = selected_service().snapshot()
-        return envelope({"status": "ready" if snapshot else "pending", "projection": snapshot})
+        if snapshot is None:
+            return envelope({"status": "pending", "projection": None})
+        players = list(((snapshot or {}).get("players") or {}).values())
+        compact = {**snapshot, "players": players[offset:offset + limit]}
+        return envelope({"status": "ready", "projection": compact, "pagination": {
+            "offset": offset, "limit": limit, "total": len(players),
+        }})
 
     @router.get("/health")
     async def health() -> dict[str, Any]:
@@ -47,7 +56,7 @@ def create_projections_router(
 
     @router.get("/weeks/{week}")
     async def week(week: int) -> dict[str, Any]:
-        snapshot = selected_service().snapshot()
+        snapshot = selected_service().week_snapshot(week)
         players = (snapshot or {}).get("players") or {}
         if snapshot is None or snapshot.get("week") != week:
             return envelope({"status": "unavailable", "week": week, "players": []})

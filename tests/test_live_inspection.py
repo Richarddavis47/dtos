@@ -19,15 +19,13 @@ PROGRESS = {
 
 
 class LiveInspectionTests(unittest.TestCase):
-    def test_matchup_starter_card_labels_both_canonical_sources(self):
+    def test_matchup_starter_card_labels_only_canonical_sleeper(self):
         html = _starter_projection_html({
-            "sleeper_projection": 24.18, "dtos_projection": 25.73,
+            "canonical_projection": 24.18, "projection_availability": "projected",
         })
-        self.assertIn("Sleeper Projection", html)
+        self.assertIn("Sleeper canonical projection", html)
         self.assertIn("24.18", html)
-        self.assertIn("DTOS Projection", html)
-        self.assertIn("25.73", html)
-        self.assertIn("DTOS +1.55", html)
+        self.assertNotIn("DTOS Projection", html)
         missing = _starter_projection_html({})
         self.assertIn("Projection unavailable", missing)
         self.assertIn("Technical Details", missing)
@@ -70,12 +68,12 @@ class LiveInspectionTests(unittest.TestCase):
                 {"id": "11", "name": "Missing", "position": "RB", "slot": "RB", "points": 0}]},
                 {"roster_id": 2, "team": "Beta", "owner": "B", "points": 0, "lineup": []}]}}
         snapshot = {"projection_snapshot_id": "snap", "players": {
-            "10": {"sleeper_projection": 24.18, "dtos_projection": 25.73,
+            "10": {"canonical_projection": 24.18,
                    "projection_snapshot_id": "snap"}}}
         result = matchup_semantic(data, "1", snapshot)
         self.assertEqual(result["teams"][0]["displayed_totals"],
                          result["teams"][0]["canonical_totals"])
-        self.assertEqual(result["teams"][0]["coverage"]["sleeper"], "1/2")
+        self.assertEqual(result["teams"][0]["coverage"]["canonical"], "1/2")
         self.assertEqual(result["teams"][0]["starters"][0]["displayed"],
                          result["teams"][0]["starters"][0]["canonical"] |
                          {"actual_points": 4})
