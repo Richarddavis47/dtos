@@ -105,6 +105,21 @@ class FOISService:
             if self._history_loader is not None
             else {}
         )
+        placement_expected = max(
+            (int(row.get("placement_seasons_expected") or 0) for row in history.values()),
+            default=0,
+        )
+        placement_available = max(
+            (int(row.get("placement_seasons_available") or 0) for row in history.values()),
+            default=0,
+        )
+        self._status["placement_evidence"] = {
+            "available_seasons": placement_available,
+            "expected_completed_seasons": placement_expected,
+            "completeness": round(
+                placement_available / placement_expected * 100, 2,
+            ) if placement_expected else 0.0,
+        }
         permanent_checkpoints = intelligence_checkpoint_store.checkpoints(
             league_id=league_id, limit=10_000,
         )
@@ -187,6 +202,10 @@ class FOISService:
                     f"Results source: {history_source}; unsupported categories remain unavailable.",
                     f"Permanent checkpoint evidence: {checkpoint_coverage['status']} "
                     f"({checkpoint_coverage['completeness']}% definitive).",
+                    "Placement evidence: "
+                    f"{rows.get('placement_seasons_available', 0)}/"
+                    f"{rows.get('placement_seasons_expected', 0)} completed seasons; "
+                    "unavailable placement is incomplete evidence, never zero.",
                 ),
                 ownership_changes=int(rows.get("ownership_changes") or 0),
                 expected_seasons=rows.get("expected_seasons"),

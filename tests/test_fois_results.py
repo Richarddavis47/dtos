@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from routes.fois import create_fois_router
 from src.core.fois.cycles import CompetitiveCycleAnalyzer
 from src.core.fois.engine import FOISEngine
-from src.core.fois.facts import FOISFacts, SeasonResult
+from src.core.fois.facts import FOISFacts, SeasonResult, TradeFact
 from src.core.fois.history import load_results_history
 from src.core.fois.repository import FOISRepository
 from src.core.fois.service import FOISService
@@ -320,6 +320,67 @@ class FOISResultsTests(unittest.TestCase):
             self.assertTrue(result["championship"])
             self.assertEqual(result["matchup_wins"], 1)
             self.assertEqual(result["league_size"], 10)
+
+    def test_current_bracket_null_placements_remain_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = HistoricalStore(Path(directory) / "history.sqlite3")
+            common = {
+                "league_id": "league", "season": 2026, "week": None,
+                "franchise_id": None, "player_id": None,
+                "observed_at": "2026-08-15", "retrieved_at": "2026-08-15",
+                "provider": "Sleeper", "availability": "observed",
+                "confidence": 100, "calculation_method": "test",
+                "derived": False, "schema_version": "1.0",
+            }
+
+            def append(key, entity, payload, **dimensions):
+                store.append(
+                    record_key=key, entity_type=entity, source_record_id=key,
+                    payload=payload, **{**common, **dimensions},
+                )
+
+            append("season", "league_season", {
+                "total_rosters": 10, "status": "in_season",
+            })
+            append("standing", "season_standing", {
+                "roster_id": 1, "wins": 0, "losses": 0, "rank": None,
+            }, franchise_id="league:franchise:1")
+            append("identity", "franchise_identity", {
+                "sleeper_roster_id": "1", "owner_id": "owner-a",
+            }, franchise_id="league:franchise:1")
+            append("playoff", "playoff_result", {
+                "placements": {"1": None, "2": None},
+                "champion_roster_id": None,
+            })
+
+            history = load_results_history(store, "league")["1"]
+            current = history["seasons"][0]
+            self.assertIsNone(current["playoff_finish"])
+            self.assertFalse(current["championship"])
+            self.assertFalse(current["complete"])
+            self.assertEqual(history["placement_seasons_available"], 0)
+            self.assertEqual(history["placement_seasons_expected"], 0)
+
+    def test_unavailable_placement_reduces_completeness_not_score(self) -> None:
+        complete = season(2025, final=True)
+        current = season(2026, wins=0, losses=0, finish=None, playoff=False, complete=False)
+        baseline = score((complete,), expected_seasons=2)
+        mixed = score((complete, current), expected_seasons=2)
+        self.assertEqual(mixed.normalized_score, baseline.normalized_score)
+        self.assertEqual(
+            mixed.details["rebuild_summary"]["history_completeness"], 50.0,
+        )
+
+        facts = FOISFacts(
+            "league", "league:franchise:1", "owner", (current,),
+            trades=(TradeFact("trade", 2026, True),), expected_seasons=1,
+        )
+        evaluated = FOISEngine().evaluate(facts)
+        trading = next(
+            row for row in evaluated.category_scores
+            if row.category_key == "trading_asset_management"
+        )
+        self.assertIsNotNone(trading.normalized_score)
 
     def test_results_history_ignores_standing_without_roster_identity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

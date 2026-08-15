@@ -140,6 +140,7 @@ class CanonicalHistoryStore:
         league = facts.get("league") or {}
         rows = [self._record(league_id, season, "league_season", league_id, {
             "league_name": league.get("name") or "Sleeper League",
+            "status": league.get("status"),
             "total_rosters": league.get("total_rosters"),
             "settings": league.get("settings") or {},
             "scoring_settings": league.get("scoring_settings") or {},
