@@ -347,8 +347,15 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     )
     runtime_metrics.mark_background("history_backfill", "running")
     history_task = start_background_backfill(direct_fetch)
-    await asyncio.gather(history_task, return_exceptions=True)
-    runtime_metrics.mark_background("history_backfill", "complete")
+    history_results = await asyncio.gather(history_task, return_exceptions=True)
+    history_result = history_results[0]
+    if isinstance(history_result, BaseException):
+        runtime_metrics.mark_background("history_backfill", "failed")
+    else:
+        runtime_metrics.mark_background(
+            "history_backfill",
+            "complete" if history_result.get("status") == "complete" else "partial",
+        )
     await asyncio.to_thread(history_progress_contracts, LEAGUE_ID)
     projection_status = projection_service.health().get("status")
     runtime_metrics.mark_background(

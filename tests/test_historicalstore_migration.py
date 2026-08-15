@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import inspect
+import asyncio
 import os
 import subprocess
 import sys
@@ -23,6 +24,7 @@ from src.core.history_context.metadata import MinimalMetadataStore
 from src.core.history_context.season_cache import SleeperSeasonCache
 from src.core.history_context.store import CanonicalHistoryStore
 from src.core.historical_memory.graph import HistoricalAssetGraph
+from src.core.intelligence_memory.chain import SeasonChain, SeasonReference
 
 
 class HistoricalStoreMigrationTests(unittest.TestCase):
@@ -479,6 +481,117 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
             self.assertNotIn(b"players_points", raw)
             self.assertNotIn(b"provider_payload", raw)
 
+    def test_metadata_store_persists_complete_season_chain_without_payloads(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = MinimalMetadataStore(Path(directory) / "metadata.sqlite3")
+            manifest = {
+                "root_league_id": "L", "year_one": 2021,
+                "seasons": [
+                    {"season": season, "league_id": f"L{season}",
+                     "cache_status": "cached" if season < 2026 else "pending_current"}
+                    for season in range(2021, 2027)
+                ],
+            }
+            store.record_season_chain("L", manifest)
+            self.assertEqual(store.season_chain("L"), manifest)
+            raw = store.path.read_bytes()
+            self.assertNotIn(b"matchups", raw)
+            self.assertNotIn(b"transactions", raw)
+
+    def test_canonical_progress_uses_discovered_chain_not_partial_cache(self) -> None:
+        from services import history
+
+        manifest = {
+            "year_one": 2021,
+            "seasons": [
+                {"season": season, "cache_status": (
+                    "pending_current" if season == 2026
+                    else "cached" if season == 2025
+                    else "available_not_cached"
+                )}
+                for season in range(2021, 2027)
+            ],
+        }
+        with patch.object(
+            history.canonical_history_store, "season_chain", return_value=manifest,
+        ), patch.object(
+            history.canonical_history_store, "_cache_index", return_value={2025: "sum"},
+        ):
+            progress = history.canonical_history_progress("L", current_year=2026)
+        self.assertEqual(progress["configured_seasons"], list(range(2021, 2027)))
+        self.assertEqual(progress["completed_steps"], 1)
+        self.assertEqual(progress["total_steps"], 6)
+        self.assertEqual(progress["missing_seasons"], [2021, 2022, 2023, 2024])
+        self.assertEqual(progress["pending_seasons"], [2026])
+        self.assertEqual(progress["status"], "incomplete")
+
+    def test_no_manifest_progress_spans_earliest_cache_through_current_year(self) -> None:
+        from services import history
+
+        cached = {season: f"sum-{season}" for season in range(2021, 2026)}
+        with patch.object(
+            history.canonical_history_store, "season_chain", return_value=None,
+        ), patch.object(
+            history.canonical_history_store, "_cache_index", return_value=cached,
+        ):
+            progress = history.canonical_history_progress("L", current_year=2026)
+        self.assertEqual(progress["configured_seasons"], list(range(2021, 2027)))
+        self.assertEqual(progress["completed_seasons"], list(range(2021, 2026)))
+        self.assertEqual(progress["pending_seasons"], [2026])
+        self.assertEqual(progress["completed_steps"], 5)
+        self.assertEqual(progress["total_steps"], 6)
+        self.assertEqual(progress["status"], "completed_with_pending")
+
+    def test_no_manifest_gapped_cache_preserves_calendar_range(self) -> None:
+        from services import history
+
+        with patch.object(
+            history.canonical_history_store, "season_chain", return_value=None,
+        ), patch.object(
+            history.canonical_history_store, "_cache_index",
+            return_value={2021: "a", 2023: "b", 2025: "c"},
+        ):
+            progress = history.canonical_history_progress("L", current_year=2026)
+        self.assertEqual(progress["configured_seasons"], list(range(2021, 2027)))
+        self.assertEqual(progress["completed_seasons"], [2021, 2023, 2025])
+        self.assertEqual(progress["missing_seasons"], [2022, 2024])
+        self.assertEqual(progress["pending_seasons"], [2026])
+
+    def test_manifest_universe_precedes_older_cached_rows(self) -> None:
+        from services import history
+
+        manifest = {"seasons": [
+            {"season": season, "cache_status": (
+                "pending_current" if season == 2026 else "cached"
+            )}
+            for season in range(2023, 2027)
+        ]}
+        cached = {season: f"sum-{season}" for season in range(2021, 2026)}
+        with patch.object(
+            history.canonical_history_store, "season_chain", return_value=manifest,
+        ), patch.object(
+            history.canonical_history_store, "_cache_index", return_value=cached,
+        ):
+            progress = history.canonical_history_progress("L", current_year=2026)
+        self.assertEqual(progress["configured_seasons"], [2023, 2024, 2025, 2026])
+        self.assertEqual(progress["completed_seasons"], [2023, 2024, 2025])
+        self.assertEqual(progress["pending_seasons"], [2026])
+        self.assertEqual(progress["status"], "completed_with_pending")
+
+    def test_empty_cache_without_manifest_uses_bounded_current_season(self) -> None:
+        from services import history
+
+        with patch.object(
+            history.canonical_history_store, "season_chain", return_value=None,
+        ), patch.object(
+            history.canonical_history_store, "_cache_index", return_value={},
+        ):
+            progress = history.canonical_history_progress("L", current_year=2026)
+        self.assertEqual(progress["configured_seasons"], [2026])
+        self.assertEqual(progress["pending_seasons"], [2026])
+        self.assertEqual(progress["completed_steps"], 0)
+        self.assertEqual(progress["total_steps"], 1)
+
     def test_plain_legacy_metadata_uuid_is_normalized_without_archive_access(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             store = MinimalMetadataStore(Path(directory) / "metadata.sqlite3")
@@ -504,6 +617,84 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
             self.assertNotEqual(cache.path("A", 2025), cache.path("B", 2025))
             self.assertEqual(cache.read("A", 2025).facts["league"]["name"], "Alpha")
             self.assertEqual(cache.read("B", 2025).facts["league"]["name"], "Beta")
+
+    def test_chain_health_distinguishes_cached_missing_and_current(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            cache = SleeperSeasonCache(Path(directory))
+            cache.write(cache.normalize("L", 2025, {
+                "league": {"league_id": "L", "season": "2025"},
+            }))
+            manifest = {"seasons": [
+                {"season": 2024, "cache_status": "available_not_cached"},
+                {"season": 2025, "cache_status": "cached"},
+                {"season": 2026, "cache_status": "pending_current"},
+            ]}
+            health = cache.health("L", manifest)["league"]
+            self.assertEqual(health["cached_seasons"], [2025])
+            self.assertEqual(health["available_not_cached"], [2024])
+            self.assertEqual(health["pending_current_seasons"], [2026])
+            self.assertGreater(health["storage_estimate"]["projected_complete_bytes"], 0)
+
+    def test_backfill_records_full_chain_and_continues_after_one_season_failure(self) -> None:
+        from services import history
+
+        class Source:
+            async def discover(self, league_id: str) -> SeasonChain:
+                rows = tuple(
+                    SeasonReference(
+                        f"L{season}", season,
+                        f"L{season - 1}" if season > 2021 else None,
+                        "available", "league_object",
+                    )
+                    for season in range(2026, 2020, -1)
+                )
+                return SeasonChain(league_id, rows, True, "provider_chain_terminated")
+
+            async def completed_season_facts(
+                self, league_id: str, season: int,
+            ) -> dict[str, object]:
+                if season == 2024:
+                    raise OSError("fixture provider failure")
+                return {"league": {"league_id": league_id, "season": str(season)}}
+
+        async def run() -> dict[str, object]:
+            history._BACKFILL_TASK = None
+            return await history.start_background_backfill(None)
+
+        with tempfile.TemporaryDirectory() as directory:
+            cache = SleeperSeasonCache(Path(directory) / "cache")
+            metadata = MinimalMetadataStore(Path(directory) / "metadata.sqlite3")
+            with patch.object(history, "LEAGUE_ID", "L"), patch.object(
+                history, "sleeper_season_cache", cache,
+            ), patch.object(
+                history, "minimal_metadata_store", metadata,
+            ), patch(
+                "src.core.intelligence_memory.sleeper_source.SleeperHistoricalSource",
+                Source,
+            ):
+                result = asyncio.run(run())
+            self.assertEqual(result["status"], "partial")
+            self.assertEqual(result["unavailable_seasons"], [2024])
+            self.assertEqual(cache.available_seasons("L"), (2021, 2022, 2023, 2025))
+            manifest = metadata.season_chain("L")
+            self.assertEqual(
+                [row["season"] for row in manifest["seasons"]],
+                [2026, 2025, 2024, 2023, 2022, 2021],
+            )
+            states = {row["season"]: row["cache_status"] for row in manifest["seasons"]}
+            self.assertEqual(states[2026], "pending_current")
+            self.assertEqual(states[2024], "unavailable")
+            self.assertEqual(states[2021], "cached")
+
+    def test_historical_cache_is_a_supported_market_blocking_phase(self) -> None:
+        from src.platform.lifecycle import LifecycleCoordinator
+
+        coordinator = LifecycleCoordinator()
+        epoch = coordinator.begin_startup("fixture")
+        coordinator.complete_startup(epoch, "fixture ready")
+        with coordinator.phase("historical_cache"):
+            self.assertFalse(coordinator.market_build_allowed())
+        self.assertTrue(coordinator.market_build_allowed())
 
 
 if __name__ == "__main__":

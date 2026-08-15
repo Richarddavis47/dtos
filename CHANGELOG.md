@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.26 - Sleeper Season Cache Chain Restoration
+
+- Persist the complete provider-discovered dynasty chain before cache hydration,
+  so partial cache state cannot redefine a league's historical beginning.
+- Hydrate completed seasons independently and retain explicit cached,
+  unavailable, and current-season lifecycle states with bounded diagnostics.
+- Report historical background failures truthfully while preserving zero legacy
+  HistoricalStore reads and writes and leaving the legacy archive untouched.
+
 ## v1.10.25 - FOIS Canonical History Null-Placement Correction
 
 - Treat unresolved current-season playoff bracket participants as unavailable placement evidence instead of coercing them to integers.
