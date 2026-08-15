@@ -39,6 +39,7 @@ from src.core.history_context import (
     canonical_history_store as historical_store,
     minimal_metadata_store,
 )
+from src.core.history_context.guard import legacy_access_guard
 from src.platform.lifecycle import LifecycleCoordinator, lifecycle_coordinator
 from tools.validation.generate_sanitized_market_fixture import (
     material_market_fixture_change,
@@ -753,6 +754,7 @@ async def fixture_contract() -> dict[str, Any]:
                 historical_store.path,
             )
         ),
+        "legacy_historical_store": legacy_access_guard.health(),
     }
 
 

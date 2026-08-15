@@ -17,6 +17,7 @@ from contextlib import closing
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from uuid import uuid4
 from pathlib import Path
+from typing import Callable
 from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
@@ -260,7 +261,9 @@ def _warm_historical_archive() -> dict[str, object]:
     }
 
 
-def _retire_validation_archive(*, warm: bool) -> dict[str, object]:
+def _retire_validation_archive(
+    *, warm: bool, memory_observer: Callable[[str], dict[str, object]] | None = None,
+) -> dict[str, object]:
     """Remove the isolated legacy fixture before the application starts."""
     global _RETIRED_ARCHIVE_SIZE
     archive = _validation_archive().resolve()
@@ -270,16 +273,39 @@ def _retire_validation_archive(*, warm: bool) -> dict[str, object]:
     if not archive.is_file():
         raise AssertionError("retirement rehearsal archive is unavailable")
     _RETIRED_ARCHIVE_SIZE = archive.stat().st_size
-    scan = _warm_historical_archive() if warm else None
-    archive.unlink()
-    for suffix in ("-wal", "-shm", "-journal"):
-        Path(f"{archive}{suffix}").unlink(missing_ok=True)
+    observe = memory_observer or _memory_evidence
+    before = None
+    scan = None
+    after = None
+    threshold = _archive_material_threshold(_RETIRED_ARCHIVE_SIZE)
+    try:
+        before = observe("archive_pressure_before") if warm else None
+        scan = _warm_historical_archive() if warm else None
+        after = observe("archive_pressure_pre_unlink") if warm else None
+    finally:
+        archive.unlink(missing_ok=True)
+        for suffix in ("-wal", "-shm", "-journal"):
+            Path(f"{archive}{suffix}").unlink(missing_ok=True)
     if configured.exists() or archive.exists():
         raise AssertionError("legacy fixture remained after retirement rehearsal")
+    inactive = after.get("inactive_file_bytes") if isinstance(after, dict) else None
+    pressure_passed = (
+        not warm or (
+            isinstance(inactive, int)
+            and inactive >= threshold
+            and bool(scan and int(scan.get("record_count") or 0) > 0)
+        )
+    )
     return {
         "status": "retired_before_startup",
         "bytes_removed": _RETIRED_ARCHIVE_SIZE,
         "archive_scan": scan,
+        "pre_unlink_pressure": {
+            "before": before,
+            "after": after,
+            "material_threshold_bytes": threshold,
+            "passed": pressure_passed,
+        } if warm else None,
         "configured_legacy_file_present": configured.exists(),
         "rehearsal_archive_present": archive.exists(),
     }
@@ -423,6 +449,24 @@ def _archive_cache_retained(snapshot: dict[str, object], threshold: int) -> bool
         snapshot.get("accounting_mode") == "cgroup_working_set"
         and isinstance(snapshot.get("inactive_file_bytes"), int)
         and int(snapshot["inactive_file_bytes"]) >= threshold
+    )
+
+
+def _post_retirement_coverage_valid(
+    status: int, coverage: dict[str, object], *, expected_records: int = 30_726,
+) -> bool:
+    progress = coverage.get("canonical_progress") or {}
+    counts = coverage.get("counts_by_season") or {}
+    records = sum(
+        int((row or {}).get("player_week") or 0)
+        for row in counts.values() if isinstance(row, dict)
+    ) if isinstance(counts, dict) else 0
+    return (
+        status == 200
+        and records == expected_records
+        and progress.get("status") == "completed_with_pending"
+        and int(progress.get("completed_steps") or 0) == 5
+        and int(progress.get("total_steps") or 0) == 6
     )
 
 
@@ -735,6 +779,13 @@ def _application_fixture_contract(expected: dict[str, object]) -> dict[str, obje
             raise AssertionError(f"application fixture contract failed: {name}")
     if actual.get("legacy_history_database_exists") is not False:
         raise AssertionError("application recreated the retired HistoricalStore")
+    legacy = actual.get("legacy_historical_store") or {}
+    if legacy.get("historicalstore_retired") is not True:
+        raise AssertionError("application retirement health is unavailable")
+    if any(int(legacy.get(name) or 0) for name in (
+        "legacy_create_attempts", "legacy_read_attempts", "legacy_write_attempts",
+    )):
+        raise AssertionError("application attempted retired HistoricalStore access")
     return actual
 
 
@@ -1731,9 +1782,16 @@ def main() -> int:
     memory_evidence.append(_memory_evidence("container_startup"))
     try:
         with log_path.open("w", encoding="utf-8") as log, Monitor() as monitor:
+            pressure = retirement_rehearsal.get("pre_unlink_pressure")
+            if archive_warmed and not (
+                isinstance(pressure, dict) and pressure.get("passed") is True
+            ):
+                raise AssertionError(
+                    "pre-unlink archive pressure did not meet the fixture-derived threshold"
+                )
             process = _start_server(log, evidence=startup_evidence)
             ready_ms = _wait_ready()
-            _application_fixture_contract(fixture_contract)
+            application_contract = _application_fixture_contract(fixture_contract)
             memory_evidence.append(_memory_evidence("fixture_ready"))
             startup_snapshot = _memory_evidence("application_startup")
             memory_evidence.append(startup_snapshot)
@@ -1757,7 +1815,6 @@ def main() -> int:
             if archive_warmed:
                 archive_before = _memory_evidence("before_coverage")
                 memory_evidence.append(archive_before)
-                archive_scan = retirement_rehearsal.get("archive_scan")
                 coverage_status, coverage_body, coverage_ms = _request(
                     "/api/history/coverage",
                 )
@@ -1767,13 +1824,24 @@ def main() -> int:
                     coverage = json.loads(coverage_body)
                 except (TypeError, ValueError, json.JSONDecodeError):
                     coverage = {}
-                phases = summary["phases"]
-                assert isinstance(phases, dict)
-                _record_archive_assessment(
-                    phases, archive_before, archive_after,
-                    coverage_status=coverage_status, coverage=coverage,
-                    duration_ms=coverage_ms, archive_scan=archive_scan,
+                coverage_valid = _post_retirement_coverage_valid(
+                    coverage_status, coverage,
                 )
+                summary["phases"]["post_unlink_product_validation"] = {
+                    "timestamp": time.time(), "duration_ms": round(coverage_ms, 3),
+                    "before": archive_before, "after": archive_after,
+                    "configured_legacy_file_present": Path(
+                        os.environ["DTOS_HISTORY_DB_FILE"]
+                    ).exists(),
+                    "validation_archive_present": _validation_archive().exists(),
+                    "legacy_historical_store": application_contract.get(
+                        "legacy_historical_store"
+                    ),
+                    "coverage_valid": coverage_valid,
+                    "canonical_progress": coverage.get("canonical_progress"),
+                }
+                if not coverage_valid:
+                    raise AssertionError("post-unlink canonical coverage contract failed")
             before_cold = _cgroup("memory.current")
             try:
                 health, build_ms, attempts, responsiveness = _cold_build()
@@ -1866,15 +1934,6 @@ def main() -> int:
             replacement_started = time.perf_counter()
             before_replacement = _memory_evidence("before_replacement")
             memory_evidence.append(before_replacement)
-            if archive_warmed and not _archive_cache_retained(
-                before_replacement,
-                int((summary["phases"]["archive_warming"])["assessment"][
-                    "material_threshold_bytes"
-                ]),
-            ):
-                raise AssertionError(
-                    "archive cache was not retained immediately before replacement"
-                )
             try:
                 replacement, replacement_profile = _replacement_profile(
                     first_generation, first_build_count, baseline_body,
