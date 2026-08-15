@@ -324,6 +324,36 @@ class LeagueConsumerContextTests(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertIsNone(manager.resident("200"))
 
+    def test_static_resource_measurement_is_not_parsed_as_a_league(self) -> None:
+        manager = LeagueRuntimeManager(max_warm=2, hydrator=None)
+        application = self._application(manager)
+        application.include_router(create_league_runtime_router(
+            manager=manager,
+            resource_measurement=lambda: {
+                "status": "complete",
+                "legacy_historical_store": {
+                    "legacy_read_attempts": 0,
+                    "legacy_write_attempts": 0,
+                },
+            },
+        ))
+        with TestClient(application) as client:
+            response = client.post("/api/leagues/resources/measure")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "complete")
+        self.assertEqual(
+            response.json()["legacy_historical_store"]["legacy_read_attempts"], 0,
+        )
+        self.assertEqual(manager.hydrations, 0)
+
+    def test_only_runtime_post_is_a_path_selected_league_request(self) -> None:
+        from src.platform.league_context import _path_league
+
+        self.assertEqual(_path_league("/api/leagues/200/runtime", "POST"), "200")
+        self.assertIsNone(_path_league("/api/leagues/resources/measure", "POST"))
+        self.assertIsNone(_path_league("/api/leagues/resources", "POST"))
+        self.assertIsNone(_path_league("/api/leagues/runtime", "POST"))
+
 class LeagueRuntimeStressTests(unittest.IsolatedAsyncioTestCase):
     async def test_thirty_leagues_never_exceed_bound(self) -> None:
         async def hydrate(runtime):

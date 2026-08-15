@@ -52,7 +52,12 @@ def _path_league(path: str, method: str) -> str | None:
     parts = path.strip("/").split("/")
     if len(parts) >= 4 and parts[:3] == ["api", "fois", "leagues"]:
         return parts[3]
-    if len(parts) >= 3 and parts[:2] == ["api", "leagues"] and method == "POST":
+    if (
+        len(parts) == 4
+        and parts[:2] == ["api", "leagues"]
+        and parts[3] == "runtime"
+        and method == "POST"
+    ):
         return parts[2]
     return None
 
