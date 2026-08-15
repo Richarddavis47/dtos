@@ -965,7 +965,12 @@ def canonical_history_progress(
             int(row["season"]) for row in manifest.get("seasons", [])
             if row.get("season") is not None
         })
-        seasons = tuple(discovered or cached or [selected_year])
+        if discovered:
+            seasons = tuple(discovered)
+        elif cached:
+            seasons = tuple(range(min(cached), selected_year + 1))
+        else:
+            seasons = (selected_year,)
         completed_seasons = [
             season for season in seasons if season in cached and season < selected_year
         ]

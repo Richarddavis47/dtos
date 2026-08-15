@@ -525,6 +525,73 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
         self.assertEqual(progress["pending_seasons"], [2026])
         self.assertEqual(progress["status"], "incomplete")
 
+    def test_no_manifest_progress_spans_earliest_cache_through_current_year(self) -> None:
+        from services import history
+
+        cached = {season: f"sum-{season}" for season in range(2021, 2026)}
+        with patch.object(
+            history.canonical_history_store, "season_chain", return_value=None,
+        ), patch.object(
+            history.canonical_history_store, "_cache_index", return_value=cached,
+        ):
+            progress = history.canonical_history_progress("L", current_year=2026)
+        self.assertEqual(progress["configured_seasons"], list(range(2021, 2027)))
+        self.assertEqual(progress["completed_seasons"], list(range(2021, 2026)))
+        self.assertEqual(progress["pending_seasons"], [2026])
+        self.assertEqual(progress["completed_steps"], 5)
+        self.assertEqual(progress["total_steps"], 6)
+        self.assertEqual(progress["status"], "completed_with_pending")
+
+    def test_no_manifest_gapped_cache_preserves_calendar_range(self) -> None:
+        from services import history
+
+        with patch.object(
+            history.canonical_history_store, "season_chain", return_value=None,
+        ), patch.object(
+            history.canonical_history_store, "_cache_index",
+            return_value={2021: "a", 2023: "b", 2025: "c"},
+        ):
+            progress = history.canonical_history_progress("L", current_year=2026)
+        self.assertEqual(progress["configured_seasons"], list(range(2021, 2027)))
+        self.assertEqual(progress["completed_seasons"], [2021, 2023, 2025])
+        self.assertEqual(progress["missing_seasons"], [2022, 2024])
+        self.assertEqual(progress["pending_seasons"], [2026])
+
+    def test_manifest_universe_precedes_older_cached_rows(self) -> None:
+        from services import history
+
+        manifest = {"seasons": [
+            {"season": season, "cache_status": (
+                "pending_current" if season == 2026 else "cached"
+            )}
+            for season in range(2023, 2027)
+        ]}
+        cached = {season: f"sum-{season}" for season in range(2021, 2026)}
+        with patch.object(
+            history.canonical_history_store, "season_chain", return_value=manifest,
+        ), patch.object(
+            history.canonical_history_store, "_cache_index", return_value=cached,
+        ):
+            progress = history.canonical_history_progress("L", current_year=2026)
+        self.assertEqual(progress["configured_seasons"], [2023, 2024, 2025, 2026])
+        self.assertEqual(progress["completed_seasons"], [2023, 2024, 2025])
+        self.assertEqual(progress["pending_seasons"], [2026])
+        self.assertEqual(progress["status"], "completed_with_pending")
+
+    def test_empty_cache_without_manifest_uses_bounded_current_season(self) -> None:
+        from services import history
+
+        with patch.object(
+            history.canonical_history_store, "season_chain", return_value=None,
+        ), patch.object(
+            history.canonical_history_store, "_cache_index", return_value={},
+        ):
+            progress = history.canonical_history_progress("L", current_year=2026)
+        self.assertEqual(progress["configured_seasons"], [2026])
+        self.assertEqual(progress["pending_seasons"], [2026])
+        self.assertEqual(progress["completed_steps"], 0)
+        self.assertEqual(progress["total_steps"], 1)
+
     def test_plain_legacy_metadata_uuid_is_normalized_without_archive_access(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             store = MinimalMetadataStore(Path(directory) / "metadata.sqlite3")
