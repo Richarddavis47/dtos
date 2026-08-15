@@ -212,18 +212,29 @@ def _memory_state() -> dict[str, object]:
     }
 
 
+_RETIRED_ARCHIVE_SIZE = 0
+
+
+def _validation_archive() -> Path:
+    return Path(os.environ.get(
+        "DTOS_VALIDATION_LEGACY_ARCHIVE_FILE",
+        str(FIXTURE / "retirement-rehearsal.sqlite3"),
+    ))
+
+
 def _archive_size() -> int:
+    if _RETIRED_ARCHIVE_SIZE:
+        return _RETIRED_ARCHIVE_SIZE
     configured = Path(os.environ.get(
-        "DTOS_HISTORY_DB_FILE", str(FIXTURE / "dtos_history.sqlite3"),
+        "DTOS_VALIDATION_LEGACY_ARCHIVE_FILE",
+        str(FIXTURE / "retirement-rehearsal.sqlite3"),
     ))
     return configured.stat().st_size if configured.is_file() else 0
 
 
 def _warm_historical_archive() -> dict[str, object]:
     """Read real historical payload pages without retaining decoded records."""
-    configured = Path(os.environ.get(
-        "DTOS_HISTORY_DB_FILE", str(FIXTURE / "dtos_history.sqlite3"),
-    ))
+    configured = _validation_archive()
     started = time.perf_counter()
     with closing(sqlite3.connect(
         f"file:{configured.as_posix()}?mode=ro", uri=True,
@@ -246,6 +257,31 @@ def _warm_historical_archive() -> dict[str, object]:
         "database_pages": pages,
         "page_size_bytes": page_size,
         "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+    }
+
+
+def _retire_validation_archive(*, warm: bool) -> dict[str, object]:
+    """Remove the isolated legacy fixture before the application starts."""
+    global _RETIRED_ARCHIVE_SIZE
+    archive = _validation_archive().resolve()
+    configured = Path(os.environ["DTOS_HISTORY_DB_FILE"]).resolve()
+    if archive == configured:
+        raise AssertionError("retirement rehearsal targets configured application storage")
+    if not archive.is_file():
+        raise AssertionError("retirement rehearsal archive is unavailable")
+    _RETIRED_ARCHIVE_SIZE = archive.stat().st_size
+    scan = _warm_historical_archive() if warm else None
+    archive.unlink()
+    for suffix in ("-wal", "-shm", "-journal"):
+        Path(f"{archive}{suffix}").unlink(missing_ok=True)
+    if configured.exists() or archive.exists():
+        raise AssertionError("legacy fixture remained after retirement rehearsal")
+    return {
+        "status": "retired_before_startup",
+        "bytes_removed": _RETIRED_ARCHIVE_SIZE,
+        "archive_scan": scan,
+        "configured_legacy_file_present": configured.exists(),
+        "rehearsal_archive_present": archive.exists(),
     }
 
 
@@ -640,23 +676,15 @@ def _configured_fixture_contract() -> dict[str, object]:
         resolved[name] = path
     if resolved["DTOS_HISTORY_STORAGE_ROOT"] != root:
         raise AssertionError("history storage root does not resolve to fixture root")
-    for name in (
-        "DTOS_CACHE_FILE", "DTOS_HISTORY_DB_FILE", "DTOS_METADATA_DB_FILE",
-    ):
+    for name in ("DTOS_CACHE_FILE", "DTOS_METADATA_DB_FILE"):
         if not resolved[name].is_file():
             raise AssertionError(f"configured fixture file is unavailable: {name}")
+    if resolved["DTOS_HISTORY_DB_FILE"].exists():
+        raise AssertionError("retired HistoricalStore was recreated before startup")
     league_id = os.environ.get("SLEEPER_LEAGUE_ID")
     if league_id != "1804000000000000000":
         raise AssertionError("configured fixture league identity is unavailable")
-    history_stat = resolved["DTOS_HISTORY_DB_FILE"].stat()
     metadata_stat = resolved["DTOS_METADATA_DB_FILE"].stat()
-    connection = sqlite3.connect(resolved["DTOS_HISTORY_DB_FILE"])
-    try:
-        database_uuid = str(connection.execute(
-            "SELECT value FROM database_metadata WHERE key='database_uuid'",
-        ).fetchone()[0])
-    finally:
-        connection.close()
     metadata_connection = sqlite3.connect(resolved["DTOS_METADATA_DB_FILE"])
     try:
         metadata_uuid = json.loads(str(metadata_connection.execute(
@@ -677,10 +705,9 @@ def _configured_fixture_contract() -> dict[str, object]:
         "database_identity_digest": hashlib.sha256(
             json.dumps(metadata_uuid).encode()
         ).hexdigest(),
-        "legacy_database_identity_digest": hashlib.sha256(
-            json.dumps(database_uuid).encode()
-        ).hexdigest(),
-        "legacy_history_database_size": history_stat.st_size,
+        "legacy_database_identity_digest": None,
+        "legacy_history_database_size": 0,
+        "historicalstore_retired": True,
         "metadata_database_size": metadata_stat.st_size,
     }
 
@@ -703,12 +730,11 @@ def _application_fixture_contract(expected: dict[str, object]) -> dict[str, obje
     ):
         if actual.get(name) != expected.get(name):
             raise AssertionError(f"application fixture identity mismatch: {name}")
-    for name in (
-        "cache_exists", "legacy_history_database_exists", "metadata_database_exists",
-        "active_store_matches", "contained",
-    ):
+    for name in ("cache_exists", "metadata_database_exists", "active_store_matches", "contained"):
         if actual.get(name) is not True:
             raise AssertionError(f"application fixture contract failed: {name}")
+    if actual.get("legacy_history_database_exists") is not False:
+        raise AssertionError("application recreated the retired HistoricalStore")
     return actual
 
 
@@ -1669,9 +1695,10 @@ def main() -> int:
     if not (CGROUP / "memory.peak").is_file():
         raise RuntimeError("memory.peak is required for this validation")
 
-    fixture_contract = _configured_fixture_contract()
     archive_warmed = os.environ.get("DTOS_ARCHIVE_WARMED") == "1"
     combined_read = os.environ.get("DTOS_COMBINED_READ") == "1"
+    retirement_rehearsal = _retire_validation_archive(warm=archive_warmed)
+    fixture_contract = _configured_fixture_contract()
     summary: dict[str, object] = {
         "schema": "dtos-linux-market-memory-v1",
         "memory_max": memory_max,
@@ -1685,7 +1712,7 @@ def main() -> int:
             "combined_read" if combined_read else
             "archive_warmed" if archive_warmed else "ordinary"
         ),
-        "phases": {},
+        "phases": {"historicalstore_retirement": retirement_rehearsal},
         "passed": False,
         "completed": False,
         "exit_code": 1,
@@ -1730,7 +1757,7 @@ def main() -> int:
             if archive_warmed:
                 archive_before = _memory_evidence("before_coverage")
                 memory_evidence.append(archive_before)
-                archive_scan = _warm_historical_archive()
+                archive_scan = retirement_rehearsal.get("archive_scan")
                 coverage_status, coverage_body, coverage_ms = _request(
                     "/api/history/coverage",
                 )

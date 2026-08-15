@@ -14,7 +14,7 @@ and system metadata. These stores have deliberately different retention rules.
 | Minimal Metadata Store | DTOS | Permanent and small | Cache checkpoints, sync generations, lifecycle and compatibility audit |
 | Projection Cache | Provider cache | Disposable | Canonical Sleeper projection evidence |
 | Asset Market Artifact | Operational | Bounded and replaceable | Current market read model and indexes |
-| Legacy HistoricalStore | Legacy | Physically preserved, dormant | Deprecated archive awaiting v1.10.24 retirement |
+| Legacy HistoricalStore | Legacy | Physically retired in v1.10.27 | Fail-closed path guard; no recreation |
 
 The Sleeper Season Cache is not permanent Historical Memory. IntelligenceCheckpoint
 does not own provider history. Missing upstream history is reported as partial or

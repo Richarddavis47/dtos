@@ -1096,3 +1096,16 @@ Health metrics distinguish rebuild requests, no-op admission skips, and actual
 constructions while preserving existing counters and durable behavior.
 
 ## Previous release
+# DTOS v1.10.27 - HistoricalStore Physical Retirement & Disk Reclamation
+
+DTOS v1.10.27 physically retires the dormant legacy HistoricalStore after the
+Sleeper-backed history architecture proved zero production reads and writes. The
+configured legacy path now fails closed on any constructor attempt and reports
+bounded retirement diagnostics. A schema-verified retirement command removes only
+the proven legacy database and SQLite sidecars after an explicit zero-access gate;
+current season caches, intelligence checkpoints, metadata, projections, and Asset
+Market artifacts remain unchanged.
+
+The release does not redesign history, FOIS, projections, Asset Market, or
+checkpoint semantics. Canonical Day Traders history remains five completed seasons
+plus the pending 2026 season.

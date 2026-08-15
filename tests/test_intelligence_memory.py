@@ -377,7 +377,7 @@ class IntelligenceMemoryApiTests(unittest.TestCase):
         self.assertEqual(payload["checkpoint_store"]["ownership"], "permanent_dtos_intelligence")
         self.assertEqual(payload["provider_cache"]["ownership"], "disposable_provider_cache")
         self.assertFalse(payload["automatic_backfill"])
-        self.assertEqual(payload["legacy_historical_memory"], "preserved_no_destructive_migration")
+        self.assertEqual(payload["legacy_historical_memory"], "physically_retired_fail_closed")
 
     def test_history_coverage_declares_no_hidden_fallback(self) -> None:
         app = FastAPI()

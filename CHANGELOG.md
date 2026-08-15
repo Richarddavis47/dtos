@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.10.27 - HistoricalStore Physical Retirement & Disk Reclamation
+
+- Added a path-specific fail-closed retirement guard that prevents the configured
+  legacy HistoricalStore from being opened or recreated while preserving isolated
+  legacy fixtures and migration tests.
+- Added bounded retirement observability for file presence, read/write/create
+  attempts, caller identity, retirement version, and retirement timestamp.
+- Added a schema-verified physical-retirement utility that removes only the legacy
+  database and its SQLite sidecars after the production zero-access gate passes;
+  it never vacuums, copies, exports, or rewrites the archive.
+- Added no-recreation and production-shaped retirement rehearsal coverage.
+
 ## v1.10.26 - Sleeper Season Cache Chain Restoration
 
 - Persist the complete provider-discovered dynasty chain before cache hydration,

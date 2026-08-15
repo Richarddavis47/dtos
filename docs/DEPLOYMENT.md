@@ -6,7 +6,7 @@
 python -m uvicorn dtos_app:app --host 0.0.0.0 --port ${PORT:-8000}
 ```
 
-Install from `requirements.txt`, configure environment variables, provide writable locations for `DTOS_CACHE_FILE` and `DTOS_HISTORY_DB_FILE`, and run the complete validator before deployment. Use persistent storage for `DTOS_HISTORY_DB_FILE` when historical evidence must survive instance replacement. Deploy one process unless cache/database storage and synchronization coordination are externalized; background sync and import coordination are process-local.
+Install from `requirements.txt`, configure environment variables, provide writable locations for current cache, checkpoint, metadata, projection, and artifact storage, and run the complete validator before deployment. `DTOS_HISTORY_DB_FILE` identifies the physically retired legacy archive only; the application fails closed rather than recreating it. Deploy one process unless cache/database storage and synchronization coordination are externalized; background sync and import coordination are process-local.
 
 ## Health checks
 

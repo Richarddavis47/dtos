@@ -43,6 +43,7 @@ jobs:
             --env DTOS_PRODUCTION_SHAPED_FIXTURE=${{ matrix.scenario != 'ordinary' && '1' || '0' }} \
             --env DTOS_CACHE_FILE=/fixture/dtos_cache.json \
             --env DTOS_HISTORY_DB_FILE=/fixture/dtos_history.sqlite3 \
+            --env DTOS_VALIDATION_LEGACY_ARCHIVE_FILE=/fixture/retirement-rehearsal.sqlite3 \
             --env DTOS_METADATA_DB_FILE=/fixture/dtos_metadata.sqlite3 \
             --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
             --env DTOS_BACKGROUND_START_DELAY=0 \

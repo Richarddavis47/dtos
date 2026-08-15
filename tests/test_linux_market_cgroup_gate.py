@@ -48,6 +48,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _normalized_headers,
     _restart_reuse,
     _record_archive_assessment,
+    _retire_validation_archive,
     _pad_to_production_baseline,
     _start_server,
     _startup_memory_within_limit,
@@ -272,7 +273,9 @@ class ArchiveCacheValidationTests(unittest.TestCase):
                     [("payload",), ("evidence",)],
                 )
                 connection.commit()
-            with patch.dict(os.environ, {"DTOS_HISTORY_DB_FILE": str(path)}):
+            with patch.dict(os.environ, {
+                "DTOS_VALIDATION_LEGACY_ARCHIVE_FILE": str(path),
+            }):
                 result = _warm_historical_archive()
         self.assertEqual(result["record_count"], 2)
         self.assertGreater(result["payload_bytes_scanned"], 0)
@@ -605,7 +608,6 @@ class RestartReuseValidationTests(unittest.TestCase):
             history = root / "dtos_history.sqlite3"
             metadata = root / "dtos_metadata.sqlite3"
             cache.write_text("{}", encoding="utf-8")
-            HistoricalStore(history)
             MinimalMetadataStore(metadata)
             environment = {
                 "DTOS_CACHE_FILE": str(cache),
@@ -623,6 +625,28 @@ class RestartReuseValidationTests(unittest.TestCase):
         self.assertEqual(contract["metadata_database"], "dtos_metadata.sqlite3")
         self.assertTrue(contract["contained"])
         self.assertEqual(contract["league_id"], "1804000000000000000")
+        self.assertTrue(contract["historicalstore_retired"])
+        self.assertEqual(contract["legacy_history_database_size"], 0)
+
+    def test_retirement_rehearsal_removes_archive_before_startup(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / "retirement-rehearsal.sqlite3"
+            configured = root / "dtos_history.sqlite3"
+            with closing(sqlite3.connect(archive)) as connection:
+                connection.execute("CREATE TABLE historical_records(payload TEXT)")
+                connection.execute("INSERT INTO historical_records VALUES ('evidence')")
+                connection.commit()
+            environment = {
+                "DTOS_VALIDATION_LEGACY_ARCHIVE_FILE": str(archive),
+                "DTOS_HISTORY_DB_FILE": str(configured),
+            }
+            with patch.dict(os.environ, environment, clear=False):
+                result = _retire_validation_archive(warm=True)
+        self.assertEqual(result["status"], "retired_before_startup")
+        self.assertFalse(result["configured_legacy_file_present"])
+        self.assertFalse(result["rehearsal_archive_present"])
+        self.assertEqual(result["archive_scan"]["record_count"], 1)
 
     def test_missing_explicit_fixture_setting_cannot_use_default(self) -> None:
         with patch.dict(os.environ, {}, clear=True), self.assertRaisesRegex(
@@ -638,12 +662,12 @@ class RestartReuseValidationTests(unittest.TestCase):
             "league_id": "1804000000000000000",
             "database_identity_digest": "sanitized-digest",
             "file_identity_digest": "sanitized-file-digest",
-            "legacy_history_database_size": 1024,
+            "legacy_history_database_size": 0,
             "metadata_database_size": 20480,
         }
         actual = {
             **expected, "active_store_database": "dtos_metadata.sqlite3",
-            "cache_exists": True, "legacy_history_database_exists": True,
+            "cache_exists": True, "legacy_history_database_exists": False,
             "metadata_database_exists": True,
             "active_store_matches": True,
             "cache_league_id": "1804000000000000000",
