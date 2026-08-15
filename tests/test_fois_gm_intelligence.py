@@ -92,6 +92,31 @@ class FOISGeneralManagerIntelligenceTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(repository.count(), 1)
             self.assertEqual(len(repository.timeline("league", "league:gm:owner")), 1)
 
+    async def test_generation_reports_bounded_placement_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+            os.environ, {"DTOS_FOIS_ENABLED": "1"},
+        ):
+            service = FOISService(FOISRepository(Path(directory) / "fois.sqlite3"))
+            data = {
+                "league": {"league_id": "league", "season": "2026"},
+                "teams": [{"roster_id": 1, "owner_id": "owner", "players": []}],
+                "fois_history": {
+                    "1": {
+                        "seasons": [row.__dict__ for row in seasons(2)],
+                        "placement_seasons_available": 1,
+                        "placement_seasons_expected": 2,
+                    },
+                },
+            }
+
+            await service.generate(data)
+
+            self.assertEqual(service.status()["placement_evidence"], {
+                "available_seasons": 1,
+                "expected_completed_seasons": 2,
+                "completeness": 50.0,
+            })
+
     def test_read_apis_expose_canonical_metadata_and_categories(self) -> None:
         with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {"DTOS_FOIS_ENABLED": "1"}):
             repository = FOISRepository(Path(directory) / "fois.sqlite3")
@@ -101,8 +126,8 @@ class FOISGeneralManagerIntelligenceTests(unittest.IsolatedAsyncioTestCase):
             client = TestClient(app)
             root = client.get("/api/fois")
             self.assertEqual(root.status_code, 200)
-            self.assertEqual(root.json()["application_version"], "1.10.24")
-            self.assertEqual(root.json()["application_build"], 1124)
+            self.assertEqual(root.json()["application_version"], "1.10.25")
+            self.assertEqual(root.json()["application_build"], 1125)
             paths = app.openapi()["paths"]
             for path in (
                 "/api/fois/leagues/{league_id}/rankings",

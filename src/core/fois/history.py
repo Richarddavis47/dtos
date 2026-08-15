@@ -7,6 +7,17 @@ from typing import Any
 from src.core.history_context.store import CanonicalHistoryStore as HistoricalStore
 
 
+def _positive_int(value: Any) -> int | None:
+    """Return a positive integer identity or explicit unavailability."""
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed > 0 else None
+
+
 def load_results_history(
     store: HistoricalStore,
     league_id: str,
@@ -27,6 +38,15 @@ def load_results_history(
         for row in league_seasons
         if row.get("season") is not None
     }
+    league_status = {
+        int(row["season"]): str(row["payload"].get("status") or "").casefold()
+        for row in league_seasons
+        if row.get("season") is not None
+    }
+    completed_seasons = {
+        season for season, status in league_status.items() if status == "complete"
+    }
+    numeric_placement_seasons: set[int] = set()
     owners: dict[str, set[str]] = defaultdict(set)
     owner_by_roster_season: dict[tuple[str, int], str] = {}
     for row in identities:
@@ -62,10 +82,13 @@ def load_results_history(
             # not let that optional evidence block canonical application startup.
             continue
         playoff = playoff_by_season.get(season, {})
-        placements = {
-            int(place): int(roster)
-            for place, roster in (playoff.get("placements") or {}).items()
-        }
+        placements = {}
+        for raw_place, raw_roster in (playoff.get("placements") or {}).items():
+            place = _positive_int(raw_place)
+            roster = _positive_int(raw_roster)
+            if place is not None and roster is not None:
+                placements[place] = roster
+                numeric_placement_seasons.add(season)
         finish_by_roster = {roster: place for place, roster in placements.items()}
         roster_number = int(roster_id)
         playoff_finish = finish_by_roster.get(roster_number)
@@ -86,7 +109,11 @@ def load_results_history(
             "championship_game": playoff_finish in {1, 2},
             "matchup_wins": matchup_wins if matchup_wins + matchup_losses else None,
             "matchup_losses": matchup_losses if matchup_wins + matchup_losses else None,
-            "complete": row.get("availability") not in {"incomplete", "unavailable"},
+            "complete": (
+                season in completed_seasons
+                if league_status.get(season)
+                else row.get("availability") not in {"incomplete", "unavailable"}
+            ),
         })
         histories[roster_id].setdefault("owner_by_season", {})[str(season)] = (
             owner_by_roster_season.get((roster_id, season))
@@ -120,4 +147,14 @@ def load_results_history(
         history["seasons"].sort(key=lambda row: row["season"])
         history["ownership_changes"] = max(0, len(owners[roster_id]) - 1)
         history["expected_seasons"] = expected
+        placement_seasons = completed_seasons if league_status else set(league_size)
+        placement_expected = len(placement_seasons)
+        placement_available = len(
+            numeric_placement_seasons & placement_seasons
+        )
+        history["placement_seasons_available"] = placement_available
+        history["placement_seasons_expected"] = placement_expected
+        history["placement_completeness"] = round(
+            placement_available / placement_expected * 100, 2,
+        ) if placement_expected else 0.0
     return dict(histories)

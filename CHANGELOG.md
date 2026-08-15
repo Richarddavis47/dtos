@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.10.25 - FOIS Canonical History Null-Placement Correction
+
+- Treat unresolved current-season playoff bracket participants as unavailable placement evidence instead of coercing them to integers.
+- Restrict completed-season FOIS scoring to canonically complete seasons while retaining trades, drafts, and checkpoint evidence from partial seasons.
+- Expose bounded placement-evidence completeness without changing existing completed-season scoring semantics.
+
 ## v1.10.24 - Legacy Access Observability Route Correction
 
 - Disambiguate the static bounded resource-measurement endpoint from league-scoped runtime hydration in request-context middleware.

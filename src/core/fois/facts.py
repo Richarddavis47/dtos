@@ -87,5 +87,5 @@ class FOISFacts:
     def completed_seasons(self) -> tuple[SeasonResult, ...]:
         return tuple(
             row for row in self.seasons
-            if row.wins is not None and row.losses is not None
+            if row.complete and row.wins is not None and row.losses is not None
         )

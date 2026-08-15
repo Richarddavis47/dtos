@@ -1,3 +1,11 @@
+# DTOS v1.10.25 - FOIS Canonical History Null-Placement Correction
+
+DTOS v1.10.25 makes the canonical FOIS history adapter explicitly nullable for final placement. Current or partial Sleeper seasons may publish playoff bracket placeholders before winner and runner-up identities exist; those values now remain unavailable rather than being coerced or invented.
+
+Completed seasons retain their existing FOIS scoring semantics. Missing placement affects evidence completeness only, while trade, draft, waiver, and permanent checkpoint evidence remain usable. The proven zero-read/zero-write HistoricalStore architecture and physical legacy database are unchanged.
+
+---
+
 # DTOS v1.10.24 - Legacy Access Observability Route Correction
 
 DTOS v1.10.24 makes the existing bounded `POST /api/leagues/resources/measure` endpoint reachable in production by narrowing league-context path recognition to the actual league runtime route. It does not change HistoricalStore migration behavior or physically modify the preserved legacy database.
