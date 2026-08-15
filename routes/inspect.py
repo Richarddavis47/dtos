@@ -22,7 +22,7 @@ from src.core.inspection import (
     discover_pages,
     excluded_current_trade_pages,
 )
-from src.core.historical_memory import historical_store
+from src.core.history_context import canonical_history_store
 from src.core.asset_market import asset_market
 from src.core.inspection.publication import GitHubPublicationResolver
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
@@ -31,6 +31,8 @@ from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.inspection.live import LiveInspection, external_mirror_policy, matchup_semantic
 from src.core.inspection.live_visual import LIVE_VIEWPORTS, LiveVisualService
+
+historical_store = canonical_history_store
 
 
 def create_inspection_router(

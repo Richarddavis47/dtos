@@ -3,7 +3,6 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 import httpx
 
@@ -217,78 +216,14 @@ class HistoricalMemoryTests(unittest.IsolatedAsyncioTestCase):
             versions = [row[0] for row in connection.execute("SELECT version FROM schema_migrations")]
         self.assertEqual(versions, [1, 2, 3, 4, 5, 6, 7, 8, 9])
 
-    def test_current_team_and_prediction_snapshots_are_immutable(self) -> None:
+    def test_current_capture_does_not_append_legacy_snapshots(self) -> None:
         data = fixture_data()
         data["league"]["league_id"] = "L2"
         data["league"]["season"] = "2022"
-        data["week"] = 1
-        data["normalized_players"] = {}
-        data["market_data"] = {"providers": {}}
-        expected_franchises = {
-            f"L2:franchise:{team['roster_id']}" for team in data["teams"]
-        }
-        observations = (
-            "2022-09-01T00:00:00+00:00",
-            "2022-09-08T00:00:00+00:00",
-        )
-        with patch("services.history.historical_store", self.store):
-            first = capture_current_state(data, observations[0])
-            duplicate = capture_current_state(data, observations[0])
-            original_count, original_rows = self.store.records(
-                "L2", "team_intelligence_snapshot",
-            )
-            original_payloads = {
-                row["franchise_id"]: row["payload"] for row in original_rows
-            }
-            data["teams"][0]["points_for"] = 1500
-            later = capture_current_state(data, observations[1])
-        team_count, team_rows = self.store.records(
-            "L2", "team_intelligence_snapshot", season=2022,
-        )
-        prediction_count, prediction_rows = self.store.records(
-            "L2", "prediction", season=2022,
-        )
-        expected_per_type = len(expected_franchises) * len(observations)
-        self.assertGreater(first["written"], 0)
-        self.assertEqual(duplicate["written"], 0)
-        self.assertGreater(later["written"], 0)
-        self.assertEqual(original_count, len(expected_franchises))
-        self.assertEqual(team_count, expected_per_type)
-        self.assertEqual(prediction_count, expected_per_type)
-        self.assertEqual(
-            {row["franchise_id"] for row in team_rows}, expected_franchises,
-        )
-        self.assertEqual(
-            {row["franchise_id"] for row in prediction_rows},
-            expected_franchises,
-        )
-        team_identities = {
-            (
-                row["league_id"], row["franchise_id"], row["season"],
-                row["week"], row["observed_at"],
-                row["payload"]["snapshot_type"],
-                row["payload"]["model_version"],
-            )
-            for row in team_rows
-        }
-        prediction_identities = {
-            (
-                row["league_id"], row["franchise_id"], row["season"],
-                row["week"], row["observed_at"],
-                row["payload"]["snapshot_type"],
-                row["payload"]["model_version"],
-            )
-            for row in prediction_rows
-        }
-        self.assertEqual(len(team_identities), expected_per_type)
-        self.assertEqual(len(prediction_identities), expected_per_type)
-        earliest_rows = {
-            row["franchise_id"]: row["payload"]
-            for row in team_rows
-            if row["observed_at"] == observations[0]
-        }
-        self.assertEqual(earliest_rows, original_payloads)
-        unrelated_count, _ = self.store.records(
-            "not-L2", "team_intelligence_snapshot",
-        )
-        self.assertEqual(unrelated_count, 0)
+        result = capture_current_state(data, "2022-09-01T00:00:00+00:00")
+        self.assertEqual(result["written"], 0)
+        self.assertEqual(result["legacy_write_attempts"], 0)
+        team_count, _ = self.store.records("L2", "team_intelligence_snapshot")
+        prediction_count, _ = self.store.records("L2", "prediction")
+        self.assertEqual(team_count, 0)
+        self.assertEqual(prediction_count, 0)

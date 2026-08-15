@@ -15,6 +15,7 @@ from unittest.mock import patch
 from tools.validation.generate_sanitized_market_fixture import (
     HISTORICAL_COUNT,
     LEAGUE_ID,
+    _canonical_history_fixture,
     _history,
     _record_payload,
     _record_provider,
@@ -24,6 +25,8 @@ from tools.validation.generate_sanitized_market_fixture import (
 )
 from src.core.brain import brain_service
 from src.core.historical_memory.store import HistoricalStore
+from src.core.history_context.metadata import MinimalMetadataStore
+from src.core.history_context.season_cache import SleeperSeasonCache
 from tools.validation.linux_market_cgroup_gate import (
     StartupFailure,
     _archive_cache_assessment,
@@ -364,6 +367,23 @@ class _FakeProcess:
 
 
 class RestartReuseValidationTests(unittest.TestCase):
+    def test_canonical_fixture_contains_five_seasons_and_all_asset_events(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+            os.environ,
+            {"DTOS_METADATA_DB_FILE": str(Path(directory) / "dtos_metadata.sqlite3")},
+        ):
+            root = Path(directory)
+            _canonical_history_fixture(root)
+            cache = SleeperSeasonCache(root / "sleeper-season-cache")
+            self.assertEqual(cache.available_seasons(LEAGUE_ID), tuple(range(2021, 2026)))
+            events = sum(
+                len(row.get("players_points") or {})
+                for season in range(2021, 2026)
+                for rows in (cache.read(LEAGUE_ID, season).facts.get("matchups") or {}).values()
+                for row in rows
+            )
+            self.assertEqual(events, HISTORICAL_COUNT)
+
     def setUp(self) -> None:
         self.payload = _published()
         self.body = json.dumps(self.payload, separators=(",", ":")).encode()
@@ -583,11 +603,14 @@ class RestartReuseValidationTests(unittest.TestCase):
             root = Path(directory)
             cache = root / "dtos_cache.json"
             history = root / "dtos_history.sqlite3"
+            metadata = root / "dtos_metadata.sqlite3"
             cache.write_text("{}", encoding="utf-8")
             HistoricalStore(history)
+            MinimalMetadataStore(metadata)
             environment = {
                 "DTOS_CACHE_FILE": str(cache),
                 "DTOS_HISTORY_DB_FILE": str(history),
+                "DTOS_METADATA_DB_FILE": str(metadata),
                 "DTOS_HISTORY_STORAGE_ROOT": str(root),
                 "SLEEPER_LEAGUE_ID": "1804000000000000000",
             }
@@ -596,7 +619,8 @@ class RestartReuseValidationTests(unittest.TestCase):
             ):
                 contract = _configured_fixture_contract()
         self.assertEqual(contract["cache_file"], "dtos_cache.json")
-        self.assertEqual(contract["history_database"], "dtos_history.sqlite3")
+        self.assertEqual(contract["legacy_history_database"], "dtos_history.sqlite3")
+        self.assertEqual(contract["metadata_database"], "dtos_metadata.sqlite3")
         self.assertTrue(contract["contained"])
         self.assertEqual(contract["league_id"], "1804000000000000000")
 
@@ -609,15 +633,18 @@ class RestartReuseValidationTests(unittest.TestCase):
     def test_application_and_validator_fixture_contracts_must_match(self) -> None:
         expected = {
             "storage_root": ".", "cache_file": "dtos_cache.json",
-            "history_database": "dtos_history.sqlite3", "contained": True,
+            "legacy_history_database": "dtos_history.sqlite3",
+            "metadata_database": "dtos_metadata.sqlite3", "contained": True,
             "league_id": "1804000000000000000",
             "database_identity_digest": "sanitized-digest",
             "file_identity_digest": "sanitized-file-digest",
-            "history_database_size": 1024,
+            "legacy_history_database_size": 1024,
+            "metadata_database_size": 20480,
         }
         actual = {
-            **expected, "active_store_database": "dtos_history.sqlite3",
-            "cache_exists": True, "history_database_exists": True,
+            **expected, "active_store_database": "dtos_metadata.sqlite3",
+            "cache_exists": True, "legacy_history_database_exists": True,
+            "metadata_database_exists": True,
             "active_store_matches": True,
             "cache_league_id": "1804000000000000000",
         }
@@ -630,7 +657,7 @@ class RestartReuseValidationTests(unittest.TestCase):
         with patch(
             "tools.validation.linux_market_cgroup_gate._request",
             return_value=(200, json.dumps(leaked).encode(), 1.0),
-        ), self.assertRaisesRegex(AssertionError, "HistoricalStore"):
+        ), self.assertRaisesRegex(AssertionError, "canonical store"):
             _application_fixture_contract(expected)
 
     def test_startup_exit_preserves_sanitized_log_and_exit_code(self) -> None:
@@ -766,19 +793,13 @@ class RestartReuseValidationTests(unittest.TestCase):
         before = _published()
         before.update({
             "valuation_generation": None,
-            "historical_progress": {"canonical_history_progress": {
-                "semantic_generations": {"historical_records": 3},
-            }},
         })
         after = json.loads(json.dumps(before))
         after["valuation_generation"] = "generated-later"
-        after["historical_progress"]["canonical_history_progress"][
-            "semantic_generations"
-        ]["historical_records"] = 4
         evidence = _nonsemantic_payload_comparison(
             json.dumps(before).encode(), json.dumps(after).encode(),
         )
-        self.assertEqual(evidence["changed_path_count"], 2)
+        self.assertEqual(evidence["changed_path_count"], 1)
         self.assertEqual(evidence["row_digest_before"], evidence["row_digest_after"])
         self.assertEqual(evidence["stable_digest_before"], evidence["stable_digest_after"])
         self.assertNotEqual(evidence["raw_digest_before"], evidence["raw_digest_after"])
@@ -855,7 +876,6 @@ class RestartReuseValidationTests(unittest.TestCase):
         after.update({
             "market_generation": "market-new", "generated_at": "market-new",
             "brain_generation": "brain-new", "valuation_generation": "value-new",
-            "historical_dataset_version": "history-new",
         })
         evidence = _material_first_page_comparison(
             json.dumps(before).encode(), json.dumps(after).encode(),

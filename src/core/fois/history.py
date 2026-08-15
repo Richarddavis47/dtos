@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
-from src.core.historical_memory.store import HistoricalStore
+from src.core.history_context.store import CanonicalHistoryStore as HistoricalStore
 
 
 def load_results_history(

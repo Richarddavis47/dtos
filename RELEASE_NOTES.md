@@ -1,3 +1,19 @@
+# DTOS v1.10.23 - HistoricalStore Consumer & Writer Migration
+
+DTOS now sources reconstructible league history from normalized Sleeper season
+caches, sources permanent DTOS intelligence from sparse IntelligenceCheckpoint
+records, and keeps current identities and relevant-player state in bounded
+operational caches. A new compact metadata database retains system-owned cache
+checkpoint and synchronization state without copying provider history.
+
+The legacy HistoricalStore remains physically intact but is dormant. Canonical
+startup, synchronization, history, FOIS, Front Office, Team HQ, dossiers, Brain,
+Asset Market, inspection, and API paths no longer initialize, read, or write it.
+Shadow-forbidden diagnostics expose any attempted regression. Physical deletion
+and disk reclamation are explicitly deferred to v1.10.24.
+
+## Previous release
+
 # DTOS v1.10.22 - Resource Admission & Heavy-Work Coordination
 
 DTOS now distinguishes verified reclaimable Linux file cache from live memory

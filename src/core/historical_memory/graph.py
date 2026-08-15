@@ -20,7 +20,7 @@ from src.core.historical_memory.models import (
     OwnershipInterval,
     PlayerSeasonSummary,
 )
-from src.core.historical_memory.store import HistoricalStore
+from src.core.history_context.store import CanonicalHistoryStore as HistoricalStore
 
 
 COMPLETED_STATUSES = {"complete", "completed"}

@@ -17,34 +17,30 @@ from config import (
     HISTORICAL_START_SEASON,
     LEAGUE_ID,
     REQUEST_TIMEOUT,
+    SLEEPER_SEASON_CACHE_ROOT,
 )
-from src.core.historical_memory import (
-    HISTORICAL_SCHEMA_VERSION,
-    PLAYER_HISTORY_SCHEMA_VERSION,
-    PREDICTION_MODEL_VERSION,
-    aggregate_production,
-    historical_store,
-)
+from src.core.historical_memory.aggregation import aggregate_production
 from src.core.historical_memory.importer import HistoricalImporter
 from src.core.historical_memory.enrichment import (
-    build_identity_context,
-    prepare_enrichment_records,
+    build_identity_context, prepare_enrichment_records,
 )
-from src.platform.lifecycle import lifecycle_coordinator
 from src.core.historical_memory.jobs import (
-    ImportJob,
-    completeness_report,
-    recover_stalled_jobs,
-    utcnow,
+    ImportJob, recover_stalled_jobs, utcnow,
 )
-from src.core.historical_memory.models import IMPORTER_VERSION
+from src.core.historical_memory.models import (
+    HISTORICAL_SCHEMA_VERSION, IMPORTER_VERSION, PLAYER_HISTORY_SCHEMA_VERSION,
+)
+from src.core.history_context import canonical_history_store, minimal_metadata_store
+from src.core.history_context.season_cache import SleeperSeasonCache
 from src.core.historical_memory.providers import (
     NflverseProvider,
     classify_nflverse_404,
 )
 from src.core.historical_memory.season_state import classify_season
-from src.core.intelligence import intelligence_orchestrator
-from src.core.valuation import VALUATION_SCHEMA_VERSION, normalize_value
+from src.platform.lifecycle import lifecycle_coordinator
+
+historical_store = canonical_history_store
+sleeper_season_cache = SleeperSeasonCache(SLEEPER_SEASON_CACHE_ROOT)
 
 _PROGRESS_CACHE_LOCK = RLock()
 _RETAINED_PROGRESS: dict[str, dict[str, Any]] = {}
@@ -60,140 +56,20 @@ def _now() -> str:
 
 
 def capture_current_state(data: dict[str, Any], observed_at: str) -> dict[str, int]:
-    """Append current evidence without replacing any earlier observation."""
+    """Update bounded operational state without legacy historical persistence."""
     league = data.get("league") or {}
     league_id = str(league.get("league_id") or LEAGUE_ID)
-    season = int(league.get("season") or datetime.now().year)
-    week = int(data.get("week") or 1)
-    counts = {"written": 0, "unchanged": 0}
-
-    def append(entity: str, source_id: str, payload: dict[str, Any], **dimensions: Any) -> None:
-        identity_variant = dimensions.pop("identity_variant", "")
-        key = (
-            f"{league_id}:{entity}:{season}:{week}:{observed_at}:"
-            f"{source_id}:{identity_variant}"
-        )
-        inserted = historical_store.append(
-            record_key=key, entity_type=entity, league_id=league_id,
-            season=season, week=dimensions.pop("week", week),
-            source_record_id=source_id, observed_at=observed_at,
-            retrieved_at=observed_at, provider=dimensions.pop("provider", "DTOS"),
-            availability=dimensions.pop("availability", "observed"),
-            confidence=dimensions.pop("confidence", 90),
-            calculation_method=dimensions.pop("calculation_method", "current_sync_snapshot"),
-            schema_version=dimensions.pop("schema_version", HISTORICAL_SCHEMA_VERSION),
-            payload=payload, **dimensions,
-        )
-        counts["written" if inserted else "unchanged"] += 1
-
-    append("league_season_snapshot", league_id, {
-        "league": league, "scoring_settings": data.get("scoring_settings") or {},
-        "roster_positions": data.get("roster_positions") or [],
-        "league_settings": data.get("league_settings") or {},
-    })
-    normalized_players = data.get("normalized_players") or {}
-    for player_id, player in normalized_players.items():
-        historical_store.upsert_identity(
-            str(player_id), "Sleeper", str(player_id),
-            str(player.get("name") or player_id), 100, observed_at,
-            {"provider_ids": player.get("provider_ids") or {}, "aliases": player.get("aliases") or []},
-        )
-    for team in data.get("teams") or []:
-        roster_id = int(team.get("roster_id") or 0)
-        franchise_id = f"{league_id}:franchise:{roster_id}"
-        append("weekly_roster_snapshot", str(roster_id), {
-            "players": [player.get("id") for player in team.get("players") or []],
-            "starters": [player.get("id") for player in team.get("players") or [] if player.get("roster_slot") == "Starter"],
-            "bench": [player.get("id") for player in team.get("players") or [] if player.get("roster_slot") == "Bench"],
-            "taxi": [player.get("id") for player in team.get("players") or [] if player.get("roster_slot") == "Taxi"],
-            "ir": [player.get("id") for player in team.get("players") or [] if player.get("roster_slot") == "IR"],
-        }, franchise_id=franchise_id)
-    if data.get("teams"):
-        intelligence = intelligence_orchestrator.analyze(
-            data, int(data["teams"][0].get("roster_id") or 0),
-        )
-        cards = intelligence.roster.team_intelligence
-        for roster_id, card in cards.items():
-            franchise_id = f"{league_id}:franchise:{roster_id}"
-            payload = asdict(card)
-            payload["snapshot_type"] = "current_team_intelligence"
-            payload["model_version"] = PREDICTION_MODEL_VERSION
-            append(
-                "team_intelligence_snapshot", str(roster_id), payload,
-                franchise_id=franchise_id, derived=True,
-                availability="calculated", confidence=card.confidence,
-                calculation_method="Team Intelligence v1.0",
-                identity_variant=(
-                    f"current_team_intelligence:{PREDICTION_MODEL_VERSION}"
-                ),
-            )
-            append("prediction", f"team:{roster_id}", {
-                "snapshot_type": "team_preseason_prediction",
-                "prediction_type": "team_preseason",
-                "projected_finish": card.projected_finish,
-                "playoff_odds": card.playoff_odds,
-                "championship_odds": card.championship_odds,
-                "projected_wins": card.projected_wins,
-                "team_tier": card.current_window.value,
-                "model_version": PREDICTION_MODEL_VERSION,
-                "inputs_version": HISTORICAL_SCHEMA_VERSION,
-                "actual_result": None,
-                "evaluation_date": None,
-            }, franchise_id=franchise_id, derived=True, availability="calculated",
-               identity_variant=(
-                   f"team_preseason_prediction:{PREDICTION_MODEL_VERSION}"
-               ))
-        for player_id, card in intelligence.roster.players.items():
-            append("valuation_snapshot", f"DTOS:{player_id}", {
-                "provider": "DTOS", "raw_provider_value": None,
-                "normalized_provider_value": card.market_value,
-                "market_value": card.market_value,
-                "dtos_intrinsic_value": card.dynasty_value,
-                "win_now_value": card.contender_value,
-                "rebuild_value": card.rebuilder_value,
-                "future_value": card.dynasty_value,
-                "trade_value": card.dynasty_value,
-                "risk_score": card.risk,
-                "liquidity_score": card.trade_liquidity,
-                "confidence_score": None,
-                "valuation_model_version": VALUATION_SCHEMA_VERSION,
-                "calibration_status": "calculated",
-            }, player_id=str(player_id), provider="DTOS",
-               availability="calculated", calculation_method="Valuation Calibration v1.0")
-    for provider, rows in ((data.get("market_data") or {}).get("providers") or {}).items():
-        distribution = tuple(
-            float(row.get("value"))
-            for row in (rows or {}).values()
-            if isinstance(row, dict) and row.get("value") is not None
-        )
-        for player_id, row in (rows or {}).items():
-            if not isinstance(row, dict):
-                continue
-            normalized = (
-                normalize_value(
-                    provider, float(row["value"]), distribution=distribution,
-                    updated_at=row.get("updated_at"), source_season=row.get("season"),
-                    provider_confidence=int(row.get("confidence") or 70),
-                )
-                if row.get("value") is not None else None
-            )
-            append("valuation_snapshot", f"{provider}:{player_id}", {
-                "provider": provider, "raw_provider_value": row.get("value"),
-                "normalized_provider_value": normalized.normalized_value if normalized else None,
-                "market_value": normalized.normalized_value if normalized else None,
-                "confidence_score": normalized.confidence_score if normalized else 0,
-                "valuation_model_version": VALUATION_SCHEMA_VERSION,
-                "calibration_status": "calibrated" if normalized else "insufficient_data",
-                "normalization_method": normalized.method if normalized else None,
-                "freshness": normalized.freshness if normalized else None,
-            }, player_id=str(player_id), provider=provider,
-               availability="observed" if row.get("value") is not None else "unavailable")
-    return counts
+    historical_store.update_current(league_id, data)
+    return {"written": 0, "unchanged": 0, "legacy_write_attempts": 0}
 
 
 async def backfill_history(
     fetch: Any, *, league_id: str = LEAGUE_ID, seasons: set[int] | None = None,
 ) -> dict[str, Any]:
+    if historical_store is canonical_history_store:
+        raise RuntimeError(
+            "Legacy bulk HistoricalStore backfill is retired; use SleeperSeasonCache."
+        )
     async with _BACKFILL_LOCK:
         workbook = Path("/mnt/data/Day_Traders_Front_Office_Database_v13_8_Master(1).xlsx")
         return await HistoricalImporter(historical_store, fetch).backfill(
@@ -204,7 +80,11 @@ async def backfill_history(
 async def wait_for_historical_lease(
     league_id: str, *, poll_seconds: float = 30.0,
 ) -> int:
-    """Wait for a live lease or atomically recover it after its heartbeat expires."""
+    """Legacy bulk-import leases no longer participate in canonical runtime."""
+    if historical_store is canonical_history_store:
+        return 0
+
+    # Isolated legacy stores remain supported for compatibility validation only.
     while True:
         locks = [
             row for row in historical_store.locks()
@@ -225,6 +105,10 @@ async def wait_for_historical_lease(
 
 
 async def ensure_history_backfill(fetch: Any, *, league_id: str = LEAGUE_ID) -> dict[str, Any]:
+    if historical_store is canonical_history_store:
+        raise RuntimeError(
+            "Legacy HistoricalStore startup backfill is retired; use the historical cache worker."
+        )
     recover_stalled_jobs(historical_store, league_id)
     foundation = historical_store.latest_completed_foundation(league_id)
     if foundation is not None:
@@ -265,6 +149,10 @@ async def enrich_player_history(
     today: date | None = None, skip_current: bool = False,
 ) -> dict[str, Any]:
     """Fetch approved weekly stats in the background and persist mapped records."""
+    if historical_store is canonical_history_store:
+        raise RuntimeError(
+            "Permanent provider-history enrichment is retired; provider evidence is cache-only."
+        )
     current_date = today or datetime.now(timezone.utc).date()
     selected = sorted(seasons or range(2021, current_date.year + 1))
     totals = {"written": 0, "unchanged": 0, "unresolved": 0}
@@ -609,11 +497,44 @@ async def enrich_player_history(
 
 
 def start_background_backfill(fetch: Any) -> asyncio.Task[dict[str, Any]]:
+    """Discover and cache provider-owned seasons without legacy persistence."""
     global _BACKFILL_TASK
     if _BACKFILL_TASK is None or _BACKFILL_TASK.done():
         async def coordinated_backfill() -> dict[str, Any]:
-            with lifecycle_coordinator.phase("historical_import") as phase:
-                result = await ensure_history_backfill(fetch)
+            with lifecycle_coordinator.phase("historical_cache") as phase:
+                from src.core.intelligence_memory.sleeper_source import SleeperHistoricalSource
+
+                source = SleeperHistoricalSource()
+                chain = await source.discover(LEAGUE_ID)
+                current = datetime.now(timezone.utc).year
+                available = []
+                unavailable = []
+                for reference in chain.seasons:
+                    if reference.season is None or reference.season >= current:
+                        continue
+                    season = await sleeper_season_cache.get_or_rebuild(
+                        reference.league_id, reference.season,
+                        source.completed_season_facts,
+                    )
+                    # Alias a season under the current league namespace so all
+                    # league-scoped consumers share one discovered chain.
+                    if season.facts:
+                        normalized = sleeper_season_cache.normalize(
+                            LEAGUE_ID, reference.season, season.facts,
+                        )
+                        sleeper_season_cache.write(normalized)
+                        minimal_metadata_store.record_season_cache_checkpoint(
+                            LEAGUE_ID, reference.season, normalized.checksum,
+                            normalized.status,
+                        )
+                    (available if season.status != "unavailable" else unavailable).append(
+                        reference.season,
+                    )
+                result = {
+                    "status": "complete" if not unavailable else "partial",
+                    "seasons": available, "unavailable_seasons": unavailable,
+                    "year_one": chain.year_one, "source": "sleeper_season_cache",
+                }
                 phase.update({
                     "historical_job_state": result.get("status"),
                     "season_count": len(result.get("seasons") or []),
@@ -851,27 +772,42 @@ def player_history_evidence(league_id: str, player_id: str) -> dict[str, Any]:
 
 
 def import_status(league_id: str) -> dict[str, Any]:
-    runs = historical_store.import_status(league_id)
-    foundation = historical_store.latest_completed_foundation(league_id)
-    jobs = historical_store.jobs(league_id)
-    for job in jobs:
-        progress = historical_store.enrichment_job_progress(job["job_id"])
-        if progress is not None:
-            job["progress"] = progress
-    progress_contracts = history_progress_contracts(
-        league_id, jobs=jobs, foundation=foundation,
-    )
+    if historical_store is not canonical_history_store:
+        runs = historical_store.import_status(league_id)
+        foundation = historical_store.latest_completed_foundation(league_id)
+        jobs = historical_store.jobs(league_id)
+        for job in jobs:
+            progress = historical_store.enrichment_job_progress(job["job_id"])
+            if progress is not None:
+                job["progress"] = progress
+        progress_contracts = history_progress_contracts(
+            league_id, jobs=jobs, foundation=foundation,
+        )
+        return {
+            "schema_version": HISTORICAL_SCHEMA_VERSION,
+            "runs": runs,
+            "jobs": jobs,
+            "checkpoints": historical_store.checkpoints(league_id),
+            "progress_repairs": historical_store.progress_repairs(),
+            "latest_attempt": runs[0] if runs else None,
+            "latest_completed_foundation": foundation,
+            "latest": runs[0] if runs else {
+                "status": "waiting", "reason": "Historical backfill has not started."
+            },
+            "canonical_progress": progress_contracts["canonical_history_progress"],
+            **progress_contracts,
+        }
+    progress_contracts = history_progress_contracts(league_id)
     return {
         "schema_version": HISTORICAL_SCHEMA_VERSION,
-        "runs": runs,
-        "jobs": jobs,
-        "checkpoints": historical_store.checkpoints(league_id),
-        "progress_repairs": historical_store.progress_repairs(),
-        "latest_attempt": runs[0] if runs else None,
-        "latest_completed_foundation": foundation,
-        "latest": runs[0] if runs else {
-            "status": "waiting", "reason": "Historical backfill has not started."
+        "runs": [], "jobs": [], "checkpoints": [], "progress_repairs": [],
+        "latest_attempt": None,
+        "latest_completed_foundation": {
+            "status": "complete", "run_id": "sleeper-season-cache",
+            "completed_at": None,
         },
+        "latest": {"status": progress_contracts["canonical_history_progress"]["status"],
+                   "reason": "Canonical history is derived from Sleeper cache availability."},
         "canonical_progress": progress_contracts["canonical_history_progress"],
         **progress_contracts,
     }
@@ -882,35 +818,40 @@ def history_progress_contracts(
     foundation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Return canonical and scoped progress through one shared serializer."""
-    candidates = jobs if jobs is not None else historical_store.jobs(league_id)
-    latest_enrichment = next(
-        (row for row in candidates if row.get("requested_data_types") == ["player_week"]),
-        None,
-    )
-    active_enrichment = next(
-        (
-            row for row in candidates
-            if row.get("requested_data_types") == ["player_week"]
-            and row.get("status") in _ACTIVE_ENRICHMENT_STATUSES
-        ),
-        None,
-    )
-    latest_job_progress = _job_progress_contract(latest_enrichment)
-    active_job_progress = _job_progress_contract(active_enrichment)
-    foundation_run = foundation or historical_store.latest_completed_foundation(
-        league_id,
-    )
-    result = {
-        "canonical_history_progress": canonical_history_progress(
-            league_id, jobs=candidates,
-        ),
-        "latest_job_progress": latest_job_progress,
-        "active_job_progress": active_job_progress,
-        "foundation_progress": {
+    if historical_store is not canonical_history_store:
+        candidates = jobs if jobs is not None else historical_store.jobs(league_id)
+        latest_enrichment = next(
+            (row for row in candidates if row.get("requested_data_types") == ["player_week"]),
+            None,
+        )
+        active_enrichment = next(
+            (
+                row for row in candidates
+                if row.get("requested_data_types") == ["player_week"]
+                and row.get("status") in _ACTIVE_ENRICHMENT_STATUSES
+            ),
+            None,
+        )
+        latest_job_progress = _job_progress_contract(latest_enrichment)
+        active_job_progress = _job_progress_contract(active_enrichment)
+        foundation_run = foundation or historical_store.latest_completed_foundation(league_id)
+        foundation_progress = {
             "status": str((foundation_run or {}).get("status") or "waiting"),
             "run_id": (foundation_run or {}).get("run_id"),
             "completed_at": (foundation_run or {}).get("completed_at"),
-        },
+        }
+    else:
+        latest_job_progress = None
+        active_job_progress = None
+        foundation_progress = {
+            "status": "complete", "run_id": "sleeper-season-cache",
+            "completed_at": None,
+        }
+    result = {
+        "canonical_history_progress": canonical_history_progress(league_id),
+        "latest_job_progress": latest_job_progress,
+        "active_job_progress": active_job_progress,
+        "foundation_progress": foundation_progress,
     }
     with _PROGRESS_CACHE_LOCK:
         _RETAINED_PROGRESS[league_id] = copy.deepcopy(result)
@@ -973,18 +914,39 @@ def canonical_history_progress(
 ) -> dict[str, Any]:
     """Return league progress from the configured durable checkpoint universe."""
     selected_year = current_year or datetime.now().year
-    seasons = tuple(range(HISTORICAL_START_SEASON, selected_year + 1))
-    state = historical_store.canonical_enrichment_progress(
-        league_id, seasons, provider="nflverse", importer_version=IMPORTER_VERSION,
-    )
-    completed_seasons = list(state["completed_seasons"])
-    pending = list(state["pending_seasons"])
-    failed = list(state["failed_seasons"])
-    invalidated = list(state["invalidated_seasons"])
-    missing = list(state["missing_seasons"])
+    if historical_store is canonical_history_store:
+        cached = sorted(historical_store._cache_index(league_id))
+        year_one = min(cached) if cached else selected_year
+        seasons = tuple(range(year_one, selected_year + 1))
+        completed_seasons = [
+            season for season in seasons if season in cached and season < selected_year
+        ]
+        pending = [season for season in seasons if season == selected_year]
+        failed: list[int] = []
+        invalidated: list[int] = []
+        missing = [
+            season for season in seasons
+            if season not in completed_seasons and season not in pending
+        ]
+        identity_generation = historical_store.identity_generations()["mapping"]
+        semantic_generations = historical_store.semantic_generations(league_id)
+    else:
+        seasons = tuple(range(HISTORICAL_START_SEASON, selected_year + 1))
+        state = historical_store.canonical_enrichment_progress(
+            league_id, seasons, provider="nflverse", importer_version=IMPORTER_VERSION,
+        )
+        completed_seasons = list(state["completed_seasons"])
+        pending = list(state["pending_seasons"])
+        failed = list(state["failed_seasons"])
+        invalidated = list(state["invalidated_seasons"])
+        missing = list(state["missing_seasons"])
+        identity_generation = state["identity_generation"]
+        semantic_generations = state["semantic_generations"]
     completed = len(completed_seasons)
     total = len(seasons)
-    candidates = jobs if jobs is not None else historical_store.jobs(league_id)
+    candidates = jobs if jobs is not None else (
+        [] if historical_store is canonical_history_store else historical_store.jobs(league_id)
+    )
     active = next(
         (
             row for row in candidates
@@ -1042,17 +1004,16 @@ def canonical_history_progress(
         "terminal": status in {"completed", "completed_with_pending", "failed"},
         "pending_reason": pending_reason,
         "configured_seasons": list(seasons),
-        "identity_generation": state["identity_generation"],
-        "semantic_generations": state["semantic_generations"],
+        "identity_generation": identity_generation,
+        "semantic_generations": semantic_generations,
     }
 
 
 def import_completeness(league_id: str) -> dict[str, Any]:
-    seasons = tuple(range(HISTORICAL_START_SEASON, datetime.now().year + 1))
-    return {
-        "schema_version": HISTORICAL_SCHEMA_VERSION,
-        **completeness_report(historical_store, league_id, seasons),
-    }
+    progress = canonical_history_progress(league_id)
+    return {"schema_version": HISTORICAL_SCHEMA_VERSION,
+            "status": "complete" if progress["consistent"] else "incomplete",
+            "source": "sleeper_season_cache", "progress": progress}
 
 
 def provider_coverage() -> dict[str, Any]:
@@ -1084,7 +1045,7 @@ def provider_coverage() -> dict[str, Any]:
 
 
 def data_quality(league_id: str) -> dict[str, Any]:
-    issues = historical_store.quality(league_id)
+    issues: list[dict[str, Any]] = []
     return {
         "schema_version": HISTORICAL_SCHEMA_VERSION,
         "issues": issues,

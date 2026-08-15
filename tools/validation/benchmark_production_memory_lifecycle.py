@@ -16,7 +16,7 @@ from config import LEAGUE_ID
 from services import sleeper
 from services.history import canonical_history_progress
 from src.core.asset_market import AssetMarketCache
-from src.core.historical_memory import historical_store
+from src.core.history_context import canonical_history_store as historical_store
 from src.core.provider_network import build_provider_network
 from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence

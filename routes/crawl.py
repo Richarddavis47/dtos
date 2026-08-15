@@ -33,7 +33,7 @@ from services.history import (
     player_career,
     provider_coverage,
 )
-from src.core.historical_memory import HISTORICAL_SCHEMA_VERSION
+from src.core.historical_memory.models import HISTORICAL_SCHEMA_VERSION
 
 GetData = Callable[[], dict[str, Any]]
 

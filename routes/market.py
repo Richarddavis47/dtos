@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse
 
 from app_metadata import VERSION
 from src.core.asset_market import AssetMarketCache, MarketWarmingError, asset_market_cache
-from src.core.historical_memory import historical_store
+from src.core.history_context import canonical_history_store
 from services.history import (
     history_progress_contracts,
     retained_history_progress_contracts,
@@ -20,6 +20,10 @@ from src.ui.intelligence_presentation import available
 
 RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[..., HTMLResponse]
+
+# Compatibility injection point for isolated route tests. Canonical production
+# binds this name to the Sleeper-backed context store, never HistoricalStore.
+historical_store = canonical_history_store
 
 
 def _value(

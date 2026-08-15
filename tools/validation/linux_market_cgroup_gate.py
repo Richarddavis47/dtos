@@ -35,6 +35,7 @@ FIXTURE = Path(os.environ.get("DTOS_FIXTURE_ROOT", "/fixture"))
 FIXTURE_SETTINGS = {
     "DTOS_CACHE_FILE": "dtos_cache.json",
     "DTOS_HISTORY_DB_FILE": "dtos_history.sqlite3",
+    "DTOS_METADATA_DB_FILE": "dtos_metadata.sqlite3",
     "DTOS_HISTORY_STORAGE_ROOT": ".",
 }
 
@@ -639,13 +640,16 @@ def _configured_fixture_contract() -> dict[str, object]:
         resolved[name] = path
     if resolved["DTOS_HISTORY_STORAGE_ROOT"] != root:
         raise AssertionError("history storage root does not resolve to fixture root")
-    for name in ("DTOS_CACHE_FILE", "DTOS_HISTORY_DB_FILE"):
+    for name in (
+        "DTOS_CACHE_FILE", "DTOS_HISTORY_DB_FILE", "DTOS_METADATA_DB_FILE",
+    ):
         if not resolved[name].is_file():
             raise AssertionError(f"configured fixture file is unavailable: {name}")
     league_id = os.environ.get("SLEEPER_LEAGUE_ID")
     if league_id != "1804000000000000000":
         raise AssertionError("configured fixture league identity is unavailable")
     history_stat = resolved["DTOS_HISTORY_DB_FILE"].stat()
+    metadata_stat = resolved["DTOS_METADATA_DB_FILE"].stat()
     connection = sqlite3.connect(resolved["DTOS_HISTORY_DB_FILE"])
     try:
         database_uuid = str(connection.execute(
@@ -653,38 +657,55 @@ def _configured_fixture_contract() -> dict[str, object]:
         ).fetchone()[0])
     finally:
         connection.close()
+    metadata_connection = sqlite3.connect(resolved["DTOS_METADATA_DB_FILE"])
+    try:
+        metadata_uuid = json.loads(str(metadata_connection.execute(
+            "SELECT value FROM metadata WHERE namespace='system' AND key='database_uuid'",
+        ).fetchone()[0]))
+    finally:
+        metadata_connection.close()
     return {
         "storage_root": ".",
         "cache_file": resolved["DTOS_CACHE_FILE"].relative_to(root).as_posix(),
-        "history_database": resolved["DTOS_HISTORY_DB_FILE"].relative_to(root).as_posix(),
+        "legacy_history_database": resolved["DTOS_HISTORY_DB_FILE"].relative_to(root).as_posix(),
+        "metadata_database": resolved["DTOS_METADATA_DB_FILE"].relative_to(root).as_posix(),
         "contained": True,
         "league_id": league_id,
         "file_identity_digest": hashlib.sha256(
-            f"{history_stat.st_dev}:{history_stat.st_ino}".encode()
+            f"{metadata_stat.st_dev}:{metadata_stat.st_ino}".encode()
         ).hexdigest(),
         "database_identity_digest": hashlib.sha256(
+            json.dumps(metadata_uuid).encode()
+        ).hexdigest(),
+        "legacy_database_identity_digest": hashlib.sha256(
             json.dumps(database_uuid).encode()
         ).hexdigest(),
-        "history_database_size": history_stat.st_size,
+        "legacy_history_database_size": history_stat.st_size,
+        "metadata_database_size": metadata_stat.st_size,
     }
 
 
 def _application_fixture_contract(expected: dict[str, object]) -> dict[str, object]:
     actual = json.loads(_request("/__validation__/fixture-contract")[1])
-    for name in ("storage_root", "cache_file", "history_database", "league_id"):
+    for name in (
+        "storage_root", "cache_file", "legacy_history_database",
+        "metadata_database", "league_id",
+    ):
         if actual.get(name) != expected.get(name):
             raise AssertionError(f"application fixture setting mismatch: {name}")
-    if actual.get("active_store_database") != expected.get("history_database"):
-        raise AssertionError("application HistoricalStore does not use fixture database")
+    if actual.get("active_store_database") != expected.get("metadata_database"):
+        raise AssertionError("application canonical store does not use metadata database")
     if actual.get("cache_league_id") != expected.get("league_id"):
         raise AssertionError("application cache uses a different fixture league")
     for name in (
-        "database_identity_digest", "file_identity_digest", "history_database_size",
+        "database_identity_digest", "file_identity_digest",
+        "legacy_history_database_size", "metadata_database_size",
     ):
         if actual.get(name) != expected.get(name):
             raise AssertionError(f"application fixture identity mismatch: {name}")
     for name in (
-        "cache_exists", "history_database_exists", "active_store_matches", "contained",
+        "cache_exists", "legacy_history_database_exists", "metadata_database_exists",
+        "active_store_matches", "contained",
     ):
         if actual.get(name) is not True:
             raise AssertionError(f"application fixture contract failed: {name}")
@@ -1000,16 +1021,11 @@ def _semantic_contract() -> dict[str, object]:
 
 
 _NONSEMANTIC_VOLATILE_PATHS = {
-    "$.historical_progress.canonical_history_progress.semantic_generations."
-    "historical_records",
     "$.valuation_generation",
 }
 _MATERIAL_PUBLICATION_ENVELOPE_PATHS = {
     "$.brain_generation",
     "$.generated_at",
-    "$.historical_progress.canonical_history_progress.semantic_generations."
-    "historical_records",
-    "$.historical_dataset_version",
     "$.market_generation",
     "$.valuation_generation",
 }
@@ -1235,13 +1251,17 @@ def _nonsemantic_reuse(
         raise AssertionError("non-semantic refresh spawned a semantic child")
     before_raw = before.get("raw_identities") or {}
     after_raw = after.get("raw_identities") or {}
-    for field in (
-        "last_sync", "brain_generated_at", "historical_record_generation",
-    ):
+    for field in ("last_sync", "brain_generated_at"):
         if before_raw.get(field) == after_raw.get(field):
             raise AssertionError(
                 f"non-semantic fixture mutation did not change raw identity: {field}"
             )
+    if before_raw.get("historical_cache_generation") != after_raw.get(
+        "historical_cache_generation"
+    ):
+        raise AssertionError(
+            "non-semantic metadata refresh changed immutable provider-cache generation"
+        )
     return {
         "classification": "non_semantic_reuse",
         "semantic_generation_stable": True,

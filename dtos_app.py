@@ -19,7 +19,7 @@ from fastapi.staticfiles import StaticFiles
 from app_metadata import APPLICATION_NAME, VERSION
 from config import (
     BACKGROUND_START_DELAY, HISTORY_STORAGE_ROOT, MAX_WARM_LEAGUE_RUNTIMES,
-    SYNC_MINUTES,
+    METADATA_DATABASE_FILE, SYNC_MINUTES,
 )
 from routes.api import create_api_router
 from routes.audit import create_audit_router
@@ -66,7 +66,9 @@ from src.core.league_runtime import (
     CanonicalLeagueContext, LeagueRuntime, LeagueRuntimeManager, RuntimeState,
 )
 from src.core.brain import BrainService
-from src.core.historical_memory import historical_store
+from src.core.history_context import (
+    canonical_history_store, legacy_access_guard, minimal_metadata_store,
+)
 from src.core.projection_intelligence import projection_service
 from src.core.projection_intelligence.service import ProjectionService
 from src.platform.observability import (
@@ -79,13 +81,19 @@ from src.platform.lifecycle import lifecycle_coordinator
 from src.platform.league_context import (
     LeagueContextMiddleware, RuntimeStateProxy, current_league_context,
 )
-from src.core.historical_memory import historical_storage_status
+from config import DURABLE_HISTORY_REQUIRED
+from src.core.historical_memory.storage import validate_historical_storage
 from src.core.inspection.live import LiveInspection
 from src.core.inspection.live_visual import LiveVisualService, live_visual_capture_requests
 from src.core.intelligence_memory import (
     intelligence_checkpoint_store, sleeper_season_cache,
 )
 from src.ui import DESIGN_SYSTEM_CSS, page_header
+
+historical_storage_status = validate_historical_storage(
+    database=METADATA_DATABASE_FILE, root=HISTORY_STORAGE_ROOT,
+    required=DURABLE_HISTORY_REQUIRED,
+)
 
 _PROCESS_STARTED = perf_counter()
 _INSPECTION_REQUEST: ContextVar[bool] = ContextVar("dtos_inspection_request", default=False)
@@ -107,7 +115,7 @@ def _publish_runtime_context(
     )
     context = CanonicalLeagueContext(
         runtime=runtime,
-        historical_store=historical_store,
+        historical_store=canonical_history_store,
         projection=projections,
         brain=brain,
         market=market,
@@ -181,7 +189,7 @@ asset_market_cache.configure_resource_context_provider(_resource_context_snapsho
 
 def _resource_health() -> dict[str, Any]:
     manager = league_runtime_manager.health()
-    storage = disk_health(historical_store.path)
+    storage = disk_health(canonical_history_store.path)
     caches = [
         runtime.market_context
         for runtime in league_runtime_manager.resident_runtimes()
@@ -213,7 +221,9 @@ def _measure_resources() -> dict[str, Any]:
         "status": "complete",
         "runtime_count": len(measurements),
         "runtimes": measurements,
-        "storage": disk_health(historical_store.path),
+        "storage": disk_health(canonical_history_store.path),
+        "minimal_metadata": minimal_metadata_store.health(),
+        "legacy_historical_store": legacy_access_guard.health(),
     }
 
 
@@ -276,7 +286,7 @@ async def background_sync() -> None:
         else:
             runtime_metrics.mark_background("fois_generation", "complete")
         asset_market_cache.reconcile(
-            STATE.get("data") or {}, STATE, historical_store, LEAGUE_ID,
+            STATE.get("data") or {}, STATE, canonical_history_store, LEAGUE_ID,
         )
         schedule_live_visual_capture()
 
@@ -361,7 +371,7 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     )
     lifecycle_coordinator.complete_startup(epoch, startup_reason)
     asset_market_cache.reconcile(
-        STATE.get("data") or {}, STATE, historical_store, LEAGUE_ID,
+        STATE.get("data") or {}, STATE, canonical_history_store, LEAGUE_ID,
     )
     schedule_live_visual_capture()
 
@@ -408,10 +418,10 @@ async def lifespan(_: FastAPI):
         projection_service.restore_into(STATE["data"])
         if default_runtime is not None:
             _publish_runtime_context(default_runtime, projection_service)
-        await asyncio.to_thread(asset_market_cache.cleanup_artifacts, historical_store)
+        await asyncio.to_thread(asset_market_cache.cleanup_artifacts, canonical_history_store)
         await asyncio.to_thread(
             asset_market_cache.restore_compatible,
-            STATE["data"], STATE, historical_store, LEAGUE_ID,
+            STATE["data"], STATE, canonical_history_store, LEAGUE_ID,
         )
     await asyncio.to_thread(history_progress_contracts, LEAGUE_ID)
     mark_startup_complete(_PROCESS_STARTED)
@@ -448,7 +458,7 @@ app.add_middleware(
     cache=asset_market_cache,
     data_provider=lambda: STATE.get("data") or {},
     state=STATE,
-    store=historical_store,
+    store=canonical_history_store,
     league_id=LEAGUE_ID,
 )
 app.add_middleware(
