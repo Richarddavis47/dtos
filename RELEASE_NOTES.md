@@ -1,3 +1,11 @@
+# DTOS v1.10.24 - Legacy Access Observability Route Correction
+
+DTOS v1.10.24 makes the existing bounded `POST /api/leagues/resources/measure` endpoint reachable in production by narrowing league-context path recognition to the actual league runtime route. It does not change HistoricalStore migration behavior or physically modify the preserved legacy database.
+
+The release retains strict league-ID validation, the existing resource measurement contract, and the fail-closed legacy access guard used to prove zero canonical reads and writes.
+
+---
+
 # DTOS v1.10.23 - HistoricalStore Consumer & Writer Migration
 
 DTOS now sources reconstructible league history from normalized Sleeper season

@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.10.24 - Legacy Access Observability Route Correction
+
+- Disambiguate the static bounded resource-measurement endpoint from league-scoped runtime hydration in request-context middleware.
+- Preserve strict Sleeper league-ID validation for the actual `/api/leagues/{league_id}/runtime` route.
+- Add runtime-routing regressions proving production legacy access counters remain directly observable without exposing private league data.
+
 ## v1.10.23 - HistoricalStore Consumer & Writer Migration
 
 - Migrated canonical league-history consumers to disposable normalized Sleeper
