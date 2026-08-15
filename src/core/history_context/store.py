@@ -111,6 +111,10 @@ class CanonicalHistoryStore:
                 result[season] = cached.checksum
         return result
 
+    def season_chain(self, league_id: str) -> dict[str, Any] | None:
+        """Return the compact durable discovery manifest for progress surfaces."""
+        return minimal_metadata_store.season_chain(league_id)
+
     def _facts(self, league_id: str, season: int) -> dict[str, Any] | None:
         cached = sleeper_season_cache.read(league_id, season)
         return cached.facts if cached else None

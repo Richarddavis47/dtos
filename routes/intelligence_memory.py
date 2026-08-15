@@ -10,6 +10,7 @@ from src.core.intelligence_memory import (
     DATA_OWNERSHIP, checkpoint_pipeline, intelligence_checkpoint_store, sleeper_season_cache,
 )
 from src.core.intelligence_memory.sleeper_source import SleeperHistoricalSource
+from src.core.history_context import minimal_metadata_store
 
 
 def create_intelligence_memory_router(
@@ -25,7 +26,10 @@ def create_intelligence_memory_router(
             "status": "healthy",
             "checkpoint_store": intelligence_checkpoint_store.health(),
             "checkpoint_pipeline": checkpoint_pipeline.health(),
-            "provider_cache": sleeper_season_cache.health(),
+            "provider_cache": sleeper_season_cache.health(
+                default_league_id,
+                minimal_metadata_store.season_chain(default_league_id),
+            ),
             "storage_estimates": intelligence_checkpoint_store.storage_estimates(),
             "data_ownership": DATA_OWNERSHIP,
             "legacy_historical_memory": "preserved_no_destructive_migration",

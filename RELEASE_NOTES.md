@@ -1,3 +1,16 @@
+# DTOS v1.10.26 - Sleeper Season Cache Chain Restoration
+
+DTOS v1.10.26 durably records the full Sleeper dynasty chain before hydrating
+individual completed-season caches. A missing or failed season is now explicit
+and recoverable instead of silently shortening every history consumer's scope.
+
+Completed seasons hydrate independently, the active season remains honestly
+pending, and startup reports partial or failed cache work truthfully. FOIS
+scoring is unchanged, canonical history never falls back to HistoricalStore,
+and the preserved legacy database is neither opened nor modified.
+
+---
+
 # DTOS v1.10.25 - FOIS Canonical History Null-Placement Correction
 
 DTOS v1.10.25 makes the canonical FOIS history adapter explicitly nullable for final placement. Current or partial Sleeper seasons may publish playoff bracket placeholders before winner and runner-up identities exist; those values now remain unavailable rather than being coerced or invented.

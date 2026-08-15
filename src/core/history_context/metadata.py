@@ -99,6 +99,14 @@ class MinimalMetadataStore:
             "status": str(status), "derived_from": "sleeper_season_cache_checksum",
         })
 
+    def record_season_chain(self, league_id: str, manifest: dict[str, Any]) -> None:
+        """Persist the compact provider chain and cache lifecycle, never payloads."""
+        self.put("sleeper_season_chain", str(league_id), manifest)
+
+    def season_chain(self, league_id: str) -> dict[str, Any] | None:
+        value = self.get("sleeper_season_chain", str(league_id))
+        return dict(value) if isinstance(value, dict) else None
+
     def record_sync_generation(self, league_id: str, generation: str) -> None:
         self.put("sync_generation", str(league_id), {
             "generation": str(generation),

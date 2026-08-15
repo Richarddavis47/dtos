@@ -507,18 +507,46 @@ def start_background_backfill(fetch: Any) -> asyncio.Task[dict[str, Any]]:
                 source = SleeperHistoricalSource()
                 chain = await source.discover(LEAGUE_ID)
                 current = datetime.now(timezone.utc).year
+                manifest = {
+                    "root_league_id": str(LEAGUE_ID),
+                    "year_one": chain.year_one,
+                    "terminated": bool(chain.terminated),
+                    "termination_reason": chain.termination_reason,
+                    "updated_at": _now(),
+                    "seasons": [
+                        {
+                            "season": reference.season,
+                            "league_id": reference.league_id,
+                            "previous_league_id": reference.previous_league_id,
+                            "provider_availability": reference.availability,
+                            "cache_status": (
+                                "pending_current" if reference.season == current
+                                else "available_not_cached"
+                            ),
+                            "checksum": None,
+                            "error": reference.reason,
+                        }
+                        for reference in chain.seasons if reference.season is not None
+                    ],
+                }
+                # Discovery is durable before hydration. A later provider or disk
+                # failure therefore cannot make the dynasty appear to start late.
+                minimal_metadata_store.record_season_chain(LEAGUE_ID, manifest)
                 available = []
                 unavailable = []
                 for reference in chain.seasons:
                     if reference.season is None or reference.season >= current:
                         continue
-                    season = await sleeper_season_cache.get_or_rebuild(
-                        reference.league_id, reference.season,
-                        source.completed_season_facts,
-                    )
-                    # Alias a season under the current league namespace so all
-                    # league-scoped consumers share one discovered chain.
-                    if season.facts:
+                    row = next(item for item in manifest["seasons"]
+                               if item["season"] == reference.season)
+                    try:
+                        season = await sleeper_season_cache.get_or_rebuild(
+                            reference.league_id, reference.season,
+                            source.completed_season_facts,
+                        )
+                        if not season.facts:
+                            raise RuntimeError("provider_season_unavailable")
+                        # Alias under the current league so consumers use one chain.
                         normalized = sleeper_season_cache.normalize(
                             LEAGUE_ID, reference.season, season.facts,
                         )
@@ -527,13 +555,29 @@ def start_background_backfill(fetch: Any) -> asyncio.Task[dict[str, Any]]:
                             LEAGUE_ID, reference.season, normalized.checksum,
                             normalized.status,
                         )
-                    (available if season.status != "unavailable" else unavailable).append(
-                        reference.season,
-                    )
+                    except Exception as exc:
+                        row.update({
+                            "cache_status": "unavailable",
+                            "error": f"cache_hydration_failed:{type(exc).__name__}",
+                        })
+                        unavailable.append(reference.season)
+                    else:
+                        row.update({
+                            "cache_status": "cached",
+                            "checksum": normalized.checksum,
+                            "error": None,
+                        })
+                        available.append(reference.season)
+                    manifest["updated_at"] = _now()
+                    minimal_metadata_store.record_season_chain(LEAGUE_ID, manifest)
                 result = {
                     "status": "complete" if not unavailable else "partial",
                     "seasons": available, "unavailable_seasons": unavailable,
                     "year_one": chain.year_one, "source": "sleeper_season_cache",
+                    "errors": [
+                        {"season": row["season"], "error": row.get("error")}
+                        for row in manifest["seasons"] if row.get("error")
+                    ],
                 }
                 phase.update({
                     "historical_job_state": result.get("status"),
@@ -916,8 +960,12 @@ def canonical_history_progress(
     selected_year = current_year or datetime.now().year
     if historical_store is canonical_history_store:
         cached = sorted(historical_store._cache_index(league_id))
-        year_one = min(cached) if cached else selected_year
-        seasons = tuple(range(year_one, selected_year + 1))
+        manifest = historical_store.season_chain(league_id) or {}
+        discovered = sorted({
+            int(row["season"]) for row in manifest.get("seasons", [])
+            if row.get("season") is not None
+        })
+        seasons = tuple(discovered or cached or [selected_year])
         completed_seasons = [
             season for season in seasons if season in cached and season < selected_year
         ]

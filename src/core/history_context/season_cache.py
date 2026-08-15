@@ -113,9 +113,52 @@ class SleeperSeasonCache:
             self.write(rebuilt)
         return rebuilt
 
-    def health(self) -> dict[str, Any]:
+    def storage_estimate(self, league_id: str, season_count: int) -> dict[str, int]:
+        """Estimate a complete root namespace from existing compact archives."""
+        files = [
+            self.path(league_id, season)
+            for season in self.available_seasons(league_id)
+        ]
+        sizes = [path.stat().st_size for path in files if path.is_file()]
+        average = int(sum(sizes) / len(sizes)) if sizes else 512_000
+        projected = average * max(0, int(season_count))
+        return {
+            "cached_bytes": sum(sizes), "average_season_bytes": average,
+            "projected_complete_bytes": projected,
+            "additional_bytes": max(0, projected - sum(sizes)),
+        }
+
+    def health(
+        self, league_id: str | None = None, manifest: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         files = list(self.root.rglob("*.json.gz")) if self.root.exists() else []
-        return {"status": "healthy", "ownership": "disposable_provider_cache",
+        result: dict[str, Any] = {
+                "status": "healthy", "ownership": "disposable_provider_cache",
                 "completed_seasons": len(files),
                 "bytes": sum(path.stat().st_size for path in files),
-                "rebuildable": True}
+                "rebuildable": True,
+        }
+        if league_id is not None:
+            rows = list((manifest or {}).get("seasons") or [])
+            cached = list(self.available_seasons(league_id))
+            result["league"] = {
+                "discovered_seasons": [row.get("season") for row in rows],
+                "cached_seasons": cached,
+                "available_not_cached": [
+                    row.get("season") for row in rows
+                    if row.get("cache_status") == "available_not_cached"
+                ],
+                "unavailable_seasons": [
+                    row.get("season") for row in rows
+                    if row.get("cache_status") == "unavailable"
+                ],
+                "pending_current_seasons": [
+                    row.get("season") for row in rows
+                    if row.get("cache_status") == "pending_current"
+                ],
+                "last_error": next((
+                    row.get("error") for row in reversed(rows) if row.get("error")
+                ), None),
+                "storage_estimate": self.storage_estimate(league_id, len(rows)),
+            }
+        return result
