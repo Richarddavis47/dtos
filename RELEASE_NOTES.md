@@ -1,3 +1,27 @@
+# DTOS v1.10.36 - Canonical FOIS GM Intelligence, Confidence Calibration & League Leaderboard
+
+DTOS v1.10.36 makes FOIS a current league GM leaderboard: one canonical active
+profile for each current GM, deterministically ranked, with confidence,
+completeness, supported evidence, strengths, and improvement areas visible.
+Meaningful historical snapshots and prior tenures remain available only beneath
+the applicable GM profile.
+
+The versioned confidence contract distinguishes reliability from evidence
+coverage, excludes unavailable dimensions from performance scoring, and keeps
+trade process separate from later outcome. FOIS continues to use reconstructible
+Sleeper facts, canonical Brain context, and compact DTOS-owned snapshots without
+restoring HistoricalStore or introducing request-time provider calls.
+
+## Validation focus
+
+- Ten current Day Traders GMs produce exactly ten current canonical profiles.
+- Full 2021–2025 history and current/pending 2026 semantics remain honest.
+- Active-tenure identity survives season league IDs and franchise renames.
+- Desktop/mobile leaderboard and GM history drill-down remain semantically distinct.
+- Generation remains idempotent, nonblocking, multi-league isolated, and compact.
+
+---
+
 # DTOS v1.10.35 - Historical Resolution Bulk Reuse & Request Responsiveness
 
 DTOS v1.10.35 makes unchanged historical trade-market replay inexpensive by

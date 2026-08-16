@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.10.35"
-BUILD_NUMBER = 1135
-RELEASE_CODENAME = "Historical Resolution Bulk Reuse & Request Responsiveness"
+VERSION = "1.10.36"
+BUILD_NUMBER = 1136
+RELEASE_CODENAME = "Canonical FOIS GM Intelligence, Confidence Calibration & League Leaderboard"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

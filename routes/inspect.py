@@ -415,17 +415,35 @@ def create_inspection_router(
         """Inspect persisted FOIS summaries without generation or provider access."""
         selected, _projections, _market = dependencies()
         scores = fois_service.repository.league(selected, FOIS_MODEL_VERSION) if selected else ()
+        scores = tuple(sorted(scores, key=lambda row: (
+            -(row.overall_score if row.overall_score is not None else -1),
+            -row.confidence, row.gm_id or "",
+        )))
+        health = (
+            fois_service.repository.canonical_health(selected, FOIS_MODEL_VERSION)
+            if selected else {
+                "current_gm_count": 0, "current_canonical_count": 0,
+                "duplicate_current_count": 0, "historical_snapshot_count": 0,
+            }
+        )
         return jsonable_encoder({
             "application_version": VERSION,
             "application_build": BUILD_NUMBER,
             "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
             "page_name": "FOIS League Overview",
             "route": "/fois",
-            "sections": ["Executive Rankings", "GM Quality vs Team Quality", "Evidence Confidence"],
-            "cards": [{"gm_name": row.gm_name, "executive_score": row.overall_score,
+            "sections": ["Current GM Leaderboard", "GM Quality vs Team Quality", "Evidence Confidence", "GM History"],
+            **health,
+            "cards": [{"rank": rank, "gm_id": row.gm_id, "gm_name": row.gm_name,
+                       "franchise_name": row.franchise_name,
+                       "evaluation_kind": row.evaluation_kind,
+                       "executive_score": row.overall_score,
+                       "grade": row.overall_letter_grade,
                        "current_team_score": row.current_team_score,
-                       "confidence": row.confidence, "evidence_state": row.evidence_state}
-                      for row in scores],
+                       "confidence": row.confidence, "completeness": row.completeness,
+                       "supported_weight": row.supported_weight,
+                       "evidence_state": row.evidence_state}
+                      for rank, row in enumerate(scores, 1)],
             "tables": ["GM Rankings"], "charts": ["Executive Score by Category"],
             "buttons": ["Executive Profile", "Compare GMs"],
             "navigation": ["Commissioner Desk", "Team Headquarters", "Front Office"],

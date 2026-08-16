@@ -5,11 +5,20 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-FOIS_MODEL_VERSION = "3.0"
-FOIS_CATEGORY_DEFINITION_VERSION = "3.0"
-FOIS_METRIC_DEFINITION_VERSION = "3.0"
-FOIS_CONFIGURATION_VERSION = "3.0"
+FOIS_MODEL_VERSION = "4.0"
+FOIS_CATEGORY_DEFINITION_VERSION = "4.0"
+FOIS_METRIC_DEFINITION_VERSION = "4.0"
+FOIS_CONFIGURATION_VERSION = "4.0"
 FOIS_EVIDENCE_VERSION = "1.0"
+FOIS_CONFIDENCE_VERSION = "1.0"
+
+
+class EvaluationKind(str, Enum):
+    CURRENT_CANONICAL = "current_canonical"
+    HISTORICAL_SNAPSHOT = "historical_snapshot"
+    HISTORICAL_TENURE = "historical_tenure"
+    DUPLICATE_DERIVATION = "duplicate_derivation"
+    INCOMPLETE_OBSOLETE_DERIVATION = "incomplete_obsolete_derivation"
 
 
 class MetricStatus(str, Enum):
@@ -120,6 +129,13 @@ class FrontOfficeIntelligenceScore:
     management_momentum: str = "Unavailable"
     strengths: tuple[str, ...] = ()
     weaknesses: tuple[str, ...] = ()
+    franchise_name: str | None = None
+    evaluation_kind: str = EvaluationKind.CURRENT_CANONICAL.value
+    supported_weight: float = 0.0
+    confidence_model_version: str = FOIS_CONFIDENCE_VERSION
+    tendencies: tuple[str, ...] = ()
+    unavailable_tendencies: tuple[str, ...] = ()
+    trade_partner_count: int = 0
 
 
 @dataclass(frozen=True)

@@ -35,3 +35,13 @@ def identity_from_team(league_id: str, team: dict) -> FranchiseIdentity:
         str(team.get("owner") or "Unassigned"),
         canonical_team_name(team),
     )
+
+
+def canonical_league_identity(league: dict) -> str:
+    """Return the stable dynasty-chain namespace supplied by canonical context."""
+    return str(
+        league.get("root_league_id")
+        or league.get("canonical_league_id")
+        or league.get("league_id")
+        or "configured-league"
+    )

@@ -9,6 +9,7 @@ from src.core.historical_memory.read_model import historical_graph
 from src.core.history_context import canonical_history_store
 from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
+from src.core.fois.identity import canonical_league_identity, identity_from_team
 
 
 def build_front_office_center(data: dict[str, Any], roster_id: int | None = None) -> dict[str, Any]:
@@ -24,8 +25,10 @@ def build_front_office_center(data: dict[str, Any], roster_id: int | None = None
     graph = historical_graph(canonical_history_store, league_id, data)
     histories = {str(selected): graph.franchise_history(str(selected))}
     selected_team = next((row for row in teams if int(row.get("roster_id") or 0) == selected), {})
-    owner_id = selected_team.get("owner_id") or selected_team.get("user_id")
-    gm_id = f"{league_id}:gm:{owner_id}" if owner_id is not None else None
+    identity = identity_from_team(
+        canonical_league_identity(data.get("league") or {}), selected_team,
+    )
+    gm_id = identity.gm_id if identity.owner_id is not None else None
     fois_score = (
         fois_service.repository.score_for_gm(league_id, gm_id, FOIS_MODEL_VERSION)
         if gm_id else None

@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from contextlib import contextmanager
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from threading import RLock
 
@@ -14,6 +14,8 @@ from src.core.fois.models import (
     FrontOfficeIntelligenceScore,
     FrontOfficeMetricScore,
     MetricStatus,
+    EvaluationKind,
+    FOIS_MODEL_VERSION,
     GMTenure,
     TakeoverSnapshot,
 )
@@ -181,13 +183,33 @@ class FOISRepository:
         model_version: str,
     ) -> tuple[FrontOfficeIntelligenceScore, ...]:
         with self._connection() as connection:
-            rows = connection.execute(
-                """SELECT payload FROM fois_scores_v2
-                WHERE league_id=? AND model_version=?
-                ORDER BY franchise_id""",
-                (league_id, model_version),
-            ).fetchall()
-        return tuple(_score(json.loads(row["payload"])) for row in rows)
+            active_count = int(connection.execute(
+                "SELECT COUNT(*) FROM fois_gm_tenures WHERE league_id=? AND active=1",
+                (league_id,),
+            ).fetchone()[0])
+            if active_count:
+                rows = connection.execute(
+                    """SELECT scores.payload FROM fois_scores_v2 AS scores
+                    JOIN fois_gm_tenures AS tenure ON tenure.tenure_id=scores.tenure_id
+                    WHERE scores.league_id=? AND scores.model_version=? AND tenure.active=1
+                    ORDER BY scores.franchise_id""",
+                    (league_id, model_version),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    """SELECT payload FROM fois_scores_v2
+                    WHERE league_id=? AND model_version=? ORDER BY franchise_id""",
+                    (league_id, model_version),
+                ).fetchall()
+        scores = tuple(_score(json.loads(row["payload"])) for row in rows)
+        by_franchise: dict[str, FrontOfficeIntelligenceScore] = {}
+        for score in scores:
+            existing = by_franchise.get(score.franchise_id)
+            if existing is None or (score.generated_at, score.score_key) > (
+                existing.generated_at, existing.score_key,
+            ):
+                by_franchise[score.franchise_id] = score
+        return tuple(by_franchise[key] for key in sorted(by_franchise))
 
     def league_ids(self, model_version: str) -> tuple[str, ...]:
         """Return persisted FOIS leagues without loading score payloads."""
@@ -272,22 +294,105 @@ class FOISRepository:
             "inherited_obligations": tuple(payload["inherited_obligations"]),
         })
 
-    def timeline(self, league_id: str, gm_id: str) -> tuple[FrontOfficeIntelligenceScore, ...]:
+    def timeline(
+        self, league_id: str, gm_id: str,
+        model_version: str = FOIS_MODEL_VERSION,
+    ) -> tuple[FrontOfficeIntelligenceScore, ...]:
         with self._connection() as connection:
             rows = connection.execute(
-                "SELECT payload FROM fois_snapshot_history WHERE league_id=? AND gm_id=? ORDER BY generated_at,snapshot_id",
-                (league_id, gm_id),
+                "SELECT payload FROM fois_snapshot_history WHERE league_id=? AND gm_id=? AND model_version=? ORDER BY generated_at,snapshot_id",
+                (league_id, gm_id, model_version),
             ).fetchall()
-        return tuple(_score(json.loads(row["payload"])) for row in rows)
+        values = tuple(_score(json.loads(row["payload"])) for row in rows)
+        current = self.score_for_gm(league_id, gm_id, model_version) if values else None
+        return tuple(
+            replace(
+                value,
+                evaluation_kind=(
+                    EvaluationKind.CURRENT_CANONICAL.value
+                    if current is not None and value.score_key == current.score_key
+                    and value.model_version == current.model_version
+                    and value.generated_at == current.generated_at
+                    else EvaluationKind.HISTORICAL_SNAPSHOT.value
+                ),
+            )
+            for value in values
+        )
+
+    def canonical_health(self, league_id: str, model_version: str) -> dict[str, object]:
+        current = self.league(league_id, model_version)
+        gm_ids = tuple(row.gm_id for row in current if row.gm_id)
+        with self._connection() as connection:
+            snapshots = int(connection.execute(
+                "SELECT COUNT(*) FROM fois_snapshot_history WHERE league_id=? AND model_version=?",
+                (league_id, model_version),
+            ).fetchone()[0])
+            tenures = int(connection.execute(
+                "SELECT COUNT(*) FROM fois_gm_tenures WHERE league_id=? AND active=0",
+                (league_id,),
+            ).fetchone()[0])
+            obsolete = int(connection.execute(
+                "SELECT COUNT(*) FROM fois_snapshot_history WHERE league_id=? AND model_version<>?",
+                (league_id, model_version),
+            ).fetchone()[0])
+            duplicate_derivations = int(connection.execute(
+                """SELECT COALESCE(SUM(c-1),0) FROM (
+                SELECT COUNT(*) AS c FROM fois_snapshot_history
+                WHERE league_id=? AND model_version=? GROUP BY score_key
+                )""",
+                (league_id, model_version),
+            ).fetchone()[0])
+            current_bytes = int(connection.execute(
+                "SELECT COALESCE(SUM(LENGTH(payload)),0) FROM fois_scores_v2 WHERE league_id=? AND model_version=?",
+                (league_id, model_version),
+            ).fetchone()[0])
+            snapshot_bytes = int(connection.execute(
+                "SELECT COALESCE(SUM(LENGTH(payload)),0) FROM fois_snapshot_history WHERE league_id=?",
+                (league_id,),
+            ).fetchone()[0])
+        return {
+            "current_gm_count": len(current),
+            "current_canonical_count": len(current),
+            "duplicate_current_count": len(gm_ids) - len(set(gm_ids)),
+            "historical_snapshot_count": max(0, snapshots - len(current)),
+            "historical_tenure_count": tenures,
+            "duplicate_derivation_count": duplicate_derivations,
+            "incomplete_obsolete_derivation_count": obsolete,
+            "current_evaluation_bytes": current_bytes,
+            "historical_snapshot_bytes": snapshot_bytes,
+            "total_fois_bytes": current_bytes + snapshot_bytes,
+            "overall_completeness": round(
+                sum(row.completeness for row in current) / len(current), 2,
+            ) if current else 0.0,
+            "confidence_distribution": [row.confidence for row in current],
+            "supported_weight_distribution": [row.supported_weight for row in current],
+            "unavailable_dimension_count": sum(
+                category.normalized_score is None
+                for row in current for category in row.category_scores
+            ),
+        }
 
     def score_for_gm(self, league_id: str, gm_id: str, model_version: str) -> FrontOfficeIntelligenceScore | None:
         with self._connection() as connection:
-            row = connection.execute(
-                """SELECT payload FROM fois_scores_v2
-                WHERE league_id=? AND gm_id=? AND model_version=?
-                ORDER BY generated_at DESC LIMIT 1""",
-                (league_id, gm_id, model_version),
-            ).fetchone()
+            active_count = int(connection.execute(
+                "SELECT COUNT(*) FROM fois_gm_tenures WHERE league_id=? AND active=1",
+                (league_id,),
+            ).fetchone()[0])
+            if active_count:
+                row = connection.execute(
+                    """SELECT scores.payload FROM fois_scores_v2 AS scores
+                    JOIN fois_gm_tenures AS tenure ON tenure.tenure_id=scores.tenure_id
+                    WHERE scores.league_id=? AND scores.gm_id=? AND scores.model_version=?
+                    AND tenure.active=1 ORDER BY scores.generated_at DESC LIMIT 1""",
+                    (league_id, gm_id, model_version),
+                ).fetchone()
+            else:
+                row = connection.execute(
+                    """SELECT payload FROM fois_scores_v2
+                    WHERE league_id=? AND gm_id=? AND model_version=?
+                    ORDER BY generated_at DESC LIMIT 1""",
+                    (league_id, gm_id, model_version),
+                ).fetchone()
         return _score(json.loads(row["payload"])) if row else None
 
 
@@ -325,5 +430,7 @@ def _score(payload: dict) -> FrontOfficeIntelligenceScore:
             "warnings": tuple(payload["warnings"]),
             "strengths": tuple(payload.get("strengths") or ()),
             "weaknesses": tuple(payload.get("weaknesses") or ()),
+            "tendencies": tuple(payload.get("tendencies") or ()),
+            "unavailable_tendencies": tuple(payload.get("unavailable_tendencies") or ()),
         }
     )

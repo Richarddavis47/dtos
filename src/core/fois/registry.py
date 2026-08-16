@@ -56,6 +56,10 @@ _CATEGORY_METRICS = {
         "Proven-player preference effectiveness", "Top-four rookie-pick utilization",
         "Mid and late pick efficiency",
     ),
+    "waivers_transactions": (
+        "Waiver activity", "Waiver value created", "FAAB efficiency",
+        "Free-agent decision quality",
+    ),
 }
 
 
