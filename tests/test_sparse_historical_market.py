@@ -8,7 +8,8 @@ from pathlib import Path
 from threading import Thread
 
 from src.core.intelligence_memory.historical_resolver import (
-    HistoricalMarketResolver, HistoricalProviderCache, PersistenceContext,
+    HistoricalMarketResolver, HistoricalProviderCache,
+    HistoricalProviderRateLimitError, PersistenceContext,
     persistence_decision,
 )
 from src.core.intelligence_memory.historical_providers import DynastyProcessHistoricalProvider
@@ -33,6 +34,12 @@ class Provider:
     def observations(self, **_context):
         self.calls += 1
         return self.rows
+
+
+class RateLimitedProvider(Provider):
+    def observations(self, **_context):
+        self.calls += 1
+        raise HistoricalProviderRateLimitError("rate limit exceeded")
 
 
 def source(value=7000, observed_at="2023-10-01T00:00:00+00:00"):
@@ -94,6 +101,82 @@ class SparseHistoricalResolverTests(unittest.TestCase):
         self.assertEqual(first.observation_id, second.observation_id)
         self.assertEqual(provider.calls, 1)
         self.assertEqual(self.store.market_memory_health()["observation_count"], 1)
+
+    def test_exact_durable_replay_survives_cache_clear_and_skips_provider(self):
+        provider = Provider((source(),))
+        resolver = HistoricalMarketResolver(self.store, (provider,))
+        first = resolver.resolve_checkpoint(
+            checkpoint(), market_context_id=self.context,
+            persistence=PersistenceContext("trade_execution"),
+        )
+        resolver.cache.clear()
+        resolver.providers = (RateLimitedProvider(),)
+        second = resolver.resolve_checkpoint(
+            checkpoint(), market_context_id=self.context,
+            persistence=PersistenceContext("trade_execution"),
+        )
+        self.assertEqual(first[0].observation_id, second[0].observation_id)
+        self.assertEqual(second[0].source, "durable_resolution_reference")
+        self.assertEqual(resolver.providers[0].calls, 0)
+        self.assertEqual(self.store.market_memory_health()["reference_count"], 1)
+
+    def test_final_unavailable_is_durable_and_not_retried(self):
+        provider = Provider(())
+        resolver = HistoricalMarketResolver(self.store, (provider,))
+        first = resolver.resolve_checkpoint(
+            checkpoint(), market_context_id=self.context,
+            persistence=PersistenceContext("trade_execution"),
+        )
+        self.assertFalse(first[0].available)
+        resolver.providers = (RateLimitedProvider(),)
+        second = resolver.resolve_checkpoint(
+            checkpoint(), market_context_id=self.context,
+            persistence=PersistenceContext("trade_execution"),
+        )
+        self.assertEqual(second[0].source, "durable_final_unavailable")
+        self.assertEqual(resolver.providers[0].calls, 0)
+
+    def test_rate_limit_without_durable_resolution_remains_retryable(self):
+        provider = RateLimitedProvider()
+        resolver = HistoricalMarketResolver(self.store, (provider,))
+        with self.assertRaises(HistoricalProviderRateLimitError):
+            resolver.resolve_checkpoint(
+                checkpoint(), market_context_id=self.context,
+                persistence=PersistenceContext("trade_execution"),
+            )
+        self.assertEqual(self.store.market_memory_health()["reference_count"], 0)
+        self.assertEqual(resolver.health()["counts"]["provider_rate_limited"], 1)
+
+    def test_service_reports_degraded_retry_pending_without_fabricating_a_grade(self):
+        provider = RateLimitedProvider()
+        service = HistoricalTradeResolutionService(
+            HistoricalMarketResolver(self.store, (provider,))
+        )
+        class History:
+            def records(self, _league_id, _entity_type, limit):
+                return 1, [{
+                    "source_record_id": "rate-limited", "season": 2022,
+                    "occurred_at": "2022-10-30T23:46:40.370Z",
+                    "payload": {"adds": {"10213": 1}},
+                }]
+        summary = service.run(History(), "L")
+        health = service.health()
+        self.assertEqual(health["status"], "degraded_provider_retry_pending")
+        self.assertEqual(summary.process_gradable, 0)
+        self.assertEqual(summary.counters["historical_provider_requests"], 1)
+        self.assertEqual(summary.counters["historical_provider_rate_limited"], 1)
+        self.assertEqual(self.store.market_memory_health()["reference_count"], 0)
+
+    def test_resolver_version_mismatch_requires_explicit_resolution(self):
+        provider = Provider((source(),))
+        resolver = HistoricalMarketResolver(self.store, (provider,))
+        resolver.resolve_checkpoint(
+            checkpoint(), market_context_id=self.context,
+            persistence=PersistenceContext("trade_execution"),
+        )
+        self.assertIsNone(self.store.compatible_resolution(
+            checkpoint(), market_context_id=self.context, resolver_version="2.0",
+        ))
 
     def test_cache_is_global_bounded_disposable_and_omits_league(self):
         provider = Provider((source(),))

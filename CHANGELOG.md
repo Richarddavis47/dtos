@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.33 - Historical Resolution Replay Resilience & Durable Reuse
+
+- Recognize version-compatible event/asset resolution references before consulting
+  historical providers, including after process restart and disposable-cache loss.
+- Persist only compact final-unavailable completion metadata and keep provider
+  rate limits retryable without fabricating evidence or invalidating preserved grades.
+- Expose per-run reuse, provider-request, rate-limit, and replay-skip diagnostics
+  while retaining zero per-league market archives and zero current-market fallback.
+
 ## v1.10.32 - Historical Trade Gradability Accounting Correction
 
 - Classify completed FAAB-only and otherwise unsupported historical trades as

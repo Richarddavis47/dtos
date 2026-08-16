@@ -10,6 +10,7 @@ from typing import Any, Callable
 
 import httpx
 
+from .historical_resolver import HistoricalProviderRateLimitError
 from .models import SourceObservation
 
 DYNASTYPROCESS_REPOSITORY = "dynastyprocess/data"
@@ -40,6 +41,10 @@ class DynastyProcessHistoricalProvider:
     def _http_json(self, url: str, params: dict[str, str]) -> Any:
         with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
             response = client.get(url, params=params, headers={"Accept": "application/vnd.github+json"})
+            if response.status_code == 403 and "rate limit" in response.text.casefold():
+                raise HistoricalProviderRateLimitError(
+                    "DynastyProcess historical provider rate limited the request."
+                )
             response.raise_for_status()
             self.requests += 1
             self.bytes_downloaded += len(response.content)

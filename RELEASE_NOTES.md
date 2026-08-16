@@ -1,4 +1,12 @@
-# DTOS v1.10.32 - Historical Trade Gradability Accounting Correction
+# DTOS v1.10.33 - Historical Resolution Replay Resilience & Durable Reuse
+
+DTOS now restores compatible historical trade resolutions directly from compact
+Global Market Observation references. Unchanged replay no longer depends on a live
+historical provider or disposable provider cache. Final unavailable evidence is
+recorded compactly, while provider rate limits remain explicit retry-pending states
+without fabricated grades, current-market fallback, or permanent provider archives.
+
+## Previous release: v1.10.32 - Historical Trade Gradability Accounting Correction
 
 DTOS now assigns every completed historical trade exactly one process-gradability
 state. FAAB-only trades remain canonical completed activity with unavailable

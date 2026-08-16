@@ -10,13 +10,15 @@ from .confidence import temporal_confidence
 from .fois import fois_process_evidence
 from .models import (
     CheckpointTrigger, EvidenceCompleteness, EvidencePersistenceDecision, GlobalMarketObservation,
+    HistoricalResolutionState,
     HistoricalTradeAssessment, IntelligenceCheckpoint, MarketObservationDecision,
     MarketObservationReference, PickLineage, ProvenanceType, SourceObservation,
 )
 from .market_memory import MarketObservationMaterialityPolicy, market_context_id
 from .historical_resolver import (
     HistoricalMarketProvider, HistoricalMarketResolver, HistoricalProviderCache,
-    HistoricalResolution, PersistenceContext, persistence_decision,
+    HistoricalProviderRateLimitError, HistoricalResolution, PersistenceContext,
+    persistence_decision,
 )
 from .historical_providers import DynastyProcessHistoricalProvider
 from .trade_resolution import HistoricalTradeResolutionService, TradeResolutionSummary
@@ -41,9 +43,9 @@ historical_trade_resolution_service = HistoricalTradeResolutionService(
 
 __all__ = [
     "CachedSeason", "CheckpointTrigger", "DATA_OWNERSHIP", "EvidenceCompleteness",
-    "EvidencePersistenceDecision", "GlobalMarketObservation", "HistoricalMarketSelection", "HistoricalTradeAssessment", "IntelligenceCheckpoint",
+    "EvidencePersistenceDecision", "GlobalMarketObservation", "HistoricalMarketSelection", "HistoricalResolutionState", "HistoricalTradeAssessment", "IntelligenceCheckpoint",
     "HistoricalMarketProvider", "HistoricalMarketResolver", "HistoricalProviderCache",
-    "HistoricalResolution", "PersistenceContext", "persistence_decision",
+    "HistoricalProviderRateLimitError", "HistoricalResolution", "PersistenceContext", "persistence_decision",
     "DynastyProcessHistoricalProvider", "HistoricalTradeResolutionService",
     "TradeResolutionSummary", "historical_market_provider",
     "historical_market_resolver", "historical_trade_resolution_service",
