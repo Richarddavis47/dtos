@@ -71,6 +71,7 @@ from src.core.history_context import (
 )
 from src.core.projection_intelligence import projection_service
 from src.core.projection_intelligence.service import ProjectionService
+from src.core.intelligence_memory import historical_trade_resolution_service
 from src.platform.observability import (
     install_observability,
     mark_startup_complete,
@@ -291,6 +292,36 @@ async def background_sync() -> None:
         schedule_live_visual_capture()
 
 
+async def resolve_historical_trade_market() -> None:
+    """Run event-driven provider matching only after the first Market is stable."""
+    runtime_metrics.mark_background("historical_market_resolution", "waiting")
+    for _ in range(300):
+        metrics = asset_market_cache.metrics()
+        if metrics.get("status") == "ready" and not metrics.get("build_active"):
+            break
+        await asyncio.sleep(1)
+    else:
+        runtime_metrics.mark_background("historical_market_resolution", "deferred")
+        return
+    runtime_metrics.mark_background("historical_market_resolution", "running")
+    with lifecycle_coordinator.phase("historical_market_resolution"):
+        result = await asyncio.to_thread(
+            historical_trade_resolution_service.run_safe,
+            canonical_history_store, LEAGUE_ID,
+        )
+    runtime_metrics.mark_background(
+        "historical_market_resolution", "complete" if result else "failed",
+    )
+    if result:
+        runtime_metrics.mark_background("fois_generation", "running")
+        try:
+            await fois_service.generate(STATE["data"])
+        except Exception:
+            runtime_metrics.mark_background("fois_generation", "failed")
+        else:
+            runtime_metrics.mark_background("fois_generation", "complete")
+
+
 async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     """Start required data promptly and defer optional cached maintenance."""
     epoch = startup_epoch or lifecycle_coordinator.begin_startup(
@@ -399,7 +430,15 @@ async def startup_and_periodic_maintenance(startup_epoch: int) -> None:
         )
         return
     if lifecycle_coordinator.startup_complete():
-        await background_sync()
+        resolution_task = asyncio.create_task(
+            resolve_historical_trade_market(),
+            name="dtos-historical-trade-market-resolution",
+        )
+        try:
+            await background_sync()
+        finally:
+            resolution_task.cancel()
+            await asyncio.gather(resolution_task, return_exceptions=True)
 
 
 @asynccontextmanager

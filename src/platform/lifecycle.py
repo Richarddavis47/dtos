@@ -14,7 +14,7 @@ import psutil
 HEAVY_PHASES = frozenset({
     "sleeper_sync", "provider_network", "valuation_intelligence",
     "cache_persistence", "historical_import", "historical_cache", "asset_market_build",
-    "live_visual_capture",
+    "historical_market_resolution", "live_visual_capture",
 })
 MARKET_BUILD_BLOCKERS = HEAVY_PHASES - {"asset_market_build"}
 
@@ -153,7 +153,9 @@ class LifecycleCoordinator:
 
     def visual_capture_allowed(self) -> bool:
         with self._condition:
-            return self._market_critical == 0 and self._phase != "asset_market_build"
+            return self._market_critical == 0 and self._phase not in {
+                "asset_market_build", "historical_market_resolution",
+            }
 
     def defer_visual_capture(self) -> None:
         with self._condition:
@@ -161,9 +163,13 @@ class LifecycleCoordinator:
 
     def wait_for_visual_capture(self, timeout: float = 0.25) -> bool:
         with self._condition:
-            if self._market_critical or self._phase == "asset_market_build":
+            if self._market_critical or self._phase in {
+                "asset_market_build", "historical_market_resolution",
+            }:
                 self._condition.wait(timeout)
-            return self._market_critical == 0 and self._phase != "asset_market_build"
+            return self._market_critical == 0 and self._phase not in {
+                "asset_market_build", "historical_market_resolution",
+            }
 
     @contextmanager
     def phase(self, name: str) -> Iterator[dict[str, Any]]:
@@ -224,6 +230,7 @@ class LifecycleCoordinator:
                         "MARKET_CRITICAL" if self._market_critical
                         else "VISUAL_CAPTURE" if self._phase == "live_visual_capture"
                         else "HISTORICAL_HEAVY" if self._phase == "historical_import"
+                        else "HISTORICAL_MARKET" if self._phase == "historical_market_resolution"
                         else "PROJECTION_HEAVY" if self._phase == "valuation_intelligence"
                         else "IDLE" if self._phase is None else self._phase.upper()
                     ),

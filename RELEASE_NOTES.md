@@ -1,4 +1,13 @@
-# DTOS v1.10.30 - FOIS TradeFact occurred_at Integration Correction
+# DTOS v1.10.31 - Sparse Historical Trade Market Matching
+
+DTOS v1.10.31 resolves historical trade evidence on demand from compatible global
+observations and approved pre-event provider evidence. Provider results may remain
+disposable; evidence is preserved only through one explicit sparse-global policy.
+No league-specific historical market warehouse is introduced, unavailable assets
+remain unavailable rather than zero-valued, and current Asset Market values remain
+strictly fresh-provider-driven.
+
+## Previous release: v1.10.30 - FOIS TradeFact occurred_at Integration Correction
 
 DTOS v1.10.30 completes the v1.10.29 FOIS integration by making the immutable
 `TradeFact` contract accept and retain canonical historical event time plus its

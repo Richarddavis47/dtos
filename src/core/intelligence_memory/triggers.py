@@ -32,6 +32,8 @@ def trade_assessment(
     valued = unavailable = 0
     totals: dict[str, float | None] = {}
     ids: list[str] = []
+    missing: list[str] = []
+    confidences: list[int] = []
     eligible = True
     for side, checkpoints in checkpoints_by_side.items():
         total = 0.0
@@ -40,10 +42,12 @@ def trade_assessment(
             ids.append(checkpoint.checkpoint_id)
             if checkpoint.market_value is None:
                 unavailable += 1
+                missing.append(checkpoint.asset_id)
                 side_incomplete = True
             else:
                 valued += 1
                 total += float(checkpoint.market_value)
+                confidences.append(checkpoint.confidence)
             eligible = eligible and checkpoint.provenance_type.definitive_process_evidence
         totals[side] = None if side_incomplete else total
     status = (
@@ -54,6 +58,9 @@ def trade_assessment(
         status=status, process_grade_eligible=eligible and not unavailable,
         valued_assets=valued, unavailable_assets=unavailable,
         side_totals=totals, evidence_checkpoint_ids=tuple(ids),
+        coverage_ratio=(valued / (valued + unavailable) if valued + unavailable else 0.0),
+        missing_asset_ids=tuple(sorted(missing)),
+        confidence=min(confidences) if confidences else 0,
     )
 
 

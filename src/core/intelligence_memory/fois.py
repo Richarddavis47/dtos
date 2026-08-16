@@ -11,7 +11,10 @@ def fois_process_evidence(
 ) -> dict[str, object]:
     rows = tuple(checkpoints)
     definitive = tuple(
-        row for row in rows if row.provenance_type.definitive_process_evidence
+        row for row in rows
+        if row.provenance_type.definitive_process_evidence
+        and row.market_value is not None
+        and row.confidence > 0
     )
     unavailable = sum(row.market_value is None for row in rows)
     completeness = round(100 * len(definitive) / len(rows), 1) if rows else 0.0
