@@ -19,6 +19,7 @@ from tools.validation.generate_sanitized_market_fixture import (
     _history,
     _record_payload,
     _record_provider,
+    _trade_replay_fixture,
     fixture_valuation_intelligence,
     material_market_fixture_change,
     publish_fixture_market_revision,
@@ -61,6 +62,15 @@ DETAIL = "Asset Market generation is building safely in the background; retry sh
 
 
 class ArchiveCacheValidationTests(unittest.TestCase):
+    def test_historical_replay_fixture_matches_production_shape(self) -> None:
+        seasons, keys = _trade_replay_fixture()
+        trades = [
+            row for weeks in seasons.values() for rows in weeks.values() for row in rows
+        ]
+        self.assertEqual(len(trades), 231)
+        self.assertEqual(len(keys), 1_578)
+        self.assertEqual(len({row[0] for row in keys}), 231)
+
     def test_cpu_stat_delta_rejects_counter_regression(self) -> None:
         before = {"usage_usec": 10, "nr_throttled": 2}
         self.assertEqual(

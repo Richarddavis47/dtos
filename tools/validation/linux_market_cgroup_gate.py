@@ -594,6 +594,76 @@ def _request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes,
     return status, body, elapsed
 
 
+def _post_request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes, float]:
+    started = time.perf_counter()
+    request = Request(BASE_URL + path, data=b"", method="POST")
+    try:
+        with urlopen(request, timeout=60) as response:
+            status, body = response.status, response.read()
+    except HTTPError as exc:
+        status, body = exc.code, exc.read()
+    elapsed = (time.perf_counter() - started) * 1000
+    if status not in expected:
+        raise AssertionError(f"{path}: HTTP {status}, expected {expected}")
+    return status, body, elapsed
+
+
+def _historical_resolution_responsiveness() -> dict[str, object]:
+    """Exercise the real durable replay while retained product routes remain live."""
+    _status, start_body, start_ms = _post_request(
+        "/__validation__/historical-resolution",
+    )
+    started = json.loads(start_body)
+    paths = ("/health/live", "/", "/market", "/api/market/health")
+    samples: list[dict[str, object]] = []
+    cycles = 0
+    active = True
+    deadline = time.monotonic() + 30
+    while (active or cycles == 0) and time.monotonic() < deadline:
+        with ThreadPoolExecutor(max_workers=len(paths)) as executor:
+            futures = {
+                executor.submit(_diagnostic_request, path): path for path in paths
+            }
+            for future in as_completed(futures):
+                path = futures[future]
+                status, body, client_ms, server_ms = future.result()
+                sample = {
+                    "path": path, "status": status,
+                    "client_ms": round(client_ms, 3),
+                    "server_ms": round(server_ms, 3),
+                    "response_bytes": len(body),
+                }
+                samples.append(sample)
+                if client_ms >= 500:
+                    raise AssertionError(
+                        f"historical replay responsiveness failed: {path}={client_ms:.3f}ms"
+                    )
+        cycles += 1
+        _health_status, health_body, _health_ms = _request(
+            "/__validation__/historical-resolution",
+        )
+        state = json.loads(health_body)
+        active = bool(state.get("active"))
+    if active:
+        raise AssertionError("historical resolution did not complete within 30 seconds")
+    health = state.get("health") or {}
+    counters = health.get("counters") or {}
+    if int(counters.get("historical_resolution_assets_total") or 0) != 1_578:
+        raise AssertionError(f"historical replay fixture was not exercised: {health!r}")
+    if int(counters.get("historical_resolution_assets_bulk_reused") or 0) != 1_578:
+        raise AssertionError(f"historical durable replay was not fully reused: {health!r}")
+    if int(counters.get("historical_provider_requests") or 0) != 0:
+        raise AssertionError(f"historical replay contacted a provider: {health!r}")
+    if int(counters.get("historical_resolution_sqlite_connections") or 0) != 1:
+        raise AssertionError(f"historical replay connection budget failed: {health!r}")
+    if int(counters.get("historical_resolution_sqlite_queries") or 0) != 3:
+        raise AssertionError(f"historical replay query budget failed: {health!r}")
+    return {
+        "start_ms": round(start_ms, 3), "started": started,
+        "cycles": cycles, "samples": samples, "health": health,
+    }
+
+
 def _start_server(
     log, mode: str = "normal", *, evidence: dict[str, object] | None = None,
     popen_factory=subprocess.Popen, request_observer=_request,
@@ -1904,6 +1974,15 @@ def main() -> int:
             summary["phases"]["warm_requests"] = {
                 "timestamp": time.time(), "latency_ms": latency_result,
                 "memory_current": _cgroup("memory.current"),
+            }
+            historical_before = _memory_evidence("historical_resolution_before")
+            memory_evidence.append(historical_before)
+            historical_replay = _historical_resolution_responsiveness()
+            historical_after = _memory_evidence("historical_resolution_after")
+            memory_evidence.append(historical_after)
+            summary["phases"]["historical_resolution"] = {
+                "timestamp": time.time(), "before": historical_before,
+                "after": historical_after, **historical_replay,
             }
             if combined_read:
                 combined_before = _memory_evidence("combined_read_before")

@@ -5,6 +5,7 @@ import hashlib
 import json
 import sqlite3
 import threading
+import time
 from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
@@ -617,6 +618,134 @@ class IntelligenceCheckpointStore:
                 ).fetchone()
                 observation = self._decode_observation(observation_row)
         return stored_checkpoint, observation, state
+
+    def compatible_resolutions(
+        self,
+        requests: list[tuple[IntelligenceCheckpoint, str, str]],
+        *,
+        decode_batch_size: int = 128,
+    ) -> tuple[
+        list[tuple[IntelligenceCheckpoint, GlobalMarketObservation | None, HistoricalResolutionState] | None],
+        dict[str, int],
+    ]:
+        """Read compatible durable resolutions in one bounded connection.
+
+        ``requests`` contains checkpoint, market-context, and resolver-version
+        tuples. Temporary tables keep the lookup indexed without constructing a
+        parameter list proportional to the archive size. They exist only for the
+        lifetime of this read connection.
+        """
+        if not requests:
+            return [], {
+                "sqlite_connections": 0, "sqlite_queries": 0,
+                "rows_loaded": 0, "objects_decoded": 0, "batches": 0,
+            }
+        batch_size = max(1, int(decode_batch_size))
+        with self._connect() as connection:
+            connection.execute(
+                """CREATE TEMP TABLE bulk_resolution_requests(
+                request_id INTEGER PRIMARY KEY, league_id TEXT, event_id TEXT,
+                asset_id TEXT, asset_type TEXT, trigger_type TEXT,
+                occurred_at TEXT, market_context_id TEXT, resolver_version TEXT)"""
+            )
+            connection.executemany(
+                """INSERT INTO bulk_resolution_requests VALUES(?,?,?,?,?,?,?,?,?)""",
+                (
+                    (
+                        index, checkpoint.league_id, checkpoint.related_event_id,
+                        checkpoint.asset_id, checkpoint.asset_type,
+                        checkpoint.trigger_type.value, checkpoint.timestamp,
+                        context, resolver_version,
+                    )
+                    for index, (checkpoint, context, resolver_version) in enumerate(requests)
+                ),
+            )
+            connection.execute(
+                """CREATE TEMP TABLE bulk_resolution_matches(
+                request_id INTEGER PRIMARY KEY, checkpoint_id TEXT NOT NULL,
+                observation_id TEXT, resolution_state TEXT NOT NULL)"""
+            )
+            connection.execute(
+                """INSERT OR IGNORE INTO bulk_resolution_matches
+                SELECT q.request_id,r.checkpoint_id,r.observation_id,r.resolution_state
+                FROM bulk_resolution_requests q
+                JOIN market_observation_references r
+                  ON r.league_id IS q.league_id
+                 AND r.event_id=q.event_id
+                 AND r.asset_id=q.asset_id
+                 AND r.trigger_type=q.trigger_type
+                 AND r.occurred_at=q.occurred_at
+                 AND r.market_context_id=q.market_context_id
+                 AND r.resolver_version=q.resolver_version
+                JOIN intelligence_checkpoints c
+                  ON c.checkpoint_id=r.checkpoint_id
+                 AND c.asset_type=q.asset_type
+                ORDER BY q.request_id,r.created_at,r.reference_id"""
+            )
+            match_rows = connection.execute(
+                """SELECT request_id,checkpoint_id,observation_id,resolution_state
+                FROM bulk_resolution_matches ORDER BY request_id"""
+            ).fetchall()
+            checkpoint_rows = connection.execute(
+                """SELECT c.*,
+                COALESCE(c.market_value,o.canonical_value) AS resolved_market_value,
+                COALESCE(c.intrinsic_value,o.intrinsic_value) AS resolved_intrinsic_value,
+                COALESCE(c.confidence,o.confidence) AS resolved_confidence,
+                COALESCE(c.evidence_completeness,o.evidence_completeness)
+                    AS resolved_evidence_completeness,
+                CASE WHEN c.observations_json='[]' AND o.provider_evidence_json IS NOT NULL
+                     THEN o.provider_evidence_json ELSE c.observations_json END
+                    AS resolved_observations_json
+                FROM intelligence_checkpoints c
+                JOIN (SELECT DISTINCT checkpoint_id FROM bulk_resolution_matches) m
+                  ON m.checkpoint_id=c.checkpoint_id
+                LEFT JOIN global_market_observations o
+                  ON o.observation_id=c.global_market_observation_id"""
+            ).fetchall()
+            observation_rows = connection.execute(
+                """SELECT o.* FROM global_market_observations o
+                JOIN (SELECT DISTINCT observation_id FROM bulk_resolution_matches
+                      WHERE observation_id IS NOT NULL) m
+                  ON m.observation_id=o.observation_id"""
+            ).fetchall()
+
+        checkpoints: dict[str, IntelligenceCheckpoint] = {}
+        observations: dict[str, GlobalMarketObservation] = {}
+        batches = 0
+        for offset in range(0, len(checkpoint_rows), batch_size):
+            batches += 1
+            for row in checkpoint_rows[offset:offset + batch_size]:
+                decoded = self._decode(row)
+                checkpoints[decoded.checkpoint_id] = decoded
+            time.sleep(0)
+        for offset in range(0, len(observation_rows), batch_size):
+            batches += 1
+            for row in observation_rows[offset:offset + batch_size]:
+                decoded = self._decode_observation(row)
+                observations[decoded.observation_id] = decoded
+            time.sleep(0)
+
+        results: list[
+            tuple[IntelligenceCheckpoint, GlobalMarketObservation | None, HistoricalResolutionState] | None
+        ] = [None] * len(requests)
+        for row in match_rows:
+            stored = checkpoints.get(str(row["checkpoint_id"]))
+            if stored is None:
+                continue
+            observation_id = row["observation_id"]
+            results[int(row["request_id"])] = (
+                stored,
+                observations.get(str(observation_id)) if observation_id is not None else None,
+                HistoricalResolutionState(row["resolution_state"]),
+            )
+        metrics = {
+            "sqlite_connections": 1,
+            "sqlite_queries": 3,
+            "rows_loaded": len(match_rows) + len(checkpoint_rows) + len(observation_rows),
+            "objects_decoded": len(checkpoints) + len(observations),
+            "batches": batches,
+        }
+        return results, metrics
 
     def observations(
         self, *, asset_id: str | None = None, market_context_id: str | None = None,

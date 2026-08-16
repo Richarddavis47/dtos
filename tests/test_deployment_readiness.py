@@ -24,6 +24,8 @@ class DeploymentReadinessTests(unittest.TestCase):
         self.original_reason = runtime_metrics.readiness_reason
         self.original_ready_at = runtime_metrics.ready_at
         self.original_background = dict(runtime_metrics.background_tasks)
+        self.original_lag = list(runtime_metrics.event_loop_lag_samples_ms)
+        self.original_current_lag = runtime_metrics.event_loop_current_lag_ms
 
     def tearDown(self) -> None:
         lifecycle_coordinator.reset()
@@ -31,6 +33,8 @@ class DeploymentReadinessTests(unittest.TestCase):
         runtime_metrics.readiness_reason = self.original_reason
         runtime_metrics.ready_at = self.original_ready_at
         runtime_metrics.background_tasks = self.original_background
+        runtime_metrics.event_loop_lag_samples_ms = self.original_lag
+        runtime_metrics.event_loop_current_lag_ms = self.original_current_lag
 
     @staticmethod
     def api_client(state: dict) -> TestClient:
@@ -100,6 +104,36 @@ class DeploymentReadinessTests(unittest.TestCase):
             "X-DTOS-Process-Uptime",
         ):
             self.assertIn(name, diagnostic.headers)
+
+    def test_request_entry_and_completion_share_correlation_id(self) -> None:
+        app = FastAPI()
+        install_observability(app)
+
+        @app.get("/health/live")
+        async def live() -> dict[str, bool]:
+            return {"ok": True}
+
+        with self.assertLogs("dtos.request", level="INFO") as captured:
+            response = TestClient(app).get(
+                "/health/live", headers={"X-Request-ID": "bounded-trace"},
+            )
+        self.assertEqual(response.status_code, 200)
+        events = [record.event for record in captured.records]
+        self.assertEqual(events, [
+            "request_accepted", "handler_scheduled", "request_complete",
+        ])
+        self.assertTrue(all(
+            record.request_id == "bounded-trace" for record in captured.records
+        ))
+
+    def test_event_loop_lag_window_is_bounded(self) -> None:
+        runtime_metrics.event_loop_lag_samples_ms = []
+        for value in range(300):
+            runtime_metrics.record_event_loop_lag(float(value))
+        health = runtime_metrics.health()["event_loop_lag"]
+        self.assertEqual(health["sample_count"], 256)
+        self.assertEqual(health["current_ms"], 299.0)
+        self.assertEqual(health["max_ms"], 299.0)
 
     def test_cached_maintenance_waits_before_background_work(self) -> None:
         events: list[str] = []

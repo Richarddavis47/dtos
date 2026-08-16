@@ -1,3 +1,19 @@
+# DTOS v1.10.35 - Historical Resolution Bulk Reuse & Request Responsiveness
+
+DTOS v1.10.35 makes unchanged historical trade-market replay inexpensive by
+validating durable results in a bounded bulk SQLite read. It retains exact
+resolution semantics while exposing request-entry, event-loop lag, and replay
+resource diagnostics needed to verify production responsiveness.
+
+## Validation focus
+
+- Exact durable replay equivalence and partial-miss provider fallback.
+- O(1) replay connection use with three indexed result queries.
+- One-time checkpoint and observation decoding in bounded batches.
+- Retained Asset Market availability and liveness during historical resolution.
+
+---
+
 # DTOS v1.10.34 - Live Visual Stale Capture Refresh Correction
 
 DTOS now refreshes stale required Live Visual evidence through the documented

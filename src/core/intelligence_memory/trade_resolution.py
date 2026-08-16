@@ -3,11 +3,13 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from threading import RLock
+from time import perf_counter
 from typing import Any
 
 from .historical_resolver import (
-    HistoricalMarketResolver, HistoricalProviderRateLimitError, PersistenceContext,
+    HistoricalMarketResolver, PersistenceContext,
 )
 from .market_memory import market_context_id
 from .models import (
@@ -52,10 +54,14 @@ class HistoricalTradeResolutionService:
         return tuple(sorted(values))
 
     def run(self, history_store: Any, league_id: str) -> TradeResolutionSummary:
+        started = perf_counter()
+        phase_started_at = datetime.now(timezone.utc).isoformat()
         resolver_before = Counter(self.resolver.health().get("counts") or {})
         total, trades = history_store.records(league_id, "trade", limit=1_000_000)
         trades = sorted(trades, key=lambda row: (str(row.get("occurred_at") or ""), str(row.get("source_record_id") or "")))
         counts: Counter[str] = Counter()
+        requests: list[tuple[IntelligenceCheckpoint, str, PersistenceContext]] = []
+        trade_work: list[tuple[dict[str, Any], tuple[tuple[str, str, str | None], ...], tuple[int, ...]]] = []
         for row in trades:
             occurred_at = row.get("occurred_at")
             payload = row.get("payload") or {}
@@ -69,8 +75,9 @@ class HistoricalTradeResolutionService:
                     counts["reason_no_supported_market_assets"] += 1
                     if payload.get("waiver_budget"):
                         counts["faab_only_trades"] += 1
+                trade_work.append((row, (), ()))
                 continue
-            available = 0
+            request_indexes = []
             for asset_id, asset_type, roster_id in assets:
                 checkpoint = IntelligenceCheckpoint(
                     checkpoint_id="", asset_id=asset_id, asset_type=asset_type,
@@ -82,16 +89,29 @@ class HistoricalTradeResolutionService:
                     model_version="1.10.31", related_event_id=str(row["source_record_id"]),
                     knowledge_state="generic_future_pick" if asset_type == "future_pick" else "player_at_execution",
                 )
-                try:
-                    result, _stored, observation_created, reference_created = self.resolver.resolve_checkpoint(
-                        checkpoint,
-                        market_context_id=market_context_id(asset_type=asset_type, scoring_profile_id=None),
-                        persistence=PersistenceContext("trade_execution"),
-                    )
-                except HistoricalProviderRateLimitError:
+                request_indexes.append(len(requests))
+                requests.append((
+                    checkpoint,
+                    market_context_id(asset_type=asset_type, scoring_profile_id=None),
+                    PersistenceContext("trade_execution"),
+                ))
+            trade_work.append((row, assets, tuple(request_indexes)))
+
+        resolved, bulk_metrics = self.resolver.resolve_checkpoints_bulk(requests)
+
+        for _row, assets, request_indexes in trade_work:
+            if not assets:
+                continue
+            available = 0
+            for request_index in request_indexes:
+                if request_index >= len(resolved):
+                    continue
+                resolved_item = resolved[request_index]
+                if resolved_item is None:
                     counts["historical_provider_rate_limited"] += 1
                     counts["historical_resolution_assets_retry_pending"] += 1
                     continue
+                result, _stored, observation_created, reference_created = resolved_item
                 available += int(result.available)
                 counts[f"persistence_{result.persistence.value}"] += 1
                 counts["historical_resolution_assets_new"] += int(
@@ -143,6 +163,28 @@ class HistoricalTradeResolutionService:
                 resolver_run.get("provider_rate_limited", 0)
             ),
             "historical_resolution_replay_skipped": int(resolver_run.get("replay_skipped", 0)),
+            "historical_resolution_assets_bulk_reused": int(
+                bulk_metrics.get("assets_bulk_reused", 0)
+            ),
+            "historical_resolution_assets_provider_resolved": int(
+                bulk_metrics.get("assets_provider_resolved", 0)
+            ),
+            "historical_resolution_sqlite_connections": int(
+                bulk_metrics.get("sqlite_connections", 0)
+            ),
+            "historical_resolution_sqlite_queries": int(
+                bulk_metrics.get("sqlite_queries", 0)
+            ),
+            "historical_resolution_rows_loaded": int(
+                bulk_metrics.get("rows_loaded", 0)
+            ),
+            "historical_resolution_objects_decoded": int(
+                bulk_metrics.get("objects_decoded", 0)
+            ),
+            "historical_resolution_batches": int(bulk_metrics.get("batches", 0)),
+            "historical_resolution_elapsed_ms": int(
+                round((perf_counter() - started) * 1000)
+            ),
         })
         for key, value in resolver_run.items():
             if key.startswith("provider_") and key.endswith("_queries"):
@@ -163,7 +205,8 @@ class HistoricalTradeResolutionService:
             }
             self._state = {
                 "status": status, "historical_resolution_status": status,
-                "last_error": None, **summary.__dict__, **exposed,
+                "last_error": None, "phase_started_at": phase_started_at,
+                **summary.__dict__, **exposed,
             }
         return summary
 
@@ -171,7 +214,10 @@ class HistoricalTradeResolutionService:
         with self._lock:
             if self._state.get("status") == "running":
                 return None
-            self._state = {"status": "running", "last_error": None}
+            self._state = {
+                "status": "running", "last_error": None,
+                "phase_started_at": datetime.now(timezone.utc).isoformat(),
+            }
         try:
             return self.run(history_store, league_id)
         except Exception as exc:

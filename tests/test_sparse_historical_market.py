@@ -120,6 +120,65 @@ class SparseHistoricalResolverTests(unittest.TestCase):
         self.assertEqual(resolver.providers[0].calls, 0)
         self.assertEqual(self.store.market_memory_health()["reference_count"], 1)
 
+    def test_bulk_replay_uses_one_connection_and_three_read_queries(self):
+        provider = Provider((source(),))
+        resolver = HistoricalMarketResolver(self.store, (provider,))
+        policy = PersistenceContext("trade_execution")
+        checkpoints = [
+            checkpoint(asset_id=f"player:{index}", event_id=f"trade-{index}")
+            for index in range(12)
+        ]
+        for item in checkpoints:
+            resolver.resolve_checkpoint(
+                item, market_context_id=self.context, persistence=policy,
+            )
+        provider.calls = 0
+        results, metrics = resolver.resolve_checkpoints_bulk([
+            (item, self.context, policy) for item in checkpoints
+        ])
+        self.assertEqual(len(results), 12)
+        self.assertTrue(all(row and row[0].available for row in results))
+        self.assertEqual(provider.calls, 0)
+        self.assertEqual(metrics["sqlite_connections"], 1)
+        self.assertEqual(metrics["sqlite_queries"], 3)
+        self.assertEqual(metrics["assets_bulk_reused"], 12)
+        self.assertEqual(metrics["assets_provider_resolved"], 0)
+        self.assertLessEqual(metrics["objects_decoded"], 24)
+
+    def test_bulk_replay_resolves_only_missing_durable_keys(self):
+        provider = Provider((source(),))
+        resolver = HistoricalMarketResolver(self.store, (provider,))
+        policy = PersistenceContext("trade_execution")
+        existing = checkpoint(asset_id="player:existing", event_id="trade-existing")
+        missing = checkpoint(asset_id="player:missing", event_id="trade-missing")
+        resolver.resolve_checkpoint(
+            existing, market_context_id=self.context, persistence=policy,
+        )
+        provider.calls = 0
+        results, metrics = resolver.resolve_checkpoints_bulk([
+            (existing, self.context, policy), (missing, self.context, policy),
+        ])
+        self.assertTrue(all(results))
+        self.assertEqual(metrics["assets_bulk_reused"], 1)
+        self.assertEqual(metrics["assets_provider_resolved"], 1)
+        self.assertEqual(provider.calls, 1)
+
+    def test_bulk_replay_preserves_final_unavailable(self):
+        resolver = HistoricalMarketResolver(self.store, (Provider(()),))
+        policy = PersistenceContext("trade_execution")
+        item = checkpoint(asset_id="player:unavailable", event_id="trade-unavailable")
+        resolver.resolve_checkpoint(
+            item, market_context_id=self.context, persistence=policy,
+        )
+        blocked = RateLimitedProvider()
+        resolver.providers = (blocked,)
+        results, metrics = resolver.resolve_checkpoints_bulk([
+            (item, self.context, policy),
+        ])
+        self.assertEqual(results[0][0].source, "durable_final_unavailable")
+        self.assertEqual(metrics["assets_bulk_reused"], 1)
+        self.assertEqual(blocked.calls, 0)
+
     def test_final_unavailable_is_durable_and_not_retried(self):
         provider = Provider(())
         resolver = HistoricalMarketResolver(self.store, (provider,))

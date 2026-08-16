@@ -11,6 +11,15 @@ from typing import Any
 from src.core.historical_memory.store import HistoricalStore
 from src.core.history_context.metadata import MinimalMetadataStore
 from src.core.history_context.season_cache import SleeperSeasonCache
+from src.core.intelligence_memory.historical_resolver import (
+    HistoricalMarketResolver, PersistenceContext,
+)
+from src.core.intelligence_memory.market_memory import market_context_id
+from src.core.intelligence_memory.models import (
+    CheckpointTrigger, EvidenceCompleteness, IntelligenceCheckpoint,
+    ProvenanceType, SourceObservation,
+)
+from src.core.intelligence_memory.store import IntelligenceCheckpointStore
 from src.core.valuation_intelligence.engine import (
     _semantic_generation,
     asset_market_input_revision,
@@ -34,6 +43,89 @@ PRODUCTION_ENTITY_COUNTS = {
 }
 LEAGUE_ID = "1804000000000000000"
 STAMP = "2026-08-07T00:00:00+00:00"
+
+
+def _trade_replay_fixture() -> tuple[dict[int, dict[str, list[dict[str, Any]]]], list[tuple[str, str, int]]]:
+    """Return 231 sanitized trades with 1,578 deterministic asset occurrences."""
+    by_season: dict[int, dict[str, list[dict[str, Any]]]] = {}
+    resolution_keys: list[tuple[str, str, int]] = []
+    valued_sequence = unavailable_sequence = 0
+    for trade_index in range(231):
+        season = 2021 + trade_index % 5
+        asset_count = 6 if 95 <= trade_index < 134 else 7
+        if trade_index < 95:
+            unavailable_count = 0
+        elif trade_index < 225:
+            unavailable_count = 2 if trade_index < 139 else 1
+        else:
+            unavailable_count = asset_count
+        event_id = f"sanitized-trade-{trade_index:03d}"
+        created = int(datetime(season, 6, 1, tzinfo=UTC).timestamp() * 1000) + trade_index
+        adds: dict[str, int] = {}
+        for asset_offset in range(asset_count):
+            unavailable = asset_offset >= asset_count - unavailable_count
+            if unavailable:
+                raw_asset = f"unavailable-{unavailable_sequence:04d}"
+                unavailable_sequence += 1
+            else:
+                raw_asset = f"bulk-{valued_sequence % 50:03d}"
+                valued_sequence += 1
+            adds[raw_asset] = asset_offset % 10 + 1
+            resolution_keys.append((event_id, raw_asset, created))
+        transaction = {
+            "transaction_id": event_id, "type": "trade", "status": "complete",
+            "created": created, "adds": adds, "drops": {},
+            "draft_picks": [], "roster_ids": [1, 2],
+        }
+        by_season.setdefault(season, {}).setdefault(str(trade_index % 18 + 1), []).append(
+            transaction
+        )
+    if len(resolution_keys) != 1_578:
+        raise RuntimeError("sanitized trade replay asset count is inconsistent")
+    return by_season, resolution_keys
+
+
+def _seed_historical_trade_resolutions(
+    root: Path, resolution_keys: list[tuple[str, str, int]],
+) -> None:
+    """Populate only sparse global evidence/references needed for replay validation."""
+    class Provider:
+        provider_id = "dynastyprocess"
+
+        def observations(self, *, asset_id: str, at_or_before: str, **_context: Any):
+            if asset_id.startswith("player:unavailable-"):
+                return ()
+            return (SourceObservation(
+                provider="dynastyprocess", raw_value=7_000, normalized_value=7_000,
+                observed_at="2021-01-01T00:00:00+00:00",
+                source_identity="sanitized:bulk-replay", temporal_distance_seconds=None,
+            ),)
+
+    path = Path(os.environ.get(
+        "DTOS_INTELLIGENCE_CHECKPOINT_FILE", str(root / "dtos_intelligence.sqlite3"),
+    ))
+    path.unlink(missing_ok=True)
+    store = IntelligenceCheckpointStore(path)
+    resolver = HistoricalMarketResolver(store, (Provider(),))
+    context = market_context_id(asset_type="player", scoring_profile_id=None)
+    for event_id, raw_asset, created in resolution_keys:
+        timestamp = datetime.fromtimestamp(created / 1000, UTC).isoformat().replace(
+            "+00:00", "Z",
+        )
+        checkpoint = IntelligenceCheckpoint(
+            checkpoint_id="", asset_id=f"player:{raw_asset}", asset_type="player",
+            timestamp=timestamp, season=datetime.fromtimestamp(created / 1000, UTC).year,
+            trigger_type=CheckpointTrigger.TRADE_EXECUTION,
+            provenance_type=ProvenanceType.UNAVAILABLE, league_id=LEAGUE_ID,
+            market_value=None, confidence=0,
+            evidence_completeness=EvidenceCompleteness.UNAVAILABLE,
+            model_version="1.10.31", related_event_id=event_id,
+            knowledge_state="player_at_execution",
+        )
+        resolver.resolve_checkpoint(
+            checkpoint, market_context_id=context,
+            persistence=PersistenceContext("trade_execution"),
+        )
 
 
 def fixture_valuation_intelligence() -> dict[str, Any]:
@@ -483,6 +575,7 @@ def _canonical_history_fixture(root: Path) -> None:
         player_index = index % ASSET_COUNT + 1
         player_id = "10213" if player_index == 1 else f"v{player_index:05d}"
         buckets.setdefault((season, week, roster_id), {})[player_id] = float(index % 50)
+    trade_facts, resolution_keys = _trade_replay_fixture()
     for season in range(2021, 2026):
         matchups: dict[str, list[dict[str, object]]] = {}
         for week in range(1, 19):
@@ -511,7 +604,7 @@ def _canonical_history_fixture(root: Path) -> None:
                 {"roster_id": index, "owner_id": f"u{index}", "settings": {}}
                 for index in range(1, 11)
             ],
-            "matchups": matchups, "transactions": {}, "drafts": [],
+            "matchups": matchups, "transactions": trade_facts.get(season, {}), "drafts": [],
             "draft_picks": [], "traded_picks": [], "winners_bracket": [],
             "losers_bracket": [],
         }
@@ -526,6 +619,7 @@ def _canonical_history_fixture(root: Path) -> None:
         metadata.record_season_cache_checkpoint(
             LEAGUE_ID, season, cached.checksum, cached.status,
         )
+    _seed_historical_trade_resolutions(root, resolution_keys)
 
 
 def main() -> int:

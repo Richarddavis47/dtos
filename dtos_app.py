@@ -75,6 +75,7 @@ from src.core.intelligence_memory import historical_trade_resolution_service
 from src.platform.observability import (
     install_observability,
     mark_startup_complete,
+    monitor_event_loop_lag,
     runtime_metrics,
 )
 from src.platform.market_warming import AssetMarketWarmingMiddleware
@@ -443,6 +444,9 @@ async def startup_and_periodic_maintenance(startup_epoch: int) -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    event_loop_monitor = asyncio.create_task(
+        monitor_event_loop_lag(), name="dtos-event-loop-lag-monitor",
+    )
     runtime_metrics.mark_not_ready("Loading cached league data.")
     startup_epoch = lifecycle_coordinator.begin_startup(
         "Loading cached canonical state."
@@ -453,7 +457,11 @@ async def lifespan(_: FastAPI):
             startup_epoch, historical_storage_status.reason,
         )
         mark_startup_complete(_PROCESS_STARTED)
-        yield
+        try:
+            yield
+        finally:
+            event_loop_monitor.cancel()
+            await asyncio.gather(event_loop_monitor, return_exceptions=True)
         return
     load_cache()
     default_runtime = league_runtime_manager.resident(LEAGUE_ID)
@@ -485,8 +493,9 @@ async def lifespan(_: FastAPI):
         yield
     finally:
         maintenance_task.cancel()
+        event_loop_monitor.cancel()
         await asyncio.gather(
-            maintenance_task,
+            maintenance_task, event_loop_monitor,
             return_exceptions=True,
         )
         await league_runtime_manager.shutdown()

@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import asyncio
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -67,6 +68,8 @@ class RuntimeMetrics:
     readiness_reason: str = "Application startup has not completed."
     ready_at: str | None = None
     background_tasks: dict[str, str] = field(default_factory=dict)
+    event_loop_lag_samples_ms: list[float] = field(default_factory=list)
+    event_loop_current_lag_ms: float = 0.0
 
     def record(self, duration_ms: float, status_code: int) -> None:
         self.requests += 1
@@ -81,6 +84,11 @@ class RuntimeMetrics:
             memory_kb: int | None = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
         except (ImportError, OSError):
             memory_kb = None
+        lag = sorted(self.event_loop_lag_samples_ms)
+        def percentile(fraction: float) -> float:
+            if not lag:
+                return 0.0
+            return lag[min(len(lag) - 1, int((len(lag) - 1) * fraction))]
         return {
             "started_at": self.started_at,
             "uptime_seconds": round(monotonic() - self.started_monotonic, 2),
@@ -93,6 +101,11 @@ class RuntimeMetrics:
             "readiness_reason": self.readiness_reason,
             "ready_at": self.ready_at,
             "background_tasks": dict(self.background_tasks),
+            "event_loop_lag": {
+                "current_ms": self.event_loop_current_lag_ms,
+                "p50_ms": percentile(0.50), "p95_ms": percentile(0.95),
+                "max_ms": max(lag, default=0.0), "sample_count": len(lag),
+            },
         }
 
     def mark_ready(self, reason: str) -> None:
@@ -111,6 +124,11 @@ class RuntimeMetrics:
     def uptime_seconds(self) -> float:
         return round(monotonic() - self.started_monotonic, 3)
 
+    def record_event_loop_lag(self, lag_ms: float) -> None:
+        self.event_loop_current_lag_ms = round(max(0.0, lag_ms), 3)
+        self.event_loop_lag_samples_ms.append(self.event_loop_current_lag_ms)
+        del self.event_loop_lag_samples_ms[:-256]
+
 
 runtime_metrics = RuntimeMetrics()
 
@@ -126,7 +144,22 @@ def install_observability(app: FastAPI) -> None:
         started = perf_counter()
         started_at = datetime.now(timezone.utc).isoformat()
         status_code = 500
+        trace_request = request.headers.get("X-DTOS-Diagnostics") == "1" or request.url.path in {
+            "/", "/market", "/health/live", "/api/market/health",
+        }
+        if trace_request:
+            logger.info(
+                "request_accepted",
+                extra={"event": "request_accepted", "method": request.method,
+                       "path": request.url.path, "request_id": request_id},
+            )
         try:
+            if trace_request:
+                logger.info(
+                    "handler_scheduled",
+                    extra={"event": "handler_scheduled", "method": request.method,
+                           "path": request.url.path, "request_id": request_id},
+                )
             response = await call_next(request)
             status_code = response.status_code
             response.headers["X-Request-ID"] = request_id
@@ -147,6 +180,17 @@ def install_observability(app: FastAPI) -> None:
                 extra={"event": "request_complete", "duration_ms": duration_ms, "status_code": status_code, "method": request.method, "path": request.url.path, "request_id": request_id},
             )
             request_id_context.reset(token)
+
+
+async def monitor_event_loop_lag(interval_seconds: float = 0.1) -> None:
+    """Retain a bounded scheduling-lag window for production diagnostics."""
+    interval = max(0.05, float(interval_seconds))
+    expected = monotonic() + interval
+    while True:
+        await asyncio.sleep(interval)
+        now = monotonic()
+        runtime_metrics.record_event_loop_lag((now - expected) * 1000)
+        expected = now + interval
 
 
 def mark_startup_complete(started: float) -> None:
