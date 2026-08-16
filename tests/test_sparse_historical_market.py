@@ -1,4 +1,4 @@
-"""v1.10.31 sparse historical trade market matching regressions."""
+"""Sparse historical trade matching and gradability regressions."""
 from __future__ import annotations
 
 import tempfile
@@ -220,7 +220,144 @@ class SparseHistoricalResolverTests(unittest.TestCase):
         summary = service.run(history, "L")
         self.assertEqual(summary.completed_trades, 1)
         self.assertEqual(summary.fully_valued, 1)
+        self.assertEqual(summary.unclassified_process_trades, 0)
         self.assertEqual(resolver.health()["per_league_permanent_historical_market_bytes"], 0)
+
+    def test_faab_only_trade_is_unavailable_and_process_not_gradable(self):
+        service = HistoricalTradeResolutionService(HistoricalMarketResolver(self.store))
+        class History:
+            def records(self, _league_id, _entity_type, limit):
+                return 1, [{
+                    "source_record_id": "faab-1", "season": 2022,
+                    "occurred_at": "2022-02-14T03:01:58.121Z",
+                    "payload": {
+                        "adds": None, "drops": None, "draft_picks": [],
+                        "waiver_budget": [{"amount": 20, "sender": 3, "receiver": 8}],
+                    },
+                }]
+        summary = service.run(History(), "L")
+        self.assertEqual(summary.completed_trades, 1)
+        self.assertEqual(summary.unavailable, 1)
+        self.assertEqual(summary.process_gradable, 0)
+        self.assertEqual(summary.process_not_gradable, 1)
+        self.assertEqual(summary.unclassified_process_trades, 0)
+        self.assertEqual(summary.counters["faab_only_trades"], 1)
+        self.assertEqual(self.store.market_memory_health()["observation_count"], 0)
+
+    def test_three_production_shaped_faab_trades_all_balance(self):
+        service = HistoricalTradeResolutionService(HistoricalMarketResolver(self.store))
+        class History:
+            def records(self, _league_id, _entity_type, limit):
+                rows = [{
+                    "source_record_id": f"faab-{amount}", "season": 2022,
+                    "occurred_at": "2022-10-30T23:46:40.370Z",
+                    "payload": {
+                        "adds": None, "drops": None, "draft_picks": [],
+                        "waiver_budget": [{"amount": amount, "sender": 3, "receiver": 1}],
+                    },
+                } for amount in (20, 1, 5)]
+                return len(rows), rows
+        summary = service.run(History(), "L")
+        self.assertEqual(
+            (summary.completed_trades, summary.unavailable,
+             summary.process_gradable, summary.process_not_gradable),
+            (3, 3, 0, 3),
+        )
+        self.assertEqual(summary.unclassified_process_trades, 0)
+
+    def test_faab_plus_player_preserves_supported_asset_gradability(self):
+        provider = Provider((source(),))
+        service = HistoricalTradeResolutionService(
+            HistoricalMarketResolver(self.store, (provider,))
+        )
+        class History:
+            def records(self, _league_id, _entity_type, limit):
+                return 1, [{
+                    "source_record_id": "mixed-player", "season": 2023,
+                    "occurred_at": "2023-10-03T00:00:00+00:00",
+                    "payload": {
+                        "adds": {"10213": 1}, "drops": {"10213": 2},
+                        "draft_picks": [],
+                        "waiver_budget": [{"amount": 5, "sender": 2, "receiver": 1}],
+                    },
+                }]
+        summary = service.run(History(), "L")
+        self.assertEqual(summary.fully_valued, 1)
+        self.assertEqual(summary.process_gradable, 1)
+        self.assertEqual(summary.process_not_gradable, 0)
+        self.assertNotIn("faab_only_trades", summary.counters)
+
+    def test_faab_plus_pick_preserves_supported_asset_gradability(self):
+        provider = Provider((source(value=2500),))
+        service = HistoricalTradeResolutionService(
+            HistoricalMarketResolver(self.store, (provider,))
+        )
+        class History:
+            def records(self, _league_id, _entity_type, limit):
+                return 1, [{
+                    "source_record_id": "mixed-pick", "season": 2023,
+                    "occurred_at": "2023-10-03T00:00:00+00:00",
+                    "payload": {
+                        "adds": None, "drops": None,
+                        "draft_picks": [{
+                            "season": "2025", "round": 1,
+                            "roster_id": 1, "owner_id": 2,
+                        }],
+                        "waiver_budget": [{"amount": 5, "sender": 2, "receiver": 1}],
+                    },
+                }]
+        summary = service.run(History(), "L")
+        self.assertEqual(summary.fully_valued, 1)
+        self.assertEqual(summary.process_gradable, 1)
+        self.assertEqual(summary.unclassified_process_trades, 0)
+
+    def test_no_supported_assets_has_explicit_reason_and_retains_history(self):
+        row = {
+            "source_record_id": "unsupported-activity", "season": 2022,
+            "occurred_at": "2022-10-30T23:46:40.370Z",
+            "payload": {"adds": None, "drops": None, "draft_picks": []},
+        }
+        original = repr(row)
+        class History:
+            def records(self, _league_id, _entity_type, limit):
+                return 1, [row]
+        summary = HistoricalTradeResolutionService(
+            HistoricalMarketResolver(self.store)
+        ).run(History(), "L")
+        self.assertEqual(summary.counters["reason_no_supported_market_assets"], 1)
+        self.assertEqual(summary.process_not_gradable, 1)
+        self.assertEqual(repr(row), original)
+
+    def test_summary_fails_closed_when_canonical_total_cannot_balance(self):
+        class History:
+            def records(self, _league_id, _entity_type, limit):
+                return 2, [{
+                    "source_record_id": "only-row", "season": 2022,
+                    "occurred_at": "2022-10-30T23:46:40.370Z",
+                    "payload": {"adds": None, "drops": None, "draft_picks": []},
+                }]
+        service = HistoricalTradeResolutionService(HistoricalMarketResolver(self.store))
+        with self.assertRaisesRegex(RuntimeError, "accounting invariant failed"):
+            service.run(History(), "L")
+
+    def test_replay_of_faab_only_trade_is_idempotent(self):
+        class History:
+            def records(self, _league_id, _entity_type, limit):
+                return 1, [{
+                    "source_record_id": "faab-replay", "season": 2022,
+                    "occurred_at": "2022-10-30T23:46:40.370Z",
+                    "payload": {
+                        "adds": None, "drops": None, "draft_picks": [],
+                        "waiver_budget": [{"amount": 5, "sender": 3, "receiver": 1}],
+                    },
+                }]
+        service = HistoricalTradeResolutionService(HistoricalMarketResolver(self.store))
+        first = service.run(History(), "L")
+        second = service.run(History(), "L")
+        self.assertEqual(first, second)
+        health = self.store.market_memory_health()
+        self.assertEqual(health["observation_count"], 0)
+        self.assertEqual(health["reference_count"], 0)
 
 
 if __name__ == "__main__":

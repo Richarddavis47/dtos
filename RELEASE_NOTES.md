@@ -1,4 +1,14 @@
-# DTOS v1.10.31 - Sparse Historical Trade Market Matching
+# DTOS v1.10.32 - Historical Trade Gradability Accounting Correction
+
+DTOS now assigns every completed historical trade exactly one process-gradability
+state. FAAB-only trades remain canonical completed activity with unavailable
+execution-time market valuation and an explicit not-gradable classification; no
+FAAB-to-market conversion is introduced. Summary invariants fail closed if either
+execution-value or process-gradability counters do not balance to the canonical
+completed-trade total. Global Sparse Market Memory, provider resolution, FOIS
+scoring, and HistoricalStore retirement remain unchanged.
+
+## Previous release: v1.10.31 - Sparse Historical Trade Market Matching
 
 DTOS v1.10.31 resolves historical trade evidence on demand from compatible global
 observations and approved pre-event provider evidence. Provider results may remain

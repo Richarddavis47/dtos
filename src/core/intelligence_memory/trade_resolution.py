@@ -21,6 +21,7 @@ class TradeResolutionSummary:
     unavailable: int
     process_gradable: int
     process_not_gradable: int
+    unclassified_process_trades: int
     assets_total: int
     assets_valued: int
     counters: dict[str, int]
@@ -54,9 +55,17 @@ class HistoricalTradeResolutionService:
         counts: Counter[str] = Counter()
         for row in trades:
             occurred_at = row.get("occurred_at")
-            assets = self._assets(row.get("payload") or {})
+            payload = row.get("payload") or {}
+            assets = self._assets(payload)
             if not occurred_at or not assets:
                 counts["unavailable_trades"] += 1
+                counts["process_not_gradable"] += 1
+                if not occurred_at:
+                    counts["reason_missing_occurred_at"] += 1
+                else:
+                    counts["reason_no_supported_market_assets"] += 1
+                    if payload.get("waiver_budget"):
+                        counts["faab_only_trades"] += 1
                 continue
             available = 0
             for asset_id, asset_type, roster_id in assets:
@@ -88,10 +97,24 @@ class HistoricalTradeResolutionService:
             else:
                 counts["unavailable_trades"] += 1
                 counts["process_not_gradable"] += 1
+        unclassified = total - (
+            counts["process_gradable"] + counts["process_not_gradable"]
+        )
+        execution_unclassified = total - (
+            counts["fully_valued"]
+            + counts["partially_valued"]
+            + counts["unavailable_trades"]
+        )
+        if unclassified or execution_unclassified:
+            raise RuntimeError(
+                "Historical trade accounting invariant failed: "
+                f"process_unclassified={unclassified}, "
+                f"execution_unclassified={execution_unclassified}."
+            )
         summary = TradeResolutionSummary(
             total, counts["fully_valued"], counts["partially_valued"],
             counts["unavailable_trades"], counts["process_gradable"],
-            counts["process_not_gradable"], counts["assets_total"],
+            counts["process_not_gradable"], unclassified, counts["assets_total"],
             counts["assets_valued"], dict(counts),
         )
         with self._lock:
