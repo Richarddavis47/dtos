@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING, Callable, Iterable, Protocol
 from .market import HistoricalMarketSelection, select_historical_market
 from .models import (
     EvidencePersistenceDecision, GlobalMarketObservation,
-    HISTORICAL_RESOLUTION_POLICY_VERSION, SourceObservation,
+    HISTORICAL_RESOLUTION_POLICY_VERSION, HistoricalResolutionState,
+    SourceObservation,
 )
 from .store import IntelligenceCheckpointStore
 
@@ -27,6 +28,10 @@ class HistoricalMarketProvider(Protocol):
         self, *, asset_id: str, asset_type: str, market_context_id: str,
         at_or_before: str,
     ) -> Iterable[SourceObservation]: ...
+
+
+class HistoricalProviderRateLimitError(RuntimeError):
+    """Historical evidence is still unresolved because a provider rate-limited it."""
 
 
 @dataclass(frozen=True)
@@ -155,10 +160,20 @@ class HistoricalMarketResolver:
             )
             def fetch(p: HistoricalMarketProvider = provider) -> Iterable[SourceObservation]:
                 self._counts["provider_queries"] += 1
-                return p.observations(
-                    asset_id=asset_id, asset_type=asset_type,
-                    market_context_id=market_context_id, at_or_before=occurred_at,
-                )
+                self._counts[f"provider_{p.provider_id.casefold()}_queries"] += 1
+                try:
+                    return p.observations(
+                        asset_id=asset_id, asset_type=asset_type,
+                        market_context_id=market_context_id, at_or_before=occurred_at,
+                    )
+                except Exception as exc:
+                    status = getattr(getattr(exc, "response", None), "status_code", None)
+                    if status == 403 or "rate limit" in str(exc).casefold():
+                        self._counts["provider_rate_limited"] += 1
+                        raise HistoricalProviderRateLimitError(
+                            "Historical provider rate limited the request."
+                        ) from exc
+                    raise
             candidates.extend(self.cache.get_or_create(key, fetch))
         selected = select_historical_market(candidates, occurred_at)
         decision = persistence_decision(selected, persistence)
@@ -174,11 +189,38 @@ class HistoricalMarketResolver:
         persistence: PersistenceContext,
     ) -> tuple[HistoricalResolution, "IntelligenceCheckpoint", bool, bool]:
         """Resolve and, only when policy requires it, atomically preserve sparse evidence."""
+        durable = self.store.compatible_resolution(
+            checkpoint, market_context_id=market_context_id,
+            resolver_version=HISTORICAL_RESOLUTION_POLICY_VERSION,
+        )
+        if durable is not None:
+            stored, observation, state = durable
+            self._counts["replay_skipped"] += 1
+            if observation is not None and state == HistoricalResolutionState.COMPLETE:
+                self._counts["durable_reuse"] += 1
+                result = self._from_global(observation)
+                return replace(result, source="durable_resolution_reference"), stored, False, False
+            if state == HistoricalResolutionState.FINAL_UNAVAILABLE:
+                self._counts["durable_final_unavailable"] += 1
+                selected = select_historical_market((), checkpoint.timestamp)
+                return HistoricalResolution(
+                    selected, EvidencePersistenceDecision.UNAVAILABLE,
+                    "durable_final_unavailable", None,
+                ), stored, False, False
         result = self.resolve(
             asset_id=checkpoint.asset_id, asset_type=checkpoint.asset_type,
             market_context_id=market_context_id, occurred_at=checkpoint.timestamp,
             persistence=persistence,
         )
+        if result.persistence == EvidencePersistenceDecision.UNAVAILABLE:
+            stored, _, _, observation_created, reference_created = self.store.put_sparse(
+                checkpoint, market_context_id=market_context_id,
+                resolver_version=HISTORICAL_RESOLUTION_POLICY_VERSION,
+                resolution_state=HistoricalResolutionState.FINAL_UNAVAILABLE,
+                unavailable_reason="provider_coverage_exhausted",
+            )
+            self._counts["final_unavailable_persisted"] += int(reference_created)
+            return result, stored, observation_created, reference_created
         if result.persistence not in {
             EvidencePersistenceDecision.PRESERVE_GLOBAL,
             EvidencePersistenceDecision.ALREADY_PRESERVED,
@@ -194,6 +236,8 @@ class HistoricalMarketResolver:
         stored, _, _, observation_created, reference_created = self.store.put_sparse(
             candidate, market_context_id=market_context_id,
             provider_evidence=selection.observations,
+            resolver_version=HISTORICAL_RESOLUTION_POLICY_VERSION,
+            resolution_state=HistoricalResolutionState.COMPLETE,
         )
         observation_id = stored.global_market_observation_id
         return (

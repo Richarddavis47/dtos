@@ -135,6 +135,14 @@ class MarketObservationDecision(str, Enum):
     UNAVAILABLE = "unavailable"
 
 
+class HistoricalResolutionState(str, Enum):
+    """Durable outcome of one versioned event/asset resolution."""
+
+    COMPLETE = "complete"
+    FINAL_UNAVAILABLE = "final_unavailable"
+    RETRYABLE_UNAVAILABLE = "retryable_unavailable"
+
+
 class EvidencePersistenceDecision(str, Enum):
     """Centralized disposition for historical provider evidence."""
 
@@ -182,3 +190,7 @@ class MarketObservationReference:
     occurred_at: str
     market_state: MarketObservationDecision
     provenance_type: ProvenanceType
+    market_context_id: str | None = None
+    resolver_version: str | None = None
+    resolution_state: HistoricalResolutionState | None = None
+    unavailable_reason: str | None = None

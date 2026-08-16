@@ -6,7 +6,9 @@ from dataclasses import dataclass
 from threading import RLock
 from typing import Any
 
-from .historical_resolver import HistoricalMarketResolver, PersistenceContext
+from .historical_resolver import (
+    HistoricalMarketResolver, HistoricalProviderRateLimitError, PersistenceContext,
+)
 from .market_memory import market_context_id
 from .models import (
     CheckpointTrigger, EvidenceCompleteness, IntelligenceCheckpoint, ProvenanceType,
@@ -50,6 +52,7 @@ class HistoricalTradeResolutionService:
         return tuple(sorted(values))
 
     def run(self, history_store: Any, league_id: str) -> TradeResolutionSummary:
+        resolver_before = Counter(self.resolver.health().get("counts") or {})
         total, trades = history_store.records(league_id, "trade", limit=1_000_000)
         trades = sorted(trades, key=lambda row: (str(row.get("occurred_at") or ""), str(row.get("source_record_id") or "")))
         counts: Counter[str] = Counter()
@@ -79,13 +82,24 @@ class HistoricalTradeResolutionService:
                     model_version="1.10.31", related_event_id=str(row["source_record_id"]),
                     knowledge_state="generic_future_pick" if asset_type == "future_pick" else "player_at_execution",
                 )
-                result, _stored, _observation_created, _reference_created = self.resolver.resolve_checkpoint(
-                    checkpoint,
-                    market_context_id=market_context_id(asset_type=asset_type, scoring_profile_id=None),
-                    persistence=PersistenceContext("trade_execution"),
-                )
+                try:
+                    result, _stored, observation_created, reference_created = self.resolver.resolve_checkpoint(
+                        checkpoint,
+                        market_context_id=market_context_id(asset_type=asset_type, scoring_profile_id=None),
+                        persistence=PersistenceContext("trade_execution"),
+                    )
+                except HistoricalProviderRateLimitError:
+                    counts["historical_provider_rate_limited"] += 1
+                    counts["historical_resolution_assets_retry_pending"] += 1
+                    continue
                 available += int(result.available)
                 counts[f"persistence_{result.persistence.value}"] += 1
+                counts["historical_resolution_assets_new"] += int(
+                    observation_created or reference_created
+                )
+                counts["historical_resolution_assets_reused"] += int(
+                    result.source in {"durable_resolution_reference", "durable_final_unavailable"}
+                )
             counts["assets_total"] += len(assets)
             counts["assets_valued"] += available
             if available == len(assets):
@@ -117,8 +131,40 @@ class HistoricalTradeResolutionService:
             counts["process_not_gradable"], unclassified, counts["assets_total"],
             counts["assets_valued"], dict(counts),
         )
+        resolver_counts = Counter(self.resolver.health().get("counts") or {})
+        resolver_run = resolver_counts - resolver_before
+        summary.counters.update({
+            "historical_resolution_assets_total": counts["assets_total"],
+            "historical_resolution_assets_unavailable": (
+                counts["assets_total"] - counts["assets_valued"]
+            ),
+            "historical_provider_requests": int(resolver_run.get("provider_queries", 0)),
+            "historical_provider_rate_limited": int(
+                resolver_run.get("provider_rate_limited", 0)
+            ),
+            "historical_resolution_replay_skipped": int(resolver_run.get("replay_skipped", 0)),
+        })
+        for key, value in resolver_run.items():
+            if key.startswith("provider_") and key.endswith("_queries"):
+                summary.counters[f"historical_{key}"] = int(value)
+        status = (
+            "degraded_provider_retry_pending"
+            if counts["historical_resolution_assets_retry_pending"]
+            else "complete_with_unavailable"
+            if counts["unavailable_trades"]
+            else "complete_with_new_resolutions"
+            if counts["historical_resolution_assets_new"]
+            else "complete_reused"
+        )
         with self._lock:
-            self._state = {"status": "complete", "last_error": None, **summary.__dict__}
+            exposed = {
+                key: value for key, value in summary.counters.items()
+                if key.startswith("historical_")
+            }
+            self._state = {
+                "status": status, "historical_resolution_status": status,
+                "last_error": None, **summary.__dict__, **exposed,
+            }
         return summary
 
     def run_safe(self, history_store: Any, league_id: str) -> TradeResolutionSummary | None:

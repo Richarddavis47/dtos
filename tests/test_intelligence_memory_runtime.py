@@ -166,7 +166,7 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         finally:
             verification.close()
         self.assertIn("roster_id", {row[1] for row in columns})
-        self.assertEqual(migrated.health()["schema_version"], 3)
+        self.assertEqual(migrated.health()["schema_version"], 4)
 
 
 if __name__ == "__main__":
