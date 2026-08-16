@@ -1,4 +1,12 @@
-# DTOS v1.10.33 - Historical Resolution Replay Resilience & Durable Reuse
+# DTOS v1.10.34 - Live Visual Stale Capture Refresh Correction
+
+DTOS now refreshes stale required Live Visual evidence through the documented
+on-demand metadata path. Current compatible captures remain deduplicated, while
+stale or missing registered captures queue exactly one replacement and publish
+their image, metadata, identity, and artifact hash together. External Visual
+Mirror publication still fails closed until every required capture is current.
+
+## Previous release: v1.10.33 - Historical Resolution Replay Resilience & Durable Reuse
 
 DTOS now restores compatible historical trade resolutions directly from compact
 Global Market Observation references. Unchanged replay no longer depends on a live

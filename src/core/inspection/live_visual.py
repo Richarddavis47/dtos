@@ -60,6 +60,14 @@ class LiveVisualService:
         self._last_error: str | None = None
         self._deferred_captures = 0
         self._required_keys: set[str] = set()
+        self._requests: dict[str, CaptureRequest] = {}
+        self._refresh_keys: set[str] = set()
+        self._refresh_counts = {
+            "refresh_requested": 0, "refresh_started": 0,
+            "refresh_succeeded": 0, "refresh_failed": 0,
+            "refresh_deduped": 0,
+        }
+        self._last_refresh: dict[str, Any] | None = None
         self._manifest = self._load_manifest()
 
     @property
@@ -93,9 +101,13 @@ class LiveVisualService:
             for request in requests:
                 key = self.capture_key(request.surface_id, request.viewport)
                 self._required_keys.add(key)
+                self._requests[key] = request
                 current = (self._manifest.get("captures") or {}).get(key) or {}
                 identity = (request.surface_id, request.viewport, request.fingerprint)
-                if current.get("fingerprint") == request.fingerprint or identity in pending:
+                if (
+                    current.get("status") == "current"
+                    and current.get("fingerprint") == request.fingerprint
+                ) or identity in pending or self._active == key:
                     continue
                 self._queue.append(request)
                 pending.add(identity)
@@ -104,6 +116,38 @@ class LiveVisualService:
                 self._worker = threading.Thread(target=self._run, name="dtos-live-visual", daemon=True)
                 self._worker.start()
             return added
+
+    def refresh(self, surface_id: str, viewport: str) -> dict[str, Any] | None:
+        """Request one registered stale/missing capture without duplicating current work."""
+        key = self.capture_key(surface_id, viewport)
+        with self._lock:
+            request = self._requests.get(key)
+            current = (self._manifest.get("captures") or {}).get(key)
+            if request is None:
+                return dict(current) if current else None
+            self._refresh_counts["refresh_requested"] += 1
+            prior_state = (current or {}).get("status", "missing")
+            self._last_refresh = {
+                "target_capture_id": key, "prior_state": prior_state,
+                "queue_result": "pending", "requested_at": _now(),
+            }
+            if (
+                current
+                and current.get("status") == "current"
+                and current.get("fingerprint") == request.fingerprint
+            ):
+                self._refresh_counts["refresh_deduped"] += 1
+                self._last_refresh["queue_result"] = "deduped_current"
+                return dict(current)
+            self._refresh_keys.add(key)
+        added = self.schedule((request,))
+        with self._lock:
+            if self._last_refresh and self._last_refresh.get("target_capture_id") == key:
+                self._last_refresh["queue_result"] = "queued" if added else "deduped_pending"
+                if not added:
+                    self._refresh_counts["refresh_deduped"] += 1
+            row = (self._manifest.get("captures") or {}).get(key)
+            return dict(row) if row else None
 
     def _run(self) -> None:
         while True:
@@ -120,11 +164,17 @@ class LiveVisualService:
                     return
                 request = self._queue.pop(0)
                 self._active = self.capture_key(request.surface_id, request.viewport)
+                refresh = self._active in self._refresh_keys
+                if refresh:
+                    self._refresh_counts["refresh_started"] += 1
+                    if self._last_refresh and self._last_refresh.get("target_capture_id") == self._active:
+                        self._last_refresh["worker_started_at"] = _now()
                 self._browser_processes = 0
             folder = self.root / "captures" / _safe_id(request.surface_id)
             folder.mkdir(parents=True, exist_ok=True)
             final = folder / f"{request.viewport}.png"
             temporary = folder / f".{request.viewport}.partial.png"
+            backup = folder / f".{request.viewport}.previous.png"
             try:
                 with lifecycle_coordinator.phase("live_visual_capture") as phase:
                     with self._lock:
@@ -139,7 +189,9 @@ class LiveVisualService:
                         "viewport": request.viewport,
                         "browser_processes": 1,
                     })
-                temporary.replace(final)
+                if not temporary.is_file() or temporary.stat().st_size <= 0:
+                    raise RuntimeError("capture artifact is missing or empty")
+                artifact_hash = hashlib.sha256(temporary.read_bytes()).hexdigest()
                 deployment = deployment_metadata()
                 row = {
                     "surface_id": request.surface_id, "title": request.title,
@@ -151,21 +203,55 @@ class LiveVisualService:
                     "metadata_url": f"/api/inspect/live/visual/metadata/{_safe_id(request.surface_id)}/{request.viewport}",
                     "application_version": VERSION, "application_build": BUILD_NUMBER,
                     "commit": deployment.get("commit"), "canonical": request.canonical,
-                    "presentation": result,
+                    "presentation": result, "artifact_hash": artifact_hash,
                 }
                 with self._lock:
-                    self._manifest.setdefault("captures", {})[self.capture_key(request.surface_id, request.viewport)] = row
+                    key = self.capture_key(request.surface_id, request.viewport)
+                    previous = (self._manifest.get("captures") or {}).get(key)
+                    if final.exists():
+                        final.replace(backup)
+                    temporary.replace(final)
+                    self._manifest.setdefault("captures", {})[key] = row
                     self._manifest.update({"schema_version": LIVE_VISUAL_SCHEMA_VERSION, "updated_at": _now()})
                     self._last_error = None
-                    self._write_manifest()
+                    try:
+                        self._write_manifest()
+                    except Exception:
+                        if previous is None:
+                            self._manifest.get("captures", {}).pop(key, None)
+                        else:
+                            self._manifest.setdefault("captures", {})[key] = previous
+                        final.unlink(missing_ok=True)
+                        if backup.exists():
+                            backup.replace(final)
+                        raise
+                    backup.unlink(missing_ok=True)
+                    if refresh:
+                        self._refresh_counts["refresh_succeeded"] += 1
+                        self._refresh_keys.discard(key)
+                        if self._last_refresh and self._last_refresh.get("target_capture_id") == key:
+                            self._last_refresh.update({
+                                "worker_completed_at": _now(), "final_state": "current",
+                                "artifact_hash": artifact_hash,
+                            })
             except Exception as exc:  # last valid capture must survive
                 temporary.unlink(missing_ok=True)
+                backup.unlink(missing_ok=True)
                 with self._lock:
                     self._last_error = f"{type(exc).__name__}: capture failed"
-                    current = (self._manifest.get("captures") or {}).get(self.capture_key(request.surface_id, request.viewport))
+                    key = self.capture_key(request.surface_id, request.viewport)
+                    current = (self._manifest.get("captures") or {}).get(key)
                     if current:
                         current["status"] = "stale"
                         current["failure_reason"] = self._last_error
+                        current["stale_reason"] = "other"
+                    if refresh:
+                        self._refresh_counts["refresh_failed"] += 1
+                        self._refresh_keys.discard(key)
+                        if self._last_refresh and self._last_refresh.get("target_capture_id") == key:
+                            self._last_refresh.update({
+                                "worker_completed_at": _now(), "final_state": "stale",
+                            })
                     self._write_manifest()
 
     def capture(self, surface_id: str, viewport: str) -> dict[str, Any] | None:
@@ -198,10 +284,12 @@ class LiveVisualService:
         manifest = self.manifest()
         required = max(required, len(self._required_keys))
         completed = manifest["capture_count"]
+        current = manifest["current"]
         return {
             "status": "complete" if completed >= required and manifest["pending"] == 0 else "pending",
             "eligible_surfaces": required // len(LIVE_VIEWPORTS) if required else 0,
             "required_captures": required, "completed": completed,
+            "current": current, "missing": max(0, required - completed),
             "stale": manifest["stale"], "pending": manifest["pending"],
             "failures": manifest["failures"], "browser_processes": self._browser_processes,
             "last_capture": manifest["last_capture"], "last_error": self._last_error,
@@ -211,6 +299,13 @@ class LiveVisualService:
                 else None
             ),
             "read_only_requests": True, "single_browser_worker": True,
+            **self._refresh_counts,
+            "last_refresh": dict(self._last_refresh) if self._last_refresh else None,
+            "stale_reasons": {
+                key: row.get("stale_reason", "other")
+                for key, row in (self._manifest.get("captures") or {}).items()
+                if row.get("status") == "stale"
+            },
         }
 
     def wait(self, timeout: float = 10) -> bool:
