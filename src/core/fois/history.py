@@ -132,6 +132,17 @@ def load_results_history(
         season = int(row.get("season") or 0)
         transaction_id = str(row["source_record_id"])
         process = fois_process_evidence(trade_checkpoints.get(transaction_id, ()))
+        checkpoints = tuple(trade_checkpoints.get(transaction_id, ()))
+        roster_values: dict[str, float] = defaultdict(float)
+        definitive = tuple(
+            checkpoint for checkpoint in checkpoints
+            if checkpoint.provenance_type.definitive_process_evidence
+            and checkpoint.market_value is not None
+        )
+        for checkpoint in definitive:
+            if checkpoint.roster_id is not None:
+                roster_values[str(checkpoint.roster_id)] += float(checkpoint.market_value)
+        fully_gradable = bool(checkpoints) and len(definitive) == len(checkpoints)
         for roster_id in payload.get("roster_ids") or ():
             partners = [
                 str(value) for value in payload.get("roster_ids") or ()
@@ -146,6 +157,16 @@ def load_results_history(
                 "championship_outlook_delta": None,
                 "partner_id": partners[0] if len(partners) == 1 else None,
                 "process_evidence": process,
+                "process_score": (
+                    round(
+                        50 + 50 * (
+                            roster_values.get(str(roster_id), 0.0)
+                            - sum(value for key, value in roster_values.items() if key != str(roster_id))
+                        ) / max(1.0, sum(roster_values.values())),
+                        2,
+                    )
+                    if fully_gradable and roster_values else None
+                ),
             })
     _, draft_picks = store.records(league_id, "draft_pick", limit=100_000)
     for row in draft_picks:
@@ -159,6 +180,25 @@ def load_results_history(
             "pick_number": payload.get("pick_no"),
             "value_over_expected": None,
         })
+    _, transactions = store.records(league_id, "transaction", limit=100_000)
+    for row in transactions:
+        payload = row["payload"]
+        season = int(row.get("season") or 0)
+        transaction_id = str(row["source_record_id"])
+        roster_ids = {
+            str(value) for value in payload.get("roster_ids") or () if value is not None
+        }
+        roster_ids.update(str(value) for value in (payload.get("adds") or {}).values())
+        roster_ids.update(str(value) for value in (payload.get("drops") or {}).values())
+        waiver_budget = payload.get("waiver_budget") or ()
+        for roster_id in roster_ids:
+            histories[roster_id].setdefault("waivers", []).append({
+                "transaction_id": transaction_id,
+                "season": season,
+                "value_created": None,
+                "faab_efficiency": None,
+                "meaningful": bool(payload.get("adds") or payload.get("drops") or waiver_budget),
+            })
     for roster_id, history in histories.items():
         history["seasons"].sort(key=lambda row: row["season"])
         history["ownership_changes"] = max(0, len(owners[roster_id]) - 1)

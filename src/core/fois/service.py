@@ -14,7 +14,7 @@ from typing import Any
 from src.core.fois.configuration import DEFAULT_FOIS_CONFIGURATION
 from src.core.fois.engine import FOISEngine
 from src.core.fois.facts import DraftFact, FOISFacts, SeasonResult, TradeFact, WaiverFact
-from src.core.fois.identity import identity_from_team
+from src.core.fois.identity import canonical_league_identity, identity_from_team
 from src.core.fois.models import GMTenure, TakeoverSnapshot
 from src.core.fois.repository import FOISRepository
 from src.core.brain import brain_service
@@ -72,12 +72,18 @@ class FOISService:
         started = perf_counter()
         try:
             scores = await asyncio.to_thread(self._generate_sync, data)
+            league_id = str((data.get("league") or {}).get("league_id") or "configured-league")
+            canonical = self.repository.canonical_health(
+                league_id, DEFAULT_FOIS_CONFIGURATION.model_version,
+            )
             self._status.update({
                 "state": "complete",
                 "last_run": scores[0].generated_at if scores else None,
                 "last_duration_ms": round((perf_counter() - started) * 1000, 3),
                 "last_error": None,
                 "records": len(scores),
+                "generation_status": "complete",
+                **canonical,
             })
             LOGGER.info(
                 "FOIS generation complete: model=%s records=%s duration_ms=%s",
@@ -97,6 +103,7 @@ class FOISService:
     def _generate_sync(self, data: dict[str, Any]) -> tuple[Any, ...]:
         league = data.get("league") or {}
         league_id = str(league.get("league_id") or "configured-league")
+        identity_league_id = canonical_league_identity(league)
         supplied_history = data.get("fois_history")
         history = (
             supplied_history
@@ -124,12 +131,14 @@ class FOISService:
             league_id=league_id, limit=10_000,
         )
         scores = []
+        snapshots_written = 0
+        snapshots_deduplicated = 0
         teams = data.get("teams") or ()
         canonical_brain = None
         if teams and supplied_history is None:
             canonical_brain = brain_service(data)
         for team in data.get("teams") or ():
-            identity = identity_from_team(league_id, team)
+            identity = identity_from_team(identity_league_id, team)
             roster_id = str(team.get("roster_id") or "")
             roster_checkpoints = tuple(
                 row for row in permanent_checkpoints
@@ -218,12 +227,16 @@ class FOISService:
                 current_team_score=rows.get("current_team_score") or roster_metrics.get("current_team_score"),
                 competitive_window=rows.get("competitive_window"),
                 waivers=waivers,
+                franchise_name=identity.franchise_name,
             )
             score = self.engine.evaluate(facts)
             fingerprint = hashlib.sha256(
                 json.dumps(asdict(facts), sort_keys=True, default=str).encode()
             ).hexdigest()
-            self.repository.save(score, fingerprint)
+            if self.repository.save(score, fingerprint):
+                snapshots_written += 1
+            else:
+                snapshots_deduplicated += 1
             LOGGER.info(
                 "FOIS franchise evaluated: model=%s league=%s franchise=%s "
                 "window=%s-%s status=%s",
@@ -235,4 +248,8 @@ class FOISService:
                 "provisional" if score.provisional else "complete",
             )
             scores.append(score)
+        self._status.update({
+            "snapshots_written": snapshots_written,
+            "snapshots_deduplicated": snapshots_deduplicated,
+        })
         return tuple(scores)

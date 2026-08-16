@@ -24,6 +24,7 @@ CATEGORY_NAMES = {
     "trading_asset_management": "Trading and Asset Management",
     "roster_construction": "Roster Construction",
     "drafting_talent_evaluation": "Drafting and Talent Evaluation",
+    "waivers_transactions": "Waivers and Transactions",
 }
 
 
@@ -223,6 +224,34 @@ class FOISEngine:
                     clamp(len(processes) * 20), clamp(len(processes) / len(facts.drafts) * 100),
                     "Process evidence is graded independently from injury and later outcome variance.", evidence_ids,
                 )
+        if facts.waivers:
+            waiver_values = [row.value_created for row in facts.waivers if row.value_created is not None]
+            faab_values = [row.faab_efficiency for row in facts.waivers if row.faab_efficiency is not None]
+            calculated["waiver_activity"] = _metric(
+                "waiver_activity", "Waiver activity",
+                "Observed waiver, free-agent, add/drop, and FAAB activity; activity is not quality.",
+                len(facts.waivers), None, len(facts.waivers),
+                clamp(len(facts.waivers) / 20 * 100), 100,
+                f"{len(facts.waivers)} historical transaction(s) establish activity only; no performance score is fabricated.",
+                evidence_ids, status=MetricStatus.INSUFFICIENT_DATA,
+                directionality=Directionality.CONTEXTUAL,
+            )
+            if waiver_values:
+                calculated["waiver_value_created"] = _metric(
+                    "waiver_value_created", "Waiver value created",
+                    "Evidence-supported value created by waiver and free-agent decisions.",
+                    round(mean(waiver_values), 2), clamp(mean(waiver_values)), len(waiver_values),
+                    clamp(len(waiver_values) / 10 * 100), clamp(len(waiver_values) / len(facts.waivers) * 100),
+                    "Only transactions with supported value evidence contribute.", evidence_ids,
+                )
+            if faab_values:
+                calculated["faab_efficiency"] = _metric(
+                    "faab_efficiency", "FAAB efficiency",
+                    "Evidence-supported FAAB efficiency; spending volume alone is not quality.",
+                    round(mean(faab_values), 2), clamp(mean(faab_values)), len(faab_values),
+                    clamp(len(faab_values) / 10 * 100), clamp(len(faab_values) / len(facts.waivers) * 100),
+                    "Only supported FAAB outcomes contribute.", evidence_ids,
+                )
         categories = []
         for category, definitions in self.registry.items():
             if category == "results":
@@ -240,7 +269,18 @@ class FOISEngine:
         strongest = max(available, key=lambda row: row.normalized_score).category_name if available else None
         weakest = min(available, key=lambda row: row.normalized_score).category_name if available else None
         completeness = round(sum(row.completeness * row.weight for row in category_scores) / 100, 2)
-        confidence = round(sum(row.confidence * row.weight for row in available) / sum(row.weight for row in available), 2) if available else 0
+        supported_weight = round(sum(row.weight for row in available), 2)
+        base_confidence = (
+            sum(row.confidence * row.weight for row in available) / supported_weight
+            if available and supported_weight else 0
+        )
+        history_coverage = min(1.0, len(completed) / max(1, min(5, facts.expected_seasons or 5)))
+        confidence = round(
+            base_confidence
+            * (.55 + .45 * completeness / 100)
+            * (.70 + .30 * history_coverage),
+            2,
+        )
         warnings = tuple(dict.fromkeys((*facts.warnings, *(
             warning for category in category_scores for warning in category.warnings
         ))))
@@ -266,6 +306,15 @@ class FOISEngine:
         weaknesses = tuple(row.category_name for row in sorted(
             available, key=lambda row: row.normalized_score or 0
         )[:1])
+        partners = {row.partner_id for row in facts.trades if row.partner_id}
+        tendencies = []
+        if len(facts.trades) >= self.configuration.minimum_sample_sizes.get("tendencies", 5):
+            tendencies.append(
+                "Aggressive trader" if len(facts.trades) >= 15 else "Selective trader"
+            )
+        if len(facts.waivers) >= self.configuration.minimum_sample_sizes.get("tendencies", 5):
+            tendencies.append("Waiver-active")
+        unavailable_tendencies = () if tendencies else ("TENDENCY_UNAVAILABLE",)
         return FrontOfficeIntelligenceScore(
             VERSION, facts.league_id, facts.franchise_id, facts.owner_id, start, end,
             len(completed), overall, letter_grade(overall, self.configuration),
@@ -284,6 +333,11 @@ class FOISEngine:
             management_momentum="Stable" if completed else "Unavailable",
             strengths=strengths,
             weaknesses=weaknesses,
+            franchise_name=facts.franchise_name,
+            supported_weight=supported_weight,
+            tendencies=tuple(tendencies),
+            unavailable_tendencies=unavailable_tendencies,
+            trade_partner_count=len(partners),
         )
 
     @staticmethod

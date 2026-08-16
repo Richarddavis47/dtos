@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.10.36 - Canonical FOIS GM Intelligence, Confidence Calibration & League Leaderboard
+
+- Present exactly one active-tenure, current canonical FOIS evaluation per current GM.
+- Preserve meaningful historical snapshots and prior tenures behind explicit GM history drill-downs.
+- Separate supported weight, completeness, and versioned confidence without scoring unavailable evidence as zero.
+- Consume full canonical results, trade-process, draft, waiver, partner, and Brain team-state evidence without request-time provider work.
+- Replace the duplicate evaluation grid with a deterministic, responsive league GM leaderboard and canonical profile pages.
+
 ## v1.10.35 - Historical Resolution Bulk Reuse & Request Responsiveness
 
 - Replaced per-asset historical market replay reads with a bounded bulk compatibility lookup.

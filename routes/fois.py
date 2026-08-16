@@ -40,16 +40,25 @@ def _summary(score: Any) -> dict[str, Any]:
         "gm_id": score.gm_id,
         "gm_name": score.gm_name,
         "franchise_id": score.franchise_id,
+        "franchise_name": score.franchise_name,
         "tenure_id": score.tenure_id,
         "executive_score": score.overall_score,
         "grade": score.overall_letter_grade,
         "confidence": score.confidence,
         "completeness": score.completeness,
+        "supported_weight": score.supported_weight,
+        "evaluation_kind": score.evaluation_kind,
+        "confidence_model_version": score.confidence_model_version,
         "evidence_state": score.evidence_state,
         "current_team_score": score.current_team_score,
         "management_momentum": score.management_momentum,
         "strongest_category": score.strongest_category,
         "weakest_category": score.weakest_category,
+        "strengths": score.strengths,
+        "improvement_areas": score.weaknesses,
+        "tendencies": score.tendencies,
+        "unavailable_tendencies": score.unavailable_tendencies,
+        "trade_partner_count": score.trade_partner_count,
     }
 
 
@@ -107,6 +116,7 @@ def create_fois_router(
     async def league(league_id: str) -> dict[str, Any]:
         scores = league_scores(league_id)
         return {**_metadata(scores[0] if scores else None), "league_id": league_id,
+                **service.repository.canonical_health(league_id, FOIS_MODEL_VERSION),
                 "gms": [_summary(score) for score in scores]}
 
     @router.get("/api/fois/leagues/{league_id}/rankings")
@@ -116,6 +126,7 @@ def create_fois_router(
             row.gm_id or "",
         ))
         return {**_metadata(scores[0] if scores else None), "league_id": league_id,
+                **service.repository.canonical_health(league_id, FOIS_MODEL_VERSION),
                 "rankings": [{"rank": index, **_summary(score)} for index, score in enumerate(scores, 1)]}
 
     @router.get("/api/fois/leagues/{league_id}/gms")
@@ -126,15 +137,30 @@ def create_fois_router(
     async def gm(league_id: str, gm_id: str) -> dict[str, Any]:
         score = gm_score(league_id, gm_id)
         tenure = service.repository.tenure_for_gm(league_id, gm_id)
+        timeline = service.repository.timeline(league_id, gm_id)
         return {**_metadata(score), "profile": jsonable_encoder(score),
                 "tenure": jsonable_encoder(tenure),
                 "takeover": jsonable_encoder(service.repository.takeover(tenure.tenure_id)) if tenure else None,
+                "history": jsonable_encoder(tuple(
+                    row for row in timeline if row.evaluation_kind != "current_canonical"
+                )),
                 "gm_quality_is_not_team_quality": True}
 
     @router.get("/api/fois/leagues/{league_id}/gms/{gm_id}/timeline")
     async def timeline(league_id: str, gm_id: str) -> dict[str, Any]:
         score = gm_score(league_id, gm_id)
         return {**_metadata(score), "timeline": jsonable_encoder(service.repository.timeline(league_id, gm_id))}
+
+    @router.get("/api/fois/leagues/{league_id}/health")
+    async def league_health(league_id: str) -> dict[str, Any]:
+        require_enabled()
+        return {
+            **_metadata(),
+            "league_id": league_id,
+            "generation_status": service.status().get("state"),
+            "generation_duration": service.status().get("last_duration_ms"),
+            **service.repository.canonical_health(league_id, FOIS_MODEL_VERSION),
+        }
 
     async def category(league_id: str, gm_id: str, category_key: str) -> dict[str, Any]:
         score = gm_score(league_id, gm_id)
@@ -260,11 +286,15 @@ def create_fois_router(
             -row.confidence, row.gm_id or "",
         ))
         cards = "".join(
-            f'<article class="card"><p class="eyebrow">{exact_rank(rank, len(ranked_scores))}</p><h3>{escape(score.gm_name or "GM")}</h3>'
-            f'<p class="score">{score.overall_score if score.overall_score is not None else "Insufficient Evidence"} '
-            f'{escape(score.overall_letter_grade or "")}</p><p>Confidence: {score.confidence:.0f}%</p>'
-            f'<p>Current Team Score: {score.current_team_score if score.current_team_score is not None else "Not yet supported by available evidence"}</p>'
-            f'<a href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}" data-api-profile="/api/fois/leagues/{escape(score.league_id)}/gms/{escape(score.gm_id or "")}">Open Executive Profile</a></article>'
+            f'<article class="card fois-leader" data-fois-current="true" data-fois-rank="{rank}" data-fois-gm="{escape(score.gm_id or "")}">'
+            f'<div class="fois-rank"><span>League Rank</span><b>#{rank}</b></div>'
+            f'<div><p class="eyebrow">CURRENT · {exact_rank(rank, len(ranked_scores))}</p><h3>{escape(score.gm_name or "GM")}</h3>'
+            f'<p class="muted">{escape(score.franchise_name or "Current franchise")}</p></div>'
+            f'<div class="fois-score"><b>{score.overall_score if score.overall_score is not None else "—"}</b><span>{escape(score.overall_letter_grade or "Insufficient evidence")}</span></div>'
+            f'<div class="fois-evidence"><b>{score.confidence:.0f}% confidence</b><span>{score.completeness:.0f}% evidence coverage · {score.supported_weight:.0f}% supported weight</span></div>'
+            f'<div><b>Strength:</b> {escape(score.strengths[0] if score.strengths else "Not yet supported")}'
+            f'<br><b>Improve:</b> {escape(score.weaknesses[0] if score.weaknesses else "Not yet supported")}</div>'
+            f'<a class="ds-action" href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}" data-api-profile="/api/fois/leagues/{escape(score.league_id)}/gms/{escape(score.gm_id or "")}">Open Executive Profile</a></article>'
             for rank, score in enumerate(ranked_scores, 1)
         )
         status = service.status()
@@ -281,14 +311,21 @@ def create_fois_router(
             content = ('<section class="empty-state" data-dtos-component="empty-state">'
                        '<h2>FOIS data unavailable</h2><p>No persisted executive profiles exist for this league.</p></section>')
         else:
-            content = f'<section id="executive-profiles" class="card-grid">{cards}</section>'
+            health = service.repository.canonical_health(selected_league_id, FOIS_MODEL_VERSION)
+            content = (
+                f'<section class="summary-grid" data-fois-leaderboard-count="{len(ranked_scores)}">'
+                f'<article class="metric"><b>{len(ranked_scores)}</b><span>Current GMs</span></article>'
+                f'<article class="metric"><b>{health["duplicate_current_count"]}</b><span>Duplicate current profiles</span></article>'
+                f'<article class="metric"><b>{health["historical_snapshot_count"]}</b><span>Historical snapshots</span></article></section>'
+                f'<section id="executive-profiles" class="fois-leaderboard">{cards}</section>'
+            )
 
         body = (
             '<nav class="ds-breadcrumbs" aria-label="FOIS sections">'
             '<a href="#gm-rankings">GM Rankings</a><a href="#executive-profiles">Executive Profiles</a>'
             '<a href="/history">Franchise and GM History</a></nav>'
-            '<section id="gm-rankings"><h2>GM Rankings</h2>'
-            '<p class="muted">GM Quality Is Not Team Quality. Rankings preserve evidence confidence and completeness.</p>'
+            '<section id="gm-rankings"><p class="eyebrow">CURRENT LEAGUE INTELLIGENCE</p><h2>GM Leaderboard</h2>'
+            '<p class="muted">One current intelligence profile per GM, ranked by canonical FOIS score. Historical evaluations live inside each GM profile.</p>'
             f'{content}</section>'
         )
         return page("Front Office Intelligence System", body) if page else HTMLResponse(body)
@@ -298,6 +335,10 @@ def create_fois_router(
         data = require_data()
         selected_league = league_id.strip() or str((data.get("league") or {}).get("league_id") or "")
         score = gm_score(selected_league, gm_id)
+        history = tuple(
+            row for row in service.repository.timeline(selected_league, gm_id)
+            if row.evaluation_kind != "current_canonical"
+        )
         rankings = sorted(league_scores(selected_league), key=lambda row: (
             -(row.overall_score if row.overall_score is not None else -1),
             -row.confidence, row.gm_id or "",
@@ -312,10 +353,15 @@ def create_fois_router(
         strengths = "".join(f"<li>{escape(item)}</li>" for item in score.strengths) or "<li>No evidence-supported strength is established yet.</li>"
         weaknesses = "".join(f"<li>{escape(item)}</li>" for item in score.weaknesses) or "<li>No evidence-supported weakness is established yet.</li>"
         details = technical_details((("GM identity", score.gm_id), ("FOIS model", score.model_version), ("Brain snapshot", score.brain_snapshot_id), ("Generated", score.generated_at)))
-        body = f'''<a class="back" href="/fois?league_id={escape(selected_league)}">← GM Rankings</a><p class="eyebrow">Executive Profile</p><h2>{escape(score.gm_name or "General Manager")}</h2>
-<div class="summary-grid"><article class="metric"><b>{exact_rank(rank, len(rankings))}</b><span>League Rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not ranked"}</b><span>Executive Score</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Confidence</span></article><article class="metric"><b>{human_status(score.evidence_state)}</b><span>Evidence State</span></article></div>
+        historical_rows = "".join(
+            f'<li data-fois-history="true"><b>HISTORICAL SNAPSHOT</b> · {escape(row.generated_at[:10])} · '
+            f'{row.overall_score if row.overall_score is not None else "Unavailable"} {escape(row.overall_letter_grade or "")}</li>'
+            for row in reversed(history)
+        ) or "<li>No earlier meaningful FOIS snapshot exists.</li>"
+        body = f'''<a class="back" href="/fois?league_id={escape(selected_league)}">← GM Leaderboard</a><p class="eyebrow">CURRENT GM PROFILE</p><h2>{escape(score.gm_name or "General Manager")}</h2><p>{escape(score.franchise_name or "Current franchise")}</p>
+<div class="summary-grid"><article class="metric"><b>{exact_rank(rank, len(rankings))}</b><span>League Rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not ranked"} {escape(score.overall_letter_grade or "")}</b><span>FOIS Score</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Confidence</span></article><article class="metric"><b>{score.completeness:.0f}%</b><span>Evidence Coverage</span></article><article class="metric"><b>{score.supported_weight:.0f}%</b><span>Supported Weight</span></article></div>
 <section class="card"><h3>Executive Summary</h3><p>{escape(score.executive_summary)}</p><p><b>Management momentum:</b> {escape(human_status(score.management_momentum))}</p></section>
-<div class="card-grid">{categories}</div><div class="grid"><section class="card"><h3>Evidence-supported strengths</h3><ul>{strengths}</ul></section><section class="card"><h3>Evidence-supported opportunities</h3><ul>{weaknesses}</ul></section></div>{details}'''
+<div class="card-grid">{categories}</div><div class="grid"><section class="card"><h3>Top strengths</h3><ul>{strengths}</ul></section><section class="card"><h3>Improvement areas</h3><ul>{weaknesses}</ul></section></div><details class="card" data-fois-history-count="{len(history)}"><summary>GM History · {len(history)} earlier snapshot(s)</summary><ul>{historical_rows}</ul></details>{details}'''
         return page(f"{score.gm_name or 'GM'} — Executive Profile", body) if page else HTMLResponse(body)
 
     return router

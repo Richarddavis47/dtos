@@ -14,14 +14,15 @@ DEFAULT_GRADE_THRESHOLDS = (
 DEFAULT_FOIS_CONFIGURATION = FrontOfficeScoringConfiguration(
     model_version=FOIS_MODEL_VERSION,
     category_weights={
-        "results": 35.0,
+        "results": 30.0,
         "trading_asset_management": 25.0,
         "roster_construction": 20.0,
-        "drafting_talent_evaluation": 20.0,
+        "drafting_talent_evaluation": 15.0,
+        "waivers_transactions": 10.0,
     },
     metric_definitions={},
     normalization_rules={"default": "league_relative_percentile"},
-    minimum_sample_sizes={"results": 3, "trades": 3, "drafts": 2},
+    minimum_sample_sizes={"results": 3, "trades": 3, "drafts": 2, "tendencies": 5},
     confidence_rules={"season_target": 10.0, "minimum": 20.0},
     historical_weighting={
         "full_history": 1.0,

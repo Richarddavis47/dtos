@@ -90,6 +90,7 @@ class FOISFacts:
     current_team_score: float | None = None
     competitive_window: str | None = None
     waivers: tuple[WaiverFact, ...] = ()
+    franchise_name: str | None = None
 
     @property
     def completed_seasons(self) -> tuple[SeasonResult, ...]:
