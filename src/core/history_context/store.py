@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
 from collections import defaultdict
 from pathlib import Path
 from threading import RLock
@@ -105,12 +106,7 @@ class CanonicalHistoryStore:
         return {"mapping": self._generation, "observations": self._generation}
 
     def _cache_index(self, league_id: str) -> dict[int, str]:
-        result = {}
-        for season in sleeper_season_cache.available_seasons(league_id):
-            cached = sleeper_season_cache.read(league_id, season)
-            if cached is not None:
-                result[season] = cached.checksum
-        return result
+        return sleeper_season_cache.checksum_index(league_id)
 
     def season_chain(self, league_id: str) -> dict[str, Any] | None:
         """Return the compact durable discovery manifest for progress surfaces."""
@@ -242,13 +238,54 @@ class CanonicalHistoryStore:
             }))
         return rows
 
+    def _transaction_records(
+        self, league_id: str, season: int, entity_type: str,
+    ) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        transactions_by_week = sleeper_season_cache.section(
+            league_id, season, "transactions",
+        ) or {}
+        processed = 0
+        for week_key, transactions in transactions_by_week.items():
+            week = int(week_key)
+            for transaction in transactions or []:
+                selected = (
+                    "trade" if transaction.get("type") == "trade" else "transaction"
+                )
+                if selected != entity_type:
+                    continue
+                transaction_id = str(
+                    transaction.get("transaction_id") or _digest(transaction)[:16]
+                )
+                payload = dict(transaction)
+                payload.setdefault("roster_ids", transaction.get("roster_ids") or [])
+                occurred_at, timestamp_provenance = canonical_transaction_timestamp(payload)
+                rows.append(self._record(
+                    league_id, season, selected, transaction_id, payload, week=week,
+                    occurred_at=occurred_at,
+                    timestamp_provenance=timestamp_provenance,
+                ))
+                processed += 1
+                if processed % 32 == 0:
+                    time.sleep(0)
+        return rows
+
     def records(
         self, league_id: str, entity_type: str | None, *, season: int | None = None,
         week: int | None = None, franchise_id: str | None = None,
         player_id: str | None = None, limit: int = 100, offset: int = 0,
     ) -> tuple[int, list[dict[str, Any]]]:
         seasons = [season] if season is not None else sorted(self._cache_index(league_id), reverse=True)
-        rows = [row for selected in seasons for row in self._season_records(league_id, selected)]
+        if entity_type in {"trade", "transaction"}:
+            rows = [
+                row for selected in seasons
+                for row in self._transaction_records(league_id, selected, entity_type)
+            ]
+        else:
+            rows = [
+                row for selected in seasons
+                for row in self._season_records(league_id, selected)
+            ]
         rows = [row for row in rows if (
             (entity_type is None or row["entity_type"] == entity_type)
             and (week is None or row["week"] == week)

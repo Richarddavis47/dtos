@@ -75,6 +75,7 @@ from src.core.intelligence_memory import historical_trade_resolution_service
 from src.platform.observability import (
     install_observability,
     mark_startup_complete,
+    monitor_event_loop_lag,
     runtime_metrics,
 )
 from src.platform.market_warming import AssetMarketWarmingMiddleware
@@ -103,6 +104,13 @@ _MULTI_LEAGUE_IMPORT_ENABLED = (
     os.getenv("DTOS_MULTI_LEAGUE_IMPORT_ENABLED", "0").strip().casefold()
     in {"1", "true", "yes", "on"}
 )
+intelligence_heavy_lock = asyncio.Lock()
+
+
+async def _generate_fois_coordinated(data: dict[str, Any]) -> tuple[Any, ...]:
+    """Run FOIS as one lifecycle-heavy flight without overlapping other phases."""
+    async with intelligence_heavy_lock:
+        return await fois_service.generate(data)
 
 
 def _publish_runtime_context(
@@ -149,7 +157,7 @@ async def _hydrate_league_runtime(runtime: LeagueRuntime) -> dict[str, Any]:
         scoring_profile_id=runtime.scoring_profile,
     )
     projections.restore_into(data)
-    await fois_service.generate(data)
+    await _generate_fois_coordinated(data)
     _publish_runtime_context(runtime, projections)
     return data
 
@@ -281,7 +289,7 @@ async def background_sync() -> None:
         if STATE.get("data"):
             runtime_metrics.mark_background("fois_generation", "running")
             try:
-                await fois_service.generate(STATE["data"])
+                await _generate_fois_coordinated(STATE["data"])
             except Exception:
                 runtime_metrics.mark_background("fois_generation", "failed")
         else:
@@ -304,18 +312,19 @@ async def resolve_historical_trade_market() -> None:
         runtime_metrics.mark_background("historical_market_resolution", "deferred")
         return
     runtime_metrics.mark_background("historical_market_resolution", "running")
-    with lifecycle_coordinator.phase("historical_market_resolution"):
-        result = await asyncio.to_thread(
-            historical_trade_resolution_service.run_safe,
-            canonical_history_store, LEAGUE_ID,
-        )
+    async with intelligence_heavy_lock:
+        with lifecycle_coordinator.phase("historical_market_resolution"):
+            result = await asyncio.to_thread(
+                historical_trade_resolution_service.run_safe,
+                canonical_history_store, LEAGUE_ID,
+            )
     runtime_metrics.mark_background(
         "historical_market_resolution", "complete" if result else "failed",
     )
     if result:
         runtime_metrics.mark_background("fois_generation", "running")
         try:
-            await fois_service.generate(STATE["data"])
+            await _generate_fois_coordinated(STATE["data"])
         except Exception:
             runtime_metrics.mark_background("fois_generation", "failed")
         else:
@@ -395,7 +404,7 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     )
     runtime_metrics.mark_background("fois_generation", "running")
     try:
-        await fois_service.generate(STATE["data"])
+        await _generate_fois_coordinated(STATE["data"])
     except Exception:
         # FOIS is an optional persisted intelligence projection. Its failure is
         # observable, but cannot hold canonical readiness or Asset Market idle.
@@ -443,6 +452,9 @@ async def startup_and_periodic_maintenance(startup_epoch: int) -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    event_loop_monitor = asyncio.create_task(
+        monitor_event_loop_lag(), name="dtos-event-loop-lag-monitor",
+    )
     runtime_metrics.mark_not_ready("Loading cached league data.")
     startup_epoch = lifecycle_coordinator.begin_startup(
         "Loading cached canonical state."
@@ -453,7 +465,11 @@ async def lifespan(_: FastAPI):
             startup_epoch, historical_storage_status.reason,
         )
         mark_startup_complete(_PROCESS_STARTED)
-        yield
+        try:
+            yield
+        finally:
+            event_loop_monitor.cancel()
+            await asyncio.gather(event_loop_monitor, return_exceptions=True)
         return
     load_cache()
     default_runtime = league_runtime_manager.resident(LEAGUE_ID)
@@ -485,8 +501,9 @@ async def lifespan(_: FastAPI):
         yield
     finally:
         maintenance_task.cancel()
+        event_loop_monitor.cancel()
         await asyncio.gather(
-            maintenance_task,
+            maintenance_task, event_loop_monitor,
             return_exceptions=True,
         )
         await league_runtime_manager.shutdown()

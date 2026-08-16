@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import asyncio
 import contextvars
 import hashlib
 import json
@@ -25,7 +26,7 @@ if os.getenv("DTOS_VALIDATION_SUPPRESS_FOIS") == "1":
 from config import (
     CACHE_FILE, HISTORY_DATABASE_FILE, HISTORY_STORAGE_ROOT, METADATA_DATABASE_FILE,
 )
-from dtos_app import app
+from dtos_app import app, intelligence_heavy_lock
 from services.fois import fois_service
 from services.history import _SEASON_SECTION_CACHE, _SEASON_SECTION_CACHE_LOCK
 from services.sleeper import LEAGUE_ID, STATE, save_cache
@@ -40,6 +41,7 @@ from src.core.history_context import (
     minimal_metadata_store,
 )
 from src.core.history_context.guard import legacy_access_guard
+from src.core.intelligence_memory import historical_trade_resolution_service
 from src.platform.lifecycle import LifecycleCoordinator, lifecycle_coordinator
 from tools.validation.generate_sanitized_market_fixture import (
     material_market_fixture_change,
@@ -62,6 +64,7 @@ _trace_context: contextvars.ContextVar[str | None] = contextvars.ContextVar(
 _cold_phase_events: list[dict[str, Any]] = []
 _cold_phase_active: dict[str, Any] = {}
 _cold_started = time.perf_counter()
+_historical_resolution_task: asyncio.Task[Any] | None = None
 
 
 def _working_memory() -> int | None:
@@ -605,6 +608,47 @@ async def cold_build_profile() -> dict[str, Any]:
         "events": events,
         "market": asset_market_cache.metrics(),
         "fois": fois_service.status(),
+    }
+
+
+@app.post("/__validation__/historical-resolution")
+async def historical_resolution() -> dict[str, Any]:
+    """Start one real production-shaped durable replay inside the app process."""
+    global _historical_resolution_task
+    if _historical_resolution_task is not None and not _historical_resolution_task.done():
+        return {"started": False, "single_flight": True,
+                "health": historical_trade_resolution_service.health()}
+    while historical_trade_resolution_service.health().get("status") == "running":
+        await asyncio.sleep(0.05)
+    started = asyncio.Event()
+
+    async def run() -> None:
+        async with intelligence_heavy_lock:
+            with lifecycle_coordinator.phase("historical_market_resolution"):
+                started.set()
+                await asyncio.to_thread(
+                    historical_trade_resolution_service.run_safe,
+                    historical_store, LEAGUE_ID,
+                )
+
+    _historical_resolution_task = asyncio.create_task(
+        run(), name="validation-historical-resolution",
+    )
+    await started.wait()
+    return {"started": True, "single_flight": True,
+            "health": historical_trade_resolution_service.health()}
+
+
+@app.get("/__validation__/historical-resolution")
+async def historical_resolution_health() -> dict[str, Any]:
+    health = historical_trade_resolution_service.health()
+    return {
+        "active": bool(
+            (_historical_resolution_task is not None
+             and not _historical_resolution_task.done())
+            or health.get("status") == "running"
+        ),
+        "health": health,
     }
 
 

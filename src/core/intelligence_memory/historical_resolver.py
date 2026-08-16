@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict, Counter
 from dataclasses import dataclass, replace
 from threading import RLock
-from time import monotonic
+from time import monotonic, sleep
 from typing import TYPE_CHECKING, Callable, Iterable, Protocol
 
 from .market import HistoricalMarketSelection, select_historical_market
@@ -193,20 +193,87 @@ class HistoricalMarketResolver:
             checkpoint, market_context_id=market_context_id,
             resolver_version=HISTORICAL_RESOLUTION_POLICY_VERSION,
         )
-        if durable is not None:
-            stored, observation, state = durable
-            self._counts["replay_skipped"] += 1
-            if observation is not None and state == HistoricalResolutionState.COMPLETE:
-                self._counts["durable_reuse"] += 1
-                result = self._from_global(observation)
-                return replace(result, source="durable_resolution_reference"), stored, False, False
-            if state == HistoricalResolutionState.FINAL_UNAVAILABLE:
-                self._counts["durable_final_unavailable"] += 1
-                selected = select_historical_market((), checkpoint.timestamp)
-                return HistoricalResolution(
-                    selected, EvidencePersistenceDecision.UNAVAILABLE,
-                    "durable_final_unavailable", None,
-                ), stored, False, False
+        reused = self._reuse_durable(checkpoint, durable)
+        if reused is not None:
+            return reused
+        return self._resolve_after_compatibility_miss(
+            checkpoint, market_context_id=market_context_id,
+            persistence=persistence,
+        )
+
+    def _reuse_durable(
+        self, checkpoint: "IntelligenceCheckpoint",
+        durable: tuple[
+            "IntelligenceCheckpoint", GlobalMarketObservation | None,
+            HistoricalResolutionState,
+        ] | None,
+    ) -> tuple[HistoricalResolution, "IntelligenceCheckpoint", bool, bool] | None:
+        if durable is None:
+            return None
+        stored, observation, state = durable
+        self._counts["replay_skipped"] += 1
+        if observation is not None and state == HistoricalResolutionState.COMPLETE:
+            self._counts["durable_reuse"] += 1
+            result = self._from_global(observation)
+            return replace(result, source="durable_resolution_reference"), stored, False, False
+        if state == HistoricalResolutionState.FINAL_UNAVAILABLE:
+            self._counts["durable_final_unavailable"] += 1
+            selected = select_historical_market((), checkpoint.timestamp)
+            return HistoricalResolution(
+                selected, EvidencePersistenceDecision.UNAVAILABLE,
+                "durable_final_unavailable", None,
+            ), stored, False, False
+        return None
+
+    def resolve_checkpoints_bulk(
+        self,
+        requests: list[tuple["IntelligenceCheckpoint", str, PersistenceContext]],
+    ) -> tuple[
+        list[tuple[HistoricalResolution, "IntelligenceCheckpoint", bool, bool] | None],
+        dict[str, int],
+    ]:
+        """Reuse compatible durable results in bulk, resolving only misses."""
+        durable, metrics = self.store.compatible_resolutions([
+            (checkpoint, context, HISTORICAL_RESOLUTION_POLICY_VERSION)
+            for checkpoint, context, _persistence in requests
+        ])
+        results = []
+        for index, ((checkpoint, context, persistence), compatible) in enumerate(zip(
+            requests, durable, strict=True,
+        ), 1):
+            reused = self._reuse_durable(checkpoint, compatible)
+            if reused is not None:
+                results.append(reused)
+                if index % 32 == 0:
+                    sleep(0)
+                continue
+            try:
+                results.append(self._resolve_after_compatibility_miss(
+                    checkpoint, market_context_id=context, persistence=persistence,
+                ))
+            except HistoricalProviderRateLimitError:
+                metrics["rate_limited"] = int(metrics.get("rate_limited", 0)) + 1
+                results.append(None)
+            if index % 32 == 0:
+                sleep(0)
+        metrics["assets_bulk_reused"] = sum(
+            result is not None and result[0].source in {
+                "durable_resolution_reference", "durable_final_unavailable",
+            }
+            for result in results
+        )
+        metrics["assets_provider_resolved"] = sum(
+            result is not None and result[0].source not in {
+                "durable_resolution_reference", "durable_final_unavailable",
+            }
+            for result in results
+        )
+        return results, metrics
+
+    def _resolve_after_compatibility_miss(
+        self, checkpoint: "IntelligenceCheckpoint", *, market_context_id: str,
+        persistence: PersistenceContext,
+    ) -> tuple[HistoricalResolution, "IntelligenceCheckpoint", bool, bool]:
         result = self.resolve(
             asset_id=checkpoint.asset_id, asset_type=checkpoint.asset_type,
             market_context_id=market_context_id, occurred_at=checkpoint.timestamp,
