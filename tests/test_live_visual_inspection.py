@@ -121,6 +121,87 @@ class LiveVisualInspectionTests(unittest.TestCase):
             self.assertEqual(service.capture("matchups-1", "mobile")["status"], "stale")
             self.assertNotIn("private fixture detail", service.health(1)["last_error"])
 
+    def test_stale_mobile_capture_refreshes_through_registered_contract(self):
+        calls = []
+
+        def capture(item, output):
+            calls.append((item.surface_id, item.viewport))
+            Image.new("RGB", (10, 10), "navy" if len(calls) == 1 else "green").save(output, "PNG")
+            return {"attempt": len(calls)}
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            self.assertEqual(service.schedule([request()]), 1)
+            self.assertTrue(service.wait())
+            service._manifest["captures"]["matchups-1--mobile"]["status"] = "stale"
+            prior = service.screenshot("matchups-1", "mobile").read_bytes()
+            self.assertEqual(service.refresh("matchups-1", "mobile")["status"], "stale")
+            self.assertTrue(service.wait())
+            self.assertNotEqual(service.screenshot("matchups-1", "mobile").read_bytes(), prior)
+            self.assertEqual(service.capture("matchups-1", "mobile")["status"], "current")
+            health = service.health(1)
+            self.assertEqual(health["stale"], 0)
+            self.assertEqual(health["current"], 1)
+            self.assertEqual(health["refresh_requested"], 1)
+            self.assertEqual(health["refresh_started"], 1)
+            self.assertEqual(health["refresh_succeeded"], 1)
+            self.assertEqual(calls, [("matchups-1", "mobile"), ("matchups-1", "mobile")])
+
+    def test_generic_desktop_stale_refresh_and_current_poll_dedupe(self):
+        calls = []
+
+        def capture(item, output):
+            calls.append(item.viewport)
+            Image.new("RGB", (10, 10), "black").save(output, "PNG")
+            return {}
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            desktop = request(viewport="desktop")
+            service.schedule([desktop])
+            service.wait()
+            service._manifest["captures"]["matchups-1--desktop"]["status"] = "stale"
+            service.refresh("matchups-1", "desktop")
+            service.wait()
+            self.assertEqual(service.refresh("matchups-1", "desktop")["status"], "current")
+            self.assertEqual(calls, ["desktop", "desktop"])
+            self.assertEqual(service.health(1)["refresh_deduped"], 1)
+
+    def test_failed_manifest_publication_restores_prior_image_and_metadata(self):
+        calls = 0
+
+        def capture(_item, output):
+            nonlocal calls
+            calls += 1
+            Image.new("RGB", (10, 10), "black" if calls == 1 else "white").save(output, "PNG")
+            return {"attempt": calls}
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            service.schedule([request()])
+            service.wait()
+            old_image = service.screenshot("matchups-1", "mobile").read_bytes()
+            old_row = service.capture("matchups-1", "mobile")
+            service._manifest["captures"]["matchups-1--mobile"]["status"] = "stale"
+            original_write = service._write_manifest
+            failed = False
+
+            def fail_once():
+                nonlocal failed
+                if not failed:
+                    failed = True
+                    raise OSError("fixture publication failure")
+                original_write()
+
+            service._write_manifest = fail_once
+            service.refresh("matchups-1", "mobile")
+            service.wait()
+            self.assertEqual(service.screenshot("matchups-1", "mobile").read_bytes(), old_image)
+            row = service.capture("matchups-1", "mobile")
+            self.assertEqual(row["fingerprint"], old_row["fingerprint"])
+            self.assertEqual(row["status"], "stale")
+            self.assertEqual(service.health(1)["refresh_failed"], 1)
+
     def test_public_routes_are_read_only_and_pending_is_bounded(self):
         state = {"data": {"league": {"league_id": "league"}, "matchups": {"1": []}}}
         with tempfile.TemporaryDirectory() as folder:

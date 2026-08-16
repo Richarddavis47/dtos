@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.34 - Live Visual Stale Capture Refresh Correction
+
+- Make the documented Live Visual metadata path schedule registered stale or
+  missing capture evidence instead of returning stale metadata indefinitely.
+- Preserve current-capture single-flight deduplication while allowing stale
+  fingerprints to execute one bounded replacement capture.
+- Publish image, metadata, artifact hash, and refresh telemetry as one
+  rollback-safe update without weakening External Visual Mirror safety.
+
 ## v1.10.33 - Historical Resolution Replay Resilience & Durable Reuse
 
 - Recognize version-compatible event/asset resolution references before consulting

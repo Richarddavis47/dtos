@@ -170,7 +170,7 @@ def create_inspection_router(
             raise HTTPException(404, "Secondary league visual capture is unavailable.")
         if viewport not in LIVE_VIEWPORTS:
             raise HTTPException(404, "Visual viewport is not registered.")
-        row = live_visual_service.capture(surface_id, viewport) if live_visual_service else None
+        row = live_visual_service.refresh(surface_id, viewport) if live_visual_service else None
         if row is None:
             return {"status": "pending", "surface_id": surface_id, "viewport": viewport,
                     "last_valid": None, "retry_after_seconds": 5}
