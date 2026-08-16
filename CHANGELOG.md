@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.10.32 - Historical Trade Gradability Accounting Correction
+
+- Classify completed FAAB-only and otherwise unsupported historical trades as
+  execution-value unavailable and explicitly process not gradable without
+  fabricating dynasty market value.
+- Enforce balanced execution-value and process-gradability accounting for every
+  completed historical trade and expose the unclassified count in health diagnostics.
+- Preserve supported player/pick evidence for mixed FAAB trades while leaving
+  global observations, references, FOIS scoring, and HistoricalStore retirement unchanged.
+
 ## v1.10.31 - Sparse Historical Trade Market Matching
 
 - Add bounded pre-event market resolution that reuses global observations before
