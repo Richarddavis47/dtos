@@ -27,7 +27,11 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
                     "market_value": {"value": 7000}, "intrinsic_dtos_value": {"value": 7100},
                     "league_adjusted_value": {"value": 7200}, "contender_value": {"value": 7300},
                     "rebuilder_value": {"value": 7050},
-                }}
+                }, "evidence_sources": [{
+                    "provider_id": "fantasycalc", "normalized_value": 7000,
+                    "family": "fantasycalc_observed_market", "category": "Market",
+                    "weight": 82.5, "freshness_tier": "fresh", "reliability": 80,
+                }]}
             }},
             "projection_intelligence": {"players": {"1": {
                 "canonical_projection": 18.25, "provider": "Sleeper",
@@ -64,6 +68,9 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         self.assertEqual(observation.metadata["scoring_profile_id"], "profile-one")
         self.assertNotIn("players", observation.metadata)
         self.assertNotIn("payload", observation.metadata)
+        global_observation = self.store.observations()[0]
+        self.assertEqual(global_observation.provider_evidence[0].provider, "fantasycalc")
+        self.assertEqual(global_observation.provider_evidence[0].normalized_value, 7000)
 
     def test_event_replay_after_model_change_remains_idempotent(self) -> None:
         trade = {"transaction_id": "T-model", "type": "trade", "created": 1_750_000_000_000,
@@ -98,8 +105,9 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         self.pipeline.ingest_scheduled(self.data, observed_at="ignored")
         rows = self.store.checkpoints()
         self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0].league_id, "L1")
+        self.assertIsNone(rows[0].league_id)
         self.assertEqual(rows[0].trigger_type, CheckpointTrigger.SEASON_START)
+        self.assertEqual(rows[0].knowledge_state, "scheduled_global_market_benchmark")
 
     def test_historical_backfill_is_explicit_not_live(self) -> None:
         trade = {"transaction_id": "old", "type": "trade", "adds": {"1": 2}}
@@ -158,7 +166,7 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         finally:
             verification.close()
         self.assertIn("roster_id", {row[1] for row in columns})
-        self.assertEqual(migrated.health()["schema_version"], 2)
+        self.assertEqual(migrated.health()["schema_version"], 3)
 
 
 if __name__ == "__main__":

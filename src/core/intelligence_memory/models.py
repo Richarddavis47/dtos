@@ -7,6 +7,8 @@ from typing import Any
 
 CHECKPOINT_SCHEMA_VERSION = "1.0"
 NORMALIZATION_VERSION = "1.0"
+MARKET_OBSERVATION_SCHEMA_VERSION = "1.0"
+MARKET_MATERIALITY_POLICY_VERSION = "1.0"
 
 
 class ProvenanceType(str, Enum):
@@ -89,6 +91,7 @@ class IntelligenceCheckpoint:
     related_event_id: str | None = None
     observations: tuple[SourceObservation, ...] = ()
     knowledge_state: str | None = None
+    global_market_observation_id: str | None = None
     schema_version: str = CHECKPOINT_SCHEMA_VERSION
 
     def public(self) -> dict[str, Any]:
@@ -120,3 +123,49 @@ class HistoricalTradeAssessment:
     unavailable_assets: int
     side_totals: dict[str, float | None]
     evidence_checkpoint_ids: tuple[str, ...]
+
+
+class MarketObservationDecision(str, Enum):
+    NEW_OBSERVATION = "new_observation"
+    REUSED_OBSERVATION = "reused_observation"
+    UNAVAILABLE = "unavailable"
+
+
+@dataclass(frozen=True)
+class GlobalMarketObservation:
+    observation_id: str
+    asset_id: str
+    asset_type: str
+    market_context_id: str
+    observed_at: str
+    canonical_value: float | int
+    intrinsic_value: float | int | None
+    confidence: int
+    evidence_completeness: EvidenceCompleteness
+    provider_evidence: tuple[SourceObservation, ...]
+    provenance_type: ProvenanceType
+    semantic_fingerprint: str
+    model_version: str
+    normalization_version: str = NORMALIZATION_VERSION
+    materiality_policy_version: str = MARKET_MATERIALITY_POLICY_VERSION
+    schema_version: str = MARKET_OBSERVATION_SCHEMA_VERSION
+
+    def public(self) -> dict[str, Any]:
+        result = asdict(self)
+        result["evidence_completeness"] = self.evidence_completeness.value
+        result["provenance_type"] = self.provenance_type.value
+        return result
+
+
+@dataclass(frozen=True)
+class MarketObservationReference:
+    reference_id: str
+    checkpoint_id: str
+    observation_id: str | None
+    asset_id: str
+    league_id: str | None
+    event_id: str | None
+    trigger_type: CheckpointTrigger
+    occurred_at: str
+    market_state: MarketObservationDecision
+    provenance_type: ProvenanceType

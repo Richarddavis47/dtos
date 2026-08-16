@@ -9,6 +9,7 @@ from .models import (
     ProvenanceType, SourceObservation,
 )
 from .store import IntelligenceCheckpointStore
+from .market_memory import market_context_id
 from .triggers import material_teammate_impacts
 
 
@@ -35,6 +36,7 @@ class IntelligenceMemoryService:
         model_version: str = "unknown", brain_identity: str | None = None,
         event_id: str | None = None,
         observations: Iterable[SourceObservation] = (),
+        market_observations: Iterable[SourceObservation] | None = None,
         knowledge_state: str | None = None,
     ) -> tuple[IntelligenceCheckpoint, bool]:
         checkpoint = IntelligenceCheckpoint(
@@ -54,7 +56,17 @@ class IntelligenceMemoryService:
             brain_identity=brain_identity, related_event_id=event_id,
             observations=tuple(observations), knowledge_state=knowledge_state,
         )
-        return self.store.put(checkpoint)
+        context_id = market_context_id(
+            asset_type=asset_type, scoring_profile_id=scoring_profile_id,
+        )
+        persisted, inserted, _, _, _ = self.store.put_sparse(
+            checkpoint, market_context_id=context_id,
+            provider_evidence=(
+                tuple(market_observations)
+                if market_observations is not None else tuple(observations)
+            ),
+        )
+        return persisted, inserted
 
     def capture_trade_assets(self, assets: Iterable[dict], **context) -> list[IntelligenceCheckpoint]:
         return [self.capture(

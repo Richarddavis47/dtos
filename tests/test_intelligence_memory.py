@@ -183,7 +183,11 @@ class CheckpointStoreTests(unittest.TestCase):
         self.assertFalse(inserted_again)
         self.assertEqual(stored.checkpoint_id, duplicate.checkpoint_id)
         restarted = IntelligenceCheckpointStore(self.path)
-        self.assertEqual(restarted.checkpoints()[0], stored)
+        migrated = restarted.checkpoints()[0]
+        self.assertEqual(migrated.checkpoint_id, stored.checkpoint_id)
+        self.assertEqual(migrated.market_value, stored.market_value)
+        self.assertEqual(migrated.observations, stored.observations)
+        self.assertIsNotNone(migrated.global_market_observation_id)
 
     def test_model_upgrade_does_not_rewrite_historical_checkpoint(self) -> None:
         old, _ = self.store.put(checkpoint())
