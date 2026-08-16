@@ -15,6 +15,7 @@ from typing import Any, Iterable
 
 from config import SLEEPER_SEASON_CACHE_ROOT
 from .season_cache import SleeperSeasonCache
+from .timestamps import canonical_transaction_timestamp
 
 from .metadata import minimal_metadata_store
 
@@ -124,17 +125,20 @@ class CanonicalHistoryStore:
         league_id: str, season: int, entity: str, source_id: str,
         payload: dict[str, Any], *, week: int | None = None,
         player_id: str | None = None, franchise_id: str | None = None,
-        provider: str = "Sleeper",
+        provider: str = "Sleeper", occurred_at: str | None = None,
+        timestamp_provenance: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         return {
             "record_key": f"cache:{league_id}:{season}:{entity}:{source_id}",
             "entity_type": entity, "league_id": league_id, "season": season,
             "week": week, "franchise_id": franchise_id, "player_id": player_id,
-            "source_record_id": str(source_id), "observed_at": None,
+            "source_record_id": str(source_id), "occurred_at": occurred_at,
+            "observed_at": None,
             "retrieved_at": None, "provider": provider,
             "availability": "observed", "confidence": 100,
             "calculation_method": "sleeper_season_cache", "derived": False,
             "schema_version": "provider-cache-1", "payload": payload,
+            "timestamp_provenance": timestamp_provenance,
         }
 
     def _season_records(self, league_id: str, season: int) -> list[dict[str, Any]]:
@@ -206,7 +210,12 @@ class CanonicalHistoryStore:
                 payload = dict(transaction)
                 payload.setdefault("roster_ids", transaction.get("roster_ids") or [])
                 entity = "trade" if transaction.get("type") == "trade" else "transaction"
-                rows.append(self._record(league_id, season, entity, transaction_id, payload, week=week))
+                occurred_at, timestamp_provenance = canonical_transaction_timestamp(payload)
+                rows.append(self._record(
+                    league_id, season, entity, transaction_id, payload, week=week,
+                    occurred_at=occurred_at,
+                    timestamp_provenance=timestamp_provenance,
+                ))
         for draft in facts.get("drafts") or []:
             draft_id = str(draft.get("draft_id") or _digest(draft)[:16])
             rows.append(self._record(league_id, season, "draft", draft_id, dict(draft)))

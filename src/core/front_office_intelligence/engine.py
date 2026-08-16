@@ -11,6 +11,28 @@ from src.core.front_office_intelligence.models import (
     ActivityProfile, AssetPreference, CompatibilityReport, FrontOfficeReport,
     LeagueFrontOfficeModel, NegotiationForecast, RelationshipEdge,
 )
+from src.core.history_context.store import canonical_history_store
+
+
+def _canonical_transactions(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Combine current actions with provider-cache history without duplication."""
+    current = list(data.get("transactions") or [])
+    if data.get("_canonical_history_transactions_loaded"):
+        return current
+    league_id = str((data.get("league") or {}).get("league_id") or data.get("league_id") or "")
+    if not league_id:
+        return current
+    _, historical = canonical_history_store.records(
+        league_id, "trade", limit=100_000,
+    )
+    existing = {str(row.get("transaction_id") or "") for row in current}
+    return [
+        *current,
+        *(
+            row["payload"] for row in historical
+            if str(row["source_record_id"]) not in existing
+        ),
+    ]
 
 
 def _roster_ids(item: dict[str, Any]) -> set[int]:
@@ -29,7 +51,7 @@ def _roster_ids(item: dict[str, Any]) -> set[int]:
 
 def _activity(data: dict[str, Any], roster_id: int, pick_count: int) -> ActivityProfile:
     counts = {"trade": 0, "waiver": 0, "free_agent": 0, "drop": 0}
-    for item in data.get("transactions") or []:
+    for item in _canonical_transactions(data):
         if roster_id not in _roster_ids(item):
             continue
         kind = str(item.get("type") or "").lower()
@@ -107,7 +129,7 @@ def _surpluses(decision: TeamDecision) -> set[str]:
 def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: FrontOfficeReport) -> CompatibilityReport:
     first_matches = _needs(first.decision) & _surpluses(second.decision)
     second_matches = _needs(second.decision) & _surpluses(first.decision)
-    bilateral = sum(str(item.get("type") or "").lower() == "trade" and {first.roster_id, second.roster_id}.issubset(_roster_ids(item)) for item in data.get("transactions") or [])
+    bilateral = sum(str(item.get("type") or "").lower() == "trade" and {first.roster_id, second.roster_id}.issubset(_roster_ids(item)) for item in _canonical_transactions(data))
     score = min(100, 40 + 15 * len(first_matches) + 15 * len(second_matches) + min(bilateral, 3) * 5)
     shared = tuple(sorted(first_matches | second_matches))
     conflicts = tuple(sorted(_needs(first.decision) & _needs(second.decision)))
@@ -134,6 +156,10 @@ def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: Front
 
 
 def build_league_model(data: dict[str, Any], decisions: dict[int, TeamDecision] | None = None) -> LeagueFrontOfficeModel:
+    data = {
+        **data, "transactions": _canonical_transactions(data),
+        "_canonical_history_transactions_loaded": True,
+    }
     teams = data.get("teams") or []
     if decisions is None:
         from src.core.intelligence.orchestrator import intelligence_orchestrator

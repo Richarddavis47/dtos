@@ -119,17 +119,33 @@ def load_results_history(
             owner_by_roster_season.get((roster_id, season))
         )
     _, trades = store.records(league_id, "trade", limit=100_000)
+    from src.core.intelligence_memory import intelligence_checkpoint_store
+    from src.core.intelligence_memory.fois import fois_process_evidence
+    trade_checkpoints: dict[str, list[Any]] = defaultdict(list)
+    for checkpoint in intelligence_checkpoint_store.checkpoints(
+        league_id=league_id, limit=10_000,
+    ):
+        if checkpoint.related_event_id:
+            trade_checkpoints[str(checkpoint.related_event_id)].append(checkpoint)
     for row in trades:
         payload = row["payload"]
         season = int(row.get("season") or 0)
+        transaction_id = str(row["source_record_id"])
+        process = fois_process_evidence(trade_checkpoints.get(transaction_id, ()))
         for roster_id in payload.get("roster_ids") or ():
+            partners = [
+                str(value) for value in payload.get("roster_ids") or ()
+                if str(value) != str(roster_id)
+            ]
             histories[str(roster_id)]["trades"].append({
-                "transaction_id": str(row["source_record_id"]),
+                "transaction_id": transaction_id,
                 "season": season,
+                "occurred_at": row.get("occurred_at"),
                 "strategically_productive": None,
                 "market_overpay_percent": None,
                 "championship_outlook_delta": None,
-                "partner_id": None,
+                "partner_id": partners[0] if len(partners) == 1 else None,
+                "process_evidence": process,
             })
     _, draft_picks = store.records(league_id, "draft_pick", limit=100_000)
     for row in draft_picks:

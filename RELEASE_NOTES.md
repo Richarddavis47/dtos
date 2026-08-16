@@ -1,3 +1,18 @@
+# DTOS v1.10.29 - Canonical Historical Trade-Time Intelligence
+
+DTOS v1.10.29 restores the provider-backed occurrence time that Sleeper already
+supplies for historical trades, waivers, adds, and drops. Canonical trades and
+their asset events now share an offset-aware UTC timestamp without changing
+their stable identities.
+
+Historical trade dossiers use only existing Global Sparse Market observations
+at or before execution. They report partial or unavailable evidence honestly,
+never substitute later or current values, and keep process assessment separate
+from outcome. FOIS and Front Office receive the complete canonical trade sample
+without restoring the retired HistoricalStore.
+
+---
+
 # DTOS v1.10.26 - Sleeper Season Cache Chain Restoration
 
 DTOS v1.10.26 durably records the full Sleeper dynasty chain before hydrating
