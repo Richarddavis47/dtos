@@ -64,10 +64,12 @@ class HistoricalAssetGraph:
         store: HistoricalStore,
         league_id: str,
         current_data: dict[str, Any] | None = None,
+        intelligence_store: Any | None = None,
     ) -> None:
         self.store = store
         self.league_id = league_id
         self.current_data = current_data or {}
+        self._intelligence_store = intelligence_store
         self._identity_by_provider_id: dict[str, dict[str, Any] | None] = {}
         self._identity_positions: dict[str, str] | None = None
         self._records_cache: dict[str, list[dict[str, Any]]] = {}
@@ -554,17 +556,19 @@ class HistoricalAssetGraph:
             payload = row["payload"]
             trade_id = canonical_trade_id(self._source_league(row), row["source_record_id"])
             trade_events = list(self._events_by_parent.get(trade_id, []))
+            intelligence = self._trade_time_intelligence(row, trade_events)
             dossiers.append({
                 "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
                 "trade_id": trade_id, "transaction_id": row["source_record_id"],
                 "season": row["season"], "week": row["week"],
-                "occurred_at": row["observed_at"],
+                "occurred_at": row.get("occurred_at"),
                 "status": str(payload.get("status") or "unknown"),
                 "participating_franchises": [franchise_id(self.league_id, roster) for roster in payload.get("roster_ids") or []],
                 "asset_events": trade_events,
                 "faab": payload.get("waiver_budget") or [],
-                "value_at_trade": None,
-                "value_at_trade_availability": "unavailable_without_timestamped_valuation",
+                "value_at_trade": intelligence["side_totals"],
+                "value_at_trade_availability": intelligence["coverage_state"],
+                "trade_time_intelligence": intelligence,
                 "current_value_label": "Current value is intentionally separate from historical value.",
                 "source": self._source(row),
                 "raw_transaction": payload,
@@ -607,11 +611,12 @@ class HistoricalAssetGraph:
             for event in self.events(asset_id=asset_id)
             if event.get("parent_id") == trade_id
         ]
+        intelligence = self._trade_time_intelligence(row, trade_events)
         dossier = {
             "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
             "trade_id": trade_id, "transaction_id": row["source_record_id"],
             "season": row["season"], "week": row["week"],
-            "occurred_at": row["observed_at"],
+            "occurred_at": row.get("occurred_at"),
             "status": str(payload.get("status") or "unknown"),
             "participating_franchises": [
                 franchise_id(self.league_id, roster)
@@ -619,14 +624,162 @@ class HistoricalAssetGraph:
             ],
             "asset_events": trade_events,
             "faab": payload.get("waiver_budget") or [],
-            "value_at_trade": None,
-            "value_at_trade_availability": "unavailable_without_timestamped_valuation",
+            "value_at_trade": intelligence["side_totals"],
+            "value_at_trade_availability": intelligence["coverage_state"],
+            "trade_time_intelligence": intelligence,
             "current_value_label": "Current value is intentionally separate from historical value.",
             "source": self._source(row), "raw_transaction": payload,
         }
         self._trade_by_id[raw_id] = dossier
         self._trade_by_id[trade_id] = dossier
         return dossier
+
+    def trade_time_coverage(self) -> dict[str, Any]:
+        """Return bounded canonical timestamp/process coverage by season."""
+        dossiers = self.trade_dossiers()
+        seasons: dict[str, dict[str, int]] = {}
+        totals = {
+            "historical_trade_count": len(dossiers), "timestamped_trade_count": 0,
+            "execution_value_complete_count": 0,
+            "execution_value_partial_count": 0,
+            "execution_value_unavailable_count": 0,
+            "process_gradable_count": 0, "process_not_gradable_count": 0,
+        }
+        for dossier in dossiers:
+            bucket = seasons.setdefault(str(dossier["season"]), {
+                key: 0 for key in totals
+            })
+            bucket["historical_trade_count"] += 1
+            if dossier.get("occurred_at"):
+                totals["timestamped_trade_count"] += 1
+                bucket["timestamped_trade_count"] += 1
+            intelligence = dossier["trade_time_intelligence"]
+            coverage_key = {
+                "complete": "execution_value_complete_count",
+                "partial": "execution_value_partial_count",
+            }.get(intelligence["coverage_state"], "execution_value_unavailable_count")
+            totals[coverage_key] += 1
+            bucket[coverage_key] += 1
+            process_key = (
+                "process_gradable_count" if intelligence["process_state"] == "gradable"
+                else "process_not_gradable_count"
+            )
+            totals[process_key] += 1
+            bucket[process_key] += 1
+        return {
+            **totals, "by_season": seasons,
+            "timestamp_contract": "provider_created_then_status_updated_utc",
+            "later_observation_substitution": 0,
+            "unavailable_assets_treated_as_zero": 0,
+        }
+
+    def _trade_time_intelligence(
+        self, row: dict[str, Any], events: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        occurred_at = row.get("occurred_at")
+        unique_assets = list(dict.fromkeys(
+            event["asset_id"] for event in events if event.get("asset_id")
+        ))
+        if not occurred_at:
+            return {
+                "coverage_state": "unavailable_without_timestamped_valuation",
+                "process_state": "not_gradable", "outcome_state": "separate_current_state",
+                "valued_assets": 0, "total_assets": len(unique_assets),
+                "coverage_percentage": 0.0, "side_totals": {}, "assets": [],
+                "confidence": 0, "reason": "provider_timestamp_unavailable",
+            }
+        store = self._intelligence_store
+        if store is None:
+            from src.core.intelligence_memory import intelligence_checkpoint_store
+            store = intelligence_checkpoint_store
+        from src.core.intelligence_memory.confidence import temporal_confidence
+        from src.core.intelligence_memory.market_memory import market_context_id
+        asset_rows = []
+        for asset_id in unique_assets:
+            asset_type = "pick" if asset_id.startswith("PICK-") else "player"
+            if asset_type == "player":
+                memory_asset_id = "player:" + asset_id.removeprefix("DTOS-P-")
+            else:
+                parts = asset_id.split("-")
+                memory_asset_id = (
+                    f"pick:{parts[1]}:{parts[2].removeprefix('R')}:"
+                    f"{parts[3].removeprefix('ORIG')}"
+                )
+            observation = store.observation_at_or_before(
+                asset_id=memory_asset_id,
+                market_context_id=market_context_id(
+                    asset_type=asset_type, scoring_profile_id=None,
+                ),
+                event_at=occurred_at,
+            )
+            if observation is None:
+                asset_rows.append({
+                    "asset_id": asset_id, "match_state": "UNAVAILABLE",
+                    "value": None, "observation_id": None, "observed_at": None,
+                    "temporal_confidence": 0, "provenance": "unavailable",
+                })
+                continue
+            confidence, temporal_reason = temporal_confidence(
+                observation.observed_at, occurred_at,
+            )
+            distance = (
+                datetime.fromisoformat(occurred_at.replace("Z", "+00:00"))
+                - datetime.fromisoformat(observation.observed_at.replace("Z", "+00:00"))
+            ).total_seconds()
+            state = (
+                "EXACT" if distance == 0 else
+                "NEARBY_HIGH_CONFIDENCE" if confidence >= 82 else
+                "NEARBY_MODERATE_CONFIDENCE" if confidence >= 65 else
+                "SINGLE_SOURCE"
+            )
+            asset_rows.append({
+                "asset_id": asset_id, "match_state": state,
+                "value": observation.canonical_value,
+                "observation_id": observation.observation_id,
+                "observed_at": observation.observed_at,
+                "temporal_confidence": confidence,
+                "temporal_reason": temporal_reason,
+                "provenance": observation.provenance_type.value,
+            })
+        valued = [item for item in asset_rows if item["value"] is not None]
+        state = (
+            "complete" if asset_rows and len(valued) == len(asset_rows) else
+            "partial" if valued else "unavailable"
+        )
+        definitive = [
+            item for item in valued
+            if item["provenance"] in {"live_captured", "historical_source_backfill"}
+            and item["temporal_confidence"] >= 65
+        ]
+        # Values are grouped by the side receiving the asset. Unknown sides are
+        # excluded rather than interpreted as zero.
+        destinations = {
+            event["asset_id"]: event.get("to_franchise_id")
+            for event in events if event.get("to_franchise_id")
+        }
+        side_totals: dict[str, float] = {}
+        for item in valued:
+            side = destinations.get(item["asset_id"])
+            if side:
+                side_totals[side] = side_totals.get(side, 0.0) + float(item["value"])
+        confidence = min((item["temporal_confidence"] for item in valued), default=0)
+        return {
+            "coverage_state": state,
+            "process_state": (
+                "gradable" if asset_rows and len(definitive) == len(asset_rows)
+                else "not_gradable"
+            ),
+            "outcome_state": "separate_current_state",
+            "valued_assets": len(valued), "total_assets": len(asset_rows),
+            "coverage_percentage": round(100 * len(valued) / len(asset_rows), 1)
+            if asset_rows else 0.0,
+            "side_totals": side_totals, "assets": asset_rows,
+            "confidence": confidence,
+            "reason": "pre_event_market_evidence_only",
+            "later_observation_substitution": False,
+            "unavailable_assets_are_zero": False,
+            "pick_hindsight_used": False,
+        }
 
     def transaction_archive(self) -> list[dict[str, Any]]:
         if self._transaction_archive_cache is not None:
@@ -644,7 +797,7 @@ class HistoricalAssetGraph:
                 "trade_dossier_url": f"/trades/history/{transaction_id}" if transaction_type == "trade" else None,
                 "season": row["season"], "week": row["week"],
                 "type": transaction_type, "status": payload.get("status") or "unknown",
-                "occurred_at": row["observed_at"], "roster_ids": payload.get("roster_ids") or [],
+                "occurred_at": row.get("occurred_at"), "roster_ids": payload.get("roster_ids") or [],
                 "adds": payload.get("adds") or {}, "drops": payload.get("drops") or {},
                 "draft_picks": payload.get("draft_picks") or [],
                 "waiver_budget": payload.get("waiver_budget") or [],
@@ -858,7 +1011,7 @@ class HistoricalAssetGraph:
     ) -> HistoricalAssetEvent:
         source_league = self._source_league(row)
         missing = []
-        occurred = row.get("observed_at")
+        occurred = row.get("occurred_at")
         if not occurred:
             missing.append("Source did not provide an occurrence timestamp.")
         return HistoricalAssetEvent(
@@ -887,6 +1040,7 @@ class HistoricalAssetGraph:
             "provider": row.get("provider"), "source_league_id": self._source_league(row),
             "source_record_id": row["source_record_id"], "retrieved_at": row.get("retrieved_at"),
             "observed_at": row.get("observed_at"), "schema_version": row.get("schema_version"),
+            "timestamp_provenance": row.get("timestamp_provenance"),
             "importer_version": payload.get("importer_version") or IMPORTER_VERSION,
             "source_hash": payload.get("source_hash") or self._hash(payload),
             "availability": row.get("availability"),

@@ -525,6 +525,19 @@ class IntelligenceCheckpointStore:
             ).fetchall()
         return [self._decode_observation(row) for row in rows]
 
+    def observation_at_or_before(
+        self, *, asset_id: str, market_context_id: str, event_at: str,
+    ) -> GlobalMarketObservation | None:
+        """Read one legitimate pre-event state without creating an observation."""
+        with self._connect() as connection:
+            row = connection.execute(
+                """SELECT * FROM global_market_observations
+                WHERE asset_id=? AND market_context_id=? AND observed_at<=?
+                ORDER BY observed_at DESC,created_at DESC LIMIT 1""",
+                (asset_id, market_context_id, event_at),
+            ).fetchone()
+        return self._decode_observation(row) if row else None
+
     def market_memory_health(self) -> dict[str, Any]:
         with self._connect() as connection:
             observations = connection.execute(

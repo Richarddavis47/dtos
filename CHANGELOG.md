@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.10.29 - Canonical Historical Trade-Time Intelligence
+
+- Normalize Sleeper transaction `created` timestamps, with `status_updated` as
+  the explicit fallback, into one offset-aware UTC `occurred_at` contract.
+- Preserve transaction and asset-event identities while rebuilding chronology
+  directly from disposable completed-season caches.
+- Link only existing pre-event Global Sparse Market observations and report
+  complete, partial, or unavailable execution-time coverage without hindsight.
+- Separate historical process eligibility from current/outcome state and expose
+  bounded coverage metrics by season.
+- Feed full canonical completed-trade counts, partner identities, occurrence
+  times, and available process evidence into Front Office and FOIS adapters.
+- Preserve zero request-time provider calls/writes, zero historical-current
+  fallback, cross-league deduplication, and retired HistoricalStore guarantees.
+
 ## v1.10.28 - Global Sparse Market Memory & Cross-League Deduplication
 
 - Added immutable global market observations keyed by asset, provider-compatible
