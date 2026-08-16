@@ -27,6 +27,9 @@ class SleeperSeasonCache:
         self.root = Path(root)
         self._checksum_lock = threading.RLock()
         self._checksum_cache: dict[Path, tuple[tuple[int, int, int, int], str]] = {}
+        self._section_cache: dict[
+            tuple[Path, str], tuple[tuple[int, int, int, int], Any]
+        ] = {}
 
     @staticmethod
     def normalize(league_id: str, season: int, facts: dict[str, Any]) -> CachedSeason:
@@ -73,6 +76,9 @@ class SleeperSeasonCache:
         path.unlink(missing_ok=True)
         with self._checksum_lock:
             self._checksum_cache.pop(path, None)
+            for key in tuple(self._section_cache):
+                if key[0] == path:
+                    self._section_cache.pop(key, None)
 
     def write(self, season: CachedSeason) -> Path:
         path = self.path(season.league_id, season.season)
@@ -98,6 +104,9 @@ class SleeperSeasonCache:
             )
             with self._checksum_lock:
                 self._checksum_cache[path] = (identity, season.checksum)
+                self._section_cache[(path, "transactions")] = (
+                    identity, season.facts.get("transactions") or {},
+                )
         finally:
             if temporary:
                 Path(temporary).unlink(missing_ok=True)
@@ -111,7 +120,40 @@ class SleeperSeasonCache:
         candidate = self.normalize(league_id, season, payload["facts"])
         if candidate.checksum != payload.get("checksum"):
             raise ValueError("Sleeper completed-season cache checksum mismatch.")
+        stat = path.stat()
+        identity = (
+            int(stat.st_dev), int(stat.st_ino), int(stat.st_size),
+            int(stat.st_mtime_ns),
+        )
+        with self._checksum_lock:
+            self._section_cache[(path, "transactions")] = (
+                identity, candidate.facts.get("transactions") or {},
+            )
         return candidate
+
+    def section(self, league_id: str, season: int, name: str) -> Any:
+        """Read a compact normalized section, reusing it while the archive is unchanged."""
+        path = self.path(league_id, season)
+        try:
+            stat = path.stat()
+        except FileNotFoundError:
+            return None
+        identity = (
+            int(stat.st_dev), int(stat.st_ino), int(stat.st_size),
+            int(stat.st_mtime_ns),
+        )
+        key = (path, str(name))
+        with self._checksum_lock:
+            cached = self._section_cache.get(key)
+        if cached is not None and cached[0] == identity:
+            return cached[1]
+        archive = self.read(league_id, season)
+        if archive is None:
+            return None
+        value = archive.facts.get(name)
+        with self._checksum_lock:
+            self._section_cache[key] = (identity, value)
+        return value
 
     def checksum_index(self, league_id: str) -> dict[int, str]:
         """Return verified archive identities without repeatedly decoding archives."""

@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict, Counter
 from dataclasses import dataclass, replace
 from threading import RLock
-from time import monotonic
+from time import monotonic, sleep
 from typing import TYPE_CHECKING, Callable, Iterable, Protocol
 
 from .market import HistoricalMarketSelection, select_historical_market
@@ -238,12 +238,14 @@ class HistoricalMarketResolver:
             for checkpoint, context, _persistence in requests
         ])
         results = []
-        for (checkpoint, context, persistence), compatible in zip(
+        for index, ((checkpoint, context, persistence), compatible) in enumerate(zip(
             requests, durable, strict=True,
-        ):
+        ), 1):
             reused = self._reuse_durable(checkpoint, compatible)
             if reused is not None:
                 results.append(reused)
+                if index % 32 == 0:
+                    sleep(0)
                 continue
             try:
                 results.append(self._resolve_after_compatibility_miss(
@@ -252,6 +254,8 @@ class HistoricalMarketResolver:
             except HistoricalProviderRateLimitError:
                 metrics["rate_limited"] = int(metrics.get("rate_limited", 0)) + 1
                 results.append(None)
+            if index % 32 == 0:
+                sleep(0)
         metrics["assets_bulk_reused"] = sum(
             result is not None and result[0].source in {
                 "durable_resolution_reference", "durable_final_unavailable",

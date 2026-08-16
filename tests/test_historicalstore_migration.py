@@ -131,6 +131,39 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
                 self.assertNotEqual(store.dataset_version("L"), first)
                 self.assertEqual(read.call_count, 2)
 
+    def test_trade_reads_skip_unrelated_season_record_construction(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            cache = SleeperSeasonCache(Path(directory))
+            facts = {
+                "league": {"league_id": "L", "name": "League"},
+                "users": [], "rosters": [], "matchups": {"1": [{
+                    "matchup_id": 1, "roster_id": 1,
+                    "players_points": {"p1": 10}, "starters": ["p1"],
+                }]},
+                "transactions": {"2": [{
+                    "transaction_id": "trade-1", "type": "trade",
+                    "status_updated": 1_700_000_000_000,
+                    "adds": {"p1": 1}, "drops": {"p2": 2},
+                }, {
+                    "transaction_id": "waiver-1", "type": "waiver",
+                    "status_updated": 1_700_000_100_000,
+                }]},
+                "drafts": [], "draft_picks": [], "traded_picks": [],
+                "winners_bracket": [], "losers_bracket": [],
+            }
+            cache.write(cache.normalize("L", 2025, facts))
+            store = CanonicalHistoryStore()
+            with patch(
+                "src.core.history_context.store.sleeper_season_cache", cache,
+            ), patch.object(
+                store, "_season_records",
+                side_effect=AssertionError("full season construction is prohibited"),
+            ):
+                count, rows = store.records("L", "trade", limit=100)
+            self.assertEqual(count, 1)
+            self.assertEqual(rows[0]["source_record_id"], "trade-1")
+            self.assertEqual(rows[0]["entity_type"], "trade")
+
     def test_entity_counts_preserve_filtered_historical_graph_contract(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             cache = SleeperSeasonCache(Path(directory))

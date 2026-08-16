@@ -623,7 +623,7 @@ class IntelligenceCheckpointStore:
         self,
         requests: list[tuple[IntelligenceCheckpoint, str, str]],
         *,
-        decode_batch_size: int = 128,
+        decode_batch_size: int = 32,
     ) -> tuple[
         list[tuple[IntelligenceCheckpoint, GlobalMarketObservation | None, HistoricalResolutionState] | None],
         dict[str, int],
@@ -728,7 +728,7 @@ class IntelligenceCheckpointStore:
         results: list[
             tuple[IntelligenceCheckpoint, GlobalMarketObservation | None, HistoricalResolutionState] | None
         ] = [None] * len(requests)
-        for row in match_rows:
+        for index, row in enumerate(match_rows, 1):
             stored = checkpoints.get(str(row["checkpoint_id"]))
             if stored is None:
                 continue
@@ -738,6 +738,8 @@ class IntelligenceCheckpointStore:
                 observations.get(str(observation_id)) if observation_id is not None else None,
                 HistoricalResolutionState(row["resolution_state"]),
             )
+            if index % batch_size == 0:
+                time.sleep(0)
         metrics = {
             "sqlite_connections": 1,
             "sqlite_queries": 3,

@@ -5,7 +5,7 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from threading import RLock
-from time import perf_counter
+from time import perf_counter, sleep
 from typing import Any
 
 from .historical_resolver import (
@@ -62,7 +62,7 @@ class HistoricalTradeResolutionService:
         counts: Counter[str] = Counter()
         requests: list[tuple[IntelligenceCheckpoint, str, PersistenceContext]] = []
         trade_work: list[tuple[dict[str, Any], tuple[tuple[str, str, str | None], ...], tuple[int, ...]]] = []
-        for row in trades:
+        for trade_index, row in enumerate(trades, 1):
             occurred_at = row.get("occurred_at")
             payload = row.get("payload") or {}
             assets = self._assets(payload)
@@ -96,10 +96,12 @@ class HistoricalTradeResolutionService:
                     PersistenceContext("trade_execution"),
                 ))
             trade_work.append((row, assets, tuple(request_indexes)))
+            if trade_index % 32 == 0:
+                sleep(0)
 
         resolved, bulk_metrics = self.resolver.resolve_checkpoints_bulk(requests)
 
-        for _row, assets, request_indexes in trade_work:
+        for trade_index, (_row, assets, request_indexes) in enumerate(trade_work, 1):
             if not assets:
                 continue
             available = 0
@@ -131,6 +133,8 @@ class HistoricalTradeResolutionService:
             else:
                 counts["unavailable_trades"] += 1
                 counts["process_not_gradable"] += 1
+            if trade_index % 32 == 0:
+                sleep(0)
         unclassified = total - (
             counts["process_gradable"] + counts["process_not_gradable"]
         )

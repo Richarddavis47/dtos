@@ -71,6 +71,30 @@ class DeploymentReadinessTests(unittest.TestCase):
         intelligence.assert_not_called()
         platform_health.assert_not_called()
 
+    def test_fois_heavy_flights_are_serialized(self) -> None:
+        active = 0
+        maximum = 0
+
+        async def generate(_data: dict) -> tuple[object, ...]:
+            nonlocal active, maximum
+            active += 1
+            maximum = max(maximum, active)
+            await asyncio.sleep(0.01)
+            active -= 1
+            return ()
+
+        async def exercise() -> None:
+            with patch.object(dtos_app, "intelligence_heavy_lock", asyncio.Lock()), patch.object(
+                dtos_app.fois_service, "generate", side_effect=generate,
+            ):
+                await asyncio.gather(
+                    dtos_app._generate_fois_coordinated({}),
+                    dtos_app._generate_fois_coordinated({}),
+                )
+
+        asyncio.run(exercise())
+        self.assertEqual(maximum, 1)
+
     def test_readiness_becomes_successful_after_cached_data_loads(self) -> None:
         runtime_metrics.mark_ready("Cached league data loaded.")
         client = self.api_client({"data": {"teams": []}})
