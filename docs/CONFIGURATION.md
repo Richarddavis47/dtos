@@ -16,7 +16,7 @@ DTOS reads configuration once at import/startup. Invalid numeric or logging sett
 | `DTOS_INTELLIGENCE_CACHE_TTL` | `60` | Orchestrator cache TTL seconds |
 | `DTOS_MARKET_CACHE_TTL` | `3600` | Market quote cache TTL seconds |
 | `DTOS_DATA_WAREHOUSE_FILE` | OS temp `dtos_data_history.json` | Durable attributed external-data snapshots |
-| `DTOS_HISTORY_DB_FILE` | OS temp `dtos_history.sqlite3` | Indexed Historical League Memory database; use a persistent writable mount in production |
+| `DTOS_HISTORY_DB_FILE` | OS temp `dtos_history.sqlite3` | Retired legacy archive identity used only for guarded inventory, observability, and one-time removal; production must not open or recreate it |
 | `DTOS_HISTORY_STORAGE_ROOT` | `/var/data/dtos` | Required persistent mount root when durable history is enabled |
 | `DTOS_DURABLE_HISTORY_REQUIRED` | Enabled automatically on Render | Reject absent, unmounted, unwritable, or out-of-root historical storage instead of falling back to ephemeral storage |
 | `DTOS_PROVIDER_<NAME>` | provider-specific | Enable or disable a provider permitted by deployment licensing |

@@ -66,7 +66,7 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
             evidence = json.loads(result.stdout.strip())
             self.assertFalse(evidence["legacy_exists"])
             self.assertEqual(evidence["canonical"], "CanonicalHistoryStore")
-            self.assertEqual(evidence["status"], "dormant")
+            self.assertEqual(evidence["status"], "retired")
 
     def test_current_capture_updates_only_bounded_operational_context(self) -> None:
         store = CanonicalHistoryStore()

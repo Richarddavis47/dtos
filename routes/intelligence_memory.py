@@ -32,7 +32,7 @@ def create_intelligence_memory_router(
             ),
             "storage_estimates": intelligence_checkpoint_store.storage_estimates(),
             "data_ownership": DATA_OWNERSHIP,
-            "legacy_historical_memory": "preserved_no_destructive_migration",
+            "legacy_historical_memory": "physically_retired_fail_closed",
             "automatic_backfill": False,
         }
 

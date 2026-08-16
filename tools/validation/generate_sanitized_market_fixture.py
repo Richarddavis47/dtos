@@ -532,7 +532,18 @@ def main() -> int:
     root = Path(os.environ.get("DTOS_FIXTURE_ROOT", "/fixture")).resolve()
     root.mkdir(parents=True, exist_ok=True)
     cache = root / "dtos_cache.json"
-    history = root / "dtos_history.sqlite3"
+    history = Path(os.environ.get(
+        "DTOS_VALIDATION_LEGACY_ARCHIVE_FILE",
+        str(root / "retirement-rehearsal.sqlite3"),
+    )).resolve()
+    configured_history = Path(os.environ.get(
+        "DTOS_HISTORY_DB_FILE", str(root / "dtos_history.sqlite3"),
+    )).resolve()
+    if history == configured_history:
+        raise RuntimeError(
+            "validation retirement archive must not be the configured legacy path"
+        )
+    configured_history.unlink(missing_ok=True)
     _cache(cache)
     production_shaped = os.environ.get("DTOS_PRODUCTION_SHAPED_FIXTURE") == "1"
     (_production_history if production_shaped else _history)(history)
@@ -546,6 +557,8 @@ def main() -> int:
         ),
         "database_shape": "production" if production_shaped else "compact",
         "historical_progress": "5/6",
+        "configured_legacy_history_absent": not configured_history.exists(),
+        "retirement_rehearsal_archive": history.name,
         "generated_at": datetime.now(UTC).isoformat(),
     }
     print(json.dumps(summary, sort_keys=True))

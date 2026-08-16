@@ -48,7 +48,9 @@ from tools.validation.linux_market_cgroup_gate import (
     _normalized_headers,
     _restart_reuse,
     _record_archive_assessment,
+    _retire_validation_archive,
     _pad_to_production_baseline,
+    _post_retirement_coverage_valid,
     _start_server,
     _startup_memory_within_limit,
     _warm_historical_archive,
@@ -272,7 +274,9 @@ class ArchiveCacheValidationTests(unittest.TestCase):
                     [("payload",), ("evidence",)],
                 )
                 connection.commit()
-            with patch.dict(os.environ, {"DTOS_HISTORY_DB_FILE": str(path)}):
+            with patch.dict(os.environ, {
+                "DTOS_VALIDATION_LEGACY_ARCHIVE_FILE": str(path),
+            }):
                 result = _warm_historical_archive()
         self.assertEqual(result["record_count"], 2)
         self.assertGreater(result["payload_bytes_scanned"], 0)
@@ -605,7 +609,6 @@ class RestartReuseValidationTests(unittest.TestCase):
             history = root / "dtos_history.sqlite3"
             metadata = root / "dtos_metadata.sqlite3"
             cache.write_text("{}", encoding="utf-8")
-            HistoricalStore(history)
             MinimalMetadataStore(metadata)
             environment = {
                 "DTOS_CACHE_FILE": str(cache),
@@ -623,6 +626,85 @@ class RestartReuseValidationTests(unittest.TestCase):
         self.assertEqual(contract["metadata_database"], "dtos_metadata.sqlite3")
         self.assertTrue(contract["contained"])
         self.assertEqual(contract["league_id"], "1804000000000000000")
+        self.assertTrue(contract["historicalstore_retired"])
+        self.assertEqual(contract["legacy_history_database_size"], 0)
+
+    def test_retirement_rehearsal_removes_archive_before_startup(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / "retirement-rehearsal.sqlite3"
+            configured = root / "dtos_history.sqlite3"
+            with closing(sqlite3.connect(archive)) as connection:
+                connection.execute("CREATE TABLE historical_records(payload TEXT)")
+                connection.execute("INSERT INTO historical_records VALUES ('evidence')")
+                connection.commit()
+            environment = {
+                "DTOS_VALIDATION_LEGACY_ARCHIVE_FILE": str(archive),
+                "DTOS_HISTORY_DB_FILE": str(configured),
+            }
+            observations: list[str] = []
+
+            def observe(phase: str) -> dict[str, object]:
+                self.assertTrue(archive.exists())
+                observations.append(phase)
+                return {
+                    "accounting_mode": "cgroup_working_set",
+                    "raw_cgroup_bytes": 32 * 1024 * 1024,
+                    "inactive_file_bytes": 8 * 1024 * 1024,
+                    "effective_working_set_bytes": 24 * 1024 * 1024,
+                }
+
+            with patch.dict(os.environ, environment, clear=False):
+                result = _retire_validation_archive(
+                    warm=True, memory_observer=observe,
+                )
+        self.assertEqual(result["status"], "retired_before_startup")
+        self.assertEqual(observations, [
+            "archive_pressure_before", "archive_pressure_pre_unlink",
+        ])
+        self.assertTrue(result["pre_unlink_pressure"]["passed"])
+        self.assertFalse(result["configured_legacy_file_present"])
+        self.assertFalse(result["rehearsal_archive_present"])
+        self.assertEqual(result["archive_scan"]["record_count"], 1)
+
+    def test_retirement_archive_must_not_equal_application_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            archive = Path(directory) / "dtos_history.sqlite3"
+            with closing(sqlite3.connect(archive)) as connection:
+                connection.execute("CREATE TABLE historical_records(payload TEXT)")
+            environment = {
+                "DTOS_VALIDATION_LEGACY_ARCHIVE_FILE": str(archive),
+                "DTOS_HISTORY_DB_FILE": str(archive),
+            }
+            with patch.dict(os.environ, environment, clear=False), self.assertRaisesRegex(
+                AssertionError, "configured application storage",
+            ):
+                _retire_validation_archive(warm=False)
+
+    def test_retirement_archive_is_cleaned_when_pressure_observer_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            archive = Path(directory) / "retirement.sqlite3"
+            configured = Path(directory) / "dtos_history.sqlite3"
+            sqlite3.connect(archive).close()
+            environment = {
+                "DTOS_VALIDATION_LEGACY_ARCHIVE_FILE": str(archive),
+                "DTOS_HISTORY_DB_FILE": str(configured),
+            }
+            with patch.dict(os.environ, environment, clear=False), self.assertRaises(
+                RuntimeError,
+            ):
+                _retire_validation_archive(
+                    warm=True,
+                    memory_observer=lambda _phase: (_ for _ in ()).throw(
+                        RuntimeError("metric failure")
+                    ),
+                )
+            self.assertFalse(archive.exists())
+
+    def test_post_retirement_coverage_does_not_require_deleted_page_cache(self) -> None:
+        coverage = ArchiveCacheValidationTests.coverage()
+        self.assertTrue(_post_retirement_coverage_valid(200, coverage))
+        self.assertFalse(_post_retirement_coverage_valid(503, coverage))
 
     def test_missing_explicit_fixture_setting_cannot_use_default(self) -> None:
         with patch.dict(os.environ, {}, clear=True), self.assertRaisesRegex(
@@ -638,15 +720,21 @@ class RestartReuseValidationTests(unittest.TestCase):
             "league_id": "1804000000000000000",
             "database_identity_digest": "sanitized-digest",
             "file_identity_digest": "sanitized-file-digest",
-            "legacy_history_database_size": 1024,
+            "legacy_history_database_size": 0,
             "metadata_database_size": 20480,
         }
         actual = {
             **expected, "active_store_database": "dtos_metadata.sqlite3",
-            "cache_exists": True, "legacy_history_database_exists": True,
+            "cache_exists": True, "legacy_history_database_exists": False,
             "metadata_database_exists": True,
             "active_store_matches": True,
             "cache_league_id": "1804000000000000000",
+            "legacy_historical_store": {
+                "historicalstore_retired": True,
+                "legacy_create_attempts": 0,
+                "legacy_read_attempts": 0,
+                "legacy_write_attempts": 0,
+            },
         }
         with patch(
             "tools.validation.linux_market_cgroup_gate._request",

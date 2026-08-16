@@ -31,8 +31,8 @@ from src.core.history_context.store import canonical_history_store
 
 historical_store = canonical_history_store
 historical_storage_status = {
-    "status": "dormant",
-    "mode": "shadow_forbidden",
+    "status": "retired",
+    "mode": "retired",
     "opened": False,
 }
 

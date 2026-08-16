@@ -246,6 +246,9 @@ class HistoricalStore:
     _QUALITY_GENERATION_PREFIX = "semantic_generation:quality:"
 
     def __init__(self, path: Path, *, initialize: bool = True) -> None:
+        from src.core.history_context.guard import legacy_access_guard
+
+        legacy_access_guard.guard_constructor(path)
         self.path = path
         self._lock = RLock()
         self._dataset_versions: dict[tuple[str, str], str] = {}
