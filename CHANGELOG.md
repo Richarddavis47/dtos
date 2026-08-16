@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.31 - Sparse Historical Trade Market Matching
+
+- Add bounded pre-event market resolution that reuses global observations before
+  consulting approved historical providers and never substitutes later/current values.
+- Add one auditable ephemeral-versus-global preservation policy plus a disposable,
+  globally keyed provider cache with no league identity in its keys.
+- Preserve compact global evidence and lightweight references without introducing
+  permanent per-league historical market snapshots or restoring HistoricalStore.
+
 ## v1.10.30 - FOIS TradeFact occurred_at Integration Correction
 
 - Migrate the FOIS `TradeFact` boundary to retain canonical UTC trade occurrence

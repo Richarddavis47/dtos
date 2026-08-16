@@ -9,6 +9,7 @@ CHECKPOINT_SCHEMA_VERSION = "1.0"
 NORMALIZATION_VERSION = "1.0"
 MARKET_OBSERVATION_SCHEMA_VERSION = "1.0"
 MARKET_MATERIALITY_POLICY_VERSION = "1.0"
+HISTORICAL_RESOLUTION_POLICY_VERSION = "1.0"
 
 
 class ProvenanceType(str, Enum):
@@ -123,11 +124,23 @@ class HistoricalTradeAssessment:
     unavailable_assets: int
     side_totals: dict[str, float | None]
     evidence_checkpoint_ids: tuple[str, ...]
+    coverage_ratio: float = 0.0
+    missing_asset_ids: tuple[str, ...] = ()
+    confidence: int = 0
 
 
 class MarketObservationDecision(str, Enum):
     NEW_OBSERVATION = "new_observation"
     REUSED_OBSERVATION = "reused_observation"
+    UNAVAILABLE = "unavailable"
+
+
+class EvidencePersistenceDecision(str, Enum):
+    """Centralized disposition for historical provider evidence."""
+
+    EPHEMERAL_ONLY = "ephemeral_only"
+    PRESERVE_GLOBAL = "preserve_global"
+    ALREADY_PRESERVED = "already_preserved"
     UNAVAILABLE = "unavailable"
 
 

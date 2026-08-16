@@ -8,6 +8,8 @@ from fastapi.responses import JSONResponse
 
 from src.core.intelligence_memory import (
     DATA_OWNERSHIP, checkpoint_pipeline, intelligence_checkpoint_store, sleeper_season_cache,
+    historical_market_provider, historical_market_resolver,
+    historical_trade_resolution_service,
 )
 from src.core.intelligence_memory.sleeper_source import SleeperHistoricalSource
 from src.core.history_context import minimal_metadata_store
@@ -35,6 +37,9 @@ def create_intelligence_memory_router(
             "data_ownership": DATA_OWNERSHIP,
             "legacy_historical_memory": "physically_retired_fail_closed",
             "automatic_backfill": False,
+            "historical_market_resolution": historical_trade_resolution_service.health(),
+            "historical_market_resolver": historical_market_resolver.health(),
+            "historical_provider": historical_market_provider.health(),
         }
 
     @router.get("/market/health")
