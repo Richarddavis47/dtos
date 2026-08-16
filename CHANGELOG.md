@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.30 - FOIS TradeFact occurred_at Integration Correction
+
+- Migrate the FOIS `TradeFact` boundary to retain canonical UTC trade occurrence
+  timestamps and bounded transaction-time process evidence.
+- Preserve nullable timestamps for genuinely unavailable provider evidence without
+  substituting cache, import, or current time.
+- Preserve historical trade identity, process/outcome separation, sparse market
+  observation semantics, and the retired HistoricalStore contract.
+
 ## v1.10.29 - Canonical Historical Trade-Time Intelligence
 
 - Normalize Sleeper transaction `created` timestamps, with `status_updated` as
