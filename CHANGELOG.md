@@ -5,6 +5,7 @@
 - Replaced per-asset historical market replay reads with a bounded bulk compatibility lookup.
 - Added replay connection, query, row, decode, batch, and elapsed-time diagnostics.
 - Added bounded request-entry correlation and event-loop lag telemetry for heavy phases.
+- Reused verified completed-season checksums so warm asset details never redecode unchanged archives.
 - Preserved historical valuation, provider, sparse-market-memory, and retired HistoricalStore contracts.
 
 ## v1.10.34 - Live Visual Stale Capture Refresh Correction

@@ -106,6 +106,31 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
             self.assertEqual(result["count"], 1)
             self.assertEqual(result["records"][0]["player_id"], "p1")
 
+    def test_dataset_version_reuses_verified_archive_checksums(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            writer = SleeperSeasonCache(root)
+            facts = {
+                "league": {"league_id": "L", "name": "League"},
+                "users": [], "rosters": [], "matchups": {},
+                "transactions": {}, "drafts": [], "draft_picks": [],
+                "traded_picks": [], "winners_bracket": [], "losers_bracket": [],
+            }
+            writer.write(writer.normalize("L", 2025, facts))
+            cache = SleeperSeasonCache(root)
+            store = CanonicalHistoryStore()
+            with patch(
+                "src.core.history_context.store.sleeper_season_cache", cache,
+            ), patch.object(cache, "read", wraps=cache.read) as read:
+                first = store.dataset_version("L")
+                self.assertEqual(read.call_count, 1)
+                self.assertEqual(store.dataset_version("L"), first)
+                self.assertEqual(read.call_count, 1)
+                changed = {**facts, "transactions": {"1": [{"transaction_id": "t1"}]}}
+                writer.write(writer.normalize("L", 2025, changed))
+                self.assertNotEqual(store.dataset_version("L"), first)
+                self.assertEqual(read.call_count, 2)
+
     def test_entity_counts_preserve_filtered_historical_graph_contract(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             cache = SleeperSeasonCache(Path(directory))

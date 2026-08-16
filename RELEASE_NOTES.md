@@ -10,6 +10,7 @@ resource diagnostics needed to verify production responsiveness.
 - Exact durable replay equivalence and partial-miss provider fallback.
 - O(1) replay connection use with three indexed result queries.
 - One-time checkpoint and observation decoding in bounded batches.
+- Strong file-generation checksum reuse for non-blocking warm historical identity reads.
 - Retained Asset Market availability and liveness during historical resolution.
 
 ---

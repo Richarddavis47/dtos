@@ -105,12 +105,7 @@ class CanonicalHistoryStore:
         return {"mapping": self._generation, "observations": self._generation}
 
     def _cache_index(self, league_id: str) -> dict[int, str]:
-        result = {}
-        for season in sleeper_season_cache.available_seasons(league_id):
-            cached = sleeper_season_cache.read(league_id, season)
-            if cached is not None:
-                result[season] = cached.checksum
-        return result
+        return sleeper_season_cache.checksum_index(league_id)
 
     def season_chain(self, league_id: str) -> dict[str, Any] | None:
         """Return the compact durable discovery manifest for progress surfaces."""
