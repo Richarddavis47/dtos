@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from src.core.fois.models import FrontOfficeEvidence
+from src.core.history_context.timestamps import canonical_utc_timestamp
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,13 @@ class TradeFact:
     recovery_score: float | None = None
     impact_weight: float = 1.0
     partner_id: str | None = None
+    occurred_at: str | None = None
+    process_evidence: dict[str, object] | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self, "occurred_at", canonical_utc_timestamp(self.occurred_at),
+        )
 
 
 @dataclass(frozen=True)

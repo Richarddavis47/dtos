@@ -1,4 +1,11 @@
-# DTOS v1.10.29 - Canonical Historical Trade-Time Intelligence
+# DTOS v1.10.30 - FOIS TradeFact occurred_at Integration Correction
+
+DTOS v1.10.30 completes the v1.10.29 FOIS integration by making the immutable
+`TradeFact` contract accept and retain canonical historical event time plus its
+existing transaction-time evidence summary. Missing timestamps remain explicitly
+unavailable, and current value is never substituted for historical proof.
+
+## Previous release: v1.10.29 - Canonical Historical Trade-Time Intelligence
 
 DTOS v1.10.29 restores the provider-backed occurrence time that Sleeper already
 supplies for historical trades, waivers, adds, and drops. Canonical trades and

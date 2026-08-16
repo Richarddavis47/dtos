@@ -27,6 +27,11 @@ def _utc_iso(value: Any) -> str | None:
     return parsed.isoformat().replace("+00:00", "Z")
 
 
+def canonical_utc_timestamp(value: Any) -> str | None:
+    """Normalize provider event time without inventing an observation time."""
+    return _utc_iso(value)
+
+
 def canonical_transaction_timestamp(payload: dict[str, Any]) -> tuple[str | None, dict[str, Any]]:
     """Return occurrence time and bounded provenance from Sleeper evidence.
 
