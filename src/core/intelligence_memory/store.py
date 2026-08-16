@@ -168,6 +168,7 @@ class IntelligenceCheckpointStore:
                 SET resolver_version='1.0', resolution_state='final_unavailable',
                     unavailable_reason='legacy_resolution_unavailable'
                 WHERE observation_id IS NULL AND trigger_type='trade_execution'
+                  AND provenance_type='unavailable'
                   AND resolver_version IS NULL"""
             )
             from .market_memory import market_context_id

@@ -18,7 +18,7 @@ from src.core.intelligence_memory.market import select_historical_market
 from src.core.intelligence_memory.market_memory import market_context_id
 from src.core.intelligence_memory.models import (
     CheckpointTrigger, EvidenceCompleteness, EvidencePersistenceDecision,
-    IntelligenceCheckpoint, ProvenanceType, SourceObservation,
+    IntelligenceCheckpoint, MarketObservationDecision, ProvenanceType, SourceObservation,
 )
 from src.core.intelligence_memory.store import IntelligenceCheckpointStore
 from src.core.intelligence_memory.triggers import trade_assessment
@@ -176,6 +176,18 @@ class SparseHistoricalResolverTests(unittest.TestCase):
         )
         self.assertIsNone(self.store.compatible_resolution(
             checkpoint(), market_context_id=self.context, resolver_version="2.0",
+        ))
+
+    def test_migration_does_not_finalize_live_current_market_unavailability(self):
+        live = replace(
+            checkpoint(), provenance_type=ProvenanceType.LIVE_CAPTURED,
+            knowledge_state="current_market_unavailable",
+        )
+        stored, _ = self.store.put(live)
+        self.store.put_reference(stored, None, MarketObservationDecision.UNAVAILABLE)
+        reopened = IntelligenceCheckpointStore(self.store.path)
+        self.assertIsNone(reopened.compatible_resolution(
+            live, market_context_id=self.context, resolver_version="1.0",
         ))
 
     def test_cache_is_global_bounded_disposable_and_omits_league(self):
