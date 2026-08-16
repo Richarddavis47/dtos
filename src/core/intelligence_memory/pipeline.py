@@ -100,6 +100,40 @@ class CheckpointPipeline:
             },
         ),)
 
+    @staticmethod
+    def _market_observations(
+        data: dict[str, Any], asset_id: str,
+    ) -> tuple[SourceObservation, ...]:
+        """Extract only compact canonical market-provider evidence."""
+        asset = ((data.get("valuation_intelligence") or {}).get("assets") or {}).get(
+            asset_id
+        ) or {}
+        rows = []
+        for item in asset.get("evidence_sources") or ():
+            provider = str(item.get("provider_id") or "").strip()
+            value = item.get("normalized_value")
+            if not provider or value is None:
+                continue
+            rows.append(SourceObservation(
+                provider=provider,
+                raw_value=value,
+                normalized_value=value,
+                observed_at=None,
+                source_identity=(
+                    f"{provider}:{item.get('family')}:{value}:"
+                    f"{item.get('freshness_tier')}"
+                ),
+                temporal_distance_seconds=None,
+                metadata={
+                    "evidence_family": item.get("family"),
+                    "category": item.get("category"),
+                    "weight": item.get("weight"),
+                    "freshness_tier": item.get("freshness_tier"),
+                    "reliability": item.get("reliability"),
+                },
+            ))
+        return tuple(sorted(rows, key=lambda row: (row.provider, str(row.source_identity))))
+
     def _capture(self, trigger: CheckpointTrigger, **values: Any) -> None:
         self._counts["checkpoints_attempted"] += 1
         event_id = str(values.get("event_id") or "")
@@ -158,6 +192,7 @@ class CheckpointPipeline:
                         event_id=event_id, roster_id=roster_id,
                         confidence=85 if values["market_value"] is not None else 40,
                         observations=self._projection_observations(data, asset_id),
+                        market_observations=self._market_observations(data, asset_id),
                         **context, **values,
                     )
         return self.health()
@@ -190,6 +225,9 @@ class CheckpointPipeline:
                     event_id=f"{draft_id}:{number}", roster_id=str(pick.get("roster_id") or "") or None,
                     confidence=85 if values["market_value"] is not None else 40,
                     observations=self._projection_observations(data, f"player:{player_id}"),
+                    market_observations=self._market_observations(
+                        data, f"player:{player_id}",
+                    ),
                     knowledge_state=f"fantasy_draft_selection:{number}",
                     **context, **{k: v for k, v in values.items() if k != "knowledge_state"},
                 )
@@ -218,16 +256,29 @@ class CheckpointPipeline:
             triggers.append(CheckpointTrigger.REGULAR_SEASON_END)
         if str(league.get("status") or "").casefold() == "complete":
             triggers.append(CheckpointTrigger.FANTASY_SEASON_END)
-        asset_id = f"league:{context['league_id']}"
+        assets = sorted(((data.get("valuation_intelligence") or {}).get("assets") or {}).keys())
         for trigger in triggers:
-            self._counts["canonical_events_observed"] += 1
-            self._counts["eligible_events"] += 1
-            self._capture(
-                trigger, asset_id=asset_id, asset_type="league_benchmark",
-                timestamp=f"{context['season']}-W{week:02d}", event_id=f"{context['season']}:{week}",
-                confidence=100, completeness=EvidenceCompleteness.COMPLETE,
-                knowledge_state="scheduled_league_benchmark", **context,
-            )
+            # Benchmarks are global by provider-compatible market context. A
+            # second league observes the same global event and is idempotently
+            # collapsed rather than multiplying a full-universe snapshot.
+            for asset_id in assets:
+                self._counts["canonical_events_observed"] += 1
+                self._counts["eligible_events"] += 1
+                values = self._values(data, asset_id)
+                benchmark_context = {
+                    **context, "league_id": None, "scoring_profile_id": None,
+                }
+                self._capture(
+                    trigger, asset_id=asset_id,
+                    asset_type="future_pick" if asset_id.startswith("pick:") else "player",
+                    timestamp=f"{context['season']}-W{week:02d}",
+                    event_id=f"global:{context['season']}:{week}:{trigger.value}:{asset_id}",
+                    confidence=85 if values["market_value"] is not None else 40,
+                    market_observations=self._market_observations(data, asset_id),
+                    knowledge_state="scheduled_global_market_benchmark",
+                    **benchmark_context,
+                    **{key: value for key, value in values.items() if key != "knowledge_state"},
+                )
         return self.health()
 
     def ingest_runtime(self, data: dict[str, Any], *, observed_at: str) -> dict[str, Any]:

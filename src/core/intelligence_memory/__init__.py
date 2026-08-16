@@ -9,9 +9,11 @@ from .chain import SeasonChain, SeasonReference, discover_season_chain
 from .confidence import temporal_confidence
 from .fois import fois_process_evidence
 from .models import (
-    CheckpointTrigger, EvidenceCompleteness, HistoricalTradeAssessment,
-    IntelligenceCheckpoint, PickLineage, ProvenanceType, SourceObservation,
+    CheckpointTrigger, EvidenceCompleteness, GlobalMarketObservation,
+    HistoricalTradeAssessment, IntelligenceCheckpoint, MarketObservationDecision,
+    MarketObservationReference, PickLineage, ProvenanceType, SourceObservation,
 )
+from .market_memory import MarketObservationMaterialityPolicy, market_context_id
 from .ownership import DATA_OWNERSHIP
 from .market import HistoricalMarketSelection, current_market_value, select_historical_market
 from .season_cache import CachedSeason, SleeperSeasonCache
@@ -26,11 +28,12 @@ checkpoint_pipeline = CheckpointPipeline(intelligence_memory_service)
 
 __all__ = [
     "CachedSeason", "CheckpointTrigger", "DATA_OWNERSHIP", "EvidenceCompleteness",
-    "HistoricalMarketSelection", "HistoricalTradeAssessment", "IntelligenceCheckpoint",
+    "GlobalMarketObservation", "HistoricalMarketSelection", "HistoricalTradeAssessment", "IntelligenceCheckpoint",
     "IntelligenceCheckpointStore", "IntelligenceMemoryService", "CheckpointPipeline",
-    "PickLineage", "ProvenanceType", "SeasonChain", "SeasonReference",
+    "MarketObservationDecision", "MarketObservationMaterialityPolicy",
+    "MarketObservationReference", "PickLineage", "ProvenanceType", "SeasonChain", "SeasonReference",
     "SleeperSeasonCache", "SourceObservation", "discover_season_chain",
     "current_market_value", "fois_process_evidence", "intelligence_checkpoint_store",
     "intelligence_memory_service", "checkpoint_pipeline", "select_historical_market",
-    "sleeper_season_cache", "temporal_confidence",
+    "market_context_id", "sleeper_season_cache", "temporal_confidence",
 ]

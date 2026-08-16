@@ -1096,6 +1096,21 @@ Health metrics distinguish rebuild requests, no-op admission skips, and actual
 constructions while preserving existing counters and durable behavior.
 
 ## Previous release
+# DTOS v1.10.28 - Global Sparse Market Memory & Cross-League Deduplication
+
+DTOS now stores a meaningful asset market state once globally and links each
+league-specific intelligence event to that immutable observation. Identical
+states are reused across leagues, provider refreshes, and scheduled benchmarks;
+material changes create a new observation immediately under one versioned
+policy. Missing current evidence remains explicitly unavailable and never falls
+back to a historical observation.
+
+The migration retains all prior checkpoint evidence, links only evidence whose
+equivalence can be proven, and leaves unsafe reconstructed rows embedded. New
+bounded health and timeline contracts expose aggregate observation/reference
+counts and storage without revealing private league context. Current Asset
+Market and Brain decisions remain fresh-provider-driven and recomputable.
+
 # DTOS v1.10.27 - HistoricalStore Physical Retirement & Disk Reclamation
 
 DTOS v1.10.27 physically retires the dormant legacy HistoricalStore after the

@@ -11,11 +11,13 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from .models import (
-    EvidenceCompleteness, IntelligenceCheckpoint, PickLineage, ProvenanceType,
-    SourceObservation,
+    CheckpointTrigger, EvidenceCompleteness, GlobalMarketObservation,
+    IntelligenceCheckpoint, MarketObservationDecision, MarketObservationReference,
+    PickLineage, ProvenanceType, SourceObservation,
 )
+from .market_memory import MarketObservationMaterialityPolicy, semantic_fingerprint
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 SCHEMA = """
@@ -49,7 +51,8 @@ CREATE TABLE IF NOT EXISTS intelligence_checkpoints (
   related_event_id TEXT,
   knowledge_state TEXT,
   schema_version TEXT NOT NULL,
-  observations_json TEXT NOT NULL
+  observations_json TEXT NOT NULL,
+  global_market_observation_id TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_intelligence_checkpoints_asset
 ON intelligence_checkpoints(asset_id, observed_at);
@@ -72,6 +75,46 @@ CREATE TABLE IF NOT EXISTS intelligence_audit (
   action TEXT NOT NULL,
   occurred_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS global_market_observations (
+  observation_id TEXT PRIMARY KEY,
+  asset_id TEXT NOT NULL,
+  asset_type TEXT NOT NULL,
+  market_context_id TEXT NOT NULL,
+  observed_at TEXT NOT NULL,
+  canonical_value REAL NOT NULL,
+  intrinsic_value REAL,
+  confidence INTEGER NOT NULL,
+  evidence_completeness TEXT NOT NULL,
+  provider_evidence_json TEXT NOT NULL,
+  provenance_type TEXT NOT NULL,
+  semantic_fingerprint TEXT NOT NULL,
+  model_version TEXT NOT NULL,
+  normalization_version TEXT NOT NULL,
+  materiality_policy_version TEXT NOT NULL,
+  schema_version TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_global_market_observation_latest
+ON global_market_observations(asset_id, market_context_id, observed_at DESC);
+CREATE TABLE IF NOT EXISTS market_observation_references (
+  reference_id TEXT PRIMARY KEY,
+  checkpoint_id TEXT NOT NULL UNIQUE,
+  observation_id TEXT,
+  asset_id TEXT NOT NULL,
+  league_id TEXT,
+  event_id TEXT,
+  trigger_type TEXT NOT NULL,
+  occurred_at TEXT NOT NULL,
+  market_state TEXT NOT NULL,
+  provenance_type TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(checkpoint_id) REFERENCES intelligence_checkpoints(checkpoint_id),
+  FOREIGN KEY(observation_id) REFERENCES global_market_observations(observation_id)
+);
+CREATE INDEX IF NOT EXISTS idx_market_reference_observation
+ON market_observation_references(observation_id, occurred_at);
+CREATE INDEX IF NOT EXISTS idx_market_reference_league
+ON market_observation_references(league_id, trigger_type, occurred_at);
 """
 
 
@@ -91,11 +134,16 @@ class IntelligenceCheckpointStore:
                 connection.execute(
                     "ALTER TABLE intelligence_checkpoints ADD COLUMN roster_id TEXT"
                 )
+            if "global_market_observation_id" not in columns:
+                connection.execute(
+                    "ALTER TABLE intelligence_checkpoints ADD COLUMN global_market_observation_id TEXT"
+                )
             connection.execute(
                 """INSERT INTO intelligence_metadata(key,value) VALUES('schema_version',?)
                 ON CONFLICT(key) DO UPDATE SET value=excluded.value""",
                 (str(SCHEMA_VERSION),),
             )
+        self._migration_summary = self.migrate_embedded_market_evidence()
 
     @contextmanager
     def _connect(self) -> Iterator[sqlite3.Connection]:
@@ -130,11 +178,14 @@ class IntelligenceCheckpointStore:
                        checkpoint.market_value],
             "observations": [observation.__dict__ for observation in checkpoint.observations],
             "knowledge_state": checkpoint.knowledge_state,
+            "global_market_observation_id": checkpoint.global_market_observation_id,
         }
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
         return hashlib.sha256(encoded.encode()).hexdigest()
 
-    def put(self, checkpoint: IntelligenceCheckpoint) -> tuple[IntelligenceCheckpoint, bool]:
+    def _put_checkpoint(
+        self, connection: sqlite3.Connection, checkpoint: IntelligenceCheckpoint,
+    ) -> tuple[IntelligenceCheckpoint, bool]:
         semantic_key = self.semantic_key(checkpoint)
         checkpoint_id = checkpoint.checkpoint_id or semantic_key
         checkpoint = replace(checkpoint, checkpoint_id=checkpoint_id)
@@ -152,33 +203,36 @@ class IntelligenceCheckpointStore:
             checkpoint.evidence_completeness.value, checkpoint.model_version,
             checkpoint.normalization_version, checkpoint.brain_identity,
             checkpoint.related_event_id, checkpoint.knowledge_state,
-            checkpoint.schema_version, observations,
+            checkpoint.schema_version, observations, checkpoint.global_market_observation_id,
         )
-        with self._lock, self._connect() as connection:
-            cursor = connection.execute(
-                """INSERT OR IGNORE INTO intelligence_checkpoints(
-                checkpoint_id,semantic_key,asset_id,asset_type,league_id,roster_id,
-                scoring_profile_id,observed_at,season,week,trigger_type,
-                provenance_type,dtos_value,intrinsic_value,contender_value,
-                rebuilder_value,market_value,confidence,evidence_completeness,
-                model_version,normalization_version,brain_identity,related_event_id,
-                knowledge_state,schema_version,observations_json)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                values,
+        cursor = connection.execute(
+            """INSERT OR IGNORE INTO intelligence_checkpoints(
+            checkpoint_id,semantic_key,asset_id,asset_type,league_id,roster_id,
+            scoring_profile_id,observed_at,season,week,trigger_type,
+            provenance_type,dtos_value,intrinsic_value,contender_value,
+            rebuilder_value,market_value,confidence,evidence_completeness,
+            model_version,normalization_version,brain_identity,related_event_id,
+            knowledge_state,schema_version,observations_json,global_market_observation_id)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            values,
+        )
+        inserted = cursor.rowcount == 1
+        if inserted:
+            connection.execute(
+                "INSERT INTO intelligence_audit(checkpoint_id,action) VALUES(?,?)",
+                (checkpoint_id, "created"),
             )
-            inserted = cursor.rowcount == 1
-            if inserted:
-                connection.execute(
-                    "INSERT INTO intelligence_audit(checkpoint_id,action) VALUES(?,?)",
-                    (checkpoint_id, "created"),
-                )
-            else:
-                row = connection.execute(
-                    "SELECT checkpoint_id FROM intelligence_checkpoints WHERE semantic_key=?",
-                    (semantic_key,),
-                ).fetchone()
-                checkpoint = replace(checkpoint, checkpoint_id=str(row["checkpoint_id"]))
+        else:
+            row = connection.execute(
+                "SELECT checkpoint_id FROM intelligence_checkpoints WHERE semantic_key=?",
+                (semantic_key,),
+            ).fetchone()
+            checkpoint = replace(checkpoint, checkpoint_id=str(row["checkpoint_id"]))
         return checkpoint, inserted
+
+    def put(self, checkpoint: IntelligenceCheckpoint) -> tuple[IntelligenceCheckpoint, bool]:
+        with self._lock, self._connect() as connection:
+            return self._put_checkpoint(connection, checkpoint)
 
     def checkpoints(
         self, *, league_id: str | None = None, asset_id: str | None = None,
@@ -188,26 +242,41 @@ class IntelligenceCheckpointStore:
         clauses: list[str] = []
         values: list[Any] = []
         if league_id is not None:
-            clauses.append("league_id=?")
+            clauses.append("c.league_id=?")
             values.append(str(league_id))
         if asset_id is not None:
-            clauses.append("asset_id=?")
+            clauses.append("c.asset_id=?")
             values.append(str(asset_id))
         if roster_id is not None:
-            clauses.append("roster_id=?")
+            clauses.append("c.roster_id=?")
             values.append(str(roster_id))
         where = " WHERE " + " AND ".join(clauses) if clauses else ""
         with self._connect() as connection:
             rows = connection.execute(
-                f"SELECT * FROM intelligence_checkpoints{where} ORDER BY observed_at LIMIT ?",
+                f"""SELECT c.*,
+                COALESCE(c.market_value,o.canonical_value) AS resolved_market_value,
+                COALESCE(c.intrinsic_value,o.intrinsic_value) AS resolved_intrinsic_value,
+                COALESCE(c.confidence,o.confidence) AS resolved_confidence,
+                COALESCE(c.evidence_completeness,o.evidence_completeness)
+                    AS resolved_evidence_completeness,
+                CASE WHEN c.observations_json='[]' AND o.provider_evidence_json IS NOT NULL
+                     THEN o.provider_evidence_json ELSE c.observations_json END
+                    AS resolved_observations_json
+                FROM intelligence_checkpoints c
+                LEFT JOIN global_market_observations o
+                  ON o.observation_id=c.global_market_observation_id
+                {where} ORDER BY c.observed_at LIMIT ?""",
                 (*values, max(1, min(int(limit), 10_000))),
             ).fetchall()
         return [self._decode(row) for row in rows]
 
     @staticmethod
     def _decode(row: sqlite3.Row) -> IntelligenceCheckpoint:
-        observations = tuple(SourceObservation(**item) for item in json.loads(row["observations_json"]))
-        from .models import CheckpointTrigger
+        evidence_json = (
+            row["resolved_observations_json"]
+            if "resolved_observations_json" in row.keys() else row["observations_json"]
+        )
+        observations = tuple(SourceObservation(**item) for item in json.loads(evidence_json))
         return IntelligenceCheckpoint(
             checkpoint_id=row["checkpoint_id"], asset_id=row["asset_id"],
             asset_type=row["asset_type"], league_id=row["league_id"],
@@ -218,13 +287,402 @@ class IntelligenceCheckpointStore:
             provenance_type=ProvenanceType(row["provenance_type"]),
             dtos_value=row["dtos_value"], intrinsic_value=row["intrinsic_value"],
             contender_value=row["contender_value"], rebuilder_value=row["rebuilder_value"],
-            market_value=row["market_value"], confidence=row["confidence"],
-            evidence_completeness=EvidenceCompleteness(row["evidence_completeness"]),
+            market_value=row["resolved_market_value"] if "resolved_market_value" in row.keys() else row["market_value"],
+            confidence=row["resolved_confidence"] if "resolved_confidence" in row.keys() else row["confidence"],
+            evidence_completeness=EvidenceCompleteness(
+                row["resolved_evidence_completeness"] if "resolved_evidence_completeness" in row.keys()
+                else row["evidence_completeness"]
+            ),
             model_version=row["model_version"], normalization_version=row["normalization_version"],
             brain_identity=row["brain_identity"], related_event_id=row["related_event_id"],
             knowledge_state=row["knowledge_state"], schema_version=row["schema_version"],
             observations=observations,
+            global_market_observation_id=row["global_market_observation_id"],
         )
+
+    @staticmethod
+    def _decode_observation(row: sqlite3.Row) -> GlobalMarketObservation:
+        return GlobalMarketObservation(
+            observation_id=row["observation_id"], asset_id=row["asset_id"],
+            asset_type=row["asset_type"], market_context_id=row["market_context_id"],
+            observed_at=row["observed_at"], canonical_value=row["canonical_value"],
+            intrinsic_value=row["intrinsic_value"], confidence=row["confidence"],
+            evidence_completeness=EvidenceCompleteness(row["evidence_completeness"]),
+            provider_evidence=tuple(
+                SourceObservation(**item) for item in json.loads(row["provider_evidence_json"])
+            ),
+            provenance_type=ProvenanceType(row["provenance_type"]),
+            semantic_fingerprint=row["semantic_fingerprint"],
+            model_version=row["model_version"],
+            normalization_version=row["normalization_version"],
+            materiality_policy_version=row["materiality_policy_version"],
+            schema_version=row["schema_version"],
+        )
+
+    def _resolve_observation_on_connection(
+        self, connection: sqlite3.Connection, checkpoint: IntelligenceCheckpoint,
+        *, market_context_id: str,
+        policy: MarketObservationMaterialityPolicy,
+        provider_evidence: tuple[SourceObservation, ...] | None = None,
+    ) -> tuple[GlobalMarketObservation | None, MarketObservationDecision, bool]:
+        if checkpoint.market_value is None:
+            return None, MarketObservationDecision.UNAVAILABLE, False
+        canonical_value = float(checkpoint.market_value)
+        provider_evidence = tuple(
+            checkpoint.observations if provider_evidence is None else provider_evidence
+        )
+        fingerprint = semantic_fingerprint(
+            asset_id=checkpoint.asset_id, asset_type=checkpoint.asset_type,
+            market_context_id=market_context_id, canonical_value=canonical_value,
+            intrinsic_value=(float(checkpoint.intrinsic_value)
+                             if checkpoint.intrinsic_value is not None else None),
+            confidence=checkpoint.confidence,
+            completeness=checkpoint.evidence_completeness,
+            provider_evidence=provider_evidence,
+            model_version=checkpoint.model_version,
+            normalization_version=checkpoint.normalization_version,
+        )
+        row = connection.execute(
+            """SELECT * FROM global_market_observations
+            WHERE asset_id=? AND market_context_id=? AND observed_at<=?
+            ORDER BY observed_at DESC,created_at DESC LIMIT 1""",
+            (checkpoint.asset_id, market_context_id, checkpoint.timestamp),
+        ).fetchone()
+        previous = self._decode_observation(row) if row else None
+        if previous and not policy.materially_changed(
+            previous, market_context_id=market_context_id,
+            canonical_value=canonical_value, confidence=checkpoint.confidence,
+            evidence_completeness=checkpoint.evidence_completeness,
+            provider_evidence=provider_evidence,
+        ):
+            return previous, MarketObservationDecision.REUSED_OBSERVATION, False
+        observation_id = hashlib.sha256(
+            f"market-observation-v1|{checkpoint.asset_id}|{market_context_id}|{checkpoint.timestamp}|{fingerprint}".encode()
+        ).hexdigest()
+        connection.execute(
+            """INSERT OR IGNORE INTO global_market_observations(
+            observation_id,asset_id,asset_type,market_context_id,observed_at,
+            canonical_value,intrinsic_value,confidence,evidence_completeness,
+            provider_evidence_json,provenance_type,semantic_fingerprint,
+            model_version,normalization_version,materiality_policy_version,schema_version)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (observation_id, checkpoint.asset_id, checkpoint.asset_type,
+             market_context_id, checkpoint.timestamp, canonical_value,
+             checkpoint.intrinsic_value, checkpoint.confidence,
+             checkpoint.evidence_completeness.value,
+             json.dumps([item.__dict__ for item in provider_evidence], sort_keys=True,
+                        separators=(",", ":")),
+             checkpoint.provenance_type.value, fingerprint,
+             checkpoint.model_version, checkpoint.normalization_version,
+             policy.version, "1.0"),
+        )
+        created = connection.execute("SELECT changes()").fetchone()[0] == 1
+        result = connection.execute(
+            "SELECT * FROM global_market_observations WHERE observation_id=?",
+            (observation_id,),
+        ).fetchone()
+        return self._decode_observation(result), (
+            MarketObservationDecision.NEW_OBSERVATION if created
+            else MarketObservationDecision.REUSED_OBSERVATION
+        ), created
+
+    def resolve_observation(
+        self, checkpoint: IntelligenceCheckpoint, *, market_context_id: str,
+        policy: MarketObservationMaterialityPolicy | None = None,
+    ) -> tuple[GlobalMarketObservation | None, MarketObservationDecision, bool]:
+        """Atomically create or reuse one global state; league identity is never part of it."""
+        with self._lock, self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            return self._resolve_observation_on_connection(
+                connection, checkpoint, market_context_id=market_context_id,
+                policy=policy or MarketObservationMaterialityPolicy(),
+            )
+
+    def _put_reference_on_connection(
+        self, connection: sqlite3.Connection, checkpoint: IntelligenceCheckpoint,
+        observation: GlobalMarketObservation | None,
+        decision: MarketObservationDecision,
+    ) -> tuple[MarketObservationReference, bool]:
+        reference_id = hashlib.sha256(
+            ("market-reference-v1|" + checkpoint.checkpoint_id).encode()
+        ).hexdigest()
+        reference = MarketObservationReference(
+            reference_id=reference_id, checkpoint_id=checkpoint.checkpoint_id,
+            observation_id=observation.observation_id if observation else None,
+            asset_id=checkpoint.asset_id, league_id=checkpoint.league_id,
+            event_id=checkpoint.related_event_id, trigger_type=checkpoint.trigger_type,
+            occurred_at=checkpoint.timestamp, market_state=decision,
+            provenance_type=checkpoint.provenance_type,
+        )
+        cursor = connection.execute(
+            """INSERT OR IGNORE INTO market_observation_references(
+            reference_id,checkpoint_id,observation_id,asset_id,league_id,event_id,
+            trigger_type,occurred_at,market_state,provenance_type)
+            VALUES(?,?,?,?,?,?,?,?,?,?)""",
+            (reference.reference_id, reference.checkpoint_id, reference.observation_id,
+             reference.asset_id, reference.league_id, reference.event_id,
+             reference.trigger_type.value, reference.occurred_at,
+             reference.market_state.value, reference.provenance_type.value),
+        )
+        inserted = cursor.rowcount == 1
+        return reference, inserted
+
+    def put_reference(
+        self, checkpoint: IntelligenceCheckpoint,
+        observation: GlobalMarketObservation | None,
+        decision: MarketObservationDecision,
+    ) -> tuple[MarketObservationReference, bool]:
+        with self._lock, self._connect() as connection:
+            return self._put_reference_on_connection(
+                connection, checkpoint, observation, decision,
+            )
+
+    def put_sparse(
+        self, checkpoint: IntelligenceCheckpoint, *, market_context_id: str,
+        policy: MarketObservationMaterialityPolicy | None = None,
+        provider_evidence: tuple[SourceObservation, ...] | None = None,
+    ) -> tuple[IntelligenceCheckpoint, bool, MarketObservationDecision, bool, bool]:
+        """Commit observation, compact checkpoint, and reference as one transaction."""
+        with self._lock, self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            existing = connection.execute(
+                """SELECT c.*,
+                COALESCE(c.market_value,o.canonical_value) AS resolved_market_value,
+                COALESCE(c.intrinsic_value,o.intrinsic_value) AS resolved_intrinsic_value,
+                COALESCE(c.confidence,o.confidence) AS resolved_confidence,
+                COALESCE(c.evidence_completeness,o.evidence_completeness)
+                    AS resolved_evidence_completeness,
+                CASE WHEN c.observations_json='[]' AND o.provider_evidence_json IS NOT NULL
+                     THEN o.provider_evidence_json ELSE c.observations_json END
+                    AS resolved_observations_json,
+                r.market_state AS resolved_market_state
+                FROM intelligence_checkpoints c
+                LEFT JOIN global_market_observations o
+                  ON o.observation_id=c.global_market_observation_id
+                LEFT JOIN market_observation_references r
+                  ON r.checkpoint_id=c.checkpoint_id
+                WHERE c.league_id IS ? AND c.related_event_id=? AND c.asset_id=?
+                  AND c.trigger_type=? LIMIT 1""",
+                (checkpoint.league_id, checkpoint.related_event_id,
+                 checkpoint.asset_id, checkpoint.trigger_type.value),
+            ).fetchone()
+            if existing is not None:
+                return (
+                    self._decode(existing), False,
+                    MarketObservationDecision(existing["resolved_market_state"]),
+                    False, False,
+                )
+            observation, decision, observation_created = self._resolve_observation_on_connection(
+                connection, checkpoint, market_context_id=market_context_id,
+                policy=policy or MarketObservationMaterialityPolicy(),
+                provider_evidence=provider_evidence,
+            )
+            compact = replace(
+                checkpoint,
+                global_market_observation_id=(observation.observation_id if observation else None),
+                market_value=None if observation else checkpoint.market_value,
+                intrinsic_value=None if observation else checkpoint.intrinsic_value,
+                # Checkpoint-local evidence (for example a weekly projection)
+                # remains attached to the event. Only compact market-provider
+                # evidence is normalized into the global observation.
+                observations=checkpoint.observations,
+            )
+            persisted, checkpoint_created = self._put_checkpoint(connection, compact)
+            _, reference_created = self._put_reference_on_connection(
+                connection, persisted, observation, decision,
+            )
+        if observation:
+            persisted = replace(
+                persisted, market_value=observation.canonical_value,
+                intrinsic_value=observation.intrinsic_value,
+                observations=(
+                    persisted.observations or observation.provider_evidence
+                ),
+                evidence_completeness=observation.evidence_completeness,
+                confidence=observation.confidence,
+            )
+        return (
+            persisted, checkpoint_created, decision,
+            observation_created, reference_created,
+        )
+
+    def observations(
+        self, *, asset_id: str | None = None, market_context_id: str | None = None,
+        limit: int = 100,
+    ) -> list[GlobalMarketObservation]:
+        clauses, values = [], []
+        if asset_id:
+            clauses.append("asset_id=?")
+            values.append(asset_id)
+        if market_context_id:
+            clauses.append("market_context_id=?")
+            values.append(market_context_id)
+        where = " WHERE " + " AND ".join(clauses) if clauses else ""
+        with self._connect() as connection:
+            rows = connection.execute(
+                f"SELECT * FROM global_market_observations{where} ORDER BY observed_at DESC LIMIT ?",
+                (*values, max(1, min(int(limit), 500))),
+            ).fetchall()
+        return [self._decode_observation(row) for row in rows]
+
+    def market_memory_health(self) -> dict[str, Any]:
+        with self._connect() as connection:
+            observations = connection.execute(
+                "SELECT COUNT(*) FROM global_market_observations"
+            ).fetchone()[0]
+            references = connection.execute(
+                "SELECT COUNT(*) FROM market_observation_references"
+            ).fetchone()[0]
+            unavailable = connection.execute(
+                "SELECT COUNT(*) FROM market_observation_references WHERE observation_id IS NULL"
+            ).fetchone()[0]
+            reused = connection.execute(
+                "SELECT COUNT(*) FROM market_observation_references WHERE market_state=?",
+                (MarketObservationDecision.REUSED_OBSERVATION.value,),
+            ).fetchone()[0]
+            cross_league = connection.execute(
+                """SELECT COUNT(*) FROM (SELECT observation_id FROM market_observation_references
+                WHERE observation_id IS NOT NULL GROUP BY observation_id
+                HAVING COUNT(DISTINCT league_id)>1)"""
+            ).fetchone()[0]
+            by_asset = dict(connection.execute(
+                "SELECT asset_type,COUNT(*) FROM global_market_observations GROUP BY asset_type"
+            ).fetchall())
+            contexts = connection.execute(
+                "SELECT COUNT(DISTINCT market_context_id) FROM global_market_observations"
+            ).fetchone()[0]
+            observation_bytes = connection.execute(
+                """SELECT COALESCE(SUM(length(observation_id)+length(asset_id)+length(asset_type)+
+                length(market_context_id)+length(observed_at)+length(provider_evidence_json)+
+                length(provenance_type)+length(semantic_fingerprint)+length(model_version)+
+                length(normalization_version)+length(materiality_policy_version)+length(schema_version)+64),0)
+                FROM global_market_observations"""
+            ).fetchone()[0]
+            reference_bytes = connection.execute(
+                """SELECT COALESCE(SUM(length(reference_id)+length(checkpoint_id)+
+                COALESCE(length(observation_id),0)+length(asset_id)+COALESCE(length(league_id),0)+
+                COALESCE(length(event_id),0)+length(trigger_type)+length(occurred_at)+
+                length(market_state)+length(provenance_type)+24),0)
+                FROM market_observation_references"""
+            ).fetchone()[0]
+            references_by_trigger = dict(connection.execute(
+                "SELECT trigger_type,COUNT(*) FROM market_observation_references GROUP BY trigger_type"
+            ).fetchall())
+            observations_by_provenance = dict(connection.execute(
+                "SELECT provenance_type,COUNT(*) FROM global_market_observations GROUP BY provenance_type"
+            ).fetchall())
+            migrated_exactly = connection.execute(
+                """SELECT COUNT(*) FROM intelligence_checkpoints c
+                JOIN market_observation_references r ON r.checkpoint_id=c.checkpoint_id
+                WHERE c.market_value IS NOT NULL AND r.observation_id IS NOT NULL"""
+            ).fetchone()[0]
+            migrated_shared = connection.execute(
+                """SELECT COALESCE(SUM(reference_count-1),0) FROM (
+                SELECT COUNT(*) AS reference_count FROM intelligence_checkpoints c
+                JOIN market_observation_references r ON r.checkpoint_id=c.checkpoint_id
+                WHERE c.market_value IS NOT NULL AND r.observation_id IS NOT NULL
+                GROUP BY r.observation_id HAVING COUNT(*)>1)"""
+            ).fetchone()[0]
+            legacy_embedded = connection.execute(
+                """SELECT COUNT(*) FROM intelligence_checkpoints c
+                LEFT JOIN market_observation_references r ON r.checkpoint_id=c.checkpoint_id
+                WHERE c.market_value IS NOT NULL AND r.reference_id IS NULL"""
+            ).fetchone()[0]
+            no_market_evidence = connection.execute(
+                """SELECT COUNT(*) FROM intelligence_checkpoints c
+                JOIN market_observation_references r ON r.checkpoint_id=c.checkpoint_id
+                WHERE c.market_value IS NULL AND r.observation_id IS NULL"""
+            ).fetchone()[0]
+            page_count = connection.execute("PRAGMA page_count").fetchone()[0]
+            page_size = connection.execute("PRAGMA page_size").fetchone()[0]
+        durable_migration = {
+            "checkpoints_examined": (
+                migrated_exactly + legacy_embedded + no_market_evidence
+            ),
+            "migratable_exactly": migrated_exactly,
+            "migratable_with_shared_observation": migrated_shared,
+            "legacy_embedded_evidence": legacy_embedded,
+            "no_market_evidence": no_market_evidence,
+            "unavailable": no_market_evidence,
+            "equivalence_failures": legacy_embedded,
+            "last_run": dict(self._migration_summary),
+        }
+        return {
+            "status": "healthy", "observation_count": observations,
+            "reference_count": references, "unavailable_references": unavailable,
+            "observations_reused": reused, "cross_league_reuse_count": cross_league,
+            "duplicate_observation_writes_avoided": reused,
+            "observations_by_asset_type": by_asset, "market_contexts": contexts,
+            "materiality_policy_version": MarketObservationMaterialityPolicy().version,
+            "observation_bytes": observation_bytes, "reference_bytes": reference_bytes,
+            "references_by_trigger": references_by_trigger,
+            "observations_by_provenance": observations_by_provenance,
+            "database_allocated_bytes": page_count * page_size,
+            "request_time_writes": 0, "league_id_in_observation_identity": False,
+            "historical_observation_current_fallback": 0,
+            "checkpoint_migration": durable_migration,
+        }
+
+    def migrate_embedded_market_evidence(self) -> dict[str, int]:
+        """Link exact legacy evidence without rewriting or discarding embedded facts."""
+        from .market_memory import market_context_id
+
+        counts = {
+            "checkpoints_examined": 0, "migratable_exactly": 0,
+            "migratable_with_shared_observation": 0,
+            "legacy_embedded_evidence": 0, "no_market_evidence": 0,
+            "unavailable": 0, "references_created": 0,
+            "observations_created": 0, "equivalence_failures": 0,
+        }
+        with self._connect() as connection:
+            rows = connection.execute(
+                """SELECT * FROM intelligence_checkpoints
+                WHERE checkpoint_id NOT IN (
+                  SELECT checkpoint_id FROM market_observation_references
+                ) ORDER BY observed_at,checkpoint_id"""
+            ).fetchall()
+        for row in rows:
+            counts["checkpoints_examined"] += 1
+            checkpoint = self._decode(row)
+            if checkpoint.market_value is None:
+                counts["no_market_evidence"] += 1
+                _, inserted = self.put_reference(
+                    checkpoint, None, MarketObservationDecision.UNAVAILABLE,
+                )
+                counts["references_created"] += int(inserted)
+                counts["unavailable"] += 1
+                continue
+            if not checkpoint.provenance_type.definitive_process_evidence:
+                counts["legacy_embedded_evidence"] += 1
+                continue
+            try:
+                observation, decision, created = self.resolve_observation(
+                    checkpoint,
+                    market_context_id=market_context_id(
+                        asset_type=checkpoint.asset_type,
+                        scoring_profile_id=checkpoint.scoring_profile_id,
+                    ),
+                )
+                if observation is None:
+                    raise ValueError("Exact market evidence did not resolve an observation.")
+                reference, inserted = self.put_reference(checkpoint, observation, decision)
+                with self._lock, self._connect() as connection:
+                    connection.execute(
+                        """UPDATE intelligence_checkpoints
+                        SET global_market_observation_id=?
+                        WHERE checkpoint_id=? AND global_market_observation_id IS NULL""",
+                        (observation.observation_id, reference.checkpoint_id),
+                    )
+                counts["migratable_exactly"] += 1
+                counts["migratable_with_shared_observation"] += int(
+                    decision is MarketObservationDecision.REUSED_OBSERVATION
+                )
+                counts["observations_created"] += int(created)
+                counts["references_created"] += int(inserted)
+            except Exception:
+                counts["equivalence_failures"] += 1
+                counts["legacy_embedded_evidence"] += 1
+        return counts
 
     def event_exists(
         self, *, league_id: str | None, event_id: str, asset_id: str,
@@ -280,12 +738,28 @@ class IntelligenceCheckpointStore:
 
     def storage_estimates(self) -> dict[str, Any]:
         health = self.health()
+        market = self.market_memory_health()
         count = int(health["checkpoint_count"])
         average = int(health["bytes"] / count) if count else 1024
+        observations = int(market["observation_count"])
+        references = int(market["reference_count"])
+        observation_average = int(market["observation_bytes"] / observations) if observations else 1024
+        reference_average = int(market["reference_bytes"] / references) if references else 256
         return {
             "average_bytes_per_checkpoint": average,
             "30_leagues": average * 3_000,
             "100_leagues": average * 10_000,
             "1000_leagues": average * 100_000,
-            "assumption": "100 meaningful checkpoints per league; excludes disposable provider caches",
+            "100000_leagues": average * 10_000_000,
+            "global_sparse_market": {
+                "average_bytes_per_observation": observation_average,
+                "average_bytes_per_reference": reference_average,
+                "observation_growth_driver": "meaningful_global_market_state_changes",
+                "reference_growth_driver": "meaningful_league_and_global_events",
+                "league_count_is_not_observation_growth_driver": True,
+            },
+            "assumption": (
+                "100 compact event references per league; global observations grow only "
+                "with materially distinct market states; excludes disposable provider caches"
+            ),
         }

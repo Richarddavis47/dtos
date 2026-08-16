@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.10.28 - Global Sparse Market Memory & Cross-League Deduplication
+
+- Added immutable global market observations keyed by asset, provider-compatible
+  market context, and versioned semantic market state rather than league ID.
+- Added lightweight league-event references with deterministic reuse,
+  unavailable-state handling, temporal safeguards, and transactional writes.
+- Migrated compatible embedded checkpoint evidence without deleting or rewriting
+  legacy evidence that cannot be proven equivalent.
+- Made scheduled market benchmarks global and idempotent across leagues while
+  preserving bounded affected-asset capture for trades, waivers, drafts, and NFL events.
+- Added bounded public-safe health and sparse asset timeline APIs with storage,
+  provenance, reference, reuse, and cross-league diagnostics.
+- Preserved fresh-provider current intelligence, retired HistoricalStore guards,
+  one-worker lifecycle behavior, and private-league isolation.
+
 ## v1.10.27 - HistoricalStore Physical Retirement & Disk Reclamation
 
 - Added a path-specific fail-closed retirement guard that prevents the configured
