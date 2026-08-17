@@ -15,6 +15,8 @@ from src.core.inspection.live_capture_worker import (
 )
 from src.core.inspection.live_capture_process import capture_page_isolated
 from src.core.inspection.live_capture_process import (
+    CAPTURE_PROCESS_CONTINUE_SIGNAL,
+    CAPTURE_PROCESS_STOP_SIGNAL,
     _isolate_capture_tree_cpu,
     _lower_tree_priority,
     _partition_request_cpu,
@@ -133,6 +135,10 @@ class LiveVisualProcessTests(unittest.TestCase):
                     "src.core.inspection.live_capture_process.psutil.Process",
                     return_value=root,
                 ), \
+                patch(
+                    "src.core.inspection.live_capture_process.os.killpg",
+                    side_effect=OSError, create=True,
+                ), \
                 patch("src.core.inspection.live_capture_process.time.sleep") as sleep, \
                 patch("src.core.inspection.live_capture_process.request_active", return_value=False):
             self.assertTrue(_yield_capture_cpu(process))
@@ -150,6 +156,10 @@ class LiveVisualProcessTests(unittest.TestCase):
         root.children.return_value = []
         with patch("src.core.inspection.live_capture_process.sys.platform", "linux"), \
                 patch("src.core.inspection.live_capture_process.psutil.Process", return_value=root), \
+                patch(
+                    "src.core.inspection.live_capture_process.os.killpg",
+                    side_effect=OSError, create=True,
+                ), \
                 patch("src.core.inspection.live_capture_process.time.sleep"), \
                 patch("src.core.inspection.live_capture_process.request_active", return_value=True), \
                 patch(
@@ -160,6 +170,25 @@ class LiveVisualProcessTests(unittest.TestCase):
         wait.assert_called_once_with(0.048)
         root.suspend.assert_called_once_with()
         root.resume.assert_called_once_with()
+
+    def test_linux_capture_atomically_suspends_its_complete_process_group(self):
+        process = unittest.mock.Mock(pid=12_345)
+        process.poll.return_value = None
+        with patch("src.core.inspection.live_capture_process.sys.platform", "linux"), \
+                patch("src.core.inspection.live_capture_process.time.sleep"), \
+                patch("src.core.inspection.live_capture_process.request_active", return_value=True), \
+                patch("src.core.inspection.live_capture_process.wait_for_request_idle"), \
+                patch("src.core.inspection.live_capture_process.os.killpg", create=True) as killpg, \
+                patch("src.core.inspection.live_capture_process.psutil.Process") as psutil_process:
+            self.assertTrue(_yield_capture_cpu(process))
+        self.assertEqual(
+            [call.args for call in killpg.call_args_list],
+            [
+                (12_345, CAPTURE_PROCESS_STOP_SIGNAL),
+                (12_345, CAPTURE_PROCESS_CONTINUE_SIGNAL),
+            ],
+        )
+        psutil_process.assert_not_called()
 
     def test_non_linux_capture_tree_uses_ordinary_poll_interval(self):
         process = unittest.mock.Mock(pid=12_345)

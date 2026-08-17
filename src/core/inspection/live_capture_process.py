@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import signal
 import subprocess
 import sys
 import time
@@ -21,6 +23,8 @@ CAPTURE_CPU_RUN_SECONDS = 0.01
 CAPTURE_CPU_PAUSE_SECONDS = 0.02
 CAPTURE_REQUEST_RUN_SECONDS = 0.002
 CAPTURE_REQUEST_PAUSE_SECONDS = 0.048
+CAPTURE_PROCESS_STOP_SIGNAL = getattr(signal, "SIGSTOP", 19)
+CAPTURE_PROCESS_CONTINUE_SIGNAL = getattr(signal, "SIGCONT", 18)
 
 
 def _lower_tree_priority(pid: int) -> int | None:
@@ -112,15 +116,20 @@ def _yield_capture_cpu(process: subprocess.Popen[bytes]) -> bool:
     if process.poll() is not None:
         return True
     suspended: list[psutil.Process] = []
+    process_group_suspended = False
     try:
-        root = psutil.Process(process.pid)
-        targets = [*root.children(recursive=True), root]
-        for target in targets:
-            try:
-                target.suspend()
-                suspended.append(target)
-            except psutil.Error:
-                continue
+        try:
+            os.killpg(process.pid, CAPTURE_PROCESS_STOP_SIGNAL)
+            process_group_suspended = True
+        except (AttributeError, OSError):
+            root = psutil.Process(process.pid)
+            targets = [*root.children(recursive=True), root]
+            for target in targets:
+                try:
+                    target.suspend()
+                    suspended.append(target)
+                except psutil.Error:
+                    continue
         if request_priority or request_active():
             wait_for_request_idle(CAPTURE_REQUEST_PAUSE_SECONDS)
         else:
@@ -128,12 +137,18 @@ def _yield_capture_cpu(process: subprocess.Popen[bytes]) -> bool:
     except psutil.Error:
         pass
     finally:
-        for target in reversed(suspended):
+        if process_group_suspended:
             try:
-                target.resume()
-            except psutil.Error:
+                os.killpg(process.pid, CAPTURE_PROCESS_CONTINUE_SIGNAL)
+            except (AttributeError, OSError):
                 pass
-    return bool(suspended)
+        else:
+            for target in reversed(suspended):
+                try:
+                    target.resume()
+                except psutil.Error:
+                    pass
+    return process_group_suspended or bool(suspended)
 
 
 def _terminate_tree(process: subprocess.Popen[bytes]) -> None:
@@ -181,6 +196,7 @@ def capture_page_isolated(
             [sys.executable, "-m", "src.core.inspection.live_capture_worker",
              "--input", str(input_path), "--result", str(result_path)],
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=sys.platform.startswith("linux"),
         )
         tree_nice_min = _lower_tree_priority(process.pid)
         cpu_isolation = _isolate_capture_tree_cpu(
