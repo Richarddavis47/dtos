@@ -167,7 +167,7 @@ class LiveVisualProcessTests(unittest.TestCase):
                     return_value=False,
                 ) as wait:
             self.assertTrue(_yield_capture_cpu(process))
-        wait.assert_called_once_with(0.048)
+        wait.assert_called_once_with(0.098)
         root.suspend.assert_called_once_with()
         root.resume.assert_called_once_with()
 
