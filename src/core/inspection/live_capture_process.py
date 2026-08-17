@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import json
-import os
-import signal
 import subprocess
 import sys
 import time
@@ -20,8 +18,6 @@ CAPTURE_PROCESS_POLL_SECONDS = 0.05
 CAPTURE_TREE_NICE = 19
 CAPTURE_CPU_RUN_SECONDS = 0.01
 CAPTURE_CPU_PAUSE_SECONDS = 0.02
-CAPTURE_STOP_SIGNAL = getattr(signal, "SIGSTOP", 19)
-CAPTURE_CONTINUE_SIGNAL = getattr(signal, "SIGCONT", 18)
 
 
 def _lower_tree_priority(pid: int) -> int | None:
@@ -109,21 +105,26 @@ def _yield_capture_cpu(process: subprocess.Popen[bytes]) -> bool:
     time.sleep(CAPTURE_CPU_RUN_SECONDS)
     if process.poll() is not None:
         return True
-    stopped = False
+    suspended: list[psutil.Process] = []
     try:
-        group = os.getpgid(process.pid)
-        os.killpg(group, CAPTURE_STOP_SIGNAL)
-        stopped = True
+        root = psutil.Process(process.pid)
+        targets = [*root.children(recursive=True), root]
+        for target in targets:
+            try:
+                target.suspend()
+                suspended.append(target)
+            except psutil.Error:
+                continue
         time.sleep(CAPTURE_CPU_PAUSE_SECONDS)
-    except (OSError, ProcessLookupError):
+    except psutil.Error:
         pass
     finally:
-        if stopped:
+        for target in reversed(suspended):
             try:
-                os.killpg(group, CAPTURE_CONTINUE_SIGNAL)
-            except (OSError, ProcessLookupError):
+                target.resume()
+            except psutil.Error:
                 pass
-    return stopped
+    return bool(suspended)
 
 
 def _terminate_tree(process: subprocess.Popen[bytes]) -> None:
@@ -167,14 +168,10 @@ def capture_page_isolated(
     cpu_throttle_cycles = 0
     cpu_partition = _partition_request_cpu()
     try:
-        process_options: dict[str, Any] = {}
-        if sys.platform.startswith("linux"):
-            process_options["start_new_session"] = True
         process = subprocess.Popen(
             [sys.executable, "-m", "src.core.inspection.live_capture_worker",
              "--input", str(input_path), "--result", str(result_path)],
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            **process_options,
         )
         tree_nice_min = _lower_tree_priority(process.pid)
         cpu_isolation = _isolate_capture_tree_cpu(

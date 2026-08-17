@@ -126,21 +126,20 @@ class LiveVisualProcessTests(unittest.TestCase):
     def test_linux_capture_tree_yields_in_bounded_cpu_slices(self):
         process = unittest.mock.Mock(pid=12_345)
         process.poll.return_value = None
+        root, browser = unittest.mock.Mock(), unittest.mock.Mock()
+        root.children.return_value = [browser]
         with patch("src.core.inspection.live_capture_process.sys.platform", "linux"), \
                 patch(
-                    "src.core.inspection.live_capture_process.os.getpgid",
-                    return_value=22, create=True,
-                ) as getpgid, \
-                patch(
-                    "src.core.inspection.live_capture_process.os.killpg", create=True,
-                ) as killpg, \
+                    "src.core.inspection.live_capture_process.psutil.Process",
+                    return_value=root,
+                ), \
                 patch("src.core.inspection.live_capture_process.time.sleep") as sleep:
             self.assertTrue(_yield_capture_cpu(process))
-        getpgid.assert_called_once_with(12_345)
-        self.assertEqual(
-            [call.args for call in killpg.call_args_list],
-            [(22, 19), (22, 18)],
-        )
+        root.children.assert_called_once_with(recursive=True)
+        browser.suspend.assert_called_once_with()
+        root.suspend.assert_called_once_with()
+        root.resume.assert_called_once_with()
+        browser.resume.assert_called_once_with()
         self.assertEqual([call.args for call in sleep.call_args_list], [(0.01,), (0.02,)])
 
     def test_non_linux_capture_tree_uses_ordinary_poll_interval(self):
