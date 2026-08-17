@@ -16,8 +16,8 @@ from src.core.inspection.live_visual import CaptureRequest
 CAPTURE_PROCESS_TIMEOUT_SECONDS = 120.0
 CAPTURE_PROCESS_POLL_SECONDS = 0.05
 CAPTURE_TREE_NICE = 19
-CAPTURE_CPU_RUN_SECONDS = 0.01
-CAPTURE_CPU_PAUSE_SECONDS = 0.02
+CAPTURE_CPU_RUN_SECONDS = 0.005
+CAPTURE_CPU_PAUSE_SECONDS = 0.045
 
 
 def _lower_tree_priority(pid: int) -> int | None:

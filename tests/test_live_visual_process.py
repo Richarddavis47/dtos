@@ -140,7 +140,7 @@ class LiveVisualProcessTests(unittest.TestCase):
         root.suspend.assert_called_once_with()
         root.resume.assert_called_once_with()
         browser.resume.assert_called_once_with()
-        self.assertEqual([call.args for call in sleep.call_args_list], [(0.01,), (0.02,)])
+        self.assertEqual([call.args for call in sleep.call_args_list], [(0.005,), (0.045,)])
 
     def test_non_linux_capture_tree_uses_ordinary_poll_interval(self):
         process = unittest.mock.Mock(pid=12_345)
