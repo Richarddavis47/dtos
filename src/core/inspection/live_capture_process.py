@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import signal
 import subprocess
 import sys
 import time
@@ -16,6 +18,10 @@ from src.core.inspection.live_visual import CaptureRequest
 CAPTURE_PROCESS_TIMEOUT_SECONDS = 120.0
 CAPTURE_PROCESS_POLL_SECONDS = 0.05
 CAPTURE_TREE_NICE = 19
+CAPTURE_CPU_RUN_SECONDS = 0.01
+CAPTURE_CPU_PAUSE_SECONDS = 0.02
+CAPTURE_STOP_SIGNAL = getattr(signal, "SIGSTOP", 19)
+CAPTURE_CONTINUE_SIGNAL = getattr(signal, "SIGCONT", 18)
 
 
 def _lower_tree_priority(pid: int) -> int | None:
@@ -36,7 +42,7 @@ def _lower_tree_priority(pid: int) -> int | None:
 
 
 def _partition_request_cpu() -> tuple[list[int], list[int]] | None:
-    """Co-locate capture with request serving so nice priority can preempt it."""
+    """Confine capture to one Linux CPU while retaining request capacity."""
     if not sys.platform.startswith("linux"):
         return None
     try:
@@ -44,9 +50,8 @@ def _partition_request_cpu() -> tuple[list[int], list[int]] | None:
         allowed = process.cpu_affinity()
         if len(allowed) < 2:
             return None
-        shared = [allowed[0]]
-        process.cpu_affinity(shared)
-        return allowed, shared
+        process.cpu_affinity(allowed[:-1])
+        return allowed, [allowed[-1]]
     except (psutil.Error, AttributeError, OSError, ValueError):
         return None
 
@@ -96,6 +101,31 @@ def _tree_rss(pid: int) -> tuple[int, int, int]:
         return 0, 0, 0
 
 
+def _yield_capture_cpu(process: subprocess.Popen[bytes]) -> bool:
+    """Bound capture CPU bursts so request serving receives scheduling windows."""
+    if not sys.platform.startswith("linux"):
+        time.sleep(CAPTURE_PROCESS_POLL_SECONDS)
+        return False
+    time.sleep(CAPTURE_CPU_RUN_SECONDS)
+    if process.poll() is not None:
+        return True
+    stopped = False
+    try:
+        group = os.getpgid(process.pid)
+        os.killpg(group, CAPTURE_STOP_SIGNAL)
+        stopped = True
+        time.sleep(CAPTURE_CPU_PAUSE_SECONDS)
+    except (OSError, ProcessLookupError):
+        pass
+    finally:
+        if stopped:
+            try:
+                os.killpg(group, CAPTURE_CONTINUE_SIGNAL)
+            except (OSError, ProcessLookupError):
+                pass
+    return stopped
+
+
 def _terminate_tree(process: subprocess.Popen[bytes]) -> None:
     """Terminate browser descendants before the orchestration process."""
     try:
@@ -134,12 +164,17 @@ def capture_page_isolated(
     browser_process_peak = 0
     tree_nice_min: int | None = None
     cpu_isolation: tuple[int, int] | None = None
+    cpu_throttle_cycles = 0
     cpu_partition = _partition_request_cpu()
     try:
+        process_options: dict[str, Any] = {}
+        if sys.platform.startswith("linux"):
+            process_options["start_new_session"] = True
         process = subprocess.Popen(
             [sys.executable, "-m", "src.core.inspection.live_capture_worker",
              "--input", str(input_path), "--result", str(result_path)],
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            **process_options,
         )
         tree_nice_min = _lower_tree_priority(process.pid)
         cpu_isolation = _isolate_capture_tree_cpu(
@@ -168,7 +203,8 @@ def capture_page_isolated(
             worker_peak = max(worker_peak, worker_rss)
             browser_peak = max(browser_peak, browser_rss)
             browser_process_peak = max(browser_process_peak, browser_processes)
-            time.sleep(CAPTURE_PROCESS_POLL_SECONDS)
+            if _yield_capture_cpu(process):
+                cpu_throttle_cycles += 1
         if process.returncode != 0 or not result_path.is_file():
             raise RuntimeError("isolated visual capture exited unsuccessfully")
         value = json.loads(result_path.read_text(encoding="utf-8"))
@@ -184,6 +220,9 @@ def capture_page_isolated(
             "capture_tree_nice_min": tree_nice_min,
             "available_cpu_count": cpu_isolation[0] if cpu_isolation else None,
             "capture_cpu_count": cpu_isolation[1] if cpu_isolation else None,
+            "capture_cpu_run_ms": CAPTURE_CPU_RUN_SECONDS * 1000,
+            "capture_cpu_pause_ms": CAPTURE_CPU_PAUSE_SECONDS * 1000,
+            "capture_cpu_throttle_cycles": cpu_throttle_cycles,
             "exit_status": process.returncode, "cleanup_complete": True,
         }}
     finally:

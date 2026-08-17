@@ -19,6 +19,7 @@ from src.core.inspection.live_capture_process import (
     _lower_tree_priority,
     _partition_request_cpu,
     _restore_request_cpu,
+    _yield_capture_cpu,
 )
 from src.core.inspection.live_visual import CaptureRequest
 
@@ -103,7 +104,7 @@ class LiveVisualProcessTests(unittest.TestCase):
         root.cpu_affinity.assert_any_call([4])
         browser.cpu_affinity.assert_called_once_with([4])
 
-    def test_linux_parent_shares_capture_cpu_for_priority_preemption_and_restores(self):
+    def test_linux_parent_reserves_and_restores_capture_cpu(self):
         parent = unittest.mock.Mock()
         parent.cpu_affinity.return_value = [2, 4]
         with patch("src.core.inspection.live_capture_process.sys.platform", "linux"), \
@@ -111,7 +112,7 @@ class LiveVisualProcessTests(unittest.TestCase):
                     "src.core.inspection.live_capture_process.psutil.Process",
                     return_value=parent,
                 ):
-            self.assertEqual(_partition_request_cpu(), ([2, 4], [2]))
+            self.assertEqual(_partition_request_cpu(), ([2, 4], [4]))
             parent.cpu_affinity.assert_any_call([2])
             _restore_request_cpu([2, 4])
             parent.cpu_affinity.assert_any_call([2, 4])
@@ -121,6 +122,33 @@ class LiveVisualProcessTests(unittest.TestCase):
                 patch("src.core.inspection.live_capture_process.psutil.Process") as process:
             self.assertIsNone(_isolate_capture_tree_cpu(12_345))
         process.assert_not_called()
+
+    def test_linux_capture_tree_yields_in_bounded_cpu_slices(self):
+        process = unittest.mock.Mock(pid=12_345)
+        process.poll.return_value = None
+        with patch("src.core.inspection.live_capture_process.sys.platform", "linux"), \
+                patch(
+                    "src.core.inspection.live_capture_process.os.getpgid",
+                    return_value=22, create=True,
+                ) as getpgid, \
+                patch(
+                    "src.core.inspection.live_capture_process.os.killpg", create=True,
+                ) as killpg, \
+                patch("src.core.inspection.live_capture_process.time.sleep") as sleep:
+            self.assertTrue(_yield_capture_cpu(process))
+        getpgid.assert_called_once_with(12_345)
+        self.assertEqual(
+            [call.args for call in killpg.call_args_list],
+            [(22, 19), (22, 18)],
+        )
+        self.assertEqual([call.args for call in sleep.call_args_list], [(0.01,), (0.02,)])
+
+    def test_non_linux_capture_tree_uses_ordinary_poll_interval(self):
+        process = unittest.mock.Mock(pid=12_345)
+        with patch("src.core.inspection.live_capture_process.sys.platform", "win32"), \
+                patch("src.core.inspection.live_capture_process.time.sleep") as sleep:
+            self.assertFalse(_yield_capture_cpu(process))
+        sleep.assert_called_once_with(0.05)
 
     def test_worker_failure_is_sanitized(self):
         with tempfile.TemporaryDirectory() as folder:
