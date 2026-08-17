@@ -35,25 +35,52 @@ def _lower_tree_priority(pid: int) -> int | None:
     return min(observed) if observed else None
 
 
-def _isolate_capture_tree_cpu(pid: int) -> tuple[int, int] | None:
+def _partition_request_cpu() -> tuple[list[int], list[int]] | None:
+    """Reserve one eligible Linux CPU before the capture child is created."""
+    if not sys.platform.startswith("linux"):
+        return None
+    try:
+        process = psutil.Process()
+        allowed = process.cpu_affinity()
+        if len(allowed) < 2:
+            return None
+        process.cpu_affinity(allowed[:-1])
+        return allowed, [allowed[-1]]
+    except (psutil.Error, AttributeError, OSError, ValueError):
+        return None
+
+
+def _restore_request_cpu(affinity: list[int] | None) -> None:
+    if affinity is None:
+        return
+    try:
+        psutil.Process().cpu_affinity(affinity)
+    except (psutil.Error, AttributeError, OSError, ValueError):
+        pass
+
+
+def _isolate_capture_tree_cpu(
+    pid: int, capture_affinity: list[int] | None = None,
+    *, available_count: int | None = None,
+) -> tuple[int, int] | None:
     """Confine capture work to one Linux CPU so request serving retains capacity."""
     if not sys.platform.startswith("linux"):
         return None
     try:
         process = psutil.Process(pid)
-        allowed = process.cpu_affinity()
+        allowed = capture_affinity or process.cpu_affinity()
         if not allowed:
             return None
-        capture_affinity = [allowed[-1]]
+        selected = list(capture_affinity or [allowed[-1]])
         targets = [process, *process.children(recursive=True)]
     except (psutil.Error, AttributeError, OSError):
         return None
     for target in targets:
         try:
-            target.cpu_affinity(capture_affinity)
+            target.cpu_affinity(selected)
         except (psutil.Error, AttributeError, OSError, ValueError):
             continue
-    return len(allowed), len(capture_affinity)
+    return int(available_count or len(allowed)), len(selected)
 
 
 def _tree_rss(pid: int) -> tuple[int, int, int]:
@@ -106,6 +133,7 @@ def capture_page_isolated(
     browser_process_peak = 0
     tree_nice_min: int | None = None
     cpu_isolation: tuple[int, int] | None = None
+    cpu_partition = _partition_request_cpu()
     try:
         process = subprocess.Popen(
             [sys.executable, "-m", "src.core.inspection.live_capture_worker",
@@ -113,14 +141,22 @@ def capture_page_isolated(
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
         tree_nice_min = _lower_tree_priority(process.pid)
-        cpu_isolation = _isolate_capture_tree_cpu(process.pid)
+        cpu_isolation = _isolate_capture_tree_cpu(
+            process.pid,
+            cpu_partition[1] if cpu_partition else None,
+            available_count=len(cpu_partition[0]) if cpu_partition else None,
+        )
         while process.poll() is None:
             if time.monotonic() - started >= timeout:
                 _terminate_tree(process)
                 raise TimeoutError("isolated visual capture exceeded its bounded timeout")
             worker_rss, browser_rss, browser_processes = _tree_rss(process.pid)
             observed_nice = _lower_tree_priority(process.pid)
-            observed_isolation = _isolate_capture_tree_cpu(process.pid)
+            observed_isolation = _isolate_capture_tree_cpu(
+                process.pid,
+                cpu_partition[1] if cpu_partition else None,
+                available_count=len(cpu_partition[0]) if cpu_partition else None,
+            )
             if observed_isolation is not None:
                 cpu_isolation = observed_isolation
             if observed_nice is not None:
@@ -152,5 +188,6 @@ def capture_page_isolated(
     finally:
         if process is not None and process.poll() is None:
             _terminate_tree(process)
+        _restore_request_cpu(cpu_partition[0] if cpu_partition else None)
         input_path.unlink(missing_ok=True)
         result_path.unlink(missing_ok=True)

@@ -17,6 +17,8 @@ from src.core.inspection.live_capture_process import capture_page_isolated
 from src.core.inspection.live_capture_process import (
     _isolate_capture_tree_cpu,
     _lower_tree_priority,
+    _partition_request_cpu,
+    _restore_request_cpu,
 )
 from src.core.inspection.live_visual import CaptureRequest
 
@@ -100,6 +102,19 @@ class LiveVisualProcessTests(unittest.TestCase):
             self.assertEqual(_isolate_capture_tree_cpu(12_345), (2, 1))
         root.cpu_affinity.assert_any_call([4])
         browser.cpu_affinity.assert_called_once_with([4])
+
+    def test_linux_parent_reserves_and_restores_capture_cpu(self):
+        parent = unittest.mock.Mock()
+        parent.cpu_affinity.return_value = [2, 4]
+        with patch("src.core.inspection.live_capture_process.sys.platform", "linux"), \
+                patch(
+                    "src.core.inspection.live_capture_process.psutil.Process",
+                    return_value=parent,
+                ):
+            self.assertEqual(_partition_request_cpu(), ([2, 4], [4]))
+            parent.cpu_affinity.assert_any_call([2])
+            _restore_request_cpu([2, 4])
+            parent.cpu_affinity.assert_any_call([2, 4])
 
     def test_non_linux_parent_does_not_change_cpu_affinity(self):
         with patch("src.core.inspection.live_capture_process.sys.platform", "win32"), \
