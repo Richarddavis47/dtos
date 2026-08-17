@@ -110,7 +110,7 @@ class ExternalVisualMirrorTests(unittest.TestCase):
             self.assertEqual(len(result["entries"]), 8)
             self.assertEqual(len([row for row in result["entries"] if row["surface_id"] == "matchups-1"]), 2)
             self.assertEqual(result["current_manifest_url"],
-                             "https://github.com/Richarddavis47/dtos/releases/latest/download/dtos-live-inspection-current.json")
+                             "https://dtos.example/api/inspect/current-visual/manifest")
             source = fixture["/png/matchups-1/mobile"]
             mirrored = (Path(folder) / "matchup-1-mobile.png").read_bytes()
             self.assertEqual(source, mirrored)

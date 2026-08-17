@@ -201,7 +201,7 @@ def build_mirror(
         "brain_snapshot_id": identity.get("brain_snapshot_id"),
         "asset_market_generation": identity.get("asset_market_generation"),
         "canonical_source": base_url.rstrip("/"), "release_tag": tag,
-        "current_manifest_url": "https://github.com/Richarddavis47/dtos/releases/latest/download/dtos-live-inspection-current.json",
+        "current_manifest_url": f"{base_url.rstrip('/')}/api/inspect/current-visual/manifest",
         "release_manifest_url": f"{download}/{manifest_name}",
         "projection_audit_url": f"{download}/dtos-projection-audit-current.json",
         "surface_catalog_url": f"{download}/dtos-live-surface-catalog.json",

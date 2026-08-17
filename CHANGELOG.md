@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.10.37 - ChatGPT-Inspectable Rolling Visual Mirror
+
+- Added a stable, public current-visual manifest with direct native PNG delivery.
+- Added verified candidate staging, atomic generation promotion, and automatic prior-generation retirement.
+- Reused Live Visual bytes through filesystem links where supported to avoid duplicating DINS or screenshot storage.
+- Added external image decoding, hash, dimension, privacy, and bounded-retention validation.
+
 ## v1.10.36 - Canonical FOIS GM Intelligence, Confidence Calibration & League Leaderboard
 
 - Present exactly one active-tenure, current canonical FOIS evaluation per current GM.

@@ -68,7 +68,13 @@ class LiveVisualService:
             "refresh_deduped": 0,
         }
         self._last_refresh: dict[str, Any] | None = None
+        self._completed_callback: Callable[[], None] | None = None
         self._manifest = self._load_manifest()
+
+    def on_complete(self, callback: Callable[[], None]) -> None:
+        """Publish a derived read model only after a complete capture flight."""
+        with self._lock:
+            self._completed_callback = callback
 
     @property
     def manifest_path(self) -> Path:
@@ -161,15 +167,27 @@ class LiveVisualService:
                 if not self._queue:
                     self._active = None
                     self._browser_processes = 0
-                    return
-                request = self._queue.pop(0)
-                self._active = self.capture_key(request.surface_id, request.viewport)
-                refresh = self._active in self._refresh_keys
-                if refresh:
-                    self._refresh_counts["refresh_started"] += 1
-                    if self._last_refresh and self._last_refresh.get("target_capture_id") == self._active:
-                        self._last_refresh["worker_started_at"] = _now()
-                self._browser_processes = 0
+                    callback = self._completed_callback
+                    completed = True
+                else:
+                    callback = None
+                    completed = False
+                    request = self._queue.pop(0)
+                    self._active = self.capture_key(request.surface_id, request.viewport)
+                    refresh = self._active in self._refresh_keys
+                    if refresh:
+                        self._refresh_counts["refresh_started"] += 1
+                        if self._last_refresh and self._last_refresh.get("target_capture_id") == self._active:
+                            self._last_refresh["worker_started_at"] = _now()
+                    self._browser_processes = 0
+            if completed:
+                if callback is not None:
+                    try:
+                        callback()
+                    except Exception as exc:
+                        with self._lock:
+                            self._last_error = f"{type(exc).__name__}: visual publication failed"
+                return
             folder = self.root / "captures" / _safe_id(request.surface_id)
             folder.mkdir(parents=True, exist_ok=True)
             final = folder / f"{request.viewport}.png"

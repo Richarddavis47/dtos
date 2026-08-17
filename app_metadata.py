@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.10.36"
-BUILD_NUMBER = 1136
-RELEASE_CODENAME = "Canonical FOIS GM Intelligence, Confidence Calibration & League Leaderboard"
+VERSION = "1.10.37"
+BUILD_NUMBER = 1137
+RELEASE_CODENAME = "ChatGPT-Inspectable Rolling Visual Mirror"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
