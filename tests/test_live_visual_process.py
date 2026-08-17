@@ -154,10 +154,10 @@ class LiveVisualProcessTests(unittest.TestCase):
                 patch("src.core.inspection.live_capture_process.request_active", return_value=True), \
                 patch(
                     "src.core.inspection.live_capture_process.wait_for_request_idle",
-                    side_effect=[False, True],
+                    return_value=False,
                 ) as wait:
             self.assertTrue(_yield_capture_cpu(process))
-        self.assertEqual(wait.call_count, 2)
+        wait.assert_called_once_with(0.048)
         root.suspend.assert_called_once_with()
         root.resume.assert_called_once_with()
 

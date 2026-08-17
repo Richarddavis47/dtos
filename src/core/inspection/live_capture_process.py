@@ -19,6 +19,8 @@ CAPTURE_PROCESS_POLL_SECONDS = 0.05
 CAPTURE_TREE_NICE = 19
 CAPTURE_CPU_RUN_SECONDS = 0.01
 CAPTURE_CPU_PAUSE_SECONDS = 0.02
+CAPTURE_REQUEST_RUN_SECONDS = 0.002
+CAPTURE_REQUEST_PAUSE_SECONDS = 0.048
 
 
 def _lower_tree_priority(pid: int) -> int | None:
@@ -103,7 +105,10 @@ def _yield_capture_cpu(process: subprocess.Popen[bytes]) -> bool:
     if not sys.platform.startswith("linux"):
         time.sleep(CAPTURE_PROCESS_POLL_SECONDS)
         return False
-    time.sleep(CAPTURE_CPU_RUN_SECONDS)
+    request_priority = request_active()
+    time.sleep(
+        CAPTURE_REQUEST_RUN_SECONDS if request_priority else CAPTURE_CPU_RUN_SECONDS
+    )
     if process.poll() is not None:
         return True
     suspended: list[psutil.Process] = []
@@ -116,10 +121,8 @@ def _yield_capture_cpu(process: subprocess.Popen[bytes]) -> bool:
                 suspended.append(target)
             except psutil.Error:
                 continue
-        if request_active():
-            while not wait_for_request_idle(CAPTURE_PROCESS_POLL_SECONDS):
-                if process.poll() is not None:
-                    break
+        if request_priority or request_active():
+            wait_for_request_idle(CAPTURE_REQUEST_PAUSE_SECONDS)
         else:
             time.sleep(CAPTURE_CPU_PAUSE_SECONDS)
     except psutil.Error:
@@ -225,6 +228,8 @@ def capture_page_isolated(
             "capture_cpu_count": cpu_isolation[1] if cpu_isolation else None,
             "capture_cpu_run_ms": CAPTURE_CPU_RUN_SECONDS * 1000,
             "capture_cpu_pause_ms": CAPTURE_CPU_PAUSE_SECONDS * 1000,
+            "capture_request_run_ms": CAPTURE_REQUEST_RUN_SECONDS * 1000,
+            "capture_request_pause_ms": CAPTURE_REQUEST_PAUSE_SECONDS * 1000,
             "capture_cpu_throttle_cycles": cpu_throttle_cycles,
             "exit_status": process.returncode, "cleanup_complete": True,
         }}
