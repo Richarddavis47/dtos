@@ -759,6 +759,7 @@ def _start_server(
     memory_observer = memory_observer or (lambda: _cgroup("memory.current"))
     environment = os.environ.copy()
     environment["DTOS_MARKET_PROFILE_MODE"] = mode
+    environment["DTOS_CAPTURE_URL"] = BASE_URL
     command = [
         sys.executable, "-m", "uvicorn",
         "tools.validation.market_profile_app:app", "--host", "127.0.0.1",
@@ -767,6 +768,7 @@ def _start_server(
     evidence.update({
         "command": [Path(command[0]).name, *command[1:]],
         "mode": mode,
+        "capture_origin": "loopback_validation_server",
         "fixture": {
             "cache_file": Path(environment.get("DTOS_CACHE_FILE", "")).name,
             "history_database": Path(

@@ -219,6 +219,7 @@ class LiveVisualProcessTests(unittest.TestCase):
             self.assertEqual(run(input_path, result_path), 1)
             value = json.loads(result_path.read_text(encoding="utf-8"))
             self.assertEqual(value["status"], "failed")
+            self.assertEqual(value["error_code"], "worker_failure")
             self.assertNotIn(str(root), json.dumps(value))
 
     def test_parent_accepts_only_complete_bounded_output_and_cleans_ipc(self):
@@ -265,11 +266,35 @@ class LiveVisualProcessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             output = Path(folder) / ".mobile.partial.png"
             with patch("src.core.inspection.live_capture_process.subprocess.Popen", Process):
-                with self.assertRaisesRegex(RuntimeError, "exited unsuccessfully"):
+                with self.assertRaisesRegex(RuntimeError, "missing_result"):
                     capture_page_isolated(
                         "http://127.0.0.1:8767", self.request(), output,
                     )
             self.assertFalse(any(Path(folder).glob("*.capture-*.json")))
+
+    def test_parent_exposes_only_bounded_child_failure_code(self):
+        class Process:
+            returncode = 1
+            pid = 12_345
+
+            def __init__(self, command, **_kwargs):
+                result = Path(command[command.index("--result") + 1])
+                result.write_text(json.dumps({
+                    "status": "failed", "error_code": "route_not_ready",
+                    "private": "must not escape",
+                }), encoding="utf-8")
+
+            def poll(self):
+                return 1
+
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder) / ".mobile.partial.png"
+            with patch("src.core.inspection.live_capture_process.subprocess.Popen", Process):
+                with self.assertRaisesRegex(RuntimeError, "route_not_ready") as raised:
+                    capture_page_isolated(
+                        "http://127.0.0.1:8767", self.request(), output,
+                    )
+        self.assertNotIn("private", str(raised.exception))
 
 
 if __name__ == "__main__":

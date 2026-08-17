@@ -195,7 +195,7 @@ class LiveVisualService:
                     self._browser_processes = 0
                     self._telemetry["capture_worker_count"] = 0
                     self._capture_finished_at = time.monotonic()
-                    callback = self._completed_callback
+                    callback = self._completed_callback if self._last_error is None else None
                     completed = True
                 else:
                     callback = None

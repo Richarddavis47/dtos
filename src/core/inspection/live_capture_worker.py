@@ -19,8 +19,14 @@ def _lower_capture_priority() -> int | None:
 
 
 def _bounded_error(exc: BaseException) -> dict[str, str]:
+    known = {
+        "Live visual route did not return HTTP 200": "route_not_ready",
+        "Live visual semantic route did not return HTTP 200": "semantic_route_not_ready",
+        "Rendered matchup does not match canonical presentation": "presentation_mismatch",
+    }
     return {"status": "failed", "error_type": type(exc).__name__,
-            "error": "isolated visual capture failed"}
+            "error": "isolated visual capture failed",
+            "error_code": known.get(str(exc), "worker_failure")}
 
 
 def run(input_path: Path, result_path: Path) -> int:

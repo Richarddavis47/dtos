@@ -236,7 +236,16 @@ def capture_page_isolated(
             if _yield_capture_cpu(process, dedicated_cpu=cpu_isolation is not None):
                 cpu_throttle_cycles += 1
         if process.returncode != 0 or not result_path.is_file():
-            raise RuntimeError("isolated visual capture exited unsuccessfully")
+            code = "missing_result"
+            if result_path.is_file():
+                try:
+                    failed = json.loads(result_path.read_text(encoding="utf-8"))
+                    candidate = str(failed.get("error_code") or "worker_failure")
+                    if candidate.replace("_", "").isalnum():
+                        code = candidate
+                except (OSError, json.JSONDecodeError, AttributeError):
+                    pass
+            raise RuntimeError(f"isolated visual capture failed ({code})")
         value = json.loads(result_path.read_text(encoding="utf-8"))
         if value.get("status") != "complete" or not isinstance(value.get("presentation"), dict):
             raise RuntimeError("isolated visual capture returned malformed output")

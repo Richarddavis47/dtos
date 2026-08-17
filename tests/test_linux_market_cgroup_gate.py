@@ -817,15 +817,23 @@ class RestartReuseValidationTests(unittest.TestCase):
 
     def test_successful_startup_records_bounded_observation(self) -> None:
         process = _FakeProcess([None])
+        launched: dict[str, object] = {}
+
+        def start(*_args, **kwargs):
+            launched.update(kwargs)
+            return process
+
         with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
             evidence: dict[str, object] = {}
             result = _start_server(
                 log, evidence=evidence,
-                popen_factory=lambda *_args, **_kwargs: process,
+                popen_factory=start,
                 request_observer=lambda _path: (200, b"{}", 1.25),
                 memory_observer=lambda: 512,
             )
         self.assertIs(result, process)
+        self.assertEqual(launched["env"]["DTOS_CAPTURE_URL"], "http://127.0.0.1:8767")
+        self.assertEqual(evidence["capture_origin"], "loopback_validation_server")
         self.assertEqual(evidence["termination"], "running")
         self.assertEqual(evidence["observations"][0]["status"], 200)
         self.assertNotIn(str(Path(sys.executable).parent), json.dumps(evidence))

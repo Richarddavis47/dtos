@@ -151,6 +151,22 @@ class LiveVisualInspectionTests(unittest.TestCase):
             self.assertEqual(service.capture("matchups-1", "mobile")["status"], "stale")
             self.assertNotIn("private fixture detail", service.health(1)["last_error"])
 
+    def test_failed_flight_does_not_run_publication_callback_or_hide_error(self):
+        publications = []
+
+        def capture(_item, _output):
+            raise RuntimeError("private fixture detail")
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            service.on_complete(lambda: publications.append("published"))
+            service.schedule([request()])
+            service.wait()
+            health = service.health(1)
+        self.assertEqual(publications, [])
+        self.assertEqual(health["captures_failed"], 1)
+        self.assertEqual(health["last_error"], "RuntimeError: capture failed")
+
     def test_matchups_mobile_transient_failure_retries_once_and_recovers(self):
         calls = 0
 
