@@ -27,6 +27,8 @@ PageRenderer = Callable[..., HTMLResponse]
 historical_store = canonical_history_store
 home_render_cache = GenerationRenderCache("home", max_entries=8)
 market_render_cache = GenerationRenderCache("market", max_entries=24)
+home_body_render_cache = GenerationRenderCache("home_body", max_entries=8)
+market_body_render_cache = GenerationRenderCache("market_body", max_entries=24)
 
 
 def _value(
@@ -101,6 +103,8 @@ def create_market_router(
             "render_caches": {
                 "home": home_render_cache.health(),
                 "market": market_render_cache.health(),
+                "home_body": home_body_render_cache.health(),
+                "market_body": market_body_render_cache.health(),
             },
             "reason": (
                 None if health["status"] == "ready"
@@ -166,8 +170,17 @@ def create_market_router(
             direction, front_office, selected, offset, limit,
         )
         render_cache = home_render_cache if route_variant == "home" else market_render_cache
+        body_cache = (
+            home_body_render_cache
+            if route_variant == "home" else market_body_render_cache
+        )
+        body_key = (
+            route_variant, selected_league, generation, market.dataset_version,
+            VERSION, BUILD_NUMBER, q, position, availability, sort,
+            direction, front_office, selected, offset, limit,
+        )
 
-        def render() -> bytes:
+        def render_body() -> bytes:
             result = market.search(q, limit) if q else market.directory(
                 offset=offset, limit=limit, sort=sort, direction=direction,
                 position=position or None, availability=availability or None,
@@ -210,6 +223,12 @@ def create_market_router(
                     for value, label in values
                 )
             body = f'''<p class="eyebrow">DTOS v{VERSION}</p><h2>Asset Market &amp; Dynasty Exchange</h2><p class="muted">One canonical, explainable market for players, free agents, picks, and connected league history. Values remain separate; unavailable evidence is never substituted.</p><form class="card" method="get" action="/market" aria-label="Asset Market filters"><label for="market-search">Search players, picks, teams, managers, trades, and transactions</label><input id="market-search" name="q" value="{escape(q)}" placeholder="Josh Allen or 2028 1st"><label for="market-position">Position</label><select id="market-position" name="position"><option value="">All assets</option>{options(((item,item) for item in ("QB","RB","WR","TE","PICK")), position)}</select><label for="market-availability">Availability</label><select id="market-availability" name="availability"><option value="">All availability</option>{options((("rostered","Rostered"),("day_traders_free_agent","Free Agents"),("taxi","Taxi"),("retired","Retired"),("owned_pick","Picks")), availability)}</select><label for="market-sort">Sort</label><select id="market-sort" name="sort">{options(((item,item.title()) for item in ("market","intrinsic","contender","rebuilder","confidence","risk","liquidity")), sort)}</select><input type="hidden" name="front_office" value="{front_office or ''}"><button class="btn" type="submit">Apply market view</button></form><div class="card"><p><b>{result.get("total", result.get("count", 0))}</b> matching assets · Dataset <code>{escape(market.dataset_version[:12])}</code> · Stable tie-break: canonical asset ID</p><div style="overflow-x:auto"><table><caption>Canonical dynasty asset rankings</caption><thead><tr><th>Rank</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No canonical assets match these filters.</td></tr>'}</tbody></table></div><nav aria-label="Market pagination"><a href="/market?offset={max(0, offset-limit)}&limit={limit}&sort={escape(sort)}">Previous</a> · <a href="/market?offset={offset+limit}&limit={limit}&sort={escape(sort)}">Next</a></nav></div>{expanded}<section class="card"><h3>Trending Market</h3><p>{escape(market.trending()["unavailable_reason"] or "Timestamped comparable observations are available.")}</p><p><a href="/api/market/trending">Open explainable trending contract</a></p></section>'''
+            return body.encode("utf-8")
+
+        def render() -> bytes:
+            body = body_cache.get_or_build(
+                body_key, generation, render_body,
+            ).decode("utf-8")
             return page("Asset Market", body).body
 
         return HTMLResponse(render_cache.get_or_build(key, generation, render))

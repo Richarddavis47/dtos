@@ -107,10 +107,14 @@ class MarketRenderedRouteTests(unittest.TestCase):
         }
         self.home_cache = GenerationRenderCache("home", max_entries=8)
         self.market_cache = GenerationRenderCache("market", max_entries=24)
+        self.home_body_cache = GenerationRenderCache("home_body", max_entries=8)
+        self.market_body_cache = GenerationRenderCache("market_body", max_entries=24)
         self.patches = (
             patch("routes.market.asset_market_cache", self.cache),
             patch("routes.market.home_render_cache", self.home_cache),
             patch("routes.market.market_render_cache", self.market_cache),
+            patch("routes.market.home_body_render_cache", self.home_body_cache),
+            patch("routes.market.market_body_render_cache", self.market_body_cache),
         )
         for item in self.patches:
             item.start()
@@ -154,7 +158,10 @@ class MarketRenderedRouteTests(unittest.TestCase):
         self.state["last_sync"] = "new-sync"
         after = self.client.get("/").content
         self.assertNotEqual(before, after)
-        self.assertEqual(self.market.directory_calls, 2)
+        self.assertEqual(self.market.directory_calls, 1)
+        self.assertEqual(
+            self.home_body_cache.health()["home_body_render_cache_hits"], 1,
+        )
 
     def test_health_exposes_bounded_render_telemetry(self) -> None:
         self.client.get("/")
@@ -163,6 +170,12 @@ class MarketRenderedRouteTests(unittest.TestCase):
         payload = response.json()["render_caches"]
         self.assertEqual(payload["home"]["home_render_cache_entries"], 1)
         self.assertEqual(payload["market"]["market_render_cache_entries"], 0)
+        self.assertEqual(
+            payload["home_body"]["home_body_render_cache_entries"], 1,
+        )
+        self.assertEqual(
+            payload["market_body"]["market_body_render_cache_entries"], 0,
+        )
 
 
 if __name__ == "__main__":
