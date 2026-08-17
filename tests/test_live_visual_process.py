@@ -14,6 +14,7 @@ from src.core.inspection.live_capture_worker import (
     run,
 )
 from src.core.inspection.live_capture_process import capture_page_isolated
+from src.core.inspection.live_capture_process import _lower_tree_priority
 from src.core.inspection.live_visual import CaptureRequest
 
 
@@ -59,9 +60,9 @@ class LiveVisualProcessTests(unittest.TestCase):
         with patch("src.core.inspection.live_capture_worker.os.name", "posix"), \
                 patch(
                     "src.core.inspection.live_capture_worker.os.nice",
-                    side_effect=[0, 15], create=True,
+                    side_effect=[0, 19], create=True,
                 ) as nice:
-            self.assertEqual(_lower_capture_priority(), 15)
+            self.assertEqual(_lower_capture_priority(), 19)
         self.assertEqual(nice.call_args_list[0].args, (CAPTURE_PROCESS_NICE_INCREMENT,))
         self.assertEqual(nice.call_args_list[1].args, (0,))
 
@@ -70,6 +71,19 @@ class LiveVisualProcessTests(unittest.TestCase):
                 patch("src.core.inspection.live_capture_worker.os.nice", create=True) as nice:
             self.assertIsNone(_lower_capture_priority())
         nice.assert_not_called()
+
+    def test_parent_enforces_priority_across_browser_descendants(self):
+        root, browser = unittest.mock.Mock(), unittest.mock.Mock()
+        root.children.return_value = [browser]
+        root.nice.side_effect = [None, 19]
+        browser.nice.side_effect = [None, 19]
+        with patch(
+            "src.core.inspection.live_capture_process.psutil.Process", return_value=root,
+        ):
+            self.assertEqual(_lower_tree_priority(12_345), 19)
+        root.children.assert_called_once_with(recursive=True)
+        root.nice.assert_any_call(19)
+        browser.nice.assert_any_call(19)
 
     def test_worker_failure_is_sanitized(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -91,7 +105,7 @@ class LiveVisualProcessTests(unittest.TestCase):
                 result = Path(command[command.index("--result") + 1])
                 result.write_text(json.dumps({
                     "status": "complete", "presentation": {"visible_text": "Matchup 1"},
-                    "process_nice": 15,
+                    "process_nice": 19,
                 }), encoding="utf-8")
 
             def poll(self):
@@ -108,7 +122,7 @@ class LiveVisualProcessTests(unittest.TestCase):
             self.assertEqual(value["visible_text"], "Matchup 1")
             self.assertEqual(value["capture_process"]["worker_pid"], 12_345)
             self.assertEqual(value["capture_process"]["browser_process_peak"], 3)
-            self.assertEqual(value["capture_process"]["process_nice"], 15)
+            self.assertEqual(value["capture_process"]["process_nice"], 19)
             self.assertFalse(any(Path(folder).glob("*.capture-*.json")))
 
     def test_parent_fails_closed_on_missing_child_result(self):

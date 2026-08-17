@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-CAPTURE_PROCESS_NICE_INCREMENT = 15
+CAPTURE_PROCESS_NICE_INCREMENT = 19
 
 
 def _lower_capture_priority() -> int | None:

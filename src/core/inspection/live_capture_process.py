@@ -15,6 +15,24 @@ from src.core.inspection.live_visual import CaptureRequest
 
 CAPTURE_PROCESS_TIMEOUT_SECONDS = 120.0
 CAPTURE_PROCESS_POLL_SECONDS = 0.05
+CAPTURE_TREE_NICE = 19
+
+
+def _lower_tree_priority(pid: int) -> int | None:
+    """Keep the complete capture/browser tree below request-serving priority."""
+    try:
+        process = psutil.Process(pid)
+        targets = [process, *process.children(recursive=True)]
+    except psutil.Error:
+        return None
+    observed: list[int] = []
+    for target in targets:
+        try:
+            target.nice(CAPTURE_TREE_NICE)
+            observed.append(int(target.nice()))
+        except (psutil.Error, OSError, ValueError):
+            continue
+    return min(observed) if observed else None
 
 
 def _tree_rss(pid: int) -> tuple[int, int, int]:
@@ -65,17 +83,25 @@ def capture_page_isolated(
     worker_peak = 0
     browser_peak = 0
     browser_process_peak = 0
+    tree_nice_min: int | None = None
     try:
         process = subprocess.Popen(
             [sys.executable, "-m", "src.core.inspection.live_capture_worker",
              "--input", str(input_path), "--result", str(result_path)],
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
+        tree_nice_min = _lower_tree_priority(process.pid)
         while process.poll() is None:
             if time.monotonic() - started >= timeout:
                 _terminate_tree(process)
                 raise TimeoutError("isolated visual capture exceeded its bounded timeout")
             worker_rss, browser_rss, browser_processes = _tree_rss(process.pid)
+            observed_nice = _lower_tree_priority(process.pid)
+            if observed_nice is not None:
+                tree_nice_min = (
+                    observed_nice if tree_nice_min is None
+                    else min(tree_nice_min, observed_nice)
+                )
             worker_peak = max(worker_peak, worker_rss)
             browser_peak = max(browser_peak, browser_rss)
             browser_process_peak = max(browser_process_peak, browser_processes)
@@ -92,6 +118,7 @@ def capture_page_isolated(
             "browser_rss_peak_bytes": browser_peak,
             "browser_process_peak": browser_process_peak,
             "process_nice": value.get("process_nice"),
+            "capture_tree_nice_min": tree_nice_min,
             "exit_status": process.returncode, "cleanup_complete": True,
         }}
     finally:

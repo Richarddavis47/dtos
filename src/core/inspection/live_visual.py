@@ -82,6 +82,7 @@ class LiveVisualService:
             "browser_rss_peak_bytes": 0,
             "last_capture_worker_pid": None,
             "capture_process_nice": None,
+            "capture_tree_nice_min": None,
         }
         self._manifest = self._load_manifest()
 
@@ -276,6 +277,9 @@ class LiveVisualService:
                     )
                     self._telemetry["capture_process_nice"] = process_metrics.get(
                         "process_nice"
+                    )
+                    self._telemetry["capture_tree_nice_min"] = process_metrics.get(
+                        "capture_tree_nice_min"
                     )
                     self._telemetry["captures_completed"] += 1
                     self._attempts.pop((key, request.fingerprint), None)
