@@ -254,7 +254,7 @@ def create_fois_router(
                                  "provisional": row.provisional} for row in scores]}
 
     @router.get("/fois", response_class=HTMLResponse)
-    async def fois_page(league_id: str = Query(default="")) -> HTMLResponse:
+    def fois_page(league_id: str = Query(default="")) -> HTMLResponse:
         try:
             data = require_data()
         except HTTPException as exc:

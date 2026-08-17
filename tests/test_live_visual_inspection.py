@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import tempfile
 import subprocess
 import sys
@@ -82,6 +83,18 @@ class LiveVisualInspectionTests(unittest.TestCase):
             timeout=30,
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
+
+    def test_capture_critical_pages_do_not_render_on_event_loop(self):
+        root = Path(__file__).resolve().parents[1]
+        for relative, function_name in (
+            ("routes/market.py", "market_page"),
+            ("routes/fois.py", "fois_page"),
+        ):
+            tree = ast.parse((root / relative).read_text(encoding="utf-8"))
+            functions = [node for node in ast.walk(tree)
+                         if getattr(node, "name", None) == function_name]
+            self.assertEqual(len(functions), 1)
+            self.assertIsInstance(functions[0], ast.FunctionDef)
 
     def test_capture_is_deduplicated_and_public_png_is_valid(self):
         calls = []

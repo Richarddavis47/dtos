@@ -139,7 +139,7 @@ def create_market_router(
     async def market_trending(limit: int = Query(10, ge=1, le=50)) -> Any:
         return jsonable_encoder(model().trending(limit))
 
-    async def market_page(
+    def market_page(
         q: str = "", position: str = "", availability: str = "",
         sort: str = "market", direction: str = "desc",
         front_office: int | None = None, selected: str = "",
