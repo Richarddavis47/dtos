@@ -153,9 +153,13 @@ class LifecycleCoordinator:
 
     def visual_capture_allowed(self) -> bool:
         with self._condition:
-            return self._market_critical == 0 and self._phase not in {
-                "asset_market_build", "historical_market_resolution",
-            }
+            return (
+                self._startup_state == "complete"
+                and self._market_critical == 0
+                and self._phase not in {
+                    "asset_market_build", "historical_market_resolution",
+                }
+            )
 
     def defer_visual_capture(self) -> None:
         with self._condition:
@@ -163,13 +167,21 @@ class LifecycleCoordinator:
 
     def wait_for_visual_capture(self, timeout: float = 0.25) -> bool:
         with self._condition:
-            if self._market_critical or self._phase in {
-                "asset_market_build", "historical_market_resolution",
-            }:
+            if (
+                self._startup_state != "complete"
+                or self._market_critical
+                or self._phase in {
+                    "asset_market_build", "historical_market_resolution",
+                }
+            ):
                 self._condition.wait(timeout)
-            return self._market_critical == 0 and self._phase not in {
-                "asset_market_build", "historical_market_resolution",
-            }
+            return (
+                self._startup_state == "complete"
+                and self._market_critical == 0
+                and self._phase not in {
+                    "asset_market_build", "historical_market_resolution",
+                }
+            )
 
     @contextmanager
     def phase(self, name: str) -> Iterator[dict[str, Any]]:

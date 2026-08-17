@@ -85,6 +85,15 @@ class MemoryLifecycleTests(unittest.TestCase):
         coordinator.release_market_critical()
         self.assertTrue(coordinator.visual_capture_allowed())
 
+    def test_startup_fence_defers_visual_until_canonical_startup_completes(self) -> None:
+        coordinator = LifecycleCoordinator()
+        epoch = coordinator.begin_startup("Canonical startup is active.")
+        self.assertFalse(coordinator.visual_capture_allowed())
+        self.assertFalse(coordinator.wait_for_visual_capture(timeout=0))
+        coordinator.complete_startup(epoch, "Canonical startup is complete.")
+        self.assertTrue(coordinator.visual_capture_allowed())
+        self.assertTrue(coordinator.wait_for_visual_capture(timeout=0))
+
     def test_market_critical_release_is_idempotent_after_failure(self) -> None:
         coordinator = LifecycleCoordinator()
         coordinator.reserve_market_critical("Fixture failure.")
