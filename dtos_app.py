@@ -87,6 +87,7 @@ from config import DURABLE_HISTORY_REQUIRED
 from src.core.historical_memory.storage import validate_historical_storage
 from src.core.inspection.live import LiveInspection
 from src.core.inspection.live_visual import LiveVisualService, live_visual_capture_requests
+from src.core.inspection.current_visual import CurrentVisualMirror
 from src.core.intelligence_memory import (
     intelligence_checkpoint_store, sleeper_season_cache,
 )
@@ -249,6 +250,10 @@ live_visual_service = LiveVisualService(
     ),
     _capture_live_visual if os.getenv("RENDER") or os.getenv("DTOS_LIVE_VISUAL_CAPTURE") else None,
 )
+current_visual_mirror = CurrentVisualMirror(
+    live_visual_service.root / "current_mirror", live_visual_service, _PUBLIC_URL,
+)
+live_visual_service.on_complete(current_visual_mirror.promote)
 
 
 def schedule_live_visual_capture() -> int:
@@ -743,6 +748,7 @@ app.include_router(create_inspection_router(
     projection_service=projection_service, market_cache=asset_market_cache,
     context_resolver=current_league_context,
     live_visual_service=live_visual_service,
+    current_visual_mirror=current_visual_mirror,
     resource_health=_resource_health,
 ))
 

@@ -1,6 +1,16 @@
-# DTOS v1.10.36 - Canonical FOIS GM Intelligence, Confidence Calibration & League Leaderboard
+# DTOS v1.10.37 - ChatGPT-Inspectable Rolling Visual Mirror
 
-DTOS v1.10.36 makes FOIS a current league GM leaderboard: one canonical active
+DTOS v1.10.37 completes a stable, externally inspectable current-product visual
+contract. A tiny manifest discovers the current verified generation without knowing
+the release number, and every capture has a direct native PNG URL with size, SHA-256,
+dimensions, page identity, viewport, and deployment provenance.
+
+Candidate generations are staged and verified before an atomic pointer update. The
+last working generation remains available on failure, and the prior rolling generation
+is retired only after successful promotion. Live Visual bytes are linked when the
+filesystem supports it, keeping rolling storage bounded without duplicating DINS.
+
+v1.10.36 made FOIS a current league GM leaderboard: one canonical active
 profile for each current GM, deterministically ranked, with confidence,
 completeness, supported evidence, strengths, and improvement areas visible.
 Meaningful historical snapshots and prior tenures remain available only beneath

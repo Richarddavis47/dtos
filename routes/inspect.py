@@ -31,6 +31,7 @@ from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.inspection.live import LiveInspection, external_mirror_policy, matchup_semantic
 from src.core.inspection.live_visual import LIVE_VIEWPORTS, LiveVisualService
+from src.core.inspection.current_visual import CurrentVisualMirror
 
 historical_store = canonical_history_store
 
@@ -45,6 +46,7 @@ def create_inspection_router(
     projection_service: Any | None = None,
     market_cache: Any | None = None,
     live_visual_service: LiveVisualService | None = None,
+    current_visual_mirror: CurrentVisualMirror | None = None,
     context_resolver: Callable[[], Any | None] | None = None,
     resource_health: Callable[[], dict[str, Any]] | None = None,
 ) -> APIRouter:
@@ -117,11 +119,36 @@ def create_inspection_router(
         result = jsonable_encoder(live().root())
         result["visual_inspection"] = "/api/inspect/live/visual"
         result["external_visual_mirror"] = {
-            "current_manifest": "https://github.com/Richarddavis47/dtos/releases/latest/download/dtos-live-inspection-current.json",
+            "current_manifest": f"{public_base}/api/inspect/current-visual/manifest",
             "release_manifest": f"https://github.com/Richarddavis47/dtos/releases/download/v{VERSION}/dtos-v{VERSION}-visual-mirror-manifest.json",
-            "canonical_source": "live_dtos",
+            "canonical_source": "rolling_current_dtos",
         }
         return result
+
+    @router.get("/current-visual/manifest")
+    async def current_visual_manifest() -> Any:
+        response = current_visual_mirror.manifest() if current_visual_mirror else {
+            "status": "pending", "current_generation": None, "captures": [],
+        }
+        return jsonable_encoder(response)
+
+    @router.get("/current-visual/health")
+    async def current_visual_health() -> Any:
+        return jsonable_encoder(current_visual_mirror.health() if current_visual_mirror else {
+            "status": "pending", "current_generation": None,
+        })
+
+    @router.get("/current-visual/images/{generation}/{name}")
+    async def current_visual_image(generation: str, name: str) -> Any:
+        if not visual_allowed():
+            raise HTTPException(404, "Secondary league visual capture is unavailable.")
+        path = current_visual_mirror.image(generation, name) if current_visual_mirror else None
+        if path is None:
+            raise HTTPException(404, "Current visual image is unavailable.")
+        return FileResponse(path, media_type="image/png", headers={
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "X-Content-Type-Options": "nosniff",
+        })
 
     @router.get("/live/visual")
     async def live_visual_index() -> Any:
