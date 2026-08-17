@@ -12,12 +12,13 @@ from typing import Any
 import psutil
 
 from src.core.inspection.live_visual import CaptureRequest
+from src.platform.request_capacity import request_active, wait_for_request_idle
 
 CAPTURE_PROCESS_TIMEOUT_SECONDS = 120.0
 CAPTURE_PROCESS_POLL_SECONDS = 0.05
 CAPTURE_TREE_NICE = 19
-CAPTURE_CPU_RUN_SECONDS = 0.005
-CAPTURE_CPU_PAUSE_SECONDS = 0.045
+CAPTURE_CPU_RUN_SECONDS = 0.01
+CAPTURE_CPU_PAUSE_SECONDS = 0.02
 
 
 def _lower_tree_priority(pid: int) -> int | None:
@@ -115,7 +116,12 @@ def _yield_capture_cpu(process: subprocess.Popen[bytes]) -> bool:
                 suspended.append(target)
             except psutil.Error:
                 continue
-        time.sleep(CAPTURE_CPU_PAUSE_SECONDS)
+        if request_active():
+            while not wait_for_request_idle(CAPTURE_PROCESS_POLL_SECONDS):
+                if process.poll() is not None:
+                    break
+        else:
+            time.sleep(CAPTURE_CPU_PAUSE_SECONDS)
     except psutil.Error:
         pass
     finally:

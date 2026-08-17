@@ -15,6 +15,7 @@ from uuid import uuid4
 from fastapi import FastAPI, Request
 
 from config import LOG_FORMAT, LOG_LEVEL
+from src.platform.request_capacity import serving_request
 
 request_id_context: ContextVar[str] = ContextVar("dtos_request_id", default="system")
 
@@ -139,47 +140,48 @@ def install_observability(app: FastAPI) -> None:
 
     @app.middleware("http")
     async def request_observability(request: Request, call_next):
-        request_id = request.headers.get("X-Request-ID") or uuid4().hex
-        token = request_id_context.set(request_id)
-        started = perf_counter()
-        started_at = datetime.now(timezone.utc).isoformat()
-        status_code = 500
-        trace_request = request.headers.get("X-DTOS-Diagnostics") == "1" or request.url.path in {
-            "/", "/market", "/health/live", "/api/market/health",
-        }
-        if trace_request:
-            logger.info(
-                "request_accepted",
-                extra={"event": "request_accepted", "method": request.method,
-                       "path": request.url.path, "request_id": request_id},
-            )
-        try:
+        with serving_request():
+            request_id = request.headers.get("X-Request-ID") or uuid4().hex
+            token = request_id_context.set(request_id)
+            started = perf_counter()
+            started_at = datetime.now(timezone.utc).isoformat()
+            status_code = 500
+            trace_request = request.headers.get("X-DTOS-Diagnostics") == "1" or request.url.path in {
+                "/", "/market", "/health/live", "/api/market/health",
+            }
             if trace_request:
                 logger.info(
-                    "handler_scheduled",
-                    extra={"event": "handler_scheduled", "method": request.method,
+                    "request_accepted",
+                    extra={"event": "request_accepted", "method": request.method,
                            "path": request.url.path, "request_id": request_id},
                 )
-            response = await call_next(request)
-            status_code = response.status_code
-            response.headers["X-Request-ID"] = request_id
-            if request.headers.get("X-DTOS-Diagnostics") == "1":
+            try:
+                if trace_request:
+                    logger.info(
+                        "handler_scheduled",
+                        extra={"event": "handler_scheduled", "method": request.method,
+                               "path": request.url.path, "request_id": request_id},
+                    )
+                response = await call_next(request)
+                status_code = response.status_code
+                response.headers["X-Request-ID"] = request_id
+                if request.headers.get("X-DTOS-Diagnostics") == "1":
+                    duration_ms = round((perf_counter() - started) * 1000, 3)
+                    response.headers["X-DTOS-Request-Start"] = started_at
+                    response.headers["X-DTOS-Route-Duration"] = str(duration_ms)
+                    response.headers["X-DTOS-Request-Duration"] = str(duration_ms)
+                    response.headers["X-DTOS-Process-Uptime"] = str(
+                        runtime_metrics.uptime_seconds()
+                    )
+                return response
+            finally:
                 duration_ms = round((perf_counter() - started) * 1000, 3)
-                response.headers["X-DTOS-Request-Start"] = started_at
-                response.headers["X-DTOS-Route-Duration"] = str(duration_ms)
-                response.headers["X-DTOS-Request-Duration"] = str(duration_ms)
-                response.headers["X-DTOS-Process-Uptime"] = str(
-                    runtime_metrics.uptime_seconds()
+                runtime_metrics.record(duration_ms, status_code)
+                logger.info(
+                    "request_complete",
+                    extra={"event": "request_complete", "duration_ms": duration_ms, "status_code": status_code, "method": request.method, "path": request.url.path, "request_id": request_id},
                 )
-            return response
-        finally:
-            duration_ms = round((perf_counter() - started) * 1000, 3)
-            runtime_metrics.record(duration_ms, status_code)
-            logger.info(
-                "request_complete",
-                extra={"event": "request_complete", "duration_ms": duration_ms, "status_code": status_code, "method": request.method, "path": request.url.path, "request_id": request_id},
-            )
-            request_id_context.reset(token)
+                request_id_context.reset(token)
 
 
 async def monitor_event_loop_lag(interval_seconds: float = 0.1) -> None:

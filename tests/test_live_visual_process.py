@@ -133,14 +133,33 @@ class LiveVisualProcessTests(unittest.TestCase):
                     "src.core.inspection.live_capture_process.psutil.Process",
                     return_value=root,
                 ), \
-                patch("src.core.inspection.live_capture_process.time.sleep") as sleep:
+                patch("src.core.inspection.live_capture_process.time.sleep") as sleep, \
+                patch("src.core.inspection.live_capture_process.request_active", return_value=False):
             self.assertTrue(_yield_capture_cpu(process))
         root.children.assert_called_once_with(recursive=True)
         browser.suspend.assert_called_once_with()
         root.suspend.assert_called_once_with()
         root.resume.assert_called_once_with()
         browser.resume.assert_called_once_with()
-        self.assertEqual([call.args for call in sleep.call_args_list], [(0.005,), (0.045,)])
+        self.assertEqual([call.args for call in sleep.call_args_list], [(0.01,), (0.02,)])
+
+    def test_linux_capture_remains_suspended_until_product_request_finishes(self):
+        process = unittest.mock.Mock(pid=12_345)
+        process.poll.return_value = None
+        root = unittest.mock.Mock()
+        root.children.return_value = []
+        with patch("src.core.inspection.live_capture_process.sys.platform", "linux"), \
+                patch("src.core.inspection.live_capture_process.psutil.Process", return_value=root), \
+                patch("src.core.inspection.live_capture_process.time.sleep"), \
+                patch("src.core.inspection.live_capture_process.request_active", return_value=True), \
+                patch(
+                    "src.core.inspection.live_capture_process.wait_for_request_idle",
+                    side_effect=[False, True],
+                ) as wait:
+            self.assertTrue(_yield_capture_cpu(process))
+        self.assertEqual(wait.call_count, 2)
+        root.suspend.assert_called_once_with()
+        root.resume.assert_called_once_with()
 
     def test_non_linux_capture_tree_uses_ordinary_poll_interval(self):
         process = unittest.mock.Mock(pid=12_345)
