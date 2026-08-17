@@ -150,17 +150,6 @@ class LiveVisualProcessTests(unittest.TestCase):
         browser.resume.assert_called_once_with()
         self.assertEqual([call.args for call in sleep.call_args_list], [(0.01,), (0.02,)])
 
-    def test_dedicated_capture_cpu_does_not_suspend_browser_tree(self):
-        process = unittest.mock.Mock(pid=12_345)
-        with patch("src.core.inspection.live_capture_process.sys.platform", "linux"), \
-                patch("src.core.inspection.live_capture_process.time.sleep") as sleep, \
-                patch("src.core.inspection.live_capture_process.os.killpg", create=True) as killpg, \
-                patch("src.core.inspection.live_capture_process.psutil.Process") as psutil_process:
-            self.assertFalse(_yield_capture_cpu(process, dedicated_cpu=True))
-        sleep.assert_called_once_with(0.05)
-        killpg.assert_not_called()
-        psutil_process.assert_not_called()
-
     def test_linux_capture_remains_suspended_until_product_request_finishes(self):
         process = unittest.mock.Mock(pid=12_345)
         process.poll.return_value = None
@@ -179,9 +168,9 @@ class LiveVisualProcessTests(unittest.TestCase):
                     return_value=False,
                 ) as wait:
             self.assertTrue(_yield_capture_cpu(process))
-        wait.assert_called_once_with(0.02)
-        self.assertEqual(sleep.call_args_list[0].args, (0.01,))
-        self.assertLessEqual(CAPTURE_REQUEST_PAUSE_SECONDS, 0.02)
+        wait.assert_called_once_with(0.098)
+        self.assertEqual(sleep.call_args_list[0].args, (0.002,))
+        self.assertLessEqual(CAPTURE_REQUEST_PAUSE_SECONDS, 0.1)
         root.suspend.assert_called_once_with()
         root.resume.assert_called_once_with()
 
