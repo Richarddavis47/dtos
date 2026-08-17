@@ -101,6 +101,39 @@ class MemoryLifecycleTests(unittest.TestCase):
         coordinator.release_market_critical()
         self.assertEqual(coordinator.snapshot()["heavy_work"]["state"], "IDLE")
 
+    def test_fois_generation_waits_for_capture_and_blocks_new_visual_work(self) -> None:
+        coordinator = LifecycleCoordinator()
+        capture_entered = threading.Event()
+        release_capture = threading.Event()
+        fois_reserved = threading.Event()
+
+        def capture() -> None:
+            with coordinator.phase("live_visual_capture"):
+                capture_entered.set()
+                release_capture.wait(1)
+
+        def reserve_fois() -> None:
+            coordinator.reserve_fois_generation()
+            fois_reserved.set()
+
+        capture_thread = threading.Thread(target=capture)
+        reserve_thread = threading.Thread(target=reserve_fois)
+        capture_thread.start()
+        self.assertTrue(capture_entered.wait(1))
+        reserve_thread.start()
+        self.assertFalse(fois_reserved.wait(0.05))
+        self.assertFalse(coordinator.visual_capture_allowed())
+        release_capture.set()
+        capture_thread.join(1)
+        reserve_thread.join(1)
+        self.assertTrue(fois_reserved.is_set())
+        self.assertEqual(
+            coordinator.snapshot()["heavy_work"]["state"], "FOIS_GENERATION",
+        )
+        self.assertFalse(coordinator.market_build_allowed())
+        coordinator.release_fois_generation()
+        self.assertTrue(coordinator.visual_capture_allowed())
+
     def test_market_health_is_metadata_only_when_no_snapshot_exists(self) -> None:
         app = FastAPI()
         app.include_router(create_market_router(

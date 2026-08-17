@@ -113,7 +113,11 @@ intelligence_heavy_lock = asyncio.Lock()
 async def _generate_fois_coordinated(data: dict[str, Any]) -> tuple[Any, ...]:
     """Run FOIS as one lifecycle-heavy flight without overlapping other phases."""
     async with intelligence_heavy_lock:
-        return await fois_service.generate(data)
+        await asyncio.to_thread(lifecycle_coordinator.reserve_fois_generation)
+        try:
+            return await fois_service.generate(data)
+        finally:
+            lifecycle_coordinator.release_fois_generation()
 
 
 def _publish_runtime_context(
