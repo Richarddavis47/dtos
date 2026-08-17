@@ -172,7 +172,19 @@ class CanonicalFOISLeaderboardTests(unittest.IsolatedAsyncioTestCase):
             page=lambda _title, body: HTMLResponse(body),
         ))
         client = TestClient(app)
-        leaderboard = client.get("/fois")
+        with patch.object(
+            self.repository, "league", wraps=self.repository.league,
+        ) as league_read:
+            leaderboard = client.get("/fois")
+            repeated = client.get("/fois")
+        self.assertEqual(repeated.content, leaderboard.content)
+        self.assertEqual(league_read.call_count, 2)
+        cache_health = client.get("/api/fois/status").json()["render_cache"]
+        self.assertEqual(cache_health["fois_render_cache_hits"], 1)
+        self.assertEqual(cache_health["fois_render_cache_misses"], 1)
+        self.assertEqual(cache_health["fois_render_cache_entries"], 1)
+        self.assertGreater(cache_health["fois_render_cache_bytes"], 0)
+        self.assertEqual(self.service.status()["request_time_provider_calls"], 0)
         self.assertEqual(leaderboard.text.count('data-fois-current="true"'), 10)
         self.assertIn('data-fois-leaderboard-count="10"', leaderboard.text)
         self.assertEqual(leaderboard.text.count("HISTORICAL SNAPSHOT"), 0)

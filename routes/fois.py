@@ -13,6 +13,7 @@ from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.fois.configuration import DEFAULT_FOIS_CONFIGURATION
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.fois.registry import DEFAULT_METRIC_REGISTRY
+from src.core.fois.render_cache import FOISRenderCache
 from src.core.fois.service import FOISService, fois_enabled
 from src.ui.intelligence_presentation import exact_rank, human_status, technical_details
 
@@ -69,6 +70,7 @@ def create_fois_router(
     page: PageRenderer | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["fois"])
+    render_cache = FOISRenderCache()
 
     def require_enabled() -> None:
         if not fois_enabled():
@@ -87,13 +89,14 @@ def create_fois_router(
 
     @router.get("/api/fois")
     async def root() -> dict[str, Any]:
-        return {**_metadata(), "status": service.status(), "links": {
+        return {**_metadata(), "status": service.status(),
+                "render_cache": render_cache.health(), "links": {
             "status": "/api/fois/status", "model": "/api/fois/model",
         }}
 
     @router.get("/api/fois/status")
     async def status() -> dict[str, Any]:
-        return {**_metadata(), **service.status()}
+        return {**_metadata(), **service.status(), "render_cache": render_cache.health()}
 
     @router.get("/api/fois/model")
     async def model() -> dict[str, Any]:
@@ -253,14 +256,7 @@ def create_fois_router(
                                  "confidence": row.confidence,
                                  "provisional": row.provisional} for row in scores]}
 
-    @router.get("/fois", response_class=HTMLResponse)
-    def fois_page(league_id: str = Query(default="")) -> HTMLResponse:
-        try:
-            data = require_data()
-        except HTTPException as exc:
-            if exc.status_code != 503:
-                raise
-            data = {}
+    def build_fois_page(league_id: str, data: dict[str, Any]) -> HTMLResponse:
         loaded_league = data.get("league") or {}
         loaded_league_id = str(loaded_league.get("league_id") or "")
         requested_league_id = league_id.strip()
@@ -329,6 +325,31 @@ def create_fois_router(
             f'{content}</section>'
         )
         return page("Front Office Intelligence System", body) if page else HTMLResponse(body)
+
+    @router.get("/fois", response_class=HTMLResponse)
+    def fois_page(league_id: str = Query(default="")) -> HTMLResponse:
+        status_value = service.status()
+        try:
+            data = require_data()
+        except HTTPException as exc:
+            if exc.status_code != 503:
+                raise
+            data = {}
+        loaded_league_id = str(
+            ((data.get("league") or {}).get("league_id") or "")
+        )
+        selected_hint = league_id.strip() or loaded_league_id
+        generation = str(status_value.get("last_run") or "persisted-cold")
+        key = (
+            "current-leaderboard", selected_hint, generation,
+            status_value.get("model_version"), status_value.get("records"),
+            status_value.get("current_gm_count"),
+            status_value.get("duplicate_current_count"), VERSION, BUILD_NUMBER,
+        )
+        body = render_cache.get_or_build(
+            key, generation, lambda: build_fois_page(league_id, data).body,
+        )
+        return HTMLResponse(body)
 
     @router.get("/fois/gms/{gm_id}", response_class=HTMLResponse)
     async def gm_profile_page(gm_id: str, league_id: str = Query(default="")) -> HTMLResponse:
