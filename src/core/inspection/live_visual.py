@@ -182,12 +182,21 @@ class LiveVisualService:
     def _run(self) -> None:
         if self._start_grace_seconds:
             time.sleep(self._start_grace_seconds)
+        deferred = False
         while True:
             if not lifecycle_coordinator.visual_capture_allowed():
+                deferred = True
                 with self._lock:
                     self._deferred_captures += 1
                 lifecycle_coordinator.defer_visual_capture()
                 lifecycle_coordinator.wait_for_visual_capture()
+                continue
+            if deferred and self._start_grace_seconds:
+                # The initial grace can elapse while a market-critical phase owns
+                # admission. Reapply it once after release so publication callers
+                # and first reads can settle before optional browser work begins.
+                deferred = False
+                time.sleep(self._start_grace_seconds)
                 continue
             with self._lock:
                 if not self._queue:

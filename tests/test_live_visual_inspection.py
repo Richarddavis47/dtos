@@ -7,6 +7,7 @@ import sys
 import threading
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -242,6 +243,35 @@ class LiveVisualInspectionTests(unittest.TestCase):
             self.assertEqual(health["current"], 38)
             self.assertEqual(health["stale"], 0)
             self.assertEqual(health["candidate_state"], "complete")
+
+    def test_capture_grace_is_reapplied_after_market_deferral(self):
+        calls = []
+
+        def capture(_item, output):
+            calls.append("capture")
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        allowed_calls = 0
+
+        def capture_allowed():
+            nonlocal allowed_calls
+            allowed_calls += 1
+            return allowed_calls > 1
+
+        sleeps = []
+        with tempfile.TemporaryDirectory() as folder, patch(
+            "src.core.inspection.live_visual.lifecycle_coordinator.visual_capture_allowed",
+            side_effect=capture_allowed,
+        ), patch(
+            "src.core.inspection.live_visual.lifecycle_coordinator.wait_for_visual_capture",
+            return_value=True,
+        ), patch("src.core.inspection.live_visual.time.sleep", side_effect=sleeps.append):
+            service = LiveVisualService(Path(folder), capture, start_grace_seconds=2.0)
+            service.schedule([request()])
+            self.assertTrue(service.wait())
+        self.assertEqual(sleeps, [2.0, 2.0])
+        self.assertEqual(calls, ["capture"])
 
     def test_stale_mobile_capture_refreshes_through_registered_contract(self):
         calls = []
