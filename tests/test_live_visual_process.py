@@ -161,7 +161,7 @@ class LiveVisualProcessTests(unittest.TestCase):
                     "src.core.inspection.live_capture_process.os.killpg",
                     side_effect=OSError, create=True,
                 ), \
-                patch("src.core.inspection.live_capture_process.time.sleep"), \
+                patch("src.core.inspection.live_capture_process.time.sleep") as sleep, \
                 patch("src.core.inspection.live_capture_process.request_active", return_value=True), \
                 patch(
                     "src.core.inspection.live_capture_process.wait_for_request_idle",
@@ -169,6 +169,7 @@ class LiveVisualProcessTests(unittest.TestCase):
                 ) as wait:
             self.assertTrue(_yield_capture_cpu(process))
         wait.assert_called_once_with(0.02)
+        self.assertEqual(sleep.call_args_list[0].args, (0.01,))
         self.assertLessEqual(CAPTURE_REQUEST_PAUSE_SECONDS, 0.02)
         root.suspend.assert_called_once_with()
         root.resume.assert_called_once_with()
