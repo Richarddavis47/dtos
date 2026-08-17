@@ -326,6 +326,28 @@ def create_fois_router(
         )
         return page("Front Office Intelligence System", body) if page else HTMLResponse(body)
 
+    def cached_fois_page(
+        league_id: str, data: dict[str, Any], generation: str,
+    ) -> bytes:
+        loaded_league_id = str(((data.get("league") or {}).get("league_id") or ""))
+        selected_hint = league_id.strip() or loaded_league_id
+        key = (
+            "current-leaderboard", selected_hint, generation,
+            DEFAULT_FOIS_CONFIGURATION.model_version, VERSION, BUILD_NUMBER,
+        )
+        return render_cache.get_or_build(
+            key, generation, lambda: build_fois_page(league_id, data).body,
+        )
+
+    def prewarm_completed_generation(
+        data: dict[str, Any], scores: tuple[Any, ...],
+    ) -> None:
+        if not scores:
+            return
+        cached_fois_page("", data, str(scores[0].generated_at))
+
+    service.add_generation_listener(prewarm_completed_generation)
+
     @router.get("/fois", response_class=HTMLResponse)
     def fois_page(league_id: str = Query(default="")) -> HTMLResponse:
         status_value = service.status()
@@ -335,20 +357,8 @@ def create_fois_router(
             if exc.status_code != 503:
                 raise
             data = {}
-        loaded_league_id = str(
-            ((data.get("league") or {}).get("league_id") or "")
-        )
-        selected_hint = league_id.strip() or loaded_league_id
         generation = str(status_value.get("last_run") or "persisted-cold")
-        key = (
-            "current-leaderboard", selected_hint, generation,
-            status_value.get("model_version"), status_value.get("records"),
-            status_value.get("current_gm_count"),
-            status_value.get("duplicate_current_count"), VERSION, BUILD_NUMBER,
-        )
-        body = render_cache.get_or_build(
-            key, generation, lambda: build_fois_page(league_id, data).body,
-        )
+        body = cached_fois_page(league_id, data, generation)
         return HTMLResponse(body)
 
     @router.get("/fois/gms/{gm_id}", response_class=HTMLResponse)

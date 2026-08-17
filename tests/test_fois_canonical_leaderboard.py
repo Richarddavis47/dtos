@@ -195,6 +195,37 @@ class CanonicalFOISLeaderboardTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("CURRENT GM PROFILE", profile.text)
         self.assertIn("GM History", profile.text)
 
+    async def test_completed_generation_is_prewarmed_before_first_request(self) -> None:
+        data = _data()
+        app = FastAPI()
+        app.include_router(create_fois_router(
+            service=self.service, require_data=lambda: data,
+            page=lambda _title, body: HTMLResponse(body),
+        ))
+        with patch.dict(os.environ, {"DTOS_FOIS_ENABLED": "1"}):
+            await self.service.generate(data)
+
+        client = TestClient(app)
+        before = client.get("/api/fois/status").json()["render_cache"]
+        response = client.get("/fois")
+        after = client.get("/api/fois/status").json()["render_cache"]
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(before["fois_render_cache_misses"], 1)
+        self.assertEqual(after["fois_render_cache_hits"], 1)
+
+    async def test_prewarm_failure_does_not_fail_generation(self) -> None:
+        data = _data()
+
+        def broken(_data, _scores) -> None:
+            raise RuntimeError("render failed")
+
+        self.service.add_generation_listener(broken)
+        with patch.dict(os.environ, {"DTOS_FOIS_ENABLED": "1"}):
+            scores = await self.service.generate(data)
+        self.assertEqual(len(scores), 10)
+        self.assertEqual(self.service.status()["state"], "complete")
+
 
 if __name__ == "__main__":
     unittest.main()

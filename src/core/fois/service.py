@@ -43,6 +43,9 @@ class FOISService:
         self._repository = repository
         self._repository_factory = repository_factory
         self._history_loader = history_loader
+        self._generation_listeners: list[
+            Callable[[dict[str, Any], tuple[Any, ...]], None]
+        ] = []
         self.engine = FOISEngine()
         self._status: dict[str, Any] = {
             "state": "disabled" if not fois_enabled() else "waiting",
@@ -63,6 +66,12 @@ class FOISService:
     def status(self) -> dict[str, Any]:
         """Return memory-only status; never access providers or persistence."""
         return {**self._status, "enabled": fois_enabled()}
+
+    def add_generation_listener(
+        self, listener: Callable[[dict[str, Any], tuple[Any, ...]], None],
+    ) -> None:
+        """Register bounded post-generation work that must not affect FOIS output."""
+        self._generation_listeners.append(listener)
 
     async def generate(self, data: dict[str, Any]) -> tuple[Any, ...]:
         if not fois_enabled():
@@ -252,4 +261,13 @@ class FOISService:
             "snapshots_written": snapshots_written,
             "snapshots_deduplicated": snapshots_deduplicated,
         })
-        return tuple(scores)
+        completed = tuple(scores)
+        for listener in tuple(self._generation_listeners):
+            try:
+                listener(data, completed)
+            except Exception as exc:
+                LOGGER.warning(
+                    "FOIS generation listener failed: type=%s",
+                    type(exc).__name__,
+                )
+        return completed
