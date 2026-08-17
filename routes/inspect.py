@@ -31,7 +31,9 @@ from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.inspection.live import LiveInspection, external_mirror_policy, matchup_semantic
 from src.core.inspection.live_visual import LIVE_VIEWPORTS, LiveVisualService
-from src.core.inspection.current_visual import CurrentVisualMirror
+from src.core.inspection.current_visual import (
+    CurrentVisualMirror, public_manifest, public_visual_origin,
+)
 
 historical_store = canonical_history_store
 
@@ -51,7 +53,10 @@ def create_inspection_router(
     resource_health: Callable[[], dict[str, Any]] | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/inspect", tags=["inspection"])
-    public_base = os.getenv("DTOS_PUBLIC_URL", "https://dtos.onrender.com").rstrip("/")
+    public_base = public_visual_origin(
+        os.getenv("DTOS_PUBLIC_URL", "https://dtos.onrender.com"),
+        production=bool(os.getenv("RENDER")),
+    )
     store = InspectionArtifactStore(artifact_root or Path("static/inspection"), public_base)
     publication = publication_resolver or GitHubPublicationResolver()
 
@@ -130,7 +135,7 @@ def create_inspection_router(
         response = current_visual_mirror.manifest() if current_visual_mirror else {
             "status": "pending", "current_generation": None, "captures": [],
         }
-        return jsonable_encoder(response)
+        return jsonable_encoder(public_manifest(response, public_base))
 
     @router.get("/current-visual/health")
     async def current_visual_health() -> Any:

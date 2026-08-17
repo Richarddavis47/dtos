@@ -6,6 +6,7 @@ import hashlib
 import io
 import json
 from typing import Any, Callable
+from urllib.parse import urljoin, urlsplit
 
 from PIL import Image
 
@@ -25,8 +26,23 @@ def verify_current(
     if len(captures) != manifest.get("image_count"):
         raise RuntimeError("Current visual mirror image inventory is inconsistent.")
     decoded = []
+    manifest_origin = urlsplit(manifest_url)
     for row in captures:
-        image_bytes = fetch(str(row["image_url"]))
+        relative = str(row.get("relative_path") or "")
+        public_url = str(row.get("public_url") or row.get("image_url") or "")
+        if not relative.startswith("/api/inspect/current-visual/images/"):
+            raise RuntimeError("Current visual image has an invalid relative identity.")
+        if not public_url:
+            public_url = urljoin(manifest_url, relative)
+        parsed = urlsplit(public_url)
+        if (
+            parsed.scheme != "https" or parsed.netloc != manifest_origin.netloc
+            or (parsed.hostname or "").casefold() in {
+                "localhost", "127.0.0.1", "0.0.0.0", "::1",
+            }
+        ):
+            raise RuntimeError("Current visual image does not use a safe public HTTPS origin.")
+        image_bytes = fetch(public_url)
         if hashlib.sha256(image_bytes).hexdigest() != row.get("sha256"):
             raise RuntimeError("Current visual image hash mismatch.")
         try:
