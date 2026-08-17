@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.10.38 - Public Current Visual Origin Correction
+
+- Separated the loopback Playwright capture origin from the externally trusted
+  current-visual delivery origin.
+- Persisted environment-neutral relative image identities and derived validated
+  HTTPS public URLs only at the inspection response boundary.
+- Preserved compatible v1.10.37 rolling generations through safe legacy-manifest
+  normalization while retaining direct `image/png` delivery and current-only access.
+- Added loopback/private-origin, path-safety, public discovery, PNG decoding, hash,
+  and rolling-retention regressions.
+
 ## v1.10.37 - ChatGPT-Inspectable Rolling Visual Mirror
 
 - Added a stable, public current-visual manifest with direct native PNG delivery.

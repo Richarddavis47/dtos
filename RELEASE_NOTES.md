@@ -1,4 +1,18 @@
-# DTOS v1.10.37 - ChatGPT-Inspectable Rolling Visual Mirror
+# DTOS v1.10.38 - Public Current Visual Origin Correction
+
+DTOS v1.10.38 makes the rolling current-product visual mirror consumable from a
+future public client. Durable manifests now identify PNGs with environment-neutral
+relative paths. The inspection boundary derives absolute URLs only from DTOS's
+validated external HTTPS origin, while Playwright retains its independent loopback
+capture origin.
+
+The correction preserves current-only retention, atomic candidate publication,
+direct native `image/png` responses, SHA-256 and dimension verification, and safe
+read-time compatibility for the retained v1.10.37 manifest. Production rejects
+loopback, localhost, unspecified, and private-IP public origins without trusting
+arbitrary forwarded host headers.
+
+## Previous release: v1.10.37 - ChatGPT-Inspectable Rolling Visual Mirror
 
 DTOS v1.10.37 completes a stable, externally inspectable current-product visual
 contract. A tiny manifest discovers the current verified generation without knowing

@@ -100,7 +100,9 @@ historical_storage_status = validate_historical_storage(
 
 _PROCESS_STARTED = perf_counter()
 _INSPECTION_REQUEST: ContextVar[bool] = ContextVar("dtos_inspection_request", default=False)
-_PUBLIC_URL = os.getenv("DTOS_PUBLIC_URL", f"http://127.0.0.1:{os.getenv('PORT', '8000')}")
+_CAPTURE_URL = os.getenv(
+    "DTOS_CAPTURE_URL", f"http://127.0.0.1:{os.getenv('PORT', '8000')}",
+).rstrip("/")
 _MULTI_LEAGUE_IMPORT_ENABLED = (
     os.getenv("DTOS_MULTI_LEAGUE_IMPORT_ENABLED", "0").strip().casefold()
     in {"1", "true", "yes", "on"}
@@ -241,7 +243,7 @@ def _capture_live_visual(request: Any, output: Any) -> dict[str, Any]:
     """Load the browser stack only inside the background capture worker."""
     from src.core.inspection.live_browser import capture_page
 
-    return capture_page(_PUBLIC_URL, request, output)
+    return capture_page(_CAPTURE_URL, request, output)
 
 
 live_visual_service = LiveVisualService(
@@ -251,7 +253,7 @@ live_visual_service = LiveVisualService(
     _capture_live_visual if os.getenv("RENDER") or os.getenv("DTOS_LIVE_VISUAL_CAPTURE") else None,
 )
 current_visual_mirror = CurrentVisualMirror(
-    live_visual_service.root / "current_mirror", live_visual_service, _PUBLIC_URL,
+    live_visual_service.root / "current_mirror", live_visual_service,
 )
 live_visual_service.on_complete(current_visual_mirror.promote)
 

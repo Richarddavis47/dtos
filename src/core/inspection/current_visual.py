@@ -6,15 +6,18 @@ import json
 import os
 import shutil
 import threading
+from ipaddress import ip_address
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from PIL import Image
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.inspection.live_visual import LIVE_VIEWPORTS, LiveVisualService
 
-CURRENT_VISUAL_SCHEMA_VERSION = "1.0"
+CURRENT_VISUAL_SCHEMA_VERSION = "1.1"
+CURRENT_VISUAL_ROUTE = "/api/inspect/current-visual"
 
 
 def _json_bytes(value: Any) -> bytes:
@@ -25,13 +28,58 @@ def _safe(value: str) -> str:
     return "".join(char if char.isalnum() or char in "-_" else "-" for char in value)
 
 
+def public_visual_origin(value: str, *, production: bool) -> str:
+    """Validate the configured public origin without trusting request headers."""
+    parsed = urlsplit(value.strip())
+    host = (parsed.hostname or "").casefold()
+    if (
+        not host or parsed.username or parsed.password or parsed.query or parsed.fragment
+        or parsed.path not in {"", "/"}
+        or parsed.scheme not in ({"https"} if production else {"http", "https"})
+    ):
+        raise ValueError("DTOS_PUBLIC_URL must be a valid public origin.")
+    prohibited = host in {"localhost", "0.0.0.0", "::1"}
+    try:
+        address = ip_address(host)
+    except ValueError:
+        address = None
+    if production and (prohibited or (address is not None and not address.is_global)):
+        raise ValueError("DTOS_PUBLIC_URL cannot use an internal origin in production.")
+    return value.strip().rstrip("/")
+
+
+def public_manifest(value: dict[str, Any], public_base: str) -> dict[str, Any]:
+    """Present one durable relative manifest through a validated public origin."""
+    result = json.loads(json.dumps(value))
+    result["manifest_url"] = f"{public_base}{CURRENT_VISUAL_ROUTE}/manifest"
+    generation = str(result.get("current_generation") or "")
+    for row in result.get("captures") or []:
+        relative = str(row.get("relative_path") or "")
+        if not relative:
+            legacy = str(row.get("image_url") or "")
+            name = legacy.rsplit("/", 1)[-1]
+            if generation and Path(name).name == name and name.endswith(".png"):
+                relative = f"{CURRENT_VISUAL_ROUTE}/images/{generation}/{name}"
+        prefix = f"{CURRENT_VISUAL_ROUTE}/images/{generation}/"
+        name = relative.removeprefix(prefix)
+        if (
+            not relative.startswith(prefix) or Path(name).name != name
+            or not name.endswith(".png") or name[:-4] != _safe(name[:-4])
+        ):
+            raise ValueError("Current visual manifest contains an invalid relative image identity.")
+        row["relative_path"] = relative
+        row["public_url"] = f"{public_base}{relative}"
+        # Preserve the v1.10.37 consumer field while correcting its derivation.
+        row["image_url"] = row["public_url"]
+    return result
+
+
 class CurrentVisualMirror:
     """Keep exactly one externally inspectable generation with safe candidate handoff."""
 
-    def __init__(self, root: Path, live: LiveVisualService, public_base: str) -> None:
+    def __init__(self, root: Path, live: LiveVisualService) -> None:
         self.root = root
         self.live = live
-        self.public_base = public_base.rstrip("/")
         self._lock = threading.RLock()
         self._last_error: str | None = None
 
@@ -141,7 +189,7 @@ class CurrentVisualMirror:
                         "purpose": f"Current {row.get('title') or row['surface_id']} {viewport} product view",
                         "content_type": "image/png", "bytes": size, "sha256": digest,
                         "width": width, "height": height,
-                        "image_url": f"{self.public_base}/api/inspect/current-visual/images/{generation}/{name}",
+                        "relative_path": f"{CURRENT_VISUAL_ROUTE}/images/{generation}/{name}",
                     })
                 deployment = deployment_metadata()
                 prior_bytes = int((previous or {}).get("current_visual_bytes") or 0)
@@ -151,7 +199,7 @@ class CurrentVisualMirror:
                     "application_version": VERSION, "application_build": BUILD_NUMBER,
                     "commit": deployment.get("commit"), "deployment_identity": deployment,
                     "captured_at": source.get("last_capture"),
-                    "manifest_url": f"{self.public_base}/api/inspect/current-visual/manifest",
+                    "manifest_path": f"{CURRENT_VISUAL_ROUTE}/manifest",
                     "captures": captures, "capture_count": len(captures),
                     "image_count": len(captures),
                     "desktop_count": sum(row["viewport"] == "desktop" for row in captures),
