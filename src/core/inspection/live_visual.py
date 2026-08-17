@@ -83,6 +83,7 @@ class LiveVisualService:
             "last_capture_worker_pid": None,
             "capture_process_nice": None,
             "capture_tree_nice_min": None,
+            "available_cpu_count": None, "capture_cpu_count": None,
         }
         self._manifest = self._load_manifest()
 
@@ -280,6 +281,12 @@ class LiveVisualService:
                     )
                     self._telemetry["capture_tree_nice_min"] = process_metrics.get(
                         "capture_tree_nice_min"
+                    )
+                    self._telemetry["available_cpu_count"] = process_metrics.get(
+                        "available_cpu_count"
+                    )
+                    self._telemetry["capture_cpu_count"] = process_metrics.get(
+                        "capture_cpu_count"
                     )
                     self._telemetry["captures_completed"] += 1
                     self._attempts.pop((key, request.fingerprint), None)

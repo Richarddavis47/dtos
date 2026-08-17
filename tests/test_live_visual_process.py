@@ -14,7 +14,10 @@ from src.core.inspection.live_capture_worker import (
     run,
 )
 from src.core.inspection.live_capture_process import capture_page_isolated
-from src.core.inspection.live_capture_process import _lower_tree_priority
+from src.core.inspection.live_capture_process import (
+    _isolate_capture_tree_cpu,
+    _lower_tree_priority,
+)
 from src.core.inspection.live_visual import CaptureRequest
 
 
@@ -84,6 +87,25 @@ class LiveVisualProcessTests(unittest.TestCase):
         root.children.assert_called_once_with(recursive=True)
         root.nice.assert_any_call(19)
         browser.nice.assert_any_call(19)
+
+    def test_linux_parent_confines_browser_tree_to_one_cpu(self):
+        root, browser = unittest.mock.Mock(), unittest.mock.Mock()
+        root.cpu_affinity.return_value = [2, 4]
+        root.children.return_value = [browser]
+        with patch("src.core.inspection.live_capture_process.sys.platform", "linux"), \
+                patch(
+                    "src.core.inspection.live_capture_process.psutil.Process",
+                    return_value=root,
+                ):
+            self.assertEqual(_isolate_capture_tree_cpu(12_345), (2, 1))
+        root.cpu_affinity.assert_any_call([4])
+        browser.cpu_affinity.assert_called_once_with([4])
+
+    def test_non_linux_parent_does_not_change_cpu_affinity(self):
+        with patch("src.core.inspection.live_capture_process.sys.platform", "win32"), \
+                patch("src.core.inspection.live_capture_process.psutil.Process") as process:
+            self.assertIsNone(_isolate_capture_tree_cpu(12_345))
+        process.assert_not_called()
 
     def test_worker_failure_is_sanitized(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -35,6 +35,27 @@ def _lower_tree_priority(pid: int) -> int | None:
     return min(observed) if observed else None
 
 
+def _isolate_capture_tree_cpu(pid: int) -> tuple[int, int] | None:
+    """Confine capture work to one Linux CPU so request serving retains capacity."""
+    if not sys.platform.startswith("linux"):
+        return None
+    try:
+        process = psutil.Process(pid)
+        allowed = process.cpu_affinity()
+        if not allowed:
+            return None
+        capture_affinity = [allowed[-1]]
+        targets = [process, *process.children(recursive=True)]
+    except (psutil.Error, AttributeError, OSError):
+        return None
+    for target in targets:
+        try:
+            target.cpu_affinity(capture_affinity)
+        except (psutil.Error, AttributeError, OSError, ValueError):
+            continue
+    return len(allowed), len(capture_affinity)
+
+
 def _tree_rss(pid: int) -> tuple[int, int, int]:
     try:
         process = psutil.Process(pid)
@@ -84,6 +105,7 @@ def capture_page_isolated(
     browser_peak = 0
     browser_process_peak = 0
     tree_nice_min: int | None = None
+    cpu_isolation: tuple[int, int] | None = None
     try:
         process = subprocess.Popen(
             [sys.executable, "-m", "src.core.inspection.live_capture_worker",
@@ -91,12 +113,16 @@ def capture_page_isolated(
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
         tree_nice_min = _lower_tree_priority(process.pid)
+        cpu_isolation = _isolate_capture_tree_cpu(process.pid)
         while process.poll() is None:
             if time.monotonic() - started >= timeout:
                 _terminate_tree(process)
                 raise TimeoutError("isolated visual capture exceeded its bounded timeout")
             worker_rss, browser_rss, browser_processes = _tree_rss(process.pid)
             observed_nice = _lower_tree_priority(process.pid)
+            observed_isolation = _isolate_capture_tree_cpu(process.pid)
+            if observed_isolation is not None:
+                cpu_isolation = observed_isolation
             if observed_nice is not None:
                 tree_nice_min = (
                     observed_nice if tree_nice_min is None
@@ -119,6 +145,8 @@ def capture_page_isolated(
             "browser_process_peak": browser_process_peak,
             "process_nice": value.get("process_nice"),
             "capture_tree_nice_min": tree_nice_min,
+            "available_cpu_count": cpu_isolation[0] if cpu_isolation else None,
+            "capture_cpu_count": cpu_isolation[1] if cpu_isolation else None,
             "exit_status": process.returncode, "cleanup_complete": True,
         }}
     finally:
