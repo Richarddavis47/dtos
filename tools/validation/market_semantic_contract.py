@@ -11,8 +11,11 @@ def retained_semantic_contract(
     """Read worker-prepared identities without rebuilding semantic inputs."""
     health = cache.health()
     cache_health = health.get("cache") or {}
-    with cache._lock:
-        prepared = dict(cache._prepared_semantic_contract or {})
+    prepared = dict(
+        (cache_health.get("semantic_preparation") or {}).get(
+            "semantic_identities"
+        ) or {}
+    )
     return {
         "semantic_generation": cache_health.get("requested_generation"),
         "semantic_identities": {

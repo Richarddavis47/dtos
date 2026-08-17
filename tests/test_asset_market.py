@@ -394,6 +394,12 @@ class AssetMarketTests(unittest.TestCase):
         self.assertEqual(metrics["execution"], "spawned_subprocess")
         self.assertTrue(metrics["reaped"])
         self.assertEqual(metrics["records"], expected["asset_count"])
+        self.assertEqual(metrics["semantic_identities"], {
+            name: expected[name] for name in (
+                "asset_universe_digest", "brain_semantic_output_digest",
+                "ownership_dependency_digest", "provider_evidence_digest",
+            )
+        })
 
     def test_semantic_generation_is_deterministic_across_repeated_processes(self) -> None:
         marker = self.cache.request_marker(

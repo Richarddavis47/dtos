@@ -6,7 +6,6 @@ import os
 import sqlite3
 import sys
 import tempfile
-import threading
 import unittest
 from collections import deque
 from contextlib import closing
@@ -67,19 +66,18 @@ DETAIL = "Asset Market generation is building safely in the background; retry sh
 class ArchiveCacheValidationTests(unittest.TestCase):
     def test_semantic_contract_diagnostic_uses_retained_worker_output(self) -> None:
         class Cache:
-            _lock = threading.RLock()
-            _prepared_semantic_contract = {
-                "asset_universe_digest": "asset-digest",
-                "brain_semantic_output_digest": "brain-digest",
-                "database_identity_digest": "private-digest",
-            }
-
             @staticmethod
             def health():
                 return {
                     "cache": {
                         "requested_generation": "semantic-generation",
                         "artifact_compatibility": "compatible",
+                        "semantic_preparation": {
+                            "semantic_identities": {
+                                "asset_universe_digest": "asset-digest",
+                                "brain_semantic_output_digest": "brain-digest",
+                            },
+                        },
                     },
                 }
 
