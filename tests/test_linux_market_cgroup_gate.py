@@ -6,6 +6,7 @@ import os
 import sqlite3
 import sys
 import tempfile
+import threading
 import unittest
 from collections import deque
 from contextlib import closing
@@ -57,12 +58,52 @@ from tools.validation.linux_market_cgroup_gate import (
     _startup_memory_within_limit,
     _warm_historical_archive,
 )
+from tools.validation.market_semantic_contract import retained_semantic_contract
 
 
 DETAIL = "Asset Market generation is building safely in the background; retry shortly."
 
 
 class ArchiveCacheValidationTests(unittest.TestCase):
+    def test_semantic_contract_diagnostic_uses_retained_worker_output(self) -> None:
+        class Cache:
+            _lock = threading.RLock()
+            _prepared_semantic_contract = {
+                "asset_universe_digest": "asset-digest",
+                "brain_semantic_output_digest": "brain-digest",
+                "database_identity_digest": "private-digest",
+            }
+
+            @staticmethod
+            def health():
+                return {
+                    "cache": {
+                        "requested_generation": "semantic-generation",
+                        "artifact_compatibility": "compatible",
+                    },
+                }
+
+            @staticmethod
+            def artifact_contract(*_args, **_kwargs):
+                raise AssertionError("diagnostic recomputed semantic inputs")
+
+        class Store:
+            @staticmethod
+            def semantic_generations(_league_id):
+                return {"provider_cache": 5}
+
+        result = retained_semantic_contract(
+            Cache(),
+            {"valuation_intelligence": {"generated_at": "brain-time"}},
+            {"last_sync": "sync-time"}, Store(), "league-1",
+        )
+        self.assertEqual(result["semantic_generation"], "semantic-generation")
+        self.assertEqual(result["artifact_compatibility"], "compatible")
+        self.assertEqual(result["semantic_identities"], {
+            "asset_universe_digest": "asset-digest",
+            "brain_semantic_output_digest": "brain-digest",
+        })
+
     def test_live_visual_probe_cadence_is_continuous_but_not_aggressive(self) -> None:
         self.assertGreaterEqual(LIVE_VISUAL_PROBE_INTERVAL_SECONDS, 0.2)
         self.assertLessEqual(LIVE_VISUAL_PROBE_INTERVAL_SECONDS, 1.0)

@@ -1579,26 +1579,6 @@ def _replacement_profile(
         raise AssertionError("material fixture scalar evidence is unavailable")
     if mutation["before"] == mutation["after"]:
         raise AssertionError("material fixture scalar did not change")
-    changed_semantic = _semantic_contract()
-    if (
-        before_semantic.get("semantic_generation")
-        == changed_semantic.get("semantic_generation")
-    ):
-        raise AssertionError("material fixture mutation did not change semantic digest")
-    if changed_semantic.get("artifact_compatibility") != "brain_semantic_output_changed":
-        raise AssertionError(
-            "material artifact mismatch reason was not brain_semantic_output_changed"
-        )
-    before_digests = before_semantic.get("semantic_identities") or {}
-    after_digests = changed_semantic.get("semantic_identities") or {}
-    for stable in ("asset_universe_digest", "ownership_dependency_digest"):
-        if before_digests.get(stable) != after_digests.get(stable):
-            raise AssertionError(f"material fixture changed unrelated digest: {stable}")
-    if (
-        before_digests.get("brain_semantic_output_digest")
-        == after_digests.get("brain_semantic_output_digest")
-    ):
-        raise AssertionError("material fixture did not change Brain/valuation digest")
     before_history = _history_metrics()
     samples: list[dict[str, object]] = []
     for sequence in range(1, 11):
@@ -1722,6 +1702,26 @@ def _replacement_profile(
         raise AssertionError("replacement warming performed request-thread generation work")
     if any(int(sample["browser_processes"]) for sample in samples):
         raise AssertionError("browser process overlapped replacement semantic preparation")
+    changed_semantic = _semantic_contract()
+    if (
+        before_semantic.get("semantic_generation")
+        == changed_semantic.get("semantic_generation")
+    ):
+        raise AssertionError("material fixture mutation did not change semantic digest")
+    if changed_semantic.get("artifact_compatibility") != "brain_semantic_output_changed":
+        raise AssertionError(
+            "material artifact mismatch reason was not brain_semantic_output_changed"
+        )
+    before_digests = before_semantic.get("semantic_identities") or {}
+    after_digests = changed_semantic.get("semantic_identities") or {}
+    for stable in ("asset_universe_digest", "ownership_dependency_digest"):
+        if before_digests.get(stable) != after_digests.get(stable):
+            raise AssertionError(f"material fixture changed unrelated digest: {stable}")
+    if (
+        before_digests.get("brain_semantic_output_digest")
+        == after_digests.get("brain_semantic_output_digest")
+    ):
+        raise AssertionError("material fixture did not change Brain/valuation digest")
     published_artifact = _artifact_state()
     if published_artifact.get("generation") != changed_semantic.get("semantic_generation"):
         raise AssertionError("validator sampled before the new semantic generation published")
