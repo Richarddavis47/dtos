@@ -7,6 +7,16 @@ import os
 from pathlib import Path
 from typing import Any
 
+CAPTURE_PROCESS_NICE_INCREMENT = 15
+
+
+def _lower_capture_priority() -> int | None:
+    """Give request serving priority over best-effort visual capture work."""
+    if os.name != "posix":
+        return None
+    os.nice(CAPTURE_PROCESS_NICE_INCREMENT)
+    return os.nice(0)
+
 
 def _bounded_error(exc: BaseException) -> dict[str, str]:
     return {"status": "failed", "error_type": type(exc).__name__,
@@ -16,8 +26,7 @@ def _bounded_error(exc: BaseException) -> dict[str, str]:
 def run(input_path: Path, result_path: Path) -> int:
     """Execute one capture from a compact private input contract."""
     try:
-        if os.name == "posix":
-            os.nice(5)
+        process_nice = _lower_capture_priority()
         value = json.loads(input_path.read_text(encoding="utf-8"))
         request_value = value["request"]
         from src.core.inspection.live_browser import capture_page
@@ -32,7 +41,10 @@ def run(input_path: Path, result_path: Path) -> int:
         result: dict[str, Any] = capture_page(
             str(value["capture_origin"]), request, Path(value["output_path"]),
         )
-        payload: dict[str, Any] = {"status": "complete", "presentation": result}
+        payload: dict[str, Any] = {
+            "status": "complete", "presentation": result,
+            "process_nice": process_nice,
+        }
         exit_code = 0
     except BaseException as exc:
         payload = _bounded_error(exc)

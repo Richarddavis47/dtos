@@ -91,6 +91,7 @@ def capture_page_isolated(
             "worker_rss_peak_bytes": worker_peak,
             "browser_rss_peak_bytes": browser_peak,
             "browser_process_peak": browser_process_peak,
+            "process_nice": value.get("process_nice"),
             "exit_status": process.returncode, "cleanup_complete": True,
         }}
     finally:
