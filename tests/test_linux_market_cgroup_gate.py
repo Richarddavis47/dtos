@@ -29,6 +29,7 @@ from src.core.historical_memory.store import HistoricalStore
 from src.core.history_context.metadata import MinimalMetadataStore
 from src.core.history_context.season_cache import SleeperSeasonCache
 from tools.validation.linux_market_cgroup_gate import (
+    LIVE_VISUAL_PROBE_INTERVAL_SECONDS,
     StartupFailure,
     _archive_cache_assessment,
     _archive_cache_retained,
@@ -62,6 +63,10 @@ DETAIL = "Asset Market generation is building safely in the background; retry sh
 
 
 class ArchiveCacheValidationTests(unittest.TestCase):
+    def test_live_visual_probe_cadence_is_continuous_but_not_aggressive(self) -> None:
+        self.assertGreaterEqual(LIVE_VISUAL_PROBE_INTERVAL_SECONDS, 0.2)
+        self.assertLessEqual(LIVE_VISUAL_PROBE_INTERVAL_SECONDS, 1.0)
+
     def test_historical_replay_fixture_matches_production_shape(self) -> None:
         seasons, keys = _trade_replay_fixture()
         trades = [

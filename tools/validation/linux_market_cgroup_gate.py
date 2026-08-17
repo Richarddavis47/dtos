@@ -30,6 +30,7 @@ COLD_MAX = int(1.5 * GIB)
 RAW_EMERGENCY_MAX = 1740 * MIB
 BASELINE = int(1.03 * GIB)
 BASE_URL = "http://127.0.0.1:8767"
+LIVE_VISUAL_PROBE_INTERVAL_SECONDS = 0.25
 CGROUP = Path("/sys/fs/cgroup")
 OUTPUT = Path(os.environ.get("DTOS_BENCHMARK_OUTPUT", "/output/summary.json"))
 FIXTURE = Path(os.environ.get("DTOS_FIXTURE_ROOT", "/fixture"))
@@ -639,9 +640,17 @@ def _live_visual_responsiveness() -> dict[str, object]:
         final_health = json.loads(body)
         if cycles >= 2 and final_health.get("status") == "complete":
             break
-        time.sleep(0.05)
+        time.sleep(LIVE_VISUAL_PROBE_INTERVAL_SECONDS)
     if final_health.get("status") != "complete":
-        raise AssertionError("production-shaped Live Visual flight did not complete")
+        raise ExpansionLatencyFailure(
+            "production-shaped Live Visual flight did not complete",
+            {
+                "samples": samples,
+                "cycles": cycles,
+                "capture_health": final_health,
+                "probe_interval_ms": LIVE_VISUAL_PROBE_INTERVAL_SECONDS * 1000,
+            },
+        )
     if any(int(final_health.get(key) or 0) for key in ("stale", "failures", "pending")):
         raise AssertionError("production-shaped Live Visual flight retained stale or failed captures")
     required = int(final_health.get("required_captures") or 0)
