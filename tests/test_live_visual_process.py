@@ -16,6 +16,7 @@ from src.core.inspection.live_capture_worker import (
 from src.core.inspection.live_capture_process import capture_page_isolated
 from src.core.inspection.live_capture_process import (
     CAPTURE_PROCESS_CONTINUE_SIGNAL,
+    CAPTURE_REQUEST_PAUSE_SECONDS,
     CAPTURE_PROCESS_STOP_SIGNAL,
     _isolate_capture_tree_cpu,
     _lower_tree_priority,
@@ -167,7 +168,8 @@ class LiveVisualProcessTests(unittest.TestCase):
                     return_value=False,
                 ) as wait:
             self.assertTrue(_yield_capture_cpu(process))
-        wait.assert_called_once_with(0.098)
+        wait.assert_called_once_with(0.02)
+        self.assertLessEqual(CAPTURE_REQUEST_PAUSE_SECONDS, 0.02)
         root.suspend.assert_called_once_with()
         root.resume.assert_called_once_with()
 
