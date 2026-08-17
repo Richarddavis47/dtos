@@ -47,6 +47,23 @@ class LiveVisualInspectionTests(unittest.TestCase):
             self.assertTrue(service.wait())
             self.assertTrue(entered.is_set())
 
+    def test_capture_grace_keeps_normal_requests_ahead_of_browser_start(self):
+        entered = threading.Event()
+
+        def capture(_item, output):
+            entered.set()
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(
+                Path(folder), capture, start_grace_seconds=0.1,
+            )
+            self.assertEqual(service.schedule([request()]), 1)
+            self.assertFalse(entered.wait(0.05))
+            self.assertTrue(service.wait())
+            self.assertTrue(entered.is_set())
+
     def test_first_generation_reservation_defers_browser_until_market_ready(self):
         entered = threading.Event()
 

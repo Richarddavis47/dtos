@@ -251,6 +251,7 @@ live_visual_service = LiveVisualService(
         "league-" + hashlib.sha256(str(LEAGUE_ID).encode()).hexdigest()[:16]
     ),
     _capture_live_visual if os.getenv("RENDER") or os.getenv("DTOS_LIVE_VISUAL_CAPTURE") else None,
+    start_grace_seconds=2.0,
 )
 current_visual_mirror = CurrentVisualMirror(
     live_visual_service.root / "current_mirror", live_visual_service,

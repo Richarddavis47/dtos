@@ -50,9 +50,11 @@ class LiveVisualService:
 
     def __init__(
         self, root: Path, capture: Callable[[CaptureRequest, Path], dict[str, Any]] | None = None,
+        *, start_grace_seconds: float = 0.0,
     ) -> None:
         self.root = root
         self._capture = capture
+        self._start_grace_seconds = max(0.0, float(start_grace_seconds))
         self._lock = threading.RLock()
         self._worker: threading.Thread | None = None
         self._queue: list[CaptureRequest] = []
@@ -178,6 +180,8 @@ class LiveVisualService:
             return dict(row) if row else None
 
     def _run(self) -> None:
+        if self._start_grace_seconds:
+            time.sleep(self._start_grace_seconds)
         while True:
             if not lifecycle_coordinator.visual_capture_allowed():
                 with self._lock:
