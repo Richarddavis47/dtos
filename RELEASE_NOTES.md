@@ -1,4 +1,17 @@
-# DTOS v1.10.38 - Public Current Visual Origin Correction
+# DTOS v1.10.39 - Live Visual Process Isolation
+
+DTOS v1.10.39 makes Live Visual capture genuinely background work. Each browser
+flight now runs in one bounded, lower-priority subprocess, leaving the single
+Uvicorn interpreter available to accept health, market, FOIS, history, and
+current-mirror requests. A compact private file contract returns presentation
+metadata; timeout and failure cleanup terminate the complete browser tree.
+
+One transient browser failure receives one tracked retry. Incomplete flights
+remain honest and cannot replace the last verified rolling generation. Complete
+flights retain atomic promotion, direct native PNG delivery, SHA-256 and decode
+verification, and the public HTTPS origin correction introduced in v1.10.38.
+
+## Previous release: v1.10.38 - Public Current Visual Origin Correction
 
 DTOS v1.10.38 makes the rolling current-product visual mirror consumable from a
 future public client. Durable manifests now identify PNGs with environment-neutral

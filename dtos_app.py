@@ -240,10 +240,10 @@ def _measure_resources() -> dict[str, Any]:
 
 
 def _capture_live_visual(request: Any, output: Any) -> dict[str, Any]:
-    """Load the browser stack only inside the background capture worker."""
-    from src.core.inspection.live_browser import capture_page
+    """Keep browser control outside the request-serving Python interpreter."""
+    from src.core.inspection.live_capture_process import capture_page_isolated
 
-    return capture_page(_CAPTURE_URL, request, output)
+    return capture_page_isolated(_CAPTURE_URL, request, output)
 
 
 live_visual_service = LiveVisualService(
@@ -255,7 +255,16 @@ live_visual_service = LiveVisualService(
 current_visual_mirror = CurrentVisualMirror(
     live_visual_service.root / "current_mirror", live_visual_service,
 )
-live_visual_service.on_complete(current_visual_mirror.promote)
+def _complete_live_visual_capture() -> None:
+    try:
+        current_visual_mirror.promote()
+    except Exception:
+        runtime_metrics.mark_background("live_visual_capture", "failed")
+        raise
+    runtime_metrics.mark_background("live_visual_capture", "complete")
+
+
+live_visual_service.on_complete(_complete_live_visual_capture)
 
 
 def schedule_live_visual_capture() -> int:

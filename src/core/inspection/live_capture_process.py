@@ -1,0 +1,100 @@
+"""Bounded parent-side contract for isolated Live Visual captures."""
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import time
+from dataclasses import asdict
+from pathlib import Path
+from typing import Any
+
+import psutil
+
+from src.core.inspection.live_visual import CaptureRequest
+
+CAPTURE_PROCESS_TIMEOUT_SECONDS = 120.0
+CAPTURE_PROCESS_POLL_SECONDS = 0.05
+
+
+def _tree_rss(pid: int) -> tuple[int, int, int]:
+    try:
+        process = psutil.Process(pid)
+        children = process.children(recursive=True)
+        active = [child for child in children if child.is_running()]
+        return int(process.memory_info().rss), sum(
+            int(child.memory_info().rss) for child in active
+        ), len(active)
+    except (psutil.Error, OSError):
+        return 0, 0, 0
+
+
+def _terminate_tree(process: subprocess.Popen[bytes]) -> None:
+    """Terminate browser descendants before the orchestration process."""
+    try:
+        root = psutil.Process(process.pid)
+        children = root.children(recursive=True)
+    except psutil.Error:
+        children = []
+    for child in reversed(children):
+        try:
+            child.kill()
+        except psutil.Error:
+            pass
+    try:
+        process.kill()
+    except OSError:
+        pass
+    process.wait(timeout=5)
+
+
+def capture_page_isolated(
+    capture_origin: str, request: CaptureRequest, output: Path,
+    *, timeout: float = CAPTURE_PROCESS_TIMEOUT_SECONDS,
+) -> dict[str, Any]:
+    """Run one browser flight outside the request-serving interpreter."""
+    token = f"{request.surface_id}-{request.viewport}"
+    input_path = output.with_name(f".{token}.capture-input.json")
+    result_path = output.with_name(f".{token}.capture-result.json")
+    input_path.write_text(json.dumps({
+        "capture_origin": capture_origin, "output_path": str(output),
+        "request": asdict(request),
+    }, sort_keys=True, separators=(",", ":")), encoding="utf-8")
+    started = time.monotonic()
+    process: subprocess.Popen[bytes] | None = None
+    worker_peak = 0
+    browser_peak = 0
+    browser_process_peak = 0
+    try:
+        process = subprocess.Popen(
+            [sys.executable, "-m", "src.core.inspection.live_capture_worker",
+             "--input", str(input_path), "--result", str(result_path)],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        while process.poll() is None:
+            if time.monotonic() - started >= timeout:
+                _terminate_tree(process)
+                raise TimeoutError("isolated visual capture exceeded its bounded timeout")
+            worker_rss, browser_rss, browser_processes = _tree_rss(process.pid)
+            worker_peak = max(worker_peak, worker_rss)
+            browser_peak = max(browser_peak, browser_rss)
+            browser_process_peak = max(browser_process_peak, browser_processes)
+            time.sleep(CAPTURE_PROCESS_POLL_SECONDS)
+        if process.returncode != 0 or not result_path.is_file():
+            raise RuntimeError("isolated visual capture exited unsuccessfully")
+        value = json.loads(result_path.read_text(encoding="utf-8"))
+        if value.get("status") != "complete" or not isinstance(value.get("presentation"), dict):
+            raise RuntimeError("isolated visual capture returned malformed output")
+        return {**value["presentation"], "capture_process": {
+            "worker_pid": process.pid,
+            "duration_ms": round((time.monotonic() - started) * 1000, 3),
+            "worker_rss_peak_bytes": worker_peak,
+            "browser_rss_peak_bytes": browser_peak,
+            "browser_process_peak": browser_process_peak,
+            "exit_status": process.returncode, "cleanup_complete": True,
+        }}
+    finally:
+        if process is not None and process.poll() is None:
+            _terminate_tree(process)
+        input_path.unlink(missing_ok=True)
+        result_path.unlink(missing_ok=True)

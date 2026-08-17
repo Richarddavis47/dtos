@@ -121,6 +121,82 @@ class LiveVisualInspectionTests(unittest.TestCase):
             self.assertEqual(service.capture("matchups-1", "mobile")["status"], "stale")
             self.assertNotIn("private fixture detail", service.health(1)["last_error"])
 
+    def test_matchups_mobile_transient_failure_retries_once_and_recovers(self):
+        calls = 0
+
+        def capture(_item, output):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise TimeoutError("transient fixture timeout")
+            Image.new("RGB", (390, 844), "navy").save(output, "PNG")
+            return {
+                "capture_process": {
+                    "worker_rss_peak_bytes": 12_000,
+                    "browser_rss_peak_bytes": 34_000,
+                },
+            }
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            self.assertEqual(service.schedule([request()]), 1)
+            self.assertTrue(service.wait())
+            health = service.health(1)
+            self.assertEqual(calls, 2)
+            self.assertEqual(health["current"], 1)
+            self.assertEqual(health["stale"], 0)
+            self.assertEqual(health["captures_retried"], 1)
+            self.assertEqual(health["capture_attempt_failures"], 1)
+            self.assertEqual(health["captures_failed"], 0)
+            self.assertEqual(health["capture_worker_peak"], 1)
+            self.assertEqual(health["browser_process_peak"], 1)
+            self.assertEqual(health["capture_worker_rss_peak_bytes"], 12_000)
+            self.assertEqual(health["browser_rss_peak_bytes"], 34_000)
+            self.assertNotIn(
+                "capture_process",
+                service.capture("matchups-1", "mobile")["presentation"],
+            )
+
+    def test_production_shaped_flight_is_single_flight_and_complete(self):
+        active = 0
+        peak = 0
+        lock = threading.Lock()
+
+        def capture(_item, output):
+            nonlocal active, peak
+            with lock:
+                active += 1
+                peak = max(peak, active)
+            try:
+                Image.new("RGB", (20, 10), "navy").save(output, "PNG")
+                return {}
+            finally:
+                with lock:
+                    active -= 1
+
+        requests = [
+            CaptureRequest(
+                surface_id=f"surface-{index}", title=f"Surface {index}",
+                human_url=f"/surface/{index}", semantic_url=f"/api/surface/{index}",
+                viewport=viewport, fingerprint=f"{index}-{viewport}", canonical={},
+            )
+            for index in range(19) for viewport in ("mobile", "desktop")
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            self.assertEqual(service.schedule(requests), 38)
+            self.assertEqual(service.schedule(requests), 0)
+            self.assertTrue(service.wait())
+            health = service.health(38)
+            self.assertEqual(peak, 1)
+            self.assertEqual(health["required_captures"], 38)
+            self.assertEqual(health["captures_started"], 38)
+            self.assertEqual(health["captures_completed"], 38)
+            self.assertEqual(health["captures_failed"], 0)
+            self.assertEqual(health["current"], 38)
+            self.assertEqual(health["stale"], 0)
+            self.assertEqual(health["candidate_state"], "complete")
+
     def test_stale_mobile_capture_refreshes_through_registered_contract(self):
         calls = []
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import threading
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -69,6 +70,18 @@ class LiveVisualService:
         }
         self._last_refresh: dict[str, Any] | None = None
         self._completed_callback: Callable[[], None] | None = None
+        self._attempts: dict[tuple[str, str], int] = {}
+        self._capture_started_at: float | None = None
+        self._capture_finished_at: float | None = None
+        self._telemetry = {
+            "captures_started": 0, "captures_completed": 0,
+            "captures_failed": 0, "capture_attempt_failures": 0,
+            "captures_retried": 0,
+            "capture_worker_count": 0, "capture_worker_peak": 0,
+            "browser_process_peak": 0, "capture_worker_rss_peak_bytes": 0,
+            "browser_rss_peak_bytes": 0,
+            "last_capture_worker_pid": None,
+        }
         self._manifest = self._load_manifest()
 
     def on_complete(self, callback: Callable[[], None]) -> None:
@@ -119,7 +132,13 @@ class LiveVisualService:
                 pending.add(identity)
                 added += 1
             if self._queue and not (self._worker and self._worker.is_alive()):
+                self._capture_started_at = time.monotonic()
+                self._capture_finished_at = None
                 self._worker = threading.Thread(target=self._run, name="dtos-live-visual", daemon=True)
+                self._telemetry["capture_worker_count"] = 1
+                self._telemetry["capture_worker_peak"] = max(
+                    self._telemetry["capture_worker_peak"], 1,
+                )
                 self._worker.start()
             return added
 
@@ -167,6 +186,8 @@ class LiveVisualService:
                 if not self._queue:
                     self._active = None
                     self._browser_processes = 0
+                    self._telemetry["capture_worker_count"] = 0
+                    self._capture_finished_at = time.monotonic()
                     callback = self._completed_callback
                     completed = True
                 else:
@@ -193,12 +214,18 @@ class LiveVisualService:
             final = folder / f"{request.viewport}.png"
             temporary = folder / f".{request.viewport}.partial.png"
             backup = folder / f".{request.viewport}.previous.png"
+            capture_completed = False
             try:
                 with lifecycle_coordinator.phase("live_visual_capture") as phase:
                     with self._lock:
                         self._browser_processes = 1
+                        self._telemetry["captures_started"] += 1
+                        self._telemetry["browser_process_peak"] = max(
+                            self._telemetry["browser_process_peak"], 1,
+                        )
                     try:
                         result = self._capture(request, temporary) if self._capture else {}
+                        capture_completed = True
                     finally:
                         with self._lock:
                             self._browser_processes = 0
@@ -221,10 +248,33 @@ class LiveVisualService:
                     "metadata_url": f"/api/inspect/live/visual/metadata/{_safe_id(request.surface_id)}/{request.viewport}",
                     "application_version": VERSION, "application_build": BUILD_NUMBER,
                     "commit": deployment.get("commit"), "canonical": request.canonical,
-                    "presentation": result, "artifact_hash": artifact_hash,
+                    "presentation": {
+                        key: value for key, value in result.items()
+                        if key != "capture_process"
+                    },
+                    "artifact_hash": artifact_hash,
                 }
                 with self._lock:
                     key = self.capture_key(request.surface_id, request.viewport)
+                    process_metrics = result.get("capture_process") or {}
+                    self._telemetry["capture_worker_rss_peak_bytes"] = max(
+                        self._telemetry["capture_worker_rss_peak_bytes"],
+                        int(process_metrics.get("worker_rss_peak_bytes") or 0),
+                    )
+                    self._telemetry["browser_rss_peak_bytes"] = max(
+                        self._telemetry["browser_rss_peak_bytes"],
+                        int(process_metrics.get("browser_rss_peak_bytes") or 0),
+                    )
+                    self._telemetry["browser_process_peak"] = max(
+                        self._telemetry["browser_process_peak"],
+                        int(process_metrics.get("browser_process_peak") or 1),
+                    )
+                    self._telemetry["last_capture_worker_pid"] = (
+                        int(process_metrics.get("worker_pid"))
+                        if process_metrics.get("worker_pid") is not None else None
+                    )
+                    self._telemetry["captures_completed"] += 1
+                    self._attempts.pop((key, request.fingerprint), None)
                     previous = (self._manifest.get("captures") or {}).get(key)
                     if final.exists():
                         final.replace(backup)
@@ -258,6 +308,15 @@ class LiveVisualService:
                 with self._lock:
                     self._last_error = f"{type(exc).__name__}: capture failed"
                     key = self.capture_key(request.surface_id, request.viewport)
+                    attempt_key = (key, request.fingerprint)
+                    attempts = self._attempts.get(attempt_key, 0)
+                    self._telemetry["capture_attempt_failures"] += 1
+                    if not capture_completed and attempts < 1:
+                        self._attempts[attempt_key] = attempts + 1
+                        self._queue.append(request)
+                        self._telemetry["captures_retried"] += 1
+                    else:
+                        self._telemetry["captures_failed"] += 1
                     current = (self._manifest.get("captures") or {}).get(key)
                     if current:
                         current["status"] = "stale"
@@ -324,6 +383,15 @@ class LiveVisualService:
                 for key, row in (self._manifest.get("captures") or {}).items()
                 if row.get("status") == "stale"
             },
+            "capture_generation": VERSION,
+            "candidate_state": "capturing" if manifest["pending"] else (
+                "failed" if manifest["failures"] or manifest["stale"] else "complete"
+            ),
+            "capture_elapsed_ms": round(
+                ((self._capture_finished_at or time.monotonic()) - self._capture_started_at) * 1000,
+                3,
+            ) if self._capture_started_at is not None else 0.0,
+            **self._telemetry,
         }
 
     def wait(self, timeout: float = 10) -> bool:
