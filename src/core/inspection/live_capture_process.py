@@ -36,7 +36,7 @@ def _lower_tree_priority(pid: int) -> int | None:
 
 
 def _partition_request_cpu() -> tuple[list[int], list[int]] | None:
-    """Reserve one eligible Linux CPU before the capture child is created."""
+    """Co-locate capture with request serving so nice priority can preempt it."""
     if not sys.platform.startswith("linux"):
         return None
     try:
@@ -44,8 +44,9 @@ def _partition_request_cpu() -> tuple[list[int], list[int]] | None:
         allowed = process.cpu_affinity()
         if len(allowed) < 2:
             return None
-        process.cpu_affinity(allowed[:-1])
-        return allowed, [allowed[-1]]
+        shared = [allowed[0]]
+        process.cpu_affinity(shared)
+        return allowed, shared
     except (psutil.Error, AttributeError, OSError, ValueError):
         return None
 

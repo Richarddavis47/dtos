@@ -103,7 +103,7 @@ class LiveVisualProcessTests(unittest.TestCase):
         root.cpu_affinity.assert_any_call([4])
         browser.cpu_affinity.assert_called_once_with([4])
 
-    def test_linux_parent_reserves_and_restores_capture_cpu(self):
+    def test_linux_parent_shares_capture_cpu_for_priority_preemption_and_restores(self):
         parent = unittest.mock.Mock()
         parent.cpu_affinity.return_value = [2, 4]
         with patch("src.core.inspection.live_capture_process.sys.platform", "linux"), \
@@ -111,7 +111,7 @@ class LiveVisualProcessTests(unittest.TestCase):
                     "src.core.inspection.live_capture_process.psutil.Process",
                     return_value=parent,
                 ):
-            self.assertEqual(_partition_request_cpu(), ([2, 4], [4]))
+            self.assertEqual(_partition_request_cpu(), ([2, 4], [2]))
             parent.cpu_affinity.assert_any_call([2])
             _restore_request_cpu([2, 4])
             parent.cpu_affinity.assert_any_call([2, 4])
