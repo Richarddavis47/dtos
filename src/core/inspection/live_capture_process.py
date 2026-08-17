@@ -104,9 +104,17 @@ def _tree_rss(pid: int) -> tuple[int, int, int]:
         return 0, 0, 0
 
 
-def _yield_capture_cpu(process: subprocess.Popen[bytes]) -> bool:
+def _yield_capture_cpu(
+    process: subprocess.Popen[bytes], *, dedicated_cpu: bool = False,
+) -> bool:
     """Bound capture CPU bursts so request serving receives scheduling windows."""
     if not sys.platform.startswith("linux"):
+        time.sleep(CAPTURE_PROCESS_POLL_SECONDS)
+        return False
+    if dedicated_cpu:
+        # CPU affinity already gives the request server and capture tree disjoint
+        # scheduling capacity. Suspending that isolated tree here serializes the
+        # browser flight without increasing request capacity.
         time.sleep(CAPTURE_PROCESS_POLL_SECONDS)
         return False
     request_priority = request_active()
@@ -225,7 +233,7 @@ def capture_page_isolated(
             worker_peak = max(worker_peak, worker_rss)
             browser_peak = max(browser_peak, browser_rss)
             browser_process_peak = max(browser_process_peak, browser_processes)
-            if _yield_capture_cpu(process):
+            if _yield_capture_cpu(process, dedicated_cpu=cpu_isolation is not None):
                 cpu_throttle_cycles += 1
         if process.returncode != 0 or not result_path.is_file():
             raise RuntimeError("isolated visual capture exited unsuccessfully")
