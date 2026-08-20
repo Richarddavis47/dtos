@@ -30,7 +30,9 @@ def verify_current(
     for row in captures:
         relative = str(row.get("relative_path") or "")
         public_url = str(row.get("public_url") or row.get("image_url") or "")
-        if not relative.startswith("/api/inspect/current-visual/images/"):
+        if not relative.startswith((
+            "/api/inspect/current-visual/images/", "/current-visual/images/",
+        )):
             raise RuntimeError("Current visual image has an invalid relative identity.")
         if not public_url:
             public_url = urljoin(manifest_url, relative)
@@ -76,7 +78,7 @@ def verify_current(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Verify DTOS current visual images from stable discovery.")
     parser.add_argument(
-        "--manifest-url", default="https://dtos.onrender.com/api/inspect/current-visual/manifest",
+        "--manifest-url", default="https://dtos.onrender.com/current-visual/manifest.json",
     )
     args = parser.parse_args()
     print(json.dumps(verify_current(args.manifest_url), indent=2))

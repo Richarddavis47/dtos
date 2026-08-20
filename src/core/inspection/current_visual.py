@@ -18,6 +18,7 @@ from src.core.inspection.live_visual import LIVE_VIEWPORTS, LiveVisualService
 
 CURRENT_VISUAL_SCHEMA_VERSION = "1.1"
 CURRENT_VISUAL_ROUTE = "/api/inspect/current-visual"
+CURRENT_VISUAL_PUBLIC_ROUTE = "/current-visual"
 
 
 def _json_bytes(value: Any) -> bytes:
@@ -74,6 +75,41 @@ def public_manifest(value: dict[str, Any], public_base: str) -> dict[str, Any]:
     return result
 
 
+def consumer_manifest(value: dict[str, Any], public_base: str) -> dict[str, Any]:
+    """Expose the rolling mirror through stable, human-readable public paths."""
+    result = public_manifest(value, public_base)
+    generation = str(result.get("current_generation") or "")
+    result["discovery_url"] = f"{public_base}{CURRENT_VISUAL_PUBLIC_ROUTE}"
+    result["manifest_url"] = f"{public_base}{CURRENT_VISUAL_PUBLIC_ROUTE}/manifest.json"
+    result["transport"] = {
+        "authentication_required": False,
+        "cookies_required": False,
+        "javascript_required": False,
+        "manifest_content_type": "application/json",
+        "image_content_type": "image/png",
+        "rolling_current_only": True,
+    }
+    for row in result.get("captures") or []:
+        stored = str(row.get("relative_path") or "")
+        name = stored.rsplit("/", 1)[-1]
+        stable = f"{CURRENT_VISUAL_PUBLIC_ROUTE}/images/{name}"
+        row.update({
+            "capture_id": name.removesuffix(".png"),
+            "page_name": row.get("title") or row.get("surface_id"),
+            "generation": generation,
+            "version": result.get("application_version"),
+            "build": result.get("application_build"),
+            "commit": result.get("commit"),
+            "capture_timestamp": row.get("captured_at"),
+            "byte_size": row.get("bytes"),
+            "relative_path": stable,
+            "public_image_url": f"{public_base}{stable}",
+            "public_url": f"{public_base}{stable}",
+            "image_url": f"{public_base}{stable}",
+        })
+    return result
+
+
 class CurrentVisualMirror:
     """Keep exactly one externally inspectable generation with safe candidate handoff."""
 
@@ -118,6 +154,18 @@ class CurrentVisualMirror:
         path = (self.root / "generations" / generation / "images" / name).resolve()
         generation_root = (self.root / "generations" / generation).resolve()
         return path if generation_root in path.parents and path.is_file() else None
+
+    def current_image(self, name: str) -> Path | None:
+        """Resolve one explicitly registered current image without path exposure."""
+        current = self.manifest()
+        generation = str(current.get("current_generation") or "")
+        registered = {
+            str(row.get("relative_path") or "").rsplit("/", 1)[-1]
+            for row in current.get("captures") or []
+        }
+        if not generation or name not in registered:
+            return None
+        return self.image(generation, name)
 
     @staticmethod
     def _link(source: Path, target: Path) -> None:
@@ -238,8 +286,22 @@ class CurrentVisualMirror:
 
     def health(self) -> dict[str, Any]:
         value = self.manifest()
-        return {key: value.get(key) for key in (
+        result = {key: value.get(key) for key in (
             "status", "current_generation", "candidate_generation", "current_visual_bytes",
             "candidate_visual_bytes", "retired_generation_count", "retired_bytes_deleted",
             "capture_count", "image_count", "manifest_bytes", "stale_count", "failed_count",
         )}
+        current = deployment_metadata()
+        visual = value.get("deployment_identity") or {}
+        result.update({
+            "application_version": value.get("application_version"),
+            "application_build": value.get("application_build"),
+            "deployment_identity": visual,
+            "current_visual_matches_deployment": bool(
+                value.get("status") == "complete"
+                and value.get("application_version") == VERSION
+                and value.get("application_build") == BUILD_NUMBER
+                and visual.get("commit") == current.get("commit")
+            ),
+        })
+        return result

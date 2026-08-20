@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.41 - Native ChatGPT Visual-Mirror Accessibility
+
+- Added one stable, release-number-free Current Visual discovery endpoint and
+  manifest with direct human-readable current PNG paths.
+- Added GET/HEAD-compatible JSON and native PNG delivery with explicit MIME,
+  inline disposition, cache revalidation, ETags, and crawler discovery.
+- Kept reads strictly allowlisted and side-effect free while preserving atomic
+  rolling promotion, restart reuse, privacy, and bounded current-only storage.
+
 ## v1.10.40 - Post-Restart Live Visual Responsiveness
 
 - Defer Live Visual scheduling until the canonical Asset Market generation has

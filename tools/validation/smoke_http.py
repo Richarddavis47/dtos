@@ -290,6 +290,7 @@ def main() -> int:
         "/api/inspect/live", "/api/inspect/live/health",
         "/api/inspect/live/visual", "/api/inspect/live/visual/health",
         "/api/inspect/visual/pages", "/api/inspect/releases/current",
+        "/current-visual", "/current-visual/manifest.json",
         "/api/valuation", "/api/valuation/status", "/api/valuation/providers",
         "/api/valuation/assets?limit=1", "/api/inspect/valuation",
         "/api/market", "/api/market/health", "/api/market/assets?limit=1",

@@ -7,9 +7,9 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from services.history import history_progress_contracts
@@ -124,18 +124,30 @@ def create_inspection_router(
         result = jsonable_encoder(live().root())
         result["visual_inspection"] = "/api/inspect/live/visual"
         result["external_visual_mirror"] = {
-            "current_manifest": f"{public_base}/api/inspect/current-visual/manifest",
+            "discovery": f"{public_base}/current-visual",
+            "current_manifest": f"{public_base}/current-visual/manifest.json",
             "release_manifest": f"https://github.com/Richarddavis47/dtos/releases/download/v{VERSION}/dtos-v{VERSION}-visual-mirror-manifest.json",
             "canonical_source": "rolling_current_dtos",
         }
         return result
 
     @router.get("/current-visual/manifest")
-    async def current_visual_manifest() -> Any:
+    async def current_visual_manifest(request: Request) -> Any:
         response = current_visual_mirror.manifest() if current_visual_mirror else {
             "status": "pending", "current_generation": None, "captures": [],
         }
-        return jsonable_encoder(public_manifest(response, public_base))
+        payload = jsonable_encoder(public_manifest(response, public_base))
+        if request.method == "HEAD":
+            return Response(media_type="application/json", headers={
+                "Cache-Control": "public, max-age=0, must-revalidate",
+            })
+        return JSONResponse(payload, headers={
+            "Cache-Control": "public, max-age=0, must-revalidate",
+        })
+
+    @router.head("/current-visual/manifest", include_in_schema=False)
+    async def current_visual_manifest_head(request: Request) -> Any:
+        return await current_visual_manifest(request)
 
     @router.get("/current-visual/health")
     async def current_visual_health() -> Any:

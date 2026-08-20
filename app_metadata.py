@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.10.40"
-BUILD_NUMBER = 1140
-RELEASE_CODENAME = "Post-Restart Live Visual Responsiveness"
+VERSION = "1.10.41"
+BUILD_NUMBER = 1141
+RELEASE_CODENAME = "Native ChatGPT Visual-Mirror Accessibility"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
