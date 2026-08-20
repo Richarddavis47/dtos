@@ -45,6 +45,8 @@ REQUIRED_GET_PATHS = (
     "/api/inspect/market",
     "/api/inspect/visual/pages",
     "/api/inspect/releases/current",
+    "/current-visual",
+    "/current-visual/manifest.json",
 )
 
 

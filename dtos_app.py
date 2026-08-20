@@ -24,6 +24,7 @@ from config import (
 from routes.api import create_api_router
 from routes.audit import create_audit_router
 from routes.crawl import create_crawl_router
+from routes.current_visual import create_current_visual_router
 from routes.draft import create_draft_router
 from routes.front_offices import create_front_offices_router
 from routes.fois import create_fois_router
@@ -87,7 +88,7 @@ from config import DURABLE_HISTORY_REQUIRED
 from src.core.historical_memory.storage import validate_historical_storage
 from src.core.inspection.live import LiveInspection
 from src.core.inspection.live_visual import LiveVisualService, live_visual_capture_requests
-from src.core.inspection.current_visual import CurrentVisualMirror
+from src.core.inspection.current_visual import CurrentVisualMirror, public_visual_origin
 from src.core.intelligence_memory import (
     intelligence_checkpoint_store, sleeper_season_cache,
 )
@@ -780,6 +781,14 @@ app.include_router(create_inspection_router(
     live_visual_service=live_visual_service,
     current_visual_mirror=current_visual_mirror,
     resource_health=_resource_health,
+))
+
+app.include_router(create_current_visual_router(
+    mirror=current_visual_mirror,
+    public_base=public_visual_origin(
+        os.getenv("DTOS_PUBLIC_URL", "https://dtos.onrender.com"),
+        production=bool(os.getenv("RENDER")),
+    ),
 ))
 
 app.include_router(

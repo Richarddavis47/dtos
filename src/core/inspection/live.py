@@ -18,6 +18,7 @@ _PRIVATE_PREFIXES = (
     "/docs", "/redoc", "/openapi.json", "/sync", "/admin", "/debug",
     "/inspection-artifacts", "/__validation__",
 )
+_MACHINE_SURFACE_PREFIXES = ("/current-visual",)
 _APPROVED_EXCLUSIONS = {
     "/robots.txt": "crawler_control",
     "/sitemap.xml": "machine_sitemap",
@@ -82,7 +83,7 @@ def public_surface_registry(routes: Iterable[Any]) -> tuple[PublicSurface, ...]:
             continue
         seen.add(key)
         excluded = _APPROVED_EXCLUSIONS.get(path)
-        is_api = path.startswith(("/api/", "/health"))
+        is_api = path.startswith(("/api/", "/health", *_MACHINE_SURFACE_PREFIXES))
         surface_id = str(route.name or _slug(path)).replace("_", "-")
         rows.append(PublicSurface(
             surface_id=surface_id,

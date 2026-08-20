@@ -1,3 +1,19 @@
+# DTOS v1.10.41 - Native ChatGPT Visual-Mirror Accessibility
+
+DTOS v1.10.41 completes the consumer-facing Current Visual transport. A generic
+web client can start from `/current-visual`, discover the current deployment and
+visual generation, fetch an `application/json` manifest, and retrieve allowlisted
+current PNGs without authentication, cookies, JavaScript, release numbers, or
+generation identifiers.
+
+The delivery boundary uses stable human-readable paths, supports safe GET/HEAD
+probing, exposes native `image/png` with inline disposition, and revalidates the
+rolling manifest without making capture, provider, history, market, or write calls.
+Atomic candidate promotion, current-only retention, private-league exclusion, and
+all v1.10.40 responsiveness behavior remain unchanged.
+
+## Previous release
+
 # DTOS v1.10.40 - Post-Restart Live Visual Responsiveness
 
 DTOS v1.10.40 prevents post-restart Live Visual work from being scheduled

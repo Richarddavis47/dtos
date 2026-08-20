@@ -298,12 +298,15 @@ def create_crawl_router(*, get_data: GetData, state: dict[str, Any], league_id: 
 
     @router.get("/robots.txt", include_in_schema=False)
     async def robots() -> PlainTextResponse:
-        content = "User-agent: *\nAllow: /\nAllow: /api/crawl\nDisallow: /sync\nDisallow: /api/data/refresh\nDisallow: /admin\nDisallow: /debug\nSitemap: https://dtos.onrender.com/sitemap.xml\n"
+        content = "User-agent: *\nAllow: /\nAllow: /api/crawl\nAllow: /current-visual\nDisallow: /sync\nDisallow: /api/data/refresh\nDisallow: /admin\nDisallow: /debug\nSitemap: https://dtos.onrender.com/sitemap.xml\n"
         return PlainTextResponse(content)
 
     @router.get("/sitemap.xml", include_in_schema=False)
     async def sitemap() -> Response:
-        urls = "".join(f"<url><loc>https://dtos.onrender.com{path}</loc></url>" for path in PUBLIC_PAGES)
+        urls = "".join(
+            f"<url><loc>https://dtos.onrender.com{path}</loc></url>"
+            for path in (*PUBLIC_PAGES, "/current-visual", "/current-visual/manifest.json")
+        )
         return Response(f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>', media_type="application/xml")
 
     return router

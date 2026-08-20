@@ -11,7 +11,9 @@ from fastapi.routing import APIRoute
 from src.core.inspection.models import DiscoveredPage
 from src.core.team_identity import team_name_for
 
-_PRIVATE_PREFIXES = ("/api/", "/health", "/openapi", "/docs", "/redoc")
+_PRIVATE_PREFIXES = (
+    "/api/", "/health", "/openapi", "/docs", "/redoc", "/current-visual",
+)
 _EXCLUDED = {
     "/robots.txt": "Crawler control document, not an HTML user interface.",
     "/sitemap.xml": "Machine-readable site map, not an HTML user interface.",
