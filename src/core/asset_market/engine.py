@@ -1357,10 +1357,11 @@ class AssetMarketCache:
             self._refresh_state = "ready"
             self._scheduler_state = "ready"
             self._scheduler_skip_reason = None
-            # A successful atomic publication makes the just-published durable
-            # generation the compatible artifact, even when discovery began
-            # with no artifact on disk.
-            self._artifact_compatibility = "compatible"
+            # A first successful atomic publication makes the newly created
+            # durable generation compatible. Replacement publications retain
+            # their precise incompatibility cause for bounded diagnostics.
+            if previous is None:
+                self._artifact_compatibility = "compatible"
             self._health_metadata = prepared_health
             if artifact_loaded:
                 self.artifact_loads += 1

@@ -551,6 +551,17 @@ class AssetMarketTests(unittest.TestCase):
         self.assertIs(published._market, self.market)
         self.assertEqual(published.health()["cache"]["build_count"], 1)
 
+    def test_replacement_publication_retains_incompatibility_reason(self) -> None:
+        published = AssetMarketCache()
+        published._publish(self.market, "original-key", "fixture-store")
+        with published._lock:
+            published._artifact_compatibility = "brain_semantic_output_changed"
+        published._publish(self.market, "replacement-key", "fixture-store")
+        self.assertEqual(
+            published.health()["cache"]["artifact_compatibility"],
+            "brain_semantic_output_changed",
+        )
+
     def test_background_generation_preserves_identity_and_serialized_output(self) -> None:
         background = AssetMarketCache()
         with self.assertRaises(MarketWarmingError):
