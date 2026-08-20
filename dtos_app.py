@@ -284,7 +284,6 @@ def schedule_live_visual_capture() -> int:
     if (
         market is None
         or market_health.get("status") != "ready"
-        or market_health.get("build_active")
     ):
         runtime_metrics.mark_background("live_visual_capture", "waiting")
         return 0

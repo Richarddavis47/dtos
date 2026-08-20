@@ -284,6 +284,28 @@ class DeploymentReadinessTests(unittest.TestCase):
         finally:
             dtos_app.STATE["data"] = original_data
 
+    def test_market_publication_callback_queues_before_builder_unwinds(self) -> None:
+        original_data = dtos_app.STATE.get("data")
+        dtos_app.STATE["data"] = {"teams": []}
+        market = Mock()
+        epoch = lifecycle_coordinator.begin_startup("fixture")
+        lifecycle_coordinator.complete_startup(epoch, "ready")
+        try:
+            with patch.object(
+                dtos_app.asset_market_cache, "current", return_value=market,
+            ), patch.object(
+                dtos_app.asset_market_cache, "metrics",
+                return_value={"status": "ready", "build_active": True},
+            ), patch.object(
+                dtos_app, "live_visual_capture_requests", return_value=("capture",),
+            ), patch.object(
+                dtos_app.live_visual_service, "schedule", return_value=1,
+            ) as schedule:
+                self.assertEqual(dtos_app.schedule_live_visual_capture(), 1)
+                schedule.assert_called_once_with(("capture",))
+        finally:
+            dtos_app.STATE["data"] = original_data
+
     def test_cached_generation_remains_eligible_after_terminal_refresh_failure(self) -> None:
         async def failed_refresh() -> dict:
             dtos_app.STATE["last_error"] = "ConnectError: fixture offline"
