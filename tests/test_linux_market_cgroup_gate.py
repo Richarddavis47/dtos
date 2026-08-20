@@ -15,6 +15,7 @@ from unittest.mock import patch
 from tools.validation.generate_sanitized_market_fixture import (
     HISTORICAL_COUNT,
     LEAGUE_ID,
+    _cache,
     _canonical_history_fixture,
     _history,
     _record_payload,
@@ -425,6 +426,19 @@ class _FakeProcess:
 
 
 class RestartReuseValidationTests(unittest.TestCase):
+    def test_current_fixture_exposes_five_renderable_matchups(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "dtos_cache.json"
+            _cache(path)
+            data = json.loads(path.read_text(encoding="utf-8"))["data"]
+
+        self.assertEqual(tuple(data["matchups"]), ("1", "2", "3", "4", "5"))
+        self.assertEqual(sum(len(sides) for sides in data["matchups"].values()), 10)
+        self.assertTrue(all(
+            len(side["lineup"]) == 4
+            for sides in data["matchups"].values() for side in sides
+        ))
+
     def test_canonical_fixture_contains_five_seasons_and_all_asset_events(self) -> None:
         with tempfile.TemporaryDirectory() as directory, patch.dict(
             os.environ,
