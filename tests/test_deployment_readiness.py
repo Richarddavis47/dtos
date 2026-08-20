@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import unittest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -236,6 +236,53 @@ class DeploymentReadinessTests(unittest.TestCase):
         ) as fresh:
             asyncio.run(dtos_app.ensure_fresh())
         fresh.assert_awaited_once_with()
+
+    def test_visual_capture_waits_for_complete_startup_and_ready_market(self) -> None:
+        original_data = dtos_app.STATE.get("data")
+        dtos_app.STATE["data"] = {"teams": []}
+        market = Mock()
+        epoch = lifecycle_coordinator.begin_startup("fixture")
+        try:
+            with patch.object(
+                dtos_app.asset_market_cache, "current", return_value=market,
+            ), patch.object(
+                dtos_app.asset_market_cache, "metrics",
+                return_value={"status": "ready", "build_active": False},
+            ), patch.object(
+                dtos_app, "live_visual_capture_requests", return_value=("capture",),
+            ), patch.object(
+                dtos_app.live_visual_service, "schedule", return_value=1,
+            ) as schedule:
+                self.assertEqual(dtos_app.schedule_live_visual_capture(), 0)
+                schedule.assert_not_called()
+                lifecycle_coordinator.complete_startup(epoch, "ready")
+                self.assertEqual(dtos_app.schedule_live_visual_capture(), 1)
+                schedule.assert_called_once_with(("capture",))
+        finally:
+            dtos_app.STATE["data"] = original_data
+
+    def test_visual_capture_waits_for_atomic_market_publication(self) -> None:
+        original_data = dtos_app.STATE.get("data")
+        dtos_app.STATE["data"] = {"teams": []}
+        epoch = lifecycle_coordinator.begin_startup("fixture")
+        lifecycle_coordinator.complete_startup(epoch, "ready")
+        try:
+            with patch.object(
+                dtos_app.asset_market_cache, "current", return_value=None,
+            ), patch.object(
+                dtos_app.asset_market_cache, "metrics",
+                return_value={"status": "warming", "build_active": True},
+            ), patch.object(
+                dtos_app.live_visual_service, "schedule",
+            ) as schedule:
+                self.assertEqual(dtos_app.schedule_live_visual_capture(), 0)
+                schedule.assert_not_called()
+                self.assertEqual(
+                    runtime_metrics.health()["background_tasks"]["live_visual_capture"],
+                    "waiting",
+                )
+        finally:
+            dtos_app.STATE["data"] = original_data
 
     def test_cached_generation_remains_eligible_after_terminal_refresh_failure(self) -> None:
         async def failed_refresh() -> dict:

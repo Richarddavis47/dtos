@@ -1,3 +1,16 @@
+# DTOS v1.10.40 - Post-Restart Live Visual Responsiveness
+
+DTOS v1.10.40 prevents post-restart Live Visual work from being scheduled
+against an incomplete Asset Market identity. Compatible captures now remain
+current across restart, and new capture work begins only after the canonical
+market generation is atomically available.
+
+The correction preserves one Uvicorn worker, isolated browser capture, atomic
+visual publication, existing memory and latency gates, and all v1.10.39 product
+contracts.
+
+## Previous release
+
 # DTOS v1.10.39 - Live Visual Process Isolation
 
 DTOS v1.10.39 makes Live Visual capture genuinely background work. Each browser

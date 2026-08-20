@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.40 - Post-Restart Live Visual Responsiveness
+
+- Defer Live Visual scheduling until the canonical Asset Market generation has
+  published atomically.
+- Reuse compatible retained visual captures across process restart without
+  launching Chromium when their semantic dependencies are unchanged.
+- Trigger presentation capture from the completed market-publication boundary
+  while keeping optional capture failures isolated from product publication.
+
 ## v1.10.39 - Live Visual Process Isolation
 
 - Moved synchronous Playwright orchestration, DOM extraction, screenshots, and

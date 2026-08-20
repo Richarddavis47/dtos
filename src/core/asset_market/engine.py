@@ -641,6 +641,12 @@ class AssetMarketCache:
         self.artifact_cleanup_failures = 0
         self.diagnostic_write_failures = 0
         self._admission_signatures: dict[tuple[str, str], tuple[bool, str]] = {}
+        self._published_callback: Any = None
+
+    def on_publish(self, callback: Any) -> None:
+        """Observe a complete atomic generation publication without owning it."""
+        with self._lock:
+            self._published_callback = callback
 
     def _resource_context(self) -> dict[str, Any]:
         try:
@@ -1373,6 +1379,15 @@ class AssetMarketCache:
         self.cleanup_artifacts(
             market.store, protected=(market._artifact_path,),
         )
+        with self._lock:
+            callback = self._published_callback
+        if callback is not None:
+            try:
+                callback()
+            except Exception:
+                # Optional presentation work cannot invalidate a canonical
+                # market generation that has already published atomically.
+                pass
         # Other league generations share this durable store directory. They are
         # intentionally retained for lazy restoration and must not be removed by
         # publication from the currently active league cache.
