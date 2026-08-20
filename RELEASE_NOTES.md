@@ -1,3 +1,18 @@
+# DTOS v1.10.42 - Actual ChatGPT-Retrievable Visual Transport
+
+DTOS v1.10.42 publishes the already-verified rolling Current Visual generation as
+ordinary GitHub Pages HTML, JSON, and PNG content. The stable discovery page is
+human-readable without JavaScript and links directly to the current manifest and
+representative desktop/mobile images.
+
+The Pages payload is assembled in an Actions runner from the allowlisted DTOS
+current generation, never committed to Git, and uploaded with one-day artifact
+retention. Atomic Pages deployment keeps the previous verified site available
+until the replacement succeeds. This delivery-only correction leaves capture,
+FOIS, Brain, Asset Market, history, and Global Market Memory behavior unchanged.
+
+## Previous release
+
 # DTOS v1.10.41 - Native ChatGPT Visual-Mirror Accessibility
 
 DTOS v1.10.41 completes the consumer-facing Current Visual transport. A generic

@@ -126,8 +126,8 @@ class FOISGeneralManagerIntelligenceTests(unittest.IsolatedAsyncioTestCase):
             client = TestClient(app)
             root = client.get("/api/fois")
             self.assertEqual(root.status_code, 200)
-            self.assertEqual(root.json()["application_version"], "1.10.41")
-            self.assertEqual(root.json()["application_build"], 1141)
+            self.assertEqual(root.json()["application_version"], "1.10.42")
+            self.assertEqual(root.json()["application_build"], 1142)
             paths = app.openapi()["paths"]
             for path in (
                 "/api/fois/leagues/{league_id}/rankings",
