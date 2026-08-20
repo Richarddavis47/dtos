@@ -962,6 +962,12 @@ Notable DTOS changes are recorded here from the repository's Git history.
 - Added `docs/CommissionerDesk.md`, expanded the README, and added targeted Commissioner Desk tests.
 - Updated application metadata to DTOS v0.9.3, build 903, codename Commissioner Desk.
 
+## v1.10.42 - 2026-08-20
+
+- Added a rolling GitHub Pages Current Visual transport with static HTML discovery, JSON manifest, and direct PNG delivery.
+- Kept visual bytes out of Git history and limited the transient Pages artifact to one-day retention.
+- Added current-generation, privacy, identity, MIME, decode, hash, failed-publication, and discovery verification.
+
 ## v0.9.2 - 2026-07-20
 
 - Rebuilt every franchise detail page as a responsive Team Headquarters with front-office identity, assets, performance, roster rooms, draft capital, recent activity, future outlook, and quick actions.
