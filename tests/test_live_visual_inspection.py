@@ -167,6 +167,30 @@ class LiveVisualInspectionTests(unittest.TestCase):
         self.assertEqual(publications, [])
         self.assertEqual(health["captures_failed"], 1)
         self.assertEqual(health["last_error"], "RuntimeError: capture failed")
+        evidence = health["capture_failure_evidence"][-1]
+        self.assertEqual(evidence["surface_id"], "matchups-1")
+        self.assertEqual(evidence["viewport"], "mobile")
+        self.assertEqual(evidence["attempt"], 2)
+        self.assertEqual(evidence["error_type"], "RuntimeError")
+        self.assertEqual(evidence["error_code"], "capture_failure")
+
+    def test_capture_failure_evidence_preserves_only_bounded_safe_worker_code(self):
+        def capture(_item, _output):
+            raise RuntimeError("isolated visual capture failed (route_not_ready)")
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            service.schedule([request()])
+            service.wait()
+            health = service.health(1)
+
+        evidence = health["capture_failure_evidence"][-1]
+        self.assertEqual(evidence["surface_id"], "matchups-1")
+        self.assertEqual(evidence["viewport"], "mobile")
+        self.assertEqual(evidence["attempt"], 2)
+        self.assertEqual(evidence["error_type"], "RuntimeError")
+        self.assertEqual(evidence["error_code"], "route_not_ready")
+        self.assertNotIn("fixture", str(health["capture_failure_evidence"]))
 
     def test_matchups_mobile_transient_failure_retries_once_and_recovers(self):
         calls = 0

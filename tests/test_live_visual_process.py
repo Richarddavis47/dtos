@@ -284,6 +284,11 @@ class LiveVisualProcessTests(unittest.TestCase):
                         "http://127.0.0.1:8767", self.request(), output,
                     )
         self.assertNotIn("private", str(raised.exception))
+        evidence = raised.exception.evidence
+        self.assertEqual(evidence["error_code"], "route_not_ready")
+        self.assertEqual(evidence["worker_pid"], 12_345)
+        self.assertEqual(evidence["worker_exit_code"], 1)
+        self.assertEqual(evidence["bounded_message"], "isolated visual capture failed")
 
 
 if __name__ == "__main__":

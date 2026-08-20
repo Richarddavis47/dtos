@@ -27,6 +27,16 @@ CAPTURE_PROCESS_STOP_SIGNAL = getattr(signal, "SIGSTOP", 19)
 CAPTURE_PROCESS_CONTINUE_SIGNAL = getattr(signal, "SIGCONT", 18)
 
 
+class CaptureProcessFailure(RuntimeError):
+    """Bounded child-process failure safe for lifecycle diagnostics."""
+
+    def __init__(self, evidence: dict[str, Any]) -> None:
+        self.evidence = evidence
+        super().__init__(
+            f"isolated visual capture failed ({evidence['error_code']})"
+        )
+
+
 def _lower_tree_priority(pid: int) -> int | None:
     """Keep the complete capture/browser tree below request-serving priority."""
     try:
@@ -207,7 +217,16 @@ def capture_page_isolated(
         while process.poll() is None:
             if time.monotonic() - started >= timeout:
                 _terminate_tree(process)
-                raise TimeoutError("isolated visual capture exceeded its bounded timeout")
+                raise CaptureProcessFailure({
+                    "error_code": "timeout", "error_type": "TimeoutError",
+                    "bounded_message": "isolated visual capture timed out",
+                    "timeout_phase": "worker_process",
+                    "navigation_result": "unknown", "http_status": None,
+                    "screenshot_phase": "unknown", "worker_pid": process.pid,
+                    "elapsed_ms": round((time.monotonic() - started) * 1000, 3),
+                    "worker_exit_code": process.returncode,
+                    "browser_exit_state": "terminated",
+                })
             worker_rss, browser_rss, browser_processes = _tree_rss(process.pid)
             observed_nice = _lower_tree_priority(process.pid)
             observed_isolation = _isolate_capture_tree_cpu(
@@ -229,6 +248,7 @@ def capture_page_isolated(
                 cpu_throttle_cycles += 1
         if process.returncode != 0 or not result_path.is_file():
             code = "missing_result"
+            failed: dict[str, Any] = {}
             if result_path.is_file():
                 try:
                     failed = json.loads(result_path.read_text(encoding="utf-8"))
@@ -237,7 +257,27 @@ def capture_page_isolated(
                         code = candidate
                 except (OSError, json.JSONDecodeError, AttributeError):
                     pass
-            raise RuntimeError(f"isolated visual capture failed ({code})")
+            raise CaptureProcessFailure({
+                "error_code": code,
+                "error_type": str(failed.get("error_type") or "RuntimeError"),
+                "bounded_message": str(
+                    failed.get("error") or "isolated visual capture failed"
+                )[:96],
+                "timeout_phase": failed.get("timeout_phase"),
+                "navigation_result": str(
+                    failed.get("navigation_result") or "unknown"
+                )[:48],
+                "http_status": failed.get("http_status"),
+                "screenshot_phase": str(
+                    failed.get("screenshot_phase") or "unknown"
+                )[:48],
+                "worker_pid": process.pid,
+                "elapsed_ms": round((time.monotonic() - started) * 1000, 3),
+                "worker_exit_code": process.returncode,
+                "browser_exit_state": (
+                    "exited" if browser_process_peak else "not_observed"
+                ),
+            })
         value = json.loads(result_path.read_text(encoding="utf-8"))
         if value.get("status") != "complete" or not isinstance(value.get("presentation"), dict):
             raise RuntimeError("isolated visual capture returned malformed output")

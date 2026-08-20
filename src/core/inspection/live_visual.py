@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import threading
 import time
 from dataclasses import dataclass
@@ -18,6 +19,11 @@ LIVE_VISUAL_SCHEMA_VERSION = "1.0"
 LIVE_VIEWPORTS = {
     "mobile": {"width": 390, "height": 844},
     "desktop": {"width": 1440, "height": 1000},
+}
+_CAPTURE_ERROR_CODE = re.compile(r"isolated visual capture failed \(([a-z0-9_]+)\)")
+_KNOWN_CAPTURE_ERROR_CODES = {
+    "missing_result", "presentation_mismatch", "route_not_ready",
+    "semantic_route_not_ready", "timeout", "worker_failure",
 }
 
 
@@ -75,6 +81,7 @@ class LiveVisualService:
         self._attempts: dict[tuple[str, str], int] = {}
         self._capture_started_at: float | None = None
         self._capture_finished_at: float | None = None
+        self._failure_evidence: list[dict[str, Any]] = []
         self._telemetry = {
             "captures_started": 0, "captures_completed": 0,
             "captures_failed": 0, "capture_attempt_failures": 0,
@@ -334,10 +341,34 @@ class LiveVisualService:
                 temporary.unlink(missing_ok=True)
                 backup.unlink(missing_ok=True)
                 with self._lock:
+                    match = _CAPTURE_ERROR_CODE.fullmatch(str(exc))
+                    error_code = (
+                        match.group(1)
+                        if match and match.group(1) in _KNOWN_CAPTURE_ERROR_CODES
+                        else "timeout" if isinstance(exc, TimeoutError)
+                        else "capture_failure"
+                    )
                     self._last_error = f"{type(exc).__name__}: capture failed"
                     key = self.capture_key(request.surface_id, request.viewport)
                     attempt_key = (key, request.fingerprint)
                     attempts = self._attempts.get(attempt_key, 0)
+                    self._failure_evidence.append({
+                        "capture_id": key,
+                        "surface_id": _safe_id(request.surface_id),
+                        "route": request.human_url,
+                        "semantic_route": request.semantic_url,
+                        "viewport": request.viewport,
+                        "matchup_id": (
+                            request.surface_id.removeprefix("matchups-")
+                            if request.surface_id.startswith("matchups-") else None
+                        ),
+                        "attempt": attempts + 1,
+                        "error_type": type(exc).__name__,
+                        "error_code": error_code,
+                        "bounded_message": "isolated visual capture failed",
+                        **dict(getattr(exc, "evidence", {}) or {}),
+                    })
+                    self._failure_evidence = self._failure_evidence[-16:]
                     self._telemetry["capture_attempt_failures"] += 1
                     if not capture_completed and attempts < 1:
                         self._attempts[attempt_key] = attempts + 1
@@ -412,6 +443,22 @@ class LiveVisualService:
                 if row.get("status") == "stale"
             },
             "capture_generation": VERSION,
+            "capture_failure_evidence": list(self._failure_evidence),
+            "required_capture_contract": [
+                {
+                    "capture_id": key,
+                    "surface_id": request.surface_id,
+                    "route": request.human_url,
+                    "semantic_route": request.semantic_url,
+                    "viewport": request.viewport,
+                    "matchup_id": (
+                        request.surface_id.removeprefix("matchups-")
+                        if request.surface_id.startswith("matchups-") else None
+                    ),
+                }
+                for key, request in sorted(self._requests.items())
+                if key in self._required_keys
+            ],
             "candidate_state": "capturing" if manifest["pending"] else (
                 "failed" if manifest["failures"] or manifest["stale"] else "complete"
             ),
