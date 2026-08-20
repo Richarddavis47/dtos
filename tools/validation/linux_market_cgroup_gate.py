@@ -30,6 +30,7 @@ COLD_MAX = int(1.5 * GIB)
 RAW_EMERGENCY_MAX = 1740 * MIB
 BASELINE = int(1.03 * GIB)
 BASE_URL = "http://127.0.0.1:8767"
+LIVE_VISUAL_PROBE_INTERVAL_SECONDS = 0.25
 CGROUP = Path("/sys/fs/cgroup")
 OUTPUT = Path(os.environ.get("DTOS_BENCHMARK_OUTPUT", "/output/summary.json"))
 FIXTURE = Path(os.environ.get("DTOS_FIXTURE_ROOT", "/fixture"))
@@ -594,6 +595,91 @@ def _request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes,
     return status, body, elapsed
 
 
+def _latency_distribution(values: list[float]) -> dict[str, float]:
+    if not values:
+        raise AssertionError("live visual responsiveness produced no samples")
+    ordered = sorted(values)
+    return {
+        "min": round(ordered[0], 3),
+        "p50": round(statistics.median(ordered), 3),
+        "p90": round(_percentile(ordered, 0.90), 3),
+        "p95": round(_percentile(ordered, 0.95), 3),
+        "max": round(ordered[-1], 3),
+    }
+
+
+def _live_visual_responsiveness() -> dict[str, object]:
+    """Probe ordinary products throughout one production-shaped browser flight."""
+    paths = (
+        "/health/live", "/", "/market", "/fois",
+        "/api/inspect/current-visual/manifest",
+    )
+    samples: list[dict[str, object]] = []
+    deadline = time.monotonic() + 480
+    cycles = 0
+    final_health: dict[str, object] = {}
+    while time.monotonic() < deadline:
+        for path in paths:
+            status, body, client_ms, server_ms = _diagnostic_request(path)
+            sample = {
+                "path": path, "status": status, "client_ms": round(client_ms, 3),
+                "server_ms": round(server_ms, 3),
+                "accept_delay_upper_bound_ms": round(max(0.0, client_ms - server_ms), 3),
+                "response_bytes": len(body), "timestamp": time.time(),
+            }
+            samples.append(sample)
+            if client_ms >= 500:
+                raise ExpansionLatencyFailure(
+                    f"live visual responsiveness failed: {path}={client_ms:.3f}ms",
+                    {"samples": samples, "failed_sample": sample},
+                )
+        cycles += 1
+        _status, body, _client_ms, _server_ms = _diagnostic_request(
+            "/api/inspect/live/visual/health",
+        )
+        final_health = json.loads(body)
+        if cycles >= 2 and final_health.get("status") == "complete":
+            break
+        time.sleep(LIVE_VISUAL_PROBE_INTERVAL_SECONDS)
+    if final_health.get("status") != "complete":
+        raise ExpansionLatencyFailure(
+            "production-shaped Live Visual flight did not complete",
+            {
+                "samples": samples,
+                "cycles": cycles,
+                "capture_health": final_health,
+                "probe_interval_ms": LIVE_VISUAL_PROBE_INTERVAL_SECONDS * 1000,
+            },
+        )
+    if any(int(final_health.get(key) or 0) for key in ("stale", "failures", "pending")):
+        raise AssertionError("production-shaped Live Visual flight retained stale or failed captures")
+    required = int(final_health.get("required_captures") or 0)
+    if required != 38 or int(final_health.get("current") or 0) != required:
+        raise AssertionError(
+            f"production-shaped Live Visual coverage is incomplete: {final_health}"
+        )
+    _status, mirror_body, _client_ms, _server_ms = _diagnostic_request(
+        "/api/inspect/current-visual/health",
+    )
+    mirror = json.loads(mirror_body)
+    if mirror.get("status") != "complete" or int(mirror.get("capture_count") or 0) != required:
+        raise AssertionError("current visual candidate was not atomically promoted")
+    by_path = {}
+    for path in paths:
+        rows = [row for row in samples if row["path"] == path]
+        by_path[path] = {
+            "client_ms": _latency_distribution([float(row["client_ms"]) for row in rows]),
+            "server_ms": _latency_distribution([float(row["server_ms"]) for row in rows]),
+        }
+    return {
+        "samples": samples, "routes": by_path, "cycles": cycles,
+        "capture_health": final_health, "current_mirror": mirror,
+        "request_accept_delay_max_ms": round(max(
+            float(row["accept_delay_upper_bound_ms"]) for row in samples
+        ), 3),
+    }
+
+
 def _post_request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes, float]:
     started = time.perf_counter()
     request = Request(BASE_URL + path, data=b"", method="POST")
@@ -673,6 +759,7 @@ def _start_server(
     memory_observer = memory_observer or (lambda: _cgroup("memory.current"))
     environment = os.environ.copy()
     environment["DTOS_MARKET_PROFILE_MODE"] = mode
+    environment["DTOS_CAPTURE_URL"] = BASE_URL
     command = [
         sys.executable, "-m", "uvicorn",
         "tools.validation.market_profile_app:app", "--host", "127.0.0.1",
@@ -681,6 +768,7 @@ def _start_server(
     evidence.update({
         "command": [Path(command[0]).name, *command[1:]],
         "mode": mode,
+        "capture_origin": "loopback_validation_server",
         "fixture": {
             "cache_file": Path(environment.get("DTOS_CACHE_FILE", "")).name,
             "history_database": Path(
@@ -1491,26 +1579,6 @@ def _replacement_profile(
         raise AssertionError("material fixture scalar evidence is unavailable")
     if mutation["before"] == mutation["after"]:
         raise AssertionError("material fixture scalar did not change")
-    changed_semantic = _semantic_contract()
-    if (
-        before_semantic.get("semantic_generation")
-        == changed_semantic.get("semantic_generation")
-    ):
-        raise AssertionError("material fixture mutation did not change semantic digest")
-    if changed_semantic.get("artifact_compatibility") != "brain_semantic_output_changed":
-        raise AssertionError(
-            "material artifact mismatch reason was not brain_semantic_output_changed"
-        )
-    before_digests = before_semantic.get("semantic_identities") or {}
-    after_digests = changed_semantic.get("semantic_identities") or {}
-    for stable in ("asset_universe_digest", "ownership_dependency_digest"):
-        if before_digests.get(stable) != after_digests.get(stable):
-            raise AssertionError(f"material fixture changed unrelated digest: {stable}")
-    if (
-        before_digests.get("brain_semantic_output_digest")
-        == after_digests.get("brain_semantic_output_digest")
-    ):
-        raise AssertionError("material fixture did not change Brain/valuation digest")
     before_history = _history_metrics()
     samples: list[dict[str, object]] = []
     for sequence in range(1, 11):
@@ -1634,6 +1702,26 @@ def _replacement_profile(
         raise AssertionError("replacement warming performed request-thread generation work")
     if any(int(sample["browser_processes"]) for sample in samples):
         raise AssertionError("browser process overlapped replacement semantic preparation")
+    changed_semantic = _semantic_contract()
+    if (
+        before_semantic.get("semantic_generation")
+        == changed_semantic.get("semantic_generation")
+    ):
+        raise AssertionError("material fixture mutation did not change semantic digest")
+    if changed_semantic.get("artifact_compatibility") != "brain_semantic_output_changed":
+        raise AssertionError(
+            "material artifact mismatch reason was not brain_semantic_output_changed"
+        )
+    before_digests = before_semantic.get("semantic_identities") or {}
+    after_digests = changed_semantic.get("semantic_identities") or {}
+    for stable in ("asset_universe_digest", "ownership_dependency_digest"):
+        if before_digests.get(stable) != after_digests.get(stable):
+            raise AssertionError(f"material fixture changed unrelated digest: {stable}")
+    if (
+        before_digests.get("brain_semantic_output_digest")
+        == after_digests.get("brain_semantic_output_digest")
+    ):
+        raise AssertionError("material fixture did not change Brain/valuation digest")
     published_artifact = _artifact_state()
     if published_artifact.get("generation") != changed_semantic.get("semantic_generation"):
         raise AssertionError("validator sampled before the new semantic generation published")
@@ -1963,6 +2051,21 @@ def main() -> int:
                 raise AssertionError(
                     f"effective working-set peak {monitor.effective_peak} exceeds 1.5 GiB"
                 )
+            try:
+                visual_responsiveness = _live_visual_responsiveness()
+            except ExpansionLatencyFailure as exc:
+                summary["phases"]["live_visual_responsiveness"] = {
+                    "timestamp": time.time(), "failed": True, **exc.result,
+                    "memory_current": _cgroup("memory.current"),
+                }
+                raise
+            summary["phases"]["live_visual_responsiveness"] = {
+                "timestamp": time.time(), **visual_responsiveness,
+                "memory_current": _cgroup("memory.current"),
+                "effective_memory_current": _memory_state().get(
+                    "effective_working_set_bytes"
+                ),
+            }
             try:
                 latency_result = _latencies()
             except ExpansionLatencyFailure as exc:

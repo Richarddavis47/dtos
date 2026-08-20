@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import ast
 import tempfile
 import subprocess
 import sys
 import threading
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -46,6 +48,23 @@ class LiveVisualInspectionTests(unittest.TestCase):
             self.assertTrue(service.wait())
             self.assertTrue(entered.is_set())
 
+    def test_capture_grace_keeps_normal_requests_ahead_of_browser_start(self):
+        entered = threading.Event()
+
+        def capture(_item, output):
+            entered.set()
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(
+                Path(folder), capture, start_grace_seconds=0.1,
+            )
+            self.assertEqual(service.schedule([request()]), 1)
+            self.assertFalse(entered.wait(0.05))
+            self.assertTrue(service.wait())
+            self.assertTrue(entered.is_set())
+
     def test_first_generation_reservation_defers_browser_until_market_ready(self):
         entered = threading.Event()
 
@@ -82,6 +101,18 @@ class LiveVisualInspectionTests(unittest.TestCase):
             timeout=30,
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
+
+    def test_capture_critical_pages_do_not_render_on_event_loop(self):
+        root = Path(__file__).resolve().parents[1]
+        for relative, function_name in (
+            ("routes/market.py", "market_page"),
+            ("routes/fois.py", "fois_page"),
+        ):
+            tree = ast.parse((root / relative).read_text(encoding="utf-8"))
+            functions = [node for node in ast.walk(tree)
+                         if getattr(node, "name", None) == function_name]
+            self.assertEqual(len(functions), 1)
+            self.assertIsInstance(functions[0], ast.FunctionDef)
 
     def test_capture_is_deduplicated_and_public_png_is_valid(self):
         calls = []
@@ -120,6 +151,151 @@ class LiveVisualInspectionTests(unittest.TestCase):
             self.assertEqual(service.screenshot("matchups-1", "mobile").read_bytes(), original)
             self.assertEqual(service.capture("matchups-1", "mobile")["status"], "stale")
             self.assertNotIn("private fixture detail", service.health(1)["last_error"])
+
+    def test_failed_flight_does_not_run_publication_callback_or_hide_error(self):
+        publications = []
+
+        def capture(_item, _output):
+            raise RuntimeError("private fixture detail")
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            service.on_complete(lambda: publications.append("published"))
+            service.schedule([request()])
+            service.wait()
+            health = service.health(1)
+        self.assertEqual(publications, [])
+        self.assertEqual(health["captures_failed"], 1)
+        self.assertEqual(health["last_error"], "RuntimeError: capture failed")
+        evidence = health["capture_failure_evidence"][-1]
+        self.assertEqual(evidence["surface_id"], "matchups-1")
+        self.assertEqual(evidence["viewport"], "mobile")
+        self.assertEqual(evidence["attempt"], 2)
+        self.assertEqual(evidence["error_type"], "RuntimeError")
+        self.assertEqual(evidence["error_code"], "capture_failure")
+
+    def test_capture_failure_evidence_preserves_only_bounded_safe_worker_code(self):
+        def capture(_item, _output):
+            raise RuntimeError("isolated visual capture failed (route_not_ready)")
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            service.schedule([request()])
+            service.wait()
+            health = service.health(1)
+
+        evidence = health["capture_failure_evidence"][-1]
+        self.assertEqual(evidence["surface_id"], "matchups-1")
+        self.assertEqual(evidence["viewport"], "mobile")
+        self.assertEqual(evidence["attempt"], 2)
+        self.assertEqual(evidence["error_type"], "RuntimeError")
+        self.assertEqual(evidence["error_code"], "route_not_ready")
+        self.assertNotIn("fixture", str(health["capture_failure_evidence"]))
+
+    def test_matchups_mobile_transient_failure_retries_once_and_recovers(self):
+        calls = 0
+
+        def capture(_item, output):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise TimeoutError("transient fixture timeout")
+            Image.new("RGB", (390, 844), "navy").save(output, "PNG")
+            return {
+                "capture_process": {
+                    "worker_rss_peak_bytes": 12_000,
+                    "browser_rss_peak_bytes": 34_000,
+                },
+            }
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            self.assertEqual(service.schedule([request()]), 1)
+            self.assertTrue(service.wait())
+            health = service.health(1)
+            self.assertEqual(calls, 2)
+            self.assertEqual(health["current"], 1)
+            self.assertEqual(health["stale"], 0)
+            self.assertEqual(health["captures_retried"], 1)
+            self.assertEqual(health["capture_attempt_failures"], 1)
+            self.assertEqual(health["captures_failed"], 0)
+            self.assertEqual(health["capture_worker_peak"], 1)
+            self.assertEqual(health["browser_process_peak"], 1)
+            self.assertEqual(health["capture_worker_rss_peak_bytes"], 12_000)
+            self.assertEqual(health["browser_rss_peak_bytes"], 34_000)
+            self.assertNotIn(
+                "capture_process",
+                service.capture("matchups-1", "mobile")["presentation"],
+            )
+
+    def test_production_shaped_flight_is_single_flight_and_complete(self):
+        active = 0
+        peak = 0
+        lock = threading.Lock()
+
+        def capture(_item, output):
+            nonlocal active, peak
+            with lock:
+                active += 1
+                peak = max(peak, active)
+            try:
+                Image.new("RGB", (20, 10), "navy").save(output, "PNG")
+                return {}
+            finally:
+                with lock:
+                    active -= 1
+
+        requests = [
+            CaptureRequest(
+                surface_id=f"surface-{index}", title=f"Surface {index}",
+                human_url=f"/surface/{index}", semantic_url=f"/api/surface/{index}",
+                viewport=viewport, fingerprint=f"{index}-{viewport}", canonical={},
+            )
+            for index in range(19) for viewport in ("mobile", "desktop")
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            self.assertEqual(service.schedule(requests), 38)
+            self.assertEqual(service.schedule(requests), 0)
+            self.assertTrue(service.wait())
+            health = service.health(38)
+            self.assertEqual(peak, 1)
+            self.assertEqual(health["required_captures"], 38)
+            self.assertEqual(health["captures_started"], 38)
+            self.assertEqual(health["captures_completed"], 38)
+            self.assertEqual(health["captures_failed"], 0)
+            self.assertEqual(health["current"], 38)
+            self.assertEqual(health["stale"], 0)
+            self.assertEqual(health["candidate_state"], "complete")
+
+    def test_capture_grace_is_reapplied_after_market_deferral(self):
+        calls = []
+
+        def capture(_item, output):
+            calls.append("capture")
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        allowed_calls = 0
+
+        def capture_allowed():
+            nonlocal allowed_calls
+            allowed_calls += 1
+            return allowed_calls > 1
+
+        sleeps = []
+        with tempfile.TemporaryDirectory() as folder, patch(
+            "src.core.inspection.live_visual.lifecycle_coordinator.visual_capture_allowed",
+            side_effect=capture_allowed,
+        ), patch(
+            "src.core.inspection.live_visual.lifecycle_coordinator.wait_for_visual_capture",
+            return_value=True,
+        ), patch("src.core.inspection.live_visual.time.sleep", side_effect=sleeps.append):
+            service = LiveVisualService(Path(folder), capture, start_grace_seconds=2.0)
+            service.schedule([request()])
+            self.assertTrue(service.wait())
+        self.assertEqual(sleeps, [2.0, 2.0])
+        self.assertEqual(calls, ["capture"])
 
     def test_stale_mobile_capture_refreshes_through_registered_contract(self):
         calls = []

@@ -283,6 +283,9 @@ def _cache(path: Path) -> None:
             "wins": roster_id % 8,
             "losses": 14 - roster_id % 8,
             "ties": 0,
+            "points_for": float(1200 + roster_id * 10),
+            "points_against": float(1100 + roster_id * 9),
+            "max_points": float(1350 + roster_id * 12),
             "players": [
                 {**players[player_id], "id": player_id, "roster_slot": "Starter"}
                 for player_id in owned
@@ -290,6 +293,30 @@ def _cache(path: Path) -> None:
             "picks_owned": [],
             "picks_traded_away": [],
         })
+    matchups = {}
+    for matchup_id in range(1, 6):
+        sides = []
+        for roster_id in (matchup_id * 2 - 1, matchup_id * 2):
+            team = teams[roster_id - 1]
+            lineup = []
+            for index, player in enumerate(team["players"][:4]):
+                lineup.append({
+                    **player,
+                    "player_id": player["id"],
+                    "nfl_team": player["team"],
+                    "slot": ("QB", "RB", "WR", "TE")[index],
+                    "points": float(roster_id + index),
+                })
+            sides.append({
+                "matchup_id": str(matchup_id),
+                "roster_id": roster_id,
+                "team": team["team_name"],
+                "owner": team["owner"],
+                "record": f'{team["wins"]}-{team["losses"]}',
+                "points": sum(float(player["points"]) for player in lineup),
+                "lineup": lineup,
+            })
+        matchups[str(matchup_id)] = sides
     picks = []
     for season in range(2027, 2030):
         for round_number in range(1, 5):
@@ -324,7 +351,7 @@ def _cache(path: Path) -> None:
         "pick_ledger": picks,
         "drafts": [],
         "transactions": [],
-        "matchups": [],
+        "matchups": matchups,
         "nfl_state": {"season": "2026", "week": 1, "season_type": "regular"},
         "week": 1,
         "players": players,

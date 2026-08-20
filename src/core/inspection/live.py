@@ -16,7 +16,7 @@ from src.core.inspection.discovery import discover_pages
 LIVE_INSPECTION_SCHEMA_VERSION = "1.0"
 _PRIVATE_PREFIXES = (
     "/docs", "/redoc", "/openapi.json", "/sync", "/admin", "/debug",
-    "/inspection-artifacts",
+    "/inspection-artifacts", "/__validation__",
 )
 _APPROVED_EXCLUSIONS = {
     "/robots.txt": "crawler_control",

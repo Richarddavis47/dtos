@@ -47,6 +47,7 @@ jobs:
             --env DTOS_METADATA_DB_FILE=/fixture/dtos_metadata.sqlite3 \
             --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
             --env DTOS_BACKGROUND_START_DELAY=0 \
+            --env DTOS_LIVE_VISUAL_CAPTURE=1 \
             --env SLEEPER_LEAGUE_ID=1804000000000000000 \
             dtos-market-cgroup:validation \
             sh -c 'python -m tools.validation.generate_sanitized_market_fixture && python -m tools.validation.linux_market_cgroup_gate'

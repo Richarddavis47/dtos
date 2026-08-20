@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import unittest
+from threading import get_ident
 from datetime import datetime, timezone
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -95,7 +97,7 @@ class MarketCalibrationDashboardTests(unittest.TestCase):
         build_provider_network(data, state)
         first = audit_market_calibration(data, state, apply=True)
         self.assertEqual(len(data["calibration_history"]), 1)
-        self.assertEqual(data["calibration_history"][0]["model_version"], "1.10.38")
+        self.assertEqual(data["calibration_history"][0]["model_version"], "1.10.39")
         self.assertEqual(calibration_report(data, state)["generated_at"], first["generated_at"])
 
     def test_api_dashboard_categories_recommendations_and_history(self) -> None:
@@ -120,6 +122,50 @@ class MarketCalibrationDashboardTests(unittest.TestCase):
         dashboard = client.get("/valuation/calibration")
         self.assertEqual(dashboard.status_code, 200)
         self.assertIn("Automated Market Calibration", dashboard.text)
+
+    def test_dashboard_runs_cpu_reports_off_the_event_loop(self) -> None:
+        data, state = calibration_fixture()
+        audit_market_calibration(data, state, apply=False)
+        event_loop_threads: list[int] = []
+        report_threads: list[int] = []
+
+        async def ready() -> None:
+            event_loop_threads.append(get_ident())
+
+        def calibration_worker(input_data, input_state):
+            report_threads.append(get_ident())
+            return calibration_report(input_data, input_state)
+
+        from src.core.provider_network import provider_network_report
+        from src.core.valuation_intelligence import valuation_intelligence_report
+
+        def network_worker(input_data):
+            report_threads.append(get_ident())
+            return provider_network_report(input_data)
+
+        def intelligence_worker(input_data):
+            report_threads.append(get_ident())
+            return valuation_intelligence_report(input_data)
+
+        app = FastAPI()
+        app.include_router(create_valuation_router(
+            ensure_fresh=ready, require_data=lambda: data, state=state,
+            page=lambda title, body: HTMLResponse(f"<h1>{title}</h1>{body}"),
+        ))
+        with (
+            patch("routes.valuation.calibration_report", side_effect=calibration_worker),
+            patch("routes.valuation.provider_network_report", side_effect=network_worker),
+            patch(
+                "routes.valuation.valuation_intelligence_report",
+                side_effect=intelligence_worker,
+            ),
+        ):
+            response = TestClient(app).get("/valuation/calibration")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(report_threads), 3)
+        self.assertTrue(event_loop_threads)
+        self.assertTrue(all(thread != event_loop_threads[0] for thread in report_threads))
 
 
 if __name__ == "__main__":

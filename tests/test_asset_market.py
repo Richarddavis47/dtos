@@ -148,6 +148,9 @@ class AssetMarketTests(unittest.TestCase):
             (health["cache"]["historical_dataset_version"],
              health["cache"]["historical_dataset_version_scope"]), expected,
         )
+        self.assertEqual(
+            health["cache"]["artifact_compatibility"], "compatible",
+        )
 
     def test_cold_warming_health_does_not_fabricate_dataset_scope(self) -> None:
         health = AssetMarketCache().health()
@@ -394,6 +397,12 @@ class AssetMarketTests(unittest.TestCase):
         self.assertEqual(metrics["execution"], "spawned_subprocess")
         self.assertTrue(metrics["reaped"])
         self.assertEqual(metrics["records"], expected["asset_count"])
+        self.assertEqual(metrics["semantic_identities"], {
+            name: expected[name] for name in (
+                "asset_universe_digest", "brain_semantic_output_digest",
+                "ownership_dependency_digest", "provider_evidence_digest",
+            )
+        })
 
     def test_semantic_generation_is_deterministic_across_repeated_processes(self) -> None:
         marker = self.cache.request_marker(
@@ -541,6 +550,17 @@ class AssetMarketTests(unittest.TestCase):
         self.assertIs(result, self.market)
         self.assertIs(published._market, self.market)
         self.assertEqual(published.health()["cache"]["build_count"], 1)
+
+    def test_replacement_publication_retains_incompatibility_reason(self) -> None:
+        published = AssetMarketCache()
+        published._publish(self.market, "original-key", "fixture-store")
+        with published._lock:
+            published._artifact_compatibility = "brain_semantic_output_changed"
+        published._publish(self.market, "replacement-key", "fixture-store")
+        self.assertEqual(
+            published.health()["cache"]["artifact_compatibility"],
+            "brain_semantic_output_changed",
+        )
 
     def test_background_generation_preserves_identity_and_serialized_output(self) -> None:
         background = AssetMarketCache()
@@ -918,6 +938,7 @@ class AssetMarketTests(unittest.TestCase):
             cache.health()["historical_dataset_version"],
             cache.health()["historical_dataset_version_scope"],
         )
+        compatibility = cache.health()["cache"]["artifact_compatibility"]
         changed = copy.deepcopy(self.data)
         changed["valuation_intelligence"]["generated_at"] = "new-generation"
         replacement = AssetMarketCache().get(
@@ -937,6 +958,9 @@ class AssetMarketTests(unittest.TestCase):
             (cache.health()["historical_dataset_version"],
              cache.health()["historical_dataset_version_scope"]),
             health_pair,
+        )
+        self.assertEqual(
+            cache.health()["cache"]["artifact_compatibility"], compatibility,
         )
 
     def test_last_valid_warming_health_retains_dataset_scope_pair(self) -> None:

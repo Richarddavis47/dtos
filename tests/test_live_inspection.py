@@ -61,6 +61,17 @@ class LiveInspectionTests(unittest.TestCase):
         self.assertFalse(excluded.inspection_enabled)
         self.assertEqual(excluded.exclusion_reason, "crawler_control")
 
+    def test_validation_only_routes_are_not_public_visual_surfaces(self):
+        app = FastAPI()
+
+        @app.get("/__validation__/fixture-contract")
+        async def fixture_contract(): return {"ok": True}
+
+        self.assertNotIn(
+            "/__validation__/fixture-contract",
+            {row.route for row in public_surface_registry(app.routes)},
+        )
+
     def test_matchup_semantic_preserves_missing_and_reconciles_totals(self):
         data = {"matchups": {"1": [{"roster_id": 1, "team": "Alpha", "owner": "A",
                  "points": 4, "lineup": [{"id": "10", "name": "Josh", "position": "QB",

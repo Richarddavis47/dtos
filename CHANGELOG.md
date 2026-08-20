@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.10.39 - Live Visual Process Isolation
+
+- Moved synchronous Playwright orchestration, DOM extraction, screenshots, and
+  image preparation into one bounded, lower-priority capture subprocess at a time.
+- Added fail-closed subprocess timeout and descendant cleanup plus one explicitly
+  tracked retry for transient browser-capture failures.
+- Added capture worker, browser memory, retry, completion, candidate, and elapsed
+  telemetry without exposing raw payloads or local paths.
+- Extended every Linux 2 GiB lifecycle scenario with a production-shaped 38-image
+  flight and continuous ordinary-route responsiveness checks.
+- Preserved atomic current-mirror promotion, compact rolling retention, and the
+  validated public HTTPS origin contract from v1.10.38.
+
 ## v1.10.38 - Public Current Visual Origin Correction
 
 - Separated the loopback Playwright capture origin from the externally trusted

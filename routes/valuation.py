@@ -1,6 +1,7 @@
 """Live, read-only valuation-universe API."""
 from __future__ import annotations
 
+import asyncio
 from html import escape
 from typing import Any, Awaitable, Callable
 
@@ -44,11 +45,11 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
 
     async def network() -> dict[str, Any]:
         await ensure_fresh()
-        return provider_network_report(require_data())
+        return await asyncio.to_thread(provider_network_report, require_data())
 
     async def intelligence() -> dict[str, Any]:
         await ensure_fresh()
-        return valuation_intelligence_report(require_data())
+        return await asyncio.to_thread(valuation_intelligence_report, require_data())
 
     @root.get("/api/brain", tags=["brain"])
     async def brain_index() -> Any:
@@ -184,7 +185,7 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
 
     async def calibration() -> dict[str, Any]:
         await ensure_fresh()
-        return calibration_report(require_data(), state)
+        return await asyncio.to_thread(calibration_report, require_data(), state)
 
     @router.get("/calibration")
     async def valuation_calibration() -> Any:

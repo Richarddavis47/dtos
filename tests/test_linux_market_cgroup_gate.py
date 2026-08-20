@@ -15,6 +15,7 @@ from unittest.mock import patch
 from tools.validation.generate_sanitized_market_fixture import (
     HISTORICAL_COUNT,
     LEAGUE_ID,
+    _cache,
     _canonical_history_fixture,
     _history,
     _record_payload,
@@ -29,6 +30,7 @@ from src.core.historical_memory.store import HistoricalStore
 from src.core.history_context.metadata import MinimalMetadataStore
 from src.core.history_context.season_cache import SleeperSeasonCache
 from tools.validation.linux_market_cgroup_gate import (
+    LIVE_VISUAL_PROBE_INTERVAL_SECONDS,
     StartupFailure,
     _archive_cache_assessment,
     _archive_cache_retained,
@@ -56,12 +58,55 @@ from tools.validation.linux_market_cgroup_gate import (
     _startup_memory_within_limit,
     _warm_historical_archive,
 )
+from tools.validation.market_semantic_contract import retained_semantic_contract
 
 
 DETAIL = "Asset Market generation is building safely in the background; retry shortly."
 
 
 class ArchiveCacheValidationTests(unittest.TestCase):
+    def test_semantic_contract_diagnostic_uses_retained_worker_output(self) -> None:
+        class Cache:
+            @staticmethod
+            def health():
+                return {
+                    "cache": {
+                        "requested_generation": "semantic-generation",
+                        "artifact_compatibility": "compatible",
+                        "semantic_preparation": {
+                            "semantic_identities": {
+                                "asset_universe_digest": "asset-digest",
+                                "brain_semantic_output_digest": "brain-digest",
+                            },
+                        },
+                    },
+                }
+
+            @staticmethod
+            def artifact_contract(*_args, **_kwargs):
+                raise AssertionError("diagnostic recomputed semantic inputs")
+
+        class Store:
+            @staticmethod
+            def semantic_generations(_league_id):
+                return {"provider_cache": 5}
+
+        result = retained_semantic_contract(
+            Cache(),
+            {"valuation_intelligence": {"generated_at": "brain-time"}},
+            {"last_sync": "sync-time"}, Store(), "league-1",
+        )
+        self.assertEqual(result["semantic_generation"], "semantic-generation")
+        self.assertEqual(result["artifact_compatibility"], "compatible")
+        self.assertEqual(result["semantic_identities"], {
+            "asset_universe_digest": "asset-digest",
+            "brain_semantic_output_digest": "brain-digest",
+        })
+
+    def test_live_visual_probe_cadence_is_continuous_but_not_aggressive(self) -> None:
+        self.assertGreaterEqual(LIVE_VISUAL_PROBE_INTERVAL_SECONDS, 0.2)
+        self.assertLessEqual(LIVE_VISUAL_PROBE_INTERVAL_SECONDS, 1.0)
+
     def test_historical_replay_fixture_matches_production_shape(self) -> None:
         seasons, keys = _trade_replay_fixture()
         trades = [
@@ -381,6 +426,29 @@ class _FakeProcess:
 
 
 class RestartReuseValidationTests(unittest.TestCase):
+    def test_current_fixture_exposes_five_renderable_matchups(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "dtos_cache.json"
+            _cache(path)
+            data = json.loads(path.read_text(encoding="utf-8"))["data"]
+
+        self.assertEqual(tuple(data["matchups"]), ("1", "2", "3", "4", "5"))
+        self.assertEqual(sum(len(sides) for sides in data["matchups"].values()), 10)
+        self.assertTrue(all(
+            len(side["lineup"]) == 4
+            for sides in data["matchups"].values() for side in sides
+        ))
+        self.assertTrue(all(
+            {"points_for", "points_against", "max_points"}.issubset(team)
+            for team in data["teams"]
+        ))
+        self.assertTrue(all(
+            player.get("nfl_team")
+            for sides in data["matchups"].values()
+            for side in sides
+            for player in side["lineup"]
+        ))
+
     def test_canonical_fixture_contains_five_seasons_and_all_asset_events(self) -> None:
         with tempfile.TemporaryDirectory() as directory, patch.dict(
             os.environ,
@@ -812,15 +880,23 @@ class RestartReuseValidationTests(unittest.TestCase):
 
     def test_successful_startup_records_bounded_observation(self) -> None:
         process = _FakeProcess([None])
+        launched: dict[str, object] = {}
+
+        def start(*_args, **kwargs):
+            launched.update(kwargs)
+            return process
+
         with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
             evidence: dict[str, object] = {}
             result = _start_server(
                 log, evidence=evidence,
-                popen_factory=lambda *_args, **_kwargs: process,
+                popen_factory=start,
                 request_observer=lambda _path: (200, b"{}", 1.25),
                 memory_observer=lambda: 512,
             )
         self.assertIs(result, process)
+        self.assertEqual(launched["env"]["DTOS_CAPTURE_URL"], "http://127.0.0.1:8767")
+        self.assertEqual(evidence["capture_origin"], "loopback_validation_server")
         self.assertEqual(evidence["termination"], "running")
         self.assertEqual(evidence["observations"][0]["status"], 200)
         self.assertNotIn(str(Path(sys.executable).parent), json.dumps(evidence))

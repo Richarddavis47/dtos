@@ -46,6 +46,7 @@ from src.platform.lifecycle import LifecycleCoordinator, lifecycle_coordinator
 from tools.validation.generate_sanitized_market_fixture import (
     material_market_fixture_change,
 )
+from tools.validation.market_semantic_contract import retained_semantic_contract
 
 _profile: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
     "market_validation_profile", default=None,
@@ -695,34 +696,11 @@ async def material_market_change(marker: str) -> dict[str, Any]:
 
 @app.get("/__validation__/semantic-market-contract")
 async def semantic_market_contract() -> dict[str, Any]:
-    """Expose sanitized semantic identities and compatibility for the fixture."""
-    data = STATE.get("data") or {}
-    contract = AssetMarketCache.artifact_contract(
-        data, STATE, historical_store, LEAGUE_ID,
+    """Expose retained semantic identities without rebuilding them on request."""
+    return retained_semantic_contract(
+        asset_market_cache, STATE.get("data") or {}, STATE,
+        historical_store, LEAGUE_ID,
     )
-    generation = AssetMarketCache.durable_generation(
-        data, STATE, historical_store, LEAGUE_ID, contract,
-    )
-    _artifact, reason = AssetMarketCache._discover_artifact(
-        historical_store, generation, contract,
-    )
-    return {
-        "semantic_generation": generation,
-        "semantic_identities": {
-            name: value for name, value in contract.items()
-            if name.endswith("_digest") and name != "database_identity_digest"
-        },
-        "raw_identities": {
-            "last_sync": STATE.get("last_sync"),
-            "brain_generated_at": (
-                (data.get("valuation_intelligence") or {}).get("generated_at")
-            ),
-            "historical_cache_generation": historical_store.semantic_generations(
-                LEAGUE_ID,
-            ).get("provider_cache"),
-        },
-        "artifact_compatibility": reason,
-    }
 
 
 @app.get("/__validation__/market-artifact")
