@@ -283,6 +283,9 @@ def _cache(path: Path) -> None:
             "wins": roster_id % 8,
             "losses": 14 - roster_id % 8,
             "ties": 0,
+            "points_for": float(1200 + roster_id * 10),
+            "points_against": float(1100 + roster_id * 9),
+            "max_points": float(1350 + roster_id * 12),
             "players": [
                 {**players[player_id], "id": player_id, "roster_slot": "Starter"}
                 for player_id in owned
@@ -300,6 +303,7 @@ def _cache(path: Path) -> None:
                 lineup.append({
                     **player,
                     "player_id": player["id"],
+                    "nfl_team": player["team"],
                     "slot": ("QB", "RB", "WR", "TE")[index],
                     "points": float(roster_id + index),
                 })

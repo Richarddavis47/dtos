@@ -438,6 +438,16 @@ class RestartReuseValidationTests(unittest.TestCase):
             len(side["lineup"]) == 4
             for sides in data["matchups"].values() for side in sides
         ))
+        self.assertTrue(all(
+            {"points_for", "points_against", "max_points"}.issubset(team)
+            for team in data["teams"]
+        ))
+        self.assertTrue(all(
+            player.get("nfl_team")
+            for sides in data["matchups"].values()
+            for side in sides
+            for player in side["lineup"]
+        ))
 
     def test_canonical_fixture_contains_five_seasons_and_all_asset_events(self) -> None:
         with tempfile.TemporaryDirectory() as directory, patch.dict(
