@@ -276,15 +276,29 @@ def schedule_live_visual_capture() -> int:
     """Queue semantic changes after canonical maintenance; never block readiness."""
     if not STATE.get("data"):
         return 0
+    if not lifecycle_coordinator.startup_complete():
+        runtime_metrics.mark_background("live_visual_capture", "waiting")
+        return 0
+    market = asset_market_cache.current()
+    market_health = asset_market_cache.metrics()
+    if (
+        market is None
+        or market_health.get("status") != "ready"
+    ):
+        runtime_metrics.mark_background("live_visual_capture", "waiting")
+        return 0
     inspector = LiveInspection(
         state=STATE, routes=app.routes, league_id=LEAGUE_ID,
         projection_snapshot=projection_service.snapshot(),
-        market=asset_market_cache.current(), fois_scores=(),
+        market=market, fois_scores=(),
     )
     requests = live_visual_capture_requests(inspector)
     queued = live_visual_service.schedule(requests)
     runtime_metrics.mark_background("live_visual_capture", "running" if queued else "complete")
     return queued
+
+
+asset_market_cache.on_publish(schedule_live_visual_capture)
 
 
 async def ensure_fresh() -> None:

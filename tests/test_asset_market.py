@@ -551,6 +551,24 @@ class AssetMarketTests(unittest.TestCase):
         self.assertIs(published._market, self.market)
         self.assertEqual(published.health()["cache"]["build_count"], 1)
 
+    def test_publication_notifies_optional_presentation_observer_once(self) -> None:
+        published = AssetMarketCache()
+        observed: list[str] = []
+        published.on_publish(lambda: observed.append("published"))
+        published._publish(self.market, "fixture-key", "fixture-store")
+        self.assertEqual(observed, ["published"])
+
+    def test_presentation_observer_failure_cannot_rollback_market(self) -> None:
+        published = AssetMarketCache()
+        published.on_publish(
+            lambda: (_ for _ in ()).throw(RuntimeError("optional capture failed")),
+        )
+        result = published._publish(
+            self.market, "fixture-key", "fixture-store",
+        )
+        self.assertIs(result, self.market)
+        self.assertIs(published.current(), self.market)
+
     def test_replacement_publication_retains_incompatibility_reason(self) -> None:
         published = AssetMarketCache()
         published._publish(self.market, "original-key", "fixture-store")
