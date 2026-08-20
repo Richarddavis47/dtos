@@ -148,6 +148,9 @@ class AssetMarketTests(unittest.TestCase):
             (health["cache"]["historical_dataset_version"],
              health["cache"]["historical_dataset_version_scope"]), expected,
         )
+        self.assertEqual(
+            health["cache"]["artifact_compatibility"], "compatible",
+        )
 
     def test_cold_warming_health_does_not_fabricate_dataset_scope(self) -> None:
         health = AssetMarketCache().health()
@@ -924,6 +927,7 @@ class AssetMarketTests(unittest.TestCase):
             cache.health()["historical_dataset_version"],
             cache.health()["historical_dataset_version_scope"],
         )
+        compatibility = cache.health()["cache"]["artifact_compatibility"]
         changed = copy.deepcopy(self.data)
         changed["valuation_intelligence"]["generated_at"] = "new-generation"
         replacement = AssetMarketCache().get(
@@ -943,6 +947,9 @@ class AssetMarketTests(unittest.TestCase):
             (cache.health()["historical_dataset_version"],
              cache.health()["historical_dataset_version_scope"]),
             health_pair,
+        )
+        self.assertEqual(
+            cache.health()["cache"]["artifact_compatibility"], compatibility,
         )
 
     def test_last_valid_warming_health_retains_dataset_scope_pair(self) -> None:
