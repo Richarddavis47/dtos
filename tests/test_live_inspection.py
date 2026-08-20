@@ -72,6 +72,27 @@ class LiveInspectionTests(unittest.TestCase):
             {row.route for row in public_surface_registry(app.routes)},
         )
 
+    def test_machine_current_visual_routes_are_not_browser_capture_surfaces(self):
+        app = FastAPI()
+
+        @app.get("/current-visual")
+        async def current_visual(): return {"kind": "current_visual_discovery"}
+
+        @app.get("/current-visual/manifest.json")
+        async def current_visual_manifest(): return {"captures": []}
+
+        surfaces = {
+            row.route: row for row in public_surface_registry(app.routes)
+            if row.route.startswith("/current-visual")
+        }
+        self.assertEqual(set(surfaces), {
+            "/current-visual", "/current-visual/manifest.json",
+        })
+        for surface in surfaces.values():
+            self.assertEqual(surface.surface_type, "api")
+            self.assertIsNone(surface.human_url)
+            self.assertFalse(surface.dins_enabled)
+
     def test_matchup_semantic_preserves_missing_and_reconciles_totals(self):
         data = {"matchups": {"1": [{"roster_id": 1, "team": "Alpha", "owner": "A",
                  "points": 4, "lineup": [{"id": "10", "name": "Josh", "position": "QB",
