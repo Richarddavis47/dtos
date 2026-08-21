@@ -106,7 +106,7 @@ class MarketWarmingMiddlewareTests(unittest.TestCase):
     def test_exact_get_and_head_paths_return_compact_contract(self) -> None:
         cache = _Cache()
         client = TestClient(_app(cache))
-        for path in ("/", "/market?sort=value", "/api/market/assets?limit=50"):
+        for path in ("/market?sort=value", "/api/market/assets?limit=50"):
             response = client.get(path, headers={
                 "Origin": "https://public.example", "X-Request-ID": "request-1",
                 "X-DTOS-Diagnostics": "1",
@@ -120,6 +120,13 @@ class MarketWarmingMiddlewareTests(unittest.TestCase):
         head = client.head("/api/market/assets")
         self.assertEqual(head.status_code, 503)
         self.assertEqual(head.content, b"")
+
+    def test_manager_home_is_not_an_asset_market_warming_surface(self) -> None:
+        cache = _Cache()
+        response = TestClient(_app(cache)).get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ready", "limit": 50})
+        self.assertEqual(cache.calls, 0)
 
     def test_details_search_health_and_mutations_are_not_intercepted(self) -> None:
         cache = _Cache()

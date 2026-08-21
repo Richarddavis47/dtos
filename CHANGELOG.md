@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.10.43 - UX Foundation
+
+- Replaced the infrastructure-first homepage with a manager briefing organized
+  around recap, actions, rankings, matchups, movement, activity, and owned assets.
+- Introduced one responsive five-destination shell for Home, My Team, Trade,
+  League, and Market while keeping FOIS and advanced tools subordinate.
+- Restructured My Team, League, Market, and Matchup presentation around answer,
+  action, explanation, and evidence without changing intelligence semantics.
+- Added provider-backed player summaries with safe fallbacks and derived current
+  league-scoring positional ranks without new persistent storage or provider calls.
+
+## v1.10.42 - Actual ChatGPT-Retrievable Visual Transport
+
+- Published the verified Current Visual generation through ordinary static
+  GitHub Pages transport without changing DTOS product intelligence.
+
 ## v1.10.41 - Native ChatGPT Visual-Mirror Accessibility
 
 - Added one stable, release-number-free Current Visual discovery endpoint and

@@ -1098,7 +1098,6 @@ class AssetMarketTests(unittest.TestCase):
         with patch("routes.market.historical_store", self.store):
             client = TestClient(app)
             with patch("services.sleeper.sync_sleeper", new=AsyncMock()) as sync:
-                self.assertEqual(self._ready_get(client, "/").status_code, 200)
                 self.assertIn("Asset Market", self._ready_get(client, "/market").text)
                 self.assertEqual(self._ready_get(client, "/api/market").status_code, 200)
                 directory = self._ready_get(

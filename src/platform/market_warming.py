@@ -11,7 +11,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 MARKET_WARMING_DETAIL = (
     "Asset Market generation is building safely in the background; retry shortly."
 )
-MARKET_WARMING_PATHS = frozenset({"/", "/market", "/api/market/assets"})
+MARKET_WARMING_PATHS = frozenset({"/market", "/api/market/assets"})
 MARKET_WARMING_METHODS = frozenset({"GET", "HEAD"})
 
 

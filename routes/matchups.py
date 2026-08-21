@@ -14,6 +14,7 @@ from fastapi.responses import HTMLResponse
 
 from services.matchup_intelligence import matchup_player_values, matchup_projection
 from src.ui.intelligence_presentation import matchup_state
+from src.ui import player_summary
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -43,6 +44,25 @@ def _starter_projection_html(row: dict[str, Any] | None) -> str:
         f'<span><small>Sleeper canonical projection</small><b>{_projection_value(sleeper)}</b></span>'
         f'</div>{technical}'
     )
+
+
+def _production_ranks(data: dict[str, Any]) -> dict[str, str]:
+    """Derive current league-scoring positional ranks from cached actual points."""
+    by_position: dict[str, dict[str, float]] = {}
+    for sides in (data.get("matchups") or {}).values():
+        for side in sides:
+            for group in ("lineup", "bench", "taxi", "reserve", "ir"):
+                for player in side.get(group) or []:
+                    player_id = str(player.get("id") or "")
+                    position = str(player.get("position") or "").upper()
+                    if player_id and position:
+                        by_position.setdefault(position, {})[player_id] = float(player.get("points") or 0)
+    result: dict[str, str] = {}
+    for position, scores in by_position.items():
+        ordered = sorted(scores.items(), key=lambda item: (-item[1], item[0]))
+        for rank, (player_id, _score) in enumerate(ordered, start=1):
+            result[player_id] = f"{position} #{rank}"
+    return result
 
 
 def create_matchups_router(
@@ -113,6 +133,7 @@ def create_matchups_router(
             }
             for side in projected.get("sides") or []
         }
+        production_ranks = _production_ranks(d)
         projection_summary = (
             f'<section class="card"><h3>Canonical Sleeper Starter Projections</h3><div class="matchup-summary-grid">'
             f'<div class="metric"><b>{projected["sides"][0]["sleeper_total"]:.1f}</b><span>{escape(left["team"])} Sleeper Projection · {escape(projected["sides"][0]["sleeper_coverage"])} {escape(projected["sides"][0]["sleeper_status"])}</span></div>'
@@ -193,13 +214,13 @@ def create_matchups_router(
                 right_result = "Vacant"
 
             left_html = (
-                f'<div class="battle-player"><b>{escape(lp["name"])}</b><span>{escape(lp["position"])} · {escape(lp["nfl_team"] or "—")}</span></div>'
+                f'<div class="battle-player">{player_summary(player_id=str(lp.get("id") or ""), name=str(lp["name"]), position=str(lp.get("position") or ""), nfl_team=str(lp.get("nfl_team") or "—"), context=production_ranks.get(str(lp.get("id") or "")))}</div>'
                 f'<div class="battle-points"><small>Actual</small>{left_points:.2f}</div>'
                 f'{_starter_projection_html(projected_by_roster.get(int(left.get("roster_id") or 0), {}).get(str(lp.get("id"))))}'
                 f'<span class="battle-result">{left_result}</span>'
             ) if lp else '<div class="battle-player"><b>Vacant</b><span>No starter assigned</span></div><div class="battle-points">—</div><span class="battle-result">Vacant</span>'
             right_html = (
-                f'<div class="battle-player"><b>{escape(rp["name"])}</b><span>{escape(rp["position"])} · {escape(rp["nfl_team"] or "—")}</span></div>'
+                f'<div class="battle-player">{player_summary(player_id=str(rp.get("id") or ""), name=str(rp["name"]), position=str(rp.get("position") or ""), nfl_team=str(rp.get("nfl_team") or "—"), context=production_ranks.get(str(rp.get("id") or "")))}</div>'
                 f'<div class="battle-points"><small>Actual</small>{right_points:.2f}</div>'
                 f'{_starter_projection_html(projected_by_roster.get(int(right.get("roster_id") or 0), {}).get(str(rp.get("id"))))}'
                 f'<span class="battle-result">{right_result}</span>'
@@ -260,6 +281,13 @@ def create_matchups_router(
             f'</div></div><div class="bench-compare">{("".join(bench_rows) if bench_rows else "<div class=\"muted\">No bench scoring available.</div>")}</div>'
         )
         top_scorer_text = f'{combined_top["name"]} · {combined_top["points"]:.2f}' if combined_top else "No points yet"
+        storyline = (
+            f'{left["team"]} has the stronger pregame projection, while {right["team"]} can close the gap through the highlighted lineup battles.'
+            if projected["sides"][0]["projected"] > projected["sides"][1]["projected"] else
+            f'{right["team"]} has the stronger pregame projection, while {left["team"]} can close the gap through the highlighted lineup battles.'
+            if projected["sides"][1]["projected"] > projected["sides"][0]["projected"] else
+            "The available pregame projections are even; lineup execution is the clearest differentiator."
+        )
         body = (
             f'<a class="back" href="/matchups">← All Matchups</a>'
             f'<section class="matchup-hero {hero_state}"><div class="matchup-label"><span class="matchup-number">Week {d["week"]} · Matchup {escape(matchup_id)}</span><span class="matchup-status">Live Sleeper data</span></div>'
@@ -271,6 +299,7 @@ def create_matchups_router(
             f'<div class="advantage-strip"><div class="advantage-side"><span>{escape(left["team"])} Battle Wins</span><b>{left_battle_wins}</b></div><div class="advantage-center">{tied_battles} tied slots</div><div class="advantage-side right"><span>{escape(right["team"])} Battle Wins</span><b>{right_battle_wins}</b></div></div></section>'
             f'<section class="roster-section"><div class="section-title"><span class="slot-label">Starting Lineup Battles</span><span class="muted">Slot-by-slot live points</span></div><div class="battle-grid">{"".join(battles)}</div></section>'
             f'{projection_summary}'
+            f'<section class="card"><h3>Balanced Storyline</h3><p>{escape(storyline)}</p><details><summary>Why?</summary><p class="muted">This storyline uses only the cached canonical starter projections and visible lineup evidence. It is not a calibrated win probability.</p></details></section>'
             f'<section class="roster-section"><div class="section-title"><span class="slot-label">Bench Comparison</span><span class="muted">Top 12 bench players, side by side</span></div>{bench_comparison_html}</section>'
         )
         return page(f'{left["team"]} vs {right["team"]} — Matchup', body)

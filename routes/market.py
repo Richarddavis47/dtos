@@ -18,6 +18,7 @@ from services.history import (
 )
 from src.ui.intelligence_presentation import available
 from src.ui.render_cache import GenerationRenderCache
+from src.ui import player_summary
 
 RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[..., HTMLResponse]
@@ -162,7 +163,7 @@ def create_market_router(
         data = selected_state.get("data") or {}
         league_name = str((data.get("league") or {}).get("name") or "Sleeper League")
         generation = str(market.semantic_generation)
-        route_variant = "home" if request.url.path == "/" else "market"
+        route_variant = "market"
         key = (
             route_variant, selected_league, generation, market.dataset_version,
             VERSION, BUILD_NUMBER, league_name, selected_state.get("last_sync"),
@@ -181,8 +182,9 @@ def create_market_router(
         )
 
         def render_body() -> bytes:
+            directory_limit = limit if offset or q else min(limit, 10)
             result = market.search(q, limit) if q else market.directory(
-                offset=offset, limit=limit, sort=sort, direction=direction,
+                offset=offset, limit=directory_limit, sort=sort, direction=direction,
                 position=position or None, availability=availability or None,
             )
             rows = result.get("assets") or result.get("results") or []
@@ -201,8 +203,20 @@ def create_market_router(
                     value = values.get(name)
                     fallback = row.get(name)
                     return available(value if value is not None else fallback)
+                display_name = str(row.get("display_name") or asset_id)
+                asset_label = (
+                    player_summary(
+                        player_id=asset_id.removeprefix("player:"),
+                        name=display_name,
+                        position=str(row.get("position") or ""),
+                        nfl_team=str(row.get("nfl_team") or "Free Agent"),
+                        context=f'Rank #{row.get("rank") or index}',
+                    )
+                    if asset_id.startswith("player:") else
+                    f'<b>{escape(display_name)}</b><br><code>{escape(asset_id)}</code>'
+                )
                 table_rows.append(
-                    f'''<tr><td>{row.get("rank") or index}</td><td><a href="/market?{escape(query)}">{escape(str(row.get("display_name") or asset_id))}</a><br><code>{escape(asset_id)}</code></td><td>{escape(str(owner.get("team_name") or owner.get("owner") or "Unrostered"))}</td><td>{escape(shown("market_value"))}</td><td>{escape(shown("intrinsic_dtos_value"))}</td><td>{escape(shown("contender_value"))}</td><td>{escape(shown("rebuilder_value"))}</td><td>{escape(str(row.get("confidence") or 0))}</td><td>{escape(str(row.get("agreement") or 0))}</td><td>{escape(str(row.get("evidence_coverage") or 0))}</td></tr>'''
+                    f'''<tr><td>{row.get("rank") or index}</td><td><a href="/market?{escape(query)}">{asset_label}</a></td><td>{escape(str(owner.get("team_name") or owner.get("owner") or "Unrostered"))}</td><td>{escape(shown("market_value"))}</td><td>{escape(shown("intrinsic_dtos_value"))}</td><td>{escape(shown("contender_value"))}</td><td>{escape(shown("rebuilder_value"))}</td><td>{escape(str(row.get("confidence") or 0))}</td><td>{escape(str(row.get("agreement") or 0))}</td><td>{escape(str(row.get("evidence_coverage") or 0))}</td></tr>'''
                 )
             detail = market.detail(selected, front_office) if selected else None
             expanded = ""
@@ -222,7 +236,7 @@ def create_market_router(
                     f'<option value="{value}" {"selected" if selected_value == value else ""}>{label}</option>'
                     for value, label in values
                 )
-            body = f'''<p class="eyebrow">DTOS v{VERSION}</p><h2>Asset Market &amp; Dynasty Exchange</h2><p class="muted">One canonical, explainable market for players, free agents, picks, and connected league history. Values remain separate; unavailable evidence is never substituted.</p><form class="card" method="get" action="/market" aria-label="Asset Market filters"><label for="market-search">Search players, picks, teams, managers, trades, and transactions</label><input id="market-search" name="q" value="{escape(q)}" placeholder="Josh Allen or 2028 1st"><label for="market-position">Position</label><select id="market-position" name="position"><option value="">All assets</option>{options(((item,item) for item in ("QB","RB","WR","TE","PICK")), position)}</select><label for="market-availability">Availability</label><select id="market-availability" name="availability"><option value="">All availability</option>{options((("rostered","Rostered"),("day_traders_free_agent","Free Agents"),("taxi","Taxi"),("retired","Retired"),("owned_pick","Picks")), availability)}</select><label for="market-sort">Sort</label><select id="market-sort" name="sort">{options(((item,item.title()) for item in ("market","intrinsic","contender","rebuilder","confidence","risk","liquidity")), sort)}</select><input type="hidden" name="front_office" value="{front_office or ''}"><button class="btn" type="submit">Apply market view</button></form><div class="card"><p><b>{result.get("total", result.get("count", 0))}</b> matching assets · Dataset <code>{escape(market.dataset_version[:12])}</code> · Stable tie-break: canonical asset ID</p><div style="overflow-x:auto"><table><caption>Canonical dynasty asset rankings</caption><thead><tr><th>Rank</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No canonical assets match these filters.</td></tr>'}</tbody></table></div><nav aria-label="Market pagination"><a href="/market?offset={max(0, offset-limit)}&limit={limit}&sort={escape(sort)}">Previous</a> · <a href="/market?offset={offset+limit}&limit={limit}&sort={escape(sort)}">Next</a></nav></div>{expanded}<section class="card"><h3>Trending Market</h3><p>{escape(market.trending()["unavailable_reason"] or "Timestamped comparable observations are available.")}</p><p><a href="/api/market/trending">Open explainable trending contract</a></p></section>'''
+            body = f'''<p class="eyebrow">DTOS v{VERSION}</p><h2>Asset Market &amp; Dynasty Exchange</h2><p class="muted">Search the canonical dynasty market first. Values remain separate; unavailable evidence is never substituted.</p><form class="card ux-answer" method="get" action="/market" aria-label="Asset Market filters"><h3>Search players &amp; picks</h3><label for="market-search">Player name or future pick</label><input id="market-search" name="q" value="{escape(q)}" placeholder="Josh Allen or 2028 1st"><label for="market-position">Position</label><select id="market-position" name="position"><option value="">All assets</option>{options(((item,item) for item in ("QB","RB","WR","TE","PICK")), position)}</select><label for="market-availability">Availability</label><select id="market-availability" name="availability"><option value="">All availability</option>{options((("rostered","Rostered"),("day_traders_free_agent","Free Agents"),("taxi","Taxi"),("retired","Retired"),("owned_pick","Picks")), availability)}</select><label for="market-sort">Sort</label><select id="market-sort" name="sort">{options(((item,item.title()) for item in ("market","intrinsic","contender","rebuilder","confidence","risk","liquidity")), sort)}</select><input type="hidden" name="front_office" value="{front_office or ''}"><button class="btn" type="submit">Search market</button></form><section class="ux-section" id="market-movers"><div class="ux-section-head"><h2>Market Movers</h2><p>Meaningful timestamped movement only</p></div><div class="card"><p>{escape(market.trending()["unavailable_reason"] or "Timestamped comparable observations are available.")}</p><a href="/api/market/trending">Review movement evidence →</a></div></section><section class="ux-section"><div class="ux-section-head"><h2>{'Search Results' if q else 'Top Rankings'}</h2><p>{'Exact compact matches' if q else 'A focused opening view; browse deeper when needed'}</p></div><div class="card"><p><b>{result.get("total", result.get("count", 0))}</b> matching assets · Dataset <code>{escape(market.dataset_version[:12])}</code> · Stable tie-break: canonical asset ID</p><div style="overflow-x:auto"><table><caption>Canonical dynasty asset rankings</caption><thead><tr><th>Rank</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No canonical assets match these filters.</td></tr>'}</tbody></table></div><nav aria-label="Market pagination"><a href="/market?offset={max(0, offset-limit)}&limit={limit}&sort={escape(sort)}">Previous</a> · <a href="/market?offset={offset+limit}&limit={limit}&sort={escape(sort)}">Browse all assets →</a></nav></div></section>{expanded}'''
             return body.encode("utf-8")
 
         def render() -> bytes:
@@ -233,6 +247,5 @@ def create_market_router(
 
         return HTMLResponse(render_cache.get_or_build(key, generation, render))
 
-    router.add_api_route("/", market_page, methods=["GET"], response_class=HTMLResponse)
     router.add_api_route("/market", market_page, methods=["GET"], response_class=HTMLResponse)
     return router
