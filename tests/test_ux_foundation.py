@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import unittest
+from time import perf_counter
 from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
-from routes.home import create_home_router
+from routes.home import create_home_router, home_body_render_cache
 from routes.matchups import (
     _game_state,
     _production_ranks,
@@ -55,6 +56,11 @@ def _data(*, preseason: bool = False) -> dict:
 
 
 class UXFoundationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        home_body_render_cache.__init__(
+            "manager_home_body", max_entries=24, max_bytes=2_097_152,
+        )
+
     def _client(self, data: dict | None = None) -> TestClient:
         app = FastAPI()
 
@@ -67,6 +73,65 @@ class UXFoundationTests(unittest.TestCase):
             page=lambda title, body: HTMLResponse(f"<h1>{title}</h1>{body}"),
         ))
         return TestClient(app)
+
+    def test_home_reuses_exact_generation_during_visual_capture_activity(self) -> None:
+        data = _data()
+        generation = ["generation-one"]
+        app = FastAPI()
+
+        async def fresh() -> None:
+            return None
+
+        app.include_router(create_home_router(
+            ensure_fresh=fresh,
+            require_data=lambda: data,
+            page=lambda title, body: HTMLResponse(f"<h1>{title}</h1>{body}"),
+            generation_provider=lambda: generation[0],
+        ))
+        client = TestClient(app)
+        with patch(
+            "routes.home.build_team_directory",
+            return_value={1: {"rank": 1}, 2: {"rank": 2}},
+        ) as build:
+            first = client.get("/?front_office=1")
+            repeated = [client.get("/?front_office=1") for _ in range(10)]
+            generation[0] = "generation-two"
+            changed = client.get("/?front_office=1")
+        self.assertEqual(first.status_code, 200)
+        self.assertTrue(all(response.content == first.content for response in repeated))
+        self.assertEqual(changed.status_code, 200)
+        self.assertEqual(build.call_count, 2)
+        health = home_body_render_cache.health()
+        self.assertEqual(health["manager_home_body_render_cache_hits"], 10)
+        self.assertEqual(health["manager_home_body_render_cache_misses"], 2)
+
+    def test_warm_home_stays_bounded_during_background_capture(self) -> None:
+        data = _data()
+        app = FastAPI()
+
+        async def fresh() -> None:
+            return None
+
+        app.include_router(create_home_router(
+            ensure_fresh=fresh,
+            require_data=lambda: data,
+            page=lambda title, body: HTMLResponse(f"<h1>{title}</h1>{body}"),
+            generation_provider=lambda: "capture-generation",
+        ))
+        client = TestClient(app)
+        with patch(
+            "routes.home.build_team_directory",
+            return_value={1: {"rank": 1}, 2: {"rank": 2}},
+        ) as build:
+            expected = client.get("/?front_office=1").content
+            samples = []
+            for _ in range(10):
+                started = perf_counter()
+                response = client.get("/?front_office=1")
+                samples.append((perf_counter() - started) * 1000)
+                self.assertEqual(response.content, expected)
+        self.assertEqual(build.call_count, 1)
+        self.assertLess(max(samples), 500)
 
     def test_primary_navigation_has_exactly_five_manager_destinations(self) -> None:
         html = manager_navigation("Home")

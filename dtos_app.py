@@ -648,6 +648,27 @@ def require_data() -> dict[str, Any]:
     return data
 
 
+def home_presentation_generation() -> tuple[object, ...]:
+    """Return retained O(1) identities for the manager Home presentation cache."""
+    context = current_league_context()
+    if context is not None:
+        return (
+            context.league_id,
+            tuple(sorted(context.runtime.source_generations.items())),
+            str(
+                context.data.get(
+                    "asset_market_semantic_revision", "market:pending",
+                )
+            ),
+        )
+    data = STATE.get("data") or {}
+    return (
+        LEAGUE_ID,
+        id(data),
+        str(data.get("asset_market_semantic_revision", "market:pending")),
+    )
+
+
 def current_league_id() -> str:
     context = current_league_context()
     return context.league_id if context is not None else LEAGUE_ID
@@ -767,6 +788,7 @@ app.include_router(create_home_router(
     ensure_fresh=ensure_fresh,
     require_data=require_data,
     page=page,
+    generation_provider=home_presentation_generation,
 ))
 
 app.include_router(create_history_router(

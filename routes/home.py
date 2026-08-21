@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from html import escape
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, Hashable
 
 from fastapi import APIRouter, Query
 from fastapi.responses import HTMLResponse
@@ -10,10 +10,17 @@ from fastapi.responses import HTMLResponse
 from services.team_headquarters import build_team_directory
 from services.transactions import normalize_transactions
 from src.ui.intelligence_presentation import league_is_preseason, record_evidence
+from src.ui.render_cache import GenerationRenderCache
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[[str, str], HTMLResponse]
+GenerationProvider = Callable[[], Hashable]
+
+
+home_body_render_cache = GenerationRenderCache(
+    "manager_home_body", max_entries=24, max_bytes=2_097_152,
+)
 
 
 def _section(title: str, context: str, content: str) -> str:
@@ -35,7 +42,10 @@ def _team_selector(data: dict[str, Any], selected: dict[str, Any] | None) -> str
     return f'<form method="get" action="/" class="card"><label for="front-office">Front office briefing</label><select id="front-office" name="front_office">{options}</select><button class="btn" type="submit">Open briefing</button></form>'
 
 
-def create_home_router(*, ensure_fresh: EnsureFresh, require_data: RequireData, page: PageRenderer) -> APIRouter:
+def create_home_router(
+    *, ensure_fresh: EnsureFresh, require_data: RequireData, page: PageRenderer,
+    generation_provider: GenerationProvider | None = None,
+) -> APIRouter:
     """Create the manager briefing and league-wide hub."""
     router = APIRouter(tags=["manager-experience"])
 
@@ -43,12 +53,28 @@ def create_home_router(*, ensure_fresh: EnsureFresh, require_data: RequireData, 
     async def home(front_office: int | None = Query(None)) -> HTMLResponse:
         await ensure_fresh()
         data = require_data()
+        retained_generation = (
+            generation_provider() if generation_provider is not None
+            else (str((data.get("league") or {}).get("league_id") or "default"), id(data))
+        )
+        generation = repr(retained_generation)
+        cache_key = (retained_generation, front_office)
+
+        def render_body() -> bytes:
+            return _home_body(data, front_office).encode("utf-8")
+
+        body = home_body_render_cache.get_or_build(
+            cache_key, generation, render_body,
+        ).decode("utf-8")
+        return page("Home", body)
+
+    def _home_body(data: dict[str, Any], front_office: int | None) -> str:
         teams = data.get("teams") or []
         team = _selected_team(data, front_office)
         directory = build_team_directory(data) if teams else {}
         selector = _team_selector(data, team)
         if team is None:
-            return page("Home", selector + '<div class="ds-empty"><b>No franchise is available.</b>The current Sleeper context has no team roster to brief.</div>')
+            return selector + '<div class="ds-empty"><b>No franchise is available.</b>The current Sleeper context has no team roster to brief.</div>'
 
         roster_id = int(team.get("roster_id") or 0)
         outlook = directory.get(roster_id, {})
@@ -106,7 +132,7 @@ def create_home_router(*, ensure_fresh: EnsureFresh, require_data: RequireData, 
             + _section("League Activity", "Recent cached transactions", activity_html)
             + _section("My Assets", "Roster and draft capital", assets_html)
         )
-        return page("Home", body)
+        return body
 
     @router.get("/league", response_class=HTMLResponse)
     async def league() -> HTMLResponse:
