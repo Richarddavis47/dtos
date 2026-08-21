@@ -7,7 +7,10 @@ from fastapi import APIRouter, FastAPI
 
 from routes.matchups import _starter_projection_html
 from src.core.inspection.live import LiveInspection, matchup_semantic, public_surface_registry
-from src.core.inspection.live_browser import projection_total_mismatches
+from src.core.inspection.live_browser import (
+    matchup_projection_mismatches,
+    projection_total_mismatches,
+)
 
 
 PROGRESS = {
@@ -141,6 +144,28 @@ class LiveInspectionTests(unittest.TestCase):
         team = matchup_semantic(data, "1", snapshot)["teams"][0]
         self.assertEqual(team["canonical_totals"]["canonical_projection"], 0.0)
         self.assertEqual(team["canonical_totals"]["availability"], "available")
+
+    def test_live_matchup_reconciles_unavailable_projection_at_aggregate_boundary(self):
+        semantic = {
+            "presentation_state": "in-game",
+            "teams": [{
+                "team_name": "Alpha",
+                "starters": [{"player_name": "Josh", "canonical": {
+                    "canonical_projection": None,
+                }}],
+                "canonical_totals": {
+                    "canonical_projection": None,
+                    "availability": "unavailable",
+                },
+            }],
+        }
+        visible = "Alpha Josh ACTUAL 4.0 Pregame projections unavailable"
+        self.assertEqual(matchup_projection_mismatches(
+            semantic, visible, ["Josh ACTUAL 4.0"], ["Alpha ACTUAL 4.0"],
+        ), [])
+        self.assertIn("aggregate_projection_unavailable_state_missing", matchup_projection_mismatches(
+            semantic, "Alpha Josh ACTUAL 4.0", ["Josh ACTUAL 4.0"], ["Alpha ACTUAL 4.0"],
+        ))
 
     @patch("src.core.inspection.live.history_progress_contracts", return_value=PROGRESS)
     def test_root_is_bounded_complete_and_dynamic(self, _progress):

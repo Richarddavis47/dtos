@@ -12,7 +12,7 @@ from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from services.history import history_progress_contracts
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.inspection.discovery import discover_pages
-from src.ui.intelligence_presentation import projection_presentation_value
+from src.ui.intelligence_presentation import matchup_game_state, projection_presentation_value
 
 LIVE_INSPECTION_SCHEMA_VERSION = "1.0"
 _PRIVATE_PREFIXES = (
@@ -108,6 +108,7 @@ def matchup_semantic(
     if not sides:
         return None
     projections = (projection_snapshot or {}).get("players") or {}
+    presentation_state = matchup_game_state(data, sides)
     teams = []
     for side in sides:
         starters = []
@@ -152,6 +153,7 @@ def matchup_semantic(
         "human_url": f"/matchups/{matchup_id}",
         "semantic_url": f"/api/inspect/live/matchups/{matchup_id}",
         "matchup_id": str(matchup_id), "status": "current", "teams": teams,
+        "presentation_state": presentation_state,
         "technical_details": {
             "application_version": VERSION, "application_build": BUILD_NUMBER,
             "projection_snapshot_id": (projection_snapshot or {}).get("projection_snapshot_id"),

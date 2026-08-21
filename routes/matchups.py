@@ -15,6 +15,7 @@ from fastapi.responses import HTMLResponse
 from services.matchup_intelligence import matchup_player_values, matchup_projection
 from src.ui.intelligence_presentation import (
     league_is_preseason,
+    matchup_game_state,
     matchup_score_hierarchy,
     matchup_state,
     projection_presentation_value,
@@ -74,14 +75,7 @@ def _production_ranks(data: dict[str, Any]) -> dict[str, str]:
 
 def _game_state(data: dict[str, Any], sides: list[dict[str, Any]]) -> str:
     """Classify visible matchup scoring without interpreting absent points as play."""
-    if league_is_preseason(data):
-        return "pregame"
-    statuses = {str(side.get("status") or side.get("game_status") or "").casefold() for side in sides}
-    if statuses & {"final", "complete", "completed"}:
-        return "final"
-    if any(float(side.get("points") or 0) != 0 for side in sides):
-        return "in-game"
-    return "pregame"
+    return matchup_game_state(data, sides)
 
 
 def _team_score_html(*, actual: Any, projected: Any, state: str) -> str:

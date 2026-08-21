@@ -11,12 +11,16 @@ from src.core.inspection.live_visual import CaptureRequest, LIVE_VIEWPORTS
 from tools.inspection.capture import DOM_SCRIPT
 
 
-def projection_total_mismatches(team: dict[str, Any], team_cards: list[str]) -> list[str]:
+def projection_total_mismatches(
+    team: dict[str, Any], team_cards: list[str], *, projection_expected: bool = True,
+) -> list[str]:
     """Reconcile one team total against its explicit availability contract."""
     name = str(team.get("team_name") or "")
     matches = [text for text in team_cards if name and name in text]
     if not matches:
         return ["projection_team_card_missing"]
+    if not projection_expected:
+        return []
     card_text = " ".join(matches)
     total = (team.get("canonical_totals") or {}).get("canonical_projection")
     availability = str((team.get("canonical_totals") or {}).get("availability") or "")
@@ -27,6 +31,45 @@ def projection_total_mismatches(team: dict[str, Any], team_cards: list[str]) -> 
     value = float(total)
     accepted = {str(total), f"{value:g}", f"{value:.1f}", f"{value:.2f}"}
     return [] if any(candidate in card_text for candidate in accepted) else ["canonical_projection_total_mismatch"]
+
+
+def matchup_projection_mismatches(
+    semantic: dict[str, Any], visible: str, starter_cards: list[str], team_cards: list[str],
+) -> list[str]:
+    """Reconcile projection evidence only where the game-state contract presents it."""
+    mismatches: list[str] = []
+    state = str(semantic.get("presentation_state") or "pregame")
+    unavailable_aggregate = True
+    for team in semantic.get("teams") or []:
+        if str(team.get("team_name")) not in visible:
+            mismatches.append("team_name_missing")
+        total = (team.get("canonical_totals") or {}).get("canonical_projection")
+        unavailable_aggregate = unavailable_aggregate and total is None
+        projection_expected = state == "pregame" or total is not None
+        for starter in team.get("starters") or []:
+            displayed = starter.get("canonical") or {}
+            canonical = displayed.get("canonical_projection")
+            matching_cards = [
+                text for text in starter_cards
+                if str(starter.get("player_name")) in text
+            ]
+            if not matching_cards:
+                mismatches.append("starter_card_missing")
+                continue
+            card_text = " ".join(matching_cards)
+            if canonical is not None and (
+                "Sleeper canonical projection" not in card_text
+                or f"{float(canonical):.2f}" not in card_text
+            ):
+                mismatches.append("canonical_projection_mismatch")
+            if canonical is None and state == "pregame" and "Projection unavailable" not in card_text:
+                mismatches.append("missing_projection_state_missing")
+        mismatches.extend(projection_total_mismatches(
+            team, team_cards, projection_expected=projection_expected,
+        ))
+    if state != "pregame" and unavailable_aggregate and "Pregame projections unavailable" not in visible:
+        mismatches.append("aggregate_projection_unavailable_state_missing")
+    return mismatches
 
 
 def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[str, Any]:
@@ -56,24 +99,10 @@ def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[s
             starter_cards = page.locator(".battle-side:not(.vacant)").all_inner_texts()
             team_cards = page.locator(".scoreboard-side, .matchup-team").all_inner_texts()
             for team in semantic.get("teams") or []:
-                if str(team.get("team_name")) not in visible:
-                    mismatches.append("team_name_missing")
                 expected_starters += len(team.get("starters") or [])
-                for starter in team.get("starters") or []:
-                    displayed = starter.get("canonical") or {}
-                    canonical = displayed.get("canonical_projection")
-                    matching_cards = [text for text in starter_cards
-                                      if str(starter.get("player_name")) in text]
-                    if not matching_cards:
-                        mismatches.append("starter_card_missing")
-                        continue
-                    card_text = " ".join(matching_cards)
-                    if canonical is not None and ("Sleeper canonical projection" not in card_text or
-                                                  f"{float(canonical):.2f}" not in card_text):
-                        mismatches.append("canonical_projection_mismatch")
-                    if canonical is None and "Projection unavailable" not in card_text:
-                        mismatches.append("missing_projection_state_missing")
-                mismatches.extend(projection_total_mismatches(team, team_cards))
+            mismatches.extend(matchup_projection_mismatches(
+                semantic, visible, starter_cards, team_cards,
+            ))
             if mismatches:
                 raise RuntimeError("Rendered matchup does not match canonical presentation")
             nodes = dom.get("nodes") or []
