@@ -13,6 +13,30 @@ _STATUS_LABELS = {
 }
 
 
+def league_is_preseason(data: dict[str, Any]) -> bool:
+    """Recognize an explicit or evidence-backed pre-kickoff league state."""
+    if data.get("preseason"):
+        return True
+    if int(data.get("week") or 0) > 1:
+        return False
+    teams = data.get("teams") or []
+    if not teams:
+        return False
+    no_results = all(
+        int(team.get("wins") or 0) == 0
+        and int(team.get("losses") or 0) == 0
+        and int(team.get("ties") or 0) == 0
+        and float(team.get("points_for") or 0) == 0
+        for team in teams
+    )
+    no_matchup_scoring = all(
+        float(side.get("points") or 0) == 0
+        for sides in (data.get("matchups") or {}).values()
+        for side in (sides or [])
+    )
+    return no_results and no_matchup_scoring
+
+
 def human_status(value: Any, *, fallback: str = "Not yet available") -> str:
     if value is None or str(value).strip() == "":
         return fallback
@@ -22,6 +46,53 @@ def human_status(value: Any, *, fallback: str = "Not yet available") -> str:
 
 def available(value: Any, *, reason: str = "Not yet available") -> str:
     return reason if value is None or value == "" else str(value)
+
+
+def numeric_evidence(value: Any, *, reason: str = "Not yet available") -> str:
+    """Format numeric evidence without turning an absent value into zero."""
+    if value is None or value == "":
+        return reason
+    return str(value)
+
+
+def record_evidence(
+    wins: Any,
+    losses: Any,
+    ties: Any = 0,
+    *,
+    season_started: bool,
+) -> str:
+    """Return a real record only after competitive scoring has started."""
+    if not season_started:
+        return "Regular-season record not started"
+    if wins is None or losses is None:
+        return "Record unavailable"
+    return f"{int(wins)}-{int(losses)}-{int(ties or 0)}"
+
+
+def matchup_score_hierarchy(
+    *,
+    actual: Any,
+    pregame: Any,
+    state: str,
+    live_projected_final: Any = None,
+) -> tuple[tuple[str, str], ...]:
+    """Return score rows ordered by the evidence appropriate to game state."""
+    normalized = state.casefold().replace("_", "-")
+    if normalized in {"pregame", "not-started", "not started"}:
+        value = None if pregame is None or float(pregame) <= 0 else pregame
+        return (("Pregame projection", numeric_evidence(value, reason="Projection unavailable")),)
+    if normalized in {"final", "complete", "completed"}:
+        rows = [("Final actual", numeric_evidence(actual, reason="Final score unavailable"))]
+        if pregame not in (None, ""):
+            rows.append(("Pregame projection", str(pregame)))
+        return tuple(rows)
+    rows = [("Actual", numeric_evidence(actual, reason="Live score unavailable"))]
+    if live_projected_final not in (None, ""):
+        rows.append(("Live projected final", str(live_projected_final)))
+    if pregame not in (None, ""):
+        rows.append(("Pregame projection", str(pregame)))
+    return tuple(rows)
 
 
 def exact_rank(value: Any, total: Any = None) -> str:

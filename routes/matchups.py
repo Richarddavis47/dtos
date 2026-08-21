@@ -13,7 +13,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 
 from services.matchup_intelligence import matchup_player_values, matchup_projection
-from src.ui.intelligence_presentation import matchup_state
+from src.ui.intelligence_presentation import league_is_preseason, matchup_score_hierarchy, matchup_state
 from src.ui import player_summary
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -48,6 +48,8 @@ def _starter_projection_html(row: dict[str, Any] | None) -> str:
 
 def _production_ranks(data: dict[str, Any]) -> dict[str, str]:
     """Derive current league-scoring positional ranks from cached actual points."""
+    if league_is_preseason(data):
+        return {}
     by_position: dict[str, dict[str, float]] = {}
     for sides in (data.get("matchups") or {}).values():
         for side in sides:
@@ -63,6 +65,31 @@ def _production_ranks(data: dict[str, Any]) -> dict[str, str]:
         for rank, (player_id, _score) in enumerate(ordered, start=1):
             result[player_id] = f"{position} #{rank}"
     return result
+
+
+def _game_state(data: dict[str, Any], sides: list[dict[str, Any]]) -> str:
+    """Classify visible matchup scoring without interpreting absent points as play."""
+    if league_is_preseason(data):
+        return "pregame"
+    statuses = {str(side.get("status") or side.get("game_status") or "").casefold() for side in sides}
+    if statuses & {"final", "complete", "completed"}:
+        return "final"
+    if any(float(side.get("points") or 0) != 0 for side in sides):
+        return "in-game"
+    return "pregame"
+
+
+def _team_score_html(*, actual: Any, projected: Any, state: str) -> str:
+    rows = matchup_score_hierarchy(actual=actual, pregame=projected, state=state)
+    return "".join(
+        f'<div class="score-row {"primary" if index == 0 else "supporting"}"><small>{escape(label)}</small><b>{escape(value)}</b></div>'
+        for index, (label, value) in enumerate(rows)
+    )
+
+
+def _has_team_projections(projected: dict[str, Any]) -> bool:
+    sides = projected.get("sides") or []
+    return len(sides) >= 2 and any(float(side.get("projected") or 0) > 0 for side in sides[:2])
 
 
 def create_matchups_router(
@@ -94,18 +121,25 @@ def create_matchups_router(
                 continue
             left, right = sides[0], sides[1]
             projected = matchup_projection(d, sides, player_values)
+            projections_available = _has_team_projections(projected)
+            projection_edge = (
+                f'<span><b>Largest edge:</b> {escape(projected["largest_advantage"])}</span>'
+                if projections_available else ""
+            )
+            game_state = _game_state(d, sides)
             status = matchup_state(
                 left=float(left["points"]), right=float(right["points"]),
                 week=int(d.get("week") or 0),
-                season_started=not bool(d.get("preseason")),
+                season_started=not league_is_preseason(d),
             )
             cards.append(
                 f'<a class="matchup-card" href="/matchups/{escape(matchup_id)}">'
                 f'<div class="matchup-label"><span class="matchup-number">Matchup {escape(matchup_id)}</span><span class="matchup-status">{status}</span></div>'
-                f'<div class="versus"><div class="matchup-team"><div class="matchup-owner">{escape(left["owner"])}</div><h3>{escape(left["team"])}</h3><div class="record">{escape(left["record"])}</div><div class="score">{left["points"]:.2f}</div></div>'
+                f'<div class="versus"><div class="matchup-team"><div class="matchup-owner">{escape(left["owner"])}</div><h3>{escape(left["team"])}</h3>{"" if game_state == "pregame" else f"<div class=\"record\">{escape(left['record'])}</div>"}{_team_score_html(actual=left["points"], projected=projected["sides"][0]["projected"], state=game_state)}</div>'
                 f'<div class="vs-mark">VS</div>'
-                f'<div class="matchup-team right"><div class="matchup-owner">{escape(right["owner"])}</div><h3>{escape(right["team"])}</h3><div class="record">{escape(right["record"])}</div><div class="score">{right["points"]:.2f}</div></div></div>'
-                f'<div class="matchup-footer"><span><b class="edge">Projected:</b> {projected["sides"][0]["projected"]:.1f}–{projected["sides"][1]["projected"]:.1f} ({escape(projected["status"])})</span><span><b>Largest edge:</b> {escape(projected["largest_advantage"])}</span></div></a>'
+                f'<div class="matchup-team right"><div class="matchup-owner">{escape(right["owner"])}</div><h3>{escape(right["team"])}</h3>{"" if game_state == "pregame" else f"<div class=\"record\">{escape(right['record'])}</div>"}{_team_score_html(actual=right["points"], projected=projected["sides"][1]["projected"], state=game_state)}</div></div>'
+                f'<div class="matchup-footer"><span><b class="edge">{escape(projected["status"] if projections_available else "Projection unavailable")}</b></span>'
+                f'{projection_edge}</div></a>'
             )
         body = (
             f'<div class="section-title"><div><h2 style="margin:0">Week {d["week"]} Matchups</h2><div class="muted">Live Sleeper scoring and lineup comparison</div></div>'
@@ -126,6 +160,8 @@ def create_matchups_router(
             return page(f"{side_name} — Matchup Awaiting Opponent", f'<a class="back" href="/matchups">← All Matchups</a><div class="card"><h2>{escape(side_name)}</h2><p class="muted">Opponent assignment is not complete. DTOS will update this page after Sleeper assigns both franchises.</p></div>')
         left, right = sides[0], sides[1]
         projected = matchup_projection(d, sides)
+        projections_available = _has_team_projections(projected)
+        game_state = _game_state(d, sides)
         projected_by_roster = {
             int(side.get("roster_id") or 0): {
                 str(player.get("player_id")): player
@@ -147,33 +183,32 @@ def create_matchups_router(
             f'<div class="metric"><b>{escape(projected["largest_advantage"])}</b><span>Largest Advantage</span></div>'
             f'<div class="metric"><b>{escape(projected["highest_volatility"])}</b><span>Highest Volatility</span></div>'
             f'<div class="metric"><b>{escape(projected["confidence"])}</b><span>Projection Confidence · {projected["missing"]} missing</span></div></div></section>'
+        ) if projections_available else (
+            '<section class="card evidence-unavailable"><h3>Pregame projections unavailable</h3>'
+            '<p>Sleeper has not published canonical starter projections for this matchup. DTOS does not substitute zeroes or fabricate an outlook.</p></section>'
         )
         margin = abs(float(left["points"]) - float(right["points"]))
-        state_label = matchup_state(
-            left=float(left["points"]), right=float(right["points"]),
-            week=int(d.get("week") or 0),
-            season_started=not bool(d.get("preseason")),
-        )
-        if state_label == "Not Started":
-            headline = "Matchup has not started"
+        if game_state == "pregame" and not projections_available:
+            headline = "Pregame projections unavailable"
             hero_state = "not-started"
             banner_state = "upcoming"
-            left_score_state = right_score_state = ""
+        elif game_state == "pregame":
+            favorite = left["team"] if projected["sides"][0]["projected"] > projected["sides"][1]["projected"] else right["team"] if projected["sides"][1]["projected"] > projected["sides"][0]["projected"] else "Even matchup"
+            headline = f'{favorite} projected edge' if favorite != "Even matchup" else favorite
+            hero_state = "not-started"
+            banner_state = "upcoming"
         elif left["points"] == right["points"]:
             headline = "Matchup is tied"
             hero_state = "tied-game"
             banner_state = "tied"
-            left_score_state = right_score_state = ""
         elif left["points"] > right["points"]:
             headline = f'{left["team"]} leads by {margin:.2f}'
             hero_state = "leading-left"
             banner_state = "leading"
-            left_score_state, right_score_state = "leading", "trailing"
         else:
             headline = f'{right["team"]} leads by {margin:.2f}'
             hero_state = "leading-right"
             banner_state = "leading"
-            left_score_state, right_score_state = "trailing", "leading"
         score_total = float(left["points"]) + float(right["points"])
         left_share = 50.0 if score_total <= 0 else (float(left["points"]) / score_total) * 100
         right_share = 100.0 - left_share
@@ -213,17 +248,17 @@ def create_matchups_router(
                 right_state += " vacant"
                 right_result = "Vacant"
 
+            left_score_rows = _team_score_html(actual=left_points, projected=(projected_by_roster.get(int(left.get("roster_id") or 0), {}).get(str(lp.get("id"))) or {}).get("canonical_projection"), state=game_state)
+            right_score_rows = _team_score_html(actual=right_points, projected=(projected_by_roster.get(int(right.get("roster_id") or 0), {}).get(str(rp.get("id"))) or {}).get("canonical_projection"), state=game_state)
             left_html = (
                 f'<div class="battle-player">{player_summary(player_id=str(lp.get("id") or ""), name=str(lp["name"]), position=str(lp.get("position") or ""), nfl_team=str(lp.get("nfl_team") or "—"), context=production_ranks.get(str(lp.get("id") or "")))}</div>'
-                f'<div class="battle-points"><small>Actual</small>{left_points:.2f}</div>'
-                f'{_starter_projection_html(projected_by_roster.get(int(left.get("roster_id") or 0), {}).get(str(lp.get("id"))))}'
-                f'<span class="battle-result">{left_result}</span>'
+                f'<div class="battle-points">{left_score_rows}</div>'
+                f'{"" if game_state == "pregame" else f"<span class=\"battle-result\">{left_result}</span>"}'
             ) if lp else '<div class="battle-player"><b>Vacant</b><span>No starter assigned</span></div><div class="battle-points">—</div><span class="battle-result">Vacant</span>'
             right_html = (
                 f'<div class="battle-player">{player_summary(player_id=str(rp.get("id") or ""), name=str(rp["name"]), position=str(rp.get("position") or ""), nfl_team=str(rp.get("nfl_team") or "—"), context=production_ranks.get(str(rp.get("id") or "")))}</div>'
-                f'<div class="battle-points"><small>Actual</small>{right_points:.2f}</div>'
-                f'{_starter_projection_html(projected_by_roster.get(int(right.get("roster_id") or 0), {}).get(str(rp.get("id"))))}'
-                f'<span class="battle-result">{right_result}</span>'
+                f'<div class="battle-points">{right_score_rows}</div>'
+                f'{"" if game_state == "pregame" else f"<span class=\"battle-result\">{right_result}</span>"}'
             ) if rp else '<div class="battle-player"><b>Vacant</b><span>No starter assigned</span></div><div class="battle-points">—</div><span class="battle-result">Vacant</span>'
             if left_points > right_points:
                 edge_label = f'{left["owner"]} edge'
@@ -274,6 +309,8 @@ def create_matchups_router(
         else:
             bench_edge = 'Bench scoring tied'
         bench_comparison_html = (
+            '<div class="evidence-unavailable"><b>Bench scoring has not started.</b><br>Pregame starter projections are the decision evidence for this matchup.</div>'
+            if game_state == "pregame" else
             f'<div class="bench-total-card"><div class="bench-total-grid">'
             f'<div class="bench-total-side"><span>{escape(left["team"])} Bench</span><b>{left_bench_total:.2f}</b></div>'
             f'<div class="advantage-center">{escape(bench_edge)}</div>'
@@ -282,22 +319,33 @@ def create_matchups_router(
         )
         top_scorer_text = f'{combined_top["name"]} · {combined_top["points"]:.2f}' if combined_top else "No points yet"
         storyline = (
+            "Sleeper has not published enough canonical starter projections to compare these lineups yet."
+            if not projections_available else
             f'{left["team"]} has the stronger pregame projection, while {right["team"]} can close the gap through the highlighted lineup battles.'
             if projected["sides"][0]["projected"] > projected["sides"][1]["projected"] else
             f'{right["team"]} has the stronger pregame projection, while {left["team"]} can close the gap through the highlighted lineup battles.'
             if projected["sides"][1]["projected"] > projected["sides"][0]["projected"] else
             "The available pregame projections are even; lineup execution is the clearest differentiator."
         )
+        hero_scores = (
+            f'<div class="scoreboard"><div class="scoreboard-side"><div class="matchup-owner">{escape(left["owner"])}</div><div class="scoreboard-team">{escape(left["team"])}</div>{_team_score_html(actual=left["points"], projected=projected["sides"][0]["projected"], state=game_state)}</div>'
+            f'<div class="vs-mark">VS</div><div class="scoreboard-side right"><div class="matchup-owner">{escape(right["owner"])}</div><div class="scoreboard-team">{escape(right["team"])}</div>{_team_score_html(actual=right["points"], projected=projected["sides"][1]["projected"], state=game_state)}</div></div>'
+        )
+        live_context = "" if game_state == "pregame" else (
+            f'<div class="live-share"><div class="live-share-head"><span>{escape(left["team"])} {left_share:.0f}%</span><span>Live score share</span><span>{escape(right["team"])} {right_share:.0f}%</span></div><div class="live-share-track"><div class="live-share-left" style="width:{left_share:.2f}%"></div><div class="live-share-right" style="width:{right_share:.2f}%"></div></div></div>'
+        )
+        battle_summary = "" if game_state == "pregame" else (
+            f'<div class="advantage-strip"><div class="advantage-side"><span>{escape(left["team"])} Battle Wins</span><b>{left_battle_wins}</b></div><div class="advantage-center">{tied_battles} tied slots</div><div class="advantage-side right"><span>{escape(right["team"])} Battle Wins</span><b>{right_battle_wins}</b></div></div>'
+        )
         body = (
             f'<a class="back" href="/matchups">← All Matchups</a>'
             f'<section class="matchup-hero {hero_state}"><div class="matchup-label"><span class="matchup-number">Week {d["week"]} · Matchup {escape(matchup_id)}</span><span class="matchup-status">Live Sleeper data</span></div>'
-            f'<div class="scoreboard"><div class="scoreboard-side {left_score_state}"><div class="matchup-owner">{escape(left["owner"])}</div><div class="scoreboard-team">{escape(left["team"])}</div><div class="record">{escape(left["record"])}</div><div class="scoreboard-score">{left["points"]:.2f}</div></div>'
-            f'<div class="vs-mark">VS</div><div class="scoreboard-side right {right_score_state}"><div class="matchup-owner">{escape(right["owner"])}</div><div class="scoreboard-team">{escape(right["team"])}</div><div class="record">{escape(right["record"])}</div><div class="scoreboard-score">{right["points"]:.2f}</div></div></div>'
+            f'{hero_scores}'
             f'<div class="leader-banner {banner_state}"><b>{escape(headline)}</b></div>'
-            f'<div class="live-share"><div class="live-share-head"><span>{escape(left["team"])} {left_share:.0f}%</span><span>Live score share</span><span>{escape(right["team"])} {right_share:.0f}%</span></div><div class="live-share-track"><div class="live-share-left" style="width:{left_share:.2f}%"></div><div class="live-share-right" style="width:{right_share:.2f}%"></div></div></div>'
-            f'<div class="matchup-summary-grid"><div class="metric"><b>{margin:.2f}</b><span>Score Margin</span></div><div class="metric"><b>{len(left.get("lineup", []))}</b><span>{escape(left["owner"])} Starters</span></div><div class="metric"><b>{len(right.get("lineup", []))}</b><span>{escape(right["owner"])} Starters</span></div><div class="metric"><b>{escape(top_scorer_text)}</b><span>Top Starter</span></div></div>'
-            f'<div class="advantage-strip"><div class="advantage-side"><span>{escape(left["team"])} Battle Wins</span><b>{left_battle_wins}</b></div><div class="advantage-center">{tied_battles} tied slots</div><div class="advantage-side right"><span>{escape(right["team"])} Battle Wins</span><b>{right_battle_wins}</b></div></div></section>'
-            f'<section class="roster-section"><div class="section-title"><span class="slot-label">Starting Lineup Battles</span><span class="muted">Slot-by-slot live points</span></div><div class="battle-grid">{"".join(battles)}</div></section>'
+            f'{live_context}'
+            f'<div class="matchup-summary-grid">{"" if game_state == "pregame" else f"<div class=\"metric\"><b>{margin:.2f}</b><span>Score Margin</span></div>"}<div class="metric"><b>{len(left.get("lineup", []))}</b><span>{escape(left["owner"])} Starters</span></div><div class="metric"><b>{len(right.get("lineup", []))}</b><span>{escape(right["owner"])} Starters</span></div>{"" if game_state == "pregame" else f"<div class=\"metric\"><b>{escape(top_scorer_text)}</b><span>Top Starter</span></div>"}</div>'
+            f'{battle_summary}</section>'
+            f'<section class="roster-section"><div class="section-title"><span class="slot-label">Starting Lineup Outlook</span><span class="muted">{"Pregame projections" if game_state == "pregame" else "Slot-by-slot live points"}</span></div><div class="battle-grid">{"".join(battles)}</div></section>'
             f'{projection_summary}'
             f'<section class="card"><h3>Balanced Storyline</h3><p>{escape(storyline)}</p><details><summary>Why?</summary><p class="muted">This storyline uses only the cached canonical starter projections and visible lineup evidence. It is not a calibrated win probability.</p></details></section>'
             f'<section class="roster-section"><div class="section-title"><span class="slot-label">Bench Comparison</span><span class="muted">Top 12 bench players, side by side</span></div>{bench_comparison_html}</section>'
