@@ -80,8 +80,16 @@ def _game_state(data: dict[str, Any], sides: list[dict[str, Any]]) -> str:
 
 def _team_score_html(*, actual: Any, projected: Any, state: str) -> str:
     rows = matchup_score_hierarchy(actual=actual, pregame=projected, state=state)
+    def display_value(label: str, value: str) -> str:
+        if "projection" not in label.casefold() or value == "Projection unavailable":
+            return value
+        try:
+            return f"{float(value):.2f}"
+        except (TypeError, ValueError):
+            return value
+
     return "".join(
-        f'<div class="score-row {"primary" if index == 0 else "supporting"}"><small>{escape(label)}</small><b>{escape(value)}</b></div>'
+        f'<div class="score-row {"primary" if index == 0 else "supporting"}"><small>{escape(label)}</small><b>{escape(display_value(label, value))}</b></div>'
         for index, (label, value) in enumerate(rows)
     )
 

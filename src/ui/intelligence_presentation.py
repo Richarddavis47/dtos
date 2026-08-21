@@ -113,14 +113,16 @@ def matchup_score_hierarchy(
         return (("Pregame projection", numeric_evidence(pregame, reason="Projection unavailable")),)
     if normalized in {"final", "complete", "completed"}:
         rows = [("Final actual", numeric_evidence(actual, reason="Final score unavailable"))]
-        if pregame not in (None, ""):
-            rows.append(("Pregame projection", str(pregame)))
+        rows.append(("Pregame projection", numeric_evidence(
+            pregame, reason="Projection unavailable",
+        )))
         return tuple(rows)
     rows = [("Actual", numeric_evidence(actual, reason="Live score unavailable"))]
     if live_projected_final not in (None, ""):
         rows.append(("Live projected final", str(live_projected_final)))
-    if pregame not in (None, ""):
-        rows.append(("Pregame projection", str(pregame)))
+    rows.append(("Pregame projection", numeric_evidence(
+        pregame, reason="Projection unavailable",
+    )))
     return tuple(rows)
 
 

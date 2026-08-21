@@ -1,3 +1,16 @@
+# DTOS v1.10.45 - Matchup Presentation Contract Correction
+
+DTOS v1.10.45 aligns the matchup page's canonical projection rendering with the
+strict Live Visual and Live Inspection contract. Projection values use one
+shared two-decimal presentation boundary, while missing projections remain
+explicitly unavailable and legitimate projected zero remains a real zero.
+
+The correction is presentation-only. It preserves the v1.10.44 UX foundation,
+all intelligence semantics, Live Visual coverage and responsiveness, durable
+storage, sparse market memory, and HistoricalStore retirement.
+
+## Previous release
+
 # DTOS v1.10.44 - UX Foundation Polish / Correctness
 
 DTOS v1.10.44 refines the deployed UX Foundation with honest evidence states and
