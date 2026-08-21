@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import unittest
+from logging.handlers import QueueHandler
+from time import sleep
 from unittest.mock import AsyncMock, Mock, patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 import dtos_app
+import src.platform.observability as observability
 from routes.api import create_api_router
 from src.platform.observability import (
     install_observability,
@@ -149,6 +153,42 @@ class DeploymentReadinessTests(unittest.TestCase):
         self.assertTrue(all(
             record.request_id == "bounded-trace" for record in captured.records
         ))
+
+    def test_request_trace_sink_is_non_blocking(self) -> None:
+        app = FastAPI()
+        install_observability(app)
+
+        request_logger = logging.getLogger("dtos.request")
+        self.assertFalse(request_logger.propagate)
+        self.assertEqual(len(request_logger.handlers), 1)
+        self.assertIsInstance(request_logger.handlers[0], QueueHandler)
+
+    def test_slow_request_log_sink_does_not_delay_diagnostic_route(self) -> None:
+        app = FastAPI()
+        install_observability(app)
+
+        @app.get("/probe")
+        async def probe() -> dict[str, bool]:
+            return {"ok": True}
+
+        listener = observability._request_log_listener
+        self.assertIsNotNone(listener)
+        assert listener is not None
+        target = listener.handlers[0]
+        original_emit = target.emit
+
+        def slow_emit(record: logging.LogRecord) -> None:
+            sleep(0.1)
+            original_emit(record)
+
+        with patch.object(target, "emit", side_effect=slow_emit):
+            response = TestClient(app).get(
+                "/probe", headers={"X-DTOS-Diagnostics": "1"},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertLess(
+            float(response.headers["X-DTOS-Request-Duration"]), 50.0,
+        )
 
     def test_event_loop_lag_window_is_bounded(self) -> None:
         runtime_metrics.event_loop_lag_samples_ms = []
