@@ -13,7 +13,12 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 
 from services.matchup_intelligence import matchup_player_values, matchup_projection
-from src.ui.intelligence_presentation import league_is_preseason, matchup_score_hierarchy, matchup_state
+from src.ui.intelligence_presentation import (
+    league_is_preseason,
+    matchup_score_hierarchy,
+    matchup_state,
+    projection_presentation_value,
+)
 from src.ui import player_summary
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -89,7 +94,14 @@ def _team_score_html(*, actual: Any, projected: Any, state: str) -> str:
 
 def _has_team_projections(projected: dict[str, Any]) -> bool:
     sides = projected.get("sides") or []
-    return len(sides) >= 2 and any(float(side.get("projected") or 0) > 0 for side in sides[:2])
+    return len(sides) >= 2 and any(_team_projection_value(side) is not None for side in sides[:2])
+
+
+def _team_projection_value(side: dict[str, Any]) -> Any | None:
+    return projection_presentation_value(
+        side.get("canonical_projection_total", side.get("sleeper_total")),
+        side.get("canonical_projection_coverage", side.get("sleeper_coverage")),
+    )
 
 
 def create_matchups_router(
@@ -135,9 +147,9 @@ def create_matchups_router(
             cards.append(
                 f'<a class="matchup-card" href="/matchups/{escape(matchup_id)}">'
                 f'<div class="matchup-label"><span class="matchup-number">Matchup {escape(matchup_id)}</span><span class="matchup-status">{status}</span></div>'
-                f'<div class="versus"><div class="matchup-team"><div class="matchup-owner">{escape(left["owner"])}</div><h3>{escape(left["team"])}</h3>{"" if game_state == "pregame" else f"<div class=\"record\">{escape(left['record'])}</div>"}{_team_score_html(actual=left["points"], projected=projected["sides"][0]["projected"], state=game_state)}</div>'
+                f'<div class="versus"><div class="matchup-team"><div class="matchup-owner">{escape(left["owner"])}</div><h3>{escape(left["team"])}</h3>{"" if game_state == "pregame" else f"<div class=\"record\">{escape(left['record'])}</div>"}{_team_score_html(actual=left["points"], projected=_team_projection_value(projected["sides"][0]), state=game_state)}</div>'
                 f'<div class="vs-mark">VS</div>'
-                f'<div class="matchup-team right"><div class="matchup-owner">{escape(right["owner"])}</div><h3>{escape(right["team"])}</h3>{"" if game_state == "pregame" else f"<div class=\"record\">{escape(right['record'])}</div>"}{_team_score_html(actual=right["points"], projected=projected["sides"][1]["projected"], state=game_state)}</div></div>'
+                f'<div class="matchup-team right"><div class="matchup-owner">{escape(right["owner"])}</div><h3>{escape(right["team"])}</h3>{"" if game_state == "pregame" else f"<div class=\"record\">{escape(right['record'])}</div>"}{_team_score_html(actual=right["points"], projected=_team_projection_value(projected["sides"][1]), state=game_state)}</div></div>'
                 f'<div class="matchup-footer"><span><b class="edge">{escape(projected["status"] if projections_available else "Projection unavailable")}</b></span>'
                 f'{projection_edge}</div></a>'
             )
@@ -328,8 +340,8 @@ def create_matchups_router(
             "The available pregame projections are even; lineup execution is the clearest differentiator."
         )
         hero_scores = (
-            f'<div class="scoreboard"><div class="scoreboard-side"><div class="matchup-owner">{escape(left["owner"])}</div><div class="scoreboard-team">{escape(left["team"])}</div>{_team_score_html(actual=left["points"], projected=projected["sides"][0]["projected"], state=game_state)}</div>'
-            f'<div class="vs-mark">VS</div><div class="scoreboard-side right"><div class="matchup-owner">{escape(right["owner"])}</div><div class="scoreboard-team">{escape(right["team"])}</div>{_team_score_html(actual=right["points"], projected=projected["sides"][1]["projected"], state=game_state)}</div></div>'
+            f'<div class="scoreboard"><div class="scoreboard-side"><div class="matchup-owner">{escape(left["owner"])}</div><div class="scoreboard-team">{escape(left["team"])}</div>{_team_score_html(actual=left["points"], projected=_team_projection_value(projected["sides"][0]), state=game_state)}</div>'
+            f'<div class="vs-mark">VS</div><div class="scoreboard-side right"><div class="matchup-owner">{escape(right["owner"])}</div><div class="scoreboard-team">{escape(right["team"])}</div>{_team_score_html(actual=right["points"], projected=_team_projection_value(projected["sides"][1]), state=game_state)}</div></div>'
         )
         live_context = "" if game_state == "pregame" else (
             f'<div class="live-share"><div class="live-share-head"><span>{escape(left["team"])} {left_share:.0f}%</span><span>Live score share</span><span>{escape(right["team"])} {right_share:.0f}%</span></div><div class="live-share-track"><div class="live-share-left" style="width:{left_share:.2f}%"></div><div class="live-share-right" style="width:{right_share:.2f}%"></div></div></div>'

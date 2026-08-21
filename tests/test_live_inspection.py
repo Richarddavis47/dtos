@@ -7,6 +7,7 @@ from fastapi import APIRouter, FastAPI
 
 from routes.matchups import _starter_projection_html
 from src.core.inspection.live import LiveInspection, matchup_semantic, public_surface_registry
+from src.core.inspection.live_browser import projection_total_mismatches
 
 
 PROGRESS = {
@@ -110,6 +111,36 @@ class LiveInspectionTests(unittest.TestCase):
                          result["teams"][0]["starters"][0]["canonical"] |
                          {"actual_points": 4})
         self.assertEqual(result["teams"][0]["starters"][1]["projection_state"], "unavailable")
+        self.assertIsNone(result["teams"][1]["canonical_totals"]["canonical_projection"])
+        self.assertEqual(result["teams"][1]["canonical_totals"]["availability"], "unavailable")
+
+    def test_projection_total_reconciliation_is_availability_aware(self):
+        unavailable = {"team_name": "Alpha", "canonical_totals": {
+            "canonical_projection": None, "raw_aggregate": 0.0, "availability": "unavailable",
+        }}
+        available_zero = {"team_name": "Alpha", "canonical_totals": {
+            "canonical_projection": 0.0, "raw_aggregate": 0.0, "availability": "available",
+        }}
+        available_value = {"team_name": "Alpha", "canonical_totals": {
+            "canonical_projection": 7.5, "raw_aggregate": 7.5, "availability": "available",
+        }}
+        self.assertEqual(projection_total_mismatches(unavailable, ["Alpha Pregame projection Projection unavailable"]), [])
+        self.assertEqual(projection_total_mismatches(available_zero, ["Alpha Pregame projection 0.0"]), [])
+        self.assertEqual(projection_total_mismatches(available_value, ["Alpha Pregame projection 7.5"]), [])
+        self.assertIn("missing_projection_total_state_missing", projection_total_mismatches(unavailable, ["Alpha Pregame projection 0.0"]))
+        self.assertIn("available_projection_total_rendered_unavailable", projection_total_mismatches(available_zero, ["Alpha Projection unavailable"]))
+        self.assertIn("available_projection_total_rendered_unavailable", projection_total_mismatches(available_value, ["Alpha Projection unavailable"]))
+        self.assertIn("canonical_projection_total_mismatch", projection_total_mismatches(available_value, ["Alpha Pregame projection 8.5"]))
+
+    def test_matchup_semantic_preserves_available_zero_total(self):
+        data = {"matchups": {"1": [{
+            "roster_id": 1, "team": "Alpha", "owner": "A", "points": 0,
+            "lineup": [{"id": "10", "name": "Josh", "position": "QB", "points": 0}],
+        }]}}
+        snapshot = {"players": {"10": {"canonical_projection": 0.0}}}
+        team = matchup_semantic(data, "1", snapshot)["teams"][0]
+        self.assertEqual(team["canonical_totals"]["canonical_projection"], 0.0)
+        self.assertEqual(team["canonical_totals"]["availability"], "available")
 
     @patch("src.core.inspection.live.history_progress_contracts", return_value=PROGRESS)
     def test_root_is_bounded_complete_and_dynamic(self, _progress):

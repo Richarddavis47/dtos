@@ -55,6 +55,21 @@ def numeric_evidence(value: Any, *, reason: str = "Not yet available") -> str:
     return str(value)
 
 
+def projection_coverage_count(coverage: Any) -> int:
+    """Return the contributing projection count from a compact coverage value."""
+    if isinstance(coverage, int):
+        return max(0, coverage)
+    if isinstance(coverage, str):
+        head = coverage.partition("/")[0].strip()
+        return max(0, int(head)) if head.isdigit() else 0
+    return 0
+
+
+def projection_presentation_value(total: Any, coverage: Any) -> Any | None:
+    """Preserve an available zero while withholding a zero-coverage aggregate."""
+    return total if projection_coverage_count(coverage) > 0 else None
+
+
 def record_evidence(
     wins: Any,
     losses: Any,
@@ -80,8 +95,7 @@ def matchup_score_hierarchy(
     """Return score rows ordered by the evidence appropriate to game state."""
     normalized = state.casefold().replace("_", "-")
     if normalized in {"pregame", "not-started", "not started"}:
-        value = None if pregame is None or float(pregame) <= 0 else pregame
-        return (("Pregame projection", numeric_evidence(value, reason="Projection unavailable")),)
+        return (("Pregame projection", numeric_evidence(pregame, reason="Projection unavailable")),)
     if normalized in {"final", "complete", "completed"}:
         rows = [("Final actual", numeric_evidence(actual, reason="Final score unavailable"))]
         if pregame not in (None, ""):

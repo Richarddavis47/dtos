@@ -12,6 +12,7 @@ from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from services.history import history_progress_contracts
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.inspection.discovery import discover_pages
+from src.ui.intelligence_presentation import projection_presentation_value
 
 LIVE_INSPECTION_SCHEMA_VERSION = "1.0"
 _PRIVATE_PREFIXES = (
@@ -130,12 +131,18 @@ def matchup_semantic(
                 "technical_details": {"projection_snapshot_id": row.get("projection_snapshot_id")},
             })
         count = len(starters)
+        presentation_total = projection_presentation_value(round(canonical_total, 2), canonical_count)
+        total_contract = {
+            "canonical_projection": presentation_total,
+            "raw_aggregate": round(canonical_total, 2),
+            "availability": "available" if canonical_count else "unavailable",
+        }
         teams.append({
             "roster_id": side.get("roster_id"), "team_name": side.get("team"),
             "manager": side.get("owner"), "actual_score": side.get("points"),
             "starters": starters,
-            "displayed_totals": {"canonical_projection": round(canonical_total, 2)},
-            "canonical_totals": {"canonical_projection": round(canonical_total, 2)},
+            "displayed_totals": dict(total_contract),
+            "canonical_totals": dict(total_contract),
             "coverage": {"canonical": f"{canonical_count}/{count}",
                          "canonical_status": "complete" if canonical_count == count else "partial"},
         })

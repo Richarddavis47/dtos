@@ -13,10 +13,17 @@ from routes.matchups import (
     _game_state,
     _production_ranks,
     _team_score_html,
+    _team_projection_value,
     create_matchups_router,
 )
 from src.ui import manager_navigation, player_summary
-from src.ui.intelligence_presentation import league_is_preseason, matchup_score_hierarchy, numeric_evidence, record_evidence
+from src.ui.intelligence_presentation import (
+    league_is_preseason,
+    matchup_score_hierarchy,
+    numeric_evidence,
+    projection_presentation_value,
+    record_evidence,
+)
 
 
 def _data(*, preseason: bool = False) -> dict:
@@ -163,7 +170,11 @@ class UXFoundationTests(unittest.TestCase):
         self.assertIn("168.4", html)
         self.assertNotIn("Actual", html)
         self.assertNotIn("0.00", html)
-        self.assertEqual(matchup_score_hierarchy(actual=0, pregame=0, state="pregame"), (("Pregame projection", "Projection unavailable"),))
+        self.assertEqual(matchup_score_hierarchy(actual=0, pregame=0, state="pregame"), (("Pregame projection", "0"),))
+        self.assertIsNone(projection_presentation_value(0.0, "0/11"))
+        self.assertEqual(projection_presentation_value(0.0, "1/11"), 0.0)
+        self.assertIsNone(_team_projection_value({"canonical_projection_total": 0.0, "canonical_projection_coverage": "0/11"}))
+        self.assertEqual(_team_projection_value({"canonical_projection_total": 0.0, "canonical_projection_coverage": "1/11"}), 0.0)
 
     def test_matchup_score_hierarchy_changes_with_game_state(self) -> None:
         live = matchup_score_hierarchy(actual=42.5, pregame=38.2, state="in-game", live_projected_final=55.1)

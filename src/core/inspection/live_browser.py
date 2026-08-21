@@ -11,6 +11,24 @@ from src.core.inspection.live_visual import CaptureRequest, LIVE_VIEWPORTS
 from tools.inspection.capture import DOM_SCRIPT
 
 
+def projection_total_mismatches(team: dict[str, Any], team_cards: list[str]) -> list[str]:
+    """Reconcile one team total against its explicit availability contract."""
+    name = str(team.get("team_name") or "")
+    matches = [text for text in team_cards if name and name in text]
+    if not matches:
+        return ["projection_team_card_missing"]
+    card_text = " ".join(matches)
+    total = (team.get("canonical_totals") or {}).get("canonical_projection")
+    availability = str((team.get("canonical_totals") or {}).get("availability") or "")
+    if availability == "unavailable" or total is None:
+        return [] if "Projection unavailable" in card_text else ["missing_projection_total_state_missing"]
+    if "Projection unavailable" in card_text:
+        return ["available_projection_total_rendered_unavailable"]
+    value = float(total)
+    accepted = {str(total), f"{value:g}", f"{value:.1f}", f"{value:.2f}"}
+    return [] if any(candidate in card_text for candidate in accepted) else ["canonical_projection_total_mismatch"]
+
+
 def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[str, Any]:
     """Render the real public route once and return compact presentation metadata."""
     viewport = LIVE_VIEWPORTS[request.viewport]
@@ -36,6 +54,7 @@ def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[s
             mismatches = []
             expected_starters = 0
             starter_cards = page.locator(".battle-side:not(.vacant)").all_inner_texts()
+            team_cards = page.locator(".scoreboard-side, .matchup-team").all_inner_texts()
             for team in semantic.get("teams") or []:
                 if str(team.get("team_name")) not in visible:
                     mismatches.append("team_name_missing")
@@ -54,9 +73,7 @@ def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[s
                         mismatches.append("canonical_projection_mismatch")
                     if canonical is None and "Projection unavailable" not in card_text:
                         mismatches.append("missing_projection_state_missing")
-                totals = team.get("canonical_totals") or {}
-                if f"{float(totals.get('canonical_projection') or 0):.1f}" not in visible:
-                    mismatches.append("canonical_projection_total_mismatch")
+                mismatches.extend(projection_total_mismatches(team, team_cards))
             if mismatches:
                 raise RuntimeError("Rendered matchup does not match canonical presentation")
             nodes = dom.get("nodes") or []
