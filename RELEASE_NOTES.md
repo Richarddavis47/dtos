@@ -1,7 +1,25 @@
+# DTOS v1.10.44 - UX Foundation Polish / Correctness
+
+DTOS v1.10.44 refines the deployed UX Foundation with honest evidence states and
+manager-first hierarchy. Missing, unsupported, unknown, and not-yet-started
+evidence no longer appears as a meaningful numeric zero. Preseason Home and
+League views now present compact briefings instead of fake current-season
+records, and Matchups lead with canonical pregame projections until scoring
+begins.
+
+Deep Market evidence now leads with value and recommendation context while
+technical identities remain available in collapsed disclosure. Team roster
+rooms reuse the established Sleeper headshot presentation with safe fallbacks.
+The release does not change navigation, valuation, Brain, Projection, FOIS,
+Trade, history, or Global Sparse Market Memory semantics and adds no permanent
+presentation warehouse.
+
+## Previous release
+
 # DTOS v1.10.43 - UX Foundation
 
-DTOS v1.10.43 is the first post-infrastructure product implementation batch. It
-turns the application shell into a manager experience with five primary
+DTOS v1.10.43 established the first post-infrastructure product implementation
+batch. It turns the application shell into a manager experience with five primary
 destinations: Home, My Team, Trade, League, and Market.
 
 Home is now a front-office briefing rather than an Asset Market directory. My
@@ -10,8 +28,6 @@ league-wide surfaces, Market begins with search and meaningful movement, and
 matchups present actual scoring, canonical projections, production rank, and a
 clearly labeled evidence-bound storyline. Existing Brain, FOIS, valuation,
 history, storage, projection, and artifact semantics remain unchanged.
-
-## Previous release
 
 # DTOS v1.10.42 - Actual ChatGPT-Retrievable Visual Transport
 

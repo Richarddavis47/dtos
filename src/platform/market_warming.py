@@ -21,7 +21,7 @@ class AssetMarketWarmingMiddleware:
     def __init__(
         self, app: ASGIApp, *, cache: Any,
         data_provider: Callable[[], dict[str, Any]], state: dict[str, Any],
-        store: Any, league_id: str,
+        store: Any, league_id: str, build_allowed: Callable[[], bool],
     ) -> None:
         self.app = app
         self.cache = cache
@@ -29,6 +29,7 @@ class AssetMarketWarmingMiddleware:
         self.state = state
         self.store = store
         self.league_id = league_id
+        self.build_allowed = build_allowed
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         query = parse_qs(scope.get("query_string", b"").decode("latin-1"))
@@ -41,6 +42,7 @@ class AssetMarketWarmingMiddleware:
         ):
             await self.app(scope, receive, send)
             return
+        build_allowed = self.build_allowed()
         if not self.cache.begin_warming_guard(
             self.data_provider(), self.state, self.store, self.league_id,
             start_background=False,
@@ -51,9 +53,12 @@ class AssetMarketWarmingMiddleware:
             "Retry-After": "5",
             "X-DTOS-Market-Refresh": "refreshing",
         }
-        background = BackgroundTask(
-            self.cache.reconcile,
-            self.data_provider(), self.state, self.store, self.league_id,
+        background = (
+            BackgroundTask(
+                self.cache.reconcile,
+                self.data_provider(), self.state, self.store, self.league_id,
+            )
+            if build_allowed else None
         )
         response: Response
         if scope["method"] == "HEAD":

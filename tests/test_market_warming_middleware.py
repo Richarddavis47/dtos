@@ -35,12 +35,12 @@ class _Cache:
         return False
 
 
-def _app(cache: _Cache) -> FastAPI:
+def _app(cache: _Cache, *, build_allowed=lambda: True) -> FastAPI:
     app = FastAPI()
     app.add_middleware(
         AssetMarketWarmingMiddleware,
         cache=cache, data_provider=lambda: {"cached": True}, state={},
-        store=object(), league_id="league",
+        store=object(), league_id="league", build_allowed=build_allowed,
     )
     app.add_middleware(
         CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "OPTIONS"],
@@ -102,6 +102,16 @@ class MarketWarmingMiddlewareTests(unittest.TestCase):
         self.assertEqual(events[-1], "worker")
         self.assertGreaterEqual(events.count("body"), 1)
         self.assertNotIn("worker", events[:-1])
+
+    def test_lifecycle_blocked_warming_does_not_schedule_reconcile(self) -> None:
+        cache = _Cache()
+        response = TestClient(_app(cache, build_allowed=lambda: False)).get(
+            "/api/market/assets?limit=50"
+        )
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json(), {"detail": MARKET_WARMING_DETAIL})
+        self.assertEqual(cache.calls, 1)
+        self.assertEqual(cache.starts, 0)
 
     def test_exact_get_and_head_paths_return_compact_contract(self) -> None:
         cache = _Cache()

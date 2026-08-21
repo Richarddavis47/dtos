@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.10.44 - UX Foundation Polish / Correctness
+
+- Distinguished legitimate numeric zero from unavailable, unsupported, unknown,
+  and not-yet-started evidence in shared manager-facing presentation helpers.
+- Replaced preseason `0-0-0` and `0.00` summaries with honest preseason
+  briefings and outlook labels on Home and League.
+- Made canonical pregame projections primary before kickoff at team and player
+  level, while preserving actual-first in-game and final-state hierarchy.
+- Collapsed unavailable Market evidence and moved dataset/model identifiers
+  behind manager-first Why/Evidence/Technical Details disclosure.
+- Standardized Sleeper-backed player summaries and safe headshot fallbacks in
+  Team Headquarters roster rooms without adding durable presentation storage.
+- Preserved the five-destination navigation, League hub, Market search-first
+  architecture, FOIS relationship, Trade experience, intelligence semantics,
+  sparse global market memory, and HistoricalStore retirement.
+
 ## v1.10.43 - UX Foundation
 
 - Replaced the infrastructure-first homepage with a manager briefing organized

@@ -95,8 +95,8 @@ def _roster_rooms(view: dict[str, Any]) -> str:
         players = view["roster_groups"][position]
         room_grade = view["roster_intelligence"].rooms[position].overall.grade
         rows = "".join(
-            f'<div class="thq-player"><div><a href="/players/{quote(str(player["id"]))}">{escape(str(player["name"]))}</a>'
-            f'<div class="thq-player-meta">{escape(position)} · {escape(str(player.get("team") or "Free Agent"))} · Age {escape(_display(player.get("age")))}{f" · Bye {escape(str(player.get("bye_week")))}" if player.get("bye_week") not in (None, "", "Unavailable") else ""}</div>'
+            f'<div class="thq-player"><div><a href="/players/{quote(str(player["id"]))}">{player_summary(player_id=str(player["id"]), name=str(player["name"]), position=position, nfl_team=str(player.get("team") or "Free Agent"), context=(f"Age {player.get('age')}" if player.get("age") is not None else None))}</a>'
+            f'<div class="thq-player-meta">{f"Bye {escape(str(player.get('bye_week')))}" if player.get("bye_week") not in (None, "", "Unavailable") else "Player profile and recommendation available"}</div>'
             f'{_player_tier(player)}</div>'
             f'<span class="thq-status {"starter" if player.get("roster_slot") == "Starter" else ""}">{escape(str(player.get("roster_slot") or "Bench"))}</span></div>'
             for player in players
@@ -104,7 +104,7 @@ def _roster_rooms(view: dict[str, Any]) -> str:
         rooms.append(f'<section class="thq-room"><div class="thq-room-head"><span>{labels[position]}</span><span>{room_grade} · {len(players)} players</span></div>{rows}</section>')
     if view["other_players"]:
         rows = "".join(
-            f'<div class="thq-player"><div><a href="/players/{quote(str(player["id"]))}">{escape(str(player["name"]))}</a><div class="thq-player-meta">{escape(str(player.get("position") or "Other"))} · {escape(str(player.get("team") or "Free Agent"))} · Age {escape(_display(player.get("age")))}</div></div><span class="thq-status">{escape(str(player.get("roster_slot") or "Bench"))}</span></div>'
+            f'<div class="thq-player"><div><a href="/players/{quote(str(player["id"]))}">{player_summary(player_id=str(player["id"]), name=str(player["name"]), position=str(player.get("position") or "Other"), nfl_team=str(player.get("team") or "Free Agent"), context=(f"Age {player.get('age')}" if player.get("age") is not None else None))}</a><div class="thq-player-meta">Player profile and recommendation available</div></div><span class="thq-status">{escape(str(player.get("roster_slot") or "Bench"))}</span></div>'
             for player in view["other_players"]
         )
         rooms.append(f'<section class="thq-room"><div class="thq-room-head"><span>Other Positions</span><span>{len(view["other_players"])}</span></div>{rows}</section>')
