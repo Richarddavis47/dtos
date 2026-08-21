@@ -560,6 +560,7 @@ app.add_middleware(
     state=STATE,
     store=canonical_history_store,
     league_id=LEAGUE_ID,
+    build_allowed=lifecycle_coordinator.market_build_allowed,
 )
 app.add_middleware(
     CORSMiddleware,
