@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.10.45 - Matchup Presentation Contract Correction
+
+- Standardized canonical matchup projection values at the shared rendered-score
+  boundary so Live Visual, Live Inspection, and the manager-facing DOM compare
+  the same two-decimal value without changing projection semantics.
+- Preserved distinct unavailable, legitimate-zero, nonzero, pregame, in-game,
+  and final presentation states across all matchup surfaces.
+- Retained the v1.10.44 manager-first UX, Live Visual responsiveness, intelligence
+  semantics, storage model, and HistoricalStore retirement.
+
 ## v1.10.44 - UX Foundation Polish / Correctness
 
 - Distinguished legitimate numeric zero from unavailable, unsupported, unknown,

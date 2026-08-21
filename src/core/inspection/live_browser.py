@@ -62,7 +62,7 @@ def matchup_projection_mismatches(
                 or f"{float(canonical):.2f}" not in card_text
             ):
                 mismatches.append("canonical_projection_mismatch")
-            if canonical is None and state == "pregame" and "Projection unavailable" not in card_text:
+            if canonical is None and "Projection unavailable" not in card_text:
                 mismatches.append("missing_projection_state_missing")
         mismatches.extend(projection_total_mismatches(
             team, team_cards, projection_expected=projection_expected,

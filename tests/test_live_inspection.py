@@ -135,6 +135,52 @@ class LiveInspectionTests(unittest.TestCase):
         self.assertIn("available_projection_total_rendered_unavailable", projection_total_mismatches(available_value, ["Alpha Projection unavailable"]))
         self.assertIn("canonical_projection_total_mismatch", projection_total_mismatches(available_value, ["Alpha Pregame projection 8.5"]))
 
+    def test_starter_reconciliation_distinguishes_unavailable_zero_and_nonzero(self):
+        def semantic(value, state):
+            return {
+                "presentation_state": "pregame",
+                "teams": [{
+                    "team_name": "Alpha",
+                    "starters": [{"player_name": "Josh", "projection_state": state,
+                                  "canonical": {"canonical_projection": value}}],
+                    "canonical_totals": {
+                        "canonical_projection": value,
+                        "availability": "unavailable" if value is None else "available",
+                    },
+                }],
+            }
+
+        self.assertEqual(matchup_projection_mismatches(
+            semantic(None, "unavailable"), "Alpha Josh Projection unavailable",
+            ["Josh Projection unavailable"], ["Alpha Projection unavailable"],
+        ), [])
+        self.assertEqual(matchup_projection_mismatches(
+            semantic(0.0, "projected_zero"), "Alpha Josh Sleeper canonical projection 0.00",
+            ["Josh Sleeper canonical projection 0.00"], ["Alpha Pregame projection 0.00"],
+        ), [])
+        self.assertEqual(matchup_projection_mismatches(
+            semantic(7.5, "available"), "Alpha Josh Sleeper canonical projection 7.50",
+            ["Josh Sleeper canonical projection 7.50"], ["Alpha Pregame projection 7.50"],
+        ), [])
+        self.assertIn("missing_projection_state_missing", matchup_projection_mismatches(
+            semantic(None, "unavailable"), "Alpha Josh Sleeper canonical projection 0.00",
+            ["Josh Sleeper canonical projection 0.00"], ["Alpha Pregame projection 0.00"],
+        ))
+        self.assertIn("canonical_projection_mismatch", matchup_projection_mismatches(
+            semantic(0.0, "projected_zero"), "Alpha Josh Projection unavailable",
+            ["Josh Projection unavailable"], ["Alpha Projection unavailable"],
+        ))
+        self.assertIn("canonical_projection_mismatch", matchup_projection_mismatches(
+            semantic(7.5, "available"), "Alpha Josh Sleeper canonical projection 8.50",
+            ["Josh Sleeper canonical projection 8.50"], ["Alpha Pregame projection 8.50"],
+        ))
+        in_game_unavailable = semantic(None, "unavailable")
+        in_game_unavailable["presentation_state"] = "in-game"
+        self.assertIn("missing_projection_state_missing", matchup_projection_mismatches(
+            in_game_unavailable, "Alpha Josh Actual 4.00",
+            ["Josh Actual 4.00"], ["Alpha Actual 4.00"],
+        ))
+
     def test_matchup_semantic_preserves_available_zero_total(self):
         data = {"matchups": {"1": [{
             "roster_id": 1, "team": "Alpha", "owner": "A", "points": 0,
@@ -159,9 +205,10 @@ class LiveInspectionTests(unittest.TestCase):
                 },
             }],
         }
-        visible = "Alpha Josh ACTUAL 4.0 Pregame projections unavailable"
+        visible = "Alpha Josh ACTUAL 4.0 Projection unavailable Pregame projections unavailable"
         self.assertEqual(matchup_projection_mismatches(
-            semantic, visible, ["Josh ACTUAL 4.0"], ["Alpha ACTUAL 4.0"],
+            semantic, visible, ["Josh ACTUAL 4.0 Projection unavailable"],
+            ["Alpha ACTUAL 4.0 Projection unavailable"],
         ), [])
         self.assertIn("aggregate_projection_unavailable_state_missing", matchup_projection_mismatches(
             semantic, "Alpha Josh ACTUAL 4.0", ["Josh ACTUAL 4.0"], ["Alpha ACTUAL 4.0"],

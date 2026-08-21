@@ -1,11 +1,14 @@
 """Structured logging, request correlation, and runtime health metrics."""
 from __future__ import annotations
 
+import asyncio
+import atexit
 import json
 import logging
 import os
-import asyncio
 from contextvars import ContextVar
+from logging.handlers import QueueHandler, QueueListener
+from queue import SimpleQueue
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from time import monotonic, perf_counter
@@ -19,13 +22,23 @@ from src.platform.request_capacity import serving_request
 
 request_id_context: ContextVar[str] = ContextVar("dtos_request_id", default="system")
 
+_request_log_queue: SimpleQueue[logging.LogRecord] = SimpleQueue()
+_request_log_listener: QueueListener | None = None
+
+
+def _stop_request_log_listener() -> None:
+    if _request_log_listener is not None:
+        _request_log_listener.stop()
+
 
 class StructuredFormatter(logging.Formatter):
     """Emit stable JSON records suitable for local logs and hosted collectors."""
 
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.fromtimestamp(
+                record.created, tz=timezone.utc,
+            ).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -48,6 +61,7 @@ class CorrelationFormatter(logging.Formatter):
 
 
 def configure_logging() -> None:
+    global _request_log_listener
     root = logging.getLogger()
     root.setLevel(LOG_LEVEL)
     if not root.handlers:
@@ -55,6 +69,20 @@ def configure_logging() -> None:
     formatter: logging.Formatter = StructuredFormatter() if LOG_FORMAT == "json" else CorrelationFormatter("%(asctime)s %(levelname)s %(name)s [%(request_id)s] %(message)s")
     for handler in root.handlers:
         handler.setFormatter(formatter)
+    request_logger = logging.getLogger("dtos.request")
+    if _request_log_listener is None:
+        # Request traces must never inherit filesystem/stdout stalls from the
+        # application log sink. The listener retains the same handlers and
+        # formatter while moving the potentially blocking write off the event
+        # loop thread.
+        targets = tuple(root.handlers)
+        _request_log_listener = QueueListener(
+            _request_log_queue, *targets, respect_handler_level=True,
+        )
+        _request_log_listener.start()
+        atexit.register(_stop_request_log_listener)
+        request_logger.handlers[:] = [QueueHandler(_request_log_queue)]
+        request_logger.propagate = False
 
 
 @dataclass

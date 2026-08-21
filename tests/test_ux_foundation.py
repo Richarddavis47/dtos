@@ -1,4 +1,4 @@
-"""v1.10.44 manager-experience presentation contracts."""
+"""Manager-experience presentation contracts."""
 from __future__ import annotations
 
 import unittest
@@ -232,10 +232,11 @@ class UXFoundationTests(unittest.TestCase):
         self.assertEqual(rows, (("Pregame projection", "168.4"),))
         html = _team_score_html(actual=0, projected=168.4, state="pregame")
         self.assertIn("Pregame projection", html)
-        self.assertIn("168.4", html)
+        self.assertIn("168.40", html)
         self.assertNotIn("Actual", html)
         self.assertNotIn("0.00", html)
         self.assertEqual(matchup_score_hierarchy(actual=0, pregame=0, state="pregame"), (("Pregame projection", "0"),))
+        self.assertIn("Pregame projection</small><b>0.00", _team_score_html(actual=0, projected=0, state="pregame"))
         self.assertIsNone(projection_presentation_value(0.0, "0/11"))
         self.assertEqual(projection_presentation_value(0.0, "1/11"), 0.0)
         self.assertIsNone(_team_projection_value({"canonical_projection_total": 0.0, "canonical_projection_coverage": "0/11"}))
@@ -246,6 +247,28 @@ class UXFoundationTests(unittest.TestCase):
         self.assertEqual([label for label, _ in live], ["Actual", "Live projected final", "Pregame projection"])
         final = matchup_score_hierarchy(actual=61.7, pregame=38.2, state="final", live_projected_final=65.0)
         self.assertEqual([label for label, _ in final], ["Final actual", "Pregame projection"])
+
+    def test_matchup_score_hierarchy_preserves_projection_availability_by_game_state(self) -> None:
+        live_missing = matchup_score_hierarchy(
+            actual=42.5, pregame=None, state="in-game", live_projected_final=None,
+        )
+        self.assertEqual(live_missing, (
+            ("Actual", "42.5"),
+            ("Pregame projection", "Projection unavailable"),
+        ))
+        live_available = matchup_score_hierarchy(
+            actual=42.5, pregame=38.2, state="in-game", live_projected_final=55.1,
+        )
+        self.assertEqual([label for label, _ in live_available], [
+            "Actual", "Live projected final", "Pregame projection",
+        ])
+        final_missing = matchup_score_hierarchy(
+            actual=61.7, pregame=None, state="final",
+        )
+        self.assertEqual(final_missing, (
+            ("Final actual", "61.7"),
+            ("Pregame projection", "Projection unavailable"),
+        ))
 
     def test_preseason_production_rank_does_not_rank_tied_zeroes(self) -> None:
         data = _data(preseason=True)
@@ -305,8 +328,8 @@ class UXFoundationTests(unittest.TestCase):
         self.assertIn("Pregame projection", detail)
         self.assertNotIn("scoreboard-score", detail)
         self.assertNotIn("<small>Actual</small>", detail)
-        self.assertNotIn("0.00", directory)
-        self.assertNotIn("0.00", detail)
+        self.assertNotIn("<small>Actual</small><b>0.00", directory)
+        self.assertNotIn("<small>Actual</small><b>0.00", detail)
         self.assertNotIn("0-0-0", directory)
         self.assertNotIn("0-0-0", detail)
         self.assertNotIn("Market", detail)
