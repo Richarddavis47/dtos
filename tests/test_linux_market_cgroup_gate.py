@@ -44,6 +44,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _effective_memory_margin,
     _historical_leader_performance,
     _identity,
+    _live_visual_coverage_complete,
     _material_target_comparison,
     _material_target_search_path,
     _material_first_page_comparison,
@@ -106,6 +107,21 @@ class ArchiveCacheValidationTests(unittest.TestCase):
     def test_live_visual_probe_cadence_is_continuous_but_not_aggressive(self) -> None:
         self.assertGreaterEqual(LIVE_VISUAL_PROBE_INTERVAL_SECONDS, 0.2)
         self.assertLessEqual(LIVE_VISUAL_PROBE_INTERVAL_SECONDS, 1.0)
+
+    def test_live_visual_coverage_tracks_the_active_surface_contract(self) -> None:
+        contract = [{"capture_id": f"capture-{index}"} for index in range(42)]
+        self.assertTrue(_live_visual_coverage_complete({
+            "required_captures": 42, "current": 42,
+            "required_capture_contract": contract,
+        }))
+        self.assertFalse(_live_visual_coverage_complete({
+            "required_captures": 42, "current": 41,
+            "required_capture_contract": contract,
+        }))
+        self.assertFalse(_live_visual_coverage_complete({
+            "required_captures": 42, "current": 42,
+            "required_capture_contract": contract[:-1],
+        }))
 
     def test_historical_replay_fixture_matches_production_shape(self) -> None:
         seasons, keys = _trade_replay_fixture()

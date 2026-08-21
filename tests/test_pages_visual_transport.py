@@ -20,7 +20,7 @@ def png(color: str = "navy") -> bytes:
 
 
 class PagesVisualTransportTests(unittest.TestCase):
-    def fixture(self) -> dict[str, bytes]:
+    def fixture(self, capture_count: int = 38) -> dict[str, bytes]:
         captures = []
         payloads: dict[str, bytes] = {}
         required = [
@@ -28,7 +28,7 @@ class PagesVisualTransportTests(unittest.TestCase):
             "front-offices-page-desktop", "teams-page-desktop", "matchups-page-desktop",
             "league-history-page-desktop",
         ]
-        for index in range(38):
+        for index in range(capture_count):
             capture_id = required[index] if index < len(required) else f"surface-{index}-desktop"
             content = png("navy" if index % 2 else "green")
             url = f"https://dtos.example/current-visual/images/{capture_id}.png"
@@ -42,7 +42,8 @@ class PagesVisualTransportTests(unittest.TestCase):
         manifest = {
             "status": "complete", "application_version": VERSION,
             "application_build": BUILD_NUMBER, "commit": "abc", "current_generation": "generation",
-            "captured_at": "now", "image_count": 38, "stale_count": 0, "failed_count": 0,
+            "captured_at": "now", "image_count": capture_count,
+            "stale_count": 0, "failed_count": 0,
             "captures": captures,
         }
         payloads["/current-visual/manifest.json"] = json.dumps(manifest).encode()
@@ -65,6 +66,18 @@ class PagesVisualTransportTests(unittest.TestCase):
             self.assertFalse(any(path.name == ".git" for path in output.rglob("*")))
             self.assertEqual(len(list((output / "images").glob("*.png"))), 38)
 
+    def test_static_site_accepts_the_complete_active_ux_surface_contract(self):
+        values = self.fixture(42)
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder) / "current-visual"
+            result = build_pages_visual(
+                source_base="https://dtos.example",
+                public_base="https://owner.github.io/dtos",
+                output=output, fetch=lambda url: values[url],
+            )
+            self.assertEqual(result["capture_count"], 42)
+            self.assertEqual(len(list((output / "images").glob("*.png"))), 42)
+
     def test_verifier_starts_from_html_and_checks_every_png(self):
         values = self.fixture()
         with tempfile.TemporaryDirectory() as folder:
@@ -86,7 +99,7 @@ class PagesVisualTransportTests(unittest.TestCase):
     def test_missing_private_malformed_or_failed_candidate_cannot_publish(self):
         for mutation, message in (
             (lambda value: value["captures"].__setitem__(0, {**value["captures"][0], "capture_id": "../private"}), "unsafe"),
-            (lambda value: value.__setitem__("image_count", 37), "38"),
+            (lambda value: value.__setitem__("image_count", 37), "capture count"),
             (lambda value: value.__setitem__("private", "League B"), "private"),
         ):
             values = self.fixture()
