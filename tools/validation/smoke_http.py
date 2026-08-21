@@ -19,7 +19,7 @@ MARKET_DATASET = re.compile(r"Dataset\s*<code>([^<]+)</code>", re.IGNORECASE)
 MARKET_WARMING_DETAIL = (
     "Asset Market generation is building safely in the background; retry shortly."
 )
-MARKET_WARMING_PATHS = frozenset(("/", "/market"))
+MARKET_WARMING_PATHS = frozenset(("/market",))
 MARKET_WARMING_DEADLINE_SECONDS = 60.0
 MARKET_WARMING_RESPONSE_LIMIT_SECONDS = 0.5
 MARKET_WARMING_INTERVAL_SECONDS = 0.5
@@ -279,7 +279,7 @@ def main() -> int:
     args = parser.parse_args()
 
     major = (
-        "/", "/market", "/commissioner", "/teams", "/matchups", "/transactions", "/picks", "/settings",
+        "/", "/market", "/league", "/commissioner", "/teams", "/matchups", "/transactions", "/picks", "/settings",
         "/health/live", "/health/ready", "/api/status", "/api/crawl",
         "/api/crawl/history", "/history",
         "/api/platform/health", "/api/intelligence", "/api/league",
@@ -296,22 +296,20 @@ def main() -> int:
         "/api/market", "/api/market/health", "/api/market/assets?limit=1",
         "/api/market/search?q=QB", "/api/market/trending", "/api/inspect/market",
     )
-    product_pages = {"/", "/market", "/commissioner", "/teams", "/matchups", "/transactions", "/picks", "/settings", "/history", "/front-offices", "/trades"}
+    product_pages = {"/", "/market", "/league", "/commissioner", "/teams", "/matchups", "/transactions", "/picks", "/settings", "/history", "/front-offices", "/trades"}
     recommendation_pages = {"/commissioner", "/front-offices", "/trades"}
     market_pages: dict[str, str] = {}
     for path in major:
-        if path in {"/", "/market"}:
+        if path == "/market":
             body = get_market_page(args.base_url, path)
             market_pages[path] = validate_asset_market_contract(body, path)
         else:
             body = get(args.base_url, path)
-        if path in product_pages and path not in {"/", "/market"}:
+        if path in product_pages and path != "/market":
             validate_product_contract(body, path, recommendation=path in recommendation_pages)
-    if market_pages["/"] != market_pages["/market"]:
-        raise AssertionError("/ and /market expose different canonical market datasets")
     print(
         "Asset Market page contract ready: "
-        f"generation={market_pages['/']} final_status=200",
+        f"generation={market_pages['/market']} final_status=200",
         flush=True,
     )
 

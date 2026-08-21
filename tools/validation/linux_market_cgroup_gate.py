@@ -653,11 +653,11 @@ def _live_visual_responsiveness() -> dict[str, object]:
         )
     if any(int(final_health.get(key) or 0) for key in ("stale", "failures", "pending")):
         raise AssertionError("production-shaped Live Visual flight retained stale or failed captures")
-    required = int(final_health.get("required_captures") or 0)
-    if required != 38 or int(final_health.get("current") or 0) != required:
+    if not _live_visual_coverage_complete(final_health):
         raise AssertionError(
             f"production-shaped Live Visual coverage is incomplete: {final_health}"
         )
+    required = int(final_health["required_captures"])
     _status, mirror_body, _client_ms, _server_ms = _diagnostic_request(
         "/api/inspect/current-visual/health",
     )
@@ -678,6 +678,17 @@ def _live_visual_responsiveness() -> dict[str, object]:
             float(row["accept_delay_upper_bound_ms"]) for row in samples
         ), 3),
     }
+
+
+def _live_visual_coverage_complete(health: dict[str, object]) -> bool:
+    """Validate the active capture contract without freezing its surface count."""
+    required = int(health.get("required_captures") or 0)
+    contract = health.get("required_capture_contract") or []
+    return (
+        required > 0
+        and required == len(contract)
+        and int(health.get("current") or 0) == required
+    )
 
 
 def _post_request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes, float]:

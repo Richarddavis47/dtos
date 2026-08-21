@@ -9,6 +9,7 @@ from src.platform.validation.routes import HttpEndpoint, validate_routes
 REQUIRED_GET_PATHS = (
     "/",
     "/market",
+    "/league",
     "/commissioner",
     "/teams",
     "/front-offices",

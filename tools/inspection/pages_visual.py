@@ -44,8 +44,8 @@ def _validate_identity(manifest: dict[str, Any]) -> None:
     if manifest.get("application_version") != VERSION or manifest.get("application_build") != BUILD_NUMBER:
         raise RuntimeError("Current Visual deployment identity is not the requested release.")
     captures = manifest.get("captures") or []
-    if len(captures) != 38 or manifest.get("image_count") != 38:
-        raise RuntimeError("Current Visual does not contain the required 38 captures.")
+    if not captures or manifest.get("image_count") != len(captures):
+        raise RuntimeError("Current Visual capture count is incomplete or inconsistent.")
     if manifest.get("stale_count") or manifest.get("failed_count"):
         raise RuntimeError("Current Visual contains stale or failed captures.")
     _validate_json_values(manifest)

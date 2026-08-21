@@ -1,3 +1,18 @@
+# DTOS v1.10.43 - UX Foundation
+
+DTOS v1.10.43 is the first post-infrastructure product implementation batch. It
+turns the application shell into a manager experience with five primary
+destinations: Home, My Team, Trade, League, and Market.
+
+Home is now a front-office briefing rather than an Asset Market directory. My
+Team leads with the starting lineup and DTOS assessment, League collects the
+league-wide surfaces, Market begins with search and meaningful movement, and
+matchups present actual scoring, canonical projections, production rank, and a
+clearly labeled evidence-bound storyline. Existing Brain, FOIS, valuation,
+history, storage, projection, and artifact semantics remain unchanged.
+
+## Previous release
+
 # DTOS v1.10.42 - Actual ChatGPT-Retrievable Visual Transport
 
 DTOS v1.10.42 publishes the already-verified rolling Current Visual generation as

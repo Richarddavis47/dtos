@@ -132,13 +132,11 @@ class MarketRenderedRouteTests(unittest.TestCase):
         for item in reversed(self.patches):
             item.stop()
 
-    def test_home_and_market_have_separate_exact_caches(self) -> None:
-        home = self.client.get("/")
-        self.assertEqual(home.content, self.client.get("/").content)
+    def test_market_has_one_exact_generation_cache(self) -> None:
         market = self.client.get("/market")
         self.assertEqual(market.content, self.client.get("/market").content)
-        self.assertEqual(self.market.directory_calls, 2)
-        self.assertEqual(self.home_cache.health()["home_render_cache_hits"], 1)
+        self.assertEqual(self.market.directory_calls, 1)
+        self.assertEqual(self.home_cache.health()["home_render_cache_entries"], 0)
         self.assertEqual(self.market_cache.health()["market_render_cache_hits"], 1)
 
     def test_query_and_generation_changes_cannot_collide(self) -> None:
@@ -154,27 +152,27 @@ class MarketRenderedRouteTests(unittest.TestCase):
         self.assertEqual(self.market.directory_calls, 3)
 
     def test_chrome_state_change_invalidates_without_personalization(self) -> None:
-        before = self.client.get("/").content
+        before = self.client.get("/market").content
         self.state["last_sync"] = "new-sync"
-        after = self.client.get("/").content
+        after = self.client.get("/market").content
         self.assertNotEqual(before, after)
         self.assertEqual(self.market.directory_calls, 1)
         self.assertEqual(
-            self.home_body_cache.health()["home_body_render_cache_hits"], 1,
+            self.market_body_cache.health()["market_body_render_cache_hits"], 1,
         )
 
     def test_health_exposes_bounded_render_telemetry(self) -> None:
-        self.client.get("/")
+        self.client.get("/market")
         response = self.client.get("/api/market/health")
         self.assertEqual(response.status_code, 200)
         payload = response.json()["render_caches"]
-        self.assertEqual(payload["home"]["home_render_cache_entries"], 1)
-        self.assertEqual(payload["market"]["market_render_cache_entries"], 0)
+        self.assertEqual(payload["home"]["home_render_cache_entries"], 0)
+        self.assertEqual(payload["market"]["market_render_cache_entries"], 1)
         self.assertEqual(
-            payload["home_body"]["home_body_render_cache_entries"], 1,
+            payload["home_body"]["home_body_render_cache_entries"], 0,
         )
         self.assertEqual(
-            payload["market_body"]["market_body_render_cache_entries"], 0,
+            payload["market_body"]["market_body_render_cache_entries"], 1,
         )
 
 

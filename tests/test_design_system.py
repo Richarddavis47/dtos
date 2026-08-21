@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from src.ui.design_system import DESIGN_SYSTEM_CSS, page_header, recommendation_panel
+from src.ui.design_system import DESIGN_SYSTEM_CSS, manager_navigation, page_header, recommendation_panel
 from routes.teams import TEAM_HQ_CSS
 from tools.validation.smoke_http import (
     validate_asset_market_contract,
@@ -29,7 +29,7 @@ class DesignSystemTests(unittest.TestCase):
             with self.subTest(title=title):
                 html = page_header(title, league_name="Dynasty League", last_updated="2026-08-03T12:00:00Z")
                 self.assertIn('data-dtos-component="page-header"', html)
-                self.assertIn('data-design-system="1.0"', html)
+                self.assertIn('data-design-system="1.1"', html)
                 self.assertIn(f"<h1>{title}</h1>", html)
                 self.assertIn("League Sync", html)
                 self.assertIn('class="ds-action primary"', html)
@@ -67,6 +67,10 @@ class DesignSystemTests(unittest.TestCase):
         self.assertIn("@media(max-width:760px)", DESIGN_SYSTEM_CSS)
         self.assertIn("min-height:44px", DESIGN_SYSTEM_CSS)
         self.assertRegex(TEAM_HQ_CSS, r"max-width:460px[^}]+\.thq-intel\{grid-template-columns:1fr")
+        navigation = manager_navigation("League")
+        self.assertEqual(navigation.split("</nav>", 1)[0].count("<a "), 5)
+        self.assertIn('aria-current="page">League</a>', navigation)
+        self.assertIn("position:fixed", DESIGN_SYSTEM_CSS)
 
     def test_http_product_contract_rejects_generic_and_internal_labels(self) -> None:
         valid = page_header("Falcons Headquarters", league_name="Dynasty League", last_updated="today")
@@ -76,7 +80,7 @@ class DesignSystemTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "internal identifier"):
             validate_product_contract((valid + "<p>Roster ID: 1</p>").encode(), "/teams/1")
 
-    def test_market_directory_contract_is_shared_without_recommendation(self) -> None:
+    def test_market_directory_contract_is_search_first_without_recommendation(self) -> None:
         header = page_header(
             "Asset Market", league_name="Dynasty League", last_updated="today",
         )
@@ -88,9 +92,8 @@ class DesignSystemTests(unittest.TestCase):
             + '<p>Values remain separate; unavailable evidence is never substituted.</p>'
             + '<p>Dataset <code>market-dataset-1</code></p>'
         ).encode()
-        home_identity = validate_asset_market_contract(market, "/")
         market_identity = validate_asset_market_contract(market, "/market")
-        self.assertEqual(home_identity, market_identity)
+        self.assertEqual(market_identity, "market-dataset-1")
 
     def test_market_detail_requires_canonical_brain_recommendation(self) -> None:
         valid = {

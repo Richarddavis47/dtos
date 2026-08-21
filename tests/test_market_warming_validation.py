@@ -99,7 +99,7 @@ class _Requests:
 class MarketWarmingValidationTests(unittest.TestCase):
     def test_valid_warming_response_eventually_requires_page_contract(self) -> None:
         request = _Requests(**{
-            "_": [
+            "_market": [
                 _response(503, {"detail": MARKET_WARMING_DETAIL}),
                 _response(200, _market_page()),
             ],
@@ -107,9 +107,9 @@ class MarketWarmingValidationTests(unittest.TestCase):
         })
         clock = _Clock()
         body = get_market_page(
-            "http://dtos", "/", request=request, sleeper=clock.sleep, clock=clock,
+            "http://dtos", "/market", request=request, sleeper=clock.sleep, clock=clock,
         )
-        self.assertEqual(validate_asset_market_contract(body, "/"), "generation-1")
+        self.assertEqual(validate_asset_market_contract(body, "/market"), "generation-1")
 
     def test_warming_exceeding_deadline_fails(self) -> None:
         request = _Requests(**{
@@ -126,20 +126,20 @@ class MarketWarmingValidationTests(unittest.TestCase):
 
     def test_market_build_failure_during_polling_fails_immediately(self) -> None:
         request = _Requests(**{
-            "_": [_response(503, {"detail": MARKET_WARMING_DETAIL})],
+            "_market": [_response(503, {"detail": MARKET_WARMING_DETAIL})],
             "_api_market_health": [
                 _response(200, _warming_health(error="memory safety refusal")),
             ],
         })
         with self.assertRaisesRegex(AssertionError, "build failed"):
-            get_market_page("http://dtos", "/", request=request)
+            get_market_page("http://dtos", "/market", request=request)
 
     def test_unrelated_503_is_not_retried(self) -> None:
         request = _Requests(**{
-            "_": [_response(503, {"detail": "Storage unavailable"})],
+            "_market": [_response(503, {"detail": "Storage unavailable"})],
         })
         with self.assertRaisesRegex(AssertionError, "unrelated or malformed"):
-            get_market_page("http://dtos", "/", request=request)
+            get_market_page("http://dtos", "/market", request=request)
 
     def test_malformed_warming_response_is_not_retried(self) -> None:
         request = _Requests(**{"_market": [_response(503, b"not-json")]})
@@ -156,7 +156,7 @@ class MarketWarmingValidationTests(unittest.TestCase):
 
     def test_eventual_page_missing_market_contract_fails(self) -> None:
         request = _Requests(**{
-            "_": [
+            "_market": [
                 _response(503, {"detail": MARKET_WARMING_DETAIL}),
                 _response(200, b"<html>not the market</html>"),
             ],
@@ -164,14 +164,14 @@ class MarketWarmingValidationTests(unittest.TestCase):
         })
         clock = _Clock()
         body = get_market_page(
-            "http://dtos", "/", request=request, sleeper=clock.sleep, clock=clock,
+            "http://dtos", "/market", request=request, sleeper=clock.sleep, clock=clock,
         )
         with self.assertRaisesRegex(AssertionError, "page header"):
-            validate_asset_market_contract(body, "/")
+            validate_asset_market_contract(body, "/market")
 
     def test_registered_lifecycle_blocker_transitions_to_one_build(self) -> None:
         request = _Requests(**{
-            "_": [
+            "_market": [
                 _response(503, {"detail": MARKET_WARMING_DETAIL}),
                 _response(503, {"detail": MARKET_WARMING_DETAIL}),
                 _response(200, _market_page()),
@@ -188,10 +188,10 @@ class MarketWarmingValidationTests(unittest.TestCase):
         })
         clock = _Clock()
         body = get_market_page(
-            "http://dtos", "/", request=request,
+            "http://dtos", "/market", request=request,
             sleeper=clock.sleep, clock=clock,
         )
-        self.assertEqual(validate_asset_market_contract(body, "/"), "generation-1")
+        self.assertEqual(validate_asset_market_contract(body, "/market"), "generation-1")
 
     def test_idle_warming_without_active_build_fails(self) -> None:
         request = _Requests(**{
@@ -207,7 +207,7 @@ class MarketWarmingValidationTests(unittest.TestCase):
 
     def test_running_startup_fence_is_a_bounded_registered_blocker(self) -> None:
         request = _Requests(**{
-            "_": [
+            "_market": [
                 _response(503, {"detail": MARKET_WARMING_DETAIL}),
                 _response(503, {"detail": MARKET_WARMING_DETAIL}),
                 _response(200, _market_page()),
@@ -225,25 +225,25 @@ class MarketWarmingValidationTests(unittest.TestCase):
         })
         clock = _Clock()
         body = get_market_page(
-            "http://dtos", "/", request=request,
+            "http://dtos", "/market", request=request,
             sleeper=clock.sleep, clock=clock,
         )
-        self.assertEqual(validate_asset_market_contract(body, "/"), "generation-1")
+        self.assertEqual(validate_asset_market_contract(body, "/market"), "generation-1")
 
     def test_failed_startup_fence_fails_immediately(self) -> None:
         request = _Requests(**{
-            "_": [_response(503, {"detail": MARKET_WARMING_DETAIL})],
+            "_market": [_response(503, {"detail": MARKET_WARMING_DETAIL})],
             "_api_market_health": [_response(200, _warming_health(
                 build_active=False, phase="idle", startup_state="failed",
                 startup_reason="Canonical synchronization failed.",
             ))],
         })
         with self.assertRaisesRegex(AssertionError, "startup fence failed"):
-            get_market_page("http://dtos", "/", request=request)
+            get_market_page("http://dtos", "/market", request=request)
 
     def test_market_build_cannot_overlap_registered_blocker(self) -> None:
         request = _Requests(**{
-            "_": [_response(503, {"detail": MARKET_WARMING_DETAIL})],
+            "_market": [_response(503, {"detail": MARKET_WARMING_DETAIL})],
             "_api_market_health": [
                 _response(200, _warming_health(
                     build_active=True, phase="sleeper_sync",
@@ -251,18 +251,18 @@ class MarketWarmingValidationTests(unittest.TestCase):
             ],
         })
         with self.assertRaisesRegex(AssertionError, "overlaps lifecycle blocker"):
-            get_market_page("http://dtos", "/", request=request)
+            get_market_page("http://dtos", "/market", request=request)
 
     def test_response_started_before_atomic_publication_accepts_ready_health(self) -> None:
         request = _Requests(**{
-            "_": [
+            "_market": [
                 _response(503, {"detail": MARKET_WARMING_DETAIL}),
                 _response(200, _market_page()),
             ],
             "_api_market_health": [_response(200, _ready_health())],
         })
-        body = get_market_page("http://dtos", "/", request=request)
-        self.assertEqual(validate_asset_market_contract(body, "/"), "generation-1")
+        body = get_market_page("http://dtos", "/market", request=request)
+        self.assertEqual(validate_asset_market_contract(body, "/market"), "generation-1")
 
 
 if __name__ == "__main__":

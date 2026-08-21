@@ -12,7 +12,7 @@ from config import LEAGUE_ID
 from services.team_headquarters import CORE_POSITIONS, build_team_directory, build_team_headquarters
 from src.core.historical_memory.read_model import historical_graph
 from src.core.history_context import canonical_history_store
-from src.ui import recommendation_panel
+from src.ui import player_summary, recommendation_panel
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -222,18 +222,25 @@ def create_teams_router(
         historical_seasons = len({row["season"] for row in franchise_history["standings"]})
         historical_transactions = len(franchise_history["transactions"])
         recommendation_card = recommendation_panel(title=recommendation.title, recommendation=recommendation.recommendation, confidence=recommendation.confidence.score, primary_reason=recommendation.why[0] if recommendation.why else recommendation.current_outlook, evidence=recommendation.why, expected_impact=f"Current: {recommendation.current_outlook} Future: {recommendation.future_outlook}", action_label="Open Trade Center", action_href=f'/trades?front_office={team["roster_id"]}', limitations=recommendation.why_not)
+        starters = [player for player in team.get("players") or [] if player.get("roster_slot") == "Starter"]
+        starter_cards = "".join(
+            f'<a class="card" href="/players/{quote(str(player.get("id") or ""))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Starter")}</a>'
+            for player in starters
+        ) or '<div class="ds-empty"><b>No starting lineup is available.</b>Sleeper has not supplied a current starter assignment.</div>'
         body = f"""
 {TEAM_HQ_CSS}
 <a class="back" href="/teams">← All Teams</a>
 <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Overall Grade {view['team_intelligence'].overall.grade}</span><span>·</span><span>League Rank #{view['rank']}</span><span>·</span><span>{view['team_intelligence'].overall.percentile}th percentile</span></div></div></div><div><span class="thq-badge">{escape(view['competitive_window'].classification.value)}</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
-{recommendation_card}
-<section class="thq-section"><div class="thq-section-head"><h2>Core Intelligence</h2><span>Current and future league-relative strength</span></div><div class="thq-intel">{intelligence_cards}{league_rankings}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Roster</h2><span>Position rooms and current lineup designation</span></div><div class="thq-roster">{_roster_rooms(view)}</div></section>
-<section class="thq-section"><div class="thq-section-head"><h2>Assets</h2><span>Roster construction, draft capital, and liquidity</span></div><div class="thq-cards">{_asset_cards(view['snapshot'])}</div><div class="thq-picks">{_draft_capital(view)}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Starting Lineup</h2><span>Compact current Sleeper lineup</span></div><div class="grid">{starter_cards}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>DTOS Team Assessment</h2><span>Answer and action first</span></div>{recommendation_card}</section>
+<section class="thq-section"><div class="thq-section-head"><h2>Strengths &amp; Needs</h2><span>Current and future league-relative evidence</span></div><div class="thq-intel">{intelligence_cards}{league_rankings}</div></section>
+<section class="thq-section" id="assets"><div class="thq-section-head"><h2>Core Assets</h2><span>Roster construction and flexibility</span></div><div class="thq-cards">{_asset_cards(view['snapshot'])}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Full Roster</h2><span>Position rooms and current lineup designation</span></div><div class="thq-roster">{_roster_rooms(view)}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Draft Capital</h2><span>Current pick ownership</span></div><div class="thq-picks">{_draft_capital(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>{'Preseason Outlook' if view['preseason'] else 'Current Team Performance'}</h2><span>{'Deterministic projections' if view['preseason'] else 'Sleeper league data'}</span></div><div class="thq-performance">{performance_cards}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Activity</h2><span>Newest cached transactions first</span></div><div class="thq-timeline">{_timeline(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Franchise History</h2><span>Verified Sleeper evidence across renamed teams and manager eras</span></div><div class="thq-performance"><article class="thq-kpi"><span>Imported Seasons</span><b>{historical_seasons}</b></article><article class="thq-kpi"><span>Archived Transactions</span><b>{historical_transactions}</b></article><article class="thq-kpi"><span>Identity Records</span><b>{len(franchise_history["identities"])}</b></article><article class="thq-kpi"><span>Roster Snapshots</span><b>{len(franchise_history["roster_snapshots"])}</b></article></div><p><a class="thq-action" href="/history/team/{escape(franchise_history["franchise_id"])}">Open complete franchise history</a></p></section>
-<section class="thq-section"><details class="thq-evidence"><summary>Detailed Evidence</summary><div class="thq-evidence-body"><div class="thq-summary">{summary}</div><h3>League-Relative Team Intelligence</h3><div class="thq-grades">{_team_intelligence(view)}</div><h3>Why DTOS Recommends This</h3><p class="muted">Supporting Evidence</p><div class="thq-grades">{_decision_horizons(view)}</div><div class="thq-future-grid">{future}</div></div></details></section>
+<section class="thq-section"><details class="thq-evidence"><summary>Deeper Team Intelligence</summary><div class="thq-evidence-body"><div class="thq-summary">{summary}</div><h3>League-Relative Team Intelligence</h3><div class="thq-grades">{_team_intelligence(view)}</div><h3>Why DTOS Recommends This</h3><p class="muted">Supporting Evidence</p><div class="thq-grades">{_decision_horizons(view)}</div><div class="thq-future-grid">{future}</div></div></details></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Quick Actions</h2></div><div class="thq-actions"><a class="thq-action" href="/transactions?team={team['roster_id']}">Transactions</a><a class="thq-action" href="/front-offices?front_office={team['roster_id']}">Front Office Dossier</a><a class="thq-action" href="/trades?front_office={team['roster_id']}">Trade Intelligence</a><a class="thq-action" href="/history">League History</a></div></section>
 """
         return page(f'{team["team_name"]} Headquarters', body)
