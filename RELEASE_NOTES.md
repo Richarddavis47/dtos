@@ -1,3 +1,17 @@
+# DTOS v1.10.48 - External Visual Mirror Semantic Validator Correction
+
+DTOS v1.10.48 removes a stale External Visual Mirror validator dependency on
+the exact prose phrase `Sleeper canonical projection`. Matchup mirror packaging
+now consumes the structured browser-capture contract already used to reconcile
+semantic projection nodes, exact values, availability, team totals, and the
+manager-facing `Pregame projection` label.
+
+The accepted UI and all projection intelligence remain unchanged. The mirror
+still fails closed for missing nodes, numeric or availability mismatches, wrong
+manager semantics, and legacy DTOS projection labels.
+
+## Previous release
+
 # DTOS v1.10.47 - Live Visual Text-Normalization Contract Correction
 
 DTOS v1.10.47 corrects the browser presentation reconciliation boundary exposed

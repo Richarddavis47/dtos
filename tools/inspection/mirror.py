@@ -172,8 +172,14 @@ def build_mirror(
                     displayed = starter.get("displayed") or {}
                     if displayed.get("canonical_projection") != audit_row.get("canonical_projection"):
                         raise RuntimeError(f"{surface_id} canonical projection does not match the projection audit.")
-            if not presentation.get("canonical_sleeper_projection_visible"):
-                raise RuntimeError(f"{surface_id} does not visibly expose canonical Sleeper projections.")
+            if not presentation.get("canonical_projection_evidence_present"):
+                raise RuntimeError(f"{surface_id} is missing canonical projection evidence.")
+            if presentation.get("semantic_projection_node_count") != starter_count:
+                raise RuntimeError(f"{surface_id} semantic projection nodes do not reconcile.")
+            if presentation.get("canonical_dom_mismatches"):
+                raise RuntimeError(f"{surface_id} rendered projection evidence does not reconcile.")
+            if not presentation.get("manager_pregame_label_reconciled"):
+                raise RuntimeError(f"{surface_id} manager projection labels do not reconcile.")
             if presentation.get("legacy_dtos_projection_visible"):
                 raise RuntimeError(f"{surface_id} still exposes the legacy DTOS weekly projection label.")
         entries.append({
@@ -186,7 +192,9 @@ def build_mirror(
             "bytes": screenshot_artifact["bytes"], "width": width, "height": height,
             "captured_at": row.get("captured_at"), "starter_count": starter_count,
             "projection_visibility": {
-                "canonical_sleeper": bool(presentation.get("canonical_sleeper_projection_visible")),
+                "canonical_semantic_evidence": bool(
+                    presentation.get("canonical_projection_evidence_present")
+                ),
                 "legacy_dtos_absent": not bool(presentation.get("legacy_dtos_projection_visible")),
             },
         })
