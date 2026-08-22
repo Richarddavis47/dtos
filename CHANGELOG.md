@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.48 - External Visual Mirror Semantic Validator Correction
+
+- Replaced the mirror's stale provider-phrase visibility gate with structured
+  canonical projection evidence from the browser capture contract.
+- Required exact semantic projection-node counts, reconciled manager labels,
+  strict numeric and availability results, and zero DOM mismatches.
+- Preserved the accepted matchup UI, intelligence semantics, storage model,
+  lifecycle thresholds, and v1.10.47 text normalization.
+
 ## v1.10.47 - Live Visual Text-Normalization Contract Correction
 
 - Normalized browser-rendered manager labels for case and presentation-only

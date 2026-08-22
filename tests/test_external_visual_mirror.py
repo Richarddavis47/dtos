@@ -52,7 +52,10 @@ class ExternalVisualMirrorTests(unittest.TestCase):
                     "screenshot_url": f"/png/{surface_id}/{viewport}",
                     "presentation": {"presentation_contract": {
                         "starter_count": starter_count,
-                        "canonical_sleeper_projection_visible": starter_count == 22,
+                        "canonical_projection_evidence_present": starter_count == 22,
+                        "semantic_projection_node_count": starter_count,
+                        "manager_pregame_label_reconciled": starter_count == 22,
+                        "canonical_dom_mismatches": [],
                         "legacy_dtos_projection_visible": False,
                     }},
                 })
@@ -132,6 +135,61 @@ class ExternalVisualMirrorTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "projection audit"):
                 build_mirror(base_url="https://dtos.example", output=Path(folder),
                              fetch=lambda path: fixture[path])
+
+    def test_legitimate_zero_projection_packages_through_real_path(self):
+        fixture = self.fixture()
+        semantic = json.loads(fixture["/semantic/matchup"])
+        semantic["teams"][0]["starters"][0]["displayed"]["canonical_projection"] = 0.0
+        fixture["/semantic/matchup"] = json.dumps(semantic).encode()
+        audit = json.loads(fixture["/api/audit/projections/current"])
+        target = next(row for row in audit["players"] if row["matchup_id"] == "1" and row["player_id"] == "1")
+        target["canonical_projection"] = 0.0
+        fixture["/api/audit/projections/current"] = json.dumps(audit).encode()
+        with tempfile.TemporaryDirectory() as folder:
+            result = build_mirror(base_url="https://dtos.example", output=Path(folder),
+                                  fetch=lambda path: fixture[path])
+        self.assertEqual(result["status"], "complete")
+
+    def test_unavailable_projection_rendered_numeric_fails_closed(self):
+        fixture = self.fixture()
+        manifest = json.loads(fixture["/api/inspect/live/visual/manifest"])
+        row = next(row for row in manifest["captures"] if row["surface_id"] == "matchups-1")
+        row["presentation"]["presentation_contract"]["canonical_dom_mismatches"] = [
+            "missing_projection_state_missing"
+        ]
+        fixture["/api/inspect/live/visual/manifest"] = json.dumps(manifest).encode()
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(RuntimeError, "rendered projection evidence"):
+                build_mirror(base_url="https://dtos.example", output=Path(folder),
+                             fetch=lambda path: fixture[path])
+
+    def test_matchup_requires_structured_projection_evidence(self):
+        fixture = self.fixture()
+        manifest = json.loads(fixture["/api/inspect/live/visual/manifest"])
+        row = next(row for row in manifest["captures"] if row["surface_id"] == "matchups-1")
+        row["presentation"]["presentation_contract"]["canonical_projection_evidence_present"] = False
+        fixture["/api/inspect/live/visual/manifest"] = json.dumps(manifest).encode()
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(RuntimeError, "missing canonical projection evidence"):
+                build_mirror(base_url="https://dtos.example", output=Path(folder),
+                             fetch=lambda path: fixture[path])
+
+    def test_matchup_rejects_semantic_node_or_rendered_contract_mismatch(self):
+        for field, value, error in (
+            ("semantic_projection_node_count", 21, "semantic projection nodes"),
+            ("canonical_dom_mismatches", ["canonical_projection_mismatch"], "rendered projection evidence"),
+            ("manager_pregame_label_reconciled", False, "manager projection labels"),
+        ):
+            with self.subTest(field=field):
+                fixture = self.fixture()
+                manifest = json.loads(fixture["/api/inspect/live/visual/manifest"])
+                row = next(row for row in manifest["captures"] if row["surface_id"] == "matchups-1")
+                row["presentation"]["presentation_contract"][field] = value
+                fixture["/api/inspect/live/visual/manifest"] = json.dumps(manifest).encode()
+                with tempfile.TemporaryDirectory() as folder:
+                    with self.assertRaisesRegex(RuntimeError, error):
+                        build_mirror(base_url="https://dtos.example", output=Path(folder),
+                                     fetch=lambda path: fixture[path])
 
     def test_public_surface_registration_inherits_mirror_policy(self):
         future = PublicSurface(

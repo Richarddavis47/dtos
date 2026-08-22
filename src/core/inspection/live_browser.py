@@ -158,14 +158,26 @@ def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[s
             ))
             if mismatches:
                 raise RuntimeError("Rendered matchup does not match canonical presentation")
+            semantic_projection_node_count = sum(
+                1
+                for card in starter_cards
+                for field in _card_semantic_fields(card)
+                if field.get("field") == "pregame_projection"
+            )
+            canonical_projection_evidence_present = (
+                expected_starters > 0
+                and semantic_projection_node_count == expected_starters
+                and not mismatches
+            )
             nodes = dom.get("nodes") or []
             cards = [row for row in nodes if row.get("tag") == "article"]
             result = {
                 "visible_text": visible[:20000],
                 "cards": [{"text": row.get("text"), "geometry": row.get("geometry")} for row in cards],
                 "presentation_contract": {
-                    "canonical_sleeper_projection_visible": "Sleeper canonical projection" in visible,
-                    "manager_visible_pregame_label": "Pregame projection" in visible,
+                    "canonical_projection_evidence_present": canonical_projection_evidence_present,
+                    "semantic_projection_node_count": semantic_projection_node_count,
+                    "manager_pregame_label_reconciled": not mismatches,
                     "requires_internal_provider_label": False,
                     "legacy_dtos_projection_visible": "DTOS Projection" in visible,
                     "starter_count": expected_starters,
