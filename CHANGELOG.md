@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.47 - Live Visual Text-Normalization Contract Correction
+
+- Normalized browser-rendered manager labels for case and presentation-only
+  whitespace while retaining the exact `Pregame projection` semantic contract.
+- Trimmed only surrounding team-name whitespace at the visual reconciliation
+  boundary without fuzzy identity matching or relaxed numeric validation.
+- Added real Chromium coverage for CSS-transformed labels, production-like
+  matchup routes, strict values, and unavailable-versus-zero behavior.
+
 ## v1.10.46 - Matchup Label/Inspection Contract Correction
 
 - Identified rendered pregame projections with a stable semantic DOM contract
