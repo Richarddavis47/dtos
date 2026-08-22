@@ -34,7 +34,7 @@ def projection_total_mismatches(
 
 
 def matchup_projection_mismatches(
-    semantic: dict[str, Any], visible: str, starter_cards: list[str], team_cards: list[str],
+    semantic: dict[str, Any], visible: str, starter_cards: list[Any], team_cards: list[str],
 ) -> list[str]:
     """Reconcile projection evidence only where the game-state contract presents it."""
     mismatches: list[str] = []
@@ -49,20 +49,29 @@ def matchup_projection_mismatches(
         for starter in team.get("starters") or []:
             displayed = starter.get("canonical") or {}
             canonical = displayed.get("canonical_projection")
-            matching_cards = [
-                text for text in starter_cards
-                if str(starter.get("player_name")) in text
-            ]
+            matching_cards = [card for card in starter_cards if str(starter.get("player_name")) in _card_text(card)]
             if not matching_cards:
                 mismatches.append("starter_card_missing")
                 continue
-            card_text = " ".join(matching_cards)
-            if canonical is not None and (
-                "Sleeper canonical projection" not in card_text
-                or f"{float(canonical):.2f}" not in card_text
+            contracts = [
+                field for card in matching_cards for field in _card_semantic_fields(card)
+                if field.get("field") == "pregame_projection"
+            ]
+            if canonical is not None:
+                expected = f"{float(canonical):.2f}"
+                if not any(
+                    field.get("availability") == "available"
+                    and field.get("value") == expected
+                    and "Pregame projection" in str(field.get("text") or "")
+                    and expected in str(field.get("text") or "")
+                    for field in contracts
+                ):
+                    mismatches.append("canonical_projection_mismatch")
+            elif not any(
+                field.get("availability") == "unavailable"
+                and "Projection unavailable" in str(field.get("text") or "")
+                for field in contracts
             ):
-                mismatches.append("canonical_projection_mismatch")
-            if canonical is None and "Projection unavailable" not in card_text:
                 mismatches.append("missing_projection_state_missing")
         mismatches.extend(projection_total_mismatches(
             team, team_cards, projection_expected=projection_expected,
@@ -70,6 +79,16 @@ def matchup_projection_mismatches(
     if state != "pregame" and unavailable_aggregate and "Pregame projections unavailable" not in visible:
         mismatches.append("aggregate_projection_unavailable_state_missing")
     return mismatches
+
+
+def _card_text(card: Any) -> str:
+    return str(card.get("text") or "") if isinstance(card, dict) else str(card)
+
+
+def _card_semantic_fields(card: Any) -> list[dict[str, Any]]:
+    if not isinstance(card, dict):
+        return []
+    return list(card.get("semantic_fields") or [])
 
 
 def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[str, Any]:
@@ -96,7 +115,15 @@ def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[s
             semantic = semantic_response.json()
             mismatches = []
             expected_starters = 0
-            starter_cards = page.locator(".battle-side:not(.vacant)").all_inner_texts()
+            starter_cards = page.locator(".battle-side:not(.vacant)").evaluate_all("""cards => cards.map(card => ({
+                text: card.innerText,
+                semantic_fields: Array.from(card.querySelectorAll('[data-dtos-semantic-field]')).map(field => ({
+                    field: field.dataset.dtosSemanticField,
+                    availability: field.dataset.dtosAvailability,
+                    value: field.dataset.dtosValue || null,
+                    text: field.innerText,
+                })),
+            }))""")
             team_cards = page.locator(".scoreboard-side, .matchup-team").all_inner_texts()
             for team in semantic.get("teams") or []:
                 expected_starters += len(team.get("starters") or [])
@@ -112,6 +139,8 @@ def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[s
                 "cards": [{"text": row.get("text"), "geometry": row.get("geometry")} for row in cards],
                 "presentation_contract": {
                     "canonical_sleeper_projection_visible": "Sleeper canonical projection" in visible,
+                    "manager_visible_pregame_label": "Pregame projection" in visible,
+                    "requires_internal_provider_label": False,
                     "legacy_dtos_projection_visible": "DTOS Projection" in visible,
                     "starter_count": expected_starters,
                     "canonical_dom_mismatches": mismatches,

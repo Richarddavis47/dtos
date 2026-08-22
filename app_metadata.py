@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.10.45"
-BUILD_NUMBER = 1145
-RELEASE_CODENAME = "Matchup Presentation Contract Correction"
+VERSION = "1.10.46"
+BUILD_NUMBER = 1146
+RELEASE_CODENAME = "Matchup Label/Inspection Contract Correction"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

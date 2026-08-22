@@ -1,3 +1,16 @@
+# DTOS v1.10.46 - Matchup Label/Inspection Contract Correction
+
+DTOS v1.10.46 corrects the inspection boundary for matchup projections. The
+manager-facing label remains `Pregame projection`; a stable semantic DOM field
+now lets Live Visual validate canonical availability and exact values without
+requiring provider-specific wording in the visible interface.
+
+The release adds real rendered-route regression coverage and preserves all
+Projection, Brain, Asset Market, FOIS, Trade Intelligence, history, storage,
+availability, responsiveness, and restart semantics from v1.10.45.
+
+## Previous release
+
 # DTOS v1.10.45 - Matchup Presentation Contract Correction
 
 DTOS v1.10.45 aligns the matchup page's canonical projection rendering with the

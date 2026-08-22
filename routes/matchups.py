@@ -36,7 +36,8 @@ def _starter_projection_html(row: dict[str, Any] | None) -> str:
     sleeper = projection.get("canonical_projection")
     if sleeper is None:
         return (
-            '<div class="starter-projections unavailable"><span>Projection unavailable</span>'
+            '<div class="starter-projections unavailable" data-dtos-semantic-field="pregame_projection" '
+            'data-dtos-availability="unavailable"><span>Projection unavailable</span>'
             '<details><summary>Technical Details</summary><small>No canonical Sleeper projection exists for this starter. DTOS does not fabricate a fallback.</small></details></div>'
         )
     technical = (
@@ -46,8 +47,9 @@ def _starter_projection_html(row: dict[str, Any] | None) -> str:
         f'DTOS consumes this league-scored value without blending a separate weekly forecast.</small></details>'
     )
     return (
-        '<div class="starter-projections">'
-        f'<span><small>Sleeper canonical projection</small><b>{_projection_value(sleeper)}</b></span>'
+        '<div class="starter-projections" data-dtos-semantic-field="pregame_projection" '
+        f'data-dtos-availability="available" data-dtos-value="{_projection_value(sleeper)}">'
+        f'<span><small>Pregame projection</small><b>{_projection_value(sleeper)}</b></span>'
         f'</div>{technical}'
     )
 
@@ -88,10 +90,22 @@ def _team_score_html(*, actual: Any, projected: Any, state: str) -> str:
         except (TypeError, ValueError):
             return value
 
-    return "".join(
-        f'<div class="score-row {"primary" if index == 0 else "supporting"}"><small>{escape(label)}</small><b>{escape(display_value(label, value))}</b></div>'
-        for index, (label, value) in enumerate(rows)
-    )
+    rendered = []
+    for index, (label, value) in enumerate(rows):
+        displayed = display_value(label, value)
+        semantic = ""
+        if label == "Pregame projection":
+            availability = "unavailable" if value == "Projection unavailable" else "available"
+            value_attribute = "" if availability == "unavailable" else f' data-dtos-value="{escape(displayed)}"'
+            semantic = (
+                ' data-dtos-semantic-field="pregame_projection"'
+                f' data-dtos-availability="{availability}"{value_attribute}'
+            )
+        rendered.append(
+            f'<div class="score-row {"primary" if index == 0 else "supporting"}"{semantic}>'
+            f'<small>{escape(label)}</small><b>{escape(displayed)}</b></div>'
+        )
+    return "".join(rendered)
 
 
 def _has_team_projections(projected: dict[str, Any]) -> bool:
