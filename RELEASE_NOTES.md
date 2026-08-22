@@ -1,3 +1,17 @@
+# DTOS v1.10.47 - Live Visual Text-Normalization Contract Correction
+
+DTOS v1.10.47 corrects the browser presentation reconciliation boundary exposed
+by production Live Visual. CSS-transformed casing is normalized for the exact
+manager-facing `Pregame projection` label, and surrounding team-name whitespace
+is trimmed without fuzzy matching.
+
+Canonical values and availability remain strict: numeric mismatches still fail,
+unavailable projections cannot render as zero, and legitimate zero remains a
+real projection. No intelligence, storage, lifecycle, or UI-copy behavior
+changes in this corrective release.
+
+## Previous release
+
 # DTOS v1.10.46 - Matchup Label/Inspection Contract Correction
 
 DTOS v1.10.46 corrects the inspection boundary for matchup projections. The

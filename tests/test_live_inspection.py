@@ -12,6 +12,8 @@ from routes.matchups import _starter_projection_html, create_matchups_router
 from src.core.inspection.live import LiveInspection, matchup_semantic, public_surface_registry
 from src.core.inspection.live_browser import (
     matchup_projection_mismatches,
+    normalized_manager_text,
+    normalized_visible_identity,
     projection_total_mismatches,
 )
 
@@ -72,6 +74,20 @@ class _BattleCardParser(HTMLParser):
 
 
 class LiveInspectionTests(unittest.TestCase):
+    def test_browser_text_normalization_is_narrow_and_semantic(self):
+        self.assertEqual(
+            normalized_manager_text("  PREGAME\n projection  "),
+            normalized_manager_text("Pregame projection"),
+        )
+        self.assertEqual(
+            normalized_visible_identity("The Longest Yard "),
+            "The Longest Yard",
+        )
+        self.assertNotEqual(
+            normalized_visible_identity("The Long Yard"),
+            normalized_visible_identity("The Longest Yard"),
+        )
+
     def test_matchup_player_card_uses_manager_label_and_semantic_field(self):
         html = _starter_projection_html({
             "canonical_projection": 24.18, "projection_availability": "projected",
@@ -220,6 +236,18 @@ class LiveInspectionTests(unittest.TestCase):
             semantic(7.5, "available"), "Alpha Josh Pregame projection 7.50",
             [card("7.50", "available", "Pregame projection 7.50")], ["Alpha Pregame projection 7.50"],
         ), [])
+        self.assertEqual(matchup_projection_mismatches(
+            semantic(7.5, "available"), "Alpha Josh PREGAME PROJECTION 7.50",
+            [card("7.50", "available", "PREGAME PROJECTION 7.50")], ["Alpha PREGAME PROJECTION 7.50"],
+        ), [])
+        self.assertEqual(matchup_projection_mismatches(
+            semantic(7.5, "available"), "Alpha Josh pregame projection 7.50",
+            [card("7.50", "available", "pregame projection 7.50")], ["Alpha pregame projection 7.50"],
+        ), [])
+        self.assertIn("canonical_projection_mismatch", matchup_projection_mismatches(
+            semantic(7.5, "available"), "Alpha Josh Current projection 7.50",
+            [card("7.50", "available", "Current projection 7.50")], ["Alpha Current projection 7.50"],
+        ))
         self.assertIn("missing_projection_state_missing", matchup_projection_mismatches(
             semantic(None, "unavailable"), "Alpha Josh Pregame projection 0.00",
             [card("0.00", "available", "Pregame projection 0.00")], ["Alpha Pregame projection 0.00"],
@@ -241,6 +269,17 @@ class LiveInspectionTests(unittest.TestCase):
         self.assertIn("missing_projection_state_missing", matchup_projection_mismatches(
             in_game_unavailable, "Alpha Josh Actual 4.00",
             [{"text": "Josh Actual 4.00", "semantic_fields": []}], ["Alpha Actual 4.00"],
+        ))
+
+    def test_team_name_reconciliation_trims_only_surrounding_whitespace(self):
+        team = {"team_name": "The Longest Yard ", "canonical_totals": {
+            "canonical_projection": 7.5, "availability": "available",
+        }}
+        self.assertEqual(projection_total_mismatches(
+            team, ["The Longest Yard PREGAME PROJECTION 7.50"],
+        ), [])
+        self.assertIn("projection_team_card_missing", projection_total_mismatches(
+            team, ["The Long Yard PREGAME PROJECTION 7.50"],
         ))
 
     def test_real_matchup_route_reconciles_manager_label_and_canonical_values(self):
@@ -296,6 +335,68 @@ class LiveInspectionTests(unittest.TestCase):
         self.assertIn("canonical_projection_mismatch", matchup_projection_mismatches(
             semantic, response.text, changed, team_cards,
         ))
+
+    def test_real_browser_matchup_route_reconciles_computed_inner_text(self):
+        from playwright.sync_api import sync_playwright
+
+        data = {
+            "week": 1, "nfl_state": {"season_type": "pre", "week": 1},
+            "matchups": {"1": [
+                {"roster_id": 1, "team": "The Longest Yard ", "owner": "A", "record": "0-0-0", "points": 0,
+                 "lineup": [{"id": "10", "name": "Josh", "position": "QB", "nfl_team": "BUF", "slot": "QB", "points": 0}], "bench": []},
+                {"roster_id": 2, "team": "Beta", "owner": "B", "record": "0-0-0", "points": 0,
+                 "lineup": [{"id": "20", "name": "Pat", "position": "QB", "nfl_team": "MIA", "slot": "QB", "points": 0}], "bench": []},
+            ]},
+        }
+        projection = {"status": "Pregame", "largest_advantage": "None", "highest_volatility": "None",
+                      "confidence": "high", "missing": 0, "sides": [
+                          {"roster_id": 1, "projected": 16.71, "floor": 14.0, "ceiling": 20.0,
+                           "sleeper_total": 16.71, "sleeper_coverage": "1/1", "sleeper_status": "available",
+                           "canonical_projection_total": 16.71, "canonical_projection_coverage": 1,
+                           "players": [{"player_id": "10", "canonical_projection": 16.71}]},
+                          {"roster_id": 2, "projected": 0.0, "floor": 0.0, "ceiling": 0.0,
+                           "sleeper_total": 0.0, "sleeper_coverage": "1/1", "sleeper_status": "available",
+                           "canonical_projection_total": 0.0, "canonical_projection_coverage": 1,
+                           "players": [{"player_id": "20", "canonical_projection": 0.0}]},
+                      ]}
+        app = FastAPI()
+
+        async def fresh() -> None:
+            return None
+
+        app.include_router(create_matchups_router(
+            ensure_fresh=fresh, require_data=lambda: data,
+            page=lambda title, body: HTMLResponse(
+                f"<style>.score-row small,.starter-projections small{{text-transform:uppercase}}</style><h1>{title}</h1>{body}"
+            ),
+        ))
+        with (patch("routes.matchups.matchup_player_values", return_value={}),
+              patch("routes.matchups.matchup_projection", return_value=projection)):
+            response = TestClient(app).get("/matchups/1")
+        semantic = matchup_semantic(data, "1", {"players": {
+            "10": {"canonical_projection": 16.71}, "20": {"canonical_projection": 0.0},
+        }})
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=True)
+            page = browser.new_page()
+            page.set_content(response.text)
+            visible = page.locator("body").inner_text()
+            starter_cards = page.locator(".battle-side:not(.vacant)").evaluate_all("""cards => cards.map(card => ({
+                text: card.innerText,
+                semantic_fields: Array.from(card.querySelectorAll('[data-dtos-semantic-field]')).map(field => ({
+                    field: field.dataset.dtosSemanticField,
+                    availability: field.dataset.dtosAvailability,
+                    value: field.dataset.dtosValue || null,
+                    text: field.innerText,
+                })),
+            }))""")
+            team_cards = page.locator(".scoreboard-side, .matchup-team").all_inner_texts()
+            browser.close()
+        self.assertIn("PREGAME PROJECTION", visible)
+        self.assertEqual(len(starter_cards), 2)
+        self.assertEqual(matchup_projection_mismatches(
+            semantic, visible, starter_cards, team_cards,
+        ), [])
 
     def test_matchup_semantic_preserves_available_zero_total(self):
         data = {"matchups": {"1": [{
