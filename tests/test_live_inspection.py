@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import unittest
+from html.parser import HTMLParser
 from unittest.mock import patch
 
 from fastapi import APIRouter, FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.testclient import TestClient
 
-from routes.matchups import _starter_projection_html
+from routes.matchups import _starter_projection_html, create_matchups_router
 from src.core.inspection.live import LiveInspection, matchup_semantic, public_surface_registry
 from src.core.inspection.live_browser import (
     matchup_projection_mismatches,
@@ -22,13 +25,62 @@ PROGRESS = {
 }
 
 
+class _BattleCardParser(HTMLParser):
+    """Extract the semantic projection contract from real rendered battle cards."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.cards: list[dict] = []
+        self._card: dict | None = None
+        self._card_depth = 0
+        self._field: dict | None = None
+        self._field_depth = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        values = dict(attrs)
+        classes = str(values.get("class") or "").split()
+        if self._card is None and tag == "div" and "battle-side" in classes and "vacant" not in classes:
+            self._card = {"text": "", "semantic_fields": []}
+            self._card_depth = 1
+        elif self._card is not None and tag == "div":
+            self._card_depth += 1
+        if self._card is not None and values.get("data-dtos-semantic-field"):
+            self._field = {
+                "field": values["data-dtos-semantic-field"],
+                "availability": values.get("data-dtos-availability"),
+                "value": values.get("data-dtos-value"),
+                "text": "",
+            }
+            self._field_depth = self._card_depth
+            self._card["semantic_fields"].append(self._field)
+
+    def handle_data(self, data: str) -> None:
+        if self._card is not None:
+            self._card["text"] += f" {data.strip()}"
+        if self._field is not None:
+            self._field["text"] += f" {data.strip()}"
+
+    def handle_endtag(self, tag: str) -> None:
+        if self._card is None or tag != "div":
+            return
+        if self._field is not None and self._field_depth == self._card_depth:
+            self._field = None
+        self._card_depth -= 1
+        if self._card_depth == 0:
+            self.cards.append(self._card)
+            self._card = None
+
+
 class LiveInspectionTests(unittest.TestCase):
-    def test_matchup_starter_card_labels_only_canonical_sleeper(self):
+    def test_matchup_player_card_uses_manager_label_and_semantic_field(self):
         html = _starter_projection_html({
             "canonical_projection": 24.18, "projection_availability": "projected",
         })
-        self.assertIn("Sleeper canonical projection", html)
+        self.assertIn("Pregame projection", html)
+        self.assertIn('data-dtos-semantic-field="pregame_projection"', html)
+        self.assertIn('data-dtos-availability="available"', html)
         self.assertIn("24.18", html)
+        self.assertNotIn("Sleeper canonical projection", html)
         self.assertNotIn("DTOS Projection", html)
         missing = _starter_projection_html({})
         self.assertIn("Projection unavailable", missing)
@@ -150,35 +202,99 @@ class LiveInspectionTests(unittest.TestCase):
                 }],
             }
 
+        def card(value, availability, rendered):
+            return {"text": f"Josh {rendered}", "semantic_fields": [{
+                "field": "pregame_projection", "availability": availability,
+                "value": value, "text": rendered,
+            }]}
+
         self.assertEqual(matchup_projection_mismatches(
             semantic(None, "unavailable"), "Alpha Josh Projection unavailable",
-            ["Josh Projection unavailable"], ["Alpha Projection unavailable"],
+            [card(None, "unavailable", "Projection unavailable")], ["Alpha Projection unavailable"],
         ), [])
         self.assertEqual(matchup_projection_mismatches(
-            semantic(0.0, "projected_zero"), "Alpha Josh Sleeper canonical projection 0.00",
-            ["Josh Sleeper canonical projection 0.00"], ["Alpha Pregame projection 0.00"],
+            semantic(0.0, "projected_zero"), "Alpha Josh Pregame projection 0.00",
+            [card("0.00", "available", "Pregame projection 0.00")], ["Alpha Pregame projection 0.00"],
         ), [])
         self.assertEqual(matchup_projection_mismatches(
-            semantic(7.5, "available"), "Alpha Josh Sleeper canonical projection 7.50",
-            ["Josh Sleeper canonical projection 7.50"], ["Alpha Pregame projection 7.50"],
+            semantic(7.5, "available"), "Alpha Josh Pregame projection 7.50",
+            [card("7.50", "available", "Pregame projection 7.50")], ["Alpha Pregame projection 7.50"],
         ), [])
         self.assertIn("missing_projection_state_missing", matchup_projection_mismatches(
-            semantic(None, "unavailable"), "Alpha Josh Sleeper canonical projection 0.00",
-            ["Josh Sleeper canonical projection 0.00"], ["Alpha Pregame projection 0.00"],
+            semantic(None, "unavailable"), "Alpha Josh Pregame projection 0.00",
+            [card("0.00", "available", "Pregame projection 0.00")], ["Alpha Pregame projection 0.00"],
+        ))
+        self.assertIn("missing_projection_state_missing", matchup_projection_mismatches(
+            semantic(None, "unavailable"), "Alpha Josh Pregame projection 7.50",
+            [card("7.50", "available", "Pregame projection 7.50")], ["Alpha Pregame projection 7.50"],
         ))
         self.assertIn("canonical_projection_mismatch", matchup_projection_mismatches(
             semantic(0.0, "projected_zero"), "Alpha Josh Projection unavailable",
-            ["Josh Projection unavailable"], ["Alpha Projection unavailable"],
+            [card(None, "unavailable", "Projection unavailable")], ["Alpha Projection unavailable"],
         ))
         self.assertIn("canonical_projection_mismatch", matchup_projection_mismatches(
-            semantic(7.5, "available"), "Alpha Josh Sleeper canonical projection 8.50",
-            ["Josh Sleeper canonical projection 8.50"], ["Alpha Pregame projection 8.50"],
+            semantic(7.5, "available"), "Alpha Josh Pregame projection 8.50",
+            [card("8.50", "available", "Pregame projection 8.50")], ["Alpha Pregame projection 8.50"],
         ))
         in_game_unavailable = semantic(None, "unavailable")
         in_game_unavailable["presentation_state"] = "in-game"
         self.assertIn("missing_projection_state_missing", matchup_projection_mismatches(
             in_game_unavailable, "Alpha Josh Actual 4.00",
-            ["Josh Actual 4.00"], ["Alpha Actual 4.00"],
+            [{"text": "Josh Actual 4.00", "semantic_fields": []}], ["Alpha Actual 4.00"],
+        ))
+
+    def test_real_matchup_route_reconciles_manager_label_and_canonical_values(self):
+        data = {
+            "week": 1, "nfl_state": {"season_type": "pre", "week": 1},
+            "matchups": {"1": [
+                {"roster_id": 1, "team": "Alpha", "owner": "A", "record": "0-0-0", "points": 0,
+                 "lineup": [{"id": "10", "name": "Josh", "position": "QB", "nfl_team": "BUF", "slot": "QB", "points": 0}], "bench": []},
+                {"roster_id": 2, "team": "Beta", "owner": "B", "record": "0-0-0", "points": 0,
+                 "lineup": [{"id": "20", "name": "Pat", "position": "QB", "nfl_team": "MIA", "slot": "QB", "points": 0}], "bench": []},
+            ]},
+        }
+        projection = {"status": "Alpha favored", "largest_advantage": "Alpha at QB",
+                      "highest_volatility": "None", "confidence": "high", "missing": 0,
+                      "sides": [
+                          {"roster_id": 1, "projected": 16.71, "floor": 14.0, "ceiling": 20.0,
+                           "sleeper_total": 16.71, "sleeper_coverage": "1/1", "sleeper_status": "available",
+                           "canonical_projection_total": 16.71, "canonical_projection_coverage": 1,
+                           "players": [{"player_id": "10", "canonical_projection": 16.71}]},
+                          {"roster_id": 2, "projected": 0.0, "floor": 0.0, "ceiling": 0.0,
+                           "sleeper_total": 0.0, "sleeper_coverage": "1/1", "sleeper_status": "available",
+                           "canonical_projection_total": 0.0, "canonical_projection_coverage": 1,
+                           "players": [{"player_id": "20", "canonical_projection": 0.0}]},
+                      ]}
+        app = FastAPI()
+
+        async def fresh() -> None:
+            return None
+
+        app.include_router(create_matchups_router(
+            ensure_fresh=fresh, require_data=lambda: data,
+            page=lambda title, body: HTMLResponse(f"<h1>{title}</h1>{body}"),
+        ))
+        with (patch("routes.matchups.matchup_player_values", return_value={}),
+              patch("routes.matchups.matchup_projection", return_value=projection)):
+            response = TestClient(app).get("/matchups/1")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Pregame projection", response.text)
+        self.assertNotIn("Sleeper canonical projection", response.text)
+        parser = _BattleCardParser()
+        parser.feed(response.text)
+        semantic = matchup_semantic(data, "1", {"players": {
+            "10": {"canonical_projection": 16.71}, "20": {"canonical_projection": 0.0},
+        }})
+        team_cards = ["Alpha Pregame projection 16.71", "Beta Pregame projection 0.00"]
+        self.assertEqual(matchup_projection_mismatches(
+            semantic, response.text, parser.cards, team_cards,
+        ), [])
+        changed = [dict(card) for card in parser.cards]
+        changed[0] = {**changed[0], "semantic_fields": [{
+            **changed[0]["semantic_fields"][0], "value": "17.12", "text": "Pregame projection 17.12",
+        }]}
+        self.assertIn("canonical_projection_mismatch", matchup_projection_mismatches(
+            semantic, response.text, changed, team_cards,
         ))
 
     def test_matchup_semantic_preserves_available_zero_total(self):
@@ -207,7 +323,10 @@ class LiveInspectionTests(unittest.TestCase):
         }
         visible = "Alpha Josh ACTUAL 4.0 Projection unavailable Pregame projections unavailable"
         self.assertEqual(matchup_projection_mismatches(
-            semantic, visible, ["Josh ACTUAL 4.0 Projection unavailable"],
+            semantic, visible, [{"text": "Josh ACTUAL 4.0 Projection unavailable", "semantic_fields": [{
+                "field": "pregame_projection", "availability": "unavailable",
+                "value": None, "text": "Pregame projection Projection unavailable",
+            }]}],
             ["Alpha ACTUAL 4.0 Projection unavailable"],
         ), [])
         self.assertIn("aggregate_projection_unavailable_state_missing", matchup_projection_mismatches(

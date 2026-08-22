@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.46 - Matchup Label/Inspection Contract Correction
+
+- Identified rendered pregame projections with a stable semantic DOM contract
+  while preserving the manager-facing `Pregame projection` label.
+- Made Live Visual reconcile canonical availability and exact two-decimal values
+  without requiring internal provider terminology in visible matchup cards.
+- Added real matchup-route coverage for available, unavailable, legitimate-zero,
+  and mismatched projection states without changing intelligence or storage.
+
 ## v1.10.45 - Matchup Presentation Contract Correction
 
 - Standardized canonical matchup projection values at the shared rendered-score
