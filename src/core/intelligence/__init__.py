@@ -10,7 +10,8 @@ from src.core.intelligence.registry import IntelligenceRegistry, intelligence_re
 from src.core.asset_intelligence import AssetContext
 from src.core.front_office_intelligence import build_league_model
 from src.core.trade_intelligence.bilateral import evaluate_bilateral
+from src.core.trade_intelligence.engine.trade_generator import generate_proposals
 from src.core.trade_intelligence.market import build_asset_pool
 from src.core.trade_intelligence.models import TradeProposal
 
-__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "TradeProposal", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "build_asset_pool", "build_context", "build_league_model", "calculate_confidence", "evaluate_bilateral", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry"]
+__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "TradeProposal", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "build_asset_pool", "build_context", "build_league_model", "calculate_confidence", "evaluate_bilateral", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry"]

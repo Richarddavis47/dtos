@@ -26,8 +26,21 @@ def dynasty_value(profile: PlayerProfile, context: AssetContext) -> AssetEvaluat
         Evidence("NFL roster status", profile.nfl_team, roster_signal - 50, "An active NFL team supplies a modest opportunity signal; it does not imply a starting role.", "Sleeper NFL team"),
         format_evidence,
     )
-    score = round(age_score * 0.70 + roster_signal * 0.30 + format_adjustment)
-    return AssetEvaluation("Dynasty Value", score, evidence_engine.confidence(evidence), "Long-term age and roster-status signals; production and market feeds are intentionally excluded.", evidence, ("Production, contract detail, usage, and dynasty market data are unavailable.",))
+    # Age and NFL-roster status are useful context, but they cannot establish an
+    # elite dynasty valuation by themselves.  Keep the independent DTOS signal
+    # deliberately close to neutral until production/role evidence is present.
+    # This prevents ordinary young developmental players from outranking proven
+    # elite assets solely because they are farther from the position age peak.
+    score = round(age_score * 0.30 + roster_signal * 0.20 + 50 * 0.50 + format_adjustment)
+    score = max(25, min(72, score))
+    return AssetEvaluation(
+        "Dynasty Value",
+        score,
+        min(70, evidence_engine.confidence(evidence)),
+        "Independent age, format, and NFL-roster context; unsupported upside is held near neutral.",
+        evidence,
+        ("Production, contract detail, usage, and dynasty market data are unavailable; this signal must not replace neutral market value.",),
+    )
 
 
 def redraft_value(profile: PlayerProfile) -> AssetEvaluation:

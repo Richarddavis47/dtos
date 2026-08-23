@@ -1,5 +1,14 @@
 # Changelog
 
+# v1.10.50 - Trade Center Value Integrity and Workflow Conformance
+
+- Preserved canonical neutral market values as the Value Fairness input while keeping DTOS intrinsic opinion and team fit separate.
+- Bounded age/status-only intrinsic evidence so unsupported developmental upside cannot erase established market tiers.
+- Added original-franchise future-pick ranges, confidence, uncertainty-aware values, and coherent player/pick comparisons.
+- Required concrete controlled-team and counterparty reasons before generated trades qualify as plausible or worth pursuing.
+- Added executable multi-asset Create Trade, complete proposal editing, assisted adjustments, and calculated repair alternatives.
+- Added real-browser interaction coverage and request-time workspace reuse so assistance remains bounded without provider or market-build work.
+
 # v1.10.49 - Trade Center Overhaul and Bilateral Trade Intelligence
 
 - Introduced one workflow-independent bilateral trade evaluation contract for Create Trade, Trade For, Shop Asset, and Recommended Trades.

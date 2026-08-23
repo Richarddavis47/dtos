@@ -57,6 +57,56 @@ def _team_players(team: dict[str, Any], assets_by_id: dict[str, dict[str, Any]])
     return [{**assets_by_id.get(str(p.get("id") or p.get("player_id")), {}), **p} for p in team.get("players") or ()]
 
 
+def _required_positions(positions: tuple[str, ...]) -> dict[str, int]:
+    required = {position: positions.count(position) for position in {"QB", "RB", "WR", "TE"}}
+    if "SUPER_FLEX" in positions:
+        required["QB"] += 1
+    return required
+
+
+def _strategic_reasons(
+    *,
+    incoming: tuple[TradeAsset, ...],
+    outgoing: tuple[TradeAsset, ...],
+    incoming_value: float,
+    outgoing_value: float,
+    lineup_delta: float | None,
+    team_players: list[dict[str, Any]],
+    positions: tuple[str, ...],
+) -> tuple[str, ...]:
+    reasons: list[str] = []
+    if lineup_delta is not None and lineup_delta > 0.25:
+        reasons.append(f"Optimal Legal Lineup improves by {lineup_delta:.2f} projected points.")
+    if incoming_value >= outgoing_value * 1.05:
+        reasons.append(f"Receives {incoming_value - outgoing_value:.0f} more neutral market value.")
+    required = _required_positions(positions)
+    counts = {
+        position: sum(str(player.get("position") or "") == position for player in team_players)
+        for position in required
+    }
+    incoming_positions = {asset.position for asset in incoming if asset.kind == "player"}
+    for position in sorted(incoming_positions):
+        if position and counts.get(position, 0) <= required.get(position, 0):
+            reasons.append(f"Adds needed {position} depth at or below the configured starting requirement.")
+    incoming_picks = sum(asset.trade_value for asset in incoming if asset.kind == "pick")
+    outgoing_picks = sum(asset.trade_value for asset in outgoing if asset.kind == "pick")
+    if incoming_picks > outgoing_picks and incoming_picks >= 250:
+        reasons.append("Adds meaningful draft-capital liquidity and future optionality.")
+    incoming_liquidity = sum(asset.liquidity_score for asset in incoming)
+    outgoing_liquidity = sum(asset.liquidity_score for asset in outgoing)
+    if incoming_liquidity >= outgoing_liquidity + 25:
+        reasons.append("Improves package liquidity and future trade flexibility.")
+    return tuple(dict.fromkeys(reasons))
+
+
+def _elite_qb_downgrade(
+    outgoing: tuple[TradeAsset, ...], incoming: tuple[TradeAsset, ...], incoming_value: float,
+) -> bool:
+    elite = max((asset.trade_value for asset in outgoing if asset.position == "QB"), default=0)
+    replacement = max((asset.trade_value for asset in incoming if asset.position == "QB"), default=0)
+    return elite >= 800 and replacement < elite * .85 and incoming_value < elite * .95
+
+
 def evaluate_bilateral(
     proposal: TradeProposal,
     *,
@@ -85,7 +135,7 @@ def evaluate_bilateral(
     fairness = "FAIR" if 0.80 <= ratio <= 1.25 else "ACTIVE ADVANTAGE" if ratio > 1.25 else "PARTNER ADVANTAGE"
     active_package = _package_quality(proposal.assets_received, proposal.assets_sent)
     partner_package = _package_quality(proposal.assets_sent, proposal.assets_received)
-    plausible = not errors and fairness == "FAIR" and active_package.assessment not in {"POOR"} and partner_package.assessment not in {"POOR"}
+    package_clear = active_package.assessment != "POOR" and partner_package.assessment != "POOR"
 
     positions = tuple(league.get("roster_positions") or league.get("settings", {}).get("roster_positions") or ())
     database = player_database or {}
@@ -108,16 +158,42 @@ def evaluate_bilateral(
             return None
         return round(float(after.projected_points or 0) - float(before.projected_points or 0), 2)
 
+    active_delta = delta(active_pre, active_post)
+    partner_delta = delta(partner_pre, partner_post)
+    active_reasons = _strategic_reasons(
+        incoming=proposal.assets_received, outgoing=proposal.assets_sent,
+        incoming_value=received_value, outgoing_value=sent_value,
+        lineup_delta=active_delta, team_players=active_players, positions=positions,
+    )
+    partner_reasons = _strategic_reasons(
+        incoming=proposal.assets_sent, outgoing=proposal.assets_received,
+        incoming_value=sent_value, outgoing_value=received_value,
+        lineup_delta=partner_delta, team_players=partner_players, positions=positions,
+    )
+    scarcity_veto = _elite_qb_downgrade(proposal.assets_received, proposal.assets_sent, sent_value)
+    plausible = bool(
+        not errors and fairness == "FAIR" and package_clear
+        and active_reasons and partner_reasons and not scarcity_veto
+    )
     confidence, confidence_reason = _qualitative_confidence(all_assets)
     if errors:
         recommendation = ManagerRecommendation.REJECT
         dominant = "The construction is not currently executable."
-    elif not plausible:
-        recommendation = ManagerRecommendation.NOT_WORTH_IT if fairness == "FAIR" else ManagerRecommendation.REJECT
-        dominant = "The exchange does not clear bilateral fairness and package-quality requirements."
+    elif fairness != "FAIR":
+        recommendation = ManagerRecommendation.REJECT
+        dominant = "Neutral market value is materially uneven before strategic fit is considered."
+    elif not package_clear:
+        recommendation = ManagerRecommendation.NOT_WORTH_IT
+        dominant = "The package composition does not provide a credible centerpiece or usable roster structure."
+    elif scarcity_veto:
+        recommendation = ManagerRecommendation.REJECT
+        dominant = "The elite Superflex quarterback seller does not receive adequate replacement value or compensation."
+    elif not active_reasons or not partner_reasons:
+        recommendation = ManagerRecommendation.NOT_WORTH_IT
+        dominant = "The numbers are close, but both managers do not have a concrete roster or strategic reason to proceed."
     elif 0.92 <= ratio <= 1.12:
         recommendation = ManagerRecommendation.WORTH_PURSUING
-        dominant = "Both rosters receive a credible package with a realistic reason to negotiate."
+        dominant = "Both managers receive a concrete market, lineup, roster, or liquidity benefit worth discussing."
     else:
         recommendation = ManagerRecommendation.FAIR_OPTIONAL
         dominant = "The construction is plausible, but neither side has a compelling reason to force it."
@@ -129,19 +205,34 @@ def evaluate_bilateral(
         "legality_reasons": sorted(set(errors)),
         "generated_trade_eligible": plausible,
         "dimensions": {
-            "value_fairness": asdict(EvaluationDimension("Value Fairness", fairness, f"Canonical adjusted values are {sent_value:.1f} sent and {received_value:.1f} received.")),
-            "strategic_fit": asdict(EvaluationDimension("Strategic Fit", "BILATERAL REVIEW", "Starting-lineup, depth, roster-capacity, timeline, liquidity, and pick context are evaluated for both teams.")),
-            "counterparty_plausibility": asdict(EvaluationDimension("Counterparty Plausibility", "PLAUSIBLE" if plausible else "DOES NOT CLEAR", "The counterparty has a credible neutral roster/value reason to engage." if plausible else "The proposal fails legality, fairness, or package-quality requirements.")),
+            "value_fairness": asdict(EvaluationDimension("Value Fairness", fairness, f"Neutral canonical market values are {sent_value:.1f} sent and {received_value:.1f} received; team fit does not rewrite them.")),
+            "strategic_fit": {
+                "label": "Strategic Fit",
+                "assessment": "CLEAR" if active_reasons else "NOT ESTABLISHED",
+                "active_reasons": list(active_reasons),
+                "partner_reasons": list(partner_reasons),
+                "explanation": " ".join(active_reasons) if active_reasons else "No concrete controlled-team lineup, roster, liquidity, or value benefit was established.",
+            },
+            "counterparty_plausibility": asdict(EvaluationDimension(
+                "Counterparty Plausibility", "PLAUSIBLE" if plausible else "DOES NOT CLEAR",
+                " ".join(partner_reasons) if partner_reasons and not scarcity_veto else
+                "Elite Superflex quarterback replacement cost is not satisfied." if scarcity_veto else
+                "No concrete counterparty lineup, roster, liquidity, or value benefit was established.",
+            )),
             "package_quality": {"active": asdict(active_package), "partner": asdict(partner_package)},
             "best_for": {"active": "BOTH" if plausible else "NEITHER", "partner": "BOTH" if plausible else "NEITHER"},
             "confidence": {"assessment": confidence, "explanation": confidence_reason},
         },
-        "why_you_would_do_it": "The incoming package improves usable value or roster optionality under the active roster context.",
-        "why_they_would_do_it": "The outgoing package gives the counterparty a coherent neutral value and roster path." if plausible else "No sufficiently credible counterparty reason was established.",
+        "why_you_would_do_it": " ".join(active_reasons) if active_reasons else "No sufficiently concrete controlled-team reason was established.",
+        "why_they_would_do_it": " ".join(partner_reasons) if partner_reasons and not scarcity_veto else "No sufficiently credible counterparty reason was established.",
+        "perspectives": {
+            "for_your_team": "FAVORABLE" if ratio > 1.12 else "REASONABLE" if ratio >= .92 else "UNFAVORABLE",
+            "bilateral_reality": "REALISTIC" if plausible else "NOT REALISTIC",
+        },
         "values": {"sent": round(sent_value, 1), "received": round(received_value, 1), "ratio": round(ratio, 3)},
         "lineup_impact": {
-            "active": {"pre": asdict(active_pre), "post": asdict(active_post), "delta": delta(active_pre, active_post)},
-            "partner": {"pre": asdict(partner_pre), "post": asdict(partner_post), "delta": delta(partner_pre, partner_post)},
+            "active": {"pre": asdict(active_pre), "post": asdict(active_post), "delta": active_delta},
+            "partner": {"pre": asdict(partner_pre), "post": asdict(partner_post), "delta": partner_delta},
             "comparison": "optimal_legal_lineup_before_vs_after",
         },
         "provenance": {"evaluator": "bilateral_trade_v1", "workflow_independent": True},

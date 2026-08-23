@@ -69,6 +69,32 @@ class BilateralTradeTests(unittest.TestCase):
         result = self.evaluate(sent=(player("a", 100, 1, confidence=40),))
         self.assertEqual(result["dimensions"]["confidence"]["assessment"], "LOW")
 
+    def test_neutral_market_value_is_not_rewritten_by_team_fit(self) -> None:
+        sent = (TradeAsset("hurts", "player", "Jalen Hurts", "QB", 735, 600, 719, 900, 20, 1, 719, 80, 85),)
+        received = (TradeAsset("allen", "player", "Josh Allen", "QB", 896, 600, 954, 400, 20, 2, 954, 90, 90),)
+        result = self.evaluate(sent=sent, received=received)
+        self.assertEqual(result["values"], {"sent": 719.0, "received": 954.0, "ratio": 1.327})
+        self.assertEqual(result["dimensions"]["value_fairness"]["assessment"], "ACTIVE ADVANTAGE")
+        self.assertEqual(result["recommendation"], "REJECT")
+        self.assertFalse(result["generated_trade_eligible"])
+
+    def test_ratio_alone_cannot_create_worth_pursuing(self) -> None:
+        active = {"roster_id": 1, "players": [{"id": "a", "position": "WR"}]}
+        partner = {"roster_id": 2, "players": [{"id": "b", "position": "WR"}]}
+        proposal = TradeProposal(1, 2, (player("a", 500, 1),), (player("b", 500, 2),), "Manual")
+        result = evaluate_bilateral(proposal, active_team=active, partner_team=partner, league={"roster_positions": []})
+        self.assertEqual(result["recommendation"], "NOT WORTH IT")
+        self.assertEqual(result["dimensions"]["counterparty_plausibility"]["assessment"], "DOES NOT CLEAR")
+
+    def test_elite_superflex_qb_downgrade_requires_compensation(self) -> None:
+        elite = player("elite", 900, 2, "QB")
+        lower = player("lower", 700, 1, "QB")
+        proposal = TradeProposal(1, 2, (lower,), (elite,), "Manual")
+        result = evaluate_bilateral(proposal, active_team=self.active, partner_team=self.partner, league={"roster_positions": ["QB", "SUPER_FLEX"]})
+        self.assertEqual(result["recommendation"], "REJECT")
+        self.assertIn(result["dimensions"]["value_fairness"]["assessment"], {"ACTIVE ADVANTAGE", "PARTNER ADVANTAGE"})
+        self.assertFalse(result["generated_trade_eligible"])
+
 
 if __name__ == "__main__":
     unittest.main()
