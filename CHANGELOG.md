@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.10.52 - Trade Center Accessible Name Correction
+
+- Corrected DINS visibility classification for controls inside collapsed native disclosures.
+- Added contextual accessible names to dynamic Trade Center asset-removal buttons.
+- Preserved every v1.10.51 recommendation and workflow contract unchanged.
+
 # v1.10.51 - Trade Center Recommendation Quality and Ownership-Aware Entry
 
 - Recalibrated bilateral recommendation gates so future-pick optimism cannot disguise elite Superflex quarterback replacement cost or produce a false championship-push label.
