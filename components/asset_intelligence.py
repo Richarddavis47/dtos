@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from html import escape
+from urllib.parse import quote
 
 from src.ui import recommendation_panel
 
@@ -43,7 +44,27 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict])
     risk_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(item.explanation)}</li>" for item in report.risk.evidence)
     opportunity = "".join(f"<li><b>{escape(label)}:</b> {value.score}/100 — {escape(value.summary)}</li>" for label, value in report.opportunity.items())
     recommendation_evidence = tuple(f"{item.factor}: {item.observed_value} — {item.explanation}" for item in report.recommendation.evidence)
-    primary_recommendation = recommendation_panel(title=report.recommendation.action, recommendation=report.recommendation.summary, confidence=report.recommendation.confidence, primary_reason=recommendation_evidence[0] if recommendation_evidence else report.executive_summary, evidence=recommendation_evidence, expected_impact="Aligns this player's role and value with the selected Front Office direction.", action_label="Open Trade Center", action_href=f'/trades?front_office={selected_team.get("roster_id")}', limitations=tuple(report.risk.limitations))
+    active_roster_id = int(selected_team.get("roster_id") or 0)
+    player_id = str(profile.player_id)
+    owner_roster_id = next(
+        (
+            int(team.get("roster_id") or 0)
+            for team in teams
+            if player_id in {
+                str(item.get("id") or item.get("player_id")) if isinstance(item, dict) else str(item)
+                for item in team.get("players", ())
+            }
+        ),
+        0,
+    )
+    owned = owner_roster_id == active_roster_id
+    trade_workflow = "shop" if owned else "trade-for"
+    trade_action = "Shop Asset" if owned else "Trade For"
+    trade_href = (
+        f"/trades/{trade_workflow}?front_office={active_roster_id}"
+        f"&asset_id={quote(player_id, safe='')}&owner_roster_id={owner_roster_id}"
+    )
+    primary_recommendation = recommendation_panel(title=report.recommendation.action, recommendation=report.recommendation.summary, confidence=report.recommendation.confidence, primary_reason=recommendation_evidence[0] if recommendation_evidence else report.executive_summary, evidence=recommendation_evidence, expected_impact="Aligns this player's role and value with the selected Front Office direction.", action_label=trade_action, action_href=trade_href, limitations=tuple(report.risk.limitations))
     value = report.value_profile
     integrated = ""
     if value is not None:

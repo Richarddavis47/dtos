@@ -8,8 +8,17 @@ from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 from routes.trades import create_trades_router
-from services.trade_intelligence import assist_trade_request, build_trade_workspace
+from components.trade_intelligence import trade_workflow
+from services.trade_intelligence import (
+    assist_trade_request,
+    build_trade_center,
+    build_trade_workspace,
+    create_trade_alternatives,
+    generate_trade_workflow,
+)
 from src.core.asset_intelligence import AssetContext, evaluate_player
+from src.core.trade_intelligence.bilateral import evaluate_bilateral
+from src.core.trade_intelligence.models import TradeAsset, TradeProposal
 from tests.test_trade_intelligence import fixture_data
 
 
@@ -125,6 +134,54 @@ class TradeWorkflowConformanceTests(unittest.TestCase):
         self.assertEqual(result["count"], 0)
         self.assertEqual(result["interpretation_error"], "specific_asset_required")
         self.assertIn("specific player or pick", result["quiet_state"])
+
+    def test_seller_side_elite_superflex_qb_downgrade_fails_bilateral_gate(self) -> None:
+        hurts = TradeAsset("hurts", "player", "Jalen Hurts", "QB", 720, 720, 720, 720, 10, 1, trade_value=720)
+        kincaid = TradeAsset("kincaid", "player", "Dalton Kincaid", "TE", 280, 280, 280, 280, 15, 2, trade_value=280)
+        unknown_first = TradeAsset(
+            "2027-R1-2", "pick", "2027 Round 1", None, 360, 0, 360, 360, 30, 2,
+            trade_value=360, projected_range="UNKNOWN", projected_range_confidence="LOW",
+        )
+        result = evaluate_bilateral(
+            TradeProposal(1, 2, (hurts,), (kincaid, unknown_first), "Player + Pick"),
+            active_team={"roster_id": 1, "players": [{"id": "hurts", "position": "QB", "projected_points": 22}]},
+            partner_team={"roster_id": 2, "players": [{"id": "kincaid", "position": "TE", "projected_points": 10}]},
+            league={"roster_positions": ["QB", "RB", "WR", "TE", "SUPER_FLEX"]},
+            ownership={"hurts": 1, "kincaid": 2, "2027-R1-2": 2},
+        )
+        self.assertEqual(result["perspectives"]["bilateral_reality"], "NOT REALISTIC")
+        self.assertEqual(result["dimensions"]["confidence"]["assessment"], "LOW")
+        self.assertNotEqual(result["recommendation"], "WORTH PURSUING")
+
+    def test_preloaded_workflows_and_picker_use_ownership_aware_auto_run(self) -> None:
+        view = build_trade_center(self.data, 1)
+        owned = build_trade_workspace(self.data, 1)["pools"][1][0].asset_id
+        external = build_trade_workspace(self.data, 1)["pools"][2][0].asset_id
+        shop = trade_workflow(view, "shop", owned, 1)
+        trade_for = trade_workflow(view, "trade-for", external, 2)
+        self.assertIn(f'data-preload-asset="{owned}"', shop)
+        self.assertIn(f'data-preload-asset="{external}"', trade_for)
+        self.assertIn('data-owner-roster="2"', trade_for)
+        self.assertIn("await run()", shop)
+        self.assertIn("onchange=()=>add('sent',s)", shop)
+        self.assertIn("More adjustment options", shop)
+
+    def test_shop_searches_all_counterparties_and_create_alternatives_are_bounded(self) -> None:
+        workspace = build_trade_workspace(self.data, 1)
+        owned = workspace["pools"][1][0].asset_id
+        shop = generate_trade_workflow(self.data, {
+            "workflow": "shop", "active_roster_id": 1, "asset_id": owned,
+        })
+        self.assertLessEqual(shop["count"], 5)
+        self.assertTrue(all(owned in row["proposal"]["assets_sent"] for row in shop["results"]))
+        sent, received = workspace["pools"][1][0].asset_id, workspace["pools"][2][0].asset_id
+        alternatives = create_trade_alternatives(self.data, {
+            "active_roster_id": 1, "partner_roster_id": 2,
+            "assets_sent": [sent], "assets_received": [received],
+        })
+        self.assertLessEqual(alternatives["count"], 3)
+        self.assertEqual(alternatives["provider_requests"], 0)
+        self.assertEqual(alternatives["asset_market_constructions"], 0)
 
 
 if __name__ == "__main__":

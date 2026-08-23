@@ -25,11 +25,14 @@ def _trade_type(proposal: TradeProposal, active: TeamDecision, current: int, fut
     window = active.competitive_window
     if window is None:
         raise ValueError("Trade Intelligence requires the canonical competitive-window contract.")
+    elite_qb_sent = max((asset.trade_value for asset in proposal.assets_sent if asset.position == "QB"), default=0)
+    replacement_qb = max((asset.trade_value for asset in proposal.assets_received if asset.position == "QB"), default=0)
+    superflex_downgrade = "SUPER_FLEX" in active.profile.league_settings.get("roster_positions", ()) and elite_qb_sent >= 650 and replacement_qb < elite_qb_sent * .85
     if window.classification in {
         CompetitiveWindowClassification.ELITE_CONTENDER,
         CompetitiveWindowClassification.CONTENDER,
         CompetitiveWindowClassification.PLAYOFF_TEAM,
-    } and current > 0:
+    } and current > 0 and not superflex_downgrade:
         return TradeType.CHAMPIONSHIP_PUSH
     if window.classification in {
         CompetitiveWindowClassification.REBUILDING,

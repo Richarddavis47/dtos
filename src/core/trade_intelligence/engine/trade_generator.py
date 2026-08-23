@@ -39,6 +39,14 @@ def _shortlist(pool: tuple[TradeAsset, ...]) -> tuple[TradeAsset, ...]:
     return tuple(players + picks)
 
 
+def _shortlist_with_required(pool: tuple[TradeAsset, ...], required_asset_id: str | None) -> tuple[TradeAsset, ...]:
+    rows = list(_shortlist(pool))
+    required = next((asset for asset in pool if asset.asset_id == required_asset_id), None)
+    if required is not None and all(asset.asset_id != required.asset_id for asset in rows):
+        rows.append(required)
+    return tuple(rows)
+
+
 def _valued_combinations(
     pool: tuple[TradeAsset, ...],
     count: int,
@@ -58,9 +66,12 @@ def generate_proposals(
     partner_roster_id: int,
     outgoing_pool: tuple[TradeAsset, ...],
     incoming_pool: tuple[TradeAsset, ...],
+    *,
+    required_sent_asset_id: str | None = None,
+    required_received_asset_id: str | None = None,
 ) -> tuple[TradeProposal, ...]:
-    outgoing = _shortlist(outgoing_pool)
-    incoming = _shortlist(incoming_pool)
+    outgoing = _shortlist_with_required(outgoing_pool, required_sent_asset_id)
+    incoming = _shortlist_with_required(incoming_pool, required_received_asset_id)
     proposals = []
     for label, sent_count, received_count, sent_kind, received_kind in PACKAGE_SHAPES:
         candidates = []
@@ -75,10 +86,7 @@ def generate_proposals(
                 ratio = received_value.adjusted_value / sent_value.adjusted_value
                 if not 0.80 <= ratio <= 1.25:
                     continue
-                superflex = any(
-                    asset.position == "QB"
-                    for asset in received
-                )
+                superflex = any(asset.position == "QB" for asset in (*sent, *received))
                 guardrail = evaluate_trade_guardrails(
                     sent,
                     received,

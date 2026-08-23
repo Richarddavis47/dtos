@@ -6,24 +6,35 @@ from src.core.decision_engine import TeamDecision
 from src.core.trade_intelligence.models import TradeImpact, TradeProposal
 
 
-def _average(assets, attribute: str) -> float:
-    return sum(getattr(asset, attribute) for asset in assets) / max(1, len(assets))
+def _sum(assets, attribute: str) -> float:
+    return sum(getattr(asset, attribute) for asset in assets)
+
+
+def _future_value(asset) -> float:
+    value = asset.dynasty_value
+    if (
+        asset.kind == "pick" and not asset.exact_slot
+        and str(asset.projected_range or "UNKNOWN").upper() == "UNKNOWN"
+        and str(asset.projected_range_confidence or "LOW").upper() == "LOW"
+    ):
+        return value * .75
+    return value
 
 
 def evaluate_trade_impact(proposal: TradeProposal, active: TeamDecision) -> TradeImpact:
     sent = proposal.assets_sent
     received = proposal.assets_received
-    current = round(_average(received, "redraft_value") - _average(sent, "redraft_value"))
-    future = round(_average(received, "dynasty_value") - _average(sent, "dynasty_value"))
+    current = round(_sum(received, "redraft_value") - _sum(sent, "redraft_value"))
+    future = round(sum(_future_value(asset) for asset in received) - sum(_future_value(asset) for asset in sent))
     asset_value = round(sum(asset.dynasty_value for asset in received) - sum(asset.dynasty_value for asset in sent))
-    risk = round(_average(sent, "risk") - _average(received, "risk"))
-    fit = round(_average(received, "team_fit_value") - _average(sent, "team_fit_value"))
+    risk = round(_sum(sent, "risk") - _sum(received, "risk"))
+    fit = round(_sum(received, "team_fit_value") - _sum(sent, "team_fit_value"))
     positions_in = {asset.position for asset in received if asset.position}
     weak_positions = {position for position, evaluation in active.position_evaluations.items() if evaluation.score < 55}
     depth = len(positions_in & weak_positions) * 8
     balance = depth - max(0, len(sent) - len(received)) * 3
     opportunity = max(0, -asset_value)
-    market = round(_average(received, "market_value") - _average(sent, "market_value"))
+    market = round(_sum(received, "market_value") - _sum(sent, "market_value"))
     championship = round(current * 0.60 + fit * 0.40)
     evidence = (
         Evidence("Current value delta", f"{current:+d}", current, "Redraft values from Asset Intelligence compare received and sent assets.", "Asset Intelligence Redraft Value"),

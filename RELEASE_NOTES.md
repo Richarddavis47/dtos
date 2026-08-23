@@ -1,3 +1,13 @@
+# DTOS v1.10.51 - Trade Center Recommendation Quality and Ownership-Aware Entry
+
+DTOS v1.10.51 makes the Trade Center stricter and more useful without changing
+the canonical neutral value foundation. Recommended trades now require coherent
+bilateral value, roster effects, package quality, and counterparty rationale.
+Player and pick pages open the correct ownership-aware workflow, while Create
+Trade proactively offers a small set of editable, calculated alternatives.
+
+## Previous release
+
 # DTOS v1.10.50 - Trade Center Value Integrity and Workflow Conformance
 
 DTOS v1.10.50 corrects the value and workflow defects found through direct

@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.10.51 - Trade Center Recommendation Quality and Ownership-Aware Entry
+
+- Recalibrated bilateral recommendation gates so future-pick optimism cannot disguise elite Superflex quarterback replacement cost or produce a false championship-push label.
+- Added ownership-aware player and pick entry into league-wide Shop Asset or preloaded Trade For workflows.
+- Added immediate asset selection, calculated Create Trade alternatives, protected-asset override, and progressive mobile adjustment controls.
+
 # v1.10.50 - Trade Center Value Integrity and Workflow Conformance
 
 - Preserved canonical neutral market values as the Value Fairness input while keeping DTOS intrinsic opinion and team fit separate.
