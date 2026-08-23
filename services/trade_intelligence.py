@@ -5,7 +5,7 @@ from typing import Any
 from hashlib import sha256
 import json
 
-from src.core.intelligence import AssetContext, TradeProposal, build_asset_pool, build_league_model, evaluate_bilateral, intelligence_orchestrator
+from src.core.intelligence import AssetContext, TradeProposal, build_asset_pool, build_league_model, evaluate_bilateral, generate_proposals, intelligence_orchestrator
 from src.core.valuation import cached_market_consensus
 
 
@@ -72,10 +72,12 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
     return {"active_roster_id": roster_id, "teams": teams, "pools": pools, "workflows": WORKFLOWS}
 
 
-def evaluate_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+def evaluate_trade_request(
+    data: dict[str, Any], payload: dict[str, Any], *, workspace: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     active_id = int(payload.get("active_roster_id") or 0)
     partner_id = int(payload.get("partner_roster_id") or 0)
-    workspace = build_trade_workspace(data, active_id)
+    workspace = workspace or build_trade_workspace(data, active_id)
     teams = {int(team.get("roster_id") or 0): team for team in workspace["teams"]}
     if active_id not in teams or partner_id not in teams or active_id == partner_id:
         raise ValueError("A valid bilateral pair of distinct teams is required.")
@@ -105,6 +107,171 @@ def evaluate_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dic
     if not evaluation["generated_trade_eligible"]:
         evaluation["repair_paths"] = ["MAKE THIS TRADE WORK", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE TARGET"]
     return {"workflow": str(payload.get("workflow") or "create"), "proposal": {"active_roster_id": active_id, "partner_roster_id": partner_id, "assets_sent": sent_ids, "assets_received": received_ids}, "evaluation": evaluation}
+
+
+def _proposal_payload(proposal: TradeProposal, workflow: str = "adjust") -> dict[str, Any]:
+    return {
+        "workflow": workflow,
+        "active_roster_id": proposal.active_roster_id,
+        "partner_roster_id": proposal.partner_roster_id,
+        "assets_sent": [asset.asset_id for asset in proposal.assets_sent],
+        "assets_received": [asset.asset_id for asset in proposal.assets_received],
+        "package_type": proposal.package_type,
+    }
+
+
+def _bounded_adjustment_candidates(workspace: dict[str, Any], payload: dict[str, Any]) -> tuple[TradeProposal, ...]:
+    """Build deterministic nearby and generated alternatives from cached pools only."""
+    active_id = int(payload.get("active_roster_id") or 0)
+    partner_id = int(payload.get("partner_roster_id") or 0)
+    pools = workspace["pools"]
+    if active_id not in pools or partner_id not in pools:
+        raise ValueError("A valid bilateral pair is required for trade assistance.")
+    sent_ids = tuple(str(item) for item in payload.get("assets_sent") or ())
+    received_ids = tuple(str(item) for item in payload.get("assets_received") or ())
+    by_id = {asset.asset_id: asset for pool in pools.values() for asset in pool}
+    if any(item not in by_id for item in (*sent_ids, *received_ids)):
+        raise ValueError("Trade assistance cannot use unknown assets.")
+    protected = {str(item) for item in payload.get("protected_assets") or ()}
+    excluded = {str(item) for item in payload.get("excluded_assets") or ()}
+    sent = tuple(by_id[item] for item in sent_ids)
+    received = tuple(by_id[item] for item in received_ids)
+    candidates = list(generate_proposals(active_id, partner_id, pools[active_id], pools[partner_id]))
+    active_options = sorted(
+        (asset for asset in pools[active_id] if asset.asset_id not in protected | excluded | set(sent_ids)),
+        key=lambda asset: (abs(asset.trade_value - max((item.trade_value for item in received), default=0)), -asset.trade_value, asset.asset_id),
+    )[:10]
+    partner_options = sorted(
+        (asset for asset in pools[partner_id] if asset.asset_id not in excluded | set(received_ids)),
+        key=lambda asset: (abs(asset.trade_value - max((item.trade_value for item in sent), default=0)), -asset.trade_value, asset.asset_id),
+    )[:10]
+    if sent and received:
+        for asset in active_options:
+            candidates.append(TradeProposal(active_id, partner_id, (*sent, asset), received, "Assisted Addition"))
+            for index in range(len(sent)):
+                if sent[index].asset_id not in protected:
+                    candidates.append(TradeProposal(active_id, partner_id, sent[:index] + (asset,) + sent[index + 1:], received, "Assisted Replacement"))
+        for asset in partner_options:
+            candidates.append(TradeProposal(active_id, partner_id, sent, (*received, asset), "Assisted Return"))
+            for index in range(len(received)):
+                candidates.append(TradeProposal(active_id, partner_id, sent, received[:index] + (asset,) + received[index + 1:], "Alternative Target"))
+        if len(sent) > 1:
+            candidates.extend(TradeProposal(active_id, partner_id, sent[:index] + sent[index + 1:], received, "Assisted Reduction") for index in range(len(sent)) if sent[index].asset_id not in protected)
+        if len(received) > 1:
+            candidates.extend(TradeProposal(active_id, partner_id, sent, received[:index] + received[index + 1:], "Assisted Reduction") for index in range(len(received)))
+    unique: dict[tuple[tuple[str, ...], tuple[str, ...]], TradeProposal] = {}
+    for proposal in candidates:
+        sent_key = tuple(sorted(asset.asset_id for asset in proposal.assets_sent))
+        received_key = tuple(sorted(asset.asset_id for asset in proposal.assets_received))
+        if not sent_key or not received_key or protected.intersection(sent_key) or excluded.intersection((*sent_key, *received_key)):
+            continue
+        unique.setdefault((sent_key, received_key), proposal)
+    return tuple(unique[key] for key in sorted(unique))[:250]
+
+
+def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+    """Return calculated repair/adjustment options, never static action labels."""
+    active_id = int(payload.get("active_roster_id") or 0)
+    workspace = build_trade_workspace(data, active_id)
+    original_sent = set(str(item) for item in payload.get("assets_sent") or ())
+    original_received = set(str(item) for item in payload.get("assets_received") or ())
+    instruction = str(payload.get("instruction") or payload.get("action") or "make this trade work").strip()
+    lowered = instruction.casefold()
+    enriched = dict(payload)
+    protected = {str(item) for item in payload.get("protected_assets") or ()}
+    excluded = {str(item) for item in payload.get("excluded_assets") or ()}
+    active_assets = workspace["pools"].get(active_id, ())
+    all_assets = tuple(asset for pool in workspace["pools"].values() for asset in pool)
+    by_id = {asset.asset_id: asset for asset in all_assets}
+    for asset in active_assets:
+        label = asset.label.casefold()
+        if label in lowered and any(prefix in lowered for prefix in ("don't trade", "do not trade", "keep ", "protect ")):
+            protected.add(asset.asset_id)
+    for asset in all_assets:
+        label = asset.label.casefold()
+        if label in lowered and any(prefix in lowered for prefix in ("replace ", "exclude ", "not this ")):
+            excluded.add(asset.asset_id)
+    enriched["protected_assets"] = sorted(protected)
+    enriched["excluded_assets"] = sorted(excluded)
+    unresolved_reference = (
+        ("keep this player" in lowered or "do not trade this pick" in lowered) and not protected
+    ) or ("replace this asset" in lowered and not excluded)
+    if unresolved_reference:
+        return {
+            "instruction": instruction,
+            "count": 0,
+            "results": [],
+            "quiet_state": "Choose or name the specific player or pick so DTOS can apply that constraint safely.",
+            "calculated": True,
+            "provider_requests": 0,
+            "asset_market_constructions": 0,
+            "constraints": {"protected_assets": sorted(protected), "excluded_assets": sorted(excluded)},
+            "interpretation_error": "specific_asset_required",
+        }
+    original_sent_assets = tuple(by_id[item] for item in original_sent if item in by_id)
+    original_received_assets = tuple(by_id[item] for item in original_received if item in by_id)
+    requested_position = next((position for position in ("WR", "RB", "QB", "TE") if f"{position.casefold()}s instead" in lowered or f"{position.casefold()} instead" in lowered), None)
+    requested_kind = "pick" if "pick" in lowered and "instead" in lowered else None
+    add_pick = "add a pick" in lowered
+    another_player = "another player back" in lowered
+    expand = "expand" in lowered or "bigger deal" in lowered
+    cheaper = "cheaper" in lowered
+    younger = "younger" in lowered
+    win_now = "win-now" in lowered or "win now" in lowered
+    candidates = []
+    for proposal in _bounded_adjustment_candidates(workspace, enriched):
+        result = evaluate_trade_request(data, _proposal_payload(proposal), workspace=workspace)
+        if not result["evaluation"]["generated_trade_eligible"]:
+            continue
+        sent = set(result["proposal"]["assets_sent"])
+        received = set(result["proposal"]["assets_received"])
+        sent_assets = tuple(by_id[item] for item in sent)
+        received_assets = tuple(by_id[item] for item in received)
+        if requested_kind and not any(asset.kind == requested_kind for asset in sent_assets):
+            continue
+        if requested_position and not any(asset.position == requested_position for asset in sent_assets):
+            continue
+        if add_pick and sum(asset.kind == "pick" for asset in (*sent_assets, *received_assets)) <= sum(asset.kind == "pick" for asset in (*original_sent_assets, *original_received_assets)):
+            continue
+        if another_player and sum(asset.kind == "player" for asset in received_assets) <= sum(asset.kind == "player" for asset in original_received_assets):
+            continue
+        if expand and len(sent_assets) + len(received_assets) <= len(original_sent_assets) + len(original_received_assets):
+            continue
+        if cheaper and sum(asset.trade_value for asset in sent_assets) >= sum(asset.trade_value for asset in original_sent_assets):
+            continue
+        original_ages = [asset.age for asset in original_received_assets if asset.age is not None]
+        candidate_ages = [asset.age for asset in received_assets if asset.age is not None]
+        if younger and (not original_ages or not candidate_ages or sum(candidate_ages) / len(candidate_ages) >= sum(original_ages) / len(original_ages)):
+            continue
+        if win_now and sum(asset.redraft_value for asset in received_assets) <= sum(asset.redraft_value for asset in original_received_assets):
+            continue
+        distance = len(sent ^ original_sent) + len(received ^ original_received)
+        target_changed = bool(received != original_received)
+        candidates.append((distance, target_changed, abs(1 - result["evaluation"]["values"]["ratio"]), result))
+    candidates.sort(key=lambda row: (row[0], row[2], row[3]["evaluation"]["provenance"]["evaluation_id"]))
+    closest = candidates[0][3] if candidates else None
+    materially_different = next((row[3] for row in candidates if row[0] >= 2 and not row[1]), None)
+    alternative_target = next((row[3] for row in candidates if row[1]), None)
+    options = []
+    if closest:
+        closest["repair_type"] = "MAKE THIS TRADE WORK"
+        options.append(closest)
+    if materially_different and materially_different is not closest:
+        materially_different["repair_type"] = "ALTERNATIVE CONSTRUCTION"
+        options.append(materially_different)
+    if alternative_target and alternative_target not in options:
+        alternative_target["repair_type"] = "ALTERNATIVE TARGET"
+        options.append(alternative_target)
+    return {
+        "instruction": instruction,
+        "count": len(options),
+        "results": options,
+        "quiet_state": None if options else "No legitimate revised construction clears ownership, market, package-quality, and bilateral gates.",
+        "calculated": True,
+        "provider_requests": 0,
+        "asset_market_constructions": 0,
+        "constraints": {"protected_assets": sorted(protected), "excluded_assets": sorted(excluded)},
+    }
 
 
 def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:

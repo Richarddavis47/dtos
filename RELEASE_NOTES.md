@@ -1,3 +1,25 @@
+# DTOS v1.10.50 - Trade Center Value Integrity and Workflow Conformance
+
+DTOS v1.10.50 corrects the value and workflow defects found through direct
+manager use of the v1.10.49 Trade Center. Neutral Value Fairness now consumes
+the canonical market layer without silently blending in team fit or unsupported
+intrinsic conviction. DTOS opinion remains visible as a distinct strategic
+signal, and Superflex replacement scarcity remains a separate bilateral gate.
+
+Future picks now use their original franchise, projected early/mid/late range,
+confidence, round, and time horizon when synchronized evidence supports that
+classification. Unknown picks remain honestly uncertain and no longer receive
+an automatic premium outcome.
+
+The manager workflow now supports multiple players and picks on both sides.
+Edit Trade retains the complete proposal; Adjust Offer invokes bounded assisted
+generation; and rejected proposals expose calculated repair, alternative
+construction, and alternative-target options only when legitimate candidates
+exist. Assistance reuses one cached workspace and performs no provider calls or
+Asset Market construction.
+
+## Previous release
+
 # DTOS v1.10.49 - Trade Center Overhaul and Bilateral Trade Intelligence
 
 DTOS v1.10.49 establishes the first production Trade Center foundation described

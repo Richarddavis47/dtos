@@ -9,7 +9,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from components.trade_intelligence import trade_center, trade_workflow
-from services.trade_intelligence import autocomplete_trade_assets, build_trade_center, build_trade_workspace, compare_trade_requests, evaluate_trade_request, generate_trade_workflow
+from services.trade_intelligence import assist_trade_request, autocomplete_trade_assets, build_trade_center, build_trade_workspace, compare_trade_requests, evaluate_trade_request, generate_trade_workflow
 from src.core.intelligence.serialization import recommendation_contract
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -104,6 +104,15 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         await ensure_fresh()
         try:
             result = generate_trade_workflow(require_data(), payload)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        return JSONResponse(jsonable_encoder(result))
+
+    @router.post("/api/trades/assist", response_class=JSONResponse)
+    async def assist_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
+        await ensure_fresh()
+        try:
+            result = assist_trade_request(require_data(), payload)
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
         return JSONResponse(jsonable_encoder(result))

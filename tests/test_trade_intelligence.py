@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from routes.trades import create_trades_router
+from services.trade_intelligence import assist_trade_request, build_trade_workspace
 from src.core.asset_intelligence import evaluate_pick, evaluate_player
 from src.core.trade_intelligence import TradeAsset, TradePriority, trade_intelligence
 from src.core.trade_intelligence.engine.trade_generator import generate_proposals
@@ -155,6 +156,48 @@ class TradeIntelligenceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "not available"):
             trade_intelligence.opportunities(self.data, 999)
 
+    def test_trade_workspace_preserves_market_value_for_neutral_fairness(self) -> None:
+        for provider in ("FantasyCalc", "DynastyProcess"):
+            self.data.setdefault("market_data", {}).setdefault("providers", {}).setdefault(provider, {})["1-QB-0"] = {
+                "value": 10000 if provider == "DynastyProcess" else 12000,
+                "confidence": 90,
+            }
+        workspace = build_trade_workspace(self.data, 1)
+        target = next(asset for asset in workspace["pools"][1] if asset.asset_id == "1-QB-0")
+        self.assertEqual(target.trade_value, target.market_value)
+        self.assertNotEqual(target.trade_value, round((target.dynasty_value + target.team_fit_value) / 2))
+
+    def test_pick_range_uses_original_franchise_and_not_current_owner(self) -> None:
+        self.data["teams"].append({
+            "roster_id": 4, "owner": "Owner 4", "team_name": "Team 4",
+            "wins": 0, "losses": 10, "points_for": 500, "max_points": 600,
+            "players": [], "picks_owned": [],
+        })
+        self.data["teams"][0]["picks_owned"].extend([
+            {"season": 2027, "round": 1, "original_team": "Team 4", "original_roster_id": 4, "current_owner_id": 1},
+            {"season": 2027, "round": 1, "original_team": "Team 1", "original_roster_id": 1, "current_owner_id": 1},
+        ])
+        workspace = build_trade_workspace(self.data, 1)
+        picks = {asset.asset_id: asset for asset in workspace["pools"][1] if asset.kind == "pick"}
+        self.assertEqual(picks["2027-R1-4"].projected_range, "EARLY")
+        self.assertEqual(picks["2027-R1-4"].projected_range_confidence, "MEDIUM")
+        self.assertNotEqual(picks["2027-R1-4"].trade_value, picks["2027-R1-1"].trade_value)
+
+    def test_assist_returns_calculated_repair_without_provider_or_market_build(self) -> None:
+        workspace = build_trade_workspace(self.data, 1)
+        sent = workspace["pools"][1][0].asset_id
+        received = workspace["pools"][2][0].asset_id
+        result = assist_trade_request(self.data, {
+            "active_roster_id": 1, "partner_roster_id": 2,
+            "assets_sent": [sent], "assets_received": [received],
+            "instruction": "make this trade work",
+        })
+        self.assertTrue(result["calculated"])
+        self.assertEqual(result["provider_requests"], 0)
+        self.assertEqual(result["asset_market_constructions"], 0)
+        self.assertTrue(result["results"])
+        self.assertIn(result["results"][0]["repair_type"], {"MAKE THIS TRADE WORK", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE TARGET"})
+
     def test_api_and_page_use_same_opportunity_contract(self) -> None:
         async def noop() -> None:
             return None
@@ -207,6 +250,9 @@ class TradeIntelligenceTests(unittest.TestCase):
             self.assertEqual(workflow_page.status_code, 200)
             self.assertIn(f'data-trade-workflow="{marker}"', workflow_page.text)
             self.assertIn("does not submit offers", workflow_page.text)
+            self.assertIn("+ Add player or pick", workflow_page.text)
+            self.assertIn('data-assist-endpoint="/api/trades/assist"', workflow_page.text)
+            self.assertIn("Generate revised offer", workflow_page.text)
         autocomplete = client.get("/api/trades/assets?q=Player&front_office=1")
         self.assertEqual(autocomplete.status_code, 200)
         self.assertTrue(autocomplete.json()["results"])
