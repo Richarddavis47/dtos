@@ -54,9 +54,16 @@ def _pick_asset(pick: dict[str, Any], context: AssetContext, source_roster_id: i
         normalize_pick(report.dynasty_value.score, report.round),
         report.risk.score,
         source_roster_id,
-        normalize_pick(report.dynasty_value.score, report.round),
-        65 if report.round == 1 else 45,
-        report.recommendation.confidence,
+        trade_value=normalize_pick(report.dynasty_value.score, report.round),
+        liquidity_score=65 if report.round == 1 else 45,
+        confidence_score=report.recommendation.confidence,
+        original_roster_id=int(pick.get("original_roster_id") or pick.get("roster_id") or 0) or None,
+        current_owner_id=int(pick.get("current_owner_id") or source_roster_id),
+        season=int(report.season),
+        round=int(report.round),
+        projected_range=str(pick.get("projected_range") or "UNKNOWN").upper(),
+        projected_range_confidence=str(pick.get("projected_range_confidence") or "LOW").upper(),
+        exact_slot=str(pick.get("exact_slot")) if pick.get("exact_slot") else None,
     )
 
 
