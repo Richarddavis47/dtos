@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.10.49 - Trade Center Overhaul and Bilateral Trade Intelligence
+
+- Introduced one workflow-independent bilateral trade evaluation contract for Create Trade, Trade For, Shop Asset, and Recommended Trades.
+- Added explicit Value Fairness, Strategic Fit, Counterparty Plausibility, Package Quality, Best For, and qualitative Confidence dimensions.
+- Added canonical league-configured Optimal Legal Lineup comparison for both teams, including Superflex and unavailable-projection handling.
+- Added legal ownership validation, contextual future-pick identity, bounded generation, quiet states, repair actions, and deterministic evaluation provenance.
+- Reworked the manager-facing Trade landing around the four workflows while preserving existing Trade Intelligence compatibility routes.
+
 ## v1.10.48 - External Visual Mirror Semantic Validator Correction
 
 - Replaced the mirror's stale provider-phrase visibility gate with structured

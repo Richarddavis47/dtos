@@ -47,6 +47,13 @@ class TradeAsset:
     liquidity_score: int = 50
     confidence_score: int = 60
     calibration_status: str = "partially_calibrated"
+    original_roster_id: int | None = None
+    current_owner_id: int | None = None
+    season: int | None = None
+    round: int | None = None
+    projected_range: str | None = None
+    projected_range_confidence: str | None = None
+    exact_slot: str | None = None
 
 
 @dataclass(frozen=True)

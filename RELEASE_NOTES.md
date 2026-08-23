@@ -1,3 +1,17 @@
+# DTOS v1.10.49 - Trade Center Overhaul and Bilateral Trade Intelligence
+
+DTOS v1.10.49 establishes the first production Trade Center foundation described
+by Product & Intelligence Blueprint v0.5. Create Trade, Trade For, Shop Asset,
+and Recommended Trades now share one deterministic bilateral evaluation contract.
+
+The evaluator keeps fairness, strategic fit, counterparty plausibility, package
+quality, best-for context, and qualitative confidence distinct. Generated ideas
+must clear legality and counterparty gates, while manual proposals remain
+analyzable and explicitly identify non-executable constructions. Both rosters are
+compared using the same league-configured Optimal Legal Lineup baseline.
+
+## Previous release
+
 # DTOS v1.10.48 - External Visual Mirror Semantic Validator Correction
 
 DTOS v1.10.48 removes a stale External Visual Mirror validator dependency on

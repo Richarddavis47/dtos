@@ -177,6 +177,48 @@ class TradeIntelligenceTests(unittest.TestCase):
         self.assertIn("Open Trade Dossier", page.text)
         self.assertNotIn("<details open", page.text)
 
+    def test_trade_center_exposes_four_shared_workflows_and_manual_evaluation(self) -> None:
+        async def noop() -> None:
+            return None
+
+        from fastapi.responses import HTMLResponse
+        app = FastAPI()
+        app.include_router(create_trades_router(ensure_fresh=noop, require_data=lambda: self.data, page=lambda _, body: HTMLResponse(body)))
+        client = TestClient(app)
+        workspace = client.get("/api/trades/workspace?front_office=1")
+        self.assertEqual(workspace.status_code, 200)
+        self.assertEqual({item["id"] for item in workspace.json()["workflows"]}, {"create", "trade_for", "shop", "recommended"})
+        teams = {team["roster_id"]: team for team in workspace.json()["teams"]}
+        sent = teams[1]["assets"][0]["asset_id"]
+        received = teams[2]["assets"][0]["asset_id"]
+        response = client.post("/api/trades/evaluate", json={"workflow": "create", "active_roster_id": 1, "partner_roster_id": 2, "assets_sent": [sent], "assets_received": [received]})
+        self.assertEqual(response.status_code, 200)
+        evaluation = response.json()["evaluation"]
+        self.assertTrue(evaluation["provenance"]["workflow_independent"])
+        self.assertIn(evaluation["recommendation"], {"SMASH ACCEPT", "WORTH PURSUING", "FAIR / OPTIONAL", "NOT WORTH IT", "REJECT"})
+        self.assertIn(evaluation["dimensions"]["confidence"]["assessment"], {"HIGH", "MEDIUM", "LOW"})
+        page = client.get("/trades?front_office=1")
+        self.assertIn("Create Trade", page.text)
+        self.assertIn("Trade For", page.text)
+        self.assertIn("Shop Asset", page.text)
+        self.assertIn("Recommended Trades", page.text)
+        for route, marker in (("/trades/create", "create"), ("/trades/trade-for", "trade-for"), ("/trades/shop", "shop"), ("/trades/recommended", "recommended")):
+            workflow_page = client.get(f"{route}?front_office=1")
+            self.assertEqual(workflow_page.status_code, 200)
+            self.assertIn(f'data-trade-workflow="{marker}"', workflow_page.text)
+            self.assertIn("does not submit offers", workflow_page.text)
+        autocomplete = client.get("/api/trades/assets?q=Player&front_office=1")
+        self.assertEqual(autocomplete.status_code, 200)
+        self.assertTrue(autocomplete.json()["results"])
+        self.assertIn("owner_roster_id", autocomplete.json()["results"][0])
+        comparison = client.post("/api/trades/compare", json={"proposals": [
+            {"workflow": "create", "active_roster_id": 1, "partner_roster_id": 2, "assets_sent": [sent], "assets_received": [received]},
+            {"workflow": "trade_for", "active_roster_id": 1, "partner_roster_id": 2, "assets_sent": [sent], "assets_received": [received]},
+        ]})
+        self.assertEqual(comparison.status_code, 200)
+        identities = {row["evaluation"]["provenance"]["evaluation_id"] for row in comparison.json()["comparisons"]}
+        self.assertEqual(len(identities), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
