@@ -34,7 +34,21 @@ def build_trade_center(data: dict[str, Any], active_roster_id: int | None = None
             "rebuild": round(totals(received, "rebuilder") - totals(sent, "rebuilder"), 1),
             "weekly": round(projections(received) - projections(sent), 2),
         }
-    return {"active_team": active_team, "teams": teams, "dossiers": dossiers, "value_impacts": impacts, "unified_recommendation": intelligence.recommendation, "brain": intelligence.brain, "brain_recommendation": intelligence.brain_decision, "decision_confidence": intelligence.brain_decision.confidence}
+    workspace = build_trade_workspace(data, roster_id)
+    canonical_results = []
+    accepted_dossiers = []
+    for dossier in dossiers:
+        result = evaluate_trade_request(data, _proposal_payload(dossier.proposal, "recommended"), workspace=workspace)
+        if not result["evaluation"]["generated_trade_eligible"]:
+            continue
+        accepted_dossiers.append(dossier)
+        result["partner_team_name"] = next(
+            str(team.get("team_name") or team.get("owner") or "Unassigned Franchise")
+            for team in teams if int(team.get("roster_id") or 0) == dossier.proposal.partner_roster_id
+        )
+        result["package_type"] = dossier.proposal.package_type
+        canonical_results.append(result)
+    return {"active_team": active_team, "teams": teams, "dossiers": tuple(accepted_dossiers), "canonical_results": canonical_results, "value_impacts": impacts, "unified_recommendation": intelligence.recommendation, "brain": intelligence.brain, "brain_recommendation": intelligence.brain_decision, "decision_confidence": intelligence.brain_decision.confidence}
 
 
 WORKFLOWS = (
@@ -274,6 +288,59 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     }
 
 
+def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+    """Return up to three distinct, editable approaches to the same negotiation goal."""
+    active_id = int(payload.get("active_roster_id") or 0)
+    workspace = build_trade_workspace(data, active_id)
+    by_id = {asset.asset_id: asset for pool in workspace["pools"].values() for asset in pool}
+    sent_ids = tuple(str(item) for item in payload.get("assets_sent") or ())
+    received_ids = tuple(str(item) for item in payload.get("assets_received") or ())
+    if not sent_ids or not received_ids or any(item not in by_id for item in (*sent_ids, *received_ids)):
+        raise ValueError("Create Trade alternatives require one valid asset on each side.")
+    key_asset_id = str(payload.get("protected_asset_id") or max((by_id[item] for item in sent_ids), key=lambda asset: (asset.trade_value, asset.asset_id)).asset_id)
+    target_id = max((by_id[item] for item in received_ids), key=lambda asset: (asset.trade_value, asset.asset_id)).asset_id
+    original = (frozenset(sent_ids), frozenset(received_ids))
+
+    def evaluated(candidate_payload: dict[str, Any]) -> list[dict[str, Any]]:
+        rows = []
+        for proposal in _bounded_adjustment_candidates(workspace, candidate_payload):
+            result = evaluate_trade_request(data, _proposal_payload(proposal, "create_alternative"), workspace=workspace)
+            if result["evaluation"]["generated_trade_eligible"]:
+                rows.append(result)
+        rows.sort(key=lambda row: (abs(1 - row["evaluation"]["values"]["ratio"]), row["evaluation"]["provenance"]["evaluation_id"]))
+        return rows
+
+    all_rows = evaluated(payload)
+    protected_payload = {**payload, "protected_assets": sorted({*payload.get("protected_assets", ()), key_asset_id})}
+    protected_rows = evaluated(protected_payload)
+    chosen: list[dict[str, Any]] = []
+    seen: set[tuple[frozenset[str], frozenset[str]]] = set()
+
+    def choose(rows: list[dict[str, Any]], label: str, predicate) -> None:
+        for row in rows:
+            sent = frozenset(row["proposal"]["assets_sent"])
+            received = frozenset(row["proposal"]["assets_received"])
+            identity = (sent, received)
+            if identity == original or identity in seen or not predicate(sent, received):
+                continue
+            row["alternative_type"] = label
+            row["protected_asset_id"] = key_asset_id
+            row["target_asset_id"] = target_id
+            chosen.append(row)
+            seen.add(identity)
+            return
+
+    choose(protected_rows, f"KEEP {by_id[key_asset_id].label.upper()}", lambda sent, received: key_asset_id not in sent and target_id in received)
+    choose(all_rows, "SAME TARGET, DIFFERENT PACKAGE", lambda sent, received: target_id in received and len(sent ^ original[0]) + len(received ^ original[1]) >= 2)
+    choose(all_rows, "EXPAND THE DEAL", lambda sent, received: len(sent) + len(received) > len(sent_ids) + len(received_ids))
+    return {
+        "count": len(chosen[:3]), "results": chosen[:3], "protected_asset_id": key_asset_id,
+        "target_asset_id": target_id, "calculated": True, "provider_requests": 0,
+        "asset_market_constructions": 0,
+        "quiet_state": None if chosen else "The original construction is currently the strongest legitimate path; no materially different alternative clears bilateral quality gates.",
+    }
+
+
 def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
     """Bounded generation adapter; manual analysis remains available for any construction."""
     active_id = int(payload.get("active_roster_id") or 0)
@@ -283,25 +350,36 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
     target = str(payload.get("asset_id") or "")
     protected = {str(item) for item in payload.get("protected_assets") or ()}
     excluded = {str(item) for item in payload.get("excluded_assets") or ()}
-    center = build_trade_center(data, active_id)
+    workspace = build_trade_workspace(data, active_id)
+    teams = {int(team.get("roster_id") or 0): team for team in workspace["teams"]}
+    ownership = {asset.asset_id: roster_id for roster_id, pool in workspace["pools"].items() for asset in pool}
+    if target and target not in ownership:
+        raise ValueError("The selected trade asset is no longer available in the canonical league context.")
+    if workflow == "shop" and target and ownership[target] != active_id:
+        raise ValueError("Shop Asset requires an asset currently owned by the active Front Office.")
+    if workflow == "trade_for" and target and ownership[target] == active_id:
+        raise ValueError("Trade For requires an asset currently owned by another franchise.")
+    partner_ids = [ownership[target]] if workflow == "trade_for" and target else [identifier for identifier in sorted(teams) if identifier != active_id]
     generated = []
-    for dossier in center["dossiers"]:
-        sent = tuple(asset.asset_id for asset in dossier.proposal.assets_sent)
-        received = tuple(asset.asset_id for asset in dossier.proposal.assets_received)
-        if protected.intersection(sent) or excluded.intersection((*sent, *received)):
-            continue
-        if workflow == "trade_for" and (not target or target not in received):
-            continue
-        if workflow == "shop" and (not target or target not in sent):
-            continue
-        result = evaluate_trade_request(data, {
-            "workflow": workflow, "active_roster_id": active_id,
-            "partner_roster_id": dossier.proposal.partner_roster_id,
-            "assets_sent": sent, "assets_received": received,
-            "package_type": dossier.proposal.package_type,
-        })
-        if result["evaluation"]["generated_trade_eligible"]:
-            generated.append(result)
+    for partner_id in partner_ids:
+        proposals = generate_proposals(
+            active_id, partner_id, workspace["pools"][active_id], workspace["pools"][partner_id],
+            required_sent_asset_id=target if workflow == "shop" else None,
+            required_received_asset_id=target if workflow == "trade_for" else None,
+        )
+        for proposal in proposals:
+            sent = tuple(asset.asset_id for asset in proposal.assets_sent)
+            received = tuple(asset.asset_id for asset in proposal.assets_received)
+            if protected.intersection(sent) or excluded.intersection((*sent, *received)):
+                continue
+            if workflow == "trade_for" and target not in received:
+                continue
+            if workflow == "shop" and target not in sent:
+                continue
+            result = evaluate_trade_request(data, _proposal_payload(proposal, workflow), workspace=workspace)
+            if result["evaluation"]["generated_trade_eligible"]:
+                result["partner_team_name"] = str(teams[partner_id].get("team_name") or teams[partner_id].get("owner") or "Unassigned Franchise")
+                generated.append(result)
     generated.sort(key=lambda row: (row["evaluation"]["values"]["ratio"] < 1, abs(1 - row["evaluation"]["values"]["ratio"]), row["evaluation"]["provenance"]["evaluation_id"]))
     limit = 5 if workflow in {"shop", "recommended"} else 3
     offer_labels = ("CHEAPEST PLAUSIBLE", "FAIR OFFER", "BEST OFFER") if workflow == "trade_for" else ()

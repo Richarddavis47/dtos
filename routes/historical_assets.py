@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from html import escape
 from typing import Any, Callable
+from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
@@ -117,7 +118,7 @@ def create_historical_assets_router(
         return _response("pick_lineage", len(dossier["events"]), dossier["events"], pick=dossier)
 
     @router.get("/picks/{pick_id}", response_class=HTMLResponse)
-    async def pick_page(pick_id: str) -> HTMLResponse:
+    async def pick_page(pick_id: str, front_office: int | None = None) -> HTMLResponse:
         dossier = graph().pick_dossier(pick_id)
         if dossier is None:
             raise HTTPException(404, "Pick not found")
@@ -130,10 +131,33 @@ def create_historical_assets_router(
             if dossier.get("selected_player_url") else "Not exercised"
         )
         pick_title = f'{dossier.get("season", "Future")} Round {dossier.get("round", "?")} Pick'
+        facts = require_data()
+        teams = facts.get("teams") or ()
+        active_id = int(front_office or (teams[0].get("roster_id") if teams else 0) or 0)
+        original_id = str(dossier.get("original_roster") or "")
+        current_pick = next(
+            (
+                row for row in facts.get("pick_ledger") or ()
+                if int(row.get("season") or 0) == int(dossier.get("season") or 0)
+                and int(row.get("round") or 0) == int(dossier.get("round") or 0)
+                and str(row.get("original_roster_id") or "") == original_id
+            ),
+            None,
+        )
+        trade_action = ""
+        if current_pick:
+            owner_id = int(current_pick.get("current_owner_id") or 0)
+            trade_asset_id = f'{int(current_pick["season"])}-R{int(current_pick["round"])}-{current_pick["original_roster_id"]}'
+            trade_flow = "shop" if owner_id == active_id else "trade-for"
+            trade_label = "Shop Asset" if owner_id == active_id else "Trade For"
+            trade_action = (
+                f'<a class="button" href="/trades/{trade_flow}?front_office={active_id}'
+                f'&asset_id={quote(trade_asset_id, safe="")}&owner_roster_id={owner_id}">{trade_label}</a>'
+            )
         details = technical_details((("Canonical pick identity", pick_id), ("Slot status", dossier.get("slot_status"))))
         body = f'''<a class="back" href="/picks">← Back to Draft Capital</a><h2>{escape(pick_title)}</h2>
 <div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(str(dossier.get("current_owner") or "Unknown"))}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article></div>
-<div class="card"><h3>Pick Conversion</h3><p>{selected}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
+<div class="card"><h3>Pick Conversion</h3><p>{selected}</p><p>{trade_action}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
 <div class="card"><h3>Ownership Chain</h3><table><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div>{details}'''
         return page(f"{pick_id} — Pick Dossier", body)
 

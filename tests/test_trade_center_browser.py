@@ -72,13 +72,13 @@ class TradeCenterBrowserTests(unittest.TestCase):
 
             page.route("**/*", route)
             page.goto("https://dtos.test/trades/create")
-            page.wait_for_function("document.querySelectorAll('#trade-sent option').length === 4")
+            page.wait_for_function("document.querySelectorAll('#trade-sent option').length === 5")
             for value in ("a", "b", "p"):
-                page.select_option("#trade-sent", value)
                 page.click("#trade-add-sent")
+                page.select_option("#trade-sent", value)
             for value in ("x", "y"):
-                page.select_option("#trade-received", value)
                 page.click("#trade-add-received")
+                page.select_option("#trade-received", value)
             self.assertEqual(page.locator("#trade-sent-chips .ti-chip").count(), 3)
             self.assertEqual(page.locator("#trade-received-chips .ti-chip").count(), 2)
             page.locator("#trade-sent-chips .ti-chip").nth(1).locator("button").click()
@@ -90,8 +90,8 @@ class TradeCenterBrowserTests(unittest.TestCase):
 
             page.click("#trade-edit")
             self.assertEqual(page.locator("#trade-sent-chips .ti-chip").count(), 2)
-            page.select_option("#trade-sent", "d")
             page.click("#trade-add-sent")
+            page.select_option("#trade-sent", "d")
             page.click("#trade-run")
             self.assertEqual(requests[1]["assets_sent"], ["a", "p", "d"])
 

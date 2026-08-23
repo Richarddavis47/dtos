@@ -45,6 +45,14 @@ def _package_quality(received: tuple[TradeAsset, ...], outgoing: tuple[TradeAsse
 
 
 def _qualitative_confidence(assets: tuple[TradeAsset, ...]) -> tuple[str, str]:
+    if any(
+        asset.kind == "pick"
+        and not asset.exact_slot
+        and str(asset.projected_range or "UNKNOWN").upper() == "UNKNOWN"
+        and str(asset.projected_range_confidence or "LOW").upper() == "LOW"
+        for asset in assets
+    ):
+        return "LOW", "At least one future pick has an unresolved range with low confidence; no premium outcome is assumed."
     score = min((asset.confidence_score for asset in assets), default=0)
     if score >= 75:
         return "HIGH", "Current market and asset evidence is strong."
@@ -104,7 +112,7 @@ def _elite_qb_downgrade(
 ) -> bool:
     elite = max((asset.trade_value for asset in outgoing if asset.position == "QB"), default=0)
     replacement = max((asset.trade_value for asset in incoming if asset.position == "QB"), default=0)
-    return elite >= 800 and replacement < elite * .85 and incoming_value < elite * .95
+    return elite >= 650 and replacement < elite * .85 and incoming_value < elite * 1.15
 
 
 def evaluate_bilateral(
@@ -170,7 +178,14 @@ def evaluate_bilateral(
         incoming_value=sent_value, outgoing_value=received_value,
         lineup_delta=partner_delta, team_players=partner_players, positions=positions,
     )
-    scarcity_veto = _elite_qb_downgrade(proposal.assets_received, proposal.assets_sent, sent_value)
+    superflex = "SUPER_FLEX" in positions
+    active_scarcity_veto = superflex and _elite_qb_downgrade(
+        proposal.assets_sent, proposal.assets_received, received_value,
+    )
+    partner_scarcity_veto = superflex and _elite_qb_downgrade(
+        proposal.assets_received, proposal.assets_sent, sent_value,
+    )
+    scarcity_veto = active_scarcity_veto or partner_scarcity_veto
     plausible = bool(
         not errors and fairness == "FAIR" and package_clear
         and active_reasons and partner_reasons and not scarcity_veto
@@ -220,7 +235,10 @@ def evaluate_bilateral(
                 "No concrete counterparty lineup, roster, liquidity, or value benefit was established.",
             )),
             "package_quality": {"active": asdict(active_package), "partner": asdict(partner_package)},
-            "best_for": {"active": "BOTH" if plausible else "NEITHER", "partner": "BOTH" if plausible else "NEITHER"},
+            "best_for": {
+                "active": "CONTENDING" if plausible and active_delta is not None and active_delta > .25 else "RETOOLING" if plausible and any(asset.kind == "pick" for asset in proposal.assets_received) else "BOTH" if plausible else "NEITHER",
+                "partner": "CONTENDING" if plausible and partner_delta is not None and partner_delta > .25 else "RETOOLING" if plausible and any(asset.kind == "pick" for asset in proposal.assets_sent) else "BOTH" if plausible else "NEITHER",
+            },
             "confidence": {"assessment": confidence, "explanation": confidence_reason},
         },
         "why_you_would_do_it": " ".join(active_reasons) if active_reasons else "No sufficiently concrete controlled-team reason was established.",
