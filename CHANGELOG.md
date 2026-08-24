@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.10.55 - Controlled Manager Trade Discovery and Mobile Experience
+
+- Replaced Trade Center's first-roster fallback with an explicit league-scoped controlled-manager contract and a safe manager-selection state.
+- Added bounded Trade For funnel evidence and closest-path guidance while preserving all bilateral quality gates.
+- Added ownership revalidation before evaluation and generation.
+- Added a mobile-first roster asset browser with player imagery, positional rank/value context, distinct pick tiles, filters, selected-asset controls, and a neutral live market-balance indicator.
+
 # v1.10.54 - Target-Preserving Trade Repair Mode
 
 - Normalize Trade Center repair requests into three mutually exclusive modes.

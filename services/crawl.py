@@ -10,7 +10,6 @@ from fastapi.encoders import jsonable_encoder
 
 from app_metadata import VERSION
 from services.front_office_intelligence import build_front_office_center
-from services.trade_intelligence import build_trade_center
 from src.core.intelligence.serialization import recommendation_contract
 from services.transactions import normalize_transactions
 from src.core.intelligence.cache import intelligence_cache
@@ -249,15 +248,14 @@ def public_front_offices(data: dict[str, Any]) -> dict[str, Any]:
 def public_trades(data: dict[str, Any]) -> dict[str, Any]:
     if not data.get("teams"):
         return {"valuation_schema_version": VALUATION_SCHEMA_VERSION, "active_front_office": None, "opportunities": [], "value_impacts": {}}
-    view = build_trade_center(data)
     return {
         "valuation_schema_version": VALUATION_SCHEMA_VERSION,
         "team_intelligence_schema_version": TEAM_INTELLIGENCE_SCHEMA_VERSION,
-        "active_front_office": view["active_team"].get("roster_id"),
-        "opportunities": _safe(view["dossiers"]),
-        "value_impacts": _safe(view["value_impacts"]),
-        "recommendation": _safe(view["unified_recommendation"]),
-        "decision_contract": _safe(recommendation_contract(view["unified_recommendation"], view.get("brain_recommendation"))),
+        "status": "manager_context_required",
+        "active_front_office": None,
+        "opportunities": [],
+        "value_impacts": {},
+        "reason": "Choose the franchise you control before requesting manager-specific Trade Intelligence.",
     }
 
 

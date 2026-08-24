@@ -8,7 +8,7 @@ from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from components.trade_intelligence import trade_center, trade_workflow
+from components.trade_intelligence import manager_context_selection, trade_center, trade_workflow
 from services.trade_intelligence import assist_trade_request, autocomplete_trade_assets, build_trade_center, build_trade_workflow_context, build_trade_workspace, compare_trade_requests, create_trade_alternatives, evaluate_trade_request, generate_trade_workflow
 from src.core.intelligence.serialization import recommendation_contract
 from src.core.request_execution import run_manager_read
@@ -38,10 +38,14 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     @router.get("/trades", response_class=HTMLResponse)
     async def trades_page(front_office: int | None = None) -> HTMLResponse:
         await ensure_fresh()
+        if front_office is None:
+            return page("Trade Intelligence", manager_context_selection(list(require_data().get("teams") or [])))
         return page("Trade Intelligence", trade_center(await view(front_office)))
 
     async def workflow_page(workflow: str, front_office: int | None, asset_id: str | None = None, owner_roster_id: int | None = None) -> HTMLResponse:
         await ensure_fresh()
+        if front_office is None:
+            return page("Trade Center", manager_context_selection(list(require_data().get("teams") or []), workflow=workflow))
         try:
             body = trade_workflow(
                 workflow_view(front_office), workflow, asset_id, owner_roster_id,
@@ -69,6 +73,8 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     @router.get("/api/trades", response_class=JSONResponse)
     async def trades_api(front_office: int | None = None) -> JSONResponse:
         await ensure_fresh()
+        if front_office is None:
+            return JSONResponse({"status": "manager_context_required", "active_front_office": None, "count": 0, "opportunities": [], "reason": "Choose the franchise you control before using Trade Center."})
         result = await view(front_office)
         payload = {
             "active_front_office": int(result["active_team"].get("roster_id") or 0),
@@ -98,6 +104,10 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
                     "assets": [
                         {
                             **asdict(asset),
+                            "headshot_url": (
+                                f"https://sleepercdn.com/content/nfl/players/{asset.asset_id}.jpg"
+                                if asset.kind == "player" else None
+                            ),
                             "raw_label": asset.label,
                             "label": (
                                 f"{asset.position} · {asset.label} · {asset.positional_rank} · {asset.trade_value}"
@@ -117,6 +127,12 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             ],
             "session_persistence": "temporary",
             "bilateral_only": True,
+            "manager_context": {
+                "league_id": workspace["manager_context"].league_id,
+                "roster_id": workspace["manager_context"].roster_id,
+                "manager_id": workspace["manager_context"].manager_id,
+                "source": workspace["manager_context"].source,
+            },
         }
         return JSONResponse(jsonable_encoder(payload))
 

@@ -1,6 +1,7 @@
 """Application-facing Trade Intelligence view assembly."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 from hashlib import sha256
@@ -28,6 +29,40 @@ _REPAIR_MODE_ALIASES = {
 }
 
 
+class ManagerContextRequired(ValueError):
+    """Raised when a league is known but the controlled franchise is not."""
+
+
+@dataclass(frozen=True)
+class ControlledManagerContext:
+    league_id: str
+    roster_id: int
+    manager_id: str | None
+    source: str
+
+
+def resolve_controlled_manager_context(
+    data: dict[str, Any], active_roster_id: int | None,
+) -> ControlledManagerContext:
+    """Resolve an explicit, league-scoped manager without guessing a roster."""
+    teams = list(data.get("teams") or [])
+    if not teams:
+        raise ValueError("No Front Office is available for Trade Intelligence.")
+    by_roster = {int(team.get("roster_id") or 0): team for team in teams}
+    if active_roster_id is None:
+        raise ManagerContextRequired("Choose the franchise you control before using Trade Center.")
+    roster_id = int(active_roster_id)
+    if roster_id not in by_roster:
+        raise ManagerContextRequired("The selected franchise is not part of this league context.")
+    team = by_roster[roster_id]
+    return ControlledManagerContext(
+        league_id=str((data.get("league") or {}).get("league_id") or data.get("league_id") or ""),
+        roster_id=roster_id,
+        manager_id=str(team.get("owner_id") or team.get("user_id") or team.get("owner") or "") or None,
+        source="explicit_front_office",
+    )
+
+
 def _repair_mode(payload: dict[str, Any], instruction: str) -> RepairMode:
     explicit = payload.get("repair_mode")
     value = str(explicit if explicit is not None else instruction).strip().casefold().replace("-", " ")
@@ -44,8 +79,8 @@ def build_trade_center(data: dict[str, Any], active_roster_id: int | None = None
     teams = list(data.get("teams") or [])
     if not teams:
         raise ValueError("No Front Office is available for Trade Intelligence.")
-    valid_ids = {int(team.get("roster_id") or 0) for team in teams}
-    roster_id = active_roster_id if active_roster_id in valid_ids else int(teams[0].get("roster_id") or 0)
+    manager = resolve_controlled_manager_context(data, active_roster_id)
+    roster_id = manager.roster_id
     active_team = next(team for team in teams if int(team.get("roster_id") or 0) == roster_id)
     intelligence = intelligence_orchestrator.analyze(data, roster_id)
     dossiers: tuple[Any, ...] = intelligence.trades
@@ -79,7 +114,7 @@ def build_trade_center(data: dict[str, Any], active_roster_id: int | None = None
         )
         result["package_type"] = dossier.proposal.package_type
         canonical_results.append(result)
-    return {"active_team": active_team, "teams": teams, "dossiers": tuple(accepted_dossiers), "canonical_results": canonical_results, "value_impacts": impacts, "unified_recommendation": intelligence.recommendation, "brain": intelligence.brain, "brain_recommendation": intelligence.brain_decision, "decision_confidence": intelligence.brain_decision.confidence}
+    return {"active_team": active_team, "teams": teams, "manager_context": manager, "dossiers": tuple(accepted_dossiers), "canonical_results": canonical_results, "value_impacts": impacts, "unified_recommendation": intelligence.recommendation, "brain": intelligence.brain, "brain_recommendation": intelligence.brain_decision, "decision_confidence": intelligence.brain_decision.confidence}
 
 
 def build_trade_workflow_context(
@@ -89,15 +124,12 @@ def build_trade_workflow_context(
     teams = list(data.get("teams") or [])
     if not teams:
         raise ValueError("No Front Office is available for Trade Intelligence.")
-    valid_ids = {int(team.get("roster_id") or 0) for team in teams}
-    roster_id = (
-        active_roster_id if active_roster_id in valid_ids
-        else int(teams[0].get("roster_id") or 0)
-    )
+    manager = resolve_controlled_manager_context(data, active_roster_id)
+    roster_id = manager.roster_id
     active_team = next(
         team for team in teams if int(team.get("roster_id") or 0) == roster_id
     )
-    return {"active_team": active_team, "teams": teams}
+    return {"active_team": active_team, "teams": teams, "manager_context": manager}
 
 
 WORKFLOWS = (
@@ -122,8 +154,8 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
     teams = list(data.get("teams") or [])
     if not teams:
         raise ValueError("No Front Office is available for Trade Intelligence.")
-    valid_ids = {int(team.get("roster_id") or 0) for team in teams}
-    roster_id = active_roster_id if active_roster_id in valid_ids else int(teams[0].get("roster_id") or 0)
+    manager = resolve_controlled_manager_context(data, active_roster_id)
+    roster_id = manager.roster_id
     model = build_league_model(data)
     decisions = {identifier: report.decision for identifier, report in model.reports.items()}
     player_ids = {str(player.get("id") or player.get("player_id")) for team in teams for player in team.get("players") or ()}
@@ -133,7 +165,7 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
         identifier = int(team.get("roster_id") or 0)
         pools[identifier] = build_asset_pool(data, team, _context(decisions[identifier]), market_values)
     pools = apply_positional_ranks(pools)
-    return {"active_roster_id": roster_id, "teams": teams, "pools": pools, "workflows": WORKFLOWS}
+    return {"active_roster_id": roster_id, "manager_context": manager, "teams": teams, "pools": pools, "workflows": WORKFLOWS}
 
 
 def evaluate_trade_request(
@@ -153,6 +185,10 @@ def evaluate_trade_request(
         raise ValueError(f"Unknown trade assets: {', '.join(unknown)}")
     proposal = TradeProposal(active_id, partner_id, tuple(assets[item] for item in sent_ids), tuple(assets[item] for item in received_ids), str(payload.get("package_type") or "Manual"))
     ownership = {asset.asset_id: asset.source_roster_id for asset in assets.values()}
+    wrong_sent = [item for item in sent_ids if ownership[item] != active_id]
+    wrong_received = [item for item in received_ids if ownership[item] != partner_id]
+    if wrong_sent or wrong_received:
+        raise ValueError("Trade assets no longer match the selected managers' canonical ownership.")
     evaluation = evaluate_bilateral(
         proposal, active_team=teams[active_id], partner_team=teams[partner_id], league=data.get("league") or {},
         player_database=data.get("players") or {}, ownership=ownership,
@@ -171,11 +207,16 @@ def evaluate_trade_request(
     if not evaluation["generated_trade_eligible"]:
         evaluation["repair_paths"] = ["MAKE THIS TRADE WORK", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE TARGET"]
     def summary(item: TradeAsset) -> dict[str, Any]:
+        player_id = item.asset_id.removeprefix("player:") if item.kind == "player" else None
         return {
             "asset_id": item.asset_id, "label": item.label, "kind": item.kind,
             "position": item.position, "positional_rank": item.positional_rank,
             "market_value": item.trade_value, "projected_range": item.projected_range,
             "range_confidence": item.projected_range_confidence,
+            "headshot_url": (
+                f"https://sleepercdn.com/content/nfl/players/{player_id}.jpg"
+                if player_id else None
+            ),
         }
 
     partner_name = str(teams[partner_id].get("team_name") or teams[partner_id].get("owner") or "Unassigned Franchise")
@@ -468,12 +509,15 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
         raise ValueError("Trade For requires an asset currently owned by another franchise.")
     partner_ids = [ownership[target]] if workflow == "trade_for" and target else [identifier for identifier in sorted(teams) if identifier != active_id]
     generated = []
+    proposals_considered = 0
+    proposals_rejected = 0
     for partner_id in partner_ids:
         proposals = generate_proposals(
             active_id, partner_id, workspace["pools"][active_id], workspace["pools"][partner_id],
             required_sent_asset_id=target if workflow == "shop" else None,
             required_received_asset_id=target if workflow == "trade_for" else None,
         )
+        proposals_considered += len(proposals)
         for proposal in proposals:
             sent = tuple(asset.asset_id for asset in proposal.assets_sent)
             received = tuple(asset.asset_id for asset in proposal.assets_received)
@@ -487,6 +531,8 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             if result["evaluation"]["generated_trade_eligible"]:
                 result["partner_team_name"] = str(teams[partner_id].get("team_name") or teams[partner_id].get("owner") or "Unassigned Franchise")
                 generated.append(result)
+            else:
+                proposals_rejected += 1
     generated.sort(key=lambda row: (row["evaluation"]["values"]["ratio"] < 1, abs(1 - row["evaluation"]["values"]["ratio"]), row["evaluation"]["provenance"]["evaluation_id"]))
     limit = 5 if workflow in {"shop", "recommended"} else 3
     offer_labels = ("CHEAPEST PLAUSIBLE", "FAIR OFFER", "BEST OFFER") if workflow == "trade_for" else ()
@@ -494,6 +540,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
         if index < len(offer_labels):
             result["offer_level"] = offer_labels[index]
     next_paths = []
+    closest_path = None
     if not generated and workflow == "trade_for" and target:
         target_asset = next(asset for asset in workspace["pools"][ownership[target]] if asset.asset_id == target)
         next_paths = [
@@ -501,11 +548,26 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             "Protect your cornerstone, then offer a stronger pick or a player-plus-pick package.",
             "Open Create Trade to build the closest legal package manually and inspect the gap.",
         ]
+        closest_path = {
+            "target_asset_id": target,
+            "target_value": target_asset.trade_value,
+            "owner_roster_id": ownership[target],
+            "guidance": next_paths[0],
+        }
     return {
         "workflow": workflow, "target_asset_id": target or None,
         "count": min(len(generated), limit), "results": generated[:limit],
         "quiet_state": None if generated else "No legitimate bilateral construction clears the current constraints.",
         "next_paths": next_paths,
+        "closest_path": closest_path,
+        "search_evidence": {
+            "partner_count": len(partner_ids),
+            "package_shapes": 6,
+            "proposals_considered": proposals_considered,
+            "proposals_rejected": proposals_rejected,
+            "result_count": min(len(generated), limit),
+            "bounded": True,
+        },
         "generated_only_after_counterparty_gate": True,
         "provider_requests": 0,
         "asset_market_constructions": 0,

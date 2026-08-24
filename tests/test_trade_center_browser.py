@@ -82,6 +82,11 @@ class TradeCenterBrowserTests(unittest.TestCase):
             page.route("**/*", route)
             page.goto("https://dtos.test/trades/create")
             page.wait_for_function("document.querySelectorAll('#trade-sent option').length === 5")
+            page.wait_for_selector(".ti-roster-browser")
+            self.assertEqual(page.get_by_role("button", name="YOUR TEAM", exact=True).count(), 1)
+            self.assertEqual(page.get_by_role("button", name="THEIR TEAM", exact=True).count(), 1)
+            self.assertEqual(page.get_by_role("button", name="PICKS", exact=True).count(), 1)
+            self.assertEqual(page.locator(".ti-market-balance").count(), 1)
             for value in ("a", "b", "p"):
                 page.click("#trade-add-sent")
                 page.select_option("#trade-sent", value)
