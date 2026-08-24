@@ -1,4 +1,4 @@
-"""v1.10.53 Trade Builder and target-preserving repair regressions."""
+"""Trade Builder and target-preserving repair regressions."""
 from __future__ import annotations
 
 import unittest
@@ -33,7 +33,9 @@ class TradeRepairContractTests(unittest.TestCase):
         result = assist_trade_request(self.data, {
             **self.payload, "instruction": "make this trade work",
         })
-        self.assertTrue(result["target_preserved"])
+        self.assertEqual(result["requested_mode"], "MAKE_THIS_TRADE_WORK")
+        self.assertEqual(set(result["returned_modes"]), {"MAKE_THIS_TRADE_WORK"} if result["results"] else set())
+        self.assertEqual(result["target_preserved"], True if result["results"] else None)
         for row in result["results"]:
             if row["repair_type"] != "ALTERNATIVE TARGET":
                 self.assertIn(self.target, row["proposal"]["assets_received"])
@@ -50,22 +52,50 @@ class TradeRepairContractTests(unittest.TestCase):
             "instruction": "make this trade work",
         })
         for row in result["results"]:
-            if row["repair_type"] != "ALTERNATIVE TARGET":
-                self.assertIn("2-QB-0", row["proposal"]["assets_received"])
-                self.assertFalse(
-                    tuple(row["proposal"]["assets_sent"]) == ("1-QB-0",)
-                    and all(asset.startswith("2027-") for asset in row["proposal"]["assets_received"]),
-                )
+            self.assertEqual(row["repair_type"], "MAKE THIS TRADE WORK")
+            self.assertEqual(set(row["proposal"]["assets_received"]), {"2-QB-0"})
+            self.assertFalse(
+                tuple(row["proposal"]["assets_sent"]) == ("1-QB-0",)
+                and all(asset.startswith("2027-") for asset in row["proposal"]["assets_received"]),
+            )
 
     def test_alternative_construction_preserves_target_and_only_named_mode_may_change_it(self) -> None:
         result = assist_trade_request(self.data, {
             **self.payload, "instruction": "alternative construction",
         })
+        self.assertEqual(result["requested_mode"], "ALTERNATIVE_CONSTRUCTION")
         for row in result["results"]:
-            if row["repair_type"] in {"MAKE THIS TRADE WORK", "ALTERNATIVE CONSTRUCTION"}:
-                self.assertIn(self.target, row["proposal"]["assets_received"])
-            elif row["repair_type"] == "ALTERNATIVE TARGET":
-                self.assertNotEqual(set(row["proposal"]["assets_received"]), {self.target})
+            self.assertEqual(row["repair_type"], "ALTERNATIVE CONSTRUCTION")
+            self.assertEqual(set(row["proposal"]["assets_received"]), {self.target})
+
+    def test_alternative_target_is_the_only_target_changing_mode(self) -> None:
+        result = assist_trade_request(self.data, {
+            **self.payload, "repair_mode": "ALTERNATIVE_TARGET",
+        })
+        self.assertEqual(result["requested_mode"], "ALTERNATIVE_TARGET")
+        self.assertFalse(result["target_preservation_required"])
+        for row in result["results"]:
+            self.assertEqual(row["repair_type"], "ALTERNATIVE TARGET")
+            self.assertNotEqual(set(row["proposal"]["assets_received"]), {self.target})
+        self.assertEqual(result["target_preserved"], False if result["results"] else None)
+
+    def test_no_target_preserving_candidate_is_honest_non_vacuous_no_path(self) -> None:
+        result = assist_trade_request(self.data, {
+            **self.payload, "repair_mode": "MAKE_THIS_TRADE_WORK",
+            "excluded_assets": [asset.asset_id for asset in self.workspace["pools"][1] if asset.asset_id != self.sent],
+        })
+        self.assertEqual(result["results"], [])
+        self.assertIsNone(result["target_preserved"])
+        self.assertTrue(result["search_completed"])
+        self.assertIn("target-preserving", result["quiet_state"])
+        self.assertIn("ALTERNATIVE_TARGET", result["next_valid_actions"])
+
+    def test_repair_mode_normalization_and_unknown_explicit_mode(self) -> None:
+        for mode in ("MAKE_THIS_TRADE_WORK", "make this trade work", "Make-This-Trade-Work"):
+            result = assist_trade_request(self.data, {**self.payload, "repair_mode": mode})
+            self.assertEqual(result["requested_mode"], "MAKE_THIS_TRADE_WORK")
+        with self.assertRaisesRegex(ValueError, "Unknown trade repair mode"):
+            assist_trade_request(self.data, {**self.payload, "repair_mode": "SURPRISE_ME"})
 
     def test_create_alternatives_preserve_the_declared_target(self) -> None:
         result = create_trade_alternatives(self.data, self.payload)
@@ -87,6 +117,17 @@ class TradeRepairContractTests(unittest.TestCase):
         }, "trade-for")
         self.assertGreaterEqual(html.count("row.proposal_presentation"), 2)
         self.assertIn("'Send '+send+' → Receive '+receive", html)
+
+    def test_rendered_workflow_fails_closed_on_mismatched_repair_mode(self) -> None:
+        html = trade_workflow({
+            "active_team": self.data["teams"][0], "teams": self.data["teams"],
+        }, "create")
+        self.assertIn("repair_mode:expected", html)
+        self.assertIn("body.requested_mode!==expected", html)
+        self.assertIn("body.returned_modes?.some(mode=>mode!==expected)", html)
+        self.assertIn("body.target_preserved!==true", html)
+        self.assertIn("row.proposal.assets_received.length!==chosen.received.length", html)
+        self.assertIn("DTOS rejected a mismatched repair mode.", html)
 
     def test_player_picker_uses_one_neutral_market_positional_rank_contract(self) -> None:
         players = [asset for pool in self.workspace["pools"].values() for asset in pool if asset.kind == "player"]

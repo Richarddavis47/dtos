@@ -1,3 +1,7 @@
+# DTOS v1.10.54 - Target-Preserving Trade Repair Mode
+
+DTOS v1.10.54 is a narrow corrective release for Trade Center repair-mode isolation. Make This Trade Work and Alternative Construction now preserve the requested acquisition target or return an honest no-path result. Only an explicit Alternative Target request may change that target, and response metadata reports the requested mode and target-preservation state without vacuous success.
+
 # DTOS v1.10.53 - Trade Builder and Repair Intelligence
 
 DTOS v1.10.53 makes the Trade Center behave like a bilateral negotiation tool.
