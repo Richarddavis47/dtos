@@ -81,7 +81,13 @@ class TradeCenterBrowserTests(unittest.TestCase):
                 page.select_option("#trade-received", value)
             self.assertEqual(page.locator("#trade-sent-chips .ti-chip").count(), 3)
             self.assertEqual(page.locator("#trade-received-chips .ti-chip").count(), 2)
-            page.locator("#trade-sent-chips .ti-chip").nth(1).locator("button").click()
+            remove_buttons = page.locator("#trade-sent-chips .ti-chip button")
+            self.assertEqual(
+                remove_buttons.evaluate_all("nodes => nodes.map(node => node.getAttribute('aria-label'))"),
+                ["Remove Alpha", "Remove Beta", "Remove 2027 Round 1 — EARLY"],
+            )
+            remove_buttons.nth(1).focus()
+            page.keyboard.press("Enter")
             self.assertEqual(page.locator("#trade-sent-chips .ti-chip").count(), 2)
             page.click("#trade-run")
             page.wait_for_selector("text=MAKE THIS TRADE WORK")

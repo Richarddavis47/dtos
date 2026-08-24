@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ROOT = ROOT / "static" / "inspection"
 
 DOM_SCRIPT = """() => {
- const visible = e => { const r=e.getBoundingClientRect(), s=getComputedStyle(e); return r.width>0&&r.height>0&&s.visibility!=='hidden'&&s.display!=='none'; };
+ const visible = e => { const r=e.getBoundingClientRect(), s=getComputedStyle(e), closed=e.closest('details:not([open])'); return !e.closest('[hidden],[inert]')&&(!closed||closed.querySelector(':scope > summary')?.contains(e))&&r.width>0&&r.height>0&&s.visibility!=='hidden'&&s.display!=='none'; };
  const role = e => e.getAttribute('role') || ({A:'link',BUTTON:'button',TABLE:'table',NAV:'navigation',FORM:'form',H1:'heading',H2:'heading',H3:'heading',IMG:'image'}[e.tagName]||'');
  const rows=[...document.querySelectorAll('header,nav,main,section,article,.card,table,button,a,form,details,h1,h2,h3,img,input,select,textarea')].filter(visible).slice(0,600).map((e,i)=>{
    const r=e.getBoundingClientRect(),s=getComputedStyle(e),text=(e.innerText||e.getAttribute('aria-label')||e.getAttribute('alt')||'').trim().replace(/\\s+/g,' ').slice(0,300);
@@ -35,7 +35,7 @@ DOM_SCRIPT = """() => {
 }"""
 
 A11Y_SCRIPT = """() => {
- const visible=e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'};
+ const visible=e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e),closed=e.closest('details:not([open])');return !e.closest('[hidden],[inert]')&&(!closed||closed.querySelector(':scope > summary')?.contains(e))&&r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'};
  const headings=[...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].filter(visible).map(e=>({level:Number(e.tagName[1]),text:(e.innerText||'').trim()}));
  const unnamedButtons=[...document.querySelectorAll('button')].filter(e=>visible(e)&&!(e.innerText||e.getAttribute('aria-label')||e.title).trim()).length;
  const unnamedLinks=[...document.querySelectorAll('a')].filter(e=>visible(e)&&!(e.innerText||e.getAttribute('aria-label')||e.title).trim()).length;

@@ -11,26 +11,32 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from components.front_office_intelligence import front_office_center
 from services.front_office_intelligence import build_front_office_center
 from src.core.intelligence.serialization import recommendation_contract
+from src.core.request_execution import run_manager_read
 
 
 def create_front_offices_router(*, ensure_fresh: Callable[[], Awaitable[None]], require_data: Callable[[], dict[str, Any]], page: Callable[[str, str], HTMLResponse]) -> APIRouter:
     router = APIRouter(tags=["front-office-intelligence"])
 
-    def view(roster_id: int | None):
+    async def view(roster_id: int | None):
         try:
-            return build_front_office_center(require_data(), roster_id)
+            return await run_manager_read(
+                lambda: build_front_office_center(require_data(), roster_id),
+            )
         except ValueError as exc:
             raise HTTPException(404, str(exc)) from exc
 
     @router.get("/front-offices", response_class=HTMLResponse)
     async def front_offices_page(front_office: int | None = None) -> HTMLResponse:
         await ensure_fresh()
-        return page("Front Office Intelligence", front_office_center(view(front_office)))
+        return page(
+            "Front Office Intelligence",
+            front_office_center(await view(front_office)),
+        )
 
     @router.get("/api/front-offices", response_class=JSONResponse)
     async def front_offices_api(front_office: int | None = None) -> JSONResponse:
         await ensure_fresh()
-        result = view(front_office)
+        result = await view(front_office)
         history = {
             roster_id: {
                 "franchise_id": item["franchise_id"],

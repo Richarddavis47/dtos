@@ -1,3 +1,18 @@
+# DTOS v1.10.52 - Trade Center Accessible Name Correction
+
+DTOS v1.10.52 narrowly corrects the accessibility gate that blocked v1.10.51
+inspection publication. DINS now follows native disclosure visibility semantics,
+and dynamic asset-removal controls identify the exact player or pick they remove.
+Trade workflow pages no longer generate full recommendation intelligence before
+the manager acts, while legitimate Trade computations run without monopolizing
+unrelated request scheduling.
+Front Office and Trade manager views now share the same non-blocking execution
+boundary while preserving their canonical intelligence and rendered output.
+Trade values, recommendations, ownership-aware entry, and assisted workflows are
+unchanged.
+
+## Previous release
+
 # DTOS v1.10.51 - Trade Center Recommendation Quality and Ownership-Aware Entry
 
 DTOS v1.10.51 makes the Trade Center stricter and more useful without changing
