@@ -132,8 +132,7 @@ def create_historical_assets_router(
         )
         pick_title = f'{dossier.get("season", "Future")} Round {dossier.get("round", "?")} Pick'
         facts = require_data()
-        teams = facts.get("teams") or ()
-        active_id = int(front_office or (teams[0].get("roster_id") if teams else 0) or 0)
+        active_id = int(front_office or 0)
         original_id = str(dossier.get("original_roster") or "")
         current_pick = next(
             (
@@ -148,12 +147,15 @@ def create_historical_assets_router(
         if current_pick:
             owner_id = int(current_pick.get("current_owner_id") or 0)
             trade_asset_id = f'{int(current_pick["season"])}-R{int(current_pick["round"])}-{current_pick["original_roster_id"]}'
-            trade_flow = "shop" if owner_id == active_id else "trade-for"
-            trade_label = "Shop Asset" if owner_id == active_id else "Trade For"
-            trade_action = (
-                f'<a class="button" href="/trades/{trade_flow}?front_office={active_id}'
-                f'&asset_id={quote(trade_asset_id, safe="")}&owner_roster_id={owner_id}">{trade_label}</a>'
-            )
+            if active_id:
+                trade_flow = "shop" if owner_id == active_id else "trade-for"
+                trade_label = "Shop Asset" if owner_id == active_id else "Trade For"
+                trade_action = (
+                    f'<a class="button" href="/trades/{trade_flow}?front_office={active_id}'
+                    f'&asset_id={quote(trade_asset_id, safe="")}&owner_roster_id={owner_id}">{trade_label}</a>'
+                )
+            else:
+                trade_action = '<a class="button" href="/trades">Choose a franchise to trade this pick</a>'
         details = technical_details((("Canonical pick identity", pick_id), ("Slot status", dossier.get("slot_status"))))
         body = f'''<a class="back" href="/picks">← Back to Draft Capital</a><h2>{escape(pick_title)}</h2>
 <div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(str(dossier.get("current_owner") or "Unknown"))}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article></div>

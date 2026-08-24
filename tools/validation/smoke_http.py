@@ -297,7 +297,7 @@ def main() -> int:
         "/api/market/search?q=QB", "/api/market/trending", "/api/inspect/market",
     )
     product_pages = {"/", "/market", "/league", "/commissioner", "/teams", "/matchups", "/transactions", "/picks", "/settings", "/history", "/front-offices", "/trades"}
-    recommendation_pages = {"/commissioner", "/front-offices", "/trades"}
+    recommendation_pages = {"/commissioner", "/front-offices"}
     market_pages: dict[str, str] = {}
     for path in major:
         if path == "/market":
@@ -307,6 +307,12 @@ def main() -> int:
             body = get(args.base_url, path)
         if path in product_pages and path != "/market":
             validate_product_contract(body, path, recommendation=path in recommendation_pages)
+        if path == "/trades" and b"Choose your franchise" not in body:
+            raise AssertionError("/trades: explicit manager-context selection is missing")
+        if path == "/api/trades":
+            trade_selection = json.loads(body)
+            if trade_selection.get("status") != "manager_context_required":
+                raise AssertionError("/api/trades: missing explicit manager-context state")
     print(
         "Asset Market page contract ready: "
         f"generation={market_pages['/market']} final_status=200",
@@ -330,8 +336,13 @@ def main() -> int:
         organization = json.loads(get(args.base_url, f"/api/front-offices?front_office={roster_id}"))
         if organization.get("active_front_office") != roster_id:
             raise AssertionError(f"Front Office context {roster_id} did not persist through the API.")
-        get(args.base_url, f"/trades?front_office={roster_id}")
-        get(args.base_url, f"/api/trades?front_office={roster_id}")
+        trade_path = f"/trades?front_office={roster_id}"
+        trade_body = get(args.base_url, trade_path)
+        validate_team_identity(trade_body, trade_path)
+        validate_product_contract(trade_body, trade_path, recommendation=True)
+        trade_api = json.loads(get(args.base_url, f"/api/trades?front_office={roster_id}"))
+        if int(trade_api.get("active_front_office") or 0) != roster_id:
+            raise AssertionError(f"Trade Center context {roster_id} did not persist through the API.")
 
     player_index = json.loads(get(args.base_url, "/api/players"))
     players = player_index.get("players") or []

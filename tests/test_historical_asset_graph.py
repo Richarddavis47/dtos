@@ -187,6 +187,9 @@ class HistoricalAssetGraphTests(unittest.TestCase):
         self.assertEqual(player.json()["identity"]["canonical_id"], "DTOS-P-p1")
         self.assertEqual(pick.json()["selected_player_id"], "DTOS-P-p1")
         self.assertIn('/players/p1', pick_page.text)
+        if "Choose a franchise to trade this pick" in pick_page.text:
+            self.assertIn('href="/trades"', pick_page.text)
+            self.assertNotIn('front_office=1', pick_page.text)
         self.assertIn('/players/p1', trade_page.text)
         self.assertEqual(search.json()["records"][0]["canonical_id"], "DTOS-P-p1")
 
