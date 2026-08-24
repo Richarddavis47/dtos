@@ -1,7 +1,6 @@
 """Trade Intelligence routes."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import asdict
 from typing import Any, Awaitable, Callable
 
@@ -12,6 +11,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from components.trade_intelligence import trade_center, trade_workflow
 from services.trade_intelligence import assist_trade_request, autocomplete_trade_assets, build_trade_center, build_trade_workflow_context, build_trade_workspace, compare_trade_requests, create_trade_alternatives, evaluate_trade_request, generate_trade_workflow
 from src.core.intelligence.serialization import recommendation_contract
+from src.core.request_execution import run_manager_read
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -23,7 +23,9 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
 
     async def view(front_office: int | None) -> dict[str, Any]:
         try:
-            return await asyncio.to_thread(build_trade_center, require_data(), front_office)
+            return await run_manager_read(
+                lambda: build_trade_center(require_data(), front_office),
+            )
         except ValueError as exc:
             raise HTTPException(404, str(exc)) from exc
 
@@ -81,8 +83,8 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     async def trade_workspace(front_office: int | None = None) -> JSONResponse:
         await ensure_fresh()
         try:
-            workspace = await asyncio.to_thread(
-                build_trade_workspace, require_data(), front_office,
+            workspace = await run_manager_read(
+                lambda: build_trade_workspace(require_data(), front_office),
             )
         except ValueError as exc:
             raise HTTPException(404, str(exc)) from exc
@@ -106,7 +108,9 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     async def evaluate_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
-            result = await asyncio.to_thread(evaluate_trade_request, require_data(), payload)
+            result = await run_manager_read(
+                lambda: evaluate_trade_request(require_data(), payload),
+            )
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
         return JSONResponse(jsonable_encoder(result))
@@ -115,7 +119,9 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     async def generate_trades(payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
-            result = await asyncio.to_thread(generate_trade_workflow, require_data(), payload)
+            result = await run_manager_read(
+                lambda: generate_trade_workflow(require_data(), payload),
+            )
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
         return JSONResponse(jsonable_encoder(result))
@@ -124,7 +130,9 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     async def assist_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
-            result = await asyncio.to_thread(assist_trade_request, require_data(), payload)
+            result = await run_manager_read(
+                lambda: assist_trade_request(require_data(), payload),
+            )
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
         return JSONResponse(jsonable_encoder(result))
@@ -133,8 +141,8 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     async def trade_alternatives(payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
-            result = await asyncio.to_thread(
-                create_trade_alternatives, require_data(), payload,
+            result = await run_manager_read(
+                lambda: create_trade_alternatives(require_data(), payload),
             )
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
@@ -144,9 +152,10 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     async def trade_assets(q: str = "", front_office: int | None = None, limit: int = 20) -> JSONResponse:
         await ensure_fresh()
         try:
-            result = await asyncio.to_thread(
-                autocomplete_trade_assets, require_data(), q, front_office,
-                max(1, min(limit, 50)),
+            result = await run_manager_read(
+                lambda: autocomplete_trade_assets(
+                    require_data(), q, front_office, max(1, min(limit, 50)),
+                ),
             )
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
@@ -156,9 +165,10 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     async def compare_trades(payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
-            result = await asyncio.to_thread(
-                compare_trade_requests, require_data(),
-                list(payload.get("proposals") or ()),
+            result = await run_manager_read(
+                lambda: compare_trade_requests(
+                    require_data(), list(payload.get("proposals") or ()),
+                ),
             )
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc

@@ -1,15 +1,20 @@
 """Front Office Intelligence behavioral and integration contracts."""
 from __future__ import annotations
 
+import asyncio
+import threading
+import time
 import unittest
 from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
 
 from routes.front_offices import create_front_offices_router
 from routes.trades import create_trades_router
+from services.front_office_intelligence import build_front_office_center
 from src.core.front_office_intelligence import build_league_model
 from src.core.trade_intelligence import trade_intelligence
 from tests.test_trade_intelligence import fixture_data
@@ -87,6 +92,59 @@ class FrontOfficeIntelligenceTests(unittest.TestCase):
             "recommendation_timestamp", "decision_provenance", "recommendation_explanation",
         ):
             self.assertEqual(office[key], trade[key], key)
+
+
+class FrontOfficeRequestSchedulingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_slow_manager_view_does_not_block_lightweight_requests(self) -> None:
+        data = fixture_data()
+        started = threading.Event()
+
+        async def noop() -> None:
+            return None
+
+        app = FastAPI()
+        app.include_router(create_front_offices_router(
+            ensure_fresh=noop,
+            require_data=lambda: data,
+            page=lambda _, body: HTMLResponse(body),
+        ))
+
+        @app.get("/health/live")
+        async def health_live() -> dict[str, bool]:
+            return {"live": True}
+
+        @app.get("/")
+        async def home() -> dict[str, bool]:
+            return {"ready": True}
+
+        def slow_view(payload: dict, roster_id: int | None = None) -> dict:
+            started.set()
+            time.sleep(0.55)
+            return build_front_office_center(payload, roster_id)
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            with patch(
+                "routes.front_offices.build_front_office_center",
+                side_effect=slow_view,
+            ):
+                manager = asyncio.create_task(client.get("/front-offices?front_office=1"))
+                for _ in range(100):
+                    if started.is_set():
+                        break
+                    await asyncio.sleep(0.005)
+                self.assertTrue(started.is_set())
+                lightweight = []
+                for path in ("/health/live", "/"):
+                    began = time.perf_counter()
+                    response = await client.get(path)
+                    lightweight.append((response, (time.perf_counter() - began) * 1000))
+                manager_response = await manager
+
+        for response, duration_ms in lightweight:
+            self.assertEqual(response.status_code, 200)
+            self.assertLess(duration_ms, 100)
+        self.assertEqual(manager_response.status_code, 200)
 
 
 if __name__ == "__main__":

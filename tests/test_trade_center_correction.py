@@ -207,6 +207,10 @@ class TradeRequestSchedulingTests(unittest.IsolatedAsyncioTestCase):
         async def health_live() -> dict[str, bool]:
             return {"live": True}
 
+        @app.get("/")
+        async def home() -> dict[str, bool]:
+            return {"ready": True}
+
         return app
 
     async def test_slow_trade_center_does_not_block_lightweight_request(self) -> None:
@@ -255,6 +259,20 @@ class TradeRequestSchedulingTests(unittest.IsolatedAsyncioTestCase):
                         response = await client.get(f"{route}?front_office=1")
                         self.assertEqual(response.status_code, 200)
                         self.assertIn('data-front-office="1"', response.text)
+
+    async def test_create_trade_entry_does_not_delay_home(self) -> None:
+        app = self._app(fixture_data())
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            workflow = asyncio.create_task(client.get("/trades/create?front_office=1"))
+            began = time.perf_counter()
+            home = await client.get("/")
+            home_ms = (time.perf_counter() - began) * 1000
+            workflow_response = await workflow
+
+        self.assertEqual(home.status_code, 200)
+        self.assertLess(home_ms, 100)
+        self.assertEqual(workflow_response.status_code, 200)
 
     def test_workflow_context_preserves_front_office_selection(self) -> None:
         data = fixture_data()
