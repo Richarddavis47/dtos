@@ -55,6 +55,7 @@ class TradeAsset:
     projected_range_confidence: str | None = None
     exact_slot: str | None = None
     age: float | None = None
+    positional_rank: str | None = None
 
 
 @dataclass(frozen=True)

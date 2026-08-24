@@ -1,3 +1,18 @@
+# DTOS v1.10.53 - Trade Builder and Repair Intelligence
+
+DTOS v1.10.53 makes the Trade Center behave like a bilateral negotiation tool.
+Repair intelligence now treats the requested receive-side asset as immutable for
+Make This Trade Work and Alternative Construction. Only a clearly labeled
+Alternative Target result may change that goal. Player and pick selection also
+uses one canonical neutral-market rank/value identity, while proposal responses
+show the actual send/receive construction and useful next steps when no honest
+path exists.
+
+The release introduces no request-time provider work or permanent generated
+trade storage and preserves the v1.10.52 manager-read scheduling boundary.
+
+## Previous release
+
 # DTOS v1.10.52 - Trade Center Accessible Name Correction
 
 DTOS v1.10.52 narrowly corrects the accessibility gate that blocked v1.10.51

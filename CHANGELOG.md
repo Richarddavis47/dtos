@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.10.53 - Trade Builder and Repair Intelligence
+
+- Made target preservation a hard contract for Make This Trade Work and Alternative Construction; only explicitly labeled Alternative Target results may replace the requested asset.
+- Added one shared, generation-local neutral-market positional rank contract and richer player/pick identities across Trade Center pickers and search.
+- Added concrete proposal presentation metadata, honest no-path acquisition guidance, and target-preserving bilateral repair regressions.
+- Preserved cached manager reads, zero request-time providers, retired HistoricalStore behavior, and all v1.10.52 scheduling boundaries.
+
 # v1.10.52 - Trade Center Accessible Name Correction
 
 - Corrected DINS visibility classification for controls inside collapsed native disclosures.
