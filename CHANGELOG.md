@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.10.54 - Target-Preserving Trade Repair Mode
+
+- Normalize Trade Center repair requests into three mutually exclusive modes.
+- Prevent Make This Trade Work and Alternative Construction from returning target-changing proposals.
+- Return an honest, structured no-path result when no target-preserving repair clears bilateral quality gates.
+- Make target-preservation evidence non-vacuous and reject unknown explicit repair modes.
+
 # v1.10.53 - Trade Builder and Repair Intelligence
 
 - Made target preservation a hard contract for Make This Trade Work and Alternative Construction; only explicitly labeled Alternative Target results may replace the requested asset.

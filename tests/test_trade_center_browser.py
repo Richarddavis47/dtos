@@ -65,7 +65,16 @@ class TradeCenterBrowserTests(unittest.TestCase):
                 elif request.url.endswith("/api/trades/assist"):
                     payload = request.post_data_json
                     requests.append(payload)
-                    body = {"count": 1, "calculated": True, "results": [evaluation(["p"], ["x"])], "quiet_state": None}
+                    body = {
+                        "count": 1,
+                        "calculated": True,
+                        "requested_mode": "MAKE_THIS_TRADE_WORK",
+                        "returned_modes": ["MAKE_THIS_TRADE_WORK"],
+                        "target_preservation_required": True,
+                        "target_preserved": True,
+                        "results": [evaluation(["p"], ["x", "y"])],
+                        "quiet_state": None,
+                    }
                     request_route.fulfill(status=200, content_type="application/json", body=json.dumps(body))
                 else:
                     request_route.abort()
@@ -107,6 +116,7 @@ class TradeCenterBrowserTests(unittest.TestCase):
             page.wait_for_function("document.querySelectorAll('#trade-sent-chips .ti-chip').length === 1")
             self.assertIn("2027 Round 1", page.locator("#trade-sent-chips .ti-chip").inner_text())
             self.assertIn("Don't trade Alpha", requests[-1]["instruction"])
+            self.assertEqual(requests[-1]["repair_mode"], "MAKE_THIS_TRADE_WORK")
             self.assertEqual(page.locator("body").evaluate("node => node.scrollWidth <= node.clientWidth"), True)
             browser.close()
 

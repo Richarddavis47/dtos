@@ -1,12 +1,43 @@
 """Application-facing Trade Intelligence view assembly."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Any
 from hashlib import sha256
 import json
 
 from src.core.intelligence import AssetContext, TradeAsset, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, evaluate_bilateral, generate_proposals, intelligence_orchestrator
 from src.core.valuation import cached_market_consensus
+
+
+class RepairMode(StrEnum):
+    """Canonical, mutually exclusive Trade Center repair modes."""
+
+    MAKE_THIS_TRADE_WORK = "MAKE_THIS_TRADE_WORK"
+    ALTERNATIVE_CONSTRUCTION = "ALTERNATIVE_CONSTRUCTION"
+    ALTERNATIVE_TARGET = "ALTERNATIVE_TARGET"
+
+
+_REPAIR_MODE_ALIASES = {
+    "make this trade work": RepairMode.MAKE_THIS_TRADE_WORK,
+    "make_this_trade_work": RepairMode.MAKE_THIS_TRADE_WORK,
+    "alternative construction": RepairMode.ALTERNATIVE_CONSTRUCTION,
+    "alternative_construction": RepairMode.ALTERNATIVE_CONSTRUCTION,
+    "alternative target": RepairMode.ALTERNATIVE_TARGET,
+    "alternative_target": RepairMode.ALTERNATIVE_TARGET,
+}
+
+
+def _repair_mode(payload: dict[str, Any], instruction: str) -> RepairMode:
+    explicit = payload.get("repair_mode")
+    value = str(explicit if explicit is not None else instruction).strip().casefold().replace("-", " ")
+    normalized = " ".join(value.split())
+    mode = _REPAIR_MODE_ALIASES.get(normalized) or _REPAIR_MODE_ALIASES.get(normalized.replace(" ", "_"))
+    if mode is not None:
+        return mode
+    if explicit is not None:
+        raise ValueError(f"Unknown trade repair mode: {explicit}")
+    return RepairMode.MAKE_THIS_TRADE_WORK
 
 
 def build_trade_center(data: dict[str, Any], active_roster_id: int | None = None) -> dict[str, Any]:
@@ -236,6 +267,8 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     original_received = set(str(item) for item in payload.get("assets_received") or ())
     instruction = str(payload.get("instruction") or payload.get("action") or "make this trade work").strip()
     lowered = instruction.casefold()
+    requested_mode = _repair_mode(payload, instruction)
+    target_preservation_required = requested_mode is not RepairMode.ALTERNATIVE_TARGET
     enriched = dict(payload)
     protected = {str(item) for item in payload.get("protected_assets") or ()}
     excluded = {str(item) for item in payload.get("excluded_assets") or ()}
@@ -258,6 +291,9 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     if unresolved_reference:
         return {
             "instruction": instruction,
+            "requested_mode": requested_mode.value,
+            "returned_modes": [],
+            "target_preservation_required": target_preservation_required,
             "count": 0,
             "results": [],
             "quiet_state": "Choose or name the specific player or pick so DTOS can apply that constraint safely.",
@@ -266,6 +302,9 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
             "asset_market_constructions": 0,
             "constraints": {"protected_assets": sorted(protected), "excluded_assets": sorted(excluded)},
             "interpretation_error": "specific_asset_required",
+            "target_asset_ids": sorted(original_received),
+            "target_preserved": None,
+            "search_completed": False,
         }
     original_sent_assets = tuple(by_id[item] for item in original_sent if item in by_id)
     original_received_assets = tuple(by_id[item] for item in original_received if item in by_id)
@@ -278,7 +317,10 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     younger = "younger" in lowered
     win_now = "win-now" in lowered or "win now" in lowered
     candidates = []
-    for proposal in _bounded_adjustment_candidates(workspace, enriched, allow_target_change=True):
+    for proposal in _bounded_adjustment_candidates(
+        workspace, enriched,
+        allow_target_change=requested_mode is RepairMode.ALTERNATIVE_TARGET,
+    ):
         result = evaluate_trade_request(data, _proposal_payload(proposal), workspace=workspace)
         if not result["evaluation"]["generated_trade_eligible"]:
             continue
@@ -305,34 +347,51 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
         if win_now and sum(asset.redraft_value for asset in received_assets) <= sum(asset.redraft_value for asset in original_received_assets):
             continue
         distance = len(sent ^ original_sent) + len(received ^ original_received)
-        target_changed = not original_received.issubset(received)
+        target_changed = received != original_received
         candidates.append((distance, target_changed, abs(1 - result["evaluation"]["values"]["ratio"]), result))
     candidates.sort(key=lambda row: (row[0], row[2], row[3]["evaluation"]["provenance"]["evaluation_id"]))
     target_preserving = [row for row in candidates if not row[1]]
     closest = target_preserving[0][3] if target_preserving else None
     materially_different = next((row[3] for row in target_preserving if row[0] >= 2), None)
     alternative_target = next((row[3] for row in candidates if row[1]), None)
-    options = []
-    if closest:
+    options: list[dict[str, Any]] = []
+    if requested_mode is RepairMode.MAKE_THIS_TRADE_WORK and closest:
         closest["repair_type"] = "MAKE THIS TRADE WORK"
         options.append(closest)
-    if materially_different and materially_different is not closest:
+    if requested_mode is RepairMode.ALTERNATIVE_CONSTRUCTION and materially_different:
         materially_different["repair_type"] = "ALTERNATIVE CONSTRUCTION"
         options.append(materially_different)
-    if alternative_target and alternative_target not in options:
+    if requested_mode is RepairMode.ALTERNATIVE_TARGET and alternative_target:
         alternative_target["repair_type"] = "ALTERNATIVE TARGET"
         options.append(alternative_target)
+    target_preserved = (
+        all(set(row["proposal"]["assets_received"]) == original_received for row in options)
+        if options else None
+    )
+    no_path = {
+        RepairMode.MAKE_THIS_TRADE_WORK: "No realistic target-preserving repair clears the current ownership, market, package-quality, and bilateral gates.",
+        RepairMode.ALTERNATIVE_CONSTRUCTION: "No materially different target-preserving construction clears the current quality gates.",
+        RepairMode.ALTERNATIVE_TARGET: "No realistic alternative target clears the current quality gates.",
+    }[requested_mode]
     return {
         "instruction": instruction,
+        "requested_mode": requested_mode.value,
+        "returned_modes": [requested_mode.value for _ in options],
+        "target_preservation_required": target_preservation_required,
         "count": len(options),
         "results": options,
-        "quiet_state": None if options else "No legitimate revised construction clears ownership, market, package-quality, and bilateral gates.",
+        "quiet_state": None if options else no_path,
+        "search_completed": True,
+        "next_valid_actions": (
+            ["ALTERNATIVE_CONSTRUCTION", "ALTERNATIVE_TARGET", "RELAX_CONSTRAINTS"]
+            if target_preservation_required and not options else []
+        ),
         "calculated": True,
         "provider_requests": 0,
         "asset_market_constructions": 0,
         "constraints": {"protected_assets": sorted(protected), "excluded_assets": sorted(excluded)},
         "target_asset_ids": sorted(original_received),
-        "target_preserved": all(original_received.issubset(set(row["proposal"]["assets_received"])) for row in options if row.get("repair_type") != "ALTERNATIVE TARGET"),
+        "target_preserved": target_preserved,
     }
 
 
