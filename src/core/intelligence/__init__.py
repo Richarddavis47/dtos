@@ -12,6 +12,7 @@ from src.core.front_office_intelligence import build_league_model
 from src.core.trade_intelligence.bilateral import evaluate_bilateral
 from src.core.trade_intelligence.engine.trade_generator import generate_proposals
 from src.core.trade_intelligence.market import build_asset_pool
-from src.core.trade_intelligence.models import TradeProposal
+from src.core.trade_intelligence.market.positional_rank import apply_positional_ranks
+from src.core.trade_intelligence.models import TradeAsset, TradeProposal
 
-__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "TradeProposal", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "build_asset_pool", "build_context", "build_league_model", "calculate_confidence", "evaluate_bilateral", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry"]
+__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "TradeAsset", "TradeProposal", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "apply_positional_ranks", "build_asset_pool", "build_context", "build_league_model", "calculate_confidence", "evaluate_bilateral", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry"]

@@ -95,7 +95,23 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
                 {
                     "roster_id": int(team.get("roster_id") or 0),
                     "team_name": str(team.get("team_name") or team.get("owner") or "Unassigned Franchise"),
-                    "assets": [asdict(asset) for asset in workspace["pools"][int(team.get("roster_id") or 0)]],
+                    "assets": [
+                        {
+                            **asdict(asset),
+                            "raw_label": asset.label,
+                            "label": (
+                                f"{asset.position} · {asset.label} · {asset.positional_rank} · {asset.trade_value}"
+                                if asset.kind == "player"
+                                else f"{asset.label} · {asset.projected_range or 'UNKNOWN'} · {asset.projected_range_confidence or 'LOW'} · {asset.trade_value}"
+                            ),
+                            "display_label": (
+                                f"{asset.position} · {asset.label} · {asset.positional_rank} · {asset.trade_value}"
+                                if asset.kind == "player"
+                                else f"{asset.label} · {asset.projected_range or 'UNKNOWN'} · {asset.projected_range_confidence or 'LOW'} · {asset.trade_value}"
+                            ),
+                        }
+                        for asset in workspace["pools"][int(team.get("roster_id") or 0)]
+                    ],
                 }
                 for team in workspace["teams"]
             ],

@@ -5,7 +5,7 @@ from typing import Any
 from hashlib import sha256
 import json
 
-from src.core.intelligence import AssetContext, TradeProposal, build_asset_pool, build_league_model, evaluate_bilateral, generate_proposals, intelligence_orchestrator
+from src.core.intelligence import AssetContext, TradeAsset, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, evaluate_bilateral, generate_proposals, intelligence_orchestrator
 from src.core.valuation import cached_market_consensus
 
 
@@ -101,6 +101,7 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
     for team in teams:
         identifier = int(team.get("roster_id") or 0)
         pools[identifier] = build_asset_pool(data, team, _context(decisions[identifier]), market_values)
+    pools = apply_positional_ranks(pools)
     return {"active_roster_id": roster_id, "teams": teams, "pools": pools, "workflows": WORKFLOWS}
 
 
@@ -138,7 +139,27 @@ def evaluate_trade_request(
     evaluation["actions"] = ["EDIT TRADE", "ADJUST OFFER"]
     if not evaluation["generated_trade_eligible"]:
         evaluation["repair_paths"] = ["MAKE THIS TRADE WORK", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE TARGET"]
-    return {"workflow": str(payload.get("workflow") or "create"), "proposal": {"active_roster_id": active_id, "partner_roster_id": partner_id, "assets_sent": sent_ids, "assets_received": received_ids}, "evaluation": evaluation}
+    def summary(item: TradeAsset) -> dict[str, Any]:
+        return {
+            "asset_id": item.asset_id, "label": item.label, "kind": item.kind,
+            "position": item.position, "positional_rank": item.positional_rank,
+            "market_value": item.trade_value, "projected_range": item.projected_range,
+            "range_confidence": item.projected_range_confidence,
+        }
+
+    partner_name = str(teams[partner_id].get("team_name") or teams[partner_id].get("owner") or "Unassigned Franchise")
+    return {
+        "workflow": str(payload.get("workflow") or "create"),
+        "proposal": {"active_roster_id": active_id, "partner_roster_id": partner_id, "assets_sent": sent_ids, "assets_received": received_ids},
+        "proposal_presentation": {
+            "partner_team_name": partner_name,
+            "send": [summary(assets[item]) for item in sent_ids],
+            "receive": [summary(assets[item]) for item in received_ids],
+            "best_for": evaluation.get("dimensions", {}).get("best_for", {}).get("active", "UNRESOLVED"),
+            "confidence": evaluation.get("dimensions", {}).get("confidence", {}).get("assessment", "UNRESOLVED"),
+        },
+        "evaluation": evaluation,
+    }
 
 
 def _proposal_payload(proposal: TradeProposal, workflow: str = "adjust") -> dict[str, Any]:
@@ -152,7 +173,9 @@ def _proposal_payload(proposal: TradeProposal, workflow: str = "adjust") -> dict
     }
 
 
-def _bounded_adjustment_candidates(workspace: dict[str, Any], payload: dict[str, Any]) -> tuple[TradeProposal, ...]:
+def _bounded_adjustment_candidates(
+    workspace: dict[str, Any], payload: dict[str, Any], *, allow_target_change: bool = False,
+) -> tuple[TradeProposal, ...]:
     """Build deterministic nearby and generated alternatives from cached pools only."""
     active_id = int(payload.get("active_roster_id") or 0)
     partner_id = int(payload.get("partner_roster_id") or 0)
@@ -185,17 +208,21 @@ def _bounded_adjustment_candidates(workspace: dict[str, Any], payload: dict[str,
                     candidates.append(TradeProposal(active_id, partner_id, sent[:index] + (asset,) + sent[index + 1:], received, "Assisted Replacement"))
         for asset in partner_options:
             candidates.append(TradeProposal(active_id, partner_id, sent, (*received, asset), "Assisted Return"))
-            for index in range(len(received)):
-                candidates.append(TradeProposal(active_id, partner_id, sent, received[:index] + (asset,) + received[index + 1:], "Alternative Target"))
+            if allow_target_change:
+                for index in range(len(received)):
+                    candidates.append(TradeProposal(active_id, partner_id, sent, received[:index] + (asset,) + received[index + 1:], "Alternative Target"))
         if len(sent) > 1:
             candidates.extend(TradeProposal(active_id, partner_id, sent[:index] + sent[index + 1:], received, "Assisted Reduction") for index in range(len(sent)) if sent[index].asset_id not in protected)
         if len(received) > 1:
             candidates.extend(TradeProposal(active_id, partner_id, sent, received[:index] + received[index + 1:], "Assisted Reduction") for index in range(len(received)))
     unique: dict[tuple[tuple[str, ...], tuple[str, ...]], TradeProposal] = {}
+    required_targets = set(received_ids)
     for proposal in candidates:
         sent_key = tuple(sorted(asset.asset_id for asset in proposal.assets_sent))
         received_key = tuple(sorted(asset.asset_id for asset in proposal.assets_received))
-        if not sent_key or not received_key or protected.intersection(sent_key) or excluded.intersection((*sent_key, *received_key)):
+        if (not sent_key or not received_key or protected.intersection(sent_key)
+                or excluded.intersection((*sent_key, *received_key))
+                or (not allow_target_change and not required_targets.issubset(received_key))):
             continue
         unique.setdefault((sent_key, received_key), proposal)
     return tuple(unique[key] for key in sorted(unique))[:250]
@@ -251,7 +278,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     younger = "younger" in lowered
     win_now = "win-now" in lowered or "win now" in lowered
     candidates = []
-    for proposal in _bounded_adjustment_candidates(workspace, enriched):
+    for proposal in _bounded_adjustment_candidates(workspace, enriched, allow_target_change=True):
         result = evaluate_trade_request(data, _proposal_payload(proposal), workspace=workspace)
         if not result["evaluation"]["generated_trade_eligible"]:
             continue
@@ -278,11 +305,12 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
         if win_now and sum(asset.redraft_value for asset in received_assets) <= sum(asset.redraft_value for asset in original_received_assets):
             continue
         distance = len(sent ^ original_sent) + len(received ^ original_received)
-        target_changed = bool(received != original_received)
+        target_changed = not original_received.issubset(received)
         candidates.append((distance, target_changed, abs(1 - result["evaluation"]["values"]["ratio"]), result))
     candidates.sort(key=lambda row: (row[0], row[2], row[3]["evaluation"]["provenance"]["evaluation_id"]))
-    closest = candidates[0][3] if candidates else None
-    materially_different = next((row[3] for row in candidates if row[0] >= 2 and not row[1]), None)
+    target_preserving = [row for row in candidates if not row[1]]
+    closest = target_preserving[0][3] if target_preserving else None
+    materially_different = next((row[3] for row in target_preserving if row[0] >= 2), None)
     alternative_target = next((row[3] for row in candidates if row[1]), None)
     options = []
     if closest:
@@ -303,6 +331,8 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
         "provider_requests": 0,
         "asset_market_constructions": 0,
         "constraints": {"protected_assets": sorted(protected), "excluded_assets": sorted(excluded)},
+        "target_asset_ids": sorted(original_received),
+        "target_preserved": all(original_received.issubset(set(row["proposal"]["assets_received"])) for row in options if row.get("repair_type") != "ALTERNATIVE TARGET"),
     }
 
 
@@ -404,11 +434,22 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
     for index, result in enumerate(generated[:limit]):
         if index < len(offer_labels):
             result["offer_level"] = offer_labels[index]
+    next_paths = []
+    if not generated and workflow == "trade_for" and target:
+        target_asset = next(asset for asset in workspace["pools"][ownership[target]] if asset.asset_id == target)
+        next_paths = [
+            f"Add meaningful value to reach {target_asset.label}'s neutral market tier.",
+            "Protect your cornerstone, then offer a stronger pick or a player-plus-pick package.",
+            "Open Create Trade to build the closest legal package manually and inspect the gap.",
+        ]
     return {
         "workflow": workflow, "target_asset_id": target or None,
         "count": min(len(generated), limit), "results": generated[:limit],
         "quiet_state": None if generated else "No legitimate bilateral construction clears the current constraints.",
+        "next_paths": next_paths,
         "generated_only_after_counterparty_gate": True,
+        "provider_requests": 0,
+        "asset_market_constructions": 0,
         "constraints": {"protected_assets": sorted(protected), "excluded_assets": sorted(excluded)},
     }
 
@@ -432,7 +473,8 @@ def autocomplete_trade_assets(data: dict[str, Any], query: str, active_roster_id
                 "position": asset.position, "owner_roster_id": roster_id, "owner_team_name": team_name,
                 "owned_by_active_roster": roster_id == workspace["active_roster_id"],
                 "projected_range": asset.projected_range, "range_confidence": asset.projected_range_confidence,
-                "exact_slot": asset.exact_slot,
+                "exact_slot": asset.exact_slot, "positional_rank": asset.positional_rank,
+                "market_value": asset.trade_value,
             })
     rows.sort(key=lambda row: (not str(row["label"]).casefold().startswith(needle), str(row["label"]).casefold(), row["asset_id"]))
     return {"query": query, "count": min(len(rows), limit), "results": rows[:limit], "ownership_revalidation_required": True}
