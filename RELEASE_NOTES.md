@@ -3,6 +3,9 @@
 DTOS v1.10.52 narrowly corrects the accessibility gate that blocked v1.10.51
 inspection publication. DINS now follows native disclosure visibility semantics,
 and dynamic asset-removal controls identify the exact player or pick they remove.
+Trade workflow pages no longer generate full recommendation intelligence before
+the manager acts, while legitimate Trade computations run without monopolizing
+unrelated request scheduling.
 Trade values, recommendations, ownership-aware entry, and assisted workflows are
 unchanged.
 

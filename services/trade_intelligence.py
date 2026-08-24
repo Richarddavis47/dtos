@@ -51,6 +51,24 @@ def build_trade_center(data: dict[str, Any], active_roster_id: int | None = None
     return {"active_team": active_team, "teams": teams, "dossiers": tuple(accepted_dossiers), "canonical_results": canonical_results, "value_impacts": impacts, "unified_recommendation": intelligence.recommendation, "brain": intelligence.brain, "brain_recommendation": intelligence.brain_decision, "decision_confidence": intelligence.brain_decision.confidence}
 
 
+def build_trade_workflow_context(
+    data: dict[str, Any], active_roster_id: int | None = None,
+) -> dict[str, Any]:
+    """Return only the league identity needed for an initial workflow render."""
+    teams = list(data.get("teams") or [])
+    if not teams:
+        raise ValueError("No Front Office is available for Trade Intelligence.")
+    valid_ids = {int(team.get("roster_id") or 0) for team in teams}
+    roster_id = (
+        active_roster_id if active_roster_id in valid_ids
+        else int(teams[0].get("roster_id") or 0)
+    )
+    active_team = next(
+        team for team in teams if int(team.get("roster_id") or 0) == roster_id
+    )
+    return {"active_team": active_team, "teams": teams}
+
+
 WORKFLOWS = (
     {"id": "create", "label": "Create Trade", "description": "Manually build and evaluate any bilateral proposal."},
     {"id": "trade_for", "label": "Trade For", "description": "Choose another team's asset and find realistic acquisition paths."},

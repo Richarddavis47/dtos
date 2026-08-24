@@ -1,17 +1,23 @@
 """v1.10.50 value-integrity and manager-workflow regressions."""
 from __future__ import annotations
 
+import asyncio
+import threading
+import time
 import unittest
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
 
 from routes.trades import create_trades_router
 from components.trade_intelligence import trade_workflow
 from services.trade_intelligence import (
     assist_trade_request,
     build_trade_center,
+    build_trade_workflow_context,
     build_trade_workspace,
     create_trade_alternatives,
     generate_trade_workflow,
@@ -182,6 +188,79 @@ class TradeWorkflowConformanceTests(unittest.TestCase):
         self.assertLessEqual(alternatives["count"], 3)
         self.assertEqual(alternatives["provider_requests"], 0)
         self.assertEqual(alternatives["asset_market_constructions"], 0)
+
+
+class TradeRequestSchedulingTests(unittest.IsolatedAsyncioTestCase):
+    @staticmethod
+    def _app(data: dict) -> FastAPI:
+        async def noop() -> None:
+            return None
+
+        app = FastAPI()
+        app.include_router(create_trades_router(
+            ensure_fresh=noop,
+            require_data=lambda: data,
+            page=lambda _, body: HTMLResponse(body),
+        ))
+
+        @app.get("/health/live")
+        async def health_live() -> dict[str, bool]:
+            return {"live": True}
+
+        return app
+
+    async def test_slow_trade_center_does_not_block_lightweight_request(self) -> None:
+        data = fixture_data()
+        app = self._app(data)
+        started = threading.Event()
+        real_builder = build_trade_center
+
+        def slow_builder(payload: dict, roster_id: int | None = None) -> dict:
+            started.set()
+            time.sleep(0.55)
+            return real_builder(payload, roster_id)
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            with patch("routes.trades.build_trade_center", side_effect=slow_builder):
+                trade = asyncio.create_task(client.get("/trades?front_office=1"))
+                for _ in range(100):
+                    if started.is_set():
+                        break
+                    await asyncio.sleep(0.005)
+                self.assertTrue(started.is_set())
+                began = time.perf_counter()
+                health = await client.get("/health/live")
+                health_ms = (time.perf_counter() - began) * 1000
+                trade_response = await trade
+
+        self.assertEqual(health.status_code, 200)
+        self.assertLess(health_ms, 100)
+        self.assertEqual(trade_response.status_code, 200)
+
+    async def test_workflow_pages_do_not_build_eager_trade_intelligence(self) -> None:
+        data = fixture_data()
+        app = self._app(data)
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            with patch(
+                "routes.trades.build_trade_center",
+                side_effect=AssertionError("workflow render must remain lightweight"),
+            ):
+                for route in (
+                    "/trades/create", "/trades/recommended",
+                    "/trades/shop", "/trades/trade-for",
+                ):
+                    with self.subTest(route=route):
+                        response = await client.get(f"{route}?front_office=1")
+                        self.assertEqual(response.status_code, 200)
+                        self.assertIn('data-front-office="1"', response.text)
+
+    def test_workflow_context_preserves_front_office_selection(self) -> None:
+        data = fixture_data()
+        context = build_trade_workflow_context(data, 2)
+        self.assertEqual(context["active_team"]["roster_id"], 2)
+        self.assertEqual(context["teams"], data["teams"])
 
 
 if __name__ == "__main__":

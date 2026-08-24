@@ -4,6 +4,7 @@
 
 - Corrected DINS visibility classification for controls inside collapsed native disclosures.
 - Added contextual accessible names to dynamic Trade Center asset-removal buttons.
+- Kept Trade Center intelligence and workspace computation off the request event loop, and removed full intelligence generation from initial workflow-page rendering.
 - Preserved every v1.10.51 recommendation and workflow contract unchanged.
 
 # v1.10.51 - Trade Center Recommendation Quality and Ownership-Aware Entry
