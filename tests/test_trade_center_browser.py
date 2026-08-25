@@ -1,4 +1,4 @@
-"""Real-browser Trade Center interaction regressions for v1.10.50."""
+"""Real-browser Trade Center interaction regressions through v1.10.56."""
 from __future__ import annotations
 
 import json
@@ -10,6 +10,89 @@ from components.trade_intelligence import trade_workflow
 
 
 class TradeCenterBrowserTests(unittest.TestCase):
+    def test_asset_browser_filters_match_computed_visibility_at_all_breakpoints(self) -> None:
+        html = trade_workflow({
+            "active_team": {"roster_id": 1, "team_name": "Active"},
+        }, "create")
+
+        def assets(prefix: str) -> list[dict]:
+            return [
+                {"asset_id": f"{prefix}-qb", "label": f"{prefix} Quarterback", "raw_label": f"{prefix} Quarterback", "kind": "player", "position": "QB", "positional_rank": "QB1", "trade_value": 700},
+                {"asset_id": f"{prefix}-rb", "label": f"{prefix} Running Back", "raw_label": f"{prefix} Running Back", "kind": "player", "position": "RB", "positional_rank": "RB1", "trade_value": 600},
+                {"asset_id": f"{prefix}-wr", "label": f"{prefix} Receiver", "raw_label": f"{prefix} Receiver", "kind": "player", "position": "WR", "positional_rank": "WR1", "trade_value": 500},
+                {"asset_id": f"{prefix}-te", "label": f"{prefix} Tight End", "raw_label": f"{prefix} Tight End", "kind": "player", "position": "TE", "positional_rank": "TE1", "trade_value": 400},
+                {"asset_id": f"{prefix}-pick", "label": f"2028 Round 1 ({prefix})", "raw_label": f"2028 Round 1 ({prefix})", "kind": "pick", "projected_range": "MID", "projected_range_confidence": "MEDIUM", "trade_value": 450},
+            ]
+
+        workspace = {
+            "teams": [
+                {"roster_id": 1, "team_name": "Active", "assets": assets("Active")},
+                {"roster_id": 2, "team_name": "Partner", "assets": assets("Partner")},
+                {"roster_id": 3, "team_name": "Other", "assets": assets("Other")},
+            ],
+        }
+        viewports = ((1280, 900), (820, 1180), (390, 844))
+        filters = ("ALL", "QB", "RB", "WR", "TE", "PICKS")
+
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=True)
+            for width, height in viewports:
+                with self.subTest(viewport=f"{width}x{height}"):
+                    page = browser.new_page(viewport={"width": width, "height": height})
+                    page.set_default_timeout(5_000)
+
+                    def route(request_route) -> None:
+                        if request_route.request.url.endswith("/trades/create"):
+                            request_route.fulfill(status=200, content_type="text/html", body=html)
+                        elif "/api/trades/workspace" in request_route.request.url:
+                            request_route.fulfill(status=200, content_type="application/json", body=json.dumps(workspace))
+                        else:
+                            request_route.abort()
+
+                    page.route("**/*", route)
+                    page.goto("https://dtos.test/trades/create")
+                    page.wait_for_selector(".ti-roster-browser")
+
+                    def assert_filter(side: str, position: str) -> None:
+                        page.get_by_role("button", name=side, exact=True).click()
+                        page.get_by_role("button", name=position, exact=True).click()
+                        expected = 5 if position == "ALL" else 1
+                        semantic = page.locator(".ti-asset-tile:not([hidden])").count()
+                        computed = page.locator(".ti-asset-tile").evaluate_all(
+                            "nodes => nodes.filter(node => getComputedStyle(node).display !== 'none' && node.getBoundingClientRect().height > 0).length"
+                        )
+                        visible_groups = page.locator(".ti-roster-group").evaluate_all(
+                            "nodes => nodes.filter(node => getComputedStyle(node).display !== 'none' && node.getBoundingClientRect().height > 0).length"
+                        )
+                        self.assertEqual((semantic, computed, visible_groups), (expected, expected, 1))
+                        expected_prefix = "Active" if side == "YOUR TEAM" else "Partner"
+                        labels = page.locator(".ti-asset-tile:not([hidden])").evaluate_all(
+                            "nodes => nodes.map(node => node.dataset.assetLabel)"
+                        )
+                        self.assertTrue(all(label.startswith(expected_prefix) or label.startswith("2028") and expected_prefix in label for label in labels))
+
+                    for side in ("YOUR TEAM", "THEIR TEAM"):
+                        for position in filters:
+                            assert_filter(side, position)
+
+                    page.get_by_role("button", name="YOUR TEAM", exact=True).focus()
+                    page.keyboard.press("Enter")
+                    page.get_by_role("button", name="ALL", exact=True).click()
+                    page.get_by_role("button", name="Add Active Quarterback to assets you send", exact=True).click()
+                    page.get_by_role("button", name="THEIR TEAM", exact=True).click()
+                    page.get_by_role("button", name="QB", exact=True).click()
+                    page.get_by_role("button", name="Add Partner Quarterback to assets you receive", exact=True).click()
+                    self.assertEqual(page.locator("#trade-sent-chips .ti-chip").count(), 1)
+                    self.assertEqual(page.locator("#trade-received-chips .ti-chip").count(), 1)
+                    totals = page.locator(".ti-market-balance strong").all_text_contents()
+                    page.get_by_role("button", name="PICKS", exact=True).click()
+                    self.assertEqual(page.locator("#trade-sent-chips .ti-chip").count(), 1)
+                    self.assertEqual(page.locator("#trade-received-chips .ti-chip").count(), 1)
+                    self.assertEqual(page.locator(".ti-market-balance strong").all_text_contents(), totals)
+                    self.assertFalse(page.locator(":focus").evaluate("node => node.hidden"))
+                    page.close()
+            browser.close()
+
     def test_multi_asset_edit_adjust_and_repair_execute(self) -> None:
         html = trade_workflow({
             "active_team": {"roster_id": 1, "team_name": "Active"},

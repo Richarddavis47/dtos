@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.10.56 - Mobile Trade Asset Browser Filtering
+
+- Make semantic `hidden` state authoritative for Trade asset tiles and roster groups at every responsive breakpoint.
+- Add computed-visibility coverage for the full YOUR TEAM/THEIR TEAM and ALL/QB/RB/WR/TE/PICKS matrix on desktop, tablet, and mobile.
+- Preserve selected proposals, neutral Market Balance, controlled-manager context, Trade For semantics, and one-tap asset interaction while browsing filters change.
+
 # v1.10.55 - Controlled Manager Trade Discovery and Mobile Experience
 
 - Replaced Trade Center's first-roster fallback with an explicit league-scoped controlled-manager contract and a safe manager-selection state.

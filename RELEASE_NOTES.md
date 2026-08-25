@@ -1,3 +1,7 @@
+# DTOS v1.10.56 - Mobile Trade Asset Browser Filtering
+
+DTOS v1.10.56 narrowly corrects the Trade Center asset-browser visibility contract. Roster and position filters now control computed rendering—not only semantic attributes—at desktop, tablet, and mobile breakpoints. The v1.10.55 controlled-manager, bilateral intelligence, market-value, balance, repair, and mobile presentation contracts remain unchanged.
+
 # DTOS v1.10.55 - Controlled Manager Trade Discovery and Mobile Experience
 
 DTOS v1.10.55 makes Trade Center explicitly manager-controlled and league-scoped. Missing identity now produces a franchise-selection state instead of silently selecting roster 1. Trade For reports bounded search evidence and honest closest-path guidance without weakening bilateral quality. The mobile builder is asset-first, with roster browsing, player and pick identity, positional market context, one-tap asset selection, and an immediate neutral market-balance view that remains separate from DTOS recommendation logic.
