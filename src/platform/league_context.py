@@ -79,14 +79,17 @@ class LeagueContextMiddleware:
             await self.app(scope, receive, send)
             return
         query = parse_qs(scope.get("query_string", b"").decode("latin-1"))
+        trusted = scope.get("dtos_authorized_league")
         requested = (
+            trusted
+            or
             (query.get("league_id") or query.get("league") or [None])[0]
             or _path_league(str(scope.get("path") or ""), str(scope.get("method") or "GET"))
         )
         if not requested or str(requested) == self.default_league_id:
             runtime = self.manager.resident(self.default_league_id)
         else:
-            if not self.import_enabled:
+            if not self.import_enabled and not trusted:
                 response = JSONResponse({
                     "status": "feature_gated",
                     "reason": "Secondary-league hydration is disabled until isolation validation is enabled.",

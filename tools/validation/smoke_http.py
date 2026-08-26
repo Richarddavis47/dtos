@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 from time import perf_counter, sleep
 from typing import Callable
 from urllib.error import HTTPError
 from urllib.parse import quote
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 from src.platform.lifecycle import MARKET_BUILD_BLOCKERS
 
@@ -87,7 +88,11 @@ def _request(base_url: str, path: str) -> tuple[int, bytes, dict[str, str], floa
     started = perf_counter()
     print(f"HTTP smoke requesting: {path}", flush=True)
     try:
-        with urlopen(base_url.rstrip("/") + path, timeout=60) as response:
+        headers = {}
+        inspection_token = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
+        if inspection_token:
+            headers["X-DTOS-Inspection-Auth"] = inspection_token
+        with urlopen(Request(base_url.rstrip("/") + path, headers=headers), timeout=60) as response:
             status = response.status
             body = response.read()
             headers = dict(response.headers.items())

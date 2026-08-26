@@ -1,3 +1,21 @@
+# DTOS v1.10.59 - Accounts, Identity, and Sleeper Onboarding Foundation
+
+DTOS v1.10.59 introduces the secure consumer identity foundation described by
+the Product and Intelligence Blueprint. DTOS accounts are distinct from public
+Sleeper identities. A user can create an account, save one-time recovery codes,
+link a resolved Sleeper username, discover eligible leagues, and select the
+franchise associated with that identity. DTOS does not claim that Sleeper proves
+account ownership.
+
+Private league and manager surfaces now derive their context from an opaque,
+durable, server-side session. Credentials use Argon2 hashes; session tokens and
+recovery codes are stored only as digests; browser mutations use CSRF controls;
+and logout or recovery invalidates prior sessions. The release adds only compact
+account, identity-link, membership, session, and audit state. It does not restore
+HistoricalStore or duplicate provider, market, or intelligence payloads.
+
+## Previous release
+
 # DTOS v1.10.58 - Asset Market Front Office Link Correction
 
 DTOS v1.10.58 narrowly corrects Asset Market directory navigation when no
