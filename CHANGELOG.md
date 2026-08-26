@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.10.57 - DynastyProcess Player Interaction Correction
+
+- Preserve external link origins in deterministic DINS interaction evidence.
+- Validate the existing DynastyProcess attribution against its legitimate GitHub destination instead of rewriting it as a DTOS-local path.
+- Keep player-page provider presentation and all v1.10.56 Trade Center behavior unchanged.
+
 # v1.10.56 - Mobile Trade Asset Browser Filtering
 
 - Make semantic `hidden` state authoritative for Trade asset tiles and roster groups at every responsive breakpoint.

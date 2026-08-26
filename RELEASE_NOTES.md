@@ -1,3 +1,11 @@
+# DTOS v1.10.57 - DynastyProcess Player Interaction Correction
+
+DTOS v1.10.57 narrowly corrects deterministic DINS interaction transport for
+external attribution links. Player pages already linked DynastyProcess to its
+official GitHub repository; inspection now preserves that origin instead of
+replaying the pathname against DTOS and reporting a false HTTP 404. No provider,
+valuation, player-dossier, Asset Market, or Trade Center behavior changes.
+
 # DTOS v1.10.56 - Mobile Trade Asset Browser Filtering
 
 DTOS v1.10.56 narrowly corrects the Trade Center asset-browser visibility contract. Roster and position filters now control computed rendering—not only semantic attributes—at desktop, tablet, and mobile breakpoints. The v1.10.55 controlled-manager, bilateral intelligence, market-value, balance, repair, and mobile presentation contracts remain unchanged.

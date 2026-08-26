@@ -12,6 +12,11 @@ from urllib.error import HTTPError
 from app_metadata import BUILD_NUMBER, VERSION
 from src.core.inspection.models import INSPECTION_SCHEMA_VERSION
 from src.core.inspection.publication import GitHubPublicationResolver
+from tools.inspection.capture import (
+    DOM_SCRIPT,
+    _interaction_path,
+    _interaction_target,
+)
 from tools.inspection.package import asset_names, package_bundle, sha256
 
 
@@ -129,6 +134,40 @@ class DinsPublicationTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(ValueError, "forbidden local or sensitive reference"):
                 package_bundle(capture, root / "assets")
+
+    def test_external_attribution_origin_is_preserved_for_interaction(self) -> None:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=True)
+            page = browser.new_page()
+            page.set_content(
+                '<main><a href="https://github.com/dynastyprocess/data" '
+                'target="_blank" rel="noopener">DynastyProcess</a></main>'
+            )
+            link = next(
+                row for row in page.evaluate(DOM_SCRIPT)["nodes"]
+                if row.get("role") == "link"
+                and row.get("text") == "DynastyProcess"
+            )
+            browser.close()
+
+        self.assertEqual(
+            link["href"], "https://github.com/dynastyprocess/data",
+        )
+        self.assertEqual(_interaction_path(link["href"]), "/dynastyprocess/data")
+        self.assertEqual(
+            _interaction_target("https://dtos.onrender.com", link["href"]),
+            "https://github.com/dynastyprocess/data",
+        )
+
+    def test_internal_interaction_target_remains_on_dtos_origin(self) -> None:
+        self.assertEqual(
+            _interaction_target(
+                "https://dtos.onrender.com", "/players/10866",
+            ),
+            "https://dtos.onrender.com/players/10866",
+        )
 
 
 if __name__ == "__main__":
