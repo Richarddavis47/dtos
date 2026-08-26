@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import unicodedata
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,14 @@ from playwright.sync_api import sync_playwright
 
 from src.core.inspection.live_visual import CaptureRequest, LIVE_VIEWPORTS
 from tools.inspection.capture import DOM_SCRIPT
+
+
+def _inspection_headers() -> dict[str, str]:
+    headers = {"X-DTOS-Inspection": "deterministic"}
+    token = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
+    if token:
+        headers["X-DTOS-Inspection-Auth"] = token
+    return headers
 
 
 def normalized_manager_text(value: Any) -> str:
@@ -124,7 +133,7 @@ def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[s
         browser = playwright.chromium.launch(headless=True)
         try:
             page = browser.new_page(viewport=viewport, color_scheme="dark", reduced_motion="reduce")
-            page.set_extra_http_headers({"X-DTOS-Inspection": "deterministic"})
+            page.set_extra_http_headers(_inspection_headers())
             response = page.goto(base_url.rstrip("/") + request.human_url, wait_until="networkidle", timeout=90000)
             if response is None or not response.ok:
                 raise RuntimeError("Live visual route did not return HTTP 200")
@@ -134,7 +143,7 @@ def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[s
             visible = str(dom.get("visible_text") or "")
             semantic_response = page.request.get(
                 base_url.rstrip("/") + request.semantic_url,
-                headers={"X-DTOS-Inspection": "deterministic"}, timeout=60000,
+                headers=_inspection_headers(), timeout=60000,
             )
             if not semantic_response.ok:
                 raise RuntimeError("Live visual semantic route did not return HTTP 200")

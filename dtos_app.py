@@ -18,9 +18,11 @@ from fastapi.staticfiles import StaticFiles
 
 from app_metadata import APPLICATION_NAME, VERSION
 from config import (
-    BACKGROUND_START_DELAY, HISTORY_STORAGE_ROOT, MAX_WARM_LEAGUE_RUNTIMES,
-    METADATA_DATABASE_FILE, SYNC_MINUTES,
+    ACCOUNT_DATABASE_FILE, AUTH_REQUIRED, BACKGROUND_START_DELAY,
+    HISTORY_STORAGE_ROOT, MAX_WARM_LEAGUE_RUNTIMES, METADATA_DATABASE_FILE,
+    SYNC_MINUTES,
 )
+from routes.accounts import create_accounts_router
 from routes.api import create_api_router
 from routes.audit import create_audit_router
 from routes.crawl import create_crawl_router
@@ -67,6 +69,7 @@ from src.core.asset_market.resource_diagnostics import (
 from src.core.league_runtime import (
     CanonicalLeagueContext, LeagueRuntime, LeagueRuntimeManager, RuntimeState,
 )
+from src.core.accounts import AccountService, AccountStore
 from src.core.brain import BrainService
 from src.core.history_context import (
     canonical_history_store, legacy_access_guard, minimal_metadata_store,
@@ -85,6 +88,7 @@ from src.platform.lifecycle import lifecycle_coordinator
 from src.platform.league_context import (
     LeagueContextMiddleware, RuntimeStateProxy, current_league_context,
 )
+from src.platform.account_context import AccountContextMiddleware, current_account
 from config import DURABLE_HISTORY_REQUIRED
 from src.core.historical_memory.storage import validate_historical_storage
 from src.core.inspection.live import LiveInspection
@@ -110,6 +114,8 @@ _MULTI_LEAGUE_IMPORT_ENABLED = (
     in {"1", "true", "yes", "on"}
 )
 intelligence_heavy_lock = asyncio.Lock()
+account_store = AccountStore(ACCOUNT_DATABASE_FILE)
+account_service = AccountService(account_store)
 
 
 async def _generate_fois_coordinated(data: dict[str, Any]) -> tuple[Any, ...]:
@@ -568,6 +574,9 @@ app.add_middleware(
     allow_methods=["GET", "OPTIONS"],
     allow_headers=["Accept", "Content-Type", "X-DTOS-Diagnostics"],
 )
+app.add_middleware(
+    AccountContextMiddleware, service=account_service, required=AUTH_REQUIRED,
+)
 install_observability(app)
 
 
@@ -632,7 +641,19 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     error = selected_state.get("last_error")
     error_html = f'<div class="error"><b>Sync error:</b> {escape(error)}</div>' if error else ""
     league_name = str(((selected_state.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
-    standard_chrome = f"""<header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync"><button class="btn" type="submit">Sync League</button></form></header>
+    account = current_account()
+    account_html = ""
+    csrf_html = ""
+    if account is not None:
+        csrf_html = f'<input type="hidden" name="csrf_token" value="{escape(account.csrf_token)}">'
+        switches = "".join(
+            f'<form method="post" action="/account/leagues/{escape(item.league_id)}/activate"><input type="hidden" name="csrf_token" value="{escape(account.csrf_token)}"><button class="ds-action" type="submit">{escape(item.league_name or item.league_id)}</button></form>'
+            for item in account_store.memberships(account.account_id)
+            if item.status == "active" and item.roster_id is not None
+        )
+        franchise = account.membership.franchise_name if account.membership else "Choose a league"
+        account_html = f'<aside class="card" aria-label="Account and league context"><b>{escape(account.display_name)}</b> · {escape(franchise or "Mapped franchise")}<div class="ds-actions">{switches}<a class="ds-action" href="/account">Account</a></div></aside>'
+    standard_chrome = f"""<header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form></header>{account_html}
 {manager_navigation(title)}{page_header(title, league_name=league_name, last_updated=str(sync))}"""
     footer = f'<footer class="footer"><b>League Sync:</b> {escape(str(sync))} · Intelligence is generated from the latest cached league state. Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'
     html = f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style></head>
@@ -692,6 +713,12 @@ async def sync_current_transactions() -> bool:
         context.refresh_generations()
     return result
 
+
+app.include_router(
+    create_accounts_router(
+        service=account_service, runtime_manager=league_runtime_manager,
+    )
+)
 
 app.include_router(
     create_api_router(

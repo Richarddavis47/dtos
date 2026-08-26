@@ -58,6 +58,10 @@ class Settings:
     intelligence_checkpoint_file: Path
     sleeper_season_cache_root: Path
     metadata_database_file: Path
+    account_database_file: Path
+    auth_required: bool
+    session_cookie_secure: bool
+    session_ttl_hours: int
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -136,6 +140,16 @@ class Settings:
                     if durable_required else cache_file.with_name("dtos_metadata.sqlite3")
                 ),
             )),
+            account_database_file=Path(os.getenv(
+                "DTOS_ACCOUNT_DB_FILE",
+                str(
+                    history_storage_root / "dtos_accounts.sqlite3"
+                    if durable_required else cache_file.with_name("dtos_accounts.sqlite3")
+                ),
+            )),
+            auth_required=_boolean("DTOS_AUTH_REQUIRED", default=bool(os.getenv("RENDER"))),
+            session_cookie_secure=_boolean("DTOS_SESSION_COOKIE_SECURE", default=bool(os.getenv("RENDER"))),
+            session_ttl_hours=min(24 * 30, _integer("DTOS_SESSION_TTL_HOURS", 24 * 7, 1)),
         )
 
 
@@ -161,3 +175,7 @@ MAX_WARM_LEAGUE_RUNTIMES = SETTINGS.max_warm_league_runtimes
 INTELLIGENCE_CHECKPOINT_FILE = SETTINGS.intelligence_checkpoint_file
 SLEEPER_SEASON_CACHE_ROOT = SETTINGS.sleeper_season_cache_root
 METADATA_DATABASE_FILE = SETTINGS.metadata_database_file
+ACCOUNT_DATABASE_FILE = SETTINGS.account_database_file
+AUTH_REQUIRED = SETTINGS.auth_required
+SESSION_COOKIE_SECURE = SETTINGS.session_cookie_secure
+SESSION_TTL_HOURS = SETTINGS.session_ttl_hours

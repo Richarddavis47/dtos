@@ -22,6 +22,14 @@ from src.core.inspection.storage import InspectionArtifactStore
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ROOT = ROOT / "static" / "inspection"
 
+
+def _inspection_headers(**extra: str) -> dict[str, str]:
+    headers = {"X-DTOS-Inspection": "deterministic", **extra}
+    token = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
+    if token:
+        headers["X-DTOS-Inspection-Auth"] = token
+    return headers
+
 DOM_SCRIPT = """() => {
  const visible = e => { const r=e.getBoundingClientRect(), s=getComputedStyle(e), closed=e.closest('details:not([open])'); return !e.closest('[hidden],[inert]')&&(!closed||closed.querySelector(':scope > summary')?.contains(e))&&r.width>0&&r.height>0&&s.visibility!=='hidden'&&s.display!=='none'; };
  const role = e => e.getAttribute('role') || ({A:'link',BUTTON:'button',TABLE:'table',NAV:'navigation',FORM:'form',H1:'heading',H2:'heading',H3:'heading',IMG:'image'}[e.tagName]||'');
@@ -54,7 +62,7 @@ A11Y_SCRIPT = """() => {
 
 
 def _json(url: str) -> dict[str, Any]:
-    request = Request(url, headers={"X-DTOS-Inspection": "deterministic", "Accept": "application/json"})
+    request = Request(url, headers=_inspection_headers(Accept="application/json"))
     with urlopen(request, timeout=60) as response:
         payload = json.loads(response.read())
     if not isinstance(payload, dict):
@@ -85,7 +93,7 @@ def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: st
     console_errors: list[str] = []
     page.on("requestfailed", lambda request: failures.append({"url": request.url.split("?", 1)[0], "error": request.failure}))
     page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
-    page.set_extra_http_headers({"X-DTOS-Inspection": "deterministic"})
+    page.set_extra_http_headers(_inspection_headers())
     started = perf_counter()
     response = page.goto(urljoin(base_url.rstrip("/") + "/", route.lstrip("/")), wait_until="networkidle", timeout=90000)
     if response is None or not response.ok:
@@ -112,7 +120,7 @@ def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: st
         if not href or path.startswith("/api/") or path in {"/sync", "/transactions/refresh"}:
             continue
         if viewport.name == "desktop":
-            target_response = page.request.get(_interaction_target(base_url, str(href)), headers={"X-DTOS-Inspection": "deterministic"}, timeout=60000)
+            target_response = page.request.get(_interaction_target(base_url, str(href)), headers=_inspection_headers(), timeout=60000)
             status = target_response.status
         else:
             status = None

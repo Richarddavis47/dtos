@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.10.59 - Accounts, Identity, and Sleeper Onboarding Foundation
+
+- Add durable DTOS accounts with Argon2 password hashing, opaque server-side sessions, one-time recovery codes, CSRF protection, and bounded authentication attempts.
+- Resolve public Sleeper identities truthfully, discover eligible leagues, map the associated roster without claiming independent ownership verification, and persist active league context.
+- Enforce account-derived league and controlled-manager context on private product surfaces while preserving deterministic, separately authorized inspection access.
+- Keep HistoricalStore retired, avoid provider payload duplication, and preserve all Asset Market, history, intelligence, memory, and latency contracts.
+
 # v1.10.58 - Asset Market Front Office Link Correction
 
 - Omit absent optional Front Office context from Asset Market navigation instead of serializing an invalid empty integer query value.
