@@ -1,4 +1,4 @@
-"""Real-browser Trade Center interaction regressions through v1.10.56."""
+"""Real-browser Trade Center interaction regressions through v1.10.57."""
 from __future__ import annotations
 
 import json

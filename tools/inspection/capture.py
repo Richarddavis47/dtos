@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
 from playwright.sync_api import Browser, Page, sync_playwright
@@ -27,7 +27,7 @@ DOM_SCRIPT = """() => {
  const role = e => e.getAttribute('role') || ({A:'link',BUTTON:'button',TABLE:'table',NAV:'navigation',FORM:'form',H1:'heading',H2:'heading',H3:'heading',IMG:'image'}[e.tagName]||'');
  const rows=[...document.querySelectorAll('header,nav,main,section,article,.card,table,button,a,form,details,h1,h2,h3,img,input,select,textarea')].filter(visible).slice(0,600).map((e,i)=>{
    const r=e.getBoundingClientRect(),s=getComputedStyle(e),text=(e.innerText||e.getAttribute('aria-label')||e.getAttribute('alt')||'').trim().replace(/\\s+/g,' ').slice(0,300);
-   return {id:e.id||`dins-${i}`,tag:e.tagName.toLowerCase(),role:role(e),text,href:e.tagName==='A'?new URL(e.getAttribute('href')||'',location.href).pathname:null,
+   return {id:e.id||`dins-${i}`,tag:e.tagName.toLowerCase(),role:role(e),text,href:e.tagName==='A'?new URL(e.getAttribute('href')||'',location.href).href:null,
    geometry:{x:Math.round(r.x),y:Math.round(r.y+scrollY),width:Math.round(r.width),height:Math.round(r.height),viewport_visible:r.bottom>0&&r.top<innerHeight,clipped:r.left<0||r.right>innerWidth,overflow_x:e.scrollWidth>e.clientWidth,overflow_y:e.scrollHeight>e.clientHeight},
    style:{display:s.display,position:s.position,font_family:s.fontFamily,font_size:s.fontSize,font_weight:s.fontWeight,line_height:s.lineHeight,color:s.color,background_color:s.backgroundColor,border_color:s.borderColor,border_radius:s.borderRadius,padding:s.padding,margin:s.margin,z_index:s.zIndex,white_space:s.whiteSpace}};
  });
@@ -66,6 +66,16 @@ def _component_rows(dom: dict[str, Any], role: str) -> tuple[dict[str, Any], ...
     return tuple(row for row in dom["nodes"] if row.get("role") == role or role in str(row.get("tag")))
 
 
+def _interaction_target(base_url: str, href: str) -> str:
+    """Resolve internal links without replacing an external attribution origin."""
+    return urljoin(base_url.rstrip("/") + "/", href)
+
+
+def _interaction_path(href: str) -> str:
+    """Return the path used by the deterministic interaction exclusion policy."""
+    return urlparse(href).path
+
+
 def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: str, spec: dict[str, Any], viewport: Viewport, league_id: str | None) -> dict[str, Any]:
     page_id, route = spec["page_id"], spec["route"]
     folder = store.current_root / "pages" / page_id
@@ -98,10 +108,11 @@ def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: st
     interactions = []
     for link in _component_rows(dom, "link")[:12]:
         href = link.get("href")
-        if not href or href.startswith("/api/") or href in {"/sync", "/transactions/refresh"}:
+        path = _interaction_path(str(href)) if href else ""
+        if not href or path.startswith("/api/") or path in {"/sync", "/transactions/refresh"}:
             continue
         if viewport.name == "desktop":
-            target_response = page.request.get(urljoin(base_url.rstrip("/") + "/", href.lstrip("/")), headers={"X-DTOS-Inspection": "deterministic"}, timeout=60000)
+            target_response = page.request.get(_interaction_target(base_url, str(href)), headers={"X-DTOS-Inspection": "deterministic"}, timeout=60000)
             status = target_response.status
         else:
             status = None
