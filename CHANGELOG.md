@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.10.58 - Asset Market Front Office Link Correction
+
+- Omit absent optional Front Office context from Asset Market navigation instead of serializing an invalid empty integer query value.
+- Preserve explicit league-scoped manager context and canonical selected-asset identity without introducing a default franchise.
+- Keep Asset Market values, rankings, generation and compatibility semantics, Trade Center, and DynastyProcess behavior unchanged.
+
 # v1.10.57 - DynastyProcess Player Interaction Correction
 
 - Preserve external link origins in deterministic DINS interaction evidence.

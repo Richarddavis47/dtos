@@ -32,6 +32,11 @@ home_body_render_cache = GenerationRenderCache("home_body", max_entries=8)
 market_body_render_cache = GenerationRenderCache("market_body", max_entries=24)
 
 
+def _market_query(**values: Any) -> str:
+    """Serialize market navigation without invalid empty optional context."""
+    return urlencode({key: value for key, value in values.items() if value is not None})
+
+
 def _value(
     row: dict[str, Any], name: str,
     layers: dict[str, Any] | None = None,
@@ -193,12 +198,12 @@ def create_market_router(
                 values = row.get("values") or {}
                 owner = row.get("owner") or {}
                 asset_id = str(row["asset_id"])
-                query = urlencode({
-                    "q": q, "position": position, "availability": availability,
-                    "sort": sort, "direction": direction,
-                    "front_office": front_office or "", "selected": asset_id,
-                    "offset": offset, "limit": limit,
-                })
+                query = _market_query(
+                    q=q, position=position, availability=availability,
+                    sort=sort, direction=direction,
+                    front_office=front_office, selected=asset_id,
+                    offset=offset, limit=limit,
+                )
                 def shown(name: str) -> str:
                     value = values.get(name)
                     fallback = row.get(name)
@@ -248,7 +253,11 @@ def create_market_router(
                 )
             trend_reason = market.trending()["unavailable_reason"]
             movers_html = f'<div class="evidence-unavailable"><b>Market movement is not available yet.</b><br>{escape(trend_reason)}</div>' if trend_reason else '<div class="card"><p>Meaningful timestamped movement is available.</p><a href="/api/market/trending">Review movement evidence →</a></div>'
-            body = f'''<p class="eyebrow">DTOS v{VERSION}</p><h2>Asset Market &amp; Dynasty Exchange</h2><p class="muted">Search the canonical dynasty market first. Values remain separate; unavailable evidence is never substituted.</p><form class="card ux-answer" method="get" action="/market" aria-label="Asset Market filters"><h3>Search players &amp; picks</h3><label for="market-search">Player name or future pick</label><input id="market-search" name="q" value="{escape(q)}" placeholder="Josh Allen or 2028 1st"><label for="market-position">Position</label><select id="market-position" name="position"><option value="">All assets</option>{options(((item,item) for item in ("QB","RB","WR","TE","PICK")), position)}</select><label for="market-availability">Availability</label><select id="market-availability" name="availability"><option value="">All availability</option>{options((("rostered","Rostered"),("day_traders_free_agent","Free Agents"),("taxi","Taxi"),("retired","Retired"),("owned_pick","Picks")), availability)}</select><label for="market-sort">Sort</label><select id="market-sort" name="sort">{options(((item,item.title()) for item in ("market","intrinsic","contender","rebuilder","confidence","risk","liquidity")), sort)}</select><input type="hidden" name="front_office" value="{front_office or ''}"><button class="btn" type="submit">Search market</button></form><section class="ux-section" id="market-movers"><div class="ux-section-head"><h2>Market Movers</h2><p>Meaningful timestamped movement only</p></div>{movers_html}</section><section class="ux-section"><div class="ux-section-head"><h2>{'Search Results' if q else 'Top Rankings'}</h2><p>{'Exact compact matches' if q else 'A focused opening view; browse deeper when needed'}</p></div><div class="card"><p><b>{result.get("total", result.get("count", 0))}</b> matching assets</p><div style="overflow-x:auto"><table><caption>Canonical dynasty asset rankings</caption><thead><tr><th>Rank</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No canonical assets match these filters.</td></tr>'}</tbody></table></div><nav aria-label="Market pagination"><a href="/market?offset={max(0, offset-limit)}&limit={limit}&sort={escape(sort)}">Previous</a> · <a href="/market?offset={offset+limit}&limit={limit}&sort={escape(sort)}">Browse all assets →</a></nav><details class="technical-details"><summary>Technical Details</summary><p>Dataset <code>{escape(market.dataset_version[:12])}</code> · stable tie-break: canonical asset ID</p></details></div></section>{expanded}'''
+            front_office_input = (
+                f'<input type="hidden" name="front_office" value="{front_office}">'
+                if front_office is not None else ""
+            )
+            body = f'''<p class="eyebrow">DTOS v{VERSION}</p><h2>Asset Market &amp; Dynasty Exchange</h2><p class="muted">Search the canonical dynasty market first. Values remain separate; unavailable evidence is never substituted.</p><form class="card ux-answer" method="get" action="/market" aria-label="Asset Market filters"><h3>Search players &amp; picks</h3><label for="market-search">Player name or future pick</label><input id="market-search" name="q" value="{escape(q)}" placeholder="Josh Allen or 2028 1st"><label for="market-position">Position</label><select id="market-position" name="position"><option value="">All assets</option>{options(((item,item) for item in ("QB","RB","WR","TE","PICK")), position)}</select><label for="market-availability">Availability</label><select id="market-availability" name="availability"><option value="">All availability</option>{options((("rostered","Rostered"),("day_traders_free_agent","Free Agents"),("taxi","Taxi"),("retired","Retired"),("owned_pick","Picks")), availability)}</select><label for="market-sort">Sort</label><select id="market-sort" name="sort">{options(((item,item.title()) for item in ("market","intrinsic","contender","rebuilder","confidence","risk","liquidity")), sort)}</select>{front_office_input}<button class="btn" type="submit">Search market</button></form><section class="ux-section" id="market-movers"><div class="ux-section-head"><h2>Market Movers</h2><p>Meaningful timestamped movement only</p></div>{movers_html}</section><section class="ux-section"><div class="ux-section-head"><h2>{'Search Results' if q else 'Top Rankings'}</h2><p>{'Exact compact matches' if q else 'A focused opening view; browse deeper when needed'}</p></div><div class="card"><p><b>{result.get("total", result.get("count", 0))}</b> matching assets</p><div style="overflow-x:auto"><table><caption>Canonical dynasty asset rankings</caption><thead><tr><th>Rank</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No canonical assets match these filters.</td></tr>'}</tbody></table></div><nav aria-label="Market pagination"><a href="/market?offset={max(0, offset-limit)}&limit={limit}&sort={escape(sort)}">Previous</a> · <a href="/market?offset={offset+limit}&limit={limit}&sort={escape(sort)}">Browse all assets →</a></nav><details class="technical-details"><summary>Technical Details</summary><p>Dataset <code>{escape(market.dataset_version[:12])}</code> · stable tie-break: canonical asset ID</p></details></div></section>{expanded}'''
             return body.encode("utf-8")
 
         def render() -> bytes:

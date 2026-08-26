@@ -1,3 +1,13 @@
+# DTOS v1.10.58 - Asset Market Front Office Link Correction
+
+DTOS v1.10.58 narrowly corrects Asset Market directory navigation when no
+league-scoped Front Office context is present. Optional context is now omitted
+instead of serialized as an invalid empty integer, while explicit manager
+context and selected assets remain intact. Market intelligence, Trade Center,
+and the v1.10.57 DynastyProcess correction are unchanged.
+
+## Previous release
+
 # DTOS v1.10.57 - DynastyProcess Player Interaction Correction
 
 DTOS v1.10.57 narrowly corrects deterministic DINS interaction transport for
