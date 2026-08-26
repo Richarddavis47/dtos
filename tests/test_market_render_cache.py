@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
-from routes.market import create_market_router
+from routes.market import _market_query, create_market_router
 from src.ui.render_cache import GenerationRenderCache
 
 
@@ -67,10 +67,11 @@ class _Market:
         self.brain_generation = "brain-1"
         self.data = {"valuation_intelligence": {"generated_at": "valuation-1"}}
         self.directory_calls = 0
+        self.assets = []
 
     def directory(self, **kwargs):
         self.directory_calls += 1
-        return {"total": 0, "assets": [], "variant": kwargs}
+        return {"total": len(self.assets), "assets": self.assets, "variant": kwargs}
 
     def search(self, _q, _limit):
         self.directory_calls += 1
@@ -174,6 +175,61 @@ class MarketRenderedRouteTests(unittest.TestCase):
         self.assertEqual(
             payload["market_body"]["market_body_render_cache_entries"], 1,
         )
+
+    def test_optional_front_office_is_omitted_from_market_query(self) -> None:
+        query = _market_query(selected="player:4984", front_office=None)
+        self.assertEqual(query, "selected=player%3A4984")
+        self.assertNotIn("front_office=", query)
+
+    def test_explicit_front_office_is_preserved_with_selected_asset(self) -> None:
+        query = _market_query(selected="player:4984", front_office=2)
+        self.assertEqual(query, "selected=player%3A4984&front_office=2")
+
+    def test_market_asset_links_never_emit_empty_front_office(self) -> None:
+        self.market.assets = [
+            {
+                "asset_id": asset_id,
+                "display_name": label,
+                "asset_type": "player",
+                "position": position,
+                "nfl_team": "NFL",
+                "rank": index,
+                "values": {},
+                "owner": {},
+            }
+            for index, (asset_id, label, position) in enumerate((
+                ("player:4984", "Josh Allen", "QB"),
+                ("player:7564", "Ja'Marr Chase", "WR"),
+                ("player:9509", "Bijan Robinson", "RB"),
+                ("player:9221", "Jahmyr Gibbs", "RB"),
+                ("player:te-1", "Representative Tight End", "TE"),
+            ), start=1)
+        ]
+        response = self.client.get("/market")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("front_office=", response.text)
+        for asset_id, _label, _position in (
+            ("player:4984", "Josh Allen", "QB"),
+            ("player:7564", "Ja'Marr Chase", "WR"),
+            ("player:9509", "Bijan Robinson", "RB"),
+            ("player:9221", "Jahmyr Gibbs", "RB"),
+            ("player:te-1", "Representative Tight End", "TE"),
+        ):
+            selected = asset_id.replace(":", "%3A")
+            self.assertIn(f"selected={selected}", response.text)
+
+    def test_market_filter_form_preserves_only_legitimate_context(self) -> None:
+        missing = self.client.get("/market")
+        self.assertNotIn('name="front_office"', missing.text)
+        selected = self.client.get("/market?front_office=2")
+        self.assertIn(
+            '<input type="hidden" name="front_office" value="2">',
+            selected.text,
+        )
+
+    def test_empty_front_office_remains_invalid_at_route_boundary(self) -> None:
+        response = self.client.get("/market?front_office=")
+        self.assertEqual(response.status_code, 422)
 
 
 if __name__ == "__main__":

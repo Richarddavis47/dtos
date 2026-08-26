@@ -280,8 +280,8 @@ class ValuationIntelligenceTests(unittest.TestCase):
         for route in routes:
             response = client.get(route)
             self.assertEqual(response.status_code, 200, route)
-        self.assertEqual(response.json()["application_version"], "1.10.57")
-        self.assertEqual(response.json()["application_build"], 1157)
+        self.assertEqual(response.json()["application_version"], "1.10.58")
+        self.assertEqual(response.json()["application_build"], 1158)
         self.assertIsNotNone(client.get("/api/valuation/assets/player:1").json()["valuation_intelligence"])
         dashboard = client.get("/valuation/calibration")
         self.assertEqual(dashboard.status_code, 200)
