@@ -199,7 +199,8 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             memberships = {context.membership.league_id: context.membership}
         else:
             try:
-                discovered = await service.discover(context.sleeper_user_id)
+                discovered_series = await service.discover_series(context.sleeper_user_id)
+                discovered = [item.public() for item in discovered_series]
             except Exception:
                 return _shell("Your leagues", '<section class="card"><h1>Sleeper is temporarily unavailable.</h1><p>Your linked identity is safe. Try league discovery again shortly.</p></section>')
             memberships = {item.league_id: item for item in service.store.memberships(context.account_id)}
@@ -207,8 +208,12 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
         for league in discovered:
             league_id = str(league.get("league_id"))
             membership = memberships.get(league_id)
-            state = "Ready" if membership and membership.status == "active" else "Add to DTOS"
-            cards.append(f'<article class="card"><h2>{escape(str(league.get("name") or "Sleeper league"))}</h2><p>{escape(str(league.get("season") or ""))} · {int(league.get("total_rosters") or 0)} teams</p><p>{"Your team: <b>" + escape(membership.franchise_name or "Mapped franchise") + "</b>" if membership else "DTOS will map the franchise associated with your resolved Sleeper identity."}</p><form method="post" action="/account/leagues/{escape(league_id)}"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">{state}</button></form></article>')
+            connected = bool(membership and membership.status == "active")
+            state = "Switch front office" if connected else "Add to DTOS"
+            action = f"/account/leagues/{league_id}/activate" if connected else f"/account/leagues/{league_id}"
+            history = league.get("historical_seasons") or []
+            years = ", ".join(str(row.get("season")) for row in history if row.get("season"))
+            cards.append(f'<article class="card"><h2>{escape(str(league.get("name") or "Sleeper league"))}</h2><p>Current season: {escape(str(league.get("season") or "Unknown"))} · {int(league.get("total_rosters") or 0)} teams</p>{f"<p>History: {escape(years)}</p>" if years else ""}<p>{"Your team: <b>" + escape(membership.franchise_name or "Mapped franchise") + "</b>" if membership else "DTOS will map the franchise associated with your resolved Sleeper identity."}</p><form method="post" action="{escape(action)}"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">{state}</button></form></article>')
         return _shell("Your leagues", f'<h1>Your Sleeper leagues</h1><p class="muted">Current NFL dynasty leagues are shown first.</p>{"".join(cards) or "<section class=\"card\"><h2>No eligible leagues found</h2><p>Check the linked Sleeper username or try again later.</p></section>"}<section class="card"><h2>Add another league</h2><p>Enter a Sleeper league ID. DTOS will add it only if your resolved identity maps to exactly one franchise.</p><form class="grid" method="post" action="/account/leagues/import"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper league ID<input name="league_id" inputmode="numeric" required></label><button class="btn" type="submit">Add to DTOS</button></form></section>')
 
     @router.post("/account/leagues/import")
@@ -227,6 +232,8 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
         if status != "active" or roster_id is None:
             return _shell("Review team mapping", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership.</p></section>')
         service.store.upsert_membership(context.account_id, league, context.sleeper_user_id, roster_id, franchise, status)
+        series = await service.complete_series(league)
+        service.store.upsert_series(context.account_id, series_id=series.series_id, current_league=series.current_league, seasons=series.seasons, roster_id=roster_id, franchise_name=franchise)
         await runtime_manager.get(str(league["league_id"]))
         service.store.activate(context.account_id, str(league["league_id"]))
         return RedirectResponse("/", status_code=303)
@@ -239,14 +246,17 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             return RedirectResponse("/account/sign-in", status_code=303)
         if not _csrf(service, request, values.get("csrf_token", "")):
             return JSONResponse({"status": "csrf_rejected"}, status_code=403)
-        discovered = {str(row.get("league_id")): row for row in await service.discover(context.sleeper_user_id)}
-        league = discovered.get(league_id)
-        if league is None:
+        discovered = {item.current_league_id: item for item in await service.discover_series(context.sleeper_user_id)}
+        series = discovered.get(league_id)
+        if series is None:
             return _shell("League unavailable", '<section class="card"><h1>That league is not available to this Sleeper identity.</h1></section>')
+        league = series.current_league
+        series = await service.complete_series(league)
         roster_id, franchise, status = await service.resolve_membership(league, context.sleeper_user_id)
-        service.store.upsert_membership(context.account_id, league, context.sleeper_user_id, roster_id, franchise, status)
         if status != "active":
             return _shell("Review team mapping", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership. Review the linked Sleeper identity or try again after Sleeper updates the league.</p></section>')
+        service.store.upsert_membership(context.account_id, league, context.sleeper_user_id, roster_id, franchise, status)
+        service.store.upsert_series(context.account_id, series_id=series.series_id, current_league=series.current_league, seasons=series.seasons, roster_id=roster_id, franchise_name=franchise)
         await runtime_manager.get(league_id)
         service.store.activate(context.account_id, league_id)
         return RedirectResponse("/", status_code=303)
@@ -283,12 +293,13 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
         context = current_account()
         if context is None:
             return JSONResponse({"status": "authentication_required"}, status_code=401)
-        return JSONResponse({"status": "ok", "leagues": [{
-            "league_id": item.league_id, "league_name": item.league_name,
-            "franchise_name": item.franchise_name, "roster_id": item.roster_id,
-            "season": item.season, "status": item.status,
-            "mapping_source": item.mapping_source,
-        } for item in service.store.memberships(context.account_id)]}, headers={"Cache-Control": "no-store"})
+        return JSONResponse({"status": "ok", "membership_model": "one_to_many", "hardcoded_league_limit": False, "leagues": [{
+            "series_id": item["series_id"], "league_id": item["current_league_id"],
+            "league_name": item.get("league_name"), "franchise_name": item.get("franchise_name"),
+            "roster_id": item.get("roster_id"), "season": item.get("current_season"),
+            "historical_season_count": max(0, int(item.get("season_count") or 1) - 1),
+            "status": item.get("status"),
+        } for item in service.store.series(context.account_id)]}, headers={"Cache-Control": "no-store"})
 
     @router.get("/api/account/active-league")
     async def active_league_api() -> JSONResponse:

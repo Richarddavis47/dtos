@@ -12,7 +12,7 @@ from typing import Any, Iterator
 
 from .models import AccountContext, LeagueMembership
 
-ACCOUNT_SCHEMA_VERSION = 1
+ACCOUNT_SCHEMA_VERSION = 2
 
 
 def _now() -> str:
@@ -54,6 +54,22 @@ CREATE TABLE IF NOT EXISTS account_league_memberships(
   PRIMARY KEY(account_id, league_id)
 );
 CREATE INDEX IF NOT EXISTS account_membership_league ON account_league_memberships(league_id);
+CREATE TABLE IF NOT EXISTS account_league_series(
+  account_id TEXT NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+  series_id TEXT NOT NULL, current_league_id TEXT NOT NULL,
+  league_name TEXT, current_season INTEGER,
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+  PRIMARY KEY(account_id,series_id)
+);
+CREATE INDEX IF NOT EXISTS account_series_current ON account_league_series(account_id,current_league_id);
+CREATE TABLE IF NOT EXISTS account_league_series_seasons(
+  account_id TEXT NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+  series_id TEXT NOT NULL, league_id TEXT NOT NULL, season INTEGER,
+  previous_league_id TEXT, roster_id INTEGER, franchise_name TEXT,
+  created_at TEXT NOT NULL, last_verified_at TEXT NOT NULL,
+  PRIMARY KEY(account_id,league_id)
+);
+CREATE INDEX IF NOT EXISTS account_series_seasons ON account_league_series_seasons(account_id,series_id,season);
 CREATE TABLE IF NOT EXISTS account_sessions(
   session_digest TEXT PRIMARY KEY, session_id TEXT NOT NULL UNIQUE,
   account_id TEXT NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
@@ -97,10 +113,11 @@ class AccountStore:
     def migrate(self) -> None:
         with self.transaction() as connection:
             connection.executescript(SCHEMA)
-            connection.execute(
-                "INSERT OR IGNORE INTO account_schema_migrations(version,applied_at) VALUES(?,?)",
-                (ACCOUNT_SCHEMA_VERSION, _now()),
-            )
+            for version in range(1, ACCOUNT_SCHEMA_VERSION + 1):
+                connection.execute(
+                    "INSERT OR IGNORE INTO account_schema_migrations(version,applied_at) VALUES(?,?)",
+                    (version, _now()),
+                )
 
     def account_by_username(self, username: str) -> sqlite3.Row | None:
         with closing(self.connect()) as connection:
@@ -251,6 +268,78 @@ class AccountStore:
                 (account_id, league_id, sleeper_user_id, roster_id, status, "sleeper_roster_association", league.get("name"), franchise_name, int(league.get("season") or 0) or None, timestamp, timestamp),
             )
 
+    def upsert_series(
+        self, account_id: str, *, series_id: str, current_league: dict[str, Any],
+        seasons: tuple[dict[str, Any], ...], roster_id: int | None,
+        franchise_name: str | None,
+    ) -> None:
+        """Persist a series and its season identities without loading runtimes."""
+        timestamp = _now()
+        current_id = str(current_league.get("league_id") or "")
+        current_season = int(current_league.get("season") or 0) or None
+        with self.transaction() as connection:
+            connection.execute(
+                """INSERT INTO account_league_series(account_id,series_id,current_league_id,league_name,current_season,created_at,updated_at)
+                VALUES(?,?,?,?,?,?,?) ON CONFLICT(account_id,series_id) DO UPDATE SET
+                current_league_id=excluded.current_league_id,league_name=excluded.league_name,
+                current_season=excluded.current_season,updated_at=excluded.updated_at""",
+                (account_id, series_id, current_id, current_league.get("name"), current_season, timestamp, timestamp),
+            )
+            for row in seasons:
+                league_id = str(row.get("league_id") or "")
+                if not league_id:
+                    continue
+                season = int(row.get("season") or 0) or None
+                is_current = league_id == current_id
+                connection.execute(
+                    """INSERT INTO account_league_series_seasons(account_id,series_id,league_id,season,previous_league_id,roster_id,franchise_name,created_at,last_verified_at)
+                    VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(account_id,league_id) DO UPDATE SET
+                    series_id=excluded.series_id,season=excluded.season,previous_league_id=excluded.previous_league_id,
+                    roster_id=CASE WHEN excluded.roster_id IS NOT NULL THEN excluded.roster_id ELSE account_league_series_seasons.roster_id END,
+                    franchise_name=CASE WHEN excluded.franchise_name IS NOT NULL THEN excluded.franchise_name ELSE account_league_series_seasons.franchise_name END,
+                    last_verified_at=excluded.last_verified_at""",
+                    (account_id, series_id, league_id, season, row.get("previous_league_id"), roster_id if is_current else None, franchise_name if is_current else None, timestamp, timestamp),
+                )
+
+    def series(self, account_id: str) -> list[dict[str, Any]]:
+        with closing(self.connect()) as connection:
+            rows = connection.execute(
+                """SELECT s.*,m.roster_id,m.franchise_name,m.status,
+                (SELECT count(*) FROM account_league_series_seasons x WHERE x.account_id=s.account_id AND x.series_id=s.series_id) AS season_count
+                FROM account_league_series s LEFT JOIN account_league_memberships m
+                ON m.account_id=s.account_id AND m.league_id=s.current_league_id
+                WHERE s.account_id=? ORDER BY s.current_season DESC,s.league_name,s.series_id""",
+                (account_id,),
+            ).fetchall()
+            represented = {
+                str(row["league_id"])
+                for row in connection.execute(
+                    "SELECT league_id FROM account_league_series_seasons WHERE account_id=?",
+                    (account_id,),
+                ).fetchall()
+            }
+            fallbacks = connection.execute(
+                "SELECT * FROM account_league_memberships WHERE account_id=? AND status='active' ORDER BY season DESC,league_name,league_id",
+                (account_id,),
+            ).fetchall()
+        result = [dict(row) for row in rows]
+        result.extend({
+            "account_id": row["account_id"], "series_id": row["league_id"],
+            "current_league_id": row["league_id"], "league_name": row["league_name"],
+            "current_season": row["season"], "roster_id": row["roster_id"],
+            "franchise_name": row["franchise_name"], "status": row["status"],
+            "season_count": 1,
+        } for row in fallbacks if str(row["league_id"]) not in represented)
+        return sorted(result, key=lambda row: (-(int(row.get("current_season") or 0)), str(row.get("league_name") or ""), str(row["series_id"])))
+
+    def series_seasons(self, account_id: str, series_id: str) -> list[dict[str, Any]]:
+        with closing(self.connect()) as connection:
+            rows = connection.execute(
+                "SELECT * FROM account_league_series_seasons WHERE account_id=? AND series_id=? ORDER BY season DESC,league_id",
+                (account_id, series_id),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def memberships(self, account_id: str) -> list[LeagueMembership]:
         with closing(self.connect()) as connection:
             rows = connection.execute(
@@ -261,6 +350,14 @@ class AccountStore:
 
     def activate(self, account_id: str, league_id: str) -> LeagueMembership | None:
         with self.transaction() as connection:
+            historical = connection.execute(
+                """SELECT 1 FROM account_league_series_seasons x
+                JOIN account_league_series s ON s.account_id=x.account_id AND s.series_id=x.series_id
+                WHERE x.account_id=? AND x.league_id=? AND s.current_league_id<>x.league_id""",
+                (account_id, league_id),
+            ).fetchone()
+            if historical is not None:
+                return None
             row = connection.execute(
                 "SELECT * FROM account_league_memberships WHERE account_id=? AND league_id=? AND status='active' AND roster_id IS NOT NULL",
                 (account_id, league_id),
@@ -274,6 +371,6 @@ class AccountStore:
         with closing(self.connect()) as connection:
             counts = {
                 name: connection.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
-                for name, table in (("accounts", "accounts"), ("sleeper_links", "sleeper_identities"), ("memberships", "account_league_memberships"), ("active_sessions", "account_sessions WHERE revoked_at IS NULL AND expires_at > datetime('now')"))
+                for name, table in (("accounts", "accounts"), ("sleeper_links", "sleeper_identities"), ("memberships", "account_league_memberships"), ("league_series", "account_league_series"), ("season_references", "account_league_series_seasons"), ("active_sessions", "account_sessions WHERE revoked_at IS NULL AND expires_at > datetime('now')"))
             }
         return {"status": "healthy", "schema_version": ACCOUNT_SCHEMA_VERSION, "counts": counts, "bytes": self.path.stat().st_size if self.path.exists() else 0}
