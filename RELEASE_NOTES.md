@@ -1,3 +1,17 @@
+# DTOS v1.10.60 - Multi-League Onboarding Authorization Boundary
+
+DTOS v1.10.60 corrects the authorization boundary that previously rejected a
+legitimate newly discovered league before the account onboarding handler could
+verify Sleeper ownership. The exception is deliberately narrow: authenticated
+onboarding/import and established-membership activation reach their handlers,
+while ordinary private league routes retain the existing membership gate.
+
+The release also presents a continuing Sleeper dynasty as one league series.
+Grouping uses authoritative `previous_league_id` continuity, preserves all season
+league IDs, never groups by name alone, and promotes future seasons without a
+hardcoded terminal year. Account memberships remain normalized one-to-many and
+league runtimes remain lazily bounded rather than loading every membership.
+
 # DTOS v1.10.59 - Accounts, Identity, and Sleeper Onboarding Foundation
 
 DTOS v1.10.59 introduces the secure consumer identity foundation described by

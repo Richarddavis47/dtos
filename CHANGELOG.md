@@ -1,5 +1,18 @@
 # Changelog
 
+# v1.10.60 - Multi-League Onboarding Authorization Boundary
+
+- Allows only authenticated league onboarding/import and established-membership
+  switching routes to reach their own server-side authorization handlers before
+  active-league path enforcement.
+- Groups continuing Sleeper season league IDs into authoritative dynasty-series
+  entries using `previous_league_id`, preserving every season ID without guessing
+  from league names.
+- Adds durable, normalized account-to-series season references while retaining the
+  unbounded one-to-many account membership model and bounded lazy runtime residency.
+- Preserves ordinary private-league authorization, neutral market truth, secure
+  sessions, CSRF, and league-specific scoring, roster, pick, and franchise context.
+
 # v1.10.59 - Accounts, Identity, and Sleeper Onboarding Foundation
 
 - Add durable DTOS accounts with Argon2 password hashing, opaque server-side sessions, one-time recovery codes, CSRF protection, and bounded authentication attempts.

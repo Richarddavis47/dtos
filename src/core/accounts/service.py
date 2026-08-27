@@ -11,6 +11,7 @@ from pwdlib import PasswordHash
 
 from config import HISTORICAL_START_SEASON, SESSION_TTL_HOURS, SLEEPER_BASE
 from .models import AccountContext
+from .league_series import LeagueSeries, group_league_series
 from .store import AccountStore, _token_digest
 
 
@@ -81,6 +82,27 @@ class AccountService:
                 if league.get("league_id"):
                     leagues[str(league["league_id"])] = league
         return sorted(leagues.values(), key=lambda row: (-int(row.get("season") or 0), str(row.get("name") or "")))
+
+    async def discover_series(self, sleeper_user_id: str, *, seasons: tuple[int, ...] | None = None) -> tuple[LeagueSeries, ...]:
+        return group_league_series(await self.discover(sleeper_user_id, seasons=seasons))
+
+    async def complete_series(self, current_league: dict[str, Any], *, maximum_seasons: int = 100) -> LeagueSeries:
+        """Walk an explicit Sleeper continuation chain with no terminal year."""
+        rows: list[dict[str, Any]] = [dict(current_league)]
+        seen = {str(current_league.get("league_id") or "")}
+        previous = str(current_league.get("previous_league_id") or "").strip()
+        while previous and len(rows) < maximum_seasons:
+            if previous in seen:
+                break
+            seen.add(previous)
+            try:
+                row = await self.league(previous)
+            except (ValueError, httpx.HTTPError):
+                break
+            rows.append(row)
+            previous = str(row.get("previous_league_id") or "").strip()
+        ordered = sorted(rows, key=lambda row: (int(row.get("season") or -1), str(row.get("league_id") or "")))
+        return LeagueSeries(str(ordered[0]["league_id"]), dict(current_league), tuple(reversed(ordered)))
 
     async def league(self, league_id: str) -> dict[str, Any]:
         if not league_id.strip() or not league_id.isdigit():

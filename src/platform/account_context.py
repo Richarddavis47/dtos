@@ -115,7 +115,11 @@ class AccountContextMiddleware:
                 await response(scope, receive, send)
                 return
         if context is not None and context.membership is not None:
-            league_path = re.search(r"/(?:league|leagues)/([^/]+)", path)
+            account_league_action = method == "POST" and (
+                path == "/account/leagues/import"
+                or bool(re.fullmatch(r"/account/leagues/[0-9]+(?:/activate)?", path))
+            )
+            league_path = None if account_league_action else re.search(r"/(?:league|leagues)/([^/]+)", path)
             if league_path and league_path.group(1) != context.membership.league_id:
                 response = JSONResponse({"status": "unauthorized_league"}, status_code=403)
                 await response(scope, receive, send)
