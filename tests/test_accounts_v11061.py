@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 from routes.accounts import create_accounts_router
 from src.core.accounts import AccountService, AccountStore
 from src.platform.account_context import AccountContextMiddleware
+from tools.validation.smoke_http import validate_product_contract
 
 
 class AccountOnboardingPresentationTests(unittest.TestCase):
@@ -96,6 +97,14 @@ class AccountOnboardingPresentationTests(unittest.TestCase):
                 self.assertIn('data-dtos-component="page-header"', response.text)
                 self.assertIn('data-dtos-shell="account-onboarding"', response.text)
                 self.assertIn('data-dtos-action="primary"', response.text)
+
+    def test_signed_out_root_redirect_finishes_on_canonical_sign_in_action(self) -> None:
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.url.path, "/account/sign-in")
+        self.assertEqual(response.history[0].status_code, 303)
+        self.assertEqual(response.history[0].headers["location"], "/account/sign-in?next=/")
+        validate_product_contract(response.content, "/")
 
     def test_inspection_fixture_contains_no_secret_or_private_account_value(self) -> None:
         with patch.dict("os.environ", self.fixture, clear=False):

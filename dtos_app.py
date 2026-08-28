@@ -62,6 +62,9 @@ from services.history import (
 )
 from services.fois import fois_service
 from src.core.fois import FOIS_MODEL_VERSION
+from src.core.fois.process_execution import (
+    shutdown_fois_executor, warm_fois_executor,
+)
 from src.core.asset_market import AssetMarketCache, asset_market_cache
 from src.core.asset_market.resource_diagnostics import (
     disk_health, resource_diagnostics, runtime_component_sizes,
@@ -514,6 +517,11 @@ async def lifespan(_: FastAPI):
             event_loop_monitor.cancel()
             await asyncio.gather(event_loop_monitor, return_exceptions=True)
         return
+    try:
+        await warm_fois_executor()
+        runtime_metrics.mark_background("fois_compute_worker", "ready")
+    except Exception:
+        runtime_metrics.mark_background("fois_compute_worker", "failed")
     load_cache()
     default_runtime = league_runtime_manager.resident(LEAGUE_ID)
     if default_runtime is not None and STATE.get("data"):
@@ -550,6 +558,7 @@ async def lifespan(_: FastAPI):
             return_exceptions=True,
         )
         await league_runtime_manager.shutdown()
+        await shutdown_fois_executor()
 
 
 app = FastAPI(title=APPLICATION_NAME, version=VERSION, lifespan=lifespan)

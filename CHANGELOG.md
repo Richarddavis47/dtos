@@ -1,5 +1,24 @@
 # Changelog
 
+# v1.10.62 - Homepage Primary Action Presentation
+
+- Correct canonical HTTP primary-action detection to recognize the established
+  semantic `data-dtos-action="primary"` contract on account/onboarding actions,
+  regardless of harmless CSS class ordering or additional button classes.
+- Preserve the authenticated Home `Open Team HQ` action and the signed-out
+  root redirect to the real `Sign in` action; no authentication, multi-league,
+  FOIS, or product-latency behavior changes.
+- Add regression coverage for the exact production signed-out-root redirect,
+  semantic account action, and rejection of markers on non-action elements.
+- Serialize validation-progress publication across Windows/Linux processes with
+  unique atomic snapshots, locked readers, and deterministic temporary cleanup.
+- Prewarm one bounded FOIS spawn worker and reduce its immutable input from the
+  full synchronized league payload to only FOIS-consumed league, roster,
+  historical, and owned-asset Brain evidence while preserving exact scores.
+- Measure canonical client latency from the socket boundary, retaining
+  validator evidence-publication time separately so diagnostics cannot consume
+  the unchanged 500 ms HTTP response budget.
+
 # v1.10.61 - Account/Onboarding Inspection Presentation
 
 - Integrates the six account and onboarding routes with the canonical shared

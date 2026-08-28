@@ -1,3 +1,29 @@
+# DTOS v1.10.62 - Homepage Primary Action Presentation
+
+DTOS v1.10.62 corrects a narrow canonical smoke-detection mismatch discovered
+after v1.10.61 deployment. Signed-out `/` correctly redirected to the shared
+sign-in page and rendered its real, accessible `Sign in` submit action, but the
+validator required an exact CSS class string and did not recognize the existing
+semantic primary-action marker when an additional `btn` class preceded it.
+
+The release recognizes the established semantic action contract while still
+requiring an actual anchor or button. Authenticated Home continues to present
+`Open Team HQ`; account authorization, multi-league behavior, FOIS process
+isolation, the 180-second outer validation watchdog, and every product latency
+and memory threshold remain unchanged.
+
+Pre-release validation also exposed two infrastructure scheduling boundaries.
+Run-scoped progress evidence now uses cross-process reader/writer serialization,
+unique same-directory atomic snapshots, and bounded cleanup on Windows and
+Linux. Canonical HTTP timing begins when the client performs the socket
+operation; progress-evidence publication remains separately recorded.
+
+FOIS retains one web worker and one isolated compute worker, but prewarms that
+spawned worker before request acceptance and reuses it for bounded immutable
+work units. The subprocess input contract includes only fields FOIS actually
+consumes, reducing the production-shaped payload from about 18.4 MB to about
+184 KB while strict regressions prove identical FOIS scores and clean shutdown.
+
 # DTOS v1.10.61 - Account/Onboarding Inspection Presentation
 
 DTOS v1.10.61 corrects the shared presentation contract for the six account and
