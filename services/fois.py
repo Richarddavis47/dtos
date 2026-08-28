@@ -8,6 +8,7 @@ from tempfile import gettempdir
 from src.core.fois.repository import FOISRepository
 from src.core.fois.history import load_results_history
 from src.core.fois.service import FOISService
+from src.core.fois.process_execution import generate_fois_isolated
 from src.core.history_context import canonical_history_store
 
 
@@ -28,4 +29,5 @@ fois_service = FOISService(
         canonical_history_store,
         league_id,
     ),
+    isolated_executor=generate_fois_isolated,
 )

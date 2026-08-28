@@ -1,3 +1,19 @@
+# DTOS v1.10.61 - Account/Onboarding Inspection Presentation
+
+DTOS v1.10.61 corrects the shared presentation contract for the six account and
+onboarding surfaces. Their normal and deterministic inspection renderings now
+use the same reduced account shell, canonical page header, and real semantically
+identified primary action across desktop, tablet, and mobile.
+
+The release does not alter authentication, account persistence, multi-league
+membership, league-series grouping, Asset Market semantics, or Historical
+Memory. Production DINS publication uses the public DTOS origin so generated
+artifact identities never contain an internal capture address.
+
+## Previous release
+
+DTOS v1.10.60 introduced the Multi-League Onboarding Authorization Boundary.
+
 # DTOS v1.10.60 - Multi-League Onboarding Authorization Boundary
 
 DTOS v1.10.60 corrects the authorization boundary that previously rejected a

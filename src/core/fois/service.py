@@ -37,12 +37,14 @@ class FOISService:
         *,
         repository_factory: Callable[[], FOISRepository] | None = None,
         history_loader: Callable[[str], dict[str, dict[str, Any]]] | None = None,
+        isolated_executor: Callable[..., Any] | None = None,
     ) -> None:
         if repository is None and repository_factory is None:
             raise ValueError("FOIS requires a repository or repository factory.")
         self._repository = repository
         self._repository_factory = repository_factory
         self._history_loader = history_loader
+        self._isolated_executor = isolated_executor
         self._generation_listeners: list[
             Callable[[dict[str, Any], tuple[Any, ...]], None]
         ] = []
@@ -80,11 +82,26 @@ class FOISService:
         self._status["state"] = "running"
         started = perf_counter()
         try:
-            scores = await asyncio.to_thread(self._generate_sync, data)
             league_id = str((data.get("league") or {}).get("league_id") or "configured-league")
-            canonical = self.repository.canonical_health(
-                league_id, DEFAULT_FOIS_CONFIGURATION.model_version,
-            )
+            if self._isolated_executor is None:
+                scores = await asyncio.to_thread(self._generate_sync, data)
+                canonical = await asyncio.to_thread(
+                    self.repository.canonical_health,
+                    league_id, DEFAULT_FOIS_CONFIGURATION.model_version,
+                )
+                execution_metrics = {"execution": "thread"}
+            else:
+                scores, canonical, execution_metrics = await self._isolated_executor(
+                    data, self.repository,
+                )
+                for listener in tuple(self._generation_listeners):
+                    try:
+                        await asyncio.to_thread(listener, data, scores)
+                    except Exception as exc:
+                        LOGGER.warning(
+                            "FOIS generation listener failed: type=%s",
+                            type(exc).__name__,
+                        )
             self._status.update({
                 "state": "complete",
                 "last_run": scores[0].generated_at if scores else None,
@@ -92,6 +109,7 @@ class FOISService:
                 "last_error": None,
                 "records": len(scores),
                 "generation_status": "complete",
+                "execution": execution_metrics,
                 **canonical,
             })
             LOGGER.info(

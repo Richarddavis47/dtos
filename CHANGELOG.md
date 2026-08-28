@@ -1,5 +1,16 @@
 # Changelog
 
+# v1.10.61 - Account/Onboarding Inspection Presentation
+
+- Integrates the six account and onboarding routes with the canonical shared
+  account page-header contract in ordinary and deterministic inspection modes.
+- Marks each real account-state action with a stable semantic identity so DINS
+  validates behavior without depending on mutable button prose.
+- Preserves the reduced signed-out shell, mobile-first forms, authentication,
+  multi-league authorization, and league-series behavior from v1.10.60.
+- Requires production DINS capture to publish public artifact identities from
+  `https://dtos.onrender.com` while the inspection token remains private.
+
 # v1.10.60 - Multi-League Onboarding Authorization Boundary
 
 - Allows only authenticated league onboarding/import and established-membership

@@ -191,7 +191,12 @@ class FOISFoundationTests(unittest.TestCase):
                 wraps=real_to_thread,
             ) as to_thread:
                 asyncio.run(service.generate(payload))
-            to_thread.assert_called_once()
+            self.assertEqual(to_thread.call_count, 2)
+            self.assertEqual(to_thread.call_args_list[0].args[0], service._generate_sync)
+            self.assertEqual(
+                to_thread.call_args_list[1].args[0],
+                service.repository.canonical_health,
+            )
 
     def test_api_is_feature_flagged_and_status_is_memory_only(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
