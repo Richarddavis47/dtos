@@ -1,3 +1,20 @@
+# DTOS v1.10.63 - Authenticated Trade Manager Context
+
+DTOS v1.10.63 corrects the canonical production smoke contract after v1.10.62
+proved that authenticated inspection identity already supplied an authorized
+active league and mapped franchise. The older validator incorrectly required
+the resolved manager to choose that franchise again.
+
+The validator now proves the stronger identity contract: a fully configured
+inspection membership must control its exact mapped roster, while unresolved
+contexts must expose the explicit chooser and may never guess a roster. Trade
+templates, manager resolution, authorization semantics, and product output are
+unchanged.
+
+The v1.10.62 homepage action, Windows-safe progress artifacts, compact persistent
+FOIS worker, 180-second watchdog, and all latency and resource thresholds remain
+unchanged.
+
 # DTOS v1.10.62 - Homepage Primary Action Presentation
 
 DTOS v1.10.62 corrects a narrow canonical smoke-detection mismatch discovered

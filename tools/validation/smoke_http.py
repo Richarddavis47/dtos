@@ -192,6 +192,33 @@ def get(base_url: str, path: str, expected: int = 200) -> bytes:
     return body
 
 
+def validate_trade_manager_context(
+    page_body: bytes, api_payload: dict[str, object], expected_roster_id: int | None,
+) -> None:
+    """Validate resolved identity or the explicit unresolved Trade state."""
+    chooser = b"Choose your franchise" in page_body
+    if expected_roster_id is None:
+        if not chooser:
+            raise AssertionError("/trades: unresolved manager context lacks explicit resolution")
+        if api_payload.get("status") != "manager_context_required":
+            raise AssertionError("/api/trades: missing explicit manager-context state")
+        if api_payload.get("active_front_office") is not None:
+            raise AssertionError("/api/trades: unresolved manager context guessed a franchise")
+        return
+    if chooser:
+        raise AssertionError("/trades: authenticated mapped manager was asked to choose a franchise")
+    if int(api_payload.get("active_front_office") or 0) != expected_roster_id:
+        raise AssertionError("/api/trades: controlled franchise does not match authenticated membership")
+
+
+def inspection_roster_id() -> int | None:
+    """Return the configured inspection membership roster, when fully resolved."""
+    token = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
+    league_id = os.getenv("DTOS_INSPECTION_LEAGUE_ID", "").strip()
+    roster = os.getenv("DTOS_INSPECTION_ROSTER_ID", "").strip()
+    return int(roster) if token and league_id and roster.isdigit() else None
+
+
 def get_market_page(
     base_url: str,
     path: str,
@@ -383,6 +410,7 @@ def main() -> int:
     product_pages = {"/", "/market", "/league", "/commissioner", "/teams", "/matchups", "/transactions", "/picks", "/settings", "/history", "/front-offices", "/trades"}
     recommendation_pages = {"/commissioner", "/front-offices"}
     market_pages: dict[str, str] = {}
+    trade_page_body = b""
     for path in major:
         if path == "/market":
             body = get_market_page(args.base_url, path)
@@ -391,12 +419,13 @@ def main() -> int:
             body = get(args.base_url, path)
         if path in product_pages and path != "/market":
             validate_product_contract(body, path, recommendation=path in recommendation_pages)
-        if path == "/trades" and b"Choose your franchise" not in body:
-            raise AssertionError("/trades: explicit manager-context selection is missing")
+        if path == "/trades":
+            trade_page_body = body
         if path == "/api/trades":
             trade_selection = json.loads(body)
-            if trade_selection.get("status") != "manager_context_required":
-                raise AssertionError("/api/trades: missing explicit manager-context state")
+            validate_trade_manager_context(
+                trade_page_body, trade_selection, inspection_roster_id(),
+            )
     print(
         "Asset Market page contract ready: "
         f"generation={market_pages['/market']} final_status=200",

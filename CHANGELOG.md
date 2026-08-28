@@ -1,5 +1,17 @@
 # Changelog
 
+# v1.10.63 - Authenticated Trade Manager Context
+
+- Replace the obsolete unconditional Trade franchise-chooser smoke assertion
+  with a state-aware semantic contract.
+- Require authenticated inspection requests to resolve the controlled Trade
+  franchise to the exact configured league membership roster without manual
+  reselection.
+- Preserve the explicit chooser and `manager_context_required` API state when
+  no membership mapping exists, including strict rejection of guessed rosters.
+- Preserve Trade product behavior, account authorization, multi-league
+  switching, homepage presentation, FOIS isolation, and all existing gates.
+
 # v1.10.62 - Homepage Primary Action Presentation
 
 - Correct canonical HTTP primary-action detection to recognize the established
