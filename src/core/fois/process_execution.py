@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import json
+import multiprocessing
 import os
 import shutil
-import sys
 import tempfile
-from collections.abc import Callable
+import threading
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -17,20 +19,125 @@ from config import (
     SLEEPER_SEASON_CACHE_ROOT,
 )
 from src.core.fois.models import FOIS_MODEL_VERSION
-from src.platform.validation.progress import (
-    PROGRESS_FILE_ENVIRONMENT, PROGRESS_RUN_ENVIRONMENT,
-    progress_from_environment,
-)
+from src.platform.validation.progress import progress_from_environment
 
 FOIS_PROCESS_TIMEOUT_SECONDS = 60.0
+_EXECUTOR: concurrent.futures.ProcessPoolExecutor | None = None
+_EXECUTOR_LOCK = threading.Lock()
 
 
-def _write_input(path: Path, payload: dict[str, Any]) -> int:
-    encoded = json.dumps(
-        payload, sort_keys=True, separators=(",", ":"), default=str,
-    ).encode("utf-8")
-    path.write_bytes(encoded)
-    return len(encoded)
+def _worker_ready() -> dict[str, int]:
+    """Import the complete compute path before the web process accepts traffic."""
+    import psutil
+    from src.core.fois.history import load_results_history  # noqa: F401
+    from src.core.fois.repository import FOISRepository  # noqa: F401
+    from src.core.fois.service import FOISService  # noqa: F401
+    from src.core.history_context import canonical_history_store  # noqa: F401
+
+    return {
+        "pid": os.getpid(),
+        "rss_bytes": psutil.Process(os.getpid()).memory_info().rss,
+    }
+
+
+def _executor() -> concurrent.futures.ProcessPoolExecutor:
+    global _EXECUTOR
+    with _EXECUTOR_LOCK:
+        if _EXECUTOR is None:
+            _EXECUTOR = concurrent.futures.ProcessPoolExecutor(
+                max_workers=1,
+                mp_context=multiprocessing.get_context("spawn"),
+            )
+        return _EXECUTOR
+
+
+async def warm_fois_executor() -> dict[str, int]:
+    """Start exactly one clean compute worker before request acceptance."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(_executor(), _worker_ready)
+
+
+async def shutdown_fois_executor() -> None:
+    """Reap the one bounded compute worker without blocking the event loop."""
+    global _EXECUTOR
+    with _EXECUTOR_LOCK:
+        executor, _EXECUTOR = _EXECUTOR, None
+    if executor is not None:
+        await asyncio.to_thread(executor.shutdown, wait=True, cancel_futures=True)
+
+
+def compact_fois_input(data: dict[str, Any]) -> dict[str, Any]:
+    """Return only canonical fields consumed by isolated FOIS generation."""
+    teams = data.get("teams") or []
+    asset_ids = {
+        f"player:{player.get('id') or player.get('player_id')}"
+        for team in teams
+        for player in team.get("players") or ()
+        if isinstance(player, dict) and (player.get("id") or player.get("player_id"))
+    }
+    report = data.get("valuation_intelligence") or {}
+    compact_report = {
+        name: value
+        for name, value in report.items()
+        if name not in {"assets", "timeline"}
+    }
+    compact_report["assets"] = {
+        asset_id: row
+        for asset_id, row in (report.get("assets") or {}).items()
+        if asset_id in asset_ids
+    }
+    compact_report["timeline"] = {
+        asset_id: row
+        for asset_id, row in (report.get("timeline") or {}).items()
+        if asset_id in asset_ids
+    }
+    compact = {
+        name: data[name]
+        for name in ("league", "league_settings", "teams", "brain_semantic_metrics")
+        if name in data
+    }
+    if report:
+        compact["valuation_intelligence"] = compact_report
+    if "fois_history" in data:
+        compact["fois_history"] = data["fois_history"]
+    return compact
+
+
+def _compute_fois_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Run one immutable compact FOIS work unit in the persistent child."""
+    progress = progress_from_environment()
+    record = progress.record if progress is not None else lambda *_args, **_kwargs: None
+    record("fois_child_phase", phase="compute", status="started")
+    import psutil
+    from src.core.fois.history import load_results_history
+    from src.core.fois.repository import FOISRepository
+    from src.core.fois.service import FOISService
+    from src.core.history_context import canonical_history_store
+
+    data = payload["data"]
+    league_id = str(payload["league_id"])
+    canonical_history_store.update_current(league_id, data)
+    repository = FOISRepository(Path(payload["fois_database"]))
+    service = FOISService(
+        repository,
+        history_loader=lambda selected: load_results_history(
+            canonical_history_store, selected,
+        ),
+    )
+    started = perf_counter()
+    scores = service._generate_sync(data)
+    duration_ms = round((perf_counter() - started) * 1000, 3)
+    record(
+        "fois_child_phase", phase="compute", status="completed",
+        duration_ms=duration_ms, records=len(scores),
+    )
+    return {
+        "status": "complete",
+        "records": len(scores),
+        "duration_ms": duration_ms,
+        "peak_rss_bytes": psutil.Process(os.getpid()).memory_info().rss,
+        "worker_pid": os.getpid(),
+    }
 
 
 def _read_published(repository: Any, league_id: str) -> tuple[tuple[Any, ...], dict[str, object]]:
@@ -58,34 +165,14 @@ def _validate_and_publish(
     return _read_published(repository, league_id)
 
 
-def _child_environment(root: Path) -> dict[str, str]:
-    environment = {
-        name: os.environ[name]
-        for name in ("PATH", "SYSTEMROOT", "WINDIR", "TMP", "TEMP")
-        if name in os.environ
-    }
-    environment.update({
-        "PYTHONPATH": str(root),
-        "PYTHONUNBUFFERED": "1",
-        "DTOS_FOIS_ENABLED": "1",
-    })
-    for name in (PROGRESS_FILE_ENVIRONMENT, PROGRESS_RUN_ENVIRONMENT):
-        if name in os.environ:
-            environment[name] = os.environ[name]
-    return environment
-
-
 async def generate_fois_isolated(
     data: dict[str, Any], repository: Any,
     *,
-    process_factory: Callable[..., Any] = asyncio.create_subprocess_exec,
     timeout: float = FOIS_PROCESS_TIMEOUT_SECONDS,
 ) -> tuple[tuple[Any, ...], dict[str, object], dict[str, object]]:
     """Compute/persist FOIS in one spawned child, then reconcile in the parent."""
-    root = Path(__file__).resolve().parents[3]
     league_id = str((data.get("league") or {}).get("league_id") or "configured-league")
     started = perf_counter()
-    process = None
     progress = progress_from_environment()
     record = progress.record if progress is not None else lambda *_args, **_kwargs: None
     record("fois_phase", phase="parent_input", status="started", league_identity="configured")
@@ -94,66 +181,40 @@ async def generate_fois_isolated(
         prefix=".dtos-fois-compute-", dir=repository.path.parent,
     ) as directory:
         temporary = Path(directory)
-        input_file = temporary / "input.json"
-        output_file = temporary / "output.json"
         working_database = temporary / "fois.sqlite3"
         await asyncio.to_thread(
             _prepare_working_database, repository.path, working_database,
         )
-        payload = {
-            "data": data,
+        compact_data = compact_fois_input(data)
+        payload: dict[str, Any] = {
+            "data": compact_data,
+            "input_contract": "compact_fois_v1",
             "league_id": league_id,
             "fois_database": str(working_database),
             "intelligence_checkpoint_file": str(INTELLIGENCE_CHECKPOINT_FILE),
             "metadata_database_file": str(METADATA_DATABASE_FILE),
             "sleeper_season_cache_root": str(SLEEPER_SEASON_CACHE_ROOT),
         }
-        input_bytes = await asyncio.to_thread(_write_input, input_file, payload)
+        input_bytes = await asyncio.to_thread(
+            lambda: len(json.dumps(
+                payload, sort_keys=True, separators=(",", ":"), default=str,
+            ).encode("utf-8")),
+        )
         record("fois_phase", phase="parent_input", status="completed", input_bytes=input_bytes, duration_ms=round((perf_counter() - started) * 1000, 3))
         try:
-            spawn_started = perf_counter()
-            record("fois_phase", phase="child_spawn", status="started")
-            process = await process_factory(
-                sys.executable, "-m", "src.fois_compute_worker",
-                "--input", str(input_file), "--output", str(output_file),
-                cwd=str(root), env=_child_environment(root),
-                stdin=asyncio.subprocess.DEVNULL,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            record("fois_phase", phase="child_spawn", status="completed", child_pid=process.pid, duration_ms=round((perf_counter() - spawn_started) * 1000, 3))
             try:
-                record("fois_phase", phase="child_execution", status="started", child_pid=process.pid)
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(), timeout=timeout,
+                loop = asyncio.get_running_loop()
+                result = await asyncio.wait_for(
+                    loop.run_in_executor(_executor(), _compute_fois_payload, payload),
+                    timeout=timeout,
                 )
-                record("fois_phase", phase="child_execution", status="completed", child_pid=process.pid, returncode=process.returncode)
             except asyncio.TimeoutError:
-                process.kill()
-                await process.wait()
                 raise RuntimeError("FOIS compute process timed out.") from None
-            if process.returncode != 0:
-                detail = stderr.decode("utf-8", errors="replace")[-500:]
-                raise RuntimeError(
-                    "FOIS compute process failed"
-                    + (f": {detail}" if detail else ".")
-                )
-            if stdout:
-                raise RuntimeError("FOIS compute process returned unexpected stdout.")
-            try:
-                result = json.loads(output_file.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError) as exc:
-                raise RuntimeError("FOIS compute process returned malformed output.") from exc
+            except BrokenProcessPool as exc:
+                raise RuntimeError("FOIS compute process failed.") from exc
             if result.get("status") != "complete" or int(result.get("records") or -1) < 0:
                 raise RuntimeError("FOIS compute process returned an invalid result contract.")
         except asyncio.CancelledError:
-            if process is not None and process.returncode is None:
-                process.terminate()
-                try:
-                    await asyncio.wait_for(process.wait(), timeout=2)
-                except asyncio.TimeoutError:
-                    process.kill()
-                    await process.wait()
             raise
 
         publication_started = perf_counter()
@@ -165,13 +226,15 @@ async def generate_fois_isolated(
         record("fois_phase", phase="publication", status="completed", records=len(scores), duration_ms=round((perf_counter() - publication_started) * 1000, 3))
         metrics = {
             "execution": "spawned_subprocess",
-            "worker_pid": process.pid,
+            "process_model": "persistent_spawn_pool",
+            "input_contract": "compact_fois_v1",
+            "worker_pid": result["worker_pid"],
             "input_bytes": input_bytes,
-            "output_bytes": output_file.stat().st_size,
+            "output_bytes": len(json.dumps(result, sort_keys=True).encode("utf-8")),
             "child_duration_ms": result.get("duration_ms"),
             "child_peak_rss_bytes": result.get("peak_rss_bytes"),
             "parent_duration_ms": round((perf_counter() - started) * 1000, 3),
-            "exit_status": process.returncode,
-            "reaped": True,
+            "exit_status": 0,
+            "reaped": False,
         }
         return scores, canonical, metrics

@@ -10,7 +10,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from src.platform.validation.worker import validate_worker_result
-from src.platform.validation.progress import read_progress
+from src.platform.validation.progress import cleanup_progress_temporary_files, read_progress
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS_DIRECTORY = ROOT / ".validation" / "results"
@@ -106,6 +106,7 @@ def main(timeout: float = OUTER_VALIDATION_WORKER_WATCHDOG_SECONDS) -> int:
         print(f"HTTP validation final result: {'PASS' if passed else 'FAIL'}")
         return 0 if passed else 1
     finally:
+        cleanup_progress_temporary_files(progress_file)
         result_file.unlink(missing_ok=True)
         retain = os.environ.get("DTOS_VALIDATION_RETAIN_DIAGNOSTICS", "0").casefold() in {
             "1", "true", "yes", "on",

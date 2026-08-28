@@ -94,6 +94,23 @@ class DesignSystemTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "internal identifier"):
             validate_product_contract((valid + "<p>Roster ID: 1</p>").encode(), "/teams/1")
 
+    def test_http_product_contract_accepts_semantic_primary_action_with_extra_classes(self) -> None:
+        header = account_page_header("Sign in", purpose="Return to your leagues.")
+        action = (
+            '<form action="/account/sign-in" method="post">'
+            '<button class="btn ds-action primary" data-dtos-action="primary" '
+            'data-action-id="sign-in" type="submit">Sign in</button></form>'
+        )
+        validate_product_contract((header + action).encode(), "/")
+
+    def test_http_product_contract_rejects_non_action_semantic_marker(self) -> None:
+        header = account_page_header("Sign in", purpose="Return to your leagues.")
+        with self.assertRaisesRegex(AssertionError, "primary page action is missing"):
+            validate_product_contract(
+                (header + '<div data-dtos-action="primary">Not an action</div>').encode(),
+                "/",
+            )
+
     def test_market_directory_contract_is_search_first_without_recommendation(self) -> None:
         header = page_header(
             "Asset Market", league_name="Dynasty League", last_updated="today",

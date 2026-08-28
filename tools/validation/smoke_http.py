@@ -20,6 +20,11 @@ GENERIC_TEAM_LABEL = re.compile(r"\b(?:Team|Roster)\s+(?:[1-9]|10)\b|\bTeam Deta
 GENERIC_PAGE_TITLE = re.compile(r"<title>\s*(?:Team|Player|Matchup)\s*(?:Detail)?\s*</title>", re.IGNORECASE)
 INTERNAL_LABEL = re.compile(r"\b(?:Roster ID|Player ID|Transaction ID|Sleeper ID|Franchise ID|Provider Key)\b", re.IGNORECASE)
 MARKET_DATASET = re.compile(r"Dataset\s*<code>([^<]+)</code>", re.IGNORECASE)
+PRIMARY_ACTION = re.compile(
+    r'<(?:a|button)\b[^>]*(?:data-dtos-action=["\']primary["\']|'
+    r'class=["\'][^"\']*\bds-action\b[^"\']*\bprimary\b[^"\']*["\'])[^>]*>',
+    re.IGNORECASE,
+)
 MARKET_WARMING_DETAIL = (
     "Asset Market generation is building safely in the background; retry shortly."
 )
@@ -68,7 +73,7 @@ def validate_product_contract(body: bytes, path: str, *, recommendation: bool = 
     html = body.decode("utf-8", errors="replace")
     if 'data-dtos-component="page-header"' not in html:
         raise AssertionError(f"{path}: shared page header is missing")
-    if 'class="ds-action primary"' not in html and ">Sync League</button>" not in html:
+    if PRIMARY_ACTION.search(html) is None and ">Sync League</button>" not in html:
         raise AssertionError(f"{path}: primary page action is missing")
     if GENERIC_PAGE_TITLE.search(html):
         raise AssertionError(f"{path}: page title is generic")
@@ -116,12 +121,13 @@ def validate_market_asset_contract(payload: dict, path: str) -> None:
 
 def _request(base_url: str, path: str, *, expected_contract: str = "canonical HTTP response") -> tuple[int, bytes, dict[str, str], float]:
     global _REQUEST_SEQUENCE
-    started = perf_counter()
+    intent_started = perf_counter()
     _REQUEST_SEQUENCE += 1
     sequence = _REQUEST_SEQUENCE
     identity = _route_identity(path)
     if _PROGRESS is not None:
         _PROGRESS.record("request_started", request_sequence=sequence, method="GET", route=identity, group=_request_group(path), expected_contract=expected_contract)
+    socket_started = perf_counter()
     print(f"HTTP smoke requesting: {path}", flush=True)
     try:
         headers = {}
@@ -130,19 +136,24 @@ def _request(base_url: str, path: str, *, expected_contract: str = "canonical HT
             headers["X-DTOS-Inspection-Auth"] = inspection_token
         headers["X-DTOS-Diagnostics"] = "1"
         with urlopen(Request(base_url.rstrip("/") + path, headers=headers), timeout=60) as response:
+            headers_received = perf_counter()
             status = response.status
             body = response.read()
+            body_received = perf_counter()
             headers = dict(response.headers.items())
     except HTTPError as exc:
+        headers_received = perf_counter()
         status = exc.code
         body = exc.read()
+        body_received = perf_counter()
         headers = dict(exc.headers.items())
     except TimeoutError as exc:
-        elapsed = perf_counter() - started
+        elapsed = perf_counter() - intent_started
         raise AssertionError(
             f"HTTP smoke timed out: {path} after {elapsed:.3f}s",
         ) from exc
-    elapsed = perf_counter() - started
+    elapsed = body_received - socket_started
+    intent_elapsed = body_received - intent_started
     server_ms = None
     request_id = None
     for name, value in headers.items():
@@ -160,6 +171,10 @@ def _request(base_url: str, path: str, *, expected_contract: str = "canonical HT
             route=identity, group=_request_group(path), status=status,
             client_duration_ms=client_ms, server_duration_ms=server_ms,
             non_handler_duration_ms=(round(max(0.0, client_ms - server_ms), 3) if server_ms is not None else None),
+            client_pre_socket_ms=round((socket_started - intent_started) * 1000, 3),
+            client_intent_to_body_ms=round(intent_elapsed * 1000, 3),
+            socket_to_headers_ms=round((headers_received - socket_started) * 1000, 3),
+            response_body_read_ms=round((body_received - headers_received) * 1000, 3),
             expected_contract=expected_contract, result="PASS",
             request_id=request_id, fois_generation_active=None,
         )
