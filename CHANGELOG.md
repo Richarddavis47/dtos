@@ -1,5 +1,17 @@
 # Changelog
 
+# v1.10.64 - Front Office Context Contract
+
+- Align canonical production smoke with the established authenticated-manager
+  boundary: protected Front Office and Trade requests resolve to the active
+  membership's true mapped franchise.
+- Preserve request-local explicit Front Office selection in unscoped local
+  validation without inventing session-persistent View As state.
+- Prove that explicit query values do not mutate account membership and cannot
+  leak across league switches, logout, accounts, or browser sessions.
+- Preserve v1.10.63 Trade manager resolution, homepage behavior, multi-league
+  membership, FOIS scheduling, and every latency and resource threshold.
+
 # v1.10.63 - Authenticated Trade Manager Context
 
 - Replace the obsolete unconditional Trade franchise-chooser smoke assertion
