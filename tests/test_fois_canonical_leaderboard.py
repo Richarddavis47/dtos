@@ -195,7 +195,7 @@ class CanonicalFOISLeaderboardTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("CURRENT GM PROFILE", profile.text)
         self.assertIn("GM History", profile.text)
 
-    async def test_completed_generation_is_prewarmed_before_first_request(self) -> None:
+    async def test_completed_generation_defers_disposable_render_until_first_request(self) -> None:
         data = _data()
         app = FastAPI()
         app.include_router(create_fois_router(
@@ -211,8 +211,14 @@ class CanonicalFOISLeaderboardTests(unittest.IsolatedAsyncioTestCase):
         after = client.get("/api/fois/status").json()["render_cache"]
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(before["fois_render_cache_misses"], 1)
-        self.assertEqual(after["fois_render_cache_hits"], 1)
+        self.assertEqual(before["fois_render_cache_misses"], 0)
+        self.assertEqual(before["fois_render_cache_entries"], 0)
+        self.assertEqual(after["fois_render_cache_misses"], 1)
+        self.assertEqual(after["fois_render_cache_entries"], 1)
+        repeated = client.get("/fois")
+        final = client.get("/api/fois/status").json()["render_cache"]
+        self.assertEqual(repeated.content, response.content)
+        self.assertEqual(final["fois_render_cache_hits"], 1)
 
     async def test_prewarm_failure_does_not_fail_generation(self) -> None:
         data = _data()

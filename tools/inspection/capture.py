@@ -130,7 +130,7 @@ def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: st
     content = page.content()
     visible_text = str(dom.get("visible_text") or "")
     has_shared_header = 'data-dtos-component="page-header"' in content
-    has_primary_action = 'class="ds-action primary"' in content or '<button class="btn" type="submit">Sync League</button>' in content
+    has_primary_action = 'data-dtos-action="primary"' in content or 'class="ds-action primary"' in content
     has_recommendation = 'data-dtos-component="recommendation"' in content
     public_contract_failures = []
     if not has_shared_header:

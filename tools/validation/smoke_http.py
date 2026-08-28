@@ -9,9 +9,12 @@ from time import perf_counter, sleep
 from typing import Callable
 from urllib.error import HTTPError
 from urllib.parse import quote
+from urllib.parse import parse_qsl, urlsplit
+from pathlib import Path
 from urllib.request import Request, urlopen
 
 from src.platform.lifecycle import MARKET_BUILD_BLOCKERS
+from src.platform.validation.progress import ValidationProgress
 
 GENERIC_TEAM_LABEL = re.compile(r"\b(?:Team|Roster)\s+(?:[1-9]|10)\b|\bTeam Detail\b", re.IGNORECASE)
 GENERIC_PAGE_TITLE = re.compile(r"<title>\s*(?:Team|Player|Matchup)\s*(?:Detail)?\s*</title>", re.IGNORECASE)
@@ -24,6 +27,33 @@ MARKET_WARMING_PATHS = frozenset(("/market",))
 MARKET_WARMING_DEADLINE_SECONDS = 60.0
 MARKET_WARMING_RESPONSE_LIMIT_SECONDS = 0.5
 MARKET_WARMING_INTERVAL_SECONDS = 0.5
+_PROGRESS: ValidationProgress | None = None
+_REQUEST_SEQUENCE = 0
+
+
+def _route_identity(path: str) -> str:
+    parsed = urlsplit(path)
+    route = re.sub(r"/(?:player:)?[^/?]+", lambda match: match.group(0), parsed.path)
+    route = re.sub(r"/\d+(?=/|$)", "/{id}", route)
+    route = re.sub(r"/players/[^/]+", "/players/{id}", route)
+    route = re.sub(r"/api/market/assets/player:[^/]+", "/api/market/assets/player:{id}", route)
+    keys = sorted({key for key, _value in parse_qsl(parsed.query, keep_blank_values=True)})
+    return route + ("?" + "&".join(f"{key}={{value}}" for key in keys) if keys else "")
+
+
+def _request_group(path: str) -> str:
+    route = urlsplit(path).path
+    if route.startswith(("/api/market", "/market")):
+        return "market"
+    if route.startswith(("/trades", "/api/trades")):
+        return "trade"
+    if route.startswith(("/fois", "/api/fois", "/front-offices", "/api/front-offices")):
+        return "fois_front_office"
+    if route.startswith(("/account", "/api/account")):
+        return "account_onboarding"
+    if route.startswith(("/health", "/api/inspect", "/current-visual")):
+        return "inspection_health"
+    return "public"
 
 
 def validate_team_identity(body: bytes, path: str) -> None:
@@ -84,14 +114,21 @@ def validate_market_asset_contract(payload: dict, path: str) -> None:
         raise AssertionError(f"{path}: market detail and recommendation use different Brain snapshots")
 
 
-def _request(base_url: str, path: str) -> tuple[int, bytes, dict[str, str], float]:
+def _request(base_url: str, path: str, *, expected_contract: str = "canonical HTTP response") -> tuple[int, bytes, dict[str, str], float]:
+    global _REQUEST_SEQUENCE
     started = perf_counter()
+    _REQUEST_SEQUENCE += 1
+    sequence = _REQUEST_SEQUENCE
+    identity = _route_identity(path)
+    if _PROGRESS is not None:
+        _PROGRESS.record("request_started", request_sequence=sequence, method="GET", route=identity, group=_request_group(path), expected_contract=expected_contract)
     print(f"HTTP smoke requesting: {path}", flush=True)
     try:
         headers = {}
         inspection_token = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
         if inspection_token:
             headers["X-DTOS-Inspection-Auth"] = inspection_token
+        headers["X-DTOS-Diagnostics"] = "1"
         with urlopen(Request(base_url.rstrip("/") + path, headers=headers), timeout=60) as response:
             status = response.status
             body = response.read()
@@ -106,6 +143,26 @@ def _request(base_url: str, path: str) -> tuple[int, bytes, dict[str, str], floa
             f"HTTP smoke timed out: {path} after {elapsed:.3f}s",
         ) from exc
     elapsed = perf_counter() - started
+    server_ms = None
+    request_id = None
+    for name, value in headers.items():
+        if name.casefold() == "x-dtos-request-duration":
+            try:
+                server_ms = float(value)
+            except ValueError:
+                pass
+        elif name.casefold() == "x-request-id":
+            request_id = value
+    if _PROGRESS is not None:
+        client_ms = round(elapsed * 1000, 3)
+        _PROGRESS.record(
+            "request_complete", request_sequence=sequence, method="GET",
+            route=identity, group=_request_group(path), status=status,
+            client_duration_ms=client_ms, server_duration_ms=server_ms,
+            non_handler_duration_ms=(round(max(0.0, client_ms - server_ms), 3) if server_ms is not None else None),
+            expected_contract=expected_contract, result="PASS",
+            request_id=request_id, fois_generation_active=None,
+        )
     print(
         f"HTTP smoke completed: {path} status={status} elapsed={elapsed:.3f}s",
         flush=True,
@@ -114,7 +171,7 @@ def _request(base_url: str, path: str) -> tuple[int, bytes, dict[str, str], floa
 
 
 def get(base_url: str, path: str, expected: int = 200) -> bytes:
-    status, body, _headers, _elapsed = _request(base_url, path)
+    status, body, _headers, _elapsed = _request(base_url, path, expected_contract=f"HTTP {expected}")
     if status != expected:
         raise AssertionError(f"{path}: expected HTTP {expected}, received {status}; body={body[:300]!r}")
     return body
@@ -281,7 +338,14 @@ def get_market_page(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default="http://127.0.0.1:8767")
+    parser.add_argument("--progress-file", type=Path)
+    parser.add_argument("--validation-run-id", default="standalone")
     args = parser.parse_args()
+    global _PROGRESS
+    if args.progress_file:
+        _PROGRESS = ValidationProgress(args.progress_file, args.validation_run_id)
+        _PROGRESS.record("smoke_phase", phase="auth_setup", status="not_applicable", duration_ms=0, reason="canonical smoke uses no account session fixture")
+        _PROGRESS.record("smoke_phase", phase="requests", status="started")
 
     major = (
         "/", "/market", "/league", "/commissioner", "/teams", "/matchups", "/transactions", "/picks", "/settings",
@@ -381,6 +445,8 @@ def main() -> int:
         f"HTTP smoke passed: {len(major)} major endpoints, {len(roster_ids)} Team HQ pages, "
         f"{len(roster_ids)} Front Office dossiers/APIs/trade contexts, and one player dossier across all contexts."
     )
+    if _PROGRESS is not None:
+        _PROGRESS.record("smoke_phase", phase="requests", status="completed", request_count=_REQUEST_SEQUENCE)
     return 0
 
 

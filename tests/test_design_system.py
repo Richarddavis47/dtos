@@ -3,7 +3,13 @@ from __future__ import annotations
 
 import unittest
 
-from src.ui.design_system import DESIGN_SYSTEM_CSS, manager_navigation, page_header, recommendation_panel
+from src.ui.design_system import (
+    DESIGN_SYSTEM_CSS,
+    account_page_header,
+    manager_navigation,
+    page_header,
+    recommendation_panel,
+)
 from routes.teams import TEAM_HQ_CSS
 from tools.validation.smoke_http import (
     validate_asset_market_contract,
@@ -43,6 +49,14 @@ class DesignSystemTests(unittest.TestCase):
         self.assertIn("Evaluate General Manager performance", html)
         self.assertIn('href="#gm-rankings"', html)
         self.assertIn(">View GM Rankings</a>", html)
+
+    def test_account_header_uses_reduced_shared_shell_without_manager_navigation(self) -> None:
+        html = account_page_header("Sign in", purpose="Return to your leagues.")
+        self.assertIn('data-dtos-component="page-header"', html)
+        self.assertIn('data-dtos-shell="account-onboarding"', html)
+        self.assertIn("Account &amp; identity", html)
+        self.assertIn("Return to your leagues.", html)
+        self.assertNotIn("manager-nav", html)
 
     def test_recommendation_contract_is_explainable_and_collapsed(self) -> None:
         html = recommendation_panel(

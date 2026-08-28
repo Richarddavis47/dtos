@@ -62,6 +62,18 @@ def page_header(title: str, *, league_name: str, last_updated: str) -> str:
     return f'''<header class="ds-page-header" data-dtos-component="page-header" data-design-system="{DESIGN_SYSTEM_VERSION}"><div><div class="ds-eyebrow">DTOS — {escape(presentation.context)}</div><h1>{escape(title)}</h1><p class="ds-purpose">{escape(presentation.purpose)}</p><div class="ds-context">{escape(league_name)}</div></div><div class="ds-header-side"><div class="ds-freshness">League Sync<br><b>{escape(last_updated or "Not synchronized yet")}</b></div><div class="ds-actions"><a class="ds-action primary" href="{escape(presentation.primary_href)}">{escape(presentation.primary_label)}</a><a class="ds-action" href="{escape(presentation.secondary_href)}">{escape(presentation.secondary_label)}</a></div></div></header>'''
 
 
+def account_page_header(title: str, *, purpose: str) -> str:
+    """Render the reduced, public-safe account/onboarding page shell."""
+    return (
+        f'<header class="ds-page-header" data-dtos-component="page-header" '
+        f'data-dtos-shell="account-onboarding" data-design-system="{DESIGN_SYSTEM_VERSION}">'
+        '<div><div class="ds-eyebrow">DTOS — Account &amp; identity</div>'
+        f'<h1>{escape(title)}</h1><p class="ds-purpose">{escape(purpose)}</p>'
+        '<div class="ds-context">Secure Sleeper-backed front office access</div></div>'
+        '</header>'
+    )
+
+
 def manager_navigation(title: str) -> str:
     """Render the five primary manager destinations and subordinate tools."""
     normalized = title.casefold()

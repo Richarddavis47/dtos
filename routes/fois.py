@@ -339,15 +339,6 @@ def create_fois_router(
             key, generation, lambda: build_fois_page(league_id, data).body,
         )
 
-    def prewarm_completed_generation(
-        data: dict[str, Any], scores: tuple[Any, ...],
-    ) -> None:
-        if not scores:
-            return
-        cached_fois_page("", data, str(scores[0].generated_at))
-
-    service.add_generation_listener(prewarm_completed_generation)
-
     @router.get("/fois", response_class=HTMLResponse)
     def fois_page(league_id: str = Query(default="")) -> HTMLResponse:
         status_value = service.status()
