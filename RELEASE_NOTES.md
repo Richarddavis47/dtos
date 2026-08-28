@@ -13,6 +13,21 @@ validation. No product route, account membership, session, or intelligence
 behavior changes. Regressions prove league-switch, logout, multi-user, and
 private-context isolation.
 
+Archive-warmed Linux validation also identified a real memory-margin failure in
+the canonical historical-leader read. The read previously constructed every
+record type for the season, copied the filtered player-week records, and then
+retained only 40 aggregate rows. It now aggregates directly over the canonical
+Sleeper season facts, preserving identical leader semantics with bounded
+temporary state.
+
+Repeated canonical warming traces then proved that FOIS computation was
+isolated but its parent-side snapshot compaction and process-pool pickling could
+still monopolize the web interpreter. The existing single persistent spawn
+worker now receives only a bounded canonical-cache control contract and loads,
+validates, compacts, and evaluates that immutable input in the child. This
+preserves one web worker, one compute lane, existing FOIS semantics, and the
+current deployment tier without tying process count to league memberships.
+
 The v1.10.63 Trade correction, homepage action, FOIS process isolation,
 180-second watchdog, Windows-safe progress publication, and all latency and
 memory thresholds remain unchanged.

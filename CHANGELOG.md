@@ -11,6 +11,14 @@
   leak across league switches, logout, accounts, or browser sessions.
 - Preserve v1.10.63 Trade manager resolution, homepage behavior, multi-league
   membership, FOIS scheduling, and every latency and resource threshold.
+- Bound canonical historical-leader aggregation to player scoring facts instead
+  of materializing and filtering every record type in a season.
+- Preserve leader counts, identities, ordering, statistics, and cache behavior
+  while removing the archive-warmed full-season temporary-copy peak.
+- Move FOIS snapshot traversal and compaction behind the existing one-process
+  compute boundary by handing the worker a bounded canonical-cache reference.
+- Keep one web worker and one persistent spawn worker while eliminating large
+  parent-process IPC pickling during startup intelligence generation.
 
 # v1.10.63 - Authenticated Trade Manager Context
 

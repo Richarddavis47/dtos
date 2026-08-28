@@ -50,7 +50,11 @@ class TradeCenterBrowserTests(unittest.TestCase):
                             request_route.abort()
 
                     page.route("**/*", route)
-                    page.goto("https://dtos.test/trades/create")
+                    page.goto(
+                        "https://dtos.test/trades/create",
+                        wait_until="domcontentloaded",
+                        timeout=10_000,
+                    )
                     page.wait_for_selector(".ti-roster-browser")
 
                     def assert_filter(side: str, position: str) -> None:
