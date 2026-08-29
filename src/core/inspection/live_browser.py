@@ -12,11 +12,11 @@ from playwright.sync_api import sync_playwright
 from src.core.inspection.live_visual import CaptureRequest, LIVE_VIEWPORTS
 from tools.inspection.capture import DOM_SCRIPT
 
-LIVE_VISUAL_CHROMIUM_ARGS = ("--disable-gpu",)
+LIVE_VISUAL_CHROMIUM_ARGS = ("--no-zygote",)
 
 
 def browser_launch_options() -> dict[str, Any]:
-    """Use CPU rasterization for static captures without a resident GPU helper."""
+    """Avoid one-shot Chromium zygotes while preserving the render pipeline."""
     return {"headless": True, "args": list(LIVE_VISUAL_CHROMIUM_ARGS)}
 
 

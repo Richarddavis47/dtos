@@ -32,11 +32,12 @@ from src.core.inspection.live_visual import CaptureRequest
 
 
 class LiveVisualProcessTests(unittest.TestCase):
-    def test_static_capture_disables_gpu_without_changing_capture_quality(self):
+    def test_one_shot_capture_omits_unused_zygote_without_changing_quality(self):
         options = browser_launch_options()
         self.assertTrue(options["headless"])
         self.assertEqual(tuple(options["args"]), LIVE_VISUAL_CHROMIUM_ARGS)
-        self.assertIn("--disable-gpu", options["args"])
+        self.assertIn("--no-zygote", options["args"])
+        self.assertNotIn("--disable-gpu", options["args"])
         self.assertNotIn("--single-process", options["args"])
         self.assertNotIn("--disable-software-rasterizer", options["args"])
 
