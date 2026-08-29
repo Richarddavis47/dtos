@@ -15,7 +15,7 @@ from time import perf_counter
 from typing import Any
 
 from config import (
-    INTELLIGENCE_CHECKPOINT_FILE, METADATA_DATABASE_FILE,
+    CACHE_FILE, INTELLIGENCE_CHECKPOINT_FILE, LEAGUE_ID, METADATA_DATABASE_FILE,
     SLEEPER_SEASON_CACHE_ROOT,
 )
 from src.core.fois.models import FOIS_MODEL_VERSION
@@ -103,6 +103,24 @@ def compact_fois_input(data: dict[str, Any]) -> dict[str, Any]:
     return compact
 
 
+def _league_cache_file(league_id: str) -> Path:
+    """Resolve the canonical cache without importing the application service."""
+    if str(league_id) == str(LEAGUE_ID):
+        return CACHE_FILE
+    return CACHE_FILE.with_name(f"{CACHE_FILE.stem}.{league_id}{CACHE_FILE.suffix}")
+
+
+def _load_compact_fois_input(cache_file: Path, league_id: str) -> tuple[dict[str, Any], int]:
+    """Load and compact canonical input entirely inside the compute process."""
+    raw = cache_file.read_bytes()
+    payload = json.loads(raw)
+    data = payload.get("data") or {}
+    cached_league = str((data.get("league") or {}).get("league_id") or "")
+    if cached_league != str(league_id):
+        raise RuntimeError("FOIS canonical cache league identity mismatch.")
+    return compact_fois_input(data), len(raw)
+
+
 def _compute_fois_payload(payload: dict[str, Any]) -> dict[str, Any]:
     """Run one immutable compact FOIS work unit in the persistent child."""
     progress = progress_from_environment()
@@ -114,8 +132,13 @@ def _compute_fois_payload(payload: dict[str, Any]) -> dict[str, Any]:
     from src.core.fois.service import FOISService
     from src.core.history_context import canonical_history_store
 
-    data = payload["data"]
     league_id = str(payload["league_id"])
+    data, source_bytes = _load_compact_fois_input(
+        Path(payload["cache_file"]), league_id,
+    )
+    compact_input_bytes = len(json.dumps(
+        data, sort_keys=True, separators=(",", ":"), default=str,
+    ).encode("utf-8"))
     canonical_history_store.update_current(league_id, data)
     repository = FOISRepository(Path(payload["fois_database"]))
     service = FOISService(
@@ -137,6 +160,8 @@ def _compute_fois_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "duration_ms": duration_ms,
         "peak_rss_bytes": psutil.Process(os.getpid()).memory_info().rss,
         "worker_pid": os.getpid(),
+        "source_bytes": source_bytes,
+        "compact_input_bytes": compact_input_bytes,
     }
 
 
@@ -169,6 +194,7 @@ async def generate_fois_isolated(
     data: dict[str, Any], repository: Any,
     *,
     timeout: float = FOIS_PROCESS_TIMEOUT_SECONDS,
+    cache_file: Path | None = None,
 ) -> tuple[tuple[Any, ...], dict[str, object], dict[str, object]]:
     """Compute/persist FOIS in one spawned child, then reconcile in the parent."""
     league_id = str((data.get("league") or {}).get("league_id") or "configured-league")
@@ -185,21 +211,21 @@ async def generate_fois_isolated(
         await asyncio.to_thread(
             _prepare_working_database, repository.path, working_database,
         )
-        compact_data = compact_fois_input(data)
+        source_file = cache_file or _league_cache_file(league_id)
+        if not source_file.is_file():
+            raise RuntimeError("FOIS canonical cache input is unavailable.")
         payload: dict[str, Any] = {
-            "data": compact_data,
-            "input_contract": "compact_fois_v1",
+            "input_contract": "canonical_cache_fois_v2",
             "league_id": league_id,
+            "cache_file": str(source_file),
             "fois_database": str(working_database),
             "intelligence_checkpoint_file": str(INTELLIGENCE_CHECKPOINT_FILE),
             "metadata_database_file": str(METADATA_DATABASE_FILE),
             "sleeper_season_cache_root": str(SLEEPER_SEASON_CACHE_ROOT),
         }
-        input_bytes = await asyncio.to_thread(
-            lambda: len(json.dumps(
-                payload, sort_keys=True, separators=(",", ":"), default=str,
-            ).encode("utf-8")),
-        )
+        input_bytes = len(json.dumps(
+            payload, sort_keys=True, separators=(",", ":"), default=str,
+        ).encode("utf-8"))
         record("fois_phase", phase="parent_input", status="completed", input_bytes=input_bytes, duration_ms=round((perf_counter() - started) * 1000, 3))
         try:
             try:
@@ -227,12 +253,14 @@ async def generate_fois_isolated(
         metrics = {
             "execution": "spawned_subprocess",
             "process_model": "persistent_spawn_pool",
-            "input_contract": "compact_fois_v1",
+            "input_contract": "canonical_cache_fois_v2",
             "worker_pid": result["worker_pid"],
             "input_bytes": input_bytes,
             "output_bytes": len(json.dumps(result, sort_keys=True).encode("utf-8")),
             "child_duration_ms": result.get("duration_ms"),
             "child_peak_rss_bytes": result.get("peak_rss_bytes"),
+            "source_bytes": result.get("source_bytes"),
+            "compact_input_bytes": result.get("compact_input_bytes"),
             "parent_duration_ms": round((perf_counter() - started) * 1000, 3),
             "exit_status": 0,
             "reaped": False,

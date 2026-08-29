@@ -1,5 +1,25 @@
 # Changelog
 
+# v1.10.64 - Front Office Context Contract
+
+- Align canonical production smoke with the established authenticated-manager
+  boundary: protected Front Office and Trade requests resolve to the active
+  membership's true mapped franchise.
+- Preserve request-local explicit Front Office selection in unscoped local
+  validation without inventing session-persistent View As state.
+- Prove that explicit query values do not mutate account membership and cannot
+  leak across league switches, logout, accounts, or browser sessions.
+- Preserve v1.10.63 Trade manager resolution, homepage behavior, multi-league
+  membership, FOIS scheduling, and every latency and resource threshold.
+- Bound canonical historical-leader aggregation to player scoring facts instead
+  of materializing and filtering every record type in a season.
+- Preserve leader counts, identities, ordering, statistics, and cache behavior
+  while removing the archive-warmed full-season temporary-copy peak.
+- Move FOIS snapshot traversal and compaction behind the existing one-process
+  compute boundary by handing the worker a bounded canonical-cache reference.
+- Keep one web worker and one persistent spawn worker while eliminating large
+  parent-process IPC pickling during startup intelligence generation.
+
 # v1.10.63 - Authenticated Trade Manager Context
 
 - Replace the obsolete unconditional Trade franchise-chooser smoke assertion

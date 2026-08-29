@@ -345,10 +345,16 @@ class CanonicalHistoryStore:
         return {"status": "complete", "run_id": "sleeper-cache", "completed_at": None} if seasons else None
 
     def season_player_leaders(self, league_id: str, season: int, limit: int = 40) -> tuple[int, list[dict[str, Any]]]:
-        count, rows = self.records(league_id, "player_week", season=season, limit=1_000_000)
+        facts = self._facts(league_id, season)
+        if not facts:
+            return 0, []
+        count = 0
         totals: dict[str, float] = defaultdict(float)
-        for row in rows:
-            totals[str(row["player_id"])] += float(row["payload"].get("fantasy_points") or 0)
+        for matchups in (facts.get("matchups") or {}).values():
+            for matchup in matchups or ():
+                for player_id, score in (matchup.get("players_points") or {}).items():
+                    totals[str(player_id)] += float(score or 0)
+                    count += 1
         ranked = sorted(totals.items(), key=lambda item: (-item[1], item[0]))[:limit]
         return count, [{"player_id": player_id, "points": points,
                         "display_name": (self._identities.get(player_id) or {}).get("display_name"),

@@ -455,6 +455,51 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
                 self.assertEqual(store.search_player_ids("L", "retired", 10), ["retired-7"])
                 self.assertEqual(store.search_player_ids("OTHER", "retired", 10), [])
 
+    def test_canonical_leaders_aggregate_directly_without_materializing_records(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            cache = SleeperSeasonCache(Path(directory))
+            cache.write(cache.normalize("L", 2025, {
+                "league": {"league_id": "L"},
+                "matchups": {
+                    "1": [{
+                        "matchup_id": 1, "roster_id": 1, "points": 30,
+                        "players_points": {"alpha": 10, "beta": 20},
+                        "starters": ["alpha", "beta"],
+                    }],
+                    "2": [{
+                        "matchup_id": 2, "roster_id": 1, "points": 25,
+                        "players_points": {"alpha": 15, "beta": 10},
+                        "starters": ["alpha", "beta"],
+                    }],
+                },
+                "transactions": {"1": [{
+                    "transaction_id": "unrelated", "type": "trade",
+                }]},
+            }))
+            store = CanonicalHistoryStore()
+            store.update_current("L", {
+                "league": {"league_id": "L"},
+                "normalized_players": {
+                    "alpha": {"name": "Alpha", "position": "QB"},
+                    "beta": {"name": "Beta", "position": "RB"},
+                },
+            })
+            with (
+                patch("src.core.history_context.store.sleeper_season_cache", cache),
+                patch.object(
+                    store, "_season_records",
+                    side_effect=AssertionError("leaders materialized full season records"),
+                ),
+            ):
+                count, leaders = store.season_player_leaders("L", 2025)
+            self.assertEqual(count, 4)
+            self.assertEqual(
+                [(row["player_id"], row["points"]) for row in leaders],
+                [("beta", 30.0), ("alpha", 25.0)],
+            )
+            self.assertEqual(leaders[0]["display_name"], "Beta")
+            self.assertEqual(leaders[0]["position"], "RB")
+
     def test_trade_discovery_filters_orders_and_limits_completed_trades(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             cache = SleeperSeasonCache(Path(directory))

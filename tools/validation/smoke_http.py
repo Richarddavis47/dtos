@@ -219,6 +219,23 @@ def inspection_roster_id() -> int | None:
     return int(roster) if token and league_id and roster.isdigit() else None
 
 
+def expected_front_office_context(requested_roster_id: int) -> int:
+    """Resolve smoke expectations through the authenticated manager contract."""
+    return inspection_roster_id() or requested_roster_id
+
+
+def validate_front_office_manager_context(
+    api_payload: dict[str, object], requested_roster_id: int,
+) -> None:
+    """Require the authenticated franchise or an explicit local perspective."""
+    expected_roster_id = expected_front_office_context(requested_roster_id)
+    if int(api_payload.get("active_front_office") or 0) != expected_roster_id:
+        raise AssertionError(
+            "/api/front-offices: resolved franchise does not match the "
+            "authenticated membership context"
+        )
+
+
 def get_market_page(
     base_url: str,
     path: str,
@@ -447,15 +464,14 @@ def main() -> int:
         validate_team_identity(front_office_body, front_office_path)
         validate_product_contract(front_office_body, front_office_path, recommendation=True)
         organization = json.loads(get(args.base_url, f"/api/front-offices?front_office={roster_id}"))
-        if organization.get("active_front_office") != roster_id:
-            raise AssertionError(f"Front Office context {roster_id} did not persist through the API.")
+        validate_front_office_manager_context(organization, roster_id)
         trade_path = f"/trades?front_office={roster_id}"
         trade_body = get(args.base_url, trade_path)
         validate_team_identity(trade_body, trade_path)
         validate_product_contract(trade_body, trade_path, recommendation=True)
         trade_api = json.loads(get(args.base_url, f"/api/trades?front_office={roster_id}"))
-        if int(trade_api.get("active_front_office") or 0) != roster_id:
-            raise AssertionError(f"Trade Center context {roster_id} did not persist through the API.")
+        if int(trade_api.get("active_front_office") or 0) != expected_front_office_context(roster_id):
+            raise AssertionError("Trade Center context does not match authenticated membership.")
 
     player_index = json.loads(get(args.base_url, "/api/players"))
     players = player_index.get("players") or []

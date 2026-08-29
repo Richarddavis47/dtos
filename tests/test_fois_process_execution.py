@@ -8,7 +8,9 @@ import tempfile
 import time
 import unittest
 from dataclasses import asdict
+from functools import partial
 from pathlib import Path
+import json
 
 import psutil
 
@@ -61,6 +63,12 @@ def semantic(score: object) -> dict:
     return payload
 
 
+def cache_input(root: Path, data: dict, name: str = "cache.json") -> Path:
+    path = root / name
+    path.write_text(json.dumps({"data": data}), encoding="utf-8")
+    return path
+
+
 class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
     def test_compact_input_retains_only_owned_brain_assets(self) -> None:
         data = fixture()
@@ -79,7 +87,10 @@ class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
             thread_service = FOISService(FOISRepository(root / "thread.sqlite3"))
             process_service = FOISService(
                 FOISRepository(root / "process.sqlite3"),
-                isolated_executor=generate_fois_isolated,
+                isolated_executor=partial(
+                    generate_fois_isolated,
+                    cache_file=cache_input(root, fixture()),
+                ),
             )
             thread_scores = await thread_service.generate(copy.deepcopy(fixture()))
             process_scores = await process_service.generate(copy.deepcopy(fixture()))
@@ -95,7 +106,7 @@ class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
             )
             execution = process_service.status()["execution"]
             self.assertEqual(execution["execution"], "spawned_subprocess")
-            self.assertEqual(execution["input_contract"], "compact_fois_v1")
+            self.assertEqual(execution["input_contract"], "canonical_cache_fois_v2")
             self.assertEqual(execution["exit_status"], 0)
             self.assertEqual(execution["process_model"], "persistent_spawn_pool")
             self.assertFalse(execution["reaped"])
@@ -108,9 +119,13 @@ class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_prewarmed_worker_keeps_event_loop_responsive_with_large_irrelevant_data(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
             service = FOISService(
-                FOISRepository(Path(directory) / "fois.sqlite3"),
-                isolated_executor=generate_fois_isolated,
+                FOISRepository(root / "fois.sqlite3"),
+                isolated_executor=partial(
+                    generate_fois_isolated,
+                    cache_file=cache_input(root, fixture()),
+                ),
             )
             data = fixture()
             data["players"] = {
@@ -140,6 +155,55 @@ class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(gaps)
             self.assertLess(max(gaps), 500)
             self.assertLess(service.status()["execution"]["input_bytes"], 1_000_000)
+            self.assertGreater(service.status()["execution"]["source_bytes"], 0)
+
+    async def test_parent_sends_only_bounded_cache_control_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data = fixture()
+            data["players"] = {
+                str(index): {"player_id": str(index), "metadata": "x" * 300}
+                for index in range(50_000)
+            }
+            cache = cache_input(root, data)
+            service = FOISService(
+                FOISRepository(root / "fois.sqlite3"),
+                isolated_executor=partial(generate_fois_isolated, cache_file=cache),
+            )
+            await service.generate(data)
+            execution = service.status()["execution"]
+            await shutdown_fois_executor()
+            self.assertEqual(execution["input_contract"], "canonical_cache_fois_v2")
+            self.assertLess(execution["input_bytes"], 2_000)
+            self.assertGreater(execution["source_bytes"], execution["input_bytes"])
+            self.assertLess(execution["compact_input_bytes"], 1_000_000)
+
+    async def test_missing_or_cross_league_cache_fails_without_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = FOISRepository(root / "fois.sqlite3")
+            missing_service = FOISService(
+                repository,
+                isolated_executor=partial(
+                    generate_fois_isolated, cache_file=root / "missing.json",
+                ),
+            )
+            with self.assertRaisesRegex(RuntimeError, "cache input is unavailable"):
+                await missing_service.generate(fixture())
+
+            wrong = fixture()
+            wrong["league"]["league_id"] = "other-league"
+            mismatch_service = FOISService(
+                repository,
+                isolated_executor=partial(
+                    generate_fois_isolated,
+                    cache_file=cache_input(root, wrong, "wrong.json"),
+                ),
+            )
+            with self.assertRaisesRegex(RuntimeError, "league identity mismatch"):
+                await mismatch_service.generate(fixture())
+            self.assertEqual(repository.league("fois-process-fixture", "4.0"), ())
+            await shutdown_fois_executor()
 
     async def test_process_failure_preserves_failed_state(self) -> None:
         async def broken(_data, _repository):
