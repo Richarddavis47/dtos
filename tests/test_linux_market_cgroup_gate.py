@@ -30,7 +30,9 @@ from src.core.historical_memory.store import HistoricalStore
 from src.core.history_context.metadata import MinimalMetadataStore
 from src.core.history_context.season_cache import SleeperSeasonCache
 from tools.validation.linux_market_cgroup_gate import (
+    COLD_MAX,
     LIVE_VISUAL_PROBE_INTERVAL_SECONDS,
+    Monitor,
     StartupFailure,
     _archive_cache_assessment,
     _archive_cache_retained,
@@ -66,6 +68,42 @@ DETAIL = "Asset Market generation is building safely in the background; retry sh
 
 
 class ArchiveCacheValidationTests(unittest.TestCase):
+    def test_memory_monitor_persists_previous_trigger_and_next_samples(self) -> None:
+        with patch(
+            "tools.validation.linux_market_cgroup_gate._memory_state",
+            return_value={
+                "raw_cgroup_bytes": 1,
+                "effective_working_set_bytes": 1,
+            },
+        ):
+            monitor = Monitor()
+        common = {
+            "anonymous_bytes": 1, "file_bytes": 1, "inactive_file_bytes": 0,
+            "dtos_parent_rss_bytes": 1, "fois_child_rss_bytes": 0,
+            "browser_rss_bytes": 0, "browser_process_count": 0,
+            "largest_browser_rss_bytes": 0, "other_child_rss_bytes": 0,
+            "capture_identity": None, "capture_phase": "inactive",
+            "phase": "live_visual_capture",
+        }
+        monitor._record_sample({
+            **common, "timestamp": 1.0, "raw_cgroup_bytes": COLD_MAX - 1,
+            "effective_working_set_bytes": COLD_MAX - 1,
+        })
+        monitor._record_sample({
+            **common, "timestamp": 2.0, "raw_cgroup_bytes": COLD_MAX,
+            "effective_working_set_bytes": COLD_MAX,
+        })
+        monitor._record_sample({
+            **common, "timestamp": 3.0, "raw_cgroup_bytes": COLD_MAX - 2,
+            "effective_working_set_bytes": COLD_MAX - 2,
+        })
+        evidence = monitor.evidence()
+        self.assertTrue(evidence["threshold_crossed"])
+        self.assertEqual(
+            [sample["timestamp"] for sample in evidence["threshold_window"]],
+            [1.0, 2.0, 3.0],
+        )
+
     def test_semantic_contract_diagnostic_uses_retained_worker_output(self) -> None:
         class Cache:
             @staticmethod
