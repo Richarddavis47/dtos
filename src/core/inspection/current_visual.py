@@ -186,7 +186,7 @@ class CurrentVisualMirror:
     def promote(self) -> dict[str, Any]:
         """Stage, verify, and atomically publish one complete current generation."""
         with self._lock:
-            source = self.live.manifest()
+            source = self.live.promotion_candidate()
             rows = sorted(source.get("captures") or [], key=lambda row: (row["surface_id"], row["viewport"]))
             if (
                 source.get("status") != "complete" or not rows

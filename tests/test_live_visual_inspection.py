@@ -177,6 +177,140 @@ class LiveVisualInspectionTests(unittest.TestCase):
         self.assertEqual(evidence["error_type"], "RuntimeError")
         self.assertEqual(evidence["error_code"], "capture_failure")
 
+    def test_terminal_callbacks_are_a_completion_barrier(self):
+        restore_started = threading.Event()
+        allow_restore = threading.Event()
+        promoted = threading.Event()
+        order = []
+
+        def capture(_item, output):
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        def restore():
+            restore_started.set()
+            self.assertTrue(allow_restore.wait(2))
+
+            order.append("restored")
+
+        def promote():
+            order.append("promoted")
+            promoted.set()
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            service.on_finished(restore)
+            service.on_complete(promote)
+            service.schedule([request()])
+            self.assertTrue(restore_started.wait(2))
+            health = service.health(1)
+            self.assertEqual(health["status"], "pending")
+            self.assertEqual(health["candidate_state"], "post_flight")
+            self.assertEqual(health["pending"], 1)
+            self.assertFalse(promoted.is_set())
+            allow_restore.set()
+            self.assertTrue(service.wait())
+            self.assertTrue(promoted.is_set())
+            self.assertEqual(order, ["restored", "promoted"])
+            self.assertEqual(service.health(1)["status"], "complete")
+
+    def test_promotion_is_a_completion_barrier(self):
+        promotion_started = threading.Event()
+        allow_promotion = threading.Event()
+
+        def capture(_item, output):
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        def promote():
+            promotion_started.set()
+            self.assertTrue(allow_promotion.wait(2))
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            service.on_complete(promote)
+            service.schedule([request()])
+            self.assertTrue(promotion_started.wait(2))
+            health = service.health(1)
+            self.assertEqual(health["status"], "pending")
+            self.assertEqual(health["candidate_state"], "promoting")
+            allow_promotion.set()
+            self.assertTrue(service.wait())
+            self.assertEqual(service.health(1)["status"], "complete")
+
+    def test_terminal_callback_failure_never_reports_complete(self):
+        publications = []
+
+        def capture(_item, output):
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        def restore():
+            raise RuntimeError("private restoration detail")
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            service.on_finished(restore)
+            service.on_complete(lambda: publications.append("published"))
+            service.schedule([request()])
+            self.assertTrue(service.wait())
+            health = service.health(1)
+        self.assertEqual(publications, [])
+        self.assertEqual(health["status"], "failed")
+        self.assertEqual(health["candidate_state"], "failed")
+        self.assertEqual(health["last_error"], "RuntimeError: visual cleanup failed")
+
+    def test_promotion_failure_never_reports_complete(self):
+        restored = []
+
+        def capture(_item, output):
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        def promote():
+            raise OSError("private publication detail")
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            service.on_finished(lambda: restored.append(True))
+            service.on_complete(promote)
+            service.schedule([request()])
+            self.assertTrue(service.wait())
+            health = service.health(1)
+        self.assertEqual(restored, [True])
+        self.assertEqual(health["status"], "failed")
+        self.assertEqual(health["candidate_state"], "failed")
+        self.assertEqual(health["last_error"], "OSError: visual publication failed")
+
+    def test_cancellation_restores_without_promotion_or_browser_leak(self):
+        capture_started = threading.Event()
+        allow_capture_cleanup = threading.Event()
+        restored = []
+        promoted = []
+
+        def capture(_item, output):
+            capture_started.set()
+            self.assertTrue(allow_capture_cleanup.wait(2))
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            service.on_finished(lambda: restored.append(True))
+            service.on_complete(lambda: promoted.append(True))
+            service.schedule([request(), request(viewport="desktop")])
+            self.assertTrue(capture_started.wait(2))
+            self.assertTrue(service.cancel())
+            allow_capture_cleanup.set()
+            self.assertTrue(service.wait())
+            health = service.health(2)
+        self.assertEqual(restored, [True])
+        self.assertEqual(promoted, [])
+        self.assertEqual(health["status"], "failed")
+        self.assertEqual(health["candidate_state"], "failed")
+        self.assertEqual(health["browser_processes"], 0)
+        self.assertEqual(health["capture_worker_count"], 0)
+
     def test_capture_failure_evidence_preserves_only_bounded_safe_worker_code(self):
         def capture(_item, _output):
             raise RuntimeError("isolated visual capture failed (route_not_ready)")

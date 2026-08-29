@@ -65,6 +65,8 @@ class LiveVisualService:
         self._worker: threading.Thread | None = None
         self._queue: list[CaptureRequest] = []
         self._active: str | None = None
+        self._flight_state = "idle"
+        self._cancel_requested = False
         self._browser_processes = 0
         self._last_error: str | None = None
         self._deferred_captures = 0
@@ -82,6 +84,7 @@ class LiveVisualService:
         self._attempts: dict[tuple[str, str], int] = {}
         self._capture_started_at: float | None = None
         self._capture_finished_at: float | None = None
+        self._terminal_timestamps: dict[str, str | None] = {}
         self._failure_evidence: list[dict[str, Any]] = []
         self._telemetry = {
             "captures_started": 0, "captures_completed": 0,
@@ -152,6 +155,15 @@ class LiveVisualService:
             if self._queue and not (self._worker and self._worker.is_alive()):
                 self._capture_started_at = time.monotonic()
                 self._capture_finished_at = None
+                self._last_error = None
+                self._cancel_requested = False
+                self._flight_state = "pending"
+                self._terminal_timestamps = {
+                    "capture_queue_drained_at": None,
+                    "fois_restored_at": None,
+                    "candidate_promoted_at": None,
+                    "complete_published_at": None,
+                }
                 self._worker = threading.Thread(target=self._run, name="dtos-live-visual", daemon=True)
                 self._telemetry["capture_worker_count"] = 1
                 self._telemetry["capture_worker_peak"] = max(
@@ -192,6 +204,15 @@ class LiveVisualService:
             row = (self._manifest.get("captures") or {}).get(key)
             return dict(row) if row else None
 
+    def cancel(self) -> bool:
+        """Cancel queued publication while allowing active browser cleanup to finish."""
+        with self._lock:
+            if not (self._worker and self._worker.is_alive()):
+                return False
+            self._cancel_requested = True
+            self._queue.clear()
+            return True
+
     def _run(self) -> None:
         if self._start_grace_seconds:
             time.sleep(self._start_grace_seconds)
@@ -215,10 +236,12 @@ class LiveVisualService:
                 if not self._queue:
                     self._active = None
                     self._browser_processes = 0
-                    self._telemetry["capture_worker_count"] = 0
-                    self._capture_finished_at = time.monotonic()
+                    if self._cancel_requested:
+                        self._last_error = "CancelledError: visual capture cancelled"
                     callback = self._completed_callback if self._last_error is None else None
                     finished_callback = self._finished_callback
+                    self._flight_state = "post_flight"
+                    self._terminal_timestamps["capture_queue_drained_at"] = _now()
                     completed = True
                 else:
                     callback = None
@@ -226,6 +249,7 @@ class LiveVisualService:
                     completed = False
                     request = self._queue.pop(0)
                     self._active = self.capture_key(request.surface_id, request.viewport)
+                    self._flight_state = "capturing"
                     refresh = self._active in self._refresh_keys
                     if refresh:
                         self._refresh_counts["refresh_started"] += 1
@@ -236,6 +260,8 @@ class LiveVisualService:
                 if finished_callback is not None:
                     try:
                         finished_callback()
+                        with self._lock:
+                            self._terminal_timestamps["fois_restored_at"] = _now()
                     except Exception as exc:
                         with self._lock:
                             self._last_error = (
@@ -243,11 +269,24 @@ class LiveVisualService:
                             )
                         callback = None
                 if callback is not None:
+                    with self._lock:
+                        self._flight_state = "promoting"
                     try:
                         callback()
+                        with self._lock:
+                            self._terminal_timestamps["candidate_promoted_at"] = _now()
                     except Exception as exc:
                         with self._lock:
                             self._last_error = f"{type(exc).__name__}: visual publication failed"
+                with self._lock:
+                    self._capture_finished_at = time.monotonic()
+                    self._flight_state = "failed" if self._last_error is not None else "complete"
+                    if self._flight_state == "complete":
+                        self._terminal_timestamps["complete_published_at"] = _now()
+                    if self._queue:
+                        self._flight_state = "pending"
+                        continue
+                    self._telemetry["capture_worker_count"] = 0
                 return
             folder = self.root / "captures" / _safe_id(request.surface_id)
             folder.mkdir(parents=True, exist_ok=True)
@@ -422,14 +461,36 @@ class LiveVisualService:
     def manifest(self) -> dict[str, Any]:
         with self._lock:
             rows = list((self._manifest.get("captures") or {}).values())
+            terminal_pending = self._flight_state in {"post_flight", "promoting"}
+            failed = self._flight_state == "failed" or self._last_error is not None
             return {
-                "status": "complete" if rows and not self._queue and not self._active else "pending",
+                "status": (
+                    "failed" if failed else
+                    "complete" if rows and not self._queue and not self._active and not terminal_pending else
+                    "pending"
+                ),
                 "schema_version": LIVE_VISUAL_SCHEMA_VERSION,
                 "captures": rows, "capture_count": len(rows),
                 "current": sum(row.get("status") == "current" for row in rows),
                 "stale": sum(row.get("status") == "stale" for row in rows),
-                "pending": len(self._queue) + int(self._active is not None),
-                "failures": int(self._last_error is not None),
+                "pending": len(self._queue) + int(self._active is not None) + int(terminal_pending),
+                "failures": int(failed),
+                "last_capture": self._manifest.get("updated_at"),
+            }
+
+    def promotion_candidate(self) -> dict[str, Any]:
+        """Return capture-complete input only to the synchronous promotion callback."""
+        with self._lock:
+            if self._flight_state != "promoting":
+                return self.manifest()
+            rows = list((self._manifest.get("captures") or {}).values())
+            return {
+                "status": "complete",
+                "schema_version": LIVE_VISUAL_SCHEMA_VERSION,
+                "captures": rows, "capture_count": len(rows),
+                "current": sum(row.get("status") == "current" for row in rows),
+                "stale": sum(row.get("status") == "stale" for row in rows),
+                "pending": 0, "failures": 0,
                 "last_capture": self._manifest.get("updated_at"),
             }
 
@@ -439,7 +500,11 @@ class LiveVisualService:
         completed = manifest["capture_count"]
         current = manifest["current"]
         return {
-            "status": "complete" if completed >= required and manifest["pending"] == 0 else "pending",
+            "status": (
+                "failed" if manifest["failures"] else
+                "complete" if completed >= required and manifest["pending"] == 0 else
+                "pending"
+            ),
             "eligible_surfaces": required // len(LIVE_VIEWPORTS) if required else 0,
             "required_captures": required, "completed": completed,
             "current": current, "missing": max(0, required - completed),
@@ -476,13 +541,16 @@ class LiveVisualService:
                 for key, request in sorted(self._requests.items())
                 if key in self._required_keys
             ],
-            "candidate_state": "capturing" if manifest["pending"] else (
-                "failed" if manifest["failures"] or manifest["stale"] else "complete"
+            "candidate_state": (
+                "failed" if manifest["failures"] else
+                "complete" if manifest["status"] == "complete" else
+                self._flight_state
             ),
             "capture_elapsed_ms": round(
                 ((self._capture_finished_at or time.monotonic()) - self._capture_started_at) * 1000,
                 3,
             ) if self._capture_started_at is not None else 0.0,
+            "terminal_timestamps": dict(self._terminal_timestamps),
             **self._telemetry,
         }
 
