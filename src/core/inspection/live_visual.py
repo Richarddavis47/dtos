@@ -78,6 +78,7 @@ class LiveVisualService:
         }
         self._last_refresh: dict[str, Any] | None = None
         self._completed_callback: Callable[[], None] | None = None
+        self._finished_callback: Callable[[], None] | None = None
         self._attempts: dict[tuple[str, str], int] = {}
         self._capture_started_at: float | None = None
         self._capture_finished_at: float | None = None
@@ -100,6 +101,11 @@ class LiveVisualService:
         """Publish a derived read model only after a complete capture flight."""
         with self._lock:
             self._completed_callback = callback
+
+    def on_finished(self, callback: Callable[[], None]) -> None:
+        """Run cleanup after every terminal capture flight, including failure."""
+        with self._lock:
+            self._finished_callback = callback
 
     @property
     def manifest_path(self) -> Path:
@@ -212,9 +218,11 @@ class LiveVisualService:
                     self._telemetry["capture_worker_count"] = 0
                     self._capture_finished_at = time.monotonic()
                     callback = self._completed_callback if self._last_error is None else None
+                    finished_callback = self._finished_callback
                     completed = True
                 else:
                     callback = None
+                    finished_callback = None
                     completed = False
                     request = self._queue.pop(0)
                     self._active = self.capture_key(request.surface_id, request.viewport)
@@ -225,6 +233,15 @@ class LiveVisualService:
                             self._last_refresh["worker_started_at"] = _now()
                     self._browser_processes = 0
             if completed:
+                if finished_callback is not None:
+                    try:
+                        finished_callback()
+                    except Exception as exc:
+                        with self._lock:
+                            self._last_error = (
+                                f"{type(exc).__name__}: visual cleanup failed"
+                            )
+                        callback = None
                 if callback is not None:
                     try:
                         callback()

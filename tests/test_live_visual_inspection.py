@@ -154,6 +154,7 @@ class LiveVisualInspectionTests(unittest.TestCase):
 
     def test_failed_flight_does_not_run_publication_callback_or_hide_error(self):
         publications = []
+        finished = []
 
         def capture(_item, _output):
             raise RuntimeError("private fixture detail")
@@ -161,10 +162,12 @@ class LiveVisualInspectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             service = LiveVisualService(Path(folder), capture)
             service.on_complete(lambda: publications.append("published"))
+            service.on_finished(lambda: finished.append("reaped"))
             service.schedule([request()])
             service.wait()
             health = service.health(1)
         self.assertEqual(publications, [])
+        self.assertEqual(finished, ["reaped"])
         self.assertEqual(health["captures_failed"], 1)
         self.assertEqual(health["last_error"], "RuntimeError: capture failed")
         evidence = health["capture_failure_evidence"][-1]
