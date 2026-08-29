@@ -12,6 +12,13 @@ from playwright.sync_api import sync_playwright
 from src.core.inspection.live_visual import CaptureRequest, LIVE_VIEWPORTS
 from tools.inspection.capture import DOM_SCRIPT
 
+LIVE_VISUAL_CHROMIUM_ARGS = ("--no-zygote",)
+
+
+def browser_launch_options() -> dict[str, Any]:
+    """Avoid one-shot Chromium zygotes while preserving the render pipeline."""
+    return {"headless": True, "args": list(LIVE_VISUAL_CHROMIUM_ARGS)}
+
 
 def _inspection_headers() -> dict[str, str]:
     headers = {"X-DTOS-Inspection": "deterministic"}
@@ -130,7 +137,7 @@ def capture_page(base_url: str, request: CaptureRequest, output: Path) -> dict[s
     """Render the real public route once and return compact presentation metadata."""
     viewport = LIVE_VIEWPORTS[request.viewport]
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
+        browser = playwright.chromium.launch(**browser_launch_options())
         try:
             page = browser.new_page(viewport=viewport, color_scheme="dark", reduced_motion="reduce")
             page.set_extra_http_headers(_inspection_headers())

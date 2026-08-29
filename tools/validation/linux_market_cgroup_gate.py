@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import base64
+from collections import deque
 import hashlib
 import re
 import signal
@@ -21,6 +22,8 @@ from typing import Callable
 from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
+
+import psutil
 
 GIB = 1024**3
 MIB = 1024**2
@@ -543,20 +546,169 @@ def _combined_read_audit() -> dict[str, object]:
 
 class Monitor:
     def __init__(self) -> None:
-        self.peak = _cgroup("memory.current")
-        self.effective_peak = int(_memory_state()["effective_working_set_bytes"])
+        initial = _memory_state()
+        self.peak = int(initial["raw_cgroup_bytes"])
+        self.effective_peak = int(initial["effective_working_set_bytes"])
         self.samples = 0
         self.stop = threading.Event()
         self.thread = threading.Thread(target=self._run, daemon=True)
+        self._lock = threading.Lock()
+        self._phase = "initialization"
+        self._server_pid: int | None = None
+        self._previous: dict[str, object] | None = None
+        self._trigger_window: list[dict[str, object]] = []
+        self._triggered = False
+        self._recent: deque[dict[str, object]] = deque(maxlen=3)
+        self._peak_window: list[dict[str, object]] = []
+        self._peak_needs_next = False
+
+    def set_server_pid(self, pid: int) -> None:
+        with self._lock:
+            self._server_pid = pid
+
+    def set_phase(self, phase: str) -> None:
+        with self._lock:
+            self._phase = phase
+
+    @staticmethod
+    def _rss(process: psutil.Process) -> int:
+        try:
+            return int(process.memory_info().rss)
+        except (psutil.Error, OSError):
+            return 0
+
+    def _process_evidence(self) -> dict[str, object]:
+        with self._lock:
+            server_pid = self._server_pid
+        if server_pid is None:
+            return {
+                "dtos_parent_rss_bytes": 0, "fois_child_rss_bytes": 0,
+                "browser_rss_bytes": 0, "browser_process_count": 0,
+                "largest_browser_rss_bytes": 0, "other_child_rss_bytes": 0,
+                "browser_process_roles": {},
+                "validation_harness_rss_bytes": self._rss(psutil.Process()),
+                "capture_identity": None, "capture_phase": "inactive",
+            }
+        try:
+            parent = psutil.Process(server_pid)
+            children = parent.children(recursive=True)
+        except (psutil.Error, OSError):
+            children = []
+            parent = None
+        browser_rss: list[int] = []
+        browser_roles: dict[str, dict[str, int]] = {}
+        fois_rss = 0
+        other_rss = 0
+        capture_identity = None
+        capture_active = False
+        for child in children:
+            rss = self._rss(child)
+            try:
+                name = child.name().casefold()
+                command = " ".join(child.cmdline()).casefold()
+            except (psutil.Error, OSError):
+                name, command = "", ""
+            if any(value in name or value in command for value in (
+                "chromium", "chrome", "playwright",
+            )):
+                browser_rss.append(rss)
+                role_match = re.search(r"--type=([a-z0-9_-]+)", command)
+                role = role_match.group(1) if role_match else "browser"
+                role_evidence = browser_roles.setdefault(
+                    role, {"process_count": 0, "rss_bytes": 0},
+                )
+                role_evidence["process_count"] += 1
+                role_evidence["rss_bytes"] += rss
+                continue
+            if "live_capture_worker" in command:
+                capture_active = True
+                match = re.search(r"\.([a-z0-9_-]+-(?:desktop|mobile))\.capture-input", command)
+                if match:
+                    capture_identity = match.group(1)
+                other_rss += rss
+                continue
+            if (
+                "fois" in command
+                or "multiprocessing.spawn" in command
+                or "process_pool" in command
+            ):
+                fois_rss += rss
+            else:
+                other_rss += rss
+        return {
+            "dtos_parent_rss_bytes": self._rss(parent) if parent is not None else 0,
+            "validation_harness_rss_bytes": self._rss(psutil.Process()),
+            "fois_child_rss_bytes": fois_rss,
+            "browser_rss_bytes": sum(browser_rss),
+            "browser_process_count": len(browser_rss),
+            "largest_browser_rss_bytes": max(browser_rss, default=0),
+            "browser_process_roles": browser_roles,
+            "other_child_rss_bytes": other_rss,
+            "capture_identity": capture_identity,
+            "capture_phase": "capturing" if capture_active or browser_rss else "inactive",
+        }
+
+    def _sample(self) -> dict[str, object]:
+        state = _memory_state()
+        with self._lock:
+            phase = self._phase
+        return {
+            "timestamp": time.time(), "phase": phase,
+            "raw_cgroup_bytes": int(state["raw_cgroup_bytes"]),
+            "effective_working_set_bytes": int(state["effective_working_set_bytes"]),
+            "anonymous_bytes": int(state["anonymous_bytes"]),
+            "file_bytes": int(state["file_bytes"]),
+            "inactive_file_bytes": int(state["inactive_file_bytes"]),
+            **self._process_evidence(),
+        }
+
+    def evidence(self) -> dict[str, object]:
+        with self._lock:
+            return {
+                "sample_interval_ms": 10,
+                "sample_count": self.samples,
+                "raw_peak_bytes": self.peak,
+                "effective_peak_bytes": self.effective_peak,
+                "threshold_bytes": COLD_MAX,
+                "threshold_crossed": self._triggered,
+                "threshold_window": list(self._trigger_window),
+                "peak_window": list(self._peak_window),
+                "recent_samples": list(self._recent),
+            }
+
+    def _record_sample(self, sample: dict[str, object]) -> None:
+        effective = int(sample["effective_working_set_bytes"])
+        raw = int(sample["raw_cgroup_bytes"])
+        with self._lock:
+            previous_peak = self.effective_peak
+            self.peak = max(self.peak, raw)
+            self.effective_peak = max(self.effective_peak, effective)
+            self.samples += 1
+            self._recent.append(sample)
+            if not self._triggered and effective >= COLD_MAX:
+                if self._previous is not None:
+                    self._trigger_window.append(self._previous)
+                self._trigger_window.append(sample)
+                self._triggered = True
+            elif self._triggered and len(self._trigger_window) < 3:
+                self._trigger_window.append(sample)
+            if effective > previous_peak:
+                self._peak_window = (
+                    [self._previous] if self._previous is not None else []
+                ) + [sample]
+                self._peak_needs_next = True
+            elif self._peak_needs_next:
+                self._peak_window.append(sample)
+                self._peak_needs_next = False
+            self._previous = sample
 
     def _run(self) -> None:
         while not self.stop.wait(0.01):
-            self.peak = max(self.peak, _cgroup("memory.current"))
-            self.effective_peak = max(
-                self.effective_peak,
-                int(_memory_state()["effective_working_set_bytes"]),
-            )
-            self.samples += 1
+            try:
+                sample = self._sample()
+            except (OSError, RuntimeError, TypeError, ValueError):
+                continue
+            self._record_sample(sample)
 
     def __enter__(self):
         self.thread.start()
@@ -608,6 +760,13 @@ def _latency_distribution(values: list[float]) -> dict[str, float]:
     }
 
 
+def _request_provider_call_count() -> int:
+    _status, body, _elapsed, _server_ms = _diagnostic_request(
+        "/__validation__/request-provider-calls",
+    )
+    return int(json.loads(body).get("request_attributed_total") or 0)
+
+
 def _live_visual_responsiveness() -> dict[str, object]:
     """Probe ordinary products throughout one production-shaped browser flight."""
     paths = (
@@ -620,14 +779,22 @@ def _live_visual_responsiveness() -> dict[str, object]:
     final_health: dict[str, object] = {}
     while time.monotonic() < deadline:
         for path in paths:
+            provider_before = _request_provider_call_count()
             status, body, client_ms, server_ms = _diagnostic_request(path)
+            provider_calls = _request_provider_call_count() - provider_before
             sample = {
                 "path": path, "status": status, "client_ms": round(client_ms, 3),
                 "server_ms": round(server_ms, 3),
                 "accept_delay_upper_bound_ms": round(max(0.0, client_ms - server_ms), 3),
                 "response_bytes": len(body), "timestamp": time.time(),
+                "request_attributed_provider_calls": provider_calls,
             }
             samples.append(sample)
+            if provider_calls:
+                raise ExpansionLatencyFailure(
+                    f"ordinary request performed provider work: {path}",
+                    {"samples": samples, "failed_sample": sample},
+                )
             if client_ms >= 500:
                 raise ExpansionLatencyFailure(
                     f"live visual responsiveness failed: {path}={client_ms:.3f}ms",
@@ -1943,6 +2110,7 @@ def main() -> int:
     log_path = OUTPUT.parent / "server.log"
     padding: list[bytearray] = []
     process = None
+    monitor: Monitor | None = None
     cpu_before = _cpu_stat()
     failure: BaseException | None = None
     startup_evidence: dict[str, object] = {}
@@ -1959,6 +2127,8 @@ def main() -> int:
                     "pre-unlink archive pressure did not meet the fixture-derived threshold"
                 )
             process = _start_server(log, evidence=startup_evidence)
+            monitor.set_server_pid(process.pid)
+            monitor.set_phase("startup")
             ready_ms = _wait_ready()
             application_contract = _application_fixture_contract(fixture_contract)
             memory_evidence.append(_memory_evidence("fixture_ready"))
@@ -2013,6 +2183,7 @@ def main() -> int:
                     raise AssertionError("post-unlink canonical coverage contract failed")
             before_cold = _cgroup("memory.current")
             try:
+                monitor.set_phase("cold_market")
                 health, build_ms, attempts, responsiveness = _cold_build()
             except ColdBuildFailure as exc:
                 summary["phases"]["cold_market"] = {
@@ -2063,6 +2234,7 @@ def main() -> int:
                     f"effective working-set peak {monitor.effective_peak} exceeds 1.5 GiB"
                 )
             try:
+                monitor.set_phase("live_visual_capture")
                 visual_responsiveness = _live_visual_responsiveness()
             except ExpansionLatencyFailure as exc:
                 summary["phases"]["live_visual_responsiveness"] = {
@@ -2076,7 +2248,9 @@ def main() -> int:
                 "effective_memory_current": _memory_state().get(
                     "effective_working_set_bytes"
                 ),
+                "memory_monitor": monitor.evidence(),
             }
+            monitor.set_phase("warm_requests")
             try:
                 latency_result = _latencies()
             except ExpansionLatencyFailure as exc:
@@ -2090,6 +2264,7 @@ def main() -> int:
                 "memory_current": _cgroup("memory.current"),
             }
             historical_before = _memory_evidence("historical_resolution_before")
+            monitor.set_phase("historical_resolution")
             memory_evidence.append(historical_before)
             historical_replay = _historical_resolution_responsiveness()
             historical_after = _memory_evidence("historical_resolution_after")
@@ -2099,6 +2274,7 @@ def main() -> int:
                 "after": historical_after, **historical_replay,
             }
             if combined_read:
+                monitor.set_phase("combined_read")
                 combined_before = _memory_evidence("combined_read_before")
                 memory_evidence.append(combined_before)
                 combined_result = _combined_read_audit()
@@ -2107,6 +2283,7 @@ def main() -> int:
                 summary["phases"]["combined_read"] = {
                     "timestamp": time.time(), "before": combined_before,
                     "after": combined_after, **combined_result,
+                    "memory_monitor": monitor.evidence(),
                 }
                 if monitor.effective_peak >= COLD_MAX:
                     raise AssertionError(
@@ -2312,6 +2489,8 @@ def main() -> int:
                 summary["exit_code"] = 1
                 failure = failure or exc
         padding.clear()
+        if monitor is not None:
+            summary["memory_monitor"] = monitor.evidence()
         memory_evidence.append(_memory_evidence("post_cleanup"))
         if log_path.is_file():
             sanitized_log = _sanitize_server_log(log_path.read_text(

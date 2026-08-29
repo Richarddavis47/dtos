@@ -63,7 +63,8 @@ from services.history import (
 from services.fois import fois_service
 from src.core.fois import FOIS_MODEL_VERSION
 from src.core.fois.process_execution import (
-    shutdown_fois_executor, warm_fois_executor,
+    shutdown_fois_executor, shutdown_fois_executor_sync,
+    warm_fois_executor, warm_fois_executor_sync,
 )
 from src.core.asset_market import AssetMarketCache, asset_market_cache
 from src.core.asset_market.resource_diagnostics import (
@@ -258,6 +259,10 @@ def _capture_live_visual(request: Any, output: Any) -> dict[str, Any]:
     """Keep browser control outside the request-serving Python interpreter."""
     from src.core.inspection.live_capture_process import capture_page_isolated
 
+    # FOIS generation and visual capture are mutually exclusive in the lifecycle
+    # coordinator. Reap only the idle compute child before the higher-memory
+    # browser tree; the same bounded spawn pool is restored after the flight.
+    shutdown_fois_executor_sync()
     return capture_page_isolated(_CAPTURE_URL, request, output)
 
 
@@ -281,6 +286,7 @@ def _complete_live_visual_capture() -> None:
 
 
 live_visual_service.on_complete(_complete_live_visual_capture)
+live_visual_service.on_finished(warm_fois_executor_sync)
 
 
 def schedule_live_visual_capture() -> int:
@@ -313,6 +319,7 @@ asset_market_cache.on_publish(schedule_live_visual_capture)
 
 
 async def ensure_fresh() -> None:
+    """Keep ordinary reads local; startup owns recovery when no context exists."""
     context = current_league_context()
     if context is not None and context.league_id != LEAGUE_ID:
         return
@@ -320,7 +327,8 @@ async def ensure_fresh() -> None:
         return
     if not lifecycle_coordinator.startup_complete():
         return
-    await ensure_data_fresh()
+    if not STATE.get("data"):
+        await ensure_data_fresh()
 
 
 async def background_sync() -> None:

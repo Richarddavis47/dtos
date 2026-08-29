@@ -1,5 +1,19 @@
 # Changelog
 
+# v1.10.65 - Authenticated Production Smoke Contract
+
+- Split production smoke into explicit anonymous authorization checks and
+  inspection-safe authenticated product checks without changing route access.
+- Reuse the existing constant-time inspection-header boundary with its
+  deterministic active league and mapped franchise; create no user session and
+  require no real account password.
+- Keep public health and inspection routes anonymous while protected product
+  HTML and APIs receive the scoped inspection context.
+- Fail closed when production authentication is enabled without the complete
+  token, league, and roster fixture, and keep all credentials out of evidence.
+- Preserve v1.10.64 Front Office semantics, historical-leader aggregation,
+  process isolation, one web worker, and every latency and memory threshold.
+
 # v1.10.64 - Front Office Context Contract
 
 - Align canonical production smoke with the established authenticated-manager

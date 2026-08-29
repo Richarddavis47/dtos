@@ -53,17 +53,30 @@ def _executor() -> concurrent.futures.ProcessPoolExecutor:
 
 async def warm_fois_executor() -> dict[str, int]:
     """Start exactly one clean compute worker before request acceptance."""
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(_executor(), _worker_ready)
+    return await asyncio.to_thread(warm_fois_executor_sync)
+
+
+def warm_fois_executor_sync() -> dict[str, int]:
+    """Restore the bounded compute worker outside request-serving execution."""
+    return _executor().submit(_worker_ready).result(
+        timeout=FOIS_PROCESS_TIMEOUT_SECONDS,
+    )
+
+
+def shutdown_fois_executor_sync() -> bool:
+    """Reap an idle compute worker before optional high-memory browser work."""
+    global _EXECUTOR
+    with _EXECUTOR_LOCK:
+        executor, _EXECUTOR = _EXECUTOR, None
+    if executor is None:
+        return False
+    executor.shutdown(wait=True, cancel_futures=True)
+    return True
 
 
 async def shutdown_fois_executor() -> None:
     """Reap the one bounded compute worker without blocking the event loop."""
-    global _EXECUTOR
-    with _EXECUTOR_LOCK:
-        executor, _EXECUTOR = _EXECUTOR, None
-    if executor is not None:
-        await asyncio.to_thread(executor.shutdown, wait=True, cancel_futures=True)
+    await asyncio.to_thread(shutdown_fois_executor_sync)
 
 
 def compact_fois_input(data: dict[str, Any]) -> dict[str, Any]:

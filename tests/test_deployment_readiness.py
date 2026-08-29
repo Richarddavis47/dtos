@@ -265,17 +265,73 @@ class DeploymentReadinessTests(unittest.TestCase):
         backfill.assert_not_called()
         delay.assert_not_called()
 
-    def test_request_freshness_does_not_start_competing_startup_sync(self) -> None:
+    def test_request_freshness_only_recovers_missing_local_state(self) -> None:
         epoch = lifecycle_coordinator.begin_startup("Fixture startup.")
         with patch.object(dtos_app, "ensure_data_fresh") as fresh:
             asyncio.run(dtos_app.ensure_fresh())
         fresh.assert_not_called()
         lifecycle_coordinator.complete_startup(epoch, "Fixture ready.")
-        with patch.object(
-            dtos_app, "ensure_data_fresh", new_callable=AsyncMock,
-        ) as fresh:
-            asyncio.run(dtos_app.ensure_fresh())
-        fresh.assert_awaited_once_with()
+        original_data = dtos_app.STATE.get("data")
+        try:
+            dtos_app.STATE["data"] = {"league": {"league_id": "local"}}
+            with patch.object(
+                dtos_app, "ensure_data_fresh", new_callable=AsyncMock,
+            ) as fresh:
+                asyncio.run(dtos_app.ensure_fresh())
+            fresh.assert_not_awaited()
+
+            dtos_app.STATE["data"] = None
+            with patch.object(
+                dtos_app, "ensure_data_fresh", new_callable=AsyncMock,
+            ) as fresh:
+                asyncio.run(dtos_app.ensure_fresh())
+            fresh.assert_awaited_once_with()
+        finally:
+            dtos_app.STATE["data"] = original_data
+
+    def test_ordinary_manager_destinations_never_schedule_provider_refresh(self) -> None:
+        epoch = lifecycle_coordinator.begin_startup("Fixture startup.")
+        lifecycle_coordinator.complete_startup(epoch, "Fixture ready.")
+        original_data = dtos_app.STATE.get("data")
+        try:
+            dtos_app.STATE["data"] = {
+                "league": {"league_id": "local-league"}, "teams": [],
+            }
+            with patch.object(
+                dtos_app, "ensure_data_fresh", new_callable=AsyncMock,
+            ) as refresh:
+                for _destination in ("home", "my_team", "trade", "league", "market"):
+                    asyncio.run(dtos_app.ensure_fresh())
+            refresh.assert_not_awaited()
+        finally:
+            dtos_app.STATE["data"] = original_data
+
+    def test_local_navigation_survives_provider_outage(self) -> None:
+        epoch = lifecycle_coordinator.begin_startup("Fixture startup.")
+        lifecycle_coordinator.complete_startup(epoch, "Fixture ready.")
+        original_data = dtos_app.STATE.get("data")
+        try:
+            dtos_app.STATE["data"] = {"league": {"league_id": "local-league"}}
+            with patch.object(
+                dtos_app, "ensure_data_fresh", new_callable=AsyncMock,
+                side_effect=RuntimeError("provider unavailable"),
+            ) as refresh:
+                asyncio.run(dtos_app.ensure_fresh())
+            refresh.assert_not_awaited()
+        finally:
+            dtos_app.STATE["data"] = original_data
+
+    def test_explicit_sync_route_preserves_provider_behavior(self) -> None:
+        state = {"data": {}, "last_error": None, "last_sync": "now"}
+        sync = AsyncMock(return_value=state)
+        app = FastAPI()
+        app.include_router(create_api_router(
+            ensure_fresh=AsyncMock(), require_data=lambda: state["data"],
+            sync_sleeper=sync, state=state, league_id="league-1",
+        ))
+        response = TestClient(app).post("/sync", headers={"Accept": "application/json"})
+        self.assertEqual(response.status_code, 200)
+        sync.assert_awaited_once_with(force_players=False)
 
     def test_visual_capture_waits_for_complete_startup_and_ready_market(self) -> None:
         original_data = dtos_app.STATE.get("data")

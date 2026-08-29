@@ -7,6 +7,7 @@ import os
 import tempfile
 import time
 import unittest
+from unittest import mock
 from dataclasses import asdict
 from functools import partial
 from pathlib import Path
@@ -16,7 +17,7 @@ import psutil
 
 from src.core.fois.process_execution import (
     compact_fois_input, generate_fois_isolated, shutdown_fois_executor,
-    warm_fois_executor,
+    shutdown_fois_executor_sync, warm_fois_executor, warm_fois_executor_sync,
 )
 from src.core.fois.repository import FOISRepository
 from src.core.fois.service import FOISService
@@ -70,6 +71,30 @@ def cache_input(root: Path, data: dict, name: str = "cache.json") -> Path:
 
 
 class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
+    def test_idle_worker_can_be_reaped_and_restored_around_visual_work(self) -> None:
+        from src.core.fois import process_execution
+
+        executor = mock.Mock()
+        future = mock.Mock()
+        future.result.return_value = {"pid": 12_345, "rss_bytes": 75_000_000}
+        executor.submit.return_value = future
+        with mock.patch.object(process_execution, "_EXECUTOR", executor):
+            self.assertTrue(shutdown_fois_executor_sync())
+            executor.shutdown.assert_called_once_with(
+                wait=True, cancel_futures=True,
+            )
+            self.assertIsNone(process_execution._EXECUTOR)
+        with mock.patch.object(
+            process_execution, "_executor", return_value=executor,
+        ):
+            self.assertEqual(
+                warm_fois_executor_sync(),
+                {"pid": 12_345, "rss_bytes": 75_000_000},
+            )
+        future.result.assert_called_once_with(
+            timeout=process_execution.FOIS_PROCESS_TIMEOUT_SECONDS,
+        )
+
     def test_compact_input_retains_only_owned_brain_assets(self) -> None:
         data = fixture()
         data["players"] = {str(index): {"player_id": str(index)} for index in range(5000)}

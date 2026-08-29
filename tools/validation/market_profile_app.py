@@ -28,6 +28,7 @@ from config import (
 )
 from dtos_app import app, intelligence_heavy_lock
 from services.fois import fois_service
+import services.sleeper as sleeper_service
 from services.history import _SEASON_SECTION_CACHE, _SEASON_SECTION_CACHE_LOCK
 from services.sleeper import LEAGUE_ID, STATE, save_cache
 import src.core.asset_market.engine as market_engine
@@ -43,6 +44,7 @@ from src.core.history_context import (
 from src.core.history_context.guard import legacy_access_guard
 from src.core.intelligence_memory import historical_trade_resolution_service
 from src.platform.lifecycle import LifecycleCoordinator, lifecycle_coordinator
+from src.platform.observability import request_id_context
 from tools.validation.generate_sanitized_market_fixture import (
     material_market_fixture_change,
 )
@@ -66,6 +68,19 @@ _cold_phase_events: list[dict[str, Any]] = []
 _cold_phase_active: dict[str, Any] = {}
 _cold_started = time.perf_counter()
 _historical_resolution_task: asyncio.Task[Any] | None = None
+_request_provider_calls: dict[str, int] = {}
+_original_sleeper_get = sleeper_service.sleeper_get
+
+
+async def _tracked_sleeper_get(client: Any, path: str) -> Any:
+    request_id = request_id_context.get()
+    if request_id != "system":
+        with _counter_lock:
+            _request_provider_calls[request_id] = _request_provider_calls.get(request_id, 0) + 1
+    return await _original_sleeper_get(client, path)
+
+
+sleeper_service.sleeper_get = _tracked_sleeper_get
 
 
 def _working_memory() -> int | None:
@@ -701,6 +716,17 @@ async def semantic_market_contract() -> dict[str, Any]:
         asset_market_cache, STATE.get("data") or {}, STATE,
         historical_store, LEAGUE_ID,
     )
+
+
+@app.get("/__validation__/request-provider-calls")
+async def request_provider_calls() -> dict[str, Any]:
+    """Expose bounded counts only; never expose provider paths or payloads."""
+    with _counter_lock:
+        counts = dict(_request_provider_calls)
+    return {
+        "request_attributed_total": sum(counts.values()),
+        "request_count": len(counts),
+    }
 
 
 @app.get("/__validation__/market-artifact")
