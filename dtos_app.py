@@ -319,6 +319,7 @@ asset_market_cache.on_publish(schedule_live_visual_capture)
 
 
 async def ensure_fresh() -> None:
+    """Keep ordinary reads local; startup owns recovery when no context exists."""
     context = current_league_context()
     if context is not None and context.league_id != LEAGUE_ID:
         return
@@ -326,7 +327,8 @@ async def ensure_fresh() -> None:
         return
     if not lifecycle_coordinator.startup_complete():
         return
-    await ensure_data_fresh()
+    if not STATE.get("data"):
+        await ensure_data_fresh()
 
 
 async def background_sync() -> None:

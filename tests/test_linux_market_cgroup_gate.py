@@ -57,6 +57,7 @@ from tools.validation.linux_market_cgroup_gate import (
     _retire_validation_archive,
     _pad_to_production_baseline,
     _post_retirement_coverage_valid,
+    _request_provider_call_count,
     _start_server,
     _startup_memory_within_limit,
     _warm_historical_archive,
@@ -68,6 +69,14 @@ DETAIL = "Asset Market generation is building safely in the background; retry sh
 
 
 class ArchiveCacheValidationTests(unittest.TestCase):
+    def test_request_provider_count_reads_bounded_validation_counter(self) -> None:
+        payload = json.dumps({"request_attributed_total": 7}).encode()
+        with patch(
+            "tools.validation.linux_market_cgroup_gate._diagnostic_request",
+            return_value=(200, payload, 1.0, 0.1),
+        ):
+            self.assertEqual(_request_provider_call_count(), 7)
+
     def test_memory_monitor_persists_previous_trigger_and_next_samples(self) -> None:
         with patch(
             "tools.validation.linux_market_cgroup_gate._memory_state",

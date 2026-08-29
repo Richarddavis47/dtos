@@ -760,6 +760,13 @@ def _latency_distribution(values: list[float]) -> dict[str, float]:
     }
 
 
+def _request_provider_call_count() -> int:
+    _status, body, _elapsed, _server_ms = _diagnostic_request(
+        "/__validation__/request-provider-calls",
+    )
+    return int(json.loads(body).get("request_attributed_total") or 0)
+
+
 def _live_visual_responsiveness() -> dict[str, object]:
     """Probe ordinary products throughout one production-shaped browser flight."""
     paths = (
@@ -772,14 +779,22 @@ def _live_visual_responsiveness() -> dict[str, object]:
     final_health: dict[str, object] = {}
     while time.monotonic() < deadline:
         for path in paths:
+            provider_before = _request_provider_call_count()
             status, body, client_ms, server_ms = _diagnostic_request(path)
+            provider_calls = _request_provider_call_count() - provider_before
             sample = {
                 "path": path, "status": status, "client_ms": round(client_ms, 3),
                 "server_ms": round(server_ms, 3),
                 "accept_delay_upper_bound_ms": round(max(0.0, client_ms - server_ms), 3),
                 "response_bytes": len(body), "timestamp": time.time(),
+                "request_attributed_provider_calls": provider_calls,
             }
             samples.append(sample)
+            if provider_calls:
+                raise ExpansionLatencyFailure(
+                    f"ordinary request performed provider work: {path}",
+                    {"samples": samples, "failed_sample": sample},
+                )
             if client_ms >= 500:
                 raise ExpansionLatencyFailure(
                     f"live visual responsiveness failed: {path}={client_ms:.3f}ms",
