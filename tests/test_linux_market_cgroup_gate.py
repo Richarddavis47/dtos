@@ -81,6 +81,7 @@ class ArchiveCacheValidationTests(unittest.TestCase):
             "anonymous_bytes": 1, "file_bytes": 1, "inactive_file_bytes": 0,
             "dtos_parent_rss_bytes": 1, "fois_child_rss_bytes": 0,
             "browser_rss_bytes": 0, "browser_process_count": 0,
+            "browser_process_roles": {},
             "largest_browser_rss_bytes": 0, "other_child_rss_bytes": 0,
             "capture_identity": None, "capture_phase": "inactive",
             "phase": "live_visual_capture",
@@ -101,6 +102,10 @@ class ArchiveCacheValidationTests(unittest.TestCase):
         self.assertTrue(evidence["threshold_crossed"])
         self.assertEqual(
             [sample["timestamp"] for sample in evidence["threshold_window"]],
+            [1.0, 2.0, 3.0],
+        )
+        self.assertEqual(
+            [sample["timestamp"] for sample in evidence["peak_window"]],
             [1.0, 2.0, 3.0],
         )
 

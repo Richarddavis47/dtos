@@ -559,6 +559,8 @@ class Monitor:
         self._trigger_window: list[dict[str, object]] = []
         self._triggered = False
         self._recent: deque[dict[str, object]] = deque(maxlen=3)
+        self._peak_window: list[dict[str, object]] = []
+        self._peak_needs_next = False
 
     def set_server_pid(self, pid: int) -> None:
         with self._lock:
@@ -583,6 +585,7 @@ class Monitor:
                 "dtos_parent_rss_bytes": 0, "fois_child_rss_bytes": 0,
                 "browser_rss_bytes": 0, "browser_process_count": 0,
                 "largest_browser_rss_bytes": 0, "other_child_rss_bytes": 0,
+                "browser_process_roles": {},
                 "capture_identity": None, "capture_phase": "inactive",
             }
         try:
@@ -592,6 +595,7 @@ class Monitor:
             children = []
             parent = None
         browser_rss: list[int] = []
+        browser_roles: dict[str, dict[str, int]] = {}
         fois_rss = 0
         other_rss = 0
         capture_identity = None
@@ -607,6 +611,13 @@ class Monitor:
                 "chromium", "chrome", "playwright",
             )):
                 browser_rss.append(rss)
+                role_match = re.search(r"--type=([a-z0-9_-]+)", command)
+                role = role_match.group(1) if role_match else "browser"
+                role_evidence = browser_roles.setdefault(
+                    role, {"process_count": 0, "rss_bytes": 0},
+                )
+                role_evidence["process_count"] += 1
+                role_evidence["rss_bytes"] += rss
                 continue
             if "live_capture_worker" in command:
                 capture_active = True
@@ -629,6 +640,7 @@ class Monitor:
             "browser_rss_bytes": sum(browser_rss),
             "browser_process_count": len(browser_rss),
             "largest_browser_rss_bytes": max(browser_rss, default=0),
+            "browser_process_roles": browser_roles,
             "other_child_rss_bytes": other_rss,
             "capture_identity": capture_identity,
             "capture_phase": "capturing" if capture_active or browser_rss else "inactive",
@@ -658,6 +670,7 @@ class Monitor:
                 "threshold_bytes": COLD_MAX,
                 "threshold_crossed": self._triggered,
                 "threshold_window": list(self._trigger_window),
+                "peak_window": list(self._peak_window),
                 "recent_samples": list(self._recent),
             }
 
@@ -665,6 +678,7 @@ class Monitor:
         effective = int(sample["effective_working_set_bytes"])
         raw = int(sample["raw_cgroup_bytes"])
         with self._lock:
+            previous_peak = self.effective_peak
             self.peak = max(self.peak, raw)
             self.effective_peak = max(self.effective_peak, effective)
             self.samples += 1
@@ -676,6 +690,14 @@ class Monitor:
                 self._triggered = True
             elif self._triggered and len(self._trigger_window) < 3:
                 self._trigger_window.append(sample)
+            if effective > previous_peak:
+                self._peak_window = (
+                    [self._previous] if self._previous is not None else []
+                ) + [sample]
+                self._peak_needs_next = True
+            elif self._peak_needs_next:
+                self._peak_window.append(sample)
+                self._peak_needs_next = False
             self._previous = sample
 
     def _run(self) -> None:
