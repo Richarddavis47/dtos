@@ -586,6 +586,7 @@ class Monitor:
                 "browser_rss_bytes": 0, "browser_process_count": 0,
                 "largest_browser_rss_bytes": 0, "other_child_rss_bytes": 0,
                 "browser_process_roles": {},
+                "validation_harness_rss_bytes": self._rss(psutil.Process()),
                 "capture_identity": None, "capture_phase": "inactive",
             }
         try:
@@ -636,6 +637,7 @@ class Monitor:
                 other_rss += rss
         return {
             "dtos_parent_rss_bytes": self._rss(parent) if parent is not None else 0,
+            "validation_harness_rss_bytes": self._rss(psutil.Process()),
             "fois_child_rss_bytes": fois_rss,
             "browser_rss_bytes": sum(browser_rss),
             "browser_process_count": len(browser_rss),

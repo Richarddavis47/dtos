@@ -14,6 +14,10 @@ from src.core.inspection.live_capture_worker import (
     run,
 )
 from src.core.inspection.live_capture_process import capture_page_isolated
+from src.core.inspection.live_browser import (
+    LIVE_VISUAL_CHROMIUM_ARGS,
+    browser_launch_options,
+)
 from src.core.inspection.live_capture_process import (
     CAPTURE_PROCESS_CONTINUE_SIGNAL,
     CAPTURE_REQUEST_PAUSE_SECONDS,
@@ -28,6 +32,14 @@ from src.core.inspection.live_visual import CaptureRequest
 
 
 class LiveVisualProcessTests(unittest.TestCase):
+    def test_static_capture_disables_gpu_without_changing_capture_quality(self):
+        options = browser_launch_options()
+        self.assertTrue(options["headless"])
+        self.assertEqual(tuple(options["args"]), LIVE_VISUAL_CHROMIUM_ARGS)
+        self.assertIn("--disable-gpu", options["args"])
+        self.assertNotIn("--single-process", options["args"])
+        self.assertNotIn("--disable-software-rasterizer", options["args"])
+
     def request(self) -> CaptureRequest:
         return CaptureRequest(
             surface_id="matchups-1", title="Matchup 1", human_url="/matchups/1",
