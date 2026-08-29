@@ -1,3 +1,18 @@
+# DTOS v1.10.66 - Artifact-Build Provenance Identity Stability
+
+DTOS v1.10.66 corrects a retained-artifact provenance mismatch observed after
+the v1.10.65 controlled restart. Compatible reuse restored the exact market
+generation with zero construction, but the loader labeled that immutable model
+with the current live Historical Memory identity instead of the identity stored
+when the artifact was built.
+
+Compatible loads now restore the persisted artifact-build identity atomically
+with the model, generation, and health metadata. Directory and market-health
+responses keep `artifact_build` scope; search and detail retain their current
+`live_store` contract. Missing provenance fails safely as an incompatible
+artifact. Semantic compatibility, output, request-time work, and all resource
+thresholds remain unchanged.
+
 # DTOS v1.10.65 - Authenticated Production Smoke Contract
 
 DTOS v1.10.65 corrects the production smoke contract exposed after v1.10.64

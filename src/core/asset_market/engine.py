@@ -180,7 +180,13 @@ class AssetMarket:
         self.state = state
         self.store = store
         self.league_id = league_id
-        self.dataset_version = store.dataset_version(league_id)
+        # A loaded artifact must report the historical identity captured when
+        # that immutable generation was built.  Reading the live store here
+        # would relabel retained build provenance after an unrelated history
+        # update, even though compatibility correctly permits artifact reuse.
+        self.dataset_version = (
+            "" if load_existing else store.dataset_version(league_id)
+        )
         brain = brain_service(data)
         self._brain = brain
         self.brain_generation = brain.report.get("generated_at")
@@ -190,6 +196,15 @@ class AssetMarket:
         if load_existing:
             self._read_model = MarketReadModel(artifact_path)
             metadata = self._read_model.metadata()
+            artifact_dataset_version = metadata.get("historical_dataset_version")
+            if (
+                not isinstance(artifact_dataset_version, str)
+                or not artifact_dataset_version
+            ):
+                raise ValueError(
+                    "Asset Market artifact lacks historical build provenance."
+                )
+            self.dataset_version = artifact_dataset_version
             self.generated_at = str(metadata["generated_at"])
             self.brain_generation = metadata.get("brain_generation")
             self._prepared_health = self._read_model.cooperative_summary_metadata()
@@ -1288,6 +1303,14 @@ class AssetMarketCache:
                 incomplete = True
                 continue
             if metadata.get("schema_version") != MARKET_READ_MODEL_SCHEMA:
+                incompatible = True
+                mismatch_reasons.append("schema_incompatible")
+                continue
+            artifact_dataset_version = metadata.get("historical_dataset_version")
+            if (
+                not isinstance(artifact_dataset_version, str)
+                or not artifact_dataset_version
+            ):
                 incompatible = True
                 mismatch_reasons.append("schema_incompatible")
                 continue

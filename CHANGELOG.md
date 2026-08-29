@@ -1,5 +1,14 @@
 # Changelog
 
+# v1.10.66 - Artifact-Build Provenance Identity Stability
+
+- Restore immutable historical dataset provenance from the compatible Asset
+  Market artifact instead of relabeling it with the current live-store identity.
+- Keep directory and health provenance scoped to `artifact_build` while search
+  and detail routes continue to expose bounded `live_store` identity.
+- Reject artifacts that lack explicit build provenance rather than fabricating
+  an identity, without changing semantic compatibility or market output.
+
 # v1.10.65 - Authenticated Production Smoke Contract
 
 - Split production smoke into explicit anonymous authorization checks and

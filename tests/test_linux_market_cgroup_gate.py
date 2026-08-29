@@ -578,6 +578,11 @@ class RestartReuseValidationTests(unittest.TestCase):
         self.assertEqual(result["warming_attempts"], 1)
         self.assertEqual(result["artifact_loads"], 1)
         self.assertEqual(result["market_constructions"], 0)
+        self.assertTrue(result["artifact_build_provenance_match"])
+        self.assertEqual(
+            result["artifact_build_provenance"],
+            self.identity["historical_dataset_version"],
+        )
 
     def test_immediate_compatible_artifact_restore_needs_no_warming(self) -> None:
         result = _restart_reuse(

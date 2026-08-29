@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import gc
 import os
+import sqlite3
 import subprocess
 import tempfile
 import threading
@@ -259,9 +260,12 @@ class AssetMarketTests(unittest.TestCase):
         )
 
     def test_history_only_observation_reuses_compact_artifact(self) -> None:
+        artifact_dataset_version = self.market.dataset_version
         self._append("transaction", "history-only-transaction", None, {
             "transaction_id": "history-only-transaction", "type": "waiver",
         })
+        live_dataset_version = self.store.dataset_version(self.league_id)
+        self.assertNotEqual(live_dataset_version, artifact_dataset_version)
         restarted = AssetMarketCache()
         with patch(
             "src.core.asset_market.engine.build_read_model",
@@ -271,10 +275,135 @@ class AssetMarketTests(unittest.TestCase):
                 self.data, self.state, self.store, self.league_id,
             )
         self.assertEqual(loaded._artifact_path, self.market._artifact_path)
+        self.assertEqual(loaded.dataset_version, artifact_dataset_version)
+        self.assertEqual(
+            (
+                loaded.directory(limit=1)["historical_dataset_version"],
+                loaded.directory(limit=1)["historical_dataset_version_scope"],
+            ),
+            (artifact_dataset_version, "artifact_build"),
+        )
+        self.assertEqual(
+            (
+                restarted.health()["historical_dataset_version"],
+                restarted.health()["historical_dataset_version_scope"],
+            ),
+            (artifact_dataset_version, "artifact_build"),
+        )
         self.assertEqual(
             loaded.detail("player:10213")["historical_dataset_version"],
-            self.store.dataset_version(self.league_id),
+            live_dataset_version,
         )
+        self.assertEqual(
+            loaded.detail("player:10213")["historical_dataset_version_scope"],
+            "live_store",
+        )
+
+    def test_compatible_load_does_not_read_live_dataset_as_build_provenance(self) -> None:
+        artifact_dataset_version = self.market.dataset_version
+        restarted = AssetMarketCache()
+        with patch.object(
+            self.store, "dataset_version",
+            side_effect=AssertionError("artifact load must restore persisted provenance"),
+        ):
+            loaded = restarted.get(
+                self.data, self.state, self.store, self.league_id,
+            )
+        self.assertEqual(loaded.dataset_version, artifact_dataset_version)
+        self.assertEqual(restarted.artifact_loads, 1)
+        self.assertEqual(restarted.actual_constructions, 0)
+
+    def test_material_rebuild_captures_current_history_as_new_build_provenance(self) -> None:
+        old_generation = self.market.semantic_generation
+        self._append("transaction", "new-build-history", None, {
+            "transaction_id": "new-build-history", "type": "trade",
+        })
+        current_dataset_version = self.store.dataset_version(self.league_id)
+        changed = copy.deepcopy(self.data)
+        changed["valuation_intelligence"]["assets"]["player:10213"][
+            "valuation_layers"
+        ]["market_value"]["value"] = 9301
+        changed["asset_market_semantic_revision"] = "new-build-provenance"
+        replacement = self.cache.get(
+            changed, self.state, self.store, self.league_id,
+        )
+        self.assertNotEqual(replacement.semantic_generation, old_generation)
+        self.assertEqual(replacement.dataset_version, current_dataset_version)
+        self.assertEqual(
+            (
+                replacement.directory(limit=1)["historical_dataset_version"],
+                replacement.directory(limit=1)["historical_dataset_version_scope"],
+            ),
+            (current_dataset_version, "artifact_build"),
+        )
+
+    def test_compatible_restart_keeps_league_scoped_build_provenance(self) -> None:
+        league_b = "league-2"
+        store_b = HistoricalStore(Path(self.temp.name) / "history-b.sqlite3")
+        store_b.append(
+            record_key="transaction:league-b", entity_type="transaction",
+            league_id=league_b, source_record_id="league-b",
+            observed_at="2025-09-01T00:00:00+00:00",
+            retrieved_at="2025-09-01T00:00:00+00:00", provider="Sleeper",
+            availability="available", confidence=100,
+            calculation_method="provider_observation", schema_version="2.0",
+            payload={"transaction_id": "league-b", "type": "waiver"},
+            season=2025, week=1,
+        )
+        data_b = copy.deepcopy(self.data)
+        data_b["league"]["league_id"] = league_b
+        state_b = {"data": data_b, "last_sync": self.state["last_sync"]}
+        cache_b = AssetMarketCache()
+        market_b = cache_b.get(data_b, state_b, store_b, league_b)
+        provenance_a = self.market.dataset_version
+        provenance_b = market_b.dataset_version
+        self.assertNotEqual(provenance_a, provenance_b)
+
+        restored_a = AssetMarketCache().get(
+            self.data, self.state, self.store, self.league_id,
+        )
+        restored_b = AssetMarketCache().get(data_b, state_b, store_b, league_b)
+        self.assertEqual(restored_a.dataset_version, provenance_a)
+        self.assertEqual(restored_b.dataset_version, provenance_b)
+        self.assertNotEqual(restored_a.dataset_version, restored_b.dataset_version)
+
+    def test_account_observability_does_not_change_artifact_provenance(self) -> None:
+        provenance = self.market.dataset_version
+        account_state = {
+            **self.state,
+            "active_account_id": "another-account",
+            "authenticated_user": {"account_id": "another-account"},
+        }
+        restarted = AssetMarketCache()
+        loaded = restarted.get(
+            self.data, account_state, self.store, self.league_id,
+        )
+        self.assertEqual(loaded.dataset_version, provenance)
+        self.assertEqual(loaded.semantic_generation, self.market.semantic_generation)
+        self.assertEqual(restarted.artifact_loads, 1)
+        self.assertEqual(restarted.actual_constructions, 0)
+
+    def test_artifact_without_build_provenance_is_schema_incompatible(self) -> None:
+        path = self.market._artifact_path
+        connection = sqlite3.connect(path)
+        try:
+            connection.execute(
+                "DELETE FROM metadata WHERE key='historical_dataset_version'"
+            )
+            connection.commit()
+        finally:
+            connection.close()
+        contract = self.cache.artifact_contract(
+            self.data, self.state, self.store, self.league_id,
+        )
+        generation = self.cache.durable_generation(
+            self.data, self.state, self.store, self.league_id, contract,
+        )
+        artifact, reason = self.cache._discover_artifact(
+            self.store, generation, contract,
+        )
+        self.assertIsNone(artifact)
+        self.assertEqual(reason, "schema_incompatible")
 
     def test_material_brain_value_change_invalidates_artifact(self) -> None:
         changed = copy.deepcopy(self.data)
