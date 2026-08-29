@@ -11,7 +11,7 @@ from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.parse import parse_qsl, urlsplit
 from pathlib import Path
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 from src.platform.lifecycle import MARKET_BUILD_BLOCKERS
 from src.platform.validation.progress import ValidationProgress
@@ -34,6 +34,49 @@ MARKET_WARMING_RESPONSE_LIMIT_SECONDS = 0.5
 MARKET_WARMING_INTERVAL_SECONDS = 0.5
 _PROGRESS: ValidationProgress | None = None
 _REQUEST_SEQUENCE = 0
+
+
+PRIVATE_HTML_PREFIXES = (
+    "/teams", "/trades", "/league", "/market", "/front-offices", "/fois",
+    "/matchups", "/transactions", "/picks", "/settings", "/brain", "/valuation",
+    "/players", "/history", "/commissioner",
+)
+PUBLIC_API_PREFIXES = (
+    "/api/status", "/api/platform/health", "/api/data/health", "/api/inspect",
+    "/api/account", "/api/market/health",
+)
+
+
+class _NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001, ANN201
+        return None
+
+
+def authentication_required() -> bool:
+    """Return the configured production authentication contract."""
+    return os.getenv("DTOS_AUTH_REQUIRED", "").strip().casefold() in {
+        "1", "true", "yes", "on",
+    }
+
+
+def inspection_fixture() -> tuple[str, str, int] | None:
+    """Resolve the complete inspection credential boundary without exposing it."""
+    token = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
+    league_id = os.getenv("DTOS_INSPECTION_LEAGUE_ID", "").strip()
+    roster = os.getenv("DTOS_INSPECTION_ROSTER_ID", "").strip()
+    if token and league_id and roster.isdigit():
+        return token, league_id, int(roster)
+    return None
+
+
+def route_uses_inspection_context(path: str) -> bool:
+    """Authenticate only protected product routes and the Account acceptance page."""
+    if inspection_fixture() is None:
+        return False
+    route = urlsplit(path).path
+    private_html = route == "/" or route.startswith(PRIVATE_HTML_PREFIXES)
+    private_api = route.startswith("/api/") and not route.startswith(PUBLIC_API_PREFIXES)
+    return private_html or private_api or route == "/account"
 
 
 def _route_identity(path: str) -> str:
@@ -119,7 +162,14 @@ def validate_market_asset_contract(payload: dict, path: str) -> None:
         raise AssertionError(f"{path}: market detail and recommendation use different Brain snapshots")
 
 
-def _request(base_url: str, path: str, *, expected_contract: str = "canonical HTTP response") -> tuple[int, bytes, dict[str, str], float]:
+def _request(
+    base_url: str,
+    path: str,
+    *,
+    expected_contract: str = "canonical HTTP response",
+    authenticated: bool | None = None,
+    follow_redirects: bool = True,
+) -> tuple[int, bytes, dict[str, str], float]:
     global _REQUEST_SEQUENCE
     intent_started = perf_counter()
     _REQUEST_SEQUENCE += 1
@@ -131,11 +181,25 @@ def _request(base_url: str, path: str, *, expected_contract: str = "canonical HT
     print(f"HTTP smoke requesting: {path}", flush=True)
     try:
         headers = {}
-        inspection_token = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
-        if inspection_token:
-            headers["X-DTOS-Inspection-Auth"] = inspection_token
+        use_inspection = (
+            route_uses_inspection_context(path)
+            if authenticated is None else authenticated
+        )
+        fixture = inspection_fixture()
+        if use_inspection:
+            if fixture is None:
+                raise AssertionError(
+                    f"{path}: authenticated smoke requires a complete inspection fixture"
+                )
+            headers["X-DTOS-Inspection-Auth"] = fixture[0]
         headers["X-DTOS-Diagnostics"] = "1"
-        with urlopen(Request(base_url.rstrip("/") + path, headers=headers), timeout=60) as response:
+        request = Request(base_url.rstrip("/") + path, headers=headers)
+        opener = build_opener(_NoRedirect()) if not follow_redirects else None
+        response_context = (
+            opener.open(request, timeout=60) if opener is not None
+            else urlopen(request, timeout=60)
+        )
+        with response_context as response:
             headers_received = perf_counter()
             status = response.status
             body = response.read()
@@ -213,10 +277,36 @@ def validate_trade_manager_context(
 
 def inspection_roster_id() -> int | None:
     """Return the configured inspection membership roster, when fully resolved."""
-    token = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
-    league_id = os.getenv("DTOS_INSPECTION_LEAGUE_ID", "").strip()
-    roster = os.getenv("DTOS_INSPECTION_ROSTER_ID", "").strip()
-    return int(roster) if token and league_id and roster.isdigit() else None
+    fixture = inspection_fixture()
+    return fixture[2] if fixture is not None else None
+
+
+def validate_anonymous_auth_contract(base_url: str) -> None:
+    """Prove anonymous HTML and API callers cannot reach private product state."""
+    status, body, headers, _elapsed = _request(
+        base_url, "/market", authenticated=False, follow_redirects=False,
+        expected_contract="anonymous private HTML authentication boundary",
+    )
+    location = next(
+        (value for name, value in headers.items() if name.casefold() == "location"), "",
+    )
+    if status != 303 or not location.startswith("/account/sign-in?next=/market"):
+        raise AssertionError(
+            f"/market: anonymous private HTML contract failed; status={status}, "
+            f"location={location!r}, body={body[:160]!r}"
+        )
+    status, body, _headers, _elapsed = _request(
+        base_url, "/api/trades", authenticated=False,
+        expected_contract="anonymous private API authentication boundary",
+    )
+    try:
+        payload = json.loads(body)
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise AssertionError("/api/trades: anonymous auth response is malformed") from exc
+    if status != 401 or payload.get("status") != "authentication_required":
+        raise AssertionError(
+            "/api/trades: anonymous private API did not enforce authentication"
+        )
 
 
 def expected_front_office_context(requested_roster_id: int) -> int:
@@ -401,10 +491,25 @@ def main() -> int:
     parser.add_argument("--validation-run-id", default="standalone")
     args = parser.parse_args()
     global _PROGRESS
+    requires_auth = authentication_required()
+    fixture = inspection_fixture()
+    if requires_auth and fixture is None:
+        raise AssertionError(
+            "Production-authenticated smoke requires the existing complete inspection "
+            "token, league, and roster fixture."
+        )
     if args.progress_file:
         _PROGRESS = ValidationProgress(args.progress_file, args.validation_run_id)
-        _PROGRESS.record("smoke_phase", phase="auth_setup", status="not_applicable", duration_ms=0, reason="canonical smoke uses no account session fixture")
+        _PROGRESS.record(
+            "smoke_phase", phase="auth_setup", status="completed", duration_ms=0,
+            mechanism=("inspection_header_context" if fixture else "local_unscoped"),
+            authentication_required=requires_auth,
+            auth_material_recorded=False, durable_session_created=False,
+        )
         _PROGRESS.record("smoke_phase", phase="requests", status="started")
+
+    if requires_auth:
+        validate_anonymous_auth_contract(args.base_url)
 
     major = (
         "/", "/market", "/league", "/commissioner", "/teams", "/matchups", "/transactions", "/picks", "/settings",
@@ -412,7 +517,7 @@ def main() -> int:
         "/api/crawl/history", "/history",
         "/api/platform/health", "/api/intelligence", "/api/league",
         "/api/players", "/front-offices", "/api/front-offices", "/trades",
-        "/api/trades", "/openapi.json",
+        "/api/trades", "/account", "/openapi.json",
         "/api/inspect", "/api/inspect/pages", "/api/inspect/site-map",
         "/api/inspect/schema", "/api/inspect/health",
         "/api/inspect/live", "/api/inspect/live/health",

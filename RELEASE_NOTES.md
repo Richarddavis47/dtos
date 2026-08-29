@@ -1,3 +1,24 @@
+# DTOS v1.10.65 - Authenticated Production Smoke Contract
+
+DTOS v1.10.65 corrects the production smoke contract exposed after v1.10.64
+successfully deployed with authentication enabled. Anonymous protected pages
+were correctly showing the sign-in surface, but the older validator treated
+that security behavior as product content and failed before authenticated
+acceptance could begin.
+
+The smoke harness now proves both boundaries independently. Anonymous private
+HTML and API requests must receive the canonical authentication-required
+behavior. Product requests then reuse the established inspection-safe header
+context, which resolves a deterministic active league and mapped franchise
+through the same account middleware without creating a durable session or
+using a real account password. Public health and inspection routes remain
+anonymous, credentials never enter diagnostics, and an incomplete production
+fixture fails closed.
+
+No product route or authentication behavior changes. The v1.10.64 Front Office
+contract, direct historical-leader aggregation, persistent bounded compute
+lane, one web worker, and all latency and memory thresholds remain unchanged.
+
 # DTOS v1.10.64 - Front Office Context Contract
 
 DTOS v1.10.64 corrects the canonical production smoke expectation exposed
