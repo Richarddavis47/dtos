@@ -1989,6 +1989,16 @@ def _restart_reuse(
                 raise AssertionError("restart accidentally rebuilt the market")
             if int(profile.get("artifact_load_total") or 0) != 1:
                 raise AssertionError("restart did not load exactly one durable artifact")
+            expected_provenance = expected_identity.get(
+                "historical_dataset_version"
+            )
+            actual_provenance = actual_identity.get(
+                "historical_dataset_version"
+            )
+            if actual_provenance != expected_provenance:
+                raise AssertionError(
+                    "restart artifact-build provenance mismatch"
+                )
             return {
                 "duration_ms": round((clock() - started) * 1000, 3),
                 "warming_attempts": len(samples), "warming_samples": samples,
@@ -1997,6 +2007,8 @@ def _restart_reuse(
                     else "bounded_warming"
                 ),
                 "identity_match": True, "output_equivalent": True,
+                "artifact_build_provenance_match": True,
+                "artifact_build_provenance": actual_provenance,
                 "artifact_loads": profile.get("artifact_load_total"),
                 "market_constructions": profile.get("market_construction_total"),
                 "hydration_stages": profile.get("hydration_stages") or {},
@@ -2428,7 +2440,12 @@ def main() -> int:
                     round(max(restart_server_values), 3)
                     if restart_server_values else None
                 ),
-                "generation_match": True, "memory_current": _cgroup("memory.current"),
+                "generation_match": True,
+                "artifact_build_provenance_match": all(
+                    bool(cycle.get("artifact_build_provenance_match"))
+                    for cycle in restart_cycles
+                ),
+                "memory_current": _cgroup("memory.current"),
             }
             summary["phases"]["historical_leaders"] = {
                 "timestamp": time.time(), "status": "running",
