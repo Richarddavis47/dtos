@@ -86,6 +86,15 @@ class DesignSystemTests(unittest.TestCase):
         self.assertIn('aria-current="page">League</a>', navigation)
         self.assertIn("position:fixed", DESIGN_SYSTEM_CSS)
 
+    def test_approved_visual_language_excludes_reference_editor_chrome(self) -> None:
+        self.assertIn("--accent", DESIGN_SYSTEM_CSS)
+        self.assertIn("manager-nav a:before", DESIGN_SYSTEM_CSS)
+        html = manager_navigation("Trade") + page_header(
+            "Trade Intelligence", league_name="Dynasty League", last_updated="today",
+        )
+        for editor_control in ("Share", "Edit", "Comment", "Resize", "Remove"):
+            self.assertNotIn(f">{editor_control}<", html)
+
     def test_http_product_contract_rejects_generic_and_internal_labels(self) -> None:
         valid = page_header("Falcons Headquarters", league_name="Dynasty League", last_updated="today")
         validate_product_contract(valid.encode(), "/teams/1")

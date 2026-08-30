@@ -612,11 +612,11 @@ async def deterministic_inspection_mode(request: Any, call_next: Any) -> Any:
 
 
 CSS = """
-:root{color-scheme:dark;--bg:#07111f;--panel:#101d2d;--line:#26374c;--text:#f5f7fb;--muted:#9fb0c6;--accent:#6ee7b7;--gold:#f5c451}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#07111f,#0b1727);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif}
+:root{color-scheme:dark;--bg:#060b12;--surface-0:#060b12;--surface-1:#0a1420;--surface-2:#0f1d2a;--surface-3:#142536;--panel:var(--surface-2);--line:#223449;--line-strong:#39516c;--text:#f5f7fb;--muted:#9baabd;--accent:#5df237;--accent-strong:#9aff52;--blue:#47a7ff;--purple:#a855f7;--gold:#f2bd42;--danger:#f15b64;--radius-sm:10px;--radius-md:14px;--radius-lg:18px;--radius-xl:22px;--shadow-card:0 16px 40px rgba(0,0,0,.22)}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,rgba(44,93,118,.18),transparent 38%),linear-gradient(180deg,var(--surface-0),#09131e 55%,var(--surface-0));color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;letter-spacing:-.005em}
 a{color:inherit;text-decoration:none}.wrap{max-width:1180px;margin:auto;padding:20px}.top{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:20px}
 .brand h1{margin:0;font-size:28px}.brand p{margin:4px 0;color:var(--muted)}.btn{border:0;border-radius:10px;padding:11px 15px;background:var(--accent);color:#062018;font-weight:800;cursor:pointer}.nav{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.nav a{padding:9px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card{background:rgba(16,29,45,.94);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 10px 25px rgba(0,0,0,.15)}.card h2,.card h3{margin-top:0}.muted{color:var(--muted)}.good{color:var(--accent)}.warn{color:#fca5a5}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card{background:linear-gradient(145deg,rgba(15,29,42,.97),rgba(9,20,32,.97));border:1px solid var(--line);border-radius:var(--radius-lg);padding:17px;box-shadow:var(--shadow-card)}.card h2,.card h3{margin-top:0;letter-spacing:-.025em}.muted{color:var(--muted)}.good{color:var(--accent)}.warn{color:#ff8a92}
 .stat{font-size:27px;font-weight:850}.team{margin-bottom:14px}.record{color:var(--gold);font-weight:800}.players{display:grid;gap:5px}.player{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid rgba(38,55,76,.65)}.starter{font-weight:800}.pill{font-size:12px;padding:3px 7px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
 .team-link{display:block;transition:transform .15s ease,border-color .15s ease}.team-link:hover{transform:translateY(-2px);border-color:#3d5877}.team-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.rank-badge{min-width:38px;height:38px;border-radius:12px;background:#182a40;border:1px solid var(--line);display:grid;place-items:center;font-weight:900;color:var(--gold)}.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.metric{background:#0b1727;border:1px solid var(--line);border-radius:10px;padding:10px}.metric b{display:block;font-size:17px}.metric span{font-size:11px;color:var(--muted)}.roster-section{margin-top:18px}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.slot-label{font-size:12px;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:.08em}.back{display:inline-block;margin-bottom:14px;color:var(--accent)}.pick-year{margin-top:14px}.pick-list{display:grid;gap:7px}.pick-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-top:1px solid rgba(38,55,76,.65)}.pick-origin{font-size:12px;color:var(--muted)}.away{color:#fca5a5}
 
@@ -649,6 +649,11 @@ details.pick-year{margin-top:12px}.pick-summary{list-style:none;cursor:pointer;d
 table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}pre{white-space:pre-wrap;word-break:break-word}.footer{color:var(--muted);font-size:13px;padding:24px 0}.error{background:#3b1720;border:1px solid #7f1d1d;padding:12px;border-radius:10px;margin-bottom:15px}@media(max-width:600px){.wrap{padding:14px}.card{padding:13px}th,td{padding:7px;font-size:13px}}
 """
 CSS += DESIGN_SYSTEM_CSS
+CSS += """
+button,input,select,textarea{font:inherit}
+input,select,textarea{min-height:42px;background:var(--surface-0);color:var(--text);border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 11px}
+label{color:var(--muted);font-size:12px;font-weight:750}
+"""
 
 
 def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLResponse:

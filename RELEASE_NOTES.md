@@ -1,3 +1,18 @@
+# DTOS v1.10.67 - Site-Wide Visual System
+
+DTOS v1.10.67 introduces a cohesive visual foundation across the existing
+manager product. It applies a premium dark, layered presentation with clearer
+hierarchy, denser decision cards, consistent actions, stronger responsive
+behavior, and an improved five-destination navigation shell.
+
+Trade Center receives the most focused presentation update: its four existing
+workflows, bilateral packages, market values, confidence, evidence, and honest
+empty states now read as one coherent decision surface. No trade logic, market
+semantics, route, production data, or intelligence output changes.
+
+The supplied mobile images informed visual language only. Their phone status
+bar and editor/share overlay controls are deliberately not part of DTOS.
+
 # DTOS v1.10.66 - Artifact-Build Provenance Identity Stability
 
 DTOS v1.10.66 corrects a retained-artifact provenance mismatch observed after
