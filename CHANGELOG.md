@@ -1,5 +1,17 @@
 # Changelog
 
+# v1.10.67 - Site-Wide Visual System
+
+- Establish a premium dark DTOS visual language with layered navy surfaces,
+  clearer hierarchy, restrained semantic color, and consistent responsive
+  spacing across the existing product shell.
+- Refine the five-destination manager navigation into a compact desktop rail
+  and accessible mobile bottom navigation without changing product routes.
+- Upgrade Trade Center workflows, bilateral proposal cards, controls, and the
+  honest no-opportunity state while preserving every intelligence contract.
+- Treat the approved mobile references as visual direction only and explicitly
+  exclude their editor, sharing, and device overlay controls from DTOS.
+
 # v1.10.66 - Artifact-Build Provenance Identity Stability
 
 - Restore immutable historical dataset provenance from the compatible Asset
