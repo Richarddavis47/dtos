@@ -82,7 +82,7 @@ def create_home_router(
         record = record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=not preseason)
         ranking_label = "preseason outlook" if preseason else "current league outlook"
         competitive = f'#{outlook.get("rank", "—")} in the {ranking_label}' if outlook.get("rank") else f'{ranking_label.title()} not yet available'
-        header = f'<article class="card ux-answer ux-competitive-header"><p class="identity-kicker">Your front office</p><h2>{escape(str(team.get("team_name") or "Franchise"))}</h2><p><b>{escape("Preseason" if preseason else record)}</b> · {escape(competitive)}</p><p class="muted">Owner: {escape(str(team.get("owner") or "Unassigned"))}{" · Week " + escape(str(data.get("week"))) if data.get("week") and not preseason else ""}</p></article>{selector}'
+        header = f'''<div class="ux-command-grid"><article class="ux-feature"><p class="identity-kicker">Your front office · {escape(str(team.get("owner") or "Unassigned"))}</p><h2>{escape(str(team.get("team_name") or "Franchise"))}</h2><p class="ux-feature-copy"><b>{escape("Preseason" if preseason else record)}</b> · {escape(competitive)}. DTOS has organized the current league evidence around the decisions that matter to this franchise.</p><div class="ux-feature-actions"><a class="ux-primary-action" href="/teams/{roster_id}">Open My Team</a><a class="ux-secondary-action" href="/trades?front_office={roster_id}">Work the trade desk</a></div></article><aside class="card ux-signal-rail"><div class="identity-kicker">Right now</div><div class="ux-signal"><span class="ux-signal-icon">#</span><span><b>{escape(str(outlook.get("rank") or "—"))}</b><small>{escape(ranking_label)}</small></span><span>→</span></div><div class="ux-signal"><span class="ux-signal-icon">◎</span><span><b>{len(team.get("players") or [])} players</b><small>{len(team.get("picks_owned") or [])} future picks</small></span><span>→</span></div><div class="ux-signal"><span class="ux-signal-icon">⇄</span><span><b>Trade desk</b><small>Bilateral opportunities</small></span><span>→</span></div></aside></div>{selector}'''
 
         actions = [
             ("Review your team direction", "See the current roster assessment, needs, and core assets.", f"/teams/{roster_id}"),
@@ -98,10 +98,10 @@ def create_home_router(
             ((int(team_row.get("roster_id") or 0), team_row, directory.get(int(team_row.get("roster_id") or 0), {})) for team_row in teams),
             key=lambda row: (int(row[2].get("rank") or 999), str(row[1].get("team_name") or "")),
         )[:5]
-        rank_html = '<div class="grid ux-ranking-grid">' + "".join(
-            f'<a class="card" href="/teams/{rid}"><b>#{view.get("rank", "—")} {escape(str(row.get("team_name") or "Team"))}</b><p class="muted">{escape("Preseason outlook" if preseason else record_evidence(row.get("wins"), row.get("losses"), row.get("ties"), season_started=True))}</p></a>'
-            for rid, row, view in rankings
-        ) + '</div><p><a href="/fois">Open separate FOIS general-manager rankings →</a></p>'
+        rank_html = '<div class="podium-grid">' + "".join(
+            f'<a class="podium-card" data-rank="{int(view.get("rank") or index)}" href="/teams/{rid}"><span class="podium-rank">#{escape(str(view.get("rank") or index))}</span><h3>{escape(str(row.get("team_name") or "Team"))}</h3><p>{escape("Preseason outlook" if preseason else record_evidence(row.get("wins"), row.get("losses"), row.get("ties"), season_started=True))}</p></a>'
+            for index, (rid, row, view) in enumerate(rankings[:3], start=1)
+        ) + '</div><p><a href="/fois">Open full GM intelligence rankings →</a></p>'
 
         matchups = []
         for matchup_id, sides in sorted((data.get("matchups") or {}).items())[:5]:
@@ -144,7 +144,7 @@ def create_home_router(
         if preseason:
             ordered = sorted(teams, key=lambda team: int(directory.get(int(team.get("roster_id") or 0), {}).get("rank") or 999))
             standings = "".join(
-                f'<tr><td>{escape(str(directory.get(int(team.get("roster_id") or 0), {}).get("rank") or "—"))}</td><td><a href="/teams/{int(team.get("roster_id") or 0)}">{escape(str(team.get("team_name") or "Team"))}</a></td><td colspan="2">Preseason outlook</td></tr>'
+                f'<tr><td><span class="podium-rank">#{escape(str(directory.get(int(team.get("roster_id") or 0), {}).get("rank") or "—"))}</span></td><td><a href="/teams/{int(team.get("roster_id") or 0)}">{escape(str(team.get("team_name") or "Team"))}</a></td><td colspan="2">Preseason outlook</td></tr>'
                 for team in ordered
             )
         else:

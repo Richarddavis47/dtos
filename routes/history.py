@@ -132,7 +132,7 @@ def create_history_router(
         archive = await history_season_api(season)
         standings = "".join(
             "<tr>"
-            f'<td>{row.get("rank") or "—"}</td>'
+            f'<td><span class="podium-rank">#{row.get("rank") or "—"}</span></td>'
             f'<td><a href="/history/team/{escape(str(row.get("franchise_id") or ""))}">{escape(row["team_name"])}</a></td>'
             f'<td>{escape(row["gm_name"])}</td>'
             f'<td>{row.get("wins") if row.get("wins") is not None else "—"}-{row.get("losses") if row.get("losses") is not None else "—"}</td>'
@@ -165,7 +165,7 @@ def create_history_router(
         body = f"""
 <a class="back" href="/history">← History Index</a><h2>{season} Season Archive</h2>
 <p><b>Status:</b> {escape(archive['display_status'])}</p><p class="muted">{escape(status_detail)}</p>
-<div class="summary-grid"><article class="metric"><b>{escape(str(champion.get('team_name') or 'Pending / unavailable'))}</b><span>Champion</span></article><article class="metric"><b>{escape(str(runner_up.get('team_name') or 'Pending / unavailable'))}</b><span>Runner-up</span></article><article class="metric"><b>{archive['counts']['matchups']}</b><span>Matchups</span></article><article class="metric"><b>{archive['counts']['transactions']}</b><span>Transactions</span></article></div>
+<div class="summary-grid"><article class="metric"><b class="{'status-trophy' if champion.get('team_name') else ''}">{escape(str(champion.get('team_name') or 'Pending / unavailable'))}</b><span>Champion</span></article><article class="metric"><b>{escape(str(runner_up.get('team_name') or 'Pending / unavailable'))}</b><span>Runner-up</span></article><article class="metric"><b>{archive['counts']['matchups']}</b><span>Matchups</span></article><article class="metric"><b>{archive['counts']['transactions']}</b><span>Transactions</span></article></div>
 <section class="card"><h3>Final Standings</h3><table><thead><tr><th>Rank</th><th>Team</th><th>GM</th><th>Record</th><th>PF</th><th>PA</th><th>Postseason</th></tr></thead><tbody>{standings}</tbody></table></section>
 <section class="card"><h3>Weekly Results</h3>{weeks}</section>
 <section class="card"><h3>Season Leaders</h3><ol>{leaders}</ol></section>

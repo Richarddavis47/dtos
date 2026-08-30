@@ -62,7 +62,7 @@ def _market_page(dataset: str = "generation-1") -> bytes:
     return (
         '<header data-dtos-component="page-header"><h1>Asset Market</h1>'
         '<a class="ds-action primary">Sync</a></header>'
-        '<h2>Asset Market &amp; Dynasty Exchange</h2>'
+        '<h2>Know the market.</h2>'
         '<form aria-label="Asset Market filters"></form>'
         '<table><caption>Canonical dynasty asset rankings</caption></table>'
         '<p>Values remain separate; unavailable evidence is never substituted.</p>'
