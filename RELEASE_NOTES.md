@@ -1,3 +1,18 @@
+# DTOS v1.10.68 - Visual Fidelity Correction
+
+DTOS v1.10.68 changes the rendered manager experience, not merely its colors.
+Home now opens as a front-office briefing, franchise pages lead with identity
+and recognizable starters, League rankings use a real podium hierarchy, and
+Market presents players and picks as ranked dynasty assets.
+
+Trade Center receives the reference-driven correction: offers visibly separate
+send and receive packages, emphasize player imagery and values, explain both
+sides of the deal, and present one clear next action. The approved screenshots
+define the visual grammar; their phone and editor overlays remain excluded.
+
+No valuation, trade intelligence, Sleeper, projection, ownership, historical,
+authentication, artifact, or infrastructure semantics change in this release.
+
 # DTOS v1.10.67 - Site-Wide Visual System
 
 DTOS v1.10.67 introduces a cohesive visual foundation across the existing

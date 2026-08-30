@@ -1,5 +1,18 @@
 # Changelog
 
+# v1.10.68 - Visual Fidelity Correction
+
+- Recompose Home as a franchise command dashboard, My Team as an identity-led
+  roster, League rankings as a visible podium, and Market as a visual dynasty
+  asset exchange rather than an administrative table.
+- Rebuild Trade Center presentation around recognizable player and pick assets,
+  unmistakable send/receive packages, bilateral reasoning, confidence, and one
+  dominant action, following the approved mobile references.
+- Introduce visible, data-bound podium and championship vocabulary while keeping
+  unsupported hot streak and movement states honest and absent.
+- Preserve the accepted v1.10.67 intelligence, routes, synchronization,
+  authentication, artifact, inspection, and resource contracts.
+
 # v1.10.67 - Site-Wide Visual System
 
 - Establish a premium dark DTOS visual language with layered navy surfaces,

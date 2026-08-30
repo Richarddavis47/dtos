@@ -35,7 +35,7 @@ class DesignSystemTests(unittest.TestCase):
             with self.subTest(title=title):
                 html = page_header(title, league_name="Dynasty League", last_updated="2026-08-03T12:00:00Z")
                 self.assertIn('data-dtos-component="page-header"', html)
-                self.assertIn('data-design-system="1.1"', html)
+                self.assertIn('data-design-system="1.2"', html)
                 self.assertIn(f"<h1>{title}</h1>", html)
                 self.assertIn("League Sync", html)
                 self.assertIn('class="ds-action primary"', html)
@@ -126,7 +126,7 @@ class DesignSystemTests(unittest.TestCase):
         )
         market = (
             header
-            + '<h2>Asset Market &amp; Dynasty Exchange</h2>'
+            + '<h2>Know the market.</h2>'
             + '<form aria-label="Asset Market filters"></form>'
             + '<table><caption>Canonical dynasty asset rankings</caption></table>'
             + '<p>Values remain separate; unavailable evidence is never substituted.</p>'

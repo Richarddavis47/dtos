@@ -217,7 +217,7 @@ class TradeIntelligenceTests(unittest.TestCase):
         self.assertEqual(page.status_code, 200)
         self.assertIn('data-dtos-component="recommendation"', page.text)
         self.assertIn("Active Front Office", page.text)
-        self.assertIn("Open Trade Dossier", page.text)
+        self.assertIn("View trade details", page.text)
         self.assertNotIn("<details open", page.text)
 
     def test_trade_center_exposes_four_shared_workflows_and_manual_evaluation(self) -> None:
