@@ -1,3 +1,16 @@
+# DTOS v1.12.1 - DINS Public-Origin Serialization Correction
+
+DTOS v1.12.1 corrects the DINS producer boundary used by authenticated
+production capture. The browser may reach DTOS through a private loopback
+transport, but publication-safe structured artifacts now represent only
+application-owned URLs through the explicitly configured public origin.
+
+The correction preserves URL paths, queries, and fragments, leaves external
+resources unchanged, and does not perform blanket text replacement. A
+surviving loopback reference still fails the unchanged packager. Historical
+Intelligence, Asset Market semantics, visual presentation, authentication, and
+production data are unchanged.
+
 # DTOS v1.12.0 - Canonical Historical Intelligence Contract
 
 DTOS v1.12.0 begins the Season-Readiness Intelligence program with one neutral

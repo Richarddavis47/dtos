@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.12.1 - DINS Public-Origin Serialization Correction
+
+- Separated DINS browser transport origin from publication identity.
+- Rebased only structured application-owned absolute URLs through the configured public origin while preserving paths, queries, and fragments.
+- Kept external URLs unchanged and retained every fail-closed packaging prohibition.
+- Required an explicit public origin whenever authenticated capture uses loopback transport.
+
 # v1.12.0 - Canonical Historical Intelligence Contract
 
 - Establish one normalized, multi-league historical-intelligence read boundary

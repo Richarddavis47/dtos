@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
 from typing import Any
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 from playwright.sync_api import Browser, Page, sync_playwright
@@ -21,6 +21,76 @@ from src.core.inspection.storage import InspectionArtifactStore
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ROOT = ROOT / "static" / "inspection"
+
+
+def _origin(value: str) -> str:
+    parsed = urlsplit(value.strip())
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("Inspection origins must be absolute HTTP(S) URLs.")
+    return urlunsplit((parsed.scheme, parsed.netloc, "", "", "")).rstrip("/")
+
+
+def _public_origin(capture_url: str, configured: str | None = None) -> str:
+    """Resolve publication identity independently from browser transport."""
+    capture_origin = _origin(capture_url)
+    selected = (configured or os.getenv("DTOS_PUBLIC_URL", "")).strip()
+    if selected:
+        return _origin(selected)
+    host = (urlsplit(capture_origin).hostname or "").casefold()
+    if host in {"localhost", "127.0.0.1", "::1"}:
+        raise ValueError(
+            "Loopback DINS capture requires an explicit configured public origin."
+        )
+    return capture_origin
+
+
+def _rebase_application_urls(
+    value: Any, *, capture_origin: str, public_origin: str,
+) -> Any:
+    """Rebase only structured absolute URLs owned by the captured application."""
+    if isinstance(value, dict):
+        return {
+            key: _rebase_application_urls(
+                item, capture_origin=capture_origin, public_origin=public_origin,
+            )
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [
+            _rebase_application_urls(
+                item, capture_origin=capture_origin, public_origin=public_origin,
+            )
+            for item in value
+        ]
+    if isinstance(value, tuple):
+        return tuple(
+            _rebase_application_urls(
+                item, capture_origin=capture_origin, public_origin=public_origin,
+            )
+            for item in value
+        )
+    if not isinstance(value, str):
+        return value
+    parsed = urlsplit(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return value
+    if _origin(value).casefold() != capture_origin.casefold():
+        return value
+    public = urlsplit(public_origin)
+    return urlunsplit((public.scheme, public.netloc, parsed.path, parsed.query, parsed.fragment))
+
+
+def _write_artifact_json(
+    path: Path, value: Any, *, capture_origin: str, public_origin: str,
+) -> Any:
+    """Publish one structured artifact through the canonical origin boundary."""
+    normalized = _rebase_application_urls(
+        value, capture_origin=capture_origin, public_origin=public_origin,
+    )
+    path.write_text(
+        json.dumps(normalized, ensure_ascii=False, indent=2), encoding="utf-8",
+    )
+    return normalized
 
 
 def _inspection_headers(**extra: str) -> dict[str, str]:
@@ -117,8 +187,14 @@ def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: st
         "publicOrigin": public_origin,
     })
     accessibility = page.evaluate(A11Y_SCRIPT)
-    (folder / f"{viewport.name}-dom.json").write_text(json.dumps(dom, ensure_ascii=False, indent=2), encoding="utf-8")
-    (folder / f"{viewport.name}-accessibility.json").write_text(json.dumps(accessibility, ensure_ascii=False, indent=2), encoding="utf-8")
+    dom = _write_artifact_json(
+        folder / f"{viewport.name}-dom.json", dom,
+        capture_origin=capture_origin, public_origin=public_origin,
+    )
+    accessibility = _write_artifact_json(
+        folder / f"{viewport.name}-accessibility.json", accessibility,
+        capture_origin=capture_origin, public_origin=public_origin,
+    )
     nodes = dom["nodes"]
     interactions = []
     for link in _component_rows(dom, "link")[:12]:
@@ -163,11 +239,17 @@ def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: st
         "metrics": {"section_count": len(_component_rows(dom, "section")), "card_count": sum(row.get("tag") == "article" for row in nodes), "button_count": len(_component_rows(dom, "button")), "table_count": len(_component_rows(dom, "table")), "heading_count": len(headings), "critical_accessibility_count": len(critical), "interaction_density": round((len(_component_rows(dom, "button")) + len(_component_rows(dom, "link"))) / max(1, page.evaluate("document.documentElement.scrollHeight") / 1000), 2), "shared_header_contract": has_shared_header, "primary_action_contract": has_primary_action, "recommendation_contract": has_recommendation, "product_contract_failures": len(public_contract_failures)},
     }
     page.close()
-    return result
+    return _rebase_application_urls(
+        result, capture_origin=capture_origin, public_origin=public_origin,
+    )
 
 
-def capture(base_url: str, output: Path, limit: int | None = None) -> dict[str, Any]:
-    public_url = os.getenv("DTOS_PUBLIC_URL", base_url).rstrip("/")
+def capture(
+    base_url: str, output: Path, limit: int | None = None,
+    *, public_url: str | None = None,
+) -> dict[str, Any]:
+    capture_origin = _origin(base_url)
+    public_url = _public_origin(base_url, public_url)
     store = InspectionArtifactStore(output, public_url)
     if store.current_root.exists():
         shutil.rmtree(store.current_root)
@@ -184,20 +266,29 @@ def capture(base_url: str, output: Path, limit: int | None = None) -> dict[str, 
     pages = [row for row in site_map.get("pages", []) if not row.get("excluded")]
     if limit is not None:
         pages = pages[:limit]
-    (store.current_root / "site-map.json").write_text(json.dumps(site_map, ensure_ascii=False, indent=2), encoding="utf-8")
+    site_map = _write_artifact_json(
+        store.current_root / "site-map.json", site_map,
+        capture_origin=capture_origin, public_origin=public_url,
+    )
     valuation_inspection = _json(urljoin(base_url.rstrip("/") + "/", "api/inspect/valuation"))
-    (store.current_root / "valuation.json").write_text(json.dumps(valuation_inspection, ensure_ascii=False, indent=2), encoding="utf-8")
+    valuation_inspection = _write_artifact_json(
+        store.current_root / "valuation.json", valuation_inspection,
+        capture_origin=capture_origin, public_origin=public_url,
+    )
     inspection_health = _json(urljoin(base_url.rstrip("/") + "/", "api/inspect/health"))
     historical_progress = inspection_health.get("historical_progress") or {}
-    (store.current_root / "historical-progress.json").write_text(
-        json.dumps(historical_progress, ensure_ascii=False, indent=2),
-        encoding="utf-8",
+    historical_progress = _write_artifact_json(
+        store.current_root / "historical-progress.json", historical_progress,
+        capture_origin=capture_origin, public_origin=public_url,
     )
     semantic_root = store.current_root / "semantic"
     semantic_root.mkdir(parents=True, exist_ok=True)
     for spec in pages:
         semantic = _json(urljoin(base_url.rstrip("/") + "/", f"api/inspect/pages/{spec['page_id']}"))
-        (semantic_root / f"{spec['page_id']}.json").write_text(json.dumps(semantic, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_artifact_json(
+            semantic_root / f"{spec['page_id']}.json", semantic,
+            capture_origin=capture_origin, public_origin=public_url,
+        )
     generated: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
     with sync_playwright() as playwright:
@@ -208,7 +299,10 @@ def capture(base_url: str, output: Path, limit: int | None = None) -> dict[str, 
                     try:
                         result = _capture_page(browser, store, base_url, spec, viewport, status.get("league_id"))
                         path = store.current_root / "pages" / spec["page_id"] / f"{viewport.name}.json"
-                        path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+                        result = _write_artifact_json(
+                            path, result, capture_origin=capture_origin,
+                            public_origin=public_url,
+                        )
                         generated.append(result)
                     except Exception as exc:  # capture must preserve partial results
                         failures.append({"page_id": spec["page_id"], "viewport": viewport.name, "error": type(exc).__name__, "detail": str(exc)[:500]})
@@ -226,8 +320,10 @@ def capture(base_url: str, output: Path, limit: int | None = None) -> dict[str, 
     manifest = {"version": VERSION, "build": BUILD_NUMBER, "commit_sha": deployment.get("commit", "Unavailable"), "source_branch": deployment.get("branch", "Unavailable"), "deployed_at": deployment.get("deployed_at"), "generated_at": generated_at, "league_id": status.get("league_id"), "inspection_schema_version": INSPECTION_SCHEMA_VERSION, "status": "complete" if not failures else "partial", "page_inventory": site_map.get("pages", []), "pages": page_ids, "pages_added": page_ids, "pages_removed": [], "pages_changed": page_ids, "semantic_contract_changes": ["DINS schema 2.0 enforces product design, navigation, recommendation, accessibility, deployment-provenance, and live valuation contracts."], "valuation_inspection": {"artifact": "valuation.json", "route": valuation_inspection.get("route"), "status": valuation_inspection.get("status"), "layers": valuation_inspection.get("valuation_layers"), "warnings": valuation_inspection.get("warnings")}, "screenshot_artifact_urls": [url for row in generated for url in (row["artifact_urls"]["viewport_screenshot"], row["artifact_urls"]["full_page_screenshot"])], "visual_difference_results": [{"baseline_version": "1.6.6", "current_version": VERSION, "status": "pending", "reason": "The post-deployment publication worker records retained visual comparison results."}], "interaction_failures": [item for row in generated for item in row["interactions"] if not item["success"]], "accessibility_regressions": [item for row in generated for item in row["accessibility"]["violations"] if item["severity"] == "critical"], "product_contract_failures": product_contract_failures, "console_errors": [item for row in generated for item in row["network"]["console_errors"]], "failed_network_requests": [item for row in generated for item in row["network"]["failed_requests"]], "stale_version_mismatches": [], "validation_outcome": "pass" if not failures and not has_critical_accessibility and not product_contract_failures else "fail", "total_pages_expected": len(pages), "total_pages_completed": len(page_ids), "total_visual_artifacts": artifact_count, "failures": failures, "warnings": ["Sleeper avatar CDN requests can be unavailable in sandboxed capture environments; failures are recorded explicitly."], "retention": "Published GitHub Release bundles are immutable and retained with their release."}
     manifest["historical_progress"] = historical_progress
     manifest["canonical_history_progress"] = historical_progress
-    (store.current_root / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    return manifest
+    return _write_artifact_json(
+        store.current_root / "manifest.json", manifest,
+        capture_origin=capture_origin, public_origin=public_url,
+    )
 
 
 def main() -> int:
@@ -235,8 +331,11 @@ def main() -> int:
     parser.add_argument("--base-url", default="http://127.0.0.1:8767")
     parser.add_argument("--output", type=Path, default=DEFAULT_ROOT)
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--public-url")
     args = parser.parse_args()
-    result = capture(args.base_url, args.output, args.limit)
+    result = capture(
+        args.base_url, args.output, args.limit, public_url=args.public_url,
+    )
     print(json.dumps({"status": result["status"], "pages": result["total_pages_completed"], "artifacts": result["total_visual_artifacts"], "failures": len(result["failures"])}, indent=2))
     return 0 if result["validation_outcome"] == "pass" else 1
 
