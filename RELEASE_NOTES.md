@@ -1,3 +1,13 @@
+# DTOS v1.10.70 - DINS DOM-Origin Serialization Correction
+
+DTOS v1.10.70 corrects the DINS producer boundary that previously serialized
+browser-resolved application links with the loopback capture origin.
+
+Internal application anchors are rebased during structured DOM extraction using
+the existing `DTOS_PUBLIC_URL` contract. Paths, query strings, and fragments are
+preserved; external origins remain unchanged. The DINS packager remains fail
+closed, and product UI, Asset Market semantics, and infrastructure are unchanged.
+
 # DTOS v1.10.69 - Symbol Rendering Correction
 
 DTOS v1.10.69 is a surgical rendering correction for the visual status system.

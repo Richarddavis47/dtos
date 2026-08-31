@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.10.69"
-BUILD_NUMBER = 1169
-RELEASE_CODENAME = "Symbol Rendering Correction"
+VERSION = "1.10.70"
+BUILD_NUMBER = 1170
+RELEASE_CODENAME = "DINS DOM-Origin Serialization Correction"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
