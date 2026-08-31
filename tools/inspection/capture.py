@@ -30,12 +30,14 @@ def _inspection_headers(**extra: str) -> dict[str, str]:
         headers["X-DTOS-Inspection-Auth"] = token
     return headers
 
-DOM_SCRIPT = """() => {
+DOM_SCRIPT = """config => {
+ const {captureOrigin=location.origin,publicOrigin=location.origin}=config||{};
  const visible = e => { const r=e.getBoundingClientRect(), s=getComputedStyle(e), closed=e.closest('details:not([open])'); return !e.closest('[hidden],[inert]')&&(!closed||closed.querySelector(':scope > summary')?.contains(e))&&r.width>0&&r.height>0&&s.visibility!=='hidden'&&s.display!=='none'; };
  const role = e => e.getAttribute('role') || ({A:'link',BUTTON:'button',TABLE:'table',NAV:'navigation',FORM:'form',H1:'heading',H2:'heading',H3:'heading',IMG:'image'}[e.tagName]||'');
+ const rebase=raw=>{const resolved=new URL(raw||'',location.href);if(resolved.origin!==captureOrigin)return resolved.href;const publicBase=new URL(publicOrigin);return new URL(resolved.pathname+resolved.search+resolved.hash,publicBase).href;};
  const rows=[...document.querySelectorAll('header,nav,main,section,article,.card,table,button,a,form,details,h1,h2,h3,img,input,select,textarea')].filter(visible).slice(0,600).map((e,i)=>{
    const r=e.getBoundingClientRect(),s=getComputedStyle(e),text=(e.innerText||e.getAttribute('aria-label')||e.getAttribute('alt')||'').trim().replace(/\\s+/g,' ').slice(0,300);
-   return {id:e.id||`dins-${i}`,tag:e.tagName.toLowerCase(),role:role(e),text,href:e.tagName==='A'?new URL(e.getAttribute('href')||'',location.href).href:null,
+   return {id:e.id||`dins-${i}`,tag:e.tagName.toLowerCase(),role:role(e),text,href:e.tagName==='A'?rebase(e.getAttribute('href')):null,
    geometry:{x:Math.round(r.x),y:Math.round(r.y+scrollY),width:Math.round(r.width),height:Math.round(r.height),viewport_visible:r.bottom>0&&r.top<innerHeight,clipped:r.left<0||r.right>innerWidth,overflow_x:e.scrollWidth>e.clientWidth,overflow_y:e.scrollHeight>e.clientHeight},
    style:{display:s.display,position:s.position,font_family:s.fontFamily,font_size:s.fontSize,font_weight:s.fontWeight,line_height:s.lineHeight,color:s.color,background_color:s.backgroundColor,border_color:s.borderColor,border_radius:s.borderRadius,padding:s.padding,margin:s.margin,z_index:s.zIndex,white_space:s.whiteSpace}};
  });
@@ -108,7 +110,12 @@ def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: st
     screenshot_started = perf_counter()
     page.screenshot(path=str(folder / full_name), full_page=True)
     screenshot_ms = round((perf_counter() - screenshot_started) * 1000, 2)
-    dom = page.evaluate(DOM_SCRIPT)
+    capture_origin = f"{urlparse(base_url).scheme}://{urlparse(base_url).netloc}"
+    public_origin = f"{urlparse(store.public_base_url).scheme}://{urlparse(store.public_base_url).netloc}"
+    dom = page.evaluate(DOM_SCRIPT, {
+        "captureOrigin": capture_origin,
+        "publicOrigin": public_origin,
+    })
     accessibility = page.evaluate(A11Y_SCRIPT)
     (folder / f"{viewport.name}-dom.json").write_text(json.dumps(dom, ensure_ascii=False, indent=2), encoding="utf-8")
     (folder / f"{viewport.name}-accessibility.json").write_text(json.dumps(accessibility, ensure_ascii=False, indent=2), encoding="utf-8")

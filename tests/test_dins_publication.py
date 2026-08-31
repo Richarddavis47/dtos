@@ -161,6 +161,61 @@ class DinsPublicationTests(unittest.TestCase):
             "https://github.com/dynastyprocess/data",
         )
 
+    def test_loopback_capture_serializes_internal_links_with_public_origin(self) -> None:
+        from playwright.sync_api import sync_playwright
+
+        html = (
+            '<main><a href="/market?position=QB#asset">Market</a>'
+            '<a href="https://github.com/dynastyprocess/data">External</a></main>'
+        )
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=True)
+            for capture_origin in (
+                "http://127.0.0.1:10000",
+                "http://localhost:10000",
+                "http://[::1]:10000",
+            ):
+                with self.subTest(capture_origin=capture_origin):
+                    page = browser.new_page()
+                    page.route("**/*", lambda route: route.fulfill(
+                        status=200, content_type="text/html", body=html,
+                    ))
+                    page.goto(f"{capture_origin}/history/2025")
+                    links = {
+                        row["text"]: row["href"]
+                        for row in page.evaluate(DOM_SCRIPT, {
+                            "captureOrigin": capture_origin,
+                            "publicOrigin": "https://dtos.onrender.com",
+                        })["nodes"]
+                        if row.get("role") == "link"
+                    }
+                    page.close()
+                    self.assertEqual(
+                        links["Market"],
+                        "https://dtos.onrender.com/market?position=QB#asset",
+                    )
+                    self.assertEqual(
+                        links["External"], "https://github.com/dynastyprocess/data",
+                    )
+            browser.close()
+
+    def test_packaging_still_rejects_surviving_loopback_dom_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            capture = root / "capture"
+            capture.mkdir()
+            (capture / "manifest.json").write_text(
+                json.dumps(self.manifest()), encoding="utf-8",
+            )
+            (capture / "desktop-dom.json").write_text(
+                json.dumps({"href": "http://127.0.0.1:10000/market"}),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                ValueError, "forbidden local or sensitive reference",
+            ):
+                package_bundle(capture, root / "assets")
+
     def test_internal_interaction_target_remains_on_dtos_origin(self) -> None:
         self.assertEqual(
             _interaction_target(

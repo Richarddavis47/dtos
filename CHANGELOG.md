@@ -1,5 +1,14 @@
 # Changelog
 
+# v1.10.70 - DINS DOM-Origin Serialization Correction
+
+- Rebase browser-resolved DTOS application links from the loopback inspection
+  origin to the configured public origin during structured DOM serialization.
+- Preserve URL paths, queries, fragments, and legitimate external origins
+  without broad string replacement.
+- Retain the unchanged fail-closed DINS packaging validator for any surviving
+  loopback, credential, header, or filesystem reference.
+
 # v1.10.69 - Symbol Rendering Correction
 
 - Render trophy and fire status glyphs as direct Unicode content so Python
