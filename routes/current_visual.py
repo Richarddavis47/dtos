@@ -66,6 +66,17 @@ def create_current_visual_router(
     async def current_visual_manifest_head(request: Request) -> Response:
         return await current_visual_manifest(request)
 
+    @router.get("/current-visual/projection-audit.json", response_class=FileResponse)
+    async def current_visual_projection_audit() -> Response:
+        path = mirror.projection_audit()
+        if path is None:
+            raise HTTPException(404, "Current visual projection audit is unavailable.")
+        return FileResponse(path, media_type="application/json", headers={
+            "Cache-Control": "public, max-age=0, must-revalidate",
+            "Content-Disposition": 'inline; filename="projection-audit.json"',
+            "X-Content-Type-Options": "nosniff",
+        })
+
     @router.get("/current-visual/images/{name}", response_class=FileResponse)
     async def current_visual_image(name: str, request: Request) -> Response:
         if Path(name).name != name or not name.endswith(".png"):

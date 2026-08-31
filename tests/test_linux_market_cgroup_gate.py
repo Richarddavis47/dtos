@@ -24,11 +24,13 @@ from tools.validation.generate_sanitized_market_fixture import (
     fixture_valuation_intelligence,
     material_market_fixture_change,
     publish_fixture_market_revision,
+    seed_fixture_projection,
 )
 from src.core.brain import brain_service
 from src.core.historical_memory.store import HistoricalStore
 from src.core.history_context.metadata import MinimalMetadataStore
 from src.core.history_context.season_cache import SleeperSeasonCache
+from src.core.projection_intelligence.service import ProjectionService
 from tools.validation.linux_market_cgroup_gate import (
     COLD_MAX,
     LIVE_VISUAL_PROBE_INTERVAL_SECONDS,
@@ -901,7 +903,9 @@ class RestartReuseValidationTests(unittest.TestCase):
 
     def test_startup_exit_preserves_sanitized_log_and_exit_code(self) -> None:
         process = _FakeProcess([1])
-        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log, patch.dict(
+            os.environ, {"SLEEPER_LEAGUE_ID": "1804000000000000000"}, clear=False,
+        ):
             log.write('Traceback\n  File "/app/private/module.py", line 1\nboom\n')
             log.flush()
             evidence: dict[str, object] = {}
@@ -921,7 +925,9 @@ class RestartReuseValidationTests(unittest.TestCase):
     def test_startup_timeout_preserves_process_for_cleanup(self) -> None:
         clock = _Clock()
         process = _FakeProcess([None] * 300)
-        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log, patch.dict(
+            os.environ, {"SLEEPER_LEAGUE_ID": "1804000000000000000"}, clear=False,
+        ):
             evidence: dict[str, object] = {}
             with self.assertRaisesRegex(StartupFailure, "60 seconds") as raised:
                 _start_server(
@@ -941,7 +947,9 @@ class RestartReuseValidationTests(unittest.TestCase):
         def missing(*_args, **_kwargs):
             raise FileNotFoundError("missing executable")
 
-        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log, patch.dict(
+            os.environ, {"SLEEPER_LEAGUE_ID": "1804000000000000000"}, clear=False,
+        ):
             evidence: dict[str, object] = {}
             with self.assertRaisesRegex(StartupFailure, "could not start"):
                 _start_server(
@@ -959,7 +967,9 @@ class RestartReuseValidationTests(unittest.TestCase):
             launched.update(kwargs)
             return process
 
-        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log:
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log, patch.dict(
+            os.environ, {"SLEEPER_LEAGUE_ID": "1804000000000000000"}, clear=False,
+        ):
             evidence: dict[str, object] = {}
             result = _start_server(
                 log, evidence=evidence,
@@ -969,10 +979,74 @@ class RestartReuseValidationTests(unittest.TestCase):
             )
         self.assertIs(result, process)
         self.assertEqual(launched["env"]["DTOS_CAPTURE_URL"], "http://127.0.0.1:8767")
+        self.assertEqual(
+            launched["env"]["DTOS_INSPECTION_LEAGUE_ID"], "1804000000000000000",
+        )
+        self.assertEqual(launched["env"]["DTOS_INSPECTION_ROSTER_ID"], "1")
+        fixture_token = launched["env"]["DTOS_INSPECTION_AUTH_TOKEN"]
+        self.assertTrue(fixture_token)
+        self.assertNotIn("DTOS_INSPECTION_AUTH_TOKEN", os.environ)
         self.assertEqual(evidence["capture_origin"], "loopback_validation_server")
         self.assertEqual(evidence["termination"], "running")
         self.assertEqual(evidence["observations"][0]["status"], 200)
         self.assertNotIn(str(Path(sys.executable).parent), json.dumps(evidence))
+        self.assertNotIn(fixture_token, json.dumps(evidence))
+
+    def test_fixture_inspection_credential_is_redacted_from_failure_evidence(self) -> None:
+        fixture_token = "dtos-linux-fixture-only-inspection-auth-v1"
+        process = _FakeProcess([1])
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as log, patch.dict(
+            os.environ, {"SLEEPER_LEAGUE_ID": "1804000000000000000"}, clear=False,
+        ):
+            log.write(f"authentication failed token={fixture_token}\n{fixture_token}\n")
+            log.flush()
+            evidence: dict[str, object] = {}
+            with self.assertRaises(StartupFailure):
+                _start_server(
+                    log, evidence=evidence,
+                    popen_factory=lambda *_args, **_kwargs: process,
+                    memory_observer=lambda: 128,
+                )
+        serialized = json.dumps(evidence)
+        self.assertNotIn(fixture_token, serialized)
+        self.assertIn("authentication failed", serialized)
+
+    def test_fixture_inspection_identity_fails_closed_outside_fixture_contract(self) -> None:
+        from tools.validation.linux_market_cgroup_gate import (
+            _fixture_inspection_environment,
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "fixture league identity"):
+            _fixture_inspection_environment({})
+        with self.assertRaisesRegex(RuntimeError, "in production"):
+            _fixture_inspection_environment({
+                "RENDER": "true", "SLEEPER_LEAGUE_ID": "fixture-league",
+            })
+
+    def test_fixture_seeds_a_compatible_authenticated_audit_projection(self) -> None:
+        data = {
+            "league": {
+                "league_id": LEAGUE_ID, "season": "2026",
+                "scoring_settings": {"rec": 1.0, "pass_td": 4.0},
+            },
+            "season": 2026, "week": 1,
+            "scoring_settings": {"rec": 1.0, "pass_td": 4.0},
+            "normalized_players": {
+                "fixture-qb": {
+                    "player_id": "fixture-qb", "full_name": "Fixture QB",
+                    "position": "QB", "team": "VAL", "status": "Active",
+                },
+            },
+        }
+        with tempfile.TemporaryDirectory() as folder:
+            database = Path(folder) / "dtos_projections.sqlite3"
+            published = seed_fixture_projection(data, database)
+            restored = ProjectionService(database, league_id=LEAGUE_ID)
+            self.assertEqual(published["league_id"], LEAGUE_ID)
+            self.assertEqual(
+                restored.health(include_accuracy=False)["compatibility"], "compatible",
+            )
+            self.assertIsNotNone(restored.snapshot())
 
     def test_material_fixture_mutation_updates_attached_canonical_input(self) -> None:
         source = {"valuation_intelligence": fixture_valuation_intelligence()}

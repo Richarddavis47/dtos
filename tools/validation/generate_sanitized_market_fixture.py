@@ -20,6 +20,7 @@ from src.core.intelligence_memory.models import (
     ProvenanceType, SourceObservation,
 )
 from src.core.intelligence_memory.store import IntelligenceCheckpointStore
+from src.core.projection_intelligence.service import ProjectionService
 from src.core.valuation_intelligence.engine import (
     _semantic_generation,
     asset_market_input_revision,
@@ -269,7 +270,7 @@ def _player(index: int) -> dict:
     }
 
 
-def _cache(path: Path) -> None:
+def _cache(path: Path) -> dict[str, Any]:
     players = dict(_player(index) for index in range(1, ASSET_COUNT + 1))
     roster_ids = list(players)[:250]
     teams = []
@@ -370,6 +371,15 @@ def _cache(path: Path) -> None:
         "transactions_last_error": None,
     }
     path.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+    return data
+
+
+def seed_fixture_projection(
+    data: dict[str, Any], database: Path,
+) -> dict[str, Any]:
+    """Publish fixture projections through the canonical durable contract."""
+    service = ProjectionService(database, league_id=LEAGUE_ID)
+    return service.generate(data, LEAGUE_ID, trigger="canonical")
 
 
 def _record_payload(entity_type: str, index: int) -> tuple[str | None, str]:
@@ -665,7 +675,8 @@ def main() -> int:
             "validation retirement archive must not be the configured legacy path"
         )
     configured_history.unlink(missing_ok=True)
-    _cache(cache)
+    data = _cache(cache)
+    seed_fixture_projection(data, root / "dtos_projections.sqlite3")
     production_shaped = os.environ.get("DTOS_PRODUCTION_SHAPED_FIXTURE") == "1"
     (_production_history if production_shaped else _history)(history)
     _canonical_history_fixture(root)

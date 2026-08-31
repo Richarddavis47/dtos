@@ -29,6 +29,26 @@ def _safe(value: str) -> str:
     return "".join(char if char.isalnum() or char in "-_" else "-" for char in value)
 
 
+def _validate_public_json(value: Any) -> None:
+    """Reject credentials and private origins before durable public publication."""
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if str(key).casefold() in {"authorization", "cookie", "set-cookie"}:
+                raise ValueError("Current Visual source contains forbidden authentication material.")
+            _validate_public_json(item)
+    elif isinstance(value, list):
+        for item in value:
+            _validate_public_json(item)
+    elif isinstance(value, str):
+        lowered = value.casefold()
+        forbidden = (
+            "localhost", "127.0.0.1", "c:\\users\\", "authorization:",
+            "cookie:", "x-dtos-inspection-auth",
+        )
+        if any(marker in lowered for marker in forbidden) or lowered.startswith("/home/"):
+            raise ValueError("Current Visual source contains a forbidden local or sensitive reference.")
+
+
 def public_visual_origin(value: str, *, production: bool) -> str:
     """Validate the configured public origin without trusting request headers."""
     parsed = urlsplit(value.strip())
@@ -89,6 +109,10 @@ def consumer_manifest(value: dict[str, Any], public_base: str) -> dict[str, Any]
         "image_content_type": "image/png",
         "rolling_current_only": True,
     }
+    if result.get("projection_audit"):
+        result["projection_audit_url"] = (
+            f"{public_base}{CURRENT_VISUAL_PUBLIC_ROUTE}/projection-audit.json"
+        )
     for row in result.get("captures") or []:
         stored = str(row.get("relative_path") or "")
         name = stored.rsplit("/", 1)[-1]
@@ -176,14 +200,16 @@ class CurrentVisualMirror:
             shutil.copy2(source, target)
 
     @staticmethod
-    def _generation(rows: list[dict[str, Any]]) -> str:
+    def _generation(rows: list[dict[str, Any]], audit_sha256: str | None = None) -> str:
         semantic = [{
             "surface_id": row["surface_id"], "viewport": row["viewport"],
             "artifact_hash": row["artifact_hash"], "fingerprint": row["fingerprint"],
         } for row in rows]
+        if audit_sha256:
+            semantic.append({"projection_audit_sha256": audit_sha256})
         return hashlib.sha256(_json_bytes(semantic)).hexdigest()[:24]
 
-    def promote(self) -> dict[str, Any]:
+    def promote(self, projection_audit: dict[str, Any] | None = None) -> dict[str, Any]:
         """Stage, verify, and atomically publish one complete current generation."""
         with self._lock:
             source = self.live.promotion_candidate()
@@ -195,7 +221,13 @@ class CurrentVisualMirror:
                 or any(row.get("application_version") != VERSION or row.get("application_build") != BUILD_NUMBER for row in rows)
             ):
                 raise RuntimeError("Only a complete, current Live Visual generation may be promoted.")
-            generation = self._generation(rows)
+            audit_content: bytes | None = None
+            audit_sha256: str | None = None
+            if projection_audit is not None:
+                _validate_public_json(projection_audit)
+                audit_content = _json_bytes(projection_audit)
+                audit_sha256 = hashlib.sha256(audit_content).hexdigest()
+            generation = self._generation(rows, audit_sha256)
             previous = self._read(self.pointer_path)
             if previous and previous.get("current_generation") == generation:
                 return previous
@@ -239,6 +271,8 @@ class CurrentVisualMirror:
                         "width": width, "height": height,
                         "relative_path": f"{CURRENT_VISUAL_ROUTE}/images/{generation}/{name}",
                     })
+                if audit_content is not None:
+                    (candidate / "projection-audit.json").write_bytes(audit_content)
                 deployment = deployment_metadata()
                 prior_bytes = int((previous or {}).get("current_visual_bytes") or 0)
                 manifest = {
@@ -259,6 +293,14 @@ class CurrentVisualMirror:
                     "stale_count": 0, "failed_count": 0,
                     "retention": "rolling_current_only",
                 }
+                if audit_content is not None:
+                    manifest["projection_audit"] = {
+                        "status": "complete",
+                        "source_scope": "authenticated_render_capture",
+                        "content_type": "application/json",
+                        "bytes": len(audit_content),
+                        "sha256": audit_sha256,
+                    }
                 manifest["manifest_bytes"] = 0
                 for _attempt in range(3):
                     manifest["manifest_bytes"] = len(_json_bytes(manifest))
@@ -283,6 +325,22 @@ class CurrentVisualMirror:
                     shutil.rmtree(final, ignore_errors=True)
                 self._last_error = f"{type(exc).__name__}: candidate publication failed"
                 raise
+
+    def projection_audit(self) -> Path | None:
+        """Resolve the sanitized audit retained with the active visual generation."""
+        current = self.manifest()
+        generation = str(current.get("current_generation") or "")
+        metadata = current.get("projection_audit") or {}
+        if not generation or metadata.get("status") != "complete":
+            return None
+        path = (self.root / "generations" / generation / "projection-audit.json").resolve()
+        generation_root = (self.root / "generations" / generation).resolve()
+        if generation_root not in path.parents or not path.is_file():
+            return None
+        content = path.read_bytes()
+        if hashlib.sha256(content).hexdigest() != metadata.get("sha256"):
+            return None
+        return path
 
     def health(self) -> dict[str, Any]:
         value = self.manifest()

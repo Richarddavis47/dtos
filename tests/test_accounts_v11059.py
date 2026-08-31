@@ -46,6 +46,10 @@ class AccountFoundationTests(unittest.TestCase):
         async def league_api(league_id: str, request: Request) -> dict[str, str]:
             return {"league_id": league_id, "query": request.url.query}
 
+        @app.get("/api/audit/projections/current")
+        async def projection_audit() -> dict[str, str]:
+            return {"status": "complete"}
+
         return TestClient(app)
 
     def test_passwords_sessions_and_recovery_are_hashed(self) -> None:
@@ -190,14 +194,25 @@ class AccountFoundationTests(unittest.TestCase):
         }
         with patch.dict("os.environ", fixture, clear=False):
             response = client.get("/api/trades", headers={"X-DTOS-Inspection-Auth": "inspection-secret"})
+            wrong = client.get(
+                "/api/audit/projections/current",
+                headers={"X-DTOS-Inspection-Auth": "wrong-fixture-secret"},
+            )
             leagues = client.get("/account/leagues", headers={"X-DTOS-Inspection-Auth": "inspection-secret"})
+            protected_audit = client.get(
+                "/api/audit/projections/current",
+                headers={"X-DTOS-Inspection-Auth": "inspection-secret"},
+            )
         self.assertEqual(response.status_code, 200)
         self.assertIn("league=inspection-league", response.json()["query"])
         self.assertIn("front_office=9", response.json()["query"])
         self.assertNotIn("inspection-secret", response.text)
+        self.assertEqual(wrong.status_code, 401)
         self.assertEqual(leagues.status_code, 200)
         self.assertIn("Inspection League", leagues.text)
         self.assertIn("Inspection Franchise", leagues.text)
+        self.assertEqual(protected_audit.status_code, 200)
+        self.assertEqual(client.get("/api/audit/projections/current").status_code, 401)
 
     def test_two_accounts_in_one_league_keep_distinct_franchises(self) -> None:
         contexts = []

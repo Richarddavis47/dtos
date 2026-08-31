@@ -71,6 +71,39 @@ def cache_input(root: Path, data: dict, name: str = "cache.json") -> Path:
 
 
 class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
+    async def test_validation_progress_io_cannot_block_request_event_loop(self) -> None:
+        class SlowProgress:
+            @staticmethod
+            def record(*_args, **_kwargs) -> None:
+                time.sleep(.15)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = FOISRepository(root / "fois.sqlite3")
+            ticks = 0
+            active = True
+
+            async def heartbeat() -> None:
+                nonlocal ticks
+                while active:
+                    await asyncio.sleep(.01)
+                    ticks += 1
+
+            task = asyncio.create_task(heartbeat())
+            try:
+                with mock.patch(
+                    "src.core.fois.process_execution.progress_from_environment",
+                    return_value=SlowProgress(),
+                ), self.assertRaisesRegex(RuntimeError, "cache input is unavailable"):
+                    await generate_fois_isolated(
+                        fixture(), repository, cache_file=root / "missing.json",
+                    )
+            finally:
+                active = False
+                await task
+
+        self.assertGreaterEqual(ticks, 5)
+
     def test_idle_worker_can_be_reaped_and_restored_around_visual_work(self) -> None:
         from src.core.fois import process_execution
 

@@ -12,7 +12,9 @@ from PIL import Image
 from app_metadata import BUILD_NUMBER, VERSION
 from src.core.inspection.live import PublicSurface, external_mirror_policy
 from src.core.inspection.live_visual import live_visual_capture_requests
-from tools.inspection.mirror import build_mirror, matchup_detail_id
+from tools.inspection.mirror import (
+    AuthenticationContractError, build_mirror, matchup_detail_id,
+)
 from tools.inspection.verify_mirror import verify
 
 
@@ -76,7 +78,12 @@ class ExternalVisualMirrorTests(unittest.TestCase):
                 "status": "complete", "last_capture": "2026-01-01T00:00:00Z",
                 "captures": captures,
             }).encode(),
-            "/api/audit/projections/current": json.dumps(audit).encode(),
+            "/current-visual/manifest.json": json.dumps({
+                "application_version": VERSION, "application_build": BUILD_NUMBER,
+                "commit": "commit",
+                "projection_audit_url": "https://dtos.example/current-visual/projection-audit.json",
+            }).encode(),
+            "https://dtos.example/current-visual/projection-audit.json": json.dumps(audit).encode(),
             "/api/inspect/live/visual": json.dumps({
                 "eligible_surfaces": [{"surface_id": "home"}, {"surface_id": "future"}],
             }).encode(),
@@ -128,9 +135,10 @@ class ExternalVisualMirrorTests(unittest.TestCase):
 
     def test_projection_mismatch_fails_closed(self):
         fixture = self.fixture()
-        audit = json.loads(fixture["/api/audit/projections/current"])
+        audit_url = "https://dtos.example/current-visual/projection-audit.json"
+        audit = json.loads(fixture[audit_url])
         audit["players"][0]["canonical_projection"] = 999
-        fixture["/api/audit/projections/current"] = json.dumps(audit).encode()
+        fixture[audit_url] = json.dumps(audit).encode()
         with tempfile.TemporaryDirectory() as folder:
             with self.assertRaisesRegex(RuntimeError, "projection audit"):
                 build_mirror(base_url="https://dtos.example", output=Path(folder),
@@ -141,10 +149,11 @@ class ExternalVisualMirrorTests(unittest.TestCase):
         semantic = json.loads(fixture["/semantic/matchup"])
         semantic["teams"][0]["starters"][0]["displayed"]["canonical_projection"] = 0.0
         fixture["/semantic/matchup"] = json.dumps(semantic).encode()
-        audit = json.loads(fixture["/api/audit/projections/current"])
+        audit_url = "https://dtos.example/current-visual/projection-audit.json"
+        audit = json.loads(fixture[audit_url])
         target = next(row for row in audit["players"] if row["matchup_id"] == "1" and row["player_id"] == "1")
         target["canonical_projection"] = 0.0
-        fixture["/api/audit/projections/current"] = json.dumps(audit).encode()
+        fixture[audit_url] = json.dumps(audit).encode()
         with tempfile.TemporaryDirectory() as folder:
             result = build_mirror(base_url="https://dtos.example", output=Path(folder),
                                   fetch=lambda path: fixture[path])
@@ -221,6 +230,30 @@ class ExternalVisualMirrorTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "forbidden"):
                 build_mirror(base_url="https://dtos.example", output=Path(folder),
                              fetch=lambda path: fixture[path])
+
+    def test_missing_authenticated_source_contract_fails_fast(self):
+        fixture = self.fixture()
+        current = json.loads(fixture["/current-visual/manifest.json"])
+        current.pop("projection_audit_url")
+        fixture["/current-visual/manifest.json"] = json.dumps(current).encode()
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(AuthenticationContractError, "sanitized authenticated"):
+                build_mirror(
+                    base_url="https://dtos.example", output=Path(folder),
+                    fetch=lambda path: fixture[path],
+                )
+
+    def test_authenticated_source_identity_must_match_current_visual(self):
+        fixture = self.fixture()
+        current = json.loads(fixture["/current-visual/manifest.json"])
+        current["commit"] = "other"
+        fixture["/current-visual/manifest.json"] = json.dumps(current).encode()
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(RuntimeError, "identity"):
+                build_mirror(
+                    base_url="https://dtos.example", output=Path(folder),
+                    fetch=lambda path: fixture[path],
+                )
 
     def test_github_only_verifier_never_needs_the_render_origin(self):
         fixture = self.fixture()

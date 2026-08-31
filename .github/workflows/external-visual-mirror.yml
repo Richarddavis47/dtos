@@ -67,9 +67,17 @@ jobs:
           mkdir -p mirror-assets
           for attempt in $(seq 1 60); do
             rm -rf mirror-assets/*
-            if python -m tools.inspection.mirror \
-              --base-url "$DTOS_BASE_URL" --output mirror-assets --require-dins; then
+            set +e
+            python -m tools.inspection.mirror \
+              --base-url "$DTOS_BASE_URL" --output mirror-assets --require-dins
+            result=$?
+            set -e
+            if [[ "$result" -eq 0 ]]; then
               exit 0
+            fi
+            if [[ "$result" -eq 3 ]]; then
+              echo "External Visual Mirror authentication contract failed; refusing transient retries." >&2
+              exit 1
             fi
             sleep 30
           done

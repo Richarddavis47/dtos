@@ -214,7 +214,10 @@ async def generate_fois_isolated(
     started = perf_counter()
     progress = progress_from_environment()
     record = progress.record if progress is not None else lambda *_args, **_kwargs: None
-    record("fois_phase", phase="parent_input", status="started", league_identity="configured")
+    await asyncio.to_thread(
+        record, "fois_phase", phase="parent_input", status="started",
+        league_identity="configured",
+    )
     repository.path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(
         prefix=".dtos-fois-compute-", dir=repository.path.parent,
@@ -239,7 +242,11 @@ async def generate_fois_isolated(
         input_bytes = len(json.dumps(
             payload, sort_keys=True, separators=(",", ":"), default=str,
         ).encode("utf-8"))
-        record("fois_phase", phase="parent_input", status="completed", input_bytes=input_bytes, duration_ms=round((perf_counter() - started) * 1000, 3))
+        await asyncio.to_thread(
+            record, "fois_phase", phase="parent_input", status="completed",
+            input_bytes=input_bytes,
+            duration_ms=round((perf_counter() - started) * 1000, 3),
+        )
         try:
             try:
                 loop = asyncio.get_running_loop()
@@ -257,12 +264,18 @@ async def generate_fois_isolated(
             raise
 
         publication_started = perf_counter()
-        record("fois_phase", phase="publication", status="started")
+        await asyncio.to_thread(
+            record, "fois_phase", phase="publication", status="started",
+        )
         scores, canonical = await asyncio.to_thread(
             _validate_and_publish, working_database, repository, league_id,
             int(result["records"]),
         )
-        record("fois_phase", phase="publication", status="completed", records=len(scores), duration_ms=round((perf_counter() - publication_started) * 1000, 3))
+        await asyncio.to_thread(
+            record, "fois_phase", phase="publication", status="completed",
+            records=len(scores),
+            duration_ms=round((perf_counter() - publication_started) * 1000, 3),
+        )
         metrics = {
             "execution": "spawned_subprocess",
             "process_model": "persistent_spawn_pool",

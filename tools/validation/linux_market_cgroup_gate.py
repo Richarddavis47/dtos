@@ -43,6 +43,32 @@ FIXTURE_SETTINGS = {
     "DTOS_METADATA_DB_FILE": "dtos_metadata.sqlite3",
     "DTOS_HISTORY_STORAGE_ROOT": ".",
 }
+_FIXTURE_INSPECTION_TOKEN = "dtos-linux-fixture-only-inspection-auth-v1"
+_FIXTURE_INSPECTION_ROSTER_ID = "1"
+
+
+def _fixture_inspection_environment(
+    environment: dict[str, str],
+) -> dict[str, str]:
+    """Configure the real inspection contract for only the isolated CI app."""
+    if environment.get("RENDER"):
+        raise RuntimeError(
+            "fixture inspection authentication cannot be enabled in production"
+        )
+    league_id = environment.get("SLEEPER_LEAGUE_ID", "").strip()
+    if not league_id:
+        raise RuntimeError(
+            "fixture inspection authentication requires the fixture league identity"
+        )
+    configured = environment.copy()
+    configured.update({
+        "DTOS_INSPECTION_AUTH_TOKEN": _FIXTURE_INSPECTION_TOKEN,
+        "DTOS_INSPECTION_LEAGUE_ID": league_id,
+        "DTOS_INSPECTION_ROSTER_ID": _FIXTURE_INSPECTION_ROSTER_ID,
+        "DTOS_INSPECTION_LEAGUE_NAME": "Linux Lifecycle Fixture",
+        "DTOS_INSPECTION_FRANCHISE_NAME": "Validation Franchise",
+    })
+    return configured
 
 
 class ExpansionLatencyFailure(AssertionError):
@@ -72,7 +98,9 @@ class ColdBuildFailure(AssertionError):
 def _sanitize_server_log(value: str, *, limit: int = 200) -> str:
     """Return a bounded diagnostic tail without paths, identities, or secrets."""
     lines = value.splitlines()[-limit:]
-    sanitized = "\n".join(lines)
+    sanitized = "\n".join(lines).replace(
+        _FIXTURE_INSPECTION_TOKEN, "<redacted-fixture-credential>",
+    )
     sanitized = re.sub(
         r'(?i)(authorization|cookie|token|password|secret)([=: ]+)\S+',
         r'\1\2<redacted>', sanitized,
@@ -935,7 +963,7 @@ def _start_server(
 ) -> subprocess.Popen:
     evidence = evidence if evidence is not None else {}
     memory_observer = memory_observer or (lambda: _cgroup("memory.current"))
-    environment = os.environ.copy()
+    environment = _fixture_inspection_environment(os.environ.copy())
     environment["DTOS_MARKET_PROFILE_MODE"] = mode
     environment["DTOS_CAPTURE_URL"] = BASE_URL
     command = [
@@ -1237,6 +1265,9 @@ def _percentile(values: list[float], percentile: float) -> float:
 
 def _public_error(exc: BaseException) -> dict[str, str]:
     message = str(exc).replace(str(FIXTURE), "<fixture>").replace(BASE_URL, "<server>")
+    message = message.replace(
+        _FIXTURE_INSPECTION_TOKEN, "<redacted-fixture-credential>",
+    )
     return {"type": type(exc).__name__, "message": message}
 
 
