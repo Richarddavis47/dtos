@@ -285,7 +285,14 @@ def _authenticated_projection_audit() -> dict[str, Any]:
     """Acquire the protected audit inside Render without exporting its credential."""
     token = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
     if not token:
-        raise RuntimeError("Protected mirror-source authentication is unavailable.")
+        error = RuntimeError("Protected mirror-source authentication is unavailable.")
+        error.dtos_safe_promotion_evidence = {  # type: ignore[attr-defined]
+            "stage": "audit_acquisition", "classification": "auth_not_configured",
+            "auth_configured": False, "request_attempted": False,
+            "http_status": None, "audit_acquired": False,
+            "mirror_promotion_entered": False, "partial_publication": False,
+        }
+        raise error
     request = Request(
         f"{_CAPTURE_URL}/api/audit/projections/current",
         headers={
@@ -300,18 +307,62 @@ def _authenticated_projection_audit() -> dict[str, Any]:
             value = json.loads(response.read())
     except HTTPError as exc:
         if exc.code in {401, 403}:
-            raise RuntimeError("Protected mirror-source authentication was rejected.") from None
-        raise RuntimeError("Protected mirror-source acquisition failed.") from None
-    except (OSError, TimeoutError, json.JSONDecodeError):
-        raise RuntimeError("Protected mirror-source acquisition failed.") from None
+            classification = "authentication_rejected"
+            message = "Protected mirror-source authentication was rejected."
+        else:
+            classification = "audit_http_failure"
+            message = "Protected mirror-source acquisition failed."
+        error = RuntimeError(message)
+        error.dtos_safe_promotion_evidence = {  # type: ignore[attr-defined]
+            "stage": "audit_acquisition", "classification": classification,
+            "auth_configured": True, "request_attempted": True,
+            "http_status": int(exc.code), "audit_acquired": False,
+            "mirror_promotion_entered": False, "partial_publication": False,
+        }
+        raise error from None
+    except (OSError, TimeoutError, json.JSONDecodeError) as exc:
+        classification = (
+            "audit_response_malformed"
+            if isinstance(exc, json.JSONDecodeError)
+            else "audit_transport_failure"
+        )
+        error = RuntimeError("Protected mirror-source acquisition failed.")
+        error.dtos_safe_promotion_evidence = {  # type: ignore[attr-defined]
+            "stage": "audit_acquisition", "classification": classification,
+            "auth_configured": True, "request_attempted": True,
+            "http_status": None, "audit_acquired": False,
+            "mirror_promotion_entered": False, "partial_publication": False,
+        }
+        raise error from None
     if not isinstance(value, dict):
-        raise RuntimeError("Protected mirror-source response is malformed.")
+        error = RuntimeError("Protected mirror-source response is malformed.")
+        error.dtos_safe_promotion_evidence = {  # type: ignore[attr-defined]
+            "stage": "audit_acquisition", "classification": "audit_response_malformed",
+            "auth_configured": True, "request_attempted": True,
+            "http_status": 200, "audit_acquired": False,
+            "mirror_promotion_entered": False, "partial_publication": False,
+        }
+        raise error
     return value
 
 
 def _complete_live_visual_capture() -> None:
     try:
-        current_visual_mirror.promote(_authenticated_projection_audit())
+        audit = _authenticated_projection_audit()
+        previous_generation = current_visual_mirror.manifest().get("current_generation")
+        try:
+            current_visual_mirror.promote(audit)
+        except Exception as exc:
+            retained_generation = current_visual_mirror.manifest().get("current_generation")
+            exc.dtos_safe_promotion_evidence = {  # type: ignore[attr-defined]
+                "stage": "mirror_promotion", "classification": "mirror_promotion_failure",
+                "auth_configured": True, "request_attempted": True,
+                "http_status": 200, "audit_acquired": True,
+                "mirror_promotion_entered": True,
+                "mirror_promotion_completed": False,
+                "partial_publication": retained_generation != previous_generation,
+            }
+            raise
     except Exception:
         runtime_metrics.mark_background("live_visual_capture", "failed")
         raise

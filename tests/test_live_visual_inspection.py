@@ -281,6 +281,46 @@ class LiveVisualInspectionTests(unittest.TestCase):
         self.assertEqual(health["status"], "failed")
         self.assertEqual(health["candidate_state"], "failed")
         self.assertEqual(health["last_error"], "OSError: visual publication failed")
+        evidence = health["promotion_failure_evidence"][-1]
+        self.assertEqual(evidence["stage"], "promotion_callback")
+        self.assertEqual(evidence["classification"], "other_promotion_failure")
+        self.assertEqual(evidence["exception_type"], "OSError")
+        self.assertNotIn("private publication detail", str(evidence))
+
+    def test_promotion_failure_evidence_is_allowlisted_and_secret_free(self):
+        def capture(_item, output):
+            Image.new("RGB", (10, 10), "navy").save(output, "PNG")
+            return {}
+
+        def promote():
+            error = RuntimeError("token=fixture-secret Authorization=private Cookie=session")
+            error.dtos_safe_promotion_evidence = {
+                "stage": "audit_acquisition",
+                "classification": "authentication_rejected",
+                "auth_configured": True,
+                "request_attempted": True,
+                "http_status": 401,
+                "audit_acquired": False,
+                "credential": "fixture-secret",
+                "headers": "Authorization=private",
+            }
+            raise error
+
+        with tempfile.TemporaryDirectory() as folder:
+            service = LiveVisualService(Path(folder), capture)
+            service.on_complete(promote)
+            service.schedule([request()])
+            self.assertTrue(service.wait())
+            health = service.health(1)
+
+        evidence = health["promotion_failure_evidence"][-1]
+        self.assertEqual(evidence["stage"], "audit_acquisition")
+        self.assertEqual(evidence["classification"], "authentication_rejected")
+        self.assertEqual(evidence["http_status"], 401)
+        serialized = str(evidence)
+        self.assertNotIn("fixture-secret", serialized)
+        self.assertNotIn("Authorization", serialized)
+        self.assertNotIn("Cookie", serialized)
 
     def test_cancellation_restores_without_promotion_or_browser_leak(self):
         capture_started = threading.Event()

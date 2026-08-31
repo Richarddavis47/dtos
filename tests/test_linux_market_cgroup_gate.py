@@ -24,11 +24,13 @@ from tools.validation.generate_sanitized_market_fixture import (
     fixture_valuation_intelligence,
     material_market_fixture_change,
     publish_fixture_market_revision,
+    seed_fixture_projection,
 )
 from src.core.brain import brain_service
 from src.core.historical_memory.store import HistoricalStore
 from src.core.history_context.metadata import MinimalMetadataStore
 from src.core.history_context.season_cache import SleeperSeasonCache
+from src.core.projection_intelligence.service import ProjectionService
 from tools.validation.linux_market_cgroup_gate import (
     COLD_MAX,
     LIVE_VISUAL_PROBE_INTERVAL_SECONDS,
@@ -1020,6 +1022,31 @@ class RestartReuseValidationTests(unittest.TestCase):
             _fixture_inspection_environment({
                 "RENDER": "true", "SLEEPER_LEAGUE_ID": "fixture-league",
             })
+
+    def test_fixture_seeds_a_compatible_authenticated_audit_projection(self) -> None:
+        data = {
+            "league": {
+                "league_id": LEAGUE_ID, "season": "2026",
+                "scoring_settings": {"rec": 1.0, "pass_td": 4.0},
+            },
+            "season": 2026, "week": 1,
+            "scoring_settings": {"rec": 1.0, "pass_td": 4.0},
+            "normalized_players": {
+                "fixture-qb": {
+                    "player_id": "fixture-qb", "full_name": "Fixture QB",
+                    "position": "QB", "team": "VAL", "status": "Active",
+                },
+            },
+        }
+        with tempfile.TemporaryDirectory() as folder:
+            database = Path(folder) / "dtos_projections.sqlite3"
+            published = seed_fixture_projection(data, database)
+            restored = ProjectionService(database, league_id=LEAGUE_ID)
+            self.assertEqual(published["league_id"], LEAGUE_ID)
+            self.assertEqual(
+                restored.health(include_accuracy=False)["compatibility"], "compatible",
+            )
+            self.assertIsNotNone(restored.snapshot())
 
     def test_material_fixture_mutation_updates_attached_canonical_input(self) -> None:
         source = {"valuation_intelligence": fixture_valuation_intelligence()}

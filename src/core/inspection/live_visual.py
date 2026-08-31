@@ -86,6 +86,7 @@ class LiveVisualService:
         self._capture_finished_at: float | None = None
         self._terminal_timestamps: dict[str, str | None] = {}
         self._failure_evidence: list[dict[str, Any]] = []
+        self._promotion_failure_evidence: list[dict[str, Any]] = []
         self._telemetry = {
             "captures_started": 0, "captures_completed": 0,
             "captures_failed": 0, "capture_attempt_failures": 0,
@@ -278,6 +279,26 @@ class LiveVisualService:
                     except Exception as exc:
                         with self._lock:
                             self._last_error = f"{type(exc).__name__}: visual publication failed"
+                            supplied = getattr(exc, "dtos_safe_promotion_evidence", {})
+                            allowed = {
+                                "stage", "classification", "exception_type",
+                                "auth_configured", "request_attempted", "http_status",
+                                "audit_acquired", "mirror_promotion_entered",
+                                "mirror_promotion_completed", "partial_publication",
+                            }
+                            evidence = {
+                                key: value for key, value in (
+                                    supplied.items() if isinstance(supplied, dict) else ()
+                                )
+                                if key in allowed and (
+                                    value is None or isinstance(value, (bool, int, float, str))
+                                )
+                            }
+                            evidence.setdefault("stage", "promotion_callback")
+                            evidence.setdefault("classification", "other_promotion_failure")
+                            evidence["exception_type"] = type(exc).__name__
+                            self._promotion_failure_evidence.append(evidence)
+                            self._promotion_failure_evidence = self._promotion_failure_evidence[-8:]
                 with self._lock:
                     self._capture_finished_at = time.monotonic()
                     self._flight_state = "failed" if self._last_error is not None else "complete"
@@ -526,6 +547,7 @@ class LiveVisualService:
             },
             "capture_generation": VERSION,
             "capture_failure_evidence": list(self._failure_evidence),
+            "promotion_failure_evidence": list(self._promotion_failure_evidence),
             "required_capture_contract": [
                 {
                     "capture_id": key,
