@@ -1,5 +1,15 @@
 # Changelog
 
+# v1.10.71 - External Visual Mirror Authenticated Source Contract
+
+- Acquire the protected current projection audit inside the authenticated
+  Render inspection boundary and atomically retain its sanitized snapshot with
+  the matching Current Visual generation.
+- Keep `/api/audit/projections/current` private while allowing the credential-free
+  GitHub mirror publisher to consume only the retained publication-safe artifact.
+- Fail immediately on deterministic authentication-contract failures while
+  preserving bounded retries for genuinely transient production readiness.
+
 # v1.10.70 - DINS DOM-Origin Serialization Correction
 
 - Rebase browser-resolved DTOS application links from the loopback inspection

@@ -17,6 +17,12 @@ from app_metadata import BUILD_NUMBER, VERSION
 from tools.inspection.package import _validate_public_content
 
 Fetch = Callable[[str], bytes]
+
+
+class AuthenticationContractError(RuntimeError):
+    """A deterministic protected-source contract failure that must not be retried."""
+
+
 _MATCHUP_DETAIL_SURFACE = re.compile(r"matchups-([1-9][0-9]*)\Z")
 
 
@@ -71,7 +77,15 @@ def _fetcher(base_url: str, retries: int = 3, timeout: float = 60) -> Fetch:
                 })
                 with urlopen(request, timeout=timeout) as response:
                     return response.read()
-            except (OSError, HTTPError, URLError, TimeoutError) as exc:
+            except HTTPError as exc:
+                if exc.code in {401, 403}:
+                    raise AuthenticationContractError(
+                        "Mirror source authentication contract failed."
+                    ) from None
+                error = exc
+                if attempt + 1 < retries:
+                    time.sleep(min(2 ** attempt, 4))
+            except (OSError, URLError, TimeoutError) as exc:
                 error = exc
                 if attempt + 1 < retries:
                     time.sleep(min(2 ** attempt, 4))
@@ -96,9 +110,15 @@ def build_mirror(
     output.mkdir(parents=True, exist_ok=True)
     live = json.loads(fetch("/api/inspect/live"))
     visual = json.loads(fetch("/api/inspect/live/visual/manifest"))
-    audit = json.loads(fetch("/api/audit/projections/current"))
+    retained = json.loads(fetch("/current-visual/manifest.json"))
+    audit_url = retained.get("projection_audit_url")
+    if not isinstance(audit_url, str) or not audit_url.startswith(base_url.rstrip("/") + "/"):
+        raise AuthenticationContractError(
+            "The sanitized authenticated mirror source is unavailable."
+        )
+    audit = json.loads(fetch(audit_url))
     catalog = json.loads(fetch("/api/inspect/live/visual"))
-    for payload in (live, visual, audit, catalog):
+    for payload in (live, visual, retained, audit, catalog):
         _validate_json_values(payload)
     if require_dins:
         dins = json.loads(fetch("/api/inspect/health?refresh=true"))
@@ -112,6 +132,14 @@ def build_mirror(
     }
     if any(identity.get(key) != value for key, value in expected.items()):
         raise RuntimeError("Production identity does not match the mirror packager.")
+    if (
+        retained.get("application_version") != VERSION
+        or retained.get("application_build") != BUILD_NUMBER
+        or retained.get("commit") != identity.get("commit")
+        or (audit.get("identity") or {}).get("projection_snapshot_id")
+        != identity.get("projection_snapshot_id")
+    ):
+        raise RuntimeError("Authenticated mirror source identity does not match Current Visual.")
 
     tag = f"v{VERSION}"
     download = f"https://github.com/{repository}/releases/download/{tag}"
@@ -249,10 +277,14 @@ def main() -> int:
     parser.add_argument("--repository", default="Richarddavis47/dtos")
     parser.add_argument("--require-dins", action="store_true")
     args = parser.parse_args()
-    result = build_mirror(
-        base_url=args.base_url, output=args.output,
-        repository=args.repository, require_dins=args.require_dins,
-    )
+    try:
+        result = build_mirror(
+            base_url=args.base_url, output=args.output,
+            repository=args.repository, require_dins=args.require_dins,
+        )
+    except AuthenticationContractError as exc:
+        print(str(exc))
+        return 3
     print(json.dumps({
         "status": result["status"], "version": result["version"],
         "artifacts": result["artifact_count"], "bytes": result["total_bytes"],

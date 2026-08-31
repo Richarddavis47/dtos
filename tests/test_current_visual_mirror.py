@@ -187,7 +187,6 @@ class CurrentVisualMirrorTests(unittest.TestCase):
             self.assertTrue(image.headers["content-disposition"].startswith("inline;"))
             self.assertEqual(hashlib.sha256(image.content).hexdigest(), row["sha256"])
             self.assertEqual(client.head(row["relative_path"]).status_code, 200)
-
             for path in (
                 "/current-visual/images/not-registered.png",
                 "/current-visual/images/%2e%2e%2fcurrent.json",
@@ -195,6 +194,57 @@ class CurrentVisualMirrorTests(unittest.TestCase):
             ):
                 with self.subTest(path=path):
                     self.assertEqual(client.get(path).status_code, 404)
+
+    def test_authenticated_audit_is_sanitized_and_published_with_visual_generation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            service = self.service(root, ["navy"])
+            mirror = CurrentVisualMirror(root / "rolling", service)
+            self.publish(service, "one")
+            audit = {
+                "identity": {"projection_snapshot_id": "projection-one"},
+                "players": [{"player_id": "1", "canonical_projection": 12.5}],
+            }
+            durable = mirror.promote(audit)
+            self.assertEqual(
+                durable["projection_audit"]["source_scope"],
+                "authenticated_render_capture",
+            )
+            path = mirror.projection_audit()
+            self.assertIsNotNone(path)
+            self.assertEqual(json.loads(path.read_bytes()), audit)
+
+            app = FastAPI()
+            app.include_router(create_current_visual_router(
+                mirror=mirror, public_base="https://dtos.example",
+            ))
+            client = TestClient(app)
+            manifest = client.get("/current-visual/manifest.json").json()
+            self.assertEqual(
+                manifest["projection_audit_url"],
+                "https://dtos.example/current-visual/projection-audit.json",
+            )
+            response = client.get("/current-visual/projection-audit.json")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json(), audit)
+
+    def test_sensitive_audit_failure_preserves_prior_generation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            service = self.service(root, ["navy"])
+            mirror = CurrentVisualMirror(root / "rolling", service)
+            self.publish(service, "one")
+            current = mirror.promote({"identity": {"projection_snapshot_id": "one"}})
+            self.publish(service, "two")
+            with self.assertRaisesRegex(ValueError, "authentication material"):
+                mirror.promote({"Authorization": "secret"})
+            self.assertEqual(
+                mirror.manifest()["current_generation"], current["current_generation"],
+            )
+            self.assertEqual(
+                json.loads(mirror.projection_audit().read_bytes())["identity"]["projection_snapshot_id"],
+                "one",
+            )
 
     def test_consumer_reads_do_not_capture_or_promote(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 import os
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
@@ -10,6 +11,8 @@ from html import escape
 from pathlib import Path
 from time import perf_counter
 from typing import Any
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -276,9 +279,39 @@ live_visual_service = LiveVisualService(
 current_visual_mirror = CurrentVisualMirror(
     live_visual_service.root / "current_mirror", live_visual_service,
 )
+
+
+def _authenticated_projection_audit() -> dict[str, Any]:
+    """Acquire the protected audit inside Render without exporting its credential."""
+    token = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
+    if not token:
+        raise RuntimeError("Protected mirror-source authentication is unavailable.")
+    request = Request(
+        f"{_CAPTURE_URL}/api/audit/projections/current",
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "DTOS-Current-Visual-Publisher/1.0",
+            "X-DTOS-Inspection": "deterministic",
+            "X-DTOS-Inspection-Auth": token,
+        },
+    )
+    try:
+        with urlopen(request, timeout=30) as response:
+            value = json.loads(response.read())
+    except HTTPError as exc:
+        if exc.code in {401, 403}:
+            raise RuntimeError("Protected mirror-source authentication was rejected.") from None
+        raise RuntimeError("Protected mirror-source acquisition failed.") from None
+    except (OSError, TimeoutError, json.JSONDecodeError):
+        raise RuntimeError("Protected mirror-source acquisition failed.") from None
+    if not isinstance(value, dict):
+        raise RuntimeError("Protected mirror-source response is malformed.")
+    return value
+
+
 def _complete_live_visual_capture() -> None:
     try:
-        current_visual_mirror.promote()
+        current_visual_mirror.promote(_authenticated_projection_audit())
     except Exception:
         runtime_metrics.mark_background("live_visual_capture", "failed")
         raise

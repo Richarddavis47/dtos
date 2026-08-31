@@ -1,3 +1,16 @@
+# DTOS v1.10.71 - External Visual Mirror Authenticated Source Contract
+
+DTOS v1.10.71 completes the secure source boundary for the External Visual
+Mirror. Render acquires the accepted projection audit through the existing
+inspection credential, validates it, and publishes a credential-free snapshot
+atomically with the matching Current Visual generation. GitHub never receives
+the production credential and no authentication material enters public output.
+
+The protected audit endpoint remains anonymous HTTP 401. Projection semantics,
+Current Visual rendering, DINS, Asset Market, and authentication policy are
+unchanged. Deterministic authentication failures now fail fast instead of being
+retried as warming.
+
 # DTOS v1.10.70 - DINS DOM-Origin Serialization Correction
 
 DTOS v1.10.70 corrects the DINS producer boundary that previously serialized
