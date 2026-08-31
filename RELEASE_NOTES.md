@@ -1,3 +1,11 @@
+# DTOS v1.10.69 - Symbol Rendering Correction
+
+DTOS v1.10.69 is a surgical rendering correction for the visual status system.
+Trophy and fire pseudo-elements now use direct Unicode glyph content, preventing
+Python string parsing from turning CSS escapes into control characters. Champion
+and HOT-state semantics, podium styling, page composition, and all intelligence
+contracts remain unchanged.
+
 # DTOS v1.10.68 - Visual Fidelity Correction
 
 DTOS v1.10.68 changes the rendered manager experience, not merely its colors.

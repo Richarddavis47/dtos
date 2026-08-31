@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import unittest
 
+from playwright.sync_api import sync_playwright
+
 from components.trade_intelligence import (
     TRADE_CSS,
     _canonical_card,
@@ -18,6 +20,35 @@ class VisualFidelityTests(unittest.TestCase):
         self.assertIn(".podium-grid", DESIGN_SYSTEM_CSS)
         self.assertIn('.podium-card[data-rank="1"]', DESIGN_SYSTEM_CSS)
         self.assertIn(".status-trophy", DESIGN_SYSTEM_CSS)
+
+    def test_semantic_symbol_css_survives_python_string_rendering(self) -> None:
+        self.assertIn('content:"🏆"', DESIGN_SYSTEM_CSS)
+        self.assertIn('content:"🔥"', DESIGN_SYSTEM_CSS)
+        self.assertNotIn("\x01F3C6", DESIGN_SYSTEM_CSS)
+        self.assertNotIn("\x01F525", DESIGN_SYSTEM_CSS)
+        self.assertFalse(any(ord(character) < 32 and character not in "\n\r\t" for character in DESIGN_SYSTEM_CSS))
+
+    def test_browser_computes_trophy_and_fire_without_control_characters(self) -> None:
+        markup = (
+            f"<style>{DESIGN_SYSTEM_CSS}</style>"
+            '<span id="trophy" class="status-trophy">Champion</span>'
+            '<span id="fire" class="status-hot">W4</span>'
+        )
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.set_content(markup)
+                content = page.evaluate(
+                    """() => ({
+                        trophy: getComputedStyle(document.querySelector('#trophy'), '::before').content,
+                        fire: getComputedStyle(document.querySelector('#fire'), '::before').content,
+                    })"""
+                )
+            finally:
+                browser.close()
+        self.assertEqual(content, {"trophy": '"🏆"', "fire": '"🔥"'})
+        self.assertFalse(any("\\1" in value or "\x01" in value for value in content.values()))
 
     def test_trade_card_has_visual_packages_bilateral_reasoning_and_one_cta(self) -> None:
         row = {
