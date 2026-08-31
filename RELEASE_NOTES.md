@@ -1,3 +1,18 @@
+# DTOS v1.12.0 - Canonical Historical Intelligence Contract
+
+DTOS v1.12.0 begins the Season-Readiness Intelligence program with one neutral
+historical-intelligence contract. Reconstructable Sleeper facts remain in the
+existing disposable completed-season cache and are normalized into stable,
+league-scoped events only when read. Sparse public market checkpoints remain a
+separate global contract and never expose private league packages or manager
+behavior.
+
+The new service supports bounded league, franchise, player, season, transaction,
+identity, and event-time queries; active/completed-season deduplication; honest
+timestamp provenance; and explicit no-hindsight checkpoint selection. It adds no
+database or permanent full league archive and does not change FOIS scores,
+recommendations, Market trends, historical trade grading, or visual behavior.
+
 # DTOS v1.10.71 - External Visual Mirror Authenticated Source Contract
 
 DTOS v1.10.71 completes the secure source boundary for the External Visual

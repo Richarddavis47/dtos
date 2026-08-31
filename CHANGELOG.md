@@ -1,5 +1,15 @@
 # Changelog
 
+# v1.12.0 - Canonical Historical Intelligence Contract
+
+- Establish one normalized, multi-league historical-intelligence read boundary
+  above the existing Sleeper-backed `CanonicalHistoryStore`.
+- Separate league-private events from sparse globally reusable market
+  checkpoints with stable identity, honest timestamp provenance, and explicit
+  event-time lookup semantics.
+- Deduplicate active and completed-season facts without creating a permanent
+  provider archive, full-market snapshot stream, or new history database.
+
 # v1.10.71 - External Visual Mirror Authenticated Source Contract
 
 - Acquire the protected current projection audit inside the authenticated
