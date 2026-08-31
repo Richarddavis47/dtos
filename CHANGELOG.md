@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.10.69 - Symbol Rendering Correction
+
+- Render trophy and fire status glyphs as direct Unicode content so Python
+  cannot consume CSS escape sequences before they reach the browser.
+- Preserve championship, HOT-state, podium, layout, intelligence, and lifecycle
+  semantics unchanged while adding control-character regression protection.
+
 # v1.10.68 - Visual Fidelity Correction
 
 - Recompose Home as a franchise command dashboard, My Team as an identity-led
