@@ -768,6 +768,67 @@ class IntelligenceCheckpointStore:
             ).fetchall()
         return [self._decode_observation(row) for row in rows]
 
+    def global_market_checkpoints(
+        self, *, asset_id: str, limit: int = 500,
+    ) -> list[Any]:
+        """Project durable observations through the canonical Step 1 read contract."""
+        from src.core.historical_intelligence.models import GlobalMarketCheckpoint
+
+        bounded = max(1, min(int(limit), 500))
+        with self._connect() as connection:
+            rows = connection.execute(
+                """SELECT * FROM global_market_observations
+                WHERE asset_id=? ORDER BY observed_at DESC LIMIT ?""",
+                (str(asset_id), bounded),
+            ).fetchall()
+            identities = [str(row["observation_id"]) for row in rows]
+            reason_rows = connection.execute(
+                """SELECT r.observation_id,r.trigger_type,c.knowledge_state
+                FROM market_observation_references r
+                JOIN intelligence_checkpoints c ON c.checkpoint_id=r.checkpoint_id
+                WHERE r.observation_id IN (
+                  SELECT observation_id FROM global_market_observations
+                  WHERE asset_id=? ORDER BY observed_at DESC LIMIT ?
+                ) ORDER BY r.observation_id,r.trigger_type,c.knowledge_state""",
+                (str(asset_id), bounded),
+            ).fetchall()
+        reasons: dict[str, set[str]] = {identity: set() for identity in identities}
+        relationships: dict[str, set[str]] = {identity: set() for identity in identities}
+        for row in reason_rows:
+            identity = str(row["observation_id"])
+            reasons.setdefault(identity, set()).add(str(row["trigger_type"]))
+            knowledge = str(row["knowledge_state"] or "")
+            if knowledge.startswith("related_player_impact:"):
+                relationships.setdefault(identity, set()).add(
+                    knowledge.removeprefix("related_player_impact:")
+                )
+        result = []
+        for raw in reversed(rows):
+            observation = self._decode_observation(raw)
+            provider_rows = tuple(item.__dict__ for item in observation.provider_evidence)
+            providers = sorted({item.provider for item in observation.provider_evidence})
+            result.append(GlobalMarketCheckpoint(
+                checkpoint_id=observation.observation_id,
+                asset_id=observation.asset_id,
+                occurred_at=observation.observed_at,
+                provider=providers[0] if len(providers) == 1 else "dtos_consensus",
+                normalized_value=float(observation.canonical_value),
+                confidence=int(observation.confidence),
+                classification="event_relevant_global_market_state",
+                reason_codes=tuple(sorted(reasons.get(observation.observation_id) or {
+                    "material_market_state",
+                })),
+                source_reference=observation.semantic_fingerprint,
+                relationship_evidence=tuple(sorted(
+                    relationships.get(observation.observation_id) or (),
+                )),
+                market_context_id=observation.market_context_id,
+                normalization_version=observation.normalization_version,
+                materiality_policy_version=observation.materiality_policy_version,
+                provider_observations=provider_rows,
+            ))
+        return result
+
     def observation_at_or_before(
         self, *, asset_id: str, market_context_id: str, event_at: str,
     ) -> GlobalMarketObservation | None:
@@ -785,6 +846,13 @@ class IntelligenceCheckpointStore:
         with self._connect() as connection:
             observations = connection.execute(
                 "SELECT COUNT(*) FROM global_market_observations"
+            ).fetchone()[0]
+            relevant_players = connection.execute(
+                """SELECT COUNT(DISTINCT asset_id) FROM global_market_observations
+                WHERE asset_type='player'"""
+            ).fetchone()[0]
+            latest_checkpoint = connection.execute(
+                "SELECT MAX(observed_at) FROM global_market_observations"
             ).fetchone()[0]
             references = connection.execute(
                 "SELECT COUNT(*) FROM market_observation_references"
@@ -875,6 +943,8 @@ class IntelligenceCheckpointStore:
         }
         return {
             "status": "healthy", "observation_count": observations,
+            "relevant_players_with_checkpoints": relevant_players,
+            "latest_checkpoint": latest_checkpoint,
             "reference_count": references, "unavailable_references": unavailable,
             "final_unavailable_references": final_unavailable,
             "retryable_unavailable_references": retryable_unavailable,

@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import replace
 from threading import RLock
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Protocol
 
 from src.core.history_context.store import CanonicalHistoryStore, canonical_history_store
 from src.core.history_context.timestamps import canonical_transaction_timestamp
@@ -20,6 +20,12 @@ _ENTITY_TYPES = (
     "trade", "transaction", "draft_pick", "matchup", "season_standing",
     "playoff_result",
 )
+
+
+class GlobalCheckpointReader(Protocol):
+    def global_market_checkpoints(
+        self, *, asset_id: str, limit: int = 500,
+    ) -> list[GlobalMarketCheckpoint]: ...
 
 
 def _stable_values(values: Iterable[object]) -> tuple[str, ...]:
@@ -78,8 +84,10 @@ class HistoricalIntelligenceService:
     def __init__(
         self, store: CanonicalHistoryStore = canonical_history_store,
         checkpoints: Iterable[GlobalMarketCheckpoint] = (),
+        checkpoint_reader: GlobalCheckpointReader | None = None,
     ) -> None:
         self.store = store
+        self.checkpoint_reader = checkpoint_reader
         self._lock = RLock()
         self._current: dict[str, tuple[int, tuple[dict[str, Any], ...]]] = {}
         self._current_revisions: defaultdict[str, int] = defaultdict(int)
@@ -96,7 +104,21 @@ class HistoricalIntelligenceService:
         self._metrics = {
             "league_builds": 0, "raw_record_reads": 0,
             "unrelated_league_reads": 0, "checkpoint_queries": 0,
+            "durable_checkpoint_reads": 0,
         }
+
+    def use_checkpoint_reader(self, reader: GlobalCheckpointReader) -> None:
+        self.checkpoint_reader = reader
+
+    def _checkpoint_rows(self, asset_id: str) -> tuple[GlobalMarketCheckpoint, ...]:
+        rows = {row.checkpoint_id: row for row in self._checkpoint_index.get(str(asset_id), ())}
+        if self.checkpoint_reader is not None:
+            for row in self.checkpoint_reader.global_market_checkpoints(
+                asset_id=str(asset_id), limit=500,
+            ):
+                rows[row.checkpoint_id] = row
+            self._metrics["durable_checkpoint_reads"] += 1
+        return tuple(sorted(rows.values(), key=lambda row: row.occurred_at))
 
     def replace_current_transactions(
         self, league_id: str, season: int, transactions: Iterable[Mapping[str, Any]],
@@ -289,7 +311,8 @@ class HistoricalIntelligenceService:
             raise KeyError("Unknown league-scoped historical event.")
         if not any(
             checkpoint.checkpoint_id == checkpoint_id
-            for rows in self._checkpoint_index.values() for checkpoint in rows
+            for player_id in event.player_ids
+            for checkpoint in self._checkpoint_rows(player_id)
         ):
             raise KeyError("Unknown global market checkpoint.")
         return replace(
@@ -303,7 +326,7 @@ class HistoricalIntelligenceService:
         direction: CheckpointDirection = CheckpointDirection.AT_OR_BEFORE,
     ) -> GlobalMarketCheckpoint | None:
         self._metrics["checkpoint_queries"] += 1
-        rows = self._checkpoint_index.get(str(asset_id), ())
+        rows = self._checkpoint_rows(str(asset_id))
         if direction is CheckpointDirection.EXACT:
             return next((row for row in rows if row.occurred_at == occurred_at), None)
         if direction is CheckpointDirection.AT_OR_BEFORE:

@@ -1,3 +1,20 @@
+# DTOS v1.12.2 - Event-Relevant Global Player Market Memory
+
+DTOS v1.12.2 establishes sparse, durable global player-market memory on the
+canonical Historical Intelligence contract. Meaningful player events and
+milestones can preserve provider-backed market evidence for reuse across
+leagues, while private league transactions remain isolated references.
+
+Milestones are limited to the persisted Relevant Player Universe. Supported
+global events evaluate only a bounded, explainable player neighborhood, and a
+relationship alone never forces storage without material change. Durable reads
+retain provider, normalization, confidence, and trigger provenance, survive
+restart, and enforce at-or-before no-hindsight lookup. Historical backfill is
+bounded and idempotent and records no current value as historical evidence.
+
+This release builds memory only: current Asset Market output, FOIS scores,
+trade recommendations, rankings, and presentation contracts are unchanged.
+
 # DTOS v1.12.1 - DINS Public-Origin Serialization Correction
 
 DTOS v1.12.1 corrects the DINS producer boundary used by authenticated

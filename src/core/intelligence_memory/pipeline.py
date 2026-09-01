@@ -11,6 +11,9 @@ from src.core.league_runtime.identity import scoring_profile_id
 
 from .models import CheckpointTrigger, EvidenceCompleteness, ProvenanceType
 from .models import PickLineage, SourceObservation
+from .relevance import (
+    material_related_candidates, milestone_asset_ids, related_player_candidates,
+)
 from .service import IntelligenceMemoryService
 
 
@@ -134,6 +137,22 @@ class CheckpointPipeline:
             ))
         return tuple(sorted(rows, key=lambda row: (row.provider, str(row.source_identity))))
 
+    @staticmethod
+    def _historical_safe_values(
+        values: dict[str, Any], provenance: ProvenanceType,
+    ) -> dict[str, Any]:
+        """Never attach current valuation state to an old league event."""
+        if provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL:
+            return values
+        return {
+            **values,
+            "dtos_value": None, "intrinsic_value": None,
+            "contender_value": None, "rebuilder_value": None,
+            "market_value": None,
+            "completeness": EvidenceCompleteness.UNAVAILABLE,
+            "knowledge_state": "historical_market_evidence_requires_resolver",
+        }
+
     def _capture(self, trigger: CheckpointTrigger, **values: Any) -> None:
         self._counts["checkpoints_attempted"] += 1
         event_id = str(values.get("event_id") or "")
@@ -142,10 +161,20 @@ class CheckpointPipeline:
             asset_id=str(values["asset_id"]), trigger_type=trigger.value,
         ):
             self._record(trigger, "duplicates_skipped")
+            self._counts["events_replayed"] += 1
             return
-        _, inserted = self.service.capture(trigger=trigger, **values)
-        result = "checkpoints_written" if inserted else "duplicates_skipped"
-        self._record(trigger, result)
+        capture_result = self.service.capture_detailed(trigger=trigger, **values)
+        inserted = capture_result.checkpoint_created
+        result_name = "checkpoints_written" if inserted else "duplicates_skipped"
+        self._record(trigger, result_name)
+        if result_name == "checkpoints_written":
+            self._counts["references_persisted"] += 1
+        if result_name == "duplicates_skipped":
+            self._counts["events_replayed"] += 1
+        if capture_result.observation_created:
+            self._counts["global_observations_persisted"] += 1
+        elif capture_result.market_decision == "reused_observation":
+            self._counts["global_observations_deduplicated"] += 1
         if values.get("completeness") is EvidenceCompleteness.UNAVAILABLE:
             self._record(trigger, "unavailable_evidence_writes")
 
@@ -184,15 +213,25 @@ class CheckpointPipeline:
                         continue
                     is_pick = trigger is CheckpointTrigger.TRADE_EXECUTION and raw_asset.count(":") == 2
                     asset_id = f"pick:{raw_asset}" if is_pick else f"player:{raw_asset}"
-                    values = self._values(data, asset_id)
+                    values = self._historical_safe_values(
+                        self._values(data, asset_id), provenance,
+                    )
                     self._capture(
                         trigger, asset_id=asset_id,
                         asset_type="future_pick" if is_pick else "player",
                         timestamp=_timestamp(transaction.get("created"), fallback),
                         event_id=event_id, roster_id=roster_id,
-                        confidence=85 if values["market_value"] is not None else 40,
-                        observations=self._projection_observations(data, asset_id),
-                        market_observations=self._market_observations(data, asset_id),
+                        confidence=85 if values["market_value"] is not None else 0,
+                        observations=(
+                            self._projection_observations(data, asset_id)
+                            if provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
+                            else ()
+                        ),
+                        market_observations=(
+                            self._market_observations(data, asset_id)
+                            if provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
+                            else ()
+                        ),
                         **context, **values,
                     )
         return self.health()
@@ -213,7 +252,9 @@ class CheckpointPipeline:
                     self._counts["materiality_skips"] += 1
                     continue
                 self._counts["eligible_events"] += 1
-                values = self._values(data, f"player:{player_id}")
+                values = self._historical_safe_values(
+                    self._values(data, f"player:{player_id}"), provenance,
+                )
                 selection_time = _timestamp(
                     pick.get("picked_at") or pick.get("created"),
                     f"{context['season']}-draft-{draft_id}-{number}",
@@ -223,10 +264,16 @@ class CheckpointPipeline:
                     asset_id=f"player:{player_id}", asset_type="player",
                     timestamp=selection_time,
                     event_id=f"{draft_id}:{number}", roster_id=str(pick.get("roster_id") or "") or None,
-                    confidence=85 if values["market_value"] is not None else 40,
-                    observations=self._projection_observations(data, f"player:{player_id}"),
-                    market_observations=self._market_observations(
-                        data, f"player:{player_id}",
+                    confidence=85 if values["market_value"] is not None else 0,
+                    observations=(
+                        self._projection_observations(data, f"player:{player_id}")
+                        if provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
+                        else ()
+                    ),
+                    market_observations=(
+                        self._market_observations(data, f"player:{player_id}")
+                        if provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
+                        else ()
                     ),
                     knowledge_state=f"fantasy_draft_selection:{number}",
                     **context, **{k: v for k, v in values.items() if k != "knowledge_state"},
@@ -256,7 +303,13 @@ class CheckpointPipeline:
             triggers.append(CheckpointTrigger.REGULAR_SEASON_END)
         if str(league.get("status") or "").casefold() == "complete":
             triggers.append(CheckpointTrigger.FANTASY_SEASON_END)
-        assets = sorted(((data.get("valuation_intelligence") or {}).get("assets") or {}).keys())
+        assets = milestone_asset_ids(data)
+        valuation_count = len(
+            ((data.get("valuation_intelligence") or {}).get("assets") or {})
+        )
+        self._counts["milestone_assets_excluded"] += max(
+            0, valuation_count - len(assets),
+        )
         for trigger in triggers:
             # Benchmarks are global by provider-compatible market context. A
             # second league observes the same global event and is idempotently
@@ -281,6 +334,66 @@ class CheckpointPipeline:
                 )
         return self.health()
 
+    def ingest_market_event(
+        self, data: dict[str, Any], *, event_id: str,
+        trigger: CheckpointTrigger, primary_asset_ids: Iterable[str],
+        before_values: dict[str, float | int | None],
+        after_values: dict[str, float | int | None], observed_at: str,
+        related_limit: int = 12,
+    ) -> dict[str, Any]:
+        """Evaluate one global event and only its bounded, material neighborhood."""
+        if trigger not in {
+            CheckpointTrigger.NFL_DRAFT_SELECTION, CheckpointTrigger.NFL_TRADE,
+            CheckpointTrigger.FREE_AGENCY, CheckpointTrigger.MAJOR_INJURY,
+            CheckpointTrigger.INJURY_RETURN, CheckpointTrigger.SUSPENSION,
+            CheckpointTrigger.RETIREMENT,
+        }:
+            raise ValueError("Market events require a supported global player trigger.")
+        primary = tuple(sorted({
+            value if str(value).startswith("player:") else f"player:{value}"
+            for value in map(str, primary_asset_ids) if value
+        }))
+        context = self._context(data, provenance=ProvenanceType.LIVE_CAPTURED)
+        context.update({"league_id": None, "scoring_profile_id": None})
+        candidates = related_player_candidates(data, primary, maximum=related_limit)
+        related = material_related_candidates(
+            candidates, before=before_values, after=after_values,
+        )
+        self._counts["events_evaluated"] += 1
+        self._counts["primary_players_considered"] += len(primary)
+        self._counts["related_players_considered"] += len(candidates)
+        self._counts["related_players_rejected_immaterial"] += (
+            len(candidates) - len(related)
+        )
+        relationship_by_asset = {
+            candidate.asset_id: candidate.relationship for candidate in related
+        }
+        for asset_id in (*primary, *(row.asset_id for row in related)):
+            market_value = after_values.get(asset_id)
+            if market_value is None:
+                self._counts["provider_unavailable"] += 1
+                continue
+            values = self._values(data, asset_id)
+            if values["market_value"] != market_value:
+                raise ValueError(
+                    "Post-event market value must match attached canonical evidence."
+                )
+            values.update({
+                "completeness": EvidenceCompleteness.COMPLETE,
+                "knowledge_state": (
+                    "primary_asset_event" if asset_id in primary else
+                    f"related_player_impact:{relationship_by_asset[asset_id]}"
+                ),
+            })
+            self._capture(
+                trigger, asset_id=asset_id, asset_type="player",
+                timestamp=observed_at, event_id=event_id,
+                confidence=85,
+                market_observations=self._market_observations(data, asset_id),
+                **context, **values,
+            )
+        return self.health()
+
     def ingest_runtime(self, data: dict[str, Any], *, observed_at: str) -> dict[str, Any]:
         try:
             self.ingest_transactions(data, data.get("transactions") or (), observed_at=observed_at)
@@ -299,7 +412,11 @@ class CheckpointPipeline:
             **{key: int(self._counts.get(key, 0)) for key in (
                 "canonical_events_observed", "eligible_events", "checkpoints_attempted",
                 "checkpoints_written", "duplicates_skipped", "materiality_skips",
-                "unavailable_evidence_writes", "failures",
+                "unavailable_evidence_writes", "failures", "events_evaluated",
+                "primary_players_considered", "related_players_considered",
+                "related_players_rejected_immaterial", "provider_unavailable",
+                "global_observations_persisted", "global_observations_deduplicated",
+                "references_persisted", "events_replayed", "milestone_assets_excluded",
             )},
             "by_trigger": {key: dict(value) for key, value in sorted(self._by_trigger.items())},
             "last_error": self._last_error,

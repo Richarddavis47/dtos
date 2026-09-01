@@ -53,12 +53,25 @@ class HistoricalTradeResolutionService:
                 values.add((f"pick:{season}:{round_number}:{roster}", "future_pick", str(owner)))
         return tuple(sorted(values))
 
-    def run(self, history_store: Any, league_id: str) -> TradeResolutionSummary:
+    def run(
+        self, history_store: Any, league_id: str, *,
+        maximum_events: int | None = None,
+    ) -> TradeResolutionSummary:
         started = perf_counter()
         phase_started_at = datetime.now(timezone.utc).isoformat()
         resolver_before = Counter(self.resolver.health().get("counts") or {})
-        total, trades = history_store.records(league_id, "trade", limit=1_000_000)
+        source_total, trades = history_store.records(
+            league_id, "trade", limit=1_000_000,
+        )
         trades = sorted(trades, key=lambda row: (str(row.get("occurred_at") or ""), str(row.get("source_record_id") or "")))
+        if maximum_events is not None:
+            trades = trades[:max(0, int(maximum_events))]
+        events_evaluated = len(trades)
+        total = (
+            int(source_total)
+            if maximum_events is None
+            else min(int(source_total), max(0, int(maximum_events)))
+        )
         counts: Counter[str] = Counter()
         requests: list[tuple[IntelligenceCheckpoint, str, PersistenceContext]] = []
         trade_work: list[tuple[dict[str, Any], tuple[tuple[str, str, str | None], ...], tuple[int, ...]]] = []
@@ -210,6 +223,9 @@ class HistoricalTradeResolutionService:
             self._state = {
                 "status": status, "historical_resolution_status": status,
                 "last_error": None, "phase_started_at": phase_started_at,
+                "source_trade_count": int(source_total),
+                "events_evaluated": events_evaluated,
+                "bounded_event_limit": maximum_events,
                 **summary.__dict__, **exposed,
             }
         return summary

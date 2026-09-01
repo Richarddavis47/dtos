@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import dataclass
 from typing import Iterable
 
 from .models import (
@@ -11,6 +12,15 @@ from .models import (
 from .store import IntelligenceCheckpointStore
 from .market_memory import market_context_id
 from .triggers import material_teammate_impacts
+
+
+@dataclass(frozen=True)
+class CheckpointCaptureResult:
+    checkpoint: IntelligenceCheckpoint
+    checkpoint_created: bool
+    market_decision: str
+    observation_created: bool
+    reference_created: bool
 
 
 class IntelligenceMemoryService:
@@ -39,6 +49,39 @@ class IntelligenceMemoryService:
         market_observations: Iterable[SourceObservation] | None = None,
         knowledge_state: str | None = None,
     ) -> tuple[IntelligenceCheckpoint, bool]:
+        result = self.capture_detailed(
+            asset_id=asset_id, asset_type=asset_type, timestamp=timestamp,
+            season=season, trigger=trigger, provenance=provenance,
+            league_id=league_id, scoring_profile_id=scoring_profile_id,
+            roster_id=roster_id, week=week, dtos_value=dtos_value,
+            intrinsic_value=intrinsic_value, contender_value=contender_value,
+            rebuilder_value=rebuilder_value, market_value=market_value,
+            confidence=confidence, completeness=completeness,
+            model_version=model_version, brain_identity=brain_identity,
+            event_id=event_id, observations=observations,
+            market_observations=market_observations,
+            knowledge_state=knowledge_state,
+        )
+        return result.checkpoint, result.checkpoint_created
+
+    def capture_detailed(
+        self,
+        *, asset_id: str, asset_type: str, timestamp: str, season: int,
+        trigger: CheckpointTrigger, provenance: ProvenanceType,
+        league_id: str | None = None, scoring_profile_id: str | None = None,
+        roster_id: str | None = None,
+        week: int | None = None, dtos_value: float | int | None = None,
+        intrinsic_value: float | int | None = None,
+        contender_value: float | int | None = None,
+        rebuilder_value: float | int | None = None,
+        market_value: float | int | None = None, confidence: int = 0,
+        completeness: EvidenceCompleteness = EvidenceCompleteness.UNAVAILABLE,
+        model_version: str = "unknown", brain_identity: str | None = None,
+        event_id: str | None = None,
+        observations: Iterable[SourceObservation] = (),
+        market_observations: Iterable[SourceObservation] | None = None,
+        knowledge_state: str | None = None,
+    ) -> CheckpointCaptureResult:
         checkpoint = IntelligenceCheckpoint(
             checkpoint_id=self.identifier(
                 asset_id, league_id, timestamp, trigger.value, event_id,
@@ -59,14 +102,17 @@ class IntelligenceMemoryService:
         context_id = market_context_id(
             asset_type=asset_type, scoring_profile_id=scoring_profile_id,
         )
-        persisted, inserted, _, _, _ = self.store.put_sparse(
+        persisted, inserted, decision, observation_created, reference_created = self.store.put_sparse(
             checkpoint, market_context_id=context_id,
             provider_evidence=(
                 tuple(market_observations)
                 if market_observations is not None else tuple(observations)
             ),
         )
-        return persisted, inserted
+        return CheckpointCaptureResult(
+            persisted, inserted, decision.value,
+            observation_created, reference_created,
+        )
 
     def capture_trade_assets(self, assets: Iterable[dict], **context) -> list[IntelligenceCheckpoint]:
         return [self.capture(

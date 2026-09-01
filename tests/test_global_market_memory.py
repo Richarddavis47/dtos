@@ -247,6 +247,9 @@ class GlobalSparseMarketMemoryTests(unittest.TestCase):
             "league": {"league_id": "A", "season": "2026", "status": "in_season",
                        "settings": {"playoff_week_start": 15}},
             "week": 1,
+            "relevant_player_universe": {"members": [{
+                "player_id": "10213", "reason_codes": ["historical_traded"],
+            }]},
             "valuation_intelligence": {"assets": {"player:10213": {
                 "valuation_layers": {
                     "market_value": {"value": 8000},
