@@ -125,7 +125,9 @@ Artifacts live below `static/inspection/v{version}-b{build}-s{schema}` and are e
 through `/inspection-artifacts/...`. The web service only reads these files.
 Release manifests use runtime deployment metadata from `/api/status`, including
 the deployed commit, source branch, and deployment timestamp. Public captures must
-set `DTOS_PUBLIC_URL`; localhost artifact URLs fail the production contract. Run the
+set `DTOS_PUBLIC_URL` (or pass `--public-url` to the capture command); localhost
+transport URLs are never accepted as publication identity and fail closed when
+no public origin is configured. Run the
 bounded capture worker after deployment:
 
 ```powershell

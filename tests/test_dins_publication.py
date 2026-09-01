@@ -16,6 +16,10 @@ from tools.inspection.capture import (
     DOM_SCRIPT,
     _interaction_path,
     _interaction_target,
+    _public_origin,
+    _rebase_application_urls,
+    _write_artifact_json,
+    capture,
 )
 from tools.inspection.package import asset_names, package_bundle, sha256
 
@@ -223,6 +227,119 @@ class DinsPublicationTests(unittest.TestCase):
             ),
             "https://dtos.onrender.com/players/10866",
         )
+
+    def test_structured_artifact_origin_rebases_every_discovered_url_class(self) -> None:
+        capture_origin = "http://127.0.0.1:10000"
+        public_origin = "https://dtos.example"
+        payload = {
+            "document_url": f"{capture_origin}/market?position=WR#asset",
+            "base_uri": f"{capture_origin}/market/",
+            "metadata": {"canonical_url": f"{capture_origin}/market"},
+            "dom": {"href": f"{capture_origin}/players/1"},
+            "resource": {"src": f"{capture_origin}/static/app.css"},
+            "form": {"action": f"{capture_origin}/trades?mode=build#offer"},
+            "interaction": {"resulting_url": f"{capture_origin}/league"},
+            "external": "https://api.sleeper.app/v1/league/1",
+        }
+        result = _rebase_application_urls(
+            payload, capture_origin=capture_origin, public_origin=public_origin,
+        )
+        self.assertEqual(
+            result["document_url"],
+            "https://dtos.example/market?position=WR#asset",
+        )
+        self.assertEqual(result["base_uri"], "https://dtos.example/market/")
+        self.assertEqual(result["metadata"]["canonical_url"], "https://dtos.example/market")
+        self.assertEqual(result["dom"]["href"], "https://dtos.example/players/1")
+        self.assertEqual(result["resource"]["src"], "https://dtos.example/static/app.css")
+        self.assertEqual(
+            result["form"]["action"],
+            "https://dtos.example/trades?mode=build#offer",
+        )
+        self.assertEqual(result["interaction"]["resulting_url"], "https://dtos.example/league")
+        self.assertEqual(result["external"], payload["external"])
+
+    def test_loopback_capture_requires_explicit_public_origin(self) -> None:
+        with patch.dict("os.environ", {}, clear=True):
+            with self.assertRaisesRegex(ValueError, "explicit configured public origin"):
+                _public_origin("http://127.0.0.1:10000")
+        self.assertEqual(
+            _public_origin(
+                "http://127.0.0.1:10000",
+                "https://dtos.example/deployment-path",
+            ),
+            "https://dtos.example",
+        )
+
+    def test_production_shaped_capture_rebases_metadata_semantic_page_and_manifest(self) -> None:
+        capture_origin = "http://127.0.0.1:10000"
+        public_origin = "https://dtos.example"
+        spec = {"page_id": "market", "page_name": "Market", "route": "/market"}
+
+        def response(url: str) -> dict:
+            if url.endswith("api/market/health"):
+                return {"status": "ready"}
+            if url.endswith("api/inspect/site-map"):
+                return {"pages": [spec], "document_url": f"{capture_origin}/market"}
+            if url.endswith("api/status"):
+                return {"version": VERSION, "league_id": "league", "deployment": {"commit": self.commit, "branch": "main"}}
+            if url.endswith("api/inspect/valuation"):
+                return {"route": f"{capture_origin}/api/valuation", "status": "ready"}
+            if url.endswith("api/inspect/health"):
+                return {"historical_progress": {"url": f"{capture_origin}/history"}}
+            return {"canonical_url": f"{capture_origin}/market?position=QB#asset"}
+
+        page_result = {
+            "page_id": "market", "viewport": {"name": "desktop"},
+            "metrics": {"product_contract_failures": 0, "critical_accessibility_count": 0},
+            "artifact_urls": {
+                "viewport_screenshot": f"{capture_origin}/inspection/market.png",
+                "full_page_screenshot": f"{capture_origin}/inspection/market-full.png",
+            },
+            "interactions": (), "accessibility": {"violations": ()},
+            "network": {"console_errors": (), "failed_requests": ()},
+            "canonical_url": f"{capture_origin}/market?position=QB#asset",
+        }
+        with tempfile.TemporaryDirectory() as folder:
+            with (
+                patch("tools.inspection.capture._json", side_effect=response),
+                patch("tools.inspection.capture.VIEWPORTS", (type("Viewport", (), {"name": "desktop"})(),)),
+                patch("tools.inspection.capture._capture_page", return_value=page_result),
+                patch("tools.inspection.capture.sync_playwright"),
+            ):
+                root = Path(folder)
+                result = capture(capture_origin, root, public_url=public_origin)
+                capture_root = next(root.iterdir())
+                text = "\n".join(
+                    path.read_text(encoding="utf-8")
+                    for path in capture_root.rglob("*.json")
+                )
+                self.assertNotIn("127.0.0.1", text)
+                self.assertIn("https://dtos.example/market?position=QB#asset", text)
+                self.assertEqual(result["commit_sha"], self.commit)
+                package_bundle(capture_root, root / "package")
+
+    def test_non_url_text_is_not_scrubbed_and_fail_closed_packaging_rejects_it(self) -> None:
+        marker = "diagnostic mentions 127.0.0.1 but is not a structured URL"
+        normalized = _rebase_application_urls(
+            {"diagnostic": marker}, capture_origin="http://127.0.0.1:10000",
+            public_origin="https://dtos.example",
+        )
+        self.assertEqual(normalized["diagnostic"], marker)
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            capture_root = root / "capture"
+            capture_root.mkdir()
+            (capture_root / "manifest.json").write_text(
+                json.dumps(self.manifest()), encoding="utf-8",
+            )
+            _write_artifact_json(
+                capture_root / "diagnostic.json", normalized,
+                capture_origin="http://127.0.0.1:10000",
+                public_origin="https://dtos.example",
+            )
+            with self.assertRaisesRegex(ValueError, "forbidden local or sensitive reference"):
+                package_bundle(capture_root, root / "package")
 
 
 if __name__ == "__main__":
