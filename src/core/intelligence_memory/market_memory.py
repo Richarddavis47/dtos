@@ -68,6 +68,20 @@ class MarketObservationMaterialityPolicy:
                     return True
         return False
 
+    def value_changed(self, previous: float | int | None, current: float | int | None) -> bool:
+        """Apply the canonical value rule to a bounded related-player candidate."""
+        if previous is None or current is None:
+            return previous != current
+        old = float(previous)
+        new = float(current)
+        delta = abs(old - new)
+        base = max(abs(old), 1.0)
+        return (
+            delta >= self.canonical_value_delta
+            or delta / base >= self.canonical_relative_delta
+            or int(old // self.market_tier_width) != int(new // self.market_tier_width)
+        )
+
 
 def market_context_id(
     *, asset_type: str, scoring_profile_id: str | None,

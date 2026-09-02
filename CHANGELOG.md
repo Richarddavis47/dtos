@@ -1,5 +1,16 @@
 # Changelog
 
+# v1.12.2 - Event-Relevant Global Player Market Memory
+
+- Connected the canonical Historical Intelligence read contract to the existing
+  durable global market-observation store with no-hindsight lookup semantics.
+- Limited scheduled milestones to the persisted Relevant Player Universe and
+  added bounded, explainable related-player evaluation for supported global events.
+- Preserved only material provider-backed observations, deduplicated shared
+  cross-league states, and kept private league-event linkage out of global payloads.
+- Added bounded, idempotent historical backfill support that never attaches
+  current valuation evidence to an old event or fabricates unavailable history.
+
 # v1.12.1 - DINS Public-Origin Serialization Correction
 
 - Separated DINS browser transport origin from publication identity.

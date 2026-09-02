@@ -377,6 +377,23 @@ class SparseHistoricalResolverTests(unittest.TestCase):
         self.assertEqual(summary.unclassified_process_trades, 0)
         self.assertEqual(resolver.health()["per_league_permanent_historical_market_bytes"], 0)
 
+    def test_trade_service_backfill_limit_is_bounded_and_reported(self):
+        service = HistoricalTradeResolutionService(HistoricalMarketResolver(self.store))
+        class History:
+            def records(self, _league_id, _entity_type, limit):
+                rows = [{
+                    "source_record_id": f"faab-{index}", "season": 2022,
+                    "occurred_at": "2022-10-30T23:46:40.370Z",
+                    "payload": {"waiver_budget": [{"amount": index + 1}]},
+                } for index in range(25)]
+                return len(rows), rows
+        summary = service.run(History(), "L", maximum_events=7)
+        health = service.health()
+        self.assertEqual(summary.completed_trades, 7)
+        self.assertEqual(health["source_trade_count"], 25)
+        self.assertEqual(health["events_evaluated"], 7)
+        self.assertEqual(health["bounded_event_limit"], 7)
+
     def test_faab_only_trade_is_unavailable_and_process_not_gradable(self):
         service = HistoricalTradeResolutionService(HistoricalMarketResolver(self.store))
         class History:

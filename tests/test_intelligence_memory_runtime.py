@@ -22,6 +22,9 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
             "league": {"league_id": "L1", "season": "2026", "status": "in_season",
                        "settings": {"playoff_week_start": 15}},
             "week": 1, "scoring_settings": {"rec": 1}, "roster_positions": ["QB", "BN"],
+            "relevant_player_universe": {"members": [{
+                "player_id": "1", "reason_codes": ["current_roster"],
+            }]},
             "valuation_intelligence": {"assets": {
                 "player:1": {"valuation_layers": {
                     "market_value": {"value": 7000}, "intrinsic_dtos_value": {"value": 7100},
@@ -117,6 +120,8 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         )
         self.assertEqual(self.store.checkpoints()[0].provenance_type,
                          ProvenanceType.HISTORICAL_SOURCE_BACKFILL)
+        self.assertIsNone(self.store.checkpoints()[0].market_value)
+        self.assertEqual(self.store.market_memory_health()["observation_count"], 0)
 
     def test_leagues_are_isolated(self) -> None:
         trade = {"transaction_id": "same", "type": "trade", "adds": {"1": 2}}

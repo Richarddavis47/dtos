@@ -101,6 +101,10 @@ class GlobalMarketCheckpoint:
     source_reference: str | None = None
     related_player_ids: tuple[str, ...] = ()
     relationship_evidence: tuple[str, ...] = ()
+    market_context_id: str | None = None
+    normalization_version: str | None = None
+    materiality_policy_version: str | None = None
+    provider_observations: tuple[Mapping[str, Any], ...] = ()
     schema_version: str = HISTORICAL_INTELLIGENCE_SCHEMA_VERSION
     method_version: str = HISTORICAL_INTELLIGENCE_METHOD_VERSION
 
@@ -119,6 +123,10 @@ class GlobalMarketCheckpoint:
         reason_codes: tuple[str, ...], source_reference: str | None = None,
         related_player_ids: tuple[str, ...] = (),
         relationship_evidence: tuple[str, ...] = (),
+        market_context_id: str | None = None,
+        normalization_version: str | None = None,
+        materiality_policy_version: str | None = None,
+        provider_observations: tuple[Mapping[str, Any], ...] = (),
     ) -> "GlobalMarketCheckpoint":
         return cls(
             checkpoint_id=semantic_identity(
@@ -131,6 +139,10 @@ class GlobalMarketCheckpoint:
             source_reference=source_reference,
             related_player_ids=tuple(sorted(set(map(str, related_player_ids)))),
             relationship_evidence=tuple(map(str, relationship_evidence)),
+            market_context_id=market_context_id,
+            normalization_version=normalization_version,
+            materiality_policy_version=materiality_policy_version,
+            provider_observations=tuple(dict(row) for row in provider_observations),
         )
 
     def public_contract(self) -> dict[str, Any]:
@@ -147,6 +159,10 @@ class GlobalMarketCheckpoint:
             "source_reference": self.source_reference,
             "related_player_ids": list(self.related_player_ids),
             "relationship_evidence": list(self.relationship_evidence),
+            "market_context_id": self.market_context_id,
+            "normalization_version": self.normalization_version,
+            "materiality_policy_version": self.materiality_policy_version,
+            "provider_observations": [dict(row) for row in self.provider_observations],
             "schema_version": self.schema_version,
             "method_version": self.method_version,
         }

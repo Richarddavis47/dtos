@@ -4,6 +4,7 @@ from __future__ import annotations
 from config import (
     INTELLIGENCE_CHECKPOINT_FILE, SLEEPER_SEASON_CACHE_ROOT,
 )
+from src.core.historical_intelligence import historical_intelligence
 
 from .chain import SeasonChain, SeasonReference, discover_season_chain
 from .confidence import temporal_confidence
@@ -33,6 +34,7 @@ intelligence_checkpoint_store = IntelligenceCheckpointStore(INTELLIGENCE_CHECKPO
 sleeper_season_cache = SleeperSeasonCache(SLEEPER_SEASON_CACHE_ROOT)
 intelligence_memory_service = IntelligenceMemoryService(intelligence_checkpoint_store)
 checkpoint_pipeline = CheckpointPipeline(intelligence_memory_service)
+historical_intelligence.use_checkpoint_reader(intelligence_checkpoint_store)
 historical_market_provider = DynastyProcessHistoricalProvider()
 historical_market_resolver = HistoricalMarketResolver(
     intelligence_checkpoint_store, (historical_market_provider,),
