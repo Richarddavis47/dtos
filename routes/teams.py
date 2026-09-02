@@ -12,6 +12,7 @@ from config import LEAGUE_ID
 from services.team_headquarters import CORE_POSITIONS, build_team_directory, build_team_headquarters
 from src.core.historical_memory.read_model import historical_graph
 from src.core.history_context import canonical_history_store
+from src.core.request_execution import run_manager_read
 from src.ui import player_summary, recommendation_panel
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -163,7 +164,11 @@ def create_teams_router(
     async def team_detail_page(roster_id: int) -> HTMLResponse:
         await ensure_fresh()
         data = require_data()
-        view = build_team_headquarters(data, roster_id, state.get("last_sync"))
+        view = await run_manager_read(
+            lambda: build_team_headquarters(
+                data, roster_id, state.get("last_sync"),
+            ),
+        )
         if view is None:
             raise HTTPException(404, "Team not found")
         team = view["team"]
@@ -217,9 +222,11 @@ def create_teams_router(
         )
         recommendation = view["unified_recommendation"]
         selected_league = str((data.get("league") or {}).get("league_id") or LEAGUE_ID)
-        franchise_history = historical_graph(
-            canonical_history_store, selected_league, data,
-        ).franchise_history(str(team["roster_id"]))
+        franchise_history = await run_manager_read(
+            lambda: historical_graph(
+                canonical_history_store, selected_league, data,
+            ).franchise_history(str(team["roster_id"])),
+        )
         historical_seasons = len({row["season"] for row in franchise_history["standings"]})
         historical_transactions = len(franchise_history["transactions"])
         recommendation_card = recommendation_panel(title=recommendation.title, recommendation=recommendation.recommendation, confidence=recommendation.confidence.score, primary_reason=recommendation.why[0] if recommendation.why else recommendation.current_outlook, evidence=recommendation.why, expected_impact=f"Current: {recommendation.current_outlook} Future: {recommendation.future_outlook}", action_label="Open Trade Center", action_href=f'/trades?front_office={team["roster_id"]}', limitations=recommendation.why_not)
