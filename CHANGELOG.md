@@ -1,5 +1,17 @@
 # Changelog
 
+# v1.12.4 - Historical Transaction Intelligence
+
+- Added a canonical bilateral historical-trade evaluation layer that consumes
+  Step 1 events, Step 2 global market evidence through Step 3, and Step 3
+  before/after franchise states without replaying or querying providers.
+- Separates contemporaneous Process from later Outcome, preserves partial and
+  invalid evidence honestly, supports non-zero-sum conclusions, and records
+  confidence, maturity, provenance, source generations, and method identity.
+- Added bounded, restartable, deterministic backlog batches with idempotent
+  semantic reuse and no request-loop execution, raw-history store, or per-league
+  market duplication.
+
 # v1.12.3 - Historical Franchise State Reconstruction
 
 - Added one canonical, deterministic franchise-state reconstruction layer over
