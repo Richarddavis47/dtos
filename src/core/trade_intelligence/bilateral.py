@@ -44,6 +44,13 @@ def _package_quality(received: tuple[TradeAsset, ...], outgoing: tuple[TradeAsse
     return EvaluationDimension("Package Quality", "COHERENT", "The package has a usable centerpiece and bounded roster-capacity cost.")
 
 
+def evaluate_package_quality(
+    received: tuple[TradeAsset, ...], outgoing: tuple[TradeAsset, ...],
+) -> EvaluationDimension:
+    """Input-driven package-quality contract shared with temporal consumers."""
+    return _package_quality(received, outgoing)
+
+
 def _qualitative_confidence(assets: tuple[TradeAsset, ...]) -> tuple[str, str]:
     if any(
         asset.kind == "pick"

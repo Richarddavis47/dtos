@@ -1,3 +1,18 @@
+# DTOS v1.12.4 - Historical Transaction Intelligence
+
+DTOS v1.12.4 turns canonical historical facts into trustworthy decision
+evidence. It evaluates both franchises in a historical trade using only the
+event boundary, contemporaneous franchise states, and legitimate at-or-before
+global market evidence. Process and Outcome remain separate, so sound process
+can have a poor later result and questionable process can benefit from luck.
+
+The derived contract retains explainable dimensions, independent confidence
+and maturity, evidence references, source generations, and method versioning.
+Unknown values are never treated as zero or replaced by current values. A
+bounded asynchronous backlog service is deterministic and idempotent, performs
+no provider calls or Step 4 raw-history scans, and does not change FOIS, Brain,
+current Trade Intelligence, Market Trends, or product presentation.
+
 # DTOS v1.12.3 - Historical Franchise State Reconstruction
 
 DTOS v1.12.3 adds the canonical derived state layer required before historical
