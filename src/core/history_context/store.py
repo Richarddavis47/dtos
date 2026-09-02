@@ -164,6 +164,17 @@ class CanonicalHistoryStore:
                 or user.get("display_name") or f"Roster {roster_id}",
                 "franchise_id": franchise,
             }, franchise_id=franchise))
+            rows.append(self._record(
+                league_id, season, "roster_snapshot", str(roster_id), {
+                    "roster_id": roster_id,
+                    "owner_id": owner_id,
+                    "players": list(map(str, roster.get("players") or ())),
+                    "starters": list(map(str, roster.get("starters") or ())),
+                    "reserve": list(map(str, roster.get("reserve") or ())),
+                    "taxi": list(map(str, roster.get("taxi") or ())),
+                },
+                franchise_id=franchise,
+            ))
             settings = roster.get("settings") or {}
             rows.append(self._record(league_id, season, "season_standing", str(roster_id), {
                 "roster_id": roster_id, "wins": settings.get("wins"),
@@ -270,12 +281,82 @@ class CanonicalHistoryStore:
                     time.sleep(0)
         return rows
 
+    def _current_records(self, league_id: str, season: int) -> list[dict[str, Any]]:
+        """Project bounded active state through the same canonical record shape."""
+        with self._lock:
+            data = self._current.get(str(league_id))
+        if not data:
+            return []
+        league = data.get("league") or {}
+        try:
+            current_season = int(league.get("season") or 0)
+        except (TypeError, ValueError):
+            current_season = 0
+        if current_season != int(season):
+            return []
+        rows = [self._record(league_id, season, "league_season", league_id, {
+            "league_name": league.get("name") or "Sleeper League",
+            "status": league.get("status"),
+            "total_rosters": league.get("total_rosters"),
+            "settings": data.get("league_settings") or league.get("settings") or {},
+            "scoring_settings": data.get("scoring_settings") or league.get("scoring_settings") or {},
+            "roster_positions": data.get("roster_positions") or league.get("roster_positions") or [],
+        })]
+        for team in data.get("teams") or ():
+            roster_id = int(team.get("roster_id") or 0)
+            franchise = f"{league_id}:franchise:{roster_id}"
+            player_rows = team.get("players") or ()
+            rows.append(self._record(league_id, season, "franchise_identity", str(roster_id), {
+                "sleeper_roster_id": roster_id,
+                "owner_id": str(team.get("owner_id") or ""),
+                "dtos_display_name": team.get("team_name") or team.get("owner"),
+                "franchise_id": franchise,
+            }, franchise_id=franchise))
+            rows.append(self._record(league_id, season, "roster_snapshot", str(roster_id), {
+                "roster_id": roster_id,
+                "owner_id": str(team.get("owner_id") or ""),
+                "players": [str(row.get("id") or row.get("player_id")) for row in player_rows if row.get("id") or row.get("player_id")],
+                "starters": [str(row.get("id") or row.get("player_id")) for row in player_rows if row.get("starter")],
+                "reserve": [str(row.get("id") or row.get("player_id")) for row in player_rows if row.get("roster_slot") == "IR"],
+                "taxi": [str(row.get("id") or row.get("player_id")) for row in player_rows if row.get("roster_slot") == "Taxi"],
+            }, franchise_id=franchise))
+        for pick in data.get("traded_picks") or ():
+            source_id = str(pick.get("pick_id") or _digest(pick)[:16])
+            rows.append(self._record(league_id, season, "pick_snapshot", source_id, dict(pick)))
+        transactions = data.get("transactions") or ()
+        if isinstance(transactions, dict):
+            transaction_rows = [row for values in transactions.values() for row in values or ()]
+        else:
+            transaction_rows = list(transactions)
+        for transaction in transaction_rows:
+            transaction_id = str(transaction.get("transaction_id") or _digest(transaction)[:16])
+            payload = dict(transaction)
+            occurred_at, timestamp_provenance = canonical_transaction_timestamp(payload)
+            entity = "trade" if transaction.get("type") == "trade" else "transaction"
+            rows.append(self._record(
+                league_id, season, entity, transaction_id, payload,
+                week=transaction.get("week") or transaction.get("leg"),
+                occurred_at=occurred_at, timestamp_provenance=timestamp_provenance,
+            ))
+        return rows
+
     def records(
         self, league_id: str, entity_type: str | None, *, season: int | None = None,
         week: int | None = None, franchise_id: str | None = None,
         player_id: str | None = None, limit: int = 100, offset: int = 0,
     ) -> tuple[int, list[dict[str, Any]]]:
-        seasons = [season] if season is not None else sorted(self._cache_index(league_id), reverse=True)
+        if season is not None:
+            seasons = [season]
+        else:
+            seasons = sorted(self._cache_index(league_id), reverse=True)
+            with self._lock:
+                current = self._current.get(str(league_id)) or {}
+            try:
+                current_season = int((current.get("league") or {}).get("season") or 0)
+            except (TypeError, ValueError):
+                current_season = 0
+            if current_season and current_season not in seasons:
+                seasons.insert(0, current_season)
         if entity_type in {"trade", "transaction"}:
             rows = [
                 row for selected in seasons
@@ -286,6 +367,9 @@ class CanonicalHistoryStore:
                 row for selected in seasons
                 for row in self._season_records(league_id, selected)
             ]
+        for selected in seasons:
+            rows.extend(self._current_records(league_id, selected))
+        rows = list({str(row["record_key"]): row for row in rows}.values())
         rows = [row for row in rows if (
             (entity_type is None or row["entity_type"] == entity_type)
             and (week is None or row["week"] == week)

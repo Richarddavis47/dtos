@@ -177,6 +177,7 @@ class HistoricalIntelligenceService:
                 "team_points", "winner", "loser", "tie", "champion_roster_id",
                 "runner_up_roster_id", "placements", "owner_id", "sleeper_roster_id",
                 "wins", "losses", "ties", "points_for", "rank", "pick_no", "round",
+                "roster_id", "player_id", "season", "year",
             ) if key in payload
         }
         return HistoricalEvent(
