@@ -1,3 +1,19 @@
+# DTOS v1.12.3 - Historical Franchise State Reconstruction
+
+DTOS v1.12.3 adds the canonical derived state layer required before historical
+decision intelligence can be graded. Given a league, franchise, and explicit
+historical boundary, it reconstructs the facts and evidence available at that
+time: historical rules, roster and pick ownership, record, weekly lineup and
+production evidence, sparse global market values, and a confidence-calibrated
+competitive-window result.
+
+The service reverses only later canonical events from provider-backed season
+state, exposes deterministic pre/post pairs and diffs, and never substitutes
+today's roster, market, standings, picks, or later outcomes. Missing dimensions
+remain partial or unavailable rather than zero. It adds no provider calls,
+HistoricalStore dependency, per-league market history, or permanent franchise
+snapshot warehouse, and it does not grade trades, waivers, drafts, or GMs.
+
 # DTOS v1.12.2 - Event-Relevant Global Player Market Memory
 
 DTOS v1.12.2 establishes sparse, durable global player-market memory on the

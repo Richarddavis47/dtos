@@ -1,5 +1,16 @@
 # Changelog
 
+# v1.12.3 - Historical Franchise State Reconstruction
+
+- Added one canonical, deterministic franchise-state reconstruction layer over
+  Step 1 league history and Step 2 global sparse market evidence.
+- Reconstructs transaction-boundary roster and pick ownership, historical league
+  rules, season-to-date record/production, legal lineup evidence, partial value,
+  and competitive-window context without current-state or future-outcome fallback.
+- Preserves honest per-dimension availability, confidence, provenance, optional
+  traces, multi-league isolation, zero provider calls, and no permanent snapshot
+  warehouse or per-league market duplication.
+
 # v1.12.2 - Event-Relevant Global Player Market Memory
 
 - Connected the canonical Historical Intelligence read contract to the existing
