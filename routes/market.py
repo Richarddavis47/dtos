@@ -1,7 +1,7 @@
 """Asset Market and Dynasty Exchange read-only routes."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from html import escape
 from typing import Any, Callable
 from urllib.parse import urlencode
@@ -60,14 +60,47 @@ def create_market_router(
     router = APIRouter(tags=["asset-market"])
     trend_service = MarketTrendService(intelligence_checkpoint_store)
 
+    def current_trend_boundaries(
+        market: Any, assets: list[dict[str, Any]],
+    ) -> dict[str, str]:
+        """Return bounded accepted-provider provenance for current market values."""
+        providers = (((market.data or {}).get("market_data") or {}).get("providers") or {})
+        statuses = (((market.data or {}).get("market_data") or {}).get("provider_status") or {})
+        result: dict[str, str] = {}
+        for asset in assets[:250]:
+            asset_id = str(asset.get("asset_id") or "")
+            if not asset_id.startswith("player:"):
+                continue
+            player_id = asset_id.removeprefix("player:")
+            candidates: list[tuple[datetime, str]] = []
+            for provider_name, provider_rows in providers.items():
+                row = (provider_rows or {}).get(player_id) if isinstance(provider_rows, dict) else None
+                if not isinstance(row, dict) or row.get("value") is None:
+                    continue
+                timestamp = row.get("updated_at") or (statuses.get(provider_name) or {}).get("last_refresh")
+                if timestamp:
+                    try:
+                        parsed = datetime.fromisoformat(
+                            str(timestamp).replace("Z", "+00:00")
+                        )
+                    except (TypeError, ValueError):
+                        continue
+                    if parsed.tzinfo is None:
+                        parsed = parsed.replace(tzinfo=timezone.utc)
+                    candidates.append((parsed, str(timestamp)))
+            if candidates:
+                result[asset_id] = max(candidates, key=lambda item: item[0])[1]
+        return result
+
     def add_trends(
         market: Any, assets: list[dict[str, Any]], selected_league: str,
     ) -> None:
         if not assets:
             return
         summaries = trend_service.summaries(
-            assets, league_id=selected_league, as_of=market.generated_at,
+            assets, league_id=selected_league, as_of=None,
             generation=market.semantic_generation,
+            current_boundaries=current_trend_boundaries(market, assets),
         )
         for asset in assets:
             asset["market_trend"] = summaries.get(str(asset.get("asset_id")))
@@ -170,7 +203,7 @@ def create_market_router(
             raise HTTPException(404, "Canonical market asset not found.")
         selected_league = dependencies()[1]
         asset = result["asset"]
-        boundary = as_of.isoformat() if as_of else market.generated_at
+        boundary = as_of.isoformat() if as_of else None
         current = (
             (asset.get("values") or {}).get("market_value")
             if as_of is None else None
@@ -179,6 +212,9 @@ def create_market_router(
             trend_service.trend_for_asset, str(asset["asset_id"]), current,
             league_id=selected_league, as_of=boundary,
             generation=market.semantic_generation,
+            current_evidence_at=current_trend_boundaries(market, [asset]).get(
+                str(asset["asset_id"])
+            ),
         )
         result["historical_progress"] = history_progress_contracts(selected_league)
         return jsonable_encoder(result)
@@ -309,8 +345,11 @@ def create_market_router(
                 asset, recommendation = detail["asset"], detail["recommendation"]
                 trend = trend_service.trend_for_asset(
                     str(asset["asset_id"]), (asset.get("values") or {}).get("market_value"),
-                    league_id=selected_league, as_of=market.generated_at,
+                    league_id=selected_league, as_of=None,
                     generation=market.semantic_generation,
+                    current_evidence_at=current_trend_boundaries(market, [asset]).get(
+                        str(asset["asset_id"])
+                    ),
                 )
                 history = detail.get("history") or {}
                 layers = detail.get("value_layers") or {}

@@ -97,6 +97,50 @@ class Step7MarketTrendTests(unittest.TestCase):
         service.trend_for_asset("player:1", 250, generation="g2", as_of="2026-09-01T00:00:00+00:00")
         self.assertEqual(reader.calls, 2)
 
+    def test_default_current_boundary_is_stable_and_evidence_driven(self):
+        rows = [
+            _row("a", "2026-01-01T00:00:00+00:00", 100),
+            _row("b", "2026-02-01T00:00:00+00:00", 120),
+        ]
+        service = MarketTrendService(_Reader(rows))
+        first = service.trend_for_asset(
+            "player:1", 140, current_evidence_at="2026-03-01T00:00:00+00:00",
+        )
+        second = service.trend_for_asset(
+            "player:1", 140, current_evidence_at="2026-03-01T00:00:00+00:00",
+        )
+        self.assertEqual(first, second)
+        self.assertEqual(first["as_of"], "2026-03-01T00:00:00+00:00")
+
+    def test_current_boundary_advances_only_with_asset_evidence(self):
+        reader = _Reader([
+            _row("a", "2026-01-01T00:00:00+00:00", 100),
+            _row("b", "2026-02-01T00:00:00+00:00", 120),
+        ])
+        service = MarketTrendService(reader)
+        first = service.trend_for_asset(
+            "player:1", 140, generation="g1",
+            current_evidence_at="2026-03-01T00:00:00+00:00",
+        )
+        unrelated_generation = service.trend_for_asset(
+            "player:1", 140, generation="g2",
+            current_evidence_at="2026-03-01T00:00:00+00:00",
+        )
+        advanced = service.trend_for_asset(
+            "player:1", 150, generation="g3",
+            current_evidence_at="2026-04-01T00:00:00+00:00",
+        )
+        self.assertEqual(first["as_of"], unrelated_generation["as_of"])
+        self.assertEqual(advanced["as_of"], "2026-04-01T00:00:00+00:00")
+        self.assertNotEqual(first["magnitude"], advanced["magnitude"])
+
+    def test_default_without_current_or_historical_evidence_is_stable(self):
+        service = MarketTrendService(_Reader())
+        first = service.trend_for_asset("pick:2028:1:1", None)
+        second = service.trend_for_asset("pick:2028:1:1", None)
+        self.assertEqual(first, second)
+        self.assertEqual(first["as_of"], "1970-01-01T00:00:00+00:00")
+
     def test_compact_summary_omits_deep_private_and_checkpoint_data(self):
         reader = _Reader([_row("a", "2026-01-01T00:00:00+00:00", 100), _row("b", "2026-02-01T00:00:00+00:00", 120)])
         result = MarketTrendService(reader).trend_for_asset(
