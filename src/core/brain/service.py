@@ -54,6 +54,7 @@ class BrainService:
         trade_complexity: int = 0,
         roster_context_available: bool = True,
         league_settings_available: bool = True,
+        front_office_evidence: dict[str, Any] | None = None,
     ) -> BrainDecision:
         canonical_ids = tuple(dict.fromkeys(canonical_asset_id(value) for value in asset_ids))
         assets = self.assets(canonical_ids)
@@ -110,6 +111,7 @@ class BrainService:
                 "Decision Confidence is calculated once inside BrainService.",
             ),
             confidence.rationale,
+            front_office_evidence,
         )
 
     def migration(self) -> dict[str, Any]:

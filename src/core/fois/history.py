@@ -127,6 +127,48 @@ def load_results_history(
     ):
         if checkpoint.related_event_id:
             trade_checkpoints[str(checkpoint.related_event_id)].append(checkpoint)
+    # Step 4 is the canonical no-hindsight decision-evidence boundary.  Build it
+    # once in this background history adapter and pass only its bounded results
+    # forward; request-time consumers never replay or scan raw history.
+    from src.core.historical_franchise_state import HistoricalFranchiseStateService
+    from src.core.historical_intelligence import (
+        HistoricalEventType, HistoricalIntelligenceService,
+    )
+    from src.core.historical_transaction_intelligence import (
+        HistoricalTransactionIntelligenceService,
+    )
+    history_intelligence = HistoricalIntelligenceService(
+        store, checkpoint_reader=intelligence_checkpoint_store,
+    )
+    transaction_intelligence = HistoricalTransactionIntelligenceService(
+        history_intelligence, HistoricalFranchiseStateService(history_intelligence),
+    )
+    step4 = {}
+    try:
+        step4_events = history_intelligence.events_for_league(
+            league_id, event_type=HistoricalEventType.TRADE,
+        )[:1000]
+    except ValueError:
+        step4_events = ()
+    for event in step4_events:
+        try:
+            step4[event.source_record_id] = transaction_intelligence.evaluate_trade(
+                league_id, event.event_id,
+            )
+        except (KeyError, ValueError):
+            # Invalid canonical history stays explicit through the legacy
+            # unavailable evidence below; it is never fabricated or zero-filled.
+            continue
+    process_scores = {
+        "strong_process": 90.0, "sound_process": 80.0,
+        "defensible_optional": 65.0, "questionable_process": 40.0,
+        "poor_process": 20.0,
+    }
+    outcome_scores = {
+        "strong_positive_outcome": 90.0, "positive_outcome": 75.0,
+        "mixed_neutral": 50.0, "negative_outcome": 25.0,
+        "strong_negative_outcome": 10.0,
+    }
     for row in trades:
         payload = row["payload"]
         season = int(row.get("season") or 0)
@@ -148,6 +190,19 @@ def load_results_history(
                 str(value) for value in payload.get("roster_ids") or ()
                 if str(value) != str(roster_id)
             ]
+            evaluation = step4.get(transaction_id)
+            franchise_id = f"{league_id}:franchise:{roster_id}"
+            side = next((
+                item for item in evaluation.sides
+                if item.franchise_id == franchise_id
+                or item.franchise_id.rsplit(":", 1)[-1] == str(roster_id)
+            ), None) if evaluation is not None else None
+            process_classification = (
+                side.process.classification.value if side is not None else None
+            )
+            outcome_classification = (
+                side.outcome.classification.value if side is not None else None
+            )
             histories[str(roster_id)]["trades"].append({
                 "transaction_id": transaction_id,
                 "season": season,
@@ -156,9 +211,11 @@ def load_results_history(
                 "market_overpay_percent": None,
                 "championship_outlook_delta": None,
                 "partner_id": partners[0] if len(partners) == 1 else None,
+                "owner_id": owner_by_roster_season.get((str(roster_id), season)),
                 "process_evidence": process,
                 "process_score": (
-                    round(
+                    process_scores.get(process_classification)
+                    if side is not None else round(
                         50 + 50 * (
                             roster_values.get(str(roster_id), 0.0)
                             - sum(value for key, value in roster_values.items() if key != str(roster_id))
@@ -167,6 +224,15 @@ def load_results_history(
                     )
                     if fully_gradable and roster_values else None
                 ),
+                "outcome_score": outcome_scores.get(outcome_classification),
+                "process_classification": process_classification,
+                "process_confidence": side.process.confidence.value if side is not None else None,
+                "outcome_classification": outcome_classification,
+                "outcome_confidence": side.outcome.confidence.value if side is not None else None,
+                "outcome_maturity": side.outcome.maturity if side is not None else None,
+                "history_generation": evaluation.history_generation if evaluation is not None else None,
+                "market_generation": evaluation.market_generation if evaluation is not None else None,
+                "evidence_references": evaluation.evidence_references if evaluation is not None else (),
             })
     _, draft_picks = store.records(league_id, "draft_pick", limit=100_000)
     for row in draft_picks:

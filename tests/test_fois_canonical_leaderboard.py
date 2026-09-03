@@ -15,7 +15,7 @@ from routes.fois import create_fois_router
 from src.core.fois.engine import FOISEngine
 from src.core.fois.facts import FOISFacts, SeasonResult, TradeFact, WaiverFact
 from src.core.fois.identity import canonical_league_identity, identity_from_team
-from src.core.fois.models import EvaluationKind, MetricStatus
+from src.core.fois.models import FOIS_MODEL_VERSION, EvaluationKind, MetricStatus
 from src.core.fois.repository import FOISRepository
 from src.core.fois.service import FOISService
 
@@ -73,9 +73,9 @@ class CanonicalFOISLeaderboardTests(unittest.IsolatedAsyncioTestCase):
     async def test_unchanged_generation_is_idempotent_and_deduplicates_snapshots(self) -> None:
         with patch.dict(os.environ, {"DTOS_FOIS_ENABLED": "1"}):
             await self.service.generate(_data())
-            before = self.repository.canonical_health("season-2026", "4.0")
+            before = self.repository.canonical_health("season-2026", FOIS_MODEL_VERSION)
             await self.service.generate(_data())
-            after = self.repository.canonical_health("season-2026", "4.0")
+            after = self.repository.canonical_health("season-2026", FOIS_MODEL_VERSION)
         self.assertEqual(before["current_gm_count"], after["current_gm_count"])
         self.assertEqual(before["historical_snapshot_count"], after["historical_snapshot_count"])
         self.assertEqual(self.service.status()["snapshots_written"], 0)
@@ -116,7 +116,7 @@ class CanonicalFOISLeaderboardTests(unittest.IsolatedAsyncioTestCase):
         tenures = self.repository.tenures("season-2026")
         self.assertEqual(len(tenures), 2)
         self.assertEqual([row.active for row in tenures], [False, True])
-        self.assertEqual(self.repository.canonical_health("season-2026", "4.0")["current_gm_count"], 1)
+        self.assertEqual(self.repository.canonical_health("season-2026", FOIS_MODEL_VERSION)["current_gm_count"], 1)
 
     def test_missing_dimensions_are_unavailable_and_supported_weight_is_explicit(self) -> None:
         score = FOISEngine().evaluate(FOISFacts(

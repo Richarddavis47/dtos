@@ -32,7 +32,12 @@ def build_context(data: dict[str, Any], roster_id: int, user_preferences: dict[s
     settings = {**(data.get("league_settings") or {}), "roster_positions": league.get("roster_positions") or []}
     transactions = data.get("transactions") or []
     players_updated = str(data.get("players_fetched_at") or "")
-    snapshot_key = f"{league_id}:{roster_id}:{len(teams)}:{len(transactions)}:{players_updated}:{data.get('week', '')}:{id(data)}"
+    front_office_generation = ",".join(sorted(
+        str(row.get("semantic_identity") or "")
+        for row in (data.get("front_office_evidence") or {}).values()
+        if isinstance(row, dict)
+    ))
+    snapshot_key = f"{league_id}:{roster_id}:{len(teams)}:{len(transactions)}:{players_updated}:{data.get('week', '')}:{front_office_generation}:{id(data)}"
     return IntelligenceContext(
         league_id, roster_id, league, roster, teams, tuple(roster.get("picks_owned") or ()), settings,
         tuple(team for team in teams if int(team.get("roster_id") or 0) != roster_id),

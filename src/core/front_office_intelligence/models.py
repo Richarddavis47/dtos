@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from src.core.asset_intelligence import Evidence
 from src.core.competitive_window import CompetitiveWindowContract
@@ -42,6 +43,7 @@ class FrontOfficeReport:
     confidence: int
     evidence: tuple[Evidence, ...]
     decision: TeamDecision
+    front_office_evidence: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)

@@ -1,3 +1,17 @@
+# DTOS v1.12.5 - FOIS Front Office Brain Unification
+
+DTOS v1.12.5 establishes one canonical Front Office evidence layer for FOIS,
+Front Office Intelligence, and the DTOS Brain. The shared contract carries
+Step 4 transaction-time Process, later Outcome, confidence, maturity, evidence
+references, and source-generation lineage while keeping those concepts
+separate and honestly unavailable when historical support is incomplete.
+
+Evidence is assembled during the existing isolated background FOIS lifecycle
+and published as a bounded generation-aware snapshot. Front Office and Brain
+requests consume that snapshot without raw-history scans, provider calls, or
+backlog reconstruction. Current recommendation scoring is unchanged, manager
+tenures do not inherit prior-owner decisions, and league data remains isolated.
+
 # DTOS v1.12.4 - Historical Transaction Intelligence
 
 DTOS v1.12.4 turns canonical historical facts into trustworthy decision

@@ -40,6 +40,15 @@ class TradeFact:
     partner_id: str | None = None
     occurred_at: str | None = None
     process_evidence: dict[str, object] | None = None
+    owner_id: str | None = None
+    process_classification: str | None = None
+    process_confidence: str | None = None
+    outcome_classification: str | None = None
+    outcome_confidence: str | None = None
+    outcome_maturity: str | None = None
+    history_generation: str | None = None
+    market_generation: str | None = None
+    evidence_references: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -91,6 +100,7 @@ class FOISFacts:
     competitive_window: str | None = None
     waivers: tuple[WaiverFact, ...] = ()
     franchise_name: str | None = None
+    front_office_evidence: dict[str, object] | None = None
 
     @property
     def completed_seasons(self) -> tuple[SeasonResult, ...]:

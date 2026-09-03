@@ -22,6 +22,7 @@ from src.core.fois.models import FrontOfficeEvidence
 from src.core.intelligence_memory import (
     fois_process_evidence, intelligence_checkpoint_store,
 )
+from src.core.front_office_evidence import assemble_front_office_evidence
 
 LOGGER = logging.getLogger("dtos.fois")
 
@@ -193,7 +194,13 @@ class FOISService:
                 SeasonResult(**row) for row in rows.get("seasons") or ()
                 if current_owner is None or owner_by_season.get(str(row.get("season"))) in {None, current_owner}
             )
-            trades = tuple(TradeFact(**row) for row in rows.get("trades") or ())
+            all_trades = tuple(TradeFact(**row) for row in rows.get("trades") or ())
+            ownership_attributed = any(row.owner_id for row in all_trades)
+            trades = tuple(
+                row for row in all_trades
+                if not ownership_attributed
+                or (current_owner is not None and row.owner_id == current_owner)
+            )
             drafts = tuple(DraftFact(**row) for row in rows.get("drafts") or ())
             waivers = tuple(WaiverFact(**row) for row in rows.get("waivers") or ())
             roster_metrics = dict(rows.get("roster_metrics") or {})
@@ -229,6 +236,10 @@ class FOISService:
                 if supplied_history is not None
                 else "canonical Historical Memory"
             )
+            shared_evidence = assemble_front_office_evidence(
+                league_id=league_id, franchise_id=identity.franchise_id,
+                gm_id=identity.gm_id, trades=trades,
+            )
             facts = FOISFacts(
                 league_id, identity.franchise_id, identity.owner_id,
                 seasons, trades, drafts, roster_metrics,
@@ -255,6 +266,7 @@ class FOISService:
                 competitive_window=rows.get("competitive_window"),
                 waivers=waivers,
                 franchise_name=identity.franchise_name,
+                front_office_evidence=shared_evidence.contract(),
             )
             score = self.engine.evaluate(facts)
             fingerprint = hashlib.sha256(

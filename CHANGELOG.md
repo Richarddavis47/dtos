@@ -1,5 +1,16 @@
 # Changelog
 
+# v1.12.5 - FOIS Front Office Brain Unification
+
+- Added one immutable, versioned Front Office evidence contract shared by FOIS,
+  Front Office Intelligence, and the DTOS Brain.
+- Integrated Step 4 Process and Outcome evidence without hindsight, score
+  collapse, current-GM inheritance, or duplicate grading paths.
+- Removed canonical historical trade scans from the shared request-time path;
+  background generation publishes bounded generation-aware summaries instead.
+- Preserved current recommendation scoring and all league-isolation, provider,
+  storage, responsiveness, and artifact contracts.
+
 # v1.12.4 - Historical Transaction Intelligence
 
 - Added a canonical bilateral historical-trade evaluation layer that consumes
