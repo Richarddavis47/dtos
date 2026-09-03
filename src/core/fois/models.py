@@ -5,11 +5,11 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-FOIS_MODEL_VERSION = "4.0"
-FOIS_CATEGORY_DEFINITION_VERSION = "4.0"
-FOIS_METRIC_DEFINITION_VERSION = "4.0"
-FOIS_CONFIGURATION_VERSION = "4.0"
-FOIS_EVIDENCE_VERSION = "1.0"
+FOIS_MODEL_VERSION = "5.0"
+FOIS_CATEGORY_DEFINITION_VERSION = "5.0"
+FOIS_METRIC_DEFINITION_VERSION = "5.0"
+FOIS_CONFIGURATION_VERSION = "5.0"
+FOIS_EVIDENCE_VERSION = "2.0"
 FOIS_CONFIDENCE_VERSION = "1.0"
 
 
@@ -136,6 +136,7 @@ class FrontOfficeIntelligenceScore:
     tendencies: tuple[str, ...] = ()
     unavailable_tendencies: tuple[str, ...] = ()
     trade_partner_count: int = 0
+    front_office_evidence: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)

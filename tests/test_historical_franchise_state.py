@@ -156,6 +156,23 @@ class HistoricalFranchiseStateTests(unittest.TestCase):
         self.assertEqual(first.trace, ())
         self.assertTrue(traced.trace)
 
+    def test_derived_state_and_record_caches_are_generation_aware(self) -> None:
+        boundary = HistoricalBoundary(
+            season=2025, event_id=self.event.event_id, mode=BoundaryMode.BEFORE,
+        )
+        first = self.service.reconstruct("league-a", "1", boundary)
+        source_queries = self.service.metrics()["source_record_queries"]
+        second = self.service.reconstruct("league-a", "1", boundary)
+        self.assertIs(first, second)
+        self.assertEqual(
+            self.service.metrics()["source_record_queries"], source_queries,
+        )
+
+        self.store.generation = "history-generation-2"
+        changed = self.service.reconstruct("league-a", "1", boundary)
+        self.assertIsNot(changed, first)
+        self.assertNotEqual(changed.state_id, first.state_id)
+
     def test_multi_league_isolation_and_rule_specific_identity(self) -> None:
         league_b = FixtureStore("league-b")
         league_b.rows[0]["payload"]["scoring_settings"] = {"pass_td": 4}

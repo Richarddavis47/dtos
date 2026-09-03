@@ -159,6 +159,17 @@ class FOISEngine:
             recovery = [row.recovery_score for row in facts.trades if row.recovery_score is not None]
             impact_total = sum(max(0.01, row.impact_weight) for row in facts.trades)
             if process:
+                shared = facts.front_office_evidence or {}
+                confidence_counts = shared.get("process_confidence") or {}
+                confidence_total = sum(int(value) for value in confidence_counts.values())
+                evidence_confidence = (
+                    sum(
+                        {"high": 100, "medium": 65, "low": 35}.get(str(key), 0)
+                        * int(value)
+                        for key, value in confidence_counts.items()
+                    ) / confidence_total
+                    if confidence_total else clamp(len(process) / 10 * 100)
+                )
                 weighted = sum(
                     (row.process_score or 0) * max(0.01, row.impact_weight)
                     for row in facts.trades if row.process_score is not None
@@ -167,16 +178,23 @@ class FOISEngine:
                     "value_captured_at_transaction_time", "Decision quality at transaction time",
                     "Impact-weighted process quality using contemporaneous evidence.",
                     round(weighted, 2), clamp(weighted), len(process),
-                    clamp(len(process) / 10 * 100), clamp(len(process) / trade_count * 100),
+                    min(clamp(len(process) / 10 * 100), evidence_confidence),
+                    float(shared.get("evidence_completeness") or clamp(len(process) / trade_count * 100)),
                     f"{len(process)} of {trade_count} trades have transaction-time process evidence; impact weight {impact_total:.2f}.",
                     evidence_ids,
                 )
             if outcomes:
+                shared = facts.front_office_evidence or {}
+                maturity = shared.get("outcome_maturity") or {}
+                mature = int(maturity.get("mature") or 0)
+                partial = int(maturity.get("partial") or 0)
+                maturity_confidence = clamp((mature + partial * .5) / max(1, trade_count) * 100)
                 calculated["subsequent_asset_value_change"] = _metric(
                     "subsequent_asset_value_change", "Long-term trade outcome",
                     "Observed outcome kept separate from transaction-time decision quality.",
                     round(mean(outcomes), 2), clamp(mean(outcomes)), len(outcomes),
-                    clamp(len(outcomes) / 10 * 100), clamp(len(outcomes) / trade_count * 100),
+                    min(clamp(len(outcomes) / 10 * 100), maturity_confidence),
+                    clamp(len(outcomes) / trade_count * 100),
                     "Outcome evidence is credited without rewriting the original process assessment.", evidence_ids,
                 )
             if recovery:
@@ -338,6 +356,7 @@ class FOISEngine:
             tendencies=tuple(tendencies),
             unavailable_tendencies=unavailable_tendencies,
             trade_partner_count=len(partners),
+            front_office_evidence=facts.front_office_evidence,
         )
 
     @staticmethod

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import unittest
 from dataclasses import replace
 
@@ -48,6 +49,43 @@ class HistoricalTransactionIntelligenceTests(unittest.TestCase):
         self.assertTrue(all(side.pre_state_id != side.post_state_id for side in result.sides))
         self.assertEqual(self.service.health()["raw_history_scans"], 0)
         self.assertEqual(self.service.health()["provider_calls"], 0)
+
+    def test_explicit_trade_participants_exclude_unrelated_asset_destinations(self) -> None:
+        store = FixtureStore()
+        trade = next(row for row in store.rows if row["entity_type"] == "trade")
+        trade["payload"]["adds"]["unrelated-player"] = 3
+        history = HistoricalIntelligenceService(store)
+        service = HistoricalTransactionIntelligenceService(
+            history, HistoricalFranchiseStateService(history),
+        )
+        event = history.transaction_history("league-a")[0]
+        result = service.evaluate_trade("league-a", event.event_id, as_of=self.as_of)
+        self.assertEqual(
+            {side.franchise_id for side in result.sides},
+            {"league-a:franchise:1", "league-a:franchise:2"},
+        )
+
+    def test_backlog_reuses_one_season_index_instead_of_rescanning_per_trade(self) -> None:
+        store = FixtureStore()
+        template = next(row for row in store.rows if row["entity_type"] == "trade")
+        for index in range(2, 22):
+            row = copy.deepcopy(template)
+            row["source_record_id"] = f"trade-{index}"
+            row["record_key"] = f"cache:league-a:2025:trade:trade-{index}"
+            row["occurred_at"] = f"2025-10-{index:02d}T12:00:00Z"
+            store.rows.append(row)
+        history = HistoricalIntelligenceService(store)
+        states = HistoricalFranchiseStateService(history)
+        service = HistoricalTransactionIntelligenceService(history, states)
+        evaluations, metrics = service.evaluate_backlog(
+            "league-a", limit=100, as_of=self.as_of,
+        )
+        self.assertEqual(len(evaluations), 21)
+        self.assertTrue(all(len(row.sides) == 2 for row in evaluations))
+        self.assertLessEqual(states.metrics()["source_record_queries"], 5)
+        self.assertGreater(states.metrics()["cache_hits"], 0)
+        self.assertEqual(metrics.provider_calls, 0)
+        self.assertEqual(metrics.raw_history_scans, 0)
 
     def test_unknown_market_asset_is_not_zero_and_reduces_confidence(self) -> None:
         result = self.evaluate()

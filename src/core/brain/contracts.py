@@ -35,3 +35,4 @@ class BrainDecision:
     recommendation_timestamp: str | None
     decision_provenance: tuple[str, ...]
     recommendation_explanation: tuple[str, ...]
+    front_office_evidence: dict[str, Any] | None = None

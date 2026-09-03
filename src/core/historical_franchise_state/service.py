@@ -47,18 +47,30 @@ class HistoricalFranchiseStateService:
             "reconstructions": 0, "provider_calls": 0, "cache_hits": 0,
             "global_market_lookups": 0, "source_record_queries": 0,
         }
+        self._record_cache: dict[
+            tuple[tuple[str, int], str, int, str], tuple[dict[str, Any], ...]
+        ] = {}
+        self._state_cache: dict[
+            tuple[tuple[str, int], str, str, int, str | None, int | None, str | None, str],
+            HistoricalFranchiseState,
+        ] = {}
 
     @staticmethod
     def _event_order(event: HistoricalEvent) -> tuple[str, int, str]:
         return (event.occurred_at or "", event.week or 0, event.event_id)
 
-    def _at_boundary(self, event: HistoricalEvent, boundary: HistoricalBoundary) -> bool:
+    def _at_boundary(
+        self, event: HistoricalEvent, boundary: HistoricalBoundary,
+        target: HistoricalEvent | None = None,
+    ) -> bool:
         if event.season < boundary.season:
             return True
         if event.season > boundary.season:
             return False
         if boundary.event_id:
-            target = self.history.event_by_identity(event.league_id, boundary.event_id)
+            target = target or self.history.event_by_identity(
+                event.league_id, boundary.event_id,
+            )
             if target is None:
                 raise KeyError("Unknown event boundary for selected league.")
             comparison = self._event_order(event) <= self._event_order(target)
@@ -74,11 +86,23 @@ class HistoricalFranchiseStateService:
         return False
 
     def _records(self, league_id: str, season: int, entity: str) -> list[dict[str, Any]]:
+        generation = self.history.cache_identity(league_id)
+        key = (generation, str(league_id), int(season), str(entity))
+        with self._lock:
+            cached = self._record_cache.get(key)
+            if cached is not None:
+                self._metrics["cache_hits"] += 1
+                return list(cached)
         self._metrics["source_record_queries"] += 1
         _count, rows = self.history.store.records(
             league_id, entity, season=season, limit=10_000,
         )
-        return rows
+        frozen = tuple(rows)
+        with self._lock:
+            if len(self._record_cache) >= 512:
+                self._record_cache.clear()
+            self._record_cache[key] = frozen
+        return list(frozen)
 
     def _final_rosters(self, league_id: str, season: int) -> dict[str, set[str]]:
         result: dict[str, set[str]] = {}
@@ -274,6 +298,19 @@ class HistoricalFranchiseStateService:
     ) -> HistoricalFranchiseState:
         league_id = str(league_id)
         franchise_id = _franchise_id(league_id, franchise_id)
+        cache_generation = self.history.cache_identity(league_id)
+        history_generation = cache_generation[0]
+        cache_key = (
+            cache_generation, league_id, franchise_id, int(boundary.season),
+            boundary.occurred_at, boundary.week, boundary.event_id,
+            boundary.mode.value,
+        )
+        if not include_trace:
+            with self._lock:
+                cached = self._state_cache.get(cache_key)
+                if cached is not None:
+                    self._metrics["cache_hits"] += 1
+                    return cached
         settings, scoring, roster_positions, settings_refs = self._settings(league_id, boundary.season)
         events = list(self.history.season_history(league_id, boundary.season))
         final_rosters = self._final_rosters(league_id, boundary.season)
@@ -282,7 +319,14 @@ class HistoricalFranchiseStateService:
         if franchise_id not in final_rosters:
             warnings.append("missing_franchise_roster_snapshot")
             final_rosters.setdefault(franchise_id, set())
-        later = [event for event in events if not self._at_boundary(event, boundary)]
+        target = (
+            self.history.event_by_identity(league_id, boundary.event_id)
+            if boundary.event_id else None
+        )
+        later = [
+            event for event in events
+            if not self._at_boundary(event, boundary, target)
+        ]
         trace: list[Mapping[str, Any]] = []
         for event in sorted(later, key=self._event_order, reverse=True):
             if event.event_type in {
@@ -352,7 +396,6 @@ class HistoricalFranchiseStateService:
             availability = ReconstructionAvailability.INVALID
         elif all(row.availability is ReconstructionAvailability.COMPLETE for row in coverage.values()):
             availability = ReconstructionAvailability.COMPLETE
-        history_generation = self.history.store.dataset_version(league_id)
         checkpoint_ids = tuple(sorted(row.market_checkpoint_id for row in assets if row.market_checkpoint_id))
         market_generation = hashlib.sha256(_canonical_json(checkpoint_ids).encode()).hexdigest()[:24]
         state_id = semantic_identity(
@@ -361,7 +404,7 @@ class HistoricalFranchiseStateService:
             history_generation, market_generation, "reverse-event-reconstruction-1",
         )
         self._metrics["reconstructions"] += 1
-        return HistoricalFranchiseState(
+        result = HistoricalFranchiseState(
             state_id, league_id, franchise_id, boundary, history_generation,
             market_generation, availability,
             round(mean(row.confidence for row in coverage.values())),
@@ -371,6 +414,12 @@ class HistoricalFranchiseStateService:
             known_value, market_ratio, dict(position_counts), coverage,
             tuple(warnings), settings_refs, len(events) - len(later), tuple(trace),
         )
+        if not include_trace:
+            with self._lock:
+                if len(self._state_cache) >= 4096:
+                    self._state_cache.clear()
+                self._state_cache[cache_key] = result
+        return result
 
     def around_event(
         self, league_id: str, franchise_id: str, event_id: str, *, include_trace: bool = False,

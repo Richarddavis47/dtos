@@ -144,7 +144,11 @@ class IntelligenceOrchestrator:
             confidence = calculate_confidence(evidence, providers=5, expected_providers=5, market_available=market_available, sample_size=offices.reports[roster_id].activity.trades, missing=missing)
             recommendation = resolve_recommendation(decision=decision, trade=top_trade, front_office=offices.reports[roster_id], market=market, evidence=evidence, confidence=confidence)
             team_asset_ids = tuple(str(player.get("id") or player.get("player_id")) for player in decision.profile.players if player.get("id") or player.get("player_id"))
-            brain_decision = brain.decision("Recommendation Engine", team_asset_ids, trade_complexity=len(top_trade.proposal.assets_sent) + len(top_trade.proposal.assets_received) if top_trade else 0)
+            brain_decision = brain.decision(
+                "Recommendation Engine", team_asset_ids,
+                trade_complexity=len(top_trade.proposal.assets_sent) + len(top_trade.proposal.assets_received) if top_trade else 0,
+                front_office_evidence=offices.reports[roster_id].front_office_evidence,
+            )
             partial = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, offices, trades, market, player_values, roster, None, recommendation, pipeline.timings_ms, False, brain, brain_decision)
             league = pipeline.run("league_intelligence", self.cache.get_or_create, prefix + "league_intelligence", lambda: self.registry.provider("league_intelligence")(partial))
             pipeline.timings_ms["orchestration_total"] = round((perf_counter() - total_started) * 1000, 3)
