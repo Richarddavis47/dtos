@@ -1,3 +1,17 @@
+# DTOS v1.12.7 - Market Trends Integration
+
+DTOS v1.12.7 connects the Asset Market to canonical sparse historical market
+memory. It derives deterministic direction, magnitude, milestone comparisons,
+observed range, volatility, confidence, event context, and bounded league
+liquidity without inventing daily history or replacing current market truth.
+
+Global trends use only deduplicated Step 2 observations; private league
+transactions remain isolated derived context. Market list summaries are
+compact and bounded, asset detail retains full checkpoint provenance, and all
+reads perform zero provider calls, history writes, or raw Sleeper scans. The
+legacy `MarketHistoryStore` remains runtime compatibility only and is no longer
+the Asset Market trend source. Trade recommendations and Step 8 are unchanged.
+
 # DTOS v1.12.6 - GM Behavioral Intelligence
 
 DTOS v1.12.6 adds a canonical GM Behavioral Intelligence layer that describes

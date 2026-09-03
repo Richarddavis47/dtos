@@ -8,6 +8,7 @@ import threading
 import time
 from contextlib import contextmanager
 from dataclasses import replace
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -767,6 +768,101 @@ class IntelligenceCheckpointStore:
                 (*values, max(1, min(int(limit), 500))),
             ).fetchall()
         return [self._decode_observation(row) for row in rows]
+
+    def market_trend_evidence(
+        self, *, asset_ids: tuple[str, ...], league_id: str | None,
+        as_of: str,
+    ) -> dict[str, dict[str, Any]]:
+        """Return bounded indexed Step 2 evidence without writes or provider work."""
+        canonical_ids = tuple(dict.fromkeys(str(value) for value in asset_ids if value))[:250]
+        if not canonical_ids:
+            return {}
+        try:
+            datetime.fromisoformat(as_of.replace("Z", "+00:00"))
+        except (AttributeError, TypeError, ValueError):
+            as_of = "9999-12-31T23:59:59+00:00"
+        placeholders = ",".join("?" for _ in canonical_ids)
+        with self._connect() as connection:
+            rows = connection.execute(
+                f"""SELECT o.*,r.trigger_type,c.knowledge_state
+                FROM global_market_observations o
+                LEFT JOIN market_observation_references r ON r.observation_id=o.observation_id
+                LEFT JOIN intelligence_checkpoints c ON c.checkpoint_id=r.checkpoint_id
+                WHERE o.asset_id IN ({placeholders}) AND o.observed_at<=?
+                ORDER BY o.asset_id,o.observed_at,o.created_at,o.observation_id""",
+                (*canonical_ids, as_of),
+            ).fetchall()
+            liquidity_rows = []
+            if league_id:
+                liquidity_rows = connection.execute(
+                    f"""SELECT r.asset_id,r.occurred_at,r.trigger_type,c.roster_id
+                    FROM market_observation_references r
+                    LEFT JOIN intelligence_checkpoints c ON c.checkpoint_id=r.checkpoint_id
+                    WHERE r.asset_id IN ({placeholders}) AND r.league_id=?
+                      AND r.occurred_at<=? AND r.trigger_type IN ('trade_execution','waiver_add','drop')
+                    ORDER BY r.asset_id,r.occurred_at,r.reference_id""",
+                    (*canonical_ids, league_id, as_of),
+                ).fetchall()
+        grouped: dict[str, dict[str, Any]] = {
+            asset_id: {"observations": [], "liquidity_rows": []} for asset_id in canonical_ids
+        }
+        observations: dict[tuple[str, str], dict[str, Any]] = {}
+        public_triggers = {
+            "nfl_draft_pre", "nfl_draft_selection", "nfl_draft_teammate_impact",
+            "nfl_trade", "free_agency", "major_injury", "injury_return",
+            "suspension", "retirement", "season_start", "midseason",
+            "regular_season_end", "fantasy_season_end",
+        }
+        for row in rows:
+            key = (str(row["asset_id"]), str(row["observation_id"]))
+            item = observations.get(key)
+            if item is None:
+                provider_rows = json.loads(row["provider_evidence_json"] or "[]")
+                item = {
+                    "observation_id": key[1], "observed_at": str(row["observed_at"]),
+                    "value": float(row["canonical_value"]), "confidence": int(row["confidence"]),
+                    "providers": tuple(sorted({str(value.get("provider")) for value in provider_rows if value.get("provider")})),
+                    "reason_codes": set(), "related_asset_ids": set(),
+                }
+                observations[key] = item
+                grouped[key[0]]["observations"].append(item)
+            if row["trigger_type"] in public_triggers:
+                item["reason_codes"].add(str(row["trigger_type"]))
+            knowledge = str(row["knowledge_state"] or "")
+            if row["trigger_type"] in public_triggers and knowledge.startswith("related_player_impact:"):
+                item["related_asset_ids"].add(knowledge.removeprefix("related_player_impact:"))
+        for item in observations.values():
+            item["reason_codes"] = tuple(sorted(item["reason_codes"]))
+            item["related_asset_ids"] = tuple(sorted(item["related_asset_ids"]))
+        for row in liquidity_rows:
+            grouped[str(row["asset_id"])]["liquidity_rows"].append(dict(row))
+        boundary = datetime.fromisoformat(as_of.replace("Z", "+00:00"))
+        if boundary.tzinfo is None:
+            boundary = boundary.replace(tzinfo=timezone.utc)
+        for asset_id, payload in grouped.items():
+            activity = payload.pop("liquidity_rows")
+            if not league_id:
+                continue
+            trades = [row for row in activity if row["trigger_type"] == "trade_execution"]
+            recent = []
+            for row in activity:
+                stamp = datetime.fromisoformat(str(row["occurred_at"]).replace("Z", "+00:00"))
+                if stamp.tzinfo is None:
+                    stamp = stamp.replace(tzinfo=timezone.utc)
+                if (boundary - stamp).days <= 365:
+                    recent.append(row)
+            franchises = {str(row["roster_id"]) for row in activity if row["roster_id"] is not None}
+            sample = len(activity)
+            payload["liquidity"] = {
+                "league_id": league_id, "transaction_count": len(trades),
+                "recent_transaction_count": len(recent),
+                "ownership_turnover_count": len(trades),
+                "distinct_franchises": len(franchises),
+                "last_transaction_at": str(activity[-1]["occurred_at"]) if activity else None,
+                "confidence": "high" if sample >= 6 else "medium" if sample >= 3 else "low" if sample else "unavailable",
+                "availability": "available" if sample else "unavailable",
+            }
+        return grouped
 
     def global_market_checkpoints(
         self, *, asset_id: str, limit: int = 500,
