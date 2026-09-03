@@ -210,6 +210,50 @@ def load_results_history(
             outcome_classification = (
                 side.outcome.classification.value if side is not None else None
             )
+            additions = payload.get("adds") or {}
+            removals = payload.get("drops") or {}
+            incoming_players = tuple(sorted(
+                str(asset_id) for asset_id, owner in additions.items()
+                if str(owner) == str(roster_id)
+            )) if isinstance(additions, dict) else ()
+            outgoing_players = tuple(sorted(
+                str(asset_id) for asset_id, owner in removals.items()
+                if str(owner) == str(roster_id)
+            )) if isinstance(removals, dict) else ()
+            incoming_picks, outgoing_picks = [], []
+            for pick in payload.get("draft_picks") or ():
+                if not isinstance(pick, dict):
+                    continue
+                pick_id = "PICK-{season}-R{round_number}-ORIG{original}".format(
+                    season=pick.get("season") or season,
+                    round_number=pick.get("round") or "?",
+                    original=pick.get("roster_id") or pick.get("original_roster_id") or "?",
+                )
+                if str(pick.get("owner_id")) == str(roster_id):
+                    incoming_picks.append(pick_id)
+                if str(pick.get("previous_owner_id")) == str(roster_id):
+                    outgoing_picks.append(pick_id)
+            def positions(asset_ids):
+                result = []
+                for asset_id in asset_ids:
+                    identity = store.identity_for_provider_id(asset_id) or {}
+                    position = (identity.get("metadata") or {}).get("position")
+                    if position:
+                        result.append(str(position))
+                return tuple(sorted(result))
+            window = None
+            if side is not None:
+                window_dimension = next((
+                    item for item in side.process.dimensions
+                    if item.name == "competitive_window_fit"
+                ), None)
+                if window_dimension is not None:
+                    marker = "was "
+                    text = window_dimension.explanation
+                    if marker in text:
+                        window = text.split(marker, 1)[1].rstrip(".")
+            week = int(row.get("week") or 0)
+            phase = "offseason" if week == 0 else "early_season" if week <= 6 else "midseason" if week <= 12 else "late_season"
             histories[str(roster_id)]["trades"].append({
                 "transaction_id": transaction_id,
                 "season": season,
@@ -240,6 +284,17 @@ def load_results_history(
                 "history_generation": evaluation.history_generation if evaluation is not None else None,
                 "market_generation": evaluation.market_generation if evaluation is not None else None,
                 "evidence_references": evaluation.evidence_references if evaluation is not None else (),
+                "incoming_asset_ids": incoming_players + tuple(sorted(incoming_picks)),
+                "outgoing_asset_ids": outgoing_players + tuple(sorted(outgoing_picks)),
+                "incoming_asset_types": tuple("player" for _ in incoming_players) + tuple("pick" for _ in incoming_picks),
+                "outgoing_asset_types": tuple("player" for _ in outgoing_players) + tuple("pick" for _ in outgoing_picks),
+                "incoming_positions": positions(incoming_players),
+                "outgoing_positions": positions(outgoing_players),
+                "known_incoming_value": side.process.known_incoming_value if side is not None else None,
+                "known_outgoing_value": side.process.known_outgoing_value if side is not None else None,
+                "market_coverage_ratio": side.process.market_coverage_ratio if side is not None else None,
+                "competitive_window_at_trade": window,
+                "season_phase": phase,
             })
     _, draft_picks = store.records(league_id, "draft_pick", limit=100_000)
     for row in draft_picks:

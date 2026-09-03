@@ -49,6 +49,17 @@ class TradeFact:
     history_generation: str | None = None
     market_generation: str | None = None
     evidence_references: tuple[str, ...] = ()
+    incoming_asset_ids: tuple[str, ...] = ()
+    outgoing_asset_ids: tuple[str, ...] = ()
+    incoming_asset_types: tuple[str, ...] = ()
+    outgoing_asset_types: tuple[str, ...] = ()
+    incoming_positions: tuple[str, ...] = ()
+    outgoing_positions: tuple[str, ...] = ()
+    known_incoming_value: float | None = None
+    known_outgoing_value: float | None = None
+    market_coverage_ratio: float | None = None
+    competitive_window_at_trade: str | None = None
+    season_phase: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -101,6 +112,7 @@ class FOISFacts:
     waivers: tuple[WaiverFact, ...] = ()
     franchise_name: str | None = None
     front_office_evidence: dict[str, object] | None = None
+    gm_behavioral_profile: dict[str, object] | None = None
 
     @property
     def completed_seasons(self) -> tuple[SeasonResult, ...]:

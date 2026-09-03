@@ -11,6 +11,7 @@ from src.core.fois.service import FOISService
 from src.core.fois.process_execution import generate_fois_isolated
 from src.core.history_context import canonical_history_store
 from src.core.front_office_evidence import publish_front_office_evidence
+from src.core.gm_behavioral_intelligence import publish_gm_behavioral_intelligence
 
 
 def _database_path() -> Path:
@@ -33,3 +34,4 @@ fois_service = FOISService(
     isolated_executor=generate_fois_isolated,
 )
 fois_service.add_generation_listener(publish_front_office_evidence)
+fois_service.add_generation_listener(publish_gm_behavioral_intelligence)

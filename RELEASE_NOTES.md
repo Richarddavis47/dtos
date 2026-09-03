@@ -1,3 +1,21 @@
+# DTOS v1.12.6 - GM Behavioral Intelligence
+
+DTOS v1.12.6 adds a canonical GM Behavioral Intelligence layer that describes
+observable decision patterns from the trusted historical evidence chain. It
+uses transaction-time inputs and manager-tenure attribution to summarize
+activity, asset flow, package construction, draft capital, positions, pricing,
+competitive-window behavior, trade partners, timing, and recent-versus-earlier
+patterns with dimension-specific samples, coverage, confidence, and bounded
+evidence references.
+
+The model remains descriptive rather than psychological or zero-sum. Process
+quality and later Outcome stay separate, missing historical market evidence is
+never filled with current value, and contradictory or sparse evidence remains
+explicit. Profiles are prepared in the existing isolated FOIS lifecycle with
+deterministic generation-aware reuse and no new provider calls or raw-history
+scans. FOIS scoring, Brain semantics, Trade recommendations, Market Trends,
+offers, and UI are unchanged.
+
 # DTOS v1.12.5 - FOIS Front Office Brain Unification
 
 DTOS v1.12.5 establishes one canonical Front Office evidence layer for FOIS,
