@@ -197,6 +197,7 @@ class MarketTrendService:
         self, assets: list[dict[str, Any]], *, league_id: str | None,
         as_of: str | None, generation: str,
         current_boundaries: dict[str, str] | None = None,
+        compact: bool = True,
     ) -> dict[str, dict[str, Any]]:
         ids = tuple(str(row["asset_id"]) for row in assets[:250])
         query_boundary = as_of or "9999-12-31T23:59:59+00:00"
@@ -205,7 +206,7 @@ class MarketTrendService:
         )
         return {asset_id: self.trend_for_asset(
             asset_id, next((row.get("values", {}).get("market_value") for row in assets if str(row["asset_id"]) == asset_id), None),
-            league_id=league_id, as_of=as_of, generation=generation, compact=True,
+            league_id=league_id, as_of=as_of, generation=generation, compact=compact,
             evidence=evidence.get(asset_id),
             current_evidence_at=(current_boundaries or {}).get(asset_id),
         ) for asset_id in ids}

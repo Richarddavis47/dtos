@@ -7,7 +7,7 @@ from typing import Any
 from hashlib import sha256
 import json
 
-from src.core.intelligence import AssetContext, TradeAsset, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, evaluate_bilateral, generate_proposals, intelligence_orchestrator
+from src.core.intelligence import AssetContext, TradeAsset, TradeEvidenceContext, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, build_trade_evidence_context, evaluate_bilateral, generate_proposals, intelligence_orchestrator
 from src.core.valuation import cached_market_consensus
 
 
@@ -101,10 +101,16 @@ def build_trade_center(data: dict[str, Any], active_roster_id: int | None = None
             "weekly": round(projections(received) - projections(sent), 2),
         }
     workspace = build_trade_workspace(data, roster_id)
+    evidence_context = build_trade_evidence_context(
+        data, (asset for pool in workspace["pools"].values() for asset in pool),
+    )
     canonical_results = []
     accepted_dossiers = []
     for dossier in dossiers:
-        result = evaluate_trade_request(data, _proposal_payload(dossier.proposal, "recommended"), workspace=workspace)
+        result = evaluate_trade_request(
+            data, _proposal_payload(dossier.proposal, "recommended"),
+            workspace=workspace, evidence_context=evidence_context,
+        )
         if not result["evaluation"]["generated_trade_eligible"]:
             continue
         accepted_dossiers.append(dossier)
@@ -170,6 +176,7 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
 
 def evaluate_trade_request(
     data: dict[str, Any], payload: dict[str, Any], *, workspace: dict[str, Any] | None = None,
+    evidence_context: TradeEvidenceContext | None = None,
 ) -> dict[str, Any]:
     active_id = int(payload.get("active_roster_id") or 0)
     partner_id = int(payload.get("partner_roster_id") or 0)
@@ -192,6 +199,9 @@ def evaluate_trade_request(
     evaluation = evaluate_bilateral(
         proposal, active_team=teams[active_id], partner_team=teams[partner_id], league=data.get("league") or {},
         player_database=data.get("players") or {}, ownership=ownership,
+        evidence_context=evidence_context or build_trade_evidence_context(
+            data, (assets[item] for item in (*sent_ids, *received_ids)),
+        ),
     )
     identity_input = {
         "league_id": str((data.get("league") or {}).get("league_id") or data.get("league_id") or ""),
@@ -199,7 +209,7 @@ def evaluate_trade_request(
         "assets_sent": sorted(sent_ids), "assets_received": sorted(received_ids),
         "market_generation": str((data.get("market_data") or {}).get("generation") or (data.get("market_data") or {}).get("generated_at") or "current"),
         "projection_generation": str((data.get("projection_intelligence") or {}).get("generation") or "current"),
-        "evaluator": "bilateral_trade_v1",
+        "evaluator": "bilateral_trade_v2",
     }
     evaluation["provenance"]["evaluation_id"] = sha256(json.dumps(identity_input, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:24]
     evaluation["provenance"]["inputs"] = identity_input
@@ -304,6 +314,9 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     """Return calculated repair/adjustment options, never static action labels."""
     active_id = int(payload.get("active_roster_id") or 0)
     workspace = build_trade_workspace(data, active_id)
+    evidence_context = build_trade_evidence_context(
+        data, (asset for pool in workspace["pools"].values() for asset in pool),
+    )
     original_sent = set(str(item) for item in payload.get("assets_sent") or ())
     original_received = set(str(item) for item in payload.get("assets_received") or ())
     instruction = str(payload.get("instruction") or payload.get("action") or "make this trade work").strip()
@@ -362,7 +375,10 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
         workspace, enriched,
         allow_target_change=requested_mode is RepairMode.ALTERNATIVE_TARGET,
     ):
-        result = evaluate_trade_request(data, _proposal_payload(proposal), workspace=workspace)
+        result = evaluate_trade_request(
+            data, _proposal_payload(proposal), workspace=workspace,
+            evidence_context=evidence_context,
+        )
         if not result["evaluation"]["generated_trade_eligible"]:
             continue
         sent = set(result["proposal"]["assets_sent"])
@@ -440,6 +456,9 @@ def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> 
     """Return up to three distinct, editable approaches to the same negotiation goal."""
     active_id = int(payload.get("active_roster_id") or 0)
     workspace = build_trade_workspace(data, active_id)
+    evidence_context = build_trade_evidence_context(
+        data, (asset for pool in workspace["pools"].values() for asset in pool),
+    )
     by_id = {asset.asset_id: asset for pool in workspace["pools"].values() for asset in pool}
     sent_ids = tuple(str(item) for item in payload.get("assets_sent") or ())
     received_ids = tuple(str(item) for item in payload.get("assets_received") or ())
@@ -452,7 +471,10 @@ def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> 
     def evaluated(candidate_payload: dict[str, Any]) -> list[dict[str, Any]]:
         rows = []
         for proposal in _bounded_adjustment_candidates(workspace, candidate_payload):
-            result = evaluate_trade_request(data, _proposal_payload(proposal, "create_alternative"), workspace=workspace)
+            result = evaluate_trade_request(
+                data, _proposal_payload(proposal, "create_alternative"),
+                workspace=workspace, evidence_context=evidence_context,
+            )
             if result["evaluation"]["generated_trade_eligible"]:
                 rows.append(result)
         rows.sort(key=lambda row: (abs(1 - row["evaluation"]["values"]["ratio"]), row["evaluation"]["provenance"]["evaluation_id"]))
@@ -509,6 +531,9 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
         raise ValueError("Trade For requires an asset currently owned by another franchise.")
     partner_ids = [ownership[target]] if workflow == "trade_for" and target else [identifier for identifier in sorted(teams) if identifier != active_id]
     generated = []
+    evidence_context = build_trade_evidence_context(
+        data, (asset for pool in workspace["pools"].values() for asset in pool),
+    )
     proposals_considered = 0
     proposals_rejected = 0
     for partner_id in partner_ids:
@@ -527,13 +552,21 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
                 continue
             if workflow == "shop" and target not in sent:
                 continue
-            result = evaluate_trade_request(data, _proposal_payload(proposal, workflow), workspace=workspace)
+            result = evaluate_trade_request(
+                data, _proposal_payload(proposal, workflow), workspace=workspace,
+                evidence_context=evidence_context,
+            )
             if result["evaluation"]["generated_trade_eligible"]:
                 result["partner_team_name"] = str(teams[partner_id].get("team_name") or teams[partner_id].get("owner") or "Unassigned Franchise")
                 generated.append(result)
             else:
                 proposals_rejected += 1
-    generated.sort(key=lambda row: (row["evaluation"]["values"]["ratio"] < 1, abs(1 - row["evaluation"]["values"]["ratio"]), row["evaluation"]["provenance"]["evaluation_id"]))
+    generated.sort(key=lambda row: (
+        row["evaluation"]["values"]["ratio"] < 1,
+        -int(row["evaluation"]["dimensions"]["historical_counterparty_evidence"]["score"]),
+        abs(1 - row["evaluation"]["values"]["ratio"]),
+        row["evaluation"]["provenance"]["evaluation_id"],
+    ))
     limit = 5 if workflow in {"shop", "recommended"} else 3
     offer_labels = ("CHEAPEST PLAUSIBLE", "FAIR OFFER", "BEST OFFER") if workflow == "trade_for" else ()
     for index, result in enumerate(generated[:limit]):
@@ -567,10 +600,21 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             "proposals_rejected": proposals_rejected,
             "result_count": min(len(generated), limit),
             "bounded": True,
+            "behavior_profiles_loaded": len(evidence_context.behavior_by_roster),
+            "trend_summaries_loaded": len(evidence_context.trends_by_asset),
+            "historical_context_duration_ms": evidence_context.preparation_duration_ms,
+            "provider_requests": 0,
+            "raw_history_scans": 0,
+            "profile_rebuilds": 0,
+            "trend_rebuilds": 0,
         },
         "generated_only_after_counterparty_gate": True,
         "provider_requests": 0,
         "asset_market_constructions": 0,
+        "raw_history_scans": 0,
+        "profile_rebuilds": 0,
+        "trend_rebuilds": 0,
+        "historical_context_generation": evidence_context.generation,
         "constraints": {"protected_assets": sorted(protected), "excluded_assets": sorted(excluded)},
     }
 
@@ -604,7 +648,18 @@ def autocomplete_trade_assets(data: dict[str, Any], query: str, active_roster_id
 def compare_trade_requests(data: dict[str, Any], proposals: list[dict[str, Any]]) -> dict[str, Any]:
     if not 2 <= len(proposals) <= 4:
         raise ValueError("Compare Trades requires between two and four proposals.")
-    evaluations = [evaluate_trade_request(data, proposal) for proposal in proposals]
+    active_id = int(proposals[0].get("active_roster_id") or 0)
+    if any(int(row.get("active_roster_id") or 0) != active_id for row in proposals):
+        raise ValueError("Compare Trades requires one controlled Front Office context.")
+    workspace = build_trade_workspace(data, active_id)
+    evidence_context = build_trade_evidence_context(
+        data, (asset for pool in workspace["pools"].values() for asset in pool),
+    )
+    evaluations = [
+        evaluate_trade_request(
+            data, proposal, workspace=workspace, evidence_context=evidence_context,
+        ) for proposal in proposals
+    ]
     ranked = sorted(evaluations, key=lambda row: (
         not row["evaluation"]["generated_trade_eligible"],
         abs(1 - row["evaluation"]["values"]["ratio"]),

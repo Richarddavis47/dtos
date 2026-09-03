@@ -1,5 +1,19 @@
 # Changelog
 
+# v1.12.9 - Trade Intelligence Historical Upgrade
+
+- Integrated canonical Step 4 transaction evidence, Step 5 Front Office
+  summaries, Step 6 manager behavior, and Step 7 sparse market trends into the
+  existing bilateral Trade Intelligence evaluator.
+- Kept current ownership, legality, neutral value, roster fit, competitive
+  window, and package quality authoritative while using supported history only
+  as qualitative counterparty plausibility and timing evidence.
+- Added deterministic evidence lineage, honest low-history behavior, bounded
+  one-pass context reads, and zero provider/raw-history/profile-rebuild work in
+  candidate loops across Trade For, Shop Asset, and Recommended Trades.
+- Preserved manual Create/Edit/Adjust workflows, multi-league isolation,
+  no-trade results, and the existing resource and responsiveness contracts.
+
 # v1.12.8 - Draft Event Timestamp Contract Correction
 
 - Separated deterministic draft-event identity from trustworthy historical

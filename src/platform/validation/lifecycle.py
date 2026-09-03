@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import socket
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -62,7 +63,7 @@ class TrackedServer:
         control_file.unlink(missing_ok=True)
         flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
         process = subprocess.Popen(
-            [str(repository_root / ".venv" / "Scripts" / "python.exe"), "-B", "-m", "tools.validation.server_host",
+            [sys.executable, "-B", "-m", "tools.validation.server_host",
              "--port", str(selected_port), "--validation-run-id", run_id, "--shutdown-file", str(control_file)],
             cwd=repository_root, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, creationflags=flags,
         )
