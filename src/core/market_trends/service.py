@@ -27,6 +27,17 @@ def _stamp(value: str) -> datetime:
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
+def _valid_temporal_observation(row: dict[str, Any]) -> bool:
+    value = row.get("observed_at")
+    if not isinstance(value, str) or not value.strip():
+        return False
+    try:
+        _stamp(value)
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
 class MarketTrendService:
     """Produces deterministic derived intelligence; it never owns or writes history."""
 
@@ -93,7 +104,12 @@ class MarketTrendService:
         source = evidence or self.reader.market_trend_evidence(
             asset_ids=(asset_id,), league_id=league_id, as_of=query_boundary,
         ).get(asset_id, {})
-        observations = list(source.get("observations") or ())
+        raw_observations = list(source.get("observations") or ())
+        observations = sorted(
+            (row for row in raw_observations if _valid_temporal_observation(row)),
+            key=lambda row: (_stamp(row["observed_at"]), str(row.get("observation_id") or "")),
+        )
+        invalid_temporal_count = len(raw_observations) - len(observations)
         if explicit_boundary:
             boundary = query_boundary
         else:
@@ -163,8 +179,12 @@ class MarketTrendService:
             volatility=volatility, volatility_band=volatility_band, milestones=milestones,
             event_context=event_context, checkpoints=checkpoints,
             league_liquidity=league_liquidity,
-            provenance={"source": "step_2_global_market_memory", "provider_calls": 0,
-                        "raw_history_scans": 0, "sparse_observations": True},
+            provenance={
+                "source": "step_2_global_market_memory", "provider_calls": 0,
+                "raw_history_scans": 0, "sparse_observations": True,
+                "invalid_temporal_evidence_count": invalid_temporal_count,
+                "undated_observations_excluded_from_chronology": invalid_temporal_count,
+            },
         )
         with self._lock:
             self._cache[cache_key] = trend

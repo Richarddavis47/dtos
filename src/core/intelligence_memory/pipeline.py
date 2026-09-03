@@ -23,6 +23,20 @@ def _timestamp(value: Any, fallback: str) -> str:
     return str(value or fallback)
 
 
+def _canonical_timestamp(value: Any) -> str | None:
+    """Return only trustworthy temporal evidence; event identity is not time."""
+    if isinstance(value, (int, float)):
+        return datetime.fromtimestamp(value / 1000, timezone.utc).isoformat()
+    if not isinstance(value, str) or not value.strip():
+        return None
+    candidate = value.strip()
+    try:
+        parsed = datetime.fromisoformat(candidate.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed.isoformat()
+
+
 class CheckpointPipeline:
     """Idempotently process canonical events; request-time reads never call this."""
 
@@ -255,29 +269,34 @@ class CheckpointPipeline:
                 values = self._historical_safe_values(
                     self._values(data, f"player:{player_id}"), provenance,
                 )
-                selection_time = _timestamp(
-                    pick.get("picked_at") or pick.get("created"),
-                    f"{context['season']}-draft-{draft_id}-{number}",
+                selection_time = _canonical_timestamp(
+                    pick.get("picked_at") or pick.get("created")
                 )
-                self._capture(
-                    CheckpointTrigger.FANTASY_DRAFT_PICK,
-                    asset_id=f"player:{player_id}", asset_type="player",
-                    timestamp=selection_time,
-                    event_id=f"{draft_id}:{number}", roster_id=str(pick.get("roster_id") or "") or None,
-                    confidence=85 if values["market_value"] is not None else 0,
-                    observations=(
-                        self._projection_observations(data, f"player:{player_id}")
-                        if provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
-                        else ()
-                    ),
-                    market_observations=(
-                        self._market_observations(data, f"player:{player_id}")
-                        if provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
-                        else ()
-                    ),
-                    knowledge_state=f"fantasy_draft_selection:{number}",
-                    **context, **{k: v for k, v in values.items() if k != "knowledge_state"},
-                )
+                if selection_time is not None:
+                    self._capture(
+                        CheckpointTrigger.FANTASY_DRAFT_PICK,
+                        asset_id=f"player:{player_id}", asset_type="player",
+                        timestamp=selection_time,
+                        event_id=f"{draft_id}:{number}",
+                        roster_id=str(pick.get("roster_id") or "") or None,
+                        confidence=85 if values["market_value"] is not None else 0,
+                        observations=(
+                            self._projection_observations(data, f"player:{player_id}")
+                            if provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
+                            else ()
+                        ),
+                        market_observations=(
+                            self._market_observations(data, f"player:{player_id}")
+                            if provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
+                            else ()
+                        ),
+                        knowledge_state=f"fantasy_draft_selection:{number}",
+                        **context,
+                        **{key: value for key, value in values.items()
+                           if key != "knowledge_state"},
+                    )
+                else:
+                    self._counts["undated_draft_events"] += 1
                 round_number = int(pick.get("round") or max(1, int(float(number))))
                 roster_id = str(pick.get("roster_id") or "unknown")
                 generic = f"pick:{context['season']}:{round_number}:{roster_id}"
@@ -417,6 +436,7 @@ class CheckpointPipeline:
                 "related_players_rejected_immaterial", "provider_unavailable",
                 "global_observations_persisted", "global_observations_deduplicated",
                 "references_persisted", "events_replayed", "milestone_assets_excluded",
+                "undated_draft_events",
             )},
             "by_trigger": {key: dict(value) for key, value in sorted(self._by_trigger.items())},
             "last_error": self._last_error,
