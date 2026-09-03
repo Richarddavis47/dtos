@@ -13,6 +13,7 @@ from src.core.trade_intelligence.market import build_asset_pool
 from src.core.trade_intelligence.models import TradeDossier
 from src.core.front_office_intelligence import LeagueFrontOfficeModel
 from src.core.valuation import cached_market_consensus
+from src.core.trade_intelligence.evidence_context import build_trade_evidence_context
 
 
 def _asset_context(decision: TeamDecision) -> AssetContext:
@@ -61,14 +62,20 @@ class TradeIntelligence:
             if player.get("id") or player.get("player_id")
         }
         market_values = cached_market_consensus(data.get("market_data") or {}, player_ids)
-        dossiers = []
+        all_assets = []
+        partner_pools = []
         for partner in reports:
             partner_decision = decisions[partner.roster_id]
             outgoing = build_asset_pool(data, team_by_id[active_roster_id], _asset_context(partner_decision), market_values)
             incoming = build_asset_pool(data, team_by_id[partner.roster_id], _asset_context(active), market_values)
+            partner_pools.append((partner, outgoing, incoming))
+            all_assets.extend((*outgoing, *incoming))
+        evidence_context = build_trade_evidence_context(data, all_assets)
+        dossiers = []
+        for partner, outgoing, incoming in partner_pools:
             proposals = generate_proposals(active_roster_id, partner.roster_id, outgoing, incoming)
             alternative_labels = tuple(asset.label for asset in sorted(incoming, key=lambda item: (-item.team_fit_value, item.label))[:3])
-            dossiers.extend(evaluate_proposal(proposal, active, partner, alternative_labels) for proposal in proposals)
+            dossiers.extend(evaluate_proposal(proposal, active, partner, alternative_labels, evidence_context) for proposal in proposals)
         return prioritize(tuple(dossiers), limit)
 
 

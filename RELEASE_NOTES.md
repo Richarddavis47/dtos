@@ -1,3 +1,19 @@
+# DTOS v1.12.9 - Trade Intelligence Historical Upgrade
+
+DTOS v1.12.9 completes the planned season-readiness intelligence chain by
+joining the trusted Step 4-7 evidence products into the existing bilateral
+Trade Intelligence engine. Current league truth remains decisive: ownership,
+legality, neutral value, current roster needs, competitive windows, lineup
+impact, and package quality are never rewritten by history.
+
+When support is sufficient, recommendations now explain counterparty package,
+asset, positional, bilateral, and market-timing evidence with bounded lineage.
+Sparse or contradictory history remains explicitly low-confidence and never
+becomes a fabricated acceptance probability. Candidate generation reads the
+derived context once, makes no provider calls or raw-history scans, and retains
+the established Trade For, Shop Asset, Recommended Trades, Create, Edit, and
+Adjust controls.
+
 # DTOS v1.12.8 - Draft Event Timestamp Contract Correction
 
 DTOS v1.12.8 corrects the historical draft timestamp boundary exposed during

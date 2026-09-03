@@ -141,4 +141,5 @@ class TradeDossier:
     why_realistic: str
     why_now: str
     competitive_window: CompetitiveWindowContract
+    historical_context: dict[str, Any] | None = None
     market: Any = None

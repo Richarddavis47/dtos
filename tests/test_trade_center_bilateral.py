@@ -47,7 +47,7 @@ class BilateralTradeTests(unittest.TestCase):
         self.assertTrue(result["generated_trade_eligible"])
         self.assertTrue(result["why_you_would_do_it"])
         self.assertTrue(result["why_they_would_do_it"])
-        self.assertEqual(set(result["dimensions"]), {"value_fairness", "strategic_fit", "counterparty_plausibility", "package_quality", "best_for", "confidence"})
+        self.assertEqual(set(result["dimensions"]), {"value_fairness", "strategic_fit", "counterparty_plausibility", "historical_counterparty_evidence", "package_quality", "best_for", "confidence"})
         self.assertEqual(result["lineup_impact"]["comparison"], "optimal_legal_lineup_before_vs_after")
 
     def test_manual_illegal_trade_is_evaluated_but_not_executable(self) -> None:

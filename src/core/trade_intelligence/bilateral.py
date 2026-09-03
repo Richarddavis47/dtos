@@ -8,6 +8,9 @@ from typing import Any
 from src.core.trade_intelligence.lineup import optimal_legal_lineup
 from src.core.trade_intelligence.models import TradeAsset, TradeProposal
 from src.core.valuation import adjusted_package_value
+from src.core.trade_intelligence.evidence_context import (
+    TradeEvidenceContext, assess_historical_fit,
+)
 
 
 class ManagerRecommendation(str, Enum):
@@ -130,6 +133,7 @@ def evaluate_bilateral(
     league: dict[str, Any],
     player_database: dict[str, dict[str, Any]] | None = None,
     ownership: dict[str, int] | None = None,
+    evidence_context: TradeEvidenceContext | None = None,
 ) -> dict[str, Any]:
     """Evaluate one exact construction; workflow does not influence analytical truth."""
     ownership = ownership or {}
@@ -198,6 +202,12 @@ def evaluate_bilateral(
         and active_reasons and partner_reasons and not scarcity_veto
     )
     confidence, confidence_reason = _qualitative_confidence(all_assets)
+    historical = assess_historical_fit(
+        evidence_context, partner_roster_id=proposal.partner_roster_id,
+        active_roster_id=proposal.active_roster_id,
+        partner_receives=proposal.assets_sent,
+        active_receives=proposal.assets_received,
+    )
     if errors:
         recommendation = ManagerRecommendation.REJECT
         dominant = "The construction is not currently executable."
@@ -241,6 +251,7 @@ def evaluate_bilateral(
                 "Elite Superflex quarterback replacement cost is not satisfied." if scarcity_veto else
                 "No concrete counterparty lineup, roster, liquidity, or value benefit was established.",
             )),
+            "historical_counterparty_evidence": historical,
             "package_quality": {"active": asdict(active_package), "partner": asdict(partner_package)},
             "best_for": {
                 "active": "CONTENDING" if plausible and active_delta is not None and active_delta > .25 else "RETOOLING" if plausible and any(asset.kind == "pick" for asset in proposal.assets_received) else "BOTH" if plausible else "NEITHER",
@@ -260,5 +271,16 @@ def evaluate_bilateral(
             "partner": {"pre": asdict(partner_pre), "post": asdict(partner_post), "delta": partner_delta},
             "comparison": "optimal_legal_lineup_before_vs_after",
         },
-        "provenance": {"evaluator": "bilateral_trade_v1", "workflow_independent": True},
+        "why_now": (
+            "Supported market movement informs timing, but does not alter canonical value."
+            if historical["trend_signals"] else
+            "No evidence-supported market-timing signal is required; current roster fit remains primary."
+        ),
+        "provenance": {
+            "evaluator": "bilateral_trade_v2", "workflow_independent": True,
+            "historical_context_schema": getattr(evidence_context, "schema_version", None),
+            "historical_context_generation": getattr(evidence_context, "generation", None),
+            "provider_requests": 0, "raw_history_scans": 0,
+            "profile_rebuilds": 0, "trend_rebuilds": 0,
+        },
     }

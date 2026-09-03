@@ -15,6 +15,7 @@ from src.core.trade_intelligence.models import (
     TradeType,
 )
 from src.core.valuation import CalibrationStatus, adjusted_package_value, evaluate_trade_guardrails
+from src.core.trade_intelligence.evidence_context import TradeEvidenceContext
 
 
 def _package_value(assets) -> float:
@@ -55,6 +56,7 @@ def evaluate_proposal(
     active: TeamDecision,
     partner: PartnerReport,
     alternatives: tuple[str, ...],
+    evidence_context: TradeEvidenceContext | None = None,
 ) -> TradeDossier:
     impact = evaluate_trade_impact(proposal, active)
     expected = round(impact.current_outlook * 0.30 + impact.future_outlook * 0.30 + impact.positional_depth * 0.20 + impact.asset_value * 0.20)
@@ -73,7 +75,23 @@ def evaluate_proposal(
     superflex = any(position == "SUPER_FLEX" for position in active.profile.league_settings.get("roster_positions", ()))
     calibration = CalibrationStatus.CALIBRATED if all(asset.confidence_score >= 55 for asset in (*proposal.assets_sent, *proposal.assets_received)) else CalibrationStatus.PARTIALLY_CALIBRATED
     guardrail = evaluate_trade_guardrails(proposal.assets_sent, proposal.assets_received, superflex=superflex, confidence=confidence, calibration_status=calibration)
-    evidence = impact.evidence + partner.evidence + (
+    from src.core.trade_intelligence.evidence_context import assess_historical_fit
+
+    historical = assess_historical_fit(
+        evidence_context, partner_roster_id=proposal.partner_roster_id,
+        active_roster_id=proposal.active_roster_id,
+        partner_receives=proposal.assets_sent,
+        active_receives=proposal.assets_received,
+    )
+    historical_evidence = tuple(
+        Evidence(
+            "Historical counterparty context", reason,
+            float(historical["score"]),
+            "Canonical Step 4-7 evidence is a soft plausibility signal; current trade quality remains primary.",
+            "Step 8 bounded evidence join",
+        ) for reason in historical["reasons"][:2]
+    )
+    evidence = impact.evidence + partner.evidence + historical_evidence + (
         Evidence("Package balance", f"{sent_value:.1f} offered / {received_value:.1f} requested", (1 - gap) * 20, "Packages are generated only inside a 20% to 25% blended Asset Intelligence boundary.", "Trade Generator package boundary"),
     )
     sent_labels = " + ".join(asset.label for asset in proposal.assets_sent)
@@ -105,4 +123,5 @@ def evaluate_proposal(
         f"The package ratio is {(received_value / max(sent_value, 1)):.2f}, inside the generator's documented balance boundary; this does not predict acceptance.",
         f"The Active Front Office is classified as {active.competitive_window.classification.value}, so current and future impacts are evaluated separately now.",
         active.competitive_window,
+        historical,
     )

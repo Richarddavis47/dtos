@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -42,6 +43,16 @@ def worker_payload(**updates) -> dict:
 
 
 class ServerLifecycleTests(unittest.TestCase):
+    def test_server_launcher_reuses_the_active_interpreter_in_an_isolated_worktree(self) -> None:
+        with tempfile.TemporaryDirectory() as folder, tempfile.TemporaryFile() as log:
+            root = Path(folder)
+            with patch.object(subprocess, "Popen", return_value=Mock()) as popen:
+                TrackedServer.start(root, log, RUN_ID, port=9001)
+        command = popen.call_args.args[0]
+        self.assertEqual(command[0], sys.executable)
+        self.assertEqual(command[1:4], ["-B", "-m", "tools.validation.server_host"])
+        self.assertEqual(popen.call_args.kwargs["cwd"], root)
+
     def test_runtime_pid_is_discovered_from_port_owner_and_run_tag(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             tracked = server(Path(folder), [{321}], [[record(100), record(321, 100)]])
