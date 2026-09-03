@@ -30,6 +30,11 @@ from src.core.asset_market.read_model import (
 from src.core.asset_market.engine import SemanticWorkerError
 from src.core.historical_memory.store import HistoricalStore
 from src.core.historical_memory import historical_graph
+from src.core.intelligence_memory.models import (
+    CheckpointTrigger, EvidenceCompleteness, IntelligenceCheckpoint,
+    ProvenanceType,
+)
+from src.core.intelligence_memory.store import IntelligenceCheckpointStore
 
 
 def _brain_asset(
@@ -1255,6 +1260,33 @@ class AssetMarketTests(unittest.TestCase):
                 )
                 self.assertEqual(self._ready_get(client, "/api/market/trending").status_code, 200)
                 sync.assert_not_awaited()
+
+    def test_trending_http_handles_legacy_draft_identity_as_observed_at(self) -> None:
+        malformed = "2026-draft-1319750580377251840-13"
+        memory = IntelligenceCheckpointStore(Path(self.temp.name) / "intelligence.sqlite3")
+        memory.put_sparse(
+            IntelligenceCheckpoint(
+                checkpoint_id="legacy-draft", asset_id="player:10213",
+                asset_type="player", timestamp=malformed, season=2026,
+                trigger_type=CheckpointTrigger.FANTASY_DRAFT_PICK,
+                provenance_type=ProvenanceType.LIVE_CAPTURED,
+                market_value=9200, confidence=80,
+                evidence_completeness=EvidenceCompleteness.COMPLETE,
+                model_version="1.12.7", related_event_id="1319750580377251840:13",
+            ),
+            market_context_id="player:global",
+        )
+        app = FastAPI()
+        with patch("routes.market.intelligence_checkpoint_store", memory):
+            app.include_router(create_market_router(
+                require_data=lambda: self.data, state=self.state,
+                league_id=self.league_id,
+                page=lambda title, body: HTMLResponse(f"<h1>{title}</h1>{body}"),
+            ))
+        with patch("routes.market.historical_store", self.store):
+            response = self._ready_get(TestClient(app), "/api/market/trending")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(malformed, response.text)
 
     def test_market_summary_is_retained_metadata_only_in_every_lifecycle_state(self) -> None:
         app = FastAPI()

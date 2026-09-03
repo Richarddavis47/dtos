@@ -1,3 +1,16 @@
+# DTOS v1.12.8 - Draft Event Timestamp Contract Correction
+
+DTOS v1.12.8 corrects the historical draft timestamp boundary exposed during
+v1.12.7 production acceptance. Draft identity is no longer used as temporal
+evidence when Sleeper supplies no trustworthy selection time. The deterministic
+identity remains preserved in canonical pick lineage while time remains
+explicitly unavailable.
+
+Market Trends now safely excludes malformed legacy timestamps from chronology,
+milestones, ranges, and horizon calculations. Valid dated observations continue
+to produce unchanged Step 7 intelligence, and affected assets return honest
+limited evidence instead of HTTP 500. No production-data rewrite is required.
+
 # DTOS v1.12.7 - Market Trends Integration
 
 DTOS v1.12.7 connects the Asset Market to canonical sparse historical market

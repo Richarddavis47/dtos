@@ -1,5 +1,15 @@
 # Changelog
 
+# v1.12.8 - Draft Event Timestamp Contract Correction
+
+- Separated deterministic draft-event identity from trustworthy historical
+  temporal evidence; undated selections remain identifiable through canonical
+  pick lineage without fabricating an observation timestamp.
+- Quarantined malformed legacy observation timestamps from chronological trend
+  calculations while preserving valid dated evidence and deterministic output.
+- Added bounded aggregate diagnostics for excluded undated evidence and exact
+  production-shaped coverage for the previously failing draft identifier.
+
 # v1.12.7 - Market Trends Integration
 
 - Added one canonical, rebuildable Market Trend model over Step 2 sparse global

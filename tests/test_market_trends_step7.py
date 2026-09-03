@@ -145,6 +145,37 @@ class Step7MarketTrendTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(first["as_of"], "1970-01-01T00:00:00+00:00")
 
+    def test_legacy_draft_identity_in_timestamp_is_safely_excluded(self):
+        malformed = "2026-draft-1319750580377251840-13"
+        service = MarketTrendService(_Reader([_row("draft-event", malformed, 900)]))
+        first = service.trend_for_asset("player:1", 1000)
+        second = service.trend_for_asset("player:1", 1000)
+        self.assertEqual(first, second)
+        self.assertEqual(first["direction"], "insufficient_evidence")
+        self.assertEqual(first["checkpoint_count"], 0)
+        self.assertEqual(first["as_of"], "1970-01-01T00:00:00+00:00")
+        self.assertEqual(first["provenance"]["invalid_temporal_evidence_count"], 1)
+        self.assertNotIn(malformed, json.dumps(first))
+
+    def test_malformed_legacy_draft_does_not_corrupt_valid_chronology(self):
+        malformed = "2026-draft-1319750580377251840-13"
+        rows = [
+            _row("later", "2026-04-01T00:00:00+00:00", 150),
+            _row("legacy", malformed, 999),
+            _row("earlier", "2026-01-01T00:00:00+00:00", 100),
+        ]
+        result = MarketTrendService(_Reader(rows)).trend_for_asset(
+            "player:1", 200, current_evidence_at="2026-05-01T00:00:00+00:00",
+        )
+        self.assertEqual(result["checkpoint_count"], 2)
+        self.assertEqual(result["observed_low"], 100)
+        self.assertEqual(result["observed_high"], 150)
+        self.assertEqual(
+            [row["observation_id"] for row in result["checkpoints"]],
+            ["earlier", "later"],
+        )
+        self.assertEqual(result["provenance"]["invalid_temporal_evidence_count"], 1)
+
     def test_compact_summary_omits_deep_private_and_checkpoint_data(self):
         reader = _Reader([_row("a", "2026-01-01T00:00:00+00:00", 100), _row("b", "2026-02-01T00:00:00+00:00", 120)])
         result = MarketTrendService(reader).trend_for_asset(
