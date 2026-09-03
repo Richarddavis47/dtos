@@ -137,6 +137,7 @@ class FrontOfficeIntelligenceScore:
     unavailable_tendencies: tuple[str, ...] = ()
     trade_partner_count: int = 0
     front_office_evidence: dict[str, Any] | None = None
+    gm_behavioral_profile: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)

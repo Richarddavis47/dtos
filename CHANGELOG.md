@@ -1,5 +1,17 @@
 # Changelog
 
+# v1.12.6 - GM Behavioral Intelligence
+
+- Added one deterministic, league-scoped behavioral evidence model over the
+  canonical Step 4 transaction evaluations and Step 5 Front Office summaries.
+- Describes sample-aware activity, asset direction, package style, draft
+  capital, position, price, window, partner, timing, and recency patterns while
+  keeping Process quality and later Outcome separate.
+- Preserves manager-tenure and league isolation, bounded evidence references,
+  generation-aware reuse, zero provider calls, and zero Step 6 history scans.
+- Leaves FOIS scoring, Brain semantics, current Trade Intelligence, Market
+  Trends, offers, recommendations, and presentation unchanged.
+
 # v1.12.5 - FOIS Front Office Brain Unification
 
 - Added one immutable, versioned Front Office evidence contract shared by FOIS,

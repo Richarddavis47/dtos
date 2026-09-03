@@ -357,6 +357,7 @@ class FOISEngine:
             unavailable_tendencies=unavailable_tendencies,
             trade_partner_count=len(partners),
             front_office_evidence=facts.front_office_evidence,
+            gm_behavioral_profile=facts.gm_behavioral_profile,
         )
 
     @staticmethod

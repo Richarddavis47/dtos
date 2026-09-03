@@ -23,6 +23,7 @@ from src.core.intelligence_memory import (
     fois_process_evidence, intelligence_checkpoint_store,
 )
 from src.core.front_office_evidence import assemble_front_office_evidence
+from src.core.gm_behavioral_intelligence import gm_behavioral_intelligence
 
 LOGGER = logging.getLogger("dtos.fois")
 
@@ -240,6 +241,9 @@ class FOISService:
                 league_id=league_id, franchise_id=identity.franchise_id,
                 gm_id=identity.gm_id, trades=trades,
             )
+            behavioral_profile = gm_behavioral_intelligence.build_profile(
+                evidence=shared_evidence, trades=trades,
+            )
             facts = FOISFacts(
                 league_id, identity.franchise_id, identity.owner_id,
                 seasons, trades, drafts, roster_metrics,
@@ -267,6 +271,7 @@ class FOISService:
                 waivers=waivers,
                 franchise_name=identity.franchise_name,
                 front_office_evidence=shared_evidence.contract(),
+                gm_behavioral_profile=behavioral_profile.contract(),
             )
             score = self.engine.evaluate(facts)
             fingerprint = hashlib.sha256(
@@ -290,6 +295,7 @@ class FOISService:
         self._status.update({
             "snapshots_written": snapshots_written,
             "snapshots_deduplicated": snapshots_deduplicated,
+            "gm_behavioral_intelligence": gm_behavioral_intelligence.health(),
         })
         completed = tuple(scores)
         for listener in tuple(self._generation_listeners):
