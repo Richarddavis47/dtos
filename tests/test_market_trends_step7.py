@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import json
+import os
+import subprocess
+import sys
 import unittest
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -149,6 +153,38 @@ class Step7MarketTrendTests(unittest.TestCase):
         self.assertNotIn("checkpoints", result)
         self.assertNotIn("league_liquidity", result)
         self.assertEqual(result["direction"], "rising")
+
+    def test_compact_serialization_is_byte_identical_across_processes(self):
+        script = """
+import json
+from src.core.market_trends.models import MarketTrend, TrendDirection
+trend = MarketTrend(
+    asset_id='player:1', current_value=140.0,
+    as_of='2026-03-01T00:00:00+00:00', direction=TrendDirection.RISING,
+    magnitude=40.0, magnitude_band='moderate', horizon='59_days',
+    confidence='medium', confidence_score=65, evidence_coverage='partial',
+    checkpoint_count=2, latest_checkpoint_age_days=29,
+    observed_high=120.0, observed_low=100.0, volatility=0.0,
+    volatility_band='stable',
+)
+print(json.dumps(trend.public(compact=True), separators=(',', ':')))
+"""
+        outputs = [
+            subprocess.check_output(
+                [sys.executable, "-c", script], text=True,
+                env={**os.environ, "PYTHONHASHSEED": seed},
+            ).strip()
+            for seed in ("1", "987654")
+        ]
+        self.assertEqual(outputs[0].encode(), outputs[1].encode())
+        self.assertEqual(
+            tuple(json.loads(outputs[0])),
+            (
+                "asset_id", "direction", "magnitude", "magnitude_band",
+                "horizon", "confidence", "checkpoint_count", "as_of",
+                "schema_version", "method_version",
+            ),
+        )
 
     def test_canonical_store_read_is_bounded_private_and_non_writing(self):
         with TemporaryDirectory() as temporary:

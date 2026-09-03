@@ -7,6 +7,18 @@ from typing import Any
 
 TREND_SCHEMA_VERSION = "market-trend-1"
 TREND_METHOD_VERSION = "sparse-event-market-trend-1"
+COMPACT_TREND_FIELDS = (
+    "asset_id",
+    "direction",
+    "magnitude",
+    "magnitude_band",
+    "horizon",
+    "confidence",
+    "checkpoint_count",
+    "as_of",
+    "schema_version",
+    "method_version",
+)
 
 
 class TrendDirection(str, Enum):
@@ -70,9 +82,5 @@ class MarketTrend:
         result = asdict(self)
         result["direction"] = self.direction.value
         if compact:
-            keep = {
-                "asset_id", "direction", "magnitude", "magnitude_band", "horizon",
-                "confidence", "checkpoint_count", "as_of", "schema_version", "method_version",
-            }
-            return {key: result[key] for key in keep}
+            return {key: result[key] for key in COMPACT_TREND_FIELDS}
         return result
