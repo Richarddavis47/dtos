@@ -71,8 +71,12 @@ rewriting the original decision-time event.
    normalized event identities and timestamp rules.
 5. GM Behavioral Intelligence will derive tenant-isolated behavior from
    league-scoped events only.
-6. Market Trends will migrate from the standalone snapshot store to sparse
-   global checkpoints.
+6. Market Trends now derives deterministic direction, magnitude, milestones,
+   observed range, volatility, and confidence from sparse Step 2 global
+   checkpoints. League transaction liquidity remains a separate private,
+   indexed context. The standalone `MarketHistoryStore` remains only as a
+   runtime compatibility input for the older orchestration report and is not a
+   durable source for the Asset Market, its trend API, or its UI.
 7. Trade Historical Upgrade will separate decision-time process evidence from
    later outcome evidence.
 

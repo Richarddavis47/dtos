@@ -1,5 +1,19 @@
 # Changelog
 
+# v1.12.7 - Market Trends Integration
+
+- Added one canonical, rebuildable Market Trend model over Step 2 sparse global
+  observations, with explicit direction, magnitude, horizons, milestones,
+  observed range, volatility, confidence, coverage, and event provenance.
+- Added separate league-scoped transaction/liquidity context using indexed
+  canonical references without contaminating global market truth.
+- Replaced the Asset Market trend API and presentation path with bounded list
+  summaries and targeted detail reads; reads create no history and make no
+  provider calls or raw Sleeper scans.
+- Kept the legacy `MarketHistoryStore` as runtime compatibility only and left
+  current values, FOIS, Brain, Trade recommendations, Step 8, and artifact
+  compatibility unchanged.
+
 # v1.12.6 - GM Behavioral Intelligence
 
 - Added one deterministic, league-scoped behavioral evidence model over the
