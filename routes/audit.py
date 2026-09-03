@@ -6,10 +6,12 @@ import io
 from typing import Any, Callable
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import Response
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse, Response
 
 from services.projection_audit import build_projection_audit
 from src.core.fois.models import FOIS_MODEL_VERSION
+from src.core.request_execution import run_manager_read
 
 
 def create_audit_router(
@@ -39,31 +41,42 @@ def create_audit_router(
         )
 
     @router.get("/projections/current")
-    async def projections_current() -> dict[str, Any]:
-        return current()
+    async def projections_current() -> Response:
+        # Construction and JSON rendering are both synchronous and can be large.
+        # Keep the single request flight off the event loop while retaining the
+        # caller's contextvars and the endpoint's existing exception contract.
+        return await run_manager_read(
+            lambda: JSONResponse(jsonable_encoder(current())),
+        )
 
     @router.get("/projections/current.csv")
     async def projections_current_csv() -> Response:
-        audit = current()
-        columns = (
-            "matchup_id", "team", "player_id", "player_name", "position",
-            "sleeper_projection", "raw_dtos_projection", "dtos_projection",
-            "calibrated_dtos_projection", "canonical_projection",
-            "calibration_adjustment", "calibration_reason", "fallback_state",
-            "evidence_depth",
-            "dtos_minus_sleeper", "actual_points", "market_value",
-            "intrinsic_dtos_value", "contender_value", "rebuilder_value",
-            "overall_rank", "contender_rank", "rebuilder_rank",
-            "projection_confidence", "projection_agreement",
-        )
-        stream = io.StringIO(newline="")
-        writer = csv.DictWriter(stream, fieldnames=columns)
-        writer.writeheader()
-        for player in audit["players"]:
-            values = player.get("values") or {}
-            writer.writerow({key: values.get(key) if key in values else player.get(key) for key in columns})
-        return Response(stream.getvalue(), media_type="text/csv", headers={
-            "Content-Disposition": "attachment; filename=dtos-projection-audit.csv",
-        })
+        def render_csv() -> Response:
+            audit = current()
+            columns = (
+                "matchup_id", "team", "player_id", "player_name", "position",
+                "sleeper_projection", "raw_dtos_projection", "dtos_projection",
+                "calibrated_dtos_projection", "canonical_projection",
+                "calibration_adjustment", "calibration_reason", "fallback_state",
+                "evidence_depth",
+                "dtos_minus_sleeper", "actual_points", "market_value",
+                "intrinsic_dtos_value", "contender_value", "rebuilder_value",
+                "overall_rank", "contender_rank", "rebuilder_rank",
+                "projection_confidence", "projection_agreement",
+            )
+            stream = io.StringIO(newline="")
+            writer = csv.DictWriter(stream, fieldnames=columns)
+            writer.writeheader()
+            for player in audit["players"]:
+                values = player.get("values") or {}
+                writer.writerow({
+                    key: values.get(key) if key in values else player.get(key)
+                    for key in columns
+                })
+            return Response(stream.getvalue(), media_type="text/csv", headers={
+                "Content-Disposition": "attachment; filename=dtos-projection-audit.csv",
+            })
+
+        return await run_manager_read(render_csv)
 
     return router

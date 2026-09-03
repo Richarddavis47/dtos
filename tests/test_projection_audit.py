@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 import copy
+import asyncio
+import contextvars
+import threading
+import time
 import unittest
 from dataclasses import dataclass
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
+from unittest.mock import patch
 
 from routes.audit import create_audit_router
 from services.projection_audit import build_projection_audit
@@ -84,7 +90,7 @@ def fixture():
     return data, snapshot
 
 
-class ProjectionAuditTests(unittest.TestCase):
+class ProjectionAuditTests(unittest.IsolatedAsyncioTestCase):
     def test_player_calibration_restores_team_separation_without_copying_sleeper(self):
         data, snapshot = fixture()
         data["matchups"] = {"5": [{
@@ -142,6 +148,27 @@ class ProjectionAuditTests(unittest.TestCase):
         self.assertEqual(data, original_data)
         self.assertEqual(snapshot, original_snapshot)
 
+    def test_stage_profile_is_bounded_and_does_not_change_output(self):
+        data, snapshot = fixture()
+        timings: dict[str, float] = {}
+        expected = build_projection_audit(
+            data=data, projection_snapshot=snapshot, projection_health={"status": "ready"},
+            market=FakeMarket(), fois_scores=(Score(),),
+            now="2026-08-11T00:00:00+00:00",
+        )
+        actual = build_projection_audit(
+            data=data, projection_snapshot=snapshot, projection_health={"status": "ready"},
+            market=FakeMarket(), fois_scores=(Score(),),
+            now="2026-08-11T00:00:00+00:00", timings=timings,
+        )
+        self.assertEqual(actual, expected)
+        self.assertEqual(set(timings), {
+            "identity_ms", "rank_maps_ms", "roster_index_ms",
+            "player_catalog_ms", "matchup_reconciliation_ms", "summary_ms",
+            "total_ms",
+        })
+        self.assertTrue(all(value >= 0 for value in timings.values()))
+
     def test_routes_never_build_market_and_csv_is_bounded(self):
         data, snapshot = fixture()
 
@@ -194,6 +221,101 @@ class ProjectionAuditTests(unittest.TestCase):
             market_cache=Cache(), fois_service=object(),
         ))
         self.assertEqual(TestClient(app).get("/api/audit/projections/current").status_code, 503)
+
+    async def test_projection_audit_does_not_block_lightweight_request(self):
+        data, snapshot = fixture()
+        started = threading.Event()
+        release = threading.Event()
+        request_context = contextvars.ContextVar("request_context", default="missing")
+        observed_context: list[str] = []
+
+        class Projection:
+            def snapshot(self): return snapshot
+            def health(self, *, include_accuracy=True): return {"status": "ready"}
+
+        class Cache:
+            def current(self): return FakeMarket()
+
+        class Repository:
+            def league(self, league_id, model): return (Score(),)
+
+        class FOIS:
+            repository = Repository()
+
+        app = FastAPI()
+        app.include_router(create_audit_router(
+            require_data=lambda: data, projection_service=Projection(),
+            market_cache=Cache(), fois_service=FOIS(),
+        ))
+
+        @app.get("/lightweight")
+        async def lightweight() -> dict[str, bool]:
+            return {"ready": True}
+
+        real_builder = build_projection_audit
+
+        def slow_builder(**kwargs):
+            observed_context.append(request_context.get())
+            started.set()
+            self.assertTrue(release.wait(2.0))
+            return real_builder(**kwargs)
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            with patch("routes.audit.build_projection_audit", side_effect=slow_builder):
+                token = request_context.set("projection-audit-request")
+                try:
+                    audit_request = asyncio.create_task(
+                        client.get("/api/audit/projections/current"),
+                    )
+                    for _ in range(100):
+                        if started.is_set():
+                            break
+                        await asyncio.sleep(0.005)
+                    self.assertTrue(started.is_set())
+                    began = time.perf_counter()
+                    response = await asyncio.wait_for(client.get("/lightweight"), 0.25)
+                    latency_ms = (time.perf_counter() - began) * 1000
+                    self.assertFalse(audit_request.done())
+                    release.set()
+                    audit_response = await audit_request
+                finally:
+                    request_context.reset(token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertLess(latency_ms, 100)
+        self.assertEqual(audit_response.status_code, 200)
+        self.assertEqual(observed_context, ["projection-audit-request"])
+
+    async def test_projection_audit_worker_exception_propagates(self):
+        data, snapshot = fixture()
+
+        class Projection:
+            def snapshot(self): return snapshot
+            def health(self, *, include_accuracy=True): return {"status": "ready"}
+
+        class Cache:
+            def current(self): return FakeMarket()
+
+        class Repository:
+            def league(self, league_id, model): return ()
+
+        class FOIS:
+            repository = Repository()
+
+        app = FastAPI()
+        app.include_router(create_audit_router(
+            require_data=lambda: data, projection_service=Projection(),
+            market_cache=Cache(), fois_service=FOIS(),
+        ))
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            with patch(
+                "routes.audit.build_projection_audit",
+                side_effect=RuntimeError("projection-audit-worker-failure"),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "projection-audit-worker-failure"):
+                    await client.get("/api/audit/projections/current")
 
 
 if __name__ == "__main__":

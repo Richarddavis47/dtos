@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from math import sqrt
 from statistics import mean, median, pstdev
+from time import perf_counter
 from typing import Any
 
 from app_metadata import BUILD_NUMBER, VERSION
@@ -142,18 +143,26 @@ def _fois(scores: tuple[Any, ...]) -> list[dict[str, Any]]:
 def build_projection_audit(
     *, data: dict[str, Any], projection_snapshot: dict[str, Any],
     projection_health: dict[str, Any], market: Any, fois_scores: tuple[Any, ...],
-    now: str | None = None,
+    now: str | None = None, timings: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     """Assemble existing canonical values without refreshing or mutating them."""
+    started = perf_counter()
     generated_at = now or datetime.now(timezone.utc).isoformat()
     players = projection_snapshot.get("players") or {}
+    stage = perf_counter()
     identity = market.audit_identity()
     brain_snapshot_id = identity.get("brain_snapshot_id")
+    if timings is not None:
+        timings["identity_ms"] = round((perf_counter() - stage) * 1000, 3)
+    stage = perf_counter()
     ranks = _rank_maps(market)
+    if timings is not None:
+        timings["rank_maps_ms"] = round((perf_counter() - stage) * 1000, 3)
     audited_players: list[dict[str, Any]] = []
     teams: list[dict[str, Any]] = []
     matchups: list[dict[str, Any]] = []
 
+    stage = perf_counter()
     roster_groups: dict[str, str] = {}
     for team in data.get("teams") or ():
         for group in ("lineup", "starters", "bench", "taxi", "reserve", "ir", "players"):
@@ -165,6 +174,9 @@ def build_projection_audit(
                     player_id = str(player or "")
                 if player_id:
                     roster_groups.setdefault(player_id, normalized)
+    if timings is not None:
+        timings["roster_index_ms"] = round((perf_counter() - stage) * 1000, 3)
+    stage = perf_counter()
     all_players = []
     for player_id, projection in sorted(players.items()):
         value = projection.get("canonical_projection")
@@ -180,7 +192,10 @@ def build_projection_audit(
         })
     projected_all = [row for row in all_players if row["canonical_projection"] is not None]
     unavailable_all = [row for row in all_players if row["canonical_projection"] is None]
+    if timings is not None:
+        timings["player_catalog_ms"] = round((perf_counter() - stage) * 1000, 3)
 
+    stage = perf_counter()
     for matchup_id, sides in sorted((data.get("matchups") or {}).items(), key=lambda item: str(item[0])):
         matchup_teams = []
         team_projections = []
@@ -290,7 +305,12 @@ def build_projection_audit(
             team_projections.append(canonical_total)
         projected_margin = round(abs(team_projections[0] - team_projections[1]), 3) if len(team_projections) == 2 else None
         matchups.append({"matchup_id": str(matchup_id), "state": "current", "teams": matchup_teams, "projected_margin": projected_margin})
+    if timings is not None:
+        timings["matchup_reconciliation_ms"] = round(
+            (perf_counter() - stage) * 1000, 3,
+        )
 
+    stage = perf_counter()
     differences = [row["dtos_minus_sleeper"] for row in audited_players if row["dtos_minus_sleeper"] is not None]
     absolute_differences = [abs(value) for value in differences]
     team_differences = [abs(float(row["dtos_projected_total"]) - float(row["sleeper_projected_total"])) for row in teams]
@@ -302,7 +322,7 @@ def build_projection_audit(
                                   "current_imported_sleeper_value": current,
                                   "difference": _difference(current, reference),
                                   "match_status": "match" if _difference(current, reference) == 0 else "different" if current is not None else "unavailable"})
-    return {
+    result = {
         "identity": {
             "league_id": str((data.get("league") or {}).get("league_id") or market.league_id),
             "league_name": (data.get("league") or {}).get("name"),
@@ -368,3 +388,7 @@ def build_projection_audit(
             "external_provider_calls": 0, "read_only": True,
         },
     }
+    if timings is not None:
+        timings["summary_ms"] = round((perf_counter() - stage) * 1000, 3)
+        timings["total_ms"] = round((perf_counter() - started) * 1000, 3)
+    return result
