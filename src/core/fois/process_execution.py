@@ -154,10 +154,11 @@ def _compute_fois_payload(payload: dict[str, Any]) -> dict[str, Any]:
     ).encode("utf-8"))
     canonical_history_store.update_current(league_id, data)
     repository = FOISRepository(Path(payload["fois_database"]))
+    history_metrics: dict[str, Any] = {}
     service = FOISService(
         repository,
         history_loader=lambda selected: load_results_history(
-            canonical_history_store, selected,
+            canonical_history_store, selected, metrics=history_metrics,
         ),
     )
     started = perf_counter()
@@ -175,6 +176,7 @@ def _compute_fois_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "worker_pid": os.getpid(),
         "source_bytes": source_bytes,
         "compact_input_bytes": compact_input_bytes,
+        "history_metrics": history_metrics,
     }
 
 
@@ -287,6 +289,7 @@ async def generate_fois_isolated(
             "child_peak_rss_bytes": result.get("peak_rss_bytes"),
             "source_bytes": result.get("source_bytes"),
             "compact_input_bytes": result.get("compact_input_bytes"),
+            "history_metrics": result.get("history_metrics") or {},
             "parent_duration_ms": round((perf_counter() - started) * 1000, 3),
             "exit_status": 0,
             "reaped": False,

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from time import perf_counter
 from typing import Any
 
 from src.core.history_context.store import CanonicalHistoryStore as HistoricalStore
@@ -21,8 +22,11 @@ def _positive_int(value: Any) -> int | None:
 def load_results_history(
     store: HistoricalStore,
     league_id: str,
+    *,
+    metrics: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Build provider-free FOIS histories from immutable cached evidence."""
+    started = perf_counter()
     _, standings = store.records(league_id, "season_standing", limit=10_000)
     _, playoffs = store.records(league_id, "playoff_result", limit=1_000)
     _, matchups = store.records(league_id, "matchup", limit=100_000)
@@ -46,6 +50,7 @@ def load_results_history(
     completed_seasons = {
         season for season, status in league_status.items() if status == "complete"
     }
+    base_history_ms = round((perf_counter() - started) * 1000, 3)
     numeric_placement_seasons: set[int] = set()
     owners: dict[str, set[str]] = defaultdict(set)
     owner_by_roster_season: dict[tuple[str, int], str] = {}
@@ -144,6 +149,7 @@ def load_results_history(
         history_intelligence, HistoricalFranchiseStateService(history_intelligence),
     )
     step4 = {}
+    step4_started = perf_counter()
     try:
         step4_events = history_intelligence.events_for_league(
             league_id, event_type=HistoricalEventType.TRADE,
@@ -159,6 +165,7 @@ def load_results_history(
             # Invalid canonical history stays explicit through the legacy
             # unavailable evidence below; it is never fabricated or zero-filled.
             continue
+    step4_ms = round((perf_counter() - step4_started) * 1000, 3)
     process_scores = {
         "strong_process": 90.0, "sound_process": 80.0,
         "defensible_optional": 65.0, "questionable_process": 40.0,
@@ -279,4 +286,32 @@ def load_results_history(
         history["placement_completeness"] = round(
             placement_available / placement_expected * 100, 2,
         ) if placement_expected else 0.0
+    if metrics is not None:
+        transaction_metrics = transaction_intelligence.health()
+        state_metrics = transaction_intelligence.states.metrics()
+        total_ms = round((perf_counter() - started) * 1000, 3)
+        metrics.update({
+            "base_history_ms": base_history_ms,
+            "step4_evaluation_ms": step4_ms,
+            "front_office_history_aggregation_ms": round(
+                total_ms - base_history_ms - step4_ms, 3,
+            ),
+            "total_history_ms": total_ms,
+            "step4_evaluations_loaded": len(step4),
+            "step4_evaluations_recomputed": int(
+                transaction_metrics.get("evaluations") or 0
+            ),
+            "step4_evaluations_reused": int(
+                transaction_metrics.get("cache_hits") or 0
+            ),
+            "step3_reconstructions": int(
+                state_metrics.get("reconstructions") or 0
+            ),
+            "derived_cache_hits": int(state_metrics.get("cache_hits") or 0),
+            "source_record_queries": int(
+                state_metrics.get("source_record_queries") or 0
+            ),
+            "provider_calls": 0,
+            "raw_history_scans": 0,
+        })
     return dict(histories)

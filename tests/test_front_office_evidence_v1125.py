@@ -47,13 +47,21 @@ def trade(
 
 class SharedEvidenceContractTests(unittest.TestCase):
     def test_step4_contract_reaches_fois_history_adapter(self) -> None:
-        history = load_results_history(FixtureStore(), "league-a")
+        metrics = {}
+        history = load_results_history(
+            FixtureStore(), "league-a", metrics=metrics,
+        )
         for roster_id in ("1", "2"):
             row = history[roster_id]["trades"][0]
             self.assertIsNotNone(row["process_classification"])
             self.assertIsNotNone(row["outcome_classification"])
             self.assertEqual(row["history_generation"], "history-generation-1:league-a")
             self.assertTrue(row["evidence_references"])
+        self.assertEqual(metrics["step4_evaluations_loaded"], 1)
+        self.assertEqual(metrics["step4_evaluations_recomputed"], 1)
+        self.assertGreater(metrics["derived_cache_hits"], 0)
+        self.assertEqual(metrics["provider_calls"], 0)
+        self.assertEqual(metrics["raw_history_scans"], 0)
 
     def test_process_and_outcome_remain_separate_and_deterministic(self) -> None:
         first = assemble_front_office_evidence(

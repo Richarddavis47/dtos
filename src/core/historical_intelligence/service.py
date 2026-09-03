@@ -150,10 +150,16 @@ class HistoricalIntelligenceService:
         source_id = str(row.get("source_record_id") or "")
         if not league_id or not season or selected_type is None or not source_id:
             return None
-        roster_ids: set[object] = set(payload.get("roster_ids") or ())
-        for mapping in (payload.get("adds"), payload.get("drops")):
-            if isinstance(mapping, Mapping):
-                roster_ids.update(mapping.values())
+        explicit_roster_ids = tuple(payload.get("roster_ids") or ())
+        roster_ids: set[object] = set(explicit_roster_ids)
+        # Sleeper's roster_ids field is the canonical trade-participant
+        # contract.  Asset mappings are a safe fallback for event types that do
+        # not expose it, but must not turn every asset destination into an
+        # additional bilateral trade side.
+        if not explicit_roster_ids:
+            for mapping in (payload.get("adds"), payload.get("drops")):
+                if isinstance(mapping, Mapping):
+                    roster_ids.update(mapping.values())
         if row.get("franchise_id"):
             roster_ids.add(row["franchise_id"])
         player_ids = set()
@@ -177,7 +183,7 @@ class HistoricalIntelligenceService:
                 "team_points", "winner", "loser", "tie", "champion_roster_id",
                 "runner_up_roster_id", "placements", "owner_id", "sleeper_roster_id",
                 "wins", "losses", "ties", "points_for", "rank", "pick_no", "round",
-                "roster_id", "player_id", "season", "year",
+                "roster_id", "roster_ids", "player_id", "season", "year",
             ) if key in payload
         }
         return HistoricalEvent(
@@ -259,6 +265,11 @@ class HistoricalIntelligenceService:
             (event_type is None or event.event_type is event_type)
             and (season is None or event.season == int(season))
         ))
+
+    def cache_identity(self, league_id: str) -> tuple[str, int]:
+        """Return the bounded canonical identity for derived read caches."""
+        key = str(league_id)
+        return self.store.dataset_version(key), self._current_revisions[key]
 
     def events_for_franchise(
         self, league_id: str, franchise_id: str,

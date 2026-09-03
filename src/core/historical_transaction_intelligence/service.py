@@ -223,8 +223,13 @@ class HistoricalTransactionIntelligenceService:
             (row.occurred_at for row in self.history.events_for_league(event.league_id) if row.occurred_at),
             default=event.occurred_at,
         )
+        explicit_roster_ids = tuple(event.attributes.get("roster_ids") or ())
+        participant_ids = (
+            tuple(f"{event.league_id}:franchise:{value}" for value in explicit_roster_ids)
+            if len(explicit_roster_ids) >= 2 else event.franchise_ids
+        )
         prepared: list[tuple[HistoricalFranchiseState, HistoricalFranchiseState, HistoricalFranchiseState | None]] = []
-        for franchise_id in event.franchise_ids:
+        for franchise_id in participant_ids:
             before, after = self.states.around_event(event.league_id, franchise_id, event.event_id)
             later = None
             try:
