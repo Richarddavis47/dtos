@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .league_scope import scoped_evidence
+
 
 @dataclass(frozen=True)
 class IntelligenceContext:
@@ -32,14 +34,16 @@ def build_context(data: dict[str, Any], roster_id: int, user_preferences: dict[s
     settings = {**(data.get("league_settings") or {}), "roster_positions": league.get("roster_positions") or []}
     transactions = data.get("transactions") or []
     players_updated = str(data.get("players_fetched_at") or "")
+    front_office_rows = scoped_evidence(data, "front_office_evidence").rows
+    behavior_rows = scoped_evidence(data, "gm_behavioral_intelligence").rows
     front_office_generation = ",".join(sorted(
         str(row.get("semantic_identity") or "")
-        for row in (data.get("front_office_evidence") or {}).values()
+        for row in front_office_rows.values()
         if isinstance(row, dict)
     ))
     behavior_generation = ",".join(sorted(
         str(row.get("semantic_identity") or "")
-        for row in (data.get("gm_behavioral_intelligence") or {}).values()
+        for row in behavior_rows.values()
         if isinstance(row, dict)
     ))
     market_generation = str(

@@ -6,6 +6,7 @@ from time import perf_counter
 from typing import Any, Iterable
 
 from src.core.intelligence_memory import intelligence_checkpoint_store
+from src.core.intelligence.league_scope import scoped_evidence, scoped_market_trends
 from src.core.market_trends import MarketTrendService
 
 
@@ -24,6 +25,8 @@ class TradeEvidenceContext:
     raw_history_scans: int = 0
     profile_rebuilds: int = 0
     trend_rebuilds: int = 0
+    wrong_league_evidence_rejected: int = 0
+    wrong_league_evidence_consumed: int = 0
     preparation_duration_ms: float = 0.0
     schema_version: str = TRADE_HISTORY_SCHEMA_VERSION
     method_version: str = TRADE_HISTORY_METHOD_VERSION
@@ -52,8 +55,11 @@ def build_trade_evidence_context(
         )
     ids = tuple(sorted(rows_by_id))[:250]
     supplied = data.get("market_trend_summaries")
+    trend_rejections = 0
     if isinstance(supplied, dict):
-        trends = {asset_id: dict(supplied.get(asset_id) or {}) for asset_id in ids}
+        trends, trend_rejections = scoped_market_trends(
+            data, ids, league_id=league_id,
+        )
     elif ids:
         trends = MarketTrendService(intelligence_checkpoint_store).summaries(
             [rows_by_id[asset_id] for asset_id in ids],
@@ -63,20 +69,21 @@ def build_trade_evidence_context(
         )
     else:
         trends = {}
+    behavior = scoped_evidence(
+        data, "gm_behavioral_intelligence", expected_league_id=league_id,
+    )
+    front_office = scoped_evidence(
+        data, "front_office_evidence", expected_league_id=league_id,
+    )
     return TradeEvidenceContext(
         league_id=league_id,
-        behavior_by_roster={
-            str(key): dict(value) for key, value in
-            (data.get("gm_behavioral_intelligence") or {}).items()
-            if isinstance(value, dict)
-        },
-        front_office_by_roster={
-            str(key): dict(value) for key, value in
-            (data.get("front_office_evidence") or {}).items()
-            if isinstance(value, dict)
-        },
+        behavior_by_roster=behavior.rows,
+        front_office_by_roster=front_office.rows,
         trends_by_asset=trends,
         generation=_market_generation(data),
+        wrong_league_evidence_rejected=(
+            behavior.rejected + front_office.rejected + trend_rejections
+        ),
         preparation_duration_ms=round((perf_counter() - started) * 1000, 3),
     )
 

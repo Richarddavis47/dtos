@@ -1,3 +1,17 @@
+# DTOS v1.13.0 - Multi-League Intelligence Isolation
+
+DTOS v1.13.0 establishes a fail-closed tenant boundary across the shared
+Front Office intelligence stack. Private evidence is accepted only when its
+canonical source league equals the active league, including when two leagues
+reuse the same roster identifier or manager identity.
+
+Global NFL player identity, market observations, and market-direction evidence
+remain reusable across leagues. League-specific ownership, franchise history,
+GM behavior, bilateral relationships, and liquidity are isolated. Rejected
+cross-league evidence is counted in bounded provenance and never consumed.
+Direct loads, repeated switching, and concurrent A/B/C reads remain equivalent
+without request-time provider calls, raw history scans, or eager runtime loads.
+
 # DTOS v1.12.9 - Trade Intelligence Historical Upgrade
 
 DTOS v1.12.9 completes the planned season-readiness intelligence chain by

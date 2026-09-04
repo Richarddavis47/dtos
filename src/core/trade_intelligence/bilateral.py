@@ -280,6 +280,12 @@ def evaluate_bilateral(
             "evaluator": "bilateral_trade_v2", "workflow_independent": True,
             "historical_context_schema": getattr(evidence_context, "schema_version", None),
             "historical_context_generation": getattr(evidence_context, "generation", None),
+            "wrong_league_evidence_rejected": getattr(
+                evidence_context, "wrong_league_evidence_rejected", 0,
+            ),
+            "wrong_league_evidence_consumed": getattr(
+                evidence_context, "wrong_league_evidence_consumed", 0,
+            ),
             "provider_requests": 0, "raw_history_scans": 0,
             "profile_rebuilds": 0, "trend_rebuilds": 0,
         },

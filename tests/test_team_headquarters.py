@@ -29,6 +29,7 @@ class TeamHeadquartersTests(unittest.TestCase):
             {"id": "k1", "name": "Kicker", "position": "K", "team": "BAL", "roster_slot": "Bench"},
         ]
         self.data = {
+            "league": {"league_id": "league"},
             "players": {
                 "qb1": {"age": 23}, "qb2": {"age": 27}, "rb1": {"age": 24},
                 "rb2": {"age": 29}, "wr1": {"age": 25}, "wr2": {"age": 22},
