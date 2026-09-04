@@ -31,7 +31,9 @@ def _data(*, preseason: bool = False) -> dict:
     return {
         "week": 4,
         "preseason": preseason,
-        "league": {"name": "Blueprint League", "season": "2026"},
+        "league": {
+            "league_id": "league", "name": "Blueprint League", "season": "2026",
+        },
         "teams": [
             {
                 "roster_id": 1, "team_name": "North Stars", "owner": "Alex",

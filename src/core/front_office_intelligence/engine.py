@@ -11,6 +11,7 @@ from src.core.front_office_intelligence.models import (
     ActivityProfile, AssetPreference, CompatibilityReport, FrontOfficeReport,
     LeagueFrontOfficeModel, NegotiationForecast, RelationshipEdge,
 )
+from src.core.intelligence.league_scope import league_id_from_data, scoped_evidence
 
 
 def _canonical_transactions(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -150,6 +151,12 @@ def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: Front
 
 
 def build_league_model(data: dict[str, Any], decisions: dict[int, TeamDecision] | None = None) -> LeagueFrontOfficeModel:
+    league_id = league_id_from_data(data)
+    private_evidence = scoped_evidence(
+        data, "front_office_evidence", expected_league_id=league_id,
+    )
+    if "front_office_evidence" in data:
+        data = {**data, "front_office_evidence": private_evidence.rows}
     if data.get("front_office_evidence") is None:
         data = {
             **data, "transactions": _canonical_transactions(data),
@@ -161,6 +168,8 @@ def build_league_model(data: dict[str, Any], decisions: dict[int, TeamDecision] 
 
         first_roster = int(teams[0].get("roster_id") or 0)
         return intelligence_orchestrator.analyze(data, first_roster).front_office_model
+    if any(str(decision.profile.league_id) != league_id for decision in decisions.values()):
+        raise ValueError("Decision Engine output belongs to a different league.")
     reports = {roster_id: _profile(decision, data) for roster_id, decision in decisions.items()}
     compatibilities = {}
     relationships = []

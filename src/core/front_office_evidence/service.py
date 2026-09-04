@@ -8,6 +8,7 @@ from statistics import mean
 from typing import Any, Iterable
 
 from src.core.fois.facts import TradeFact
+from src.core.intelligence.league_scope import league_id_from_data
 
 from .models import (
     FRONT_OFFICE_EVIDENCE_METHOD_VERSION,
@@ -83,8 +84,12 @@ def publish_front_office_evidence(
     data: dict[str, Any], scores: tuple[Any, ...],
 ) -> None:
     """Atomically expose already-computed summaries to request-time consumers."""
+    league_id = league_id_from_data(data)
     summaries = {
         str(score.franchise_id.rsplit(":", 1)[-1]): dict(score.front_office_evidence)
-        for score in scores if getattr(score, "front_office_evidence", None)
+        for score in scores
+        if getattr(score, "front_office_evidence", None)
+        and str(getattr(score, "league_id", "")) == league_id
+        and str(score.front_office_evidence.get("league_id") or "") == league_id
     }
     data["front_office_evidence"] = summaries

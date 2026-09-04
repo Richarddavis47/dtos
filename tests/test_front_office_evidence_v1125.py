@@ -163,7 +163,10 @@ class SharedEvidenceContractTests(unittest.TestCase):
         data = fixture_data()
         baseline = build_context(data, 1).snapshot_key
         data["front_office_evidence"] = {
-            "1": {"semantic_identity": "generation-a"},
+            "1": {
+                "league_id": str(data["league"]["league_id"]),
+                "semantic_identity": "generation-a",
+            },
         }
         first = build_context(data, 1).snapshot_key
         data["front_office_evidence"]["1"]["semantic_identity"] = "generation-b"

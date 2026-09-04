@@ -33,6 +33,7 @@ class TradeHistoricalUpgradeTests(unittest.TestCase):
         }
         self.data["gm_behavioral_intelligence"] = {
             "2": {
+                "league_id": str(self.data["league"]["league_id"]),
                 "overall_confidence": "high", "evidence_completeness": 90,
                 "dimensions": [
                     _dimension("asset_direction", "acquire_player"),
@@ -42,7 +43,11 @@ class TradeHistoricalUpgradeTests(unittest.TestCase):
             },
         }
         self.data["front_office_evidence"] = {
-            "2": {"partner_counts": {"1": 3}, "evidence_references": ["event:bilateral"]},
+            "2": {
+                "league_id": str(self.data["league"]["league_id"]),
+                "partner_counts": {"1": 3},
+                "evidence_references": ["event:bilateral"],
+            },
         }
         self.data["market_trend_summaries"] = {
             self.received: {"direction": "rising", "confidence": "high"},

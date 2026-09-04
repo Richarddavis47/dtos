@@ -603,6 +603,8 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             "behavior_profiles_loaded": len(evidence_context.behavior_by_roster),
             "trend_summaries_loaded": len(evidence_context.trends_by_asset),
             "historical_context_duration_ms": evidence_context.preparation_duration_ms,
+            "wrong_league_evidence_rejected": evidence_context.wrong_league_evidence_rejected,
+            "wrong_league_evidence_consumed": evidence_context.wrong_league_evidence_consumed,
             "provider_requests": 0,
             "raw_history_scans": 0,
             "profile_rebuilds": 0,
@@ -615,6 +617,8 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
         "profile_rebuilds": 0,
         "trend_rebuilds": 0,
         "historical_context_generation": evidence_context.generation,
+        "wrong_league_evidence_rejected": evidence_context.wrong_league_evidence_rejected,
+        "wrong_league_evidence_consumed": evidence_context.wrong_league_evidence_consumed,
         "constraints": {"protected_assets": sorted(protected), "excluded_assets": sorted(excluded)},
     }
 

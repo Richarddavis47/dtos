@@ -1,5 +1,16 @@
 # Changelog
 
+# v1.13.0 - Multi-League Intelligence Isolation
+
+- Added a fail-closed league-identity boundary for private Front Office,
+  manager-behavior, bilateral-history, and league-liquidity evidence.
+- Preserved globally shared player market trends while preventing a nested
+  league-liquidity signal from crossing into another active league.
+- Made wrong-league evidence rejection visible through bounded Trade
+  Intelligence provenance without exposing private source data.
+- Added adversarial direct-load, switch-order, same-roster-ID, A/B/C, and
+  concurrent-read regressions while preserving bounded cached execution.
+
 # v1.12.9 - Trade Intelligence Historical Upgrade
 
 - Integrated canonical Step 4 transaction evidence, Step 5 Front Office

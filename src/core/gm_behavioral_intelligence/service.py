@@ -10,6 +10,7 @@ from typing import Iterable
 
 from src.core.fois.facts import TradeFact
 from src.core.front_office_evidence.models import FrontOfficeEvidenceSummary
+from src.core.intelligence.league_scope import league_id_from_data
 
 from .models import (
     GM_BEHAVIOR_METHOD_VERSION, GM_BEHAVIOR_SCHEMA_VERSION,
@@ -203,9 +204,13 @@ gm_behavioral_intelligence = GMBehavioralIntelligenceService()
 
 def publish_gm_behavioral_intelligence(data: dict, scores: tuple[object, ...]) -> None:
     """Publish bounded completed profiles for authenticated league consumers."""
+    league_id = league_id_from_data(data)
     profiles = {
         str(getattr(score, "franchise_id").rsplit(":", 1)[-1]):
         dict(getattr(score, "gm_behavioral_profile"))
-        for score in scores if getattr(score, "gm_behavioral_profile", None)
+        for score in scores
+        if getattr(score, "gm_behavioral_profile", None)
+        and str(getattr(score, "league_id", "")) == league_id
+        and str(getattr(score, "gm_behavioral_profile").get("league_id") or "") == league_id
     }
     data["gm_behavioral_intelligence"] = profiles
