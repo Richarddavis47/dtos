@@ -12,6 +12,8 @@
 - Preserve global market memory, authorization, and bounded evidence caching.
 - Hydrate each cold league's own disposable Sleeper history cache and use its
   name on player career history; release operational history references on eviction.
+- Refresh resident secondary leagues at the established interval and resolve
+  their historical trades through the same league-scoped background pipeline.
 
 # v1.13.0 - Multi-League Intelligence Isolation
 

@@ -55,6 +55,12 @@ by this correction.
    remove a newer runtime, other leagues remain intact, and disposable season
    facts/checkpoints are untouched. A 500-runtime close regression proves the
    adapter does not accumulate those closed operational contexts.
+8. Periodic synchronization and startup historical market resolution were still
+   default-only. Resident secondary runtimes now own one maintenance loop at the
+   existing interval; inactive memberships create none. History resolution takes
+   explicit runtime state/Market/league identity. Eviction awaits current writers,
+   then releases the operational context. Existing resource admission serializes
+   heavy work and all requests remain provider-free.
 
 ## Regression proof
 

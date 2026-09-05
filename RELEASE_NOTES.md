@@ -6,6 +6,9 @@ chrome independently. Valuation uses the active league synchronization state.
 Player history uses the selected league's name and its own background Sleeper
 season reconstruction. Runtime eviction releases current history references;
 provider caches and compact checkpoints are preserved without a legacy archive.
+Resident leagues receive interval refresh and historical trade-resolution work
+using their own state, with cancellation waiting for outstanding writers before
+runtime eviction. Inactive account memberships do not create maintenance tasks.
 
 Regression coverage exercises distinct accounts, colliding roster/player IDs,
 repeated switching and concurrent requests. All 500 stored memberships are
