@@ -390,6 +390,7 @@ def create_transactions_router(
         live = data_platform.player_report(player_id, data)
         selected_league = str((data.get("league") or {}).get("league_id") or LEAGUE_ID)
         history = historical_graph(canonical_history_store, selected_league, data).player_dossier(player_id)
+        history_league_name = escape(str((data.get("league") or {}).get("name") or "Active League"))
         consensus = live["consensus"]
         provider_values = "".join(
             f'<tr><td>{escape(str(row["provider"]))}</td><td>{escape(str(row["value"] if row["value"] is not None else row["availability"]))}</td><td>{escape(str(row["freshness"]))}</td><td>{escape(str(row["confidence"]))}%</td><td>{escape(str((live["provider_availability"].get(row["provider"]) or {}).get("reason", "Available")))}</td></tr>'
@@ -432,10 +433,10 @@ def create_transactions_router(
         ownership_history = "".join(
             f'<li>{escape(str(row["season"]))} Week {escape(str(row["week"] or "Unknown"))}: {escape(row["event_type"].replace("_", " ").title())} — {escape(row["event_status"])} <small>{escape(row["source_record_id"])}</small></li>'
             for row in history["ownership_timeline"]
-        ) or '<li>No verified Day Traders ownership event is available.</li>'
+        ) or f'<li>No verified {history_league_name} ownership event is available in the retained league history.</li>'
         origin = history["league_origin"]
         historical_details = technical_details((("Canonical identity", history["identity"]["canonical_id"]), ("Identity resolution", history["identity"]["resolution_status"])))
-        historical_panel = f'''<section class="card"><h2>Day Traders Career History</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}">Open complete historical performance</a></p>{historical_details}
+        historical_panel = f'''<section class="card"><h2>{history_league_name} Career History</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}">Open complete historical performance</a></p>{historical_details}
 <h3>Annual League History</h3><div style="overflow-x:auto"><table><thead><tr><th>Season</th><th>Status</th><th>Games</th><th>Starts</th><th>Bench</th><th>Points</th><th>Overall</th><th>Position</th><th>Complete</th></tr></thead><tbody>{season_history}</tbody></table></div>
 <h3>Ownership Timeline</h3><ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></section>'''
         body = f"""

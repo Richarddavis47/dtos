@@ -180,7 +180,28 @@ async def _hydrate_league_runtime(runtime: LeagueRuntime) -> dict[str, Any]:
     )
     projections.restore_into(data)
     await _generate_fois_coordinated(data)
-    _publish_runtime_context(runtime, projections)
+    context = _publish_runtime_context(runtime, projections)
+    # The default startup pipeline already hydrates its historical chain.
+    # Other authorized runtimes need the same provider-backed foundation,
+    # without making a page request wait for multi-season archive reads.
+    # Retry partial/evicted disposable caches on a cold runtime hydration too;
+    # an existing compact chain manifest is not proof its cached facts exist.
+    if runtime.league_id != str(LEAGUE_ID) or not minimal_metadata_store.season_chain(runtime.league_id):
+        context.history_state = "warming"
+        async def prepare_history() -> None:
+            try:
+                result = await start_background_backfill(None, league_id=runtime.league_id)
+                context.history_state = str(result.get("status") or "partial")
+                await asyncio.to_thread(history_progress_contracts, runtime.league_id)
+                await _generate_fois_coordinated(runtime.state.get("data") or {})
+                context.fois_state = "ready"
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                context.history_state = "unavailable"
+        task = asyncio.create_task(prepare_history(), name="dtos-league-history")
+        runtime.background_tasks.add(task)
+        task.add_done_callback(runtime.background_tasks.discard)
     return data
 
 
@@ -853,7 +874,7 @@ app.include_router(
     create_valuation_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
-        state=STATE,
+        state=runtime_state,
         page=page,
     )
 )

@@ -207,7 +207,7 @@ class LeagueSeriesAndScaleTests(unittest.IsolatedAsyncioTestCase):
             manager = LeagueRuntimeManager(max_warm=2, hydrator=None)
             self.assertEqual(len(store.memberships(account_id)), 500)
             self.assertEqual(len(store.series(account_id)), 500)
-            for target in ("10000", "10249", "10499"):
+            for target in (str(10_000 + number) for number in range(500)):
                 membership = store.activate(account_id, target)
                 self.assertEqual(membership.league_id, target)
                 self.assertEqual(membership.roster_id, int(target) - 9999)

@@ -81,6 +81,16 @@ class PlayerApiContractTests(unittest.TestCase):
         ))
         self.client = TestClient(app)
 
+    def test_player_history_uses_selected_league_name_not_default(self) -> None:
+        for name in ("Independent Dynasty", "Other <League>"):
+            self.data["league"]["name"] = name
+            response = self.client.get("/players/player%20one")
+            self.assertEqual(response.status_code, 200)
+            from html import escape
+            self.assertIn(f"{escape(name)} Career History", response.text)
+            self.assertNotIn("Day Traders Career History", response.text)
+            self.assertNotIn("verified Day Traders ownership", response.text)
+
     def test_canonical_player_index_is_enumerable_and_url_safe(self) -> None:
         response = self.client.get("/api/players")
         self.assertEqual(response.status_code, 200)

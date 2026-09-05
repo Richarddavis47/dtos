@@ -69,6 +69,20 @@ class CanonicalHistoryStore:
                 self._current_digests[key] = semantic
                 self._generation += 1
 
+    def release_current(self, league_id: str, expected_data: dict[str, Any]) -> None:
+        """Release an evicted runtime, without deleting provider facts/checkpoints.
+
+        Identity comparison prevents a late close from removing a newer runtime.
+        Public player identities remain shared independently of league residency.
+        """
+        key = str(league_id)
+        with self._lock:
+            if self._current.get(key) is not expected_data:
+                return
+            self._current.pop(key, None)
+            self._current_digests.pop(key, None)
+            self._relevance.pop(key, None)
+
     def database_uuid(self) -> str:
         return minimal_metadata_store.database_uuid()
 

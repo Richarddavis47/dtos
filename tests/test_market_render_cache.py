@@ -162,6 +162,28 @@ class MarketRenderedRouteTests(unittest.TestCase):
             self.market_body_cache.health()["market_body_render_cache_hits"], 1,
         )
 
+    def test_account_chrome_is_never_reused_with_shared_market_body(self) -> None:
+        account = {"name": "inspection", "session": "fixture-one"}
+        app = FastAPI()
+        app.include_router(create_market_router(
+            require_data=lambda: self.state["data"], state=self.state,
+            league_id="league-a", page=lambda title, body: HTMLResponse(
+                f"{account['name']}|{account['session']}|{body}"
+            ),
+        ))
+        with TestClient(app) as client:
+            first = client.get("/market")
+            account.update(name="account-b", session="fixture-two")
+            second = client.get("/market")
+            account.update(name="account-b", session="fixture-three")
+            third = client.get("/market")
+        self.assertTrue(first.text.startswith("inspection|fixture-one|"))
+        self.assertTrue(second.text.startswith("account-b|fixture-two|"))
+        self.assertTrue(third.text.startswith("account-b|fixture-three|"))
+        self.assertEqual(first.text.split("|", 2)[2], third.text.split("|", 2)[2])
+        self.assertEqual(self.market.directory_calls, 1)
+        self.assertEqual(self.market_cache.health()["market_render_cache_hits"], 2)
+
     def test_health_exposes_bounded_render_telemetry(self) -> None:
         self.client.get("/market")
         response = self.client.get("/api/market/health")
