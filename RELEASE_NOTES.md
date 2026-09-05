@@ -1,3 +1,21 @@
+# DTOS v1.13.1 - Account and League Presentation Isolation
+
+Market and FOIS now cache only reusable league evidence, not authenticated
+account controls or session fields. Every response composes its current account
+chrome independently. Valuation uses the active league synchronization state.
+Player history uses the selected league's name and its own background Sleeper
+season reconstruction. Runtime eviction releases current history references;
+provider caches and compact checkpoints are preserved without a legacy archive.
+Resident leagues receive interval refresh and historical trade-resolution work
+using their own state, with cancellation waiting for outstanding writers before
+runtime eviction. Inactive account memberships do not create maintenance tasks.
+
+Regression coverage exercises distinct accounts, colliding roster/player IDs,
+repeated switching and concurrent requests. All 500 stored memberships are
+exercised without eager runtime creation. Global market history remains shared;
+league ownership and private intelligence remain scoped. Production acceptance
+is required before declaring this corrective release complete.
+
 # DTOS v1.13.0 - Multi-League Intelligence Isolation
 
 DTOS v1.13.0 establishes a fail-closed tenant boundary across the shared

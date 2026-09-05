@@ -16,6 +16,7 @@ from src.core.fois.registry import DEFAULT_METRIC_REGISTRY
 from src.core.fois.render_cache import FOISRenderCache
 from src.core.fois.service import FOISService, fois_enabled
 from src.ui.intelligence_presentation import exact_rank, human_status, technical_details
+from src.platform.account_context import current_account
 
 PageRenderer = Callable[[str, str], HTMLResponse]
 
@@ -324,7 +325,7 @@ def create_fois_router(
             '<p class="muted">One current intelligence profile per GM, ranked by canonical FOIS score. Historical evaluations live inside each GM profile.</p>'
             f'{content}</section>'
         )
-        return page("Front Office Intelligence System", body) if page else HTMLResponse(body)
+        return HTMLResponse(body)
 
     def cached_fois_page(
         league_id: str, data: dict[str, Any], generation: str,
@@ -341,6 +342,11 @@ def create_fois_router(
 
     @router.get("/fois", response_class=HTMLResponse)
     def fois_page(league_id: str = Query(default="")) -> HTMLResponse:
+        account = current_account()
+        if account is not None and account.membership is not None:
+            # Missing/warming data must not activate the single-persisted-league
+            # fallback for a different authenticated membership.
+            league_id = account.membership.league_id
         status_value = service.status()
         try:
             data = require_data()
@@ -350,7 +356,8 @@ def create_fois_router(
             data = {}
         generation = str(status_value.get("last_run") or "persisted-cold")
         body = cached_fois_page(league_id, data, generation)
-        return HTMLResponse(body)
+        # Only league evidence is shared; account/session chrome is request-local.
+        return page("Front Office Intelligence System", body.decode("utf-8")) if page else HTMLResponse(body)
 
     @router.get("/fois/gms/{gm_id}", response_class=HTMLResponse)
     async def gm_profile_page(gm_id: str, league_id: str = Query(default="")) -> HTMLResponse:

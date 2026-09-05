@@ -397,12 +397,13 @@ def create_market_router(
             return body.encode("utf-8")
 
         def render() -> bytes:
-            body = body_cache.get_or_build(
+            return body_cache.get_or_build(
                 body_key, generation, render_body,
-            ).decode("utf-8")
-            return page("Asset Market", body).body
+            )
 
-        return HTMLResponse(render_cache.get_or_build(key, generation, render))
+        # Shared caches must never retain account chrome or session CSRF fields.
+        body = render_cache.get_or_build(key, generation, render).decode("utf-8")
+        return page("Asset Market", body)
 
     router.add_api_route("/market", market_page, methods=["GET"], response_class=HTMLResponse)
     return router

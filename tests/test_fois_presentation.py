@@ -5,8 +5,9 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
+from types import SimpleNamespace
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
@@ -16,6 +17,7 @@ from src.core.fois.facts import FOISFacts, SeasonResult
 from src.core.fois.repository import FOISRepository
 from src.core.fois.service import FOISService
 from src.ui.design_system import page_header
+from src.platform.account_context import _CURRENT_ACCOUNT
 
 
 def _page(title: str, body: str) -> HTMLResponse:
@@ -79,6 +81,27 @@ class FOISPresentationTests(unittest.TestCase):
         self.assertIn('id="executive-profiles"', html)
         self.assertIn('href="/history"', html)
 
+    def test_cached_evidence_does_not_retain_account_or_session_chrome(self) -> None:
+        self._persist_profiles("active-league", 1)
+        account = {"name": "inspection", "session": "fixture-one"}
+        app = FastAPI()
+        app.include_router(create_fois_router(
+            service=self.service, require_data=lambda: self.data,
+            page=lambda title, body: HTMLResponse(
+                f"{account['name']}|{account['session']}|{body}"
+            ),
+        ))
+        with TestClient(app) as client:
+            before = client.get("/fois").text
+            account.update(name="independent-account", session="fixture-two")
+            after = client.get("/fois").text
+            account.update(session="fixture-three")
+            renewed = client.get("/fois").text
+        self.assertTrue(before.startswith("inspection|fixture-one|"))
+        self.assertTrue(after.startswith("independent-account|fixture-two|"))
+        self.assertTrue(renewed.startswith("independent-account|fixture-three|"))
+        self.assertEqual(before.split("|", 2)[2], renewed.split("|", 2)[2])
+
     def test_explicit_valid_league_overrides_loaded_default(self) -> None:
         self._persist_profiles("active-league", 1)
         self._persist_profiles("other-league", 1)
@@ -107,6 +130,20 @@ class FOISPresentationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Executive 1", response.text)
         self.assertIn("/api/fois/leagues/persisted-league/gms/gm-0", response.text)
+
+    def test_authenticated_warming_never_borrows_only_persisted_league(self) -> None:
+        self._persist_profiles("other-private-league", 1)
+        marker = _CURRENT_ACCOUNT.set(SimpleNamespace(
+            membership=SimpleNamespace(league_id="active-league"),
+        ))
+        try:
+            with self._client(Mock(side_effect=HTTPException(503, "warming"))) as client:
+                response = client.get("/fois")
+        finally:
+            _CURRENT_ACCOUNT.reset(marker)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("Executive 1", response.text)
+        self.assertNotIn("other-private-league", response.text)
 
     def test_pending_generation_is_distinct_from_missing_data(self) -> None:
         response = self._client().get("/fois")

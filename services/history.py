@@ -46,6 +46,7 @@ _PROGRESS_CACHE_LOCK = RLock()
 _RETAINED_PROGRESS: dict[str, dict[str, Any]] = {}
 _BACKFILL_LOCK = asyncio.Lock()
 _BACKFILL_TASK: asyncio.Task[dict[str, Any]] | None = None
+_LEAGUE_BACKFILL_TASKS: dict[str, asyncio.Task[dict[str, Any]]] = {}
 _ACTIVE_ENRICHMENT_STATUSES = frozenset({
     "queued", "running", "partially_complete", "retry_wait", "recoverable", "stale",
 })
@@ -496,19 +497,21 @@ async def enrich_player_history(
     }
 
 
-def start_background_backfill(fetch: Any) -> asyncio.Task[dict[str, Any]]:
+def start_background_backfill(fetch: Any, *, league_id: str | None = None) -> asyncio.Task[dict[str, Any]]:
     """Discover and cache provider-owned seasons without legacy persistence."""
     global _BACKFILL_TASK
-    if _BACKFILL_TASK is None or _BACKFILL_TASK.done():
+    selected_league = str(league_id if league_id is not None else LEAGUE_ID)
+    task = _LEAGUE_BACKFILL_TASKS.get(selected_league)
+    if task is None or task.done():
         async def coordinated_backfill() -> dict[str, Any]:
             with lifecycle_coordinator.phase("historical_cache") as phase:
                 from src.core.intelligence_memory.sleeper_source import SleeperHistoricalSource
 
                 source = SleeperHistoricalSource()
-                chain = await source.discover(LEAGUE_ID)
+                chain = await source.discover(selected_league)
                 current = datetime.now(timezone.utc).year
                 manifest = {
-                    "root_league_id": str(LEAGUE_ID),
+                    "root_league_id": selected_league,
                     "year_one": chain.year_one,
                     "terminated": bool(chain.terminated),
                     "termination_reason": chain.termination_reason,
@@ -531,7 +534,7 @@ def start_background_backfill(fetch: Any) -> asyncio.Task[dict[str, Any]]:
                 }
                 # Discovery is durable before hydration. A later provider or disk
                 # failure therefore cannot make the dynasty appear to start late.
-                minimal_metadata_store.record_season_chain(LEAGUE_ID, manifest)
+                minimal_metadata_store.record_season_chain(selected_league, manifest)
                 available = []
                 unavailable = []
                 for reference in chain.seasons:
@@ -548,11 +551,11 @@ def start_background_backfill(fetch: Any) -> asyncio.Task[dict[str, Any]]:
                             raise RuntimeError("provider_season_unavailable")
                         # Alias under the current league so consumers use one chain.
                         normalized = sleeper_season_cache.normalize(
-                            LEAGUE_ID, reference.season, season.facts,
+                            selected_league, reference.season, season.facts,
                         )
                         sleeper_season_cache.write(normalized)
                         minimal_metadata_store.record_season_cache_checkpoint(
-                            LEAGUE_ID, reference.season, normalized.checksum,
+                            selected_league, reference.season, normalized.checksum,
                             normalized.status,
                         )
                     except Exception as exc:
@@ -569,7 +572,7 @@ def start_background_backfill(fetch: Any) -> asyncio.Task[dict[str, Any]]:
                         })
                         available.append(reference.season)
                     manifest["updated_at"] = _now()
-                    minimal_metadata_store.record_season_chain(LEAGUE_ID, manifest)
+                    minimal_metadata_store.record_season_chain(selected_league, manifest)
                 result = {
                     "status": "complete" if not unavailable else "partial",
                     "seasons": available, "unavailable_seasons": unavailable,
@@ -585,10 +588,29 @@ def start_background_backfill(fetch: Any) -> asyncio.Task[dict[str, Any]]:
                 })
                 return result
 
-        _BACKFILL_TASK = asyncio.create_task(
-            coordinated_backfill(), name="dtos-history-worker",
-        )
-    return _BACKFILL_TASK
+        async def background_worker() -> dict[str, Any]:
+            # Lifecycle admission and archive normalization may block. Neither
+            # belongs on the request/event-loop thread. The lifecycle phase
+            # serializes history against Market/browser heavy work.
+            worker = asyncio.create_task(asyncio.to_thread(
+                lambda: asyncio.run(coordinated_backfill()),
+            ))
+            try:
+                return await asyncio.shield(worker)
+            except asyncio.CancelledError:
+                # Do not abandon a live archive writer on runtime eviction.
+                await worker
+                raise
+
+        task = asyncio.create_task(background_worker(), name="dtos-history-worker")
+        _LEAGUE_BACKFILL_TASKS[selected_league] = task
+        def finished(completed: asyncio.Task[dict[str, Any]]) -> None:
+            if _LEAGUE_BACKFILL_TASKS.get(selected_league) is completed:
+                _LEAGUE_BACKFILL_TASKS.pop(selected_league, None)
+        task.add_done_callback(finished)
+        if selected_league == str(LEAGUE_ID):
+            _BACKFILL_TASK = task
+    return task
 
 
 async def direct_fetch(path: str) -> Any:

@@ -84,6 +84,11 @@ class CanonicalLeagueContext:
         self.runtime.source_generations = generations
         return generations
 
+    def close(self) -> None:
+        """Drop secondary operational references after background tasks finish."""
+        if self.runtime.owns_state:
+            self.historical_store.release_current(self.league_id, self.data)
+
     def health(self) -> dict[str, Any]:
         projection = self.projection.health()
         market = self.market.health()

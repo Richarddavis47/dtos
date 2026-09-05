@@ -557,14 +557,20 @@ async def sync_sleeper_league(
 ) -> dict[str, Any]:
     """Synchronize a league without replacing process-global league state."""
     service = projections or ProjectionService(league_id=str(league_id))
-    return await asyncio.to_thread(
+    worker = asyncio.create_task(asyncio.to_thread(
         lambda: asyncio.run(_sync_sleeper(
             force_players=force_players,
             league_id=str(league_id),
             state=state,
             projections=service,
         )),
-    )
+    ))
+    try:
+        return await asyncio.shield(worker)
+    except asyncio.CancelledError:
+        # Eviction/shutdown cannot abandon a still-writing league sync thread.
+        await asyncio.gather(worker, return_exceptions=True)
+        raise
 
 
 async def sync_transactions(

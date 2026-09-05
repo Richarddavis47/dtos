@@ -799,6 +799,78 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
             self.assertFalse(coordinator.market_build_allowed())
         self.assertTrue(coordinator.market_build_allowed())
 
+    def test_evicted_runtime_releases_history_operational_data_without_cross_league_removal(self) -> None:
+        from src.core.league_runtime import CanonicalLeagueContext, LeagueRuntime
+        store = CanonicalHistoryStore()
+        other = {"league": {"league_id": "other"}}
+        store.update_current("other", other)
+        for index in range(500):
+            runtime = LeagueRuntime(f"fixture-{index}")
+            data = {"league": {"league_id": runtime.league_id}}
+            runtime.apply_data(data)
+            store.update_current(runtime.league_id, data)
+            runtime.canonical_context = CanonicalLeagueContext(
+                runtime=runtime, historical_store=store,
+                projection=None, brain=None, market=None,
+            )
+            asyncio.run(runtime.close())
+            self.assertNotIn(runtime.league_id, store._current)
+            self.assertIs(store._current["other"], other)
+        self.assertEqual(len(store._current), 1)
+
+    def test_old_runtime_close_cannot_release_new_runtime_history(self) -> None:
+        store = CanonicalHistoryStore()
+        old = {"league": {"league_id": "L"}}
+        new = {"league": {"league_id": "L"}, "teams": []}
+        store.update_current("L", old)
+        store.update_current("L", new)
+        store.release_current("L", old)
+        self.assertIs(store._current["L"], new)
+
+    def test_backfill_is_league_scoped_single_flight_and_reuses_cached_facts(self) -> None:
+        from services import history
+        import threading
+
+        parent_thread = threading.get_ident()
+        calls = []
+
+        class Source:
+            async def discover(self, league_id: str) -> SeasonChain:
+                self_thread = threading.get_ident()
+                if self_thread == parent_thread:
+                    raise AssertionError("historical work ran on the event loop")
+                return SeasonChain(league_id, (
+                    SeasonReference(f"{league_id}-2025", 2025, None,
+                                    "available", "league_object"),
+                ), True, "provider_chain_terminated")
+
+            async def completed_season_facts(self, league_id, season):
+                calls.append((league_id, season))
+                return {"league": {"league_id": league_id, "season": str(season)},
+                        "transactions": {"1": [{"transaction_id": "same-id",
+                                                 "metadata": {"fixture_owner": league_id}}]}}
+
+        async def run():
+            first = history.start_background_backfill(None, league_id="A")
+            self.assertIs(first, history.start_background_backfill(None, league_id="A"))
+            second = history.start_background_backfill(None, league_id="B")
+            self.assertIsNot(first, second)
+            await asyncio.gather(first, second)
+            await history.start_background_backfill(None, league_id="B")
+
+        with tempfile.TemporaryDirectory() as directory:
+            cache = SleeperSeasonCache(Path(directory) / "cache")
+            metadata = MinimalMetadataStore(Path(directory) / "metadata.sqlite3")
+            with patch.object(history, "sleeper_season_cache", cache), patch.object(
+                history, "minimal_metadata_store", metadata,
+            ), patch("src.core.intelligence_memory.sleeper_source.SleeperHistoricalSource", Source):
+                asyncio.run(run())
+            self.assertCountEqual(calls, [("A-2025", 2025), ("B-2025", 2025)])
+            for league in ("A", "B"):
+                self.assertEqual(cache.read(league, 2025).facts["league"]["league_id"],
+                                 f"{league}-2025")
+                self.assertEqual(metadata.season_chain(league)["root_league_id"], league)
+
 
 if __name__ == "__main__":
     unittest.main()

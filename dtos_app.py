@@ -165,7 +165,9 @@ def _publish_runtime_context(
     return context
 
 
-async def _hydrate_league_runtime(runtime: LeagueRuntime) -> dict[str, Any]:
+async def _hydrate_league_runtime(
+    runtime: LeagueRuntime, *, prepare_history: bool = True,
+) -> dict[str, Any]:
     """Hydrate one requested league without replacing the configured default."""
     projections = ProjectionService(league_id=runtime.league_id)
     await sync_sleeper_league(
@@ -180,8 +182,61 @@ async def _hydrate_league_runtime(runtime: LeagueRuntime) -> dict[str, Any]:
     )
     projections.restore_into(data)
     await _generate_fois_coordinated(data)
-    _publish_runtime_context(runtime, projections)
+    if runtime.status in {RuntimeState.EVICTING, RuntimeState.CLOSED}:
+        # An interval refresh may finish while close() awaits its writer. Do
+        # not spawn a new history/Market flight outside close's task snapshot.
+        return data
+    prior_context = runtime.canonical_context
+    context = _publish_runtime_context(runtime, projections)
+    if prior_context is not None:
+        context.history_state = prior_context.history_state
+    context.market.reconcile(data, runtime.state, canonical_history_store, runtime.league_id)
+    # The default startup pipeline already hydrates its historical chain.
+    # Other authorized runtimes need the same provider-backed foundation,
+    # without making a page request wait for multi-season archive reads.
+    # Retry partial/evicted disposable caches on a cold runtime hydration too;
+    # an existing compact chain manifest is not proof its cached facts exist.
+    history_needed = (
+        prepare_history or context.history_state in {"partial", "unavailable"}
+        or runtime.lifecycle.get("historical_market_resolution") in {"deferred", "failed"}
+    )
+    history_active = any(
+        task.get_name() == "dtos-league-history" and not task.done()
+        for task in runtime.background_tasks
+    )
+    if history_needed and not history_active:
+        context.history_state = "warming"
+        async def prepare_league_history() -> None:
+            try:
+                result = await start_background_backfill(None, league_id=runtime.league_id)
+                active_context = runtime.canonical_context or context
+                active_context.history_state = str(result.get("status") or "partial")
+                await asyncio.to_thread(history_progress_contracts, runtime.league_id)
+                await _generate_fois_coordinated(runtime.state.get("data") or {})
+                active_context.fois_state = "ready"
+                try:
+                    await resolve_historical_trade_market(runtime=runtime)
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    runtime.lifecycle["historical_market_resolution"] = "failed"
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                (runtime.canonical_context or context).history_state = "unavailable"
+        task = asyncio.create_task(prepare_league_history(), name="dtos-league-history")
+        runtime.background_tasks.add(task)
+        task.add_done_callback(runtime.background_tasks.discard)
+    if runtime.league_id != str(LEAGUE_ID):
+        from services.league_maintenance import ensure_periodic_refresh
+        ensure_periodic_refresh(
+            runtime, _refresh_resident_league, interval_seconds=SYNC_MINUTES * 60,
+        )
     return data
+
+
+async def _refresh_resident_league(runtime: LeagueRuntime) -> dict[str, Any]:
+    return await _hydrate_league_runtime(runtime, prepare_history=False)
 
 
 league_runtime_manager = LeagueRuntimeManager(
@@ -438,31 +493,46 @@ async def background_sync() -> None:
         schedule_live_visual_capture()
 
 
-async def resolve_historical_trade_market() -> None:
+async def resolve_historical_trade_market(*, runtime: LeagueRuntime | None = None) -> None:
     """Run event-driven provider matching only after the first Market is stable."""
-    runtime_metrics.mark_background("historical_market_resolution", "waiting")
+    market = runtime.market_context if runtime is not None else asset_market_cache
+    state = runtime.state if runtime is not None else STATE
+    selected_league = runtime.league_id if runtime is not None else LEAGUE_ID
+
+    def mark(status: str) -> None:
+        if runtime is not None:
+            runtime.lifecycle["historical_market_resolution"] = status
+        else:
+            runtime_metrics.mark_background("historical_market_resolution", status)
+
+    mark("waiting")
     for _ in range(300):
-        metrics = asset_market_cache.metrics()
+        metrics = market.metrics()
         if metrics.get("status") == "ready" and not metrics.get("build_active"):
             break
         await asyncio.sleep(1)
     else:
-        runtime_metrics.mark_background("historical_market_resolution", "deferred")
+        mark("deferred")
         return
-    runtime_metrics.mark_background("historical_market_resolution", "running")
-    async with intelligence_heavy_lock:
+    mark("running")
+    def resolve() -> Any:
         with lifecycle_coordinator.phase("historical_market_resolution"):
-            result = await asyncio.to_thread(
-                historical_trade_resolution_service.run_safe,
-                canonical_history_store, LEAGUE_ID,
+            return historical_trade_resolution_service.run_safe(
+                canonical_history_store, selected_league,
             )
-    runtime_metrics.mark_background(
-        "historical_market_resolution", "complete" if result else "failed",
-    )
+
+    async with intelligence_heavy_lock:
+        worker = asyncio.create_task(asyncio.to_thread(resolve))
+        try:
+            result = await asyncio.shield(worker)
+        except asyncio.CancelledError:
+            await asyncio.gather(worker, return_exceptions=True)
+            raise
+    mark("complete" if result else "failed")
     if result:
         runtime_metrics.mark_background("fois_generation", "running")
         try:
-            await _generate_fois_coordinated(STATE["data"])
+            await _generate_fois_coordinated(state["data"])
         except Exception:
             runtime_metrics.mark_background("fois_generation", "failed")
         else:
@@ -853,7 +923,7 @@ app.include_router(
     create_valuation_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
-        state=STATE,
+        state=runtime_state,
         page=page,
     )
 )
