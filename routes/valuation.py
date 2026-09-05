@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import asdict
 from html import escape
 from typing import Any, Awaitable, Callable
 
@@ -12,6 +13,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from src.core.brain import brain_service
 from src.core.provider_network import provider_network_report
 from src.core.valuation.automation import calibration_report
+from src.core.valuation.config import DEFAULT_CONFIG, NORMALIZATION_VERSION
 from src.core.valuation.universe import ValuationUniverse
 from src.core.valuation_intelligence import valuation_intelligence_report
 
@@ -42,6 +44,31 @@ def create_valuation_router(*, ensure_fresh: EnsureFresh, require_data: RequireD
         await ensure_fresh()
         report = provider_network_report(require_data())
         return _network_envelope(report, {"providers": report["providers"], "provider_dependencies": report["provider_dependencies"], "evidence_summary": report["evidence_summary"], "performance": report["performance"], "safety": report["safety"]})
+
+    @router.get("/normalization-inputs")
+    async def normalization_inputs(offset: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=250)) -> Any:
+        """Bounded retained inputs for restart diagnosis; no provider or DB work."""
+        await ensure_fresh()
+        data = require_data()
+        market = data.get("market_data") or {}
+        sources = market.get("providers") or {}
+        keys = sorted((name, str(asset_id)) for name in ("FantasyCalc", "DynastyProcess")
+                      for asset_id in (sources.get(name) or {}))
+        rows = []
+        for name, asset_id in keys[offset:offset + limit]:
+            source = sources[name][asset_id]
+            source = source if isinstance(source, dict) else {"value": source}
+            rows.append({"asset_id": "player:" + asset_id, "provider": name,
+                         "raw_value": source.get("value"),
+                         "source_confidence": source.get("confidence"),
+                         "source_timestamp": source.get("updated_at"),
+                           "provider_rank": source.get("rank"),
+                           "normalization_version": NORMALIZATION_VERSION,
+                           "scale": asdict(DEFAULT_CONFIG.provider_scales[name])})
+        return {"source": "retained_selected_league_provider_inputs",
+                "synchronization_generation": state.get("last_sync"),
+                "league_id": (data.get("league") or {}).get("league_id"),
+                "total": len(keys), "offset": offset, "limit": limit, "records": rows}
 
     async def network() -> dict[str, Any]:
         await ensure_fresh()
