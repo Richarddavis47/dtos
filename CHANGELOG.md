@@ -1,5 +1,14 @@
 # Changelog
 
+# v1.13.4 — Bounded Restart Evidence Deduplication
+
+- Correct a diagnostic-only production capture size failure by retaining normalized
+  provider rows once, in their existing canonical valuation location.
+- Preserve exact safe confidence/freshness fields, every structural difference,
+  private-data protection, atomic persistence and unchanged node/byte bounds.
+- Extend the production-shaped regression to prove the old duplicate layout fails
+  while the complete deduplicated layout fits. No intelligence or compatibility change.
+
 # v1.13.3 - Semantic Freshness and Restart Evidence
 
 - Use the established family-aware material freshness boundaries for normalized

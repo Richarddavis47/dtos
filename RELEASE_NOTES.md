@@ -1,3 +1,18 @@
+# DTOS v1.13.4 — Bounded Restart Evidence Deduplication
+
+The v1.13.3 pre-restart collector correctly rejected a 503,868-node production
+payload against its 500,000-node limit. No restart occurred. Normalized provider
+rows were duplicated in confidence evidence and canonical valuation records.
+
+This diagnostic-only correction retains those rows once, with exact safe numeric
+confidence and freshness fields at their canonical location. All unknown fields,
+ordering, privacy checks, publication fences and 64 MiB / 500,000-node bounds remain.
+Evidence schema v3 explicitly rejects comparison with the old duplicate layout.
+
+The independent semantic-freshness correction and account/league isolation remain
+unchanged. The original v1.13.2 restart cause remains historically unclassified.
+Production restart and full acceptance remain required before completion.
+
 # DTOS v1.13.3 - Semantic Freshness and Restart Evidence
 
 Normalized provider confidence now follows DTOS's existing material freshness

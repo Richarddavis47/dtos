@@ -195,7 +195,9 @@ def _capture(read: Callable[[str], dict[str, Any]], output: Path) -> dict[str, A
         "ownership_digest": semantic.get("ownership_dependency_digest"),
         "calibration": calibration,
         "artifact_compatibility": health,
-        "provider_confidence": inputs + [p for a in valuation for p in a.get("providers", [])],
+        # Normalized provider rows already occur in semantic_records[].valuation.
+        # Retain raw normalization inputs here, never a second copy of those rows.
+        "provider_confidence": inputs,
         "source_timestamps": [{k: p.get(k) for k in (
             "provider_id", "last_successful_refresh", "freshness_assessment",
             "confidence_contribution", "reliability_dimensions", "effective_calibration_weight",
