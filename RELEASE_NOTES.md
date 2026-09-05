@@ -1,3 +1,16 @@
+# DTOS v1.13.2 - League-Scoped Projection Restoration
+
+Production restart acceptance found that the module-level projection service
+could briefly expose another league's newer saved snapshot before synchronization.
+It now restores using the configured league identity from initialization onward.
+If that league has no snapshot, it stays pending instead of borrowing one.
+
+This correction does not alter projection values, scoring, Market compatibility,
+storage layout, account authorization, or resource thresholds. A fresh-process
+regression reproduces the original failure and verifies independent league
+overrides and missing-evidence behavior. Full release and production gates remain
+required before completion; v1.13.1 provenance remains immutable.
+
 # DTOS v1.13.1 - Account and League Presentation Isolation
 
 Market and FOIS now cache only reusable league evidence, not authenticated

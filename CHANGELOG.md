@@ -1,5 +1,14 @@
 # Changelog
 
+# v1.13.2 - League-Scoped Projection Restoration
+
+- Bind the configured projection service to its league before durable restoration,
+  preventing a newer foreign-league snapshot from appearing during startup.
+- Preserve pending state when that league has no compatible snapshot; keep shared
+  provider evidence and all projection/scoring semantics unchanged.
+- Reproduce fresh-process startup across three league overrides, a newer foreign
+  snapshot, and missing own evidence, including provider-free repeated reads.
+
 # v1.13.1 - Account and League Presentation Isolation
 
 - Keep Market and FOIS cached league evidence separate from request-local account,
