@@ -231,7 +231,8 @@ class FOISService:
                 tuple(sorted(str(item) for item in rows.get("inherited_obligations") or ())),
                 takeover_context,
             )
-            self.repository.ensure_tenure(tenure, takeover)
+            tenure = self.repository.ensure_tenure(tenure, takeover)
+            started_at = tenure.started_at
             history_source = (
                 "explicit FOIS facts"
                 if supplied_history is not None
