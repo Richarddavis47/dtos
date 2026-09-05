@@ -1,3 +1,20 @@
+# DTOS v1.13.5 — FOIS Active Tenure Continuity
+
+Production acceptance found that a league's historical evidence and newly
+calculated scores existed, but current profiles still selected earlier empty
+evaluations. Earlier history changed the inferred tenure ID; the one-active-tenure
+constraint rejected its insertion while scores referenced that missing ID.
+
+FOIS now reuses the persisted active tenure for the same owner and publishes its
+scores with that returned identity. Historical evidence does not imply an owner
+change. Takeover snapshots remain immutable, actual ownership changes still close
+the previous tenure, and account/league/franchise boundaries remain separate.
+No scoring, historical truth, provider, resource, or compatibility rule changes.
+No production data is manually repaired. Normal background generation publishes
+the corrected current profile; prior evidence remains retained.
+
+Full validation and production acceptance remain required before completion.
+
 # DTOS v1.13.4 — Bounded Restart Evidence Deduplication
 
 The v1.13.3 pre-restart collector correctly rejected a 503,868-node production

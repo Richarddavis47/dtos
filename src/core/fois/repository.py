@@ -232,6 +232,17 @@ class FOISRepository:
                 "SELECT * FROM fois_gm_tenures WHERE league_id=? AND franchise_id=? AND active=1",
                 (tenure.league_id, tenure.franchise_id),
             ).fetchone()
+            if (active and active["gm_id"] == tenure.gm_id
+                    and active["tenure_id"] != tenure.tenure_id):
+                # Earlier history arriving is not an ownership transition.
+                # Keep the established identity and immutable takeover snapshot;
+                # otherwise the unique-active constraint silently rejects the
+                # newly inferred ID while scores reference that missing tenure.
+                return GMTenure(
+                    active["tenure_id"], active["league_id"], active["franchise_id"],
+                    active["gm_id"], active["gm_name"], active["started_at"],
+                    active["ended_at"], bool(active["active"]),
+                )
             if active and active["gm_id"] != tenure.gm_id:
                 connection.execute(
                     "UPDATE fois_gm_tenures SET active=0,ended_at=? WHERE tenure_id=?",

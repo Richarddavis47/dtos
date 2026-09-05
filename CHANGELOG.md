@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.13.5 — FOIS Active Tenure Continuity
+
+- Preserve an existing active GM tenure when earlier historical evidence arrives.
+- Publish newly evaluated scores against that persisted identity, avoiding an
+  ignored unique-active insert and unreachable evidence-backed profiles.
+- Preserve immutable takeover snapshots, owner-change isolation, scoring rules,
+  provider-free requests, and bounded process execution.
+
 # v1.13.4 — Bounded Restart Evidence Deduplication
 
 - Correct a diagnostic-only production capture size failure by retaining normalized
