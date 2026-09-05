@@ -46,6 +46,18 @@ def fingerprint(value: Any) -> str:
     ).encode()).hexdigest()
 
 
+_NORMALIZED_PROVIDER_PATH = re.compile(
+    r"^\$\.semantic_records/\d+/key:" + fingerprint("valuation")[:16]
+    + r"/key:" + fingerprint("providers")[:16] + r"/\d+(?:/|$)"
+)
+
+
+def _public_evidence_path(path: str) -> bool:
+    """Only existing confidence evidence and the exact canonical provider location."""
+    return (path.startswith(("$.provider_confidence/", "$.source_timestamps/"))
+            or _NORMALIZED_PROVIDER_PATH.match(path) is not None)
+
+
 def snapshot(inputs: dict[str, Any]) -> dict[str, Any]:
     if set(inputs) != REQUIRED:
         raise ValueError("Restart evidence requires the complete exact input contract")
@@ -64,7 +76,7 @@ def snapshot(inputs: dict[str, Any]) -> dict[str, Any]:
             node = {"kind": "object", "children": {}}
             for key in sorted(value):
                 # Hash nested keys too: roster names and IDs can be object keys.
-                public = (path.startswith(("$.provider_confidence/", "$.source_timestamps/"))
+                public = (_public_evidence_path(path)
                           and key in PUBLIC_CONFIDENCE_FIELDS | PUBLIC_STATE_FIELDS)
                 full_hash = fingerprint(key)
                 short_hash = full_hash[:16]
@@ -79,12 +91,12 @@ def snapshot(inputs: dict[str, Any]) -> dict[str, Any]:
             ]}
         elif value is None or isinstance(value, (str, bool, int, float)):
             node = {"kind": type(value).__name__, "sha256": fingerprint(value)}
-            if (path.startswith("$.provider_confidence/")
+            if ((path.startswith("$.provider_confidence/") or _NORMALIZED_PROVIDER_PATH.match(path))
                     and path.rsplit("/", 1)[-1] in PUBLIC_CONFIDENCE_FIELDS
                     and isinstance(value, (int, float)) and not isinstance(value, bool)):
                 node["value"] = value
             field = path.rsplit("/", 1)[-1]
-            if path.startswith(("$.provider_confidence/", "$.source_timestamps/")):
+            if _public_evidence_path(path):
                 if (field in PUBLIC_STATE_FIELDS and isinstance(value, (int, float))
                         and not isinstance(value, bool)):
                     node["value"] = value
@@ -100,7 +112,7 @@ def snapshot(inputs: dict[str, Any]) -> dict[str, Any]:
         return node
 
     tree = {key: walk(inputs[key], "$." + key) for key in sorted(inputs)}
-    result = {"schema": "dtos-restart-evidence-v2", "key_hashes": key_hashes,
+    result = {"schema": "dtos-restart-evidence-v3", "key_hashes": key_hashes,
               "tree": tree, "node_count": node_count}
     if len(json.dumps(result).encode()) > MAX_BYTES:
         raise ValueError("Restart evidence exceeds its byte budget")
@@ -108,7 +120,7 @@ def snapshot(inputs: dict[str, Any]) -> dict[str, Any]:
 
 
 def differences(before: dict[str, Any], after: dict[str, Any]) -> list[dict[str, Any]]:
-    if before.get("schema") != after.get("schema") or before.get("schema") != "dtos-restart-evidence-v2":
+    if before.get("schema") != after.get("schema") or before.get("schema") != "dtos-restart-evidence-v3":
         raise ValueError("Incompatible restart evidence schemas")
     left, right = before["tree"], after["tree"]
     before_keys, after_keys = before.get("key_hashes", {}), after.get("key_hashes", {})

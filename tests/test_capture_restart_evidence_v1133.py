@@ -28,7 +28,8 @@ class RestartCaptureTests(unittest.TestCase):
         from src.core.valuation.universe import ValuationUniverse
         from src.core.brain import brain_service
         from src.core.asset_market.engine import _summary
-        with tempfile.TemporaryDirectory() as folder, patch.object(fixture, "ASSET_COUNT", 1009):
+        from tools.validation.restart_evidence import snapshot
+        with tempfile.TemporaryDirectory() as folder, patch.object(fixture, "ASSET_COUNT", 1500):
             data = fixture._cache(Path(folder) / "fixture.json")
             # The lifecycle fixture intentionally seeds one controlled Brain asset.
             # Restart evidence must also fit a populated production Brain universe.
@@ -56,7 +57,17 @@ class RestartCaptureTests(unittest.TestCase):
                     result["semantic_identity"]["provider_evidence_digest"] = provider_digest(valuation)
                 return result
             output = Path(folder) / "capture.json"
-            result = capture(read, output)
+            def reject_duplicate_layout(inputs):
+                duplicated = {**inputs, "provider_confidence": inputs["provider_confidence"] + [
+                    provider for record in inputs["semantic_records"]
+                    for provider in record["valuation"].get("providers", [])
+                ]}
+                with self.assertRaisesRegex(ValueError, "leaf budget"):
+                    snapshot(duplicated)
+                return snapshot(inputs)
+
+            with patch("tools.validation.capture_restart_evidence.snapshot", side_effect=reject_duplicate_layout):
+                result = capture(read, output)
             self.assertEqual(result["capture"]["asset_count"], len(valuation))
             self.assertGreater(len(valuation), 1000)
             self.assertLess(output.stat().st_size, 64 * 1024 * 1024)
