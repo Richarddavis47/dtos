@@ -1,5 +1,16 @@
 # Changelog
 
+# v1.13.3 - Semantic Freshness and Restart Evidence
+
+- Use the established family-aware material freshness boundaries for normalized
+  provider confidence instead of continuous wall-clock micro-drift.
+- Preserve stale status, new-source invalidation, league isolation and shared
+  global market evidence; add cross-process confidence regressions.
+- Add bounded authenticated restart capture with paginated retained normalization
+  inputs, identity checks, structural differences and atomic private evidence.
+- The earlier v1.13.2 restart remains historically unclassified: exact inputs were
+  not retained. The confidence defect was independently reproduced.
+
 # v1.13.2 - League-Scoped Projection Restoration
 
 - Bind the configured projection service to its league before durable restoration,

@@ -1,3 +1,21 @@
+# DTOS v1.13.3 - Semantic Freshness and Restart Evidence
+
+Normalized provider confidence now follows DTOS's existing material freshness
+tiers. Evidence still loses confidence at legitimate stale boundaries, but small
+clock movement within a tier no longer changes canonical confidence. Normalization
+contract 1.1 records this correction; no compatibility check is bypassed.
+
+An authenticated, bounded restart evidence command captures retained provider
+inputs, Brain/valuation records, projections, calibration and Market rows. It
+checks selected identity and generation boundaries, records structural differences
+without raw private identities, and atomically retains evidence before rejecting
+a moving boundary. These temporary diagnostic files are not publication assets.
+
+The prior v1.13.2 restart incident remains unclassified because its exact source
+inputs were not retained. No retrospective causal attribution is made.
+
+Production acceptance and publication must pass before completion is declared.
+
 # DTOS v1.13.2 - League-Scoped Projection Restoration
 
 Production restart acceptance found that the module-level projection service

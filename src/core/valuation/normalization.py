@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from bisect import bisect_left, bisect_right
 from datetime import datetime, timezone
-from math import exp
 from typing import Iterable
+
+from src.core.freshness import assess_freshness
 
 from src.core.valuation.config import CANONICAL_MAX, DEFAULT_CONFIG, NORMALIZATION_VERSION, ValuationConfig
 from src.core.valuation.models import NormalizedValuation
@@ -29,7 +30,7 @@ def prepare_distribution(
     )
 
 
-def _freshness(updated_at: str | None, config: ValuationConfig) -> tuple[str, int]:
+def _freshness(updated_at: str | None, provider: str) -> tuple[str, int]:
     if not updated_at:
         return "unknown", 70
     try:
@@ -38,8 +39,19 @@ def _freshness(updated_at: str | None, config: ValuationConfig) -> tuple[str, in
         hours = max(0.0, (datetime.now(timezone.utc) - observed.astimezone(timezone.utc)).total_seconds() / 3600)
     except ValueError:
         return "unknown", 60
-    factor = exp(-hours / max(config.freshness_half_life_hours, 1))
-    return ("fresh" if hours <= 48 else "aging" if hours <= 336 else "stale"), round(100 * factor)
+    family = {
+        "FantasyCalc": "fantasycalc_observed_market",
+        "DynastyProcess": "fantasypros_derived_market",
+        "KTC": "ktc_crowd_market",
+        "DTOS": "dtos_intrinsic",
+        "DTOS Pick": "dtos_intrinsic",
+    }.get(provider)
+    assessment = assess_freshness(hours, family)
+    # Preserve the existing normalized-value freshness vocabulary for consumers.
+    label = {"Very Stale": "stale", "Immutable": "fresh"}.get(
+        assessment.tier, assessment.tier.lower(),
+    )
+    return label, assessment.semantic_weight
 
 
 def normalize_value(
@@ -72,7 +84,7 @@ def normalize_value(
     else:
         canonical = round(CANONICAL_MAX * ratio)
         method = "provider_range_linear"
-    freshness, freshness_confidence = _freshness(updated_at, config)
+    freshness, freshness_confidence = _freshness(updated_at, provider)
     confidence = round(min(100, max(0, provider_confidence)) * scale.reliability * freshness_confidence / 100)
     return NormalizedValuation(provider, float(raw_value), scale.minimum, scale.maximum, max(0, min(CANONICAL_MAX, canonical)), updated_at, source_season, confidence, freshness, NORMALIZATION_VERSION, method)
 
