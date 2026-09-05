@@ -22,8 +22,9 @@ membership; caller query strings cannot override them. LeagueContextMiddleware
 uses a ContextVar, not a mutable process-global selection. Sleeper synchronization
 passes the selected league ID to league/users/rosters/picks/drafts/matchups and
 transaction endpoints. Warm switching reuses retained state; cold hydration is
-bounded by the existing runtime manager. No additional provider calls are added
-by this correction.
+bounded by the existing runtime manager. No request-time provider calls are added.
+Background reconstruction and interval refresh use the existing Sleeper source
+for the selected resident league; inactive memberships do not start provider work.
 
 ## Defects and corrections
 
