@@ -11,7 +11,7 @@ from pathlib import Path
 from statistics import mean, median
 from typing import Any
 
-from config import PROJECTION_DATABASE_FILE
+from config import LEAGUE_ID, PROJECTION_DATABASE_FILE
 from src.core.projection_intelligence.sleeper_provider import (
     PARSER_VERSION, SOURCE_CLASSIFICATION, freshness_state, parse_projection_feed,
 )
@@ -902,4 +902,5 @@ class ProjectionService:
         }
 
 
-projection_service = ProjectionService()
+# The configured runtime must never restore another league's newer snapshot.
+projection_service = ProjectionService(league_id=LEAGUE_ID)
