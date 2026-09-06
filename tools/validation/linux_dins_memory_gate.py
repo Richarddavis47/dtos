@@ -86,6 +86,16 @@ def persist_contract_evidence(manifest: dict, output: Path) -> None:
                   "failures", "interaction_failures", "console_errors", "failed_network_requests",
                   "product_contract_failures", "accessibility_regressions")},
               "interaction_failures": rows, "interaction_details_truncated": len(failures) > 100}
+    network = {}
+    for item in manifest.get("failed_network_requests", []):
+        host = urlsplit(str(item.get("url", ""))).hostname
+        # Only Playwright's fixed error class, never arbitrary error text/URLs.
+        error = str(item.get("error", ""))
+        classification = error if error.startswith("net::") and error.replace("net::", "").replace("_", "").isalnum() else "other"
+        key = (host, classification)
+        network[key] = network.get(key, 0) + 1
+    result["network_failure_groups"] = [{"host": host, "error": error, "count": count}
+                                        for (host, error), count in sorted(network.items(), key=str)][:100]
     output.write_text(json.dumps(result, indent=2), encoding="utf-8")
 
 

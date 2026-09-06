@@ -4,7 +4,7 @@ import tempfile
 import unittest
 
 from src.core.inspection.discovery import discover_pages
-from tools.validation.generate_sanitized_market_fixture import _cache
+from tools.validation.generate_sanitized_market_fixture import _cache, _trade_replay_fixture
 from tools.validation.linux_dins_memory_gate import require_full_inventory
 
 
@@ -24,6 +24,14 @@ class DinsFixtureInventoryTests(unittest.TestCase):
                   for row in self.data["traded_picks"]}
         self.assertEqual(expected, actual)
         self.assertEqual(len(actual), len(self.data["traded_picks"]))
+
+    def test_valued_historical_trade_assets_are_existing_canonical_players(self):
+        seasons, occurrences = _trade_replay_fixture()
+        self.assertEqual(len(occurrences), 1578)
+        self.assertEqual(sum(len(rows) for weeks in seasons.values() for rows in weeks.values()), 231)
+        valued = {asset for _, asset, _ in occurrences if not asset.startswith("unavailable-")}
+        self.assertEqual(len(valued), 50)
+        self.assertTrue(valued <= self.data["players"].keys())
 
     def test_full_application_inventory_contains_four_pick_dossiers(self):
         from dtos_app import app

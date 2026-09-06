@@ -69,7 +69,9 @@ def _trade_replay_fixture() -> tuple[dict[int, dict[str, list[dict[str, Any]]]],
                 raw_asset = f"unavailable-{unavailable_sequence:04d}"
                 unavailable_sequence += 1
             else:
-                raw_asset = f"bulk-{valued_sequence % 50:03d}"
+                # Historical value coverage is not a second player namespace.
+                # Reuse canonical fixture identities so dossier links resolve.
+                raw_asset = _player(valued_sequence % 50 + 2)[0]
                 valued_sequence += 1
             adds[raw_asset] = asset_offset % 10 + 1
             resolution_keys.append((event_id, raw_asset, created))
