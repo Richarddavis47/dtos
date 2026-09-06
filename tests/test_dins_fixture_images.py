@@ -16,7 +16,7 @@ class FixtureImagesTests(unittest.TestCase):
             root = Path(folder)
             with patch.object(images, "prepared_ids", return_value=("v00002",)):
                 images.prepare(root)
-            self.assertEqual((root / "v00002.jpg").read_bytes(), images.jpeg("v00002"))
+            self.assertEqual((root / "v00002.jpg").read_bytes(), images.image_bytes("v00002"))
             page = Mock()
             route = Mock()
             route.request.url = "https://sleepercdn.com/content/nfl/players/v00002.jpg"
@@ -24,7 +24,7 @@ class FixtureImagesTests(unittest.TestCase):
             with patch.dict(os.environ, {"DTOS_PRODUCTION_SHAPED_FIXTURE": "1", "RENDER": ""}):
                 images.install(page, fixture_origin="http://dtos.fixture", directory=root)
             callback = page.route.call_args.args[1]
-            with patch.object(images, "jpeg", side_effect=AssertionError("request-time encoding")):
+            with patch.object(images, "image_bytes", side_effect=AssertionError("request-time encoding")):
                 callback(route)
             self.assertEqual(route.fulfill.call_args.kwargs["body"], (root / "v00002.jpg").read_bytes())
 
@@ -35,17 +35,19 @@ class FixtureImagesTests(unittest.TestCase):
             self.assertIsNone(images.fixture_id(base + value))
         self.assertIsNone(images.fixture_id(base.replace("sleepercdn.com", "example.org") + "v00002.jpg"))
 
-    def test_real_deterministic_jpeg_workload_not_transparent_placeholder(self):
-        payload = images.jpeg("v00002")
-        self.assertEqual(payload, images.jpeg("v00002"))
-        self.assertNotEqual(payload, images.jpeg("v00003"))
+    def test_real_deterministic_headshot_workload_not_empty_placeholder(self):
+        payload = images.image_bytes("v00002")
+        self.assertEqual(payload, images.image_bytes("v00002"))
+        self.assertNotEqual(payload, images.image_bytes("v00003"))
         self.assertGreater(len(payload), 26835)
         self.assertLess(len(payload), 128 * 1024)
         with Image.open(BytesIO(payload)) as image:
             image.load()
             self.assertEqual(image.size, (350, 254))
-            self.assertEqual(image.mode, "RGB")
-            self.assertEqual(image.format, "JPEG")
+            self.assertEqual(image.mode, "P")
+            self.assertEqual(image.format, "PNG")
+            with image.convert("RGBA") as rgba:
+                self.assertGreaterEqual(sum(rgba.getchannel("A").histogram()[1:]), 37323)
 
     def test_production_and_nonfixture_activation_fail_closed(self):
         for env, origin in (({}, "http://dtos.fixture"),

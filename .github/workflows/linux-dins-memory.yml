@@ -7,6 +7,11 @@ on:
         type: choice
         options: [focused-images, focused-team7, full]
         default: focused-images
+      image-format:
+        description: Diagnostic control only; full acceptance always uses png
+        type: choice
+        options: [png, jpeg]
+        default: png
 permissions:
   contents: read
 jobs:
@@ -33,7 +38,8 @@ jobs:
             --env DTOS_PRODUCTION_SHAPED_FIXTURE=1 \
             --env DTOS_BACKGROUND_START_DELAY=0 \
             --env DTOS_PUBLIC_URL=http://dtos.fixture:8767 \
-            --env DTOS_DINS_DIAGNOSTIC_PAGE=${{ inputs.scope == 'focused-team7' && 'teams-7' || '' }} \
+            --env DTOS_DINS_DIAGNOSTIC_PAGE=${{ inputs.scope == 'focused-team7' && 'teams-8' || '' }} \
+            --env DTOS_DINS_IMAGE_FORMAT=${{ inputs.image-format || 'png' }} \
             --env SLEEPER_LEAGUE_ID=1804000000000000000 \
             dtos-dins:validation \
             sh -c 'python -m tools.validation.generate_sanitized_market_fixture && python -m tools.validation.linux_dins_memory_gate'

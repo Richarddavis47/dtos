@@ -221,7 +221,7 @@ def capture_worker() -> int:
     require_full_inventory(inventory)
     diagnostic = os.environ.get("DTOS_DINS_DIAGNOSTIC_PAGE")
     if diagnostic:
-        if diagnostic != "teams-7":
+        if diagnostic not in {"teams-7", "teams-8"}:
             raise RuntimeError("Unsupported bounded diagnostic target")
         original_json = dins._json
 
@@ -299,7 +299,11 @@ def main() -> int:
                 raise AssertionError("FOIS startup did not settle before full DINS")
             from tools.validation.dins_fixture_images import prepare
 
-            prepare(lifecycle.FIXTURE / "dins-images")
+            image_format = os.environ.get("DTOS_DINS_IMAGE_FORMAT", "png")
+            if image_format != "png" and not os.environ.get("DTOS_DINS_DIAGNOSTIC_PAGE"):
+                raise RuntimeError("Legacy image format is diagnostic-only")
+            prepare(lifecycle.FIXTURE / "dins-images", format_name=image_format)
+            summary["fixture_image_format"] = image_format
             while True:
                 sample = memory_sample()
                 remaining = PRODUCTION_BASELINE - sample["effective_working_set_bytes"]
@@ -316,7 +320,7 @@ def main() -> int:
                     lifecycle._request("/health/ready")
                     time.sleep(1)
                 # These are still within TTL at the observed Team7 boundary.
-                for roster in range(2, 8):
+                for roster in range(2, 9):
                     lifecycle._request(f"/teams/{roster}")
                 summary["diagnostic_pre_capture"] = memory_sample()
                 summary["diagnostic_processes"] = process_sample(server.pid, -1)

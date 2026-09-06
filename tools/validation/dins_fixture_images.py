@@ -21,14 +21,31 @@ def fixture_id(url: str) -> str | None:
     return identity if identity == "10213" or 2 <= int(identity[1:]) <= 12322 else None
 
 
-def jpeg(identity: str) -> bytes:
-    """Real RGB JPEG decoding, unique deterministic pixels; no cached rasters."""
-    from PIL import Image
+def image_bytes(identity: str, *, format_name: str = "png") -> bytes:
+    """Reference-shaped350x254 headshot, not an empty/one-pixel placeholder."""
+    from PIL import Image, ImageDraw
 
     seed = int.from_bytes(hashlib.sha256(identity.encode()).digest(), "big")
-    with Image.frombytes("RGB", (WIDTH, HEIGHT), random.Random(seed).randbytes(WIDTH * HEIGHT * 3)) as image:
+    if format_name == "jpeg":  # Diagnostic control: original full-frame noise.
+        with Image.frombytes("RGB", (WIDTH, HEIGHT), random.Random(seed).randbytes(WIDTH * HEIGHT * 3)) as image:
+            with BytesIO() as output:
+                image.save(output, format="JPEG", quality=85)
+                return output.getvalue()
+    if format_name != "png":
+        raise ValueError("Unknown fixture image format")
+    # Real reference: PNG/P,88900decodedpixels,37323nontransparent,26835bytes.
+    # This silhouette has42262nontransparentpixels and ~44KiB encoded: a
+    # conservative real headshot workload, without full-frame random RGB noise.
+    with Image.new("L", (WIDTH, HEIGHT)) as mask:
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((105, 12, 245, 160), fill=1)
+        draw.ellipse((25, 145, 325, 335), fill=1)
+        pixels = bytes(value % 255 + 1 if flag else 0 for flag, value in
+                       zip(mask.tobytes(), random.Random(seed).randbytes(WIDTH * HEIGHT)))
+    with Image.frombytes("P", (WIDTH, HEIGHT), pixels) as image:
+        image.putpalette([value for index in range(256) for value in (index, index * 3 % 256, index * 7 % 256)])
         with BytesIO() as output:
-            image.save(output, format="JPEG", quality=85)
+            image.save(output, format="PNG", transparency=0)
             return output.getvalue()
 
 
@@ -37,11 +54,11 @@ def prepared_ids() -> tuple[str, ...]:
             *(f"v{i:05d}" for i in range(1000, 1250)))
 
 
-def prepare(directory: Path) -> None:
+def prepare(directory: Path, *, format_name: str = "png") -> None:
     """Prepare fixture transport bytes before the measured production baseline."""
     directory.mkdir(parents=True, exist_ok=True)
     for identity in prepared_ids():
-        (directory / f"{identity}.jpg").write_bytes(jpeg(identity))
+        (directory / f"{identity}.jpg").write_bytes(image_bytes(identity, format_name=format_name))
 
 
 def install(page, *, fixture_origin: str, evidence: dict | None = None,
@@ -58,8 +75,8 @@ def install(page, *, fixture_origin: str, evidence: dict | None = None,
         if identity is None or route.request.method != "GET":
             route.fallback()
             return
-        payload = (directory / f"{identity}.jpg").read_bytes() if directory is not None else jpeg(identity)
-        route.fulfill(status=200, content_type="image/jpeg", body=payload,
+        payload = (directory / f"{identity}.jpg").read_bytes() if directory is not None else image_bytes(identity)
+        route.fulfill(status=200, content_type="image/png" if payload.startswith(b"\x89PNG") else "image/jpeg", body=payload,
                       headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
         evidence["responses"] += 1
         evidence["encoded_bytes"] += len(payload)
