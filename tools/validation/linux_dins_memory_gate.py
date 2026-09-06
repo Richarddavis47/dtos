@@ -134,7 +134,8 @@ class TrackedPage(dict):
 def capture_worker() -> int:
     from tools.inspection import capture as dins
     from tools.inspection.package import package_bundle
-    from playwright.sync_api import APIRequestContext, Page
+    from playwright.sync_api import APIRequestContext, Browser, Page
+    from tools.validation.dins_fixture_images import install
 
     refs: list[weakref.ReferenceType] = []
     original_capture = dins._capture_page
@@ -143,6 +144,15 @@ def capture_worker() -> int:
     original_release = dins._release_completed_capture_resources
     boundaries = OUTPUT / "page-boundaries.jsonl"
     active = {}
+    image_totals = {"responses": 0, "encoded_bytes": 0, "decoded_pixels": 0}
+    original_new_page = Browser.new_page
+
+    def new_page(browser, *args, **kwargs):
+        page = original_new_page(browser, *args, **kwargs)
+        install(page, fixture_origin=PUBLIC_ORIGIN, evidence=image_totals)
+        return page
+
+    Browser.new_page = new_page
 
     def boundary(phase, page_id=None, viewport=None):
         row = {"phase": phase, "page_id": page_id, "viewport": viewport,
@@ -233,6 +243,7 @@ def capture_worker() -> int:
         "pages": expected, "viewports": viewports, "page_json": len(page_files),
         "png": len(png_files), "artifacts": manifest["total_visual_artifacts"],
         "sanitization": "pass", "completed_payloads_alive": sum(ref() is not None for ref in refs),
+        "fixture_images": image_totals,
     }), encoding="utf-8")
     return 0
 
