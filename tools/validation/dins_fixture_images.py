@@ -3,12 +3,11 @@ from __future__ import annotations
 
 import hashlib
 from io import BytesIO
+from pathlib import Path
 import os
 import random
 import re
 from urllib.parse import urlsplit
-
-from PIL import Image
 
 WIDTH, HEIGHT = 350, 254  # Measured public Sleeper headshot decoded dimensions.
 PATTERN = re.compile(r"^https://sleepercdn\.com/content/nfl/players/(v\d{5}|10213)\.jpg$")
@@ -24,6 +23,8 @@ def fixture_id(url: str) -> str | None:
 
 def jpeg(identity: str) -> bytes:
     """Real RGB JPEG decoding, unique deterministic pixels; no cached rasters."""
+    from PIL import Image
+
     seed = int.from_bytes(hashlib.sha256(identity.encode()).digest(), "big")
     with Image.frombytes("RGB", (WIDTH, HEIGHT), random.Random(seed).randbytes(WIDTH * HEIGHT * 3)) as image:
         with BytesIO() as output:
@@ -31,7 +32,20 @@ def jpeg(identity: str) -> bytes:
             return output.getvalue()
 
 
-def install(page, *, fixture_origin: str, evidence: dict | None = None) -> dict:
+def prepared_ids() -> tuple[str, ...]:
+    return ("10213", *(f"v{i:05d}" for i in range(2, 251)),
+            *(f"v{i:05d}" for i in range(1000, 1250)))
+
+
+def prepare(directory: Path) -> None:
+    """Prepare fixture transport bytes before the measured production baseline."""
+    directory.mkdir(parents=True, exist_ok=True)
+    for identity in prepared_ids():
+        (directory / f"{identity}.jpg").write_bytes(jpeg(identity))
+
+
+def install(page, *, fixture_origin: str, evidence: dict | None = None,
+            directory: Path | None = None) -> dict:
     if os.environ.get("RENDER") or os.environ.get("DTOS_PRODUCTION_SHAPED_FIXTURE") != "1":
         raise RuntimeError("Synthetic images require an isolated production-shaped fixture")
     if urlsplit(fixture_origin).hostname not in {"dtos.fixture", "127.0.0.1", "localhost"}:
@@ -44,7 +58,7 @@ def install(page, *, fixture_origin: str, evidence: dict | None = None) -> dict:
         if identity is None or route.request.method != "GET":
             route.fallback()
             return
-        payload = jpeg(identity)
+        payload = (directory / f"{identity}.jpg").read_bytes() if directory is not None else jpeg(identity)
         route.fulfill(status=200, content_type="image/jpeg", body=payload,
                       headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
         evidence["responses"] += 1

@@ -11,6 +11,23 @@ from tools.validation import dins_fixture_images as images
 
 
 class FixtureImagesTests(unittest.TestCase):
+    def test_prepared_transport_is_byte_identical_and_does_not_encode_on_request(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with patch.object(images, "prepared_ids", return_value=("v00002",)):
+                images.prepare(root)
+            self.assertEqual((root / "v00002.jpg").read_bytes(), images.jpeg("v00002"))
+            page = Mock()
+            route = Mock()
+            route.request.url = "https://sleepercdn.com/content/nfl/players/v00002.jpg"
+            route.request.method = "GET"
+            with patch.dict(os.environ, {"DTOS_PRODUCTION_SHAPED_FIXTURE": "1", "RENDER": ""}):
+                images.install(page, fixture_origin="http://dtos.fixture", directory=root)
+            callback = page.route.call_args.args[1]
+            with patch.object(images, "jpeg", side_effect=AssertionError("request-time encoding")):
+                callback(route)
+            self.assertEqual(route.fulfill.call_args.kwargs["body"], (root / "v00002.jpg").read_bytes())
+
     def test_exact_allowlist_never_matches_real_or_unknown_requests(self):
         base = "https://sleepercdn.com/content/nfl/players/"
         self.assertEqual(images.fixture_id(base + "v00002.jpg"), "v00002")

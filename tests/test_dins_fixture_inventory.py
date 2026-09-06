@@ -30,6 +30,8 @@ class DinsFixtureInventoryTests(unittest.TestCase):
         self.assertEqual(len(occurrences), 1578)
         self.assertEqual(sum(len(rows) for weeks in seasons.values() for rows in weeks.values()), 231)
         all_assets = {asset for _, asset, _ in occurrences}
+        from tools.validation.dins_fixture_images import prepared_ids
+        self.assertTrue(all_assets <= set(prepared_ids()))
         self.assertTrue(all_assets <= self.data["players"].keys())
         valued = {asset for asset in all_assets if int(asset[1:]) < 1000}
         self.assertEqual(len(valued), 50)

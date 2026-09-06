@@ -149,7 +149,8 @@ def capture_worker() -> int:
 
     def new_page(browser, *args, **kwargs):
         page = original_new_page(browser, *args, **kwargs)
-        install(page, fixture_origin=PUBLIC_ORIGIN, evidence=image_totals)
+        install(page, fixture_origin=PUBLIC_ORIGIN, evidence=image_totals,
+                directory=lifecycle.FIXTURE / "dins-images")
         return page
 
     Browser.new_page = new_page
@@ -296,6 +297,9 @@ def main() -> int:
                 time.sleep(1)
             else:
                 raise AssertionError("FOIS startup did not settle before full DINS")
+            from tools.validation.dins_fixture_images import prepare
+
+            prepare(lifecycle.FIXTURE / "dins-images")
             while True:
                 sample = memory_sample()
                 remaining = PRODUCTION_BASELINE - sample["effective_working_set_bytes"]
@@ -308,12 +312,14 @@ def main() -> int:
             if os.environ.get("DTOS_DINS_DIAGNOSTIC_PAGE"):
                 # Reproduce the late-capture idle-worker/cache state without
                 # recapturing the preceding146 viewports. Keep the same padding.
-                for roster in range(1, 8):
-                    lifecycle._request(f"/teams/{roster}")
                 for _ in range(65):
                     lifecycle._request("/health/ready")
                     time.sleep(1)
+                # These are still within TTL at the observed Team7 boundary.
+                for roster in range(2, 8):
+                    lifecycle._request(f"/teams/{roster}")
                 summary["diagnostic_pre_capture"] = memory_sample()
+                summary["diagnostic_processes"] = process_sample(server.pid, -1)
                 summary["release_acceptance_eligible"] = False
             with worker_log.open("w+") as capture_log, (OUTPUT / "memory-curve.jsonl").open("w") as curve:
                 worker = subprocess.Popen([sys.executable, "-m", __name__.replace("__main__", "tools.validation.linux_dins_memory_gate"), "--worker"],
