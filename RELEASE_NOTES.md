@@ -1,3 +1,33 @@
+# DTOS v1.13.6 — Bounded DINS Capture Memory
+
+The v1.13.5 production DINS attempt stopped safely below the required reserve.
+Diagnosis separated retained completed-page graphs, native screenshot buffers,
+unneeded capture imports, idle compute memory, expired intelligence graphs, and
+temporary calibration display records. Prior failed evidence remains preserved.
+
+Complete page evidence is still written before its in-memory summary is reduced.
+Browser and driver lifetimes end after each viewport. Full screenshots retain every
+pixel and color profile while native scanlines are assembled with bounded buffers.
+Packaging retains one file at a time, with unchanged sanitization and deterministic
+ZIP semantics. No partial capture is eligible for publication.
+
+Server maintenance releases only unused allocator pages, idle FOIS compute workers,
+and already-expired disposable intelligence. Running jobs and published scores are
+preserved. Cache TTLs and capacity are unchanged; each expired graph is released
+off-loop with a scheduling boundary. Calibration evaluates every asset using the
+existing canonical iterator and produces the identical full report with fewer
+temporary display fields.
+
+The production-shaped Linux fixture now projects its existing traded-pick ownership
+consistently, restoring all four discoverable pick dossiers. Full inventory checks
+fail before capture if the required surfaces are missing. All resource, browser,
+privacy, intelligence, artifact-compatibility and HistoricalStore-retirement rules
+remain unchanged. No infrastructure or pricing change is included.
+
+Full release and production acceptance, including complete DINS publication, remain
+required before this corrective release is declared complete. v1.13.5 provenance
+remains immutable.
+
 # DTOS v1.13.5 — FOIS Active Tenure Continuity
 
 Production acceptance found that a league's historical evidence and newly

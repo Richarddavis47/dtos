@@ -59,6 +59,15 @@ def enforce_memory(sample: dict) -> None:
         raise AssertionError("DINS recorded OOM or cgroup kill")
 
 
+def require_full_inventory(inventory: dict) -> None:
+    """Reject missing fixture surfaces before spending a full capture flight."""
+    pages = inventory["pages"]
+    if any(str(row.get("route", "")).startswith("/__validation__/") for row in pages):
+        raise AssertionError("Diagnostic control routes contaminated the DINS workload")
+    if sum(not row.get("excluded") for row in pages) < 61:
+        raise AssertionError("Production-shaped DINS inventory has fewer than 61 pages")
+
+
 def process_sample(server_pid: int, capture_pid: int) -> list[dict]:
     rows = []
     for p in psutil.Process().children(recursive=True):
@@ -167,8 +176,7 @@ def capture_worker() -> int:
     dins._release_completed_capture_resources = release
     boundary("capture_start")
     inventory = dins._json(PUBLIC_ORIGIN + "/api/inspect/site-map")
-    if any(str(row.get("route", "")).startswith("/__validation__/") for row in inventory["pages"]):
-        raise AssertionError("Diagnostic control routes contaminated the DINS workload")
+    require_full_inventory(inventory)
     manifest = dins.capture(PUBLIC_ORIGIN, Path("/fixture/dins-capture"), public_url=PUBLIC_ORIGIN)
     boundary("capture_complete")
     expected = manifest["total_pages_expected"]
@@ -277,7 +285,7 @@ def main() -> int:
                        after_cleanup=memory_sample())
         remaining = psutil.Process().children(recursive=True)
         summary["remaining_children"] = len(remaining)
-        if remaining:
+        if remaining or any(summary["after_cleanup"]["memory_events"].values()):
             summary["passed"] = False
         (OUTPUT / "summary.json").write_text(json.dumps(summary, indent=2))
     return 0 if summary["passed"] else 1
