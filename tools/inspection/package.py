@@ -64,12 +64,15 @@ def package_bundle(capture_root: Path, output: Path, *, repository: str = "Richa
     bundle = output / names["bundle"]
     files = sorted(path for path in capture_root.rglob("*") if path.is_file() and path != manifest_path)
     with zipfile.ZipFile(bundle, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-        for path, content in [(Path("manifest.json"), manifest_asset.read_bytes()), *[(path.relative_to(capture_root), path.read_bytes()) for path in files]]:
+        for source in [manifest_asset, *files]:
+            path = Path("manifest.json") if source == manifest_asset else source.relative_to(capture_root)
+            content = source.read_bytes()
             _validate_public_content(path, content)
             info = zipfile.ZipInfo(f"dins/{path.as_posix()}", date_time=(1980, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o100644 << 16
             archive.writestr(info, content)
+            del content
     checksums = output / names["checksums"]
     checksums.write_bytes(_json_bytes({"algorithm": "sha256", "release_tag": tag, "files": {names["bundle"]: sha256(bundle), names["manifest"]: sha256(manifest_asset)}}))
     return {"bundle": bundle, "manifest": manifest_asset, "checksums": checksums}
