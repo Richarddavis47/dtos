@@ -42,8 +42,6 @@ def production_server(command, **kwargs):
     environment.pop("DTOS_LIVE_VISUAL_CAPTURE", None)
     kwargs["env"] = environment
     command = production_server_command(command)
-    if environment.get("DTOS_DINS_ALLOCATOR_DIAGNOSTIC") == "1":
-        command = ["tools.validation.dins_memory_observer:app" if item == "dtos_app:app" else item for item in command]
     return subprocess.Popen(command, **kwargs)
 
 
@@ -265,16 +263,6 @@ def main() -> int:
     except Exception as exc:
         summary["error"] = lifecycle._public_error(exc)
     finally:
-        if os.environ.get("DTOS_DINS_ALLOCATOR_DIAGNOSTIC") == "1":
-            summary["diagnostic_only"] = True
-            summary["passed"] = False
-            if worker is not None:
-                stop_group(worker)
-            if server is not None and server.poll() is None:
-                os.kill(server.pid, signal.SIGUSR1)
-                deadline = time.monotonic() + 5
-                while not (OUTPUT / "server-allocator.json").exists() and time.monotonic() < deadline:
-                    time.sleep(.1)
         for process in (worker, server):
             if process is not None:
                 stop_group(process)

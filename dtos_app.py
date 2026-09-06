@@ -660,6 +660,12 @@ async def startup_and_periodic_maintenance(startup_epoch: int) -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    from src.platform.memory_reclamation import maintain_unused_memory
+
+    memory_reclaimer = asyncio.create_task(
+        maintain_unused_memory(lambda: runtime_metrics.requests, lambda: runtime_metrics.ready),
+        name="dtos-unused-memory-reclaimer",
+    )
     event_loop_monitor = asyncio.create_task(
         monitor_event_loop_lag(), name="dtos-event-loop-lag-monitor",
     )
@@ -676,8 +682,9 @@ async def lifespan(_: FastAPI):
         try:
             yield
         finally:
+            memory_reclaimer.cancel()
             event_loop_monitor.cancel()
-            await asyncio.gather(event_loop_monitor, return_exceptions=True)
+            await asyncio.gather(memory_reclaimer, event_loop_monitor, return_exceptions=True)
         return
     try:
         await warm_fois_executor()
@@ -714,9 +721,10 @@ async def lifespan(_: FastAPI):
         yield
     finally:
         maintenance_task.cancel()
+        memory_reclaimer.cancel()
         event_loop_monitor.cancel()
         await asyncio.gather(
-            maintenance_task, event_loop_monitor,
+            maintenance_task, memory_reclaimer, event_loop_monitor,
             return_exceptions=True,
         )
         await league_runtime_manager.shutdown()

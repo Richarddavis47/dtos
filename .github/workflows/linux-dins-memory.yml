@@ -32,7 +32,6 @@ jobs:
             --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
             --env DTOS_PRODUCTION_SHAPED_FIXTURE=1 \
             --env DTOS_BACKGROUND_START_DELAY=0 \
-            --env DTOS_DINS_ALLOCATOR_DIAGNOSTIC=1 \
             --env DTOS_PUBLIC_URL=http://dtos.fixture:8767 \
             --env SLEEPER_LEAGUE_ID=1804000000000000000 \
             dtos-dins:validation \
@@ -49,6 +48,5 @@ jobs:
             .validation/dins-linux/capture-result.json
             .validation/dins-linux/server.log
             .validation/dins-linux/capture.log
-            .validation/dins-linux/server-allocator.json
           if-no-files-found: error
           retention-days: 14
