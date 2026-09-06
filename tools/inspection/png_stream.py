@@ -69,19 +69,15 @@ def full_page_screenshot(page, path: Path, *, strip_height: int, device_scale_fa
                 with BytesIO(encoded) as buffer, Image.open(buffer) as image:
                     if image.size != (pixel_width, band_height * device_scale_factor):
                         raise ValueError("Full-page screenshot strip dimensions changed")
-                    rgba = image.convert("RGBA")
-                del encoded
-                try:
-                    rows = rgba.tobytes()
-                finally:
-                    rgba.close()
-                del rgba, image, buffer
-                stride = pixel_width * 4
-                for start in range(0, len(rows), stride):
-                    compressed = compressor.compress(b"\0" + rows[start:start + stride])
-                    if compressed:
-                        _chunk(stream, b"IDAT", compressed)
-                del rows
+                    # Keep one decoded strip, never a second RGBA image plus a
+                    # third full-strip bytes copy. Conversion/encoding is one row.
+                    for row in range(image.height):
+                        with image.crop((0, row, pixel_width, row + 1)) as line:
+                            with line.convert("RGBA") as rgba:
+                                compressed = compressor.compress(b"\0" + rgba.tobytes())
+                        if compressed:
+                            _chunk(stream, b"IDAT", compressed)
+                del encoded, image, buffer
             _chunk(stream, b"IDAT", compressor.flush())
             _chunk(stream, b"IEND", b"")
         if page.content() != original_content or page.evaluate(_SIZE_SCRIPT) != size:

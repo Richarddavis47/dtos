@@ -49,7 +49,13 @@ class DinsPngStreamTests(unittest.TestCase):
                             with Image.open(BytesIO(page.screenshot(full_page=True))) as native:
                                 expected = native.convert('RGBA')
                             target = Path(folder) / 'full.png'
-                            with patch.object(page, 'screenshot', wraps=page.screenshot) as screenshots:
+                            original_bytes = Image.Image.tobytes
+
+                            def bounded_bytes(image, *args, **kwargs):
+                                self.assertEqual(image.height, 1, 'Encoding copied an entire strip')
+                                return original_bytes(image, *args, **kwargs)
+
+                            with patch.object(page, 'screenshot', wraps=page.screenshot) as screenshots, patch.object(Image.Image, 'tobytes', bounded_bytes):
                                 full_page_screenshot(page, target, strip_height=height, device_scale_factor=scale)
                             clips = [call.kwargs['clip'] for call in screenshots.call_args_list]
                             self.assertGreater(len(clips), 1)
