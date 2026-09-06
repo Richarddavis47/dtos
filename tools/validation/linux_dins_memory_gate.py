@@ -136,6 +136,10 @@ def persist_contract_evidence(manifest: dict, output: Path) -> None:
                   "failures", "interaction_failures", "console_errors", "failed_network_requests",
                   "product_contract_failures", "accessibility_regressions")},
               "interaction_failures": rows, "interaction_details_truncated": len(failures) > 100}
+    result["capture_failure_locations"] = [
+        {key: item.get(key) for key in ("page_id", "viewport", "error")}
+        for item in manifest.get("failures", [])[:100]
+    ]
     network = {}
     for item in manifest.get("failed_network_requests", []):
         host = urlsplit(str(item.get("url", ""))).hostname
@@ -314,7 +318,7 @@ def capture_worker() -> int:
     require_full_inventory(inventory)
     diagnostic = os.environ.get("DTOS_DINS_DIAGNOSTIC_PAGE")
     if diagnostic:
-        if diagnostic not in {"teams", "teams-7", "teams-8"}:
+        if diagnostic not in {"teams", "teams-7", "teams-8", "market"}:
             raise RuntimeError("Unsupported bounded diagnostic target")
         if os.environ.get("DTOS_DINS_BASELINE") in {"server-warm", "representative", "interaction-warm", "sustained"}:
             # Replay only read-only canonical routes preceding Teams, once.
@@ -363,6 +367,7 @@ def capture_worker() -> int:
         dins.VIEWPORTS = tuple(view for view in dins.VIEWPORTS if view.name == "mobile")
     manifest = dins.capture(PUBLIC_ORIGIN, Path("/fixture/dins-capture"), public_url=PUBLIC_ORIGIN)
     persist_contract_evidence(manifest, OUTPUT / "contract-evidence.json")
+    (OUTPUT / "fixture-images.json").write_text(json.dumps(image_totals), encoding="utf-8")
     boundary("capture_complete")
     expected = manifest["total_pages_expected"]
     if expected < (1 if diagnostic else 61) or manifest["total_pages_completed"] != expected:

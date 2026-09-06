@@ -112,6 +112,7 @@ class InspectionRelayTests(unittest.TestCase):
                 connection.request("GET", "/teams/4", headers={
                     "Authorization": "incoming-do-not-forward", "Cookie": "not-forwarded",
                     "X-DTOS-Inspection-Auth": "attacker", "Host": "untrusted.invalid",
+                    "X-League-ID": "another-league", "X-Account-ID": "another-account",
                 })
                 response = connection.getresponse()
                 self.assertEqual(response.status, 200)
@@ -128,6 +129,8 @@ class InspectionRelayTests(unittest.TestCase):
                 self.assertEqual(sent["X-DTOS-Inspection"], "deterministic")
                 self.assertNotIn("Authorization", sent)
                 self.assertNotIn("Cookie", sent)
+                self.assertNotIn("X-League-ID", sent)
+                self.assertNotIn("X-Account-ID", sent)
                 self.assertEqual(sent["Host"], f"127.0.0.1:{upstream.server_port}")
                 port = relay.server_port
             connection = http.client.HTTPConnection("127.0.0.1", port, timeout=1)

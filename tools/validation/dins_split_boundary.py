@@ -34,6 +34,13 @@ class Resources(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         attributes = dict(attrs)
+        # The existing canonical Trade UI loads this read-only workspace through
+        # data attributes rather than href/src. Bind the exact rendered manager;
+        # never authorize arbitrary data endpoints, other leagues, or POSTs.
+        manager = attributes.get("data-front-office", "")
+        if (attributes.get("data-workspace-endpoint") == "/api/trades/workspace"
+                and manager.isascii() and manager.isdigit() and 0 < int(manager) < 100000):
+            self.targets.add("/api/trades/workspace?front_office=" + manager)
         for key in ("href", "src"):
             value = attributes.get(key, "")
             parsed = urlsplit(value)
@@ -44,7 +51,7 @@ class Resources(HTMLParser):
                 self.targets.add(target)
 
 
-def inventory(token: str, *, full: bool = False) -> list[str]:
+def inventory(token: str, *, full: bool = False, focus: str = "teams") -> list[str]:
     policy = RelayPolicy(REQUIRED, token, 8767)
     status, _, body = policy.read("GET", "/api/inspect/site-map")
     if status != 200:
@@ -60,7 +67,8 @@ def inventory(token: str, *, full: bool = False) -> list[str]:
         targets.update("/" + path.as_posix() for path in folder.rglob("*") if path.is_file())
     # Focused Teams workload only. Full inventory is still exposed unchanged;
     # the established focused harness selects the one page and mobile viewport.
-    html_targets = [page["route"] for page in pages if not page.get("excluded")] if full else ["/teams", "/teams/4"]
+    html_targets = [page["route"] for page in pages if not page.get("excluded")] if full else (
+        ["/market"] if focus == "market" else ["/teams", "/teams/4"])
     for target in html_targets:
         policy = RelayPolicy(sorted(targets), token, 8767)
         status, _, body = policy.read("GET", target)
@@ -99,7 +107,7 @@ def server() -> int:
 
             prepare(lifecycle.FIXTURE / "dins-images")
             token = lifecycle._fixture_inspection_environment(os.environ.copy())["DTOS_INSPECTION_AUTH_TOKEN"]
-            targets = inventory(token, full=full)
+            targets = inventory(token, full=full, focus=os.environ.get("DTOS_DINS_SPLIT_SCOPE", "teams"))
             relay = RelayServer(8768, RelayPolicy(targets, token, 8767))
             thread = threading.Thread(target=relay.serve_forever, daemon=True)
             thread.start()
@@ -175,10 +183,12 @@ def capture() -> int:
     try:
         if lifecycle._cgroup("memory.max") != lifecycle.MEMORY_MAX:
             raise AssertionError("Capture hard limit changed")
-        for number in range(1, 2 if full else 4):
+        market_only = os.environ.get("DTOS_DINS_SPLIT_SCOPE") == "market"
+        for number in range(1, 2 if full or market_only else 4):
             folder = CONTROL / f"capture-{number}"
             folder.mkdir(exist_ok=True)
-            environment = dict(os.environ, DTOS_DINS_OUTPUT=str(folder), DTOS_DINS_DIAGNOSTIC_PAGE="" if full else "teams")
+            environment = dict(os.environ, DTOS_DINS_OUTPUT=str(folder),
+                               DTOS_DINS_DIAGNOSTIC_PAGE="" if full else "market" if market_only else "teams")
             process = None
             peak = 0
             try:

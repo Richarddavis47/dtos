@@ -11,6 +11,43 @@ from tools.validation import dins_fixture_images as images
 
 
 class FixtureImagesTests(unittest.TestCase):
+    def test_every_canonical_synthetic_id_has_prepared_transport(self):
+        bank = set(images.prepared_ids())
+        for identity in ("10213", *(f"v{i:05d}" for i in range(2, 12323))):
+            self.assertIn(images.prepared_identity(identity), bank)
+        for identity in bank:
+            self.assertEqual(images.prepared_identity(identity), identity)
+        with self.assertRaises(ValueError):
+            images.prepared_identity("v12323")
+
+    def test_unprepared_market_assets_decode_without_external_fallback(self):
+        identities = ("v00251", "v05000", "v10001", "v12322")
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            for identity in identities:
+                mapped = images.prepared_identity(identity)
+                (root / f"{mapped}.jpg").write_bytes(images.image_bytes(mapped))
+            page = Mock()
+            with patch.dict(os.environ, {"DTOS_PRODUCTION_SHAPED_FIXTURE": "1", "RENDER": ""}):
+                evidence = images.install(page, fixture_origin="http://dtos.fixture", directory=root)
+            callback = page.route.call_args.args[1]
+            for identity in identities:
+                route = Mock()
+                route.request.url = f"https://sleepercdn.com/content/nfl/players/{identity}.jpg"
+                route.request.method = "GET"
+                with patch.object(images, "image_bytes", side_effect=AssertionError("request-time encoding")):
+                    callback(route)
+                route.fallback.assert_not_called()
+                route.abort.assert_not_called()
+                with Image.open(BytesIO(route.fulfill.call_args.kwargs["body"])) as image:
+                    image.load()
+                    self.assertEqual(image.size, (350, 254))
+            self.assertEqual(set(evidence["requested_ids"]), set(identities))
+            route.request.url = "https://sleepercdn.com/content/nfl/players/v12323.jpg"
+            callback(route)
+            route.abort.assert_called_once_with("blockedbyclient")
+            route.fallback.assert_not_called()
+
     def test_prepared_transport_is_byte_identical_and_does_not_encode_on_request(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -65,11 +102,12 @@ class FixtureImagesTests(unittest.TestCase):
                     failures = []
                     page.on("requestfailed", lambda request: failures.append(request.failure))
                     evidence = images.install(page, fixture_origin="http://dtos.fixture")
-                    page.set_content(''.join(f'<img width="100" src="https://sleepercdn.com/content/nfl/players/v{i:05d}.jpg">' for i in range(2, 24)))
+                    ids = [*range(2, 24), *range(12313, 12323)]
+                    page.set_content(''.join(f'<img width="100" src="https://sleepercdn.com/content/nfl/players/v{i:05d}.jpg">' for i in ids))
                     page.evaluate("async () => { await Promise.all([...document.images].map(i=>i.decode())); }")
-                    self.assertEqual(page.evaluate("[...document.images].filter(i=>i.naturalWidth===350&&i.naturalHeight===254).length"), 22)
+                    self.assertEqual(page.evaluate("[...document.images].filter(i=>i.naturalWidth===350&&i.naturalHeight===254).length"), len(ids))
                     self.assertEqual(failures, [])
-                    self.assertEqual(evidence["responses"], 22)
+                    self.assertEqual(evidence["responses"], len(ids))
                     with tempfile.TemporaryDirectory() as folder:
                         path = Path(folder) / "cards.png"
                         page.screenshot(path=str(path), full_page=True)

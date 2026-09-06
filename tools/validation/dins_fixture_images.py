@@ -54,6 +54,23 @@ def prepared_ids() -> tuple[str, ...]:
             *(f"v{i:05d}" for i in range(1000, 1250)))
 
 
+def prepared_identity(identity: str) -> str:
+    """Cover every canonical synthetic asset with existing decoded-image workload.
+
+    Preserve the previously proven image bytes for the original 500 assets.
+    Other synthetic players deterministically select a representative from that
+    same bank, without encoding in the capture process or using an external CDN.
+    This is fixture appearance only, never a source of player facts.
+    """
+    if fixture_id(f"https://sleepercdn.com/content/nfl/players/{identity}.jpg") != identity:
+        raise ValueError("Unknown synthetic fixture player")
+    bank = prepared_ids()
+    if identity in bank:
+        return identity
+    slot = int.from_bytes(hashlib.sha256(identity.encode()).digest()[:4], "big") % len(bank)
+    return bank[slot]
+
+
 def prepare(directory: Path, *, format_name: str = "png") -> None:
     """Prepare fixture transport bytes before the measured production baseline."""
     directory.mkdir(parents=True, exist_ok=True)
@@ -73,9 +90,17 @@ def install(page, *, fixture_origin: str, evidence: dict | None = None,
     def respond(route):
         identity = fixture_id(route.request.url)
         if identity is None or route.request.method != "GET":
-            route.fallback()
+            # This callback matches only the synthetic namespace (and the exact
+            # controlled fixture player). Unknown IDs must fail, not hit a CDN.
+            evidence["rejected_requests"] = evidence.get("rejected_requests", 0) + 1
+            route.abort("blockedbyclient")
             return
-        payload = (directory / f"{identity}.jpg").read_bytes() if directory is not None else image_bytes(identity)
+        selected = prepared_identity(identity)
+        requests = evidence.setdefault("requested_ids", {})
+        requests[identity] = requests.get(identity, 0) + 1
+        if selected != identity:
+            evidence.setdefault("representative_mapping", {})[identity] = selected
+        payload = (directory / f"{selected}.jpg").read_bytes() if directory is not None else image_bytes(selected)
         route.fulfill(status=200, content_type="image/png" if payload.startswith(b"\x89PNG") else "image/jpeg", body=payload,
                       headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
         evidence["responses"] += 1
