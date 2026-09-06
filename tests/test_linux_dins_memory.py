@@ -1,11 +1,30 @@
 """Fail-closed DINS resource accounting independent of Linux test availability."""
 import unittest
+import json
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 from tools.validation import linux_dins_memory_gate as gate
 
 
 class LinuxDinsMemoryTests(unittest.TestCase):
+    def test_failed_contract_evidence_is_bounded_and_has_no_query_or_credentials(self):
+        manifest = {"interaction_failures": [{"starting_page": "/fixture?token=secret",
+                    "target": "https://user:password@example.org/missing?token=secret#private",
+                    "http_status": 403, "action": "sensitive text"}] * 101}
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder) / "contract.json"
+            gate.persist_contract_evidence(manifest, output)
+            raw = output.read_text()
+        result = json.loads(raw)
+        self.assertEqual(result["failure_counts"]["interaction_failures"], 101)
+        self.assertEqual(len(result["interaction_failures"]), 100)
+        self.assertTrue(result["interaction_details_truncated"])
+        self.assertEqual(result["interaction_failures"][0]["target_host"], "example.org")
+        for forbidden in ("secret", "password", "sensitive text", "private"):
+            self.assertNotIn(forbidden, raw)
+
     def test_initial_fois_completion_is_not_a_settled_history_boundary(self):
         tasks = {"fois_generation": "complete", "live_visual_capture": "complete",
                  "historical_market_resolution": "waiting"}

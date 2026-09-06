@@ -9,6 +9,7 @@ import subprocess
 import sys
 import time
 import weakref
+from urllib.parse import urlsplit
 from contextlib import contextmanager
 
 import psutil
@@ -66,6 +67,26 @@ def require_full_inventory(inventory: dict) -> None:
         raise AssertionError("Diagnostic control routes contaminated the DINS workload")
     if sum(not row.get("excluded") for row in pages) < 61:
         raise AssertionError("Production-shaped DINS inventory has fewer than 61 pages")
+
+
+def persist_contract_evidence(manifest: dict, output: Path) -> None:
+    """Persist bounded fixture-only failure facts before any acceptance assertion."""
+    failures = manifest.get("interaction_failures", [])
+    rows = []
+    for item in failures[:100]:
+        target = urlsplit(str(item.get("target", "")))
+        start = urlsplit(str(item.get("starting_page", "")))
+        rows.append({"starting_path": start.path[:200], "target_host": target.hostname,
+                     "target_path": target.path[:200], "http_status": item.get("http_status")})
+    result = {"pages_expected": manifest.get("total_pages_expected"),
+              "pages_completed": manifest.get("total_pages_completed"),
+              "artifacts": manifest.get("total_visual_artifacts"),
+              "status": manifest.get("status"), "validation_outcome": manifest.get("validation_outcome"),
+              "failure_counts": {key: len(manifest.get(key, [])) for key in (
+                  "failures", "interaction_failures", "console_errors", "failed_network_requests",
+                  "product_contract_failures", "accessibility_regressions")},
+              "interaction_failures": rows, "interaction_details_truncated": len(failures) > 100}
+    output.write_text(json.dumps(result, indent=2), encoding="utf-8")
 
 
 def process_sample(server_pid: int, capture_pid: int) -> list[dict]:
@@ -178,6 +199,7 @@ def capture_worker() -> int:
     inventory = dins._json(PUBLIC_ORIGIN + "/api/inspect/site-map")
     require_full_inventory(inventory)
     manifest = dins.capture(PUBLIC_ORIGIN, Path("/fixture/dins-capture"), public_url=PUBLIC_ORIGIN)
+    persist_contract_evidence(manifest, OUTPUT / "contract-evidence.json")
     boundary("capture_complete")
     expected = manifest["total_pages_expected"]
     if expected < 61 or manifest["total_pages_completed"] != expected:
