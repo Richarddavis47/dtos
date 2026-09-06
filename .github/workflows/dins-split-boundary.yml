@@ -1,0 +1,65 @@
+name: Focused DINS split memory boundary
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  focused-isolation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build existing production-shaped browser image
+        run: docker build --file tools/validation/Dockerfile.market-cgroup --tag dtos-dins:split .
+      - name: Same server baseline, three isolated Teams mobile captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .validation/split-output .validation/split-fixture/dins-images
+          cleanup() { docker rm -f dtos-relay-capture dtos-relay-server >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          docker run --detach --name dtos-relay-server --memory 2g --memory-swap 2g --cpus 2 \
+            --network host --add-host dtos.fixture:127.0.0.1 \
+            --volume "$PWD/.validation/split-output:/output" \
+            --volume "$PWD/.validation/split-fixture:/fixture" \
+            --env DTOS_CACHE_FILE=/fixture/dtos_cache.json \
+            --env DTOS_HISTORY_DB_FILE=/fixture/dtos_history.sqlite3 \
+            --env DTOS_VALIDATION_LEGACY_ARCHIVE_FILE=/fixture/retirement-rehearsal.sqlite3 \
+            --env DTOS_METADATA_DB_FILE=/fixture/dtos_metadata.sqlite3 \
+            --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
+            --env DTOS_PRODUCTION_SHAPED_FIXTURE=1 --env DTOS_BACKGROUND_START_DELAY=0 \
+            --env DTOS_PUBLIC_URL=http://dtos.fixture:8768 \
+            --env SLEEPER_LEAGUE_ID=1804000000000000000 \
+            dtos-dins:split sh -c 'python -m tools.validation.generate_sanitized_market_fixture && python -m tools.validation.dins_split_boundary server'
+          for attempt in $(seq 1 180); do
+            if test -f .validation/split-output/server-ready.json; then break; fi
+            if test "$(docker inspect -f '{{.State.Running}}' dtos-relay-server)" != true; then
+              echo 'Fixture server stopped before readiness'; exit 1
+            fi
+            sleep 2
+          done
+          test -f .validation/split-output/server-ready.json
+          docker run --name dtos-relay-capture --memory 2g --memory-swap 2g --cpus 2 \
+            --network host --add-host dtos.fixture:127.0.0.1 \
+            --volume "$PWD/.validation/split-output:/output" \
+            --volume "$PWD/.validation/split-fixture/dins-images:/fixture/dins-images:ro" \
+            --env DTOS_PRODUCTION_SHAPED_FIXTURE=1 \
+            dtos-dins:split python -m tools.validation.dins_split_boundary capture
+          test "$(docker wait dtos-relay-server)" = 0
+      - name: Always retain sanitized focused evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dins-split-boundary
+          path: |
+            .validation/split-output/server/summary.json
+            .validation/split-output/server/memory-curve.jsonl
+            .validation/split-output/server/server.log
+            .validation/split-output/capture-summary.json
+            .validation/split-output/capture-*/memory-curve.jsonl
+            .validation/split-output/capture-*/page-boundaries.jsonl
+            .validation/split-output/capture-*/capture-result.json
+            .validation/split-output/capture-*/contract-evidence.json
+            .validation/split-output/capture-*/capture.log
+          if-no-files-found: error
+          retention-days: 14

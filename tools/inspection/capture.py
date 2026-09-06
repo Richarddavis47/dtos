@@ -148,8 +148,11 @@ def _component_rows(dom: dict[str, Any], role: str) -> tuple[dict[str, Any], ...
     return tuple(row for row in dom["nodes"] if row.get("role") == role or role in str(row.get("tag")))
 
 
-def _interaction_target(base_url: str, href: str) -> str:
+def _interaction_target(base_url: str, href: str, public_url: str | None = None) -> str:
     """Resolve internal links without replacing an external attribution origin."""
+    if public_url and urlsplit(href).netloc and _origin(href) == _origin(public_url):
+        parsed = urlsplit(href)
+        href = urlunsplit(("", "", parsed.path, parsed.query, parsed.fragment))
     return urljoin(base_url.rstrip("/") + "/", href)
 
 
@@ -208,7 +211,7 @@ def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: st
         if not href or path.startswith("/api/") or path in {"/sync", "/transactions/refresh"}:
             continue
         if viewport.name == "desktop":
-            target_response = page.request.get(_interaction_target(base_url, str(href)), headers=_inspection_headers(), timeout=60000)
+            target_response = page.request.get(_interaction_target(base_url, str(href), store.public_base_url), headers=_inspection_headers(), timeout=60000)
             status = target_response.status
         else:
             status = None
