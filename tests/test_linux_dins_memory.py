@@ -6,6 +6,14 @@ from tools.validation import linux_dins_memory_gate as gate
 
 
 class LinuxDinsMemoryTests(unittest.TestCase):
+    def test_real_application_inventory_excludes_profiler_control_endpoints(self):
+        command = ["python", "-m", "uvicorn", "tools.validation.market_profile_app:app", "--workers", "1"]
+        actual = gate.production_server_command(command)
+        self.assertEqual(actual[3], "dtos_app:app")
+        self.assertEqual(actual[:3], command[:3])
+        self.assertEqual(actual[4:], command[4:])
+        self.assertIn("tools.validation.market_profile_app:app", command)
+
     def test_exact_reserve_passes_and_one_byte_less_fails(self):
         sample = {"effective_working_set_bytes": 2 * 1024**3 - 500 * 1024**2,
                   "memory_events": {"oom": 0, "oom_kill": 0, "oom_group_kill": 0}}

@@ -22,6 +22,15 @@ PUBLIC_ORIGIN = "http://dtos.fixture:8767"
 OUTPUT = Path(os.environ.get("DTOS_DINS_OUTPUT", "/output"))
 
 
+def production_server_command(command: list[str]) -> list[str]:
+    """Use the actual production route inventory, not diagnostic control routes."""
+    return ["dtos_app:app" if item == "tools.validation.market_profile_app:app" else item for item in command]
+
+
+def production_server(command, **kwargs):
+    return subprocess.Popen(production_server_command(command), **kwargs)
+
+
 def memory_sample() -> dict:
     stats = lifecycle._cgroup_values("memory.stat")
     if not {"inactive_file", "anon", "file"} <= stats.keys():
@@ -106,6 +115,9 @@ def capture_worker() -> int:
     dins._capture_page = capture_page
     dins._write_artifact_json = write
     boundary("capture_start")
+    inventory = dins._json(PUBLIC_ORIGIN + "/api/inspect/site-map")
+    if any(str(row.get("route", "")).startswith("/__validation__/") for row in inventory["pages"]):
+        raise AssertionError("Diagnostic control routes contaminated the DINS workload")
     manifest = dins.capture(PUBLIC_ORIGIN, Path("/fixture/dins-capture"), public_url=PUBLIC_ORIGIN)
     boundary("capture_complete")
     expected = manifest["total_pages_expected"]
@@ -151,9 +163,20 @@ def main() -> int:
         assert lifecycle._cgroup("memory.max") == lifecycle.MEMORY_MAX
         lifecycle._retire_validation_archive(warm=False)
         with log_path.open("w+") as log:
-            server = lifecycle._start_server(log)
-            lifecycle._application_fixture_contract(lifecycle._configured_fixture_contract())
+            server = lifecycle._start_server(log, popen_factory=production_server)
+            summary["fixture"] = lifecycle._configured_fixture_contract()
             lifecycle._cold_build()
+            # Production acceptance begins after startup/FOIS synchronization settles.
+            deadline = time.monotonic() + 180
+            while time.monotonic() < deadline:
+                ready = json.loads(lifecycle._request("/health/ready")[1])
+                tasks = (ready.get("runtime") or {}).get("background_tasks") or {}
+                if tasks.get("fois_generation") == "complete":
+                    summary["settled_background_tasks"] = tasks
+                    break
+                time.sleep(1)
+            else:
+                raise AssertionError("FOIS startup did not settle before full DINS")
             while True:
                 sample = memory_sample()
                 remaining = PRODUCTION_BASELINE - sample["effective_working_set_bytes"]
