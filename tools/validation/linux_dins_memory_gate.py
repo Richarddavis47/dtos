@@ -65,7 +65,8 @@ def startup_settled(tasks: dict) -> bool:
 
 def production_server_command(command: list[str]) -> list[str]:
     """Use the actual production route inventory, not diagnostic control routes."""
-    return ["dtos_app:app" if item == "tools.validation.market_profile_app:app" else item for item in command]
+    application = "tools.validation.dins_sustained_memory_app:app" if os.environ.get("DTOS_DINS_BASELINE") == "sustained" else "dtos_app:app"
+    return [application if item == "tools.validation.market_profile_app:app" else item for item in command]
 
 
 def production_server(command, **kwargs):
@@ -82,7 +83,24 @@ def memory_sample() -> dict:
     stats = lifecycle._cgroup_values("memory.stat")
     if not {"inactive_file", "anon", "file"} <= stats.keys():
         raise RuntimeError("Required cgroup accounting fields unavailable")
-    return {"timestamp": time.time(), **lifecycle._memory_state()}
+    result = {"timestamp": time.time(), **lifecycle._memory_state()}
+    if os.environ.get("DTOS_DINS_BASELINE") == "sustained":
+        result["cgroup_detail"] = {key: stats[key] for key in (
+            "anon", "file", "kernel", "kernel_stack", "pagetables", "sock", "shmem",
+            "slab_reclaimable", "slab_unreclaimable", "active_anon", "inactive_anon",
+            "active_file", "inactive_file") if key in stats}
+    return result
+
+
+def proc_memory(text: str) -> dict:
+    allowed = {"Rss", "Pss", "Pss_Anon", "Pss_File", "Pss_Shmem", "Private_Clean",
+               "Private_Dirty", "Shared_Clean", "Shared_Dirty", "Anonymous", "Swap"}
+    result = {}
+    for line in text.splitlines():
+        key, _, value = line.partition(":")
+        if key in allowed:
+            result[key] = int(value.split()[0]) * 1024
+    return result
 
 
 def enforce_memory(sample: dict) -> None:
@@ -141,7 +159,13 @@ def process_sample(server_pid: int, capture_pid: int) -> list[dict]:
                 role = "dtos_server"
             elif p.pid == capture_pid:
                 role = "dins_capture"
-            rows.append({"pid": p.pid, "role": role, "rss_bytes": p.memory_info().rss})
+            row = {"pid": p.pid, "role": role, "rss_bytes": p.memory_info().rss}
+            if os.environ.get("DTOS_DINS_BASELINE") == "sustained":
+                try:
+                    row["smaps"] = proc_memory(Path(f"/proc/{p.pid}/smaps_rollup").read_text())
+                except (FileNotFoundError, ProcessLookupError):
+                    row["exited_during_sample"] = True
+            rows.append(row)
         except psutil.NoSuchProcess:
             continue
     return rows
@@ -292,7 +316,7 @@ def capture_worker() -> int:
     if diagnostic:
         if diagnostic not in {"teams", "teams-7", "teams-8"}:
             raise RuntimeError("Unsupported bounded diagnostic target")
-        if os.environ.get("DTOS_DINS_BASELINE") in {"server-warm", "representative", "interaction-warm"}:
+        if os.environ.get("DTOS_DINS_BASELINE") in {"server-warm", "representative", "interaction-warm", "sustained"}:
             # Replay only read-only canonical routes preceding Teams, once.
             # No browser, screenshots, fabricated padding, or cache clearing.
             from urllib.request import Request, urlopen
@@ -306,7 +330,7 @@ def capture_worker() -> int:
                         pass
                 boundary("server_warm_route", spec["page_id"], "none")
             boundary("server_warm_complete")
-            if os.environ.get("DTOS_DINS_BASELINE") == "interaction-warm":
+            if os.environ.get("DTOS_DINS_BASELINE") in {"interaction-warm", "sustained"}:
                 # Exact fixture-only GETs present before Teams in the failed
                 # trace but absent from the representative warm-state trace.
                 league = os.environ["SLEEPER_LEAGUE_ID"]
@@ -415,6 +439,7 @@ def main() -> int:
                     break
                 padding.append(bytearray(min(16 * MIB, remaining)))
             summary["before_capture"] = memory_sample()
+            summary["diagnostic_padding_bytes"] = sum(map(len, padding))
             summary["before_capture_processes"] = process_sample(server.pid, -1)
             enforce_memory(summary["before_capture"])
             if os.environ.get("DTOS_DINS_DIAGNOSTIC_PAGE"):
@@ -439,6 +464,8 @@ def main() -> int:
                 while worker.poll() is None:
                     sample = memory_sample()
                     sample["processes"] = process_sample(server.pid, worker.pid)
+                    if os.environ.get("DTOS_DINS_BASELINE") == "sustained":
+                        sample["controller_smaps"] = proc_memory(Path("/proc/self/smaps_rollup").read_text())
                     stage = OUTPUT / "active-page.json"
                     if stage.exists():
                         sample["page"] = json.loads(stage.read_text())

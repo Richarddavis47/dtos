@@ -15,7 +15,7 @@ on:
       baseline:
         description: Focused diagnostic server state only
         type: choice
-        options: [existing, server-warm, representative, interaction-warm]
+        options: [existing, server-warm, representative, interaction-warm, sustained]
         default: existing
 permissions:
   contents: read
@@ -70,5 +70,6 @@ jobs:
             .validation/dins-linux/server.log
             .validation/dins-linux/capture.log
             .validation/dins-linux/fixture-images.log
+            .validation/dins-linux/server-memory.jsonl
           if-no-files-found: error
           retention-days: 14

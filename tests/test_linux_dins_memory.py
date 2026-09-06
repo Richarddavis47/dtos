@@ -9,6 +9,10 @@ from tools.validation import linux_dins_memory_gate as gate
 
 
 class LinuxDinsMemoryTests(unittest.TestCase):
+    def test_proc_memory_contains_only_numeric_accounting_no_paths(self):
+        value = gate.proc_memory("004000-005000 /private/file\nRss: 12 kB\nAnonymous: 5 kB\nPrivate_Dirty: 4 kB\nVmFlags: secret\n")
+        self.assertEqual(value, {"Rss": 12288, "Anonymous": 5120, "Private_Dirty": 4096})
+
     def test_baseline_is_only_preceding_canonical_reads(self):
         rows = [{"page_id": "home", "route": "/"},
                 {"page_id": "skip", "excluded": True},
