@@ -669,6 +669,7 @@ async def lifespan(_: FastAPI):
             lambda: runtime_metrics.requests, lambda: runtime_metrics.ready,
             retire_idle=lambda: retire_idle_fois_executor_sync() if lifecycle_coordinator.startup_complete() else False,
             expire_one=intelligence_cache.expire_one,
+            expiry_limit=intelligence_cache.max_entries,
         ),
         name="dtos-unused-memory-reclaimer",
     )

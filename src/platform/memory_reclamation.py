@@ -32,6 +32,7 @@ async def maintain_unused_memory(
     request_count: Callable[[], int], ready: Callable[[], bool],
     *, interval: float = 1.0, retire_idle: Callable[[], bool] | None = None,
     expire_one: Callable[[], bool] | None = None,
+    expiry_limit: int = 1,
 ) -> None:
     """At most one off-loop reclamation per interval, only after read activity.
 
@@ -48,5 +49,10 @@ async def maintain_unused_memory(
         if retire_idle is not None:
             await asyncio.to_thread(retire_idle)
         if expire_one is not None:
-            await asyncio.to_thread(expire_one)
+            # Drain the expired backlog, bounded by the cache's capacity.
+            # Each disposal yields separately; no large graph destruction batch
+            # holds the event loop or the cache lock. Busy caches stop the pass.
+            for _ in range(expiry_limit):
+                if not await asyncio.to_thread(expire_one):
+                    break
         await asyncio.to_thread(release_unused_allocator_pages)
