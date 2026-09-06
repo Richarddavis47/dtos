@@ -28,6 +28,11 @@ def production_server_command(command: list[str]) -> list[str]:
 
 
 def production_server(command, **kwargs):
+    # A nonempty "0" enables this existing opt-in. DINS is the sole capture
+    # flight in this isolated gate, as it is after production Current Visual.
+    environment = kwargs["env"].copy()
+    environment.pop("DTOS_LIVE_VISUAL_CAPTURE", None)
+    kwargs["env"] = environment
     return subprocess.Popen(production_server_command(command), **kwargs)
 
 

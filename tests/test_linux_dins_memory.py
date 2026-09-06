@@ -6,6 +6,14 @@ from tools.validation import linux_dins_memory_gate as gate
 
 
 class LinuxDinsMemoryTests(unittest.TestCase):
+    def test_dins_does_not_enable_a_second_capture_flight_with_string_zero(self):
+        environment = {"DTOS_LIVE_VISUAL_CAPTURE": "0", "DTOS_CACHE_FILE": "fixture.json"}
+        with patch.object(gate.subprocess, "Popen") as spawn:
+            gate.production_server(["python", "dtos_app:app"], env=environment)
+        self.assertNotIn("DTOS_LIVE_VISUAL_CAPTURE", spawn.call_args.kwargs["env"])
+        self.assertEqual(spawn.call_args.kwargs["env"]["DTOS_CACHE_FILE"], "fixture.json")
+        self.assertEqual(environment["DTOS_LIVE_VISUAL_CAPTURE"], "0")
+
     def test_real_application_inventory_excludes_profiler_control_endpoints(self):
         command = ["python", "-m", "uvicorn", "tools.validation.market_profile_app:app", "--workers", "1"]
         actual = gate.production_server_command(command)
