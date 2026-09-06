@@ -1,6 +1,9 @@
 name: Focused DINS split memory boundary
 on:
   workflow_dispatch:
+  push:
+    branches: [dtos-v1.13.6-dins-bounded-capture]
+    paths: [.github/workflows/dins-split-boundary.yml]
 permissions:
   contents: read
 jobs:
