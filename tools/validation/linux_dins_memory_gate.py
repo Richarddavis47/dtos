@@ -235,6 +235,7 @@ def main() -> int:
                     break
                 padding.append(bytearray(min(16 * MIB, remaining)))
             summary["before_capture"] = memory_sample()
+            summary["before_capture_processes"] = process_sample(server.pid, -1)
             enforce_memory(summary["before_capture"])
             with worker_log.open("w+") as capture_log, (OUTPUT / "memory-curve.jsonl").open("w") as curve:
                 worker = subprocess.Popen([sys.executable, "-m", __name__.replace("__main__", "tools.validation.linux_dins_memory_gate"), "--worker"],

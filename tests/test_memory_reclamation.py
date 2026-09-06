@@ -30,6 +30,7 @@ class MemoryReclamationTests(unittest.IsolatedAsyncioTestCase):
     async def test_bounded_off_loop_work_only_after_ready_request_activity(self):
         state = {"requests": 0, "ready": False}
         threads = []
+        idle_threads = []
         called = asyncio.Event()
         loop = asyncio.get_running_loop()
 
@@ -40,6 +41,7 @@ class MemoryReclamationTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(module, "release_unused_allocator_pages", release):
             task = asyncio.create_task(module.maintain_unused_memory(
                 lambda: state["requests"], lambda: state["ready"], interval=.01,
+                retire_idle=lambda: idle_threads.append(threading.get_ident()),
             ))
             try:
                 await asyncio.sleep(.03)
@@ -51,6 +53,8 @@ class MemoryReclamationTests(unittest.IsolatedAsyncioTestCase):
                 await asyncio.wait_for(called.wait(), 1)
                 await asyncio.sleep(.03)
                 self.assertEqual(len(threads), 1)
+                self.assertEqual(len(idle_threads), 1)
+                self.assertNotEqual(idle_threads[0], threading.get_ident())
                 self.assertNotEqual(threads[0], threading.get_ident())
             finally:
                 task.cancel()
