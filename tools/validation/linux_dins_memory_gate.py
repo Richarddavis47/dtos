@@ -99,6 +99,7 @@ def capture_worker() -> int:
     original_capture = dins._capture_page
     original_write = dins._write_artifact_json
     original_playwright = dins.sync_playwright
+    original_release = dins._release_completed_capture_resources
     boundaries = OUTPUT / "page-boundaries.jsonl"
     active = {}
 
@@ -126,6 +127,10 @@ def capture_worker() -> int:
                 yield playwright
         finally:
             boundary("viewport_reclaimed", **active)
+
+    def release():
+        original_release()
+        boundary("viewport_heap_reclaimed", **active)
 
     def capture_page(browser, store, base, spec, viewport, league):
         active.update(page_id=spec["page_id"], viewport=viewport.name)
@@ -158,6 +163,7 @@ def capture_worker() -> int:
     dins._capture_page = capture_page
     dins._write_artifact_json = write
     dins.sync_playwright = tracked_playwright
+    dins._release_completed_capture_resources = release
     boundary("capture_start")
     inventory = dins._json(PUBLIC_ORIGIN + "/api/inspect/site-map")
     if any(str(row.get("route", "")).startswith("/__validation__/") for row in inventory["pages"]):

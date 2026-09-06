@@ -17,6 +17,25 @@ class TrackedPage(dict):
 
 
 class DinsCaptureMemoryTests(unittest.TestCase):
+    def test_linux_returns_unused_allocator_pages_without_requiring_glibc_elsewhere(self):
+        with patch.object(module.sys, 'platform', 'linux'), patch('ctypes.CDLL') as library:
+            module._release_completed_capture_resources()
+            library.return_value.malloc_trim.assert_called_once_with(0)
+        with patch.object(module.sys, 'platform', 'linux'), patch('ctypes.CDLL', side_effect=OSError):
+            module._release_completed_capture_resources()
+
+    def test_closed_resource_cycles_are_collected_without_linux_api_on_windows(self):
+        class ClosedResource:
+            pass
+
+        resource = ClosedResource()
+        resource.cycle = resource
+        reference = weakref.ref(resource)
+        del resource
+        with patch.object(module.sys, 'platform', 'win32'):
+            module._release_completed_capture_resources()
+        self.assertIsNone(reference())
+
     def test_failed_viewports_close_native_resources_and_preserve_failure_evidence(self):
         def response(url):
             if url.endswith('/api/market/health'):

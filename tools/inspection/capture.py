@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import os
 import re
 import shutil
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
@@ -272,6 +274,21 @@ def _manifest_page_summary(result: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _release_completed_capture_resources() -> None:
+    """Release closed Playwright cycles and idle worker allocator pages."""
+    gc.collect()
+    if sys.platform == "linux":
+        import ctypes
+
+        try:
+            trim = ctypes.CDLL(None).malloc_trim
+        except (AttributeError, OSError):
+            return  # Non-glibc hosts still collect unreachable Python objects.
+        trim.argtypes = [ctypes.c_size_t]
+        trim.restype = ctypes.c_int
+        trim(0)
+
+
 def capture(
     base_url: str, output: Path, limit: int | None = None,
     *, public_url: str | None = None,
@@ -321,6 +338,7 @@ def capture(
     failures: list[dict[str, Any]] = []
     for spec in pages:
         for viewport in VIEWPORTS:
+            browser = playwright = None
             try:
                 # Closing a page/context does not release Chromium's shared
                 # screenshot buffers or the driver's native allocations. End
@@ -341,6 +359,9 @@ def capture(
                         browser.close()
             except Exception as exc:  # capture must preserve partial results
                 failures.append({"page_id": spec["page_id"], "viewport": viewport.name, "error": type(exc).__name__, "detail": str(exc)[:500]})
+            finally:
+                browser = playwright = None
+                _release_completed_capture_resources()
     deployment = status.get("deployment") or deployment_metadata()
     generated_at = datetime.now(timezone.utc).isoformat()
     page_ids = sorted({row["page_id"] for row in generated})
