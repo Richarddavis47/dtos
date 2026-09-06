@@ -280,7 +280,7 @@ def _cache(path: Path) -> dict[str, Any]:
             "roster_id": roster_id,
             "owner_id": f"owner-{roster_id}",
             "owner": f"Validation Owner {roster_id}",
-            "team_name": f"Validation Team {roster_id}",
+            "team_name": f"Validation Franchise {roster_id}",
             "wins": roster_id % 8,
             "losses": 14 - roster_id % 8,
             "ties": 0,
@@ -327,9 +327,9 @@ def _cache(path: Path) -> dict[str, Any]:
                     "season": season,
                     "round": round_number,
                     "original_roster_id": original_roster_id,
-                    "original_team": f"Validation Team {original_roster_id}",
+                    "original_team": f"Validation Franchise {original_roster_id}",
                     "current_owner_id": owner,
-                    "current_owner": f"Validation Team {owner}",
+                    "current_owner": f"Validation Franchise {owner}",
                     "is_traded": owner != original_roster_id,
                 })
     data = {

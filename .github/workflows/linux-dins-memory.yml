@@ -1,0 +1,53 @@
+name: Linux full DINS memory
+on:
+  workflow_dispatch:
+  push:
+    branches: [dtos-v1.13.6-dins-bounded-capture]
+    paths:
+      - tools/inspection/**
+      - tools/validation/linux_dins_memory_gate.py
+      - tools/validation/generate_sanitized_market_fixture.py
+      - .github/workflows/linux-dins-memory.yml
+permissions:
+  contents: read
+jobs:
+  full-dins:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build existing production-shaped image
+        run: docker build --file tools/validation/Dockerfile.market-cgroup --tag dtos-dins:validation .
+      - name: Full DINS with unchanged memory reserve
+        run: |
+          mkdir -p .validation/dins-linux .validation/dins-fixture
+          docker run --rm --memory 2g --memory-swap 2g --cpus 2 \
+            --add-host dtos.fixture:127.0.0.1 \
+            --volume "$PWD/.validation/dins-linux:/output" \
+            --volume "$PWD/.validation/dins-fixture:/fixture" \
+            --env DTOS_CACHE_FILE=/fixture/dtos_cache.json \
+            --env DTOS_HISTORY_DB_FILE=/fixture/dtos_history.sqlite3 \
+            --env DTOS_VALIDATION_LEGACY_ARCHIVE_FILE=/fixture/retirement-rehearsal.sqlite3 \
+            --env DTOS_METADATA_DB_FILE=/fixture/dtos_metadata.sqlite3 \
+            --env DTOS_HISTORY_STORAGE_ROOT=/fixture \
+            --env DTOS_PRODUCTION_SHAPED_FIXTURE=1 \
+            --env DTOS_BACKGROUND_START_DELAY=0 \
+            --env DTOS_LIVE_VISUAL_CAPTURE=0 \
+            --env DTOS_PUBLIC_URL=http://dtos.fixture:8767 \
+            --env SLEEPER_LEAGUE_ID=1804000000000000000 \
+            dtos-dins:validation \
+            sh -c 'python -m tools.validation.generate_sanitized_market_fixture && python -m tools.validation.linux_dins_memory_gate'
+      - name: Upload sanitized evidence on every outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-full-dins-memory
+          path: |
+            .validation/dins-linux/summary.json
+            .validation/dins-linux/memory-curve.jsonl
+            .validation/dins-linux/page-boundaries.jsonl
+            .validation/dins-linux/capture-result.json
+            .validation/dins-linux/server.log
+            .validation/dins-linux/capture.log
+          if-no-files-found: error
+          retention-days: 14

@@ -244,6 +244,34 @@ def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: st
     )
 
 
+def _manifest_page_summary(result: dict[str, Any]) -> dict[str, Any]:
+    """Keep manifest inputs only after the complete page artifact is persisted.
+
+    DOM geometry and component trees remain unchanged on disk. Retaining them
+    here scales the capture process heap with every completed viewport.
+    """
+    return {
+        "page_id": result["page_id"],
+        "viewport": {"name": result["viewport"]["name"]},
+        "metrics": {
+            key: result["metrics"][key]
+            for key in ("product_contract_failures", "critical_accessibility_count")
+        },
+        "artifact_urls": {
+            key: result["artifact_urls"][key]
+            for key in ("viewport_screenshot", "full_page_screenshot")
+        },
+        "interactions": [row for row in result["interactions"] if not row["success"]],
+        "accessibility": {
+            "violations": [row for row in result["accessibility"]["violations"] if row["severity"] == "critical"],
+        },
+        "network": {
+            key: result["network"][key]
+            for key in ("console_errors", "failed_requests")
+        },
+    }
+
+
 def capture(
     base_url: str, output: Path, limit: int | None = None,
     *, public_url: str | None = None,
@@ -303,7 +331,8 @@ def capture(
                             path, result, capture_origin=capture_origin,
                             public_origin=public_url,
                         )
-                        generated.append(result)
+                        generated.append(_manifest_page_summary(result))
+                        del result
                     except Exception as exc:  # capture must preserve partial results
                         failures.append({"page_id": spec["page_id"], "viewport": viewport.name, "error": type(exc).__name__, "detail": str(exc)[:500]})
         finally:
