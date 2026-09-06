@@ -661,12 +661,14 @@ async def startup_and_periodic_maintenance(startup_epoch: int) -> None:
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     from src.core.fois.process_execution import retire_idle_fois_executor_sync
+    from src.core.intelligence.cache import intelligence_cache
     from src.platform.memory_reclamation import maintain_unused_memory
 
     memory_reclaimer = asyncio.create_task(
         maintain_unused_memory(
             lambda: runtime_metrics.requests, lambda: runtime_metrics.ready,
             retire_idle=lambda: retire_idle_fois_executor_sync() if lifecycle_coordinator.startup_complete() else False,
+            expire_one=intelligence_cache.expire_one,
         ),
         name="dtos-unused-memory-reclaimer",
     )

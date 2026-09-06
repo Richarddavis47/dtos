@@ -61,6 +61,28 @@ class IntelligenceCache:
             del self._entries[oldest]
             self.invalidations += 1
 
+    def expire_one(self) -> bool:
+        """Release one already-expired graph off-loop, without blocking readers.
+
+        Normal lookups already reject these entries. Unrelated keys previously
+        retained their expired graphs until capacity eviction or another lookup.
+        Caller-held results remain valid; no factory or provider is invoked.
+        """
+        if not self._lock.acquire(blocking=False):
+            return False
+        expired = None
+        try:
+            now = monotonic()
+            for key, entry in self._entries.items():
+                if entry.expires_at <= now:
+                    expired = self._entries.pop(key)
+                    self.invalidations += 1
+                    break
+        finally:
+            self._lock.release()
+        # Destruction of the graph must not hold the shared cache lock.
+        return expired is not None
+
     def invalidate(self, prefix: str | None = None) -> int:
         with self._lock:
             keys = [

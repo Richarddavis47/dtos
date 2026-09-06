@@ -31,6 +31,7 @@ def release_unused_allocator_pages() -> bool:
 async def maintain_unused_memory(
     request_count: Callable[[], int], ready: Callable[[], bool],
     *, interval: float = 1.0, retire_idle: Callable[[], bool] | None = None,
+    expire_one: Callable[[], bool] | None = None,
 ) -> None:
     """At most one off-loop reclamation per interval, only after read activity.
 
@@ -46,4 +47,6 @@ async def maintain_unused_memory(
         previous = current
         if retire_idle is not None:
             await asyncio.to_thread(retire_idle)
+        if expire_one is not None:
+            await asyncio.to_thread(expire_one)
         await asyncio.to_thread(release_unused_allocator_pages)
