@@ -29,7 +29,9 @@ class DinsFixtureInventoryTests(unittest.TestCase):
         seasons, occurrences = _trade_replay_fixture()
         self.assertEqual(len(occurrences), 1578)
         self.assertEqual(sum(len(rows) for weeks in seasons.values() for rows in weeks.values()), 231)
-        valued = {asset for _, asset, _ in occurrences if not asset.startswith("unavailable-")}
+        all_assets = {asset for _, asset, _ in occurrences}
+        self.assertTrue(all_assets <= self.data["players"].keys())
+        valued = {asset for asset in all_assets if int(asset[1:]) < 1000}
         self.assertEqual(len(valued), 50)
         self.assertTrue(valued <= self.data["players"].keys())
 

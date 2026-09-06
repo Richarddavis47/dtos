@@ -66,7 +66,7 @@ def _trade_replay_fixture() -> tuple[dict[int, dict[str, list[dict[str, Any]]]],
         for asset_offset in range(asset_count):
             unavailable = asset_offset >= asset_count - unavailable_count
             if unavailable:
-                raw_asset = f"unavailable-{unavailable_sequence:04d}"
+                raw_asset = _player(1000 + unavailable_sequence)[0]
                 unavailable_sequence += 1
             else:
                 # Historical value coverage is not a second player namespace.
@@ -92,11 +92,14 @@ def _seed_historical_trade_resolutions(
     root: Path, resolution_keys: list[tuple[str, str, int]],
 ) -> None:
     """Populate only sparse global evidence/references needed for replay validation."""
+    unavailable_ids = {f"player:{raw}" for _, raw, _ in resolution_keys
+                       if raw.startswith("v") and int(raw[1:]) >= 1000}
     class Provider:
         provider_id = "dynastyprocess"
 
         def observations(self, *, asset_id: str, at_or_before: str, **_context: Any):
-            if asset_id.startswith("player:unavailable-"):
+            # Missing historical prices do not mean missing player identity.
+            if asset_id in unavailable_ids:
                 return ()
             return (SourceObservation(
                 provider="dynastyprocess", raw_value=7_000, normalized_value=7_000,
