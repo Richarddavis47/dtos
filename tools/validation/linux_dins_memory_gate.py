@@ -218,11 +218,25 @@ def capture_worker() -> int:
     boundary("capture_start")
     inventory = dins._json(PUBLIC_ORIGIN + "/api/inspect/site-map")
     require_full_inventory(inventory)
+    diagnostic = os.environ.get("DTOS_DINS_DIAGNOSTIC_PAGE")
+    if diagnostic:
+        if diagnostic != "teams-7":
+            raise RuntimeError("Unsupported bounded diagnostic target")
+        original_json = dins._json
+
+        def diagnostic_json(url):
+            result = original_json(url)
+            if url.endswith("/api/inspect/site-map"):
+                result = {**result, "pages": [row for row in result["pages"] if row["page_id"] == diagnostic]}
+            return result
+
+        dins._json = diagnostic_json
+        dins.VIEWPORTS = tuple(view for view in dins.VIEWPORTS if view.name == "mobile")
     manifest = dins.capture(PUBLIC_ORIGIN, Path("/fixture/dins-capture"), public_url=PUBLIC_ORIGIN)
     persist_contract_evidence(manifest, OUTPUT / "contract-evidence.json")
     boundary("capture_complete")
     expected = manifest["total_pages_expected"]
-    if expected < 61 or manifest["total_pages_completed"] != expected:
+    if expected < (1 if diagnostic else 61) or manifest["total_pages_completed"] != expected:
         raise AssertionError("Full authoritative page coverage was not captured")
     if manifest["status"] != "complete" or manifest["validation_outcome"] != "pass":
         raise AssertionError("DINS capture/product/accessibility gate failed")
@@ -236,13 +250,16 @@ def capture_worker() -> int:
     if len(page_files) != expected * viewports * 3 or len(png_files) != expected * viewports * 2:
         raise AssertionError("Viewport artifact coverage was incomplete")
     # The existing packaging validator remains unchanged and fail closed.
-    boundary("packaging")
-    package_bundle(root, Path("/fixture/dins-package"))
-    boundary("packaging_complete")
+    if not diagnostic:
+        boundary("packaging")
+        package_bundle(root, Path("/fixture/dins-package"))
+        boundary("packaging_complete")
     (OUTPUT / "capture-result.json").write_text(json.dumps({
         "pages": expected, "viewports": viewports, "page_json": len(page_files),
         "png": len(png_files), "artifacts": manifest["total_visual_artifacts"],
-        "sanitization": "pass", "completed_payloads_alive": sum(ref() is not None for ref in refs),
+        "sanitization": "not_run_diagnostic" if diagnostic else "pass",
+        "release_acceptance_eligible": not bool(diagnostic),
+        "completed_payloads_alive": sum(ref() is not None for ref in refs),
         "fixture_images": image_totals,
     }), encoding="utf-8")
     return 0
@@ -288,6 +305,16 @@ def main() -> int:
             summary["before_capture"] = memory_sample()
             summary["before_capture_processes"] = process_sample(server.pid, -1)
             enforce_memory(summary["before_capture"])
+            if os.environ.get("DTOS_DINS_DIAGNOSTIC_PAGE"):
+                # Reproduce the late-capture idle-worker/cache state without
+                # recapturing the preceding146 viewports. Keep the same padding.
+                for roster in range(1, 8):
+                    lifecycle._request(f"/teams/{roster}")
+                for _ in range(65):
+                    lifecycle._request("/health/ready")
+                    time.sleep(1)
+                summary["diagnostic_pre_capture"] = memory_sample()
+                summary["release_acceptance_eligible"] = False
             with worker_log.open("w+") as capture_log, (OUTPUT / "memory-curve.jsonl").open("w") as curve:
                 worker = subprocess.Popen([sys.executable, "-m", __name__.replace("__main__", "tools.validation.linux_dins_memory_gate"), "--worker"],
                     stdout=capture_log, stderr=subprocess.STDOUT, start_new_session=True,
