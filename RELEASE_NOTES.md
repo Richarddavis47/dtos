@@ -1,3 +1,29 @@
+# DTOS v1.13.6 — Automated Visual System Retirement
+
+This unreleased candidate deliberately retires Current Visual, Live Visual, DINS,
+and External Visual Mirror. Prior failed capture runs remain failures; they are
+not reclassified as passing application validation. No further capture/publication
+workflow is part of release acceptance.
+
+Browser scheduling, screenshot/DOM archives, capture workers, public manifests,
+relay transfers and visual publication routes are removed. Production installs no
+Playwright or Pillow. Lightweight browser validation uses the separate validation
+requirements and does not publish screenshots or private page content.
+
+Read-only semantic inspection, projection reconciliation, accessibility and Trade
+interaction regressions remain. Account/league isolation, historical intelligence,
+FOIS, Market outputs and stable-boundary artifact reuse remain required. The three
+Linux application lifecycle scenarios and canonical release validator remain gates;
+actual application memory admission and responsiveness thresholds are unchanged.
+
+Previously reviewed non-visual fixes retain idle FOIS worker reclamation, expired
+cache cleanup and bounded calibration iteration without changing intelligence.
+Production acceptance requires authenticated multi-league browser journeys, full
+smoke and a stable-boundary controlled restart. Historical published release assets
+remain immutable. No infrastructure tier or cost change is included.
+
+Validation and production acceptance must finish before this candidate is complete.
+
 # DTOS v1.13.5 — FOIS Active Tenure Continuity
 
 Production acceptance found that a league's historical evidence and newly

@@ -72,7 +72,7 @@ Common filters are `league`, `season`, `week`, `franchise`, `player`, `limit`, a
 - `GET /api/crawl/history/player/{player_id}/data-quality` — provenance and quality findings.
 # AI Inspection System
 
-DINS exposes cached, read-only structural page descriptions:
+Semantic inspection exposes cached, read-only structural page descriptions:
 
 - `GET /api/inspect`
 - `GET /api/inspect/pages`
@@ -82,14 +82,9 @@ DINS exposes cached, read-only structural page descriptions:
 - `GET /api/inspect/trades`
 
 These routes perform no synchronization or intelligence calculation. See
-`docs/DINS_INSPECTION.md` for the schema and guarantees.
-# DINS 2.0 inspection API
-
-`/api/inspect` discovers all public inspection capabilities. Use `/api/inspect/site-map`
-for the canonical page inventory, `/api/inspect/visual/pages/{page_id}/{viewport}` for
-rendered evidence, `/api/inspect/health` for bundle readiness, and
-`/api/inspect/releases/current` for the release manifest. Supported viewports are
-`desktop`, `tablet`, and `mobile`. Artifact URLs are absolute and never expose local paths.
+`docs/LIVE_PRODUCT_INSPECTION.md` for the current contract. `/api/inspect/health`
+reports semantic read-only availability. Screenshot, manifest and publication routes
+are retired and return 404; they are not readiness gates.
 # Historical Asset Graph API (v1.7.7)
 
 Historical Asset Graph schema `1.0` exposes immutable cached history without

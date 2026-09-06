@@ -1,39 +1,28 @@
-"""Read-only DINS routes over the current cached application state."""
+"""Authenticated semantic diagnostics over the active league cached state."""
 from __future__ import annotations
 
-import os
-import asyncio
 from collections.abc import Callable, Iterable
-from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import FileResponse, JSONResponse, Response
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from services.history import history_progress_contracts
 from src.core.brain import brain_service
 from src.core.inspection import (
     INSPECTION_SCHEMA_VERSION,
-    VIEWPORTS,
-    InspectionArtifactStore,
     InspectionEngine,
     discover_pages,
     excluded_current_trade_pages,
 )
 from src.core.history_context import canonical_history_store
 from src.core.asset_market import asset_market
-from src.core.inspection.publication import GitHubPublicationResolver
 from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 from src.core.valuation_intelligence import valuation_intelligence_report
 from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
-from src.core.inspection.live import LiveInspection, external_mirror_policy, matchup_semantic
-from src.core.inspection.live_visual import LIVE_VIEWPORTS, LiveVisualService
-from src.core.inspection.current_visual import (
-    CurrentVisualMirror, public_manifest, public_visual_origin,
-)
+from src.core.inspection.live import LiveInspection, matchup_semantic
 
 historical_store = canonical_history_store
 
@@ -42,27 +31,13 @@ def create_inspection_router(
     *,
     state: dict[str, Any],
     route_provider: Callable[[], Iterable[Any]] = tuple,
-    artifact_root: Path | None = None,
-    publication_resolver: GitHubPublicationResolver | None = None,
     league_id: str | None = None,
     projection_service: Any | None = None,
     market_cache: Any | None = None,
-    live_visual_service: LiveVisualService | None = None,
-    current_visual_mirror: CurrentVisualMirror | None = None,
     context_resolver: Callable[[], Any | None] | None = None,
     resource_health: Callable[[], dict[str, Any]] | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/inspect", tags=["inspection"])
-    public_base = public_visual_origin(
-        os.getenv("DTOS_PUBLIC_URL", "https://dtos.onrender.com"),
-        production=bool(os.getenv("RENDER")),
-    )
-    store = InspectionArtifactStore(artifact_root or Path("static/inspection"), public_base)
-    publication = publication_resolver or GitHubPublicationResolver()
-
-    async def published(*, refresh: bool = False) -> dict[str, Any]:
-        return await asyncio.to_thread(publication.current, refresh=refresh)
-
     def engine() -> InspectionEngine:
         return InspectionEngine(state)
 
@@ -96,18 +71,6 @@ def create_inspection_router(
     def historical_progress() -> dict[str, Any]:
         return progress_contracts()["canonical_history_progress"]
 
-    def visual_allowed() -> bool:
-        selected, _projections, _market = dependencies()
-        return not league_id or selected == league_id
-
-    def private_visual_state() -> dict[str, Any]:
-        return {
-            "status": "unavailable",
-            "reason": "Secondary league visual inspection is private and requires explicit authorization.",
-            "captures": [],
-            "capture_count": 0,
-        }
-
     @router.get("")
     async def inspection_index() -> Any:
         return jsonable_encoder(engine().index())
@@ -121,115 +84,7 @@ def create_inspection_router(
         """Canonical current-production inspection entry point."""
         # Refresh is inspection-read-model-only; route discovery is derived anew and
         # never refreshes canonical application state.
-        result = jsonable_encoder(live().root())
-        result["visual_inspection"] = "/api/inspect/live/visual"
-        result["external_visual_mirror"] = {
-            "discovery": f"{public_base}/current-visual",
-            "current_manifest": f"{public_base}/current-visual/manifest.json",
-            "release_manifest": f"https://github.com/Richarddavis47/dtos/releases/download/v{VERSION}/dtos-v{VERSION}-visual-mirror-manifest.json",
-            "canonical_source": "rolling_current_dtos",
-        }
-        return result
-
-    @router.get("/current-visual/manifest")
-    async def current_visual_manifest(request: Request) -> Any:
-        response = current_visual_mirror.manifest() if current_visual_mirror else {
-            "status": "pending", "current_generation": None, "captures": [],
-        }
-        payload = jsonable_encoder(public_manifest(response, public_base))
-        if request.method == "HEAD":
-            return Response(media_type="application/json", headers={
-                "Cache-Control": "public, max-age=0, must-revalidate",
-            })
-        return JSONResponse(payload, headers={
-            "Cache-Control": "public, max-age=0, must-revalidate",
-        })
-
-    @router.head("/current-visual/manifest", include_in_schema=False)
-    async def current_visual_manifest_head(request: Request) -> Any:
-        return await current_visual_manifest(request)
-
-    @router.get("/current-visual/health")
-    async def current_visual_health() -> Any:
-        return jsonable_encoder(current_visual_mirror.health() if current_visual_mirror else {
-            "status": "pending", "current_generation": None,
-        })
-
-    @router.get("/current-visual/images/{generation}/{name}")
-    async def current_visual_image(generation: str, name: str) -> Any:
-        if not visual_allowed():
-            raise HTTPException(404, "Secondary league visual capture is unavailable.")
-        path = current_visual_mirror.image(generation, name) if current_visual_mirror else None
-        if path is None:
-            raise HTTPException(404, "Current visual image is unavailable.")
-        return FileResponse(path, media_type="image/png", headers={
-            "Cache-Control": "public, max-age=31536000, immutable",
-            "X-Content-Type-Options": "nosniff",
-        })
-
-    @router.get("/live/visual")
-    async def live_visual_index() -> Any:
-        if not visual_allowed():
-            return private_visual_state()
-        inspector = live()
-        eligibility = [{
-            "surface_id": row.surface_id, "title": row.title,
-            "human_url": row.human_url, "semantic_url": row.semantic_url,
-            "capture_policy": external_mirror_policy(row),
-        } for row in inspector.surfaces
-            if row.inspection_enabled and row.dins_enabled and row.human_url]
-        if live_visual_service is None:
-            return {"status": "pending", "manifest": "/api/inspect/live/visual/manifest",
-                    "health": "/api/inspect/live/visual/health", "captures": [],
-                    "eligible_surfaces": eligibility}
-        result = live_visual_service.manifest()
-        result.update({"kind": "live_visual", "mutable": True,
-                       "manifest": "/api/inspect/live/visual/manifest",
-                       "health": "/api/inspect/live/visual/health",
-                       "projection_audit": "/api/audit/projections/current",
-                       "eligible_surfaces": eligibility})
-        return result
-
-    @router.get("/live/visual/manifest")
-    async def live_visual_manifest() -> Any:
-        if not visual_allowed():
-            return private_visual_state()
-        return live_visual_service.manifest() if live_visual_service else {
-            "status": "pending", "captures": [], "capture_count": 0,
-        }
-
-    @router.get("/live/visual/health")
-    async def live_visual_health() -> Any:
-        if not visual_allowed():
-            return private_visual_state()
-        required = len((state.get("data") or {}).get("matchups") or {}) * len(LIVE_VIEWPORTS)
-        return live_visual_service.health(required) if live_visual_service else {
-            "status": "pending", "required_captures": required, "completed": 0,
-            "browser_processes": 0,
-        }
-
-    @router.get("/live/visual/metadata/{surface_id}/{viewport}")
-    async def live_visual_metadata(surface_id: str, viewport: str) -> Any:
-        if not visual_allowed():
-            raise HTTPException(404, "Secondary league visual capture is unavailable.")
-        if viewport not in LIVE_VIEWPORTS:
-            raise HTTPException(404, "Visual viewport is not registered.")
-        row = live_visual_service.refresh(surface_id, viewport) if live_visual_service else None
-        if row is None:
-            return {"status": "pending", "surface_id": surface_id, "viewport": viewport,
-                    "last_valid": None, "retry_after_seconds": 5}
-        return row
-
-    @router.get("/live/visual/captures/{surface_id}/{viewport}.png")
-    async def live_visual_png(surface_id: str, viewport: str) -> Any:
-        if not visual_allowed():
-            raise HTTPException(404, "Secondary league visual capture is unavailable.")
-        if viewport not in LIVE_VIEWPORTS:
-            raise HTTPException(404, "Visual viewport is not registered.")
-        path = live_visual_service.screenshot(surface_id, viewport) if live_visual_service else None
-        if path is None:
-            raise HTTPException(404, "No valid visual capture is available yet.")
-        return FileResponse(path, media_type="image/png", headers={"Cache-Control": "public, max-age=60"})
+        return jsonable_encoder(live().root())
 
     @router.get("/live/health")
     async def live_health() -> Any:
@@ -273,10 +128,6 @@ def create_inspection_router(
                          "teams": [side.get("team") for side in sides],
                          "human_url": f"/matchups/{matchup_id}",
                          "semantic_url": f"/api/inspect/live/matchups/{matchup_id}",
-                         "visual": {
-                             viewport: f"/api/inspect/live/visual/captures/matchups-{matchup_id}/{viewport}.png"
-                             for viewport in LIVE_VIEWPORTS
-                         },
                          "status": "current"})
         return {"identity": inspector.identity(), "count": len(rows), "matchups": rows}
 
@@ -286,10 +137,7 @@ def create_inspection_router(
         result = matchup_semantic(inspector.data, matchup_id, inspector.projection_snapshot)
         if result is None:
             raise HTTPException(404, "Current matchup is unavailable.")
-        return {"identity": inspector.identity(), **result, "visual": {
-            viewport: f"/api/inspect/live/visual/captures/matchups-{matchup_id}/{viewport}.png"
-            for viewport in LIVE_VIEWPORTS
-        }, "projection_audit": "/api/audit/projections/current"}
+        return {"identity": inspector.identity(), **result, "projection_audit": "/api/audit/projections/current"}
 
     @router.get("/live/players")
     async def live_players(
@@ -366,8 +214,6 @@ def create_inspection_router(
                 "surface_id": f"matchups-{matchup_id}", "title": title,
                 "human_url": f"/matchups/{matchup_id}",
                 "semantic_url": f"/api/inspect/live/matchups/{matchup_id}",
-                "visual": {viewport: f"/api/inspect/live/visual/captures/matchups-{matchup_id}/{viewport}.png"
-                           for viewport in LIVE_VIEWPORTS},
             })
         rows = rows[:limit]
         return {"identity": inspector.identity(), "query": q, "count": len(rows), "results": rows}
@@ -396,21 +242,11 @@ def create_inspection_router(
             historical_trades=trades["transaction_ids"],
         )
 
-    def current_manifest() -> dict[str, Any] | None:
-        result = store.manifest()
-        if result is None:
-            return None
-        deployment = deployment_metadata()
-        return {**result, "version": VERSION, "build": BUILD_NUMBER, "commit_sha": deployment["commit"], "source_branch": deployment["branch"], "deployed_at": deployment["deployed_at"]}
-
     @router.get("/pages/{page_id}")
     async def inspect_page(page_id: str) -> Any:
         page = next((row for row in page_catalog() if row.page_id == page_id), None)
         if page is None:
             raise HTTPException(404, "Inspection page ID is not registered.")
-        release = await published()
-        bundle_url = release.get("full_bundle_url")
-        local_visuals = any(store.page(page_id, viewport.name) for viewport in VIEWPORTS)
         progress = progress_contracts()
         return {
             "application_version": VERSION,
@@ -419,14 +255,6 @@ def create_inspection_router(
             "page": jsonable_encoder(page),
             "historical_progress": progress["canonical_history_progress"],
             "history_progress_contracts": progress,
-            "visual_artifacts": {
-                viewport.name: (
-                    {"url": f"{public_base}/api/inspect/visual/pages/{page_id}/{viewport.name}", "mode": "direct"}
-                    if local_visuals else
-                    {"bundle_url": bundle_url, "internal_path": f"dins/pages/{page_id}/{viewport.name}.json", "mode": "bundle"}
-                )
-                for viewport in VIEWPORTS
-            },
         }
 
     @router.get("/team/{roster_id}")
@@ -601,7 +429,6 @@ def create_inspection_router(
         exclusions = excluded_current_trade_pages(
             state, trade_discovery["transaction_ids"],
         )
-        release = await published()
         return {
             "application_version": VERSION,
             "application_build": BUILD_NUMBER,
@@ -611,77 +438,27 @@ def create_inspection_router(
                 "historical_trades": trade_discovery,
                 "exclusions": jsonable_encoder(exclusions),
             },
-            "publication": {key: release.get(key) for key in ("publication_status", "full_bundle_url", "published_manifest_url", "checksums_url")},
             "metrics": {"total": len(pages), "inspectable": sum(not page.excluded for page in pages), "excluded": sum(page.excluded for page in pages)},
         }
 
     @router.get("/schema")
     async def inspection_schema() -> Any:
-        return {"application_version": VERSION, "application_build": BUILD_NUMBER, "inspection_schema_version": INSPECTION_SCHEMA_VERSION, "viewports": jsonable_encoder(VIEWPORTS), "contracts": ["semantic", "visual", "dom", "accessibility", "geometry", "interaction", "release"]}
-
-    @router.get("/visual")
-    @router.get("/visual/pages")
-    async def visual_index() -> Any:
-        return current_manifest() or {"application_version": VERSION, "application_build": BUILD_NUMBER, "inspection_schema_version": INSPECTION_SCHEMA_VERSION, "status": "pending", "pages": [], "message": "The versioned post-deployment inspection bundle has not completed."}
-
-    @router.get("/visual/pages/{page_id}")
-    async def visual_page_index(page_id: str) -> Any:
-        rows = {viewport.name: store.page(page_id, viewport.name) for viewport in VIEWPORTS}
-        if not any(rows.values()):
-            raise HTTPException(404, "No generated visual inspection exists for this page.")
-        return {"page_id": page_id, "viewports": rows}
-
-    @router.get("/visual/pages/{page_id}/{viewport}")
-    async def visual_page(page_id: str, viewport: str) -> Any:
-        if viewport not in {row.name for row in VIEWPORTS}:
-            raise HTTPException(404, "Unsupported inspection viewport.")
-        result = store.page(page_id, viewport)
-        if result is None:
-            raise HTTPException(404, "Generated visual inspection not found.")
-        return result
-
-    @router.get("/releases")
-    async def inspection_releases() -> Any:
-        current = await published()
-        return {"releases": [current, *store.releases()], "current": f"{public_base}/api/inspect/releases/current"}
-
-    @router.get("/releases/current")
-    async def current_release(refresh: bool = False) -> Any:
-        return await published(refresh=refresh)
-
-    def retained_release(version: str) -> dict[str, Any]:
-        result = next((row for row in store.releases() if row.get("version") == version), None)
-        if result is None:
-            raise HTTPException(404, "Inspection release not retained.")
-        return result
-
-    @router.get("/releases/{version}")
-    async def release(version: str) -> Any:
-        if version.removeprefix("v") == VERSION:
-            return await published()
-        return retained_release(version)
-
-    @router.get("/releases/{version}/changes")
-    async def release_changes(version: str) -> Any:
-        result = await published() if version.removeprefix("v") == VERSION else retained_release(version)
-        return {key: result.get(key, []) for key in ("pages_added", "pages_removed", "pages_changed", "semantic_contract_changes")}
-
-    @router.get("/releases/{version}/regressions")
-    async def release_regressions(version: str) -> Any:
-        result = await published() if version.removeprefix("v") == VERSION else retained_release(version)
-        return {key: result.get(key, []) for key in ("visual_difference_results", "interaction_failures", "accessibility_regressions", "stale_version_mismatches")}
+        return {"application_version": VERSION, "application_build": BUILD_NUMBER,
+                "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
+                "contracts": ["semantic", "numeric", "active_league", "read_only"]}
 
     @router.get("/health")
-    async def inspection_health(refresh: bool = False) -> Any:
-        current = await published(refresh=refresh)
-        pages = page_catalog()
-        deployment = deployment_metadata()
-        branch, commit = deployment["branch"], deployment["commit"]
-        completed = int(current.get("total_pages_completed") or 0)
-        expected = sum(not page.excluded for page in pages)
-        latest = current.get("version")
-        identities_match = bool(current.get("identities_match"))
+    async def inspection_health() -> Any:
         progress = progress_contracts()
-        return {"application_version": VERSION, "application_build": BUILD_NUMBER, "current_production_commit": commit, "expected_release_tag": f"v{VERSION}", "inspection_schema_version": INSPECTION_SCHEMA_VERSION, "latest_completed_inspection_version": latest, "inspection_status": current.get("publication_status", "pending"), "publication_status": current.get("publication_status", "pending"), "published_manifest_url": current.get("published_manifest_url"), "full_bundle_url": current.get("full_bundle_url"), "checksums_url": current.get("checksums_url"), "total_pages_expected": expected, "total_pages_completed": completed, "total_visual_artifacts": current.get("total_visual_artifacts", 0), "failures": current.get("failures", []), "warnings": current.get("warnings", []), "generated_timestamp": current.get("generated_at"), "source_commit": current.get("commit_sha") or commit, "source_branch": branch, "identities_match": identities_match, "production_inspection_matches_deployment": identities_match and latest == VERSION and completed == expected, "historical_progress": progress["canonical_history_progress"], "history_progress_contracts": progress, "resource_health": resource_health() if resource_health else None}
+        deployment = deployment_metadata()
+        return {
+            "application_version": VERSION, "application_build": BUILD_NUMBER,
+            "current_production_commit": deployment["commit"],
+            "inspection_schema_version": INSPECTION_SCHEMA_VERSION,
+            "status": "available", "mode": "semantic_read_only",
+            "historical_progress": progress["canonical_history_progress"],
+            "history_progress_contracts": progress,
+            "resource_health": resource_health() if resource_health else None,
+        }
 
     return router

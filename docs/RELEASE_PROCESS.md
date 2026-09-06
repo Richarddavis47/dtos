@@ -1,21 +1,26 @@
 # Release Process
 
-`AGENTS.md` is authoritative. In summary:
+1. Follow AGENTS.md and the explicitly authorized release scope. Preserve failed evidence.
+2. Run focused tests while diagnosing; batch corrections before final validation.
+3. Run the canonical `.venv/Scripts/python.exe -m tools.validation.validate_release`,
+   full regression, lint, compilation, dependencies, whitespace, routes/OpenAPI and smoke.
+4. Require ordinary, archive-warmed and combined-read Linux **application** lifecycle
+   checks: cold construction, non-semantic reuse, one material replacement, compatible
+   restart, provider-free requests, memory admission, responsiveness and cleanup.
+5. Run lightweight browser product journeys with `requirements-validation.txt`:
+   desktop/mobile navigation, authenticated A→B→A context, two accounts, Trade workflows,
+   numerical contracts and accessibility. Do not create successful screenshot archives.
+6. Review ancestry and diff; merge only green required PR checks. Release and deploy
+   the exact merge commit; do not rewrite immutable prior releases.
+7. Verify real authenticated production journeys and account/league/franchise isolation,
+   full smoke, semantic inspection, stable-boundary restart and post-restart smoke.
+8. Confirm storage/privacy, temporary-resource cleanup and clean synchronized main.
 
-1. Start from clean synchronized `main` and create one release branch.
-2. Inspect contracts and roadmap, implement a focused release, update metadata and documentation.
-3. Run `.\.venv\Scripts\python.exe -m tools.validation.validate_release` from the repository root.
-4. Stop on any failed gate. Never bypass or misreport validation.
-5. Review the diff and conflict state, commit, push, open a ready pull request, and squash-merge after all gates pass.
-6. Delete the feature branch, tag the merge commit, publish release notes, return to `main`, pull, and repeat startup/smoke validation.
-7. Verify Live Product Inspection, Live Visual Inspection, and External Visual
-   Mirror are complete. The release-triggered mirror workflow waits for matching
-   production and DINS, publishes individual public artifacts, and verifies the
-   stable current manifest.
-8. Confirm clean synchronized state and no remaining validation process.
+Current Visual, Live Visual, DINS and External Visual Mirror are retired. They are not
+release gates and have no publication steps. Their historical failed evidence remains
+accurate; old published release artifacts remain immutable. Shared product checks were
+retained, not waived. Application memory and responsiveness contracts are unchanged.
 
-Permanent product principle: if a public DTOS surface is visible to the user, it
-must be discoverable through Live Inspection and eligible for visual inspection.
-Core current surfaces must also have externally fetchable visual evidence.
-
-Version metadata lives only in `app_metadata.py`. Build numbers use the numeric release tuple (`1.0.0` → `1000`). Release artifacts are the Git tree, annotated tag, GitHub release notes, changelog, validation report, and production-readiness checklist.
+See [validation architecture](VALIDATION_ARCHITECTURE.md). Version/build identity is
+centralized in `app_metadata.py`. Stop for genuine unsafe or out-of-scope failures;
+never weaken a gate or label an unexecuted check as passed.

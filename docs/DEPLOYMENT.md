@@ -25,9 +25,12 @@ Use graceful termination so FastAPI lifespan cleanup cancels tracked background 
 
 Set the start command above, configure `SLEEPER_LEAGUE_ID`, and use a persistent writable cache path only when the hosting plan supplies persistent storage. Render branch/commit variables are automatically surfaced on Settings.
 
-After a tagged Render deployment is ready, capture DINS against the exact production
-commit and upload its deterministic ZIP, manifest, and checksum files to the matching
-GitHub Release. Render resolves these public assets dynamically; generated inspection
-files are never committed or baked into a follow-up deployment. Set
-`DTOS_GITHUB_REPOSITORY` only when deploying a fork; the default is
-`Richarddavis47/dtos`.
+Production build command: `pip install -r requirements.txt`. Do not install
+Chromium or Playwright in the production service. Browser dependencies belong only
+to the validation environment. Remove obsolete capture-only browser path and visual
+publication settings after verifying they have no shared consumer; preserve existing
+inspection authentication, accounts, storage paths and all application settings.
+
+After deployment, run authenticated product journeys, semantic inspection, full
+smoke and stable-boundary restart acceptance. No DINS, PNG mirror or visual archive
+publication is required or scheduled. See [validation architecture](VALIDATION_ARCHITECTURE.md).

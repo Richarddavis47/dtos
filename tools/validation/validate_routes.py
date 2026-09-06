@@ -40,14 +40,8 @@ REQUIRED_GET_PATHS = (
     "/api/inspect/health",
     "/api/inspect/live",
     "/api/inspect/live/health",
-    "/api/inspect/live/visual",
-    "/api/inspect/live/visual/health",
     "/api/inspect/schema",
     "/api/inspect/market",
-    "/api/inspect/visual/pages",
-    "/api/inspect/releases/current",
-    "/current-visual",
-    "/current-visual/manifest.json",
 )
 
 
@@ -63,7 +57,7 @@ def main() -> int:
         raise AssertionError("missing OpenAPI paths: " + ", ".join(missing_openapi))
     unsupported = unsupported_dynamic_patterns(app.routes)
     if unsupported:
-        raise AssertionError("public HTML routes lack DINS fixture metadata: " + ", ".join(unsupported))
+        raise AssertionError("public HTML routes lack Semantic inspection fixture metadata: " + ", ".join(unsupported))
     if schema.get("info", {}).get("version") != VERSION:
         raise AssertionError("OpenAPI and centralized application versions differ.")
 

@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 
 from routes.matchups import _starter_projection_html, create_matchups_router
 from src.core.inspection.live import LiveInspection, matchup_semantic, public_surface_registry
-from src.core.inspection.live_browser import (
+from src.core.inspection.projection_contract import (
     matchup_projection_mismatches,
     normalized_manager_text,
     normalized_visible_identity,
@@ -114,7 +114,6 @@ class LiveInspectionTests(unittest.TestCase):
         surfaces = public_surface_registry(app.routes)
         future = next(row for row in surfaces if row.route == "/future-feature")
         self.assertTrue(future.inspection_enabled)
-        self.assertTrue(future.dins_enabled)
         self.assertEqual(future.category, "Future Intelligence")
 
     def test_removed_route_disappears_and_approved_exclusion_is_explicit(self):
@@ -143,27 +142,6 @@ class LiveInspectionTests(unittest.TestCase):
             "/__validation__/fixture-contract",
             {row.route for row in public_surface_registry(app.routes)},
         )
-
-    def test_machine_current_visual_routes_are_not_browser_capture_surfaces(self):
-        app = FastAPI()
-
-        @app.get("/current-visual")
-        async def current_visual(): return {"kind": "current_visual_discovery"}
-
-        @app.get("/current-visual/manifest.json")
-        async def current_visual_manifest(): return {"captures": []}
-
-        surfaces = {
-            row.route: row for row in public_surface_registry(app.routes)
-            if row.route.startswith("/current-visual")
-        }
-        self.assertEqual(set(surfaces), {
-            "/current-visual", "/current-visual/manifest.json",
-        })
-        for surface in surfaces.values():
-            self.assertEqual(surface.surface_type, "api")
-            self.assertIsNone(surface.human_url)
-            self.assertFalse(surface.dins_enabled)
 
     def test_matchup_semantic_preserves_missing_and_reconciles_totals(self):
         data = {"matchups": {"1": [{"roster_id": 1, "team": "Alpha", "owner": "A",

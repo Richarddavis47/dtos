@@ -50,15 +50,9 @@ System renderers`. Design System 1.0 standardizes hierarchy and interaction whil
 preserving domain ownership in the orchestrator and registered engines.
 
 Sleeper synchronization normalizes data into one cache snapshot. A request selects a Front Office, builds an immutable intelligence context, executes or reuses provider results, aggregates evidence, resolves conflicts conservatively, and renders HTML or JSON. Refresh invalidates the affected orchestration namespace.
-# DINS release-verification boundary
+# Validation boundary
 
-The web application discovers routes and serves cached inspection artifacts. The
-`tools.inspection.capture` worker alone owns Chromium, navigation, screenshots, DOM
-and accessibility extraction, interaction evidence, and artifact writes. This keeps
-the dependency direction `read-only API -> artifact store` and prevents ordinary
-requests from performing visual work or invoking intelligence engines.
-
-The post-deployment publication boundary is `capture -> deterministic package ->
-GitHub Release assets`. Production performs a brief cached, read-only GitHub release
-lookup and validates immutable identity; it never owns Chromium, uploads, or generated
-artifact persistence.
+Semantic inspection reads canonical application evidence under existing authentication.
+Browser product tests run only in validation, using independent test dependencies.
+Production has no automated screenshot/DOM capture, publication scheduler, browser
+worker or visual archive. See [validation architecture](VALIDATION_ARCHITECTURE.md).

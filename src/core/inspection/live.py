@@ -17,9 +17,8 @@ from src.ui.intelligence_presentation import matchup_game_state, projection_pres
 LIVE_INSPECTION_SCHEMA_VERSION = "1.0"
 _PRIVATE_PREFIXES = (
     "/docs", "/redoc", "/openapi.json", "/sync", "/admin", "/debug",
-    "/inspection-artifacts", "/__validation__",
+    "/__validation__",
 )
-_MACHINE_SURFACE_PREFIXES = ("/current-visual",)
 _APPROVED_EXCLUSIONS = {
     "/robots.txt": "crawler_control",
     "/sitemap.xml": "machine_sitemap",
@@ -38,16 +37,8 @@ class PublicSurface:
     semantic_url: str
     parameterized: bool
     inspection_enabled: bool = True
-    dins_enabled: bool = True
     public: bool = True
     exclusion_reason: str | None = None
-
-
-def external_mirror_policy(surface: PublicSurface) -> str:
-    """Return the scalable mirror policy derived from canonical registration."""
-    if not surface.public or not surface.inspection_enabled or not surface.dins_enabled:
-        return "excluded"
-    return "representative_or_requested" if surface.parameterized else "always"
 
 
 def _slug(value: str) -> str:
@@ -84,7 +75,7 @@ def public_surface_registry(routes: Iterable[Any]) -> tuple[PublicSurface, ...]:
             continue
         seen.add(key)
         excluded = _APPROVED_EXCLUSIONS.get(path)
-        is_api = path.startswith(("/api/", "/health", *_MACHINE_SURFACE_PREFIXES))
+        is_api = path.startswith(("/api/", "/health"))
         surface_id = str(route.name or _slug(path)).replace("_", "-")
         rows.append(PublicSurface(
             surface_id=surface_id,
@@ -95,7 +86,6 @@ def public_surface_registry(routes: Iterable[Any]) -> tuple[PublicSurface, ...]:
             semantic_url=f"/api/inspect/live/surfaces/{surface_id}",
             parameterized="{" in path,
             inspection_enabled=excluded is None,
-            dins_enabled=excluded is None and not is_api,
             exclusion_reason=excluded,
         ))
     return tuple(sorted(rows, key=lambda row: (row.category, row.route, row.surface_id)))
@@ -225,8 +215,7 @@ class LiveInspection:
             },
             "audit_exports": {"json": "/api/audit/projections/current",
                               "csv": "/api/audit/projections/current.csv"},
-            "dins": {"current_release": "/api/inspect/releases/current",
-                     "health": "/api/inspect/health"},
+            "semantic_health": "/api/inspect/health",
             "traversal": "Start with a collection, then follow human_url and semantic_url.",
             "side_effect_contract": {"provider_calls": 0, "projection_refreshes": 0,
                                      "brain_regenerations": 0, "market_constructions": 0,

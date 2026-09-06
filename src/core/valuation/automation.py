@@ -105,10 +105,31 @@ def _provider_summary(universe: ValuationUniverse) -> list[dict[str, Any]]:
     ]
 
 
+def _calibration_universe(data: dict[str, Any], state: dict[str, Any]) -> ValuationUniverse:
+    """Keep audit inputs, not twelve full display layers for every asset.
+
+    The canonical iterator still evaluates every asset with identical semantics.
+    Only temporary presentation fields unused by this audit/status are released.
+    Public ValuationUniverse construction and its full records remain unchanged.
+    """
+    universe = ValuationUniverse.streaming(data, state)
+    universe.assets = [{
+        "asset_id": asset["asset_id"], "asset_type": asset["asset_type"],
+        "identity": {key: asset["identity"].get(key) for key in (
+            "round", "position", "age", "rookie_class", "player_name", "draft_pick_description",
+        )},
+        "layers": {name: {key: asset["layers"][name].get(key) for key in ("value", "reason")}
+                   for name in ("market_value", "intrinsic_dtos_value", "contender_value", "rebuilder_value")},
+        "audit": {key: asset["audit"][key] for key in ("provider_count", "confidence", "inspection_ready")},
+        "providers": [{key: row[key] for key in ("provider", "raw_value", "confidence")} for row in asset["providers"]],
+    } for asset in universe.iter_assets()]
+    return universe
+
+
 def audit_market_calibration(data: dict[str, Any], state: dict[str, Any], *, apply: bool = True) -> dict[str, Any]:
     """Audit every canonical asset and safely apply category-level adjustments only."""
     generated_at = _now()
-    universe = ValuationUniverse(data, state)
+    universe = _calibration_universe(data, state)
     buckets: dict[str, list[dict[str, Any]]] = defaultdict(list)
     largest: list[dict[str, Any]] = []
     for asset in universe.assets:

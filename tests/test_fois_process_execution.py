@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import copy
 import os
 import tempfile
@@ -71,6 +72,62 @@ def cache_input(root: Path, data: dict, name: str = "cache.json") -> Path:
 
 
 class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
+    def test_idle_retirement_preserves_full_warm_interval(self):
+        from src.core.fois import process_execution as module
+
+        executor = mock.Mock()
+        with mock.patch.object(module, '_EXECUTOR', executor), mock.patch.object(module, '_IN_FLIGHT', 0), mock.patch.object(module, '_LAST_USED', 100):
+            with mock.patch.object(module, 'perf_counter', return_value=159.99):
+                self.assertFalse(module.retire_idle_fois_executor_sync())
+            executor.shutdown.assert_not_called()
+            with mock.patch.object(module, 'perf_counter', return_value=160):
+                self.assertTrue(module.retire_idle_fois_executor_sync())
+                self.assertFalse(module.retire_idle_fois_executor_sync())
+            executor.shutdown.assert_called_once_with(wait=True, cancel_futures=True)
+
+    def test_pending_running_failed_and_cancelled_jobs_are_accounted(self):
+        from src.core.fois import process_execution as module
+
+        first, second = concurrent.futures.Future(), concurrent.futures.Future()
+        executor = mock.Mock()
+        executor.submit.side_effect = (first, second)
+        with mock.patch.object(module, '_EXECUTOR', executor), mock.patch.object(module, '_IN_FLIGHT', 0), mock.patch.object(module, '_LAST_USED', 0), mock.patch.object(module, 'perf_counter', return_value=100):
+            module._submit(str, 1)
+            module._submit(str, 2)
+            self.assertEqual(module._IN_FLIGHT, 2)
+            with mock.patch.object(module, 'perf_counter', return_value=1000):
+                self.assertFalse(module.retire_idle_fois_executor_sync())
+            first.cancel()
+            self.assertEqual(module._IN_FLIGHT, 1)
+            self.assertFalse(module.retire_idle_fois_executor_sync())
+            second.set_exception(RuntimeError('failed work'))
+            self.assertEqual(module._IN_FLIGHT, 0)
+            self.assertEqual(module._LAST_USED, 100)
+            self.assertFalse(module.retire_idle_fois_executor_sync())
+            with mock.patch.object(module, 'perf_counter', return_value=160):
+                self.assertTrue(module.retire_idle_fois_executor_sync())
+
+    async def test_idle_retirement_reaps_process_and_recreates_identical_scores(self):
+        from src.core.fois import process_execution as module
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            repository = FOISRepository(root / 'fois.sqlite3')
+            cache = cache_input(root, fixture())
+            try:
+                first, _, metrics = await generate_fois_isolated(fixture(), repository, cache_file=cache)
+                before = repository.path.read_bytes()
+                old_pid = metrics['worker_pid']
+                with mock.patch.object(module, '_LAST_USED', time.perf_counter() - 61):
+                    self.assertTrue(await asyncio.to_thread(module.retire_idle_fois_executor_sync))
+                self.assertFalse(psutil.pid_exists(old_pid))
+                self.assertEqual(repository.path.read_bytes(), before)
+                second, _, after = await generate_fois_isolated(fixture(), repository, cache_file=cache)
+                self.assertNotEqual(after['worker_pid'], old_pid)
+                self.assertEqual([semantic(row) for row in first], [semantic(row) for row in second])
+            finally:
+                await shutdown_fois_executor()
+
     async def test_validation_progress_io_cannot_block_request_event_loop(self) -> None:
         class SlowProgress:
             @staticmethod
@@ -110,6 +167,7 @@ class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
         executor = mock.Mock()
         future = mock.Mock()
         future.result.return_value = {"pid": 12_345, "rss_bytes": 75_000_000}
+        future.add_done_callback.side_effect = lambda callback: callback(future)
         executor.submit.return_value = future
         with mock.patch.object(process_execution, "_EXECUTOR", executor):
             self.assertTrue(shutdown_fois_executor_sync())

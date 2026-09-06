@@ -1,7 +1,6 @@
-"""DINS 2.0 discovery, artifact, safety, and comparison regressions."""
+"""Semantic discovery and deployment identity regressions (no visual archive)."""
 from __future__ import annotations
 
-import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,12 +8,10 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
-from PIL import Image
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from routes.inspect import create_inspection_router
-from src.core.inspection import INSPECTION_SCHEMA_VERSION, InspectionArtifactStore, discover_pages
-from src.core.inspection.comparison import compare_images
+from src.core.inspection import discover_pages
 
 
 class VisualInspectionTests(unittest.TestCase):
@@ -22,10 +19,6 @@ class VisualInspectionTests(unittest.TestCase):
         return {"last_sync": "2026-08-02T00:00:00Z", "data": {"league": {"league_id": "l1"}, "players": {"p1": {"full_name": "Player One", "position": "QB"}}, "teams": [{"roster_id": 1, "team_name": "Team 1", "owner": "Owner 1", "players": [{"id": "p1"}]}], "matchups": [{"matchup_id": 7}]}}
 
     def app(self, root: Path, publication_payload: dict | None = None) -> FastAPI:
-        class PendingPublication:
-            def current(self, *, refresh: bool = False) -> dict:
-                return publication_payload or {"version": VERSION, "build": BUILD_NUMBER, "publication_status": "pending", "status": "pending", "identities_match": False}
-
         app = FastAPI()
 
         @app.get("/", response_class=HTMLResponse)
@@ -40,7 +33,7 @@ class VisualInspectionTests(unittest.TestCase):
         async def player(player_id: str) -> HTMLResponse:
             return HTMLResponse(f"<h1>{player_id}</h1>")
 
-        app.include_router(create_inspection_router(state=self.state(), route_provider=lambda: app.routes, artifact_root=root, publication_resolver=PendingPublication()))
+        app.include_router(create_inspection_router(state=self.state(), route_provider=lambda: app.routes))
         return app
 
     def test_discovery_resolves_dynamic_routes_and_excludes_api(self) -> None:
@@ -70,65 +63,14 @@ class VisualInspectionTests(unittest.TestCase):
         self.assertEqual(schema["application_version"], VERSION)
         self.assertEqual(schema["application_build"], BUILD_NUMBER)
         self.assertGreaterEqual(site_map["metrics"]["inspectable"], 3)
-        self.assertEqual(health["inspection_status"], "pending")
-        self.assertFalse(health["production_inspection_matches_deployment"])
-
-    def test_published_health_exposes_public_assets_and_matching_identity(self) -> None:
-        payload = {
-            "version": VERSION, "build": BUILD_NUMBER, "commit_sha": deployment_metadata()["commit"],
-            "publication_status": "complete", "status": "complete", "identities_match": True,
-            "total_pages_completed": 3, "total_visual_artifacts": 12,
-            "published_manifest_url": "https://github.com/example/manifest.json",
-            "full_bundle_url": "https://github.com/example/bundle.zip",
-            "checksums_url": "https://github.com/example/checksums.json",
-        }
-        with tempfile.TemporaryDirectory() as folder:
-            health = TestClient(self.app(Path(folder), payload)).get("/api/inspect/health?refresh=true").json()
-        self.assertEqual(health["publication_status"], "complete")
-        self.assertTrue(health["production_inspection_matches_deployment"])
-        self.assertTrue(health["full_bundle_url"].startswith("https://github.com/"))
-
-    def test_artifacts_are_namespaced_and_run_contract_is_retrievable(self) -> None:
-        with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder)
-            store = InspectionArtifactStore(root, "https://example.test")
-            page = store.current_root / "pages" / "home"
-            page.mkdir(parents=True)
-            payload = {"application_version": VERSION, "page_id": "home", "viewport": {"name": "desktop"}}
-            (page / "desktop.json").write_text(json.dumps(payload), encoding="utf-8")
-            (store.current_root / "manifest.json").write_text(json.dumps({"version": VERSION, "status": "complete", "total_pages_completed": 1}), encoding="utf-8")
-            client = TestClient(self.app(root))
-            response = client.get("/api/inspect/visual/pages/home/desktop")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["page_id"], "home")
-        self.assertIn(f"v{VERSION}-b{BUILD_NUMBER}-s{INSPECTION_SCHEMA_VERSION}", store.artifact_url("pages/home/desktop.png"))
+        self.assertEqual(health["mode"], "semantic_read_only")
+        self.assertNotIn("publication_status", health)
 
     def test_invalid_page_and_viewport_are_clean_json_errors(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             client = TestClient(self.app(Path(folder)))
             self.assertEqual(client.get("/api/inspect/pages/missing").status_code, 404)
             self.assertEqual(client.get("/api/inspect/visual/pages/home/watch").status_code, 404)
-
-    def test_image_comparison_passes_identical_and_detects_change(self) -> None:
-        with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder)
-            before, same, changed, diff = (root / name for name in ("before.png", "same.png", "changed.png", "diff.png"))
-            Image.new("RGB", (20, 20), "white").save(before)
-            Image.new("RGB", (20, 20), "white").save(same)
-            Image.new("RGB", (20, 20), "black").save(changed)
-            self.assertEqual(compare_images(before, same, diff).status, "pass")
-            result = compare_images(before, changed, diff)
-            self.assertEqual(result.status, "fail")
-            self.assertEqual(result.changed_pixel_percentage, 100.0)
-            self.assertTrue(diff.exists())
-
-    def test_store_rejects_traversal_and_malformed_artifact(self) -> None:
-        with tempfile.TemporaryDirectory() as folder:
-            store = InspectionArtifactStore(Path(folder))
-            self.assertIsNone(store.read_json("../secret.json"))
-            store.current_root.mkdir(parents=True)
-            (store.current_root / "manifest.json").write_text("not-json", encoding="utf-8")
-            self.assertIsNone(store.manifest())
 
     def test_deployment_provenance_contract_is_complete(self) -> None:
         deployment = deployment_metadata()

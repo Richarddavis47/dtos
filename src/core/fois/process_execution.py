@@ -22,8 +22,11 @@ from src.core.fois.models import FOIS_MODEL_VERSION
 from src.platform.validation.progress import progress_from_environment
 
 FOIS_PROCESS_TIMEOUT_SECONDS = 60.0
+FOIS_IDLE_RETENTION_SECONDS = 60.0
 _EXECUTOR: concurrent.futures.ProcessPoolExecutor | None = None
-_EXECUTOR_LOCK = threading.Lock()
+_EXECUTOR_LOCK = threading.RLock()
+_IN_FLIGHT = 0
+_LAST_USED = 0.0
 
 
 def _worker_ready() -> dict[str, int]:
@@ -51,6 +54,40 @@ def _executor() -> concurrent.futures.ProcessPoolExecutor:
         return _EXECUTOR
 
 
+def _submit(function, *arguments):
+    """Account for queued/running jobs atomically with idle retirement."""
+    global _IN_FLIGHT, _LAST_USED
+    with _EXECUTOR_LOCK:
+        future = _executor().submit(function, *arguments)
+        _IN_FLIGHT += 1
+        _LAST_USED = perf_counter()
+        future.add_done_callback(_finished)
+        return future
+
+
+def _finished(_future) -> None:
+    global _IN_FLIGHT, _LAST_USED
+    with _EXECUTOR_LOCK:
+        _IN_FLIGHT -= 1
+        _LAST_USED = perf_counter()
+
+
+def retire_idle_fois_executor_sync() -> bool:
+    """Reap only an unused compute cache, never published scores or active work.
+
+    Retain the warm process for clustered generations for one minute. Hold the
+    submission lock until idle shutdown finishes so a new child cannot overlap.
+    This function must run off the request/event-loop thread.
+    """
+    global _EXECUTOR
+    with _EXECUTOR_LOCK:
+        if _EXECUTOR is None or _IN_FLIGHT or perf_counter() - _LAST_USED < FOIS_IDLE_RETENTION_SECONDS:
+            return False
+        _EXECUTOR.shutdown(wait=True, cancel_futures=True)
+        _EXECUTOR = None
+        return True
+
+
 async def warm_fois_executor() -> dict[str, int]:
     """Start exactly one clean compute worker before request acceptance."""
     return await asyncio.to_thread(warm_fois_executor_sync)
@@ -58,7 +95,7 @@ async def warm_fois_executor() -> dict[str, int]:
 
 def warm_fois_executor_sync() -> dict[str, int]:
     """Restore the bounded compute worker outside request-serving execution."""
-    return _executor().submit(_worker_ready).result(
+    return _submit(_worker_ready).result(
         timeout=FOIS_PROCESS_TIMEOUT_SECONDS,
     )
 
@@ -251,9 +288,11 @@ async def generate_fois_isolated(
         )
         try:
             try:
-                loop = asyncio.get_running_loop()
+                # Creating/recreating the pool or waiting for idle shutdown must
+                # never hold the event loop that serves warming/read requests.
+                future = await asyncio.to_thread(_submit, _compute_fois_payload, payload)
                 result = await asyncio.wait_for(
-                    loop.run_in_executor(_executor(), _compute_fois_payload, payload),
+                    asyncio.wrap_future(future),
                     timeout=timeout,
                 )
             except asyncio.TimeoutError:

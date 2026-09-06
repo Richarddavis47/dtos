@@ -1,5 +1,17 @@
 # Changelog
 
+# v1.13.6 — Automated Visual System Retirement
+
+- Retire automated Current/Live Visual, DINS and External Visual Mirror workers,
+  routes, archives, relays and publication workflows by explicit product decision.
+- Retain semantic inspection, numerical reconciliation, accessibility and lightweight
+  authenticated browser journeys independently of screenshot publication.
+- Separate browser test dependencies from production; keep all application lifecycle,
+  memory, responsiveness, isolation and stable-boundary restart gates.
+- Preserve reviewed idle FOIS worker cleanup, expired-cache reclamation and bounded
+  calibration iteration, with unchanged intelligence and storage semantics.
+- Keep historical release assets immutable; no paid infrastructure change.
+
 # v1.13.5 — FOIS Active Tenure Continuity
 
 - Preserve an existing active GM tenure when earlier historical evidence arrives.

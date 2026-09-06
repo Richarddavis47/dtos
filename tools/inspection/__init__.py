@@ -1,1 +1,0 @@
-"""DINS browser capture tooling."""

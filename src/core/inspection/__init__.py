@@ -1,31 +1,31 @@
-"""Public contracts for the DTOS AI Inspection System (DINS)."""
-from src.core.inspection.engine import InspectionEngine
-from src.core.inspection.discovery import (
-    discover_pages,
-    excluded_current_trade_pages,
-    uncovered_public_routes,
-    unsupported_dynamic_patterns,
-)
-from src.core.inspection.models import (
-    INSPECTION_SCHEMA_VERSION,
-    VIEWPORTS,
-    PageInspection,
-    VisualInspection,
-)
-from src.core.inspection.storage import InspectionArtifactStore
-from src.core.inspection.publication import GitHubPublicationResolver
-from src.core.inspection.live import (
-    LIVE_INSPECTION_SCHEMA_VERSION,
-    LiveInspection,
-    PublicSurface,
-    public_surface_registry,
-)
+"""Read-only semantic inspection contracts; no visual publication subsystem."""
+from importlib import import_module
+
+_EXPORT_MODULES = {
+    "engine": ("InspectionEngine",),
+    "discovery": ("discover_pages", "excluded_current_trade_pages", "uncovered_public_routes", "unsupported_dynamic_patterns"),
+    "models": ("INSPECTION_SCHEMA_VERSION", "PageInspection"),
+    "live": ("LIVE_INSPECTION_SCHEMA_VERSION", "LiveInspection", "PublicSurface", "public_surface_registry"),
+}
+
+
+def __getattr__(name):
+    for module, names in _EXPORT_MODULES.items():
+        if name in names:
+            value = getattr(import_module(f"{__name__}.{module}"), name)
+            globals()[name] = value
+            return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    return sorted(set(globals()) | set(__all__))
 
 __all__ = [
-    "INSPECTION_SCHEMA_VERSION", "VIEWPORTS", "InspectionArtifactStore",
-    "InspectionEngine", "PageInspection", "VisualInspection", "discover_pages",
+    "INSPECTION_SCHEMA_VERSION",
+    "InspectionEngine", "PageInspection", "discover_pages",
     "excluded_current_trade_pages",
-    "uncovered_public_routes", "unsupported_dynamic_patterns", "GitHubPublicationResolver",
+    "uncovered_public_routes", "unsupported_dynamic_patterns",
     "LIVE_INSPECTION_SCHEMA_VERSION", "LiveInspection", "PublicSurface",
     "public_surface_registry",
 ]

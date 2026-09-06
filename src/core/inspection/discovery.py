@@ -12,7 +12,7 @@ from src.core.inspection.models import DiscoveredPage
 from src.core.team_identity import team_name_for
 
 _PRIVATE_PREFIXES = (
-    "/api/", "/health", "/openapi", "/docs", "/redoc", "/current-visual",
+    "/api/", "/health", "/openapi", "/docs", "/redoc",
 )
 _EXCLUDED = {
     "/robots.txt": "Crawler control document, not an HTML user interface.",
@@ -231,7 +231,7 @@ def uncovered_public_routes(routes: Iterable[Any], state: dict[str, Any]) -> tup
 
 
 def unsupported_dynamic_patterns(routes: Iterable[Any]) -> tuple[str, ...]:
-    """Flag public HTML parameters for which DINS has no fixture strategy."""
+    """Flag public HTML parameters for which Semantic inspection has no fixture strategy."""
     supported = {
         "roster_id", "player_id", "matchup_id", "franchise_id", "pick_id",
         "transaction_id", "gm_id",

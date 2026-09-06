@@ -6,15 +6,11 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 DTOS v1.8.8 validates completed player-week checkpoints against compact season-scoped identity dependencies, so unrelated current-player changes cannot invalidate immutable historical evidence. Legacy checkpoints migrate through evidence verification with durable, idempotent audits. See the [Historical Asset Graph](docs/HISTORICAL_ASSET_GRAPH.md) and [canonical Brain integration](docs/BRAIN_ARCHITECTURE.md).
 
-DTOS v1.6.7 publishes immutable production DINS bundles through GitHub Releases and
-validates them dynamically without changing the inspected commit. DTOS v1.6.6 corrected Team Headquarters mobile overflow while preserving Product
-Design System 1.0. DTOS v1.6.5 introduced shared page hierarchy, navigation,
-explainable recommendations, league-relative grade context, truthful offseason
-states, responsive behavior, and permanent DINS product-contract validation.
-DTOS v1.6.4 normalized franchise identity across the application and polished Team Headquarters into a concise executive workflow. DTOS v1.6.3 expanded the read-only AI Inspection System into a complete semantic,
-rendered-visual, DOM, accessibility, geometry, interaction, and release-verification
-surface under `/api/inspect`. See
-the [DINS inspection contract](docs/DINS_INSPECTION.md).
+Starting with v1.13.6, automated Current/Live Visual, DINS and External Visual
+Mirror capture/publication are retired. Read-only semantic inspection, numeric
+reconciliation, account isolation and lightweight authenticated browser tests remain.
+See the [validation architecture](docs/VALIDATION_ARCHITECTURE.md). Historical
+published release assets remain immutable.
 
 DTOS v1.6.1 makes Results the first production FOIS category using canonical
 historical standings, matchups, playoff results, and owner history. See the

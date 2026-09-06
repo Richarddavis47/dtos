@@ -6,7 +6,7 @@ import unittest
 from playwright.sync_api import sync_playwright
 
 from components.trade_intelligence import trade_workflow
-from tools.inspection.capture import A11Y_SCRIPT
+from tools.validation.browser_contract import A11Y_SCRIPT
 
 
 class TradeCenterAccessibilityTests(unittest.TestCase):
