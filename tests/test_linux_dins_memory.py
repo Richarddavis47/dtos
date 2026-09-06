@@ -9,6 +9,18 @@ from tools.validation import linux_dins_memory_gate as gate
 
 
 class LinuxDinsMemoryTests(unittest.TestCase):
+    def test_baseline_is_only_preceding_canonical_reads(self):
+        rows = [{"page_id": "home", "route": "/"},
+                {"page_id": "skip", "excluded": True},
+                {"page_id": "teams", "route": "/teams"},
+                {"page_id": "later", "route": "/later"}]
+        self.assertEqual(gate.baseline_routes({"pages": rows}), rows[:1])
+        with self.assertRaises(ValueError):
+            gate.baseline_routes({"pages": rows[:1]})
+        rows[0]["route"] = "//external.invalid/"
+        with self.assertRaises(ValueError):
+            gate.baseline_routes({"pages": rows})
+
     def test_diagnostic_records_lengths_without_sensitive_payload(self):
         def _capture_page():
             dom = {"secret": "must never be serialized"}

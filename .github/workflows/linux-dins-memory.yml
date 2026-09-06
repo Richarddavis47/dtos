@@ -12,6 +12,11 @@ on:
         type: choice
         options: [png, jpeg]
         default: png
+      baseline:
+        description: Focused diagnostic server state only
+        type: choice
+        options: [existing, server-warm]
+        default: existing
 permissions:
   contents: read
 jobs:
@@ -40,6 +45,7 @@ jobs:
             --env DTOS_PUBLIC_URL=http://dtos.fixture:8767 \
             --env DTOS_DINS_DIAGNOSTIC_PAGE=${{ inputs.scope == 'focused-teams' && 'teams' || inputs.scope == 'focused-team7' && 'teams-8' || '' }} \
             --env DTOS_DINS_IMAGE_FORMAT=${{ inputs.image-format || 'png' }} \
+            --env DTOS_DINS_BASELINE=${{ inputs.baseline || 'existing' }} \
             --env SLEEPER_LEAGUE_ID=1804000000000000000 \
             dtos-dins:validation \
             sh -c 'python -m tools.validation.generate_sanitized_market_fixture && python -m tools.validation.linux_dins_memory_gate'

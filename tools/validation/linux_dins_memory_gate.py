@@ -43,6 +43,19 @@ def capture_object_counts() -> dict:
     return result
 
 
+def baseline_routes(inventory: dict) -> list[dict]:
+    result = []
+    for spec in inventory["pages"]:
+        if spec["page_id"] == "teams":
+            return result
+        if spec.get("excluded"):
+            continue
+        if not spec["route"].startswith("/") or spec["route"].startswith("//"):
+            raise ValueError("Baseline route must remain on fixture origin")
+        result.append(spec)
+    raise ValueError("Teams boundary absent from fixture inventory")
+
+
 def startup_settled(tasks: dict) -> bool:
     # Historical resolution publishes another FOIS generation after cold Market.
     return all(tasks.get(name) == "complete" for name in (
@@ -191,6 +204,9 @@ def capture_worker() -> int:
             row["operation"] = dict(detail)
             row["live_objects"] = capture_object_counts()
             row["child_processes"] = process_sample(-1, os.getpid())
+            server_pid = os.environ.get("DTOS_DINS_SERVER_PID")
+            if server_pid:
+                row["server_rss_bytes"] = psutil.Process(int(server_pid)).memory_info().rss
         with boundaries.open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(row) + "\n")
         temporary = OUTPUT / "active-page.tmp"
@@ -276,6 +292,20 @@ def capture_worker() -> int:
     if diagnostic:
         if diagnostic not in {"teams", "teams-7", "teams-8"}:
             raise RuntimeError("Unsupported bounded diagnostic target")
+        if os.environ.get("DTOS_DINS_BASELINE") == "server-warm":
+            # Replay only read-only canonical routes preceding Teams, once.
+            # No browser, screenshots, fabricated padding, or cache clearing.
+            from urllib.request import Request, urlopen
+            boundary("server_warm_start")
+            for spec in baseline_routes(inventory):
+                target = PUBLIC_ORIGIN + "/" + spec["route"].lstrip("/")
+                with urlopen(Request(target, headers=dins._inspection_headers()), timeout=60) as response:
+                    if response.status != 200:
+                        raise AssertionError("Baseline canonical read failed")
+                    while response.read(65536):
+                        pass
+                boundary("server_warm_route", spec["page_id"], "none")
+            boundary("server_warm_complete")
         original_json = dins._json
 
         def diagnostic_json(url):
@@ -379,9 +409,11 @@ def main() -> int:
                 summary["diagnostic_processes"] = process_sample(server.pid, -1)
                 summary["release_acceptance_eligible"] = False
             with worker_log.open("w+") as capture_log, (OUTPUT / "memory-curve.jsonl").open("w") as curve:
+                worker_environment = lifecycle._fixture_inspection_environment(os.environ.copy())
+                worker_environment["DTOS_DINS_SERVER_PID"] = str(server.pid)
                 worker = subprocess.Popen([sys.executable, "-m", __name__.replace("__main__", "tools.validation.linux_dins_memory_gate"), "--worker"],
                     stdout=capture_log, stderr=subprocess.STDOUT, start_new_session=True,
-                    env=lifecycle._fixture_inspection_environment(os.environ.copy()))
+                    env=worker_environment)
                 deadline = time.monotonic() + 1500
                 while worker.poll() is None:
                     sample = memory_sample()
