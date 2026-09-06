@@ -6,6 +6,16 @@ from tools.validation import linux_dins_memory_gate as gate
 
 
 class LinuxDinsMemoryTests(unittest.TestCase):
+    def test_initial_fois_completion_is_not_a_settled_history_boundary(self):
+        tasks = {"fois_generation": "complete", "live_visual_capture": "complete",
+                 "historical_market_resolution": "waiting"}
+        self.assertFalse(gate.startup_settled(tasks))
+        tasks["historical_market_resolution"] = "complete"
+        tasks["fois_generation"] = "running"
+        self.assertFalse(gate.startup_settled(tasks))
+        tasks["fois_generation"] = "complete"
+        self.assertTrue(gate.startup_settled(tasks))
+
     def test_dins_does_not_enable_a_second_capture_flight_with_string_zero(self):
         environment = {"DTOS_LIVE_VISUAL_CAPTURE": "0", "DTOS_CACHE_FILE": "fixture.json"}
         with patch.object(gate.subprocess, "Popen") as spawn:

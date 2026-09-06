@@ -22,6 +22,13 @@ PUBLIC_ORIGIN = "http://dtos.fixture:8767"
 OUTPUT = Path(os.environ.get("DTOS_DINS_OUTPUT", "/output"))
 
 
+def startup_settled(tasks: dict) -> bool:
+    # Historical resolution publishes another FOIS generation after cold Market.
+    return all(tasks.get(name) == "complete" for name in (
+        "fois_generation", "historical_market_resolution", "live_visual_capture",
+    ))
+
+
 def production_server_command(command: list[str]) -> list[str]:
     """Use the actual production route inventory, not diagnostic control routes."""
     return ["dtos_app:app" if item == "tools.validation.market_profile_app:app" else item for item in command]
@@ -85,11 +92,13 @@ class TrackedPage(dict):
 def capture_worker() -> int:
     from tools.inspection import capture as dins
     from tools.inspection.package import package_bundle
+    from playwright.sync_api import APIRequestContext, Page
 
     refs: list[weakref.ReferenceType] = []
     original_capture = dins._capture_page
     original_write = dins._write_artifact_json
     boundaries = OUTPUT / "page-boundaries.jsonl"
+    active = {}
 
     def boundary(phase, page_id=None, viewport=None):
         row = {"phase": phase, "page_id": page_id, "viewport": viewport,
@@ -106,8 +115,24 @@ def capture_worker() -> int:
             raise AssertionError("Completed full page payload remained reachable")
 
     def capture_page(browser, store, base, spec, viewport, league):
+        active.update(page_id=spec["page_id"], viewport=viewport.name)
         boundary("before_capture", spec["page_id"], viewport.name)
         return original_capture(browser, store, base, spec, viewport, league)
+
+    def trace_method(owner, name):
+        original = getattr(owner, name)
+
+        def traced(self, *args, **kwargs):
+            boundary("before_" + name, **active)
+            result = original(self, *args, **kwargs)
+            boundary("after_" + name, **active)
+            return result
+
+        setattr(owner, name, traced)
+
+    for method in ("goto", "screenshot", "evaluate", "content", "close"):
+        trace_method(Page, method)
+    trace_method(APIRequestContext, "get")
 
     def write(path, value, **kwargs):
         result = original_write(path, value, **kwargs)
@@ -176,7 +201,7 @@ def main() -> int:
             while time.monotonic() < deadline:
                 ready = json.loads(lifecycle._request("/health/ready")[1])
                 tasks = (ready.get("runtime") or {}).get("background_tasks") or {}
-                if tasks.get("fois_generation") == "complete":
+                if startup_settled(tasks):
                     summary["settled_background_tasks"] = tasks
                     break
                 time.sleep(1)
