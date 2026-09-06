@@ -292,7 +292,7 @@ def capture_worker() -> int:
     if diagnostic:
         if diagnostic not in {"teams", "teams-7", "teams-8"}:
             raise RuntimeError("Unsupported bounded diagnostic target")
-        if os.environ.get("DTOS_DINS_BASELINE") == "server-warm":
+        if os.environ.get("DTOS_DINS_BASELINE") in {"server-warm", "representative"}:
             # Replay only read-only canonical routes preceding Teams, once.
             # No browser, screenshots, fabricated padding, or cache clearing.
             from urllib.request import Request, urlopen
@@ -311,7 +311,12 @@ def capture_worker() -> int:
         def diagnostic_json(url):
             result = original_json(url)
             if url.endswith("/api/inspect/site-map"):
-                result = {**result, "pages": [row for row in result["pages"] if row["page_id"] == diagnostic]}
+                selected = {diagnostic}
+                if os.environ.get("DTOS_DINS_BASELINE") == "representative":
+                    selected.update({"commissioner", "players-v10003"})
+                    history = next(row["page_id"] for row in result["pages"] if row["page_id"].startswith("history-team-"))
+                    selected.add(history)
+                result = {**result, "pages": [row for row in result["pages"] if row["page_id"] in selected]}
             return result
 
         dins._json = diagnostic_json
