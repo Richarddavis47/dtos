@@ -292,7 +292,7 @@ def capture_worker() -> int:
     if diagnostic:
         if diagnostic not in {"teams", "teams-7", "teams-8"}:
             raise RuntimeError("Unsupported bounded diagnostic target")
-        if os.environ.get("DTOS_DINS_BASELINE") in {"server-warm", "representative"}:
+        if os.environ.get("DTOS_DINS_BASELINE") in {"server-warm", "representative", "interaction-warm"}:
             # Replay only read-only canonical routes preceding Teams, once.
             # No browser, screenshots, fabricated padding, or cache clearing.
             from urllib.request import Request, urlopen
@@ -306,6 +306,22 @@ def capture_worker() -> int:
                         pass
                 boundary("server_warm_route", spec["page_id"], "none")
             boundary("server_warm_complete")
+            if os.environ.get("DTOS_DINS_BASELINE") == "interaction-warm":
+                # Exact fixture-only GETs present before Teams in the failed
+                # trace but absent from the representative warm-state trace.
+                league = os.environ["SLEEPER_LEAGUE_ID"]
+                paths = [f"/transactions?league={league}", f"/trades?league={league}&front_office=1"]
+                for asset in ("v01000", "v10001", "v10003"):
+                    paths.extend((f"/trades/trade-for?front_office=1&asset_id={asset}&owner_roster_id=0&league={league}",
+                                  f"/history/player/{asset}?league={league}"))
+                paths.extend(f"/players/{asset}?league={league}&front_office=1" for asset in ("10213", "v00002", "v00003"))
+                for index, path in enumerate(paths):
+                    with urlopen(Request(PUBLIC_ORIGIN + path, headers=dins._inspection_headers()), timeout=60) as response:
+                        if response.status != 200:
+                            raise AssertionError("Baseline interaction GET failed")
+                        while response.read(65536):
+                            pass
+                    boundary("interaction_warm_route", str(index), "none")
         original_json = dins._json
 
         def diagnostic_json(url):
