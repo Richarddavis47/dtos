@@ -4,6 +4,13 @@ from contextlib import contextmanager
 import http.client
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+import os
+from pathlib import Path
+import signal
+import socket
+import subprocess
+import sys
+import tempfile
 import threading
 import unittest
 from unittest.mock import patch
@@ -58,7 +65,10 @@ class Upstream(BaseHTTPRequestHandler):
         if self.path == "/compressed":
             self.send_header("Content-Encoding", "gzip")
         self.end_headers()
-        self.wfile.write(content)
+        if self.command != "HEAD":
+            self.wfile.write(content)
+
+    do_HEAD = do_GET
 
 
 class InspectionRelayTests(unittest.TestCase):
@@ -83,6 +93,15 @@ class InspectionRelayTests(unittest.TestCase):
                                       (["/"], "", 10000), (["/"], TOKEN, 0)):
             with self.assertRaises(ValueError):
                 RelayPolicy(targets, token, port)
+
+    def test_required_account_form_views_are_read_only_not_submissions(self):
+        targets = ["/account", "/account/create", "/account/recover", "/account/sleeper",
+                   "/account/sign-in", "/account/leagues"]
+        policy = RelayPolicy(targets, TOKEN, 10000)
+        for target in targets:
+            self.assertTrue(policy.permits("GET", target))
+            self.assertFalse(policy.permits("POST", target))
+        self.assertFalse(policy.permits("GET", "/account/sign-out"))
 
     def test_real_transport_identity_headers_and_teardown(self):
         with running(HTTPServer(("127.0.0.1", 0), Upstream)) as upstream:
@@ -131,6 +150,45 @@ class InspectionRelayTests(unittest.TestCase):
                     self.assertEqual(response.read(), b"")
                     connection.close()
             self.assertEqual(Upstream.received, [])
+
+    def test_head_preserves_length_without_body(self):
+        with running(HTTPServer(("127.0.0.1", 0), Upstream)) as upstream:
+            with running(RelayServer(0, RelayPolicy(["/teams/4"], TOKEN, upstream.server_port))) as relay:
+                connection = http.client.HTTPConnection("127.0.0.1", relay.server_port)
+                connection.request("HEAD", "/teams/4")
+                response = connection.getresponse()
+                self.assertEqual(response.status, 200)
+                self.assertEqual(response.read(), b"")
+                self.assertEqual(int(response.getheader("Content-Length")), len(b"<html>unchanged complete DOM</html>"))
+                connection.close()
+
+    @unittest.skipUnless(hasattr(signal, "SIGALRM"), "Linux hard-deadline execution proof")
+    def test_cli_deadline_interrupts_stalled_client_and_removes_listener(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "inventory.json"
+            path.write_text('["/teams/4"]')
+            with socket.socket() as available:
+                available.bind(("127.0.0.1", 0))
+                port = available.getsockname()[1]
+            process = subprocess.Popen([
+                sys.executable, "-m", "tools.inspection.loopback_relay", "--inventory", str(path),
+                "--port", str(port), "--lifetime", "2",
+            ], env=dict(os.environ, DTOS_INSPECTION_AUTH_TOKEN=TOKEN, PORT="9"),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            try:
+                self.assertEqual(json.loads(process.stdout.readline())["relay"], "ready")
+                with socket.create_connection(("127.0.0.1", port)) as client:
+                    client.sendall(b"GET /teams/4 HTTP/1.1\r\n")  # Deliberately unfinished headers.
+                    output, error = process.communicate(timeout=5)
+                self.assertEqual(process.returncode, 0)
+                self.assertEqual(json.loads(output)["relay"], "closed")
+                self.assertNotIn(TOKEN, output + error)
+                with self.assertRaises(OSError):
+                    socket.create_connection(("127.0.0.1", port), timeout=1)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait()
 
     def test_secret_leaks_redirects_and_encoding_rejected_before_headers(self):
         paths = ["/leak", "/encoded-leak", "/header-leak", "/redirect", "/compressed"]

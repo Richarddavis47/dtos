@@ -57,7 +57,8 @@ def valid_target(target: str) -> bool:
         parsed.path in {"/sync", "/transactions/refresh"}
         or parsed.path.startswith(("/api/account", "/api/admin"))
         or (parsed.path.startswith("/account/") and parsed.path not in {
-            "/account/sign-in", "/account/register", "/account/leagues",
+            "/account/sign-in", "/account/create", "/account/recover",
+            "/account/sleeper", "/account/leagues",
         })
     )
 
@@ -123,6 +124,8 @@ class RelayPolicy:
             allowed = [(key, value) for key, value in headers if key.lower() in RESPONSE_HEADERS]
             if location and 300 <= response.status < 400:
                 allowed.append(("Location", location))
+            if method == "HEAD" and length is not None:
+                allowed.append(("Content-Length", length))
             if any("\r" in value or "\n" in value for _, value in allowed):
                 raise ValueError("Invalid upstream headers")
             return response.status, allowed, body
@@ -175,7 +178,8 @@ class RelayHandler(BaseHTTPRequestHandler):
         for key, value in headers:
             self.send_header(key, value)
         self.send_header("Cache-Control", "no-store")
-        self.send_header("Content-Length", str(len(body)))
+        if not any(key.lower() == "content-length" for key, _ in headers):
+            self.send_header("Content-Length", str(len(body)))
         self.send_header("Connection", "close")
         self.end_headers()
         if self.command != "HEAD":
@@ -188,6 +192,10 @@ class RelayHandler(BaseHTTPRequestHandler):
     def setup(self):
         super().setup()
         self.connection.settimeout(65)
+
+
+class RelayStopped(BaseException):
+    """Interrupt even a stalled socket read without exposing request details."""
 
 
 def main() -> int:
@@ -205,19 +213,27 @@ def main() -> int:
             json.loads(args.inventory.read_text(encoding="utf-8")),
             os.environ.pop("DTOS_INSPECTION_AUTH_TOKEN", ""), int(os.environ["PORT"]),
         )
-        stopped = False
-
         def stop(_signal, _frame):
-            nonlocal stopped
-            stopped = True
+            raise RelayStopped()
 
         signal.signal(signal.SIGTERM, stop)
         signal.signal(signal.SIGINT, stop)
+        # Render is Linux. A wall-clock alarm bounds slow clients/upstreams too,
+        # not merely time spent between requests. No daemon survives this CLI.
+        if not hasattr(signal, "SIGALRM"):
+            raise ValueError("Relay CLI requires a hard-deadline-capable runtime")
+        signal.signal(signal.SIGALRM, stop)
         with RelayServer(args.port, policy) as server:
             deadline = time.monotonic() + args.lifetime
             print(json.dumps({"relay": "ready", "loopback_only": True}), flush=True)
-            while not stopped and time.monotonic() < deadline:
-                server.handle_request()
+            signal.alarm(args.lifetime)
+            try:
+                while time.monotonic() < deadline:
+                    server.handle_request()
+            except RelayStopped:
+                pass
+            finally:
+                signal.alarm(0)
             print(json.dumps({"relay": "closed", "counts": server.counts}), flush=True)
         return 0
     except Exception:
