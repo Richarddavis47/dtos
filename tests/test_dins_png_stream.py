@@ -2,16 +2,62 @@
 from io import BytesIO
 from pathlib import Path
 import tempfile
+import tracemalloc
 import unittest
 from unittest.mock import patch
+import zlib
 
 from PIL import Image
 from playwright.sync_api import sync_playwright
 
-from tools.inspection.png_stream import full_page_screenshot
+from tools.inspection.png_stream import _first_row, _parts, _scanlines, full_page_screenshot
 
 
 class DinsPngStreamTests(unittest.TestCase):
+    def test_strip_boundary_preserves_all_five_native_filter_types(self):
+        for channels in (3, 4):
+            raw = bytes((index * 79) % 256 for index in range(channels * 7))
+            for kind in range(5):
+                encoded = bytearray()
+                for index, value in enumerate(raw):
+                    left = raw[index - channels] if index >= channels else 0
+                    predictor = left if kind in (1, 4) else left // 2 if kind == 3 else 0
+                    encoded.append((value - predictor) & 255)
+                self.assertEqual(_first_row(bytes([kind]) + encoded, channels), b'\0' + raw)
+
+    def test_scanline_inflation_memory_is_independent_of_strip_height(self):
+        width, height = 1440, 10000
+        row = b'\0' + b'\xff' * (width * 4)
+        compressor = zlib.compressobj()
+        compressed = b''.join(compressor.compress(row) for _ in range(height)) + compressor.flush()
+        # Several IDAT boundaries can split a deflate block or scanline anywhere.
+        chunks = [(b'IDAT', memoryview(compressed)[i:i + 37]) for i in range(0, len(compressed), 37)]
+        tracemalloc.start()
+        try:
+            count = 0
+            for result in _scanlines(chunks, width, height, 4):
+                self.assertEqual(result, row)
+                count += 1
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            tracemalloc.stop()
+        self.assertEqual(count, height)
+        self.assertLess(peak, 256 * 1024)
+
+    def test_corrupt_checksum_truncated_stream_and_extra_rows_fail_closed(self):
+        output = BytesIO()
+        with Image.new('RGB', (8, 2), 'green') as image:
+            image.save(output, format='PNG')
+        corrupt = bytearray(output.getvalue())
+        corrupt[-1] ^= 1
+        with self.assertRaisesRegex(ValueError, 'checksum'):
+            _parts(bytes(corrupt))
+        compressed = zlib.compress(b'\0' + b'\0' * 24)
+        with self.assertRaisesRegex(ValueError, 'Incomplete'):
+            list(_scanlines([(b'IDAT', compressed[:-2])], 8, 1, 3))
+        with self.assertRaisesRegex(ValueError, 'row count'):
+            list(_scanlines([(b'IDAT', zlib.compress((b'\0' + b'\0' * 24) * 2))], 8, 1, 3))
+
     def test_dom_change_rejects_capture_without_replacing_last_valid_png(self):
         class Page:
             reads = 0
@@ -55,7 +101,7 @@ class DinsPngStreamTests(unittest.TestCase):
                                 self.assertEqual(image.height, 1, 'Encoding copied an entire strip')
                                 return original_bytes(image, *args, **kwargs)
 
-                            with patch.object(page, 'screenshot', wraps=page.screenshot) as screenshots, patch.object(Image.Image, 'tobytes', bounded_bytes):
+                            with patch.object(page, 'screenshot', wraps=page.screenshot) as screenshots, patch.object(Image.Image, 'tobytes', bounded_bytes), patch.object(Image, 'open', side_effect=AssertionError('Decoded image allocation')):
                                 full_page_screenshot(page, target, strip_height=height, device_scale_factor=scale)
                             clips = [call.kwargs['clip'] for call in screenshots.call_args_list]
                             self.assertGreater(len(clips), 1)
