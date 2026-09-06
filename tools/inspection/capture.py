@@ -180,7 +180,10 @@ def _capture_page(browser: Browser, store: InspectionArtifactStore, base_url: st
     full_name = f"{viewport.name}-full.png"
     page.screenshot(path=str(folder / viewport_name), full_page=False)
     screenshot_started = perf_counter()
-    page.screenshot(path=str(folder / full_name), full_page=True)
+    from tools.inspection.png_stream import full_page_screenshot
+
+    full_page_screenshot(page, folder / full_name, strip_height=viewport.height,
+                         device_scale_factor=viewport.device_scale_factor)
     screenshot_ms = round((perf_counter() - screenshot_started) * 1000, 2)
     capture_origin = f"{urlparse(base_url).scheme}://{urlparse(base_url).netloc}"
     public_origin = f"{urlparse(store.public_base_url).scheme}://{urlparse(store.public_base_url).netloc}"
