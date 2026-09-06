@@ -11,6 +11,20 @@ pixel and color profile while native scanlines are assembled with bounded buffer
 Packaging retains one file at a time, with unchanged sanitization and deterministic
 ZIP semantics. No partial capture is eligible for publication.
 
+Repeated full-workload measurements also established a shared-cgroup capture
+limit. DINS now has a temporary off-Render execution path on the existing Linux
+runner, with independently measured server and capture memory budgets. A
+loopback-only SSH relay injects inspection authentication inside Render; the
+capture runner never receives that token. Exact read-only targets, bounded
+responses, security headers, wall-clock teardown and unchanged public-origin
+serialization are covered by focused regressions. Docker's standard init reaps
+exited browser descendants; no browser launch policy or resource limit changes.
+
+The failed shared-boundary runs remain evidence. Three focused isolated captures
+retained more than 1,639 MiB reserve and the server retained 784 MiB. A separate
+process-only proof reproduced six zero-RSS zombie descendants without init and
+zero descendants with init. Full isolated acceptance remains required.
+
 Server maintenance releases only unused allocator pages, idle FOIS compute workers,
 and already-expired disposable intelligence. Running jobs and published scores are
 preserved. Cache TTLs and capacity are unchanged; each expired graph is released

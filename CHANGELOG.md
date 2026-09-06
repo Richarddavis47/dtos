@@ -2,6 +2,10 @@
 
 # v1.13.6 — Bounded DINS Capture Memory
 
+- Isolate DINS browser/native memory from Render using the existing runner and a
+  temporary, read-only SSH loopback relay; keep inspection credentials in Render.
+- Preserve public artifact identity while internal interaction requests use the
+  private capture transport. Reap exited browser descendants through container init.
 - Persist complete page evidence, then release completed geometry and browser/driver
   resources instead of retaining them through the full DINS workload.
 - Stream native screenshot scanlines with exact pixel equivalence and package one

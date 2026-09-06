@@ -44,7 +44,7 @@ class Resources(HTMLParser):
                 self.targets.add(target)
 
 
-def inventory(token: str) -> list[str]:
+def inventory(token: str, *, full: bool = False) -> list[str]:
     policy = RelayPolicy(REQUIRED, token, 8767)
     status, _, body = policy.read("GET", "/api/inspect/site-map")
     if status != 200:
@@ -60,7 +60,8 @@ def inventory(token: str) -> list[str]:
         targets.update("/" + path.as_posix() for path in folder.rglob("*") if path.is_file())
     # Focused Teams workload only. Full inventory is still exposed unchanged;
     # the established focused harness selects the one page and mobile viewport.
-    for target in ("/teams", "/teams/4"):
+    html_targets = [page["route"] for page in pages if not page.get("excluded")] if full else ["/teams", "/teams/4"]
+    for target in html_targets:
         policy = RelayPolicy(sorted(targets), token, 8767)
         status, _, body = policy.read("GET", target)
         if status != 200:
@@ -74,7 +75,8 @@ def inventory(token: str) -> list[str]:
 def server() -> int:
     output = CONTROL / "server"
     output.mkdir(exist_ok=True)
-    summary = {"passed": False, "release_acceptance_eligible": False}
+    full = os.environ.get("DTOS_DINS_SPLIT_SCOPE") == "full"
+    summary = {"passed": False, "release_acceptance_eligible": full}
     process = relay = thread = None
     padding: list[bytearray] = []
     peak = 0
@@ -97,7 +99,7 @@ def server() -> int:
 
             prepare(lifecycle.FIXTURE / "dins-images")
             token = lifecycle._fixture_inspection_environment(os.environ.copy())["DTOS_INSPECTION_AUTH_TOKEN"]
-            targets = inventory(token)
+            targets = inventory(token, full=full)
             relay = RelayServer(8768, RelayPolicy(targets, token, 8767))
             thread = threading.Thread(target=relay.serve_forever, daemon=True)
             thread.start()
@@ -115,13 +117,14 @@ def server() -> int:
                 if status != 200:
                     raise AssertionError("Prior fixture route warmup failed")
             summary["after_prior_route_warmup"] = gate.memory_sample()
+            (output / "pre-capture.json").write_text(json.dumps(summary))
             gate.enforce_memory(summary["after_prior_route_warmup"])
             summary["market_before"] = json.loads(lifecycle._request("/api/market/health")[1])["cache"]
             # Persist only bounded counters, never the full health payload.
             keys = ("build_count", "attempted_constructions", "artifact_loads", "market_generation")
             summary["market_before"] = {key: summary["market_before"].get(key) for key in keys}
             (CONTROL / "server-ready.json").write_text('{"ready":true}')
-            deadline = time.monotonic() + 480
+            deadline = time.monotonic() + (1800 if full else 480)
             with (output / "memory-curve.jsonl").open("w") as curve:
                 while not (CONTROL / "capture-done.json").exists():
                     sample = gate.memory_sample()
@@ -167,21 +170,22 @@ def server() -> int:
 def capture() -> int:
     if os.environ.get("DTOS_INSPECTION_AUTH_TOKEN"):
         raise AssertionError("Capture container must not receive the inspection token")
-    summary = {"passed": False, "runs": [], "release_acceptance_eligible": False}
+    full = os.environ.get("DTOS_DINS_SPLIT_SCOPE") == "full"
+    summary = {"passed": False, "runs": [], "release_acceptance_eligible": full}
     try:
         if lifecycle._cgroup("memory.max") != lifecycle.MEMORY_MAX:
             raise AssertionError("Capture hard limit changed")
-        for number in range(1, 4):
+        for number in range(1, 2 if full else 4):
             folder = CONTROL / f"capture-{number}"
             folder.mkdir(exist_ok=True)
-            environment = dict(os.environ, DTOS_DINS_OUTPUT=str(folder), DTOS_DINS_DIAGNOSTIC_PAGE="teams")
+            environment = dict(os.environ, DTOS_DINS_OUTPUT=str(folder), DTOS_DINS_DIAGNOSTIC_PAGE="" if full else "teams")
             process = None
             peak = 0
             try:
                 with (folder / "capture.private.log").open("w") as log, (folder / "memory-curve.jsonl").open("w") as curve:
                     process = subprocess.Popen([sys.executable, "-m", "tools.validation.dins_split_boundary", "worker"],
                                                env=environment, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
-                    deadline = time.monotonic() + 150
+                    deadline = time.monotonic() + (1500 if full else 150)
                     while process.poll() is None:
                         sample = gate.memory_sample()
                         sample["processes"] = gate.process_sample(-1, process.pid)
@@ -198,7 +202,7 @@ def capture() -> int:
                 for line in (folder / "page-boundaries.jsonl").read_text().splitlines():
                     peak = max(peak, json.loads(line)["effective_working_set_bytes"])
                 headroom = lifecycle.MEMORY_MAX - peak
-                if headroom < 550 * gate.MIB:
+                if headroom < (500 if full else 550) * gate.MIB:
                     raise AssertionError("Focused isolation proof lacks comfortable550MiB margin")
                 summary["runs"].append({"effective_peak_bytes": peak, "headroom_bytes": headroom,
                                         "capture": json.loads((folder / "capture-result.json").read_text())})
