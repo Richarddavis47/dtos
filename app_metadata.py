@@ -9,7 +9,7 @@ from pathlib import Path
 APPLICATION_NAME = "DTOS"
 VERSION = "1.13.6"
 BUILD_NUMBER = 1306
-RELEASE_CODENAME = "Bounded DINS Capture Memory"
+RELEASE_CODENAME = "Automated Visual System Retirement"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

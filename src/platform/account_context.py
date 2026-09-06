@@ -32,7 +32,7 @@ def _header(scope: dict[str, Any], name: bytes) -> str:
 
 PUBLIC_PREFIXES = (
     "/account", "/health", "/api/status", "/api/platform", "/api/inspect",
-    "/current-visual", "/openapi.json", "/docs", "/redoc", "/static",
+    "/openapi.json", "/docs", "/redoc", "/static",
 )
 PUBLIC_API_PREFIXES = (
     "/api/status", "/api/platform/health", "/api/data/health", "/api/inspect",

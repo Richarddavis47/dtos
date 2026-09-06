@@ -1,0 +1,28 @@
+name: Product browser journeys
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  product-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-validation.txt
+      - name: Install validation-only browser dependencies
+        run: |
+          python -m pip install -r requirements-validation.txt
+          python -m playwright install --with-deps chromium
+      - name: Authenticated product, interaction and accessibility contracts
+        run: |
+          python -m unittest tests.test_product_browser_journey tests.test_trade_center_browser tests.test_trade_center_accessibility tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement

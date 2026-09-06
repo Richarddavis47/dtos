@@ -354,7 +354,7 @@ def _cache(path: Path) -> dict[str, Any]:
         "owners": {f"owner-{index}": {"display_name": f"Validation Owner {index}"} for index in range(1, 11)},
         "teams": teams,
         # Preserve the already-generated ledger's ownership in the Sleeper
-        # projection too; DINS discovers pick dossiers from this source field.
+        # projection too; Semantic inspection discovers pick dossiers from this source field.
         "traded_picks": [
             {"season": str(row["season"]), "round": row["round"],
              "roster_id": row["original_roster_id"], "owner_id": row["current_owner_id"]}

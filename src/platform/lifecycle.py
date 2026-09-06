@@ -14,7 +14,7 @@ import psutil
 HEAVY_PHASES = frozenset({
     "sleeper_sync", "provider_network", "valuation_intelligence",
     "cache_persistence", "historical_import", "historical_cache", "asset_market_build",
-    "historical_market_resolution", "live_visual_capture",
+    "historical_market_resolution",
 })
 MARKET_BUILD_BLOCKERS = HEAVY_PHASES - {"asset_market_build"}
 
@@ -91,8 +91,6 @@ class LifecycleCoordinator:
         self._market_critical = 0
         self._market_critical_reason: str | None = None
         self._fois_generation = 0
-        self._visual_deferrals = 0
-        self._visual_overlap_count = 0
 
     def begin_startup(self, reason: str) -> int:
         """Open a process startup fence before canonical work begins."""
@@ -139,7 +137,7 @@ class LifecycleCoordinator:
             return self._startup_state == "complete"
 
     def reserve_market_critical(self, reason: str) -> None:
-        """Prioritize a queued first/replacement Market generation over browsers."""
+        """Record a queued first/replacement Market generation."""
         with self._condition:
             self._market_critical += 1
             self._market_critical_reason = reason
@@ -153,51 +151,14 @@ class LifecycleCoordinator:
             self._condition.notify_all()
 
     def reserve_fois_generation(self) -> None:
-        """Block new visual/market work and wait for an active capture to finish."""
+        """Keep Market construction from overlapping FOIS generation."""
         with self._condition:
             self._fois_generation += 1
-            while self._phase == "live_visual_capture":
-                self._condition.wait()
 
     def release_fois_generation(self) -> None:
         with self._condition:
             self._fois_generation = max(0, self._fois_generation - 1)
             self._condition.notify_all()
-
-    def visual_capture_allowed(self) -> bool:
-        with self._condition:
-            return (
-                self._startup_state == "complete"
-                and self._market_critical == 0
-                and self._fois_generation == 0
-                and self._phase not in {
-                    "asset_market_build", "historical_market_resolution",
-                }
-            )
-
-    def defer_visual_capture(self) -> None:
-        with self._condition:
-            self._visual_deferrals += 1
-
-    def wait_for_visual_capture(self, timeout: float = 0.25) -> bool:
-        with self._condition:
-            if (
-                self._startup_state != "complete"
-                or self._market_critical
-                or self._fois_generation
-                or self._phase in {
-                    "asset_market_build", "historical_market_resolution",
-                }
-            ):
-                self._condition.wait(timeout)
-            return (
-                self._startup_state == "complete"
-                and self._market_critical == 0
-                and self._fois_generation == 0
-                and self._phase not in {
-                    "asset_market_build", "historical_market_resolution",
-                }
-            )
 
     @contextmanager
     def phase(self, name: str) -> Iterator[dict[str, Any]]:
@@ -209,7 +170,7 @@ class LifecycleCoordinator:
                 (self._phase is not None and self._owner != owner)
                 or (
                     self._fois_generation
-                    and name in {"asset_market_build", "live_visual_capture"}
+                    and name == "asset_market_build"
                 )
             ):
                 self._condition.wait()
@@ -265,7 +226,6 @@ class LifecycleCoordinator:
                     "state": (
                         "MARKET_CRITICAL" if self._market_critical
                         else "FOIS_GENERATION" if self._fois_generation
-                        else "VISUAL_CAPTURE" if self._phase == "live_visual_capture"
                         else "HISTORICAL_HEAVY" if self._phase == "historical_import"
                         else "HISTORICAL_MARKET" if self._phase == "historical_market_resolution"
                         else "PROJECTION_HEAVY" if self._phase == "valuation_intelligence"
@@ -274,8 +234,6 @@ class LifecycleCoordinator:
                     "market_critical": bool(self._market_critical),
                     "market_critical_reason": self._market_critical_reason,
                     "fois_generation": bool(self._fois_generation),
-                    "visual_deferrals": self._visual_deferrals,
-                    "visual_overlap_count": self._visual_overlap_count,
                 },
                 "recent_phases": list(self._history),
                 "memory": memory_snapshot(),
@@ -293,8 +251,6 @@ class LifecycleCoordinator:
             self._startup_completed_at = None
             self._market_critical = 0
             self._market_critical_reason = None
-            self._visual_deferrals = 0
-            self._visual_overlap_count = 0
             self._condition.notify_all()
 
 

@@ -1,0 +1,109 @@
+"""Pure rendered projection checks shared by semantic and browser tests."""
+from __future__ import annotations
+
+import unicodedata
+from typing import Any
+
+
+def _card_text(card: Any) -> str:
+    return str(card.get("text") or "") if isinstance(card, dict) else str(card)
+
+
+def _card_semantic_fields(card: Any) -> list[dict[str, Any]]:
+    if not isinstance(card, dict):
+        return []
+    return list(card.get("semantic_fields") or [])
+
+def normalized_manager_text(value: Any) -> str:
+    """Normalize browser-rendered manager copy without weakening its semantics."""
+    normalized = unicodedata.normalize("NFKC", str(value or ""))
+    return " ".join(normalized.split()).casefold()
+
+
+def normalized_visible_identity(value: Any) -> str:
+    """Trim presentation-only surrounding whitespace while preserving identity text."""
+    return unicodedata.normalize("NFKC", str(value or "")).strip()
+
+
+def projection_total_mismatches(
+    team: dict[str, Any], team_cards: list[str], *, projection_expected: bool = True,
+) -> list[str]:
+    """Reconcile one team total against its explicit availability contract."""
+    name = normalized_visible_identity(team.get("team_name"))
+    matches = [text for text in team_cards if name and name in normalized_visible_identity(text)]
+    if not matches:
+        return ["projection_team_card_missing"]
+    if not projection_expected:
+        return []
+    card_text = " ".join(matches)
+    total = (team.get("canonical_totals") or {}).get("canonical_projection")
+    availability = str((team.get("canonical_totals") or {}).get("availability") or "")
+    normalized_card_text = normalized_manager_text(card_text)
+    unavailable_label = normalized_manager_text("Projection unavailable")
+    if availability == "unavailable" or total is None:
+        return [] if unavailable_label in normalized_card_text else ["missing_projection_total_state_missing"]
+    if unavailable_label in normalized_card_text:
+        return ["available_projection_total_rendered_unavailable"]
+    value = float(total)
+    accepted = {str(total), f"{value:g}", f"{value:.1f}", f"{value:.2f}"}
+    return [] if any(candidate in card_text for candidate in accepted) else ["canonical_projection_total_mismatch"]
+
+
+def matchup_projection_mismatches(
+    semantic: dict[str, Any], visible: str, starter_cards: list[Any], team_cards: list[str],
+) -> list[str]:
+    """Reconcile projection evidence only where the game-state contract presents it."""
+    mismatches: list[str] = []
+    state = str(semantic.get("presentation_state") or "pregame")
+    unavailable_aggregate = True
+    for team in semantic.get("teams") or []:
+        team_name = normalized_visible_identity(team.get("team_name"))
+        if team_name not in normalized_visible_identity(visible):
+            mismatches.append("team_name_missing")
+        total = (team.get("canonical_totals") or {}).get("canonical_projection")
+        unavailable_aggregate = unavailable_aggregate and total is None
+        projection_expected = state == "pregame" or total is not None
+        for starter in team.get("starters") or []:
+            displayed = starter.get("canonical") or {}
+            canonical = displayed.get("canonical_projection")
+            player_name = normalized_visible_identity(starter.get("player_name"))
+            matching_cards = [
+                card for card in starter_cards
+                if player_name and player_name in normalized_visible_identity(_card_text(card))
+            ]
+            if not matching_cards:
+                mismatches.append("starter_card_missing")
+                continue
+            contracts = [
+                field for card in matching_cards for field in _card_semantic_fields(card)
+                if field.get("field") == "pregame_projection"
+            ]
+            if canonical is not None:
+                expected = f"{float(canonical):.2f}"
+                if not any(
+                    field.get("availability") == "available"
+                    and field.get("value") == expected
+                    and normalized_manager_text("Pregame projection")
+                    in normalized_manager_text(field.get("text"))
+                    and expected in str(field.get("text") or "")
+                    for field in contracts
+                ):
+                    mismatches.append("canonical_projection_mismatch")
+            elif not any(
+                field.get("availability") == "unavailable"
+                and normalized_manager_text("Projection unavailable")
+                in normalized_manager_text(field.get("text"))
+                for field in contracts
+            ):
+                mismatches.append("missing_projection_state_missing")
+        mismatches.extend(projection_total_mismatches(
+            team, team_cards, projection_expected=projection_expected,
+        ))
+    if (
+        state != "pregame"
+        and unavailable_aggregate
+        and normalized_manager_text("Pregame projections unavailable")
+        not in normalized_manager_text(visible)
+    ):
+        mismatches.append("aggregate_projection_unavailable_state_missing")
+    return mismatches

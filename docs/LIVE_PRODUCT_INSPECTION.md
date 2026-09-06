@@ -7,7 +7,7 @@
 3. Follow collection links to discover teams, matchups, relevant players, picks,
    seasons, FOIS profiles, and public APIs.
 4. Use semantic URLs for exact values and human URLs for visual inspection.
-5. Use DINS for immutable release comparison.
+5. Use release identity and sanitized validation results for version comparison.
 6. Use `/api/audit/projections/current` for full projection calibration.
 
 The root is compact and self-describing. Large collections are paginated. Live
@@ -23,20 +23,17 @@ through a documented approved classification such as crawler control, internal,
 sensitive, administrative, or unsafe. Building a separate manually maintained
 Live Inspection URL list is an anti-pattern.
 
-The registry supplies current Live Inspection and API discovery; existing DINS
-page discovery consumes the same application route source and dynamically
-resolves canonical entities. New public routes therefore appear without edits to
-Live Inspection-specific code. Removed routes disappear while immutable prior
-DINS releases remain unchanged.
+The registry supplies current semantic inspection and dynamically resolves canonical
+entities. New public routes appear without a separate hardcoded surface list.
+Automated visual capture/publication is retired. Prior published assets remain
+historical, not a current-readiness dependency.
 
 ## Healthy contract
 
 ```json
 {
-  "status": "complete",
-  "completeness_percent": 100.0,
-  "broken_links": 0,
-  "side_effects": 0
+  "status": "available",
+  "mode": "semantic_read_only"
 }
 ```
 

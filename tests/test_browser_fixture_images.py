@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 from PIL import Image
 from playwright.sync_api import sync_playwright
-from tools.validation import dins_fixture_images as images
+from tools.validation import browser_fixture_images as images
 
 
 class FixtureImagesTests(unittest.TestCase):

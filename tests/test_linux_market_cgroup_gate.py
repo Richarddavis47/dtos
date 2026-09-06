@@ -33,7 +33,6 @@ from src.core.history_context.season_cache import SleeperSeasonCache
 from src.core.projection_intelligence.service import ProjectionService
 from tools.validation.linux_market_cgroup_gate import (
     COLD_MAX,
-    LIVE_VISUAL_PROBE_INTERVAL_SECONDS,
     Monitor,
     StartupFailure,
     _archive_cache_assessment,
@@ -48,7 +47,6 @@ from tools.validation.linux_market_cgroup_gate import (
     _effective_memory_margin,
     _historical_leader_performance,
     _identity,
-    _live_visual_coverage_complete,
     _material_target_comparison,
     _material_target_search_path,
     _material_first_page_comparison,
@@ -95,7 +93,7 @@ class ArchiveCacheValidationTests(unittest.TestCase):
             "browser_process_roles": {},
             "largest_browser_rss_bytes": 0, "other_child_rss_bytes": 0,
             "capture_identity": None, "capture_phase": "inactive",
-            "phase": "live_visual_capture",
+            "phase": "combined_read",
         }
         monitor._record_sample({
             **common, "timestamp": 1.0, "raw_cgroup_bytes": COLD_MAX - 1,
@@ -157,25 +155,6 @@ class ArchiveCacheValidationTests(unittest.TestCase):
             "asset_universe_digest": "asset-digest",
             "brain_semantic_output_digest": "brain-digest",
         })
-
-    def test_live_visual_probe_cadence_is_continuous_but_not_aggressive(self) -> None:
-        self.assertGreaterEqual(LIVE_VISUAL_PROBE_INTERVAL_SECONDS, 0.2)
-        self.assertLessEqual(LIVE_VISUAL_PROBE_INTERVAL_SECONDS, 1.0)
-
-    def test_live_visual_coverage_tracks_the_active_surface_contract(self) -> None:
-        contract = [{"capture_id": f"capture-{index}"} for index in range(42)]
-        self.assertTrue(_live_visual_coverage_complete({
-            "required_captures": 42, "current": 42,
-            "required_capture_contract": contract,
-        }))
-        self.assertFalse(_live_visual_coverage_complete({
-            "required_captures": 42, "current": 41,
-            "required_capture_contract": contract,
-        }))
-        self.assertFalse(_live_visual_coverage_complete({
-            "required_captures": 42, "current": 42,
-            "required_capture_contract": contract[:-1],
-        }))
 
     def test_historical_replay_fixture_matches_production_shape(self) -> None:
         seasons, keys = _trade_replay_fixture()
@@ -978,7 +957,6 @@ class RestartReuseValidationTests(unittest.TestCase):
                 memory_observer=lambda: 512,
             )
         self.assertIs(result, process)
-        self.assertEqual(launched["env"]["DTOS_CAPTURE_URL"], "http://127.0.0.1:8767")
         self.assertEqual(
             launched["env"]["DTOS_INSPECTION_LEAGUE_ID"], "1804000000000000000",
         )

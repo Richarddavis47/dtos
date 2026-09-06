@@ -33,7 +33,6 @@ COLD_MAX = int(1.5 * GIB)
 RAW_EMERGENCY_MAX = 1740 * MIB
 BASELINE = int(1.03 * GIB)
 BASE_URL = "http://127.0.0.1:8767"
-LIVE_VISUAL_PROBE_INTERVAL_SECONDS = 0.25
 CGROUP = Path("/sys/fs/cgroup")
 OUTPUT = Path(os.environ.get("DTOS_BENCHMARK_OUTPUT", "/output/summary.json"))
 FIXTURE = Path(os.environ.get("DTOS_FIXTURE_ROOT", "/fixture"))
@@ -777,7 +776,7 @@ def _request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes,
 
 def _latency_distribution(values: list[float]) -> dict[str, float]:
     if not values:
-        raise AssertionError("live visual responsiveness produced no samples")
+        raise AssertionError("runtime responsiveness produced no samples")
     ordered = sorted(values)
     return {
         "min": round(ordered[0], 3),
@@ -795,94 +794,12 @@ def _request_provider_call_count() -> int:
     return int(json.loads(body).get("request_attributed_total") or 0)
 
 
-def _live_visual_responsiveness() -> dict[str, object]:
-    """Probe ordinary products throughout one production-shaped browser flight."""
-    paths = (
-        "/health/live", "/", "/market", "/fois",
-        "/api/inspect/current-visual/manifest",
-    )
-    samples: list[dict[str, object]] = []
-    deadline = time.monotonic() + 480
-    cycles = 0
-    final_health: dict[str, object] = {}
-    while time.monotonic() < deadline:
-        for path in paths:
-            provider_before = _request_provider_call_count()
-            status, body, client_ms, server_ms = _diagnostic_request(path)
-            provider_calls = _request_provider_call_count() - provider_before
-            sample = {
-                "path": path, "status": status, "client_ms": round(client_ms, 3),
-                "server_ms": round(server_ms, 3),
-                "accept_delay_upper_bound_ms": round(max(0.0, client_ms - server_ms), 3),
-                "response_bytes": len(body), "timestamp": time.time(),
-                "request_attributed_provider_calls": provider_calls,
-            }
-            samples.append(sample)
-            if provider_calls:
-                raise ExpansionLatencyFailure(
-                    f"ordinary request performed provider work: {path}",
-                    {"samples": samples, "failed_sample": sample},
-                )
-            if client_ms >= 500:
-                raise ExpansionLatencyFailure(
-                    f"live visual responsiveness failed: {path}={client_ms:.3f}ms",
-                    {"samples": samples, "failed_sample": sample},
-                )
-        cycles += 1
-        _status, body, _client_ms, _server_ms = _diagnostic_request(
-            "/api/inspect/live/visual/health",
-        )
-        final_health = json.loads(body)
-        if cycles >= 2 and final_health.get("status") == "complete":
-            break
-        time.sleep(LIVE_VISUAL_PROBE_INTERVAL_SECONDS)
-    if final_health.get("status") != "complete":
-        raise ExpansionLatencyFailure(
-            "production-shaped Live Visual flight did not complete",
-            {
-                "samples": samples,
-                "cycles": cycles,
-                "capture_health": final_health,
-                "probe_interval_ms": LIVE_VISUAL_PROBE_INTERVAL_SECONDS * 1000,
-            },
-        )
-    if any(int(final_health.get(key) or 0) for key in ("stale", "failures", "pending")):
-        raise AssertionError("production-shaped Live Visual flight retained stale or failed captures")
-    if not _live_visual_coverage_complete(final_health):
-        raise AssertionError(
-            f"production-shaped Live Visual coverage is incomplete: {final_health}"
-        )
-    required = int(final_health["required_captures"])
-    _status, mirror_body, _client_ms, _server_ms = _diagnostic_request(
-        "/api/inspect/current-visual/health",
-    )
-    mirror = json.loads(mirror_body)
-    if mirror.get("status") != "complete" or int(mirror.get("capture_count") or 0) != required:
-        raise AssertionError("current visual candidate was not atomically promoted")
-    by_path = {}
-    for path in paths:
-        rows = [row for row in samples if row["path"] == path]
-        by_path[path] = {
-            "client_ms": _latency_distribution([float(row["client_ms"]) for row in rows]),
-            "server_ms": _latency_distribution([float(row["server_ms"]) for row in rows]),
-        }
-    return {
-        "samples": samples, "routes": by_path, "cycles": cycles,
-        "capture_health": final_health, "current_mirror": mirror,
-        "request_accept_delay_max_ms": round(max(
-            float(row["accept_delay_upper_bound_ms"]) for row in samples
-        ), 3),
-    }
-
-
-def _live_visual_coverage_complete(health: dict[str, object]) -> bool:
-    """Validate the active capture contract without freezing its surface count."""
-    required = int(health.get("required_captures") or 0)
-    contract = health.get("required_capture_contract") or []
-    return (
-        required > 0
-        and required == len(contract)
-        and int(health.get("current") or 0) == required
+def _browser_process_count() -> int:
+    """No browser belongs in the application-only lifecycle container."""
+    return sum(
+        1 for process in psutil.process_iter(["name"])
+        if any(word in (process.info["name"] or "").lower()
+               for word in ("chromium", "chrome", "playwright"))
     )
 
 
@@ -965,7 +882,6 @@ def _start_server(
     memory_observer = memory_observer or (lambda: _cgroup("memory.current"))
     environment = _fixture_inspection_environment(os.environ.copy())
     environment["DTOS_MARKET_PROFILE_MODE"] = mode
-    environment["DTOS_CAPTURE_URL"] = BASE_URL
     command = [
         sys.executable, "-m", "uvicorn",
         "tools.validation.market_profile_app:app", "--host", "127.0.0.1",
@@ -1216,10 +1132,7 @@ def _cold_build() -> tuple[dict, float, int, dict[str, object]]:
         phases.add(str((health.get("cache") or {}).get("build_phase")))
         _live_status, _live_body, live_ms, _ = _diagnostic_request("/health/live")
         liveness_latency.append(live_ms)
-        _visual_status, visual_body, _visual_ms, _ = _diagnostic_request(
-            "/api/inspect/live/visual/health",
-        )
-        browser_count = int(json.loads(visual_body).get("browser_processes") or 0)
+        browser_count = _browser_process_count()
         browser_counts.append(browser_count)
         if browser_count:
             raise AssertionError("browser process overlapped semantic preparation")
@@ -1846,9 +1759,7 @@ def _replacement_profile(
             "build_active": cache.get("build_active"),
             "semantic_child_count": cache.get("semantic_child_count"),
             "semantic_preparation": cache.get("semantic_preparation"),
-            "browser_processes": int(json.loads(_request(
-                "/api/inspect/live/visual/health",
-            )[1]).get("browser_processes") or 0),
+            "browser_processes": _browser_process_count(),
         })
     after_history = _history_metrics()
     deadline = time.monotonic() + 60
@@ -2276,23 +2187,6 @@ def main() -> int:
                 raise AssertionError(
                     f"effective working-set peak {monitor.effective_peak} exceeds 1.5 GiB"
                 )
-            try:
-                monitor.set_phase("live_visual_capture")
-                visual_responsiveness = _live_visual_responsiveness()
-            except ExpansionLatencyFailure as exc:
-                summary["phases"]["live_visual_responsiveness"] = {
-                    "timestamp": time.time(), "failed": True, **exc.result,
-                    "memory_current": _cgroup("memory.current"),
-                }
-                raise
-            summary["phases"]["live_visual_responsiveness"] = {
-                "timestamp": time.time(), **visual_responsiveness,
-                "memory_current": _cgroup("memory.current"),
-                "effective_memory_current": _memory_state().get(
-                    "effective_working_set_bytes"
-                ),
-                "memory_monitor": monitor.evidence(),
-            }
             monitor.set_phase("warm_requests")
             try:
                 latency_result = _latencies()

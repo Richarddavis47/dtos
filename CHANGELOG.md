@@ -1,24 +1,16 @@
 # Changelog
 
-# v1.13.6 — Bounded DINS Capture Memory
+# v1.13.6 — Automated Visual System Retirement
 
-- Isolate DINS browser/native memory from Render using the existing runner and a
-  temporary, read-only SSH loopback relay; keep inspection credentials in Render.
-- Preserve public artifact identity while internal interaction requests use the
-  private capture transport. Reap exited browser descendants through container init.
-- Persist complete page evidence, then release completed geometry and browser/driver
-  resources instead of retaining them through the full DINS workload.
-- Stream native screenshot scanlines with exact pixel equivalence and package one
-  artifact at a time; preserve full coverage, atomic files and fail-closed sanitization.
-- Avoid importing server intelligence into capture-only processes; reclaim idle
-  FOIS compute processes without touching published scores or active jobs.
-- Drain expired intelligence-cache entries off-loop within the existing capacity,
-  preserving TTLs and valid results; return unused allocator pages on Linux.
-- Retain compact calibration audit inputs from every canonical asset, with exact
-  complete-report equivalence instead of a second full display universe.
-- Add full Linux DINS memory/coverage evidence and correct fixture traded-pick
-  discovery to match its existing ledger. Preserve the 2 GiB ceiling, 500 MiB reserve,
-  browser policy, intelligence semantics, account/league isolation and retired history.
+- Retire automated Current/Live Visual, DINS and External Visual Mirror workers,
+  routes, archives, relays and publication workflows by explicit product decision.
+- Retain semantic inspection, numerical reconciliation, accessibility and lightweight
+  authenticated browser journeys independently of screenshot publication.
+- Separate browser test dependencies from production; keep all application lifecycle,
+  memory, responsiveness, isolation and stable-boundary restart gates.
+- Preserve reviewed idle FOIS worker cleanup, expired-cache reclamation and bounded
+  calibration iteration, with unchanged intelligence and storage semantics.
+- Keep historical release assets immutable; no paid infrastructure change.
 
 # v1.13.5 — FOIS Active Tenure Continuity
 

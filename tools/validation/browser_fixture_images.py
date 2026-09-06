@@ -1,4 +1,4 @@
-"""Explicitly isolated synthetic image transport; never imported by production."""
+"""Synthetic browser-test image transport; never imported by production."""
 from __future__ import annotations
 
 import hashlib

@@ -99,7 +99,7 @@ def _request_group(path: str) -> str:
         return "fois_front_office"
     if route.startswith(("/account", "/api/account")):
         return "account_onboarding"
-    if route.startswith(("/health", "/api/inspect", "/current-visual")):
+    if route.startswith(("/health", "/api/inspect")):
         return "inspection_health"
     return "public"
 
@@ -521,9 +521,6 @@ def main() -> int:
         "/api/inspect", "/api/inspect/pages", "/api/inspect/site-map",
         "/api/inspect/schema", "/api/inspect/health",
         "/api/inspect/live", "/api/inspect/live/health",
-        "/api/inspect/live/visual", "/api/inspect/live/visual/health",
-        "/api/inspect/visual/pages", "/api/inspect/releases/current",
-        "/current-visual", "/current-visual/manifest.json",
         "/api/valuation", "/api/valuation/status", "/api/valuation/providers",
         "/api/valuation/assets?limit=1", "/api/inspect/valuation",
         "/api/market", "/api/market/health", "/api/market/assets?limit=1",

@@ -1,14 +1,10 @@
-"""Public contracts for the DTOS AI Inspection System (DINS)."""
+"""Read-only semantic inspection contracts; no visual publication subsystem."""
 from importlib import import_module
 
-# Browser capture needs models/storage only. Importing the package must not
-# also retain the server's FOIS/Brain/valuation dependency graph in that worker.
 _EXPORT_MODULES = {
     "engine": ("InspectionEngine",),
     "discovery": ("discover_pages", "excluded_current_trade_pages", "uncovered_public_routes", "unsupported_dynamic_patterns"),
-    "models": ("INSPECTION_SCHEMA_VERSION", "VIEWPORTS", "PageInspection", "VisualInspection"),
-    "storage": ("InspectionArtifactStore",),
-    "publication": ("GitHubPublicationResolver",),
+    "models": ("INSPECTION_SCHEMA_VERSION", "PageInspection"),
     "live": ("LIVE_INSPECTION_SCHEMA_VERSION", "LiveInspection", "PublicSurface", "public_surface_registry"),
 }
 
@@ -26,10 +22,10 @@ def __dir__():
     return sorted(set(globals()) | set(__all__))
 
 __all__ = [
-    "INSPECTION_SCHEMA_VERSION", "VIEWPORTS", "InspectionArtifactStore",
-    "InspectionEngine", "PageInspection", "VisualInspection", "discover_pages",
+    "INSPECTION_SCHEMA_VERSION",
+    "InspectionEngine", "PageInspection", "discover_pages",
     "excluded_current_trade_pages",
-    "uncovered_public_routes", "unsupported_dynamic_patterns", "GitHubPublicationResolver",
+    "uncovered_public_routes", "unsupported_dynamic_patterns",
     "LIVE_INSPECTION_SCHEMA_VERSION", "LiveInspection", "PublicSurface",
     "public_surface_registry",
 ]

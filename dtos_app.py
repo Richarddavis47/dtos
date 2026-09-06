@@ -2,22 +2,16 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
-import json
 import os
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from html import escape
-from pathlib import Path
 from time import perf_counter
 from typing import Any
-from urllib.error import HTTPError
-from urllib.request import Request, urlopen
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 
 from app_metadata import APPLICATION_NAME, VERSION
 from config import (
@@ -29,7 +23,6 @@ from routes.accounts import create_accounts_router
 from routes.api import create_api_router
 from routes.audit import create_audit_router
 from routes.crawl import create_crawl_router
-from routes.current_visual import create_current_visual_router
 from routes.draft import create_draft_router
 from routes.front_offices import create_front_offices_router
 from routes.fois import create_fois_router
@@ -66,8 +59,8 @@ from services.history import (
 from services.fois import fois_service
 from src.core.fois import FOIS_MODEL_VERSION
 from src.core.fois.process_execution import (
-    shutdown_fois_executor, shutdown_fois_executor_sync,
-    warm_fois_executor, warm_fois_executor_sync,
+    shutdown_fois_executor,
+    warm_fois_executor,
 )
 from src.core.asset_market import AssetMarketCache, asset_market_cache
 from src.core.asset_market.resource_diagnostics import (
@@ -98,9 +91,6 @@ from src.platform.league_context import (
 from src.platform.account_context import AccountContextMiddleware, current_account
 from config import DURABLE_HISTORY_REQUIRED
 from src.core.historical_memory.storage import validate_historical_storage
-from src.core.inspection.live import LiveInspection
-from src.core.inspection.live_visual import LiveVisualService, live_visual_capture_requests
-from src.core.inspection.current_visual import CurrentVisualMirror, public_visual_origin
 from src.core.intelligence_memory import (
     intelligence_checkpoint_store, sleeper_season_cache,
 )
@@ -113,9 +103,6 @@ historical_storage_status = validate_historical_storage(
 
 _PROCESS_STARTED = perf_counter()
 _INSPECTION_REQUEST: ContextVar[bool] = ContextVar("dtos_inspection_request", default=False)
-_CAPTURE_URL = os.getenv(
-    "DTOS_CAPTURE_URL", f"http://127.0.0.1:{os.getenv('PORT', '8000')}",
-).rstrip("/")
 _MULTI_LEAGUE_IMPORT_ENABLED = (
     os.getenv("DTOS_MULTI_LEAGUE_IMPORT_ENABLED", "0").strip().casefold()
     in {"1", "true", "yes", "on"}
@@ -313,150 +300,6 @@ def _measure_resources() -> dict[str, Any]:
     }
 
 
-def _capture_live_visual(request: Any, output: Any) -> dict[str, Any]:
-    """Keep browser control outside the request-serving Python interpreter."""
-    from src.core.inspection.live_capture_process import capture_page_isolated
-
-    # FOIS generation and visual capture are mutually exclusive in the lifecycle
-    # coordinator. Reap only the idle compute child before the higher-memory
-    # browser tree; the same bounded spawn pool is restored after the flight.
-    shutdown_fois_executor_sync()
-    return capture_page_isolated(_CAPTURE_URL, request, output)
-
-
-live_visual_service = LiveVisualService(
-    HISTORY_STORAGE_ROOT / "live_visual" / (
-        "league-" + hashlib.sha256(str(LEAGUE_ID).encode()).hexdigest()[:16]
-    ),
-    _capture_live_visual if os.getenv("RENDER") or os.getenv("DTOS_LIVE_VISUAL_CAPTURE") else None,
-    start_grace_seconds=2.0,
-)
-current_visual_mirror = CurrentVisualMirror(
-    live_visual_service.root / "current_mirror", live_visual_service,
-)
-
-
-def _authenticated_projection_audit() -> dict[str, Any]:
-    """Acquire the protected audit inside Render without exporting its credential."""
-    token = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
-    if not token:
-        error = RuntimeError("Protected mirror-source authentication is unavailable.")
-        error.dtos_safe_promotion_evidence = {  # type: ignore[attr-defined]
-            "stage": "audit_acquisition", "classification": "auth_not_configured",
-            "auth_configured": False, "request_attempted": False,
-            "http_status": None, "audit_acquired": False,
-            "mirror_promotion_entered": False, "partial_publication": False,
-        }
-        raise error
-    request = Request(
-        f"{_CAPTURE_URL}/api/audit/projections/current",
-        headers={
-            "Accept": "application/json",
-            "User-Agent": "DTOS-Current-Visual-Publisher/1.0",
-            "X-DTOS-Inspection": "deterministic",
-            "X-DTOS-Inspection-Auth": token,
-        },
-    )
-    try:
-        with urlopen(request, timeout=30) as response:
-            value = json.loads(response.read())
-    except HTTPError as exc:
-        if exc.code in {401, 403}:
-            classification = "authentication_rejected"
-            message = "Protected mirror-source authentication was rejected."
-        else:
-            classification = "audit_http_failure"
-            message = "Protected mirror-source acquisition failed."
-        error = RuntimeError(message)
-        error.dtos_safe_promotion_evidence = {  # type: ignore[attr-defined]
-            "stage": "audit_acquisition", "classification": classification,
-            "auth_configured": True, "request_attempted": True,
-            "http_status": int(exc.code), "audit_acquired": False,
-            "mirror_promotion_entered": False, "partial_publication": False,
-        }
-        raise error from None
-    except (OSError, TimeoutError, json.JSONDecodeError) as exc:
-        classification = (
-            "audit_response_malformed"
-            if isinstance(exc, json.JSONDecodeError)
-            else "audit_transport_failure"
-        )
-        error = RuntimeError("Protected mirror-source acquisition failed.")
-        error.dtos_safe_promotion_evidence = {  # type: ignore[attr-defined]
-            "stage": "audit_acquisition", "classification": classification,
-            "auth_configured": True, "request_attempted": True,
-            "http_status": None, "audit_acquired": False,
-            "mirror_promotion_entered": False, "partial_publication": False,
-        }
-        raise error from None
-    if not isinstance(value, dict):
-        error = RuntimeError("Protected mirror-source response is malformed.")
-        error.dtos_safe_promotion_evidence = {  # type: ignore[attr-defined]
-            "stage": "audit_acquisition", "classification": "audit_response_malformed",
-            "auth_configured": True, "request_attempted": True,
-            "http_status": 200, "audit_acquired": False,
-            "mirror_promotion_entered": False, "partial_publication": False,
-        }
-        raise error
-    return value
-
-
-def _complete_live_visual_capture() -> None:
-    try:
-        audit = _authenticated_projection_audit()
-        previous_generation = current_visual_mirror.manifest().get("current_generation")
-        try:
-            current_visual_mirror.promote(audit)
-        except Exception as exc:
-            retained_generation = current_visual_mirror.manifest().get("current_generation")
-            exc.dtos_safe_promotion_evidence = {  # type: ignore[attr-defined]
-                "stage": "mirror_promotion", "classification": "mirror_promotion_failure",
-                "auth_configured": True, "request_attempted": True,
-                "http_status": 200, "audit_acquired": True,
-                "mirror_promotion_entered": True,
-                "mirror_promotion_completed": False,
-                "partial_publication": retained_generation != previous_generation,
-            }
-            raise
-    except Exception:
-        runtime_metrics.mark_background("live_visual_capture", "failed")
-        raise
-    runtime_metrics.mark_background("live_visual_capture", "complete")
-
-
-live_visual_service.on_complete(_complete_live_visual_capture)
-live_visual_service.on_finished(warm_fois_executor_sync)
-
-
-def schedule_live_visual_capture() -> int:
-    """Queue semantic changes after canonical maintenance; never block readiness."""
-    if not STATE.get("data"):
-        return 0
-    if not lifecycle_coordinator.startup_complete():
-        runtime_metrics.mark_background("live_visual_capture", "waiting")
-        return 0
-    market = asset_market_cache.current()
-    market_health = asset_market_cache.metrics()
-    if (
-        market is None
-        or market_health.get("status") != "ready"
-    ):
-        runtime_metrics.mark_background("live_visual_capture", "waiting")
-        return 0
-    inspector = LiveInspection(
-        state=STATE, routes=app.routes, league_id=LEAGUE_ID,
-        projection_snapshot=projection_service.snapshot(),
-        market=market, fois_scores=(),
-    )
-    requests = live_visual_capture_requests(inspector)
-    queued = live_visual_service.schedule(requests)
-    runtime_metrics.mark_background("live_visual_capture", "running" if queued else "complete")
-    return queued
-
-
-asset_market_cache.on_publish(schedule_live_visual_capture)
-
-
 async def ensure_fresh() -> None:
     """Keep ordinary reads local; startup owns recovery when no context exists."""
     context = current_league_context()
@@ -490,7 +333,6 @@ async def background_sync() -> None:
         asset_market_cache.reconcile(
             STATE.get("data") or {}, STATE, canonical_history_store, LEAGUE_ID,
         )
-        schedule_live_visual_capture()
 
 
 async def resolve_historical_trade_market(*, runtime: LeagueRuntime | None = None) -> None:
@@ -628,7 +470,6 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     asset_market_cache.reconcile(
         STATE.get("data") or {}, STATE, canonical_history_store, LEAGUE_ID,
     )
-    schedule_live_visual_capture()
 
 
 async def startup_and_periodic_maintenance(startup_epoch: int) -> None:
@@ -1021,22 +862,9 @@ app.include_router(
 
 app.include_router(create_inspection_router(
     state=runtime_state, route_provider=lambda: app.routes, league_id=LEAGUE_ID,
-    artifact_root=Path("static/inspection") / (
-        "league-" + hashlib.sha256(str(LEAGUE_ID).encode()).hexdigest()[:16]
-    ),
     projection_service=projection_service, market_cache=asset_market_cache,
     context_resolver=current_league_context,
-    live_visual_service=live_visual_service,
-    current_visual_mirror=current_visual_mirror,
     resource_health=_resource_health,
-))
-
-app.include_router(create_current_visual_router(
-    mirror=current_visual_mirror,
-    public_base=public_visual_origin(
-        os.getenv("DTOS_PUBLIC_URL", "https://dtos.onrender.com"),
-        production=bool(os.getenv("RENDER")),
-    ),
 ))
 
 app.include_router(
@@ -1090,10 +918,4 @@ app.include_router(
         require_data=require_data,
         page=page,
     )
-)
-
-app.mount(
-    "/inspection-artifacts",
-    StaticFiles(directory="static/inspection", check_dir=False),
-    name="inspection-artifacts",
 )

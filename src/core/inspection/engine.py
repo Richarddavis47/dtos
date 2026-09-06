@@ -71,7 +71,7 @@ class InspectionEngine:
                 {"count": len(pages)},
             ),),
             tables=(InspectionTable(
-                "pages", "DINS Page Registry",
+                "pages", "Semantic inspection Page Registry",
                 ("page_name", "page_route", "inspection_route", "scope"),
                 tuple(pages),
             ),),
@@ -239,7 +239,7 @@ class InspectionEngine:
             links=links,
             empty_states=empty,
             warnings=(
-                "DINS reports cached evidence only; it does not calculate a new dossier.",
+                "Semantic inspection reports cached evidence only; it does not calculate a new dossier.",
             ),
         )
 
@@ -291,7 +291,7 @@ class InspectionEngine:
                 if not transactions else ()
             ),
             warnings=(
-                "DINS does not execute Front Office Intelligence; it inspects cached inputs and page structure.",
+                "Semantic inspection does not execute Front Office Intelligence; it inspects cached inputs and page structure.",
             ),
         )
 
@@ -330,7 +330,7 @@ class InspectionEngine:
             links=(InspectionLink("Transactions", "/transactions", "transactions"),),
             empty_states=("No cached trades are available.",) if not trades else (),
             warnings=(
-                "DINS does not generate or evaluate trade packages.",
+                "Semantic inspection does not generate or evaluate trade packages.",
             ),
         )
 

@@ -1,46 +1,28 @@
-# DTOS v1.13.6 — Bounded DINS Capture Memory
+# DTOS v1.13.6 — Automated Visual System Retirement
 
-The v1.13.5 production DINS attempt stopped safely below the required reserve.
-Diagnosis separated retained completed-page graphs, native screenshot buffers,
-unneeded capture imports, idle compute memory, expired intelligence graphs, and
-temporary calibration display records. Prior failed evidence remains preserved.
+This unreleased candidate deliberately retires Current Visual, Live Visual, DINS,
+and External Visual Mirror. Prior failed capture runs remain failures; they are
+not reclassified as passing application validation. No further capture/publication
+workflow is part of release acceptance.
 
-Complete page evidence is still written before its in-memory summary is reduced.
-Browser and driver lifetimes end after each viewport. Full screenshots retain every
-pixel and color profile while native scanlines are assembled with bounded buffers.
-Packaging retains one file at a time, with unchanged sanitization and deterministic
-ZIP semantics. No partial capture is eligible for publication.
+Browser scheduling, screenshot/DOM archives, capture workers, public manifests,
+relay transfers and visual publication routes are removed. Production installs no
+Playwright or Pillow. Lightweight browser validation uses the separate validation
+requirements and does not publish screenshots or private page content.
 
-Repeated full-workload measurements also established a shared-cgroup capture
-limit. DINS now has a temporary off-Render execution path on the existing Linux
-runner, with independently measured server and capture memory budgets. A
-loopback-only SSH relay injects inspection authentication inside Render; the
-capture runner never receives that token. Exact read-only targets, bounded
-responses, security headers, wall-clock teardown and unchanged public-origin
-serialization are covered by focused regressions. Docker's standard init reaps
-exited browser descendants; no browser launch policy or resource limit changes.
+Read-only semantic inspection, projection reconciliation, accessibility and Trade
+interaction regressions remain. Account/league isolation, historical intelligence,
+FOIS, Market outputs and stable-boundary artifact reuse remain required. The three
+Linux application lifecycle scenarios and canonical release validator remain gates;
+actual application memory admission and responsiveness thresholds are unchanged.
 
-The failed shared-boundary runs remain evidence. Three focused isolated captures
-retained more than 1,639 MiB reserve and the server retained 784 MiB. A separate
-process-only proof reproduced six zero-RSS zombie descendants without init and
-zero descendants with init. Full isolated acceptance remains required.
+Previously reviewed non-visual fixes retain idle FOIS worker reclamation, expired
+cache cleanup and bounded calibration iteration without changing intelligence.
+Production acceptance requires authenticated multi-league browser journeys, full
+smoke and a stable-boundary controlled restart. Historical published release assets
+remain immutable. No infrastructure tier or cost change is included.
 
-Server maintenance releases only unused allocator pages, idle FOIS compute workers,
-and already-expired disposable intelligence. Running jobs and published scores are
-preserved. Cache TTLs and capacity are unchanged; each expired graph is released
-off-loop with a scheduling boundary. Calibration evaluates every asset using the
-existing canonical iterator and produces the identical full report with fewer
-temporary display fields.
-
-The production-shaped Linux fixture now projects its existing traded-pick ownership
-consistently, restoring all four discoverable pick dossiers. Full inventory checks
-fail before capture if the required surfaces are missing. All resource, browser,
-privacy, intelligence, artifact-compatibility and HistoricalStore-retirement rules
-remain unchanged. No infrastructure or pricing change is included.
-
-Full release and production acceptance, including complete DINS publication, remain
-required before this corrective release is declared complete. v1.13.5 provenance
-remains immutable.
+Validation and production acceptance must finish before this candidate is complete.
 
 # DTOS v1.13.5 — FOIS Active Tenure Continuity
 
