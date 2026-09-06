@@ -5,7 +5,7 @@ on:
       scope:
         description: Focused image proof or final full acceptance
         type: choice
-        options: [focused-images, focused-team7, full]
+        options: [focused-images, focused-team7, focused-teams, full]
         default: focused-images
       image-format:
         description: Diagnostic control only; full acceptance always uses png
@@ -23,7 +23,7 @@ jobs:
       - name: Build existing production-shaped image
         run: docker build --file tools/validation/Dockerfile.market-cgroup --tag dtos-dins:validation .
       - name: Full DINS with unchanged memory reserve
-        if: inputs.scope == 'full' || inputs.scope == 'focused-team7'
+        if: inputs.scope == 'full' || inputs.scope == 'focused-team7' || inputs.scope == 'focused-teams'
         run: |
           mkdir -p .validation/dins-linux .validation/dins-fixture
           docker run --rm --memory 2g --memory-swap 2g --cpus 2 \
@@ -38,7 +38,7 @@ jobs:
             --env DTOS_PRODUCTION_SHAPED_FIXTURE=1 \
             --env DTOS_BACKGROUND_START_DELAY=0 \
             --env DTOS_PUBLIC_URL=http://dtos.fixture:8767 \
-            --env DTOS_DINS_DIAGNOSTIC_PAGE=${{ inputs.scope == 'focused-team7' && 'teams-8' || '' }} \
+            --env DTOS_DINS_DIAGNOSTIC_PAGE=${{ inputs.scope == 'focused-teams' && 'teams' || inputs.scope == 'focused-team7' && 'teams-8' || '' }} \
             --env DTOS_DINS_IMAGE_FORMAT=${{ inputs.image-format || 'png' }} \
             --env SLEEPER_LEAGUE_ID=1804000000000000000 \
             dtos-dins:validation \

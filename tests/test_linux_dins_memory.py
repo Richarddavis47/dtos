@@ -9,6 +9,16 @@ from tools.validation import linux_dins_memory_gate as gate
 
 
 class LinuxDinsMemoryTests(unittest.TestCase):
+    def test_diagnostic_records_lengths_without_sensitive_payload(self):
+        def _capture_page():
+            dom = {"secret": "must never be serialized"}
+            counts = gate.capture_object_counts()
+            self.assertEqual(len(dom), counts["_capture_page.dom"]["length"])
+            return counts
+        counts = _capture_page()
+        self.assertNotIn("secret", json.dumps(counts))
+        self.assertNotIn("serialized", json.dumps(counts))
+
     def test_failed_contract_evidence_is_bounded_and_has_no_query_or_credentials(self):
         manifest = {"interaction_failures": [{"starting_page": "/fixture?token=secret",
                     "target": "https://user:password@example.org/missing?token=secret#private",

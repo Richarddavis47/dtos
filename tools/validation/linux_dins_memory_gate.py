@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import inspect
 import os
 from pathlib import Path
 import signal
@@ -22,6 +23,24 @@ RESERVE = 500 * MIB
 PRODUCTION_BASELINE = 1_241_243_648
 PUBLIC_ORIGIN = "http://dtos.fixture:8767"
 OUTPUT = Path(os.environ.get("DTOS_DINS_OUTPUT", "/output"))
+
+
+def capture_object_counts() -> dict:
+    """Lengths only: never copy, stringify, or retain capture payloads."""
+    result = {}
+    frame = inspect.currentframe()
+    try:
+        while frame is not None:
+            if frame.f_code.co_name in {"_capture_page", "full_page_screenshot"}:
+                for key in ("original_content", "encoded", "chunks", "dom", "accessibility"):
+                    value = frame.f_locals.get(key)
+                    if isinstance(value, (bytes, str, list, tuple, dict)):
+                        result[frame.f_code.co_name + "." + key] = {
+                            "length": len(value), "shallow_bytes": sys.getsizeof(value)}
+            frame = frame.f_back
+    finally:
+        del frame
+    return result
 
 
 def startup_settled(tasks: dict) -> bool:
@@ -144,6 +163,9 @@ def capture_worker() -> int:
     original_release = dins._release_completed_capture_resources
     boundaries = OUTPUT / "page-boundaries.jsonl"
     active = {}
+    diagnostic = bool(os.environ.get("DTOS_DINS_DIAGNOSTIC_PAGE"))
+    sessions = weakref.WeakKeyDictionary()
+    detail = {}
     image_totals = {"responses": 0, "encoded_bytes": 0, "decoded_pixels": 0}
     original_new_page = Browser.new_page
 
@@ -151,6 +173,10 @@ def capture_worker() -> int:
         page = original_new_page(browser, *args, **kwargs)
         install(page, fixture_origin=PUBLIC_ORIGIN, evidence=image_totals,
                 directory=lifecycle.FIXTURE / "dins-images")
+        if diagnostic:
+            session = page.context.new_cdp_session(page)
+            session.send("Performance.enable")
+            sessions[page] = session
         return page
 
     Browser.new_page = new_page
@@ -161,6 +187,10 @@ def capture_worker() -> int:
                "capture_child_processes": len(psutil.Process().children(recursive=True)),
                "capture_rss_bytes": psutil.Process().memory_info().rss,
                **memory_sample()}
+        if diagnostic:
+            row["operation"] = dict(detail)
+            row["live_objects"] = capture_object_counts()
+            row["child_processes"] = process_sample(-1, os.getpid())
         with boundaries.open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(row) + "\n")
         temporary = OUTPUT / "active-page.tmp"
@@ -193,8 +223,25 @@ def capture_worker() -> int:
         original = getattr(owner, name)
 
         def traced(self, *args, **kwargs):
+            if diagnostic:
+                label = name
+                if name == "evaluate" and args:
+                    label = "dom_extraction" if args[0] == dins.DOM_SCRIPT else "accessibility" if args[0] == dins.A11Y_SCRIPT else "geometry_evaluation"
+                detail.clear()
+                detail.update(label=label)
+                session = sessions.get(self)
+                if session is not None and name != "close":
+                    metrics = session.send("Performance.getMetrics")["metrics"]
+                    detail["browser_metrics_before"] = {r["name"]: r["value"] for r in metrics if r["name"] in {"JSHeapUsedSize", "JSHeapTotalSize", "Nodes", "Documents"}}
             boundary("before_" + name, **active)
             result = original(self, *args, **kwargs)
+            if diagnostic:
+                if isinstance(result, (bytes, str, dict, list)):
+                    detail["result_length"] = len(result)
+                    detail["result_shallow_bytes"] = sys.getsizeof(result)
+                if session is not None and name != "close":
+                    metrics = session.send("Performance.getMetrics")["metrics"]
+                    detail["browser_metrics_after"] = {r["name"]: r["value"] for r in metrics if r["name"] in {"JSHeapUsedSize", "JSHeapTotalSize", "Nodes", "Documents"}}
             boundary("after_" + name, **active)
             return result
 
@@ -205,7 +252,13 @@ def capture_worker() -> int:
     trace_method(APIRequestContext, "get")
 
     def write(path, value, **kwargs):
+        if diagnostic:
+            detail.clear()
+            detail["label"] = "artifact_serialization"
+            boundary("before_artifact_write", **active)
         result = original_write(path, value, **kwargs)
+        if diagnostic:
+            boundary("after_artifact_write", **active)
         if path.name in {"desktop.json", "tablet.json", "mobile.json"}:
             result = TrackedPage(result)
             refs.append(weakref.ref(result))
@@ -221,7 +274,7 @@ def capture_worker() -> int:
     require_full_inventory(inventory)
     diagnostic = os.environ.get("DTOS_DINS_DIAGNOSTIC_PAGE")
     if diagnostic:
-        if diagnostic not in {"teams-7", "teams-8"}:
+        if diagnostic not in {"teams", "teams-7", "teams-8"}:
             raise RuntimeError("Unsupported bounded diagnostic target")
         original_json = dins._json
 
