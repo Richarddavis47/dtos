@@ -9,6 +9,7 @@ import subprocess
 import sys
 import time
 import weakref
+from contextlib import contextmanager
 
 import psutil
 
@@ -97,12 +98,14 @@ def capture_worker() -> int:
     refs: list[weakref.ReferenceType] = []
     original_capture = dins._capture_page
     original_write = dins._write_artifact_json
+    original_playwright = dins.sync_playwright
     boundaries = OUTPUT / "page-boundaries.jsonl"
     active = {}
 
     def boundary(phase, page_id=None, viewport=None):
         row = {"phase": phase, "page_id": page_id, "viewport": viewport,
                "completed_payloads_alive": sum(ref() is not None for ref in refs),
+               "capture_child_processes": len(psutil.Process().children(recursive=True)),
                "capture_rss_bytes": psutil.Process().memory_info().rss,
                **memory_sample()}
         with boundaries.open("a", encoding="utf-8") as stream:
@@ -113,6 +116,16 @@ def capture_worker() -> int:
         enforce_memory(row)
         if phase in {"before_capture", "capture_complete"} and row["completed_payloads_alive"]:
             raise AssertionError("Completed full page payload remained reachable")
+        if phase == "viewport_reclaimed" and row["capture_child_processes"]:
+            raise AssertionError("Completed viewport retained browser/driver processes")
+
+    @contextmanager
+    def tracked_playwright():
+        try:
+            with original_playwright() as playwright:
+                yield playwright
+        finally:
+            boundary("viewport_reclaimed", **active)
 
     def capture_page(browser, store, base, spec, viewport, league):
         active.update(page_id=spec["page_id"], viewport=viewport.name)
@@ -144,6 +157,7 @@ def capture_worker() -> int:
 
     dins._capture_page = capture_page
     dins._write_artifact_json = write
+    dins.sync_playwright = tracked_playwright
     boundary("capture_start")
     inventory = dins._json(PUBLIC_ORIGIN + "/api/inspect/site-map")
     if any(str(row.get("route", "")).startswith("/__validation__/") for row in inventory["pages"]):

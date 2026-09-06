@@ -319,11 +319,15 @@ def capture(
         )
     generated: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
-        try:
-            for spec in pages:
-                for viewport in VIEWPORTS:
+    for spec in pages:
+        for viewport in VIEWPORTS:
+            try:
+                # Closing a page/context does not release Chromium's shared
+                # screenshot buffers or the driver's native allocations. End
+                # both lifetimes before allocating the next viewport. Rendering
+                # policy and the complete per-viewport workload stay unchanged.
+                with sync_playwright() as playwright:
+                    browser = playwright.chromium.launch(headless=True)
                     try:
                         result = _capture_page(browser, store, base_url, spec, viewport, status.get("league_id"))
                         path = store.current_root / "pages" / spec["page_id"] / f"{viewport.name}.json"
@@ -333,10 +337,10 @@ def capture(
                         )
                         generated.append(_manifest_page_summary(result))
                         del result
-                    except Exception as exc:  # capture must preserve partial results
-                        failures.append({"page_id": spec["page_id"], "viewport": viewport.name, "error": type(exc).__name__, "detail": str(exc)[:500]})
-        finally:
-            browser.close()
+                    finally:
+                        browser.close()
+            except Exception as exc:  # capture must preserve partial results
+                failures.append({"page_id": spec["page_id"], "viewport": viewport.name, "error": type(exc).__name__, "detail": str(exc)[:500]})
     deployment = status.get("deployment") or deployment_metadata()
     generated_at = datetime.now(timezone.utc).isoformat()
     page_ids = sorted({row["page_id"] for row in generated})
