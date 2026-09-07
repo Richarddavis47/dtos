@@ -90,16 +90,20 @@ class PlayerValueProjectionTests(unittest.TestCase):
             "season_projected_points": 85.0, "projection_agreement": "Moderate",
         }
         with patch(
-            "src.core.player_value_projection.providers.projection_service.player",
-            return_value={**canonical, "weekly_projected_points": 5.0},
+            "src.core.player_value_projection.providers.projection_service.snapshot",
+            return_value={"league_id": self.data["league"]["league_id"], "week": self.data.get("week"), "projection_snapshot_id": "low", "players": {
+                p["id"]: {**canonical, "weekly_projected_points": 5.0}
+                for team in self.data["teams"] for p in team["players"]}},
         ):
             low = IntelligenceOrchestrator(
                 IntelligenceRegistry(), IntelligenceCache(default_ttl=60),
             ).analyze(self.data, 1)
         with patch(
-            "src.core.player_value_projection.providers.projection_service.player",
-            return_value={**canonical, "weekly_projected_points": 20.0,
-                          "weekly_median": 20.0, "projection_snapshot_id": "high"},
+            "src.core.player_value_projection.providers.projection_service.snapshot",
+            return_value={"league_id": self.data["league"]["league_id"], "week": self.data.get("week"), "projection_snapshot_id": "high", "players": {
+                p["id"]: {**canonical, "weekly_projected_points": 20.0,
+                          "weekly_median": 20.0, "projection_snapshot_id": "high"}
+                for team in self.data["teams"] for p in team["players"]}},
         ):
             high = IntelligenceOrchestrator(
                 IntelligenceRegistry(), IntelligenceCache(default_ttl=60),

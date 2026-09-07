@@ -7,6 +7,7 @@ from typing import Any
 from src.core.asset_intelligence import AssetContext, evaluate_player
 from src.core.roster_intelligence.models import GradeDimension, PlayerCard, PositionRoomReport, RosterReport
 from src.core.team_intelligence import build_team_intelligence
+from src.core.intelligence.team_assessment import build_team_assessment
 from src.core.valuation import (
     CalibrationStatus,
     cached_market_consensus,
@@ -224,7 +225,6 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
     premium_assets = elite + cornerstone
     current, future = decision.current_outlook.score, decision.future_outlook.score
     starter_age = mean(decision.profile.starter_ages) if decision.profile.starter_ages else None
-    identity, identity_reasoning = _identity(current, future, round(starter_age, 1) if starter_age is not None else None, premium_assets)
     metrics: dict[str, object] = {
         "Championship Window": current, "Future Window": future,
         "Roster Health": _clamp(100 - mean(card.overall_score * 0 + (100 if card.risk == 'High' else 35 if card.risk == 'Medium' else 10) for card in cards.values())) if cards else 50,
@@ -245,4 +245,15 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
     advantages = tuple(room.advantage for room in rooms.values() if room.advantage)
     league_metric_map = {int(item["roster_id"]): {key: value for key, value in item.items() if key != "roster_id"} for item in league_dimensions}
     team_intelligence, league_summary = build_team_intelligence(intelligence.decisions, league_rooms_by_roster, league_players, league_metric_map)
-    return RosterReport(identity, identity_reasoning, rooms, cards, metrics, sorted_rooms[0], sorted_rooms[-1], advantages, ("Production and projection dimensions use available deterministic Asset Intelligence proxies when live feeds are unavailable.",), league_rooms_by_roster, league_players, league_metric_map, team_intelligence, league_summary)
+    assessment = build_team_assessment(context, team_intelligence[context.active_roster_id])
+    window = assessment.team.competitive_window
+    metrics.update({
+        "Championship Window": assessment.team.current_strength,
+        "Future Window": assessment.team.future_strength,
+        "Weekly Ceiling": assessment.weekly_ceiling,
+        "Weekly Floor": assessment.weekly_floor,
+        "Weekly Projection Units": "fantasy_points",
+    })
+    # Old proxy ranks are not actual weekly projections and must not escape as such.
+    metrics["League Rankings"] = {key: value for key, value in metrics["League Rankings"].items() if key not in {"Projected Weekly Starter Points", "Projected Floor", "Projected Ceiling"}}
+    return RosterReport(window.classification.value, " ".join(window.reasons), rooms, cards, metrics, sorted_rooms[0], sorted_rooms[-1], advantages, assessment.limitations, league_rooms_by_roster, league_players, league_metric_map, team_intelligence, league_summary, assessment)

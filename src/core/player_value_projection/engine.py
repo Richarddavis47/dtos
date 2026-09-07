@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from src.core.player_value_projection.models import DataStatus, LineupValue, PlayerValueProfile, PositionalContext, ValueMetric
-from src.core.player_value_projection.providers import PlayerDataRegistry, player_data_registry
+from src.core.player_value_projection.providers import PlayerDataRegistry, SleeperCanonicalProjectionProvider, player_data_registry
 from src.core.historical_memory.valuation import apply_historical_evidence
 from src.core.valuation import CalibrationStatus, PlayerIntelligenceCard, calibrate_asset_value, contextualize_valuation_tier, normalize_internal
 from src.core.valuation.models import ConsensusProvider
@@ -25,9 +25,14 @@ def _posture(gap: float | None, liquidity: int, confidence: int, calibration: Ca
 
 def evaluate_player_values(context: Any, decision: Any, reports: dict[str, Any], market: Any, registry: PlayerDataRegistry = player_data_registry) -> dict[str, PlayerValueProfile]:
     scoring = context.cached_data.get("scoring_settings") or context.settings.get("scoring_settings") or {}
-    week = context.cached_data.get("week")
+    snapshot = getattr(context, "projection_snapshot", None) or {}
+    week = snapshot.get("week") if snapshot else context.cached_data.get("week")
     raw_by_id = {str(player.get("id") or player.get("player_id")): player for player in decision.profile.players}
-    projections = {player_id: registry.projection().project(raw_by_id[player_id], report.core_values.redraft.score, scoring, int(week) if week else None) for player_id, report in reports.items()}
+    provider = registry.projection()
+    if isinstance(provider, SleeperCanonicalProjectionProvider) and hasattr(context, "projection_snapshot"):
+        projections = {player_id: provider.from_canonical((snapshot.get("players") or {}).get(player_id), int(week) if week else None) for player_id in reports}
+    else:
+        projections = {player_id: provider.project(raw_by_id[player_id], report.core_values.redraft.score, scoring, int(week) if week else None) for player_id, report in reports.items()}
     supplies = decision.profile.market_context.get("position_counts") or {}
     calibrations = {}
     for player_id, report in reports.items():

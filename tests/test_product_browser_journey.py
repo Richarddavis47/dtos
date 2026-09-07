@@ -76,7 +76,7 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                     "rank": 1, "values": {}, "owner": {"team_name": f"Franchise {league}"},
                 }]
                 runtime.canonical_context = SimpleNamespace(
-                    league_id=league, data=data, state=state, market=_Cache(market),
+                    runtime=runtime, league_id=league, data=data, state=state, market=_Cache(market),
                     projection=ProjectionService(Path(folder) / f"projection-{league}.sqlite3", league_id=league),
                 )
 
@@ -134,7 +134,8 @@ class ProductBrowserJourneyTests(unittest.TestCase):
 
                                 context.route("**/*", transport)
                                 for league in sequence:
-                                    page.goto(origin + "/", wait_until="domcontentloaded")
+                                    initial = page.goto(origin + "/", wait_until="domcontentloaded")
+                                    self.assertEqual(initial.status, 200, "Account home must render before league activation")
                                     with page.expect_navigation(wait_until="domcontentloaded"):
                                         page.get_by_role("button", name=f"League {league}", exact=True).click()
                                     for path in ("/", "/league", "/teams/1", "/fois", "/market", "/trades", "/trades/create", "/trades/trade-for", "/trades/shop", "/trades/recommended"):

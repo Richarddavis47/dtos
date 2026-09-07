@@ -76,7 +76,7 @@ def _decision_horizons(view: dict[str, Any]) -> str:
         )
         limits = "".join(f"<li>{escape(item)}</li>" for item in evaluation.limitations)
         cards.append(
-            f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>{escape(evaluation.horizon.value)}</h3><div class="thq-grade-score">{evaluation.score}/100 · {evaluation.confidence}% confidence</div></div><div class="thq-grade-mark">{escape(evaluation.grade)}</div></div><p class="muted">{escape(evaluation.summary)}</p><details><summary>Show Reasoning</summary><div class="thq-reasoning"><b>Factors</b><ul>{factors}</ul>{f"<b>Known limitations</b><ul>{limits}</ul>" if limits else ""}</div></details></article>'
+            f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>Legacy diagnostic: {escape(evaluation.horizon.value)}</h3><div class="thq-grade-score">{evaluation.score}/100 · {evaluation.confidence}% confidence</div></div><div class="thq-grade-mark">{escape(evaluation.grade)}</div></div><p class="muted">Not the current team assessment: this older results/age/coverage diagnostic uses different inputs and may use neutral preseason baselines. {escape(evaluation.summary)}</p><details><summary>Show Reasoning</summary><div class="thq-reasoning"><b>Factors</b><ul>{factors}</ul>{f"<b>Known limitations</b><ul>{limits}</ul>" if limits else ""}</div></details></article>'
         )
     return "".join(cards)
 
@@ -95,7 +95,7 @@ def _roster_rooms(view: dict[str, Any]) -> str:
     rooms = []
     for position in CORE_POSITIONS:
         players = view["roster_groups"][position]
-        room_grade = view["roster_intelligence"].rooms[position].overall.grade
+        room_grade = view["assessment"].team.positions[position].grade
         rows = "".join(
             f'<div class="thq-player"><div><a href="/players/{quote(str(player["id"]))}">{player_summary(player_id=str(player["id"]), name=str(player["name"]), position=position, nfl_team=str(player.get("team") or "Free Agent"), context=(f"Age {player.get('age')}" if player.get("age") is not None else None))}</a>'
             f'<div class="thq-player-meta">{f"Bye {escape(str(player.get('bye_week')))}" if player.get("bye_week") not in (None, "", "Unavailable") else "Player profile and recommendation available"}</div>'
@@ -201,17 +201,19 @@ def create_teams_router(
             )
         )
         roster = view["roster_intelligence"]
+        assessment = view["assessment"]
         intelligence_cards = "".join(
             f'<article class="thq-kpi"><span>{escape(label)}</span><b>{escape(_display(value))}</b></article>'
             for label, value in (
-                ("Team Identity", roster.identity),
-                ("Strongest Position", roster.strongest_position),
-                ("Weakest Position", roster.weakest_position),
+                ("Team Identity", assessment.team.competitive_window.classification.value),
+                ("Strongest Position", max(assessment.team.positions, key=lambda p: assessment.team.positions[p].score)),
+                ("Weakest Position", min(assessment.team.positions, key=lambda p: assessment.team.positions[p].score)),
                 ("Elite Assets", roster.metrics["Elite Assets"]),
                 ("Trade Chips", roster.metrics["Trade Chips"]),
                 ("Roster Flexibility", f'{roster.metrics["Roster Flexibility"]}/100'),
-                ("Weekly Ceiling", f'{roster.metrics["Weekly Ceiling"]}/100'),
-                ("Weekly Floor", f'{roster.metrics["Weekly Floor"]}/100'),
+                ("Projected Starter Points", assessment.projected_points),
+                ("Weekly Ceiling (points)", assessment.weekly_ceiling),
+                ("Weekly Floor (points)", assessment.weekly_floor),
                 ("Positional Balance", f'{roster.metrics["Positional Balance"]}/100'),
                 ("Positional Advantages", ", ".join(roster.positional_advantages) or "None identified"),
             )
@@ -219,6 +221,7 @@ def create_teams_router(
         league_rankings = "".join(
             f'<article class="thq-kpi"><span>{escape(label)}</span><b>#{rank} of {roster.rooms["QB"].league_size}</b></article>'
             for label, rank in roster.metrics["League Rankings"].items()
+            if label not in {"Projected Weekly Starter Points", "Projected Floor", "Projected Ceiling"}
         )
         recommendation = view["unified_recommendation"]
         selected_league = str((data.get("league") or {}).get("league_id") or LEAGUE_ID)
@@ -241,7 +244,7 @@ def create_teams_router(
 <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Overall Grade {view['team_intelligence'].overall.grade}</span><span>·</span><span>League Rank #{view['rank']}</span><span>·</span><span>{view['team_intelligence'].overall.percentile}th percentile</span></div></div></div><div><span class="thq-badge">{escape(view['competitive_window'].classification.value)}</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
 <section class="thq-section"><div class="thq-section-head"><h2>Starting Lineup</h2><span>The players carrying this franchise now</span></div><div class="thq-starters">{starter_cards}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>DTOS Team Assessment</h2><span>Answer and action first</span></div>{recommendation_card}</section>
-<section class="thq-section"><div class="thq-section-head"><h2>Strengths &amp; Needs</h2><span>Current and future league-relative evidence</span></div><div class="thq-intel">{intelligence_cards}{league_rankings}</div></section>
+<section class="thq-section"><div class="thq-section-head"><h2>Strengths &amp; Needs</h2><span>Current and future league-relative evidence</span></div><div class="thq-intel">{intelligence_cards}{league_rankings}</div><p class="muted">{escape(' '.join(assessment.limitations))}</p><p class="muted">Projection week: {escape(str(assessment.projection_week or 'Unavailable'))} · Coverage: {assessment.projected_starter_count}/{assessment.starter_count} starters · As of: {escape(assessment.projection_as_of or 'Unavailable')}</p></section>
 <section class="thq-section" id="assets"><div class="thq-section-head"><h2>Core Assets</h2><span>Roster construction and flexibility</span></div><div class="thq-cards">{_asset_cards(view['snapshot'])}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Full Roster</h2><span>Position rooms and current lineup designation</span></div><div class="thq-roster">{_roster_rooms(view)}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Draft Capital</h2><span>Current pick ownership</span></div><div class="thq-picks">{_draft_capital(view)}</div></section>

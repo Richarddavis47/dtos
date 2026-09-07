@@ -27,3 +27,4 @@ class IntelligenceResult:
     cache_hit: bool
     brain: Any = None
     brain_decision: Any = None
+    team_assessment: Any = None
