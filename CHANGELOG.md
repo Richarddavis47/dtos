@@ -1,5 +1,17 @@
 # Changelog
 
+# v1.13.7 — Canonical Team Assessment
+
+- Bind Team HQ, Roster identity and unified recommendation outlook to one shared
+  league-relative assessment and the existing competitive-window engine.
+- Pin the correct league projection publication, include its generation and Brain
+  generation in cache identity, and use its effective forecast week in preseason.
+- Display complete canonical starter points/bounds only; missing bounds remain
+  unavailable. Remove mislabeled proxy projection rankings from Team HQ.
+- Preserve legacy results/coverage diagnostics with explicit subordinate labeling;
+  preserve trade selection, canonical valuation formulas and historical intelligence.
+- Automated visual capture/publication remains retired; all application safety gates remain.
+
 # v1.13.6 — Automated Visual System Retirement
 
 - Retire automated Current/Live Visual, DINS and External Visual Mirror workers,

@@ -62,3 +62,4 @@ class RosterReport:
     league_metrics: dict[int, dict[str, float]]
     team_intelligence: dict[int, Any]
     league_summary: Any
+    assessment: Any = None

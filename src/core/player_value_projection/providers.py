@@ -52,6 +52,10 @@ class SleeperCanonicalProjectionProvider(WeeklyProjectionProvider):
             context = None
         service = context.projection if context is not None else projection_service
         canonical = service.player(player_id)
+        return self.from_canonical(canonical, week)
+
+    def from_canonical(self, canonical: dict[str, Any] | None, week: int | None) -> Projection:
+        """Convert a pinned published row without another service read."""
         if canonical is not None and canonical.get("week") == week:
             status = DataStatus.UNAVAILABLE if canonical.get("weekly_projected_points") is None else DataStatus.CACHED
             return Projection(

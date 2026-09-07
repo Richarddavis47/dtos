@@ -143,6 +143,14 @@ class IntelligenceOrchestrator:
             market_available = any(report.consensus.value is not None for report in market.assets.values())
             confidence = calculate_confidence(evidence, providers=5, expected_providers=5, market_available=market_available, sample_size=offices.reports[roster_id].activity.trades, missing=missing)
             recommendation = resolve_recommendation(decision=decision, trade=top_trade, front_office=offices.reports[roster_id], market=market, evidence=evidence, confidence=confidence)
+            assessment = roster.assessment
+            recommendation = replace(
+                recommendation, current_outlook=assessment.current_outlook,
+                future_outlook=assessment.future_outlook,
+                competitive_window=assessment.team.competitive_window,
+                why=(*assessment.team.explanation, *assessment.team.current_contending.reasons, *assessment.team.future_outlook.reasons),
+                assumptions=(*recommendation.assumptions, *assessment.limitations),
+            )
             team_asset_ids = tuple(str(player.get("id") or player.get("player_id")) for player in decision.profile.players if player.get("id") or player.get("player_id"))
             brain_decision = brain.decision(
                 "Recommendation Engine", team_asset_ids,
@@ -152,7 +160,7 @@ class IntelligenceOrchestrator:
             partial = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, offices, trades, market, player_values, roster, None, recommendation, pipeline.timings_ms, False, brain, brain_decision)
             league = pipeline.run("league_intelligence", self.cache.get_or_create, prefix + "league_intelligence", lambda: self.registry.provider("league_intelligence")(partial))
             pipeline.timings_ms["orchestration_total"] = round((perf_counter() - total_started) * 1000, 3)
-            return replace(partial, league=league, timings_ms=pipeline.timings_ms)
+            return replace(partial, league=league, timings_ms=pipeline.timings_ms, team_assessment=assessment)
 
         try:
             result = self.cache.get_or_create(key, execute)

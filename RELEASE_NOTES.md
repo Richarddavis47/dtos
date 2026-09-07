@@ -1,4 +1,21 @@
-# DTOS v1.13.6 — Automated Visual System Retirement
+# DTOS v1.13.7 — Canonical Team Assessment
+
+Corrects conflicting Team HQ conclusions without selecting a preferred display
+label arbitrarily. Existing league-relative Team Intelligence and the canonical
+competitive-window engine now supply one shared assessment for roster identity,
+Team HQ and unified recommendation outlook. Older results/age/coverage diagnostics
+remain explicitly labeled as different, subordinate diagnostics, not team grades.
+
+Projection evidence is pinned to the league's published snapshot and effective
+week. Missing bounds are unavailable, never fabricated zeroes. Cache identity
+includes projection, Brain and published league generations. Trade selection,
+market valuation formulas, historical intelligence and authentication stay intact.
+
+Pre-release validation and production acceptance are pending. v1.13.6 remains the
+immutable deployed release until all candidate gates pass. No visual archives or
+publication systems are restored.
+
+## Prior v1.13.6 retirement contract (preserved)
 
 This unreleased candidate deliberately retires Current Visual, Live Visual, DINS,
 and External Visual Mirror. Prior failed capture runs remain failures; they are
