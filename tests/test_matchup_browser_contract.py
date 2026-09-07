@@ -18,7 +18,7 @@ class MatchupBrowserTests(unittest.TestCase):
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             try:
-                for viewport in ({"width": 390, "height": 844}, {"width": 1280, "height": 900}):
+                for viewport in ({"width": 375, "height": 844}, {"width": 390, "height": 844}, {"width": 1280, "height": 900}):
                     with browser.new_context(viewport=viewport) as context:
                         def transport(route):
                             url = route.request.url
@@ -33,7 +33,8 @@ class MatchupBrowserTests(unittest.TestCase):
                         context.route("**/*", transport)
                         page = context.new_page()
                         page.goto("https://dtos.test/matchups/1")
-                        self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
+                        layout = page.evaluate("""() => ({width:innerWidth, client:document.documentElement.clientWidth, scroll:document.documentElement.scrollWidth, overflow:[...document.querySelectorAll('main *')].filter(e=>e.getBoundingClientRect().right>document.documentElement.clientWidth).slice(0,12).map(e=>({tag:e.tagName,css:e.className,text:e.innerText?.slice(0,80),right:e.getBoundingClientRect().right}))})""")
+                        self.assertLessEqual(layout["scroll"], layout["width"], layout)
                         player = page.get_by_role("link", name="Open A Player 0 player dossier", exact=True)
                         box = player.bounding_box()
                         self.assertGreaterEqual(box["height"], 44)
