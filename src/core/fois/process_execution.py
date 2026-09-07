@@ -6,7 +6,6 @@ import concurrent.futures
 import json
 import multiprocessing
 import os
-import shutil
 import tempfile
 import threading
 from concurrent.futures.process import BrokenProcessPool
@@ -228,10 +227,10 @@ def _read_published(repository: Any, league_id: str) -> tuple[tuple[Any, ...], d
     return scores, health
 
 
-def _prepare_working_database(source: Path, target: Path) -> None:
-    source.parent.mkdir(parents=True, exist_ok=True)
-    if source.exists():
-        shutil.copy2(source, target)
+def _prepare_working_database(source: Path, target: Path, league_id: str) -> None:
+    from src.core.fois.working_storage import prepare
+
+    prepare(source, target, league_id)
 
 
 def _validate_and_publish(
@@ -249,11 +248,13 @@ def _validate_and_publish(
     if len(working_scores) != expected:
         raise RuntimeError("FOIS compute publication count mismatch.")
     # The portable content identity crosses the process boundary, unlike SQLite
-    # data_version. Recheck after IPC before replacing the last-valid database.
+    # data_version. Recheck after IPC before merging the completed flight.
     with checkpoint_read_flight(intelligence_checkpoint_store) as reader:
         if not checkpoint_generation or reader.generation != checkpoint_generation:
             raise CheckpointGenerationChanged("Checkpoint evidence advanced before FOIS publication.")
-    os.replace(working_path, repository.path)
+    from src.core.fois.working_storage import publish
+
+    publish(working_path, repository, league_id)
     return _read_published(repository, league_id)
 
 
@@ -279,7 +280,7 @@ async def generate_fois_isolated(
         temporary = Path(directory)
         working_database = temporary / "fois.sqlite3"
         await asyncio.to_thread(
-            _prepare_working_database, repository.path, working_database,
+            _prepare_working_database, repository.path, working_database, league_id,
         )
         source_file = cache_file or _league_cache_file(league_id)
         if not source_file.is_file():
