@@ -8,6 +8,9 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from threading import RLock
 
+from src.core.fois import state_storage
+from src.platform.storage_gate import connect
+
 from src.core.fois.models import (
     Directionality,
     FrontOfficeCategoryScore,
@@ -103,11 +106,11 @@ class FOISRepository:
         self._lock = RLock()
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._connection() as connection:
-            connection.executescript(SCHEMA)
+            connection.executescript(SCHEMA + state_storage.SCHEMA)
 
     @contextmanager
     def _connection(self):
-        connection = sqlite3.connect(self.path, timeout=30)
+        connection = connect(self.path, timeout=30)
         connection.row_factory = sqlite3.Row
         try:
             yield connection
@@ -146,6 +149,7 @@ class FOISRepository:
             snapshot_id = __import__("hashlib").sha256(
                 f"{score.score_key}|{source_fingerprint}".encode()
             ).hexdigest()
+            history_payload = state_storage.encode(connection, json.loads(payload))
             connection.execute(
                 """INSERT OR IGNORE INTO fois_snapshot_history(
                 snapshot_id,score_key,tenure_id,league_id,gm_id,model_version,
@@ -153,7 +157,7 @@ class FOISRepository:
                 ) VALUES (?,?,?,?,?,?,?,?,?,?)""",
                 (snapshot_id, score.score_key, score.tenure_id, score.league_id,
                  score.gm_id, score.model_version, score.brain_snapshot_id,
-                 score.generated_at, source_fingerprint, payload),
+                 score.generated_at, source_fingerprint, history_payload),
             )
             connection.executemany(
                 "INSERT OR IGNORE INTO fois_evidence_links(score_key,evidence_id,evidence_type) VALUES (?,?,?)",
@@ -314,7 +318,7 @@ class FOISRepository:
                 "SELECT payload FROM fois_snapshot_history WHERE league_id=? AND gm_id=? AND model_version=? ORDER BY generated_at,snapshot_id",
                 (league_id, gm_id, model_version),
             ).fetchall()
-        values = tuple(_score(json.loads(row["payload"])) for row in rows)
+            values = tuple(_score(state_storage.decode(connection, row["payload"])) for row in rows)
         current = self.score_for_gm(league_id, gm_id, model_version) if values else None
         return tuple(
             replace(
@@ -361,6 +365,14 @@ class FOISRepository:
                 "SELECT COALESCE(SUM(LENGTH(payload)),0) FROM fois_snapshot_history WHERE league_id=?",
                 (league_id,),
             ).fetchone()[0])
+            state_bytes = int(connection.execute(
+                "SELECT COALESCE(SUM(LENGTH(payload)),0) FROM fois_semantic_states "
+                "WHERE league_id=?",
+                (league_id,),
+            ).fetchone()[0])
+            state_count = int(connection.execute(
+                "SELECT COUNT(*) FROM fois_semantic_states WHERE league_id=?", (league_id,),
+            ).fetchone()[0])
         return {
             "current_gm_count": len(current),
             "current_canonical_count": len(current),
@@ -370,8 +382,12 @@ class FOISRepository:
             "duplicate_derivation_count": duplicate_derivations,
             "incomplete_obsolete_derivation_count": obsolete,
             "current_evaluation_bytes": current_bytes,
-            "historical_snapshot_bytes": snapshot_bytes,
-            "total_fois_bytes": current_bytes + snapshot_bytes,
+            "historical_snapshot_bytes": snapshot_bytes + state_bytes,
+            "historical_observation_bytes": snapshot_bytes,
+            "historical_semantic_state_bytes": state_bytes,
+            "semantic_state_count": state_count,
+            "observation_count": snapshots,
+            "total_fois_bytes": current_bytes + snapshot_bytes + state_bytes,
             "overall_completeness": round(
                 sum(row.completeness for row in current) / len(current), 2,
             ) if current else 0.0,

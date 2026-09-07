@@ -56,7 +56,7 @@ from services.history import (
     history_progress_contracts,
     start_background_backfill,
 )
-from services.fois import fois_service
+from services.fois import fois_service, storage_summary as fois_storage_summary
 from src.core.fois import FOIS_MODEL_VERSION
 from src.core.fois.process_execution import (
     shutdown_fois_executor,
@@ -280,6 +280,8 @@ def _resource_health() -> dict[str, Any]:
         },
         "admission": resource_diagnostics.health(),
         "storage": storage,
+        "fois_storage": fois_storage_summary(),
+        "projection_storage": projection_service.storage(),
         "intelligence_memory": intelligence_checkpoint_store.health(),
         "sleeper_season_cache": sleeper_season_cache.health(),
     }

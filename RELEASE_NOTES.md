@@ -1,4 +1,17 @@
-# DTOS v1.15.0 - Trade Center Workspace & Mechanics
+# DTOS v1.15.1 - Lossless Storage Prerequisite
+
+Correct duplicate durable intelligence storage and full-database FOIS preparation
+without changing conclusions, historical evidence, ownership, or Trade mechanics.
+FOIS observations reference compressed semantic states; projection history shares
+unchanged player evidence. Scoped worker publication preserves unrelated leagues.
+Explicit maintenance uses bounded compact output, integrity/equivalence checks,
+and reversible serialization. No paid storage change or arbitrary history expiry.
+
+Production migration requires separate dry-run admission and the corrected
+deployment. See docs/STORAGE_PREREQUISITE_V1151.md. Batch 2 is not started.
+Current Visual, DINS and External Visual Mirror remain retired.
+
+## Previous release: v1.15.0 - Trade Center Workspace & Mechanics
 
 Master Roadmap Batch 1 only: one shared, temporary Trade Center workspace across
 Create, Trade For, Shop and Recommended entry points. Mobile and desktop use the

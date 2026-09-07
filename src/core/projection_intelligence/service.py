@@ -12,6 +12,8 @@ from statistics import mean, median
 from typing import Any
 
 from config import LEAGUE_ID, PROJECTION_DATABASE_FILE
+from src.core.projection_intelligence import state_storage
+from src.platform.storage_gate import connect
 from src.core.projection_intelligence.sleeper_provider import (
     PARSER_VERSION, SOURCE_CLASSIFICATION, freshness_state, parse_projection_feed,
 )
@@ -142,12 +144,13 @@ class ProjectionService:
 
     def _connect(self) -> sqlite3.Connection:
         self._database_file.parent.mkdir(parents=True, exist_ok=True)
-        connection = sqlite3.connect(self._database_file, timeout=15)
+        connection = connect(self._database_file, timeout=15)
         connection.row_factory = sqlite3.Row
         return connection
 
     def _initialize(self) -> None:
         with closing(self._connect()) as connection:
+            connection.executescript(state_storage.SCHEMA)
             connection.execute("CREATE TABLE IF NOT EXISTS projection_snapshots (snapshot_id TEXT PRIMARY KEY, league_id TEXT NOT NULL, season INTEGER NOT NULL, week INTEGER, generated_at TEXT NOT NULL, payload TEXT NOT NULL)")
             connection.execute("CREATE TABLE IF NOT EXISTS projection_actuals (snapshot_id TEXT NOT NULL, player_id TEXT NOT NULL, actual_points REAL NOT NULL, recorded_at TEXT NOT NULL, PRIMARY KEY(snapshot_id, player_id))")
             connection.execute("CREATE TABLE IF NOT EXISTS sleeper_projection_snapshots (fingerprint TEXT PRIMARY KEY, season INTEGER NOT NULL, week INTEGER NOT NULL, retrieved_at TEXT NOT NULL, payload TEXT NOT NULL)")
@@ -164,7 +167,7 @@ class ProjectionService:
             external = connection.execute("SELECT fingerprint, retrieved_at FROM sleeper_projection_snapshots ORDER BY retrieved_at DESC LIMIT 1").fetchone()
         try:
             if row:
-                restored = json.loads(row["payload"])
+                restored = self._decode_snapshot(row["payload"])
                 self._snapshot_restores = 1
                 self._restored_snapshot_identity = {
                     "schema_version": restored.get("schema_version"),
@@ -604,13 +607,12 @@ class ProjectionService:
             "consumer_migration": projection_consumer_health(),
             "sleeper_evidence_snapshot_id": (external_snapshot or {}).get("semantic_fingerprint"),
         }
-        payload = json.dumps(snapshot, sort_keys=True, separators=(",", ":"))
         with closing(self._connect()) as connection:
             existing = connection.execute("SELECT payload FROM projection_snapshots WHERE snapshot_id=?", (snapshot_id,)).fetchone()
             existing_snapshot = None
             if existing:
                 try:
-                    candidate = json.loads(existing["payload"])
+                    candidate = state_storage.decode(connection, existing["payload"])
                 except (TypeError, ValueError, json.JSONDecodeError):
                     candidate = None
                 if snapshot_compatibility(candidate)[0] == "compatible":
@@ -619,15 +621,21 @@ class ProjectionService:
             if existing_snapshot is not None:
                 snapshot = existing_snapshot
             elif existing:
+                payload = state_storage.encode(connection, snapshot)
                 connection.execute(
                     "UPDATE projection_snapshots SET league_id=?, season=?, week=?, generated_at=?, payload=? WHERE snapshot_id=?",
                     (league_id, season, week, generated_at, payload, snapshot_id),
                 )
                 connection.commit()
             else:
+                payload = state_storage.encode(connection, snapshot)
                 connection.execute("INSERT INTO projection_snapshots VALUES (?, ?, ?, ?, ?, ?)", (snapshot_id, league_id, season, week, generated_at, payload))
                 connection.commit()
         return snapshot, normalization, published
+
+    def _decode_snapshot(self, payload: str) -> dict[str, Any]:
+        with closing(self._connect()) as connection:
+            return state_storage.decode(connection, payload)
 
     def snapshot(self) -> dict[str, Any] | None:
         with self._lock:
@@ -651,7 +659,7 @@ class ProjectionService:
                 "ORDER BY generated_at DESC LIMIT 1", (league_id, int(week)),
             ).fetchone()
         if row:
-            candidate = json.loads(row["payload"])
+            candidate = self._decode_snapshot(row["payload"])
             if snapshot_compatibility(candidate)[0] == "compatible":
                 return candidate
         if not snapshot:
@@ -717,7 +725,7 @@ class ProjectionService:
         by_week: dict[str, list[float]] = {}
         availability_misses = 0
         for row in rows:
-            snapshot = json.loads(row["payload"])
+            snapshot = self._decode_snapshot(row["payload"])
             projection = (snapshot.get("players") or {}).get(row["player_id"]) or {}
             expected = projection.get("weekly_projected_points")
             if expected is not None:
@@ -754,6 +762,9 @@ class ProjectionService:
                 "actual_evaluation_rows": int(connection.execute(
                     "SELECT COUNT(*) FROM projection_actuals"
                 ).fetchone()[0]),
+                "projection_player_states": int(connection.execute(
+                    "SELECT COUNT(*) FROM projection_player_states"
+                ).fetchone()[0]),
             }
             payload_bytes = {
                 "raw_shared_provider_bytes": int(connection.execute(
@@ -761,6 +772,9 @@ class ProjectionService:
                 ).fetchone()[0]),
                 "derived_scoring_profile_bytes": int(connection.execute(
                     "SELECT COALESCE(SUM(LENGTH(payload)), 0) FROM projection_snapshots"
+                ).fetchone()[0]),
+                "projection_player_state_bytes": int(connection.execute(
+                    "SELECT COALESCE(SUM(LENGTH(payload)),0) FROM projection_player_states"
                 ).fetchone()[0]),
             }
         return {

@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.15.1 - Lossless Storage Prerequisite
+
+- Separate FOIS semantic states from observation provenance without discarding history.
+- Normalize historical projection player evidence while preserving exact snapshots and missing values.
+- Replace full FOIS database copies with scoped compute inputs and transactional publication.
+- Add bounded reversible compaction, logical-equivalence checks, connection fencing and storage counts.
+- Preserve all Batch 1 intelligence and isolation contracts; Batch 2 is not started.
+
 # v1.15.0 - Trade Center Workspace & Mechanics
 
 - Replace competing Trade Center pickers with one temporary, session/league/
