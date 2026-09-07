@@ -1,4 +1,19 @@
-# DTOS v1.14.1 — Matchups Evidence & Interaction Correctness
+# DTOS v1.15.0 - Trade Center Workspace & Mechanics
+
+Master Roadmap Batch 1 only: one shared, temporary Trade Center workspace across
+Create, Trade For, Shop and Recommended entry points. Mobile and desktop use the
+same asset selection, review, evaluation and adjustment state. Authenticated
+requests carry the existing session protection; ownership errors are separate
+from engine failures, and errors do not discard the proposal.
+
+Current ownership and league/franchise isolation remain authoritative. Neutral
+Market Balance is separate from bilateral Trade Intelligence. Missing evidence
+remains unavailable. No external trade execution, permanent draft storage,
+intelligence-methodology change or later roadmap batch is included.
+
+Current Visual, DINS and External Visual Mirror remain retired.
+
+## Previous release: v1.14.1 - Matchups Evidence & Interaction Correctness
 
 Narrow correction to pregame/live/final matchup labels, missing projection
 evidence, and existing player-dossier navigation. Pregame projections never

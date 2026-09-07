@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import unittest
+from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
@@ -25,6 +26,8 @@ class TradeCenterBrowserTests(unittest.TestCase):
             ]
 
         workspace = {
+            "workspace_context": {"binding": "fixture", "ownership_generation": "fixture"},
+            "manager_context": {"league_id": "fixture"},
             "teams": [
                 {"roster_id": 1, "team_name": "Active", "assets": assets("Active")},
                 {"roster_id": 2, "team_name": "Partner", "assets": assets("Partner")},
@@ -42,7 +45,10 @@ class TradeCenterBrowserTests(unittest.TestCase):
                     page.set_default_timeout(5_000)
 
                     def route(request_route) -> None:
-                        if request_route.request.url.endswith("/trades/create"):
+                        if "/static/" in request_route.request.url:
+                            path = request_route.request.url.split("dtos.test/", 1)[1]
+                            request_route.fulfill(content_type="text/css; charset=utf-8" if path.endswith(".css") else "text/javascript; charset=utf-8", body=Path(path).read_text(encoding="utf-8"))
+                        elif request_route.request.url.endswith("/trades/create"):
                             request_route.fulfill(status=200, content_type="text/html", body=html)
                         elif "/api/trades/workspace" in request_route.request.url:
                             request_route.fulfill(status=200, content_type="application/json", body=json.dumps(workspace))
@@ -55,44 +61,39 @@ class TradeCenterBrowserTests(unittest.TestCase):
                         wait_until="domcontentloaded",
                         timeout=10_000,
                     )
-                    page.wait_for_selector(".ti-roster-browser")
+                    page.get_by_label("Counterparty", exact=True).select_option("2")
 
                     def assert_filter(side: str, position: str) -> None:
-                        page.get_by_role("button", name=side, exact=True).click()
-                        page.get_by_role("button", name=position, exact=True).click()
+                        if width < 760:
+                            page.get_by_role("button", name=side, exact=True).click()
+                        board = page.locator("#trade-sent-board" if side == "My assets" else "#trade-received-board")
+                        board.get_by_role("button", name=position, exact=True).click()
                         expected = 5 if position == "ALL" else 1
-                        semantic = page.locator(".ti-asset-tile:not([hidden])").count()
-                        computed = page.locator(".ti-asset-tile").evaluate_all(
+                        semantic = board.locator(".tw-asset").count()
+                        computed = board.locator(".tw-asset").evaluate_all(
                             "nodes => nodes.filter(node => getComputedStyle(node).display !== 'none' && node.getBoundingClientRect().height > 0).length"
                         )
-                        visible_groups = page.locator(".ti-roster-group").evaluate_all(
-                            "nodes => nodes.filter(node => getComputedStyle(node).display !== 'none' && node.getBoundingClientRect().height > 0).length"
-                        )
-                        self.assertEqual((semantic, computed, visible_groups), (expected, expected, 1))
-                        expected_prefix = "Active" if side == "YOUR TEAM" else "Partner"
-                        labels = page.locator(".ti-asset-tile:not([hidden])").evaluate_all(
-                            "nodes => nodes.map(node => node.dataset.assetLabel)"
-                        )
+                        self.assertEqual((semantic, computed), (expected, expected))
+                        expected_prefix = "Active" if side == "My assets" else "Partner"
+                        labels = board.locator(".tw-asset b").all_text_contents()
                         self.assertTrue(all(label.startswith(expected_prefix) or label.startswith("2028") and expected_prefix in label for label in labels))
 
-                    for side in ("YOUR TEAM", "THEIR TEAM"):
+                    for side in ("My assets", "Their assets"):
                         for position in filters:
                             assert_filter(side, position)
 
-                    page.get_by_role("button", name="YOUR TEAM", exact=True).focus()
+                    assert_filter("My assets", "ALL")
+                    page.get_by_role("button", name="Add Active Quarterback — you send", exact=True).focus()
                     page.keyboard.press("Enter")
-                    page.get_by_role("button", name="ALL", exact=True).click()
-                    page.get_by_role("button", name="Add Active Quarterback to assets you send", exact=True).click()
-                    page.get_by_role("button", name="THEIR TEAM", exact=True).click()
-                    page.get_by_role("button", name="QB", exact=True).click()
-                    page.get_by_role("button", name="Add Partner Quarterback to assets you receive", exact=True).click()
-                    self.assertEqual(page.locator("#trade-sent-chips .ti-chip").count(), 1)
-                    self.assertEqual(page.locator("#trade-received-chips .ti-chip").count(), 1)
-                    totals = page.locator(".ti-market-balance strong").all_text_contents()
-                    page.get_by_role("button", name="PICKS", exact=True).click()
-                    self.assertEqual(page.locator("#trade-sent-chips .ti-chip").count(), 1)
-                    self.assertEqual(page.locator("#trade-received-chips .ti-chip").count(), 1)
-                    self.assertEqual(page.locator(".ti-market-balance strong").all_text_contents(), totals)
+                    assert_filter("Their assets", "QB")
+                    page.get_by_role("button", name="Add Partner Quarterback — you receive", exact=True).click()
+                    self.assertEqual(page.locator("#trade-sent-chips .tw-asset").count(), 1)
+                    self.assertEqual(page.locator("#trade-received-chips .tw-asset").count(), 1)
+                    totals = page.locator(".ti-market-balance").inner_text()
+                    assert_filter("Their assets", "PICKS")
+                    self.assertEqual(page.locator("#trade-sent-chips .tw-asset").count(), 1)
+                    self.assertEqual(page.locator("#trade-received-chips .tw-asset").count(), 1)
+                    self.assertEqual(page.locator(".ti-market-balance").inner_text(), totals)
                     self.assertFalse(page.locator(":focus").evaluate("node => node.hidden"))
                     page.close()
             browser.close()
@@ -102,6 +103,8 @@ class TradeCenterBrowserTests(unittest.TestCase):
             "active_team": {"roster_id": 1, "team_name": "Active"},
         }, "create")
         workspace = {
+            "workspace_context": {"binding": "fixture", "ownership_generation": "fixture"},
+            "manager_context": {"league_id": "fixture"},
             "teams": [
                 {"roster_id": 1, "team_name": "Active", "assets": [
                     {"asset_id": "a", "label": "Alpha", "kind": "player"},
@@ -141,7 +144,10 @@ class TradeCenterBrowserTests(unittest.TestCase):
 
             def route(request_route) -> None:
                 request = request_route.request
-                if request.url.endswith("/trades/create"):
+                if "/static/" in request.url:
+                    path = request.url.split("dtos.test/", 1)[1]
+                    request_route.fulfill(content_type="text/css; charset=utf-8" if path.endswith(".css") else "text/javascript; charset=utf-8", body=Path(path).read_text(encoding="utf-8"))
+                elif request.url.endswith("/trades/create"):
                     request_route.fulfill(status=200, content_type="text/html", body=html)
                 elif "/api/trades/workspace" in request.url:
                     request_route.fulfill(status=200, content_type="application/json", body=json.dumps(workspace))
@@ -168,45 +174,46 @@ class TradeCenterBrowserTests(unittest.TestCase):
 
             page.route("**/*", route)
             page.goto("https://dtos.test/trades/create")
-            page.wait_for_function("document.querySelectorAll('#trade-sent option').length === 5")
-            page.wait_for_selector(".ti-roster-browser")
-            self.assertEqual(page.get_by_role("button", name="YOUR TEAM", exact=True).count(), 1)
-            self.assertEqual(page.get_by_role("button", name="THEIR TEAM", exact=True).count(), 1)
-            self.assertEqual(page.get_by_role("button", name="PICKS", exact=True).count(), 1)
+            page.get_by_label("Counterparty", exact=True).select_option("2")
+            self.assertEqual(page.get_by_role("button", name="My assets", exact=True).count(), 1)
+            self.assertEqual(page.get_by_role("button", name="Their assets", exact=True).count(), 1)
+            self.assertEqual(page.locator('#trade-sent-board').get_by_role("button", name="PICKS", exact=True).count(), 1)
             self.assertEqual(page.locator(".ti-market-balance").count(), 1)
             for value in ("a", "b", "p"):
-                page.click("#trade-add-sent")
-                page.select_option("#trade-sent", value)
+                page.locator(f'#trade-sent-board button[data-asset-id="{value}"]').click()
+            page.get_by_role("button", name="Their assets", exact=True).click()
             for value in ("x", "y"):
-                page.click("#trade-add-received")
-                page.select_option("#trade-received", value)
-            self.assertEqual(page.locator("#trade-sent-chips .ti-chip").count(), 3)
-            self.assertEqual(page.locator("#trade-received-chips .ti-chip").count(), 2)
-            remove_buttons = page.locator("#trade-sent-chips .ti-chip button")
+                page.locator(f'#trade-received-board button[data-asset-id="{value}"]').click()
+            page.locator('#trade-tray-view').click()
+            self.assertEqual(page.locator("#trade-sent-chips .tw-asset").count(), 3)
+            self.assertEqual(page.locator("#trade-received-chips .tw-asset").count(), 2)
+            remove_buttons = page.locator("#trade-sent-chips .tw-asset button")
             self.assertEqual(
                 remove_buttons.evaluate_all("nodes => nodes.map(node => node.getAttribute('aria-label'))"),
-                ["Remove Alpha", "Remove Beta", "Remove 2027 Round 1 — EARLY"],
+                ["Remove Alpha — you send", "Remove Beta — you send", "Remove 2027 Round 1 — EARLY — you send"],
             )
             remove_buttons.nth(1).focus()
             page.keyboard.press("Enter")
-            self.assertEqual(page.locator("#trade-sent-chips .ti-chip").count(), 2)
+            self.assertEqual(page.locator("#trade-sent-chips .tw-asset").count(), 2)
             page.click("#trade-run")
-            page.wait_for_selector("text=MAKE THIS TRADE WORK")
+            page.locator('#trade-result h3').wait_for()
             self.assertEqual(requests[0]["assets_sent"], ["a", "p"])
             self.assertEqual(requests[0]["assets_received"], ["x", "y"])
 
             page.click("#trade-edit")
-            self.assertEqual(page.locator("#trade-sent-chips .ti-chip").count(), 2)
-            page.click("#trade-add-sent")
-            page.select_option("#trade-sent", "d")
+            self.assertEqual(page.locator("#trade-sent-chips .tw-asset").count(), 2)
+            page.get_by_role("button", name="My assets", exact=True).click()
+            page.locator('#trade-sent-board button[data-asset-id="d"]').click()
             page.click("#trade-run")
+            page.locator('#trade-result h3').wait_for()
             self.assertEqual(requests[1]["assets_sent"], ["a", "p", "d"])
 
             page.click("#trade-adjust")
             page.fill("#trade-instruction", "Don't trade Alpha. Use picks instead.")
             page.click("#trade-apply-adjust")
-            page.wait_for_function("document.querySelectorAll('#trade-sent-chips .ti-chip').length === 1")
-            self.assertIn("2027 Round 1", page.locator("#trade-sent-chips .ti-chip").inner_text())
+            page.get_by_role('button', name='Open editable offer:', exact=False).click()
+            self.assertEqual(page.locator('#trade-sent-chips .tw-asset').count(), 1)
+            self.assertIn("2027 Round 1", page.locator("#trade-sent-chips .tw-asset").inner_text())
             self.assertIn("Don't trade Alpha", requests[-1]["instruction"])
             self.assertEqual(requests[-1]["repair_mode"], "MAKE_THIS_TRADE_WORK")
             self.assertEqual(page.locator("body").evaluate("node => node.scrollWidth <= node.clientWidth"), True)

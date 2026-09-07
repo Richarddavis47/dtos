@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 from components.trade_intelligence import trade_workflow
 
@@ -115,19 +116,23 @@ class TradeRepairContractTests(unittest.TestCase):
         html = trade_workflow({
             "active_team": self.data["teams"][0], "teams": self.data["teams"],
         }, "trade-for")
-        self.assertGreaterEqual(html.count("row.proposal_presentation"), 2)
-        self.assertIn("'Send '+send+' → Receive '+receive", html)
+        self.assertIn('/static/js/trade_workspace.js', html)
+        script = (Path(__file__).parents[1] / "static/js/trade_workspace.js").read_text(encoding="utf-8")
+        self.assertIn('row.proposal_presentation?.send', script)
+        self.assertIn('row.proposal_presentation?.receive', script)
+        self.assertIn('Open editable offer:', script)
 
     def test_rendered_workflow_fails_closed_on_mismatched_repair_mode(self) -> None:
         html = trade_workflow({
             "active_team": self.data["teams"][0], "teams": self.data["teams"],
         }, "create")
-        self.assertIn("repair_mode:expected", html)
-        self.assertIn("body.requested_mode!==expected", html)
-        self.assertIn("body.returned_modes?.some(mode=>mode!==expected)", html)
-        self.assertIn("body.target_preserved!==true", html)
-        self.assertIn("row.proposal.assets_received.length!==chosen.received.length", html)
-        self.assertIn("DTOS rejected a mismatched repair mode.", html)
+        self.assertIn('/static/js/trade_workspace.js', html)
+        script = (Path(__file__).parents[1] / "static/js/trade_workspace.js").read_text(encoding="utf-8")
+        self.assertIn("body.requested_mode !== extra.repair_mode", script)
+        self.assertIn("body.returned_modes?.some(mode => mode !== extra.repair_mode)", script)
+        self.assertIn("body.target_preserved !== true", script)
+        self.assertIn("row.proposal.assets_received.length !== selected.received.length", script)
+        self.assertIn("DTOS rejected a mismatched repair mode.", script)
 
     def test_player_picker_uses_one_neutral_market_positional_rank_contract(self) -> None:
         players = [asset for pool in self.workspace["pools"].values() for asset in pool if asset.kind == "player"]

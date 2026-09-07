@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
 from components.trade_intelligence import (
     TRADE_CSS,
     _canonical_card,
-    _premium_trade_enhancement,
 )
 from src.ui.design_system import DESIGN_SYSTEM_CSS
 
@@ -100,9 +100,9 @@ class VisualFidelityTests(unittest.TestCase):
             ".ti-bilateral",
         ):
             self.assertIn(marker, TRADE_CSS)
-        enhancement = _premium_trade_enhancement()
-        self.assertIn(".ti-target-hero", enhancement)
-        self.assertIn("width:110px", enhancement)
+        workspace = (Path(__file__).parents[1] / "static/css/trade_workspace.css").read_text(encoding="utf-8")
+        for marker in (".tw-boards", ".tw-packages", ".tw-tray", "grid-template-columns:repeat(2,minmax(0,1fr))"):
+            self.assertIn(marker, workspace)
 
     def test_compact_header_preserves_responsive_actions_and_flow(self) -> None:
         """Height is content-driven; interaction and document flow are the contract."""

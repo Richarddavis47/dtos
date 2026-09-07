@@ -114,7 +114,8 @@ class TradeWorkflowConformanceTests(unittest.TestCase):
             page=lambda _, body: HTMLResponse(body),
         ))
         text = TestClient(app).get("/trades/create?front_office=1").text
-        self.assertEqual(text.count("+ Add player or pick"), 2)
+        self.assertIn('id="trade-sent-board"', text)
+        self.assertIn('id="trade-received-board"', text)
         self.assertIn("trade-sent-chips", text)
         self.assertIn("trade-received-chips", text)
         self.assertIn("Generate revised offer", text)
@@ -125,8 +126,8 @@ class TradeWorkflowConformanceTests(unittest.TestCase):
             "Make it more win-now", "Expand the trade",
         ):
             self.assertIn(label, text)
-        self.assertIn("runAssist(path)", text)
-        self.assertIn("Market fairness uses neutral canonical values", text)
+        self.assertIn('/static/js/trade_workspace.js', text)
+        self.assertIn("Market Balance is neutral market evidence", text)
         self.assertNotIn("Use protected and excluded assets to constrain the next generated search.", text)
 
     def test_ambiguous_structured_reference_fails_safely(self) -> None:
@@ -159,7 +160,7 @@ class TradeWorkflowConformanceTests(unittest.TestCase):
         self.assertEqual(result["dimensions"]["confidence"]["assessment"], "LOW")
         self.assertNotEqual(result["recommendation"], "WORTH PURSUING")
 
-    def test_preloaded_workflows_and_picker_use_ownership_aware_auto_run(self) -> None:
+    def test_preloaded_workflows_preserve_asset_and_offer_explicit_generation(self) -> None:
         view = build_trade_center(self.data, 1)
         owned = build_trade_workspace(self.data, 1)["pools"][1][0].asset_id
         external = build_trade_workspace(self.data, 1)["pools"][2][0].asset_id
@@ -168,8 +169,8 @@ class TradeWorkflowConformanceTests(unittest.TestCase):
         self.assertIn(f'data-preload-asset="{owned}"', shop)
         self.assertIn(f'data-preload-asset="{external}"', trade_for)
         self.assertIn('data-owner-roster="2"', trade_for)
-        self.assertIn("await run()", shop)
-        self.assertIn("onchange=()=>add('sent',s)", shop)
+        self.assertIn('id="trade-find"', shop)
+        self.assertIn('/static/js/trade_workspace.js', shop)
         self.assertIn("More adjustment options", shop)
 
     def test_shop_searches_all_counterparties_and_create_alternatives_are_bounded(self) -> None:

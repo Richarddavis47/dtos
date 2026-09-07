@@ -104,7 +104,7 @@ class TradeDiscoveryAndPresentationTests(unittest.TestCase):
     def test_wrong_side_ownership_is_rejected(self) -> None:
         data = fixture_data()
         workspace = build_trade_workspace(data, 1)
-        with self.assertRaisesRegex(ValueError, "canonical ownership"):
+        with self.assertRaisesRegex(ValueError, "no longer belongs to the selected sending franchise"):
             evaluate_trade_request(data, {
                 "active_roster_id": 1, "partner_roster_id": 2,
                 "assets_sent": [workspace["pools"][2][0].asset_id],
@@ -114,12 +114,12 @@ class TradeDiscoveryAndPresentationTests(unittest.TestCase):
     def test_mobile_workflow_exposes_asset_first_visual_contract(self) -> None:
         html = trade_workflow(build_trade_workflow_context(fixture_data(), 1), "trade-for")
         for contract in (
-            "ti-roster-browser", "ti-asset-tile", "ti-pick-tile",
-            "headshot_url", "League assets", "trade_value", "YOUR TEAM",
-            "THEIR TEAM", "PICKS", "Market Balance", "NEAR FAIR",
+            "trade-sent-board", "trade-received-board", "trade-tray",
+            "My assets", "Their assets", "Market Balance", "View Trade",
+            "Evaluate Trade", "trade-review",
         ):
             self.assertIn(contract, html)
-        self.assertIn("@media(max-width:760px)", html)
+        self.assertIn('/static/css/trade_workspace.css', html)
 
     def test_recommendation_cards_show_recognizable_assets_before_open(self) -> None:
         html = trade_center(build_trade_center(fixture_data(), 1))
