@@ -130,7 +130,8 @@ class PlayerValueProjectionTests(unittest.TestCase):
             sides.append({"roster_id": team["roster_id"], "team": team["team_name"], "lineup": lineup})
         summary = matchup_projection(self.data, sides)
         self.assertEqual(len(summary["sides"]), 2)
-        self.assertTrue(all(item["floor"] <= item["projected"] <= item["ceiling"] for item in summary["sides"]))
+        # This fixture has no canonical weekly forecast: missing is not a 0–0 range.
+        self.assertTrue(all(item["floor"] is None and item["projected"] is None and item["ceiling"] is None for item in summary["sides"]))
         self.assertNotIn("probability", summary)
 
     def test_matchup_aggregation_uses_nested_projection_snapshot_contract(self) -> None:

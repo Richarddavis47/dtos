@@ -1,5 +1,15 @@
 # Changelog
 
+# v1.14.1 — Matchups Evidence & Interaction Correctness
+
+- Compare canonical projections for pregame starter battles, current actuals for
+  live games, and final actual results for completed games.
+- Preserve missing projection totals/ranges as unavailable, including incomplete
+  bounds; genuine numeric zero remains valid evidence.
+- Link starter portraits/names to existing player dossiers with keyboard focus
+  and mobile tap targets. Preserve franchise links and active league context.
+- Keep v1.14.0 visual/FOIS architecture and retired visual publication unchanged.
+
 # v1.14.0 — Premium Visual System & UX Coherence
 
 - Establish one shared dark/navy, green-action, blue-value visual system across

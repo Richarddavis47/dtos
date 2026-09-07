@@ -72,14 +72,16 @@ def projection_presentation_value(total: Any, coverage: Any) -> Any | None:
 
 def matchup_game_state(data: dict[str, Any], sides: list[dict[str, Any]]) -> str:
     """Return the shared presentation state for matchup score evidence."""
-    if league_is_preseason(data):
-        return "pregame"
     statuses = {
         str(side.get("status") or side.get("game_status") or "").casefold()
         for side in sides
     }
     if statuses & {"final", "complete", "completed"}:
         return "final"
+    if statuses & {"live", "in-game", "in_game", "in_progress", "in-progress"}:
+        return "in-game"
+    if league_is_preseason(data):
+        return "pregame"
     if any(float(side.get("points") or 0) != 0 for side in sides):
         return "in-game"
     return "pregame"

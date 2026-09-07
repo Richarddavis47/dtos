@@ -1,4 +1,12 @@
-# DTOS v1.14.0 — Premium Visual System & UX Coherence
+# DTOS v1.14.1 — Matchups Evidence & Interaction Correctness
+
+Narrow correction to pregame/live/final matchup labels, missing projection
+evidence, and existing player-dossier navigation. Pregame projections never
+masquerade as live results; absent forecast bounds never become a zero range.
+All accepted v1.14.0 visual, isolation, checkpoint reuse and resource contracts
+remain unchanged. Current Visual, DINS and External Visual Mirror remain retired.
+
+## Previous release: v1.14.0 — Premium Visual System & UX Coherence
 
 Mobile-first presentation overhaul across Home, Trade Center, Team HQ, Market,
 player dossiers, League, matchups, draft capital, history, FOIS, Front Office,
