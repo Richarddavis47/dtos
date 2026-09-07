@@ -1,5 +1,19 @@
 # Changelog
 
+# v1.15.0 - Trade Center Workspace & Mechanics
+
+- Replace competing Trade Center pickers with one temporary, session/league/
+  franchise-scoped asset-board and editable proposal workspace.
+- Supply existing authenticated request protection on evaluation and adjustment;
+  distinguish stale ownership, invalid proposals and internal evaluation errors.
+- Preserve player/pick selections through filters, review, editing and refresh;
+  validate current ownership before evaluating, including traded draft picks.
+- Expose canonical bilateral reasoning, confidence, package quality and lineup
+  evidence without recalibrating intelligence or substituting missing evidence.
+- Preserve explicit target-repair modes, reject unresolved protected-asset names,
+  and keep generated offers editable without submitting anything to Sleeper.
+- Keep subsequent roadmap batches and retired visual publication systems off.
+
 # v1.14.1 — Matchups Evidence & Interaction Correctness
 
 - Compare canonical projections for pregame starter battles, current actuals for

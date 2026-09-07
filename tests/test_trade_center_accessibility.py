@@ -27,7 +27,7 @@ class TradeCenterAccessibilityTests(unittest.TestCase):
                         page.set_content(trade_workflow(view, workflow))
                         disclosure = page.locator("details")
                         hidden_actions = disclosure.locator("button")
-                        self.assertEqual(hidden_actions.count(), 8)
+                        self.assertEqual(hidden_actions.count(), 15)
                         self.assertTrue(all(hidden_actions.evaluate_all(
                             "nodes => nodes.map(node => Boolean(node.textContent.trim()))"
                         )))

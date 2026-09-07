@@ -169,7 +169,7 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                                             self.assertEqual(page.get_by_role("navigation", name="Primary navigation").get_by_role("link", name="My Team", exact=True).get_attribute("href"), "/teams/1")
                                             self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"), f"Horizontal overflow: {path}")
                                             if path.startswith("/trades/"):
-                                                page.locator(".ti-roster-browser").wait_for(state="visible")
+                                                page.locator("#trade-sent-board input[type=search]").wait_for(state="visible")
                                             accessibility = page.evaluate(A11Y_SCRIPT)
                                             for key in ("buttons_without_names", "links_without_names", "images_without_alt", "inputs_without_labels"):
                                                 self.assertEqual(accessibility[key], 0, (path, key))

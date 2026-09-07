@@ -33,6 +33,38 @@ class ManagerContextRequired(ValueError):
     """Raised when a league is known but the controlled franchise is not."""
 
 
+class TradeInputError(ValueError):
+    """Expected proposal rejection, distinct from an intelligence failure."""
+
+    def __init__(self, code: str, message: str, assets: tuple[str, ...] = ()):
+        super().__init__(message)
+        self.code, self.assets = code, assets
+
+
+def validate_trade_ownership(workspace: dict, payload: dict) -> None:
+    active, partner = int(payload.get("active_roster_id") or 0), int(payload.get("partner_roster_id") or 0)
+    pools = workspace["pools"]
+    if active not in pools or partner not in pools or active == partner:
+        raise TradeInputError("legality_rejected", "Choose two distinct franchises in this league.")
+    for field in ("assets_sent", "assets_received"):
+        values = payload.get(field)
+        if not isinstance(values, (list, tuple)) or any(not isinstance(value, str) or not value for value in values):
+            raise TradeInputError("invalid_proposal", "Select assets using the current trade workspace.")
+    sent, received = tuple(payload["assets_sent"]), tuple(payload["assets_received"])
+    if not sent or not received:
+        raise TradeInputError("legality_rejected", "Select at least one asset on each side.")
+    if len(set((*sent, *received))) != len(sent) + len(received):
+        raise TradeInputError("duplicate_asset", "An asset cannot appear twice or on both sides.")
+    assets = {a.asset_id: a for pool in pools.values() for a in pool}
+    missing = tuple(str(i) for i in (*sent, *received) if i not in assets)
+    if missing:
+        raise TradeInputError("missing_asset", "Trade needs refreshing: selected assets are no longer available in this league.", missing)
+    wrong = tuple(i for ids, owner in ((sent, active), (received, partner)) for i in ids if assets[i].source_roster_id != owner)
+    if wrong:
+        names = ", ".join(assets[i].label for i in wrong)
+        raise TradeInputError("ownership_changed", f"Trade needs refreshing: {names} no longer belongs to the selected sending franchise.", wrong)
+
+
 @dataclass(frozen=True)
 class ControlledManagerContext:
     league_id: str
@@ -181,6 +213,7 @@ def evaluate_trade_request(
     active_id = int(payload.get("active_roster_id") or 0)
     partner_id = int(payload.get("partner_roster_id") or 0)
     workspace = workspace or build_trade_workspace(data, active_id)
+    validate_trade_ownership(workspace, payload)
     teams = {int(team.get("roster_id") or 0): team for team in workspace["teams"]}
     if active_id not in teams or partner_id not in teams or active_id == partner_id:
         raise ValueError("A valid bilateral pair of distinct teams is required.")
@@ -196,19 +229,26 @@ def evaluate_trade_request(
     wrong_received = [item for item in received_ids if ownership[item] != partner_id]
     if wrong_sent or wrong_received:
         raise ValueError("Trade assets no longer match the selected managers' canonical ownership.")
-    evaluation = evaluate_bilateral(
-        proposal, active_team=teams[active_id], partner_team=teams[partner_id], league=data.get("league") or {},
-        player_database=data.get("players") or {}, ownership=ownership,
-        evidence_context=evidence_context or build_trade_evidence_context(
-            data, (assets[item] for item in (*sent_ids, *received_ids)),
-        ),
-    )
+    try:
+        evaluation = evaluate_bilateral(
+            proposal, active_team=teams[active_id], partner_team=teams[partner_id], league=data.get("league") or {},
+            player_database=data.get("players") or {}, ownership=ownership,
+            evidence_context=evidence_context or build_trade_evidence_context(
+                data, (assets[item] for item in (*sent_ids, *received_ids)),
+            ),
+        )
+    except Exception as exc:
+        # Once input/ownership checks passed, an evaluator exception is not a
+        # stale proposal and must not expose internal exception text to users.
+        raise RuntimeError("Canonical trade evaluation unavailable") from exc
     identity_input = {
         "league_id": str((data.get("league") or {}).get("league_id") or data.get("league_id") or ""),
         "active_roster_id": active_id, "partner_roster_id": partner_id,
         "assets_sent": sorted(sent_ids), "assets_received": sorted(received_ids),
         "market_generation": str((data.get("market_data") or {}).get("generation") or (data.get("market_data") or {}).get("generated_at") or "current"),
         "projection_generation": str((data.get("projection_intelligence") or {}).get("generation") or "current"),
+        "historical_generation": evaluation.get("provenance", {}).get("historical_context_generation"),
+        "result_digest": sha256(json.dumps(evaluation, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest(),
         "evaluator": "bilateral_trade_v2",
     }
     evaluation["provenance"]["evaluation_id"] = sha256(json.dumps(identity_input, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:24]
@@ -314,6 +354,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     """Return calculated repair/adjustment options, never static action labels."""
     active_id = int(payload.get("active_roster_id") or 0)
     workspace = build_trade_workspace(data, active_id)
+    validate_trade_ownership(workspace, payload)
     evidence_context = build_trade_evidence_context(
         data, (asset for pool in workspace["pools"].values() for asset in pool),
     )
@@ -340,8 +381,8 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     enriched["protected_assets"] = sorted(protected)
     enriched["excluded_assets"] = sorted(excluded)
     unresolved_reference = (
-        ("keep this player" in lowered or "do not trade this pick" in lowered) and not protected
-    ) or ("replace this asset" in lowered and not excluded)
+        any(prefix in lowered for prefix in ("don't trade", "do not trade", "keep ", "protect ")) and not protected
+    ) or (any(prefix in lowered for prefix in ("replace ", "exclude ", "not this ")) and not excluded)
     if unresolved_reference:
         return {
             "instruction": instruction,
@@ -530,6 +571,11 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
     if workflow == "trade_for" and target and ownership[target] == active_id:
         raise ValueError("Trade For requires an asset currently owned by another franchise.")
     partner_ids = [ownership[target]] if workflow == "trade_for" and target else [identifier for identifier in sorted(teams) if identifier != active_id]
+    requested_partner = int(payload.get("partner_roster_id") or 0)
+    if requested_partner:
+        if requested_partner not in partner_ids:
+            raise TradeInputError("legality_rejected", "The selected counterparty does not own the requested target or is not a valid trade partner.")
+        partner_ids = [requested_partner]
     generated = []
     evidence_context = build_trade_evidence_context(
         data, (asset for pool in workspace["pools"].values() for asset in pool),
