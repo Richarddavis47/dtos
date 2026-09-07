@@ -60,3 +60,11 @@ remains a failed event; its eight passed gate results are reused on the unchange
 product/test boundary, with the independently passed canonical HTTP worker and
 final process check completing the required local gate set. No duplicate full
 regression was run to replace valid evidence. Linux/PR/production gates remain.
+
+Independent Linux lifecycle run `34095674773` passed all scenarios; minimum
+effective headroom was 815.51MiB, one worker and zero restarts. PR Linux run
+`34095982049` also passed all three. PR browser run `34095981901` found mobile
+overflow. Browser-only diagnostic `34096335664` identified metric cells containing
+`Unavailable` forcing a 404px document inside a 375px viewport on Linux. The
+Matchups-only metric rule now permits shrinking and text wrapping; no content,
+viewport, font size, intelligence or acceptance threshold is removed.

@@ -162,6 +162,7 @@ a:has(>.player-summary):hover .player-summary-copy b{color:var(--accent)}
 .matchup-player-link{display:flex;min-height:44px;align-items:center;color:inherit;text-decoration:none;border-radius:10px}
 .matchup-player-link:hover{background:rgba(126,223,64,.08)}
 .matchup-player-link:focus-visible{outline:2px solid var(--accent,#80df40);outline-offset:3px}
+.matchup-summary-grid>.metric{min-width:0;overflow-wrap:anywhere}
 .battle-side,.bench-player{background:var(--background);border-color:var(--border)}
 .pick-asset-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:20px 0}
 .pick-asset-title{display:flex;gap:12px;align-items:center;min-height:52px}.pick-asset-title b{font-size:18px}.pick-asset-title small{display:block;color:var(--accent);font-size:12px}
