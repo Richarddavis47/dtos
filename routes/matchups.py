@@ -40,6 +40,32 @@ def _projection_value(value: Any) -> str:
     return f"{float(value):.2f}" if value is not None else "Unavailable"
 
 
+def _projection_range(side: dict[str, Any]) -> str:
+    floor, ceiling = side.get("floor"), side.get("ceiling")
+    if floor is None or ceiling is None:
+        return "Unavailable"
+    return f"{floor:.1f}–{ceiling:.1f}"
+
+
+def _battle_edge(*, state: str, left: Any, right: Any, left_name: str, right_name: str) -> tuple[str, str]:
+    """Pregame compares projections; live/final callers supply actual scores."""
+    if left is None or right is None:
+        return ("Projection unavailable" if state == "pregame" else "Score unavailable", "unavailable")
+    if left == right:
+        return ("Even projected battle" if state == "pregame" else "Final tie" if state == "final" else "Even battle", "tie")
+    winner = left_name if left > right else right_name
+    suffix = "projected edge" if state == "pregame" else "wins" if state == "final" else "leads"
+    return (f"{winner} {suffix}", "good" if left > right else "warn")
+
+
+def _player_identity(player: dict[str, Any], context: str | None = None) -> str:
+    identity = player_summary(player_id=str(player.get("id") or ""), name=str(player["name"]), position=player.get("position"), nfl_team=player.get("nfl_team"), context=context)
+    player_id = str(player.get("id") or "")
+    if not player_id or not all(c.isalnum() or c in {"-", "_"} for c in player_id):
+        return identity
+    return f'<a class="matchup-player-link" href="/players/{escape(player_id)}" aria-label="Open {escape(str(player["name"]))} player dossier">{identity}</a>'
+
+
 def _starter_projection_html(row: dict[str, Any] | None) -> str:
     projection = row or {}
     sleeper = projection.get("canonical_projection")
@@ -52,7 +78,7 @@ def _starter_projection_html(row: dict[str, Any] | None) -> str:
     technical = (
         f'<details><summary>Technical Details</summary><small>Provider: Sleeper. '
         f'Availability: {escape(str(projection.get("projection_availability") or "projected"))}. '
-        f'Confidence: {escape(str(projection.get("projection_confidence") or "Unavailable"))}%. '
+        f'Confidence: {escape(str(projection.get("projection_confidence") if projection.get("projection_confidence") is not None else "Unavailable"))}%. '
         f'DTOS consumes this league-scored value without blending a separate weekly forecast.</small></details>'
     )
     return (
@@ -127,6 +153,16 @@ def _team_projection_value(side: dict[str, Any]) -> Any | None:
         side.get("canonical_projection_total", side.get("sleeper_total")),
         side.get("canonical_projection_coverage", side.get("sleeper_coverage")),
     )
+
+
+def _complete_team_projection(side: dict[str, Any]) -> bool:
+    """Partial totals may be displayed with coverage, not compared as full teams."""
+    coverage = str(side.get("canonical_projection_coverage", side.get("sleeper_coverage", "")))
+    try:
+        available, expected = map(int, coverage.split("/"))
+    except (ValueError, TypeError):
+        return False
+    return expected > 0 and available == expected and _team_projection_value(side) is not None
 
 
 def create_matchups_router(
@@ -209,14 +245,14 @@ def create_matchups_router(
         production_ranks = _production_ranks(d)
         projection_summary = (
             f'<section class="card"><h3>Canonical Sleeper Starter Projections</h3><div class="matchup-summary-grid">'
-            f'<div class="metric"><b>{projected["sides"][0]["sleeper_total"]:.1f}</b><span>{escape(left["team"])} Sleeper Projection · {escape(projected["sides"][0]["sleeper_coverage"])} {escape(projected["sides"][0]["sleeper_status"])}</span></div>'
-            f'<div class="metric"><b>{projected["sides"][1]["sleeper_total"]:.1f}</b><span>{escape(right["team"])} Sleeper Projection · {escape(projected["sides"][1]["sleeper_coverage"])} {escape(projected["sides"][1]["sleeper_status"])}</span></div>'
+            f'<div class="metric"><b>{_projection_value(_team_projection_value(projected["sides"][0]))}</b><span>{escape(left["team"])} Sleeper Projection · {escape(projected["sides"][0]["sleeper_coverage"])} {escape(projected["sides"][0]["sleeper_status"])}</span></div>'
+            f'<div class="metric"><b>{_projection_value(_team_projection_value(projected["sides"][1]))}</b><span>{escape(right["team"])} Sleeper Projection · {escape(projected["sides"][1]["sleeper_coverage"])} {escape(projected["sides"][1]["sleeper_status"])}</span></div>'
             f'</div></section>'
             f'<section class="card"><h3>Projected Starter Outlook · {escape(projected["status"])}</h3><div class="matchup-summary-grid">'
-            f'<div class="metric"><b>{projected["sides"][0]["projected"]:.1f}</b><span>{escape(left["team"])} Projection</span></div>'
-            f'<div class="metric"><b>{projected["sides"][1]["projected"]:.1f}</b><span>{escape(right["team"])} Projection</span></div>'
-            f'<div class="metric"><b>{projected["sides"][0]["floor"]:.1f}–{projected["sides"][0]["ceiling"]:.1f}</b><span>{escape(left["team"])} Range</span></div>'
-            f'<div class="metric"><b>{projected["sides"][1]["floor"]:.1f}–{projected["sides"][1]["ceiling"]:.1f}</b><span>{escape(right["team"])} Range</span></div>'
+            f'<div class="metric"><b>{_projection_value(projected["sides"][0]["projected"])}</b><span>{escape(left["team"])} Projection</span></div>'
+            f'<div class="metric"><b>{_projection_value(projected["sides"][1]["projected"])}</b><span>{escape(right["team"])} Projection</span></div>'
+            f'<div class="metric"><b>{_projection_range(projected["sides"][0])}</b><span>{escape(left["team"])} Range</span></div>'
+            f'<div class="metric"><b>{_projection_range(projected["sides"][1])}</b><span>{escape(right["team"])} Range</span></div>'
             f'<div class="metric"><b>{escape(projected["largest_advantage"])}</b><span>Largest Advantage</span></div>'
             f'<div class="metric"><b>{escape(projected["highest_volatility"])}</b><span>Highest Volatility</span></div>'
             f'<div class="metric"><b>{escape(projected["confidence"])}</b><span>Projection Confidence · {projected["missing"]} missing</span></div></div></section>'
@@ -225,25 +261,26 @@ def create_matchups_router(
             '<p>Sleeper has not published canonical starter projections for this matchup. DTOS does not substitute zeroes or fabricate an outlook.</p></section>'
         )
         margin = abs(float(left["points"]) - float(right["points"]))
-        if game_state == "pregame" and not projections_available:
+        comparable = all(_complete_team_projection(side) for side in projected["sides"][:2])
+        if game_state == "pregame" and not comparable:
             headline = "Pregame projections unavailable"
             hero_state = "not-started"
             banner_state = "upcoming"
         elif game_state == "pregame":
-            favorite = left["team"] if projected["sides"][0]["projected"] > projected["sides"][1]["projected"] else right["team"] if projected["sides"][1]["projected"] > projected["sides"][0]["projected"] else "Even matchup"
+            favorite = left["team"] if _team_projection_value(projected["sides"][0]) > _team_projection_value(projected["sides"][1]) else right["team"] if _team_projection_value(projected["sides"][1]) > _team_projection_value(projected["sides"][0]) else "Even matchup"
             headline = f'{favorite} projected edge' if favorite != "Even matchup" else favorite
             hero_state = "not-started"
             banner_state = "upcoming"
         elif left["points"] == right["points"]:
-            headline = "Matchup is tied"
+            headline = "Final result: tie" if game_state == "final" else "Matchup is tied"
             hero_state = "tied-game"
             banner_state = "tied"
         elif left["points"] > right["points"]:
-            headline = f'{left["team"]} leads by {margin:.2f}'
+            headline = f'{left["team"]} {"wins" if game_state == "final" else "leads"} by {margin:.2f}'
             hero_state = "leading-left"
             banner_state = "leading"
         else:
-            headline = f'{right["team"]} leads by {margin:.2f}'
+            headline = f'{right["team"]} {"wins" if game_state == "final" else "leads"} by {margin:.2f}'
             hero_state = "leading-right"
             banner_state = "leading"
         score_total = float(left["points"]) + float(right["points"])
@@ -285,27 +322,28 @@ def create_matchups_router(
                 right_state += " vacant"
                 right_result = "Vacant"
 
-            left_score_rows = _team_score_html(actual=left_points, projected=(projected_by_roster.get(int(left.get("roster_id") or 0), {}).get(str(lp.get("id"))) or {}).get("canonical_projection"), state=game_state)
-            right_score_rows = _team_score_html(actual=right_points, projected=(projected_by_roster.get(int(right.get("roster_id") or 0), {}).get(str(rp.get("id"))) or {}).get("canonical_projection"), state=game_state)
+            left_projection = (projected_by_roster.get(int(left.get("roster_id") or 0), {}).get(str((lp or {}).get("id"))) or {}).get("canonical_projection")
+            right_projection = (projected_by_roster.get(int(right.get("roster_id") or 0), {}).get(str((rp or {}).get("id"))) or {}).get("canonical_projection")
+            left_score_rows = _team_score_html(actual=left_points, projected=left_projection, state=game_state)
+            right_score_rows = _team_score_html(actual=right_points, projected=right_projection, state=game_state)
             left_html = (
-                f'<div class="battle-player">{player_summary(player_id=str(lp.get("id") or ""), name=str(lp["name"]), position=str(lp.get("position") or ""), nfl_team=str(lp.get("nfl_team") or "—"), context=production_ranks.get(str(lp.get("id") or "")))}</div>'
+                f'<div class="battle-player">{_player_identity(lp, production_ranks.get(str(lp.get("id") or "")))}</div>'
                 f'<div class="battle-points">{left_score_rows}</div>'
                 f'{"" if game_state == "pregame" else f"<span class=\"battle-result\">{left_result}</span>"}'
             ) if lp else '<div class="battle-player"><b>Vacant</b><span>No starter assigned</span></div><div class="battle-points">—</div><span class="battle-result">Vacant</span>'
             right_html = (
-                f'<div class="battle-player">{player_summary(player_id=str(rp.get("id") or ""), name=str(rp["name"]), position=str(rp.get("position") or ""), nfl_team=str(rp.get("nfl_team") or "—"), context=production_ranks.get(str(rp.get("id") or "")))}</div>'
+                f'<div class="battle-player">{_player_identity(rp, production_ranks.get(str(rp.get("id") or "")))}</div>'
                 f'<div class="battle-points">{right_score_rows}</div>'
                 f'{"" if game_state == "pregame" else f"<span class=\"battle-result\">{right_result}</span>"}'
             ) if rp else '<div class="battle-player"><b>Vacant</b><span>No starter assigned</span></div><div class="battle-points">—</div><span class="battle-result">Vacant</span>'
-            if left_points > right_points:
-                edge_label = f'{left["owner"]} edge'
-                edge_class = 'good'
-            elif right_points > left_points:
-                edge_label = f'{right["owner"]} edge'
-                edge_class = 'warn'
-            else:
-                edge_label = 'Even battle'
-                edge_class = 'tie'
+            edge_label, edge_class = _battle_edge(state=game_state, left=left_projection if game_state == "pregame" else (left_points if lp else None), right=right_projection if game_state == "pregame" else (right_points if rp else None), left_name=left["team"], right_name=right["team"])
+            if game_state == "pregame":
+                left_state = "winning" if edge_class == "good" else "losing" if edge_class == "warn" else "tied"
+                right_state = "losing" if edge_class == "good" else "winning" if edge_class == "warn" else "tied"
+                if not lp:
+                    left_state += " vacant"
+                if not rp:
+                    right_state += " vacant"
             left_top_class = " top-performer" if lp and combined_top and lp.get("name") == combined_top.get("name") and float(lp.get("points", 0) or 0) == float(combined_top.get("points", 0) or 0) and float(combined_top.get("points", 0) or 0) > 0 else ""
             right_top_class = " top-performer" if rp and combined_top and rp.get("name") == combined_top.get("name") and float(rp.get("points", 0) or 0) == float(combined_top.get("points", 0) or 0) and float(combined_top.get("points", 0) or 0) > 0 else ""
             battle_top_class = " top-battle" if left_top_class or right_top_class else ""
@@ -357,11 +395,11 @@ def create_matchups_router(
         top_scorer_text = f'{combined_top["name"]} · {combined_top["points"]:.2f}' if combined_top else "No points yet"
         storyline = (
             "Sleeper has not published enough canonical starter projections to compare these lineups yet."
-            if not projections_available else
+            if not comparable else
             f'{left["team"]} has the stronger pregame projection, while {right["team"]} can close the gap through the highlighted lineup battles.'
-            if projected["sides"][0]["projected"] > projected["sides"][1]["projected"] else
+            if _team_projection_value(projected["sides"][0]) > _team_projection_value(projected["sides"][1]) else
             f'{right["team"]} has the stronger pregame projection, while {left["team"]} can close the gap through the highlighted lineup battles.'
-            if projected["sides"][1]["projected"] > projected["sides"][0]["projected"] else
+            if _team_projection_value(projected["sides"][1]) > _team_projection_value(projected["sides"][0]) else
             "The available pregame projections are even; lineup execution is the clearest differentiator."
         )
         hero_scores = (
