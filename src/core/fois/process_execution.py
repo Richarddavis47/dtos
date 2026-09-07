@@ -181,6 +181,8 @@ def _compute_fois_payload(payload: dict[str, Any]) -> dict[str, Any]:
     from src.core.fois.repository import FOISRepository
     from src.core.fois.service import FOISService
     from src.core.history_context import canonical_history_store
+    from src.core.intelligence_memory import intelligence_checkpoint_store
+    from src.core.intelligence_memory.checkpoint_flight import checkpoint_read_flight
 
     league_id = str(payload["league_id"])
     data, source_bytes = _load_compact_fois_input(
@@ -192,18 +194,21 @@ def _compute_fois_payload(payload: dict[str, Any]) -> dict[str, Any]:
     canonical_history_store.update_current(league_id, data)
     repository = FOISRepository(Path(payload["fois_database"]))
     history_metrics: dict[str, Any] = {}
-    service = FOISService(
-        repository,
-        history_loader=lambda selected: load_results_history(
-            canonical_history_store, selected, metrics=history_metrics,
-        ),
-    )
     started = perf_counter()
-    scores = service._generate_sync(data)
+    with checkpoint_read_flight(intelligence_checkpoint_store) as reader:
+        service = FOISService(
+            repository,
+            history_loader=lambda selected: load_results_history(
+                canonical_history_store, selected, metrics=history_metrics,
+                checkpoint_reader=reader,
+            ),
+        )
+        scores = service._generate_sync(data)
+        history_metrics["checkpoint_flight"] = reader.metrics()
     duration_ms = round((perf_counter() - started) * 1000, 3)
     record(
         "fois_child_phase", phase="compute", status="completed",
-        duration_ms=duration_ms, records=len(scores),
+        duration_ms=duration_ms, records=len(scores), history_metrics=history_metrics,
     )
     return {
         "status": "complete",
@@ -231,13 +236,23 @@ def _prepare_working_database(source: Path, target: Path) -> None:
 
 def _validate_and_publish(
     working_path: Path, repository: Any, league_id: str, expected: int,
+    checkpoint_generation: str,
 ) -> tuple[tuple[Any, ...], dict[str, object]]:
     from src.core.fois.repository import FOISRepository
+    from src.core.intelligence_memory import intelligence_checkpoint_store
+    from src.core.intelligence_memory.checkpoint_flight import (
+        CheckpointGenerationChanged, checkpoint_read_flight,
+    )
 
     working = FOISRepository(working_path)
     working_scores = tuple(working.league(league_id, FOIS_MODEL_VERSION))
     if len(working_scores) != expected:
         raise RuntimeError("FOIS compute publication count mismatch.")
+    # The portable content identity crosses the process boundary, unlike SQLite
+    # data_version. Recheck after IPC before replacing the last-valid database.
+    with checkpoint_read_flight(intelligence_checkpoint_store) as reader:
+        if not checkpoint_generation or reader.generation != checkpoint_generation:
+            raise CheckpointGenerationChanged("Checkpoint evidence advanced before FOIS publication.")
     os.replace(working_path, repository.path)
     return _read_published(repository, league_id)
 
@@ -311,6 +326,7 @@ async def generate_fois_isolated(
         scores, canonical = await asyncio.to_thread(
             _validate_and_publish, working_database, repository, league_id,
             int(result["records"]),
+            str((result.get("history_metrics", {}).get("checkpoint_flight") or {}).get("generation") or ""),
         )
         await asyncio.to_thread(
             record, "fois_phase", phase="publication", status="completed",

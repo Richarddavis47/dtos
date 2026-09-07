@@ -35,7 +35,7 @@ class DesignSystemTests(unittest.TestCase):
             with self.subTest(title=title):
                 html = page_header(title, league_name="Dynasty League", last_updated="2026-08-03T12:00:00Z")
                 self.assertIn('data-dtos-component="page-header"', html)
-                self.assertIn('data-design-system="1.2"', html)
+                self.assertIn('data-design-system="2.0"', html)
                 self.assertIn(f"<h1>{title}</h1>", html)
                 self.assertIn("League Sync", html)
                 self.assertIn('class="ds-action primary"', html)
@@ -80,15 +80,15 @@ class DesignSystemTests(unittest.TestCase):
         self.assertIn("overflow-x:auto", DESIGN_SYSTEM_CSS)
         self.assertIn("@media(max-width:760px)", DESIGN_SYSTEM_CSS)
         self.assertIn("min-height:44px", DESIGN_SYSTEM_CSS)
-        self.assertRegex(TEAM_HQ_CSS, r"max-width:460px[^}]+\.thq-intel\{grid-template-columns:1fr")
+        self.assertIn(".thq-intel{grid-template-columns:1fr}", TEAM_HQ_CSS)
         navigation = manager_navigation("League")
         self.assertEqual(navigation.split("</nav>", 1)[0].count("<a "), 5)
-        self.assertIn('aria-current="page">League</a>', navigation)
+        self.assertRegex(navigation, r'aria-current="page"><svg[^>]+>.*?</svg>League</a>')
         self.assertIn("position:fixed", DESIGN_SYSTEM_CSS)
 
     def test_approved_visual_language_excludes_reference_editor_chrome(self) -> None:
         self.assertIn("--accent", DESIGN_SYSTEM_CSS)
-        self.assertIn("manager-nav a:before", DESIGN_SYSTEM_CSS)
+        self.assertIn(".nav-icon", DESIGN_SYSTEM_CSS)
         html = manager_navigation("Trade") + page_header(
             "Trade Intelligence", league_name="Dynasty League", last_updated="today",
         )
@@ -126,14 +126,19 @@ class DesignSystemTests(unittest.TestCase):
         )
         market = (
             header
-            + '<h2>Know the market.</h2>'
-            + '<form aria-label="Asset Market filters"></form>'
+            + '<form aria-label="Asset Market filters" method="get" action="/market">'
+            + '<input name="q"><select name="position"></select>'
+            + '<select name="availability"></select><select name="sort"></select></form>'
             + '<table><caption>Canonical dynasty asset rankings</caption></table>'
             + '<p>Values remain separate; unavailable evidence is never substituted.</p>'
             + '<p>Dataset <code>market-dataset-1</code></p>'
         ).encode()
         market_identity = validate_asset_market_contract(market, "/market")
         self.assertEqual(market_identity, "market-dataset-1")
+        with self.assertRaisesRegex(AssertionError, "filter controls missing"):
+            validate_asset_market_contract(market.replace(b'name="q"', b'name="wrong"'), "/market")
+        with self.assertRaisesRegex(AssertionError, "must submit a GET"):
+            validate_asset_market_contract(market.replace(b'action="/market"', b'action="/wrong"'), "/market")
 
     def test_market_detail_requires_canonical_brain_recommendation(self) -> None:
         valid = {

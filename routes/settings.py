@@ -49,10 +49,14 @@ def create_settings_router(
         )
         body = f"""
 <h2>League Configuration</h2>
+<section class="card"><h3>Starting Lineup &amp; Roster Positions</h3><p>{positions}</p><p class="muted">Rules below belong to the active league.</p></section>
 <div class="grid">
-  <div class="card"><h3>Roster Positions</h3><p>{positions}</p></div>
-  <div class="card" id="sync-status">
-    <h3>Front Office</h3>
+  <div class="card ds-table-wrap"><h3>Scoring Settings</h3><table><tbody>{scoring_rows}</tbody></table></div>
+  <div class="card ds-table-wrap"><h3>League Settings</h3><table><tbody>{setting_rows}</tbody></table></div>
+</div>
+<details class="card" id="sync-status"><summary>Application &amp; source status</summary>
+  <div class="ds-table-wrap">
+    <h3>Application Identity</h3>
     <table><tbody>
       <tr><td>DTOS version</td><td>{escape(VERSION)}</td></tr>
       <tr><td>Build</td><td>{BUILD_NUMBER}</td></tr>
@@ -60,12 +64,7 @@ def create_settings_router(
       <tr><td>Latest commit</td><td>{escape(commit)}</td></tr>
     </tbody></table>
   </div>
-</div>
-<div class="grid">
-  <div class="card"><h3>Scoring Settings</h3><table><tbody>{scoring_rows}</tbody></table></div>
-  <div class="card"><h3>League Settings</h3><table><tbody>{setting_rows}</tbody></table></div>
-</div>
-<div class="card"><h3>Provider Activation Dashboard</h3><p class="muted">Authentication, licensing, availability, reliability, failures, and scheduling remain explicit. Disabled sources do not block DTOS.</p><table><thead><tr><th>Provider</th><th>Status</th><th>Licensing</th><th>Freshness</th><th>Reliability</th><th>Missing Configuration / Failure</th><th>Next Refresh</th></tr></thead><tbody>{provider_rows}</tbody></table></div>
+<div class="ds-table-wrap"><h3>Provider Activation Dashboard</h3><p class="muted">Authentication, licensing, availability, reliability, failures, and scheduling remain explicit. Disabled sources do not block DTOS.</p><table><thead><tr><th>Provider</th><th>Status</th><th>Licensing</th><th>Freshness</th><th>Reliability</th><th>Missing Configuration / Failure</th><th>Next Refresh</th></tr></thead><tbody>{provider_rows}</tbody></table></div></details>
 """
         return page("League Settings", body)
 

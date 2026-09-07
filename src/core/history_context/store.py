@@ -357,7 +357,7 @@ class CanonicalHistoryStore:
     def records(
         self, league_id: str, entity_type: str | None, *, season: int | None = None,
         week: int | None = None, franchise_id: str | None = None,
-        player_id: str | None = None, limit: int = 100, offset: int = 0,
+        player_id: str | None = None, limit: int | None = 100, offset: int = 0,
     ) -> tuple[int, list[dict[str, Any]]]:
         if season is not None:
             seasons = [season]
@@ -390,7 +390,7 @@ class CanonicalHistoryStore:
             and (franchise_id is None or row["franchise_id"] == franchise_id)
             and (player_id is None or row["player_id"] == player_id)
         )]
-        return len(rows), rows[offset:offset + limit]
+        return len(rows), rows[offset:] if limit is None else rows[offset:offset + limit]
 
     def identities(self) -> list[dict[str, Any]]:
         with self._lock:

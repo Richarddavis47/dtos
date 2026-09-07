@@ -285,7 +285,7 @@ def create_fois_router(
         cards = "".join(
             f'<article class="card fois-leader" data-fois-current="true" data-fois-rank="{rank}" data-fois-gm="{escape(score.gm_id or "")}">'
             f'<div class="fois-rank"><span>League Rank</span><b>#{rank}</b></div>'
-            f'<div><p class="eyebrow">CURRENT · {exact_rank(rank, len(ranked_scores))}</p><h3>{escape(score.gm_name or "GM")}</h3>'
+            f'<div><p class="eyebrow">CURRENT · {exact_rank(rank, len(ranked_scores))}</p><h3><a href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}">{escape(score.gm_name or "GM")}</a></h3>'
             f'<p class="muted">{escape(score.franchise_name or "Current franchise")}</p></div>'
             f'<div class="fois-score"><b>{score.overall_score if score.overall_score is not None else "—"}</b><span>{escape(score.overall_letter_grade or "Insufficient evidence")}</span></div>'
             f'<div class="fois-evidence"><b>{score.confidence:.0f}% confidence</b><span>{score.completeness:.0f}% evidence coverage · {score.supported_weight:.0f}% supported weight</span></div>'
@@ -310,11 +310,11 @@ def create_fois_router(
         else:
             health = service.repository.canonical_health(selected_league_id, FOIS_MODEL_VERSION)
             content = (
-                f'<section class="summary-grid" data-fois-leaderboard-count="{len(ranked_scores)}">'
-                f'<article class="metric"><b>{len(ranked_scores)}</b><span>Current GMs</span></article>'
-                f'<article class="metric"><b>{health["duplicate_current_count"]}</b><span>Duplicate current profiles</span></article>'
-                f'<article class="metric"><b>{health["historical_snapshot_count"]}</b><span>Historical snapshots</span></article></section>'
+                f'<p class="fois-count" data-fois-leaderboard-count="{len(ranked_scores)}"><b>{len(ranked_scores)}</b> Current GMs · One current assessment per manager</p>'
                 f'<section id="executive-profiles" class="fois-leaderboard">{cards}</section>'
+                '<details class="technical-details"><summary>Profile coverage and integrity</summary>'
+                f'<p>Duplicate current profiles: {health["duplicate_current_count"]}</p>'
+                f'<p>Historical snapshots: {health["historical_snapshot_count"]}</p></details>'
             )
 
         body = (

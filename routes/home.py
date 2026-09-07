@@ -82,7 +82,7 @@ def create_home_router(
         record = record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=not preseason)
         ranking_label = "preseason outlook" if preseason else "current league outlook"
         competitive = f'#{outlook.get("rank", "—")} in the {ranking_label}' if outlook.get("rank") else f'{ranking_label.title()} not yet available'
-        header = f'''<div class="ux-command-grid"><article class="ux-feature"><p class="identity-kicker">Your front office · {escape(str(team.get("owner") or "Unassigned"))}</p><h2>{escape(str(team.get("team_name") or "Franchise"))}</h2><p class="ux-feature-copy"><b>{escape("Preseason" if preseason else record)}</b> · {escape(competitive)}. DTOS has organized the current league evidence around the decisions that matter to this franchise.</p><div class="ux-feature-actions"><a class="ux-primary-action" href="/teams/{roster_id}">Open My Team</a><a class="ux-secondary-action" href="/trades?front_office={roster_id}">Work the trade desk</a></div></article><aside class="card ux-signal-rail"><div class="identity-kicker">Right now</div><div class="ux-signal"><span class="ux-signal-icon">#</span><span><b>{escape(str(outlook.get("rank") or "—"))}</b><small>{escape(ranking_label)}</small></span><span>→</span></div><div class="ux-signal"><span class="ux-signal-icon">◎</span><span><b>{len(team.get("players") or [])} players</b><small>{len(team.get("picks_owned") or [])} future picks</small></span><span>→</span></div><div class="ux-signal"><span class="ux-signal-icon">⇄</span><span><b>Trade desk</b><small>Bilateral opportunities</small></span><span>→</span></div></aside></div>{selector}'''
+        header = f'''<div class="ux-command-grid"><article class="ux-feature"><p class="identity-kicker">Your front office · {escape(str(team.get("owner") or "Unassigned"))}</p><h2>{escape(str(team.get("team_name") or "Franchise"))}</h2><p class="ux-feature-copy"><b>{escape("Preseason" if preseason else record)}</b> · {escape(competitive)}. DTOS has organized the current league evidence around the decisions that matter to this franchise.</p><div class="ux-feature-actions"><a class="ux-primary-action" href="/teams/{roster_id}">Open My Team</a><a class="ux-secondary-action" href="/trades?front_office={roster_id}">Work the trade desk</a></div></article><aside class="card ux-signal-rail"><div class="identity-kicker">Right now</div><a class="ux-signal" href="/league"><span class="ux-signal-icon">#</span><span><b>{escape(str(outlook.get("rank") or "—"))}</b><small>{escape(ranking_label)}</small></span><span aria-hidden="true">→</span></a><a class="ux-signal" href="/teams/{roster_id}#assets"><span class="ux-signal-icon">◎</span><span><b>{len(team.get("players") or [])} players</b><small>{len(team.get("picks_owned") or [])} future picks</small></span><span aria-hidden="true">→</span></a><a class="ux-signal" href="/trades?front_office={roster_id}"><span class="ux-signal-icon">⇄</span><span><b>Trade desk</b><small>Bilateral opportunities</small></span><span aria-hidden="true">→</span></a></aside></div>{selector}'''
 
         actions = [
             ("Review your team direction", "See the current roster assessment, needs, and core assets.", f"/teams/{roster_id}"),
@@ -148,10 +148,22 @@ def create_home_router(
                 for team in ordered
             )
         else:
+            ordered = teams
             standings = "".join(
                 f'<tr><td>{index}</td><td><a href="/teams/{int(team.get("roster_id") or 0)}">{escape(str(team.get("team_name") or "Team"))}</a></td><td>{escape(record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=True))}</td><td>{escape(f"{float(team['points_for']):.2f}" if team.get("points_for") is not None else "Unavailable")}</td></tr>'
                 for index, team in enumerate(teams, start=1)
             )
+        franchise_rows = []
+        for index, team in enumerate(ordered, start=1):
+            roster_id = int(team.get("roster_id") or 0)
+            rank = directory.get(roster_id, {}).get("rank") if preseason else index
+            record = "Preseason outlook" if preseason else record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=True)
+            points = "" if preseason else (f"{float(team['points_for']):,.2f} PF" if team.get("points_for") is not None else "Points unavailable")
+            medal = f" rank-{rank}" if rank in (1, 2, 3) else ""
+            identity = escape(str(team.get("team_name") or "Team"))
+            content = f'<span class="league-place{medal}" aria-label="Rank {escape(str(rank or "Unavailable"))}">{escape(str(rank or "—"))}</span><span class="league-franchise"><b>{identity}</b><span>{escape(str(record))}</span></span><span class="league-points">{escape(points)}</span>'
+            franchise_rows.append(f'<a class="league-standing" href="/teams/{roster_id}">{content}<span aria-hidden="true">›</span></a>' if roster_id > 0 else f'<div class="league-standing">{content}</div>')
+        visual_standings = '<div class="league-standings">' + "".join(franchise_rows) + '</div>'
         destinations = (
             ("Matchups", "Weekly competition and starter evidence", "/matchups"),
             ("FOIS", "General-manager performance and confidence", "/fois"),
@@ -162,7 +174,7 @@ def create_home_router(
         links = '<div class="grid">' + "".join(f'<a class="card" href="{href}"><h3>{title}</h3><p class="muted">{description}</p></a>' for title, description, href in destinations) + "</div>"
         body = (
             _section("Preseason League Briefing" if preseason else "League Recap", "A league-wide view, separate from your personal front office", f'<div class="card ux-recap"><p>{escape("Regular-season games have not started. Review roster direction, recent activity, market movement, and Week 1 preparation." if preseason else f"{len(teams)} franchises · Week {data.get('week') or '—'} · Season {(data.get('league') or {}).get('season') or '—'}")}</p></div>')
-            + _section("Preseason Rankings" if preseason else "Current Rankings", "Preseason team outlook—not current results or FOIS" if preseason else "Current-season results—not FOIS", f'<div class="card ds-table-wrap"><table><thead><tr><th>Rank</th><th>Franchise</th><th>{"State" if preseason else "Record"}</th><th>{"" if preseason else "Points"}</th></tr></thead><tbody>{standings}</tbody></table></div>')
+            + _section("Preseason Rankings" if preseason else "Current Rankings", "Preseason team outlook—not current results or FOIS" if preseason else "Current-season results—not FOIS", visual_standings + f'<details><summary>Compare standings in detail</summary><div class="card ds-table-wrap"><table><thead><tr><th>Rank</th><th>Franchise</th><th>{"State" if preseason else "Record"}</th><th>{"" if preseason else "Points"}</th></tr></thead><tbody>{standings}</tbody></table></div></details>')
             + _section("League Intelligence", "Competition, management, activity, and history", links)
         )
         return page("League", body)

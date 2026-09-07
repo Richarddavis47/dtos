@@ -868,26 +868,32 @@ class IntelligenceCheckpointStore:
         self, *, asset_id: str, limit: int = 500,
     ) -> list[Any]:
         """Project durable observations through the canonical Step 1 read contract."""
+        with self._connect() as connection:
+            return self._global_market_checkpoints(connection, asset_id=asset_id, limit=limit)
+
+    def _global_market_checkpoints(
+        self, connection: sqlite3.Connection, *, asset_id: str, limit: int = 500,
+    ) -> list[Any]:
+        """The same projection for ordinary reads and a flight's read snapshot."""
         from src.core.historical_intelligence.models import GlobalMarketCheckpoint
 
         bounded = max(1, min(int(limit), 500))
-        with self._connect() as connection:
-            rows = connection.execute(
-                """SELECT * FROM global_market_observations
-                WHERE asset_id=? ORDER BY observed_at DESC LIMIT ?""",
-                (str(asset_id), bounded),
-            ).fetchall()
-            identities = [str(row["observation_id"]) for row in rows]
-            reason_rows = connection.execute(
-                """SELECT r.observation_id,r.trigger_type,c.knowledge_state
-                FROM market_observation_references r
-                JOIN intelligence_checkpoints c ON c.checkpoint_id=r.checkpoint_id
-                WHERE r.observation_id IN (
-                  SELECT observation_id FROM global_market_observations
-                  WHERE asset_id=? ORDER BY observed_at DESC LIMIT ?
-                ) ORDER BY r.observation_id,r.trigger_type,c.knowledge_state""",
-                (str(asset_id), bounded),
-            ).fetchall()
+        rows = connection.execute(
+            """SELECT * FROM global_market_observations
+            WHERE asset_id=? ORDER BY observed_at DESC LIMIT ?""",
+            (str(asset_id), bounded),
+        ).fetchall()
+        identities = [str(row["observation_id"]) for row in rows]
+        reason_rows = connection.execute(
+            """SELECT r.observation_id,r.trigger_type,c.knowledge_state
+            FROM market_observation_references r
+            JOIN intelligence_checkpoints c ON c.checkpoint_id=r.checkpoint_id
+            WHERE r.observation_id IN (
+              SELECT observation_id FROM global_market_observations
+              WHERE asset_id=? ORDER BY observed_at DESC LIMIT ?
+            ) ORDER BY r.observation_id,r.trigger_type,c.knowledge_state""",
+            (str(asset_id), bounded),
+        ).fetchall()
         reasons: dict[str, set[str]] = {identity: set() for identity in identities}
         relationships: dict[str, set[str]] = {identity: set() for identity in identities}
         for row in reason_rows:

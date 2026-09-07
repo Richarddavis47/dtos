@@ -2,18 +2,96 @@
 from __future__ import annotations
 
 from html import escape
+from urllib.parse import quote
+from typing import TYPE_CHECKING
 
-from src.core.trade_intelligence import TradeDossier
 from src.ui import recommendation_panel
+
+if TYPE_CHECKING:
+    from src.core.trade_intelligence import TradeDossier
 
 TRADE_CSS = """
 <style>
-.ti-hero{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}.ti-hero h2{margin:3px 0}.ti-selector select{background:#0b1727;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px}.ti-workflows{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.ti-workflow{display:block;background:#101d2d;border:1px solid var(--line);border-radius:12px;padding:13px;color:var(--text);text-decoration:none}.ti-workflow b{display:block;color:var(--accent);margin-bottom:5px}.ti-workflow span{font-size:12px;color:var(--muted)}.ti-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.ti-action{border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--accent);background:#07111f}.ti-list{display:grid;gap:13px;margin-top:15px}.ti-card{background:linear-gradient(180deg,#14263d,#0b1727);border:1px solid var(--line);border-radius:15px;padding:15px}.ti-head{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:start}.ti-priority{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold)}.ti-score{font-size:24px;font-weight:950;color:var(--accent);text-align:right}.ti-score small{display:block;font-size:9px;color:var(--muted)}.ti-assets{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin:12px 0}.ti-package{background:#101d2d;border:1px solid var(--line);border-radius:11px;padding:11px}.ti-package span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase}.ti-package b{display:block;margin-top:5px}.ti-arrow{color:var(--accent);font-weight:950}.ti-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.ti-metric{background:#07111f;border:1px solid var(--line);border-radius:9px;padding:8px}.ti-metric b{display:block}.ti-metric span{font-size:9px;color:var(--muted)}.ti-details summary{cursor:pointer;color:var(--accent);font-weight:850;margin-top:11px}.ti-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:9px}.ti-section{background:#101d2d;border:1px solid var(--line);border-radius:10px;padding:10px}.ti-section h4{margin:0 0 6px}.ti-section ul{padding-left:18px}.ti-empty{padding:34px;text-align:center;color:var(--muted)}
-.ti-builder{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ti-builder label{display:grid;gap:5px;color:var(--muted);font-size:12px}.ti-builder select,.ti-builder input{width:100%;background:#07111f;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px}.ti-side{background:#101d2d;border:1px solid var(--line);border-radius:12px;padding:12px}.ti-picker{display:grid;grid-template-columns:1fr auto;gap:7px}.ti-chips{display:flex;flex-wrap:wrap;gap:7px;min-height:36px;margin-top:9px}.ti-chip{display:inline-flex;gap:7px;align-items:center;background:#07111f;border:1px solid var(--line);border-radius:999px;padding:6px 9px}.ti-chip button{border:0;background:transparent;color:var(--muted);cursor:pointer}.ti-assist{display:grid;gap:8px;margin-top:12px}.ti-quick{display:flex;flex-wrap:wrap;gap:6px}.ti-result{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#07111f}.ti-result[hidden]{display:none}.ti-result h4{margin:0 0 6px}.ti-result p{margin:5px 0}.ti-values{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted)}
-.ti-proposal-asset{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;margin-top:8px}.ti-proposal-asset img,.ti-proposal-asset .ti-pick-icon{width:38px;height:38px;border-radius:9px;object-fit:cover}.ti-proposal-asset small{display:block;color:var(--muted)}.ti-proposal-asset strong{color:var(--accent)}
-.ti-hero{position:relative;overflow:hidden;min-height:190px;align-items:end;padding:28px 30px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:radial-gradient(circle at 88% 14%,rgba(93,242,55,.18),transparent 26%),linear-gradient(120deg,#0c2130,#07111b)}.ti-hero:after{content:"";position:absolute;left:30px;bottom:0;width:78px;height:3px;background:var(--accent)}.ti-hero h2{font-size:clamp(32px,5vw,50px);line-height:1;margin:7px 0}.ti-hero p{max-width:650px;font-size:15px}.ti-selector label{display:block;margin-bottom:6px;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.ti-selector select{min-height:44px;background:var(--surface-0);border-color:var(--line-strong);border-radius:var(--radius-sm)}.ti-workflows{padding:5px;margin:0 0 24px;background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0}.ti-workflow{position:relative;text-align:center;background:transparent;border-color:transparent;border-radius:var(--radius-md);transition:background .15s ease,border-color .15s ease,transform .15s ease}.ti-workflow:hover{transform:translateY(-1px);background:rgba(93,242,55,.06);border-color:rgba(93,242,55,.26)}.ti-workflow b{font-size:14px}.ti-action{min-height:42px;border-radius:var(--radius-sm);font-weight:900;cursor:pointer}.ti-actions .ti-action:first-child,#trade-run{background:linear-gradient(135deg,var(--accent),var(--accent-strong));border-color:var(--accent);color:#071108;box-shadow:0 8px 20px rgba(93,242,55,.14)}.ti-list{gap:18px}.ti-card{position:relative;overflow:hidden;padding:0;background:linear-gradient(145deg,var(--surface-2),var(--surface-1));border-color:rgba(93,242,55,.24);border-radius:20px;box-shadow:var(--shadow-card)}.ti-card:before{display:none}.ti-head{padding:16px 18px 12px;border-bottom:1px solid var(--line)}.ti-head h3{font-size:18px;margin:9px 0 0}.ti-opportunity-label{display:flex;justify-content:space-between;gap:12px;align-items:center}.ti-confidence{color:var(--accent);font-weight:950}.ti-priority{display:inline-flex;padding:4px 7px;border-radius:6px;background:rgba(93,242,55,.11);color:var(--accent)}.ti-franchises{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;padding:15px 18px 0}.ti-franchise:last-child{text-align:right}.ti-franchise b,.ti-franchise span{display:block}.ti-franchise span{color:var(--muted);font-size:11px}.ti-score{color:var(--accent)}.ti-assets{padding:0 18px}.ti-package{padding:8px 12px;background:rgba(6,11,18,.56);border:0;border-radius:var(--radius-md)}.ti-package>span:first-child{color:var(--blue);font-weight:900;letter-spacing:.08em}.ti-arrow{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(93,242,55,.30);border-radius:50%;background:rgba(93,242,55,.06)}.ti-proposal-asset{min-height:58px;padding:7px 0;border-bottom:1px solid rgba(34,52,73,.65)}.ti-proposal-asset:last-child{border-bottom:0}.ti-proposal-asset img,.ti-proposal-asset .ti-pick-icon{width:48px;height:48px;border-radius:11px}.ti-proposal-asset b{font-size:14px}.ti-proposal-asset strong{font-size:18px}.ti-values{padding:12px 18px;margin:0;justify-content:space-between}.ti-bilateral{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(6,11,18,.38)}.ti-reason{padding:15px 18px;line-height:1.45}.ti-reason+.ti-reason{border-left:1px solid var(--line)}.ti-reason span{display:block;margin-bottom:5px;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.ti-card-action{display:block;margin:14px 18px 18px;padding:13px;text-align:center;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:#071108;font-weight:950;text-transform:uppercase;letter-spacing:.035em}.ti-metric{background:rgba(6,11,18,.58)}.ti-details{margin:0;padding:0 18px 16px;border:0}.ti-details summary{padding:8px 0}.ti-builder{margin-top:14px;gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden}.ti-side{background:linear-gradient(145deg,var(--surface-2),var(--surface-1));border:0;border-radius:0;padding:18px}.ti-side+.ti-side{border-left:1px solid var(--line)}.ti-result{border-radius:var(--radius-md);background:var(--surface-0)}.ti-empty{display:grid;place-items:center;min-height:260px;padding:38px;border-style:dashed;background:radial-gradient(circle,rgba(93,242,55,.05),transparent 66%);line-height:1.6}
-@media(max-width:760px){.ti-workflows{grid-template-columns:1fr 1fr}.ti-builder{grid-template-columns:1fr}.ti-head{grid-template-columns:1fr}.ti-assets{grid-template-columns:1fr}.ti-arrow{text-align:center;transform:rotate(90deg)}.ti-metrics{grid-template-columns:repeat(2,1fr)}.ti-grid{grid-template-columns:1fr}}
-@media(max-width:760px){.ti-hero{padding:22px 4px;min-height:150px}.ti-hero:after{left:4px}.ti-workflows{grid-template-columns:repeat(4,minmax(72px,1fr));overflow:visible}.ti-workflow{min-width:0;padding:11px 5px}.ti-workflow b{font-size:11px}.ti-workflow span{display:none}.ti-franchises{padding:14px 14px 0}.ti-assets{padding:0 14px}.ti-bilateral{grid-template-columns:1fr}.ti-reason+.ti-reason{border-left:0;border-top:1px solid var(--line)}.ti-side+.ti-side{border-left:0;border-top:1px solid var(--line)}}
+.ti-hero{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:18px;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)}
+.ti-hero h2{font-size:26px;margin:4px 0}.ti-hero p{font-size:14px;color:var(--text-secondary);max-width:620px;margin:8px 0}
+.ti-selector label{display:grid;gap:6px;font-size:12px;color:var(--muted)}
+#trade-builder>label{display:grid;gap:6px;font-size:13px;color:var(--text-secondary);margin-bottom:14px}#trade-builder>label select{width:100%}
+.ti-workflows{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;margin:12px 0 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md)}
+.ti-workflow{display:block;padding:12px;text-align:center;border-radius:var(--radius-sm)}
+.ti-workflow:hover{background:var(--surface-interactive)}
+.ti-workflow b{display:block;color:var(--accent);font-size:14px}
+.ti-workflow span{font-size:12px;color:var(--muted)}
+.ti-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ti-action{display:inline-flex;justify-content:center;align-items:center;min-height:44px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-weight:650;cursor:pointer}
+.ti-actions .ti-action:first-child,#trade-run{background:var(--accent);color:#0c1908;border-color:var(--accent)}
+.ti-list{display:grid;gap:16px;margin-top:20px}
+@media(min-width:1100px){.ti-list{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.ti-list>.ti-empty{grid-column:1/-1}}
+.ti-card{border:1px solid #365334;border-radius:var(--radius-lg);background:var(--surface);overflow:hidden}
+.ti-head{padding:16px 18px 8px}
+.ti-head h3{font-size:19px;margin:10px 0 0}
+.ti-opportunity-label{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.ti-priority{display:inline-flex;padding:4px 8px;background:rgba(128,223,66,.09);color:var(--positive);border-radius:6px;font-size:11px;font-weight:700}
+.ti-confidence{font-size:12px;color:var(--text-secondary);text-align:right}
+.ti-score{font-size:24px;color:var(--blue)}.ti-score small{font-size:12px;color:var(--muted);display:block}
+.ti-franchises{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;padding:12px 18px}
+.ti-franchise:last-child{text-align:right}.ti-franchise b,.ti-franchise span{display:block}.ti-franchise span{font-size:12px;color:var(--muted)}
+.ti-arrow{display:grid;place-items:center;color:var(--accent);font-size:22px}
+.ti-assets{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);gap:8px;margin:0;padding:0 18px}
+.ti-package{min-width:0;padding:10px;background:var(--background);border:1px solid var(--border);border-radius:var(--radius-md)}
+.ti-package>span:first-child{display:block;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.ti-proposal-asset{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.ti-proposal-asset:last-child{border:0}
+.ti-proposal-asset img,.ti-proposal-asset .ti-pick-icon{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--surface-interactive)}
+.ti-pick-icon{display:grid;place-items:center;font-size:10px;color:var(--gold)}
+.ti-proposal-asset b{font-size:14px}.ti-proposal-asset small{display:block;font-size:11px;color:var(--muted)}
+.ti-proposal-asset strong{font-size:17px;color:var(--blue);font-variant-numeric:tabular-nums}
+a.ti-proposal-asset:hover b{color:var(--accent)}
+.ti-values{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 18px;color:var(--muted);font-size:12px}
+.ti-bilateral{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.ti-reason{padding:14px 18px;color:var(--text-secondary);font-size:13px;line-height:1.55}
+.ti-reason+.ti-reason{border-left:1px solid var(--border)}
+.ti-reason span{display:block;margin-bottom:6px;color:var(--text);font-weight:650}
+.ti-details{padding:0 18px 16px}
+.ti-details summary{cursor:pointer}
+.ti-card-action{display:block;text-align:center;list-style:none;padding:12px;margin:14px 0 0;background:var(--accent);color:#0c1908;font-weight:700;border-radius:var(--radius-sm);min-height:44px}
+.ti-card-action::-webkit-details-marker{display:none}
+.ti-card-action:after{content:" +";margin-left:8px}
+details[open]>.ti-card-action:after{content:" −"}
+.ti-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.ti-metric,.ti-section{padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md)}
+.ti-metric b{display:block}.ti-metric span{font-size:12px;color:var(--muted)}
+.ti-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ti-section h4{margin:0 0 8px}
+.ti-builder{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:16px}
+.ti-builder label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+.ti-builder input,.ti-builder select{width:100%}
+.ti-side{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);min-width:0}
+.ti-side h4{margin:0 0 12px;font-size:16px}
+.ti-picker{display:grid;gap:8px}
+.ti-chips{display:flex;flex-wrap:wrap;gap:8px;min-height:44px;margin-top:10px}
+.ti-chip{display:inline-flex;align-items:center;gap:8px;padding:4px 8px 4px 12px;background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.ti-chip button{background:transparent;border:0;color:var(--muted);min-width:36px}
+.ti-assist{display:grid;gap:8px;margin-top:12px}
+.ti-assist[hidden],.ti-result[hidden]{display:none}
+.ti-quick{display:flex;gap:8px;flex-wrap:wrap}.ti-quick button{padding:8px 12px}
+.ti-result{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface)}
+.ti-result h4{margin:0 0 8px}.ti-result p{margin:8px 0}
+.ti-empty{padding:28px;text-align:center;color:var(--muted);line-height:1.6}
+.ti-empty h3{color:var(--text);font-size:22px}.ti-empty .ti-actions{justify-content:center}
+@media(max-width:760px){
+ .ti-hero{padding:16px}.ti-hero h2{font-size:24px}
+ .ti-workflow{padding:12px 4px}.ti-workflow b{font-size:12px}.ti-workflow span{display:none}
+ .ti-builder{grid-template-columns:1fr}.ti-grid{grid-template-columns:1fr}
+ .ti-head{padding:14px 14px 8px}.ti-head h3{font-size:18px}
+ .ti-franchises{padding:12px 14px}.ti-assets{padding:0 12px;gap:6px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .ti-assets>.ti-arrow{display:none}.ti-package{padding:8px}
+ .ti-proposal-asset{grid-template-columns:36px minmax(0,1fr);gap:6px}
+ .ti-proposal-asset img,.ti-proposal-asset .ti-pick-icon{width:36px;height:40px}
+ .ti-proposal-asset b{font-size:12px}.ti-proposal-asset small{font-size:11px}
+ .ti-proposal-asset strong{grid-column:2;font-size:16px}
+ .ti-reason{padding:12px;font-size:12px}.ti-details{padding:0 12px 12px}
+ .ti-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ti-values{padding:12px}.ti-confidence{font-size:11px}
+}
 </style>
 """
 
@@ -35,7 +113,7 @@ def manager_context_selection(teams: list[dict], *, workflow: str | None = None)
 def _premium_trade_enhancement() -> str:
     """Load the asset-first mobile layer after initial page readiness."""
     return '''<style>
-.ti-roster-browser{margin:18px 0}.ti-target-hero{text-align:left;display:grid;grid-template-columns:110px 1fr;align-items:center;gap:4px 20px;margin:14px 0 20px;padding:20px 24px;border:1px solid rgba(93,242,55,.28);border-radius:20px;background:radial-gradient(circle at 90% 10%,rgba(93,242,55,.15),transparent 30%),linear-gradient(145deg,#102536,#08131e)}.ti-target-hero>img,.ti-target-hero>.ti-pick-icon{grid-row:1/5;width:110px;height:110px;margin:0;border-radius:18px;object-fit:cover}.ti-target-hero h3{font-size:32px;margin:0}.ti-target-hero p{margin:0;font-size:16px}.ti-target-hero small,.ti-target-hero>span:first-child{color:var(--muted)}.ti-browser-controls,.ti-position-filters{display:flex;gap:7px;overflow-x:auto;margin:9px 0}.ti-browser-controls button,.ti-position-filters button{min-height:38px;border:1px solid var(--line);border-radius:999px;background:#07111f;color:var(--muted);padding:6px 12px}.ti-browser-controls button[aria-pressed="true"],.ti-position-filters button[aria-pressed="true"]{color:#07111f;background:var(--accent);border-color:var(--accent)}.ti-browser-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ti-roster-group{display:grid;gap:7px;align-content:start}.ti-roster-group[hidden],.ti-asset-tile[hidden]{display:none}.ti-asset-tile{display:grid;grid-template-columns:42px 1fr auto;gap:9px;align-items:center;min-height:58px;padding:7px;text-align:left;color:var(--text);background:#07111f;border:1px solid var(--line);border-radius:11px}.ti-asset-tile[aria-pressed="true"]{outline:2px solid var(--accent);background:#102c3b}.ti-asset-tile img,.ti-pick-icon{width:42px;height:42px;border-radius:9px;object-fit:cover;background:#16283f}.ti-pick-icon{display:grid;place-items:center;color:var(--gold);font-size:9px;font-weight:900}.ti-asset-tile span,.ti-asset-tile b,.ti-asset-tile small{display:block}.ti-asset-tile small{color:var(--muted)}.ti-asset-tile strong{color:var(--accent)}.ti-market-balance{display:grid;gap:7px;margin:14px 0;padding:14px;background:#0b1727;border-radius:13px}.ti-market-balance div{display:flex;justify-content:space-between}.ti-market-balance small{color:var(--muted)}@media(max-width:760px){.ti-target-hero{grid-template-columns:82px 1fr;padding:15px;gap:3px 12px}.ti-target-hero>img,.ti-target-hero>.ti-pick-icon{width:82px;height:82px}.ti-target-hero h3{font-size:24px}.ti-browser-grid{grid-template-columns:1fr}.ti-asset-tile{min-height:64px}}
+.ti-roster-browser{margin:18px 0}.ti-target-hero{text-align:left;display:grid;grid-template-columns:110px 1fr;align-items:center;gap:4px 20px;margin:14px 0 20px;padding:20px 24px;border:1px solid rgba(93,242,55,.28);border-radius:20px;background:radial-gradient(circle at 90% 10%,rgba(93,242,55,.15),transparent 30%),linear-gradient(145deg,#102536,#08131e)}.ti-target-hero>img,.ti-target-hero>.ti-pick-icon{grid-row:1/5;width:110px;height:110px;margin:0;border-radius:18px;object-fit:cover}.ti-target-hero h3{font-size:32px;margin:0}.ti-target-hero p{margin:0;font-size:16px}.ti-target-hero small,.ti-target-hero>span:first-child{color:var(--muted)}.ti-browser-controls,.ti-position-filters{display:flex;gap:7px;overflow-x:auto;margin:9px 0}.ti-browser-controls button,.ti-position-filters button{min-height:44px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);padding:6px 12px}.ti-browser-controls button[aria-pressed="true"],.ti-position-filters button[aria-pressed="true"]{color:#07111f;background:var(--accent);border-color:var(--accent)}.ti-browser-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ti-roster-group{display:grid;gap:7px;align-content:start}.ti-roster-group[hidden],.ti-asset-tile[hidden]{display:none}.ti-asset-tile{display:grid;grid-template-columns:42px 1fr auto;gap:9px;align-items:center;min-height:58px;padding:7px;text-align:left;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:11px}.ti-asset-tile[aria-pressed="true"]{outline:2px solid var(--accent);background:#102c3b}.ti-asset-tile img,.ti-pick-icon{width:42px;height:42px;border-radius:9px;object-fit:cover;background:#16283f}.ti-pick-icon{display:grid;place-items:center;color:var(--gold);font-size:11px;font-weight:900}.ti-asset-tile span,.ti-asset-tile b,.ti-asset-tile small{display:block}.ti-asset-tile small{color:var(--muted)}.ti-asset-tile strong{color:var(--accent)}.ti-market-balance{display:grid;gap:7px;margin:14px 0;padding:14px;background:var(--surface-elevated);border-radius:13px}.ti-market-balance div{display:flex;justify-content:space-between}.ti-market-balance small{color:var(--muted)}@media(max-width:760px){.ti-target-hero{grid-template-columns:82px 1fr;padding:15px;gap:3px 12px}.ti-target-hero>img,.ti-target-hero>.ti-pick-icon{width:82px;height:82px}.ti-target-hero h3{font-size:24px}.ti-browser-grid{grid-template-columns:1fr}.ti-asset-tile{min-height:64px}}
 </style><script>
 window.addEventListener('load', async () => {
   const root = document.getElementById('trade-builder'); if (!root) return;
@@ -105,7 +183,7 @@ def trade_card(dossier: TradeDossier, value_impact: dict | None = None) -> str:
 <article class="ti-card"><div class="ti-head"><div><div class="ti-priority">{escape(rec.priority.value)} · {escape(rec.trade_type.value)} · {escape(dossier.proposal.package_type)}</div><h3>{escape(rec.title)}</h3><p class="muted">{escape(dossier.executive_summary)}</p></div><div class="pill">{dossier.partner.compatibility_score}% compatibility<br>{escape(dossier.partner.difficulty)}</div><div class="ti-score">{rec.expected_value:+d}<small>Expected Value</small></div></div>
 <div class="ti-assets"><div class="ti-package"><span>Send</span><b>{_assets(dossier.proposal.assets_sent)}</b></div><div class="ti-arrow">→</div><div class="ti-package"><span>Receive</span><b>{_assets(dossier.proposal.assets_received)}</b></div></div>
 <div class="ti-metrics"><div class="ti-metric"><b>{impact.current_outlook:+d}</b><span>Current Outlook</span></div><div class="ti-metric"><b>{impact.future_outlook:+d}</b><span>Future Outlook</span></div><div class="ti-metric"><b>{impact.positional_depth:+d}</b><span>Depth</span></div><div class="ti-metric"><b>{impact.asset_value:+d}</b><span>Asset Value</span></div><div class="ti-metric"><b>{rec.confidence}%</b><span>Confidence</span></div></div>
-<div class="ti-actions"><button class="ti-action" type="button">Edit Trade</button><button class="ti-action" type="button">Adjust Offer</button><button class="ti-action" type="button">Compare</button></div>
+<div class="ti-actions"><a class="ti-action" href="/trades/create?front_office={dossier.proposal.active_roster_id}">Open Trade Builder</a></div>
 <details class="ti-details"><summary>Open Trade Dossier</summary><div class="ti-grid"><section class="ti-section"><h4>Why Both Sides Improve</h4><p><b>Active:</b> {escape(dossier.why_active_improves)}</p><p><b>Partner:</b> {escape(dossier.why_partner_improves)}</p><p>{escape(dossier.why_realistic)}</p><p>{escape(dossier.why_now)}</p></section><section class="ti-section"><h4>Strengths</h4><ul>{strengths}</ul><h4>Weaknesses</h4><ul>{weaknesses}</ul></section><section class="ti-section"><h4>Risk</h4><ul>{risks}</ul><p>Acceptance likelihood: <b>{rec.acceptance_likelihood if rec.acceptance_likelihood is not None else 'Unavailable'}</b></p></section><section class="ti-section"><h4>Negotiation Plan</h4><p><b>Opening:</b> {escape(plan.opening_offer)}</p><p><b>Minimum offer:</b> {escape(plan.minimum_offer)}</p><p><b>Maximum offer:</b> {escape(plan.maximum_offer)}</p><p><b>Likely counter:</b> {escape(plan.likely_counter)}</p><p><b>Walk-away:</b> {escape(plan.walk_away_point)}</p><p><b>Fallback:</b> {escape(plan.fallback_offer)}</p><p><b>Alternatives:</b> {escape(alternatives)}</p></section>{market_section}{integrated}<section class="ti-section"><h4>Supporting Evidence</h4><ul>{_evidence(dossier)}</ul></section></div></details></article>
 """
 
@@ -174,10 +252,16 @@ def _canonical_card(row: dict) -> str:
                 str(item.get("position") or ""),
                 str(item.get("positional_rank") or item.get("projected_range") or ""),
             )))
+            identity = str(item.get("asset_id") or "")
+            href = f'/players/{quote(identity.removeprefix("player:"), safe="")}' if kind == "player" and identity else None
+            tag = "a" if href else "span"
+            destination = f' href="{escape(href, quote=True)}"' if href else ""
+            value = item.get("market_value")
+            shown_value = f"{int(value):,}" if value is not None else "Unavailable"
             rendered.append(
-                f'<span class="ti-proposal-asset {"ti-player-tile" if kind == "player" else "ti-pick-tile"}">'
+                f'<{tag}{destination} class="ti-proposal-asset {"ti-player-tile" if kind == "player" else "ti-pick-tile"}">'
                 f'{image}<span><b>{escape(str(item.get("label") or item.get("asset_id") or "Asset"))}</b>'
-                f'<small>{escape(context)}</small></span><strong>{int(item.get("market_value") or 0)}</strong></span>'
+                f'<small>{escape(context)}</small></span><strong>{shown_value}</strong></{tag}>'
             )
         return "".join(rendered)
 
@@ -191,7 +275,12 @@ def _canonical_card(row: dict) -> str:
     history_reasons = "".join(
         f"<li>{escape(str(reason))}</li>" for reason in historical.get("reasons", ())
     )
-    return f'''<article class="ti-card"><div class="ti-head"><div class="ti-opportunity-label"><div class="ti-priority">{escape(str(evaluation["recommendation"]))} · {escape(str(best_for))}</div><div class="ti-confidence">{escape(str(confidence))} confidence</div></div><h3>{escape(str(evaluation["dominant_reason"]))}</h3></div><div class="ti-franchises"><div class="ti-franchise"><b>{escape(active)}</b><span>Receives</span></div><div class="ti-arrow">⇄</div><div class="ti-franchise"><b>{escape(partner)}</b><span>Sends</span></div></div><div class="ti-assets"><div class="ti-package"><span>You send</span>{sent}</div><div class="ti-arrow">→</div><div class="ti-package"><span>You receive</span>{received}</div></div><div class="ti-values"><span>Neutral market: <b>{values["sent"]}</b> sent / <b>{values["received"]}</b> received</span><span>{escape(str(evaluation["perspectives"]["bilateral_reality"]))}</span></div><div class="ti-bilateral"><div class="ti-reason"><span>Why you should consider this</span>{escape(str(evaluation["why_you_would_do_it"]))}</div><div class="ti-reason"><span>Why they should consider this</span>{escape(str(evaluation["why_they_would_do_it"]))}</div></div><a class="ti-card-action" href="/trades/create">View trade details →</a><details class="ti-details"><summary>Evidence and constraints</summary><p><b>Why now:</b> {escape(str(evaluation.get("why_now") or "No supported timing signal."))}</p><p><b>Historical counterparty evidence:</b> {escape(str(historical.get("assessment") or "INSUFFICIENT EVIDENCE"))} · {escape(str(historical.get("confidence") or "LOW"))} confidence</p><ul>{history_reasons}</ul><p>Package quality, optimal legal lineup effects, counterparty plausibility, and evidence confidence are included in the canonical evaluation. Historical evidence is context, not a promise of acceptance.</p></details></article>'''
+    dimensions = evaluation.get("dimensions") or {}
+    impact_strip = '<div class="ti-impact-strip">' + "".join(
+        f'<div><span>{label}</span><b>{escape(str((dimensions.get(key) or {}).get("assessment") or "Unavailable"))}</b></div>'
+        for key, label in (("value_fairness", "Market fairness"), ("strategic_fit", "Roster fit"), ("counterparty_plausibility", "Counterparty"), ("confidence", "Evidence"))
+    ) + '</div>'
+    return f'''<article class="ti-card"><div class="ti-head"><div class="ti-opportunity-label"><div class="ti-priority">{escape(str(evaluation["recommendation"]))} · {escape(str(best_for))}</div><div class="ti-confidence">{escape(str(confidence))} confidence</div></div><h3>Trade with {escape(partner)}</h3></div><div class="ti-franchises"><div class="ti-franchise"><b>{escape(active)}</b><span>Your franchise</span></div><div class="ti-arrow">⇄</div><div class="ti-franchise"><b>{escape(partner)}</b><span>Trade partner</span></div></div><div class="ti-assets"><div class="ti-package"><span>You send</span>{sent}</div><div class="ti-arrow">→</div><div class="ti-package"><span>You receive</span>{received}</div></div><div class="ti-values"><span>Neutral market: <b>{values["sent"]}</b> sent / <b>{values["received"]}</b> received</span><span>{escape(str(evaluation["perspectives"]["bilateral_reality"]))}</span></div>{impact_strip}<div class="ti-bilateral"><div class="ti-reason"><span>Why you should consider this</span>{escape(str(evaluation["why_you_would_do_it"]))}</div><div class="ti-reason"><span>Why they should consider this</span>{escape(str(evaluation["why_they_would_do_it"]))}</div></div><details class="ti-details"><summary class="ti-card-action">View trade details</summary><h4>Evidence and constraints</h4><p><b>Assessment:</b> {escape(str(evaluation["dominant_reason"]))}</p><p><b>Why now:</b> {escape(str(evaluation.get("why_now") or "No supported timing signal."))}</p><p><b>Historical counterparty evidence:</b> {escape(str(historical.get("assessment") or "INSUFFICIENT EVIDENCE"))} · {escape(str(historical.get("confidence") or "LOW"))} confidence</p><ul>{history_reasons}</ul><p>Package quality, optimal legal lineup effects, counterparty plausibility, and evidence confidence are included in the canonical evaluation. Historical evidence is context, not a promise of acceptance.</p></details></article>'''
 
 
 def trade_center(view: dict) -> str:
@@ -211,7 +300,7 @@ def trade_center(view: dict) -> str:
             ("recommended", "Recommended Trades", "Only worthwhile bilateral opportunities."),
         )
     )
-    cards = "".join(_canonical_card(row) for row in view.get("canonical_results", ()))
+    cards = "".join(_canonical_card({**row, "active_team_name": active.get("team_name") or row.get("active_team_name") or "Your franchise"}) for row in view.get("canonical_results", ()))
     if not cards:
         cards = '<div class="card ti-empty"><div><div class="ds-eyebrow">No clean trade right now</div><h3>No realistic bilateral opportunity clears every gate.</h3><p>DTOS checked neutral market value, roster effects, package quality, counterparty fit, and evidence confidence. Try building a proposal or targeting a specific asset.</p><div class="ti-actions"><a class="ti-action" href="/trades/create">Create a Trade</a><a class="ti-action" href="/trades/trade-for">Trade For a Player</a></div></div></div>'
     first = (view.get("canonical_results") or [None])[0]

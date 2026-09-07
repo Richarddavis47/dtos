@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from components.commissioner import commissioner_desk
 from models.commissioner import ConfidenceScore, RecommendationPriority
@@ -134,10 +136,21 @@ class CommissionerDeskTests(unittest.TestCase):
         self.assertIn("localStorage", rendered)
         self.assertIn("dtos.activeFrontOffice", rendered)
         self.assertIn("dtos.lastCommissionerVisit", rendered)
-        self.assertIn("fetch('/sync'", rendered)
+        self.assertNotIn("fetch('/sync'", rendered)
         self.assertIn("@media(max-width:650px)", rendered)
         self.assertIn("color-scheme:dark", rendered)
         self.assertNotIn("League Personality", rendered)
+
+    def test_shared_shell_provides_one_authenticated_sync_and_navigation(self) -> None:
+        import dtos_app
+
+        account = SimpleNamespace(account_id="fixture", csrf_token="fixture-csrf", display_name="Manager", membership=None)
+        with patch.object(dtos_app, "current_account", return_value=account), patch.object(dtos_app, "current_league_context", return_value=None), patch.object(dtos_app, "STATE", {"data": self.data}), patch.object(dtos_app, "account_store", Mock(memberships=Mock(return_value=[]))):
+            html = dtos_app.page("Commissioner Desk", commissioner_desk(self.build())).body.decode()
+        self.assertEqual(html.count('action="/sync"'), 1)
+        self.assertIn('name="csrf_token" value="fixture-csrf"', html)
+        self.assertEqual(html.count('aria-label="Primary navigation"'), 1)
+        self.assertIn('aria-label="Account and league context"', html)
 
     def test_confidence_score_is_bounded(self) -> None:
         self.assertEqual(ConfidenceScore(150).value, 100)

@@ -33,13 +33,22 @@ class TradeCenterAccessibilityTests(unittest.TestCase):
                         )))
                         self.assertEqual(page.evaluate(A11Y_SCRIPT)["buttons_without_names"], 0)
 
+                        # The assistance panel is intentionally unavailable before an
+                        # evaluation. Exercise disclosure semantics in its real visible
+                        # state rather than relying on CSS overriding HTML `hidden`.
+                        self.assertFalse(disclosure.is_visible())
+                        page.locator("#trade-assist").evaluate("node => { node.hidden = false; }")
+                        self.assertTrue(disclosure.is_visible())
+                        self.assertFalse(hidden_actions.first.is_visible())
                         disclosure.locator("summary").focus()
                         page.keyboard.press("Enter")
                         self.assertTrue(disclosure.evaluate("node => node.open"))
+                        self.assertTrue(hidden_actions.first.is_visible())
                         self.assertEqual(page.evaluate(A11Y_SCRIPT)["buttons_without_names"], 0)
                         disclosure.locator("summary").focus()
                         page.keyboard.press("Enter")
                         self.assertFalse(disclosure.evaluate("node => node.open"))
+                        self.assertFalse(hidden_actions.first.is_visible())
 
             page.evaluate("document.body.insertAdjacentHTML('beforeend', '<button id=unnamed></button>')")
             self.assertEqual(page.evaluate(A11Y_SCRIPT)["buttons_without_names"], 1)
