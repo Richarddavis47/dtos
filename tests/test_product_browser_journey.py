@@ -26,6 +26,12 @@ from routes.home import create_home_router
 from routes.market import create_market_router
 from routes.teams import create_teams_router
 from routes.trades import create_trades_router
+from routes.draft import create_draft_router
+from routes.matchups import create_matchups_router
+from routes.transactions import create_transactions_router
+from routes.front_offices import create_front_offices_router
+from routes.settings import create_settings_router
+from routes.hq import create_hq_router
 from src.core.accounts import AccountService, AccountStore
 from src.core.fois.repository import FOISRepository
 from src.core.fois.service import FOISService
@@ -67,6 +73,12 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                 data["league"].update(league_id=league, name=f"League {league}", season="2026")
                 for team in data["teams"]:
                     team["team_name"] = f"Franchise {league}" if team["roster_id"] == 1 else f"Partner {league}-{team['roster_id']}"
+                data["week"] = 1
+                data["scoring_settings"] = {"pass_yd": .04, "pass_td": 4, "rec": 1}
+                data["league_settings"] = {"playoff_teams": 2}
+                data["roster_positions"] = data["league"]["roster_positions"]
+                data["matchups"] = {"1": [dict(team=team["team_name"], owner=team["owner"], roster_id=team["roster_id"], points=0, record="0-0", players=team["players"], starters=[]) for team in data["teams"][:2]]}
+                data["traded_picks"] = [{"season": "2027", "round": 1, "roster_id": 1, "owner_id": 2, "previous_owner_id": 1}]
                 state = {"data": data, "last_sync": "fixture-boundary"}
                 runtime = manager.attach_default(league, state, warm=True)
                 market = _Market(f"generation-{league}")
@@ -94,6 +106,12 @@ class ProductBrowserJourneyTests(unittest.TestCase):
             app.include_router(create_home_router(**common))
             app.include_router(create_teams_router(**common, state=RuntimeStateProxy({})))
             app.include_router(create_trades_router(**common))
+            app.include_router(create_draft_router(**common))
+            app.include_router(create_matchups_router(**common))
+            app.include_router(create_transactions_router(**common, refresh_transactions=fresh, state=RuntimeStateProxy({})))
+            app.include_router(create_front_offices_router(**common))
+            app.include_router(create_settings_router(**common))
+            app.include_router(create_hq_router(**common, state=RuntimeStateProxy({}), league_id="100", league_resolver=lambda: current_league_context().league_id))
             app.include_router(create_market_router(require_data=data, page=dtos_app.page,
                 state={}, league_id="100", context_resolver=current_league_context))
             app.include_router(create_fois_router(require_data=data, page=dtos_app.page,
@@ -136,9 +154,10 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                                 for league in sequence:
                                     initial = page.goto(origin + "/", wait_until="domcontentloaded")
                                     self.assertEqual(initial.status, 200, "Account home must render before league activation")
+                                    page.locator(".account-context > summary").click()
                                     with page.expect_navigation(wait_until="domcontentloaded"):
                                         page.get_by_role("button", name=f"League {league}", exact=True).click()
-                                    for path in ("/", "/league", "/teams/1", "/fois", "/market", "/trades", "/trades/create", "/trades/trade-for", "/trades/shop", "/trades/recommended"):
+                                    for path in ("/", "/league", "/teams/1", "/fois", "/market", "/trades", "/trades/create", "/trades/trade-for", "/trades/shop", "/trades/recommended", "/picks", "/matchups", "/matchups/1", "/transactions", "/players/1-QB-0", "/front-offices", "/settings", "/commissioner"):
                                         with self.subTest(viewport=viewport, account=account, league=league, route=path):
                                             response = page.goto(origin + path, wait_until="domcontentloaded")
                                             self.assertEqual(response.status, 200)
@@ -147,6 +166,8 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                                             for other in {"100", "200", "300"} - {league}:
                                                 self.assertNotIn(f"Franchise {other}", page.locator("body").inner_text())
                                             self.assertGreater(page.get_by_role("main").count(), 0)
+                                            self.assertEqual(page.get_by_role("navigation", name="Primary navigation").get_by_role("link", name="My Team", exact=True).get_attribute("href"), "/teams/1")
+                                            self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"), f"Horizontal overflow: {path}")
                                             if path.startswith("/trades/"):
                                                 page.locator(".ti-roster-browser").wait_for(state="visible")
                                             accessibility = page.evaluate(A11Y_SCRIPT)

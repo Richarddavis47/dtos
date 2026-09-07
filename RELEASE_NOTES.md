@@ -1,4 +1,36 @@
-# DTOS v1.13.7 — Canonical Team Assessment
+# DTOS v1.14.0 — Premium Visual System & UX Coherence
+
+Mobile-first presentation overhaul across Home, Trade Center, Team HQ, Market,
+player dossiers, League, matchups, draft capital, history, FOIS, Front Office,
+Commissioner Desk and account/settings surfaces. The supplied approved Trade
+references govern the platform's visual language, not its production data.
+
+Shared tokens replace competing visual definitions. Compact context switching,
+coherent navigation, stronger identity, bilateral offer composition, visible
+rank/championship treatment, and real contextual actions improve hierarchy and
+usability without changing canonical intelligence. Unknown evidence remains
+unknown; no fake values, confidence, trends, trophies, or acceptance odds are added.
+
+Validation exposed repeated canonical-history expansion during startup. One
+league-local batch read preserves the exact per-player evidence and 1,000-row
+aggregation boundary without retaining a new cache. Validation's default
+intelligence stores are now run-owned, and child-process cleanup includes
+untagged computation workers. Explicit storage overrides remain authoritative.
+
+Cold FOIS preparation now reuses checkpoint projections within one read-only,
+generation-scoped flight. Historical boundaries and all assessment semantics stay
+unchanged. Concurrent evidence changes invalidate preparation, and the parent
+rechecks the content generation before atomic publication. No private assessment
+cache or durable storage is added.
+
+All prior security, multi-league isolation, memory, responsiveness and restart
+contracts remain. No dependency, infrastructure tier, or production image-policy
+change is included. Current Visual, DINS and External Visual Mirror remain retired.
+
+Candidate validation and production acceptance are pending. Do not interpret this
+document as evidence of deployment or a completed production visual audit.
+
+## Prior v1.13.7 — Canonical Team Assessment
 
 Corrects conflicting Team HQ conclusions without selecting a preferred display
 label arbitrarily. Existing league-relative Team Intelligence and the canonical

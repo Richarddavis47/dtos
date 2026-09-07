@@ -26,7 +26,7 @@ from src.core.projection_intelligence.sleeper_provider import SleeperProjectionC
 from src.platform.lifecycle import lifecycle_coordinator
 from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence
-from services.history import player_history_evidence
+from services.history import player_history_evidence_batch
 from config import (
     CACHE_FILE,
     LEAGUE_ID,
@@ -233,7 +233,9 @@ async def _sync_sleeper(
 
             user_by_id = {str(u.get("user_id")): u for u in users}
             team_rows = []
-            history_by_player: dict[str, dict[str, Any]] = {}
+            history_by_player = player_history_evidence_batch(
+                league_id, {str(pid) for roster in rosters for pid in (roster.get("players") or [])},
+            )
             for roster in rosters:
                 owner_id = str(roster.get("owner_id") or "")
                 owner = user_by_id.get(owner_id, {})
@@ -261,8 +263,6 @@ async def _sync_sleeper(
                         roster_slot = "IR"
                     else:
                         roster_slot = "Bench"
-                    if pid not in history_by_player:
-                        history_by_player[pid] = player_history_evidence(league_id, pid)
                     player_rows.append({
                         "id": pid,
                         "name": full_name,

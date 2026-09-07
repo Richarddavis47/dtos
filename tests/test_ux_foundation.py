@@ -141,7 +141,9 @@ class UXFoundationTests(unittest.TestCase):
         self.assertEqual(primary.count("<a "), 5)
         for label in ("Home", "My Team", "Trade", "League", "Market"):
             self.assertIn(f">{label}</a>", primary)
-        self.assertIn('aria-current="page">Home</a>', primary)
+        self.assertRegex(primary, r'<a href="/" aria-current="page">.*?</svg>Home</a>')
+        self.assertEqual(primary.count('aria-current="page"'), 1)
+        self.assertEqual(primary.count('aria-hidden="true"'), 5)
         self.assertIn("More league tools", html)
         self.assertNotIn(">FOIS</a>", primary)
 

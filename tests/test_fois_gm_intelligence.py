@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from app_metadata import BUILD_NUMBER, VERSION
 
 from routes.fois import create_fois_router
 from src.core.fois.engine import FOISEngine
@@ -126,8 +127,8 @@ class FOISGeneralManagerIntelligenceTests(unittest.IsolatedAsyncioTestCase):
             client = TestClient(app)
             root = client.get("/api/fois")
             self.assertEqual(root.status_code, 200)
-            self.assertEqual(root.json()["application_version"], "1.13.7")
-            self.assertEqual(root.json()["application_build"], 1307)
+            self.assertEqual(root.json()["application_version"], VERSION)
+            self.assertEqual(root.json()["application_build"], BUILD_NUMBER)
             paths = app.openapi()["paths"]
             for path in (
                 "/api/fois/leagues/{league_id}/rankings",

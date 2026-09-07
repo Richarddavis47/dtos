@@ -676,7 +676,11 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     account = current_account()
     account_html = ""
     csrf_html = ""
+    navigation_roster_id = None
     if account is not None:
+        selected_league_id = str(((selected_state.get("data") or {}).get("league") or {}).get("league_id") or "")
+        if account.membership and str(account.membership.league_id) == selected_league_id:
+            navigation_roster_id = account.membership.roster_id
         csrf_html = f'<input type="hidden" name="csrf_token" value="{escape(account.csrf_token)}">'
         switches = "".join(
             f'<form method="post" action="/account/leagues/{escape(item.league_id)}/activate"><input type="hidden" name="csrf_token" value="{escape(account.csrf_token)}"><button class="ds-action" type="submit">{escape(item.league_name or item.league_id)}</button></form>'
@@ -684,11 +688,11 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
             if item.status == "active" and item.roster_id is not None
         )
         franchise = account.membership.franchise_name if account.membership else "Choose a league"
-        account_html = f'<aside class="card" aria-label="Account and league context"><b>{escape(account.display_name)}</b> · {escape(franchise or "Mapped franchise")}<div class="ds-actions">{switches}<a class="ds-action" href="/account">Account</a></div></aside>'
-    standard_chrome = f"""<header class="top"><div class="brand"><h1>{APPLICATION_NAME}</h1><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form></header>{account_html}
-{manager_navigation(title)}{page_header(title, league_name=league_name, last_updated=str(sync))}"""
+        account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{escape(franchise or "Mapped franchise")} · Switch league</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
+    standard_chrome = f"""<header class="top"><div class="brand"><a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form></header>{account_html}
+{manager_navigation(title, roster_id=navigation_roster_id)}{page_header(title, league_name=league_name, last_updated=str(sync))}"""
     footer = f'<footer class="footer"><b>League Sync:</b> {escape(str(sync))} · Intelligence is generated from the latest cached league state. Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'
-    html = f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style></head>
+    html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style></head>
 <body><main class="wrap">{"" if commissioner_chrome else standard_chrome}{error_html}{body}{"" if commissioner_chrome else footer}</main></body></html>"""
     return HTMLResponse(html)
 

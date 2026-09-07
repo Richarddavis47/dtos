@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import json
 import os
 import subprocess
@@ -21,12 +22,52 @@ from src.platform.validation.progress import (
 ROOT = Path(__file__).resolve().parents[2]
 
 
+@contextmanager
+def validation_startup_schedule():
+    """Match Linux's immediate fixture kickoff; never change production defaults.
+
+All canonical work and the 60-second Market deadline remain required. An
+explicit caller override still wins, including an intentionally delayed test.
+"""
+    key = "DTOS_BACKGROUND_START_DELAY"
+    owned = key not in os.environ
+    if owned:
+        os.environ[key] = "0"
+    try:
+        yield
+    finally:
+        if owned:
+            os.environ.pop(key, None)
+
+
+@contextmanager
+def isolated_default_fois_storage():
+    """Owner outlives server teardown; explicit storage remains authoritative."""
+    if os.environ.get("DTOS_HISTORY_STORAGE_ROOT"):
+        yield
+        return
+    with tempfile.TemporaryDirectory(prefix="dtos-http-fois-") as directory:
+        defaults = {
+            "DTOS_FOIS_DB_FILE": "fois.sqlite3",
+            "DTOS_INTELLIGENCE_CHECKPOINT_FILE": "intelligence.sqlite3",
+            "DTOS_DATA_WAREHOUSE_FILE": "data-warehouse.json",
+        }
+        owned = {key: value for key, value in defaults.items() if key not in os.environ}
+        for key, filename in owned.items():
+            os.environ[key] = str(Path(directory) / filename)
+        try:
+            yield
+        finally:
+            for key in owned:
+                os.environ.pop(key, None)
+
+
 def execute(run_id: str, progress: ValidationProgress | None = None) -> HttpValidationResult:
     result = HttpValidationResult(run_id=run_id)
     server = None
     record = progress.record if progress is not None else lambda *_args, **_kwargs: None
     record("worker_phase", phase="entry", status="started")
-    with tempfile.TemporaryFile() as log:
+    with tempfile.TemporaryFile() as log, isolated_default_fois_storage(), validation_startup_schedule():
         try:
             started = perf_counter()
             record("worker_phase", phase="startup", status="started")

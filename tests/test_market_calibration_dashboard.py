@@ -8,6 +8,7 @@ from unittest.mock import patch
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
+from app_metadata import VERSION
 
 from routes.valuation import create_valuation_router
 from src.core.provider_network import build_provider_network
@@ -97,7 +98,7 @@ class MarketCalibrationDashboardTests(unittest.TestCase):
         build_provider_network(data, state)
         first = audit_market_calibration(data, state, apply=True)
         self.assertEqual(len(data["calibration_history"]), 1)
-        self.assertEqual(data["calibration_history"][0]["model_version"], "1.13.7")
+        self.assertEqual(data["calibration_history"][0]["model_version"], VERSION)
         self.assertEqual(calibration_report(data, state)["generated_at"], first["generated_at"])
 
     def test_api_dashboard_categories_recommendations_and_history(self) -> None:

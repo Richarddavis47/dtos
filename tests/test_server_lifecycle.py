@@ -92,6 +92,28 @@ class ServerLifecycleTests(unittest.TestCase):
         self.assertEqual(validate_worker_result(worker_payload(), RUN_ID), ())
         self.assertTrue(any("mismatch" in item for item in validate_worker_result(worker_payload(), "other")))
 
+    def test_untagged_compute_child_is_owned_after_server_exit(self) -> None:
+        child = ProcessRecord(322, 321, "python.exe", "python.exe", "python -c multiprocessing.spawn")
+        unrelated = ProcessRecord(999, 1, "python.exe", "python.exe", "python other.py")
+        with tempfile.TemporaryDirectory() as folder:
+            tracked = server(Path(folder), [], [])
+            tracked.runtime_pid = 321
+            self.assertEqual(tracked._owned_processes([record(321), child, unrelated]), [record(321), child])
+            self.assertEqual(tracked._owned_processes([child, unrelated]), [child])
+            changed = ProcessRecord(322, 1, "python.exe", "python.exe", "python unrelated.py")
+            self.assertEqual(tracked._owned_processes([changed, unrelated]), [])
+
+    def test_forced_teardown_includes_untagged_children_not_unrelated_processes(self) -> None:
+        child = ProcessRecord(322, 321, "python.exe", "python.exe", "python -c multiprocessing.spawn")
+        with tempfile.TemporaryDirectory() as folder:
+            tracked = server(Path(folder), [], [[record(321), child, record(999, run_id="other")]])
+            tracked.runtime_pid = 321
+            with patch("src.platform.validation.lifecycle.os.name", "nt"), patch.object(subprocess, "run") as stop:
+                tracked._force_process_tree()
+            self.assertEqual([call.args[0] for call in stop.call_args_list], [
+                ["taskkill", "/PID", "322", "/F"], ["taskkill", "/PID", "321", "/F"],
+            ])
+
     def test_result_schema_rejects_incomplete_or_invalid_timestamp(self) -> None:
         errors = validate_worker_result(worker_payload(completed=False, completed_at="invalid"), RUN_ID)
         self.assertTrue(any("incomplete" in item for item in errors))

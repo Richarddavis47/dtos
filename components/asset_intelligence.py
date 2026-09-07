@@ -4,16 +4,26 @@ from __future__ import annotations
 from html import escape
 from urllib.parse import quote
 
-from src.ui import recommendation_panel
+from src.ui import player_summary, recommendation_panel
 
 from src.core.asset_intelligence import AssetEvaluation, PlayerReport
 
 ASSET_CSS = """
 <style>
-.ai-context{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.ai-context select{background:#0b1727;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px}
-.ai-values{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:10px;margin:14px 0}.ai-value{background:linear-gradient(180deg,#14263d,#0b1727);border:1px solid var(--line);border-radius:13px;padding:13px}.ai-value b{font-size:25px;color:var(--gold);display:block}.ai-value span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}.ai-value small{display:block;color:var(--muted);margin-top:5px}
-.ai-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ai-card{background:#101d2d;border:1px solid var(--line);border-radius:14px;padding:14px}.ai-card h3{margin:0 0 8px}.ai-card ul{margin:7px 0;padding-left:20px}.ai-evidence summary{cursor:pointer;color:var(--accent);font-weight:800}.ai-evidence li{margin-bottom:7px}.ai-recommendation{border-color:rgba(110,231,183,.55)}.ai-priority{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold)}
-@media(max-width:760px){.ai-values{grid-template-columns:repeat(2,1fr)}.ai-sections{grid-template-columns:1fr}}@media(max-width:430px){.ai-values{grid-template-columns:1fr}}
+.ai-context{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center}
+.ai-context .ds-actions{justify-content:flex-start}.ai-context form{display:grid;gap:8px}
+.ai-player-identity{margin:12px 0}.ai-player-identity .player-portrait,.ai-player-identity .player-headshot,.ai-player-identity .player-headshot-fallback{width:88px;height:88px;flex-basis:88px;border-radius:16px}
+.ai-player-identity .player-summary-copy b{font-size:28px}.ai-player-identity .player-summary-copy span{font-size:14px}
+.ai-values{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.ai-value{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px}
+.ai-value b{font-size:30px;color:var(--blue);display:block;margin:8px 0}
+.ai-value span{font-size:13px;color:var(--text-secondary)}.ai-value small{display:block;color:var(--muted);margin:6px 0}
+.ai-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0;align-items:start}
+.ai-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px}
+.ai-card h3{margin:0 0 12px;font-size:19px}.ai-card ul{padding-left:20px;margin:8px 0}.ai-card li{margin:8px 0;color:var(--text-secondary)}
+.ai-evidence summary{cursor:pointer;color:var(--accent);font-size:13px;min-height:44px;display:flex;align-items:center}
+.ai-evidence li{margin-bottom:8px}.ai-recommendation{border-color:#365334}.ai-priority{font-size:12px;color:var(--gold)}
+@media(max-width:760px){.ai-context{grid-template-columns:1fr}.ai-values{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-sections{grid-template-columns:1fr}.ai-player-identity .player-summary-copy b{font-size:24px}}
 </style>
 """
 
@@ -82,7 +92,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict])
         integrated = integrated.replace("Trend:</b> Unavailable", f"Trend:</b> {escape(production_reason)}")
     return f"""
 {ASSET_CSS}
-<section class="card ai-context"><div><div class="identity-kicker">Asset Intelligence v1 · Player Dossier</div><h2>{escape(profile.name)}</h2><p class="muted">{escape(report.executive_summary)}</p></div><form method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section>
+<section class="card ai-context"><div><div class="identity-kicker">Player Dossier</div><div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=profile.nfl_team)}</div><p class="muted">{escape(report.executive_summary)}</p><div class="ds-actions"><a class="ds-action primary" href="{trade_href}">{trade_action}</a>{f'<a class="ds-action" href="/teams/{owner_roster_id}">View owning franchise</a>' if owner_roster_id else '<span class="pill">Unrostered in this league</span>'}</div></div><form method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section>
 {primary_recommendation}
 <section class="ai-values">{values}</section>
 {integrated}

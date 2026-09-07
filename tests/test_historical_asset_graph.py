@@ -17,6 +17,8 @@ from src.core.historical_memory.graph import (
     canonical_player_id,
 )
 from src.core.historical_memory.store import HistoricalStore
+from src.core.fois.repository import FOISRepository
+from src.core.fois.service import FOISService
 
 
 class HistoricalAssetGraphTests(unittest.TestCase):
@@ -176,13 +178,21 @@ class HistoricalAssetGraphTests(unittest.TestCase):
             require_data=lambda: self.current_data,
             page=lambda _title, body: HTMLResponse(body),
         ))
-        with patch("routes.historical_assets.historical_store", self.store):
+        repository = FOISRepository(Path(self.temp.name) / "fois.sqlite3")
+        fixture_fois = FOISService(repository)
+        with (
+            patch("routes.historical_assets.historical_store", self.store),
+            patch("routes.historical_assets.fois_service", fixture_fois),
+            patch.object(repository, "league", wraps=repository.league) as fois_read,
+            patch("services.fois._database_path", side_effect=AssertionError("Ambient FOIS storage is not a fixture")),
+        ):
             client = TestClient(app)
             player = client.get("/api/history/players/p1")
             pick = client.get("/api/picks/PICK-2025-R1-ORIG1")
             pick_page = client.get("/picks/PICK-2025-R1-ORIG1")
             trade_page = client.get("/trades/history/trade-1")
             search = client.get("/api/search", params={"q": "Alpha Runner"})
+            self.assertEqual(fois_read.call_args.args[0], self.league_id)
         self.assertEqual({player.status_code, pick.status_code, pick_page.status_code, trade_page.status_code, search.status_code}, {200})
         self.assertEqual(player.json()["identity"]["canonical_id"], "DTOS-P-p1")
         self.assertEqual(pick.json()["selected_player_id"], "DTOS-P-p1")

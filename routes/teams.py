@@ -21,17 +21,68 @@ PageRenderer = Callable[[str, str], HTMLResponse]
 
 TEAM_HQ_CSS = """
 <style>
-.thq-header{display:flex;justify-content:space-between;gap:18px;align-items:center;background:linear-gradient(135deg,#142a43,#0b1727);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:15px}.thq-identity{display:flex;gap:15px;align-items:center}.thq-avatar{width:72px;height:72px;border-radius:18px;object-fit:cover;background:#1b3048;border:1px solid #39536f}.thq-avatar-fallback{display:grid;place-items:center;font-size:25px;font-weight:950;color:var(--accent)}.thq-title h2{margin:2px 0 4px}.thq-meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:11px}.thq-badge{display:inline-block;border:1px solid rgba(245,196,81,.55);color:var(--gold);border-radius:999px;padding:6px 10px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}.thq-updated{text-align:right;color:var(--muted);font-size:10px;margin-top:8px}
-.thq-section{margin-top:18px}.thq-section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:9px}.thq-section-head h2{margin:0}.thq-section-head span{color:var(--muted);font-size:11px}.thq-cards{display:grid;grid-template-columns:repeat(7,minmax(115px,1fr));gap:9px}.thq-kpi,.thq-grade,.thq-future{background:linear-gradient(180deg,#13243a,#0c1929);border:1px solid var(--line);border-radius:14px;padding:13px}.thq-kpi span,.thq-grade span,.thq-future span{display:block;font-size:9px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.06em}.thq-kpi b{display:block;font-size:22px;margin-top:5px}.thq-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.thq-summary article{background:#101d2d;border:1px solid var(--line);border-radius:13px;padding:13px}.thq-summary h3{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}.thq-summary p{font-size:12px;color:#c7d2e0;margin:0;line-height:1.55}
-.thq-grades{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.thq-grade-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.thq-grade h3{margin:0;font-size:13px}.thq-grade-mark{font-size:25px;font-weight:950;color:var(--accent)}.thq-grade-score{color:var(--muted);font-size:10px}.thq-grade details{margin-top:9px;border-top:1px solid var(--line);padding-top:8px}.thq-grade summary{cursor:pointer;font-size:10px;font-weight:850;color:var(--gold)}.thq-reasoning{font-size:10px;color:var(--muted);line-height:1.5}.thq-reasoning b{color:var(--text)}
-.thq-dimensions{display:grid;gap:4px;margin-top:8px}.thq-dimension{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}.thq-tier{display:block;margin-top:5px;color:var(--gold);font-size:9px;font-weight:900;text-transform:uppercase}.thq-intel{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
-.thq-roster{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}.thq-room{background:#101d2d;border:1px solid var(--line);border-radius:14px;overflow:hidden}.thq-room-head{display:flex;justify-content:space-between;background:#0b1727;padding:11px 13px;font-weight:900}.thq-player{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:10px 13px;border-top:1px solid rgba(38,55,76,.7)}.thq-player a{font-weight:800}.thq-player-meta{font-size:10px;color:var(--muted);margin-top:3px}.thq-status{font-size:9px;font-weight:900;border:1px solid var(--line);border-radius:999px;padding:4px 7px;align-self:center}.thq-status.starter{color:var(--accent);border-color:rgba(110,231,183,.45)}
-.thq-picks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.thq-pick-year{background:#101d2d;border:1px solid var(--line);border-radius:14px;padding:13px}.thq-pick-year h3{margin:0 0 8px;color:var(--accent)}.thq-pick{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid rgba(38,55,76,.65)}.thq-pick small{display:block;color:var(--muted);margin-top:2px}.thq-performance{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}.thq-timeline{display:grid;gap:8px}.thq-event{display:grid;grid-template-columns:145px 105px minmax(0,1fr) auto;gap:10px;align-items:center;background:#101d2d;border:1px solid var(--line);border-radius:12px;padding:11px 13px}.thq-event-type{font-weight:900;color:var(--accent)}.thq-event-assets{color:var(--muted);font-size:11px}.thq-event a{font-size:10px}.thq-future-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.thq-future b{display:block;margin:8px 0 3px}.thq-future small{color:var(--muted)}.thq-actions{display:flex;gap:9px;flex-wrap:wrap}.thq-action{display:inline-block;border:1px solid var(--line);border-radius:10px;background:#172940;color:var(--text);padding:10px 13px;font-weight:850}
-.thq-recommendation{border-left:4px solid var(--gold);background:linear-gradient(135deg,#172940,#101d2d);padding:18px}.thq-recommendation h2{margin:0 0 6px}.thq-evidence>summary{cursor:pointer;font-weight:900;color:var(--gold);padding:14px;background:#101d2d;border:1px solid var(--line);border-radius:12px}.thq-evidence[open]>summary{border-radius:12px 12px 0 0}.thq-evidence-body{border:1px solid var(--line);border-top:0;padding:14px;border-radius:0 0 12px 12px}
-@media(max-width:1100px){.thq-cards{grid-template-columns:repeat(4,1fr)}.thq-summary{grid-template-columns:repeat(2,1fr)}.thq-future-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:760px){.thq-header{display:block}.thq-header>div:last-child{margin-top:12px;text-align:left}.thq-updated{text-align:left}.thq-cards,.thq-grades,.thq-roster,.thq-picks,.thq-performance,.thq-future-grid,.thq-intel{grid-template-columns:repeat(2,minmax(0,1fr))}.thq-event{grid-template-columns:1fr 1fr}.thq-event-assets{grid-column:1/-1}.thq-summary{grid-template-columns:1fr}}
-@media(max-width:460px){.thq-cards,.thq-grades,.thq-roster,.thq-picks,.thq-performance,.thq-future-grid,.thq-intel{grid-template-columns:1fr}.thq-avatar{width:58px;height:58px}}
-.thq-header{min-height:220px;padding:28px 30px;border:0;border-radius:0;border-bottom:1px solid var(--line);background:radial-gradient(circle at 88% 12%,rgba(93,242,55,.14),transparent 28%),linear-gradient(120deg,#102536,#08131e)}.thq-avatar{width:112px;height:112px;border-radius:26px}.thq-title h2{font-size:clamp(34px,5vw,54px);line-height:1;margin:6px 0}.thq-meta{font-size:13px}.thq-section{margin-top:36px}.thq-section-head h2{font-size:clamp(22px,3vw,30px)}.thq-starters{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.thq-starters>.card{padding:13px;border:0;border-bottom:1px solid var(--line);border-radius:12px;background:rgba(10,20,32,.72);box-shadow:none}.thq-starters .player-portrait,.thq-starters .player-headshot,.thq-starters .player-headshot-fallback{width:58px;height:58px;flex-basis:58px}.thq-starters .player-summary{gap:13px}.thq-starters .player-summary-copy b{font-size:15px}.thq-room{border:0;background:rgba(10,20,32,.68)}.thq-room-head{background:transparent;border-bottom:2px solid var(--line)}.thq-player{min-height:74px}.thq-player .player-portrait,.thq-player .player-headshot,.thq-player .player-headshot-fallback{width:50px;height:50px;flex-basis:50px}.thq-actions .thq-action:nth-child(3){background:linear-gradient(135deg,var(--accent),var(--accent-strong));border-color:var(--accent);color:#071108}@media(max-width:760px){.thq-header{min-height:210px;padding:22px 16px}.thq-avatar{width:76px;height:76px}.thq-starters{grid-template-columns:1fr 1fr}}@media(max-width:460px){.thq-starters{grid-template-columns:1fr}}
+.thq-header{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:22px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:20px}
+.thq-identity{display:flex;align-items:center;gap:16px;min-width:0}
+.thq-avatar{width:88px;height:88px;border-radius:18px;object-fit:cover;background:var(--surface-interactive);flex-shrink:0}
+.thq-avatar-fallback{display:grid;place-items:center;color:var(--accent);font-size:26px;font-weight:700}
+.thq-title{min-width:0}.thq-title h2{font-size:clamp(25px,3vw,38px);letter-spacing:-.035em;margin:6px 0}
+.thq-meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--text-secondary);font-size:13px}
+.thq-badge{display:inline-flex;padding:6px 10px;border:1px solid #5d663e;border-radius:999px;color:var(--gold);font-size:12px;font-weight:650}
+.thq-updated{color:var(--muted);font-size:11px;margin-top:10px;text-align:right}
+.thq-section{margin:28px 0}
+.thq-section-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.thq-section-head h2{font-size:22px;margin:0}.thq-section-head span{font-size:12px;color:var(--muted)}
+.thq-starters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.thq-starters>.card{padding:12px}
+.thq-cards,.thq-performance,.thq-intel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.thq-kpi,.thq-grade,.thq-future{padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);min-width:0}
+.thq-kpi span,.thq-future span{display:block;font-size:12px;color:var(--muted);line-height:1.4}
+.thq-kpi b{display:block;margin-top:8px;font-size:24px;font-weight:650;color:var(--blue);line-height:1.25;overflow-wrap:anywhere}
+.thq-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.thq-summary article{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md)}
+.thq-summary h3{font-size:14px;margin:0 0 8px}.thq-summary p{color:var(--text-secondary);font-size:13px;margin:0}
+.thq-grades{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.thq-grade-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.thq-grade h3{font-size:15px;margin:0}.thq-grade-mark{font-size:32px;font-weight:700;color:var(--accent)}
+.thq-grade-score{font-size:12px;color:var(--muted)}
+.thq-grade details{margin-top:12px;border-top:1px solid var(--border);padding-top:10px}
+.thq-grade summary,.thq-evidence summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:13px}
+.thq-reasoning{font-size:13px;color:var(--text-secondary);line-height:1.6}
+.thq-dimensions{display:grid;gap:6px;margin-top:8px}.thq-dimension{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+.thq-tier{display:block;margin-top:6px;color:var(--gold);font-size:11px}
+.thq-roster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.thq-room{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.thq-room-head{display:flex;justify-content:space-between;gap:10px;padding:14px;font-weight:650;background:var(--surface-elevated)}
+.thq-player{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--border)}
+.thq-player-meta{font-size:11px;color:var(--muted);margin-top:6px}
+.thq-status{padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px}
+.thq-status.starter{color:var(--accent);border-color:#365334}
+.thq-picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.thq-pick-year{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)}
+.thq-pick-year h3{font-size:22px;color:var(--gold);margin:0 0 12px}
+.thq-pick{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--border)}
+.thq-pick small{display:block;color:var(--muted);margin-top:4px;font-size:12px}
+.thq-timeline{display:grid;gap:8px}.thq-event{display:grid;grid-template-columns:145px 100px minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface)}
+.thq-event-type{color:var(--accent);font-weight:650}.thq-event-assets{color:var(--text-secondary);font-size:13px}
+.thq-event a{display:inline-flex;min-height:44px;align-items:center;color:var(--accent)}
+.thq-future-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.thq-future b{display:block;margin:8px 0}.thq-future small{color:var(--muted)}
+.thq-actions{display:flex;gap:8px;flex-wrap:wrap}
+.thq-action{display:inline-flex;min-height:44px;align-items:center;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-weight:650}
+.thq-actions .thq-action:nth-child(3){background:var(--accent);color:#0c1908}
+.thq-evidence>summary{padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text-secondary)}
+.thq-evidence-body{padding:16px;border:1px solid var(--border)}
+.thq-recommendation{padding:18px;border-left:3px solid var(--accent);background:var(--surface)}
+@media(max-width:900px){.thq-starters{grid-template-columns:repeat(2,minmax(0,1fr))}.thq-grades{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){
+ .thq-header{display:block;padding:18px}.thq-header>div:last-child{margin-top:12px}
+ .thq-avatar{width:72px;height:72px}.thq-title h2{font-size:26px}
+ .thq-updated{text-align:left}.thq-section-head{display:block}.thq-section-head span{display:block;margin-top:4px}
+ .thq-cards,.thq-performance,.thq-intel{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .thq-roster,.thq-picks,.thq-summary,.thq-future-grid{grid-template-columns:1fr}
+ .thq-event{grid-template-columns:1fr auto}.thq-event-assets{grid-column:1/-1}
+ .thq-kpi b{font-size:21px}
+}
+@media(max-width:460px){.thq-starters,.thq-grades{grid-template-columns:1fr}.thq-intel{grid-template-columns:1fr}}
 </style>
 """
 
@@ -132,6 +183,13 @@ def _timeline(view: dict[str, Any]) -> str:
     return rows or '<div class="card muted">No recent cached transactions involve this team.</div>'
 
 
+def _franchise_portrait(team: dict[str, Any]) -> str:
+    name = str(team.get("team_name") or "Franchise")
+    initials = "".join(part[:1] for part in name.split()[:2]).upper() or "DT"
+    image = (f'<img src="https://sleepercdn.com/avatars/thumbs/{quote(str(team["avatar"]), safe="")}" alt="{escape(name)} logo" loading="lazy" onerror="this.hidden=true">' if team.get("avatar") else "")
+    return f'<span class="franchise-portrait">{image}<span aria-hidden="true">{escape(initials)}</span></span>'
+
+
 def create_teams_router(
     *,
     ensure_fresh: EnsureFresh,
@@ -156,7 +214,7 @@ def create_teams_router(
             result = (f'<p class="record">Projected #{outlook["rank"]} · {outlook["projected_wins"]} wins</p>' if outlook["preseason"] else f'<p class="record">{team["wins"]}-{team["losses"]}-{team["ties"]}</p>')
             performance = (f'<div class="metric"><b>{outlook["playoff_odds"]}%</b><span>Playoff Odds</span></div><div class="metric"><b>{outlook["championship_odds"]}%</b><span>Championship Odds</span></div>' if outlook["preseason"] else f'<div class="metric"><b>{team["points_for"]:.2f}</b><span>Points For</span></div><div class="metric"><b>{team["max_points"]:.2f}</b><span>Max PF</span></div>')
             cards.append(
-                f'<a class="card team team-link" href="/teams/{team["roster_id"]}"><div class="team-head"><div><div class="identity-kicker">Owner: {escape(team["owner"])}</div><h3 class="franchise-name">{escape(team["team_name"])}</h3></div><div class="rank-badge">{escape(outlook["grade"])}</div></div>{result}<div class="summary-grid">{performance}<div class="metric"><b>{len(team["players"])}</b><span>Players</span></div><div class="metric"><b>{firsts}</b><span>Future 1sts</span></div></div><p class="muted">{starters} starters · {len(team.get("picks_owned", []))} total future picks</p></a>'
+                f'<a class="card team team-link" href="/teams/{team["roster_id"]}"><div class="team-head">{_franchise_portrait(team)}<div><div class="identity-kicker">Owner: {escape(team["owner"])}</div><h3 class="franchise-name">{escape(team["team_name"])}</h3></div><div class="rank-badge">{escape(outlook["grade"])}</div></div>{result}<div class="summary-grid">{performance}<div class="metric"><b>{len(team["players"])}</b><span>Players</span></div><div class="metric"><b>{firsts}</b><span>Future 1sts</span></div></div><p class="muted">{starters} starters · {len(team.get("picks_owned", []))} total future picks</p><span class="team-open">Open Team HQ <span aria-hidden="true">→</span></span></a>'
             )
         return page("Teams", '<h2>League Franchises</h2><p class="muted">Select a team to open its Front Office Headquarters.</p><div class="grid">' + "".join(cards) + "</div>")
 
@@ -172,11 +230,7 @@ def create_teams_router(
         if view is None:
             raise HTTPException(404, "Team not found")
         team = view["team"]
-        avatar = (
-            f'<img class="thq-avatar" src="https://sleepercdn.com/avatars/thumbs/{quote(str(team["avatar"]))}" alt="{escape(team["team_name"])} logo">'
-            if team.get("avatar")
-            else f'<div class="thq-avatar thq-avatar-fallback">{escape("".join(part[:1] for part in team["team_name"].split()[:2]).upper() or "DT")}</div>'
-        )
+        avatar = _franchise_portrait(team)
         summary = "".join(f'<article><h3>{escape(label)}</h3><p>{escape(text)}</p></article>' for label, text in view["summary"].items())
         performance = view["performance"]
         performance_metrics = (
@@ -242,8 +296,8 @@ def create_teams_router(
 {TEAM_HQ_CSS}
 <a class="back" href="/teams">← All Teams</a>
 <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Overall Grade {view['team_intelligence'].overall.grade}</span><span>·</span><span>League Rank #{view['rank']}</span><span>·</span><span>{view['team_intelligence'].overall.percentile}th percentile</span></div></div></div><div><span class="thq-badge">{escape(view['competitive_window'].classification.value)}</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
-<section class="thq-section"><div class="thq-section-head"><h2>Starting Lineup</h2><span>The players carrying this franchise now</span></div><div class="thq-starters">{starter_cards}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>DTOS Team Assessment</h2><span>Answer and action first</span></div>{recommendation_card}</section>
+<section class="thq-section"><div class="thq-section-head"><h2>Starting Lineup</h2><span>The players carrying this franchise now</span></div><div class="thq-starters">{starter_cards}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Strengths &amp; Needs</h2><span>Current and future league-relative evidence</span></div><div class="thq-intel">{intelligence_cards}{league_rankings}</div><p class="muted">{escape(' '.join(assessment.limitations))}</p><p class="muted">Projection week: {escape(str(assessment.projection_week or 'Unavailable'))} · Coverage: {assessment.projected_starter_count}/{assessment.starter_count} starters · As of: {escape(assessment.projection_as_of or 'Unavailable')}</p></section>
 <section class="thq-section" id="assets"><div class="thq-section-head"><h2>Core Assets</h2><span>Roster construction and flexibility</span></div><div class="thq-cards">{_asset_cards(view['snapshot'])}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Full Roster</h2><span>Position rooms and current lineup designation</span></div><div class="thq-roster">{_roster_rooms(view)}</div></section>

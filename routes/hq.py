@@ -42,6 +42,6 @@ def create_hq_router(
             last_sync=state.get("last_sync"),
             last_error=state.get("last_error"),
         )
-        return page("Commissioner Desk", commissioner_desk(view), True)
+        return page("Commissioner Desk", commissioner_desk(view))
 
     return router

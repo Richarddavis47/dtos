@@ -1,5 +1,28 @@
 # Changelog
 
+# v1.14.0 — Premium Visual System & UX Coherence
+
+- Establish one shared dark/navy, green-action, blue-value visual system across
+  the manager platform, with compact responsive headers and accessible navigation.
+- Preserve authenticated league switching in a compact disclosure; My Team opens
+  the active account's mapped franchise rather than a fixed or unrelated team.
+- Recompose trade offers as bilateral player/pick packages, canonical impact
+  summaries, balanced reasoning, and real expandable offer evidence.
+- Strengthen franchise/player identity in Team HQ, team listings, player dossiers,
+  Market, standings, draft capital, season archives and executive profiles.
+- Prioritize canonical assessments and manager decisions; retain detailed evidence
+  and application diagnostics in subordinate native disclosures.
+- Correct dead legacy card controls, Market pagination context, unavailable-state
+  typography, page navigation selection, and Commissioner Desk shell consistency.
+- Remove repeated season-history expansion during startup synchronization using
+  one league-local batch read with identical per-player evidence and limits.
+- Isolate default HTTP-validation intelligence stores and include untagged
+  computation children in owned-process teardown.
+- Reuse canonical global checkpoint evidence within one bounded FOIS preparation
+  snapshot; preserve event-time selection and reject changed evidence before publication.
+- Preserve intelligence semantics, isolation, security, provider-free request paths,
+  all resource/latency thresholds, and retirement of automated visual publication.
+
 # v1.13.7 — Canonical Team Assessment
 
 - Bind Team HQ, Roster identity and unified recommendation outlook to one shared

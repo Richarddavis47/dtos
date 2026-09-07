@@ -24,8 +24,27 @@ def load_results_history(
     league_id: str,
     *,
     metrics: dict[str, Any] | None = None,
+    checkpoint_reader: Any = None,
 ) -> dict[str, dict[str, Any]]:
     """Build provider-free FOIS histories from immutable cached evidence."""
+    from src.core.intelligence_memory import intelligence_checkpoint_store
+    from src.core.intelligence_memory.checkpoint_flight import checkpoint_read_flight
+
+    if checkpoint_reader is not None:
+        return _load_results_history(
+            store, league_id, metrics=metrics, checkpoint_reader=checkpoint_reader,
+        )
+    with checkpoint_read_flight(intelligence_checkpoint_store) as reader:
+        result = _load_results_history(store, league_id, metrics=metrics, checkpoint_reader=reader)
+        if metrics is not None:
+            metrics["checkpoint_flight"] = reader.metrics()
+    return result
+
+
+def _load_results_history(
+    store: HistoricalStore, league_id: str, *,
+    metrics: dict[str, Any] | None = None, checkpoint_reader: Any,
+) -> dict[str, dict[str, Any]]:
     started = perf_counter()
     _, standings = store.records(league_id, "season_standing", limit=10_000)
     _, playoffs = store.records(league_id, "playoff_result", limit=1_000)
@@ -143,7 +162,7 @@ def load_results_history(
         HistoricalTransactionIntelligenceService,
     )
     history_intelligence = HistoricalIntelligenceService(
-        store, checkpoint_reader=intelligence_checkpoint_store,
+        store, checkpoint_reader=checkpoint_reader,
     )
     transaction_intelligence = HistoricalTransactionIntelligenceService(
         history_intelligence, HistoricalFranchiseStateService(history_intelligence),

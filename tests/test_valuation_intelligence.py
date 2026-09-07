@@ -6,6 +6,7 @@ from unittest.mock import patch
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
+from app_metadata import BUILD_NUMBER, VERSION
 
 from routes.valuation import create_valuation_router
 from src.core.provider_network import build_provider_network
@@ -280,8 +281,8 @@ class ValuationIntelligenceTests(unittest.TestCase):
         for route in routes:
             response = client.get(route)
             self.assertEqual(response.status_code, 200, route)
-        self.assertEqual(response.json()["application_version"], "1.13.7")
-        self.assertEqual(response.json()["application_build"], 1307)
+        self.assertEqual(response.json()["application_version"], VERSION)
+        self.assertEqual(response.json()["application_build"], BUILD_NUMBER)
         self.assertIsNotNone(client.get("/api/valuation/assets/player:1").json()["valuation_intelligence"])
         dashboard = client.get("/valuation/calibration")
         self.assertEqual(dashboard.status_code, 200)

@@ -32,6 +32,7 @@ def create_draft_router(
             str(team["roster_id"]): team["team_name"] for team in data["teams"]
         }
         rows = []
+        cards = []
         sorted_picks = sorted(
             data["traded_picks"],
             key=lambda item: (
@@ -46,6 +47,19 @@ def create_draft_router(
             pick_id = canonical_pick_id(
                 pick.get("season", "UNKNOWN"), pick.get("round", "UNKNOWN"), roster_id,
             )
+            def franchise(identity: str) -> str:
+                label = escape(roster_names.get(identity, "Ownership unavailable"))
+                return f'<a href="/teams/{int(identity)}">{label}</a>' if identity in roster_names and identity.isdigit() else label
+
+            cards.append(
+                f'<article class="card pick-asset-card"><a class="pick-asset-title" href="/picks/{escape(pick_id)}">'
+                f'<span class="pick-emblem" aria-hidden="true">R{escape(str(pick.get("round", "?")))}</span>'
+                f'<span><b>{escape(str(pick.get("season", "")))} Round {escape(str(pick.get("round", "")))}</b><small>View pick details →</small></span></a>'
+                f'<p class="pick-owner"><span>Current owner</span>{franchise(owner_id)}</p>'
+                f'<p class="pick-owner"><span>Original franchise</span>{franchise(roster_id)}</p>'
+                f'<div class="pick-outlook"><b>{report.dynasty_value.score}/100</b><span>{escape(report.expected_range)}</span></div>'
+                f'<p class="muted">{escape(report.recommendation.action)} · {escape(report.risk.level)} risk</p></article>'
+            )
             rows.append(
                 f'<tr><td><a href="/picks/{escape(pick_id)}">{escape(str(pick.get("season", "")))}</a></td>'
                 f'<td>{escape(str(pick.get("round", "")))}</td>'
@@ -57,11 +71,13 @@ def create_draft_router(
             )
 
         body = (
-            '<h2>Traded Draft Picks</h2><div class="card"><table><thead>'
+            '<h2>Traded Draft Picks</h2><div class="pick-asset-grid">'
+            + ("".join(cards) or '<div class="ds-empty"><b>No traded picks are available.</b>Current roster-owned picks remain available in Team HQ.</div>')
+            + '</div><details class="technical-details"><summary>Compare all pick evidence</summary><div class="card ds-table-wrap"><table><thead>'
             '<tr><th>Season</th><th>Round</th><th>Original Team</th>'
             '<th>Current Owner</th><th>Dynasty Value</th><th>Risk</th><th>Strategy</th></tr></thead><tbody>'
             + "".join(rows)
-            + "</tbody></table></div>"
+            + "</tbody></table></div></details>"
         )
         return page("Draft Picks", body)
 

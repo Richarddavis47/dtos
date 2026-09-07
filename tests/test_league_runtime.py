@@ -27,6 +27,8 @@ from src.core.league_runtime import (
 from src.core.asset_market import AssetMarketCache, asset_market_cache
 from services import sleeper as sleeper_service
 from src.core.projection_intelligence.service import ProjectionService
+from src.core.fois.repository import FOISRepository
+from src.core.fois.service import FOISService
 from src.platform.league_context import LeagueContextMiddleware, current_league_context
 
 
@@ -251,8 +253,15 @@ class LeagueConsumerContextTests(unittest.TestCase):
         import dtos_app
 
         runtime = LeagueRuntime("200", state={"data": league_data("200")})
-        projection = ProjectionService(league_id="200")
-        context = dtos_app._publish_runtime_context(runtime, projection)
+        with tempfile.TemporaryDirectory() as folder:
+            fixture_fois = FOISService(FOISRepository(Path(folder) / "fois.sqlite3"))
+            projection = ProjectionService(Path(folder) / "projections.sqlite3", league_id="200")
+            with (
+                patch.object(dtos_app, "fois_service", fixture_fois),
+                patch("services.fois._database_path", side_effect=AssertionError("Ambient FOIS storage is not a fixture")),
+            ):
+                context = dtos_app._publish_runtime_context(runtime, projection)
+            self.assertIs(runtime.fois_context, fixture_fois)
 
         self.assertIsInstance(context.market, AssetMarketCache)
         self.assertIs(runtime.market_context, context.market)

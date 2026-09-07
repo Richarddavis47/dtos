@@ -132,13 +132,26 @@ def validate_asset_market_contract(body: bytes, path: str) -> str:
     validate_product_contract(body, path)
     html = body.decode("utf-8", errors="replace")
     for required in (
-        "Know the market.",
         'aria-label="Asset Market filters"',
         "Canonical dynasty asset rankings",
         "Values remain separate; unavailable evidence is never substituted.",
     ):
         if required not in html:
             raise AssertionError(f"{path}: Asset Market contract is missing {required!r}")
+    filters = re.search(
+        r'<form\b(?=[^>]*\baria-label="Asset Market filters")'
+        r'(?=[^>]*\bmethod="get")(?=[^>]*\baction="/market")[^>]*>(.*?)</form>',
+        html, re.IGNORECASE | re.DOTALL,
+    )
+    if filters is None:
+        raise AssertionError(f"{path}: Market filters must submit a GET to /market")
+    controls = set(re.findall(
+        r'<(?:input|select)\b[^>]*\bname="([^"]+)"', filters.group(1),
+        re.IGNORECASE,
+    ))
+    missing_controls = {"q", "position", "availability", "sort"} - controls
+    if missing_controls:
+        raise AssertionError(f"{path}: Market filter controls missing: {sorted(missing_controls)}")
     match = MARKET_DATASET.search(html)
     if match is None:
         raise AssertionError(f"{path}: canonical market dataset identity is missing")

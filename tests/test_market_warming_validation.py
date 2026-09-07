@@ -62,8 +62,9 @@ def _market_page(dataset: str = "generation-1") -> bytes:
     return (
         '<header data-dtos-component="page-header"><h1>Asset Market</h1>'
         '<a class="ds-action primary">Sync</a></header>'
-        '<h2>Know the market.</h2>'
-        '<form aria-label="Asset Market filters"></form>'
+        '<form aria-label="Asset Market filters" method="get" action="/market">'
+        '<input name="q"><select name="position"></select>'
+        '<select name="availability"></select><select name="sort"></select></form>'
         '<table><caption>Canonical dynasty asset rankings</caption></table>'
         '<p>Values remain separate; unavailable evidence is never substituted.</p>'
         f'<p>Dataset <code>{dataset}</code></p>'

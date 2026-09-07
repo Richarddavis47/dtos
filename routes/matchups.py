@@ -27,6 +27,15 @@ RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[[str, str], HTMLResponse]
 
 
+def _franchise_identity(side: dict[str, Any]) -> str:
+    """Link only a known franchise; missing ownership must not become team zero."""
+    label = escape(str(side.get("team") or "Franchise unavailable"))
+    roster_id = str(side.get("roster_id") or "")
+    if roster_id.isdecimal() and int(roster_id) > 0:
+        return f'<a href="/teams/{int(roster_id)}">{label}</a>'
+    return label
+
+
 def _projection_value(value: Any) -> str:
     return f"{float(value):.2f}" if value is not None else "Unavailable"
 
@@ -356,8 +365,8 @@ def create_matchups_router(
             "The available pregame projections are even; lineup execution is the clearest differentiator."
         )
         hero_scores = (
-            f'<div class="scoreboard"><div class="scoreboard-side"><div class="matchup-owner">{escape(left["owner"])}</div><div class="scoreboard-team">{escape(left["team"])}</div>{_team_score_html(actual=left["points"], projected=_team_projection_value(projected["sides"][0]), state=game_state)}</div>'
-            f'<div class="vs-mark">VS</div><div class="scoreboard-side right"><div class="matchup-owner">{escape(right["owner"])}</div><div class="scoreboard-team">{escape(right["team"])}</div>{_team_score_html(actual=right["points"], projected=_team_projection_value(projected["sides"][1]), state=game_state)}</div></div>'
+f'<div class="scoreboard"><div class="scoreboard-side"><div class="matchup-owner">{escape(left["owner"])}</div><div class="scoreboard-team">{_franchise_identity(left)}</div>{_team_score_html(actual=left["points"], projected=_team_projection_value(projected["sides"][0]), state=game_state)}</div>'
+            f'<div class="vs-mark">VS</div><div class="scoreboard-side right"><div class="matchup-owner">{escape(right["owner"])}</div><div class="scoreboard-team">{_franchise_identity(right)}</div>{_team_score_html(actual=right["points"], projected=_team_projection_value(projected["sides"][1]), state=game_state)}</div></div>'
         )
         live_context = "" if game_state == "pregame" else (
             f'<div class="live-share"><div class="live-share-head"><span>{escape(left["team"])} {left_share:.0f}%</span><span>Live score share</span><span>{escape(right["team"])} {right_share:.0f}%</span></div><div class="live-share-track"><div class="live-share-left" style="width:{left_share:.2f}%"></div><div class="live-share-right" style="width:{right_share:.2f}%"></div></div></div>'

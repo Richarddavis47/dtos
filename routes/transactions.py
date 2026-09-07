@@ -45,7 +45,10 @@ TRANSACTIONS_CSS = """
 .tx-empty{text-align:center;padding:34px;color:var(--muted)}.tx-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}.tx-pages{display:flex;gap:6px;flex-wrap:wrap}.tx-pages a,.tx-pages span{border:1px solid var(--line);border-radius:8px;padding:7px 10px}.tx-pages .current{background:var(--accent);color:#062018;font-weight:900}
 .player-hero{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}.player-monogram{width:58px;height:58px;border-radius:16px;background:#182a40;border:1px solid var(--line);display:grid;place-items:center;font-size:20px;font-weight:950;color:var(--accent)}
 @media(max-width:1000px){.tx-stats{grid-template-columns:repeat(3,1fr)}.tx-filters{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.tx-stats{grid-template-columns:repeat(2,1fr)}.tx-filters{grid-template-columns:1fr}.tx-refresh-meta{text-align:left}.tx-hero{display:block}.tx-actions{margin-top:10px}.tx-stat b{font-size:19px}}
+@media(max-width:600px){.tx-stats{grid-template-columns:repeat(2,1fr)}.tx-filters{grid-template-columns:1fr}.tx-refresh-meta{text-align:left}.tx-hero{display:block}.tx-actions{margin-top:10px}.tx-stat b{font-size:19px}
+.tx-table{min-width:0;display:block}.tx-table thead{display:block}.tx-table thead tr{display:flex;flex-wrap:wrap}.tx-table thead th{border:0;padding:10px;font-size:12px}
+.tx-table tbody{display:grid;gap:12px;padding:12px}.tx-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px}
+.tx-table tbody td{display:block;border:0;padding:4px 0;min-width:0}.tx-table tbody td:nth-child(n+3){grid-column:1/-1;padding-top:12px}.tx-time{white-space:normal;font-size:12px}.tx-asset{padding:8px;border-left:2px solid var(--line);background:var(--surface-elevated);border-radius:6px}.tx-table-wrap{background:transparent;border:0}}
 </style>
 """
 
@@ -414,7 +417,7 @@ def create_transactions_router(
         live_panel = f'''<section class="card"><h2>Live Data &amp; Market</h2>
 <div class="grid"><div><div class="muted">Market Consensus</div><div class="stat">{escape(str(consensus_value))}</div><p>Confidence {consensus["confidence"]}% · Agreement {consensus["agreement"]}%</p><p>30-day trend: {escape(str(trend_label))}</p></div>
 <div><div class="muted">Player Context</div><p><b>{escape(str(normalized["position"]))}</b> · {escape(str(normalized["nfl_team"]))} · {escape(human_status(normalized["status"]))}</p><p>Age: {escape(available(metadata.get("age"), reason="Age is not supplied by the current source."))}</p><p>Depth chart: {escape(str(depth_role))} · Bye: {escape(str(bye_week))}</p></div></div>
-<table><thead><tr><th>Provider</th><th>Value / State</th><th>Freshness</th><th>Confidence</th><th>Availability reason</th></tr></thead><tbody>{provider_values}</tbody></table>
+<div class="ds-table-wrap" tabindex="0" role="region" aria-label="Provider value evidence"><table><thead><tr><th>Provider</th><th>Value / State</th><th>Freshness</th><th>Confidence</th><th>Availability reason</th></tr></thead><tbody>{provider_values}</tbody></table></div>
 <h3>League Context</h3><div class="grid"><div><b>Trending</b><p>{league_context["trending_adds"]} adds · {league_context["trending_drops"]} drops (Sleeper, last cached window)</p></div><div><b>Ownership</b><p>{escape(str(league_context["owned_by"] or "Not rostered in the active league."))}</p></div><div><b>Transactions</b><p>{league_context["transaction_count"]} cached league transactions</p></div></div>
 <h3>Data Availability</h3><ul><li><b>ADP:</b> {escape(str(reasons["adp"]))}</li><li><b>Current projections:</b> {escape(str(reasons["projection"]))}</li><li><b>Production:</b> {escape(str(reasons["production"]))}</li><li><b>Usage:</b> {escape(str(reasons["usage"]))}</li></ul>
 <p class="muted">Sources: {attribution} · Sleeper player, league, transaction, and trending metadata.</p></section>'''

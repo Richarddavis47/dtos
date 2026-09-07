@@ -54,6 +54,7 @@ class TrackedServer:
         self.owner_lookup = owner_lookup
         self.inventory = inventory
         self.runtime_pid: int | None = None
+        self._owned_descendants: dict[int, ProcessRecord] = {}
 
     @classmethod
     def start(cls, repository_root: Path, log: BinaryIO, run_id: str, port: int | None = None) -> "TrackedServer":
@@ -89,7 +90,15 @@ class TrackedServer:
         self.control_file.write_text(self.run_id, encoding="utf-8")
 
     def _runtime_alive(self) -> bool:
-        return self.runtime_pid is not None and any(item.pid == self.runtime_pid for item in self.inventory())
+        return bool(self._owned_processes(self.inventory()))
+
+    def _owned_processes(self, records: list[ProcessRecord]) -> list[ProcessRecord]:
+        """Remember untagged computation children before their parent exits."""
+        roots = [item for item in processes_for_run(records, self.run_id) if item.pid == self.runtime_pid]
+        if roots:
+            self._owned_descendants.update({item.pid: item for item in descendants(records, self.runtime_pid)})
+        children = [item for item in records if self._owned_descendants.get(item.pid) == item]
+        return roots + children
 
     def _wait_for_exit(self, timeout: float) -> bool:
         deadline = time.monotonic() + timeout
@@ -103,9 +112,8 @@ class TrackedServer:
         if self.runtime_pid is None:
             raise RuntimeError("Runtime PID was never established.")
         records = self.inventory()
-        run_records = {item.pid: item for item in processes_for_run(records, self.run_id)}
-        targets = [item.pid for item in descendants(records, self.runtime_pid) if item.pid in run_records]
-        targets.append(self.runtime_pid)
+        owned = self._owned_processes(records)
+        targets = [item.pid for item in reversed(owned)]
         if os.name == "nt":
             for pid in targets:
                 subprocess.run(["taskkill", "/PID", str(pid), "/F"], capture_output=True, check=False)
@@ -117,13 +125,15 @@ class TrackedServer:
         if self.runtime_pid is None:
             raise RuntimeError("Refusing cleanup: runtime PID was not verified.")
         try:
-            run_pids = {item.pid for item in processes_for_run(self.inventory(), self.run_id)}
+            initial_records = self.inventory()
+            run_pids = {item.pid for item in processes_for_run(initial_records, self.run_id)}
             owners = self.owner_lookup(self.port)
             if self.runtime_pid not in run_pids or self.runtime_pid not in owners:
                 raise RuntimeError(
                     f"Refusing cleanup: runtime PID {self.runtime_pid} is not the run-owned port owner; "
                     f"run_pids={sorted(run_pids)}, owners={sorted(owners)}"
                 )
+            self._owned_processes(initial_records)
             self._request_graceful_shutdown()
             if self._wait_for_exit(graceful_timeout):
                 outcome = "graceful"
@@ -132,7 +142,8 @@ class TrackedServer:
                 if not self._wait_for_exit(force_timeout):
                     raise RuntimeError(f"Run-owned process tree rooted at PID {self.runtime_pid} survived forced termination.")
                 outcome = "forced"
-            remaining = processes_for_run(self.inventory(), self.run_id)
+            final_records = self.inventory()
+            remaining = tuple(processes_for_run(final_records, self.run_id)) + tuple(self._owned_processes(final_records))
             owners = self.owner_lookup(self.port)
             if remaining or owners:
                 raise RuntimeError(

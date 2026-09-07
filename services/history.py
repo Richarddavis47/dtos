@@ -837,6 +837,35 @@ def player_history_evidence(league_id: str, player_id: str) -> dict[str, Any]:
     }
 
 
+def player_history_evidence_batch(league_id: str, player_ids: set[str]) -> dict[str, dict[str, Any]]:
+    """Scan once per sync, preserving the existing per-player evidence contract.
+
+    Read the league's available canonical records in one snapshot, rather than
+    materializing the same season chain for every player. No cache survives the
+    synchronization, and no provider request or historical write is added.
+    """
+    if not player_ids:
+        return {}
+    _, rows = historical_store.records(league_id, "player_week", limit=None)
+    counts = {player_id: 0 for player_id in player_ids}
+    payloads: dict[str, list[dict[str, Any]]] = {player_id: [] for player_id in player_ids}
+    for row in rows:
+        player_id = row.get("player_id")
+        if player_id not in counts:
+            continue
+        counts[player_id] += 1
+        if len(payloads[player_id]) < 1000:
+            payloads[player_id].append(row["payload"])
+    return {
+        player_id: {
+            **aggregate_production(payloads[player_id]),
+            "weekly_record_count": counts[player_id],
+            "source": "Historical League Memory", "schema_version": PLAYER_HISTORY_SCHEMA_VERSION,
+        }
+        for player_id in player_ids
+    }
+
+
 def import_status(league_id: str) -> dict[str, Any]:
     if historical_store is not canonical_history_store:
         runs = historical_store.import_status(league_id)
