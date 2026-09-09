@@ -49,6 +49,9 @@ from tools.validation.generate_sanitized_market_fixture import (
     material_market_fixture_change,
 )
 from tools.validation.market_semantic_contract import retained_semantic_contract
+from tools.validation.market_replacement_window import ReplacementWindow
+
+_replacement_window = ReplacementWindow()
 
 _profile: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
     "market_validation_profile", default=None,
@@ -468,6 +471,19 @@ MarketReadModel.fetch_summaries = _stage("market_row_loading_and_decoding", Mark
 market_read_model._json_object = _stage("row_decoding", market_read_model._json_object)
 AssetMarket.health = _stage("compact_summary_reconstruction", AssetMarket.health)
 AssetMarketCache._publish = _stage("object_publication", AssetMarketCache._publish)
+_publish_with_profile = AssetMarketCache._publish
+
+
+def _held_replacement_publish(self, *args, **kwargs):
+    if self is asset_market_cache:
+        _replacement_window.before_publication()
+    result = _publish_with_profile(self, *args, **kwargs)
+    if self is asset_market_cache:
+        _replacement_window.record("publication_complete")
+    return result
+
+
+AssetMarketCache._publish = _held_replacement_publish
 market_engine.brain_service = _stage("brain_snapshot_lookup", market_engine.brain_service)
 
 _build_read_model = market_engine.build_read_model
@@ -597,6 +613,12 @@ async def validation_profile(request: Request, call_next):
         "transactions_syncing": bool(STATE.get("transactions_syncing")),
         "market_build_phase": cache.get("build_phase"),
         "market_last_error": cache.get("last_error"),
+        "market_last_miss_reason": cache.get("last_miss_reason"),
+        "replacement_window": list(_replacement_window.events),
+        "lifecycle": {
+            key: value for key, value in lifecycle_coordinator.snapshot().items()
+            if key in {"phase", "market_build_allowed", "startup_fence", "heavy_work"}
+        },
         "hydration_stages": {name: dict(value) for name, value in _stages.items()},
         "preparation_active": dict(_preparation_active),
         "preparation_events": [dict(event) for event in _preparation_events],
@@ -684,7 +706,6 @@ async def nonsemantic_refresh(marker: str) -> dict[str, Any]:
     }
 
 
-@app.post("/__validation__/material-market-change")
 async def material_market_change(marker: str) -> dict[str, Any]:
     """Change one attached canonical player value and retain the fixture state."""
     current = STATE.get("data")
@@ -707,6 +728,23 @@ async def material_market_change(marker: str) -> dict[str, Any]:
         ),
         "consumed_attached": consumed_attached,
     }
+
+
+@app.post("/__validation__/material-market-change")
+async def admitted_material_market_change(marker: str) -> dict[str, Any]:
+    async with _replacement_window.admitted(lifecycle_coordinator):
+        evidence = await material_market_change(marker)
+        _replacement_window.record("material_input_published")
+        asset_market_cache.reconcile(STATE["data"], STATE, historical_store, LEAGUE_ID)
+        if not asset_market_cache.metrics().get("build_active"):
+            raise RuntimeError("Material replacement worker did not start")
+        _replacement_window.record("replacement_started")
+        return {**evidence, "replacement_window": list(_replacement_window.events)}
+
+
+@app.post("/__validation__/replacement-release")
+async def release_material_replacement() -> dict[str, Any]:
+    return {"events": _replacement_window.release()}
 
 
 @app.get("/__validation__/semantic-market-contract")

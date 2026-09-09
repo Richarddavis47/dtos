@@ -9,6 +9,11 @@ These routes remain authenticated and require an active membership. Measurement
 retains CSRF protection. Dynamic league routes, unknown path descendants and
 cross-account/franchise scoping retain their existing security checks.
 
+The Linux fixture now distinguishes deferred maintenance (complete last-valid
+Market is available) from active replacement (503). A validation-only publication
+barrier proves the intended overlap without changing production Market behavior,
+artifact semantics, workloads, or timing/memory limits.
+
 No historical backfill, database migration, provider, intelligence, storage or
 infrastructure behavior changes. The accepted v1.16.0 evidence remains valid for
 those untouched systems. Current Visual/DINS/Mirror remain retired. Batch 3 is
