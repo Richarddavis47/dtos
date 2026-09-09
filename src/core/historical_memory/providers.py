@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import csv
+import math
 from dataclasses import dataclass
 from collections.abc import AsyncIterator
 from typing import Any, Protocol
@@ -124,22 +125,43 @@ def classify_nflverse_404(
 
 def normalize_nflverse_row(row: dict[str, Any]) -> dict[str, Any]:
     """Normalize provider CSV while preserving unavailable versus observed zero."""
+    # Published nflverse schemas changed these names. Prefer the current field
+    # when present (including explicit null); never silently backfill a null
+    # current field from a conflicting legacy alias.
+    aliases = {
+        "interceptions": "passing_interceptions",
+        "fumbles": "fumbles_total",
+        "fumbles_lost": "fumbles_lost_total",
+    }
+    normalized_row = dict(row)
+    for legacy, current in aliases.items():
+        if current in row:
+            normalized_row[legacy] = row[current]
     raw_stats = {
-        key: _number(row.get(source))
+        key: _number(normalized_row.get(source))
         for key, source in {
             "pass_att": "attempts",
             "pass_cmp": "completions",
             "pass_yd": "passing_yards",
             "pass_td": "passing_tds",
             "pass_int": "interceptions",
+            "pass_2pt": "passing_2pt_conversions",
+            "pass_fd": "passing_first_downs",
+            "pass_sack": "sacks_suffered",
             "rush_att": "carries",
             "rush_yd": "rushing_yards",
             "rush_td": "rushing_tds",
+            "rush_2pt": "rushing_2pt_conversions",
+            "rush_fd": "rushing_first_downs",
             "rec": "receptions",
             "rec_yd": "receiving_yards",
             "rec_td": "receiving_tds",
+            "rec_2pt": "receiving_2pt_conversions",
+            "rec_fd": "receiving_first_downs",
             "rec_tgt": "targets",
             "rec_air_yd": "receiving_air_yards",
+            "target_share": "target_share",
+            "air_yards_share": "air_yards_share",
             "fumbles": "fumbles",
             "fumbles_lost": "fumbles_lost",
         }.items()
@@ -152,6 +174,7 @@ def normalize_nflverse_row(row: dict[str, Any]) -> dict[str, Any]:
         "season": _integer(row.get("season")),
         "week": _integer(row.get("week")),
         "season_type": row.get("season_type") or None,
+        "game_id": row.get("game_id") or None,
         "nfl_team": row.get("recent_team") or row.get("team") or None,
         "opponent": row.get("opponent_team") or None,
         "position": row.get("position") or None,
@@ -170,7 +193,8 @@ def _number(value: Any) -> float | None:
     if value in {None, "", "NA", "NaN"}:
         return None
     try:
-        return float(value)
+        number = float(value)
+        return number if math.isfinite(number) else None
     except (TypeError, ValueError):
         return None
 

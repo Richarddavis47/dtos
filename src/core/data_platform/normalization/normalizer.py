@@ -14,7 +14,7 @@ class ProviderNormalizer:
 
     def value(self, provider: str, identifier: str, row: Any, *, name: str | None = None) -> NormalizedValue:
         mapping = row if isinstance(row, dict) else {"value": row}
-        player = self.resolver.resolve(identifier, provider, name) or self.resolver.resolve(identifier, "Sleeper", name)
+        player = self.resolver.resolve(identifier, provider, name)
         warnings: list[str] = []
         if player is None:
             warnings.append("Provider player identifier did not resolve to a canonical DTOS player.")
@@ -27,6 +27,8 @@ class ProviderNormalizer:
         if value is not None and not 0 <= value <= 1_000_000:
             value = None
             warnings.append("Provider value is outside accepted bounds.")
+        if player is None:
+            value = None
         timestamp = normalize_timestamp(mapping.get("updated_at") or mapping.get("timestamp"))
         confidence = normalize_confidence(mapping.get("confidence", 70))
         return NormalizedValue(player.dtos_id if player else identifier, provider, value, _integer(mapping.get("rank")), _integer(mapping.get("position_rank")), str(mapping["tier"]) if mapping.get("tier") is not None else None, _float(mapping.get("adp")), timestamp, confidence, "value", tuple(warnings))

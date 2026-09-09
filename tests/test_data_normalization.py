@@ -24,7 +24,7 @@ class NormalizationTests(unittest.TestCase):
     def test_identity_resolves_all_registered_provider_ids_and_name_variations(self) -> None:
         self.assertEqual(self.resolver.resolve("99", "FantasyCalc").dtos_id, "s1")
         self.assertEqual(self.resolver.resolve("mhj", "KeepTradeCut").dtos_id, "s1")
-        self.assertEqual(self.resolver.resolve("marvinharrison", name="Marvin Harrison Jr.").dtos_id, "s1")
+        self.assertIsNone(self.resolver.resolve("marvinharrison", name="Marvin Harrison Jr."))
         self.assertEqual(normalize_name("Marvin Harrison Jr."), "marvinharrison")
 
     def test_team_position_free_agent_and_rookie_normalization(self) -> None:
@@ -34,6 +34,31 @@ class NormalizationTests(unittest.TestCase):
         self.assertEqual((rookie.nfl_team, rookie.experience), ("FA", 0))
         self.assertEqual(normalize_team("WSH"), "WAS")
         self.assertEqual(normalize_position("D/ST"), "DST")
+
+    def test_provider_namespace_does_not_fall_back_to_sleeper_or_name(self) -> None:
+        self.assertIsNone(self.resolver.resolve("s1", "GSIS", "Marvin Harrison Jr."))
+        result = ProviderNormalizer(self.resolver).value("GSIS", "s1", {"value": 100})
+        self.assertIsNone(result.value)
+        self.assertTrue(result.warnings)
+
+    def test_ambiguous_crosswalk_fails_closed_independent_of_registration_order(self) -> None:
+        rows = {
+            "a": {"full_name": "Same Name", "gsis_id": "shared"},
+            "b": {"full_name": "Same Name", "gsis_id": "shared"},
+        }
+        for ordered in (rows, dict(reversed(list(rows.items())))):
+            resolver = PlayerIdentityResolver(ordered)
+            self.assertIsNone(resolver.resolve("shared", "GSIS"))
+            self.assertIsNone(resolver.resolve("Same Name", name="Same Name"))
+            self.assertEqual(resolver.resolve("a", "Sleeper").dtos_id, "a")
+
+    def test_verified_identity_survives_team_name_and_status_changes(self) -> None:
+        resolver = PlayerIdentityResolver({"a": {"full_name": "Old Name", "team": "NYJ", "gsis_id": "old", "pfr_id": "pfr-a"}})
+        resolver.register("a", {"full_name": "New Name", "team": None, "status": "Retired", "gsis_id": "new", "pfr_id": "pfr-a"})
+        self.assertIsNone(resolver.resolve("old", "GSIS"))
+        player = resolver.resolve("new", "GSIS")
+        self.assertEqual((player.dtos_id, player.nfl_team, player.status), ("a", "FA", "Retired"))
+        self.assertEqual(resolver.resolve("pfr-a", "PFR"), player)
 
     def test_sleeper_metadata_is_always_normalized_to_a_dictionary(self) -> None:
         cases = (
@@ -102,7 +127,7 @@ class NormalizationTests(unittest.TestCase):
             return state
 
         app = FastAPI()
-        app.include_router(create_api_router(ensure_fresh=ensure, require_data=lambda: data, sync_sleeper=sync_sleeper, state=state, league_id="test"))
+        app.include_router(create_api_router(ensure_fresh=ensure, require_data=lambda: data, sync_sleeper=sync_sleeper, state=state, league_id=data["league"]["league_id"]))
         client = TestClient(app)
         found = client.get(f"/api/players/{player_id}/intelligence")
         missing = client.get("/api/players/not-real/intelligence")
@@ -110,6 +135,11 @@ class NormalizationTests(unittest.TestCase):
         self.assertEqual(missing.status_code, 404)
         self.assertIn("provider_availability", found.json())
         self.assertIn("unavailable_reasons", found.json())
+
+        data["league"]["league_id"] = "another-league"
+        mismatch = client.get(f"/api/players/{player_id}/intelligence")
+        self.assertEqual(mismatch.status_code, 503)
+        self.assertNotIn("normalized_player", mismatch.json())
 
     def test_normalization_and_consensus_are_deterministic(self) -> None:
         normalizer = ProviderNormalizer(self.resolver)

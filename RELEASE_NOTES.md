@@ -1,4 +1,29 @@
-# DTOS v1.15.1 - Lossless Storage Prerequisite
+# DTOS v1.16.0 - Canonical Data Foundation
+
+Master Roadmap Batch 2 establishes shared canonical source evidence and
+league-specific derivation. Global NFL production, usage and schedule evidence
+are bounded and reusable across leagues; unchanged synchronization does not
+append duplicate snapshots. Background workers publish complete source revisions
+atomically and preserve prior evidence during interruption.
+
+Sleeper history reconciliation preserves source settings, ownership, regular and
+postseason results, transactions and draft identity. Historical franchise reads
+exclude unproven future evidence and distinguish exact event times from draft
+lifecycle bounds. Missing evidence, ambiguous identities and scoring gaps remain
+explicit. No valuation/ranking or FOIS grade recalibration is included.
+
+Coverage limitations: the 2026 production file was unavailable at source review;
+no earlier season is substituted. Unsupported scoring bonuses remain incomplete.
+Contract/snap/route feeds without verified upstream permission remain unconnected.
+Current Sleeper status/depth metadata are not historical status proof. A 0.10-point
+source discrepancy in one 2021 standing is retained rather than overwritten.
+
+See docs/BATCH2_CANONICAL_DATA_FOUNDATION.md for evidence and acceptance status,
+and docs/BATCH2_CONSUMER_MIGRATION_MAP.md for later consumer migrations. Production
+backfill requires dry-run admission. Batch 3 is not started. Current Visual, DINS
+and External Visual Mirror remain retired.
+
+## Previous release: v1.15.1 - Lossless Storage Prerequisite
 
 Correct duplicate durable intelligence storage and full-database FOIS preparation
 without changing conclusions, historical evidence, ownership, or Trade mechanics.

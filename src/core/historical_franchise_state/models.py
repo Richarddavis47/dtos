@@ -7,7 +7,7 @@ from typing import Any, Mapping
 
 
 HISTORICAL_FRANCHISE_STATE_SCHEMA_VERSION = "historical-franchise-state-1"
-HISTORICAL_FRANCHISE_STATE_METHOD_VERSION = "reverse-event-reconstruction-1"
+HISTORICAL_FRANCHISE_STATE_METHOD_VERSION = "reverse-event-reconstruction-2"
 
 
 class BoundaryMode(StrEnum):

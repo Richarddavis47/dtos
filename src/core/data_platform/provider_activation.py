@@ -53,8 +53,8 @@ def provider_catalog(existing: dict[str, Any] | None = None) -> dict[str, dict[s
             "Underdog ADP": _status(enabled=False, state="unsupported", result="Disabled", reason="No approved public Underdog ADP API is available to this deployment."),
             "KeepTradeCut": _status(enabled=False, state="unsupported", result="Disabled", reason="No approved public API or licensed integration is configured."),
             "Projections": _status(enabled=False, state="unsupported", result="Disabled", reason="No live projection provider has been configured."),
-            "Production": _status(enabled=False, state="unsupported", result="Disabled", reason="No supported production-stat provider is configured."),
-            "Usage": _status(enabled=False, state="unsupported", result="Disabled", reason="No supported snap-share or route-usage provider is configured."),
+            "Production": _status(enabled=True, state="waiting", result="Canonical global background ingestion", reason="Availability depends on the requested source season and retained canonical evidence."),
+            "Usage": _status(enabled=True, state="waiting", result="Derived targets/carries from canonical production", reason="Snap-share and route detail are not connected."),
         }
     )
     return catalog
@@ -154,6 +154,10 @@ def player_context(player_id: str, data: dict[str, Any]) -> dict[str, Any]:
     owners = [team for team in data.get("teams") or [] if any(str(row.get("id")) == player_id for row in team.get("players") or [])]
     transactions = [row for row in data.get("transactions") or [] if player_id in {str(key) for key in (row.get("adds") or {})} or player_id in {str(key) for key in (row.get("drops") or {})}]
     role = player.get("depth_chart_position") or player.get("depth_chart_order")
+    snapshot = data.get("projection_intelligence") or {}
+    league_id = str((data.get("league") or {}).get("league_id") or "")
+    projection = ((snapshot.get("players") or {}).get(player_id) or {}) if league_id and str(snapshot.get("league_id") or "") == league_id else {}
+    projected = projection.get("weekly_projected_points")
     return {
         "metadata": {
             "team": player.get("team"),
@@ -165,12 +169,21 @@ def player_context(player_id: str, data: dict[str, Any]) -> dict[str, Any]:
             "depth_chart_order": player.get("depth_chart_order"),
         },
         "league": {"trending_adds": adds, "trending_drops": drops, "owned_by": owners[0].get("team_name") if owners else None, "transaction_count": len(transactions), "source": "Sleeper"},
+        "projection_evidence": {
+            "value": projected, "source": "Sleeper",
+            "availability": "cached" if projected is not None else "unavailable",
+            "league_id": league_id,
+            "snapshot_id": snapshot.get("projection_snapshot_id") if projection else None,
+            "season": snapshot.get("season") if projection else None,
+            "week": snapshot.get("week") if projection else None,
+            "freshness": projection.get("source_freshness") if projection else None,
+        },
         "availability": {
             "adp": "Sleeper and Underdog do not expose an approved public ADP feed to this deployment.",
-            "production": "No supported production-stat provider is configured.",
-            "projection": "No live projection provider has been configured; DTOS deterministic estimates are labeled separately.",
+            "production": "Consult canonical_evidence for season-scoped production; this legacy context does not attach a production window.",
+            "projection": None if projected is not None else "Canonical Sleeper projection evidence is unavailable for this player in the active league snapshot; missing evidence is not zero.",
             "usage": "No supported snap-share or route-usage provider is configured.",
             "depth_chart_role": None if role is not None else "Sleeper player metadata does not currently provide a depth-chart role for this player.",
-            "bye_week": None if player.get("bye_week") is not None else "Sleeper player metadata does not currently provide a bye week for this player.",
+            "bye_week": None if player.get("bye_week") is not None else "Consult canonical_evidence.schedule for source-backed schedule/bye evidence; Sleeper metadata alone does not supply this field.",
         },
     }

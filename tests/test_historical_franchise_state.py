@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import unittest
+from dataclasses import replace
 from typing import Any
 
 from src.core.historical_franchise_state import (
@@ -10,7 +11,7 @@ from src.core.historical_franchise_state import (
     ReconstructionAvailability,
 )
 from src.core.historical_intelligence import (
-    GlobalMarketCheckpoint, HistoricalIntelligenceService,
+    GlobalMarketCheckpoint, HistoricalIntelligenceService, HistoricalEventType,
 )
 from src.core.history_context.store import CanonicalHistoryStore
 
@@ -97,6 +98,51 @@ class FixtureStore:
 
 
 class HistoricalFranchiseStateTests(unittest.TestCase):
+    def test_draft_lifecycle_bounds_prove_order_without_fabricating_pick_time(self) -> None:
+        draft = replace(self.event, event_id='draft:2', event_type=HistoricalEventType.ROOKIE_DRAFT_SELECTION,
+            occurred_at=None, week=None, attributes={'draft_id': 'draft', 'pick_no': 2,
+                'draft_status': 'complete', 'draft_start_at': '2025-04-26T00:00:00Z',
+                'draft_last_pick_at': '2025-04-29T00:00:00Z'})
+        boundary = HistoricalBoundary(season=2025, event_id=self.event.event_id)
+        self.assertTrue(self.service._at_boundary(draft, boundary, self.event))
+        self.assertIsNone(draft.occurred_at)
+        inside = HistoricalBoundary(season=2025, occurred_at='2025-04-27T00:00:00Z')
+        self.assertIsNone(self.service._at_boundary(draft, inside))
+        self.assertIsNone(self.service._at_boundary(replace(draft,
+            attributes={**draft.attributes, 'draft_status': 'drafting'}), boundary, self.event))
+
+    def test_missing_time_is_not_lexicographic_event_order(self) -> None:
+        target = replace(self.event, occurred_at=None, week=None,
+                         event_id='draft:10', attributes={'draft_id': 'draft', 'pick_no': 10})
+        earlier = replace(target, event_id='draft:2', attributes={'draft_id': 'draft', 'pick_no': 2})
+        boundary = HistoricalBoundary(season=2025, event_id=target.event_id)
+        self.assertTrue(self.service._at_boundary(earlier, boundary, target))
+        unrelated = replace(earlier, attributes={'draft_id': 'other', 'pick_no': 2})
+        self.assertIsNone(self.service._at_boundary(unrelated, boundary, target))
+
+    def test_unknown_ownership_order_is_partial_and_cannot_supply_future_assets(self) -> None:
+        for row in self.store.rows:
+            if row['entity_type'] == 'trade':
+                row['occurred_at'] = None
+                row['timestamp_provenance'] = {}
+        self.store.generation = 'history-generation-missing-time'
+        state = self.service.reconstruct('league-a', '1', HistoricalBoundary(
+            season=2025, occurred_at='2025-10-01T12:00:00Z', week=5))
+        self.assertIn('ownership_event_order_unresolved', state.warnings)
+        self.assertEqual(state.coverage['ownership'].availability, ReconstructionAvailability.PARTIAL)
+        self.assertNotIn('player-new', {row.asset_id for row in state.players})
+        self.assertNotIn('player-old', {row.asset_id for row in state.players})
+
+    def test_failed_or_pending_attempt_cannot_change_reconstructed_roster(self) -> None:
+        for status in ('failed', 'pending'):
+            event = replace(self.event, attributes={**self.event.attributes, 'status': status})
+            rosters = {'league-a:franchise:1': {'player-new'}, 'league-a:franchise:2': {'player-old'}}
+            expected = {key: set(value) for key, value in rosters.items()}
+            picks = {}
+            self.service._reverse_event(rosters, picks, event)
+            self.assertEqual(rosters, expected)
+            self.assertEqual(picks, {})
+
     def setUp(self) -> None:
         self.store = FixtureStore()
         checkpoints = (
@@ -133,6 +179,26 @@ class HistoricalFranchiseStateTests(unittest.TestCase):
         self.assertEqual(state.record.games_observed, 1)
         self.assertEqual(state.lineup.actual_starters, ("player-stay",))
         self.assertEqual(state.lineup.evidence_week, 4)
+
+    def test_event_only_boundary_does_not_include_end_of_season_results(self) -> None:
+        state = self.service.reconstruct('league-a', '1', HistoricalBoundary(
+            2025, event_id=self.event.event_id))
+        self.assertEqual((state.record.wins, state.record.losses), (1, 0))
+        self.assertEqual(state.record.games_observed, 1)
+        self.assertEqual(state.lineup.evidence_week, 4)
+
+    def test_timestamp_without_week_cannot_guess_completed_weekly_results(self) -> None:
+        state = self.service.reconstruct('league-a', '1', HistoricalBoundary(
+            2025, occurred_at='2025-10-01T12:00:00Z'))
+        self.assertEqual(state.record.games_observed, 0)
+        self.assertIsNone(state.lineup.actual_points)
+        self.assertIsNone(state.lineup.optimal_points)
+
+    def test_intraweek_boundary_excludes_that_weeks_final_result(self) -> None:
+        state = self.service.reconstruct('league-a', '1', HistoricalBoundary(
+            2025, week=4, occurred_at='2025-09-25T12:00:00Z'))
+        self.assertEqual(state.record.games_observed, 0)
+        self.assertIsNone(state.lineup.actual_points)
 
     def test_unknown_market_is_not_zero_and_total_is_partial(self) -> None:
         service = HistoricalFranchiseStateService(HistoricalIntelligenceService(self.store))

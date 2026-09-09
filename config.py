@@ -62,6 +62,7 @@ class Settings:
     auth_required: bool
     session_cookie_secure: bool
     session_ttl_hours: int
+    global_evidence_file: Path
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -150,6 +151,11 @@ class Settings:
             auth_required=_boolean("DTOS_AUTH_REQUIRED", default=bool(os.getenv("RENDER"))),
             session_cookie_secure=_boolean("DTOS_SESSION_COOKIE_SECURE", default=bool(os.getenv("RENDER"))),
             session_ttl_hours=min(24 * 30, _integer("DTOS_SESSION_TTL_HOURS", 24 * 7, 1)),
+            global_evidence_file=Path(os.getenv(
+                "DTOS_GLOBAL_EVIDENCE_FILE",
+                str(history_storage_root / "dtos_global_evidence.sqlite3" if durable_required
+                    else cache_file.with_name("dtos_global_evidence.sqlite3")),
+            )),
         )
 
 
@@ -179,3 +185,4 @@ ACCOUNT_DATABASE_FILE = SETTINGS.account_database_file
 AUTH_REQUIRED = SETTINGS.auth_required
 SESSION_COOKIE_SECURE = SETTINGS.session_cookie_secure
 SESSION_TTL_HOURS = SETTINGS.session_ttl_hours
+GLOBAL_EVIDENCE_FILE = SETTINGS.global_evidence_file

@@ -32,6 +32,18 @@ def canonical_utc_timestamp(value: Any) -> str | None:
     return _utc_iso(value)
 
 
+def canonical_draft_bounds(draft: dict[str, Any]) -> dict[str, Any]:
+    """Lifecycle bounds constrain selections; they are not exact pick times."""
+    def positive(value):
+        try:
+            return _utc_iso(value) if not isinstance(value, bool) and float(value) > 0 else None
+        except (TypeError, ValueError):
+            return None
+    return {'draft_start_at': positive(draft.get('start_time')),
+            'draft_last_pick_at': positive(draft.get('last_picked')) if draft.get('status') == 'complete' else None,
+            'draft_status': draft.get('status')}
+
+
 def canonical_transaction_timestamp(payload: dict[str, Any]) -> tuple[str | None, dict[str, Any]]:
     """Return occurrence time and bounded provenance from Sleeper evidence.
 

@@ -35,7 +35,9 @@ class CachedMarketAdapter(DataProvider):
                     detail = f"Cached {field} field"
                     break
         resolver = PlayerIdentityResolver({key: asset})
-        normalized = ProviderNormalizer(resolver).value(self.provider_name, key, normalized_row, name=asset.get("full_name"))
+        # This adapter reads canonical Sleeper-keyed cached rows, not raw provider IDs.
+        normalizer = ProviderNormalizer(resolver)
+        normalized = normalizer.value("Sleeper", key, normalized_row)
         available = normalized.value is not None and not normalized.warnings
         issues = normalized.warnings or (() if available else (detail,))
         quality = DataQuality("good" if available else "blocked", issues, 100 if available else 0)

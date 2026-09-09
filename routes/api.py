@@ -209,12 +209,20 @@ def create_api_router(
 
     @router.get("/api/players/{player_id}/intelligence")
     async def api_player_intelligence(player_id: str) -> JSONResponse:
+        import asyncio
+        from services.global_evidence import canonical_player_evidence
         from fastapi.encoders import jsonable_encoder
         await ensure_fresh()
+        data = require_data()
+        if str((data.get("league") or {}).get("league_id") or "") != str(selected_league()):
+            return JSONResponse({"detail": "Selected league context is not ready"}, status_code=503)
         try:
-            report = data_platform.player_report(player_id, require_data())
+            report = data_platform.player_report(player_id, data)
         except KeyError:
             return JSONResponse({"detail": "Player not found"}, status_code=404)
+        report["canonical_evidence"] = await asyncio.to_thread(
+            canonical_player_evidence, player_id, data, expected_league_id=selected_league(),
+        )
         return JSONResponse(jsonable_encoder(report))
 
     @router.post("/sync")

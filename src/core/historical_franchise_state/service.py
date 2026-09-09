@@ -6,6 +6,7 @@ import hashlib
 import json
 from collections import defaultdict
 from datetime import datetime
+from dataclasses import replace
 from statistics import mean
 from threading import RLock
 from typing import Any, Iterable, Mapping
@@ -21,7 +22,9 @@ from .models import (
     HistoricalBoundary, HistoricalFranchiseState, HistoricalLineupState,
     HistoricalRecordState, HistoricalWindowState, ReconstructionAvailability,
     StateDifference,
+    HISTORICAL_FRANCHISE_STATE_METHOD_VERSION,
 )
+from src.core.history_context.results import number
 
 
 def _franchise_id(league_id: str, value: object) -> str:
@@ -59,10 +62,26 @@ class HistoricalFranchiseStateService:
     def _event_order(event: HistoricalEvent) -> tuple[str, int, str]:
         return (event.occurred_at or "", event.week or 0, event.event_id)
 
+    @staticmethod
+    def _event_interval(event: HistoricalEvent):
+        """Source bounds are not fabricated exact selection timestamps."""
+        low = high = event.occurred_at
+        if not low and event.event_type is HistoricalEventType.ROOKIE_DRAFT_SELECTION:
+            low = event.attributes.get('draft_start_at')
+            high = event.attributes.get('draft_last_pick_at') if event.attributes.get('draft_status') == 'complete' else None
+        try:
+            start = datetime.fromisoformat(low.replace('Z', '+00:00')) if low else None
+            end = datetime.fromisoformat(high.replace('Z', '+00:00')) if high else None
+            if start and end and start.tzinfo and end.tzinfo and start <= end:
+                return start, end
+        except (ValueError, TypeError, AttributeError):
+            pass
+        return None
+
     def _at_boundary(
         self, event: HistoricalEvent, boundary: HistoricalBoundary,
         target: HistoricalEvent | None = None,
-    ) -> bool:
+    ) -> bool | None:
         if event.season < boundary.season:
             return True
         if event.season > boundary.season:
@@ -73,17 +92,41 @@ class HistoricalFranchiseStateService:
             )
             if target is None:
                 raise KeyError("Unknown event boundary for selected league.")
-            comparison = self._event_order(event) <= self._event_order(target)
-            if boundary.mode is BoundaryMode.BEFORE and event.event_id == target.event_id:
-                return False
-            return comparison
+            if event.event_id == target.event_id:
+                return boundary.mode is not BoundaryMode.BEFORE
+            draft = event.attributes.get('draft_id')
+            if draft and draft == target.attributes.get('draft_id'):
+                left, right = event.attributes.get('pick_no'), target.attributes.get('pick_no')
+                if str(left).isdigit() and str(right).isdigit() and int(left) != int(right):
+                    return int(left) < int(right)
+            left_interval, right_interval = self._event_interval(event), self._event_interval(target)
+            if left_interval and right_interval:
+                if left_interval[1] < right_interval[0]:
+                    return True
+                if left_interval[0] > right_interval[1]:
+                    return False
+                return None
+            if event.week is not None and target.week is not None and event.week != target.week:
+                return event.week < target.week
+            return None
         if boundary.occurred_at and event.occurred_at:
+            event_time = datetime.fromisoformat(event.occurred_at.replace('Z', '+00:00'))
+            boundary_time = datetime.fromisoformat(boundary.occurred_at.replace('Z', '+00:00'))
             if boundary.mode is BoundaryMode.BEFORE:
-                return event.occurred_at < boundary.occurred_at
-            return event.occurred_at <= boundary.occurred_at
+                return event_time < boundary_time
+            return event_time <= boundary_time
+        if boundary.occurred_at and (interval := self._event_interval(event)):
+            stamp = datetime.fromisoformat(boundary.occurred_at.replace('Z', '+00:00'))
+            if interval[1] < stamp:
+                return True
+            if interval[0] > stamp:
+                return False
+            return None
         if boundary.week is not None and event.week is not None:
+            if boundary.occurred_at and boundary.week == event.week:
+                return None
             return event.week <= boundary.week
-        return False
+        return None
 
     def _records(self, league_id: str, season: int, entity: str) -> list[dict[str, Any]]:
         generation = self.history.cache_identity(league_id)
@@ -117,6 +160,10 @@ class HistoricalFranchiseStateService:
         rosters: dict[str, set[str]], picks: dict[str, str], event: HistoricalEvent,
     ) -> None:
         attributes = event.attributes
+        if attributes.get("status") not in (None, "complete"):
+            # Failed/pending claims are historical attempts, not roster moves.
+            # Keep the source event, but never apply its proposed adds/drops.
+            return
         adds = attributes.get("adds") or {}
         drops = attributes.get("drops") or {}
         if isinstance(adds, Mapping):
@@ -140,8 +187,9 @@ class HistoricalFranchiseStateService:
                 rosters.setdefault(_franchise_id(event.league_id, roster_id), set()).discard(player_id)
                 year = attributes.get("season") or attributes.get("year") or event.season
                 round_number = attributes.get("round")
-                if round_number:
-                    picks[f"PICK-{year}-R{round_number}-ORIG{roster_id}"] = _franchise_id(event.league_id, roster_id)
+                original = attributes.get('original_roster_id')
+                if round_number and original:
+                    picks[f"PICK-{year}-R{round_number}-ORIG{original}"] = _franchise_id(event.league_id, roster_id)
 
     def _final_picks(self, league_id: str, season: int) -> dict[str, str]:
         result: dict[str, str] = {}
@@ -175,13 +223,16 @@ class HistoricalFranchiseStateService:
         for row in self._records(league_id, boundary.season, "matchup"):
             payload = row.get("payload") or {}
             week = int(row.get("week") or 0)
-            if boundary.week is not None and week > boundary.week:
+            if not self._completed_week_at_boundary(week, boundary):
                 continue
             scores = payload.get("team_points") or {}
             if roster_id not in scores:
                 continue
-            own = float(scores[roster_id] or 0)
-            other = max((float(value or 0) for key, value in scores.items() if str(key) != roster_id), default=own)
+            values = {str(key): number(value) for key, value in scores.items()}
+            if len(values) != 2 or any(value is None for value in values.values()):
+                continue
+            own = values[roster_id]
+            other = next(value for key, value in values.items() if key != roster_id)
             points_for += own
             opponents.append((own, other))
             if own > other:
@@ -191,6 +242,16 @@ class HistoricalFranchiseStateService:
             else:
                 ties += 1
         return HistoricalRecordState(wins, losses, ties, points_for, None, len(opponents))
+
+    @staticmethod
+    def _completed_week_at_boundary(week: int, boundary: HistoricalBoundary) -> bool:
+        # A final weekly payload does not prove that its result existed at an
+        # intraweek timestamp. Without a source week, no temporal join is safe.
+        if boundary.week is None or week <= 0:
+            return False
+        if boundary.occurred_at or boundary.event_id or boundary.mode is BoundaryMode.BEFORE:
+            return week < boundary.week
+        return week <= boundary.week
 
     def _market_assets(
         self, player_ids: Iterable[str], occurred_at: str | None,
@@ -241,7 +302,9 @@ class HistoricalFranchiseStateService:
             if str(row.get("franchise_id") or "") != franchise_id:
                 continue
             week = int(row.get("week") or 0)
-            if boundary.week is not None and week > boundary.week:
+            if not self._completed_week_at_boundary(week, boundary):
+                continue
+            if number((row.get("payload") or {}).get("points")) is None:
                 continue
             player_id = str(row.get("player_id") or "")
             if player_id in player_ids:
@@ -276,7 +339,7 @@ class HistoricalFranchiseStateService:
                 allowed = {"QB", "RB", "WR", "TE"}
             else:
                 allowed = {normalized}
-            candidates = [player_id for player_id in remaining if positions.get(player_id) in allowed]
+            candidates = [player_id for player_id in remaining if positions.get(player_id) in allowed and player_id in weekly_points]
             if candidates:
                 selected = max(candidates, key=lambda player_id: (weekly_points.get(player_id, 0), player_id))
                 optimal.append(selected)
@@ -323,35 +386,55 @@ class HistoricalFranchiseStateService:
             self.history.event_by_identity(league_id, boundary.event_id)
             if boundary.event_id else None
         )
-        later = [
-            event for event in events
-            if not self._at_boundary(event, boundary, target)
-        ]
+        positions = [(event, self._at_boundary(event, boundary, target)) for event in events]
+        later = [event for event, before in positions if before is False]
+        unresolved = [event for event, before in positions if before is None
+                      and event.attributes.get('status') in (None, 'complete')
+                      and (event.attributes.get('adds') or event.attributes.get('drops')
+                           or event.attributes.get('draft_picks')
+                           or event.event_type is HistoricalEventType.ROOKIE_DRAFT_SELECTION)]
         trace: list[Mapping[str, Any]] = []
         for event in sorted(later, key=self._event_order, reverse=True):
+            if event.attributes.get("status") not in (None, "complete"):
+                continue
             if event.event_type in {
                 HistoricalEventType.TRADE, HistoricalEventType.WAIVER_ACQUISITION,
                 HistoricalEventType.FREE_AGENT_ACQUISITION, HistoricalEventType.DROP,
                 HistoricalEventType.PLAYER_EVENT, HistoricalEventType.PICK_TRADE,
                 HistoricalEventType.ROOKIE_DRAFT_SELECTION,
             }:
+                if event.event_type is HistoricalEventType.ROOKIE_DRAFT_SELECTION and not event.attributes.get('original_roster_id'):
+                    warnings.append('draft_original_pick_identity_unavailable')
                 self._reverse_event(final_rosters, picks, event)
                 if include_trace:
                     trace.append({"event_id": event.event_id, "operation": "reverse", "occurred_at": event.occurred_at})
+        if unresolved:
+            warnings.append('ownership_event_order_unresolved')
+            uncertain_players = {str(player) for event in unresolved for player in event.player_ids}
+            for event in unresolved:
+                uncertain_players.update(map(str, event.attributes.get('adds') or {}))
+                uncertain_players.update(map(str, event.attributes.get('drops') or {}))
+            for roster in final_rosters.values():
+                roster.difference_update(uncertain_players)
+            if any(event.attributes.get('draft_picks') or event.event_type is HistoricalEventType.ROOKIE_DRAFT_SELECTION
+                   for event in unresolved):
+                picks.clear()
+                warnings.append('pick_ownership_event_order_unresolved')
         players = final_rosters[franchise_id]
         effective_time = boundary.occurred_at
         if effective_time is None and boundary.event_id:
             target = self.history.event_by_identity(league_id, boundary.event_id)
             effective_time = target.occurred_at if target else None
+        evidence_boundary = replace(boundary, week=target.week) if boundary.week is None and target else boundary
         lineup, production = self._lineup_and_production(
-            league_id, franchise_id, boundary, players, roster_positions,
+            league_id, franchise_id, evidence_boundary, players, roster_positions,
         )
         assets, known_value, known_count = self._market_assets(players, effective_time, production)
         selected_picks = tuple(HistoricalAssetState(asset_id=pick, asset_type="pick") for pick, owner in sorted(picks.items()) if owner == franchise_id)
         position_counts: defaultdict[str, int] = defaultdict(int)
         for asset in assets:
             position_counts[str(asset.position or "UNKNOWN")] += 1
-        record = self._record(league_id, franchise_id, boundary)
+        record = self._record(league_id, franchise_id, evidence_boundary)
         market_ratio = known_count / len(assets) if assets else 0.0
         age_count = sum(row.age_as_of is not None for row in assets)
         age_ratio = age_count / len(assets) if assets else 0.0
@@ -372,6 +455,16 @@ class HistoricalFranchiseStateService:
                 "birthdate_as_of_boundary" if age_count else "birthdate_evidence_unavailable",
             ),
         }
+        if unresolved:
+            coverage[CoverageDimension.OWNERSHIP.value] = self._coverage(
+                ReconstructionAvailability.PARTIAL, 40, 'ownership_event_order_unresolved')
+            if 'pick_ownership_event_order_unresolved' in warnings:
+                coverage[CoverageDimension.PICKS.value] = self._coverage(
+                    ReconstructionAvailability.UNAVAILABLE, 0, 'pick_ownership_event_order_unresolved')
+        if ('draft_original_pick_identity_unavailable' in warnings
+                and 'pick_ownership_event_order_unresolved' not in warnings):
+            coverage[CoverageDimension.PICKS.value] = self._coverage(
+                ReconstructionAvailability.PARTIAL, 40, 'draft_original_pick_identity_unavailable')
         numeric_confidence = round(mean(row.confidence for row in coverage.values()))
         current_strength = min(100, round((known_value / max(1, len(assets))) / 100)) if market_available else 0
         future_strength = min(100, round((known_value + len(selected_picks) * 1000) / max(1, len(assets) + len(selected_picks)) / 100)) if market_available else 0
@@ -401,7 +494,7 @@ class HistoricalFranchiseStateService:
         state_id = semantic_identity(
             "historical-franchise-state", league_id, franchise_id,
             _canonical_json({"season": boundary.season, "occurred_at": boundary.occurred_at, "week": boundary.week, "event_id": boundary.event_id, "mode": boundary.mode.value}),
-            history_generation, market_generation, "reverse-event-reconstruction-1",
+            history_generation, market_generation, HISTORICAL_FRANCHISE_STATE_METHOD_VERSION,
         )
         self._metrics["reconstructions"] += 1
         result = HistoricalFranchiseState(

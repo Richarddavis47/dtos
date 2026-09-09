@@ -16,7 +16,8 @@ from typing import Any, Iterable
 
 from config import SLEEPER_SEASON_CACHE_ROOT
 from .season_cache import SleeperSeasonCache
-from .timestamps import canonical_transaction_timestamp
+from .timestamps import canonical_transaction_timestamp, canonical_draft_bounds
+from .playoffs import playoff_facts
 
 from .metadata import minimal_metadata_store
 
@@ -130,6 +131,18 @@ class CanonicalHistoryStore:
         cached = sleeper_season_cache.read(league_id, season)
         return cached.facts if cached else None
 
+    def ownership_observations(self, league_id: str) -> dict[str, Any]:
+        """Background reconciliation only; no provider reads or permanent copy."""
+        from .ownership import reconcile_ownership
+        seasons = []
+        for season in sorted(self._cache_index(str(league_id))):
+            facts = self._facts(str(league_id), season)
+            if facts:
+                seasons.append({'league': facts.get('league') or {}, 'rosters': [
+                    {key: row.get(key) for key in ('roster_id', 'owner_id', 'co_owners')}
+                    for row in facts.get('rosters') or []]})
+        return reconcile_ownership(seasons)
+
     @staticmethod
     def _record(
         league_id: str, season: int, entity: str, source_id: str,
@@ -152,11 +165,14 @@ class CanonicalHistoryStore:
         }
 
     def _season_records(self, league_id: str, season: int) -> list[dict[str, Any]]:
+        from .results import matchup_result, standing_points
         facts = self._facts(league_id, season)
         if not facts:
             return []
         league = facts.get("league") or {}
         rows = [self._record(league_id, season, "league_season", league_id, {
+            "sleeper_season_league_id": league.get("league_id"),
+            "previous_league_id": league.get("previous_league_id"),
             "league_name": league.get("name") or "Sleeper League",
             "status": league.get("status"),
             "total_rosters": league.get("total_rosters"),
@@ -173,6 +189,7 @@ class CanonicalHistoryStore:
             franchise = f"{league_id}:franchise:{roster_id}"
             rows.append(self._record(league_id, season, "franchise_identity", str(roster_id), {
                 "sleeper_roster_id": roster_id, "owner_id": owner_id,
+                "co_owners": list(map(str, roster.get("co_owners") or ())),
                 "sleeper_username": user.get("display_name") or user.get("username"),
                 "dtos_display_name": (user.get("metadata") or {}).get("team_name")
                 or user.get("display_name") or f"Roster {roster_id}",
@@ -182,6 +199,7 @@ class CanonicalHistoryStore:
                 league_id, season, "roster_snapshot", str(roster_id), {
                     "roster_id": roster_id,
                     "owner_id": owner_id,
+                    "co_owners": list(map(str, roster.get("co_owners") or ())),
                     "players": list(map(str, roster.get("players") or ())),
                     "starters": list(map(str, roster.get("starters") or ())),
                     "reserve": list(map(str, roster.get("reserve") or ())),
@@ -193,14 +211,18 @@ class CanonicalHistoryStore:
             rows.append(self._record(league_id, season, "season_standing", str(roster_id), {
                 "roster_id": roster_id, "wins": settings.get("wins"),
                 "losses": settings.get("losses"), "ties": settings.get("ties"),
-                "points_for": settings.get("fpts"), "points_against": settings.get("fpts_against"),
+                "points_for": standing_points(settings, "fpts"),
+                "points_against": standing_points(settings, "fpts_against"),
                 "rank": settings.get("rank"),
             }, franchise_id=franchise))
         for week_key, matchups in (facts.get("matchups") or {}).items():
             week = int(week_key)
             grouped: dict[int, list[dict[str, Any]]] = defaultdict(list)
             for row in matchups or []:
-                grouped[int(row.get("matchup_id") or 0)].append(row)
+                # Unpaired/bye rows still supply player evidence, never a
+                # fabricated game against another unpaired franchise.
+                if row.get("matchup_id") is not None:
+                    grouped[int(row["matchup_id"])].append(row)
                 points = row.get("players_points") or {}
                 starters = set(map(str, row.get("starters") or ()))
                 roster_id = int(row.get("roster_id") or 0)
@@ -214,15 +236,9 @@ class CanonicalHistoryStore:
                         franchise_id=f"{league_id}:franchise:{roster_id}",
                     ))
             for matchup_id, sides in grouped.items():
-                scores = {str(side.get("roster_id")): side.get("points") for side in sides}
-                ordered = sorted(sides, key=lambda side: float(side.get("points") or 0), reverse=True)
-                winner = ordered[0].get("roster_id") if len(ordered) > 1 and ordered[0].get("points") != ordered[1].get("points") else None
                 rows.append(self._record(league_id, season, "matchup", f"{week}:{matchup_id}", {
                     "matchup_id": matchup_id,
-                    "franchises": [side.get("roster_id") for side in sides],
-                    "team_points": scores, "winner": winner,
-                    "loser": ordered[-1].get("roster_id") if winner else None,
-                    "tie": winner is None, "postseason_context": False,
+                    **matchup_result(sides, playoff_week=(league.get("settings") or {}).get("playoff_week_start"), week=week),
                 }, week=week))
         for week_key, transactions in (facts.get("transactions") or {}).items():
             week = int(week_key)
@@ -240,9 +256,20 @@ class CanonicalHistoryStore:
         for draft in facts.get("drafts") or []:
             draft_id = str(draft.get("draft_id") or _digest(draft)[:16])
             rows.append(self._record(league_id, season, "draft", draft_id, dict(draft)))
+        drafts_by_id = {str(draft.get('draft_id')): draft for draft in facts.get('drafts') or []
+                        if draft.get('draft_id')}
         for pick in facts.get("draft_picks") or []:
+            if str(pick.get('draft_id')) in drafts_by_id:
+                pick = {**pick, **canonical_draft_bounds(drafts_by_id[str(pick['draft_id'])])}
             pick_id = str(pick.get("pick_no") or pick.get("pick_id") or _digest(pick)[:16])
-            rows.append(self._record(league_id, season, "draft_pick", pick_id, dict(pick), player_id=str(pick.get("player_id") or "") or None))
+            if pick.get("draft_id"):
+                pick_id = f"{pick['draft_id']}:{pick_id}"
+            roster_id = pick.get("roster_id")
+            rows.append(self._record(
+                league_id, season, "draft_pick", pick_id, dict(pick),
+                player_id=str(pick.get("player_id") or "") or None,
+                franchise_id=f"{league_id}:franchise:{roster_id}" if roster_id is not None else None,
+            ))
         for pick in facts.get("traded_picks") or []:
             source_id = str(pick.get("pick_id") or _digest(pick)[:16])
             rows.append(self._record(
@@ -254,13 +281,11 @@ class CanonicalHistoryStore:
                 payload = {**row, "bracket": bracket_name}
                 rows.append(self._record(league_id, season, "playoff_bracket", f"{bracket_name}:{row.get('m')}", payload))
                 brackets.append(payload)
-        championship = next((row for row in brackets if row.get("p") == 1), None)
-        if championship:
-            rows.append(self._record(league_id, season, "playoff_result", "final", {
-                "champion_roster_id": championship.get("w"),
-                "runner_up_roster_id": championship.get("l"),
-                "placements": {"1": championship.get("w"), "2": championship.get("l")},
-            }))
+        winners = [row for row in brackets if row["bracket"] == "winners_bracket"]
+        if winners:
+            rows.append(self._record(
+                league_id, season, "playoff_result", "final", playoff_facts(winners),
+            ))
         return rows
 
     def _transaction_records(
