@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.16.1 - Reserved League Route Classification
+
+- Classify exact static runtime/resource API paths before dynamic league-ID authorization.
+- Preserve authentication, active membership, CSRF, account/franchise scoping and fail-closed handling of unknown descendants.
+- Add real-router security regressions covering sibling static paths, cross-account/league denial, trailing-slash behavior and OpenAPI registration.
+- Make the validation-only material Market replacement probe wait for lifecycle admission and hold atomic publication until warming observations finish; retain the 503 contract and fail-closed timing gates.
+- No global evidence, backfill, storage, intelligence or infrastructure changes. Batch 3 remains not started.
+
 # v1.16.0 - Canonical Data Foundation (Master Roadmap Batch 2)
 
 - Add bounded, source-pinned, resumable global NFL evidence ingestion with atomic feed publication and cross-process single-flight coordination.

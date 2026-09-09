@@ -39,6 +39,25 @@ PUBLIC_API_PREFIXES = (
     "/api/account", "/api/market/health",
 )
 
+# Exact registered static paths, not namespace/prefix exemptions. Authentication,
+# active membership, CSRF and request scoping still apply to these endpoints.
+# Unknown descendants must continue through the fail-closed league-ID check.
+STATIC_LEAGUE_API_PATHS = frozenset({
+    "/api/leagues/runtime",
+    "/api/leagues/resources",
+    "/api/leagues/resources/measure",
+})
+
+
+def league_path_identity(path: str) -> str | None:
+    """Classify static routes before interpreting dynamic league segments."""
+    # Match the router's single trailing-slash redirect, not arbitrary prefixes.
+    canonical_path = path[:-1] if path.endswith("/") else path
+    if canonical_path in STATIC_LEAGUE_API_PATHS:
+        return None
+    match = re.search(r"/(?:league|leagues)/([^/]+)", path)
+    return match.group(1) if match else None
+
 
 class AccountContextMiddleware:
     def __init__(self, app: Any, *, service: AccountService, required: bool) -> None:
@@ -119,8 +138,8 @@ class AccountContextMiddleware:
                 path == "/account/leagues/import"
                 or bool(re.fullmatch(r"/account/leagues/[0-9]+(?:/activate)?", path))
             )
-            league_path = None if account_league_action else re.search(r"/(?:league|leagues)/([^/]+)", path)
-            if league_path and league_path.group(1) != context.membership.league_id:
+            league_id = None if account_league_action else league_path_identity(path)
+            if league_id is not None and league_id != context.membership.league_id:
                 response = JSONResponse({"status": "unauthorized_league"}, status_code=403)
                 await response(scope, receive, send)
                 return

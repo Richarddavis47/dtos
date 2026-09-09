@@ -1712,8 +1712,11 @@ def _replacement_profile(
             "detail": "Asset Market generation is building safely in the "
             "background; retry shortly.",
         }:
-            raise AssertionError(
-                f"replacement request did not use bounded warming contract: {status}"
+            raise ExpansionLatencyFailure(
+                f"replacement request did not use bounded warming contract: {status}",
+                {"failed_sample": {"status": status, "client_ms": client_ms,
+                                   "server_ms": server_ms, "profile": profile},
+                 "completed_samples": samples},
             )
         if headers.get("retry-after") != "5":
             raise AssertionError("replacement warming omitted Retry-After: 5")
@@ -1762,6 +1765,10 @@ def _replacement_profile(
             "browser_processes": _browser_process_count(),
         })
     after_history = _history_metrics()
+    _release_status, release_body, _release_ms = _post_request(
+        "/__validation__/replacement-release",
+    )
+    replacement_window = json.loads(release_body)
     deadline = time.monotonic() + 60
     final_health: dict[str, object] = {}
     while time.monotonic() < deadline:
@@ -1775,6 +1782,7 @@ def _replacement_profile(
     server_values = [float(sample["server_ms"]) for sample in samples]
     result = {
         "samples": samples,
+        "replacement_window": replacement_window,
         "median_client_ms": round(statistics.median(client_values), 3),
         "p95_client_ms": round(_percentile(client_values, 0.95), 3),
         "maximum_client_ms": round(max(client_values), 3),
