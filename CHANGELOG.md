@@ -1,5 +1,15 @@
 # Changelog
 
+# v1.16.0 - Canonical Data Foundation (Master Roadmap Batch 2)
+
+- Add bounded, source-pinned, resumable global NFL evidence ingestion with atomic feed publication and cross-process single-flight coordination.
+- Store semantic global facts once; derive league-specific production/scoring and usage without per-league durable copies or request-time ingestion.
+- Preserve source identity, publication/as-of boundaries, missing values, ambiguous player IDs, and incomplete scoring separately from available raw production.
+- Reconcile Sleeper postseason qualification/byes/semifinals/placements, fractional standings, draft identity, transaction attempts, and season-observed franchise ownership.
+- Correct historical roster/weekly-result boundaries; retain draft lifecycle bounds without inventing exact selection times or original pick ownership.
+- Add source-backed schedule/bye derivation, bounded player evidence reads and an explicit downstream migration map.
+- Preserve v1.15.1 storage behavior and Batch 1 Trade Center. Batch 3 is not started; retired capture/publication systems remain retired.
+
 # v1.15.1 - Lossless Storage Prerequisite
 
 - Separate FOIS semantic states from observation provenance without discarding history.

@@ -68,7 +68,7 @@ class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
 
     def test_unsupported_providers_have_specific_reasons(self) -> None:
         catalog = provider_catalog()
-        for name in ("Sleeper ADP", "Underdog ADP", "KeepTradeCut", "Projections", "Production", "Usage"):
+        for name in ("Sleeper ADP", "Underdog ADP", "KeepTradeCut", "Projections"):
             self.assertFalse(catalog[name]["enabled"])
             self.assertTrue(catalog[name]["reason"])
 
@@ -78,7 +78,22 @@ class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context["metadata"]["depth_chart_role"], "RB")
         self.assertEqual(context["league"]["owned_by"], "Front Office One")
         self.assertEqual(context["league"]["trending_adds"], 8)
-        self.assertIn("No supported production", context["availability"]["production"])
+        self.assertIn("canonical_evidence", context["availability"]["production"])
+
+    def test_projection_availability_uses_only_active_league_canonical_snapshot(self) -> None:
+        data = {"players": self.players, "league": {"league_id": "A"},
+                "projection_intelligence": {"league_id": "A", "season": 2026,
+                    "week": 1, "projection_snapshot_id": "generation-a",
+                    "players": {"9509": {"weekly_projected_points": 0.0,
+                                          "source_freshness": "fresh"}}}}
+        context = player_context("9509", data)
+        self.assertIsNone(context["availability"]["projection"])
+        self.assertEqual(context["projection_evidence"]["value"], 0.0)
+        data["league"]["league_id"] = "B"
+        other = player_context("9509", data)
+        self.assertIsNone(other["projection_evidence"]["value"])
+        self.assertIsNone(other["projection_evidence"]["snapshot_id"])
+        self.assertIsNotNone(other["availability"]["projection"])
 
 
 if __name__ == "__main__":

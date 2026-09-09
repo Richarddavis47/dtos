@@ -184,6 +184,10 @@ class HistoricalIntelligenceService:
                 "runner_up_roster_id", "placements", "owner_id", "sleeper_roster_id",
                 "wins", "losses", "ties", "points_for", "rank", "pick_no", "round",
                 "roster_id", "roster_ids", "player_id", "season", "year",
+                "qualified_roster_ids", "semifinal_roster_ids", "championship_roster_ids",
+                "first_round_bye_roster_ids",
+                "reason_codes", "waiver_budget", "settings",
+                "draft_id", "picked_by", "draft_start_at", "draft_last_pick_at", "draft_status",
             ) if key in payload
         }
         return HistoricalEvent(

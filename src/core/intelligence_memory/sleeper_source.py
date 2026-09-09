@@ -10,6 +10,7 @@ from config import REQUEST_TIMEOUT, SLEEPER_BASE
 from services.sleeper import request_headers
 
 from .chain import SeasonChain, discover_season_chain
+from src.core.history_context.timestamps import canonical_draft_bounds
 
 
 class SleeperHistoricalSource:
@@ -42,6 +43,8 @@ class SleeperHistoricalSource:
             league = await self._get(client, f"/league/{league_id}")
             if not league:
                 return None
+            if str(league.get("league_id")) != str(league_id) or str(league.get("season")) != str(season):
+                raise ValueError("Sleeper league/season identity mismatch.")
             users, rosters, traded_picks, drafts = await asyncio.gather(
                 self._get(client, f"/league/{league_id}/users"),
                 self._get(client, f"/league/{league_id}/rosters"),
@@ -51,19 +54,23 @@ class SleeperHistoricalSource:
             settings = league.get("settings") or {}
             playoff_week = int(settings.get("playoff_week_start") or 15)
             weeks = range(1, min(18, playoff_week + 4) + 1)
+            transaction_weeks = range(0, min(18, playoff_week + 4) + 1)
             matchup_rows = await asyncio.gather(*(
                 self._get(client, f"/league/{league_id}/matchups/{week}")
                 for week in weeks
             ))
             transaction_rows = await asyncio.gather(*(
                 self._get(client, f"/league/{league_id}/transactions/{week}")
-                for week in weeks
+                for week in transaction_weeks
             ))
             draft_rows = []
             for draft in drafts or ():
                 draft_id = str(draft.get("draft_id") or "")
                 if draft_id:
-                    draft_rows.extend(await self._get(client, f"/draft/{draft_id}/picks") or ())
+                    for pick in await self._get(client, f"/draft/{draft_id}/picks") or ():
+                        if pick.get("draft_id") and str(pick["draft_id"]) != draft_id:
+                            raise ValueError("Draft selection source identity mismatch.")
+                        draft_rows.append({**pick, "draft_id": draft_id, **canonical_draft_bounds(draft)})
             brackets = await asyncio.gather(
                 self._get(client, f"/league/{league_id}/winners_bracket"),
                 self._get(client, f"/league/{league_id}/losers_bracket"),
@@ -71,7 +78,7 @@ class SleeperHistoricalSource:
         return {
             "league": league, "users": users, "rosters": rosters,
             "matchups": {str(index): rows for index, rows in enumerate(matchup_rows, 1)},
-            "transactions": {str(index): rows for index, rows in enumerate(transaction_rows, 1)},
+            "transactions": {str(index): rows for index, rows in zip(transaction_weeks, transaction_rows)},
             "drafts": drafts, "draft_picks": draft_rows,
             "traded_picks": traded_picks, "winners_bracket": brackets[0],
             "losers_bracket": brackets[1], "season": int(season),

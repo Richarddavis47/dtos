@@ -42,6 +42,10 @@ class SleeperSeasonCache:
             key: "available" if facts.get(key) is not None else "unavailable"
             for key in supported
         }
+        for key in ("matchups", "transactions"):
+            buckets = facts.get(key)
+            if isinstance(buckets, dict) and any(value is None for value in buckets.values()):
+                completeness[key] = "partial"
         available = sum(value == "available" for value in completeness.values())
         status = "complete" if available == len(supported) else (
             "partial" if available else "unavailable"

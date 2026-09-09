@@ -14,7 +14,7 @@ import psutil
 HEAVY_PHASES = frozenset({
     "sleeper_sync", "provider_network", "valuation_intelligence",
     "cache_persistence", "historical_import", "historical_cache", "asset_market_build",
-    "historical_market_resolution",
+    "historical_market_resolution", "global_evidence_ingestion",
 })
 MARKET_BUILD_BLOCKERS = HEAVY_PHASES - {"asset_market_build"}
 

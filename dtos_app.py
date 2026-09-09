@@ -337,6 +337,32 @@ async def background_sync() -> None:
         )
 
 
+async def refresh_global_evidence() -> None:
+    """One global current-season flight; never one job per league or request."""
+    from config import GLOBAL_EVIDENCE_FILE
+    from services.global_evidence_ingestion import ingest_in_background
+
+    delay = 30
+    while True:
+        await asyncio.sleep(delay)
+        data = STATE.get("data") or {}
+        season = (data.get("nfl_state") or {}).get("season")
+        if not season or not lifecycle_coordinator.startup_complete():
+            continue
+        runtime_metrics.mark_background("global_evidence", "preparing")
+        try:
+            async with intelligence_heavy_lock:
+                result = await ingest_in_background(int(season), GLOBAL_EVIDENCE_FILE)
+            status = result.get("status", "failed")
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            # Provider gaps never erase retained evidence or hold startup ready.
+            status = "failed"
+        runtime_metrics.mark_background("global_evidence", status)
+        delay = 30 if status == "deferred" else 6 * 60 * 60
+
+
 async def resolve_historical_trade_market(*, runtime: LeagueRuntime | None = None) -> None:
     """Run event-driven provider matching only after the first Market is stable."""
     market = runtime.market_context if runtime is not None else asset_market_cache
@@ -494,11 +520,15 @@ async def startup_and_periodic_maintenance(startup_epoch: int) -> None:
             resolve_historical_trade_market(),
             name="dtos-historical-trade-market-resolution",
         )
+        evidence_task = asyncio.create_task(
+            refresh_global_evidence(), name="dtos-global-evidence-ingestion",
+        )
         try:
             await background_sync()
         finally:
             resolution_task.cancel()
-            await asyncio.gather(resolution_task, return_exceptions=True)
+            evidence_task.cancel()
+            await asyncio.gather(resolution_task, evidence_task, return_exceptions=True)
 
 
 @asynccontextmanager
