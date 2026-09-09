@@ -8,8 +8,10 @@ from contextlib import asynccontextmanager
 
 
 class ReplacementWindow:
-    def __init__(self, timeout: float = 60) -> None:
+    def __init__(self, timeout: float = 60, preparation_lock=None) -> None:
         self.timeout = timeout
+        self._preparation_lock = preparation_lock
+        self._owns_preparation_lock = False
         self._released = threading.Event()
         self._lock = threading.Lock()
         self._active = False
@@ -32,6 +34,10 @@ class ReplacementWindow:
         self.record("admission_requested")
         try:
             deadline = time.monotonic() + self.timeout
+            if self._preparation_lock is not None:
+                await asyncio.wait_for(self._preparation_lock.acquire(), self.timeout)
+                self._owns_preparation_lock = True
+                self.record("preparation_lock_acquired")
             while not coordinator.market_build_allowed():
                 if time.monotonic() >= deadline:
                     raise TimeoutError("Replacement validation admission timed out")
@@ -58,6 +64,9 @@ class ReplacementWindow:
     def release(self) -> list[dict[str, object]]:
         self.record("probe_complete")
         self._released.set()
+        if self._owns_preparation_lock:
+            self._owns_preparation_lock = False
+            self._preparation_lock.release()
         with self._lock:
             self._active = False
             return list(self.events)

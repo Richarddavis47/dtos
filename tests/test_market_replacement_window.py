@@ -15,6 +15,21 @@ from tools.validation.market_replacement_window import ReplacementWindow
 
 
 class ReplacementWindowTests(unittest.TestCase):
+    def test_new_fois_flight_cannot_enter_between_admission_and_probe(self):
+        async def exercise():
+            lock = asyncio.Lock()
+            window = ReplacementWindow(timeout=1, preparation_lock=lock)
+            async with window.admitted(LifecycleCoordinator()):
+                self.assertTrue(lock.locked())
+            contender = asyncio.create_task(lock.acquire())
+            await asyncio.sleep(.01)
+            self.assertFalse(contender.done())
+            window.release()
+            await contender
+            lock.release()
+            window.release()  # idempotent; must not release another owner's lock
+        asyncio.run(exercise())
+
     def test_existing_fois_must_finish_before_admission(self):
         coordinator = LifecycleCoordinator()
         window = ReplacementWindow(timeout=1)

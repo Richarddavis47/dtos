@@ -46,7 +46,9 @@ The candidate's authentication change does not participate in this boundary.
 
 ## Fixture-only correction
 
-Reserve the existing Market-priority mechanism, wait boundedly for current
+Hold the existing shared intelligence-preparation lock through the probes (so a
+new FOIS flight cannot enter between admission and the request). Reserve the
+existing Market-priority mechanism, wait boundedly for current
 maintenance to finish, mutate the attached canonical input, and explicitly start
 reconciliation. Hold only publication until the existing ten warming probes
 finish. Semantic preparation/construction still run normally during the probes;

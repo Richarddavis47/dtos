@@ -51,7 +51,7 @@ from tools.validation.generate_sanitized_market_fixture import (
 from tools.validation.market_semantic_contract import retained_semantic_contract
 from tools.validation.market_replacement_window import ReplacementWindow
 
-_replacement_window = ReplacementWindow()
+_replacement_window = ReplacementWindow(preparation_lock=intelligence_heavy_lock)
 
 _profile: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
     "market_validation_profile", default=None,
