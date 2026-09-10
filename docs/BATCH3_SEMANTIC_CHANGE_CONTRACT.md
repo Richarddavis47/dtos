@@ -95,3 +95,11 @@ candidate. Regression: 428.620 seconds; routes: 252 registrations, zero
 duplicates, 234 OpenAPI paths; tracked HTTP: 94.699 seconds; process cleanup:
 PASS. Linux and lightweight browser checks plus production acceptance remain
 pending. These results do not claim a release or production pass.
+
+PR #180 initially passed all three Linux scenarios on 90aae7e. The browser
+job exposed 390px Player Dossier overflow on Linux across account/league cases.
+Focused diagnostics separated contained table scrolling from text overflow.
+Wrapping the large value label (including Unavailable) within its card fixed
+the document width without clipping content, changing font size or semantics.
+Fifteen focused local tests passed; isolated Linux browser run 34436380418
+passed. Final PR checks must pass on the corrected commit before merge.
