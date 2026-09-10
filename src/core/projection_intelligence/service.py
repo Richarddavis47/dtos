@@ -23,7 +23,7 @@ from src.core.projection_intelligence.consumer_registry import projection_consum
 PROJECTION_SCHEMA_VERSION = "2.0"
 PROJECTION_MODEL_VERSION = "sleeper-canonical-weekly-1"
 PROJECTION_CONTRACT_VERSION = "2"
-PROJECTION_SEMANTIC_POLICY_VERSION = "2"
+PROJECTION_SEMANTIC_POLICY_VERSION = "3"
 PROVIDER_CACHE_SEASONS = 6
 
 
@@ -467,6 +467,12 @@ class ProjectionService:
     ) -> dict[str, Any]:
         player_id = str(player.get("id") or player.get("player_id"))
         value = (evidence or {}).get("league_projection")
+        # Older cached parser output could score an empty source record as zero.
+        # Explicitly empty raw evidence cannot become a canonical expectation.
+        if evidence is not None and 'projected_stats' in evidence:
+            from src.core.projection_intelligence.scoring import STAT_KEYS
+            if not any(key in STAT_KEYS for key in (evidence['projected_stats'] or {})):
+                value = None
         projected = round(float(value), 2) if value is not None else None
         availability = cls._availability(player, evidence)
         state = "projected_zero" if projected == 0 else "projected" if projected is not None else "unavailable"

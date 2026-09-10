@@ -1,7 +1,7 @@
 """Public, immutable Market Intelligence contracts."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -33,6 +33,7 @@ class ProviderQuote:
     raw_scale: tuple[float, float] | None = None
     normalization_version: str | None = None
     normalization_method: str | None = None
+    compatibility_key: str | None = None
 
 
 @dataclass(frozen=True)
@@ -49,7 +50,7 @@ class MarketEvidence:
 class MarketConsensus:
     asset_id: str
     value: int | None
-    agreement: int
+    agreement: int | None
     dispersion: float | None
     confidence: int
     quotes: tuple[ProviderQuote, ...]
@@ -58,20 +59,27 @@ class MarketConsensus:
     calibration_status: str = "uncalibrated"
     provider_weights: tuple[tuple[str, float], ...] = ()
     warning: str | None = None
+    evidence_state: str = field(init=False)
+
+    def __post_init__(self) -> None:
+        state = "MARKET UNAVAILABLE" if self.value is None else (
+            "MULTI-PROVIDER CONSENSUS" if len(self.provider_weights) > 1 else "SINGLE-PROVIDER MARKET")
+        object.__setattr__(self, "evidence_state", state)
 
 
 @dataclass(frozen=True)
 class MarketTrend:
     direction: str
-    momentum: float
-    volatility: float
-    confidence_drift: float
+    momentum: float | None
+    volatility: float | None
+    confidence_drift: float | None
     periods: dict[str, float | None]
+    reason_codes: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
 class ValueGap:
-    intrinsic_value: int
+    intrinsic_value: int | None
     market_value: int | None
     difference: int | None
     percentage: float | None

@@ -28,9 +28,14 @@ class UnifiedRecommendation:
 def resolve_recommendation(*, decision, trade, front_office, market, evidence: tuple[UnifiedEvidence, ...], confidence: UnifiedConfidence) -> UnifiedRecommendation:
     trade_rec = trade.recommendation if trade is not None else None
     low_acceptance = trade_rec is not None and trade_rec.acceptance_likelihood is not None and trade_rec.acceptance_likelihood < 45
-    negative_value = trade_rec is not None and trade_rec.expected_value < 0
+    negative_value = trade_rec is not None and trade_rec.expected_value is not None and trade_rec.expected_value < 0
     if trade_rec is None:
         action, title, priority = "Monitor the market.", "Preserve optionality", "Low"
+    elif trade_rec.expected_value is None:
+        action, title, priority = (
+            "Review the acquisition-price relationship and available evidence; long-term intrinsic improvement is unavailable.",
+            "Additional evidence needed", "Low",
+        )
     elif low_acceptance or negative_value:
         action, title, priority = "Wait and monitor an alternative structure.", "Patience is the best current action", "Medium"
     else:

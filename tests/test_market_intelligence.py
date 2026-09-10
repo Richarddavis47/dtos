@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -14,6 +15,7 @@ from src.core.intelligence import IntelligenceCache, IntelligenceOrchestrator, I
 from src.core.market_intelligence import MarketHistoryStore, MarketProvider, MarketProviderRegistry, MarketQuoteCache, MarketSnapshot, ProviderQuote, ValueGapLabel, value_gap
 from src.core.market_intelligence.aggregation import build_consensus
 from src.core.market_intelligence.trends import calculate_trend
+from src.core.market_intelligence.engine import MarketIntelligence
 from tests.test_trade_intelligence import fixture_data
 
 
@@ -35,13 +37,53 @@ def market_data() -> dict:
     data["market_data"] = {"context_mode": "online"}
     for index, player in enumerate(data["players"].values()):
         base = 48 + index % 20
-        player.update({"fantasycalc_value": base, "keeptradecut_value": base + 2, "sleeper_adp_value": base - 1, "dynastyprocess_value": base + 1})
+        player.update({"fantasycalc_value": base})
     return data
 
 
 class ConsensusTests(unittest.TestCase):
+    def test_single_and_duplicate_quotes_do_not_establish_agreement(self) -> None:
+        quote = ProviderQuote("FantasyCalc", "p1", 0, 80, "now", "source", True, "test")
+        for quotes in ((), (quote,), (quote, quote)):
+            result = build_consensus("p1", quotes, ("FantasyCalc",))
+            self.assertIsNone(result.agreement)
+            self.assertIsNone(result.dispersion)
+            if quotes:
+                self.assertEqual(result.value, 0)
+
+    def test_market_evidence_is_not_a_directional_intrinsic_substitute(self) -> None:
+        from src.core.market_intelligence.evidence.builder import build_market_evidence
+        from src.core.market_intelligence.models import MarketTrend
+        for price in (0, 900):
+            quote = ProviderQuote("FantasyCalc", "p1", price, 80, "now", "source", True, "test")
+            consensus = build_consensus("p1", (quote,), ("FantasyCalc",))
+            evidence = build_market_evidence(consensus, value_gap(None, consensus.value, 80),
+                MarketTrend('Unavailable', 0, 0, 0, {}))
+            self.assertEqual(evidence[0].observed_value, str(price))
+            self.assertEqual(evidence[0].impact, 0)
+            self.assertFalse(evidence[1].available)
+            self.assertEqual(evidence[1].observed_value, 'Unavailable')
+            self.assertFalse(evidence[2].available)
+
+    def test_unsupported_scale_is_not_zero_market_evidence(self) -> None:
+        envelope = SimpleNamespace(value=42, provider="Sleeper ADP", key="p1", confidence=90,
+            timestamp="2026-09-09T00:00:00+00:00", source="ADP", cache_state="fresh",
+            retrieval_mode="online", freshness="fresh", quality=SimpleNamespace(status="available", issues=()), limitations=())
+        quote = MarketIntelligence._quote(envelope, {})
+        self.assertEqual(quote.value, 42)  # Raw evidence is not silently erased.
+        self.assertFalse(quote.available)
+        self.assertIsNone(quote.normalized_value)
+        result = build_consensus("p1", (quote,), ("Sleeper ADP",))
+        self.assertIsNone(result.value)
+        self.assertEqual(result.missing_providers, ("Sleeper ADP",))
+
+    def test_explicit_unsupported_normalization_cannot_use_legacy_passthrough(self) -> None:
+        quote = ProviderQuote("Unsupported", "p1", 42, 90, None, "raw", True, "test",
+            normalized_value=0, normalization_method="unsupported_provider")
+        self.assertIsNone(build_consensus("p1", (quote,), ("Unsupported",)).value)
+
     def test_consensus_limits_outlier_and_reports_agreement(self) -> None:
-        quotes = tuple(ProviderQuote(name, "p1", value, 80, "now", name, True, "test") for name, value in (("A", 50), ("B", 52), ("C", 51), ("D", 100)))
+        quotes = tuple(ProviderQuote(name, "p1", value, 80, "now", name, True, "test", compatibility_key="verified-fixture") for name, value in (("A", 50), ("B", 52), ("C", 51), ("D", 100)))
         result = build_consensus("p1", quotes, ("A", "B", "C", "D"))
         self.assertLess(result.value, 65)
         self.assertGreater(result.value, 49)
@@ -57,12 +99,12 @@ class ConsensusTests(unittest.TestCase):
         self.assertEqual(result.value, 60)
         self.assertEqual(result.missing_providers, ("Offline",))
 
-    def test_mixed_provider_availability_reduces_confidence(self) -> None:
-        all_quotes = tuple(ProviderQuote(name, "p1", value, 80, "now", name, True, "test") for name, value in (("A", 50), ("B", 51), ("C", 52), ("D", 50)))
+    def test_provider_count_alone_does_not_reduce_confidence(self) -> None:
+        all_quotes = tuple(ProviderQuote(name, "p1", 50, 80, "now", name, True, "test", compatibility_key="verified-fixture") for name in ("A", "B", "C", "D"))
         partial = all_quotes[:2] + tuple(ProviderQuote(name, "p1", None, 0, None, name, False, "offline") for name in ("C", "D"))
         complete = build_consensus("p1", all_quotes, ("A", "B", "C", "D"))
         degraded = build_consensus("p1", partial, ("A", "B", "C", "D"))
-        self.assertLess(degraded.confidence, complete.confidence)
+        self.assertEqual(degraded.confidence, complete.confidence)
         self.assertEqual(degraded.missing_providers, ("C", "D"))
 
     def test_value_gap_keeps_intrinsic_and_market_values_separate(self) -> None:
@@ -78,8 +120,8 @@ class HistoryAndCacheTests(unittest.TestCase):
             path = Path(folder) / "market.json"
             now = datetime.now(timezone.utc)
             rows = (
-                MarketSnapshot("p1", (now - timedelta(days=6)).isoformat(), "A", 50, 60),
-                MarketSnapshot("p1", now.isoformat(), "A", 60, 75),
+                MarketSnapshot("p1", (now - timedelta(days=6)).isoformat(), "A", 50, 60, "price", "0-1000", "2qb", "v1"),
+                MarketSnapshot("p1", now.isoformat(), "A", 60, 75, "price", "0-1000", "2qb", "v1"),
             )
             MarketHistoryStore(path).append(rows)
             loaded = MarketHistoryStore(path).for_asset("p1")
@@ -174,15 +216,40 @@ class MarketIntegrationTests(unittest.TestCase):
         self.assertIn("Market Intelligence", result.recommendation.sources)
         self.assertIn("market_intelligence", result.timings_ms)
 
+    def test_market_gap_uses_same_canonical_scale_as_consensus(self) -> None:
+        result = self.orchestrator.analyze(self.data, 1)
+        for player_id, market in result.market.assets.items():
+            score = result.player_reports[player_id].core_values.dynasty.score
+            self.assertIsNone(score)
+            self.assertIsNone(market.value_gap.intrinsic_value)
+            self.assertIsNone(market.value_gap.difference)
+
     def test_player_dossier_uses_consensus_without_replacing_intrinsic_value(self) -> None:
         player_id, player = next(iter(self.data["players"].items()))
         report = self.orchestrator.player_report(self.data, {**player, "id": player_id}, 1)
         self.assertNotEqual(report.core_values.market.summary, "Neutral placeholder until a traceable market-consensus provider is connected.")
-        self.assertIn("independent", report.core_values.market.summary.casefold())
-        self.assertEqual(report.core_values.dynasty.name, "Dynasty Value")
+        self.assertIsNotNone(report.core_values.market.score)
+        self.assertIsNone(report.core_values.dynasty.score)
+        self.assertEqual(report.core_values.dynasty.name, "Intrinsic dynasty utility")
+
+    def test_dossier_market_value_is_not_clamped_to_legacy_100_point_scale(self) -> None:
+        from dataclasses import replace
+        from unittest.mock import patch
+        result = self.orchestrator.analyze(self.data, 1)
+        player_id = next(iter(result.player_reports))
+        market = result.market.assets[player_id]
+        corrected = replace(market, consensus=replace(market.consensus, value=812))
+        result = replace(result, market=replace(result.market, assets={**result.market.assets, player_id: corrected}))
+        player = self.data['players'][player_id]
+        with patch.object(self.orchestrator, 'analyze', return_value=result):
+            report = self.orchestrator.player_report(self.data, {**player, 'id': player_id}, 1)
+        self.assertEqual(report.core_values.market.score, 812)
+        self.assertEqual(report.core_values.market.scale_maximum, 1000)
+        self.assertEqual(report.core_values.dynasty.scale_maximum, 100)
 
     def test_offline_provider_state_is_explicit_and_non_blocking(self) -> None:
         data = fixture_data()
+        data['market_data'] = {'context_mode': 'offline'}
         result = self.orchestrator.analyze(data, 1)
         self.assertTrue(result.market.offline)
         self.assertTrue(all(report.consensus.value is None for report in result.market.assets.values()))

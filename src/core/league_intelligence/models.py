@@ -9,7 +9,7 @@ class TeamNeed:
     roster_id: int
     position: str
     priority: str
-    score: int
+    score: int | None
     reasoning: tuple[str, ...]
 
 
@@ -107,7 +107,7 @@ class LeagueTradeRecommendation:
     partner_roster_id: int
     offer: tuple[str, ...]
     receive: tuple[str, ...]
-    dtos_value_delta: int
+    dtos_value_delta: int | None
     market_value_delta: int | None
     lineup_impact: int
     direction_impact: str

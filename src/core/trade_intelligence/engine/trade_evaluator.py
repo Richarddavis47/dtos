@@ -22,7 +22,7 @@ def _package_value(assets) -> float:
     return adjusted_package_value(assets).adjusted_value
 
 
-def _trade_type(proposal: TradeProposal, active: TeamDecision, current: int, future: int, depth: int) -> TradeType:
+def _trade_type(proposal: TradeProposal, active: TeamDecision, current: int, future: int | None, depth: int) -> TradeType:
     window = active.competitive_window
     if window is None:
         raise ValueError("Trade Intelligence requires the canonical competitive-window contract.")
@@ -33,12 +33,12 @@ def _trade_type(proposal: TradeProposal, active: TeamDecision, current: int, fut
         CompetitiveWindowClassification.ELITE_CONTENDER,
         CompetitiveWindowClassification.CONTENDER,
         CompetitiveWindowClassification.PLAYOFF_TEAM,
-    } and current > 0 and not superflex_downgrade:
+    } and current is not None and current > 0 and not superflex_downgrade:
         return TradeType.CHAMPIONSHIP_PUSH
     if window.classification in {
         CompetitiveWindowClassification.REBUILDING,
         CompetitiveWindowClassification.FULL_REBUILD,
-    } and future > 0:
+    } and future is not None and future > 0:
         return TradeType.REBUILD
     if any(asset.kind == "pick" for asset in proposal.assets_received):
         return TradeType.PICK_ACQUISITION
@@ -46,7 +46,7 @@ def _trade_type(proposal: TradeProposal, active: TeamDecision, current: int, fut
         return TradeType.ELITE_CONSOLIDATION
     if depth > 0:
         return TradeType.DEPTH_UPGRADE
-    if current * future < 0:
+    if future is not None and current is not None and current * future < 0:
         return TradeType.AGE_SWAP
     return TradeType.ROSTER_BALANCE
 
@@ -59,9 +59,12 @@ def evaluate_proposal(
     evidence_context: TradeEvidenceContext | None = None,
 ) -> TradeDossier:
     impact = evaluate_trade_impact(proposal, active)
-    expected = round(impact.current_outlook * 0.30 + impact.future_outlook * 0.30 + impact.positional_depth * 0.20 + impact.asset_value * 0.20)
+    expected = (round(impact.current_outlook * 0.30 + impact.future_outlook * 0.30 + impact.positional_depth * 0.20 + impact.asset_value * 0.20)
+        if impact.current_outlook is not None and impact.future_outlook is not None and impact.asset_value is not None else None)
     trade_type = _trade_type(proposal, active, impact.current_outlook, impact.future_outlook, impact.positional_depth)
-    if expected >= 12 and partner.compatibility_score >= 70:
+    if expected is None:
+        priority = TradePriority.FUTURE_WATCH
+    elif expected >= 12 and partner.compatibility_score >= 70:
         priority = TradePriority.HIGH
     elif expected >= 5:
         priority = TradePriority.MEDIUM
@@ -92,7 +95,7 @@ def evaluate_proposal(
         ) for reason in historical["reasons"][:2]
     )
     evidence = impact.evidence + partner.evidence + historical_evidence + (
-        Evidence("Package balance", f"{sent_value:.1f} offered / {received_value:.1f} requested", (1 - gap) * 20, "Packages are generated only inside a 20% to 25% blended Asset Intelligence boundary.", "Trade Generator package boundary"),
+        Evidence("Package balance", f"{sent_value:.1f} offered / {received_value:.1f} requested", (1 - gap) * 20, "Packages are generated only inside the documented acquisition-price balance boundary, not an intrinsic-value boundary.", "Trade Generator package boundary"),
     )
     sent_labels = " + ".join(asset.label for asset in proposal.assets_sent)
     received_labels = " + ".join(asset.label for asset in proposal.assets_received)
@@ -105,8 +108,8 @@ def evaluate_proposal(
         expected,
         partner.acceptance_likelihood,
         evidence,
-        guardrail.recommendation_status,
-        guardrail.reason_code,
+        guardrail.recommendation_status if expected is not None else "insufficient_data",
+        guardrail.reason_code if expected is not None else "INTRINSIC_DIMENSION_UNAVAILABLE",
     )
     return TradeDossier(
         proposal,
@@ -114,12 +117,12 @@ def evaluate_proposal(
         recommendation,
         impact,
         build_negotiation_plan(proposal, alternatives, partner),
-        f"A {trade_type.value} opportunity with {partner.owner_name}, generated from complementary roster context and balanced Asset Intelligence values.",
+        f"A {trade_type.value} opportunity with {partner.owner_name}, generated from roster context and balanced acquisition prices; intrinsic improvement is assessed separately where supported.",
         tuple(item.explanation for item in impact.evidence if item.impact > 0) or ("Package balance is within the v1 realism boundary.",),
         tuple(item.explanation for item in impact.evidence if item.impact < 0) or ("No measured horizon has a negative delta above the v1 threshold.",),
         (("Acceptance likelihood is unavailable without sufficient completed trade history.",) if partner.acceptance_likelihood is None else ("Acceptance likelihood is a conservative historical signal, not a prediction.",)) + ("Player news and market movement may change values after the cached snapshot.",),
-        f"The incoming package has {received_value:.1f} blended dynasty/fit value in the Active Front Office context.",
-        f"The offered package has {sent_value:.1f} blended dynasty/fit value in {partner.team_name}'s context.",
+        f"The incoming package has {received_value:.1f} adjusted acquisition value; this is not intrinsic value or proof of team improvement.",
+        f"The offered package has {sent_value:.1f} adjusted acquisition value; this is not intrinsic value or proof of team improvement.",
         f"The package ratio is {(received_value / max(sent_value, 1)):.2f}, inside the generator's documented balance boundary; this does not predict acceptance.",
         f"The Active Front Office is classified as {active.competitive_window.classification.value}, so current and future impacts are evaluated separately now.",
         active.competitive_window,

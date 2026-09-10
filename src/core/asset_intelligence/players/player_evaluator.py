@@ -13,6 +13,9 @@ from src.core.asset_intelligence.players.value_models import dynasty_value, mark
 
 def _recommendation(values: CoreValues, risk_level: str) -> AssetRecommendation:
     score = values.team_fit.score
+    if score is None:
+        return AssetRecommendation('Review evidence', 'No supported aggregate justifies a Buy/Sell posture.',
+            'Unavailable', 0, values.dynasty.evidence + values.redraft.evidence)
     if score >= 72 and risk_level != "High":
         action, priority = "Buy", "High"
     elif score >= 58:
@@ -31,7 +34,7 @@ def _recommendation(values: CoreValues, risk_level: str) -> AssetRecommendation:
 def evaluate_player(player: dict[str, Any], context: AssetContext) -> PlayerReport:
     profile = build_player_profile(player)
     dynasty = dynasty_value(profile, context)
-    redraft = redraft_value(profile)
+    redraft = redraft_value(profile, context)
     market = market_value(dynasty)
     fit = team_fit(profile, context, dynasty, redraft)
     values = CoreValues(dynasty, redraft, market, fit)
@@ -41,7 +44,7 @@ def evaluate_player(player: dict[str, Any], context: AssetContext) -> PlayerRepo
     weaknesses = tuple(item.explanation for item in risk.evidence if item.available and item.impact > 0) or ("No current evidence-backed weakness exceeds the v1 threshold.",)
     opportunity = {
         "Current Season": redraft,
-        "2-Year Outlook": AssetEvaluation("2-Year Outlook", round((dynasty.score + redraft.score) / 2), min(dynasty.confidence, redraft.confidence), "Balanced current and dynasty horizon.", dynasty.evidence + redraft.evidence),
+        "2-Year Outlook": AssetEvaluation("2-Year Outlook", None, 0, "No supported two-year forecast is available.", dynasty.evidence + redraft.evidence),
         "Long-Term Outlook": dynasty,
     }
     recommendation = _recommendation(values, risk.level)

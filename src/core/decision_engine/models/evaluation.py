@@ -24,7 +24,7 @@ class EvaluationFactor:
 @dataclass(frozen=True)
 class Evaluation:
     horizon: EvaluationHorizon
-    score: int
+    score: int | None
     grade: str
     confidence: int
     summary: str
@@ -32,5 +32,6 @@ class Evaluation:
     limitations: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "score", max(0, min(100, int(self.score))))
+        if self.score is not None:
+            object.__setattr__(self, "score", max(0, min(100, int(self.score))))
         object.__setattr__(self, "confidence", max(0, min(100, int(self.confidence))))

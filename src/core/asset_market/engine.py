@@ -155,7 +155,7 @@ def _summary(asset: dict[str, Any], brain_asset: dict[str, Any] | None) -> dict[
         "round": identity.get("round"),
         "values": values,
         "confidence": int(scores.get("confidence", audit.get("confidence") or 0)),
-        "agreement": int(scores.get("agreement") or 0),
+        "agreement": int(scores["agreement"]) if scores.get("agreement") is not None else None,
         "evidence_coverage": int(scores.get("coverage") or 0),
         "provider_coverage": int(audit.get("provider_count") or 0),
         "missing_evidence": list((brain_asset or {}).get("missing_evidence") or []),
@@ -352,7 +352,11 @@ class AssetMarket:
         total, page = self._read_model.query(
             where, parameters, column, direction, limit, offset,
         )
-        page = [dict(row, rank=offset + index + 1) for index, row in enumerate(page)]
+        # Filtering, ownership, sort basis and direction change this ordinal.
+        # It is not a global/league dynasty rank.
+        page = [dict(row, result_position=offset + index + 1,
+                     order_scope="filtered_results", order_basis=layer)
+                for index, row in enumerate(page)]
         return {
             **self.identity(), "total": total, "offset": offset,
             "limit": limit, "sort": sort, "direction": direction,
@@ -528,7 +532,13 @@ class AssetMarket:
             "valuation": brain_asset,
             "value_layers": {
                 name: {
-                    **layer, "scale": "DTOS 0-10000 normalized scale",
+                    **layer, "scale": {
+                        "market_value": "Canonical Market price 0-1000",
+                        "provider_consensus": "Canonical Market price 0-1000",
+                        "current_production_value": "Fantasy points per game · selected league scoring",
+                        "confidence_score": "Evidence support 0-100",
+                        "age_curve_score": "Longevity context 0-100",
+                    }.get(name, layer.get("scale")),
                     "dataset_version": historical_dataset_version,
                     "brain_snapshot_id": decision.brain_snapshot_id,
                     "provider_coverage": row["provider_coverage"],

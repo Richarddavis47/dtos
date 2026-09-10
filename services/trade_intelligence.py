@@ -118,19 +118,27 @@ def build_trade_center(data: dict[str, Any], active_roster_id: int | None = None
     dossiers: tuple[Any, ...] = intelligence.trades
     impacts = {}
     for dossier in dossiers:
-        def totals(assets: tuple[Any, ...], attribute: str) -> float:
-            return sum(float(getattr(intelligence.player_values.get(asset.asset_id), attribute).value or 0) for asset in assets if intelligence.player_values.get(asset.asset_id))
-
-        def projections(assets: tuple[Any, ...]) -> float:
-            return sum(float(intelligence.player_values[asset.asset_id].projection.projected_points or 0) for asset in assets if asset.asset_id in intelligence.player_values)
+        def projections(assets: tuple[Any, ...]) -> float | None:
+            points = []
+            for asset in assets:
+                if asset.kind == "pick":
+                    continue  # Future picks do not contribute to this week's lineup.
+                report = intelligence.player_values.get(asset.asset_id)
+                value = report.projection.projected_points if report is not None else None
+                if value is None:
+                    return None
+                points.append(value)
+            return sum(points)
 
         received, sent = dossier.proposal.assets_received, dossier.proposal.assets_sent
+        received_projection, sent_projection = projections(received), projections(sent)
         impacts[dossier.partner.roster_id] = {
-            "dtos_dynasty": round(totals(received, "dtos_dynasty") - totals(sent, "dtos_dynasty"), 1),
-            "market": round(totals(received, "market_consensus") - totals(sent, "market_consensus"), 1),
-            "contender": round(totals(received, "contender") - totals(sent, "contender"), 1),
-            "rebuild": round(totals(received, "rebuilder") - totals(sent, "rebuilder"), 1),
-            "weekly": round(projections(received) - projections(sent), 2),
+            "dtos_dynasty": None,
+            "market": round(sum(asset.trade_value for asset in received) - sum(asset.trade_value for asset in sent), 1),
+            "contender": None,
+            "rebuild": None,
+            "weekly": round(received_projection - sent_projection, 2)
+            if received_projection is not None and sent_projection is not None else None,
         }
     workspace = build_trade_workspace(data, roster_id)
     evidence_context = build_trade_evidence_context(
@@ -229,6 +237,7 @@ def evaluate_trade_request(
     wrong_received = [item for item in received_ids if ownership[item] != partner_id]
     if wrong_sent or wrong_received:
         raise ValueError("Trade assets no longer match the selected managers' canonical ownership.")
+    _require_acquisition_prices(proposal.assets_sent + proposal.assets_received)
     try:
         evaluation = evaluate_bilateral(
             proposal, active_team=teams[active_id], partner_team=teams[partner_id], league=data.get("league") or {},
@@ -284,6 +293,16 @@ def evaluate_trade_request(
     }
 
 
+def _require_acquisition_prices(assets: tuple[TradeAsset, ...]) -> None:
+    missing = tuple(asset.asset_id for asset in assets if asset.trade_value is None)
+    if missing:
+        raise TradeInputError(
+            "market_evidence_unavailable",
+            "Market Balance is unavailable because selected assets lack acquisition-price evidence.",
+            missing,
+        )
+
+
 def _proposal_payload(proposal: TradeProposal, workflow: str = "adjust") -> dict[str, Any]:
     return {
         "workflow": workflow,
@@ -313,13 +332,14 @@ def _bounded_adjustment_candidates(
     excluded = {str(item) for item in payload.get("excluded_assets") or ()}
     sent = tuple(by_id[item] for item in sent_ids)
     received = tuple(by_id[item] for item in received_ids)
+    _require_acquisition_prices(sent + received)
     candidates = list(generate_proposals(active_id, partner_id, pools[active_id], pools[partner_id]))
     active_options = sorted(
-        (asset for asset in pools[active_id] if asset.asset_id not in protected | excluded | set(sent_ids)),
+        (asset for asset in pools[active_id] if asset.trade_value is not None and asset.asset_id not in protected | excluded | set(sent_ids)),
         key=lambda asset: (abs(asset.trade_value - max((item.trade_value for item in received), default=0)), -asset.trade_value, asset.asset_id),
     )[:10]
     partner_options = sorted(
-        (asset for asset in pools[partner_id] if asset.asset_id not in excluded | set(received_ids)),
+        (asset for asset in pools[partner_id] if asset.trade_value is not None and asset.asset_id not in excluded | set(received_ids)),
         key=lambda asset: (abs(asset.trade_value - max((item.trade_value for item in sent), default=0)), -asset.trade_value, asset.asset_id),
     )[:10]
     if sent and received:
@@ -442,7 +462,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
         candidate_ages = [asset.age for asset in received_assets if asset.age is not None]
         if younger and (not original_ages or not candidate_ages or sum(candidate_ages) / len(candidate_ages) >= sum(original_ages) / len(original_ages)):
             continue
-        if win_now and sum(asset.redraft_value for asset in received_assets) <= sum(asset.redraft_value for asset in original_received_assets):
+        if win_now and (any(asset.redraft_value is None for asset in (*received_assets, *original_received_assets)) or sum(asset.redraft_value for asset in received_assets) <= sum(asset.redraft_value for asset in original_received_assets)):
             continue
         distance = len(sent ^ original_sent) + len(received ^ original_received)
         target_changed = received != original_received
@@ -505,6 +525,8 @@ def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> 
     received_ids = tuple(str(item) for item in payload.get("assets_received") or ())
     if not sent_ids or not received_ids or any(item not in by_id for item in (*sent_ids, *received_ids)):
         raise ValueError("Create Trade alternatives require one valid asset on each side.")
+    validate_trade_ownership(workspace, payload)
+    _require_acquisition_prices(tuple(by_id[item] for item in (*sent_ids, *received_ids)))
     key_asset_id = str(payload.get("protected_asset_id") or max((by_id[item] for item in sent_ids), key=lambda asset: (asset.trade_value, asset.asset_id)).asset_id)
     target_id = max((by_id[item] for item in received_ids), key=lambda asset: (asset.trade_value, asset.asset_id)).asset_id
     original = (frozenset(sent_ids), frozenset(received_ids))

@@ -407,7 +407,7 @@ def create_transactions_router(
         fantasycalc = live["provider_details"].get("FantasyCalc") or {}
         trend_value = fantasycalc.get("trend_30_day")
         trend_label = f"{trend_value:+}" if isinstance(trend_value, (int, float)) else "No historical provider trend is available."
-        consensus_value = consensus["value"] if consensus["value"] is not None else "No enabled market provider currently has a supported value for this player."
+        consensus_value = consensus["value"] if consensus["value"] is not None else (consensus.get("warning") or "No supported combined Market price; inspect separate provider evidence.")
         attribution = " · ".join(
             f'<a href="{escape(str(item["url"]))}" target="_blank" rel="noopener">{escape(str(item["label"]))}</a>'
             for item in live["attribution"].values()
@@ -415,7 +415,7 @@ def create_transactions_router(
         depth_role = metadata.get("depth_chart_role") if metadata.get("depth_chart_role") is not None else reasons["depth_chart_role"]
         bye_week = metadata.get("bye_week") if metadata.get("bye_week") is not None else reasons["bye_week"]
         live_panel = f'''<section class="card"><h2>Live Data &amp; Market</h2>
-<div class="grid"><div><div class="muted">Market Consensus</div><div class="stat">{escape(str(consensus_value))}</div><p>Confidence {consensus["confidence"]}% · Agreement {consensus["agreement"]}%</p><p>30-day trend: {escape(str(trend_label))}</p></div>
+<div class="grid"><div><div class="muted">{escape(consensus["evidence_state"])} · 0–1000</div><div class="stat">{escape(str(consensus_value))}</div><p>Evidence confidence {consensus["confidence"]}/100 · Agreement {str(consensus["agreement"]) + "/100" if consensus["agreement"] is not None else "Unavailable"}</p><p>FantasyCalc raw-price 30-day change (provider units): {escape(str(trend_label))}</p></div>
 <div><div class="muted">Player Context</div><p><b>{escape(str(normalized["position"]))}</b> · {escape(str(normalized["nfl_team"]))} · {escape(human_status(normalized["status"]))}</p><p>Age: {escape(available(metadata.get("age"), reason="Age is not supplied by the current source."))}</p><p>Depth chart: {escape(str(depth_role))} · Bye: {escape(str(bye_week))}</p></div></div>
 <div class="ds-table-wrap" tabindex="0" role="region" aria-label="Provider value evidence"><table><thead><tr><th>Provider</th><th>Value / State</th><th>Freshness</th><th>Confidence</th><th>Availability reason</th></tr></thead><tbody>{provider_values}</tbody></table></div>
 <h3>League Context</h3><div class="grid"><div><b>Trending</b><p>{league_context["trending_adds"]} adds · {league_context["trending_drops"]} drops (Sleeper, last cached window)</p></div><div><b>Ownership</b><p>{escape(str(league_context["owned_by"] or "Not rostered in the active league."))}</p></div><div><b>Transactions</b><p>{league_context["transaction_count"]} cached league transactions</p></div></div>

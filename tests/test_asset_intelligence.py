@@ -24,13 +24,11 @@ class AssetIntelligenceTests(unittest.TestCase):
         values = report.core_values
         self.assertEqual(
             {values.dynasty.name, values.redraft.name, values.market.name, values.team_fit.name},
-            {"Dynasty Value", "Redraft Value", "Market Value", "Team Fit Value"},
+            {"Intrinsic dynasty utility", "Season utility", "Market price", "Team-specific fit"},
         )
-        self.assertNotEqual(values.dynasty.score, values.redraft.score)
         for value in (values.dynasty, values.redraft, values.market, values.team_fit):
-            self.assertGreaterEqual(value.score, 0)
-            self.assertLessEqual(value.score, 100)
-            self.assertTrue(value.evidence)
+            self.assertIsNone(value.score)
+            self.assertTrue(value.summary)
             for evidence in value.evidence:
                 self.assertTrue(evidence.factor)
                 self.assertTrue(evidence.observed_value)
@@ -44,21 +42,22 @@ class AssetIntelligenceTests(unittest.TestCase):
             (), {"QB": 2, "RB": 5, "WR": 6, "TE": 2},
         )
         rebuilder = evaluate_player(self.player, rebuilder_context)
-        self.assertNotEqual(contender.core_values.team_fit.score, rebuilder.core_values.team_fit.score)
-        self.assertIn("Front Office 1", contender.core_values.team_fit.summary)
-        self.assertIn("Front Office 2", rebuilder.core_values.team_fit.summary)
+        self.assertIsNone(contender.core_values.team_fit.score)
+        self.assertIsNone(rebuilder.core_values.team_fit.score)
+        self.assertIn('unavailable', contender.core_values.team_fit.summary)
 
     def test_missing_market_and_production_data_are_not_fabricated(self) -> None:
         report = evaluate_player(self.player, self.contender)
-        self.assertEqual(report.core_values.market.score, 50)
-        self.assertFalse(report.core_values.market.evidence[0].available)
+        self.assertIsNone(report.core_values.market.score)
+        self.assertFalse(any(item.available for item in report.core_values.market.evidence))
         limitations = " ".join(report.limitations).lower()
-        self.assertIn("production", limitations)
-        self.assertIn("market", limitations)
+        self.assertTrue(any(item.factor == 'Canonical production' and not item.available
+                            for item in report.core_values.dynasty.evidence))
+        self.assertIn("missing external price", limitations)
 
     def test_recommendation_and_ui_evidence_are_collapsed(self) -> None:
         report = evaluate_player(self.player, self.contender)
-        self.assertIn(report.recommendation.action, {"Buy", "Hold", "Sell", "Shop Aggressively"})
+        self.assertEqual(report.recommendation.action, 'Review evidence')
         self.assertTrue(report.recommendation.evidence)
         html = player_dossier(report, {"roster_id": 1, "owner": "Alex"}, [{"roster_id": 1, "owner": "Alex"}])
         self.assertIn("Supporting Evidence", html)
@@ -80,7 +79,7 @@ class AssetIntelligenceTests(unittest.TestCase):
     def test_portfolios_aggregate_individual_reports(self) -> None:
         players = evaluate_player_portfolio((self.player,), self.contender)
         picks = evaluate_pick_portfolio(({"season": 2027, "round": 1},), self.contender)
-        self.assertIn("individual", players.summary.lower())
+        self.assertIn("No supported aggregate", players.summary)
         self.assertIn("Individual pick values", {item.factor for item in picks.evidence})
 
 

@@ -1,79 +1,51 @@
-"""Roster Intelligence v1 quality-first and explainability regressions."""
-from __future__ import annotations
-
+"""Active roster adapter regressions after retirement of generic scalar grades."""
 import unittest
-
 from src.core.intelligence import IntelligenceCache, IntelligenceOrchestrator, IntelligenceRegistry
-from src.core.roster_intelligence.engine import _identity, _room_score
-from src.core.roster_intelligence.models import PlayerCard
+from src.core.intelligence.roster_grading import PlayerGradingEvidence, grade_roster_evidence
 from tests.test_trade_intelligence import fixture_data
 
 
-def card(score: int, *, risk: str = "Low") -> PlayerCard:
-    return PlayerCard(
-        str(score), "Cornerstone" if score >= 84 else "Replacement Level", "A" if score >= 84 else "F",
-        score, "Prime", "Stable", score, score, score, score, score, 70, risk,
-        score, score, "Observable current outlook", "Observable future outlook", "HOLD",
-    )
-
-
 class RosterIntelligenceTests(unittest.TestCase):
-    def test_elite_room_with_limited_depth_beats_deep_replacement_room(self) -> None:
-        elite, elite_dimensions = _room_score([card(98), card(92), card(45)], "TE")
-        deep, deep_dimensions = _room_score([card(48) for _ in range(6)], "TE")
-        self.assertGreater(elite, deep)
-        self.assertGreater(elite_dimensions["Elite Talent"], deep_dimensions["Elite Talent"])
-        self.assertGreater(deep_dimensions["Depth"], elite_dimensions["Depth"])
+    def test_evidence_order_does_not_change_dimensions(self):
+        players = (PlayerGradingEvidence('a', 100, 90, 20, 70, 80),
+                   PlayerGradingEvidence('b', 50, 60, 10, 60, 80))
+        args = dict(league_id='a', roster_id=1, generation='g', actual_starter_ids=('a',),
+                    optimal_starter_ids=('a',), actual_points=20, optimal_points=20, legal_backup_points=10)
+        self.assertEqual(grade_roster_evidence(players=players, **args),
+                         grade_roster_evidence(players=tuple(reversed(players)), **args))
 
-    def test_grade_consistency_is_order_independent(self) -> None:
-        players = [card(90), card(72), card(55), card(44)]
-        self.assertEqual(_room_score(players, "WR"), _room_score(list(reversed(players)), "WR"))
+    def test_price_cannot_establish_overall_identity(self):
+        row = grade_roster_evidence(league_id='a', roster_id=1, generation='g',
+            players=(PlayerGradingEvidence('a', 1000, None, None, None, 0),),
+            actual_starter_ids=(), optimal_starter_ids=(), actual_points=None,
+            optimal_points=None, legal_backup_points=None)
+        self.assertIsNone(row.overall_grade)
+        self.assertEqual(row.competitive_window, 'Unavailable')
+        self.assertIsNone(row.dimensions['Optimal projected lineup'].value)
 
-    def test_team_identity_distinguishes_young_and_aging_windows(self) -> None:
-        young, young_reason = _identity(85, 84, 24.8, 3)
-        aging, aging_reason = _identity(80, 55, 29.4, 1)
-        rebuild, _ = _identity(45, 70, 24.1, 1)
-        self.assertIn(young, {"Championship Favorite", "Young Contender"})
-        self.assertEqual(aging, "Aging Contender")
-        self.assertEqual(rebuild, "Productive Struggle")
-        self.assertIn("average starter age", young_reason)
-        self.assertIn("future outlook", aging_reason)
-
-    def test_orchestrator_supplies_explainable_roster_report(self) -> None:
-        orchestrator = IntelligenceOrchestrator(IntelligenceRegistry(), IntelligenceCache(default_ttl=60))
-        result = orchestrator.analyze(fixture_data(), 1)
-        self.assertIsNotNone(result.roster)
-        self.assertEqual(set(result.roster.rooms), {"QB", "RB", "WR", "TE"})
-        for room in result.roster.rooms.values():
-            self.assertEqual(len(room.dimensions), 6)
-            self.assertTrue(room.reasoning)
-            self.assertGreaterEqual(room.league_rank, 1)
-            self.assertLessEqual(room.league_rank, room.league_size)
-        self.assertTrue(result.roster.identity_reasoning)
-        self.assertIn("Roster Intelligence", orchestrator.registry.provider("roster").__module__.replace("_", " ").title())
-
-    def test_player_cards_expose_tier_strategy_and_shared_values(self) -> None:
+    def test_orchestrator_supplies_explicit_roster_report(self):
         result = IntelligenceOrchestrator(IntelligenceRegistry(), IntelligenceCache()).analyze(fixture_data(), 1)
-        self.assertTrue(result.roster.players)
-        player = next(iter(result.roster.players.values()))
-        self.assertTrue(player.tier)
-        self.assertGreaterEqual(player.dynasty_value, 0)
-        self.assertGreaterEqual(player.contender_value, 0)
-        self.assertGreaterEqual(player.rebuilder_value, 0)
-        self.assertTrue(player.recommended_action)
+        self.assertEqual(set(result.roster.rooms), {'QB', 'RB', 'WR', 'TE'})
+        for room in result.roster.rooms.values():
+            self.assertIsNone(room.overall.score)
+            self.assertIsNone(room.league_rank)
+            self.assertTrue(room.reasoning)
+        self.assertIn('Evidence Dimensions', result.roster.metrics)
 
-    def test_league_comparisons_do_not_change_with_active_front_office(self) -> None:
+    def test_player_cards_do_not_manufacture_grades(self):
+        result = IntelligenceOrchestrator(IntelligenceRegistry(), IntelligenceCache()).analyze(fixture_data(), 1)
+        for player in result.roster.players.values():
+            self.assertIsNone(player.dynasty_value)
+            self.assertIsNone(player.contender_value)
+            self.assertIsNone(player.overall_score)
+            self.assertEqual(player.overall_grade, 'Unavailable')
+            self.assertTrue(player.recommended_action)
+
+    def test_league_comparisons_do_not_change_with_selected_franchise(self):
         data = fixture_data()
-        orchestrator = IntelligenceOrchestrator(IntelligenceRegistry(), IntelligenceCache())
-        first = orchestrator.analyze(data, 1)
-        second = orchestrator.analyze(data, 2)
-        self.assertEqual(first.roster.league_rooms, second.roster.league_rooms)
+        engine = IntelligenceOrchestrator(IntelligenceRegistry(), IntelligenceCache())
+        first, second = engine.analyze(data, 1), engine.analyze(data, 2)
+        self.assertEqual(first.context.evidence_generation, second.context.evidence_generation)
+        self.assertNotEqual(first.context.snapshot_key, second.context.snapshot_key)
+        self.assertEqual(first.roster.team_intelligence, second.roster.team_intelligence)
         self.assertEqual(first.roster.league_metrics, second.roster.league_metrics)
-        self.assertEqual(
-            first.roster.team_intelligence,
-            second.roster.team_intelligence,
-        )
-
-
-if __name__ == "__main__":
-    unittest.main()

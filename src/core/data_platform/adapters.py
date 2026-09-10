@@ -1,12 +1,13 @@
 """Adapters that place existing approved/cached sources behind the Data Platform."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any
 
 from src.core.data_platform.models import DataEnvelope, DataQuality, LicensingTier, ProviderMetadata
 from src.core.data_platform.normalization import PlayerIdentityResolver, ProviderNormalizer
 from src.core.data_platform.provider import DataProvider
+from src.core.valuation.normalization import normalize_cached_value
+from src.core.valuation.source_time import market_times
 class CachedMarketAdapter(DataProvider):
     def __init__(self, provider_name: str, field: str, metadata: ProviderMetadata, aliases: tuple[str, ...] = ()) -> None:
         self.provider_name = provider_name
@@ -42,7 +43,10 @@ class CachedMarketAdapter(DataProvider):
         issues = normalized.warnings or (() if available else (detail,))
         quality = DataQuality("good" if available else "blocked", issues, 100 if available else 0)
         metadata = {"contract": "NormalizedValue", "dtos_id": normalized.dtos_id, "source_field": normalized.source_field}
-        return DataEnvelope(normalized.dtos_id, self.metadata.category, normalized.value, self.provider_name, self.provider_name, normalized.timestamp or datetime.now(timezone.utc).isoformat(), "fresh" if available else "unavailable", normalized.confidence if available else 0, "miss", "live" if available else "unavailable", quality, () if available else (detail,), "Live" if available else "Unavailable", 60, metadata)
+        clocks = market_times(normalized_row)
+        metadata.update(clocks)
+        valuation = normalize_cached_value(self.provider_name, normalized_row) if available else None
+        return DataEnvelope(normalized.dtos_id, self.metadata.category, normalized.value, self.provider_name, self.provider_name, clocks['retrieved_at'] or "", valuation.freshness if valuation else "unavailable", normalized.confidence if available else 0, "miss", "live" if available else "unavailable", quality, () if available else (detail,), "Live" if available else "Unavailable", 60, metadata)
 
 
 def metadata(name: str, category: str, tier: LicensingTier, *, enabled: bool, live: bool, scheduled: bool, season: int, offseason: int, version: str = "v1") -> ProviderMetadata:

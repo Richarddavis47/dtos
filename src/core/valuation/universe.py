@@ -10,7 +10,7 @@ from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.valuation.calibration import cached_market_consensus
 from src.core.valuation.config import NORMALIZATION_VERSION, VALUATION_SCHEMA_VERSION
 from src.core.valuation.models import CalibrationStatus
-from src.core.valuation.normalization import normalize_internal, normalize_value, prepare_distribution
+from src.core.valuation.normalization import normalize_cached_value, normalize_internal, prepare_distribution
 
 UNIVERSE_SCHEMA_VERSION = "1.0"
 PROVIDER_NAMES = ("DTOS", "KTC", "FantasyCalc", "DynastyProcess")
@@ -124,7 +124,7 @@ def _provider_rows(
         normalized = None
         confidence = int(raw.get("confidence") or 0)
         if raw_value is not None and name in distributions:
-            item = normalize_value(name, raw_value, prepared_distribution=distributions[name], updated_at=raw.get("updated_at"), provider_confidence=confidence or 70)
+            item = normalize_cached_value(name, raw, prepared_distribution=distributions[name], updated_at=raw.get("updated_at"), provider_confidence=confidence if raw.get("confidence") is not None else 70)
             normalized = item.normalized_value
             confidence = item.confidence_score
         status = provider_status.get(name) or provider_status.get(source_name) or {}
@@ -133,6 +133,8 @@ def _provider_rows(
             "raw_value": raw_value,
             "normalized_value": normalized,
             "provider_rank": raw.get("rank"),
+            "provider_tier": raw.get("tier"),
+            "format": raw.get("format"), "format_details": raw.get("format_details"),
             "last_updated": raw.get("updated_at") or status.get("last_refresh"),
             "confidence": confidence,
             "availability": "available" if raw_value is not None else str(status.get("status") or "unavailable"),
@@ -196,7 +198,8 @@ class ValuationUniverse:
         consensus = cached_market_consensus(self.data.get("market_data") or {}, (str(key) for key in players))
         for player_id, row in sorted(players.items(), key=lambda item: str(item[0])):
             if isinstance(row, dict):
-                merged = {**row, **player_context.get(str(player_id), {})}
+                # Catalog identity/player facts win over roster-specific enrichment.
+                merged = {**player_context.get(str(player_id), {}), **row}
                 merged.setdefault("id", str(player_id))
                 merged.setdefault("team", row.get("nfl_team") or row.get("team"))
                 yield self._player(
@@ -227,7 +230,6 @@ class ValuationUniverse:
         from src.core.asset_intelligence import AssetContext, evaluate_player
 
         market, market_confidence, calibration = consensus or (None, 0, CalibrationStatus.INSUFFICIENT_DATA)
-        raw_intrinsic = next((_number(player.get(key)) for key in ("dtos_value", "dynasty_value") if _number(player.get(key)) is not None), None)
         position = str(player.get("position") or "").upper()
         status = str(player.get("status") or "Unknown")
         active = position in {"QB", "RB", "WR", "TE"} and status.casefold() not in {
@@ -238,15 +240,14 @@ class ValuationUniverse:
             context = AssetContext(
                 str((self.data.get("league") or {}).get("league_id") or "unknown"),
                 int((owner or {}).get("roster_id") or 0),
-                self.data.get("league_settings") or self.data.get("scoring_settings") or {},
+                {},  # Global intrinsic quality does not depend on the selected league.
+                canonical_production=self.data.get("canonical_player_production"),
+                canonical_projection=self.data.get("projection_intelligence"),
             )
             report = evaluate_player(player, context)
-        if raw_intrinsic is not None:
-            intrinsic = normalize_internal(raw_intrinsic) if raw_intrinsic <= 100 else int(raw_intrinsic)
-        elif report is not None:
-            intrinsic = normalize_internal(report.core_values.dynasty.score)
-        else:
-            intrinsic = None
+        # Neither legacy cached scalars nor the age/team proxy establish a
+        # validated long-term intrinsic price. Preserve absence at this boundary.
+        intrinsic = None
         contender = None
         rebuilder = None
         liquidity = None
@@ -254,33 +255,20 @@ class ValuationUniverse:
         age_curve = None
         if report is not None:
             risk_score = int(report.risk.score)
-            contender = normalize_internal(round(
-                report.core_values.redraft.score * .55
-                + report.core_values.dynasty.score * .25
-                + (100 - report.risk.score) * .20
-            ))
             peak = {"QB": 29, "RB": 24, "WR": 26, "TE": 27}.get(position, 26)
             age = _number(player.get("age"))
-            age_curve = 50 if age is None else max(10, min(95, round(80 - max(age - peak, 0) * 9 + max(peak - age, 0) * 2)))
-            liquidity = round((market / 10 if market is not None else report.core_values.dynasty.score) * .65 + market_confidence * .20 + (100 - report.risk.score) * .15)
-            rebuilder = normalize_internal(round(
-                report.core_values.dynasty.score * .55
-                + age_curve * .30
-                + liquidity * .15
-            ))
-        adjustment_category = {"QB": "Quarterbacks", "RB": "Running Backs", "WR": "Wide Receivers", "TE": "Tight Ends"}.get(str(player.get("position") or "").upper())
-        adjustments = ((self.data.get("calibration_state") or {}).get("adjustments") or {})
-        multiplier = float(adjustments.get(adjustment_category, adjustments.get("All Assets", 1.0)))
-        league_adjusted = round(intrinsic * multiplier) if intrinsic is not None else None
+            age_curve = None if age is None else max(10, min(95, round(80 - max(age - peak, 0) * 9 + max(peak - age, 0) * 2)))
+        league_adjusted = None
         provider_rows = _provider_rows(player_id, providers, distributions, provider_status)
-        if intrinsic is not None:
-            provider_rows[0].update({"raw_value": raw_intrinsic, "normalized_value": intrinsic, "confidence": 70, "availability": "available", "reason": None})
+        provider_rows[0].update({"raw_value": None, "normalized_value": None,
+            "confidence": 0, "availability": "unavailable",
+            "reason": "DTOS is not an external Market provider; long-term intrinsic scalar is unvalidated."})
         available = [row for row in provider_rows if row["raw_value"] is not None]
         layers = {name: _layer(None, "Unavailable", self.generated_at) for name in LAYER_NAMES}
         layers.update({
             "market_value": _layer(market, "Provider consensus", self.generated_at, market_confidence),
-            "intrinsic_dtos_value": _layer(intrinsic, "DTOS canonical intrinsic engine", self.generated_at, report.core_values.dynasty.confidence if report is not None else 70 if intrinsic is not None else 0, reason="Player is retired, unsupported, or lacks active-career DTOS evidence."),
-            "league_adjusted_value": _layer(league_adjusted, f"DTOS intrinsic value with {adjustment_category or 'All Assets'} model calibration", self.generated_at, 65 if league_adjusted is not None else 0),
+            "intrinsic_dtos_value": _layer(intrinsic, "Intrinsic evidence profile", self.generated_at, reason="Long-term intrinsic scalar is not validated; Market price is separate."),
+            "league_adjusted_value": _layer(league_adjusted, "League-adjusted intrinsic utility", self.generated_at, reason="Requires a supported utility model; unavailable intrinsic value cannot be substituted."),
             "contender_value": _layer(contender, "DTOS Brain near-term championship utility model", self.generated_at, report.core_values.redraft.confidence if report is not None else 0, reason="Near-term production and active-career evidence are insufficient."),
             "rebuilder_value": _layer(rebuilder, "DTOS Brain long-horizon retention model", self.generated_at, report.core_values.dynasty.confidence if report is not None else 0, reason="Long-horizon active-career evidence is insufficient."),
             "liquidity_score": _layer(liquidity, "DTOS evidence-backed tradability model", self.generated_at, market_confidence if market is not None else 40 if liquidity is not None else 0),
@@ -289,14 +277,54 @@ class ValuationUniverse:
             "future_value": _layer(rebuilder, "DTOS Brain long-horizon retention model", self.generated_at, report.core_values.dynasty.confidence if report is not None else 0),
             "confidence_score": _layer(market_confidence, "Provider coverage and freshness", self.generated_at, market_confidence),
             "provider_consensus": _layer(market, "Canonical provider consensus", self.generated_at, market_confidence),
-            "current_production_value": _layer(_number(player.get("fantasy_points")), "Sleeper cached player metadata", self.generated_at, 50 if player.get("fantasy_points") is not None else 0),
+            "current_production_value": _layer(None, "Canonical current-season production", self.generated_at, reason="No prepared scoring/season boundary; raw metadata points are not substituted."),
         })
+        prepared = self.data.get("canonical_player_production")
+        production_context = None
+        intrinsic_profile = {"intrinsic_value": None, "intrinsic_tier": None,
+            "presentation": "evidence_profile_not_long_term_price",
+            "demonstrated_quality": None, "sample_confidence": 0,
+            "generation": None, "as_of": None,
+            "reason": "Canonical reference production has not been prepared."}
+        if prepared is not None:
+            from src.core.player_value_projection.canonical_production import prepared_production_context
+            from dataclasses import asdict
+            production = prepared_production_context(
+                prepared, league_id=str((self.data.get("league") or {}).get("league_id") or ""),
+                player_id=player_id,
+            )
+            production_context = asdict(production)
+            from src.core.valuation.player_methodology import assess_prepared_intrinsic
+            quality = assess_prepared_intrinsic(prepared=prepared,
+                league_id=str((self.data.get("league") or {}).get("league_id") or ""),
+                player_id=player_id, position=position, age=_number(player.get("age")))
+            components = {item.name: item.score for item in quality.components}
+            intrinsic_profile.update({
+                "demonstrated_quality": components.get("reference_production"),
+                "latest_observed_usage": components.get("supporting_usage"),
+                "usage_season": quality.usage_season,
+                "longevity_context": components.get("position_lifecycle"),
+                "sample_confidence": quality.confidence,
+                "seasons": quality.seasons, "effective_games": quality.effective_games,
+                "generation": prepared.get("generation"), "as_of": prepared.get("as_of"),
+                "method_version": quality.method_version,
+                "reason": "Evidence dimensions are not a validated long-term price.",
+                "limitations": quality.limitations,
+            })
+            season_window = next((window for window in production.windows if window.label == "Season Average"), None)
+            points = season_window.fantasy_points if season_window is not None else None
+            layers["current_production_value"] = _layer(
+                points, "Canonical current-season PPG · selected league scoring", self.generated_at,
+                reason="Current-season complete scoring evidence is unavailable; previous seasons are not substituted.",
+            )
         name = player.get("name") or player.get("full_name") or " ".join(filter(None, (player.get("first_name"), player.get("last_name")))) or player_id
         return {
             "asset_id": f"player:{player_id}", "asset_type": "player",
             "identity": {"player_name": name, "position": player.get("position"), "nfl_team": player.get("nfl_team") or player.get("team"), "sleeper_id": player_id, "current_owner": owner, "free_agent": owner is None, "draft_pick_description": None, "year": None, "round": None, "projected_slot": None, "rookie_class": player.get("years_exp") == 0, "age": player.get("age"), "status": status},
             "layers": layers, "providers": provider_rows,
-            "audit": {"provider_count": len(available), "provider_agreement": None if len(available) < 2 else "measured", "missing_providers": [row["provider"] for row in provider_rows if row["raw_value"] is None], "data_age": self.freshness["provider_refresh_timestamp"], "confidence": market_confidence, "last_changed": max((row["last_updated"] for row in available if row["last_updated"]), default=None), "source_version": UNIVERSE_SCHEMA_VERSION, "inspection_ready": True, "calibration_status": calibration.value},
+            "canonical_production": production_context,
+            "intrinsic_evidence_profile": intrinsic_profile,
+            "audit": {"provider_count": len(available), "provider_agreement": None, "missing_providers": [row["provider"] for row in provider_rows if row["raw_value"] is None], "data_age": self.freshness["provider_refresh_timestamp"], "confidence": market_confidence, "last_changed": max((row["last_updated"] for row in available if row["last_updated"]), default=None), "source_version": UNIVERSE_SCHEMA_VERSION, "inspection_ready": True, "calibration_status": calibration.value},
             "comparison": _comparison(intrinsic, market), "freshness": self.freshness,
         }
 

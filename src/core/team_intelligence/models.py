@@ -11,10 +11,10 @@ from src.core.competitive_window import (
 @dataclass(frozen=True)
 class RelativeGrade:
     category: str
-    score: int
+    score: int | None
     grade: str
-    percentile: int
-    rank: int
+    percentile: int | None
+    rank: int | None
     league_size: int
     reasons: tuple[str, ...]
 
@@ -34,16 +34,20 @@ class TeamIntelligenceCard:
     roster_flexibility: RelativeGrade
     asset_liquidity: RelativeGrade
     competitive_window: CompetitiveWindowContract
-    current_strength: int
-    future_strength: int
-    risk_score: int
+    current_strength: int | None
+    future_strength: int | None
+    risk_score: int | None
     confidence: int
     explanation: tuple[str, ...]
     preseason: bool
-    projected_finish: int
-    projected_wins: float
-    playoff_odds: int
-    championship_odds: int
+    projected_finish: int | None
+    projected_wins: float | None
+    playoff_odds: int | None
+    championship_odds: int | None
+    market_asset_strength: RelativeGrade
+    production_quality: RelativeGrade
+    league_id: str
+    generation: str
 
     @property
     def current_window(self) -> CompetitiveWindowClassification:
@@ -53,14 +57,14 @@ class TeamIntelligenceCard:
 
 @dataclass(frozen=True)
 class LeagueTeamSummary:
-    league_strength: int
+    league_strength: int | None
     average_age: float | None
-    average_team_grade: float
+    average_team_grade: float | None
     contenders: int
     rebuilders: int
     strongest_position_group: str
     weakest_position_group: str
-    parity_score: int
+    parity_score: int | None
     championship_favorite: int | None
     biggest_risers: str
     biggest_fallers: str

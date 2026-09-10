@@ -39,6 +39,7 @@ class BrainIntegrationTests(unittest.TestCase):
             "generated_at": "observation-one",
         }
         self.data["projection_intelligence"] = {
+            "league_id": str(self.data['league']['league_id']),
             "projection_snapshot_id": "projection-semantic-1",
             "generated_at": "observation-one",
             "players": {"1": projection},
@@ -75,6 +76,8 @@ class BrainIntegrationTests(unittest.TestCase):
         self.assertGreaterEqual(len(decision.confidence.rationale), 4)
         self.assertTrue(any("Historical" in item for item in decision.confidence.rationale))
         self.assertGreater(decision.confidence.complexity_penalty, 0)
+        self.assertIsNone(decision.confidence.agreement)
+        self.assertTrue(any('unavailable agreement is not scored' in line for line in decision.confidence.rationale))
 
     def test_migration_and_health_have_no_legacy_or_duplicate_consumers(self) -> None:
         brain = brain_service(self.data)

@@ -68,9 +68,9 @@ class ValuationUniverseTests(unittest.TestCase):
 
     def test_active_player_receives_independent_canonical_layers(self) -> None:
         layers = self.universe.by_id["player:1"]["layers"]
-        self.assertEqual(layers["intrinsic_dtos_value"]["value"], 800)
-        self.assertIsNotNone(layers["contender_value"]["value"])
-        self.assertIsNotNone(layers["rebuilder_value"]["value"])
+        self.assertIsNone(layers["intrinsic_dtos_value"]["value"])
+        self.assertIsNone(layers["contender_value"]["value"])
+        self.assertIsNone(layers["rebuilder_value"]["value"])
         self.assertNotEqual(
             layers["contender_value"]["source"],
             layers["rebuilder_value"]["source"],
@@ -79,7 +79,7 @@ class ValuationUniverseTests(unittest.TestCase):
     def test_inactive_player_remains_honestly_unavailable(self) -> None:
         layers = self.universe.by_id["player:2"]["layers"]
         self.assertIsNone(layers["intrinsic_dtos_value"]["value"])
-        self.assertIn("retired", layers["intrinsic_dtos_value"]["reason"])
+        self.assertIn("not validated", layers["intrinsic_dtos_value"]["reason"])
 
     def test_pick_receives_distinct_contender_and_rebuilder_layers(self) -> None:
         layers = self.universe.by_id["pick:2027:1:4"]["layers"]
@@ -92,20 +92,20 @@ class ValuationUniverseTests(unittest.TestCase):
 
     def test_status_audits_layer_coverage_and_missing_causes(self) -> None:
         status = self.universe.status()
-        self.assertEqual(status["layer_coverage"]["intrinsic_dtos_value"], 2)
-        self.assertEqual(status["layer_coverage"]["contender_value"], 2)
-        self.assertEqual(status["layer_coverage"]["rebuilder_value"], 2)
-        self.assertEqual(status["layer_coverage"]["all_four"], 1)
+        self.assertEqual(status["layer_coverage"]["intrinsic_dtos_value"], 1)
+        self.assertEqual(status["layer_coverage"]["contender_value"], 1)
+        self.assertEqual(status["layer_coverage"]["rebuilder_value"], 1)
+        self.assertEqual(status["layer_coverage"]["all_four"], 0)
         reasons = status["missing_layer_reasons"]["intrinsic_dtos_value"]
-        self.assertEqual(sum(reasons.values()), 1)
-        self.assertTrue(any("retired" in reason for reason in reasons))
+        self.assertEqual(sum(reasons.values()), 2)
+        self.assertTrue(any("not validated" in reason for reason in reasons))
 
     def test_provider_abstraction_includes_available_and_unavailable_sources(self) -> None:
         rows = self.universe.by_id["player:1"]["providers"]
         self.assertEqual(tuple(row["provider"] for row in rows), PROVIDER_NAMES)
         self.assertEqual(next(row for row in rows if row["provider"] == "FantasyCalc")["availability"], "available")
         self.assertEqual(next(row for row in rows if row["provider"] == "KTC")["availability"], "unsupported")
-        self.assertEqual(next(row for row in rows if row["provider"] == "DTOS")["normalized_value"], 800)
+        self.assertIsNone(next(row for row in rows if row["provider"] == "DTOS")["normalized_value"])
         summary = self.universe.providers()["providers"]
         self.assertEqual(next(row for row in summary if row["provider"] == "KTC")["status"], "unsupported")
 
@@ -135,11 +135,11 @@ class ValuationUniverseTests(unittest.TestCase):
         self.assertEqual(len(client.get("/api/valuation/export.json").json()["assets"]), 3)
         self.assertIn("text/csv", client.get("/api/valuation/export.csv").headers["content-type"])
 
-    def test_no_existing_value_is_recalibrated(self) -> None:
+    def test_legacy_unvalidated_player_scalar_is_not_republished(self) -> None:
         layers = self.universe.by_id["player:1"]["layers"]
-        self.assertEqual(layers["intrinsic_dtos_value"]["value"], 800)
-        self.assertEqual(layers["league_adjusted_value"]["value"], 800)
-        self.assertNotEqual(layers["market_value"]["value"], layers["intrinsic_dtos_value"]["value"])
+        self.assertIsNone(layers["intrinsic_dtos_value"]["value"])
+        self.assertIsNone(layers["league_adjusted_value"]["value"])
+        self.assertIsNone(layers["market_value"]["value"])  # Unproven multi-format consensus.
 
 
 if __name__ == "__main__":

@@ -32,6 +32,12 @@ def consensus(key: str, rows: tuple[DataEnvelope, ...], expected: tuple[str, ...
 def trend(key: str, rows: tuple[DataEnvelope, ...], now: datetime | None = None) -> TrendResult:
     now = now or datetime.now(timezone.utc)
     numeric = tuple(row for row in rows if isinstance(row.value, (int, float)))
+    # Alternating raw provider scales are not observations of one price series.
+    identities = {(row.provider, row.category) for row in numeric}
+    if len(identities) != 1 or len(numeric) < 2:
+        return TrendResult(key, None, None, None, None, "Unavailable", {},
+                           "Insufficient comparable single-provider observations; mixed raw scales are not a trend")
+    numeric = tuple(sorted(numeric, key=lambda row: row.timestamp))
     values = tuple(float(row.value) for row in numeric)
     absolute = round(values[-1] - values[0], 2) if len(values) > 1 else None
     percentage = round(absolute / abs(values[0]) * 100, 2) if absolute is not None and values[0] else None

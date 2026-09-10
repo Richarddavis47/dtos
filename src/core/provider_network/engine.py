@@ -49,8 +49,17 @@ def _reliability(provider: dict[str, Any], *, coverage: float, identity_rate: fl
 
 def _consensus(observations: list[EvidenceObservation], reliability: dict[str, dict[str, int]]) -> dict[str, Any]:
     by_asset: dict[str, list[EvidenceObservation]] = defaultdict(list)
+    grouped = defaultdict(list)
     for row in observations:
-        if row.normalized_value is not None and row.identity_match_status in {"exact", "strong"}:
+        grouped[(row.canonical_asset_id, row.provider_id)].append(row)
+    for members in grouped.values():
+        row = members[0]
+        if any(member != row for member in members):
+            continue
+        if (row.normalized_value is not None and row.identity_match_status in {"exact", "strong"}
+                and row.availability == "available" and row.confidence > 0
+                and row.evidence_family not in {"dtos_intrinsic", "sleeper_league_observed"}
+                and reliability.get(row.provider_id, {}).get("overall", 0) > 0):
             by_asset[row.canonical_asset_id].append(row)
     results: list[dict[str, Any]] = []
     family_counts: list[int] = []
@@ -65,12 +74,17 @@ def _consensus(observations: list[EvidenceObservation], reliability: dict[str, d
             family_values.append((family, sum(value * weight for value, weight in weighted) / total_weight, min(100.0, total_weight / max(len(weighted), 1))))
         values = [row[1] for row in family_values]
         weights = [row[2] for row in family_values]
+        # Active FC/DP feeds have no proven shared format contract. Keep raw
+        # evidence, not a less strict parallel consensus than valuation permits.
+        compatibility_unproven = len(families) > 1
+        if compatibility_unproven:
+            values, weights = [], []
         consensus = round(sum(value * weight for value, weight in zip(values, weights)) / sum(weights)) if weights else None
         dispersion = round(pstdev(values), 2) if len(values) > 1 else None
-        confidence = min(100, round(mean(weights) * min(1, len(families) / 2) * (1 if dispersion is None else max(.25, 1 - dispersion / 500)))) if weights else 0
-        family_counts.append(len(families))
-        results.append({"asset_id": asset_id, "raw_provider_count": len(rows), "independent_evidence_family_count": len(families), "effective_provider_count": round(sum(weights) / 100, 2), "weighted_consensus_value": consensus, "weighted_consensus_rank": None, "dispersion": dispersion, "confidence_interval": None if consensus is None or dispersion is None else [max(0, round(consensus - dispersion)), min(1000, round(consensus + dispersion))], "disagreement_score": min(100, round((dispersion or 0) / 5)), "market_evidence_confidence": confidence, "families": [row[0] for row in family_values]})
-    return {"assets_with_evidence": len(results), "assets_with_multiple_independent_families": sum(row >= 2 for row in family_counts), "average_confidence": round(mean(row["market_evidence_confidence"] for row in results), 2) if results else 0, "average_disagreement": round(mean(row["disagreement_score"] for row in results), 2) if results else 0, "sample": results[:100]}
+        confidence = min(100, round(mean(weights) * (1 if dispersion is None else max(.25, 1 - dispersion / 500)))) if weights else 0
+        family_counts.append(0 if compatibility_unproven else len(families))
+        results.append({"asset_id": asset_id, "raw_provider_count": len(rows), "independent_evidence_family_count": len(families), "compatible_evidence_family_count": 0 if compatibility_unproven else len(families), "effective_provider_count": round(sum(weights) / 100, 2), "weighted_consensus_value": consensus, "weighted_consensus_rank": None, "dispersion": dispersion, "confidence_interval": None, "provider_dispersion_range": None if consensus is None or dispersion is None else [max(0, round(consensus - dispersion)), min(1000, round(consensus + dispersion))], "disagreement_score": min(100, round(dispersion / 5)) if dispersion is not None else None, "market_evidence_confidence": confidence, "families": [row[0] for row in family_values], "evidence_state": "MARKET UNAVAILABLE" if consensus is None else "SINGLE-PROVIDER MARKET", "compatibility": "unproven" if compatibility_unproven else "single_source", "separate_provider_values": {row.provider_id: row.normalized_value for row in rows}})
+    return {"assets_with_evidence": len(results), "assets_with_multiple_independent_families": sum(row >= 2 for row in family_counts), "average_confidence": round(mean(row["market_evidence_confidence"] for row in results), 2) if results else 0, "average_disagreement": round(mean(row["disagreement_score"] for row in results if row["disagreement_score"] is not None), 2) if any(row["disagreement_score"] is not None for row in results) else None, "sample": results[:100]}
 
 
 def build_provider_network(data: dict[str, Any], state: dict[str, Any]) -> dict[str, Any]:
@@ -115,7 +129,7 @@ def build_provider_network(data: dict[str, Any], state: dict[str, Any]) -> dict[
             provider_value = next((item for item in asset["providers"] if item["provider"] == provider_name), {})
             observed_at = row.get("updated_at") or statuses.get(provider_name, {}).get("last_refresh")
             provider_stamp[provider_id] = observed_at
-            observation = EvidenceObservation(asset_id, provider_id, definition["evidence_category"], float(raw) if raw is not None else None, provider_value.get("normalized_value"), int(row["position_rank"]) if str(row.get("position_rank") or "").isdigit() else None, int(row["rank"]) if str(row.get("rank") or "").isdigit() else None, str(row.get("tier")) if row.get("tier") is not None else None, "PPR", "superflex", 12, False, observed_at, observed_at, generated_at, _age_hours(observed_at, evaluation_time), 1, int(row.get("confidence") or 65), "available", 100, "exact", str(row.get("source_version") or "current"), definition["official_source_url"], definition["evidence_family"], definition["redistribution"] in {"open_data_attributed", "derived_and_attributed", "derived"})
+            observation = EvidenceObservation(asset_id, provider_id, definition["evidence_category"], float(raw) if raw is not None else None, provider_value.get("normalized_value"), int(row["position_rank"]) if str(row.get("position_rank") or "").isdigit() else None, int(row["rank"]) if str(row.get("rank") or "").isdigit() else None, str(row.get("tier")) if row.get("tier") is not None else None, str((row.get("format_details") or {}).get("ppr", "unknown")), str(row.get("format") or "unknown"), (row.get("format_details") or {}).get("num_teams"), (row.get("format_details") or {}).get("te_premium"), observed_at, row.get("source_updated_at"), generated_at, _age_hours(row.get("source_updated_at"), evaluation_time), 1, int(provider_value.get("confidence") or 0), str(row.get("availability") or ("historical" if row.get("retrieval_mode") == "historical_snapshot" else "available")) if raw is not None and provider_value.get("normalized_value") is not None else "unavailable", 100, "exact", str(row.get("source_version") or "current"), definition["official_source_url"], definition["evidence_family"], definition["redistribution"] in {"open_data_attributed", "derived_and_attributed", "derived"})
             observations.append(observation)
             provider_records[provider_id] += 1
             provider_exact[provider_id] += 1

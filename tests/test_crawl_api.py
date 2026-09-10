@@ -109,17 +109,17 @@ class CrawlApiTests(unittest.TestCase):
         payload = self.client.get("/api/crawl/teams").json()
         self.assertEqual(payload["valuation_schema_version"], "1.0")
         valuation = payload["data"]["teams"][0]["roster"][0]["valuation"]
-        self.assertTrue(0 <= valuation["market_value"] <= 1000)
-        self.assertIn(valuation["calibration_status"], {"calibrated", "partially_calibrated", "stale"})
+        self.assertIsNone(valuation["market_value"])
+        self.assertEqual(valuation["calibration_status"], "insufficient_data")
         self.assertNotIn("raw_value", valuation)
 
     def test_team_intelligence_is_shared_across_crawl_contracts(self) -> None:
         teams = self.client.get("/api/crawl/teams").json()
         front_offices = self.client.get("/api/crawl/front-offices").json()
         snapshot = self.client.get("/api/crawl/snapshot").json()
-        self.assertEqual(teams["team_intelligence_schema_version"], "1.0")
-        self.assertEqual(front_offices["data"]["team_intelligence_schema_version"], "1.0")
-        self.assertEqual(snapshot["data"]["team_intelligence_schema_version"], "1.0")
+        self.assertEqual(teams["team_intelligence_schema_version"], "2.0")
+        self.assertEqual(front_offices["data"]["team_intelligence_schema_version"], "2.0")
+        self.assertEqual(snapshot["data"]["team_intelligence_schema_version"], "2.0")
         card = teams["data"]["teams"][0]["team_intelligence"]
         self.assertTrue({"overall", "current_contending", "dynasty", "positions", "confidence", "current_window", "explanation"}.issubset(card))
         self.assertEqual(card["current_window"], front_offices["data"]["team_intelligence"]["1"]["current_window"])
@@ -129,7 +129,7 @@ class CrawlApiTests(unittest.TestCase):
             team.update({"wins": 0, "losses": 0, "ties": 0})
         intelligence_cache.invalidate()
         rows = self.client.get("/api/crawl/standings").json()["data"]["standings"]
-        self.assertTrue(all(row["ranking_type"] == "Preseason Projection" for row in rows))
+        self.assertTrue(all(row["ranking_type"] == "Canonical Team Assessment" for row in rows))
 
     def test_default_explicit_and_invalid_league_selection(self) -> None:
         self.assertEqual(self.client.get("/api/crawl/teams").json()["league_id"], LEAGUE_ID)

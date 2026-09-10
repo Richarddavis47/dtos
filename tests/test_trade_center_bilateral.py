@@ -43,8 +43,9 @@ class BilateralTradeTests(unittest.TestCase):
 
     def test_same_construction_has_workflow_independent_bilateral_contract(self) -> None:
         result = self.evaluate()
-        self.assertEqual(result["recommendation"], "WORTH PURSUING")
-        self.assertTrue(result["generated_trade_eligible"])
+        self.assertEqual(result["recommendation"], "NOT WORTH IT")
+        self.assertFalse(result["generated_trade_eligible"])
+        self.assertNotIn('Adds needed WR depth', str(result))
         self.assertTrue(result["why_you_would_do_it"])
         self.assertTrue(result["why_they_would_do_it"])
         self.assertEqual(set(result["dimensions"]), {"value_fairness", "strategic_fit", "counterparty_plausibility", "historical_counterparty_evidence", "package_quality", "best_for", "confidence"})

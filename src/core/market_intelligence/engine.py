@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
 from typing import Any
 
 from src.core.data_platform import DataPlatform, data_platform
@@ -10,12 +11,12 @@ from src.core.market_intelligence.evidence import build_market_evidence
 from src.core.market_intelligence.history import MarketHistoryStore, MarketSnapshot
 from src.core.market_intelligence.models import AssetMarketReport, MarketIntelligenceReport, ProviderQuote, TradeMarketImpact, ValueGap, ValueGapLabel
 from src.core.market_intelligence.trends import calculate_trend
-from src.core.valuation import normalize_value
-from src.core.valuation.normalization import prepare_distribution
+from src.core.valuation import normalize_internal
+from src.core.valuation.normalization import normalize_cached_value, prepare_distribution
 
 
-def value_gap(intrinsic: int, market: int | None, confidence: int) -> ValueGap:
-    if market is None or confidence < 35:
+def value_gap(intrinsic: int | None, market: int | None, confidence: int) -> ValueGap:
+    if intrinsic is None or market is None or confidence < 35:
         return ValueGap(intrinsic, market, None, None, ValueGapLabel.UNCERTAIN, confidence)
     difference = intrinsic - market
     percentage = round(difference / max(abs(market), 1) * 100, 2)
@@ -46,7 +47,7 @@ class MarketIntelligence:
         allow_cached_fallback = bool(market_data.get("allow_cached_fallback", False))
         namespace = f"{context.league_id}:{context.active_roster_id}"
         players = context.cached_data.get("players") or {}
-        intrinsic_by_id = {str(asset_id): int(report.core_values.dynasty.score) for asset_id, report in player_reports.items()}
+        intrinsic_by_id = {str(asset_id): normalize_internal(report.core_values.dynasty.score) if report.core_values.dynasty.score is not None else None for asset_id, report in player_reports.items()}
         labels = {str(player_id): str(row.get("full_name") or player_id) for player_id, row in players.items()}
         reports: dict[str, AssetMarketReport] = {}
         providers = self.platform.registry.providers("market")
@@ -93,7 +94,15 @@ class MarketIntelligence:
                     state["cache_age_seconds"] = quote.cache_age_seconds
                     state["freshness"] = quote.freshness
                     state["confidence_impact"] = quote.confidence_impact
-                    asset_snapshots.append(MarketSnapshot(asset_id, quote.observed_at or generated_at, quote.provider, float(quote.normalized_value), quote.confidence))
+                    source_row = (provider_rows.get(quote.provider) or {}).get(asset_id) or {}
+                    format_key = json.dumps([source_row.get("format"), source_row.get("format_details")], sort_keys=True) if source_row.get("format") else None
+                    if not quote.observed_at:
+                        # A cache read is not a newly observed source fact.
+                        continue
+                    asset_snapshots.append(MarketSnapshot(asset_id, quote.observed_at, quote.provider, float(quote.value), quote.confidence,
+                        "external_provider_raw_price", f"{quote.provider}:raw_price_units", format_key,
+                        "provider-price-observation-v2", source_row.get("rank"), source_row.get("tier"),
+                        source_row.get("source_updated_at"), source_row.get("published_at")))
             consensus = build_consensus(asset_id, quotes, tuple(provider.metadata.name for provider in providers))
             self.history.append(tuple(asset_snapshots))
             trend = calculate_trend(self.history.for_asset(asset_id))
@@ -116,9 +125,9 @@ class MarketIntelligence:
         available = envelope.value is not None and envelope.quality.status != "blocked"
         raw = float(envelope.value) if available else None
         provider_rows = (market_data.get("providers") or {}).get(envelope.provider) or {}
-        normalized = normalize_value(
+        normalized = normalize_cached_value(
             envelope.provider,
-            raw,
+            {**(provider_rows.get(envelope.key) or {}), "value": raw},
             distribution=(
                 float(row.get("value"))
                 for row in provider_rows.values()
@@ -128,7 +137,18 @@ class MarketIntelligence:
             updated_at=envelope.timestamp,
             provider_confidence=envelope.confidence,
         ) if raw is not None else None
-        return ProviderQuote(envelope.provider, envelope.key, raw, envelope.confidence if available else 0, envelope.timestamp, envelope.source, available, "; ".join((*envelope.quality.issues, *envelope.limitations)) or "Data Platform envelope", 0.0, envelope.cache_state != "fresh", envelope.retrieval_mode, envelope.timestamp, None, normalized.freshness if normalized else envelope.freshness, 0, normalized.normalized_value if normalized else None, (normalized.raw_min, normalized.raw_max) if normalized else None, normalized.normalization_version if normalized else None, normalized.method if normalized else None)
+        if normalized is not None and normalized.method == "unsupported_provider":
+            # A readable raw quote is not a comparable dynasty value. In
+            # particular, ADP and unsupported scales must not enter as zero.
+            return ProviderQuote(
+                envelope.provider, envelope.key, raw, 0, envelope.timestamp,
+                envelope.source, False, "No supported comparable normalization contract.",
+                cached=envelope.cache_state != "fresh", retrieval_mode=envelope.retrieval_mode,
+                retrieved_at=envelope.timestamp, freshness=envelope.freshness,
+                normalization_version=normalized.normalization_version,
+                normalization_method=normalized.method,
+            )
+        return ProviderQuote(envelope.provider, envelope.key, raw, normalized.confidence_score if normalized else 0, envelope.timestamp, envelope.source, available, "; ".join((*envelope.quality.issues, *envelope.limitations)) or "Data Platform envelope", 0.0, envelope.cache_state != "fresh", envelope.retrieval_mode, envelope.timestamp, None, normalized.freshness if normalized else envelope.freshness, 0, normalized.normalized_value if normalized else None, (normalized.raw_min, normalized.raw_max) if normalized else None, normalized.normalization_version if normalized else None, normalized.method if normalized else None)
 
     @staticmethod
     def _trade_impact(dossier: Any, reports: dict[str, AssetMarketReport]) -> TradeMarketImpact:

@@ -133,7 +133,7 @@ def validate_asset_market_contract(body: bytes, path: str) -> str:
     html = body.decode("utf-8", errors="replace")
     for required in (
         'aria-label="Asset Market filters"',
-        "Canonical dynasty asset rankings",
+        "Filtered asset results · order is not a dynasty rank",
         "Values remain separate; unavailable evidence is never substituted.",
     ):
         if required not in html:

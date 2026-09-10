@@ -46,7 +46,8 @@ def _asset_context(context: IntelligenceContext, decision: Any) -> AssetContext:
         if decision.competitive_window is not None
         else "Pending canonical window"
     )
-    return AssetContext(context.league_id, context.active_roster_id, context.settings, window, decision.profile.strategy, needs, depths, decision.profile.market_context.get("position_counts") or {})
+    return AssetContext(context.league_id, context.active_roster_id, context.settings, window, decision.profile.strategy, needs, depths, decision.profile.market_context.get("position_counts") or {},
+                        context.cached_data.get("canonical_player_production"), context.projection_snapshot)
 
 
 def _asset_provider(context: IntelligenceContext, decision: Any) -> tuple[Any, Any, dict[str, Any]]:
@@ -238,6 +239,7 @@ class IntelligenceOrchestrator:
             f"External provider consensus with {market.consensus.agreement}% agreement; independent from DTOS intrinsic value.",
             tuple(Evidence(item.factor, item.observed_value, item.impact, item.explanation, item.source, item.available) for item in market.evidence),
             tuple(f"Missing provider: {name}" for name in market.consensus.missing_providers),
+            scale_maximum=1000,
         )
         return replace(report, core_values=replace(report.core_values, market=market_value), value_profile=value_profile)
 

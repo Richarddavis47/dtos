@@ -172,7 +172,7 @@ def audit_market_calibration(data: dict[str, Any], state: dict[str, Any], *, app
             "median_difference_percent": deviation,
             "mean_absolute_difference_percent": round(mean(abs(item) for item in deviations), 2) if deviations else None,
             "confidence": confidence, "status": status, "impact_score": impact_score,
-            "provider_agreement": "supported" if len(healthy_market_providers) >= 2 else "insufficient",
+            "provider_agreement": "supported" if independent_families > 0 else "unavailable",
         }
         category_health.append(category_row)
         if status == "Confirm":
@@ -180,7 +180,7 @@ def audit_market_calibration(data: dict[str, Any], state: dict[str, Any], *, app
         evidence = [
             f"Audited {len(rows)} assets; {len(comparable)} have both intrinsic and market evidence.",
             f"Median DTOS-versus-market difference is {deviation}%" if deviation is not None else "Comparable intrinsic evidence is insufficient.",
-            f"{len(healthy_market_providers)} independent market providers are healthy.",
+            f"{len(healthy_market_providers)} market feeds are healthy; availability alone does not prove independent compatible consensus.",
         ]
         safe = (
             status == "Calibration Required" and len(comparable) >= AUTO_APPLY_SAMPLE
@@ -212,7 +212,8 @@ def audit_market_calibration(data: dict[str, Any], state: dict[str, Any], *, app
 
     comparable_total = sum(row["comparable_assets"] for row in category_health if row["category"] == "All Assets")
     all_assets = next(row for row in category_health if row["category"] == "All Assets")
-    calibration_score = max(0, round(100 - min(100, all_assets["mean_absolute_difference_percent"] or 0)))
+    deviation = all_assets["mean_absolute_difference_percent"]
+    calibration_score = max(0, round(100 - min(100, deviation))) if deviation is not None else None
     integrity_score = 100 if integrity_ok else 0
     report = {
         "schema_version": CALIBRATION_SCHEMA_VERSION, "generated_at": generated_at,

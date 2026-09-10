@@ -26,6 +26,8 @@ class NormalizedValuation:
     freshness: str
     normalization_version: str
     method: str
+    # Numeric normalization alone does not prove cross-provider compatibility.
+    compatibility_key: str | None = None
 
 
 @dataclass(frozen=True)
@@ -46,21 +48,27 @@ class CanonicalConsensus:
     calibration_status: CalibrationStatus
     warning: str | None
 
+    @property
+    def evidence_state(self) -> str:
+        if self.market_consensus is None:
+            return "MARKET UNAVAILABLE"
+        return "MULTI-PROVIDER CONSENSUS" if len(self.providers_used) > 1 else "SINGLE-PROVIDER MARKET"
+
 
 @dataclass(frozen=True)
 class PlayerIntelligenceCard:
     player_id: str
     market_value: int | None
-    dtos_intrinsic_value: int
-    win_now_value: int
-    rebuild_value: int
-    future_value: int
-    trade_value: int
-    age_score: int
-    production_score: int
-    situation_score: int
-    risk_score: int
-    liquidity_score: int
+    dtos_intrinsic_value: int | None
+    win_now_value: int | None
+    rebuild_value: int | None
+    future_value: int | None
+    trade_value: int | None
+    age_score: int | None
+    production_score: int | None
+    situation_score: int | None
+    risk_score: int | None
+    liquidity_score: int | None
     confidence_score: int
     calibration_status: CalibrationStatus
     provider_evidence: tuple[ConsensusProvider, ...]

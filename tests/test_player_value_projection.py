@@ -60,11 +60,12 @@ class PlayerValueProjectionTests(unittest.TestCase):
     def test_unified_profiles_keep_internal_and_market_values_separate(self) -> None:
         result = self.orchestrator.analyze(self.data, 1)
         profile = next(iter(result.player_values.values()))
-        self.assertEqual(profile.dtos_dynasty.source, "DTOS Asset Intelligence")
+        self.assertEqual(profile.dtos_dynasty.status, DataStatus.UNAVAILABLE)
+        self.assertIsNone(profile.dtos_dynasty.value)
         self.assertIn(profile.market_consensus.status, set(DataStatus))
         self.assertTrue(profile.evidence)
         self.assertTrue(profile.market_posture)
-        self.assertGreaterEqual(profile.lineup.scarcity, 0)
+        self.assertIsNone(profile.lineup.scarcity)
 
     def test_points_above_replacement_and_roster_marginal_value_are_exposed(self) -> None:
         profiles = self.orchestrator.analyze(self.data, 1).player_values.values()
@@ -73,14 +74,15 @@ class PlayerValueProjectionTests(unittest.TestCase):
             or isinstance(item.lineup.points_above_replacement, Real)
             for item in profiles
         ))
-        self.assertTrue(all(0 <= item.lineup.marginal_value <= 100 for item in profiles))
+        self.assertTrue(all(item.lineup.marginal_value is None for item in profiles))
         self.assertTrue(any(item.lineup.role for item in profiles))
 
     def test_contender_and_rebuilder_values_remain_independent(self) -> None:
         profiles = self.orchestrator.analyze(self.data, 1).player_values.values()
-        self.assertTrue(any(item.contender.value != item.rebuilder.value for item in profiles))
+        self.assertTrue(all(item.contender.value is None and item.rebuilder.value is None for item in profiles))
 
-    def test_contender_value_is_more_weekly_sensitive_than_rebuilder_value(self) -> None:
+    def test_weekly_changes_do_not_manufacture_dynasty_or_horizon_scalars(self) -> None:
+        self.data['week'] = 1
         canonical = {
             "week": self.data.get("week"), "weekly_floor": 3.0, "weekly_median": 5.0,
             "weekly_ceiling": 8.0, "projection_confidence": 80,
@@ -109,10 +111,12 @@ class PlayerValueProjectionTests(unittest.TestCase):
                 IntelligenceRegistry(), IntelligenceCache(default_ttl=60),
             ).analyze(self.data, 1)
         player_id = next(iter(low.player_values))
-        contender_change = high.player_values[player_id].contender.value - low.player_values[player_id].contender.value
-        rebuilder_change = high.player_values[player_id].rebuilder.value - low.player_values[player_id].rebuilder.value
-        self.assertGreater(contender_change, rebuilder_change)
-        self.assertGreater(rebuilder_change, 0)
+        self.assertEqual(low.player_values[player_id].projection.projected_points, 5)
+        self.assertEqual(high.player_values[player_id].projection.projected_points, 20)
+        for result in (low, high):
+            self.assertIsNone(result.player_values[player_id].contender.value)
+            self.assertIsNone(result.player_values[player_id].rebuilder.value)
+            self.assertIsNone(result.player_values[player_id].dtos_dynasty.value)
 
     def test_portrait_fallback_and_determinism(self) -> None:
         first = self.orchestrator.analyze(self.data, 1)

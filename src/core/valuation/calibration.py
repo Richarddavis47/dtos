@@ -6,7 +6,7 @@ from typing import Any, Iterable
 
 from src.core.valuation.consensus import build_canonical_consensus
 from src.core.valuation.models import CalibrationStatus, NormalizedValuation
-from src.core.valuation.normalization import normalize_value, prepare_distribution
+from src.core.valuation.normalization import normalize_cached_value, prepare_distribution
 
 
 @dataclass(frozen=True)
@@ -147,16 +147,16 @@ def cached_market_consensus(
             if not isinstance(row, dict) or row.get("value") is None:
                 continue
             try:
-                raw = float(row["value"])
+                float(row["value"])
             except (TypeError, ValueError):
                 continue
             normalized.append(
-                normalize_value(
+                normalize_cached_value(
                     provider,
-                    raw,
+                    row,
                     prepared_distribution=distributions[provider],
                     updated_at=row.get("updated_at"),
-                    provider_confidence=int(row.get("confidence") or 70),
+                    provider_confidence=int(row["confidence"]) if row.get("confidence") is not None else 70,
                 )
             )
         consensus = build_canonical_consensus(

@@ -11,7 +11,7 @@ class DecisionConfidence:
 
     value: int
     evidence_confidence: int
-    agreement: int
+    agreement: int | None
     coverage: int
     context_quality: int
     calibration: int

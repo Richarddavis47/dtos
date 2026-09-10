@@ -23,6 +23,15 @@ _REGISTRY: tuple[dict[str, Any], ...] = (
 )
 
 
+def evidence_family(provider: str) -> str:
+    """Resolve declared lineage, not provider count or a new synthetic source."""
+    key = provider.strip().casefold()
+    for row in _REGISTRY:
+        if key in {row['provider_id'].casefold(), row['provider_name'].casefold()}:
+            return row['evidence_family']
+    return key
+
+
 def provider_registry(runtime_status: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     statuses = runtime_status or {}
     rows = deepcopy(list(_REGISTRY))

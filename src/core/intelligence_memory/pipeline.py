@@ -7,6 +7,7 @@ from threading import RLock
 from typing import Any, Iterable
 
 from app_metadata import VERSION
+from src.core.valuation_intelligence.changes import METHODOLOGY_ID
 from src.core.league_runtime.identity import scoring_profile_id
 
 from .models import CheckpointTrigger, EvidenceCompleteness, ProvenanceType
@@ -60,7 +61,7 @@ class CheckpointPipeline:
             return (layers.get(name) or {}).get("value")
         current = value("market_value")
         return {
-            "dtos_value": value("league_adjusted_value") or value("intrinsic_dtos_value"),
+            "dtos_value": value("league_adjusted_value"),
             "intrinsic_value": value("intrinsic_dtos_value"),
             "contender_value": value("contender_value"),
             "rebuilder_value": value("rebuilder_value"),
@@ -81,7 +82,7 @@ class CheckpointPipeline:
                 roster_positions=tuple(data.get("roster_positions") or league.get("roster_positions") or ()),
             ),
             "provenance": provenance,
-            "model_version": VERSION,
+            "model_version": f"{VERSION}:{METHODOLOGY_ID}",
             "brain_identity": ((data.get("brain") or {}).get("brain_snapshot_id")
                                or (data.get("valuation_intelligence") or {}).get("brain_snapshot_id")),
         }
@@ -102,11 +103,12 @@ class CheckpointPipeline:
             provider="Sleeper",
             raw_value=projection.get("canonical_projection"),
             normalized_value=projection.get("canonical_projection"),
-            observed_at=projection.get("source_timestamp") or projection.get("generated_at"),
+            observed_at=projection.get("generated_at"),
             source_identity=projection.get("sleeper_evidence_fingerprint"),
             temporal_distance_seconds=None,
             metadata={
                 "evidence_type": "canonical_weekly_projection",
+                "source_updated_at": projection.get("source_timestamp"),
                 "season": projection.get("season"),
                 "week": projection.get("week"),
                 "scoring_profile_id": projection.get("scoring_profile_id"),

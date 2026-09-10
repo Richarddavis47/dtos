@@ -37,13 +37,13 @@ class TradeAsset:
     kind: str
     label: str
     position: str | None
-    dynasty_value: int
-    redraft_value: int
-    market_value: int
-    team_fit_value: int
+    dynasty_value: int | None
+    redraft_value: int | None
+    market_value: int | None
+    team_fit_value: int | None
     risk: int
     source_roster_id: int
-    trade_value: int = 0
+    trade_value: int | None = None
     liquidity_score: int = 50
     confidence_score: int = 60
     calibration_status: str = "partially_calibrated"
@@ -86,15 +86,15 @@ class PartnerReport:
 
 @dataclass(frozen=True)
 class TradeImpact:
-    current_outlook: int
-    future_outlook: int
+    current_outlook: int | None
+    future_outlook: int | None
     roster_balance: int
     positional_depth: int
-    asset_value: int
+    asset_value: int | None
     risk: int
-    opportunity_cost: int
-    market_efficiency: int
-    championship_outlook: int
+    opportunity_cost: int | None
+    market_efficiency: int | None
+    championship_outlook: int | None
     evidence: tuple[Evidence, ...]
     limitations: tuple[str, ...]
 
@@ -118,7 +118,7 @@ class TradeRecommendation:
     trade_type: TradeType
     priority: TradePriority
     confidence: int
-    expected_value: int
+    expected_value: int | None
     acceptance_likelihood: int | None
     evidence: tuple[Evidence, ...]
     recommendation_status: str = "accepted"

@@ -95,13 +95,14 @@ def create_home_router(
         ) + "</div>"
 
         rankings = sorted(
-            ((int(team_row.get("roster_id") or 0), team_row, directory.get(int(team_row.get("roster_id") or 0), {})) for team_row in teams),
+            ((int(team_row.get("roster_id") or 0), team_row, directory.get(int(team_row.get("roster_id") or 0), {})) for team_row in teams
+             if directory.get(int(team_row.get("roster_id") or 0), {}).get("rank") is not None),
             key=lambda row: (int(row[2].get("rank") or 999), str(row[1].get("team_name") or "")),
         )[:5]
         rank_html = '<div class="podium-grid">' + "".join(
-            f'<a class="podium-card" data-rank="{int(view.get("rank") or index)}" href="/teams/{rid}"><span class="podium-rank">#{escape(str(view.get("rank") or index))}</span><h3>{escape(str(row.get("team_name") or "Team"))}</h3><p>{escape("Preseason outlook" if preseason else record_evidence(row.get("wins"), row.get("losses"), row.get("ties"), season_started=True))}</p></a>'
+            f'<a class="podium-card" data-rank="{int(view["rank"])}" href="/teams/{rid}"><span class="podium-rank">#{escape(str(view["rank"]))}</span><h3>{escape(str(row.get("team_name") or "Team"))}</h3><p>{escape("Canonical team assessment" if preseason else record_evidence(row.get("wins"), row.get("losses"), row.get("ties"), season_started=True))}</p></a>'
             for index, (rid, row, view) in enumerate(rankings[:3], start=1)
-        ) + '</div><p><a href="/fois">Open full GM intelligence rankings →</a></p>'
+        ) + '</div>' + ('<p>Canonical team assessment rankings unavailable.</p>' if not rankings else '') + '<p><a href="/teams">Open team assessments →</a></p>'
 
         matchups = []
         for matchup_id, sides in sorted((data.get("matchups") or {}).items())[:5]:
@@ -126,7 +127,7 @@ def create_home_router(
             header
             + _section("Preseason Briefing" if preseason else "Weekly Recap", "What matters for your franchise now", f'<div class="card ux-recap"><p>{escape(recap)}</p><a href="/league">Open league briefing →</a></div>')
             + _section("What Should I Do?", "Highest-value next steps from existing intelligence", action_html)
-            + _section("Rankings", ("Preseason team outlook and FOIS remain distinct" if preseason else "Current-season standings and FOIS remain distinct"), rank_html)
+            + _section("Team Assessment Rankings", "Canonical team assessment · not standings or FOIS GM rankings", rank_html)
             + _section("This Week", "Current Sleeper matchup evidence", matchup_html)
             + _section("Market Movers", "Meaningful movement only", '<div class="card"><p class="muted">Market movement is shown only when timestamped comparable observations cross the established threshold.</p><a href="/market#market-movers">Review market evidence →</a></div>')
             + _section("League Activity", "Recent cached transactions", activity_html)

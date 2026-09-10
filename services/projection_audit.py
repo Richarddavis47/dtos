@@ -96,25 +96,20 @@ def _position_distributions(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _rank_maps(market: Any) -> dict[str, dict[str, int]]:
-    mappings: dict[str, dict[str, int]] = {}
-    for name, sort in (
-        ("overall_rank", "market"), ("contender_rank", "contender"),
-        ("rebuilder_rank", "rebuilder"),
-    ):
-        response = market.directory(limit=len(market.assets), sort=sort)
-        mappings[name] = {
-            str(row["asset_id"]): int(row["rank"])
-            for row in response.get("assets") or []
-        }
-    position_rank: dict[str, int] = {}
-    grouped: dict[str, list[dict[str, Any]]] = {}
-    for row in market.assets:
-        grouped.setdefault(str(row.get("position") or "Other"), []).append(row)
-    for rows in grouped.values():
-        rows.sort(key=lambda row: (-float((row.get("values") or {}).get("market_value") or 0), str(row.get("asset_id"))))
-        position_rank.update({str(row["asset_id"]): index for index, row in enumerate(rows, 1)})
-    mappings["position_rank"] = position_rank
-    return mappings
+    from src.core.valuation.ranking import rank_players
+    players = [row for row in market.assets if str(row.get("asset_id", "")).startswith("player:")]
+    ranks = rank_players(
+        {str(row["asset_id"]): (row.get("values") or {}).get("market_value") for row in players},
+        {str(row["asset_id"]): str(row.get("position") or "Unknown") for row in players},
+        scope="league_universe", value_basis="external_market_price",
+        methodology="projection-audit-market-scope-v1",
+    )
+    return {
+        "overall_rank": {key: row["overall"].rank for key, row in ranks.items() if row["overall"].rank is not None},
+        "position_rank": {key: row["position"].rank for key, row in ranks.items() if row["position"].rank is not None},
+        # Unsupported dynasty utility cannot acquire rank from list position.
+        "contender_rank": {}, "rebuilder_rank": {},
+    }
 
 
 def _fois(scores: tuple[Any, ...]) -> list[dict[str, Any]]:
@@ -245,6 +240,9 @@ def build_projection_audit(
                     "projection_difference_pct": pct, "difference_bucket": _bucket(difference),
                     "values": values,
                     "overall_rank": ranks["overall_rank"].get(asset_id),
+                    "rank_scope": "league_universe",
+                    "rank_basis": "external_market_price",
+                    "rank_methodology": "projection-audit-market-scope-v1",
                     "position_rank": ranks["position_rank"].get(asset_id),
                     "contender_rank": ranks["contender_rank"].get(asset_id),
                     "rebuilder_rank": ranks["rebuilder_rank"].get(asset_id),

@@ -17,8 +17,8 @@ class EvidenceObservation:
     tier: str | None
     scoring_format: str
     league_format: str
-    league_size: int
-    te_premium: bool
+    league_size: int | None
+    te_premium: bool | None
     observation_timestamp: str | None
     source_publication_timestamp: str | None
     ingestion_timestamp: str

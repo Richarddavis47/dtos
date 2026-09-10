@@ -13,10 +13,15 @@ POSITIONS = ("QB", "RB", "WR", "TE")
 
 
 def _direction(decision: Any, card: Any) -> TeamDirection:
-    return TeamDirection(decision.profile.roster_id, card.current_window.value, card.confidence, (f"Current league-relative strength {card.current_strength}/100 (#{card.current_contending.rank}).", f"Future league-relative strength {card.future_strength}/100 (#{card.future_outlook.rank}).", *card.explanation))
+    current = 'Unavailable' if card.current_strength is None else f'{card.current_strength}/100'
+    future = 'Unavailable' if card.future_strength is None else f'{card.future_strength}/100'
+    return TeamDirection(decision.profile.roster_id, card.current_window.value, card.confidence,
+        (f"Optimal projected lineup relative strength: {current}.", f"Long-term utility: {future}.", *card.explanation))
 
 
 def _need(roster_id: int, position: str, room_score: int, cards: list[Any], direction: TeamDirection) -> TeamNeed:
+    if room_score is None:
+        return TeamNeed(roster_id, position, 'Unavailable', None, ('No supported position-room aggregate; do not infer need from Market price.',))
     starter_quality = max((card.contender_value for card in cards), default=0)
     future_quality = max((card.rebuilder_value for card in cards), default=0)
     replacement = max((card.weekly_floor for card in cards), default=0)
@@ -26,6 +31,8 @@ def _need(roster_id: int, position: str, room_score: int, cards: list[Any], dire
 
 
 def _surplus(roster_id: int, position: str, room_score: int, cards: list[Any], need: TeamNeed) -> TeamSurplus | None:
+    if room_score is None:
+        return None
     tradable = [card for card in cards if card.trade_liquidity >= 55 and card.tier not in {"Elite Franchise Player"}]
     score = round(room_score * .55 + mean((card.trade_liquidity for card in tradable)) * .30 + min(len(tradable), 3) * 5) if tradable else 0
     if score < 62 or need.priority in {"Critical", "High"}:
@@ -34,6 +41,8 @@ def _surplus(roster_id: int, position: str, room_score: int, cards: list[Any], n
 
 
 def _availability(player_id: str, roster_id: int, card: Any, direction: TeamDirection, surplus_positions: set[str], position: str) -> AssetAvailability:
+    if card.trade_liquidity is None:
+        return AssetAvailability(player_id, roster_id, 'Unavailable', 0, ('Market price alone does not establish trade availability or willingness.',))
     if card.tier == "Elite Franchise Player":
         status = "Untouchable"
     elif card.tier == "Cornerstone" and direction.label not in {"Rebuilding", "Full Rebuild"}:
@@ -57,7 +66,7 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
     availability: dict[str, AssetAvailability] = {}
     for roster_id, rooms in roster.league_rooms.items():
         cards_by_position = {position: [card for card in roster.league_players[roster_id].values() if intelligence.decisions[roster_id].profile.position_rooms.get(position) and card.player_id in {str(player.get("id") or player.get("player_id")) for player in intelligence.decisions[roster_id].profile.players if player.get("position") == position}] for position in POSITIONS}
-        team_needs = tuple(sorted((_need(roster_id, position, rooms[position], cards_by_position[position], directions[roster_id]) for position in POSITIONS), key=lambda item: (-item.score, item.position)))
+        team_needs = tuple(sorted((_need(roster_id, position, rooms[position], cards_by_position[position], directions[roster_id]) for position in POSITIONS), key=lambda item: (item.score is None, -item.score if item.score is not None else 0, item.position)))
         needs[roster_id] = team_needs
         team_surpluses = tuple(item for position in POSITIONS if (item := _surplus(roster_id, position, rooms[position], cards_by_position[position], next(need for need in team_needs if need.position == position))) is not None)
         average_picks = mean(decision.profile.draft_pick_count for decision in intelligence.decisions.values())
@@ -126,6 +135,8 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
         if available.roster_id == active_id:
             continue
         card = roster.league_players[available.roster_id][player_id]
+        if card.dynasty_value is None or card.trade_liquidity is None:
+            continue
         need = active_needs.get(position_by_id.get(player_id, ""))
         fit = need.score if need else 20
         partner = partner_scores.get(available.roster_id, 40)
@@ -140,20 +151,29 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
         sent = tuple(asset.label for asset in dossier.proposal.assets_sent)
         received = tuple(asset.label for asset in dossier.proposal.assets_received)
         market_delta = dossier.market.market_gain_loss if dossier.market else None
-        trade_recommendations.append(LeagueTradeRecommendation(dossier.partner.roster_id, sent, received, dossier.impact.asset_value, market_delta, dossier.impact.current_outlook, "Improves current direction" if dossier.impact.current_outlook > 0 else "Improves future direction" if dossier.impact.future_outlook > 0 else "Direction-neutral", dossier.recommendation.confidence, (dossier.why_active_improves, dossier.why_partner_improves, dossier.why_realistic, dossier.why_now)))
+        direction = (
+            "Current improvement; future evidence unavailable"
+            if dossier.impact.future_outlook is None and dossier.impact.current_outlook is not None and dossier.impact.current_outlook > 0
+            else "Future direction unavailable" if dossier.impact.future_outlook is None
+            else "Improves current direction" if dossier.impact.current_outlook is not None and dossier.impact.current_outlook > 0
+            else "Improves future direction" if dossier.impact.future_outlook > 0
+            else "Direction-neutral"
+        )
+        trade_recommendations.append(LeagueTradeRecommendation(dossier.partner.roster_id, sent, received, dossier.impact.asset_value, market_delta, dossier.impact.current_outlook, direction, dossier.recommendation.confidence, (dossier.why_active_improves, dossier.why_partner_improves, dossier.why_realistic, dossier.why_now)))
 
     active_partners = sorted(((score, roster_id) for roster_id, score in partner_scores.items()), reverse=True)
     undervalued = max(intelligence.market.opportunities, key=lambda item: item.value_gap.difference or -999, default=None)
-    overvalued = min(intelligence.market.assets.values(), key=lambda item: item.value_gap.difference if item.value_gap.difference is not None else 999, default=None)
-    most_tradable = max((item for item in availability.values() if item.status != "Untouchable"), key=lambda item: status_scores[item.status], default=None)
-    strongest = max(((score, roster_id, position) for roster_id, rooms in roster.league_rooms.items() for position, score in rooms.items()), default=(0, 0, "Unavailable"))
-    weakest = min(((score, roster_id, position) for roster_id, rooms in roster.league_rooms.items() for position, score in rooms.items()), default=(0, 0, "Unavailable"))
+    overvalued = min((item for item in intelligence.market.assets.values() if item.value_gap.difference is not None and item.value_gap.difference < 0), key=lambda item: item.value_gap.difference, default=None)
+    most_tradable = max((item for item in availability.values() if item.status in status_scores and item.status != "Untouchable"), key=lambda item: status_scores[item.status], default=None)
+    strongest = max(((score, roster_id, position) for roster_id, rooms in roster.league_rooms.items() for position, score in rooms.items() if score is not None), default=(0, 0, "Unavailable"))
+    weakest = min(((score, roster_id, position) for roster_id, rooms in roster.league_rooms.items() for position, score in rooms.items() if score is not None), default=(0, 0, "Unavailable"))
     names = {roster_id: getattr(decision.profile, "team_name", "Unassigned Franchise") for roster_id, decision in intelligence.decisions.items()}
+    largest_need = max((item for rows in needs.values() for item in rows if item.score is not None), key=lambda item: item.score, default=None)
     dashboard = {
         "Today's Best Trade Partner": names.get(active_partners[0][1], "Unassigned Franchise") if active_partners else "Unavailable",
         "Most Undervalued Player": undervalued.label if undervalued else "Unavailable",
         "Most Overvalued Player": overvalued.label if overvalued and overvalued.value_gap.difference is not None else "Unavailable",
-        "Largest Team Need": f"{names.get(max((item for rows in needs.values() for item in rows), key=lambda item: item.score).roster_id, 'Unassigned Franchise')} {max((item for rows in needs.values() for item in rows), key=lambda item: item.score).position}",
+        "Largest Team Need": f"{names.get(largest_need.roster_id, 'Unassigned Franchise')} {largest_need.position}" if largest_need else 'Unavailable',
         "Most Tradable Asset": most_tradable.player_id if most_tradable else "Unavailable",
         "Most Valuable Pick": "Requires pick-market provider",
         "Strongest Position Group": f"{names.get(strongest[1], 'Unassigned Franchise')} {strongest[2]} ({strongest[0]})",

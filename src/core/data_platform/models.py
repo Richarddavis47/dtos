@@ -96,10 +96,11 @@ class TrendResult:
     key: str
     absolute_change: float | None
     percentage_change: float | None
-    momentum: float
-    volatility: float
+    momentum: float | None
+    volatility: float | None
     direction: str
     periods: dict[str, float | None]
+    basis: str = "single-provider raw observations; not canonical Market movement"
 
 
 @dataclass(frozen=True)

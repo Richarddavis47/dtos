@@ -64,11 +64,29 @@ def snapshot(inputs: dict[str, Any]) -> dict[str, Any]:
     node_count = 0
     key_hashes: dict[str, str] = {}
 
+    def check_private_tree(value):
+        if isinstance(value, dict):
+            if any(FORBIDDEN.intersection(str(key).casefold().replace('-', '_').split('_')) for key in value):
+                raise ValueError('Credential-bearing input is forbidden')
+            for item in value.values():
+                check_private_tree(item)
+        elif isinstance(value, list):
+            for item in value:
+                check_private_tree(item)
+
+    layer_path = re.compile(r'^\$\.semantic_records/\d+/key:' + fingerprint('valuation')[:16]
+                            + '/key:' + fingerprint('layers')[:16] + '/key:[0-9a-f]{16}$')
+
     def walk(value: Any, path: str) -> dict[str, Any]:
         nonlocal node_count
         node_count += 1
         if node_count > MAX_LEAVES:
             raise ValueError("Restart evidence exceeds its leaf budget")
+        if isinstance(value, dict) and layer_path.fullmatch(path):
+            # Preserve the exact layer, but compare it as one private fingerprint.
+            # Provider rows stay expanded for confidence/freshness diagnosis.
+            check_private_tree(value)
+            return {'kind': 'canonical_layer', 'sha256': fingerprint(value)}
         if isinstance(value, dict):
             if any(FORBIDDEN.intersection(str(key).casefold().replace("-", "_").split("_"))
                    for key in value):
@@ -112,7 +130,7 @@ def snapshot(inputs: dict[str, Any]) -> dict[str, Any]:
         return node
 
     tree = {key: walk(inputs[key], "$." + key) for key in sorted(inputs)}
-    result = {"schema": "dtos-restart-evidence-v3", "key_hashes": key_hashes,
+    result = {"schema": "dtos-restart-evidence-v4", "key_hashes": key_hashes,
               "tree": tree, "node_count": node_count}
     if len(json.dumps(result).encode()) > MAX_BYTES:
         raise ValueError("Restart evidence exceeds its byte budget")
@@ -120,7 +138,7 @@ def snapshot(inputs: dict[str, Any]) -> dict[str, Any]:
 
 
 def differences(before: dict[str, Any], after: dict[str, Any]) -> list[dict[str, Any]]:
-    if before.get("schema") != after.get("schema") or before.get("schema") != "dtos-restart-evidence-v3":
+    if before.get("schema") != after.get("schema") or before.get("schema") != "dtos-restart-evidence-v4":
         raise ValueError("Incompatible restart evidence schemas")
     left, right = before["tree"], after["tree"]
     before_keys, after_keys = before.get("key_hashes", {}), after.get("key_hashes", {})

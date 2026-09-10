@@ -1,3 +1,22 @@
+# DTOS v1.17.0 - Player and Market Evidence Intelligence (candidate)
+
+Batch 3 separates source-specific Market evidence, demonstrated production,
+current opportunity, weekly expectation and longevity context. Unsupported
+long-term intrinsic scalar values and ranks remain unavailable. DynastyProcess
+and FantasyCalc are not averaged without a proven shared format contract.
+
+Player, roster, team and trade consumers preserve explicit units, scopes,
+missingness and semantic generation. Structured change records distinguish real
+evidence movement from the Batch 3 methodology migration. Existing historical
+external observations are not rewritten. The retained 57-player panel is a
+diagnostic, not a published ranking or fresh production acceptance.
+
+This is an unreleased candidate. Required comprehensive and production gates
+must pass before publication. No Batch 4 work, paid infrastructure changes or
+restoration of Current Visual, DINS or Mirror is included.
+
+## Prior release
+
 # DTOS v1.16.1 - Reserved League Route Classification
 
 Narrow corrective release for the Batch 2 acceptance diagnostic route. The

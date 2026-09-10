@@ -34,7 +34,9 @@ def _matches(assets: tuple[TradeAsset, ...], kind: str | None) -> bool:
 
 
 def _shortlist(pool: tuple[TradeAsset, ...]) -> tuple[TradeAsset, ...]:
-    players = sorted((asset for asset in pool if asset.kind == "player"), key=lambda item: (-item.team_fit_value, item.asset_id))[:8]
+    pool = tuple(asset for asset in pool if asset.trade_value is not None)
+    # Missing fit has no preference; canonical identity breaks ties, not a substitute value.
+    players = sorted((asset for asset in pool if asset.kind == "player"), key=lambda item: (item.team_fit_value is None, -item.team_fit_value if item.team_fit_value is not None else 0, item.asset_id))[:8]
     picks = sorted((asset for asset in pool if asset.kind == "pick"), key=lambda item: (-item.dynasty_value, item.asset_id))[:4]
     return tuple(players + picks)
 
@@ -42,7 +44,7 @@ def _shortlist(pool: tuple[TradeAsset, ...]) -> tuple[TradeAsset, ...]:
 def _shortlist_with_required(pool: tuple[TradeAsset, ...], required_asset_id: str | None) -> tuple[TradeAsset, ...]:
     rows = list(_shortlist(pool))
     required = next((asset for asset in pool if asset.asset_id == required_asset_id), None)
-    if required is not None and all(asset.asset_id != required.asset_id for asset in rows):
+    if required is not None and required.trade_value is not None and all(asset.asset_id != required.asset_id for asset in rows):
         rows.append(required)
     return tuple(rows)
 
@@ -105,7 +107,7 @@ def generate_proposals(
                                 received_value.adjusted_value
                                 - sent_value.adjusted_value
                             ),
-                            -sum(item.team_fit_value for item in received),
+                            -sum(item.team_fit_value for item in received) if all(item.team_fit_value is not None for item in received) else 0,
                             sent,
                             received,
                         )

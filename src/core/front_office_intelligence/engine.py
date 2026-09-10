@@ -5,13 +5,12 @@ from itertools import combinations
 from typing import Any
 
 from src.core.asset_intelligence import AssetContext, Evidence
-from src.core.asset_intelligence.portfolio import evaluate_pick_portfolio, evaluate_player_portfolio
+from src.core.asset_intelligence.portfolio import evaluate_pick_portfolio
 from src.core.decision_engine import TeamDecision
 from src.core.front_office_intelligence.models import (
     ActivityProfile, AssetPreference, CompatibilityReport, FrontOfficeReport,
     LeagueFrontOfficeModel, NegotiationForecast, RelationshipEdge,
 )
-from src.core.intelligence.league_scope import league_id_from_data, scoped_evidence
 
 
 def _canonical_transactions(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -66,10 +65,11 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
     if decision.competitive_window is None:
         raise ValueError("Front Office Intelligence requires the canonical competitive-window contract.")
     asset_context = AssetContext(profile.league_id, profile.roster_id, profile.league_settings, decision.competitive_window.classification.value, profile.strategy)
-    player_portfolio = evaluate_player_portfolio(profile.players, asset_context)
     pick_portfolio = evaluate_pick_portfolio(profile.picks, asset_context)
     philosophies: list[str] = []
-    if decision.current_outlook.score >= decision.future_outlook.score + 10:
+    if decision.current_outlook.score is None or decision.future_outlook.score is None:
+        philosophies.append("Competitive direction unavailable")
+    elif decision.current_outlook.score >= decision.future_outlook.score + 10:
         philosophies.append("Win Now")
     elif decision.future_outlook.score >= decision.current_outlook.score + 10:
         philosophies.append("Long-Term Builder")
@@ -77,8 +77,7 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
         philosophies.append("Balanced")
     if profile.draft_pick_count >= 10:
         philosophies.append("Draft-Centric")
-    if abs(player_portfolio.score - pick_portfolio.score) <= 10:
-        philosophies.append("Value Investor")
+    # Portfolio magnitude cannot establish a manager's investment philosophy.
     if activity.trades >= 5:
         philosophies.append("Aggressive Trader")
     elif activity.trades == 0:
@@ -98,8 +97,11 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
     style = "Active trade participant" if activity.trades >= 5 else "Selective trade participant" if activity.trades else "Neutral default — insufficient trade history"
     confidence = min(90, 35 + min(known, 20) + min(activity.trades * 5, 25) + (10 if profile.draft_pick_count else 0))
     evidence = activity.evidence + tuple(item for pref in preferences for item in pref.evidence) + (
-        Evidence("Current/Future outlook", f"{decision.current_outlook.score}/{decision.future_outlook.score}", decision.current_outlook.score - decision.future_outlook.score, "Independent Decision Engine horizons determine competitive direction.", "Decision Engine"),
-        Evidence("Player/Pick portfolio", f"{player_portfolio.score}/{pick_portfolio.score}", player_portfolio.score - pick_portfolio.score, "Asset Intelligence portfolio outputs provide a shared asset-balance signal without duplicating valuation logic.", "Asset Intelligence"),
+        Evidence("Competitive window", decision.competitive_window.classification.value, 0,
+            "Shared generation-bound assessment; missing direction is not rebuild behavior.", "Canonical team assessment",
+            decision.competitive_window.classification.value != "Unavailable"),
+        Evidence("Future capital", str(pick_portfolio.score), 0,
+            "Independent pick evidence; no player/pick scalar comparison.", "Asset Intelligence"),
     )
     strengths = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score >= 70) or ("No position crossed the v1 strength threshold.",)
     constraints = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score < 55) or ("No position crossed the v1 need threshold.",)
@@ -151,6 +153,8 @@ def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: Front
 
 
 def build_league_model(data: dict[str, Any], decisions: dict[int, TeamDecision] | None = None) -> LeagueFrontOfficeModel:
+    from src.core.intelligence.league_scope import league_id_from_data, scoped_evidence
+
     league_id = league_id_from_data(data)
     private_evidence = scoped_evidence(
         data, "front_office_evidence", expected_league_id=league_id,

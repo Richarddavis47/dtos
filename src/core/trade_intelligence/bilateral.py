@@ -8,6 +8,7 @@ from typing import Any
 from src.core.trade_intelligence.lineup import optimal_legal_lineup
 from src.core.trade_intelligence.models import TradeAsset, TradeProposal
 from src.core.valuation import adjusted_package_value
+from src.core.valuation.packages import neutral_trade_value
 from src.core.trade_intelligence.evidence_context import (
     TradeEvidenceContext, assess_historical_fit,
 )
@@ -34,9 +35,9 @@ def _value(assets: tuple[TradeAsset, ...]) -> float:
 
 def _package_quality(received: tuple[TradeAsset, ...], outgoing: tuple[TradeAsset, ...]) -> EvaluationDimension:
     received_value = _value(received)
-    centerpiece = max((asset.trade_value or asset.dynasty_value for asset in outgoing), default=0)
-    best_incoming = max((asset.trade_value or asset.dynasty_value for asset in received), default=0)
-    useful = sum(1 for asset in received if (asset.trade_value or asset.dynasty_value) >= max(20, centerpiece * 0.35))
+    centerpiece = max((neutral_trade_value(asset) for asset in outgoing), default=0)
+    best_incoming = max((neutral_trade_value(asset) for asset in received), default=0)
+    useful = sum(1 for asset in received if neutral_trade_value(asset) >= max(20, centerpiece * 0.35))
     roster_spots = max(0, len(received) - len(outgoing))
     if centerpiece and len(received) >= 3 and best_incoming < centerpiece * 0.60 and useful <= 1:
         return EvaluationDimension("Package Quality", "POOR", "Fair on paper, but the package relies on secondary pieces rather than a credible centerpiece.")
@@ -51,6 +52,8 @@ def evaluate_package_quality(
     received: tuple[TradeAsset, ...], outgoing: tuple[TradeAsset, ...],
 ) -> EvaluationDimension:
     """Input-driven package-quality contract shared with temporal consumers."""
+    if any(asset.trade_value is None for asset in (*received, *outgoing)):
+        return EvaluationDimension("Package Quality", "UNAVAILABLE", "Acquisition-price evidence is missing; package quality cannot be established.")
     return _package_quality(received, outgoing)
 
 
@@ -104,7 +107,9 @@ def _strategic_reasons(
     }
     incoming_positions = {asset.position for asset in incoming if asset.kind == "player"}
     for position in sorted(incoming_positions):
-        if position and counts.get(position, 0) <= required.get(position, 0):
+        added = sum(asset.kind == 'player' and asset.position == position for asset in incoming)
+        removed = sum(asset.kind == 'player' and asset.position == position for asset in outgoing)
+        if position and added > removed and counts.get(position, 0) <= required.get(position, 0):
             reasons.append(f"Adds needed {position} depth at or below the configured starting requirement.")
     incoming_picks = sum(asset.trade_value for asset in incoming if asset.kind == "pick")
     outgoing_picks = sum(asset.trade_value for asset in outgoing if asset.kind == "pick")

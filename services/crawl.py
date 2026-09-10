@@ -17,7 +17,7 @@ from src.core.intelligence import intelligence_orchestrator
 from src.core.valuation import NORMALIZATION_VERSION, VALUATION_SCHEMA_VERSION, build_canonical_consensus, normalize_value
 
 SCHEMA_VERSION = "1.0"
-TEAM_INTELLIGENCE_SCHEMA_VERSION = "1.0"
+TEAM_INTELLIGENCE_SCHEMA_VERSION = "2.0"
 PUBLIC_PAGES = ("/", "/teams", "/front-offices", "/trades", "/transactions", "/matchups", "/picks", "/history", "/settings")
 CRAWL_ENDPOINTS = {
     "snapshot": "/api/crawl/snapshot",
@@ -129,12 +129,16 @@ def _team_intelligence_cards(data: dict[str, Any]) -> dict[int, Any]:
 
 def _public_team_intelligence(card: Any) -> dict[str, Any]:
     def grade(item: Any) -> dict[str, Any]:
-        return {"score": item.score, "grade": item.grade, "percentile": item.percentile, "rank": item.rank}
+        return {"dimension": item.category, "score": item.score, "grade": item.grade, "percentile": item.percentile, "rank": item.rank}
     return {
         "schema_version": TEAM_INTELLIGENCE_SCHEMA_VERSION,
         "overall": grade(card.overall),
         "current_contending": grade(card.current_contending),
         "dynasty": grade(card.dynasty),
+        "market_asset_strength": grade(card.market_asset_strength),
+        "production_quality": grade(card.production_quality),
+        "league_id": card.league_id,
+        "evidence_generation": card.generation,
         "starting_lineup": grade(card.starting_lineup),
         "depth": grade(card.depth),
         "positions": {position: grade(value) for position, value in card.positions.items()},
@@ -190,11 +194,14 @@ def public_teams(data: dict[str, Any]) -> list[dict[str, Any]]:
 
 def standings(data: dict[str, Any]) -> list[dict[str, Any]]:
     cards = _team_intelligence_cards(data)
-    teams = sorted(data.get("teams") or [], key=lambda team: cards[int(team.get("roster_id") or 0)].overall.rank) if cards else data.get("teams") or []
-    preseason = all((team.get("wins", 0) + team.get("losses", 0) + team.get("ties", 0)) == 0 for team in teams)
+    teams = sorted(data.get("teams") or [], key=lambda team: (
+        cards[int(team.get("roster_id") or 0)].overall.rank is None,
+        cards[int(team.get("roster_id") or 0)].overall.rank or 0,
+        int(team.get("roster_id") or 0),
+    )) if cards else data.get("teams") or []
     return [
         {
-            "rank": rank,
+            "rank": cards[int(team.get("roster_id") or 0)].overall.rank if cards else None,
             "roster_id": team.get("roster_id"),
             "team_name": team.get("team_name"),
             "owner": team.get("owner"),
@@ -204,11 +211,11 @@ def standings(data: dict[str, Any]) -> list[dict[str, Any]]:
             "points_for": team.get("points_for"),
             "points_against": team.get("points_against"),
             "max_points": team.get("max_points"),
-            "ranking_type": "Preseason Projection" if preseason else "Current Standings",
+            "ranking_type": "Canonical Team Assessment",
             "current_window": cards[int(team.get("roster_id") or 0)].current_window.value if cards else None,
             "overall_grade": cards[int(team.get("roster_id") or 0)].overall.grade if cards else None,
         }
-        for rank, team in enumerate(teams, 1)
+        for team in teams
     ]
 
 
@@ -306,8 +313,8 @@ def sync_metadata(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def cached_response(key: str, factory: Callable[[], Any], *, sync_marker: str | None, ttl: float = 300) -> dict[str, Any]:
-    cache_key = f"crawl:{NORMALIZATION_VERSION}:{TEAM_INTELLIGENCE_SCHEMA_VERSION}:{sync_marker or 'empty'}:{key}"
+def cached_response(key: str, factory: Callable[[], Any], *, sync_marker: str | None, ttl: float = 300, evidence_generation: str = "not-assessment") -> dict[str, Any]:
+    cache_key = f"crawl:{NORMALIZATION_VERSION}:{TEAM_INTELLIGENCE_SCHEMA_VERSION}:{sync_marker or 'empty'}:{evidence_generation}:{key}"
     artifact, hit = intelligence_cache.get_or_create_with_status(
         cache_key,
         lambda: {"generated_at": utcnow(), "data": jsonable_encoder(_safe(factory()))},

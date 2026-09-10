@@ -65,7 +65,7 @@ def _market_page(dataset: str = "generation-1") -> bytes:
         '<form aria-label="Asset Market filters" method="get" action="/market">'
         '<input name="q"><select name="position"></select>'
         '<select name="availability"></select><select name="sort"></select></form>'
-        '<table><caption>Canonical dynasty asset rankings</caption></table>'
+        '<table><caption>Filtered asset results · order is not a dynasty rank</caption></table>'
         '<p>Values remain separate; unavailable evidence is never substituted.</p>'
         f'<p>Dataset <code>{dataset}</code></p>'
     ).encode()
