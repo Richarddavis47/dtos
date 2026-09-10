@@ -171,6 +171,10 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                                                 viewport: innerWidth, width: document.documentElement.scrollWidth,
                                                 elements: [...document.querySelectorAll('main *')].filter(e => {
                                                     const r = e.getBoundingClientRect();
+                                                    for (let p=e.parentElement;p;p=p.parentElement) {
+                                                        if (['auto','scroll','hidden','clip'].includes(getComputedStyle(p).overflowX)
+                                                            && p.getBoundingClientRect().right <= innerWidth + 1) return false;
+                                                    }
                                                     return r.width && (r.right > innerWidth + 1 || r.left < -1);
                                                 }).slice(0, 12).map(e => ({tag:e.tagName, class:e.className,
                                                     text:e.textContent.slice(0,180), width:e.getBoundingClientRect().width}))
