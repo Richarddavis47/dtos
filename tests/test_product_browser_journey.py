@@ -180,6 +180,10 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                                                     text:e.textContent.slice(0,180), width:e.getBoundingClientRect().width}))
                                             })""")
                                             self.assertLessEqual(overflow['width'], overflow['viewport'], f"Horizontal overflow: {path}: {overflow}")
+                                            if path.startswith('/players/'):
+                                                self.assertEqual(page.locator('.ai-value b').evaluate_all(
+                                                    "elements => elements.filter(e => e.scrollWidth > e.clientWidth).map(e => e.textContent)"
+                                                ), [], "Player values/unavailable states must fit their cards without truncation")
                                             if path.startswith("/trades/"):
                                                 page.locator("#trade-sent-board input[type=search]").wait_for(state="visible")
                                             accessibility = page.evaluate(A11Y_SCRIPT)

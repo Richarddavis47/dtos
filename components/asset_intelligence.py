@@ -16,7 +16,7 @@ ASSET_CSS = """
 .ai-player-identity .player-summary-copy b{font-size:28px}.ai-player-identity .player-summary-copy span{font-size:14px}
 .ai-values{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
 .ai-value{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px}
-.ai-value b{font-size:30px;color:var(--blue);display:block;margin:8px 0}
+.ai-value b{font-size:30px;color:var(--blue);display:block;margin:8px 0;overflow-wrap:anywhere}
 .ai-value span{font-size:13px;color:var(--text-secondary)}.ai-value small{display:block;color:var(--muted);margin:6px 0}
 .ai-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0;align-items:start}
 .ai-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px}
