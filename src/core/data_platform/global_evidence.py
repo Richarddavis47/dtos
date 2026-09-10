@@ -297,3 +297,50 @@ class GlobalEvidenceStore:
         with closing(self._connect(readonly=True)) as connection:
             return {row[0]: row[1] for row in connection.execute(
                 "SELECT family,COUNT(*) FROM global_facts GROUP BY family")}
+
+    def iter_player_production(self, player_ids: Iterable[str], *, seasons: tuple[int, ...],
+                               as_of: str) -> Iterable[dict[str, Any]]:
+        """Background-only bounded stream from ONE read transaction.
+
+        This is not a page-read API. A preparation flight selects an explicit
+        universe and at most two seasons. Chunked IDs avoid SQLite parameter
+        limits; every chunk shares the same published evidence snapshot.
+        """
+        if not seasons or len(set(seasons)) > 2 or any(not isinstance(year, int) for year in seasons):
+            raise ValueError('Production preparation requires one or two explicit seasons.')
+        yield from self._stream_player_production(player_ids, seasons=seasons, as_of=as_of)
+
+    def iter_dynasty_production(self, player_ids: Iterable[str], *, current_season: int,
+                                as_of: str) -> Iterable[dict[str, Any]]:
+        """Bounded eight-season preparation; shares the canonical temporal filter.
+
+        Consumers retain compact season summaries, not a second raw history store.
+        The ordinary two-season reader retains its existing narrower contract.
+        """
+        if isinstance(current_season, bool) or not isinstance(current_season, int):
+            raise ValueError('Dynasty preparation requires an explicit season.')
+        yield from self._stream_player_production(player_ids,
+            seasons=tuple(range(current_season - 7, current_season + 1)), as_of=as_of)
+
+    def _stream_player_production(self, player_ids: Iterable[str], *, seasons: tuple[int, ...],
+                                  as_of: str) -> Iterable[dict[str, Any]]:
+        ids = sorted(set(str(value) for value in player_ids))
+        boundary = utc(as_of)
+        with closing(self._connect(readonly=True)) as connection:
+            connection.execute('BEGIN')
+            for offset in range(0, len(ids), 128):
+                subjects = [f'sleeper:{value}' for value in ids[offset:offset + 128]]
+                subject_slots = ','.join('?' for _ in subjects)
+                season_slots = ','.join('?' for _ in seasons)
+                query = f'''SELECT fingerprint,payload,known_at FROM (
+                    SELECT f.fingerprint,f.payload,r.known_at,f.subject_id,f.effective_at,
+                        ROW_NUMBER() OVER (PARTITION BY f.subject_id,f.provider,f.source_record_id
+                        ORDER BY r.known_at DESC,r.observed_at DESC,f.fingerprint DESC) revision
+                    FROM global_facts f JOIN global_fact_revisions r ON r.fingerprint=f.fingerprint
+                    WHERE f.family='production' AND f.subject_id IN ({subject_slots})
+                        AND f.season IN ({season_slots}) AND r.published=1
+                        AND f.effective_at<=? AND r.known_at<=?
+                    ) WHERE revision=1 ORDER BY subject_id,effective_at,fingerprint'''
+                for row in connection.execute(query, (*subjects, *seasons, boundary, boundary)):
+                    yield {**json.loads(zlib.decompress(row['payload'])),
+                           'fingerprint': row['fingerprint'], 'knowledge_boundary': row['known_at']}

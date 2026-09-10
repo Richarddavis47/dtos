@@ -9,6 +9,21 @@ from tools.validation.restart_evidence import REQUIRED, differences, persist, re
 
 
 class RestartEvidenceTests(unittest.TestCase):
+    def test_complete_layers_are_private_exact_and_fail_closed(self):
+        original = self.inputs()
+        original['semantic_records'] = [{'valuation': {'layers': {'market': {
+            'value': None, 'nested': {'meaning': 'private-layer'}}}}}]
+        before = snapshot(original)
+        self.assertNotIn('private-layer', json.dumps(before))
+        changed = copy.deepcopy(original)
+        changed['semantic_records'][0]['valuation']['layers']['market']['value'] = 0
+        self.assertTrue(differences(before, snapshot(changed)))
+        changed['semantic_records'][0]['valuation']['layers']['market']['nested']['token'] = 'forbidden'
+        with self.assertRaisesRegex(ValueError, 'Credential'):
+            snapshot(changed)
+        with self.assertRaisesRegex(ValueError, 'schemas'):
+            differences({**before, 'schema': 'dtos-restart-evidence-v3'}, before)
+
     def inputs(self):
         return {key: None for key in REQUIRED} | {
             "account_identity": "private-account",

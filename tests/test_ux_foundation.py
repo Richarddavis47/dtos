@@ -58,6 +58,15 @@ def _data(*, preseason: bool = False) -> dict:
 
 
 class UXFoundationTests(unittest.TestCase):
+    def test_home_does_not_turn_missing_team_ranks_into_podium_positions(self) -> None:
+        with patch('routes.home.build_team_directory', return_value={1: {'rank': None}, 2: {'rank': None}}):
+            response = self._client().get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Canonical team assessment rankings unavailable', response.text)
+        self.assertNotIn('data-rank="1"', response.text)
+        self.assertNotIn('data-rank="2"', response.text)
+        self.assertIn('not standings or FOIS GM rankings', response.text)
+
     def setUp(self) -> None:
         home_body_render_cache.__init__(
             "manager_home_body", max_entries=24, max_bytes=2_097_152,
@@ -159,7 +168,8 @@ class UXFoundationTests(unittest.TestCase):
         positions = [html.index(heading) for heading in headings]
         self.assertEqual(positions, sorted(positions))
         self.assertIn("North Stars", html)
-        self.assertIn("Current-season standings and FOIS remain distinct", html)
+        self.assertIn("Canonical team assessment", html)
+        self.assertIn("not standings or FOIS GM rankings", html)
         self.assertNotIn("system health", html.casefold())
 
     def test_league_hub_keeps_fois_and_current_rankings_distinct(self) -> None:
@@ -194,7 +204,7 @@ class UXFoundationTests(unittest.TestCase):
         with patch("routes.home.build_team_directory", return_value={1: {"rank": 1}, 2: {"rank": 2}}):
             html = self._client(data).get("/?front_office=1").text
         self.assertIn("Preseason Briefing", html)
-        self.assertIn("Preseason team outlook and FOIS remain distinct", html)
+        self.assertIn("Canonical team assessment", html)
         self.assertNotIn("0-0-0", html)
         self.assertNotIn("0.00", html)
         self.assertNotIn("completed-week", html)

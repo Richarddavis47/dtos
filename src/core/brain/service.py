@@ -9,7 +9,7 @@ from app_metadata import BUILD_NUMBER, VERSION
 from src.core.brain.contracts import BrainDecision, DecisionConfidence
 from src.core.valuation_intelligence import valuation_intelligence_report
 
-BRAIN_SCHEMA_VERSION = "1.0"
+BRAIN_SCHEMA_VERSION = "1.1"
 CONSUMERS = (
     "Team Headquarters", "FOIS", "Trade Intelligence", "Recommendation Engine",
     "Decision Engine", "Team Intelligence", "Championship Odds", "Playoff Odds",
@@ -59,10 +59,11 @@ class BrainService:
         canonical_ids = tuple(dict.fromkeys(canonical_asset_id(value) for value in asset_ids))
         assets = self.assets(canonical_ids)
         scores = [row.get("scores") or {} for row in assets]
-        def average(key: str, default: int) -> int:
-            return round(mean(float(row.get(key, default)) for row in scores)) if scores else default
+        def average(key: str, default: int | None) -> int | None:
+            values = [float(row[key]) for row in scores if row.get(key) is not None]
+            return round(mean(values)) if values else default
         evidence_confidence = average("confidence", 25)
-        agreement = average("agreement", 35)
+        agreement = average("agreement", None)
         coverage = average("coverage", 20)
         context_quality = (50 if roster_context_available else 20) + (30 if league_settings_available else 10)
         calibration = 100 if self._report.get("safety", {}).get("unsafe_adjustments") == 0 else 40
@@ -86,13 +87,17 @@ class BrainService:
         )
         historical_coverage = round(100 * history_covered / len(raw_player_ids)) if raw_player_ids else 0
         history_penalty = 0 if not raw_player_ids else round((100 - historical_coverage) * .10)
-        value = round(evidence_confidence * .25 + agreement * .20 + coverage * .20 + context_quality * .10 + calibration * .10 + stability * .15 - complexity_penalty - history_penalty)
+        supported = [(evidence_confidence, .25), (agreement, .20), (coverage, .20),
+                     (context_quality, .10), (calibration, .10), (stability, .15)]
+        value = round(sum(score * weight for score, weight in supported if score is not None)
+                      / sum(weight for score, weight in supported if score is not None)
+                      - complexity_penalty - history_penalty)
         confidence = DecisionConfidence(
             max(0, min(100, value)), evidence_confidence, agreement, coverage,
             context_quality, calibration, stability, complexity_penalty,
             (
                 f"Canonical evidence confidence is {evidence_confidence}/100.",
-                f"Provider agreement is {agreement}/100 and coverage is {coverage}/100.",
+                f"Provider agreement is {str(agreement) + '/100' if agreement is not None else 'Unavailable'} and coverage is {coverage}/100; unavailable agreement is not scored.",
                 f"Context quality is {context_quality}/100; calibration safety is {calibration}/100.",
                 f"Recommendation stability is {stability}/100; complexity penalty is {complexity_penalty}.",
                 f"Historical coverage is {historical_coverage}/100 across {historical_observations} verified weekly observations; missing history penalty is {history_penalty}.",
@@ -132,7 +137,7 @@ class BrainService:
             "generated_at": self._report.get("generated_at"), "asset_count": len(self._assets),
             "coverage": summary.get("average_coverage", 0),
             "confidence": summary.get("average_confidence", 0),
-            "agreement": summary.get("average_agreement", 0),
+            "agreement": summary.get("average_agreement"),
             "cache": {"mode": "synchronized_snapshot", "hit": True, "read_latency_ms": self.latency_ms},
             "provider_health": self._report.get("availability", "pending"),
             "migration": self.migration(), "diagnostics": self._report.get("diagnostics") or {},

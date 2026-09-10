@@ -5,12 +5,15 @@ from collections import defaultdict
 from datetime import datetime, timezone
 import hashlib
 import json
-from statistics import mean, pstdev
+from statistics import mean
 from typing import Any, Mapping
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.freshness import assess_freshness, freshness_policy_manifest
 from src.core.valuation.universe import ValuationUniverse
+from src.core.valuation.ranking import RANK_METHODOLOGY, current_global_player_ranks, rank_players
+from dataclasses import asdict
+from src.core.valuation_intelligence.changes import METHODOLOGY, METHODOLOGY_ID, snapshot, compare
 
 INTELLIGENCE_SCHEMA_VERSION = "1.0"
 EVIDENCE_CATEGORIES = ("Market", "Trades", "Performance", "Historical", "League Context", "Team Context", "Projection", "Metadata")
@@ -29,6 +32,8 @@ _BRAIN_INPUT_FAMILIES = {
     "projection_snapshot": ("projection_intelligence",),
     "market_provider_evidence": ("provider_network",),
     "historical_production": ("historical_summary", "historical_progress"),
+    "canonical_production": ("canonical_player_production",),
+    "global_player_ranks": ("global_player_ranks",),
     "league_settings": ("league_settings", "scoring_settings", "roster_positions"),
     "roster_ownership": ("teams", "owners", "pick_ledger", "traded_picks"),
     "current_nfl_state": ("nfl_state", "week"),
@@ -66,7 +71,7 @@ def _semantic_generation(assets: list[dict[str, Any]]) -> str:
     """Fingerprint canonical intelligence while excluding observation metadata."""
 
     payload = json.dumps(
-        canonical_semantic_value(assets), sort_keys=True,
+        {"methodology_id": METHODOLOGY_ID, "assets": canonical_semantic_value(assets)}, sort_keys=True,
         separators=(",", ":"), default=str,
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
@@ -100,6 +105,10 @@ def brain_input_manifest(data: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
     manifest: dict[str, dict[str, Any]] = {}
     for family, keys in _BRAIN_INPUT_FAMILIES.items():
         value = {key: data.get(key) for key in keys if key in data}
+        if family == "canonical_production":
+            value = {"generation": (data.get("canonical_player_production") or {}).get("generation")}
+        if family == "global_player_ranks":
+            value = {"generation": (data.get("global_player_ranks") or {}).get("generation")}
         count = sum(len(item) for item in value.values() if isinstance(item, (dict, list, tuple)))
         manifest[family] = {
             "semantic_digest": _semantic_digest(value),
@@ -160,7 +169,11 @@ def resolve_asset_name(asset: Mapping[str, Any]) -> str:
     return f"Unknown asset ({canonical_id})"
 
 
-def _score_asset(asset: dict[str, Any], rows: list[dict[str, Any]], providers: dict[str, dict[str, Any]], consensus: dict[str, Any] | None) -> dict[str, Any]:
+def _score_asset(asset: dict[str, Any], rows: list[dict[str, Any]], providers: dict[str, dict[str, Any]], consensus: dict[str, Any] | None,
+                 projection: dict[str, Any] | None = None) -> dict[str, Any]:
+    rows = [row for row in rows if row.get("availability", "available") == "available"
+            and row.get("confidence", 100) > 0
+            and row.get("evidence_family") not in {"dtos_intrinsic", "sleeper_league_observed"}]
     identity = asset.get("identity") or {}
     categories = {_category(str(row.get("evidence_category") or "")) for row in rows}
     categories.add("Metadata")
@@ -169,18 +182,20 @@ def _score_asset(asset: dict[str, Any], rows: list[dict[str, Any]], providers: d
     layers = asset.get("layers") or {}
     if (layers.get("current_production_value") or {}).get("value") is not None:
         categories.add("Performance")
-    if (layers.get("future_value") or {}).get("value") is not None:
+    if projection is not None and projection.get("weekly_projected_points") is not None:
         categories.add("Projection")
     intrinsic = (layers.get("intrinsic_dtos_value") or {}).get("value")
-    if intrinsic is not None:
+    production = asset.get("canonical_production") or {}
+    if any(window.get("label") == "Previous Season Average" and window.get("fantasy_points") is not None
+           for window in production.get("windows") or ()):
         categories.add("Historical")
 
     provider_ids = {str(row.get("provider_id")) for row in rows}
     families = {str(row.get("evidence_family")) for row in rows}
     coverage = min(100, round(len(categories) / len(EVIDENCE_CATEGORIES) * 55 + min(len(families), 3) / 3 * 25 + (10 if rows else 0) + (10 if intrinsic is not None else 0)))
-    normalized = [float(row["normalized_value"]) for row in rows if row.get("normalized_value") is not None]
-    dispersion = float(consensus.get("dispersion")) if consensus and consensus.get("dispersion") is not None else (pstdev(normalized) if len(normalized) > 1 else None)
-    agreement = 35 if not normalized else 70 if len(normalized) == 1 else max(0, min(100, round(100 - (dispersion or 0) / 5)))
+    comparable = bool(consensus and consensus.get("compatible_evidence_family_count", 0) >= 2)
+    dispersion = float(consensus["dispersion"]) if comparable and consensus.get("dispersion") is not None else None
+    agreement = None if dispersion is None else max(0, min(100, round(100 - dispersion / 5)))
     reliabilities = [int((providers.get(provider_id) or {}).get("reliability_score") or 0) for provider_id in provider_ids]
     identity = [int(row.get("identity_match_confidence") or 0) for row in rows]
     assessments = [
@@ -190,7 +205,7 @@ def _score_asset(asset: dict[str, Any], rows: list[dict[str, Any]], providers: d
     freshness = [assessment.semantic_weight for assessment in assessments]
     sample = min(100, len(rows) * 20)
     confidence = round(
-        agreement * .30
+        (agreement * .30 if agreement is not None else 0)
         + (mean(reliabilities) if reliabilities else 25) * .25
         + (mean(identity) if identity else 50) * .15
         + (mean(freshness) if freshness else 40) * .10
@@ -209,7 +224,11 @@ def _score_asset(asset: dict[str, Any], rows: list[dict[str, Any]], providers: d
 
     reasons = [f"{len(categories)} of {len(EVIDENCE_CATEGORIES)} evidence categories are represented."]
     reasons.append(f"{len(families)} independent provider {'family' if len(families) == 1 else 'families'} contribute evidence.")
-    reasons.append(f"Provider agreement is {agreement}/100" + (f" with normalized dispersion {round(dispersion, 2)}." if dispersion is not None else "."))
+    reasons.append(
+        "Provider agreement is unavailable: at least two comparable observations are required."
+        if agreement is None else
+        f"Provider agreement is {agreement}/100 with normalized dispersion {round(dispersion, 2)}."
+    )
     if not rows:
         reasons.append("No supported market-provider observation is available; confidence is intentionally limited.")
     if "Trades" in categories:
@@ -226,7 +245,7 @@ def _score_asset(asset: dict[str, Any], rows: list[dict[str, Any]], providers: d
         diagnostics.append("High Coverage / Low Confidence")
     if coverage < 40 and confidence >= 65:
         diagnostics.append("Low Coverage / High Confidence")
-    if agreement < 60 and len(normalized) > 1:
+    if agreement is not None and agreement < 60:
         diagnostics.append("Provider disagreement")
     if missing:
         diagnostics.append("Missing evidence")
@@ -238,6 +257,8 @@ def _score_asset(asset: dict[str, Any], rows: list[dict[str, Any]], providers: d
         "asset_id": asset["asset_id"], "asset_type": asset["asset_type"], "display_name": resolve_asset_name(asset),
         "scores": {"coverage": coverage, "confidence": confidence, "agreement": agreement},
         "valuation_layers": {name: layers.get(name) for name in ("market_value", "intrinsic_dtos_value", "league_adjusted_value", "contender_value", "rebuilder_value")},
+        "canonical_production": asset.get("canonical_production"),
+        "intrinsic_evidence_profile": asset.get("intrinsic_evidence_profile"),
         "categories": [{"name": name, "available": name in categories, "observation_count": sum(_category(str(row.get("evidence_category") or "")) == name for row in rows)} for name in EVIDENCE_CATEGORIES],
         "evidence_sources": contributions, "provider_count": len(provider_ids), "independent_family_count": len(families),
         "missing_evidence": missing, "diagnostics": diagnostics, "explanation": explanation,
@@ -254,9 +275,12 @@ def build_valuation_intelligence(data: dict[str, Any], state: dict[str, Any]) ->
         evidence_by_asset[str(row.get("canonical_asset_id"))].append(dict(row))
     provider_by_id = {row["provider_id"]: row for row in network.get("providers") or []}
     consensus_by_asset = {row["asset_id"]: row for row in (network.get("consensus") or {}).get("sample") or []}
-    reports = [_score_asset(asset, evidence_by_asset[asset["asset_id"]], provider_by_id, consensus_by_asset.get(asset["asset_id"])) for asset in universe.assets]
     projection_snapshot = data.get("projection_intelligence") or {}
     projections = projection_snapshot.get("players") or {}
+    reports = [_score_asset(asset, evidence_by_asset[asset["asset_id"]], provider_by_id,
+                           consensus_by_asset.get(asset["asset_id"]),
+                           projections.get(asset["asset_id"].removeprefix("player:")) if asset["asset_type"] == "player" else None)
+               for asset in universe.assets]
     for row in reports:
         if not row["asset_id"].startswith("player:"):
             continue
@@ -267,14 +291,44 @@ def build_valuation_intelligence(data: dict[str, Any], state: dict[str, Any]) ->
         row["projection_confidence"] = projection.get("projection_confidence")
         row["projection_snapshot_id"] = projection.get("projection_snapshot_id")
     by_id = {row["asset_id"]: row for row in reports}
+    rank_assets = {asset['asset_id']: asset for asset in universe.assets if asset['asset_type'] == 'player'}
+    positions = {key: str(row['identity'].get('position') or 'Unknown') for key, row in rank_assets.items()}
+    # Production relevance includes league-owned/history players plus a bounded
+    # free-agent selection. That is not a global comparison universe. Until a
+    # pre-filter global rank snapshot is prepared, label this scope truthfully.
+    restricted_universe = isinstance((data.get('relevant_player_universe') or {}).get('member_ids'), list)
+    reference_scope = 'league_universe' if restricted_universe else 'global'
+    for label, layer, scope in (
+        (f'{reference_scope}_intrinsic', 'intrinsic_dtos_value', reference_scope),
+        (f'{reference_scope}_market', 'market_value', reference_scope),
+        ('league_adjusted', 'league_adjusted_value', 'league_adjusted'),
+    ):
+        ranks = rank_players({key: (row['layers'].get(layer) or {}).get('value') for key, row in rank_assets.items()},
+            positions, scope=scope, value_basis=layer, methodology=RANK_METHODOLOGY)
+        for key, pair in ranks.items():
+            by_id[key].setdefault('ranks', {})[label] = {axis: asdict(rank) for axis, rank in pair.items()}
+    for key, pair in current_global_player_ranks(data).items():
+        if key in rank_assets:
+            by_id[key]['ranks'].update(pair)
 
     prior_timeline = data.get("valuation_intelligence_timeline") or {}
     timeline: dict[str, list[dict[str, Any]]] = {key: list(value) for key, value in prior_timeline.items() if isinstance(value, list)}
     for row in reports:
         event = {"timestamp": generated_at, "coverage": row["scores"]["coverage"], "confidence": row["scores"]["confidence"], "agreement": row["scores"]["agreement"], "provider_count": row["provider_count"], "categories": [item["name"] for item in row["categories"] if item["available"]]}
         history = timeline.setdefault(row["asset_id"], [])
-        comparable = {key: event[key] for key in event if key != "timestamp"}
-        if not history or {key: history[-1].get(key) for key in comparable} != comparable:
+        asset = universe.by_id[row['asset_id']]
+        current = snapshot(row, asset.get('identity') or {}, (data.get('league') or {}).get('league_id', ''), asset.get('providers') or ())
+        row['semantic_change_state'] = current
+        previous = history[-1].get('semantic_snapshot') if history else None
+        reasons = compare(previous, current)
+        if history and previous is None:
+            reasons = ('METHODOLOGY_VERSION_CHANGED',)
+        event.update(methodology_id=METHODOLOGY_ID, semantic_snapshot=current, reason_codes=reasons)
+        if reasons:
+            # Only the latest comparison state is needed. Older events retain
+            # their codes and methodology, not 50 copies of the rank/evidence map.
+            if history and 'semantic_snapshot' in history[-1]:
+                history[-1] = {key: value for key, value in history[-1].items() if key != 'semantic_snapshot'}
             history.append(event)
         timeline[row["asset_id"]] = history[-50:]
 
@@ -283,11 +337,14 @@ def build_valuation_intelligence(data: dict[str, Any], state: dict[str, Any]) ->
         for diagnostic in row["diagnostics"]:
             diagnostics[diagnostic].append(row["asset_id"])
     def ranked(key: str, reverse: bool = True) -> list[str]:
-        return [row["asset_id"] for row in sorted(reports, key=lambda item: (item["scores"][key], item["asset_id"]), reverse=reverse)[:25]]
+        supported = [row for row in reports if row["scores"][key] is not None]
+        return [row["asset_id"] for row in sorted(supported, key=lambda item: (item["scores"][key], item["asset_id"]), reverse=reverse)[:25]]
+    agreements = [row["scores"]["agreement"] for row in reports if row["scores"]["agreement"] is not None]
     input_manifest = brain_input_manifest(data)
     result = {
         "application_version": VERSION, "application_build": BUILD_NUMBER, "commit": deployment_metadata()["commit"],
         "schema_version": INTELLIGENCE_SCHEMA_VERSION, "generated_at": generated_at,
+        "methodology": METHODOLOGY, "methodology_id": METHODOLOGY_ID,
         "semantic_generation": _semantic_generation(reports),
         "freshness_policy": freshness_policy_manifest(),
         "input_manifest": input_manifest,
@@ -296,7 +353,7 @@ def build_valuation_intelligence(data: dict[str, Any], state: dict[str, Any]) ->
         "summary": {
             "average_coverage": round(mean(row["scores"]["coverage"] for row in reports), 2) if reports else 0,
             "average_confidence": round(mean(row["scores"]["confidence"] for row in reports), 2) if reports else 0,
-            "average_agreement": round(mean(row["scores"]["agreement"] for row in reports), 2) if reports else 0,
+            "average_agreement": round(mean(agreements), 2) if agreements else None,
             "highest_coverage": ranked("coverage"), "lowest_coverage": ranked("coverage", False),
             "highest_confidence": ranked("confidence"), "lowest_confidence": ranked("confidence", False),
             "strongest_consensus": ranked("agreement"), "most_disputed": ranked("agreement", False),

@@ -147,7 +147,8 @@ class PlayerApiContractTests(unittest.TestCase):
             with self.subTest(roster_id=roster_id):
                 report, team, _ = build_player_dossier(self.data, "player one", roster_id)
                 self.assertEqual(team["roster_id"], roster_id)
-                self.assertIn(f"Front Office {roster_id}", report.core_values.team_fit.summary)
+                self.assertIsNone(report.core_values.team_fit.score)
+                self.assertIn('unavailable', report.core_values.team_fit.summary)
 
     def test_index_ignores_roster_entries_without_ids(self) -> None:
         self.data["teams"][0]["players"].append({"name": "Invalid"})

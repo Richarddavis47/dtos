@@ -34,11 +34,11 @@ def _asset_map(state: HistoricalFranchiseState) -> dict[str, object]:
 
 
 def _trade_asset(asset: object, roster_id: int) -> TradeAsset:
-    value = round(float(asset.market_value or 0))
+    value = round(float(asset.market_value)) if asset.market_value is not None else None
     return TradeAsset(
         asset_id=asset.asset_id, kind=asset.asset_type, label=asset.asset_id,
-        position=asset.position, dynasty_value=value, redraft_value=value,
-        market_value=value, team_fit_value=value, risk=50,
+        position=asset.position, dynasty_value=None, redraft_value=None,
+        market_value=value, team_fit_value=None, risk=50,
         source_roster_id=roster_id, trade_value=value,
         confidence_score=asset.market_confidence or 0,
     )

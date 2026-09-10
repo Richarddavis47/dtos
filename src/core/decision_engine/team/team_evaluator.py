@@ -71,6 +71,10 @@ def build_team_profile(data: dict[str, Any], roster_id: int, context: DecisionCo
 def _asset_health(profile: TeamProfile) -> Evaluation:
     player_score, player_factors, player_limits = evaluate_player_assets(profile)
     pick_score, pick_factors, pick_limits = evaluate_pick_assets(profile)
+    if player_score is None:
+        return Evaluation(EvaluationHorizon.ASSET_HEALTH, None, 'Unavailable', 0,
+            'No combined player/pick scalar; consume explicit roster evidence dimensions.',
+            player_factors + pick_factors, player_limits + pick_limits)
     represented = sum(room.total_players > 0 for room in profile.position_rooms.values())
     balance_score = represented / 4 * 100
     score = pick_score * 0.50 + player_score * 0.30 + balance_score * 0.20

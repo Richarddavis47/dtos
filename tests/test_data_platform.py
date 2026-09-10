@@ -170,8 +170,8 @@ class DataPlatformTests(unittest.TestCase):
         platform.register(FixtureProvider("Good", 100))
         platform.register(FixtureProvider("Limited", failure="rate limit exceeded"))
         result = platform.aggregate("market", "p1", {"namespace": "league"})
-        self.assertEqual(result.value, 100)
-        self.assertEqual(result.missing_providers, ("Limited",))
+        self.assertIsNone(result.value)  # Unknown scale cannot enter Market consensus.
+        self.assertEqual(result.missing_providers, ("Good", "Limited"))
         self.assertEqual(platform.health()["providers"]["Limited"]["status"], ProviderStatus.RATE_LIMITED)
 
     def test_news_intelligence_is_structured_and_does_not_fabricate(self) -> None:

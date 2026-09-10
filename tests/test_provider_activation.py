@@ -39,6 +39,22 @@ class FixtureClient:
 
 
 class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
+    def test_player_and_market_api_use_same_current_normalized_price(self) -> None:
+        platform = build_data_platform()
+        data = {'players': self.players, 'market_data': {'providers': {
+            'FantasyCalc': {'9509': {'value': 12000, 'confidence': 90}}}}}
+        first = platform.player_report('9509', data)['consensus']
+        self.assertEqual(first['value'], 1000)
+        self.assertIsNone(first['agreement'])
+        data['market_data']['providers']['FantasyCalc']['9509']['value'] = 0
+        changed = platform.player_report('9509', data)['consensus']
+        api = platform.aggregate('market', '9509', {'market_data': data['market_data']})
+        self.assertEqual(changed['value'], 0)
+        self.assertEqual(api.value, changed['value'])
+        data['market_data']['providers']['FantasyCalc'] = {}
+        missing = platform.player_report('9509', data)['consensus']
+        self.assertIsNone(missing['value'])
+
     def setUp(self) -> None:
         self.players = {
             "9509": {"player_id": "9509", "full_name": "Bijan Robinson", "position": "RB", "team": "ATL", "age": 24, "status": "Active", "depth_chart_position": "RB", "depth_chart_order": 1, "metadata": None}
@@ -53,7 +69,11 @@ class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["providers"]["DynastyProcess"]["9509"]["value"], "8262")
         self.assertEqual(result["provider_status"]["FantasyCalc"]["records_retrieved"], 1)
         report = build_data_platform().player_report("9509", {"players": self.players, "market_data": result})
-        self.assertIsNotNone(report["consensus"]["value"])
+        # Readable provider prices are not proof of format compatibility.
+        self.assertIsNone(report["consensus"]["value"])
+        self.assertIsNone(result["providers"]["FantasyCalc"]["9509"]["source_updated_at"])
+        self.assertEqual(result["providers"]["FantasyCalc"]["9509"]["retrieved_at"],
+                         result["providers"]["FantasyCalc"]["9509"]["updated_at"])
         self.assertEqual(report["provider_details"]["FantasyCalc"]["fantasycalc_id"], 9833)
 
     async def test_empty_partial_failure_and_recovery_are_explicit(self) -> None:

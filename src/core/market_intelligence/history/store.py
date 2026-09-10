@@ -14,6 +14,14 @@ class MarketSnapshot:
     provider: str
     value: float
     confidence: int
+    value_concept: str | None = None
+    value_scale: str | None = None
+    format_key: str | None = None
+    methodology: str | None = None
+    source_rank: int | None = None
+    source_tier: str | int | None = None
+    source_updated_at: str | None = None
+    published_at: str | None = None
 
 
 class MarketHistoryStore:
@@ -34,8 +42,9 @@ class MarketHistoryStore:
                 self._identities = set()
 
     @staticmethod
-    def _identity(row: MarketSnapshot) -> tuple[str, str, str]:
-        return row.asset_id, row.timestamp, row.provider
+    def _identity(row: MarketSnapshot) -> tuple:
+        return (row.asset_id, row.timestamp, row.provider, row.value_concept,
+                row.value_scale, row.format_key, row.methodology)
 
     def append(self, rows: tuple[MarketSnapshot, ...]) -> None:
         if not rows:

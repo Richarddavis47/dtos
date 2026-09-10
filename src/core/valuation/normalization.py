@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 from bisect import bisect_left, bisect_right
+from dataclasses import replace
 from datetime import datetime, timezone
-from typing import Iterable
+import hashlib
+import json
+from typing import Any, Iterable
 
 from src.core.freshness import assess_freshness
 
 from src.core.valuation.config import CANONICAL_MAX, DEFAULT_CONFIG, NORMALIZATION_VERSION, ValuationConfig
 from src.core.valuation.models import NormalizedValuation
+from src.core.valuation.source_time import market_times
 
 
 def prepare_distribution(
@@ -92,6 +96,56 @@ def normalize_value(
 def normalize_internal(value: float) -> int:
     """Convert a legacy DTOS 0-100 score without treating it as provider market data."""
     return max(0, min(CANONICAL_MAX, round(float(value) * 10)))
+
+
+def prepare_market_normalization(market_data: dict[str, Any]) -> None:
+    """Pin comparison values before league relevance discards provider rows.
+
+    Existing cached rows retain only their normalized scalar and reference
+    identity, not a second population array. No provider or durable store reads.
+    Freshness/confidence are still evaluated at consumption time.
+    """
+    for provider, rows in (market_data.get("providers") or {}).items():
+        if provider not in {"FantasyCalc", "DynastyProcess"} or not isinstance(rows, dict):
+            continue
+        population = prepare_distribution(provider, (
+            row.get("value") for row in rows.values() if isinstance(row, dict)
+        ))
+        generation = hashlib.sha256(json.dumps(
+            [NORMALIZATION_VERSION, provider, population], separators=(",", ":")
+        ).encode()).hexdigest()
+        for row in rows.values():
+            if not isinstance(row, dict):
+                continue
+            row.pop("normalization_reference", None)
+            if row.get("value") is None:
+                continue
+            normalized = normalize_value(provider, float(row["value"]), prepared_distribution=population)
+            row["normalization_reference"] = {
+                "provider": provider, "raw_value": normalized.raw_value,
+                "normalized_value": normalized.normalized_value,
+                "version": NORMALIZATION_VERSION, "method": normalized.method,
+                "generation": generation, "population_size": len(population),
+            }
+
+
+def normalize_cached_value(provider: str, row: dict[str, Any], **kwargs: Any) -> NormalizedValuation:
+    """Use a matching pre-filter reference; stale/raw-changed references fail closed."""
+    clocks = market_times(row, kwargs.get('updated_at'))
+    kwargs['updated_at'] = clocks['source_updated_at']
+    normalized = normalize_value(provider, float(row["value"]), **kwargs)
+    # Keep knowledge separate from the source time used to assess freshness.
+    normalized = replace(normalized, updated_at=clocks['retrieved_at'])
+    reference = row.get("normalization_reference") or {}
+    value = reference.get("normalized_value")
+    if (reference.get("provider") == provider
+            and reference.get("raw_value") == normalized.raw_value
+            and reference.get("version") == NORMALIZATION_VERSION
+            and reference.get("generation")
+            and reference.get("method") in {"provider_range_linear", "provider_range_70_percentile_30"}
+            and isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= CANONICAL_MAX):
+        return replace(normalized, normalized_value=value, method=reference["method"])
+    return normalized
 
 
 def normalize_pick(value: float, round_number: int, config: ValuationConfig = DEFAULT_CONFIG) -> int:

@@ -33,9 +33,9 @@ class TradeValueIntegrityTests(unittest.TestCase):
         context = AssetContext("league", 1, {}, "Contender", "Neutral")
         young = evaluate_player({"player_id": "young", "full_name": "Young", "position": "WR", "team": "BUF", "age": 21}, context)
         veteran = evaluate_player({"player_id": "vet", "full_name": "Veteran", "position": "WR", "team": "MIN", "age": 28}, context)
-        self.assertLessEqual(young.core_values.dynasty.score, 72)
-        self.assertLessEqual(abs(young.core_values.dynasty.score - veteran.core_values.dynasty.score), 20)
-        self.assertIn("must not replace neutral market value", young.core_values.dynasty.limitations[0])
+        self.assertIsNone(young.core_values.dynasty.score)
+        self.assertIsNone(veteran.core_values.dynasty.score)
+        self.assertIn("do not establish a dynasty price", young.core_values.dynasty.limitations[0])
 
     def test_unknown_future_first_does_not_exceed_elite_neutral_market_fixture(self) -> None:
         workspace = build_trade_workspace(fixture_data(), 1)

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from datetime import datetime, timezone
 from time import monotonic
 from typing import Callable
 
@@ -43,7 +42,7 @@ class MarketQuoteCache:
         if context_mode != "offline" and entry and entry.expires_at > now:
             self.hits += 1
             age = max(0.0, now - entry.stored_at)
-            return replace(entry.quote, cached=True, retrieval_mode="cache_hit", cache_age_seconds=round(age, 2), freshness="fresh")
+            return replace(entry.quote, cached=True, retrieval_mode="cache_hit", cache_age_seconds=round(age, 2))
         self.misses += 1
         fresh = factory()
         if context_mode == "offline":
@@ -70,7 +69,6 @@ class MarketQuoteCache:
                 confidence=max(0, entry.quote.confidence - penalty),
                 cached=True,
                 retrieval_mode="cached_fallback",
-                retrieved_at=datetime.now(timezone.utc).isoformat(),
                 cache_age_seconds=round(age, 2),
                 freshness="stale",
                 confidence_impact=-penalty,

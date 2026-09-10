@@ -167,7 +167,23 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                                                 self.assertNotIn(f"Franchise {other}", page.locator("body").inner_text())
                                             self.assertGreater(page.get_by_role("main").count(), 0)
                                             self.assertEqual(page.get_by_role("navigation", name="Primary navigation").get_by_role("link", name="My Team", exact=True).get_attribute("href"), "/teams/1")
-                                            self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"), f"Horizontal overflow: {path}")
+                                            overflow = page.evaluate("""() => ({
+                                                viewport: innerWidth, width: document.documentElement.scrollWidth,
+                                                elements: [...document.querySelectorAll('main *')].filter(e => {
+                                                    const r = e.getBoundingClientRect();
+                                                    for (let p=e.parentElement;p;p=p.parentElement) {
+                                                        if (['auto','scroll','hidden','clip'].includes(getComputedStyle(p).overflowX)
+                                                            && p.getBoundingClientRect().right <= innerWidth + 1) return false;
+                                                    }
+                                                    return r.width && (r.right > innerWidth + 1 || r.left < -1);
+                                                }).slice(0, 12).map(e => ({tag:e.tagName, class:e.className,
+                                                    text:e.textContent.slice(0,180), width:e.getBoundingClientRect().width}))
+                                            })""")
+                                            self.assertLessEqual(overflow['width'], overflow['viewport'], f"Horizontal overflow: {path}: {overflow}")
+                                            if path.startswith('/players/'):
+                                                self.assertEqual(page.locator('.ai-value b').evaluate_all(
+                                                    "elements => elements.filter(e => e.scrollWidth > e.clientWidth).map(e => e.textContent)"
+                                                ), [], "Player values/unavailable states must fit their cards without truncation")
                                             if path.startswith("/trades/"):
                                                 page.locator("#trade-sent-board input[type=search]").wait_for(state="visible")
                                             accessibility = page.evaluate(A11Y_SCRIPT)

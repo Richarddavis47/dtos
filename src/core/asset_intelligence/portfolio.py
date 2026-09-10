@@ -12,9 +12,14 @@ from src.core.asset_intelligence.players.player_evaluator import evaluate_player
 def evaluate_player_portfolio(players: tuple[dict[str, Any], ...], context: AssetContext) -> AssetEvaluation:
     if not players:
         evidence = (Evidence("Player inventory", "0 players", 0, "A neutral value is retained because no players are available.", "Sleeper roster", False),)
-        return AssetEvaluation("Player Portfolio", 50, 35, "No player assets are available for evaluation.", evidence, ("No player dossiers could be generated.",))
+        return AssetEvaluation("Player Portfolio", None, 0, "No player assets are available for evaluation.", evidence, ("No player dossiers could be generated.",))
     reports = tuple(evaluate_player(player, context) for player in players)
     values = [report.core_values.dynasty.score for report in reports]
+    if any(value is None for value in values):
+        return AssetEvaluation('Player Portfolio', None, 0,
+            'No supported aggregate long-term player scalar.',
+            tuple(item for report in reports for item in report.core_values.dynasty.evidence),
+            ('Market holdings, projected lineup and production quality are separate roster dimensions.',))
     known = sum(report.profile.age is not None for report in reports)
     evidence = (
         Evidence("Player dossier values", f"{len(values)} dossiers; mean {mean(values):.1f}", mean(values) - 50, "The portfolio is the arithmetic mean of individually explainable dynasty values.", "Asset Intelligence player reports"),

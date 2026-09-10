@@ -56,7 +56,7 @@ class SleeperCanonicalProjectionProvider(WeeklyProjectionProvider):
 
     def from_canonical(self, canonical: dict[str, Any] | None, week: int | None) -> Projection:
         """Convert a pinned published row without another service read."""
-        if canonical is not None and canonical.get("week") == week:
+        if week is not None and canonical is not None and canonical.get("week") == week:
             status = DataStatus.UNAVAILABLE if canonical.get("weekly_projected_points") is None else DataStatus.CACHED
             return Projection(
                 canonical.get("weekly_projected_points"), canonical.get("weekly_floor"),
@@ -85,7 +85,9 @@ class CachedProductionProvider(ProductionProvider):
     def production(self, player: dict[str, Any]) -> ProductionContext:
         history = player.get("fantasy_points_history") or player.get("recent_points") or []
         values = [float(value) for value in history if value is not None]
-        season = player.get("season_average") or player.get("fantasy_points_per_game")
+        season = player.get("season_average")
+        if season is None:
+            season = player.get("fantasy_points_per_game")
         windows = []
         for label, size in (("Last Game", 1), ("Last 3 Games", 3), ("Last 5 Games", 5)):
             sample = values[-size:]

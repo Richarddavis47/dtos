@@ -9,6 +9,7 @@ COMPETITIVE_WINDOW_CONTRACT_VERSION = "1.0"
 
 
 class CompetitiveWindowClassification(str, Enum):
+    UNAVAILABLE = "Unavailable"
     ELITE_CONTENDER = "Elite Contender"
     CONTENDER = "Contender"
     PLAYOFF_TEAM = "Playoff Team"
@@ -23,9 +24,9 @@ class CompetitiveWindowContract:
 
     classification: CompetitiveWindowClassification
     confidence: int
-    championship_score: int
-    playoff_score: int
-    rebuild_score: int
+    championship_score: int | None
+    playoff_score: int | None
+    rebuild_score: int | None
     reasons: tuple[str, ...]
     strengths: tuple[str, ...]
     weaknesses: tuple[str, ...]
@@ -37,9 +38,9 @@ class CompetitiveWindowContract:
         cls,
         classification: CompetitiveWindowClassification,
         confidence: int,
-        championship_score: int,
-        playoff_score: int,
-        rebuild_score: int,
+        championship_score: int | None,
+        playoff_score: int | None,
+        rebuild_score: int | None,
         reasons: tuple[str, ...],
         strengths: tuple[str, ...],
         weaknesses: tuple[str, ...],

@@ -43,6 +43,29 @@ def fixture() -> tuple[dict, dict]:
 
 
 class ProviderNetworkTests(unittest.TestCase):
+    def test_active_feeds_remain_separate_until_format_proven(self) -> None:
+        data, state = fixture()
+        report = build_provider_network(data, state)
+        row = next(row for row in report['consensus']['sample'] if row['asset_id'] == 'player:1')
+        self.assertIsNone(row['weighted_consensus_value'])
+        self.assertEqual(row['compatible_evidence_family_count'], 0)
+        self.assertEqual(set(row['separate_provider_values']), {'fantasycalc', 'dynastyprocess'})
+        self.assertEqual(row['evidence_state'], 'MARKET UNAVAILABLE')
+
+    def test_observation_does_not_invent_format_or_restore_zero_confidence(self) -> None:
+        data, state = fixture()
+        data['market_data']['providers']['FantasyCalc']['1']['confidence'] = 0
+        report = build_provider_network(data, state)
+        row = next(row for row in report['evidence'] if row['provider_id'] == 'fantasycalc' and row['canonical_asset_id'] == 'player:1')
+        self.assertEqual(row['confidence'], 0)
+        self.assertEqual(row['league_format'], 'unknown')
+        self.assertEqual(row['scoring_format'], 'unknown')
+        self.assertIsNone(row['league_size'])
+        self.assertIsNone(row['te_premium'])
+        self.assertIsNone(row['source_publication_timestamp'])
+        summary = next(row for row in report['consensus']['sample'] if row['asset_id'] == 'player:1')
+        self.assertEqual(summary['independent_evidence_family_count'], 1)
+
     def test_registry_is_versioned_and_every_provider_has_compliance(self) -> None:
         rows = provider_registry()
         self.assertEqual(PROVIDER_REGISTRY_VERSION, "1.0")
@@ -72,7 +95,7 @@ class ProviderNetworkTests(unittest.TestCase):
         self.assertEqual(report["evidence_summary"]["unmatched"], 0)
         self.assertEqual(report["evidence_summary"]["conflicting"], 0)
         self.assertEqual(report["consensus"]["assets_with_evidence"], 80)
-        self.assertEqual(report["consensus"]["assets_with_multiple_independent_families"], 80)
+        self.assertEqual(report["consensus"]["assets_with_multiple_independent_families"], 0)
         self.assertEqual(report["evidence_summary"]["exact"], 160)
         self.assertTrue(all(key in report["performance"] for key in ("universe_ms", "normalization_ms", "identity_resolution_ms", "trade_inference_ms", "reliability_ms", "consensus_ms", "total_ms")))
         sample = report["consensus"]["sample"][0]

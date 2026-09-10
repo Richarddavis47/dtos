@@ -978,6 +978,15 @@ class AssetMarketTests(unittest.TestCase):
         self.assertEqual(result["tie_breaker"], "canonical_asset_id")
         self.assertEqual(result, self.market.directory(sort="market"))
 
+    def test_filtered_order_is_not_published_as_dynasty_rank(self) -> None:
+        result = self.market.directory(sort='confidence', position='QB')
+        self.assertTrue(result['assets'])
+        for index, row in enumerate(result['assets'], 1):
+            self.assertNotIn('rank', row)
+            self.assertEqual(row['result_position'], index)
+            self.assertEqual(row['order_scope'], 'filtered_results')
+            self.assertEqual(row['order_basis'], 'confidence_score')
+
     def test_search_spans_players_picks_former_players_teams_and_trades(self) -> None:
         self.assertEqual(self.market.search("Josh Allen")["results"][0]["asset_id"], "player:10213")
         self.assertEqual(self.market.search("2028 1st")["results"][0]["asset_type"], "pick")
@@ -988,6 +997,8 @@ class AssetMarketTests(unittest.TestCase):
 
     def test_value_layers_remain_separate_and_missing_market_is_not_substituted(self) -> None:
         detail = self.market.detail("player:10213", 1)
+        self.assertEqual(detail["value_layers"]["market_value"]["scale"], "Canonical Market price 0-1000")
+        self.assertIsNone(detail["value_layers"]["contender_value"]["scale"])
         self.assertEqual(detail["value_layers"]["market_value"]["value"], 9200)
         self.assertEqual(detail["value_layers"]["contender_value"]["value"], 9500)
         retired = self.market.detail("player:3")

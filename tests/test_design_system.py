@@ -129,12 +129,17 @@ class DesignSystemTests(unittest.TestCase):
             + '<form aria-label="Asset Market filters" method="get" action="/market">'
             + '<input name="q"><select name="position"></select>'
             + '<select name="availability"></select><select name="sort"></select></form>'
-            + '<table><caption>Canonical dynasty asset rankings</caption></table>'
+            + '<table><caption>Filtered asset results · order is not a dynasty rank</caption></table>'
             + '<p>Values remain separate; unavailable evidence is never substituted.</p>'
             + '<p>Dataset <code>market-dataset-1</code></p>'
         ).encode()
         market_identity = validate_asset_market_contract(market, "/market")
         self.assertEqual(market_identity, "market-dataset-1")
+        with self.assertRaisesRegex(AssertionError, "Asset Market contract is missing"):
+            validate_asset_market_contract(market.replace(
+                "Filtered asset results · order is not a dynasty rank".encode(),
+                b"Canonical dynasty asset rankings",
+            ), "/market")
         with self.assertRaisesRegex(AssertionError, "filter controls missing"):
             validate_asset_market_contract(market.replace(b'name="q"', b'name="wrong"'), "/market")
         with self.assertRaisesRegex(AssertionError, "must submit a GET"):

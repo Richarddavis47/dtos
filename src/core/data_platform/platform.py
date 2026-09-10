@@ -57,7 +57,7 @@ class DataPlatform:
         stored = self._cache_stored.get(cache_key)
         age = monotonic() - stored if stored is not None else None
         if allow_cached and not context.get("force_refresh") and cached and age is not None and age <= self.cache_ttl_seconds:
-            return replace(cached, cache_state="fresh_cache", retrieval_mode="cache_hit", freshness="fresh", availability="Cached")
+            return replace(cached, cache_state="fresh_cache", retrieval_mode="cache_hit", availability="Cached")
         try:
             envelope = provider.fetch(key, context)
             latency = round((perf_counter() - started) * 1000, 3)
@@ -88,8 +88,18 @@ class DataPlatform:
 
     def aggregate(self, category: str, key: str, context: dict[str, Any], *, mode: str = "online"):
         providers = self.registry.providers(category)
-        rows = tuple(self.fetch(provider.metadata.name, key, context, mode=mode) for provider in providers)
+        rows = tuple(self.fetch(provider.metadata.name, key, context, mode=mode, allow_cached=category != "market") for provider in providers)
+        if category == "market":
+            return self._market_consensus(key, rows, context.get("market_data") or {},
+                                          tuple(provider.metadata.name for provider in providers))
         return consensus(key, rows, tuple(provider.metadata.name for provider in providers))
+
+    @staticmethod
+    def _market_consensus(key, rows, market_data, expected):
+        """Reuse the same admitted normalized price boundary as roster consumers."""
+        from src.core.market_intelligence.engine import MarketIntelligence
+        from src.core.market_intelligence.aggregation import build_consensus
+        return build_consensus(key, tuple(MarketIntelligence._quote(row, market_data) for row in rows), expected)
 
     def trend(self, key: str, category: str | None = None):
         return trend(key, self.warehouse.history(key, category))
@@ -104,8 +114,11 @@ class DataPlatform:
         context = {"asset": players.get(player_id) or {}, "market_data": market_data, "namespace": f"player:{player_id}"}
         mode = "online" if market_data.get("providers") else "offline"
         providers = self.registry.providers("market")
-        values = tuple(self.fetch(provider.metadata.name, player_id, context, mode=mode) for provider in providers)
-        result = consensus(player_id, values, tuple(provider.metadata.name for provider in providers))
+        # The page reads the current published provider snapshot. An older
+        # warehouse observation must not replace missing current evidence.
+        values = tuple(self.fetch(provider.metadata.name, player_id, context, mode=mode, allow_cached=False) for provider in providers)
+        result = self._market_consensus(player_id, values, market_data,
+                                       tuple(provider.metadata.name for provider in providers))
         status_rows = market_data.get("provider_status") or {}
         availability = {}
         for row in values:

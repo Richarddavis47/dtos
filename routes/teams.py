@@ -112,31 +112,26 @@ def _asset_cards(snapshot: dict[str, Any]) -> str:
 
 
 def _decision_horizons(view: dict[str, Any]) -> str:
-    decision = view["decision"]
-    evaluations = (
-        decision.current_outlook,
-        decision.future_outlook,
-        decision.depth,
-        decision.asset_health,
+    """Supporting evidence shares the headline's exact generation, not old grades."""
+    assessment = view["assessment"]
+    evidence = assessment.roster_evidence
+    rows = (
+        ("Actual starters · projected points", evidence.actual_lineup_projection),
+        ("Optimal legal lineup · projected points", evidence.optimal_lineup_projection),
+        ("Projection coverage", f"{evidence.projection_covered}/{evidence.roster_count}"),
     )
-    cards = []
-    for evaluation in evaluations:
-        factors = "".join(
-            f'<li><b>{escape(factor.name)}:</b> {escape(factor.value)} · {escape(factor.explanation)}</li>'
-            for factor in evaluation.factors
-        )
-        limits = "".join(f"<li>{escape(item)}</li>" for item in evaluation.limitations)
-        cards.append(
-            f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>Legacy diagnostic: {escape(evaluation.horizon.value)}</h3><div class="thq-grade-score">{evaluation.score}/100 · {evaluation.confidence}% confidence</div></div><div class="thq-grade-mark">{escape(evaluation.grade)}</div></div><p class="muted">Not the current team assessment: this older results/age/coverage diagnostic uses different inputs and may use neutral preseason baselines. {escape(evaluation.summary)}</p><details><summary>Show Reasoning</summary><div class="thq-reasoning"><b>Factors</b><ul>{factors}</ul>{f"<b>Known limitations</b><ul>{limits}</ul>" if limits else ""}</div></details></article>'
-        )
-    return "".join(cards)
+    return (
+        '<div class="thq-evidence-dimensions">'
+        + "".join(f'<p><b>{escape(label)}:</b> {escape(str(value) if value is not None else "Unavailable")}</p>' for label, value in rows)
+        + f'<p class="muted">Evidence generation: {escape(assessment.generation)}. Actual starters are not replaced by the optimizer.</p></div>'
+    )
 
 
 def _team_intelligence(view: dict[str, Any]) -> str:
     card = view["team_intelligence"]
-    grades = (card.overall, card.current_contending, card.dynasty, card.starting_lineup, card.depth, *card.positions.values(), card.draft_capital, card.youth, card.future_outlook, card.roster_flexibility, card.asset_liquidity)
+    grades = (card.overall, card.market_asset_strength, card.production_quality, card.dynasty, card.starting_lineup, card.depth, *card.positions.values(), card.draft_capital, card.youth, card.future_outlook, card.roster_flexibility, card.asset_liquidity)
     return "".join(
-        f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>{escape(item.category)}</h3><div class="thq-grade-score">Score {item.score}/100 · #{item.rank} of {item.league_size} · {item.percentile}th percentile · {card.confidence}% confidence</div></div><div class="thq-grade-mark">{escape(item.grade)}</div></div><p class="ds-grade-context">Meaning: this grade compares the franchise with the rest of this league using the evidence shown below.</p><details><summary>Show Reasoning</summary><div class="thq-reasoning"><ul>{"".join(f"<li>{escape(reason)}</li>" for reason in item.reasons or card.explanation)}</ul></div></details></article>'
+        f'<article class="thq-grade"><div class="thq-grade-head"><div><h3>{escape(item.category)}</h3><div class="thq-grade-score">{("Unavailable — insufficient evidence" if item.score is None else f"Score {item.score}/100 · #{item.rank} of {item.league_size} · {item.percentile}th percentile")}</div></div><div class="thq-grade-mark">{escape(item.grade)}</div></div><p class="ds-grade-context">Meaning: this grade compares only the explicitly named dimension, not overall dynasty value.</p><details><summary>Show Reasoning</summary><div class="thq-reasoning"><ul>{"".join(f"<li>{escape(reason)}</li>" for reason in item.reasons or card.explanation)}</ul></div></details></article>'
         for item in grades
     )
 
@@ -211,7 +206,7 @@ def create_teams_router(
             starters = sum(player.get("roster_slot") == "Starter" for player in team.get("players") or [])
             firsts = team.get("pick_counts", {}).get("1", 0)
             outlook = directory[int(team["roster_id"])]
-            result = (f'<p class="record">Projected #{outlook["rank"]} · {outlook["projected_wins"]} wins</p>' if outlook["preseason"] else f'<p class="record">{team["wins"]}-{team["losses"]}-{team["ties"]}</p>')
+            result = (f'<p class="record">Projected finish: {_display(outlook["rank"])} · Projected wins: {_display(outlook["projected_wins"])}</p>' if outlook["preseason"] else f'<p class="record">{team["wins"]}-{team["losses"]}-{team["ties"]}</p>')
             performance = (f'<div class="metric"><b>{outlook["playoff_odds"]}%</b><span>Playoff Odds</span></div><div class="metric"><b>{outlook["championship_odds"]}%</b><span>Championship Odds</span></div>' if outlook["preseason"] else f'<div class="metric"><b>{team["points_for"]:.2f}</b><span>Points For</span></div><div class="metric"><b>{team["max_points"]:.2f}</b><span>Max PF</span></div>')
             cards.append(
                 f'<a class="card team team-link" href="/teams/{team["roster_id"]}"><div class="team-head">{_franchise_portrait(team)}<div><div class="identity-kicker">Owner: {escape(team["owner"])}</div><h3 class="franchise-name">{escape(team["team_name"])}</h3></div><div class="rank-badge">{escape(outlook["grade"])}</div></div>{result}<div class="summary-grid">{performance}<div class="metric"><b>{len(team["players"])}</b><span>Players</span></div><div class="metric"><b>{firsts}</b><span>Future 1sts</span></div></div><p class="muted">{starters} starters · {len(team.get("picks_owned", []))} total future picks</p><span class="team-open">Open Team HQ <span aria-hidden="true">→</span></span></a>'
@@ -234,7 +229,7 @@ def create_teams_router(
         summary = "".join(f'<article><h3>{escape(label)}</h3><p>{escape(text)}</p></article>' for label, text in view["summary"].items())
         performance = view["performance"]
         performance_metrics = (
-            (("Projected Wins", view["team_intelligence"].projected_wins), ("Power Ranking", f'#{view["rank"]} of {len(data["teams"])}'), ("Championship Odds", f'{view["team_intelligence"].championship_odds}%'), ("Playoff Odds", f'{view["team_intelligence"].playoff_odds}%'))
+            (("Projected Wins", _display(view["team_intelligence"].projected_wins)), ("Power Ranking", _display(view["rank"])), ("Championship Odds", _display(view["team_intelligence"].championship_odds)), ("Playoff Odds", _display(view["team_intelligence"].playoff_odds)))
             if view["preseason"] else
             (("Record", performance["record"]), ("Points For", f'{performance["points_for"]:.2f}'), ("Points Against", f'{performance["points_against"]:.2f}'), ("Max PF", f'{performance["max_points"]:.2f}'), ("League Standing", performance["standing"]))
         )
@@ -245,13 +240,13 @@ def create_teams_router(
         future = "".join(
             f'<article class="thq-future"><span>{escape(label)}</span><b>{escape(value)}</b><small>{escape(note)}</small></article>'
             for label, value, note in (
-                ("Current Outlook", f'{view["team_intelligence"].current_strength}/100', "League-relative Team Intelligence"),
-                ("Future Outlook", f'{view["team_intelligence"].future_strength}/100', "League-relative Team Intelligence"),
-                ("Projected Wins", str(view["team_intelligence"].projected_wins), "Deterministic 14-game preseason indicator"),
-                ("Playoff Odds", f'{view["team_intelligence"].playoff_odds}%', "Relative strength indicator, not a simulation"),
-                ("Championship Odds", f'{view["team_intelligence"].championship_odds}%', "Relative strength indicator, not a simulation"),
-                ("Youth Grade", view["grades"]["Youth"]["grade"] + " foundation", "Deterministic roster age model"),
-                ("Draft Capital Grade", view["grades"]["Draft Capital"]["grade"] + " foundation", "Deterministic pick inventory model"),
+                ("Current Outlook", _display(view["team_intelligence"].current_strength), "League-relative Team Intelligence"),
+                ("Future Outlook", _display(view["team_intelligence"].future_strength), "League-relative Team Intelligence"),
+                ("Projected Wins", _display(_display(view["team_intelligence"].projected_wins)), "No supported wins forecast"),
+                ("Playoff Odds", _display(view["team_intelligence"].playoff_odds), "No supported probability model"),
+                ("Championship Odds", _display(view["team_intelligence"].championship_odds), "No supported probability model"),
+                ("Longevity Context", view["grades"]["Youth"]["grade"], "Canonical position-specific lifecycle evidence"),
+                ("Future Capital", view["grades"]["Draft Capital"]["grade"], "Canonical pick evidence; not a forecast"),
             )
         )
         roster = view["roster_intelligence"]
@@ -260,15 +255,15 @@ def create_teams_router(
             f'<article class="thq-kpi"><span>{escape(label)}</span><b>{escape(_display(value))}</b></article>'
             for label, value in (
                 ("Team Identity", assessment.team.competitive_window.classification.value),
-                ("Strongest Position", max(assessment.team.positions, key=lambda p: assessment.team.positions[p].score)),
-                ("Weakest Position", min(assessment.team.positions, key=lambda p: assessment.team.positions[p].score)),
+                ("Strongest Position", max((p for p in assessment.team.positions if assessment.team.positions[p].score is not None), key=lambda p: assessment.team.positions[p].score, default='Unavailable')),
+                ("Weakest Position", min((p for p in assessment.team.positions if assessment.team.positions[p].score is not None), key=lambda p: assessment.team.positions[p].score, default='Unavailable')),
                 ("Elite Assets", roster.metrics["Elite Assets"]),
                 ("Trade Chips", roster.metrics["Trade Chips"]),
-                ("Roster Flexibility", f'{roster.metrics["Roster Flexibility"]}/100'),
+                ("Roster Flexibility", _display(roster.metrics["Roster Flexibility"])),
                 ("Projected Starter Points", assessment.projected_points),
                 ("Weekly Ceiling (points)", assessment.weekly_ceiling),
                 ("Weekly Floor (points)", assessment.weekly_floor),
-                ("Positional Balance", f'{roster.metrics["Positional Balance"]}/100'),
+                ("Positional Balance", _display(roster.metrics["Positional Balance"])),
                 ("Positional Advantages", ", ".join(roster.positional_advantages) or "None identified"),
             )
         )
@@ -295,7 +290,7 @@ def create_teams_router(
         body = f"""
 {TEAM_HQ_CSS}
 <a class="back" href="/teams">← All Teams</a>
-<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Overall Grade {view['team_intelligence'].overall.grade}</span><span>·</span><span>League Rank #{view['rank']}</span><span>·</span><span>{view['team_intelligence'].overall.percentile}th percentile</span></div></div></div><div><span class="thq-badge">{escape(view['competitive_window'].classification.value)}</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
+<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Overall Grade {view['team_intelligence'].overall.grade}</span><span>·</span><span>Assessment rank {_display(view['rank'])}</span><span>·</span><span>{_display(view['team_intelligence'].overall.percentile)} percentile</span></div></div></div><div><span class="thq-badge">{escape(view['competitive_window'].classification.value)}</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
 <section class="thq-section"><div class="thq-section-head"><h2>DTOS Team Assessment</h2><span>Answer and action first</span></div>{recommendation_card}</section>
 <section class="thq-section"><div class="thq-section-head"><h2>Starting Lineup</h2><span>The players carrying this franchise now</span></div><div class="thq-starters">{starter_cards}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Strengths &amp; Needs</h2><span>Current and future league-relative evidence</span></div><div class="thq-intel">{intelligence_cards}{league_rankings}</div><p class="muted">{escape(' '.join(assessment.limitations))}</p><p class="muted">Projection week: {escape(str(assessment.projection_week or 'Unavailable'))} · Coverage: {assessment.projected_starter_count}/{assessment.starter_count} starters · As of: {escape(assessment.projection_as_of or 'Unavailable')}</p></section>

@@ -53,7 +53,10 @@ def create_crawl_router(*, get_data: GetData, state: dict[str, Any], league_id: 
             data, selected_league = selected(requested)
         except CrawlLeagueError as exc:
             return JSONResponse({"ok": False, "schema_version": SCHEMA_VERSION, "error": "invalid_league", "detail": str(exc)}, status_code=404)
-        payload = cached_response(f"{selected_league}:{key}", lambda: factory(data), sync_marker=state.get("last_sync"))
+        from src.core.intelligence.context import build_context
+        teams = data.get("teams") or []
+        generation = build_context(data, int(teams[0]["roster_id"])).evidence_generation if teams else "empty"
+        payload = cached_response(f"{selected_league}:{key}", lambda: factory(data), sync_marker=state.get("last_sync"), evidence_generation=generation)
         payload["league_id"] = selected_league
         return JSONResponse(payload, headers={"Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=60"})
 

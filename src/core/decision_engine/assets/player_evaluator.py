@@ -20,4 +20,4 @@ def evaluate_player_assets(profile: TeamProfile) -> tuple[float, tuple[Evaluatio
         EvaluationFactor(item.factor, item.observed_value, item.impact, item.explanation, item.source)
         for item in result.evidence
     )
-    return float(result.score), factors, result.limitations
+    return float(result.score) if result.score is not None else None, factors, result.limitations

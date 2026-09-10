@@ -67,7 +67,7 @@ def build_recommendations(
                 {"engine": "player-intelligence", "position": weakest_position, "active_front_office_id": profile.active_front_office_id},
             )
         )
-    if assets.score < 60:
+    if assets.score is not None and assets.score < 60:
         recommendations.append(
             Recommendation(
                 "Protect asset flexibility",

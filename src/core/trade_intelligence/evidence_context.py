@@ -6,7 +6,6 @@ from time import perf_counter
 from typing import Any, Iterable
 
 from src.core.intelligence_memory import intelligence_checkpoint_store
-from src.core.intelligence.league_scope import scoped_evidence, scoped_market_trends
 from src.core.market_trends import MarketTrendService
 
 
@@ -41,6 +40,10 @@ def build_trade_evidence_context(
     data: dict[str, Any], assets: Iterable[Any] = (),
 ) -> TradeEvidenceContext:
     """Read each already-derived evidence product once; never scan raw history."""
+    # Importing the public Intelligence package at module initialization also
+    # imports Trade Intelligence. Resolve helpers after both APIs are initialized.
+    from src.core.intelligence.league_scope import scoped_evidence, scoped_market_trends
+
     started = perf_counter()
     league = data.get("league") or {}
     league_id = str(league.get("league_id") or data.get("league_id") or "")

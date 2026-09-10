@@ -7,6 +7,8 @@ from time import perf_counter
 from typing import Any
 
 from src.core.market_intelligence.models import ProviderQuote
+from src.core.valuation.normalization import normalize_cached_value
+from src.core.valuation.source_time import market_times
 
 
 class MarketProvider(ABC):
@@ -22,11 +24,16 @@ class MarketProvider(ABC):
         try:
             value, confidence, observed_at, detail = self._extract(asset, market_data)
             available = value is not None
+            row = ((market_data.get('providers') or {}).get(self.name) or {}).get(asset_id)
+            row = row if isinstance(row, dict) else {}
+            clocks = market_times(row, observed_at)
+            normalized = normalize_cached_value(self.name, {**row, 'value': value},
+                updated_at=observed_at, provider_confidence=confidence) if available else None
             return ProviderQuote(
-                self.name, asset_id, value, confidence if available else 0, observed_at, self.name,
+                self.name, asset_id, value, normalized.confidence_score if normalized and normalized.method != 'unsupported_provider' else confidence if available else 0, clocks['retrieved_at'], self.name,
                 available, detail, round((perf_counter() - started) * 1000, 3), False,
-                "live" if available else "unavailable", datetime.now(timezone.utc).isoformat(), 0.0,
-                "fresh" if available else "unavailable", 0,
+                "live" if available else "unavailable", clocks['retrieved_at'], 0.0,
+                normalized.freshness if normalized else "unavailable", 0,
             )
         except (KeyError, TypeError, ValueError) as exc:
             return ProviderQuote(

@@ -5,7 +5,7 @@ from typing import Any
 
 from src.core.asset_intelligence import AssetContext, evaluate_pick, evaluate_player
 from src.core.trade_intelligence.models import TradeAsset
-from src.core.valuation import CalibrationStatus, calibrate_asset_value, normalize_internal, normalize_pick
+from src.core.valuation import CalibrationStatus, normalize_internal, normalize_pick
 
 
 def _team_strength(team: dict[str, Any]) -> float | None:
@@ -63,25 +63,21 @@ def _player_asset(
     market_value, confidence, status = market_values.get(
         player_id, (None, 0, CalibrationStatus.INSUFFICIENT_DATA),
     )
-    intrinsic = normalize_internal(report.core_values.dynasty.score)
-    calibrated = calibrate_asset_value(
-        intrinsic, market_value, confidence, status=status,
-    )
-    neutral_market = market_value if market_value is not None else calibrated.calibrated_value
     return TradeAsset(
         player_id,
         "player",
         report.profile.name,
         report.profile.position,
-        calibrated.calibrated_value,
-        normalize_internal(report.core_values.redraft.score),
-        market_value if market_value is not None else normalize_internal(report.core_values.market.score),
-        normalize_internal(report.core_values.team_fit.score),
+        None,  # No validated long-term player intrinsic scalar.
+        None,
+        market_value,
+        None,
         report.risk.score,
         source_roster_id,
-        neutral_market,
+        market_value,
         55,
-        max(report.recommendation.confidence, confidence),
+        confidence,
+        calibration_status=status.value,
         age=report.profile.age,
     )
 

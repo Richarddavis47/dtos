@@ -16,6 +16,16 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def market_identity_map(rows) -> dict[str, str]:
+    """Exact source IDs only; conflicting crosswalk identities remain unresolved."""
+    candidates: dict[str, set[str]] = {}
+    for row in rows:
+        provider_id, sleeper_id = row.get('fantasypros_id'), row.get('sleeper_id')
+        if provider_id not in {None, '', 'NA'} and sleeper_id not in {None, '', 'NA'}:
+            candidates.setdefault(str(provider_id), set()).add(str(sleeper_id))
+    return {key: next(iter(values)) for key, values in candidates.items() if len(values) == 1}
+
+
 def _status(
     *,
     enabled: bool,
@@ -94,6 +104,12 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
                     "value": value,
                     "confidence": 85,
                     "updated_at": stamp,
+                    "retrieved_at": stamp,
+                    "source_updated_at": None,
+                    "timestamp_basis": "retrieved_at_source_timestamp_unavailable",
+                    "format": "dynasty_2qb",
+                    "format_details": {"num_teams": 12, "ppr": 1},
+                    "independence_family": "fantasycalc_observed_trades",
                     "rank": row.get("overallRank"),
                     "position_rank": row.get("positionRank"),
                     "tier": row.get("maybeTier"),
@@ -116,11 +132,7 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
             ids_response = await client.get(DYNASTYPROCESS_IDS_URL)
             value_response.raise_for_status()
             ids_response.raise_for_status()
-            identities = {
-                row.get("fantasypros_id"): row.get("sleeper_id")
-                for row in csv.DictReader(io.StringIO(ids_response.text))
-                if row.get("fantasypros_id") not in {None, "", "NA"} and row.get("sleeper_id") not in {None, "", "NA"}
-            }
+            identities = market_identity_map(csv.DictReader(io.StringIO(ids_response.text)))
             stamp = _now().isoformat()
             normalized = {}
             for row in csv.DictReader(io.StringIO(value_response.text)):
@@ -132,6 +144,11 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
                     "value": value,
                     "confidence": 75,
                     "updated_at": stamp,
+                    "source_updated_at": row.get('scrape_date') or None,
+                    "retrieved_at": stamp,
+                    "source_timestamp_precision": "day",
+                    "format": "dynasty_2qb",
+                    "independence_family": "fantasypros_derived",
                     "rank": row.get("ecr_2qb"),
                     "position_rank": row.get("ecr_pos"),
                     "detail": "DynastyProcess public 2QB dynasty value",

@@ -9,18 +9,28 @@ from src.core.competitive_window.models import (
 
 def build_competitive_window(
     *,
-    current_strength: int,
-    overall_strength: int,
-    future_strength: int,
-    depth: int,
-    youth: int,
-    draft_capital: int,
-    risk: int,
+    current_strength: int | None,
+    overall_strength: int | None,
+    future_strength: int | None,
+    depth: int | None,
+    youth: int | None,
+    draft_capital: int | None,
+    risk: int | None,
     confidence: int,
     elite_assets: int = 0,
     starter_strength: int | None = None,
 ) -> CompetitiveWindowContract:
     """Classify calibrated league-relative inputs exactly once."""
+    required = {"current strength": current_strength, "overall strength": overall_strength,
+                "future strength": future_strength, "depth": depth, "youth": youth,
+                "draft capital": draft_capital, "risk": risk}
+    missing = tuple(name for name, value in required.items() if value is None)
+    if missing:
+        return CompetitiveWindowContract.generated(
+            CompetitiveWindowClassification.UNAVAILABLE, 0, None, None, None,
+            ("Competitive window requires supported team evidence; unavailable: " + ", ".join(missing) + ".",),
+            (), ("Missing evidence is not a rebuilding classification or zero strength.",),
+        )
     starter = current_strength if starter_strength is None else starter_strength
     championship = round(
         current_strength * .45 + overall_strength * .25 + starter * .20 + depth * .10

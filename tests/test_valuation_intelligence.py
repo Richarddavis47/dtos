@@ -29,7 +29,7 @@ class ValuationIntelligenceTests(unittest.TestCase):
         data, state, report = self.build()
         self.assertEqual(report["asset_count"], 120)
         self.assertEqual(report["safety"]["asset_integrity_score"], 100)
-        self.assertTrue(all(0 <= score <= 100 for row in report["assets"].values() for score in row["scores"].values()))
+        self.assertTrue(all(score is None or 0 <= score <= 100 for row in report["assets"].values() for score in row["scores"].values()))
         self.assertEqual(report["assets"]["player:1"]["scores"], build_valuation_intelligence(data, state)["assets"]["player:1"]["scores"])
 
     def test_coverage_is_not_confidence_and_categories_are_explicit(self) -> None:
@@ -59,13 +59,13 @@ class ValuationIntelligenceTests(unittest.TestCase):
         self.assertEqual(changed["assets"]["player:1"]["display_name"], "Renamed Canonical Player")
         self.assertEqual(changed["assets"]["player:1"]["scores"], scores)
 
-    def test_agreement_responds_to_conflicting_provider_evidence(self) -> None:
+    def test_unproven_formats_cannot_recreate_agreement_from_raw_values(self) -> None:
         data, state = fixture()
         data["market_data"]["providers"]["FantasyCalc"]["1"]["value"] = 1
         data["market_data"]["providers"]["DynastyProcess"]["1"]["value"] = 100000
         build_provider_network(data, state)
         report = build_valuation_intelligence(data, state)
-        self.assertLess(report["assets"]["player:1"]["scores"]["agreement"], 100)
+        self.assertIsNone(report["assets"]["player:1"]["scores"]["agreement"])
 
     def test_dynamic_provider_contributions_are_measurable(self) -> None:
         _, _, report = self.build()
@@ -82,6 +82,17 @@ class ValuationIntelligenceTests(unittest.TestCase):
         self.assertEqual(row["provider_count"], 0)
         self.assertIn("No supported market-provider observation", row["explanation"])
         self.assertIn("Missing market support", row["diagnostics"])
+        self.assertIsNone(row["scores"]["agreement"])
+        self.assertIsNone(report["summary"]["average_agreement"])
+        self.assertEqual(report["summary"]["most_disputed"], [])
+
+    def test_single_provider_cannot_establish_agreement(self) -> None:
+        data, state = fixture()
+        data["market_data"]["providers"].pop("DynastyProcess", None)
+        build_provider_network(data, state)
+        report = build_valuation_intelligence(data, state)
+        self.assertIsNone(report["assets"]["player:1"]["scores"]["agreement"])
+        self.assertNotIn("player:1", report["summary"]["strongest_consensus"])
 
     def test_timeline_is_idempotent_and_records_semantic_changes(self) -> None:
         data, state, first = self.build()

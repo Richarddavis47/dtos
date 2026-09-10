@@ -64,11 +64,13 @@ def build_context(data: dict[str, Any], roster_id: int, user_preferences: dict[s
         (data.get("market_data") or {}).get("generation")
         or (data.get("market_data") or {}).get("generated_at") or ""
     )
-    snapshot_key = f"{league_id}:{roster_id}:{len(teams)}:{len(transactions)}:{players_updated}:{data.get('week', '')}:{front_office_generation}:{behavior_generation}:{market_generation}"
+    snapshot_key = f"{league_id}:{len(teams)}:{len(transactions)}:{players_updated}:{data.get('week', '')}:{front_office_generation}:{behavior_generation}:{market_generation}"
     brain_generation = str((data.get("valuation_intelligence") or {}).get("semantic_generation") or "pending")
-    snapshot_key += f":{generations}:{brain_generation}:{projection_generation}"
+    production_generation = str((data.get("canonical_player_production") or {}).get("generation") or "unprepared")
+    snapshot_key += f":{generations}:{brain_generation}:{projection_generation}:{production_generation}:roster-evidence-grading-v2"
     evidence_generation = sha256(snapshot_key.encode()).hexdigest()
-    snapshot_key += f":{id(data)}"
+    # Selection scopes the view cache, not the league's canonical evidence generation.
+    snapshot_key += f":{roster_id}:{id(data)}"
     return IntelligenceContext(
         league_id, roster_id, league, roster, teams, tuple(roster.get("picks_owned") or ()), settings,
         tuple(team for team in teams if int(team.get("roster_id") or 0) != roster_id),

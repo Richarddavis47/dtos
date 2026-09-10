@@ -1,7 +1,7 @@
 """Stable, immutable player-value and projection contracts."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -74,26 +74,28 @@ class ProductionContext:
 @dataclass(frozen=True)
 class LineupValue:
     role: str
-    projected_starter: bool
+    actual_starter: bool
     flex_utility: bool
     superflex_utility: bool
-    replacement_points: float
-    points_above_replacement: float
-    points_above_current_starter: float
-    marginal_value: int
-    scarcity: int
+    replacement_points: float | None
+    points_above_replacement: float | None
+    points_above_current_starter: float | None
+    marginal_value: int | None
+    scarcity: int | None
 
 
 @dataclass(frozen=True)
 class PositionalContext:
-    overall_rank: int
-    dynasty_rank: int
-    weekly_rank: int
+    overall_rank: int | None
+    dynasty_rank: int | None
+    weekly_rank: int | None
     tier: str
-    scarcity: int
-    replacement_gap: float
+    scarcity: int | None
+    replacement_gap: float | None
     league_supply: int
-    elite_advantage: bool
+    elite_advantage: bool | None
+    rank_scope: str = "roster"
+    scoped_ranks: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

@@ -464,6 +464,10 @@ async def _sync_sleeper(
             )
 
             canonical_history_store.update_current(league_id, state["data"])
+            from src.core.valuation.normalization import prepare_market_normalization
+            await asyncio.to_thread(prepare_market_normalization, state["data"]["market_data"])
+            from src.core.valuation.ranking import prepare_global_player_ranks
+            state["data"]["global_player_ranks"] = await asyncio.to_thread(prepare_global_player_ranks, state["data"])
             state["data"]["relevant_player_universe"] = await asyncio.to_thread(
                 build_relevant_player_universe,
                 state["data"], canonical_history_store, league_id,
@@ -471,6 +475,12 @@ async def _sync_sleeper(
             apply_relevant_player_filter(
                 state["data"], state["data"]["relevant_player_universe"],
             )
+            # Keep global ranks for the selected runtime's members without
+            # retaining another full catalog or recomputing a league percentile.
+            rank_members = set(state["data"]["relevant_player_universe"]["member_ids"])
+            global_ranks = state["data"]["global_player_ranks"]
+            global_ranks["players"] = {key: row for key, row in global_ranks["players"].items()
+                if key.removeprefix("player:") in rank_members}
             try:
                 with lifecycle_coordinator.phase("provider_network") as phase:
                     await asyncio.to_thread(build_provider_network, state["data"], state)
@@ -510,6 +520,12 @@ async def _sync_sleeper(
                         "Projection generation failed; canonical intelligence will publish an explicit unavailable state"
                     )
                 with lifecycle_coordinator.phase("valuation_intelligence") as phase:
+                    from services.player_evidence import prepare_player_production
+                    production_evidence = await asyncio.to_thread(
+                        prepare_player_production, state["data"],
+                        expected_league_id=league_id, as_of=utcnow().isoformat(),
+                    )
+                    state["data"]["canonical_player_production"] = production_evidence
                     await asyncio.to_thread(build_valuation_intelligence, state["data"], state)
                     phase["canonical_generation"] = (
                         state["data"].get("valuation_intelligence") or {}

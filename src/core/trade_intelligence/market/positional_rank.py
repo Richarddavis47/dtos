@@ -10,7 +10,7 @@ def apply_positional_ranks(
     pools: dict[int, tuple[TradeAsset, ...]],
 ) -> dict[int, tuple[TradeAsset, ...]]:
     """Apply one deterministic league-wide rank contract without persistence."""
-    players = [asset for pool in pools.values() for asset in pool if asset.kind == "player"]
+    players = [asset for pool in pools.values() for asset in pool if asset.kind == "player" and asset.trade_value is not None]
     ranked: dict[str, str] = {}
     for position in ("QB", "RB", "WR", "TE"):
         rows = sorted(

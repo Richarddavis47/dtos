@@ -1,147 +1,93 @@
-"""Unified, contextual player values built from existing intelligence evidence."""
+"""Player views expose independent evidence concepts, never a blended dynasty scalar."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any
 
 from src.core.player_value_projection.models import DataStatus, LineupValue, PlayerValueProfile, PositionalContext, ValueMetric
 from src.core.player_value_projection.providers import PlayerDataRegistry, SleeperCanonicalProjectionProvider, player_data_registry
-from src.core.historical_memory.valuation import apply_historical_evidence
-from src.core.valuation import CalibrationStatus, PlayerIntelligenceCard, calibrate_asset_value, contextualize_valuation_tier, normalize_internal
+from src.core.player_value_projection.canonical_production import prepared_production_context
+from src.core.valuation import CalibrationStatus, PlayerIntelligenceCard
 from src.core.valuation.models import ConsensusProvider
+from src.core.valuation.ranking import current_global_player_ranks, rank_players
 
 
-def _metric(value: float | None, source: str, status: DataStatus, confidence: int, limitations: tuple[str, ...] = ()) -> ValueMetric:
-    return ValueMetric(round(value, 2) if value is not None else None, source, status, confidence, datetime.now(timezone.utc).isoformat() if status != DataStatus.UNAVAILABLE else None, limitations)
-
-
-def _posture(gap: float | None, liquidity: int, confidence: int, calibration: CalibrationStatus) -> str:
-    if liquidity < 35:
-        return "Illiquid"
-    if gap is None or confidence < 55 or calibration not in {CalibrationStatus.CALIBRATED, CalibrationStatus.PARTIALLY_CALIBRATED}:
-        return "Monitor — calibration incomplete"
-    return "Strong Buy" if gap >= 120 else "Buy" if gap >= 60 else "Strong Sell" if gap <= -120 else "Sell" if gap <= -60 else "Fair Value"
-
-
-def evaluate_player_values(context: Any, decision: Any, reports: dict[str, Any], market: Any, registry: PlayerDataRegistry = player_data_registry) -> dict[str, PlayerValueProfile]:
-    scoring = context.cached_data.get("scoring_settings") or context.settings.get("scoring_settings") or {}
-    snapshot = getattr(context, "projection_snapshot", None) or {}
-    week = snapshot.get("week") if snapshot else context.cached_data.get("week")
-    raw_by_id = {str(player.get("id") or player.get("player_id")): player for player in decision.profile.players}
+def evaluate_player_values(context: Any, decision: Any, reports: dict[str, Any], market: Any,
+                           registry: PlayerDataRegistry = player_data_registry) -> dict[str, PlayerValueProfile]:
+    snapshot = context.projection_snapshot or {}
+    if snapshot and str(snapshot.get("league_id") or "") != context.league_id:
+        raise ValueError("Player projection league mismatch")
+    week = snapshot.get("week")
+    raw_by_id = {str(p.get("id") or p.get("player_id")): p for p in decision.profile.players}
     provider = registry.projection()
-    if isinstance(provider, SleeperCanonicalProjectionProvider) and hasattr(context, "projection_snapshot"):
-        projections = {player_id: provider.from_canonical((snapshot.get("players") or {}).get(player_id), int(week) if week else None) for player_id in reports}
-    else:
-        projections = {player_id: provider.project(raw_by_id[player_id], report.core_values.redraft.score, scoring, int(week) if week else None) for player_id, report in reports.items()}
-    supplies = decision.profile.market_context.get("position_counts") or {}
-    calibrations = {}
-    for player_id, report in reports.items():
-        market_report = market.assets.get(player_id)
-        intrinsic = apply_historical_evidence(
-            normalize_internal(report.core_values.dynasty.score),
-            report.profile.position,
-            raw_by_id[player_id].get("historical_evidence"),
-        ).adjusted_value
-        status = (
-            CalibrationStatus(market_report.consensus.calibration_status)
-            if market_report
-            else CalibrationStatus.INSUFFICIENT_DATA
-        )
-        calibrations[player_id] = calibrate_asset_value(
-            intrinsic,
-            market_report.consensus.value if market_report else None,
-            market_report.consensus.confidence if market_report else 0,
-            status=status,
-        )
-    profiles: dict[str, PlayerValueProfile] = {}
-    for player_id, report in reports.items():
-        raw = raw_by_id[player_id]
-        projection = projections[player_id]
-        same_position = sorted((item.projected_points or 0 for key, item in projections.items() if reports[key].profile.position == report.profile.position))
-        replacement = same_position[max(0, len(same_position) // 3 - 1)] if same_position else 0
-        starters = [raw_by_id[key] for key in reports if reports[key].profile.position == report.profile.position and raw_by_id[key].get("roster_slot") == "Starter"]
-        starter_points = [projections[str(item.get("id") or item.get("player_id"))].projected_points or 0 for item in starters]
-        current_starter = min(starter_points) if starter_points else replacement
-        above_replacement = round((projection.projected_points or 0) - replacement, 2)
-        above_starter = round((projection.projected_points or 0) - current_starter, 2)
-        market_report = market.assets.get(player_id)
+    # A legacy redraft score is not a projection-provider input.
+    if not isinstance(provider, SleeperCanonicalProjectionProvider):
+        raise ValueError("Canonical pinned projection provider required")
+    projections = {key: provider.from_canonical((snapshot.get("players") or {}).get(key), week)
+                   for key in reports}
+    positions = {key: report.profile.position for key, report in reports.items()}
+    weekly_ranks = rank_players({key: row.projected_points for key, row in projections.items()},
+        positions, scope="roster", value_basis="weekly_projection", methodology="sleeper-canonical-weekly")
+    intrinsic_ranks = rank_players(dict.fromkeys(reports), positions, scope="roster",
+        value_basis="intrinsic_dtos_value", methodology="intrinsic-unavailable-v1")
+    unavailable = ValueMetric(None, "Unsupported scalar; see separate evidence", DataStatus.UNAVAILABLE, 0,
+        None, ("No validated long-term intrinsic scalar or numeric substitute is published.",))
+    profiles = {}
+    global_ranks = current_global_player_ranks(context.cached_data)
+    for key, report in reports.items():
+        raw, projection = raw_by_id[key], projections[key]
+        market_report = market.assets.get(key)
         consensus = market_report.consensus.value if market_report else None
-        quotes = [quote.value for quote in market_report.consensus.quotes if quote.value is not None] if market_report else []
-        market_status = DataStatus.UNAVAILABLE
-        if market_report and quotes:
-            modes = {quote.retrieval_mode for quote in market_report.consensus.quotes if quote.value is not None}
-            market_status = DataStatus.LIVE if "online" in modes else DataStatus.CACHED
-        dynasty_base = normalize_internal(report.core_values.dynasty.score)
-        historical = apply_historical_evidence(
-            dynasty_base, report.profile.position, raw.get("historical_evidence"),
-        )
-        forward_value = max(0, min(1000, round((projection.projected_points or 0) * 35)))
-        dynasty = round(historical.adjusted_value * .90 + forward_value * .10)
-        calibrated = calibrations[player_id]
-        redraft = normalize_internal(report.core_values.redraft.score)
-        team_fit = normalize_internal(report.core_values.team_fit.score)
-        contender = round(redraft * .35 + team_fit * .15 + calibrated.calibrated_value * .30 + forward_value * .20)
-        rebuilder = round(calibrated.calibrated_value * .70 + team_fit * .15 + normalize_internal(100 - report.risk.score) * .10 + forward_value * .05)
-        scarcity = max(0, min(100, round(100 - int(supplies.get(report.profile.position, 0)) / max(1, len(context.teams)) * 12)))
-        liquidity = max(0, min(100, round(((consensus if consensus is not None else dynasty) / 10) * .65 + (market_report.consensus.confidence if market_report else 25) * .35)))
-        gap = round(dynasty - consensus, 2) if consensus is not None else None
-        calibration = CalibrationStatus(market_report.consensus.calibration_status) if market_report else CalibrationStatus.INSUFFICIENT_DATA
-        dynasty_rank = 1 + sum(
-            calibrations[key].calibrated_value > calibrated.calibrated_value
-            for key, item in reports.items()
-            if item.profile.position == report.profile.position
-        )
-        weekly_rank = 1 + sum((projections[key].projected_points or 0) > (projection.projected_points or 0) for key in reports if reports[key].profile.position == report.profile.position)
-        tier = contextualize_valuation_tier(
-            calibrated.tier,
-            report.profile.age,
-        )
-        role = "Starter" if raw.get("roster_slot") == "Starter" else "Flex Upgrade" if above_starter > 0 else "Bench / Developmental"
-        lineup = LineupValue(role, raw.get("roster_slot") == "Starter", report.profile.position in {"RB", "WR", "TE"}, report.profile.position == "QB" and "SUPER_FLEX" in context.settings.get("roster_positions", ()), round(replacement, 2), above_replacement, above_starter, max(0, min(100, round(50 + above_replacement * 5))), scarcity)
-        positional = PositionalContext(dynasty_rank, dynasty_rank, weekly_rank, tier, scarcity, above_replacement, int(supplies.get(report.profile.position, 0)), dynasty_rank <= 2 and scarcity >= 65)
-        production = registry.production().production(raw)
-        limitations = tuple(dict.fromkeys((*report.limitations, *projection.limitations, *production.limitations)))
+        confidence = market_report.consensus.confidence if market_report and consensus is not None else 0
+        weights = dict(market_report.consensus.provider_weights) if market_report else {}
+        quotes = [q for q in market_report.consensus.quotes if q.available and q.normalized_value is not None
+                  and weights.get(q.provider, 0) > 0] if market_report else []
+        status = DataStatus.CACHED if consensus is not None else DataStatus.UNAVAILABLE
+        market_metric = ValueMetric(consensus, "Canonical external Market price", status, confidence,
+            market_report.consensus.updated_at if market_report and hasattr(market_report.consensus, "updated_at") else None)
+        same_position = [p.projected_points for pid, p in projections.items() if positions[pid] == positions[key]]
+        # This is a roster-local comparison, NOT legal-lineup optimization or dynasty utility.
+        replacement = (sorted(same_position)[max(0, len(same_position) // 3 - 1)]
+                       if same_position and all(v is not None for v in same_position) else None)
+        starters = [projections[pid].projected_points for pid in reports
+                    if positions[pid] == positions[key] and raw_by_id[pid].get("roster_slot") == "Starter"]
+        starter = min(starters) if starters and all(v is not None for v in starters) else None
+        above = round(projection.projected_points - replacement, 2) if projection.projected_points is not None and replacement is not None else None
+        above_starter = round(projection.projected_points - starter, 2) if projection.projected_points is not None and starter is not None else None
+        actual = raw.get("roster_slot") == "Starter"
+        lineup = LineupValue("Actual starter" if actual else "Reserve", actual,
+            positions[key] in {"RB", "WR", "TE"},
+            positions[key] == "QB" and "SUPER_FLEX" in context.settings.get("roster_positions", ()),
+            replacement, above, above_starter, None, None)
+        prepared = context.cached_data.get("canonical_player_production")
+        production = prepared_production_context(
+            prepared if prepared is not None else {"league_id": context.league_id},
+            league_id=context.league_id, player_id=key)
+        positional = PositionalContext(None, None, weekly_ranks[key]["position"].rank,
+            "Intrinsic tier unavailable", None, above,
+            sum(pos == positions[key] for pos in positions.values()), None,
+            scoped_ranks={"global_market": (global_ranks.get(f"player:{key}") or {}).get("global_market", {}), "roster_dynasty": intrinsic_ranks[key],
+                          "roster_weekly": weekly_ranks[key]})
         evidence = (
-            f"DTOS intrinsic value {dynasty}/1000 remains independent from provider market evidence.",
-            *calibrated.reasoning,
-            *historical.evidence,
-            f"Projection state is {projection.status.value} from {projection.source}.",
-            f"Canonical Sleeper weekly production contributes {forward_value}/1000 with a larger contender than rebuilder weight.",
-            f"Projects {above_replacement:+.2f} points above roster-specific replacement.",
-            f"Market state is {market_status.value}; raw provider values are normalized before comparison.",
+            "Market price is external acquisition evidence, not DTOS intrinsic value.",
+            "Long-term intrinsic value, fit and liquidity scalars are unavailable.",
+            f"Weekly expectation uses the published week {week} horizon only; it is not annualized.",
+            f"League {context.league_id}; evidence generation {context.evidence_generation}.",
+            "Actual starter status is distinct from the team's optimal legal projected lineup.",
         )
-        name = report.profile.name
-        initials = "".join(part[:1] for part in name.split()[:2]).upper() or "DT"
-        confidence = market_report.consensus.confidence if market_report else 0
-        provider_evidence = tuple(
-            ConsensusProvider(quote.provider, float(quote.value), int(quote.normalized_value), dict(market_report.consensus.provider_weights).get(quote.provider, 0.0), quote.freshness)
-            for quote in market_report.consensus.quotes
-            if quote.value is not None and quote.normalized_value is not None
-        ) if market_report else ()
-        posture = _posture(gap, liquidity, confidence, calibration)
-        card = PlayerIntelligenceCard(
-            player_id, consensus, dynasty, contender, rebuilder, calibrated.calibrated_value,
-            calibrated.calibrated_value,
-            max(0, min(100, round((100 - report.risk.score) * .7))),
-            50 if production.status is DataStatus.UNAVAILABLE else production.consistency or 50,
-            60 if report.profile.nfl_team != "Free Agent" else 30,
-            report.risk.score, liquidity, confidence, calibration, provider_evidence,
-            posture, evidence, tuple(limitations[:3]),
-        )
-        normalized_quotes = sorted(quote.normalized_value for quote in market_report.consensus.quotes if quote.normalized_value is not None) if market_report else []
-        profiles[player_id] = PlayerValueProfile(
-            player_id, name, report.profile.position, report.profile.nfl_team, report.profile.age,
-            raw.get("portrait_url") or raw.get("headshot_url"), "available" if raw.get("portrait_url") or raw.get("headshot_url") else "fallback", initials,
-            _metric(dynasty, "DTOS Asset Intelligence", DataStatus.FALLBACK, report.core_values.dynasty.confidence, report.core_values.dynasty.limitations),
-            _metric(consensus, "Market Intelligence normalized consensus" if consensus is not None else "Market Intelligence unavailable", market_status, confidence, tuple(f"Missing provider: {provider}" for provider in market_report.consensus.missing_providers) if market_report else ("No market snapshot available.",)),
-            (normalized_quotes[0], normalized_quotes[-1]) if normalized_quotes else None,
-            _metric(contender, "DTOS contender value · canonical 0–1000", DataStatus.FALLBACK, 65),
-            _metric(rebuilder, "DTOS rebuild value · canonical 0–1000", DataStatus.FALLBACK, 65),
-            _metric(redraft, "DTOS win-now value · canonical 0–1000", DataStatus.FALLBACK, report.core_values.redraft.confidence),
-            _metric(round(dynasty * .7 + scarcity * 3), "DTOS positional value · canonical 0–1000", DataStatus.FALLBACK, 60),
-            _metric(max(0, min(1000, round(dynasty + above_replacement * 20))), "DTOS replacement-adjusted value · canonical 0–1000", DataStatus.FALLBACK, projection.confidence),
-            _metric(liquidity, "Market coverage and risk model · 0–100", market_status if consensus is not None else DataStatus.FALLBACK, 55),
-            market_report.trend.direction if market_report else "Unavailable", gap, posture, projection, production, lineup, positional,
-            report.recommendation.action.upper(), evidence, limitations, card,
-        )
+        limits = tuple(dict.fromkeys((*projection.limitations, *production.limitations, *unavailable.limitations)))
+        provider_evidence = tuple(ConsensusProvider(q.provider, float(q.value), int(q.normalized_value),
+            weights[q.provider], q.freshness) for q in quotes if q.value is not None)
+        calibration = CalibrationStatus(market_report.consensus.calibration_status) if market_report else CalibrationStatus.INSUFFICIENT_DATA
+        card = PlayerIntelligenceCard(key, consensus, None, None, None, None, consensus,
+            None, None, None, None, None, confidence, calibration, provider_evidence,
+            "Review evidence", evidence, limits)
+        normalized = sorted(q.normalized_value for q in quotes)
+        profiles[key] = PlayerValueProfile(key, report.profile.name, positions[key], report.profile.nfl_team,
+            report.profile.age, raw.get("portrait_url") or raw.get("headshot_url"),
+            "available" if raw.get("portrait_url") or raw.get("headshot_url") else "fallback",
+            "".join(p[:1] for p in report.profile.name.split()[:2]).upper() or "DT",
+            unavailable, market_metric, (normalized[0], normalized[-1]) if normalized else None,
+            unavailable, unavailable, unavailable, unavailable, unavailable, unavailable,
+            market_report.trend.direction if market_report else "Unavailable", None, "Review evidence",
+            projection, production, lineup, positional, "Review evidence", evidence, limits, card)
     return profiles

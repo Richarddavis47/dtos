@@ -322,7 +322,11 @@ def build_commissioner_desk(
         "team_names": team_name_map(data),
         "league_intelligence": _league_intelligence(data, intelligence.roster.team_intelligence, intelligence.roster.league_summary),
         "snapshot": {
-            "standings": sorted(data.get("teams") or [], key=lambda team: intelligence.roster.team_intelligence[int(team.get("roster_id") or 0)].overall.rank),
+            "standings": sorted(data.get("teams") or [], key=lambda team: (
+                intelligence.roster.team_intelligence[int(team.get("roster_id") or 0)].overall.rank is None,
+                intelligence.roster.team_intelligence[int(team.get("roster_id") or 0)].overall.rank or 0,
+                int(team.get("roster_id") or 0),
+            )),
             "season_label": intelligence.roster.league_summary.season_label,
             "preseason": team_card.preseason,
             "transactions": normalized[:5],

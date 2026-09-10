@@ -9,11 +9,11 @@ from typing import Any
 
 import httpx
 
-from src.core.projection_intelligence.scoring import fantasy_points
+from src.core.projection_intelligence.scoring import STAT_KEYS, fantasy_points
 
 PROVIDER_ID = "sleeper_projections"
 SOURCE_CLASSIFICATION = "Sleeper Canonical Weekly Projection Evidence"
-PARSER_VERSION = "2.0"
+PARSER_VERSION = "2.1"
 TRANSPORT_VERSION = "1.0"
 REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 ALLOWED_PROJECTION_HOSTS = frozenset({"api.sleeper.app", "api.sleeper.com"})
@@ -86,7 +86,8 @@ def parse_projection_feed(
             "opponent": item.get("opponent"),
             "projected_stats": normalized_stats,
             "displayed_projection": float(displayed) if displayed is not None else None,
-            "league_projection": fantasy_points(normalized_stats, scoring, position),
+            "league_projection": (fantasy_points(normalized_stats, scoring, position)
+                if any(key in STAT_KEYS for key in normalized_stats) else None),
             "source_company": item.get("company"),
             "source_updated_at": item.get("updated_at") or item.get("last_modified"),
         }

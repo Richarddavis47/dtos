@@ -2,13 +2,24 @@
 from __future__ import annotations
 
 from typing import Any
+from math import isfinite
 
 from src.core.valuation.config import DEFAULT_CONFIG, ValuationConfig
 from src.core.valuation.models import CalibrationStatus, PackageValue, TradeGuardrailResult
 
 
+def neutral_trade_value(asset: Any) -> int:
+    """Acquisition-price input only. Never fall back to dynasty/fit/projection."""
+    value = getattr(asset, 'trade_value', None)
+    if value is None:
+        raise ValueError('Neutral acquisition value unavailable; package balance cannot be calculated.')
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value) or value < 0:
+        raise ValueError('Neutral acquisition value must be finite and nonnegative.')
+    return round(value)
+
+
 def adjusted_package_value(assets: tuple[Any, ...], config: ValuationConfig = DEFAULT_CONFIG) -> PackageValue:
-    values = sorted((int(getattr(asset, "trade_value", 0) or getattr(asset, "dynasty_value", 0)) for asset in assets), reverse=True)
+    values = sorted((neutral_trade_value(asset) for asset in assets), reverse=True)
     raw_total = sum(values)
     adjusted = 0.0
     reasons: list[str] = []
@@ -37,10 +48,10 @@ def evaluate_trade_guardrails(
 ) -> TradeGuardrailResult:
     offer = offered_package or adjusted_package_value(offered, config)
     request = requested_package or adjusted_package_value(requested, config)
-    premium = max((int(getattr(asset, "trade_value", 0) or getattr(asset, "dynasty_value", 0)) for asset in requested), default=0)
-    centerpiece = max((int(getattr(asset, "trade_value", 0) or getattr(asset, "dynasty_value", 0)) for asset in offered), default=0)
+    premium = max((neutral_trade_value(asset) for asset in requested), default=0)
+    centerpiece = max((neutral_trade_value(asset) for asset in offered), default=0)
     requested_qb = any(getattr(asset, "position", None) == "QB" for asset in requested)
-    low_pieces = sum(int(getattr(asset, "trade_value", 0) or getattr(asset, "dynasty_value", 0)) < config.low_value_threshold for asset in offered)
+    low_pieces = sum(neutral_trade_value(asset) < config.low_value_threshold for asset in offered)
     if calibration_status not in {CalibrationStatus.CALIBRATED, CalibrationStatus.PARTIALLY_CALIBRATED}:
         return TradeGuardrailResult("suppressed", "UNCALIBRATED_VALUES", "Precise packages are suppressed until values are calibrated.", offer.adjusted_value, request.adjusted_value, min(confidence, 40))
     if confidence < config.minimum_confidence:

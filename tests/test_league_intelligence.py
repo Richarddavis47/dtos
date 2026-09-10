@@ -23,7 +23,7 @@ class LeagueIntelligenceTests(unittest.TestCase):
         for roster_id, needs in self.league.needs.items():
             self.assertEqual({item.position for item in needs}, {"QB", "RB", "WR", "TE"})
             self.assertTrue(all(item.reasoning for item in needs))
-            self.assertEqual(needs, tuple(sorted(needs, key=lambda item: (-item.score, item.position))))
+            self.assertTrue(all(item.score is None and item.priority == 'Unavailable' for item in needs))
             self.assertTrue(self.league.directions[roster_id].reasoning)
 
     def test_surplus_requires_quality_and_liquidity_evidence(self) -> None:
@@ -50,7 +50,7 @@ class LeagueIntelligenceTests(unittest.TestCase):
                 self.assertTrue(self.league.economy[position].explanation)
 
     def test_asset_availability_is_neutral_and_evidence_backed(self) -> None:
-        allowed = {"Untouchable", "Extremely Difficult", "Available For Premium", "Available", "Actively Shopping"}
+        allowed = {"Untouchable", "Extremely Difficult", "Available For Premium", "Available", "Actively Shopping", "Unavailable"}
         self.assertTrue(self.league.availability)
         self.assertTrue(all(item.status in allowed and item.reasoning for item in self.league.availability.values()))
 
@@ -68,11 +68,13 @@ class LeagueIntelligenceTests(unittest.TestCase):
 
     def test_trade_recommendations_preserve_separate_impacts(self) -> None:
         self.assertTrue(self.league.trade_recommendations)
-        for recommendation in self.league.trade_recommendations:
+        for recommendation, dossier in zip(self.league.trade_recommendations, self.result.trades):
             self.assertTrue(recommendation.offer)
             self.assertTrue(recommendation.receive)
-            self.assertIsInstance(recommendation.dtos_value_delta, int)
-            self.assertIsInstance(recommendation.lineup_impact, int)
+            self.assertEqual(recommendation.dtos_value_delta, dossier.impact.asset_value)
+            self.assertEqual(recommendation.lineup_impact, dossier.impact.current_outlook)
+            if any(asset.kind == 'player' for asset in (*dossier.proposal.assets_sent, *dossier.proposal.assets_received)):
+                self.assertIsNone(recommendation.dtos_value_delta)
             self.assertTrue(recommendation.explanation)
 
     def test_dashboard_is_rendered_on_commissioner_home(self) -> None:

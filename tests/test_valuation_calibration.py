@@ -94,9 +94,14 @@ class NormalizationTests(unittest.TestCase):
 
 
 class ConsensusTests(unittest.TestCase):
+    @staticmethod
+    def compatible(*values):
+        # Synthetic proven-equivalent format, not a claim about live feeds.
+        return tuple(replace(value, compatibility_key='fixture-12team-2qb-ppr') for value in values)
+
     def test_consensus_uses_normalized_values_and_records_weights(self) -> None:
         values = (normalize_value("FantasyCalc", 9000), normalize_value("DynastyProcess", 7500))
-        result = build_canonical_consensus(values)
+        result = build_canonical_consensus(self.compatible(*values))
         self.assertLessEqual(result.market_consensus, 1000)
         self.assertEqual(len(result.providers_used), 2)
         self.assertAlmostEqual(sum(item.weight for item in result.providers_used), 1.0, places=3)
@@ -104,19 +109,19 @@ class ConsensusTests(unittest.TestCase):
     def test_missing_provider_is_safe_and_partial(self) -> None:
         result = build_canonical_consensus((normalize_value("FantasyCalc", 8000),))
         self.assertEqual(result.calibration_status, CalibrationStatus.PARTIALLY_CALIBRATED)
-        self.assertIsNotNone(result.warning)
+        self.assertIsNone(result.warning)
 
     def test_stale_data_lowers_confidence_and_status(self) -> None:
         now = datetime.now(timezone.utc).isoformat()
         old = (datetime.now(timezone.utc) - timedelta(days=60)).isoformat()
-        fresh = build_canonical_consensus((normalize_value("FantasyCalc", 8000, updated_at=now), normalize_value("DynastyProcess", 7000, updated_at=now)))
-        stale = build_canonical_consensus((normalize_value("FantasyCalc", 8000, updated_at=old), normalize_value("DynastyProcess", 7000, updated_at=old)))
+        fresh = build_canonical_consensus(self.compatible(normalize_value("FantasyCalc", 8000, updated_at=now), normalize_value("DynastyProcess", 7000, updated_at=now)))
+        stale = build_canonical_consensus(self.compatible(normalize_value("FantasyCalc", 8000, updated_at=old), normalize_value("DynastyProcess", 7000, updated_at=old)))
         self.assertLess(stale.confidence_score, fresh.confidence_score)
         self.assertEqual(stale.calibration_status, CalibrationStatus.STALE)
 
     def test_provider_disagreement_reduces_confidence(self) -> None:
-        close = build_canonical_consensus((normalize_value("FantasyCalc", 8000), normalize_value("DynastyProcess", 6800)))
-        wide = build_canonical_consensus((normalize_value("FantasyCalc", 11_000), normalize_value("DynastyProcess", 1000)))
+        close = build_canonical_consensus(self.compatible(normalize_value("FantasyCalc", 8000), normalize_value("DynastyProcess", 6800)))
+        wide = build_canonical_consensus(self.compatible(normalize_value("FantasyCalc", 11_000), normalize_value("DynastyProcess", 1000)))
         self.assertLess(wide.confidence_score, close.confidence_score)
 
     def test_legacy_quote_contract_never_compares_thousands_to_internal_scores(self) -> None:

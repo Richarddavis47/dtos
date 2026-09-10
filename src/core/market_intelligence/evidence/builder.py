@@ -6,16 +6,18 @@ from src.core.market_intelligence.models import MarketConsensus, MarketEvidence,
 
 def build_market_evidence(consensus: MarketConsensus, gap: ValueGap, trend: MarketTrend) -> tuple[MarketEvidence, ...]:
     rows = [
-        MarketEvidence("Market consensus", str(consensus.value) if consensus.value is not None else "Unavailable", (consensus.value or 50) - 50, "A robust confidence-weighted center limits outlier influence.", "Market Consensus", consensus.value is not None),
-        MarketEvidence("Provider agreement", f"{consensus.agreement}%", consensus.agreement - 50, "Dispersion across available providers determines agreement.", "Market Consensus", bool(consensus.quotes)),
-        MarketEvidence("Value gap", gap.label.value, gap.difference or 0, "Intrinsic and market values remain independent; their difference identifies possible opportunity, not an automatic action.", "Value Gap Engine", gap.market_value is not None),
-        MarketEvidence("Trend", f"{trend.direction}; {trend.momentum:+.2f}%", trend.momentum, "Historical cached snapshots determine direction and momentum.", "Market History", any(value is not None for value in trend.periods.values())),
+        # Impact is a recommendation contribution, not the observed evidence.
+        # Price magnitude and provider agreement imply no directional action.
+        MarketEvidence(consensus.evidence_state, str(consensus.value) if consensus.value is not None else "Unavailable", 0, consensus.warning or "Source-scoped external price 0–1000; price magnitude is not a recommendation.", "Market Evidence", consensus.value is not None),
+        MarketEvidence("Provider agreement", f"{consensus.agreement}/100" if consensus.agreement is not None else "Unavailable", 0, "Requires multiple admitted providers; agreement is not outcome probability.", "Market Consensus", consensus.agreement is not None),
+        MarketEvidence("Value gap", gap.label.value if gap.difference is not None else "Unavailable", 0, "No directional recommendation is inferred from unlike or unavailable evidence concepts.", "Value Gap Engine", gap.difference is not None),
+        MarketEvidence("Trend", f"{trend.direction}; {trend.momentum:+.2f}%" if trend.momentum is not None else "Unavailable", trend.momentum if trend.momentum is not None else 0, "Comparable provider, concept, scale, format, methodology and ordered timestamps are required.", "Market History", trend.momentum is not None),
     ]
     rows.extend(
         MarketEvidence(
             item.provider,
             f"raw={item.value if item.available else 'Unavailable'}; normalized={item.normalized_value if item.normalized_value is not None else 'Unavailable'}/1000; mode={item.retrieval_mode}; freshness={item.freshness}; age={item.cache_age_seconds if item.cache_age_seconds is not None else 'n/a'}s",
-            (((item.normalized_value or 500) - 500) / 10) + item.confidence_impact,
+            0,
             f"{item.detail} Provider status, retrieval mode, freshness, cache age, and confidence impact are disclosed.",
             item.source,
             item.available,

@@ -24,7 +24,8 @@ def prioritize(dossiers: tuple[TradeDossier, ...], limit: int = 12) -> tuple[Tra
         unique.values(),
         key=lambda item: (
             order[item.recommendation.priority],
-            -item.recommendation.expected_value,
+            item.recommendation.expected_value is None,
+            -item.recommendation.expected_value if item.recommendation.expected_value is not None else 0,
             -int((item.historical_context or {}).get("score") or 0),
             -item.partner.compatibility_score,
             item.recommendation.title,

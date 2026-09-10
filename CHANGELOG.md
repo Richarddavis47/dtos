@@ -1,5 +1,14 @@
 # Changelog
 
+# v1.17.0 - Player and Market Evidence Intelligence (candidate)
+
+- Separate external Market prices from supported intrinsic evidence profiles; unsupported long-term scalars remain unavailable.
+- Preserve canonical production, explicit projection missingness, rank scopes and generation-bound roster/team assessments.
+- Keep unproven provider formats separate, prevent mirrored-source confidence inflation and disclose single-source evidence.
+- Add bounded structured semantic changes and an explicit methodology transition identity; unchanged replay does not create movement.
+- Preserve historical boundaries, multi-league isolation, retired visual systems and existing Market replacement/resource contracts.
+- Release and production acceptance remain pending; Batch 4 is not started.
+
 # v1.16.1 - Reserved League Route Classification
 
 - Classify exact static runtime/resource API paths before dynamic league-ID authorization.

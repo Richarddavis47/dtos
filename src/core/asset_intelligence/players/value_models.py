@@ -1,85 +1,66 @@
 """Transparent player value calculations."""
 from __future__ import annotations
 
-from src.core.asset_intelligence.evidence import evidence_engine
 from src.core.asset_intelligence.models import AssetContext, AssetEvaluation, Evidence, PlayerProfile
-from src.core.asset_intelligence.players.league_context import league_adjustment
-
-LONGEVITY_PEAK = {"QB": 29, "RB": 24, "WR": 26, "TE": 27}
 
 
-def _age_signal(profile: PlayerProfile) -> tuple[float, Evidence]:
-    if profile.age is None:
-        return 50.0, Evidence("Age curve", "Age unavailable", 0, "Age cannot contribute, so the signal remains neutral.", "Sleeper player record", False)
-    peak = LONGEVITY_PEAK.get(profile.position, 26)
-    distance = profile.age - peak
-    score = max(15.0, min(90.0, 75 - max(distance, 0) * 7 + max(-distance, 0) * 2))
-    return score, Evidence("Age curve", f"Age {profile.age:g}; {profile.position} reference {peak}", score - 50, "The value is adjusted against a documented position-specific longevity reference.", "Sleeper age and DTOS v1 age curve")
+
+def canonical_evidence(profile: PlayerProfile, context: AssetContext | None) -> tuple[Evidence, ...]:
+    """Prepared facts are not inferred from placeholder model values."""
+    rows = []
+    if context is not None and context.canonical_production is not None:
+        from src.core.player_value_projection.canonical_production import prepared_production_context
+        production = prepared_production_context(context.canonical_production,
+            league_id=context.league_id, player_id=profile.player_id)
+        for label in ("Season Average", "Previous Season Average"):
+            window = next((row for row in production.windows if row.label == label), None)
+            value = window.fantasy_points if window is not None else None
+            rows.append(Evidence(label, str(value) if value is not None else "Unavailable", 0,
+                "Canonical NFL game evidence scored under the selected league rules; previous seasons are not current production.",
+                production.source, value is not None))
+        window = next((row for row in production.windows if row.label == "Season Average"), None)
+        for label, value in (("Targets per game", window.targets if window else None),
+                             ("Carries per game", window.carries if window else None)):
+            rows.append(Evidence(label, str(value) if value is not None else "Unavailable", 0,
+                "Derived from the same canonical production records; missing usage is not zero.",
+                production.source, value is not None))
+    else:
+        rows.append(Evidence("Canonical production", "Not prepared", 0,
+            "Canonical production has not been prepared for this context.", "Canonical evidence", False))
+    snapshot = context.canonical_projection if context is not None else None
+    projection = None
+    if snapshot:
+        if str(snapshot.get("league_id") or "") != context.league_id:
+            raise ValueError("Canonical projection belongs to another league.")
+        projection = (snapshot.get("players") or {}).get(profile.player_id)
+    points = projection.get("weekly_projected_points") if projection is not None and snapshot.get("week") is not None and projection.get("week") == snapshot.get("week") else None
+    rows.append(Evidence("Canonical weekly projection", str(points) if points is not None else "Unavailable", 0,
+        "Published Sleeper projection; not an actual NFL result or a dynasty value.", "Sleeper canonical projection", points is not None))
+    return tuple(rows)
 
 
 def dynasty_value(profile: PlayerProfile, context: AssetContext) -> AssetEvaluation:
-    age_score, age_evidence = _age_signal(profile)
-    roster_signal = 55 if profile.nfl_team != "Free Agent" else 35
-    format_adjustment, format_evidence = league_adjustment(profile, context)
-    evidence = (
-        age_evidence,
-        Evidence("NFL roster status", profile.nfl_team, roster_signal - 50, "An active NFL team supplies a modest opportunity signal; it does not imply a starting role.", "Sleeper NFL team"),
-        format_evidence,
-    )
-    # Age and NFL-roster status are useful context, but they cannot establish an
-    # elite dynasty valuation by themselves.  Keep the independent DTOS signal
-    # deliberately close to neutral until production/role evidence is present.
-    # This prevents ordinary young developmental players from outranking proven
-    # elite assets solely because they are farther from the position age peak.
-    score = round(age_score * 0.30 + roster_signal * 0.20 + 50 * 0.50 + format_adjustment)
-    score = max(25, min(72, score))
-    return AssetEvaluation(
-        "Dynasty Value",
-        score,
-        min(70, evidence_engine.confidence(evidence)),
-        "Independent age, format, and NFL-roster context; unsupported upside is held near neutral.",
-        evidence,
-        ("Production, contract detail, usage, and dynasty market data are unavailable; this signal must not replace neutral market value.",),
-    )
+    return AssetEvaluation("Intrinsic dynasty utility", None, 0,
+        "Long-term scalar unavailable; demonstrated quality, opportunity and longevity remain separate.",
+        canonical_evidence(profile, context),
+        ("Age, team status and league format alone do not establish a dynasty price.",))
 
 
-def redraft_value(profile: PlayerProfile) -> AssetEvaluation:
-    team_score = 60 if profile.nfl_team != "Free Agent" else 30
-    injury_score = 65 if profile.injury_status == "No reported designation" else 35
-    evidence = (
-        Evidence("NFL opportunity", profile.nfl_team, team_score - 50, "Active NFL roster status is the available opportunity proxy.", "Sleeper NFL team"),
-        Evidence("Injury designation", profile.injury_status, injury_score - 50, "A current designation reduces the present-season availability signal without predicting missed games.", "Sleeper injury status"),
-        Evidence("Production and usage", "Unavailable", 0, "No production or usage feed is connected; this factor stays neutral.", "Not available", False),
-    )
-    score = round(team_score * 0.45 + injury_score * 0.35 + 50 * 0.20)
-    return AssetEvaluation("Redraft Value", score, evidence_engine.confidence(evidence), "Current-season availability and opportunity proxy, kept separate from dynasty value.", evidence, ("Live projections, production, depth-chart role, and usage are unavailable.",))
+def redraft_value(profile: PlayerProfile, context: AssetContext | None = None) -> AssetEvaluation:
+    return AssetEvaluation("Season utility", None, 0,
+        "Weekly evidence is disclosed at its actual horizon, not converted into a season-value score.",
+        canonical_evidence(profile, context),
+        ("No annualization or availability-based score substitutes for canonical weekly projection.",))
 
 
 def market_value(dynasty: AssetEvaluation) -> AssetEvaluation:
-    evidence = (
-        Evidence("Dynasty market consensus", "Provider unavailable", 0, "No external market feed is connected; the neutral market baseline is not inferred from the dynasty score.", "Not available", False),
-    )
-    return AssetEvaluation("Market Value", 50, evidence_engine.confidence(evidence, 30), "Neutral placeholder until a traceable market-consensus provider is connected.", evidence, (f"The independent dynasty evaluation is {dynasty.score}/100 but is not presented as market consensus.",))
+    return AssetEvaluation("Market price", None, 0, "External Market evidence must be supplied by the active consensus adapter.",
+        (), ("Missing external price is unavailable, not a neutral baseline.",), scale_maximum=1000)
 
 
 def team_fit(profile: PlayerProfile, context: AssetContext, dynasty: AssetEvaluation, redraft: AssetEvaluation) -> AssetEvaluation:
-    depth = (context.position_depth or {}).get(profile.position, 0)
-    need = profile.position in context.team_needs or depth < 2
-    window = context.team_window.casefold()
-    if "championship" in window or "playoff" in window:
-        horizon_score = redraft.score
-        horizon = "current-season"
-    elif "rebuild" in window or "ascension" in window:
-        horizon_score = dynasty.score
-        horizon = "long-term"
-    else:
-        horizon_score = round((dynasty.score + redraft.score) / 2)
-        horizon = "balanced"
-    need_score = 75 if need else 50
-    evidence = (
-        Evidence("Front Office window", context.team_window, horizon_score - 50, f"The {context.team_window} applies the {horizon} value horizon.", "Decision Engine team window"),
-        Evidence("Position need", f"{profile.position}: {depth} rostered", need_score - 50, "A thin or explicitly identified position increases contextual fit.", "Active Front Office roster"),
-        Evidence("Strategic direction", context.team_strategy, 0, "Strategy is retained as context without an unsupported numeric adjustment.", "Active Front Office context", context.team_strategy != "Unspecified"),
-    )
-    score = round(horizon_score * 0.75 + need_score * 0.25)
-    return AssetEvaluation("Team Fit Value", score, evidence_engine.confidence(evidence), f"Fit for Front Office {context.active_front_office_id}, not a universal player ranking.", evidence)
+    return AssetEvaluation("Team-specific fit", None, 0,
+        "A validated fit aggregate is unavailable; roster context does not manufacture a player value.",
+        (Evidence("Selected franchise", str(context.active_front_office_id), 0,
+            "Fit is scoped to the selected league and franchise.", "Canonical context"),),
+        ("Price, weekly points and production quality are not interchangeable fit scores.",))

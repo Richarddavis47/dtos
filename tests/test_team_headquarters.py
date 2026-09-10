@@ -63,7 +63,7 @@ class TeamHeadquartersTests(unittest.TestCase):
         view = build_team_headquarters(self.data, 1, "2026-07-20T12:00:00+00:00")
         self.assertIsNotNone(view)
         assert view is not None
-        self.assertEqual(view["rank"], 1)
+        self.assertIsNone(view["rank"])
         self.assertEqual(view["snapshot"]["total_players"], 8)
         self.assertEqual(view["snapshot"]["total_picks"], 3)
         self.assertEqual(view["snapshot"]["first_round_picks"], 2)
@@ -81,9 +81,10 @@ class TeamHeadquartersTests(unittest.TestCase):
             {"QB", "RB", "WR", "TE", "Youth", "Depth", "Draft Capital", "Flexibility", "Roster Construction"},
         )
         for grade in view["grades"].values():
-            self.assertRegex(grade["grade"], r"^(A|B|C|D)[+-]?$|^F$")
-            self.assertGreaterEqual(grade["score"], 0)
-            self.assertLessEqual(grade["score"], 100)
+            self.assertRegex(grade["grade"], r"^(A|B|C|D)[+-]?$|^F$|^Unavailable$")
+            if grade["score"] is not None:
+                self.assertGreaterEqual(grade["score"], 0)
+                self.assertLessEqual(grade["score"], 100)
             self.assertTrue(grade["data"])
             self.assertTrue(grade["calculation"])
             self.assertTrue(grade["why"])
@@ -92,15 +93,15 @@ class TeamHeadquartersTests(unittest.TestCase):
         view = build_team_headquarters(self.data, 1)
         assert view is not None
         combined = " ".join(view["summary"].values())
-        self.assertIn("Current Championship Outlook", combined)
-        self.assertIn("evaluated independently from future assets", combined)
-        self.assertIn("independently calculated future horizon", combined)
+        self.assertIn("Overall assessment unavailable", combined)
+        self.assertIn("Market strength is not lineup strength", combined)
+        self.assertIn("Future capital and longevity context remain distinct", combined)
 
-    def test_missing_ages_use_neutral_explainable_baseline(self) -> None:
+    def test_missing_assessment_does_not_use_neutral_baseline(self) -> None:
         players = [{"id": "unknown", "position": "QB", "roster_slot": "Starter"}]
         grades = calculate_team_grades(players, {"picks_owned": []})
-        self.assertEqual(grades["Youth"]["score"], 50)
-        self.assertIn("No player ages are available", grades["Youth"]["why"])
+        self.assertIsNone(grades["Youth"]["score"])
+        self.assertEqual(grades["Youth"]["grade"], "Unavailable")
 
     def test_unknown_team_returns_none(self) -> None:
         self.assertIsNone(build_team_headquarters(self.data, 999))

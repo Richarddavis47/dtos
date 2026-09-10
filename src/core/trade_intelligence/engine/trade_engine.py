@@ -74,7 +74,7 @@ class TradeIntelligence:
         dossiers = []
         for partner, outgoing, incoming in partner_pools:
             proposals = generate_proposals(active_roster_id, partner.roster_id, outgoing, incoming)
-            alternative_labels = tuple(asset.label for asset in sorted(incoming, key=lambda item: (-item.team_fit_value, item.label))[:3])
+            alternative_labels = tuple(asset.label for asset in sorted(incoming, key=lambda item: (item.team_fit_value is None, -item.team_fit_value if item.team_fit_value is not None else 0, item.label))[:3])
             dossiers.extend(evaluate_proposal(proposal, active, partner, alternative_labels, evidence_context) for proposal in proposals)
         return prioritize(tuple(dossiers), limit)
 

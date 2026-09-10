@@ -1,20 +1,15 @@
-"""League-relative, valuation-backed team grading and classification."""
+"""League-relative grading of explicit, generation-bound evidence dimensions."""
 from __future__ import annotations
 
-from statistics import mean, pstdev
+from statistics import mean
 from typing import Any
 
-from src.core.competitive_window import CompetitiveWindowClassification, build_competitive_window
+from src.core.competitive_window import build_competitive_window
 from src.core.team_intelligence.models import LeagueTeamSummary, RelativeGrade, TeamIntelligenceCard
 from src.core.asset_intelligence.picks.pick_value import dynasty_pick_value
 from src.core.valuation import normalize_pick
 
 POSITIONS = ("QB", "RB", "WR", "TE")
-OVERALL_WEIGHTS = {
-    "Current Contending": .22, "Dynasty": .14, "Starting Lineup": .14, "Depth": .09,
-    "QB": .07, "RB": .06, "WR": .07, "TE": .05, "Draft Capital": .06,
-    "Youth": .04, "Future Outlook": .03, "Roster Flexibility": .02, "Asset Liquidity": .01,
-}
 
 
 def _percentile(value: float, population: tuple[float, ...]) -> int:
@@ -58,95 +53,59 @@ def build_team_intelligence(
     league_rooms: dict[int, dict[str, int]],
     league_players: dict[int, dict[str, Any]],
     league_metrics: dict[int, dict[str, float]],
+    *, grading=None,
 ) -> tuple[dict[int, TeamIntelligenceCard], LeagueTeamSummary]:
-    raw: dict[int, dict[str, float]] = {}
-    preseason = all(decision.profile.wins + decision.profile.losses + decision.profile.ties == 0 for decision in decisions.values())
-    for roster_id, decision in decisions.items():
-        players = tuple(league_players.get(roster_id, {}).values())
-        metrics = league_metrics[roster_id]
-        starters = [player for player in decision.profile.players if player.get("roster_slot") == "Starter"]
-        bench_count = max(0, len(players) - len(starters))
-        room_average = mean(league_rooms[roster_id].values()) if league_rooms[roster_id] else 0
-        bench_quality = mean(sorted((card.dynasty_value for card in players), reverse=True)[len(starters):len(starters) + 5]) if bench_count else 0
-        ages = [float(player.get("age")) for player in decision.profile.players if player.get("age") is not None]
-        youth_assets = [card.rebuilder_value for card in players if next((float(row.get("age")) for row in decision.profile.players if str(row.get("id") or row.get("player_id")) == card.player_id and row.get("age") is not None), 99) <= 24]
-        pick_value = _pick_value(decision.profile.picks)
-        current = metrics["Starting-Lineup Dynasty Value"] * .55 + metrics["Contender Value"] * .25 + room_average * 10 * .20
-        dynasty = metrics["Total Dynasty Value"] * .60 + metrics["Rebuild Value"] * .40
-        depth = bench_quality * .65 + room_average * .35
-        youth = mean(youth_assets) if youth_assets else 0
-        flexibility = metrics["Market Liquidity"] * .65 + pick_value / max(1, len(decision.profile.picks)) * .035
-        raw[roster_id] = {
-            "Current Contending": current,
-            "Dynasty": dynasty,
-            "Starting Lineup": metrics["Starting-Lineup Dynasty Value"],
-            "Depth": depth,
-            **league_rooms[roster_id],
-            "Draft Capital": pick_value,
-            "Youth": youth,
-            "Future Outlook": dynasty * .75 + pick_value * .25,
-            "Roster Flexibility": flexibility,
-            "Asset Liquidity": metrics["Market Liquidity"],
-            "Average Age": mean(ages) if ages else 0,
-        }
-    category_percentiles = {roster_id: {category: _percentile(values[category], tuple(row[category] for row in raw.values())) for category in OVERALL_WEIGHTS} for roster_id, values in raw.items()}
-    for roster_id in raw:
-        raw[roster_id]["Overall"] = sum(category_percentiles[roster_id][category] * weight for category, weight in OVERALL_WEIGHTS.items())
-    cards: dict[int, TeamIntelligenceCard] = {}
-    for roster_id, decision in decisions.items():
-        def grade(category: str, reasons: tuple[str, ...]) -> RelativeGrade:
-            return _relative(category, roster_id, raw, reasons)
-        positions = {position: grade(position, (f"{position} room uses top-end quality, weekly leverage, longevity, market value, and depth.", f"Raw room strength {league_rooms[roster_id][position]}/100 before league-relative ranking.")) for position in POSITIONS}
-        current = grade("Current Contending", ("Starting-lineup value supplies 55% of the raw current-strength input.", "Contender values supply 25%; league-relative position-room strength supplies 20%.", "Record is excluded before completed games exist."))
-        dynasty = grade("Dynasty", ("Normalized DTOS dynasty and rebuild values are aggregated with diminishing roster depth already applied by Roster Intelligence.",))
-        lineup = grade("Starting Lineup", ("Only designated starters contribute to the starting-lineup value total.",))
-        depth = grade("Depth", ("Bench quality is capped to the next five assets; extra replacement-level bodies receive no equal credit.",))
-        draft = grade("Draft Capital", (f"{decision.profile.draft_pick_count} owned picks are valued on the canonical DTOS pick scale by round and horizon.",))
-        youth = grade("Youth", (f"{decision.profile.young_player_count} players age 24 or younger; young-asset quality matters more than count.",))
-        future = grade("Future Outlook", ("Dynasty roster strength and normalized draft capital are evaluated independently from current results.",))
-        flexibility = grade("Roster Flexibility", ("Market liquidity and usable draft capital determine optionality.",))
-        liquidity = grade("Asset Liquidity", ("Average traceable trade liquidity comes from shared Asset and Market Intelligence.",))
-        overall = grade("Overall", ())
-        ordered = sorted((current, dynasty, lineup, depth, draft, youth, future, flexibility, liquidity, *positions.values()), key=lambda item: (-item.percentile, item.category))
-        explanation = (f"Strongest relative area: {ordered[0].category} ({ordered[0].grade}, #{ordered[0].rank}).", f"Lowest relative area: {ordered[-1].category} ({ordered[-1].grade}, #{ordered[-1].rank}).", "Overall combines category percentiles; no 0–1000 player value is treated as a 0–100 grade.")
-        confidence = round(mean((decision.current_outlook.confidence, decision.future_outlook.confidence, decision.depth.confidence, decision.asset_health.confidence)))
-        risk = max(0, min(100, round(100 - mean((current.percentile, dynasty.percentile, flexibility.percentile)))))
-        premium_assets = sum(
-            getattr(card, "tier", None) in {"Elite Franchise Player", "Cornerstone"}
-            for card in league_players[roster_id].values()
-        )
-        window = build_competitive_window(
-            current_strength=current.percentile,
-            overall_strength=overall.percentile,
-            future_strength=future.percentile,
-            depth=depth.percentile,
-            youth=youth.percentile,
-            draft_capital=draft.percentile,
-            risk=risk,
-            confidence=confidence,
-            elite_assets=premium_assets,
-            starter_strength=lineup.percentile,
-        )
-        playoff_odds = max(5, min(95, round(current.percentile * .8 + 10)))
-        championship_odds = max(1, min(60, round(current.percentile * .35 + overall.percentile * .25 - 10)))
-        projected_wins = round(playoff_odds / 100 * 14, 1)
-        cards[roster_id] = TeamIntelligenceCard(
-            roster_id, overall, current, dynasty, lineup, depth, positions, draft, youth,
-            future, flexibility, liquidity, window, current.percentile, future.percentile,
-            risk, confidence, explanation, preseason, overall.rank, projected_wins,
-            playoff_odds, championship_odds,
-        )
-    overall_scores = [card.overall.score for card in cards.values()]
-    all_ages = [age for decision in decisions.values() for age in decision.profile.known_ages]
-    strongest = max(((grade.score, roster_id, position) for roster_id, card in cards.items() for position, grade in card.positions.items()), default=(0, 0, "Unavailable"))
-    weakest = min(((grade.score, roster_id, position) for roster_id, card in cards.items() for position, grade in card.positions.items()), default=(0, 0, "Unavailable"))
-    names = {roster_id: getattr(decision.profile, "team_name", "Unassigned Franchise") for roster_id, decision in decisions.items()}
-    def best(attribute: str) -> int | None:
-        return min(cards.values(), key=lambda card: (getattr(card, attribute).rank, card.roster_id)).roster_id if cards else None
+    if grading is not None:
+        return _from_grading_evidence(decisions, grading)
+    raise ValueError('Generation-bound roster grading evidence is required; legacy scalar fallback is retired.')
 
-    def worst(attribute: str) -> int | None:
-        return max(cards.values(), key=lambda card: (getattr(card, attribute).rank, -card.roster_id)).roster_id if cards else None
-    age_rows = [(mean(decision.profile.known_ages), roster_id) for roster_id, decision in decisions.items() if decision.profile.known_ages]
-    absolute_league_strength = round(mean(score for rooms in league_rooms.values() for score in rooms.values())) if league_rooms else 0
-    summary = LeagueTeamSummary(absolute_league_strength, round(mean(all_ages), 1) if all_ages else None, round(mean(overall_scores), 1) if overall_scores else 0, sum(card.current_window in {CompetitiveWindowClassification.ELITE_CONTENDER, CompetitiveWindowClassification.CONTENDER} for card in cards.values()), sum(card.current_window in {CompetitiveWindowClassification.REBUILDING, CompetitiveWindowClassification.FULL_REBUILD} for card in cards.values()), f"{names.get(strongest[1], 'Unassigned Franchise')} {strongest[2]}", f"{names.get(weakest[1], 'Unassigned Franchise')} {weakest[2]}", max(0, min(100, round(100 - pstdev(overall_scores) * 2))) if len(overall_scores) > 1 else 100, min(cards.values(), key=lambda card: (card.overall.rank, card.roster_id)).roster_id if cards else None, "Unavailable without prior team-grade snapshots", "Unavailable without prior team-grade snapshots", best("draft_capital"), worst("draft_capital"), best("roster_flexibility"), max(age_rows, default=(0, None))[1], min(age_rows, default=(0, None))[1], "Preseason Projection" if preseason else "Current Season")
+
+def _from_grading_evidence(decisions, grading):
+    """Adapt the generation-bound dimensions; never reuse legacy card scores."""
+    from src.core.intelligence.roster_grading import rank_roster_dimension
+    rows = tuple(grading.values())
+    if set(grading) != set(decisions):
+        raise ValueError('Every franchise requires the same evidence boundary')
+    ranks = {name: rank_roster_dimension(rows, name) for name in rows[0].dimensions} if rows else {}
+    size = len(rows)
+    def unavailable(name):
+        return RelativeGrade(name, None, 'Unavailable', None, None, size,
+            ('No validated aggregate for this concept; unrelated scalar evidence is not substituted.',))
+    def dimension(roster_id, name):
+        item = grading[roster_id].dimensions[name]
+        values = tuple(row.dimensions[name].value for row in rows if row.dimensions[name].value is not None)
+        if item.value is None:
+            return unavailable(name)
+        percentile = _percentile(item.value, values)
+        return RelativeGrade(name, percentile, _letter(percentile), percentile,
+            ranks[name][roster_id], size,
+            (f'{item.value:g} {item.units}; coverage {item.covered}/{item.expected}.',
+             'This dimension is not an overall dynasty or competitive-window grade.'))
+    cards = {}
+    picks = {key: {'Future Capital': _pick_value(item.profile.picks)} for key, item in decisions.items()}
+    for roster_id, decision in decisions.items():
+        lineup = dimension(roster_id, 'Optimal projected lineup')
+        depth = dimension(roster_id, 'Useful projected depth')
+        overall = unavailable('Overall team assessment')
+        future = unavailable('Long-term dynasty utility')
+        draft = _relative('Future Capital', roster_id, picks, ('Existing canonical pick model; separate from player value.',))
+        window = build_competitive_window(current_strength=lineup.score, overall_strength=None,
+            future_strength=None, depth=depth.score, youth=None, draft_capital=draft.score,
+            risk=None, confidence=0)
+        cards[roster_id] = TeamIntelligenceCard(roster_id, overall, lineup,
+            unavailable('Intrinsic dynasty utility'), lineup, depth,
+            {position: unavailable(f'{position} evidence assessment') for position in POSITIONS},
+            draft, dimension(roster_id, 'Longevity context'), future,
+            unavailable('Roster flexibility'), unavailable('Asset liquidity'), window,
+            lineup.score, None, None, 0,
+            ('Supported dimensions are published separately; no ambiguous overall grade is manufactured.',
+             'Competitive Window is unavailable until all required team-level evidence is supported.'),
+            decision.profile.wins + decision.profile.losses + decision.profile.ties == 0,
+            None, None, None, None, dimension(roster_id, 'Market asset strength'),
+            dimension(roster_id, 'Production quality'),
+            grading[roster_id].league_id, grading[roster_id].generation)
+    ages = [age for decision in decisions.values() for age in decision.profile.known_ages]
+    summary = LeagueTeamSummary(None, mean(ages) if ages else None, None, 0, 0,
+        'Unavailable', 'Unavailable', None, None, 'Unavailable', 'Unavailable',
+        None, None, None, None, None, 'Evidence dimensions')
     return cards, summary

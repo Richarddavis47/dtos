@@ -16,7 +16,7 @@ ASSET_CSS = """
 .ai-player-identity .player-summary-copy b{font-size:28px}.ai-player-identity .player-summary-copy span{font-size:14px}
 .ai-values{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
 .ai-value{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px}
-.ai-value b{font-size:30px;color:var(--blue);display:block;margin:8px 0}
+.ai-value b{font-size:30px;color:var(--blue);display:block;margin:8px 0;overflow-wrap:anywhere}
 .ai-value span{font-size:13px;color:var(--text-secondary)}.ai-value small{display:block;color:var(--muted);margin:6px 0}
 .ai-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0;align-items:start}
 .ai-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px}
@@ -28,6 +28,12 @@ ASSET_CSS = """
 """
 
 
+def _number(value, *, signed=False) -> str:
+    if value is None:
+        return "Unavailable"
+    return f"{value:+.2f}" if signed else str(value)
+
+
 def _evidence(evaluation: AssetEvaluation) -> str:
     rows = "".join(
         f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(item.explanation)} <small>Source: {escape(item.source)}</small></li>"
@@ -37,6 +43,23 @@ def _evidence(evaluation: AssetEvaluation) -> str:
     return f'<details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{rows}</ul>{f"<b>Limitations</b><ul>{limits}</ul>" if limits else ""}</details>'
 
 
+def _scoped_rank_summary(scoped_ranks: dict) -> str:
+    """Label global/league comparisons explicitly; never promote a roster rank."""
+    lines = []
+    for key, label in (("global_intrinsic", "Global DTOS intrinsic dynasty"),
+                       ("global_market", "Global provider Market"),
+                       ("league_adjusted", "League-adjusted dynasty")):
+        pair = scoped_ranks.get(key) or {}
+        overall = pair.get("overall") or {}
+        positional = pair.get("position") or {}
+        rank = overall.get("rank")
+        position_rank = positional.get("rank")
+        display = (f"#{rank} overall · {positional.get('position', '')} #{position_rank}"
+            f" · {overall.get('ranked_count', 0)} ranked players") if rank is not None else "Unavailable"
+        lines.append(f"<p><b>{escape(label)}:</b> {escape(display)}</p>")
+    return "".join(lines)
+
+
 def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict]) -> str:
     profile = report.profile
     options = "".join(
@@ -44,7 +67,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict])
         for team in teams
     )
     values = "".join(
-        f'<article class="ai-value"><span>{escape(value.name)}</span><b>{value.score}</b><small>{value.confidence}% confidence</small>{_evidence(value)}</article>'
+        f'<article class="ai-value"><span>{escape(value.name)}</span><b>{_number(value.score)}</b><small>Scale 0–{value.scale_maximum} · {value.confidence}% confidence</small>{_evidence(value)}</article>'
         for value in (report.core_values.dynasty, report.core_values.redraft, report.core_values.market, report.core_values.team_fit)
     )
     snapshot = (("Asset Tier", report.archetypes[0]), ("Position", profile.position), ("NFL Team", profile.nfl_team), ("Age", str(profile.age or "Sleeper metadata does not provide age.")), ("Experience", str(profile.experience if profile.experience is not None else "Sleeper metadata does not provide NFL experience.")), ("Contract", profile.contract_status if profile.contract_status != "Unavailable" else "No supported provider supplies contract data."), ("Injury", profile.injury_status), ("Bye", profile.bye_week if profile.bye_week != "Unavailable" else "Sleeper metadata does not currently provide a bye week."))
@@ -52,7 +75,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict])
     strengths = "".join(f"<li>{escape(item)}</li>" for item in report.strengths)
     weaknesses = "".join(f"<li>{escape(item)}</li>" for item in report.weaknesses)
     risk_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(item.explanation)}</li>" for item in report.risk.evidence)
-    opportunity = "".join(f"<li><b>{escape(label)}:</b> {value.score}/100 — {escape(value.summary)}</li>" for label, value in report.opportunity.items())
+    opportunity = "".join(f"<li><b>{escape(label)}:</b> {_number(value.score)} — {escape(value.summary)}</li>" for label, value in report.opportunity.items())
     recommendation_evidence = tuple(f"{item.factor}: {item.observed_value} — {item.explanation}" for item in report.recommendation.evidence)
     active_roster_id = int(selected_team.get("roster_id") or 0)
     player_id = str(profile.player_id)
@@ -85,7 +108,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict])
         providers = ", ".join(f"{item.provider}: raw {item.raw_value:g} → {item.normalized_value}/1000" for item in card.provider_evidence) if card and card.provider_evidence else "No calibrated provider evidence."
         calibration = f'{escape(card.calibration_status.value)} · {card.confidence_score}% confidence' if card else "insufficient_data"
         warning = "" if card and card.calibration_status.value == "calibrated" else "Experimental — market calibration incomplete."
-        integrated = f'''<p class="muted"><b>Calibration:</b> {calibration}. {escape(warning)}</p><section class="ai-sections"><article class="ai-card"><h3>Unified Value · canonical 0–1000</h3><ul><li><b>DTOS Intrinsic:</b> {value.dtos_dynasty.value}</li><li><b>Market Consensus:</b> {value.market_consensus.value if value.market_consensus.value is not None else "Unavailable"} ({escape(value.market_consensus.status.value)})</li><li><b>Normalized Market Range:</b> {escape(market_range)}</li><li><b>Canonical Value Gap:</b> {value.value_gap if value.value_gap is not None else "Unavailable"}</li><li><b>Win-Now / Rebuild:</b> {value.contender.value} / {value.rebuilder.value}</li><li><b>Liquidity (0–100):</b> {value.trade_liquidity.value}</li><li><b>Posture:</b> {escape(value.market_posture)}</li><li><b>Provider Evidence:</b> {escape(providers)}</li></ul></article><article class="ai-card"><h3>Weekly Outlook · {escape(projection.status.value)}</h3><ul><li><b>Projection:</b> {projection.projected_points}</li><li><b>Floor / Median / Ceiling:</b> {projection.floor} / {projection.median} / {projection.ceiling}</li><li><b>Role:</b> {escape(value.lineup.role)}</li><li><b>Above Replacement:</b> {value.lineup.points_above_replacement:+.2f}</li><li><b>Above Current Starter:</b> {value.lineup.points_above_current_starter:+.2f}</li><li><b>Source:</b> {escape(projection.source)}</li></ul></article><article class="ai-card"><h3>Production</h3><ul><li><b>Season Average:</b> {production if production is not None else "Unavailable"}</li><li><b>Consistency:</b> {value.production.consistency if value.production.consistency is not None else "Unavailable"}</li><li><b>Trend:</b> {escape(value.production.trend)}</li><li><b>Status:</b> {escape(value.production.status.value)}</li></ul></article><article class="ai-card"><h3>Positional Context</h3><ul><li><b>Dynasty Rank:</b> {value.positional.dynasty_rank}</li><li><b>Weekly Rank:</b> {value.positional.weekly_rank}</li><li><b>Tier:</b> {escape(value.positional.tier)}</li><li><b>Scarcity:</b> {value.positional.scarcity}/100</li><li><b>Replacement Gap:</b> {value.positional.replacement_gap:+.2f}</li></ul><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{"".join(f"<li>{escape(item)}</li>" for item in value.evidence)}</ul></details></article></section>'''
+        integrated = f'''<p class="muted"><b>Calibration:</b> {calibration}. {escape(warning)}</p><section class="ai-sections"><article class="ai-card"><h3>Independent Evidence · Market price 0–1000</h3><ul><li><b>DTOS Intrinsic:</b> {_number(value.dtos_dynasty.value)}</li><li><b>Market Consensus:</b> {value.market_consensus.value if value.market_consensus.value is not None else "Unavailable"} ({escape(value.market_consensus.status.value)})</li><li><b>Normalized Market Range:</b> {escape(market_range)}</li><li><b>Canonical Value Gap:</b> {value.value_gap if value.value_gap is not None else "Unavailable"}</li><li><b>Win-Now / Rebuild:</b> {_number(value.contender.value)} / {_number(value.rebuilder.value)}</li><li><b>Liquidity (0–100):</b> {_number(value.trade_liquidity.value)}</li><li><b>Posture:</b> {escape(value.market_posture)}</li><li><b>Provider Evidence:</b> {escape(providers)}</li></ul></article><article class="ai-card"><h3>Weekly Outlook · {escape(projection.status.value)}</h3><ul><li><b>Projection:</b> {_number(projection.projected_points)}</li><li><b>Floor / Median / Ceiling:</b> {_number(projection.floor)} / {_number(projection.median)} / {_number(projection.ceiling)}</li><li><b>Role:</b> {escape(value.lineup.role)}</li><li><b>Above Replacement:</b> {_number(value.lineup.points_above_replacement, signed=True)}</li><li><b>Above Current Starter:</b> {_number(value.lineup.points_above_current_starter, signed=True)}</li><li><b>Source:</b> {escape(projection.source)}</li></ul></article><article class="ai-card"><h3>Production</h3><ul><li><b>Season Average:</b> {production if production is not None else "Unavailable"}</li><li><b>Consistency:</b> {value.production.consistency if value.production.consistency is not None else "Unavailable"}</li><li><b>Trend:</b> {escape(value.production.trend)}</li><li><b>Status:</b> {escape(value.production.status.value)}</li></ul></article><article class="ai-card"><h3>Positional Context</h3>{_scoped_rank_summary(value.positional.scoped_ranks)}<ul><li><b>Roster Dynasty Position Rank:</b> {_number(value.positional.dynasty_rank)}</li><li><b>Roster Weekly Position Rank:</b> {value.positional.weekly_rank if value.positional.weekly_rank is not None else "Unavailable"}</li><li><b>Tier:</b> {escape(value.positional.tier)}</li><li><b>Scarcity:</b> {_number(value.positional.scarcity)}</li><li><b>Replacement Gap:</b> {_number(value.positional.replacement_gap, signed=True)}</li></ul><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{"".join(f"<li>{escape(item)}</li>" for item in value.evidence)}</ul></details></article></section>'''
         production_reason = value.production.limitations[0] if value.production.limitations else "No supported production-stat provider is configured."
         integrated = integrated.replace("Season Average:</b> Unavailable", f"Season Average:</b> {escape(production_reason)}")
         integrated = integrated.replace("Consistency:</b> Unavailable", f"Consistency:</b> {escape(production_reason)}")
