@@ -6,6 +6,10 @@ from datetime import datetime, timezone
 from statistics import mean, pstdev
 from threading import RLock
 from typing import Any
+from math import isfinite
+import re
+
+from .compatibility import comparison_identity, comparison_reasons
 
 from .models import (
     TREND_METHOD_VERSION, LeagueLiquidity, MarketTrend, TrendCheckpoint,
@@ -30,6 +34,10 @@ def _stamp(value: str) -> datetime:
 def _valid_temporal_observation(row: dict[str, Any]) -> bool:
     value = row.get("observed_at")
     if not isinstance(value, str) or not value.strip():
+        return False
+    # Season/week labels can be accepted by fromisoformat, but are not an
+    # observed market instant (for example legacy "2026-W01").
+    if not re.match(r"^\d{4}-\d{2}-\d{2}(?:$|[T ])", value):
         return False
     try:
         _stamp(value)
@@ -84,6 +92,7 @@ class MarketTrendService:
         self, asset_id: str, current_value: float | int | None, *, league_id: str | None = None,
         as_of: str | None = None, generation: str = "current", compact: bool = False,
         evidence: dict[str, Any] | None = None, current_evidence_at: str | None = None,
+        current_semantics: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         explicit_boundary = as_of is not None
         query_boundary = as_of or "9999-12-31T23:59:59+00:00"
@@ -95,6 +104,7 @@ class MarketTrendService:
             cache_key = (
                 asset_id, current_value, league_id, query_boundary, generation,
                 TREND_METHOD_VERSION,
+                repr(current_semantics),
             )
             with self._lock:
                 cached = self._cache.get(cache_key)
@@ -111,6 +121,12 @@ class MarketTrendService:
         )
         invalid_temporal_count = len(raw_observations) - len(observations)
         if explicit_boundary:
+            observations = [row for row in observations
+                            if _stamp(row["observed_at"]) <= _stamp(query_boundary)
+                            and (not row.get("known_at") or (
+                                _valid_temporal_observation({"observed_at": row["known_at"]})
+                                and _stamp(row["known_at"]) <= _stamp(query_boundary)))]
+        if explicit_boundary:
             boundary = query_boundary
         else:
             candidates = [
@@ -126,20 +142,43 @@ class MarketTrendService:
         cache_key = (
             asset_id, current_value, league_id, boundary, generation,
             TREND_METHOD_VERSION,
+            repr(current_semantics),
         )
         with self._lock:
             cached = self._cache.get(cache_key)
             if cached is not None:
                 self._cache.move_to_end(cache_key)
                 return cached.public(compact=compact)
-        # Current truth is used as the endpoint, never written back or substituted for history.
-        historical_values = [float(row["value"]) for row in observations]
-        values = historical_values + ([float(current_value)] if current_value is not None else [])
+        reasons = comparison_reasons(observations)
+        by_time: dict[datetime, float] = {}
+        for row in observations:
+            stamp, value = _stamp(row["observed_at"]), float(row["value"])
+            if not isfinite(value) or (stamp in by_time and by_time[stamp] != value):
+                reasons += ("TIME_ORDER_UNAVAILABLE",)
+            by_time[stamp] = value
+        reasons = tuple(dict.fromkeys(reasons))
+        # A bare current number has no proven comparison identity. Keep it as
+        # current evidence, but never silently append it to a historical series.
+        current_comparable = bool(
+            observations and current_value is not None and current_evidence_at
+            and isfinite(float(current_value))
+            and _valid_temporal_observation({"observed_at": current_evidence_at})
+            and _stamp(observations[-1]["observed_at"]) < _stamp(current_evidence_at) <= _stamp(boundary)
+            and comparison_identity(current_semantics or {}) is not None
+            and comparison_identity(current_semantics or {}) == comparison_identity(observations[-1])
+            and not comparison_reasons([observations[-1], current_semantics or {}])
+        )
+        historical_values = [] if reasons else [float(row["value"]) for row in observations]
+        values = historical_values + ([float(current_value)] if current_comparable and not reasons else [])
         direction, magnitude, volatility = self._direction(values)
+        if reasons:
+            direction = TrendDirection.NOT_COMPARABLE
         latest_age = None
         if observations:
             latest_age = max(0, (_stamp(boundary) - _stamp(observations[-1]["observed_at"])).days)
         score, confidence, coverage = self._confidence(observations, latest_age)
+        if reasons:
+            score, confidence, coverage = 0, "unavailable", "not_comparable"
         material = max(25.0, abs(values[0]) * 0.03) if values else 25.0
         ratio = abs(magnitude or 0) / material
         band = "unavailable" if magnitude is None else "small" if ratio < 1 else "moderate" if ratio < 3 else "large"
@@ -154,7 +193,7 @@ class MarketTrendService:
         milestones: dict[str, dict[str, Any]] = {}
         for label, reason in _MILESTONES.items():
             matching = [row for row in observations if reason in row.get("reason_codes", ())]
-            if matching and current_value is not None:
+            if matching and current_comparable and not reasons:
                 selected = matching[-1]
                 milestones[label] = {
                     "checkpoint_id": selected["observation_id"],
@@ -179,11 +218,13 @@ class MarketTrendService:
             volatility=volatility, volatility_band=volatility_band, milestones=milestones,
             event_context=event_context, checkpoints=checkpoints,
             league_liquidity=league_liquidity,
+            comparison_reasons=reasons,
             provenance={
                 "source": "step_2_global_market_memory", "provider_calls": 0,
                 "raw_history_scans": 0, "sparse_observations": True,
                 "invalid_temporal_evidence_count": invalid_temporal_count,
                 "undated_observations_excluded_from_chronology": invalid_temporal_count,
+                "current_endpoint_comparable": current_comparable and not reasons,
             },
         )
         with self._lock:

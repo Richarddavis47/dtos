@@ -1,3 +1,18 @@
+# DTOS v1.17.1 - Sparse Market Trend Compatibility
+
+Narrow immutable correction for the Batch 3 production acceptance blocker.
+The sparse trend reader discarded metadata, allowing raw provider prices and
+legacy blended values to produce false volatility. Comparisons now require
+explicit matching concept, scale, format and methodology, valid time ordering
+and historical knowledge admission. Unproven legacy records remain unchanged
+as individual evidence, not numerical trends. Unlabeled current values cannot
+silently become historical endpoints. Market/API surfaces expose not-comparable
+states and structured boundary reasons.
+
+No historical rewrite, conversion, threshold, infrastructure, authentication,
+projection or valuation change. Production acceptance remains pending.
+Current Visual, DINS and Mirror remain retired. Batch 4 is not started.
+
 # DTOS v1.17.0 - Player and Market Evidence Intelligence (candidate)
 
 Batch 3 separates source-specific Market evidence, demonstrated production,

@@ -52,6 +52,20 @@ def _value(
     return str(layer.get("reason") or "Insufficient DTOS evidence")
 
 
+def _trend_boundary_notice(trend: dict[str, Any]) -> str:
+    reasons = trend.get("comparison_reasons") or ()
+    if not reasons:
+        return ""
+    label = ("Methodology / semantic boundary" if "METHODOLOGY_VERSION_CHANGED" in reasons
+             else "Comparable Market history unavailable")
+    return (
+        f'<p class="evidence-unavailable"><b>{label}.</b> '
+        'Historical observations are preserved, but their value concept, scale, '
+        'format, methodology or time ordering cannot support a numerical comparison. '
+        'This is not player movement.</p>'
+    )
+
+
 def create_market_router(
     *, require_data: RequireData, state: dict[str, Any], league_id: str,
     page: PageRenderer,
@@ -245,7 +259,7 @@ def create_market_router(
                     generation=market.semantic_generation, compact=True,
                     evidence=evidence.get(asset_id),
                 )
-        comparable = [row for row in candidates if (row.get("market_trend") or {}).get("direction") != "insufficient_evidence"]
+        comparable = [row for row in candidates if (row.get("market_trend") or {}).get("direction") in {"rising", "falling", "stable", "volatile"}]
         risers = sorted(
             (row for row in comparable if row["market_trend"]["direction"] == "rising"),
             key=lambda row: (row["market_trend"].get("magnitude") or 0, str(row["asset_id"])), reverse=True,
@@ -375,13 +389,14 @@ def create_market_router(
                     for name, row in trend["milestones"].items()
                 )
                 trend_html = f'''<section class="card"><p class="eyebrow">Observed Market Trend</p><h3>{escape(str(trend["direction"]).replace("_", " ").upper())} · {escape(trend["confidence"].upper())} CONFIDENCE</h3><p>{trend["checkpoint_count"]} meaningful Step 2 checkpoints · {escape(trend["magnitude_band"])} movement · observed range {available(trend["observed_low"])}–{available(trend["observed_high"])}</p>{f'<ul>{milestone_html}</ul>' if milestone_html else '<p class="muted">No supported milestone comparison is available yet.</p>'}<p class="muted">Sparse observed checkpoints; no daily values are inferred.</p></section>'''
+                trend_html += _trend_boundary_notice(trend)
                 expanded = f'''<section class="card" id="selected-asset" tabindex="-1"><p class="eyebrow">Expanded Asset</p><h2>{escape(asset["display_name"])}</h2><p>{escape(str(asset.get("position") or asset["asset_type"]))} · {escape(str(asset.get("nfl_team") or "No NFL team"))}</p>{value_html}<p><b>DTOS view:</b> {escape(recommendation["primary_reason"])}</p><p><a href="{escape(asset["canonical_url"])}">Open canonical dossier</a> · <a href="{trade_href}">Trade Intelligence</a></p><details><summary>Why?</summary><p>Decision confidence: {escape(available(recommendation.get("confidence"), reason="Unavailable"))}</p><p>Historical availability: {escape(asset["historical_availability"])}</p><p>Missing evidence: {escape(", ".join(recommendation["missing_evidence"]) or "None reported")}</p></details><details class="technical-details"><summary>Technical Details</summary><p>Asset: <code>{escape(asset["asset_id"])}</code></p><p>Brain snapshot: <code>{escape(recommendation["brain_snapshot_id"])}</code></p><p>Market generation: <code>{escape(detail["market_generation"])}</code></p><p>Valuation generation: <code>{escape(str(detail.get("valuation_generation") or "Unavailable"))}</code></p><p>Historical dataset: <code>{escape(detail["historical_dataset_version"])}</code></p><p>Historical evidence records: {len(history.get("events") or history.get("ownership_intervals") or [])}</p></details></section>{trend_html}{forward_html}'''
             def options(values: Any, selected_value: str) -> str:
                 return "".join(
                     f'<option value="{value}" {"selected" if selected_value == value else ""}>{label}</option>'
                     for value, label in values
                 )
-            trend_available = any((row.get("market_trend") or {}).get("direction") != "insufficient_evidence" for row in rows)
+            trend_available = any((row.get("market_trend") or {}).get("direction") in {"rising", "falling", "stable", "volatile"} for row in rows)
             movers_html = '<div class="card"><p>Meaningful sparse Step 2 movement evidence is available.</p><a href="/api/market/trending">Review movement evidence →</a></div>' if trend_available else '<div class="evidence-unavailable"><b>Market movement is not available yet.</b><br>At least two legitimate Step 2 observations are required.</div>'
             front_office_input = (
                 f'<input type="hidden" name="front_office" value="{front_office}">'

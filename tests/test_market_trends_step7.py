@@ -36,6 +36,10 @@ def _row(identity, stamp, value, reasons=(), providers=("A", "B")):
         "observation_id": identity, "observed_at": stamp, "value": value,
         "confidence": 80, "reason_codes": reasons, "providers": providers,
         "related_asset_ids": (),
+        "comparison_semantics": {
+            "value_concept": "external_market_price", "value_scale": "fixture-points",
+            "format_key": "fixture-12team-2qb-ppr", "methodology": "fixture-v1",
+        },
     }
 
 
@@ -73,6 +77,8 @@ class Step7MarketTrendTests(unittest.TestCase):
         ])
         result = MarketTrendService(reader).trend_for_asset(
             "player:1", 200, as_of="2026-09-01T00:00:00+00:00",
+            current_evidence_at="2026-09-01T00:00:00+00:00",
+            current_semantics=_row("current", "", 200),
         )
         self.assertEqual((result["observed_low"], result["observed_high"]), (100, 180))
         self.assertEqual(result["milestones"]["season_start"]["change"], 100)
@@ -125,14 +131,17 @@ class Step7MarketTrendTests(unittest.TestCase):
         first = service.trend_for_asset(
             "player:1", 140, generation="g1",
             current_evidence_at="2026-03-01T00:00:00+00:00",
+            current_semantics=_row("current", "", 140),
         )
         unrelated_generation = service.trend_for_asset(
             "player:1", 140, generation="g2",
             current_evidence_at="2026-03-01T00:00:00+00:00",
+            current_semantics=_row("current", "", 140),
         )
         advanced = service.trend_for_asset(
             "player:1", 150, generation="g3",
             current_evidence_at="2026-04-01T00:00:00+00:00",
+            current_semantics=_row("current", "", 150),
         )
         self.assertEqual(first["as_of"], unrelated_generation["as_of"])
         self.assertEqual(advanced["as_of"], "2026-04-01T00:00:00+00:00")
@@ -180,6 +189,8 @@ class Step7MarketTrendTests(unittest.TestCase):
         reader = _Reader([_row("a", "2026-01-01T00:00:00+00:00", 100), _row("b", "2026-02-01T00:00:00+00:00", 120)])
         result = MarketTrendService(reader).trend_for_asset(
             "player:1", 140, compact=True, as_of="2026-09-01T00:00:00+00:00",
+            current_evidence_at="2026-09-01T00:00:00+00:00",
+            current_semantics=_row("current", "", 140),
         )
         self.assertNotIn("checkpoints", result)
         self.assertNotIn("league_liquidity", result)
@@ -214,6 +225,7 @@ print(json.dumps(trend.public(compact=True), separators=(',', ':')))
                 "asset_id", "direction", "magnitude", "magnitude_band",
                 "horizon", "confidence", "checkpoint_count", "as_of",
                 "schema_version", "method_version",
+                "comparison_reasons",
             ),
         )
 

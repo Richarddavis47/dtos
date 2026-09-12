@@ -821,6 +821,20 @@ class IntelligenceCheckpointStore:
                 item = {
                     "observation_id": key[1], "observed_at": str(row["observed_at"]),
                     "value": float(row["canonical_value"]), "confidence": int(row["confidence"]),
+                    "model_version": row["model_version"],
+                    "normalization_version": row["normalization_version"],
+                    "market_context_id": row["market_context_id"],
+                    "known_at": row["created_at"],
+                    # Explicit producer metadata only; legacy raw/blended values
+                    # cannot acquire a new scale/format merely by being read.
+                    "comparison_semantics": (
+                        provider_rows[0].get("metadata", {}).get("comparison_semantics")
+                        if provider_rows and all(
+                            value.get("metadata", {}).get("comparison_semantics")
+                            == provider_rows[0].get("metadata", {}).get("comparison_semantics")
+                            for value in provider_rows
+                        ) else None
+                    ),
                     "providers": tuple(sorted({str(value.get("provider")) for value in provider_rows if value.get("provider")})),
                     "reason_codes": set(), "related_asset_ids": set(),
                 }
