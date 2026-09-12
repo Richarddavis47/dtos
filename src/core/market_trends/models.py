@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Any
 
 TREND_SCHEMA_VERSION = "market-trend-1"
-TREND_METHOD_VERSION = "sparse-event-market-trend-1"
+TREND_METHOD_VERSION = "sparse-event-market-trend-2"
 COMPACT_TREND_FIELDS = (
     "asset_id",
     "direction",
@@ -18,6 +18,7 @@ COMPACT_TREND_FIELDS = (
     "as_of",
     "schema_version",
     "method_version",
+    "comparison_reasons",
 )
 
 
@@ -27,6 +28,7 @@ class TrendDirection(str, Enum):
     STABLE = "stable"
     VOLATILE = "volatile"
     INSUFFICIENT = "insufficient_evidence"
+    NOT_COMPARABLE = "not_comparable"
 
 
 @dataclass(frozen=True)
@@ -75,6 +77,7 @@ class MarketTrend:
     checkpoints: tuple[TrendCheckpoint, ...] = ()
     league_liquidity: LeagueLiquidity | None = None
     provenance: dict[str, Any] = field(default_factory=dict)
+    comparison_reasons: tuple[str, ...] = ()
     schema_version: str = TREND_SCHEMA_VERSION
     method_version: str = TREND_METHOD_VERSION
 

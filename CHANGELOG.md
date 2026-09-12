@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.17.1 - Sparse Market Trend Compatibility
+
+- Preserve method, normalization, context and knowledge identity through the sparse Market reader.
+- Reject incompatible or unproven concept/scale/format/methodology before calculating movement, volatility, ranges or milestones.
+- Keep historical records unchanged and distinguish semantic boundaries from player movement.
+- Do not append unlabeled current scalars to history; retain explicitly compatible trends.
+- Preserve v1.17.0 architecture. Production acceptance remains pending; Batch 4 is not started.
+
 # v1.17.0 - Player and Market Evidence Intelligence (candidate)
 
 - Separate external Market prices from supported intrinsic evidence profiles; unsupported long-term scalars remain unavailable.
