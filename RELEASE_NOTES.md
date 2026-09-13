@@ -1,4 +1,15 @@
-# DTOS v1.18.0 - FOIS and Pick Evidence Intelligence (candidate)
+# DTOS v1.18.1 - Pick Evidence Cache Upgrade
+
+Corrects the production upgrade case where a healthy pre-Batch-4 player cache
+deferred missing Pick Market evidence until its next daily refresh. Preparation
+now fetches an absent pick family once; a successfully fetched empty family
+remains valid and does not trigger repeated requests. Existing provider formats,
+quote identities, source freshness and failure isolation remain unchanged.
+
+v1.18.0 remains immutable. Batch 4 production acceptance and restart are pending.
+No infrastructure, schema, authentication or retired visual-system changes.
+
+## Previous release: DTOS v1.18.0 - FOIS and Pick Evidence Intelligence
 
 Batch 4 reconciles historical Results and manager tenure, preserves decision-time
 process separately from later outcomes, and exposes category quality only where
