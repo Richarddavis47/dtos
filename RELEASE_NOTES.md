@@ -1,4 +1,19 @@
-# DTOS v1.17.1 - Sparse Market Trend Compatibility
+# DTOS v1.17.2 - Single-Provider Market Coverage
+
+Corrects the shared Market availability boundary: the presence of an incompatible
+secondary provider no longer erases a valid FantasyCalc price. The configured
+FantasyCalc 12-team/2QB/PPR reference is selected explicitly, not averaged or
+converted from DynastyProcess. Independent compatible sources may still form
+consensus. Single-provider evidence retains its existing confidence semantics.
+
+Historical-only, explicitly expired/invalid/ambiguous and incompatible feed rows
+remain unavailable. No intrinsic, projection, historical or pick fallback is added.
+Selection changes carry a methodology boundary. Historical observations, pricing
+normalization, infrastructure, authentication and Pick Intelligence are unchanged.
+
+Production coverage acceptance pending. Batch 4 is not started.
+
+## Previous release: DTOS v1.17.1 - Sparse Market Trend Compatibility
 
 Narrow immutable correction for the Batch 3 production acceptance blocker.
 The sparse trend reader discarded metadata, allowing raw provider prices and

@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.17.2 - Single-Provider Market Coverage
+
+- Preserve the valid FantasyCalc reference when secondary Market formats cannot join consensus; never average incompatible formats.
+- Keep single-source confidence unchanged, preserve separate provider evidence, and reject explicitly historical, invalid, expired, ambiguous or incompatible current quotes.
+- Version the Market selection boundary so repaired availability is not misrepresented as organic player movement.
+- Add read-only aggregate coverage diagnostics and active Trade/valuation consistency regressions. Pick Intelligence and Batch 4 remain untouched.
+
 # v1.17.1 - Sparse Market Trend Compatibility
 
 - Preserve method, normalization, context and knowledge identity through the sparse Market reader.

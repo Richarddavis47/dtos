@@ -137,7 +137,7 @@ class MarketIntelligence:
             updated_at=envelope.timestamp,
             provider_confidence=envelope.confidence,
         ) if raw is not None else None
-        if normalized is not None and normalized.method == "unsupported_provider":
+        if normalized is not None and (normalized.method == "unsupported_provider" or normalized.confidence_score <= 0):
             # A readable raw quote is not a comparable dynasty value. In
             # particular, ADP and unsupported scales must not enter as zero.
             return ProviderQuote(

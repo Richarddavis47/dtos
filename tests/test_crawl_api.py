@@ -109,8 +109,8 @@ class CrawlApiTests(unittest.TestCase):
         payload = self.client.get("/api/crawl/teams").json()
         self.assertEqual(payload["valuation_schema_version"], "1.0")
         valuation = payload["data"]["teams"][0]["roster"][0]["valuation"]
-        self.assertIsNone(valuation["market_value"])
-        self.assertEqual(valuation["calibration_status"], "insufficient_data")
+        self.assertEqual(valuation["market_value"], 600)  # Valid single-provider FC price.
+        self.assertEqual(valuation["calibration_status"], "partially_calibrated")
         self.assertNotIn("raw_value", valuation)
 
     def test_team_intelligence_is_shared_across_crawl_contracts(self) -> None:

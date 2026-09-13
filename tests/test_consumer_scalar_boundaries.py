@@ -33,9 +33,10 @@ class ConsumerScalarBoundaryTests(unittest.TestCase):
         for field in ('intrinsic_dtos_value', 'league_adjusted_value', 'contender_value',
                       'rebuilder_value', 'future_value', 'current_production_value', 'liquidity_score'):
             self.assertIsNone(row['layers'][field]['value'], field)
-        self.assertIsNone(row['layers']['market_value']['value'])  # Unproven FC/DP format compatibility.
+        self.assertEqual(row['layers']['market_value']['value'], 750)  # FC alone; no incompatible averaging.
         data['market_data']['providers'].pop('DynastyProcess')
-        self.assertIsNotNone(ValuationUniverse(data, state).by_id['player:1']['layers']['market_value']['value'])
+        self.assertEqual(ValuationUniverse(data, state).by_id['player:1']['layers']['market_value']['value'],
+                         row['layers']['market_value']['value'])
         self.assertIsNone(row['comparison']['difference_percent'])
 
     def test_checkpoint_keeps_adjusted_and_intrinsic_independent_including_zero(self):

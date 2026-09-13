@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 
 from src.core.valuation.consensus import build_canonical_consensus
-from src.core.valuation.models import CalibrationStatus, NormalizedValuation
+from src.core.valuation.models import CalibrationStatus, CanonicalConsensus, NormalizedValuation
 from src.core.valuation.normalization import normalize_cached_value, prepare_distribution
 
 
@@ -121,6 +121,11 @@ def cached_market_consensus(
     market_data: dict[str, Any],
     player_ids: Iterable[str],
 ) -> dict[str, tuple[int | None, int, CalibrationStatus]]:
+    return {key: (value.market_consensus, value.confidence_score, value.calibration_status)
+            for key, value in cached_market_results(market_data, player_ids).items()}
+
+
+def cached_market_results(market_data: dict[str, Any], player_ids: Iterable[str]) -> dict[str, CanonicalConsensus]:
     """Normalize cached public providers once for downstream intelligence."""
     providers = market_data.get("providers") or {}
     supported = tuple(
@@ -139,7 +144,7 @@ def cached_market_consensus(
         )
         for provider in supported
     }
-    result: dict[str, tuple[int | None, int, CalibrationStatus]] = {}
+    result: dict[str, CanonicalConsensus] = {}
     for player_id in player_ids:
         normalized: list[NormalizedValuation] = []
         for provider in supported:
@@ -163,9 +168,5 @@ def cached_market_consensus(
             tuple(normalized),
             expected_providers=max(1, len(supported)),
         )
-        result[str(player_id)] = (
-            consensus.market_consensus,
-            consensus.confidence_score,
-            consensus.calibration_status,
-        )
+        result[str(player_id)] = consensus
     return result

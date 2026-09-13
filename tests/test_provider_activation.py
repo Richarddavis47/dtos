@@ -69,8 +69,9 @@ class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["providers"]["DynastyProcess"]["9509"]["value"], "8262")
         self.assertEqual(result["provider_status"]["FantasyCalc"]["records_retrieved"], 1)
         report = build_data_platform().player_report("9509", {"players": self.players, "market_data": result})
-        # Readable provider prices are not proof of format compatibility.
-        self.assertIsNone(report["consensus"]["value"])
+        # Incompatible DP cannot erase valid FC or contribute to its price/agreement.
+        self.assertEqual(report["consensus"]["value"], 851)
+        self.assertIsNone(report["consensus"]["agreement"])
         self.assertIsNone(result["providers"]["FantasyCalc"]["9509"]["source_updated_at"])
         self.assertEqual(result["providers"]["FantasyCalc"]["9509"]["retrieved_at"],
                          result["providers"]["FantasyCalc"]["9509"]["updated_at"])

@@ -17,8 +17,9 @@ class MarketConsensusIndependenceTests(unittest.TestCase):
         self.assertEqual(single['evidence_state'], 'SINGLE-PROVIDER MARKET')
         self.assertEqual(single['confidence'], 80)
         combined = asdict(build_consensus('p1', (a, b), ('FantasyCalc', 'DynastyProcess')))
-        self.assertIsNone(combined['value'])
-        self.assertEqual(combined['evidence_state'], 'MARKET UNAVAILABLE')
+        self.assertEqual(combined['value'], single['value'])
+        self.assertEqual(combined['confidence'], single['confidence'])
+        self.assertEqual(combined['evidence_state'], 'SINGLE-PROVIDER MARKET')
         self.assertEqual(len(combined['quotes']), 2)
 
     def test_market_history_requires_comparable_ordered_boundaries(self):
@@ -86,9 +87,9 @@ class MarketConsensusIndependenceTests(unittest.TestCase):
         a = normalize_value('FantasyCalc', 6000)
         b = normalize_value('DynastyProcess', 5000)
         result = build_canonical_consensus((a, b))
-        self.assertIsNone(result.market_consensus)
-        self.assertIn('compatibility', result.warning)
-        self.assertEqual(result.evidence_state, 'MARKET UNAVAILABLE')
+        self.assertEqual(result.market_consensus, a.normalized_value)
+        self.assertIn('excluded, not averaged', result.warning)
+        self.assertEqual(result.evidence_state, 'SINGLE-PROVIDER MARKET')
         self.assertEqual(build_canonical_consensus((a,)).confidence_score, a.confidence_score)
         self.assertEqual(build_canonical_consensus((a,)).evidence_state, 'SINGLE-PROVIDER MARKET')
 
@@ -96,4 +97,4 @@ class MarketConsensusIndependenceTests(unittest.TestCase):
         a = replace(normalize_value('FantasyCalc', 6000), compatibility_key='verified-test-format')
         b = replace(normalize_value('DynastyProcess', 5000), compatibility_key=a.compatibility_key)
         self.assertEqual(build_canonical_consensus((a, b)).evidence_state, 'MULTI-PROVIDER CONSENSUS')
-        self.assertIsNone(build_canonical_consensus((a, replace(b, compatibility_key='other'))).market_consensus)
+        self.assertEqual(build_canonical_consensus((a, replace(b, compatibility_key='other'))).market_consensus, a.normalized_value)
