@@ -81,23 +81,19 @@ class ValuationUniverseTests(unittest.TestCase):
         self.assertIsNone(layers["intrinsic_dtos_value"]["value"])
         self.assertIn("not validated", layers["intrinsic_dtos_value"]["reason"])
 
-    def test_pick_receives_distinct_contender_and_rebuilder_layers(self) -> None:
+    def test_pick_does_not_receive_unsupported_legacy_utility_scalars(self) -> None:
         layers = self.universe.by_id["pick:2027:1:4"]["layers"]
-        self.assertIsNotNone(layers["contender_value"]["value"])
-        self.assertIsNotNone(layers["rebuilder_value"]["value"])
-        self.assertNotEqual(
-            layers["contender_value"]["value"],
-            layers["rebuilder_value"]["value"],
-        )
+        for key in ('contender_value', 'rebuilder_value', 'intrinsic_dtos_value', 'market_value'):
+            self.assertIsNone(layers[key]['value'])
 
     def test_status_audits_layer_coverage_and_missing_causes(self) -> None:
         status = self.universe.status()
-        self.assertEqual(status["layer_coverage"]["intrinsic_dtos_value"], 1)
-        self.assertEqual(status["layer_coverage"]["contender_value"], 1)
-        self.assertEqual(status["layer_coverage"]["rebuilder_value"], 1)
+        self.assertEqual(status["layer_coverage"]["intrinsic_dtos_value"], 0)
+        self.assertEqual(status["layer_coverage"]["contender_value"], 0)
+        self.assertEqual(status["layer_coverage"]["rebuilder_value"], 0)
         self.assertEqual(status["layer_coverage"]["all_four"], 0)
         reasons = status["missing_layer_reasons"]["intrinsic_dtos_value"]
-        self.assertEqual(sum(reasons.values()), 2)
+        self.assertEqual(sum(reasons.values()), 3)
         self.assertTrue(any("not validated" in reason for reason in reasons))
 
     def test_provider_abstraction_includes_available_and_unavailable_sources(self) -> None:

@@ -71,7 +71,8 @@ class AssetIntelligenceTests(unittest.TestCase):
         )
         self.assertEqual(report.round, 1)
         self.assertTrue(report.dynasty_value.evidence)
-        self.assertEqual(report.market_value.score, 50)
+        self.assertIsNone(report.dynasty_value.score)
+        self.assertIsNone(report.market_value.score)
         self.assertIn("slot unknown", report.expected_range)
         self.assertTrue(report.time_horizon)
         self.assertTrue(report.recommendation.evidence)
@@ -80,7 +81,8 @@ class AssetIntelligenceTests(unittest.TestCase):
         players = evaluate_player_portfolio((self.player,), self.contender)
         picks = evaluate_pick_portfolio(({"season": 2027, "round": 1},), self.contender)
         self.assertIn("No supported aggregate", players.summary)
-        self.assertIn("Individual pick values", {item.factor for item in picks.evidence})
+        self.assertIsNone(picks.score)
+        self.assertIn("Pick inventory", {item.factor for item in picks.evidence})
 
 
 if __name__ == "__main__":

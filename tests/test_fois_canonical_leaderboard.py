@@ -48,7 +48,10 @@ def _data(count: int = 10) -> dict[str, object]:
              "owner": f"GM {index}", "team_name": f"Franchise {index}", "players": []}
             for index in range(1, count + 1)
         ],
-        "fois_history": {str(index): _history(5 + index % 6) for index in range(1, count + 1)},
+        "fois_history": {str(index): {
+            **_history(5 + index % 6),
+            "owner_by_season": {str(year): f"owner-{index}" for year in range(2021, 2026)},
+        } for index in range(1, count + 1)},
     }
 
 
@@ -85,6 +88,7 @@ class CanonicalFOISLeaderboardTests(unittest.IsolatedAsyncioTestCase):
         first = _data(1)
         changed = _data(1)
         changed["fois_history"]["1"] = _history(12)
+        changed["fois_history"]["1"]["owner_by_season"] = first["fois_history"]["1"]["owner_by_season"]
         with patch.dict(os.environ, {"DTOS_FOIS_ENABLED": "1"}):
             await self.service.generate(first)
             await self.service.generate(changed)
@@ -127,7 +131,9 @@ class CanonicalFOISLeaderboardTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(all(all(metric.status != MetricStatus.ACTIVE for metric in row.metric_scores)
                             for row in missing))
         self.assertLess(score.supported_weight, 100)
-        self.assertGreater(score.overall_score or 0, 0)
+        self.assertIsNone(score.overall_score)  # Results alone are not overall FOIS.
+        self.assertIsNotNone(next(row for row in score.category_scores
+                                 if row.category_key == 'results').normalized_score)
 
     def test_confidence_and_completeness_are_distinct_and_incomplete_is_not_perfect(self) -> None:
         score = FOISEngine().evaluate(FOISFacts(

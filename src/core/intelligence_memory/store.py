@@ -18,6 +18,7 @@ from .models import (
     PickLineage, ProvenanceType, SourceObservation,
 )
 from .market_memory import MarketObservationMaterialityPolicy, semantic_fingerprint
+from .market import supported_quote_identity
 
 SCHEMA_VERSION = 4
 
@@ -892,10 +893,15 @@ class IntelligenceCheckpointStore:
         from src.core.historical_intelligence.models import GlobalMarketCheckpoint
 
         bounded = max(1, min(int(limit), 500))
+        # Historical roster facts carry Sleeper's numeric player ID. Durable
+        # global observations use the typed player namespace. This is an exact
+        # identity alias, never a pick/name/format conversion.
+        requested = str(asset_id)
+        canonical_id = f"player:{requested}" if requested.isdigit() else requested
         rows = connection.execute(
             """SELECT * FROM global_market_observations
-            WHERE asset_id=? ORDER BY observed_at DESC LIMIT ?""",
-            (str(asset_id), bounded),
+            WHERE asset_id IN (?,?) ORDER BY observed_at DESC LIMIT ?""",
+            (requested, canonical_id, bounded),
         ).fetchall()
         identities = [str(row["observation_id"]) for row in rows]
         reason_rows = connection.execute(
@@ -921,6 +927,8 @@ class IntelligenceCheckpointStore:
         result = []
         for raw in reversed(rows):
             observation = self._decode_observation(raw)
+            if any(not supported_quote_identity(item) for item in observation.provider_evidence):
+                continue
             provider_rows = tuple(item.__dict__ for item in observation.provider_evidence)
             providers = sorted({item.provider for item in observation.provider_evidence})
             result.append(GlobalMarketCheckpoint(

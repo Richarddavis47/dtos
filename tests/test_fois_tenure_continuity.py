@@ -33,7 +33,7 @@ class FOISTenureContinuityTests(unittest.TestCase):
                 "fois_history": {},
             }
             initial = service._generate_sync(data)[0]
-            data["fois_history"] = {"1": {"seasons": [
+            data["fois_history"] = {"1": {"owner_by_season": {str(y): "owner" for y in range(2022, 2026)}, "seasons": [
                 {"season": year, "wins": 9, "losses": 5,
                  "finish": 2, "league_size": 10, "complete": True}
                 for year in range(2022, 2026)
@@ -82,7 +82,7 @@ class FOISTenureContinuityTests(unittest.TestCase):
             }
             initial = service._generate_sync(data)[0]
             self.assertIsNone(initial.overall_score)
-            data["fois_history"] = {"1": {"seasons": [
+            data["fois_history"] = {"1": {"owner_by_season": {str(y): "owner" for y in range(2022, 2026)}, "seasons": [
                 {"season": year, "wins": 9, "losses": 5,
                  "finish": 2, "league_size": 10, "complete": True}
                 for year in range(2022, 2026)
@@ -91,7 +91,11 @@ class FOISTenureContinuityTests(unittest.TestCase):
             current = repository.score_for_gm(
                 "secondary", "secondary:gm:owner", FOIS_MODEL_VERSION,
             )
-            self.assertIsNotNone(published.overall_score)
+            # Historical Results must become reachable without masquerading
+            # as an overall score when decision categories remain unavailable.
+            self.assertIsNone(published.overall_score)
+            self.assertIsNotNone(next(c for c in published.category_scores
+                                      if c.category_key == 'results').normalized_score)
             self.assertEqual(current.score_key, published.score_key)
             self.assertEqual(current.seasons_evaluated, 4)
             self.assertEqual(len(repository.league("secondary", FOIS_MODEL_VERSION)), 1)

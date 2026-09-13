@@ -191,20 +191,25 @@ class FOISService:
             rows = history.get(roster_id) or {}
             owner_by_season = rows.get("owner_by_season") or {}
             current_owner = identity.owner_id
+            from src.core.fois.attribution import belongs_to_manager
+
+            def attributed(record):
+                return belongs_to_manager(record, current_owner, owner_by_season)
+
             seasons = tuple(
                 SeasonResult(**row) for row in rows.get("seasons") or ()
-                if current_owner is None or owner_by_season.get(str(row.get("season"))) in {None, current_owner}
+                if attributed(row)
             )
-            all_trades = tuple(TradeFact(**row) for row in rows.get("trades") or ())
-            ownership_attributed = any(row.owner_id for row in all_trades)
             trades = tuple(
-                row for row in all_trades
-                if not ownership_attributed
-                or (current_owner is not None and row.owner_id == current_owner)
+                TradeFact(**row) for row in rows.get("trades") or () if attributed(row)
             )
-            drafts = tuple(DraftFact(**row) for row in rows.get("drafts") or ())
-            waivers = tuple(WaiverFact(**row) for row in rows.get("waivers") or ())
-            roster_metrics = dict(rows.get("roster_metrics") or {})
+            drafts = tuple(DraftFact(**row) for row in rows.get("drafts") or () if attributed(row))
+            waivers = tuple(WaiverFact(**row) for row in rows.get("waivers") or () if attributed(row))
+            roster_metrics = (
+                dict(rows.get("roster_metrics") or {})
+                if current_owner and str(rows.get("roster_metrics_owner_id") or "") == str(current_owner)
+                else {}
+            )
             asset_ids = tuple(
                 str(player.get("id") or player.get("player_id"))
                 for player in team.get("players") or ()
@@ -252,6 +257,11 @@ class FOISService:
                 evidence=checkpoint_evidence,
                 warnings=(
                     f"Results source: {history_source}; unsupported categories remain unavailable.",
+                    "GM attribution excludes unknown or other-manager evidence: "
+                    + ", ".join(
+                        f"{key}={sum(not attributed(record) for record in rows.get(key) or ())}"
+                        for key in ("seasons", "trades", "drafts", "waivers")
+                    ) + ". Season-owner evidence is not proof of an intra-season handover timestamp.",
                     f"Permanent checkpoint evidence: {checkpoint_coverage['status']} "
                     f"({checkpoint_coverage['completeness']}% definitive).",
                     "Placement evidence: "

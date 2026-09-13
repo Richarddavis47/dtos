@@ -1,10 +1,12 @@
 """Focused real Chromium journeys through authenticated local Trade APIs."""
 import base64
 import unittest
+from datetime import datetime, timezone
 from urllib.parse import urlsplit
 
 from playwright.sync_api import sync_playwright
 import tests.test_trade_workspace_batch1 as boundary
+from src.core.valuation.normalization import prepare_market_normalization
 
 
 class TradeWorkspaceBrowserTests(unittest.TestCase):
@@ -17,6 +19,7 @@ class TradeWorkspaceBrowserTests(unittest.TestCase):
             try:
                 for width in (390, 1280):
                     with self.subTest(width=width):
+                        fixture.data['market_data'].pop('pick_quotes', None)
                         page = browser.new_page(viewport={"width": width, "height": 900})
                         page.set_default_timeout(8000)
                         errors = []
@@ -51,6 +54,20 @@ class TradeWorkspaceBrowserTests(unittest.TestCase):
                         self.assertIn("4 assets", page.locator("#trade-tray-text").inner_text())
                         page.locator("#trade-tray-view").click()
                         self.assertTrue(page.locator("#trade-review").is_visible())
+                        page.get_by_role("button", name="Evaluate Trade", exact=True).click()
+                        page.get_by_text("Market Balance is unavailable", exact=False).wait_for()
+                        self.assertIn("4 assets", page.locator("#trade-tray-text").inner_text())
+                        # Publish legitimate fixture-only external evidence,
+                        # then verify the successful valuation interaction too.
+                        fixture.data['market_data']['pick_quotes'] = {'FantasyCalc': [{
+                            'provider': 'FantasyCalc', 'year': 2027, 'round': 1,
+                            'pick_type': 'generic_round', 'market_format': 'fc:12:2qb:ppr',
+                            'value_scale': 'fc_native', 'value': 3000, 'confidence': 85,
+                            'availability': 'current', 'retrieved_at': datetime.now(timezone.utc).isoformat(),
+                            'source_updated_at': None}]}
+                        prepare_market_normalization(fixture.data['market_data'])
+                        page.reload()
+                        page.locator('#trade-tray:not([hidden])').wait_for()
                         page.get_by_role("button", name="Evaluate Trade", exact=True).click()
                         page.locator("#trade-result h3").wait_for()
                         self.assertNotIn("failed", page.locator("#trade-result").inner_text().lower())

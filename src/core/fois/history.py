@@ -72,14 +72,20 @@ def _load_results_history(
     base_history_ms = round((perf_counter() - started) * 1000, 3)
     numeric_placement_seasons: set[int] = set()
     owners: dict[str, set[str]] = defaultdict(set)
-    owner_by_roster_season: dict[tuple[str, int], str] = {}
+    owner_by_roster_season: dict[tuple[str, int], str | None] = {}
     for row in identities:
         roster_id = str(row["payload"].get("sleeper_roster_id") or "")
         owner_id = str(row["payload"].get("owner_id") or "")
         if roster_id and owner_id:
             owners[roster_id].add(owner_id)
             if row.get("season") is not None:
-                owner_by_roster_season[(roster_id, int(row["season"]))] = owner_id
+                key = (roster_id, int(row["season"]))
+                if key in owner_by_roster_season and owner_by_roster_season[key] != owner_id:
+                    # Conflicting observations do not prove a handover time.
+                    # Never choose an owner by record iteration order.
+                    owner_by_roster_season[key] = None
+                else:
+                    owner_by_roster_season[key] = owner_id
     records: dict[tuple[str, int], list[int]] = defaultdict(lambda: [0, 0])
     for row in matchups:
         payload = row["payload"]
@@ -116,6 +122,19 @@ def _load_results_history(
         finish_by_roster = {roster: place for place, roster in placements.items()}
         roster_number = int(roster_id)
         playoff_finish = finish_by_roster.get(roster_number)
+        # Canonical history records qualification independently of placement:
+        # a bye recipient or an unresolved placement is still a participant.
+        # Preserve the older payload only where the canonical field is absent.
+        def participants(key: str, legacy_key: str | None = None) -> set[int]:
+            values = playoff.get(key)
+            if values is None and legacy_key is not None:
+                values = playoff.get(legacy_key)
+            return {parsed for value in values or ()
+                    if (parsed := _positive_int(value)) is not None}
+
+        qualified = participants("qualified_roster_ids")
+        semifinalists = participants("semifinal_roster_ids", "final_four_roster_ids")
+        finalists = participants("championship_roster_ids")
         matchup_wins, matchup_losses = records[(roster_id, season)]
         histories[roster_id]["seasons"].append({
             "season": season,
@@ -125,12 +144,12 @@ def _load_results_history(
             "playoff_finish": (
                 str(playoff_finish) if playoff_finish is not None else None
             ),
-            "championship": playoff.get("champion_roster_id") == roster_number,
+            "championship": _positive_int(playoff.get("champion_roster_id")) == roster_number,
             "rebuilding": False,
             "league_size": league_size.get(season),
-            "playoff": playoff_finish is not None,
-            "final_four": roster_number in (playoff.get("final_four_roster_ids") or []),
-            "championship_game": playoff_finish in {1, 2},
+            "playoff": roster_number in qualified or playoff_finish is not None,
+            "final_four": roster_number in semifinalists,
+            "championship_game": roster_number in finalists or playoff_finish in {1, 2},
             "matchup_wins": matchup_wins if matchup_wins + matchup_losses else None,
             "matchup_losses": matchup_losses if matchup_wins + matchup_losses else None,
             "complete": (
@@ -282,7 +301,11 @@ def _load_results_history(
                 "championship_outlook_delta": None,
                 "partner_id": partners[0] if len(partners) == 1 else None,
                 "owner_id": owner_by_roster_season.get((str(roster_id), season)),
-                "process_evidence": process,
+                "process_evidence": {**process, "historical_process_dimensions": [
+                    {"name": item.name, "assessment": item.assessment,
+                     "evidence_available": item.evidence_available}
+                    for item in side.process.dimensions
+                ] if side is not None else None},
                 "process_score": (
                     process_scores.get(process_classification)
                     if side is not None else round(
@@ -316,6 +339,34 @@ def _load_results_history(
                 "season_phase": phase,
             })
     _, draft_picks = store.records(league_id, "draft_pick", limit=100_000)
+    def decision_market_references(asset_ids, occurred_at, *, details=False):
+        # Only reference existing canonical evidence. No provider requests,
+        # payload copies, current-value fallback, or synthesized timestamps.
+        from datetime import datetime
+        try:
+            boundary = datetime.fromisoformat(str(occurred_at).replace("Z", "+00:00"))
+            if boundary.tzinfo is None:
+                return ()
+        except ValueError:
+            return ()
+        references = []
+        for asset_id in sorted(set(str(value) for value in asset_ids if value)):
+            checkpoint = history_intelligence.nearest_market_checkpoint(asset_id, str(occurred_at))
+            if checkpoint is None:
+                continue
+            try:
+                observed = datetime.fromisoformat(checkpoint.occurred_at.replace("Z", "+00:00"))
+                if observed.tzinfo is None or observed > boundary:
+                    continue
+            except ValueError:
+                continue
+            references.append({'asset_id': asset_id, 'reference': checkpoint.checkpoint_id,
+                               'observed_at': checkpoint.occurred_at,
+                               'value': checkpoint.normalized_value,
+                               'context': (checkpoint.market_context_id, checkpoint.normalization_version)}
+                              if details else checkpoint.checkpoint_id)
+        return tuple(references)
+
     for row in draft_picks:
         payload = row["payload"]
         roster_id = str(payload.get("roster_id") or "")
@@ -325,11 +376,21 @@ def _load_results_history(
             "draft_id": str(payload.get("draft_id") or row["source_record_id"]),
             "season": int(row.get("season") or 0),
             "pick_number": payload.get("pick_no"),
+            "player_id": payload.get("player_id") or row.get("player_id"),
+            "draft_start_at": payload.get("draft_start_at"),
             "value_over_expected": None,
+            "owner_id": owner_by_roster_season.get((roster_id, int(row.get("season") or 0))),
+            "occurred_at": row.get("occurred_at"),
+            "decision_time_market_references": decision_market_references(
+                (payload.get("player_id") or row.get("player_id"),), row.get("occurred_at")),
         })
     _, transactions = store.records(league_id, "transaction", limit=100_000)
     for row in transactions:
         payload = row["payload"]
+        # The canonical transaction stream also contains trades and unsuccessful
+        # claims. Neither is an executed waiver/free-agent decision.
+        if payload.get("type") not in {"waiver", "free_agent"} or payload.get("status") != "complete":
+            continue
         season = int(row.get("season") or 0)
         transaction_id = str(row["source_record_id"])
         roster_ids = {
@@ -345,8 +406,62 @@ def _load_results_history(
                 "value_created": None,
                 "faab_efficiency": None,
                 "meaningful": bool(payload.get("adds") or payload.get("drops") or waiver_budget),
+                "owner_id": owner_by_roster_season.get((roster_id, season)),
+                "occurred_at": row.get("occurred_at"),
+                "adds": tuple(sorted(str(asset) for asset, owner in (payload.get("adds") or {}).items()
+                                     if str(owner) == roster_id)),
+                "drops": tuple(sorted(str(asset) for asset, owner in (payload.get("drops") or {}).items()
+                                      if str(owner) == roster_id)),
+                "transaction_type": payload.get("type"),
+                "faab_bid": (payload.get("settings") or {}).get("waiver_bid"),
+                "decision_time_market_references": decision_market_references(
+                    [asset for mapping in (payload.get("adds") or {}, payload.get("drops") or {})
+                     for asset, owner in mapping.items() if str(owner) == roster_id],
+                    row.get("occurred_at")),
             })
     for roster_id, history in histories.items():
+        from src.core.fois.decision_evaluators import evaluate_decision
+        from src.core.fois.decision_context import roster_context, draft_alternatives
+        from src.core.historical_intelligence import CheckpointDirection
+        from datetime import datetime
+        for category, key in (('drafting', 'drafts'), ('waivers', 'waivers')):
+            for decision in history.get(key) or ():
+                assets = (decision.get('player_id'),) if category == 'drafting' else (*decision['adds'], *decision['drops'])
+                alternatives = draft_alternatives(decision, draft_picks) if category == 'drafting' else ()
+                market = decision_market_references((*assets, *(row['asset_id'] for row in alternatives)), decision.get('occurred_at'), details=True)
+                context = roster_context(transaction_intelligence.states, league_id, roster_id, decision)
+                # A later same-concept Market observation supports only Market
+                # development, not realized NFL production or overall quality.
+                # Report the actual elapsed horizon; do not score newer decisions
+                # negatively for lacking a later observation.
+                outcome_rows = []
+                acquired = {str(value) for value in ((decision.get('player_id'),) if category == 'drafting' else decision['adds']) if value}
+                for baseline in market:
+                    if baseline['asset_id'] not in acquired:
+                        continue
+                    later = history_intelligence.nearest_market_checkpoint(
+                        baseline['asset_id'], decision['occurred_at'], direction=CheckpointDirection.AFTER)
+                    if later is None or (later.market_context_id, later.normalization_version) != baseline['context']:
+                        continue
+                    later_at = datetime.fromisoformat(later.occurred_at.replace('Z', '+00:00'))
+                    decision_at = datetime.fromisoformat(decision['occurred_at'].replace('Z', '+00:00'))
+                    outcome_rows.append({'asset_id': baseline['asset_id'],
+                        'dimension': 'later_observed_market_change',
+                        'change': later.normalized_value - baseline['value'],
+                        'horizon_days': (later_at - decision_at).total_seconds() / 86400,
+                        'as_of': later.occurred_at,
+                        'reference': later.checkpoint_id, 'baseline_reference': baseline['reference']})
+                outcome = None
+                if outcome_rows:
+                    outcome = {'decision_id': decision.get('transaction_id') or decision.get('draft_id'),
+                               'league_id': league_id, 'reference': tuple(row['reference'] for row in outcome_rows),
+                               'as_of': max(outcome_rows, key=lambda row: row['horizon_days'])['as_of'],
+                               'assessment': outcome_rows}
+                decision['decision_evaluation'] = evaluate_decision(
+                    {**decision, 'league_id': league_id}, category,
+                    market=market, outcome=outcome, alternatives=alternatives, roster_assessment=context)
+        from src.core.fois.coverage import decision_coverage
+        history['decision_coverage'] = decision_coverage(history)
         history["seasons"].sort(key=lambda row: row["season"])
         history["ownership_changes"] = max(0, len(owners[roster_id]) - 1)
         history["expected_seasons"] = expected

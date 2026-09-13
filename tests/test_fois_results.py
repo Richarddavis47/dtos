@@ -361,6 +361,42 @@ class FOISResultsTests(unittest.TestCase):
             self.assertEqual(history["placement_seasons_available"], 0)
             self.assertEqual(history["placement_seasons_expected"], 0)
 
+    def test_canonical_qualification_and_semifinals_do_not_require_placement(self) -> None:
+        for roster_id in (1, 2):
+            with self.subTest(roster_id=roster_id), tempfile.TemporaryDirectory() as directory:
+                store = HistoricalStore(Path(directory) / "history.sqlite3")
+                common = {
+                    "league_id": "league", "season": 2025,
+                    "observed_at": "2026-01-10", "retrieved_at": "2026-01-10",
+                    "provider": "Sleeper", "availability": "observed",
+                    "confidence": 100, "calculation_method": "fixture",
+                    "schema_version": "1.0",
+                }
+                for entity, payload in (
+                    ("league_season", {"total_rosters": 10, "status": "complete"}),
+                    ("season_standing", {"roster_id": roster_id, "wins": 9,
+                                         "losses": 5, "rank": roster_id}),
+                    ("playoff_result", {
+                        "qualified_roster_ids": ["1", "2", "3", "4", "5", "6"],
+                        "first_round_bye_roster_ids": ["1", "2"],
+                        "semifinal_roster_ids": ["1", "2", "3", "5"],
+                        "championship_roster_ids": ["1", "5"],
+                        "champion_roster_id": "1", "placements": {},
+                    }),
+                ):
+                    store.append(record_key=entity, entity_type=entity,
+                                 source_record_id=entity, payload=payload, **common)
+                result = load_results_history(store, "league")[str(roster_id)]["seasons"][0]
+                self.assertTrue(result["playoff"])
+                self.assertTrue(result["final_four"])
+                self.assertIsNone(result["playoff_finish"])
+                self.assertEqual(result["championship_game"], roster_id == 1)
+                self.assertEqual(result["championship"], roster_id == 1)
+                evaluated = score((SeasonResult(**result),))
+                playoff_metric = next(m for m in evaluated.metric_scores
+                                      if m.metric_key == "playoff_appearances")
+                self.assertEqual(playoff_metric.raw_value, 1)
+
     def test_unavailable_placement_reduces_completeness_not_score(self) -> None:
         complete = season(2025, final=True)
         current = season(2026, wins=0, losses=0, finish=None, playoff=False, complete=False)
@@ -380,7 +416,7 @@ class FOISResultsTests(unittest.TestCase):
             row for row in evaluated.category_scores
             if row.category_key == "trading_asset_management"
         )
-        self.assertIsNotNone(trading.normalized_score)
+        self.assertIsNone(trading.normalized_score)  # One activity fact is not process quality.
 
     def test_results_history_ignores_standing_without_roster_identity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -413,6 +449,7 @@ class FOISResultsTests(unittest.TestCase):
                 "teams": [{"roster_id": 1, "owner_id": "owner"}],
                 "fois_history": {
                     "1": {
+                        "owner_by_season": {str(y): "owner" for y in (2022, 2023, 2024)},
                         "seasons": [
                             row.__dict__
                             for row in (

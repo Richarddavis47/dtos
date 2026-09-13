@@ -86,6 +86,8 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
     providers = dict(previous.get("providers") or {})
     statuses = provider_catalog(previous.get("provider_status") or {})
     attribution = dict(previous.get("attribution") or {})
+    pick_quotes = dict(previous.get("pick_quotes") or {})
+    from src.core.data_platform.pick_quotes import pick_concept
 
     if refresh_due(statuses.get("FantasyCalc")):
         try:
@@ -94,10 +96,20 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
             rows = response.json()
             stamp = _now().isoformat()
             normalized: dict[str, dict[str, Any]] = {}
+            retained_picks = []
             for row in rows if isinstance(rows, list) else ():
                 player = row.get("player") or {}
                 sleeper_id = player.get("sleeperId")
                 value = row.get("value")
+                if player.get('position') == 'PICK':
+                    concept = pick_concept('FantasyCalc', str(player.get('name') or ''), sleeper_id)
+                    if concept is not None and value is not None:
+                        retained_picks.append({**concept, 'provider': 'FantasyCalc',
+                            'market_format': 'fc:12:2qb:ppr', 'value_scale': 'fc_native',
+                            'value': value, 'confidence': 85, 'availability': 'current',
+                            'retrieved_at': stamp, 'source_updated_at': None,
+                            'source_id': sleeper_id})
+                    continue
                 if sleeper_id is None or value is None:
                     continue
                 normalized[str(sleeper_id)] = {
@@ -121,6 +133,7 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
                     "detail": "FantasyCalc public dynasty market value",
                 }
             providers["FantasyCalc"] = normalized
+            pick_quotes['FantasyCalc'] = retained_picks
             statuses["FantasyCalc"] = _status(enabled=True, state="healthy", result="success", records=len(normalized), refreshed_at=stamp)
             attribution["FantasyCalc"] = {"label": "FantasyCalc", "url": "https://fantasycalc.com/", "retrieval_mode": "public API"}
         except Exception as exc:  # provider isolation is intentional
@@ -135,7 +148,21 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
             identities = market_identity_map(csv.DictReader(io.StringIO(ids_response.text)))
             stamp = _now().isoformat()
             normalized = {}
+            retained_picks = []
             for row in csv.DictReader(io.StringIO(value_response.text)):
+                if row.get('pos') == 'PICK':
+                    concept = pick_concept('DynastyProcess', row.get('player') or '')
+                    if concept is not None:
+                        for variant in ('1qb', '2qb'):
+                            raw_value = row.get(f'value_{variant}')
+                            if raw_value not in {None, '', 'NA'}:
+                                retained_picks.append({**concept, 'provider': 'DynastyProcess',
+                                    'market_format': f'dp:{variant}', 'value_scale': 'dp_native',
+                                    'value': raw_value, 'confidence': 75, 'availability': 'current',
+                                    'retrieved_at': stamp,
+                                    'source_updated_at': f"{row['scrape_date']}T00:00:00+00:00" if row.get('scrape_date') else None,
+                                    'source_timestamp_precision': 'day', 'source_id': row.get('player')})
+                    continue
                 sleeper_id = identities.get(row.get("fp_id"))
                 value = row.get("value_2qb")
                 if not sleeper_id or value in {None, "", "NA"}:
@@ -154,12 +181,13 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
                     "detail": "DynastyProcess public 2QB dynasty value",
                 }
             providers["DynastyProcess"] = normalized
+            pick_quotes['DynastyProcess'] = retained_picks
             statuses["DynastyProcess"] = _status(enabled=True, state="healthy", result="success", records=len(normalized), refreshed_at=stamp)
             attribution["DynastyProcess"] = {"label": "DynastyProcess", "url": "https://github.com/dynastyprocess/data", "retrieval_mode": "public dataset"}
         except Exception as exc:  # provider isolation is intentional
             statuses["DynastyProcess"] = _status(enabled=True, state="failed", result="cached_fallback" if providers.get("DynastyProcess") else "failed", records=len(providers.get("DynastyProcess") or {}), reason=f"DynastyProcess temporarily unavailable: {type(exc).__name__}.")
 
-    return {"providers": providers, "provider_status": statuses, "attribution": attribution, "context_mode": "online" if providers else "offline", "allow_cached_fallback": bool(providers)}
+    return {"providers": providers, "pick_quotes": pick_quotes, "provider_status": statuses, "attribution": attribution, "context_mode": "online" if providers else "offline", "allow_cached_fallback": bool(providers)}
 
 
 def player_context(player_id: str, data: dict[str, Any]) -> dict[str, Any]:

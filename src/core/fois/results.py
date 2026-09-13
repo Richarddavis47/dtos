@@ -198,7 +198,7 @@ class ResultsScorer:
             "worst_finish": self._metric(
                 "worst_finish",
                 max((row.finish for row in seasons if row.finish is not None), default=None),
-                clamp(90 - bottom_finishes * 15),
+                clamp(90 - bottom_finishes * 15) if finish_scores else None,
                 len(finish_scores), confidence, completeness,
                 f"{bottom_finishes} bottom-quartile finish(es); one isolated poor season has limited impact.",
                 directionality=Directionality.LOWER_IS_BETTER,

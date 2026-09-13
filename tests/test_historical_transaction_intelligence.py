@@ -94,6 +94,10 @@ class HistoricalTransactionIntelligenceTests(unittest.TestCase):
         self.assertGreater(side.process.known_incoming_value + side.process.known_outgoing_value, 0)
         self.assertLess(side.process.market_coverage_ratio, 1)
         self.assertNotEqual(side.process.confidence.value, "high")
+        self.assertEqual(side.process.classification, ProcessClassification.INSUFFICIENT)
+        fairness = next(d for d in side.process.dimensions if d.name == 'value_fairness')
+        self.assertFalse(fairness.evidence_available)
+        self.assertEqual(fairness.assessment, 'unknown')
 
     def test_future_market_evidence_cannot_change_process(self) -> None:
         first = self.evaluate()
@@ -191,7 +195,7 @@ class HistoricalTransactionIntelligenceTests(unittest.TestCase):
 
     def test_current_bilateral_engine_is_not_called_or_modified(self) -> None:
         result = self.evaluate()
-        self.assertEqual(result.method_version, "historical-trade-process-outcome-1")
+        self.assertEqual(result.method_version, "historical-trade-process-outcome-2")
         self.assertNotIn("SMASH ACCEPT", str(result.private_contract()))
 
 

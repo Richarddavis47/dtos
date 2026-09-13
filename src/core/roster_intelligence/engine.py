@@ -63,7 +63,8 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
                 'Longevity context is not a dynasty price.', 'Review evidence')
     league_rooms = {key: dict.fromkeys(POSITIONS) for key in grading}
     league_metrics = {key: {name: item.value for name, item in row.dimensions.items()} for key, row in grading.items()}
-    teams, summary = build_team_intelligence(intelligence.decisions, league_rooms, league_players, league_metrics, grading=grading)
+    teams, summary = build_team_intelligence(intelligence.decisions, league_rooms, league_players, league_metrics, grading=grading,
+                                           market_data=context.cached_data.get('market_data'))
     assessment = build_team_assessment(context, teams[context.active_roster_id])
     window = assessment.team.competitive_window
     rooms = {p: PositionRoomReport(p, GradeDimension('Position evidence', None, 'Unavailable',

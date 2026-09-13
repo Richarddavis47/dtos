@@ -82,7 +82,7 @@ class HistoricalTransactionIntelligenceService:
         coverage = known_count / len(all_assets) if all_assets else 0.0
         missing = tuple(asset.asset_id for asset in all_assets if asset.market_value is None)
         dimensions: list[HistoricalDecisionDimension] = []
-        if known_count:
+        if known_count and not missing:
             ratio = known_in / max(known_out, 1.0)
             fairness = "balanced" if .8 <= ratio <= 1.25 else "favorable" if ratio > 1.25 else "premium_paid"
             dimensions.append(HistoricalDecisionDimension(
@@ -92,7 +92,7 @@ class HistoricalTransactionIntelligenceService:
         else:
             ratio = 1.0
             dimensions.append(HistoricalDecisionDimension(
-                "value_fairness", "unknown", "No contemporaneous market value supports this dimension.", False,
+                "value_fairness", "unknown", "A complete contemporaneous package price is unavailable; priced subsets cannot establish package fairness.", False,
             ))
         roster_id = int(before.franchise_id.rsplit(":", 1)[-1])
         shared_package = evaluate_package_quality(
@@ -142,7 +142,7 @@ class HistoricalTransactionIntelligenceService:
             "Risk confidence reflects historical market, lineup, age, and pick uncertainty coverage; no later injury is used.",
         ))
         confidence_score = min(before.confidence, after.confidence, round(coverage * 100))
-        if coverage == 0:
+        if coverage < 1:
             classification = ProcessClassification.INSUFFICIENT
         elif ratio >= .8 and (fit == "aligned" or (lineup_delta is not None and lineup_delta >= 0)):
             classification = ProcessClassification.SOUND if ratio <= 1.25 else ProcessClassification.STRONG

@@ -128,6 +128,27 @@ def prepare_market_normalization(market_data: dict[str, Any]) -> None:
                 "version": NORMALIZATION_VERSION, "method": normalized.method,
                 "generation": generation, "population_size": len(population),
             }
+        # External pick prices use the identical provider comparison transform,
+        # never a pick-only percentile distribution or legacy round adjustment.
+        for quote in (market_data.get('pick_quotes') or {}).get(provider, ()):
+            quote.pop('normalization_reference', None)
+            supported_format = 'fc:12:2qb:ppr' if provider == 'FantasyCalc' else 'dp:2qb'
+            if quote.get('market_format') != supported_format:
+                continue
+            try:
+                raw = float(quote['value'])
+            except (ValueError, TypeError, KeyError):
+                continue
+            scale = DEFAULT_CONFIG.provider_scales[provider]
+            if not scale.minimum <= raw <= scale.maximum:
+                continue
+            normalized = normalize_value(provider, raw, prepared_distribution=population)
+            quote['normalization_reference'] = {
+                'provider': provider, 'raw_value': raw,
+                'normalized_value': normalized.normalized_value,
+                'version': NORMALIZATION_VERSION, 'method': normalized.method,
+                'generation': generation, 'population_size': len(population),
+            }
 
 
 def normalize_cached_value(provider: str, row: dict[str, Any], **kwargs: Any) -> NormalizedValuation:

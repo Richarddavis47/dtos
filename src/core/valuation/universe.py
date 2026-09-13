@@ -11,7 +11,7 @@ from src.core.valuation.calibration import cached_market_consensus
 from src.core.valuation.quote_eligibility import exclusion_reason
 from src.core.valuation.config import NORMALIZATION_VERSION, VALUATION_SCHEMA_VERSION
 from src.core.valuation.models import CalibrationStatus
-from src.core.valuation.normalization import normalize_cached_value, normalize_internal, prepare_distribution
+from src.core.valuation.normalization import normalize_cached_value, prepare_distribution
 
 UNIVERSE_SCHEMA_VERSION = "1.0"
 PROVIDER_NAMES = ("DTOS", "KTC", "FantasyCalc", "DynastyProcess")
@@ -330,32 +330,37 @@ class ValuationUniverse:
         }
 
     def _pick(self, pick: dict[str, Any]) -> dict[str, Any]:
-        from src.core.asset_intelligence.picks.pick_value import dynasty_pick_value
+        from src.core.data_platform.pick_quotes import canonical_pick_market
+        from src.core.intelligence.pick_context import assess_pick_range
+        pick = assess_pick_range(pick, league_id=str((self.data.get('league') or {}).get('league_id') or ''))
 
         season, round_number, original = int(pick.get("season") or 0), int(pick.get("round") or 0), int(pick.get("original_roster_id") or 0)
         asset_id = f"pick:{season}:{round_number}:{original}"
-        intrinsic = normalize_internal(dynasty_pick_value(pick).score)
-        adjustments = ((self.data.get("calibration_state") or {}).get("adjustments") or {})
-        pick_category = "Early Picks" if round_number <= 2 else "Late Picks"
-        multiplier = float(adjustments.get(pick_category, adjustments.get("Future Picks", adjustments.get("All Assets", 1.0))))
-        league_adjusted = round(intrinsic * multiplier)
+        evidence = canonical_pick_market({**pick, 'year': season, 'round': round_number}, self.data.get('market_data') or {})
+        market = evidence['normalized_market_price']
+        quote = evidence.get('quote') or {}
+        confidence = quote.get('confidence', 0) if market is not None else 0
         layers = {name: _layer(None, "Unavailable", self.generated_at) for name in LAYER_NAMES}
         layers.update({
-            "intrinsic_dtos_value": _layer(intrinsic, "DTOS deterministic pick value", self.generated_at, 70),
-            "league_adjusted_value": _layer(league_adjusted, f"DTOS deterministic pick value with {pick_category} model calibration", self.generated_at, 65),
-            "contender_value": _layer(round(intrinsic * (.92 if season <= datetime.now().year + 1 else .82)), "DTOS Brain near-term pick utility model", self.generated_at, 65),
-            "rebuilder_value": _layer(round(intrinsic * (1.04 if season >= datetime.now().year + 1 else .98)), "DTOS Brain long-horizon pick utility model", self.generated_at, 70),
-            "future_value": _layer(intrinsic, "DTOS deterministic pick value", self.generated_at, 70),
-            "confidence_score": _layer(70, "Deterministic pick identity", self.generated_at, 70),
+            "market_value": _layer(market, f"{quote.get('provider', 'Unavailable')} · {quote.get('pick_type', 'no quote')}", quote.get('source_updated_at'), confidence),
+            "confidence_score": _layer(confidence, "Pick Market evidence support", self.generated_at, confidence),
         })
         provider_rows = _provider_rows(asset_id, {}, {}, {})
-        provider_rows[0].update({"raw_value": dynasty_pick_value(pick).score, "normalized_value": intrinsic, "confidence": 70, "availability": "available", "reason": None})
+        for provider_row in provider_rows:
+            if provider_row.get('provider') == quote.get('provider') and market is not None:
+                provider_row.update(raw_value=quote['value'], normalized_value=market,
+                                    confidence=confidence, availability='available', reason=None,
+                                    last_updated=quote.get('source_updated_at'))
         return {
             "asset_id": asset_id, "asset_type": "pick",
             "identity": {"player_name": None, "position": "PICK", "nfl_team": None, "sleeper_id": None, "current_owner": {"roster_id": int(pick.get("current_owner_id") or 0), "team_name": pick.get("current_owner")}, "free_agent": False, "draft_pick_description": f"{season} Round {round_number} ({pick.get('original_team') or f'Roster {original}'})", "year": season, "round": round_number, "projected_slot": pick.get("projected_slot"), "rookie_class": season, "status": "Owned"},
-            "layers": layers, "providers": provider_rows,
-            "audit": {"provider_count": 1, "provider_agreement": None, "missing_providers": ["KTC", "FantasyCalc", "DynastyProcess"], "data_age": self.freshness["sleeper_sync_timestamp"], "confidence": 70, "last_changed": self.freshness["sleeper_sync_timestamp"], "source_version": UNIVERSE_SCHEMA_VERSION, "inspection_ready": True, "calibration_status": "uncalibrated"},
-            "comparison": _comparison(intrinsic, None), "freshness": self.freshness,
+            "layers": layers, "providers": provider_rows, "pick_market_evidence": evidence,
+            "pick_context": {"original_franchise": original, "current_owner": pick.get('current_owner_id'),
+                             "projected_range": pick.get('projected_range', 'UNKNOWN'),
+                             "range_confidence": pick.get('projected_range_confidence'),
+                             "exact_slot": pick.get('exact_slot') if pick.get('exact_slot_established') is True else None},
+            "audit": {"provider_count": int(market is not None), "provider_agreement": None, "missing_providers": [], "data_age": quote.get('source_updated_at'), "confidence": confidence, "last_changed": quote.get('source_updated_at'), "source_version": UNIVERSE_SCHEMA_VERSION, "inspection_ready": True, "calibration_status": "partially_calibrated" if market is not None else "insufficient_data"},
+            "comparison": _comparison(None, market), "freshness": self.freshness,
         }
 
     def status(self) -> dict[str, Any]:

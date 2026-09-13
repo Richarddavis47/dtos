@@ -5,7 +5,6 @@ from statistics import mean
 from typing import Any
 
 from src.core.asset_intelligence.models import AssetContext, AssetEvaluation, Evidence
-from src.core.asset_intelligence.picks.pick_evaluator import evaluate_pick
 from src.core.asset_intelligence.players.player_evaluator import evaluate_player
 
 
@@ -30,19 +29,12 @@ def evaluate_player_portfolio(players: tuple[dict[str, Any], ...], context: Asse
 
 
 def evaluate_pick_portfolio(picks: tuple[dict[str, Any], ...], context: AssetContext) -> AssetEvaluation:
-    if not picks:
-        evidence = (Evidence("Pick inventory", "0 picks", -50, "No owned picks are available in the cached ledger.", "Sleeper pick ledger"),)
-        return AssetEvaluation("Pick Portfolio", 0, 70, "No current draft-pick inventory.", evidence)
-    reports = tuple(evaluate_pick(pick, context) for pick in picks)
-    option_values = [report.dynasty_value.score for report in reports]
-    inventory_coverage = min(len(reports) / 12, 1) * 100
-    firsts = sum(report.round == 1 for report in reports)
-    first_coverage = min(firsts / 3, 1) * 100
-    score = inventory_coverage * 0.35 + first_coverage * 0.35 + mean(option_values) * 0.30
+    # Counts are inventory facts, not quality against one league's round count.
+    firsts = sum(str(pick.get('round')) == '1' for pick in picks)
     evidence = (
-        Evidence("Pick inventory", f"{len(reports)} picks", inventory_coverage * 0.35, "35% coverage against a documented three-year, four-round benchmark.", "Sleeper pick ledger"),
-        Evidence("First-round inventory", f"{firsts} firsts", first_coverage * 0.35, "35% coverage against a documented three-first benchmark.", "Sleeper pick ledger"),
-        Evidence("Individual pick values", f"Mean {mean(option_values):.1f}", mean(option_values) * 0.30, "30% mean of individually explainable pick reports.", "Asset Intelligence pick reports"),
+        Evidence("Pick inventory", f"{len(picks)} picks", 0, "Owned inventory; no assumed league-round benchmark.", "Sleeper pick ledger"),
+        Evidence("First-round inventory", f"{firsts} firsts", 0, "Count, not a portfolio quality score.", "Sleeper pick ledger"),
     )
-    limitations = tuple(dict.fromkeys(limit for report in reports for limit in report.limitations))
-    return AssetEvaluation("Pick Portfolio", round(score), min(report.dynasty_value.confidence for report in reports), "Inventory and individual pick reports combined with published weights.", evidence, limitations)
+    return AssetEvaluation("Pick Portfolio", None, 0,
+        "Owned draft capital; consume canonical portfolio distributions and separate Market evidence.",
+        evidence, ("No supported aggregate pick utility scalar.",))

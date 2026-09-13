@@ -5,7 +5,7 @@ from typing import Any
 
 from src.core.asset_intelligence import AssetContext, evaluate_pick, evaluate_player
 from src.core.trade_intelligence.models import TradeAsset
-from src.core.valuation import CalibrationStatus, normalize_internal, normalize_pick
+from src.core.valuation import CalibrationStatus
 
 
 def _team_strength(team: dict[str, Any]) -> float | None:
@@ -32,23 +32,11 @@ def _team_strength(team: dict[str, Any]) -> float | None:
 
 
 def _pick_context(pick: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
-    """Attach original-franchise range context without mutating Sleeper facts."""
-    if pick.get("projected_range"):
-        return dict(pick)
-    original = int(pick.get("original_roster_id") or pick.get("roster_id") or 0)
-    teams = tuple(data.get("teams") or ())
-    ranked = sorted(
-        ((score, int(team.get("roster_id") or 0)) for team in teams if (score := _team_strength(team)) is not None),
-        key=lambda item: (item[0], item[1]),
-    )
-    result = dict(pick)
-    identifiers = [identifier for _, identifier in ranked]
-    if original not in identifiers or len(ranked) < 4:
-        result.update(projected_range="UNKNOWN", projected_range_confidence="LOW")
-        return result
-    percentile = identifiers.index(original) / max(1, len(identifiers) - 1)
-    result["projected_range"] = "EARLY" if percentile < .34 else "LATE" if percentile > .66 else "MID"
-    result["projected_range_confidence"] = "MEDIUM"
+    """Consume prepared range evidence; the Trade adapter cannot forecast it."""
+    from src.core.intelligence.pick_context import assess_pick_range
+    result = assess_pick_range(pick, league_id=str((data.get('league') or {}).get('league_id') or ''))
+    if result.get("exact_slot_established") is not True:
+        result.pop("exact_slot", None)
     return result
 
 
@@ -82,24 +70,29 @@ def _player_asset(
     )
 
 
-def _pick_asset(pick: dict[str, Any], context: AssetContext, source_roster_id: int) -> TradeAsset:
+def _pick_asset(pick: dict[str, Any], context: AssetContext, source_roster_id: int,
+                market_data: dict[str, Any] | None = None) -> TradeAsset:
     report = evaluate_pick(pick, context)
     asset_id = f"{report.season}-R{report.round}-{pick.get('original_roster_id') or pick.get('roster_id') or 'unknown'}"
-    neutral_value = normalize_pick(report.dynasty_value.score, report.round)
+    from src.core.data_platform.pick_quotes import canonical_pick_market
+    evidence = canonical_pick_market({**pick, 'year': report.season, 'round': report.round}, market_data or {})
+    neutral_value = evidence['normalized_market_price']
     return TradeAsset(
         asset_id,
         "pick",
         f"{report.season} Round {report.round} ({report.original_owner})",
         None,
-        normalize_pick(report.dynasty_value.score, report.round),
-        normalize_internal(50),
+        None,  # No supported independent long-term pick utility scalar.
+        None,  # A future pick is not current weekly production.
         neutral_value,
-        normalize_pick(report.dynasty_value.score, report.round),
+        None,  # Team-specific fit is not the legacy option score.
         report.risk.score,
         source_roster_id,
         trade_value=neutral_value,
         liquidity_score=65 if report.round == 1 else 45,
-        confidence_score=report.recommendation.confidence,
+        confidence_score=int((evidence.get('quote') or {}).get('confidence', 0)) if neutral_value is not None else 0,
+        calibration_status=(CalibrationStatus.PARTIALLY_CALIBRATED if neutral_value is not None else CalibrationStatus.INSUFFICIENT_DATA).value,
+        pick_market_evidence=evidence,
         original_roster_id=int(pick.get("original_roster_id") or pick.get("roster_id") or 0) or None,
         current_owner_id=int(pick.get("current_owner_id") or source_roster_id),
         season=int(report.season),
@@ -129,7 +122,7 @@ def build_asset_pool(
         if str(player.get("position") or "") in {"QB", "RB", "WR", "TE"}
     )
     picks = tuple(
-        _pick_asset(_pick_context(pick, data), recipient_context, roster_id)
+        _pick_asset(_pick_context(pick, data), recipient_context, roster_id, data.get('market_data'))
         for pick in team.get("picks_owned") or []
     )
     return players + picks

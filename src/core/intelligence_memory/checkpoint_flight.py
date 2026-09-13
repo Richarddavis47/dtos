@@ -17,7 +17,7 @@ from typing import Any, Iterator
 
 from .store import SCHEMA_VERSION, IntelligenceCheckpointStore
 
-READ_CONTRACT = "global-checkpoint-projection-flight-v1"
+READ_CONTRACT = "global-checkpoint-projection-flight-v3-player-identity"
 
 
 class CheckpointGenerationChanged(RuntimeError):

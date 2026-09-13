@@ -126,11 +126,9 @@ class TradeIntelligenceTests(unittest.TestCase):
 
     def test_current_and_future_impacts_remain_independent(self) -> None:
         dossier = trade_intelligence.opportunities(self.data, 1)[0]
-        self.assertIsInstance(dossier.impact.current_outlook, int)
-        if any(asset.kind == "player" for asset in (*dossier.proposal.assets_sent, *dossier.proposal.assets_received)):
-            self.assertIsNone(dossier.impact.future_outlook)
-        else:
-            self.assertIsInstance(dossier.impact.future_outlook, int)
+        # This fixture has neither supported season utility nor intrinsic scalars.
+        self.assertIsNone(dossier.impact.current_outlook)
+        self.assertIsNone(dossier.impact.future_outlook)
         self.assertIn("not a probability", " ".join(dossier.impact.limitations))
 
     def test_recommendations_are_unique_non_contradictory_and_explainable(self) -> None:
@@ -182,15 +180,17 @@ class TradeIntelligenceTests(unittest.TestCase):
         })
         self.data["teams"][0]["picks_owned"].extend([
             {"season": 2027, "round": 1, "original_team": "Team 4", "original_roster_id": 4, "current_owner_id": 1},
-            {"season": 2027, "round": 1, "original_team": "Team 1", "original_roster_id": 1, "current_owner_id": 1},
         ])
         workspace = build_trade_workspace(self.data, 1)
         picks = {asset.asset_id: asset for asset in workspace["pools"][1] if asset.kind == "pick"}
-        self.assertEqual(picks["2027-R1-4"].projected_range, "EARLY")
-        self.assertEqual(picks["2027-R1-4"].projected_range_confidence, "MEDIUM")
-        self.assertNotEqual(picks["2027-R1-4"].trade_value, picks["2027-R1-1"].trade_value)
+        self.assertEqual(picks["2027-R1-4"].projected_range, "UNKNOWN")
+        self.assertEqual(picks["2027-R1-4"].projected_range_confidence, "LOW")
+        self.assertEqual(picks["2027-R1-4"].original_roster_id, 4)
+        self.assertEqual(picks["2027-R1-4"].current_owner_id, 1)
+        self.assertIsNone(picks["2027-R1-4"].trade_value)
+        self.assertIsNone(picks["2027-R1-1"].trade_value)
 
-    def test_assist_returns_calculated_repair_without_provider_or_market_build(self) -> None:
+    def test_assist_does_not_invent_repair_from_equal_prices_and_missing_utility(self) -> None:
         workspace = build_trade_workspace(self.data, 1)
         sent = workspace["pools"][1][0].asset_id
         received = workspace["pools"][2][0].asset_id
@@ -202,8 +202,9 @@ class TradeIntelligenceTests(unittest.TestCase):
         self.assertTrue(result["calculated"])
         self.assertEqual(result["provider_requests"], 0)
         self.assertEqual(result["asset_market_constructions"], 0)
-        self.assertTrue(result["results"])
-        self.assertIn(result["results"][0]["repair_type"], {"MAKE THIS TRADE WORK", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE TARGET"})
+        self.assertEqual(result["results"], [])
+        self.assertTrue(result['search_completed'])
+        self.assertIn('No realistic target-preserving repair', result['quiet_state'])
 
     def test_api_and_page_use_same_opportunity_contract(self) -> None:
         async def noop() -> None:

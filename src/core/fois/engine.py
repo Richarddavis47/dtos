@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import asdict, replace
+from collections import Counter
 from datetime import datetime, timezone
 from statistics import mean
 
@@ -18,6 +20,7 @@ from src.core.fois.models import (
 from src.core.fois.registry import registry_by_category
 from src.core.fois.results import ResultsScorer
 from src.core.fois.scoring import aggregate_categories, aggregate_metrics, clamp, letter_grade
+from src.core.fois.assessment_export import assessment_record, assessment_summary
 
 CATEGORY_NAMES = {
     "results": "Results",
@@ -77,10 +80,30 @@ class FOISEngine:
         season_confidence = clamp(len(completed) / 10 * 100)
         evidence_ids = tuple(item.source_identifier for item in facts.evidence)
         calculated: dict[str, FrontOfficeMetricScore] = {}
+        decision_summaries = {
+            key: assessment_summary([
+                assessment_record(asdict(row), category, league_id=facts.league_id,
+                                  franchise_id=facts.franchise_id)
+                for row in rows
+            ])
+            for key, category, rows in (
+                ('trading_asset_management', 'trading', facts.trades),
+                ('drafting_talent_evaluation', 'drafting', facts.drafts),
+                ('waivers_transactions', 'waivers', facts.waivers),
+            )
+        }
+        decision_summaries['waivers_transactions']['faab'] = {
+            'known': sum(row.faab_bid is not None for row in facts.waivers),
+            'genuine_zero': sum(row.faab_bid == 0 for row in facts.waivers),
+            'unavailable': sum(row.faab_bid is None for row in facts.waivers),
+        }
+        roster_contexts = [(row.decision_evaluation or {}).get('historical_roster_context')
+                           for row in (*facts.drafts, *facts.waivers)]
+        roster_contexts = [row for row in roster_contexts if row]
         games = sum((row.wins or 0) + (row.losses or 0) for row in completed)
         wins = sum(row.wins or 0 for row in completed)
         championships = sum(row.championship for row in completed)
-        playoffs = sum(row.playoff_finish is not None for row in completed)
+        playoffs = sum(row.playoff or row.playoff_finish is not None for row in completed)
         rebuild_runs = self._rebuild_runs(completed)
         longest_rebuild = max(rebuild_runs, default=0)
         if games:
@@ -121,21 +144,27 @@ class FOISEngine:
                 directionality=Directionality.LOWER_IS_BETTER,
             )
         trade_count = len(facts.trades)
+        supported_productivity = [trade for trade in facts.trades
+                                  if trade.strategically_productive is not None]
         productive = sum(trade.strategically_productive is True for trade in facts.trades)
         if trade_count:
             calculated["trade_activity"] = _metric(
                 "trade_activity", "Trade activity", "Observed completed trade sample; activity alone has limited value.",
-                trade_count, clamp(min(trade_count, 10) * 10), trade_count,
+                trade_count, None, trade_count,
                 clamp(trade_count / 10 * 100), clamp(trade_count / 10 * 100),
                 f"{trade_count} completed trades create an opportunity sample but do not independently establish quality.",
-                evidence_ids,
+                evidence_ids, status=MetricStatus.INSUFFICIENT_DATA,
+                directionality=Directionality.CONTEXTUAL,
             )
             calculated["productive_trade_activity"] = _metric(
                 "productive_trade_activity", "Productive trade activity",
                 "Trades with evidence of improved outlook, flexibility, or asset position.",
-                productive, clamp(productive / trade_count * 100), trade_count,
-                clamp(trade_count / 10 * 100), clamp(trade_count / 10 * 100),
-                f"{productive} of {trade_count} observed trades have supported strategic improvement evidence.",
+                productive if supported_productivity else None,
+                clamp(productive / len(supported_productivity) * 100) if supported_productivity else None,
+                len(supported_productivity),
+                clamp(len(supported_productivity) / 10 * 100),
+                clamp(len(supported_productivity) / trade_count * 100),
+                f"{productive} of {len(supported_productivity)} assessed trades have supported strategic improvement evidence; {trade_count - len(supported_productivity)} unassessed trades are excluded.",
                 evidence_ids,
             )
             justified = [
@@ -157,10 +186,9 @@ class FOISEngine:
             process = [row.process_score for row in facts.trades if row.process_score is not None]
             outcomes = [row.outcome_score for row in facts.trades if row.outcome_score is not None]
             recovery = [row.recovery_score for row in facts.trades if row.recovery_score is not None]
-            impact_total = sum(max(0.01, row.impact_weight) for row in facts.trades)
             if process:
                 shared = facts.front_office_evidence or {}
-                confidence_counts = shared.get("process_confidence") or {}
+                confidence_counts = decision_summaries['trading_asset_management']['process']['supported_confidence_distribution']
                 confidence_total = sum(int(value) for value in confidence_counts.values())
                 evidence_confidence = (
                     sum(
@@ -170,18 +198,19 @@ class FOISEngine:
                     ) / confidence_total
                     if confidence_total else clamp(len(process) / 10 * 100)
                 )
-                weighted = sum(
-                    (row.process_score or 0) * max(0.01, row.impact_weight)
-                    for row in facts.trades if row.process_score is not None
-                ) / sum(max(0.01, row.impact_weight) for row in facts.trades if row.process_score is not None)
+                weighted = mean(process)
                 calculated["value_captured_at_transaction_time"] = _metric(
                     "value_captured_at_transaction_time", "Decision quality at transaction time",
-                    "Impact-weighted process quality using contemporaneous evidence.",
+                    "Equal-decision supported process magnitude using contemporaneous evidence.",
                     round(weighted, 2), clamp(weighted), len(process),
                     min(clamp(len(process) / 10 * 100), evidence_confidence),
-                    float(shared.get("evidence_completeness") or clamp(len(process) / trade_count * 100)),
-                    f"{len(process)} of {trade_count} trades have transaction-time process evidence; impact weight {impact_total:.2f}.",
+                    (float(shared["evidence_completeness"])
+                     if shared.get("evidence_completeness") is not None
+                     else clamp(len(process) / trade_count * 100)),
+                    f"{len(process)} of {trade_count} trades have transaction-time process magnitudes. Each supported decision contributes equally; missing magnitudes are excluded. Outcome does not contribute to process quality.",
                     evidence_ids,
+                    status=(MetricStatus.PROVISIONAL if len(process) >= self.configuration.minimum_sample_sizes.get('trades', 3)
+                            else MetricStatus.INSUFFICIENT_DATA),
                 )
             if outcomes:
                 shared = facts.front_office_evidence or {}
@@ -276,16 +305,31 @@ class FOISEngine:
                 categories.append(self.results_scorer.score(facts))
                 continue
             metrics = tuple(calculated.get(definition.key, _unavailable(definition)) for definition in definitions)
-            categories.append(aggregate_metrics(
+            category_score = aggregate_metrics(
                 category, CATEGORY_NAMES[category],
                 self.configuration.category_weights[category], metrics,
                 self.configuration,
-            ))
+            )
+            if category in decision_summaries:
+                category_score = replace(category_score, details=decision_summaries[category])
+            elif category == 'roster_construction':
+                category_score = replace(category_score, details={
+                    'historical_references': len(roster_contexts),
+                    'precision': dict(Counter(row.get('precision', 'unavailable') for row in roster_contexts)),
+                    'ownership_availability': dict(Counter(row.get('ownership_availability', 'unavailable') for row in roster_contexts)),
+                    'scope': 'Historical context references do not independently establish roster quality.',
+                })
+            categories.append(category_score)
         category_scores = tuple(categories)
         overall = aggregate_categories(category_scores, self.configuration)
         available = tuple(row for row in category_scores if row.normalized_score is not None)
-        strongest = max(available, key=lambda row: row.normalized_score).category_name if available else None
-        weakest = min(available, key=lambda row: row.normalized_score).category_name if available else None
+        # Comparative labels require an actual difference. With one supported
+        # category (or tied categories), the same evidence cannot be presented
+        # simultaneously as a strength and a weakness.
+        ordered = sorted(available, key=lambda row: row.normalized_score, reverse=True)
+        differentiated = len(ordered) > 1 and ordered[0].normalized_score > ordered[-1].normalized_score
+        strongest = ordered[0].category_name if differentiated else None
+        weakest = ordered[-1].category_name if differentiated else None
         completeness = round(sum(row.completeness * row.weight for row in category_scores) / 100, 2)
         supported_weight = round(sum(row.weight for row in available), 2)
         base_confidence = (
@@ -310,7 +354,7 @@ class FOISEngine:
             f"Strongest supported category: {strongest or 'unavailable'}; weakest supported category: {weakest or 'unavailable'}. "
             "Missing categories are disclosed and excluded rather than scored as zero."
             if overall is not None
-            else "FOIS is provisional because no supported category has sufficient historical evidence."
+            else "Overall FOIS is unavailable: supported categories do not establish a multi-category assessment under the configured aggregation policy. Available category assessments remain separate."
         )
         key_source = f"{facts.league_id}|{facts.franchise_id}|{facts.tenure_id or facts.owner_id}|{start}|{end}|{self.configuration.model_version}"
         score_key = hashlib.sha256(key_source.encode()).hexdigest()
@@ -318,12 +362,9 @@ class FOISEngine:
             "insufficient_evidence" if overall is None else
             "provisional" if provisional else "available"
         )
-        strengths = tuple(row.category_name for row in sorted(
-            available, key=lambda row: row.normalized_score or 0, reverse=True
-        )[:2])
-        weaknesses = tuple(row.category_name for row in sorted(
-            available, key=lambda row: row.normalized_score or 0
-        )[:1])
+        strengths = tuple(row.category_name for row in ordered
+                          if differentiated and row.normalized_score > ordered[-1].normalized_score)[:2]
+        weaknesses = (weakest,) if weakest is not None else ()
         partners = {row.partner_id for row in facts.trades if row.partner_id}
         tendencies = []
         if len(facts.trades) >= self.configuration.minimum_sample_sizes.get("tendencies", 5):

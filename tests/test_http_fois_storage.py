@@ -3,12 +3,37 @@ import os
 from contextlib import closing
 from pathlib import Path
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from tools.validation.http_worker import execute, isolated_default_fois_storage, validation_startup_schedule
 
 
 class HttpFoisStorageTests(unittest.TestCase):
+    def test_progress_io_failure_cannot_skip_server_cleanup(self):
+        import tempfile
+        from types import SimpleNamespace
+
+        with tempfile.TemporaryDirectory() as directory:
+            progress = Mock(path=Path(directory) / 'progress.json')
+            def record(event, **fields):
+                if fields.get('phase') == 'cleanup':
+                    raise PermissionError('snapshot held by external reader')
+            progress.record.side_effect = record
+            server = Mock(port=12345, runtime_pid=123)
+            server.cleanup.return_value = SimpleNamespace(outcome='graceful')
+            with patch.dict(os.environ, {}, clear=True), patch(
+                'tools.validation.http_worker.TrackedServer.start', return_value=server,
+            ), patch('tools.validation.http_worker.subprocess.run',
+                     return_value=SimpleNamespace(returncode=0)), patch(
+                'tools.validation.http_worker.windows_process_inventory', return_value=[],
+            ):
+                result = execute('progress-failure-test', progress)
+            server.cleanup.assert_called_once()
+            self.assertEqual(result.cleanup, 'PASS')
+            self.assertEqual(result.process_cleanup, 'PASS')
+            self.assertFalse(result.passed)
+            self.assertTrue(any('Progress evidence write failed' in e for e in result.errors))
+
     def test_fixture_schedule_matches_linux_and_restores_after_failure(self):
         with patch.dict(os.environ, {}, clear=True):
             with self.assertRaisesRegex(RuntimeError, "fixture failure"):

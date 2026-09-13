@@ -48,6 +48,12 @@ def aggregate_metrics(
         metric for metric in metrics
         if metric.status in {MetricStatus.ACTIVE, MetricStatus.PROVISIONAL}
         and metric.normalized_score is not None
+        # These remain separately visible outcome/context observations, never
+        # contributors to historical decision-process category quality.
+        and metric.metric_key not in {
+            'subsequent_asset_value_change', 'recovery_from_unsuccessful_trades',
+            'productive_trade_activity',
+        }
     )
     if not included:
         return FrontOfficeCategoryScore(
@@ -91,6 +97,10 @@ def aggregate_categories(
         category for category in categories if category.normalized_score is not None
     )
     if not included:
+        return None
+    # A single dimension is a category assessment, not an overall front-office
+    # assessment. In particular, Results alone cannot stand in for decisions.
+    if len(included) < 2:
         return None
     active_weight = sum(category.weight for category in included)
     if active_weight < 100 and not configuration.renormalize_available_categories:

@@ -48,6 +48,7 @@ class TeamIntelligenceCard:
     production_quality: RelativeGrade
     league_id: str
     generation: str
+    future_capital_evidence: dict | None = None
 
     @property
     def current_window(self) -> CompetitiveWindowClassification:

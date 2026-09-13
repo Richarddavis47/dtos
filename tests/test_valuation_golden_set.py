@@ -84,7 +84,7 @@ class GoldenValuationTests(unittest.TestCase):
             "Developmental",
         )
 
-    def test_pick_curve_preserves_round_and_slot_relationships(self) -> None:
+    def test_legacy_pick_curve_cannot_manufacture_intrinsic_values(self) -> None:
         current_year = datetime.now(timezone.utc).year
         values = {}
         for row in self.benchmark["picks"]:
@@ -93,21 +93,19 @@ class GoldenValuationTests(unittest.TestCase):
                 "season": current_year + row["years_away"],
                 "projected_slot": row["slot"],
             }).score
-        self.assertGreater(values["Next early first"], values["Next middle first"])
-        self.assertGreater(values["Next middle first"], values["Next late first"])
-        self.assertGreater(values["Next early second"], values["Next early third"])
-        self.assertGreater(values["Next early third"], values["Next fourth"])
-        self.assertGreater(values["Next early first"], values["Future early first"])
+        self.assertTrue(values)
+        self.assertTrue(all(value is None for value in values.values()))
 
-    def test_two_thirds_cannot_equal_an_elite_player(self) -> None:
+    def test_unpriced_thirds_cannot_be_compared_to_priced_player(self) -> None:
         current_year = datetime.now(timezone.utc).year
         third = dynasty_pick_value({
             "round": 3, "season": current_year + 1, "projected_slot": "middle",
-        }).score * 10
+        }).score
         elite = calibrate_asset_value(
             750, 877, 89, status=CalibrationStatus.CALIBRATED,
         ).calibrated_value
-        self.assertLess(third * 2, elite)
+        self.assertIsNone(third)
+        self.assertGreater(elite, 0)
 
     def test_competitive_window_scenarios_are_stable(self) -> None:
         for row in self.benchmark["team_scenarios"]:

@@ -462,6 +462,9 @@ async def _sync_sleeper(
             from src.core.relevant_players import (
                 apply_relevant_player_filter, build_relevant_player_universe,
             )
+            from src.core.intelligence.pick_context import prepare_pick_context
+            await asyncio.to_thread(prepare_pick_context, state['data'], minimal_metadata_store,
+                                    observed_at=synced_at)
 
             canonical_history_store.update_current(league_id, state["data"])
             from src.core.valuation.normalization import prepare_market_normalization

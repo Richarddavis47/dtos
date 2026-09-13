@@ -76,6 +76,12 @@ class DraftFact:
     process_score: float | None = None
     outcome_score: float | None = None
     opportunity_cost_score: float | None = None
+    owner_id: str | None = None
+    occurred_at: str | None = None
+    player_id: str | None = None
+    decision_time_market_references: tuple[str, ...] = ()
+    decision_evaluation: dict[str, object] | None = None
+    draft_start_at: str | None = None
 
 
 @dataclass(frozen=True)
@@ -85,6 +91,14 @@ class WaiverFact:
     value_created: float | None
     faab_efficiency: float | None = None
     meaningful: bool = False
+    owner_id: str | None = None
+    occurred_at: str | None = None
+    adds: tuple[str, ...] = ()
+    drops: tuple[str, ...] = ()
+    transaction_type: str | None = None
+    faab_bid: float | None = None
+    decision_time_market_references: tuple[str, ...] = ()
+    decision_evaluation: dict[str, object] | None = None
 
 
 @dataclass(frozen=True)

@@ -79,7 +79,18 @@ class TradeDiscoveryAndPresentationTests(unittest.TestCase):
                 "workflow": "trade_for", "active_roster_id": manager,
                 "asset_id": target,
             })
-            self.assertGreater(result["count"], 0)
+            # Equal-price players with no supported intrinsic fit need not
+            # generate a recommendation. Ownership is still enforced on a
+            # real manually constructed proposal through the same evaluator.
+            workspace = build_trade_workspace(data, manager)
+            sent_id = workspace['pools'][manager][0].asset_id
+            manual = evaluate_trade_request(data, {
+                'active_roster_id': manager, 'partner_roster_id': 2,
+                'assets_sent': [sent_id], 'assets_received': [target],
+            })
+            self.assertEqual(manual['proposal']['active_roster_id'], manager)
+            self.assertEqual(tuple(manual['proposal']['assets_sent']), (sent_id,))
+            self.assertEqual(tuple(manual['proposal']['assets_received']), (target,))
             for row in result["results"]:
                 self.assertEqual(row["proposal"]["active_roster_id"], manager)
                 self.assertTrue(all(
@@ -122,7 +133,15 @@ class TradeDiscoveryAndPresentationTests(unittest.TestCase):
         self.assertIn('/static/css/trade_workspace.css', html)
 
     def test_recommendation_cards_show_recognizable_assets_before_open(self) -> None:
-        html = trade_center(build_trade_center(fixture_data(), 1))
+        data = fixture_data()
+        view = build_trade_center(data, 1)
+        # Exercise card presentation independently of recommendation eligibility;
+        # do not require the engine to invent a benefit for equal-price assets.
+        view['canonical_results'] = [evaluate_trade_request(data, {
+            'active_roster_id': 1, 'partner_roster_id': 2,
+            'assets_sent': ['1-QB-0'], 'assets_received': ['2-QB-0'],
+        })]
+        html = trade_center(view)
         self.assertIn("ti-proposal-asset", html)
         self.assertIn("You send", html)
         self.assertIn("You receive", html)
