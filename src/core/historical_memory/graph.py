@@ -513,7 +513,8 @@ class HistoricalAssetGraph:
         if not events and not pick_id.startswith("PICK-"):
             return None
         parts = self._pick_parts(pick_id)
-        exercise = next((event for event in events if event["event_type"] == "pick_exercise"), None)
+        exercise = next((event for event in events if event["event_type"] == "pick_exercise"
+                         and event["event_status"].casefold() in COMPLETED_STATUSES), None)
         selected_player = None
         if exercise:
             candidates = self.store.asset_event_records(
@@ -525,19 +526,35 @@ class HistoricalAssetGraph:
             ) == exercise["event_id"]), None)
             if row and row.get("player_id"):
                 selected_player = canonical_player_id(str(row["player_id"]))
-        owners = [event["to_franchise_id"] for event in events if event.get("to_franchise_id") and event["event_status"].casefold() in COMPLETED_STATUSES]
+        # Preserve chronology, including a return to a previous owner. Global
+        # deduplication destroys A -> B -> A and conceals incomplete transfers.
+        owners: list[str] = []
+        chain_gaps: list[str] = []
+        for event in events:
+            if event["event_status"].casefold() not in COMPLETED_STATUSES:
+                continue
+            outgoing = event.get("from_franchise_id")
+            incoming = event.get("to_franchise_id")
+            if outgoing and not owners:
+                owners.append(outgoing)
+            elif outgoing and owners[-1] != outgoing:
+                chain_gaps.append(event["event_id"])
+            if incoming and (not owners or owners[-1] != incoming):
+                owners.append(incoming)
         return {
             "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
             "pick_id": pick_id,
             "season": parts.get("season"), "round": parts.get("round"),
             "original_franchise_id": franchise_id(self.league_id, parts.get("original_roster")),
-            "owner_chain": list(dict.fromkeys(owners)),
+            "owner_chain": owners,
+            "ownership_chain_gaps": chain_gaps,
             "current_owner": owners[-1] if owners else None,
             "events": events,
             "exercised": bool(exercise), "selected_player_id": selected_player,
             "selected_player_url": f"/players/{selected_player.removeprefix('DTOS-P-')}" if selected_player else None,
             "slot_status": "determined" if exercise else "unknown",
-            "reconciliation_status": "verified" if events else "no_historical_events",
+            "reconciliation_status": ("ownership_chain_gap" if chain_gaps else
+                                      "verified" if owners else "no_historical_events"),
             "provenance": ["Sleeper drafts", "Sleeper traded-pick transaction snapshots"],
         }
 

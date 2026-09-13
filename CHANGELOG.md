@@ -1,5 +1,14 @@
 # Changelog
 
+# v1.18.0 - FOIS and Pick Evidence Intelligence (candidate)
+
+- Reconcile Results and historical GM tenure; separate activity, process, outcomes, confidence and evidence availability.
+- Carry supported decision-time assessments through active FOIS preparation and category aggregation; missing categories never become poor grades or Results-only overall scores.
+- Preserve original-franchise pick identity and ownership chains; select compatible external generic/range/exact Market evidence with shared normalization.
+- Replace legacy calculated pick scalars with explicit evidence; normal Picks reads avoid full intelligence orchestration.
+- Add generation-bound conservative ranges, portfolio distributions and bounded semantic range history with zero-growth unchanged replay.
+- Production publication, live acceptance, storage admission and controlled restart remain pending. Batch 5 is not started.
+
 # v1.17.2 - Single-Provider Market Coverage
 
 - Preserve the valid FantasyCalc reference when secondary Market formats cannot join consensus; never average incompatible formats.

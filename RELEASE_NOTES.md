@@ -1,4 +1,21 @@
-# DTOS v1.17.2 - Single-Provider Market Coverage
+# DTOS v1.18.0 - FOIS and Pick Evidence Intelligence (candidate)
+
+Batch 4 reconciles historical Results and manager tenure, preserves decision-time
+process separately from later outcomes, and exposes category quality only where
+supported. Missing historical timestamps, Market evidence and roster precision
+remain explicit limitations. Results alone cannot produce overall FOIS.
+
+Pick Intelligence preserves original franchise, current ownership and transfer
+history. Compatible external Market quotes retain generic/range/exact identities;
+unavailable prices are never replaced by internal scores. Ranges remain UNKNOWN
+without supported original-franchise evidence. Portfolio context is descriptive,
+not a fabricated value grade. Prepared Picks navigation avoids full orchestration.
+
+Semantic histories deduplicate unchanged inputs and retain methodology boundaries.
+Release gates and production acceptance are pending. No paid infrastructure change.
+Current Visual, DINS and Mirror remain retired. Batch 5 is not started.
+
+## Previous release: DTOS v1.17.2 - Single-Provider Market Coverage
 
 Corrects the shared Market availability boundary: the presence of an incompatible
 secondary provider no longer erases a valid FantasyCalc price. The configured

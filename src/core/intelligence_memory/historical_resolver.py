@@ -7,11 +7,11 @@ from threading import RLock
 from time import monotonic, sleep
 from typing import TYPE_CHECKING, Callable, Iterable, Protocol
 
-from .market import HistoricalMarketSelection, select_historical_market
+from .market import HistoricalMarketSelection, select_historical_market, supported_quote_identity
 from .models import (
     EvidencePersistenceDecision, GlobalMarketObservation,
     HISTORICAL_RESOLUTION_POLICY_VERSION, HistoricalResolutionState,
-    SourceObservation,
+    SourceObservation, ProvenanceType, EvidenceCompleteness,
 )
 from .store import IntelligenceCheckpointStore
 
@@ -129,6 +129,14 @@ class HistoricalMarketResolver:
 
     @staticmethod
     def _from_global(row: GlobalMarketObservation) -> HistoricalResolution:
+        if any(not supported_quote_identity(item) for item in row.provider_evidence):
+            return HistoricalResolution(
+                HistoricalMarketSelection(
+                    ProvenanceType.UNAVAILABLE, EvidenceCompleteness.UNAVAILABLE,
+                    None, 0, (), False, "unsupported_retained_quote_identity",
+                ), EvidencePersistenceDecision.ALREADY_PRESERVED,
+                "unsupported_retained_quote_identity", row.observation_id,
+            )
         selection = HistoricalMarketSelection(
             row.provenance_type, row.evidence_completeness,
             float(row.canonical_value), row.confidence,

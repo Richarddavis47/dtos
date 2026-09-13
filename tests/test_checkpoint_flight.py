@@ -40,6 +40,28 @@ class CheckpointFlightTests(unittest.TestCase):
             model_version="fixture-v1", related_event_id=f"trade-{when}",
         ), market_context_id="player:global")
 
+    def test_sleeper_player_identity_resolves_namespaced_global_evidence(self):
+        self.put('player:10213', '2025-09-20T00:00:00Z', 500)
+        self.put('player:10213', '2025-11-20T00:00:00Z', 800)
+        with checkpoint_read_flight(self.store) as reader:
+            history = HistoricalIntelligenceService(FixtureStore('league-a'), checkpoint_reader=reader)
+            row = history.nearest_market_checkpoint('10213', '2025-10-01T00:00:00Z')
+            self.assertIsNotNone(row)
+            self.assertEqual(row.normalized_value, 500)
+            self.assertEqual(reader.global_market_checkpoints(asset_id='10213'),
+                             self.store.global_market_checkpoints(asset_id='10213'))
+            self.assertEqual(reader.global_market_checkpoints(asset_id='pick:10213'), [])
+
+    def test_checkpoint_asof_rejects_event_labels_and_compares_actual_instants(self):
+        self.put('player:10213', '2025-09-20T02:00:00+02:00', 500)
+        self.put('player:10213', '2025-draft-event-98', 900)
+        with checkpoint_read_flight(self.store) as reader:
+            history = HistoricalIntelligenceService(FixtureStore('league-a'), checkpoint_reader=reader)
+            self.assertEqual(history.nearest_market_checkpoint(
+                '10213', '2025-09-20T00:00:00Z').normalized_value, 500)
+            self.assertIsNone(history.nearest_market_checkpoint('10213', '2025-draft-event-99'))
+            self.assertIsNone(history.nearest_market_checkpoint('10213', '2025-09-20T00:00:00'))
+
     def evaluate(self, reader, league="league-a", as_of="2025-12-31T00:00:00Z", event_suffix="1"):
         from src.core.historical_transaction_intelligence import HistoricalTransactionIntelligenceService
         facts = FixtureStore(league)

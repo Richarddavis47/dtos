@@ -10,7 +10,8 @@ def inputs(strengths, games=0):
     decisions, grading = {}, {}
     for rid, strength in enumerate(strengths, 1):
         decisions[rid] = SimpleNamespace(profile=SimpleNamespace(
-            wins=games, losses=0, ties=0, picks=({'round': 1},), known_ages=(25,)))
+            wins=games, losses=0, ties=0, picks=({'season': 2027, 'round': 1,
+                'original_roster_id': rid, 'current_owner_id': rid},), known_ages=(25,)))
         grading[rid] = grade_roster_evidence(league_id='a', roster_id=rid, generation='g',
             players=(PlayerGradingEvidence(str(rid), strength * 10, strength, strength, 50, 80, 90, 85),),
             actual_starter_ids=(str(rid),), optimal_starter_ids=(str(rid),),
@@ -80,9 +81,14 @@ class TeamIntelligenceTests(unittest.TestCase):
 
     def test_pick_evidence_stays_independent_of_unknown_player_utility(self):
         decisions, grading = inputs((70, 70))
-        decisions[1].profile.picks = tuple({'round': 1} for _ in range(12))
+        decisions[1].profile.picks = tuple({'season': year, 'round': round_number,
+            'original_roster_id': 1, 'current_owner_id': 1}
+            for year in (2027, 2028, 2029) for round_number in (1, 2, 3, 4))
         cards, _ = build_team_intelligence(decisions, {}, {}, {}, grading=grading)
-        self.assertGreater(cards[1].draft_capital.score, cards[2].draft_capital.score)
+        self.assertIsNone(cards[1].draft_capital.score)
+        self.assertIsNone(cards[2].draft_capital.score)
+        self.assertEqual(cards[1].future_capital_evidence['owned_pick_count'], 12)
+        self.assertEqual(cards[2].future_capital_evidence['owned_pick_count'], 1)
         self.assertIsNone(cards[1].future_outlook.score)
         grading[2] = replace(grading[2], generation='other')
         with self.assertRaisesRegex(ValueError, 'mixed-generation'):

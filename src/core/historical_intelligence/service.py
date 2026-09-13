@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import replace
+from datetime import datetime
 from threading import RLock
 from typing import Any, Iterable, Mapping, Protocol
 
@@ -343,12 +344,24 @@ class HistoricalIntelligenceService:
     ) -> GlobalMarketCheckpoint | None:
         self._metrics["checkpoint_queries"] += 1
         rows = self._checkpoint_rows(str(asset_id))
+        def instant(value):
+            try:
+                parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+                return parsed if parsed.tzinfo is not None else None
+            except ValueError:
+                return None
+        boundary = instant(occurred_at)
+        if boundary is None:
+            return None
+        dated = sorted(((instant(row.occurred_at), row) for row in rows
+                        if instant(row.occurred_at) is not None),
+                       key=lambda item: (item[0], item[1].checkpoint_id))
         if direction is CheckpointDirection.EXACT:
-            return next((row for row in rows if row.occurred_at == occurred_at), None)
+            return next((row for stamp, row in dated if stamp == boundary), None)
         if direction is CheckpointDirection.AT_OR_BEFORE:
-            eligible = [row for row in rows if row.occurred_at <= occurred_at]
+            eligible = [row for stamp, row in dated if stamp <= boundary]
             return eligible[-1] if eligible else None
-        return next((row for row in rows if row.occurred_at > occurred_at), None)
+        return next((row for stamp, row in dated if stamp > boundary), None)
 
     def metrics(self) -> dict[str, int]:
         return dict(self._metrics)

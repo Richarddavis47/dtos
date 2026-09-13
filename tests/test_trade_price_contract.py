@@ -5,6 +5,58 @@ from src.core.valuation.packages import adjusted_package_value, neutral_trade_va
 
 
 class TradePriceContractTests(unittest.TestCase):
+    def test_active_pool_uses_prepared_external_pick_quote(self):
+        from datetime import datetime, timezone
+        from src.core.asset_intelligence import AssetContext
+        from src.core.trade_intelligence.market.trade_market import build_asset_pool
+        from src.core.valuation.normalization import prepare_market_normalization
+        from services.trade_intelligence import _require_acquisition_prices
+        market = {'providers': {'FantasyCalc': {'player': {'value': 3000}}},
+                  'pick_quotes': {'FantasyCalc': [{
+                      'provider': 'FantasyCalc', 'year': 2027, 'round': 1,
+                      'pick_type': 'generic_round', 'market_format': 'fc:12:2qb:ppr',
+                      'value_scale': 'fc_native', 'value': 3000, 'confidence': 85,
+                      'availability': 'current', 'retrieved_at': datetime.now(timezone.utc).isoformat(),
+                      'source_updated_at': None}]}}
+        prepare_market_normalization(market)
+        team = {'roster_id': 2, 'players': [], 'picks_owned': [
+            {'season': 2027, 'round': 1, 'original_roster_id': 1, 'current_owner_id': 2}]}
+        pick, = build_asset_pool({'market_data': market}, team, AssetContext('A', 2, {}))
+        expected = market['providers']['FantasyCalc']['player']['normalization_reference']['normalized_value']
+        self.assertEqual(pick.trade_value, expected)
+        self.assertEqual(pick.market_value, expected)
+        self.assertIsNone(pick.dynasty_value)
+        self.assertIsNone(pick.redraft_value)
+        self.assertIsNone(pick.team_fit_value)
+        self.assertEqual(pick.pick_market_evidence['quote']['pick_type'], 'generic_round')
+        self.assertEqual((pick.original_roster_id, pick.current_owner_id), (1, 2))
+        _require_acquisition_prices((pick, SimpleNamespace(asset_id='player', trade_value=expected)))
+        self.assertEqual(adjusted_package_value((pick,)).raw_total, expected)
+        market['pick_quotes']['FantasyCalc'][0]['value'] = 9999
+        changed, = build_asset_pool({'market_data': market}, team, AssetContext('A', 2, {}))
+        self.assertIsNone(changed.trade_value)
+
+    def test_actual_pick_adapter_cannot_promote_internal_score_to_market(self):
+        from src.core.asset_intelligence import AssetContext
+        from src.core.trade_intelligence.market.trade_market import _pick_asset
+        from services.trade_intelligence import TradeInputError, _require_acquisition_prices
+        context = AssetContext('league', 2, {})
+        for projected_range in ('EARLY', 'MID', 'LATE', 'UNKNOWN'):
+            pick = _pick_asset({'season': 2027, 'round': 1, 'original_roster_id': 1,
+                                'current_owner_id': 2, 'projected_range': projected_range,
+                                'exact_slot': '1.03'}, context, 2)
+            self.assertIsNone(pick.market_value)
+            self.assertIsNone(pick.trade_value)
+            self.assertEqual(pick.original_roster_id, 1)
+            self.assertEqual(pick.current_owner_id, 2)
+            self.assertEqual(pick.projected_range, projected_range)
+            with self.assertRaises(TradeInputError):
+                _require_acquisition_prices((SimpleNamespace(asset_id='player', trade_value=600), pick))
+
+    def test_pick_report_has_no_neutral_market_placeholder(self):
+        from src.core.asset_intelligence.picks.pick_value import market_pick_value
+        self.assertIsNone(market_pick_value().score)
+
     def test_zero_market_price_does_not_fall_back_to_intrinsic(self):
         asset = SimpleNamespace(trade_value=0, dynasty_value=999, redraft_value=999, team_fit_value=999)
         self.assertEqual(adjusted_package_value((asset,)).raw_total, 0)

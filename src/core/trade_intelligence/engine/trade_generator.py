@@ -37,7 +37,8 @@ def _shortlist(pool: tuple[TradeAsset, ...]) -> tuple[TradeAsset, ...]:
     pool = tuple(asset for asset in pool if asset.trade_value is not None)
     # Missing fit has no preference; canonical identity breaks ties, not a substitute value.
     players = sorted((asset for asset in pool if asset.kind == "player"), key=lambda item: (item.team_fit_value is None, -item.team_fit_value if item.team_fit_value is not None else 0, item.asset_id))[:8]
-    picks = sorted((asset for asset in pool if asset.kind == "pick"), key=lambda item: (-item.dynasty_value, item.asset_id))[:4]
+    # This shortlist answers acquisition-package coverage, not intrinsic quality.
+    picks = sorted((asset for asset in pool if asset.kind == "pick"), key=lambda item: (-item.trade_value, item.asset_id))[:4]
     return tuple(players + picks)
 
 

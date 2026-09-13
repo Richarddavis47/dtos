@@ -11,7 +11,7 @@ from src.core.decision_engine.team.scoring import clamp, grade
 def evaluate_future_outlook(profile: TeamProfile) -> Evaluation:
     player_score, player_factors, player_limits = evaluate_player_assets(profile)
     pick_score, pick_factors, pick_limits = evaluate_pick_assets(profile)
-    if player_score is None:
+    if player_score is None or pick_score is None:
         return Evaluation(EvaluationHorizon.FUTURE, None, 'Unavailable', 0,
             'Long-term player utility is unavailable; future capital remains separate.',
             player_factors + pick_factors, player_limits + pick_limits)

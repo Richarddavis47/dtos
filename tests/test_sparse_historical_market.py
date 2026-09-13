@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import tempfile
+import json
 import unittest
 from dataclasses import replace
 from pathlib import Path
@@ -81,6 +82,32 @@ class SparseHistoricalResolverTests(unittest.TestCase):
         )
         self.assertEqual(result.persistence, EvidencePersistenceDecision.EPHEMERAL_ONLY)
         self.assertEqual(self.store.market_memory_health()["observation_count"], 0)
+
+    def test_retained_synthetic_pick_quote_is_preserved_but_not_gradable(self):
+        resolver = HistoricalMarketResolver(self.store, (Provider((source(),)),))
+        resolver.resolve_checkpoint(
+            checkpoint(), market_context_id=self.context,
+            persistence=PersistenceContext("trade_execution"),
+        )
+        # Emulate the historical adapter's retained provenance, not new ingestion.
+        with self.store._connect() as connection:
+            row = connection.execute('SELECT provider_evidence_json FROM global_market_observations').fetchone()
+            evidence = json.loads(row[0])
+            evidence[0]['metadata']['matching'] = 'generic_pick_round_average'
+            connection.execute('UPDATE global_market_observations SET provider_evidence_json=?',
+                               (json.dumps(evidence),))
+        from src.core.intelligence_memory.checkpoint_flight import checkpoint_read_flight
+        self.assertEqual(self.store.global_market_checkpoints(asset_id='player:10213'), [])
+        with checkpoint_read_flight(self.store) as flight:
+            self.assertEqual(flight.global_market_checkpoints(asset_id='player:10213'), [])
+        result = resolver.resolve(
+            asset_id='player:10213', asset_type='player', market_context_id=self.context,
+            occurred_at='2023-10-03T00:00:00+00:00',
+            persistence=PersistenceContext('inspection'),
+        )
+        self.assertFalse(result.available)
+        self.assertEqual(result.source, 'unsupported_retained_quote_identity')
+        self.assertEqual(self.store.market_memory_health()['observation_count'], 1)
 
     def test_trade_evidence_is_preserved_once_and_reused_across_leagues(self):
         provider = Provider((source(),))
@@ -355,7 +382,15 @@ class SparseHistoricalResolverTests(unittest.TestCase):
             at_or_before="2023-10-03T00:00:00Z",
         )
         self.assertEqual(player[0].normalized_value, 7000)
-        self.assertEqual(pick[0].normalized_value, 2500)
+        self.assertEqual(pick, ())  # Range quotes cannot manufacture generic evidence.
+        provider._snapshots.clear()
+        values += '"2027 1st",2600,NA\n'
+        generic = provider.observations(
+            asset_id="pick:2027:1:R1", asset_type="future_pick", market_context_id=self.context,
+            at_or_before="2023-10-03T00:00:00Z",
+        )
+        self.assertEqual(generic[0].normalized_value, 2600)
+        self.assertEqual(generic[0].metadata['matching'], 'explicit_generic_pick_round')
         self.assertEqual(provider.health()["permanent_snapshot_bytes"], 0)
 
     def test_trade_service_reads_canonical_facts_and_persists_no_league_snapshot(self):

@@ -41,9 +41,9 @@ class TeamHeadquartersTests(unittest.TestCase):
                     "wins": 5, "losses": 2, "ties": 0, "points_for": 700,
                     "points_against": 650, "max_points": 820, "players": players,
                     "picks_owned": [
-                        {"season": 2027, "round": 1, "original_team": "Alpha", "is_traded": False},
-                        {"season": 2027, "round": 1, "original_team": "Bravo", "is_traded": True},
-                        {"season": 2028, "round": 2, "original_team": "Alpha", "is_traded": False},
+                        {"season": 2027, "round": 1, "original_roster_id": 1, "current_owner_id": 1, "original_team": "Alpha", "is_traded": False},
+                        {"season": 2027, "round": 1, "original_roster_id": 2, "current_owner_id": 1, "original_team": "Bravo", "is_traded": True},
+                        {"season": 2028, "round": 2, "original_roster_id": 1, "current_owner_id": 1, "original_team": "Alpha", "is_traded": False},
                     ],
                 },
                 {

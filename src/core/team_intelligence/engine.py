@@ -6,8 +6,6 @@ from typing import Any
 
 from src.core.competitive_window import build_competitive_window
 from src.core.team_intelligence.models import LeagueTeamSummary, RelativeGrade, TeamIntelligenceCard
-from src.core.asset_intelligence.picks.pick_value import dynasty_pick_value
-from src.core.valuation import normalize_pick
 
 POSITIONS = ("QB", "RB", "WR", "TE")
 
@@ -38,29 +36,19 @@ def _relative(category: str, roster_id: int, raw: dict[int, dict[str, float]], r
     return RelativeGrade(category, percentile, _letter(percentile), percentile, _rank(value, population), len(population), reasons)
 
 
-def _pick_value(picks: tuple[dict[str, Any], ...]) -> float:
-    return sum(
-        normalize_pick(
-            dynasty_pick_value(pick).score,
-            int(pick.get("round") or 4),
-        )
-        for pick in picks
-    )
-
-
 def build_team_intelligence(
     decisions: dict[int, Any],
     league_rooms: dict[int, dict[str, int]],
     league_players: dict[int, dict[str, Any]],
     league_metrics: dict[int, dict[str, float]],
-    *, grading=None,
+    *, grading=None, market_data=None,
 ) -> tuple[dict[int, TeamIntelligenceCard], LeagueTeamSummary]:
     if grading is not None:
-        return _from_grading_evidence(decisions, grading)
+        return _from_grading_evidence(decisions, grading, market_data or {})
     raise ValueError('Generation-bound roster grading evidence is required; legacy scalar fallback is retired.')
 
 
-def _from_grading_evidence(decisions, grading):
+def _from_grading_evidence(decisions, grading, market_data=None):
     """Adapt the generation-bound dimensions; never reuse legacy card scores."""
     from src.core.intelligence.roster_grading import rank_roster_dimension
     rows = tuple(grading.values())
@@ -82,13 +70,19 @@ def _from_grading_evidence(decisions, grading):
             (f'{item.value:g} {item.units}; coverage {item.covered}/{item.expected}.',
              'This dimension is not an overall dynasty or competitive-window grade.'))
     cards = {}
-    picks = {key: {'Future Capital': _pick_value(item.profile.picks)} for key, item in decisions.items()}
+    from src.core.data_platform.pick_quotes import canonical_pick_market
+    from src.core.intelligence.pick_context import pick_portfolio, assess_pick_range
     for roster_id, decision in decisions.items():
         lineup = dimension(roster_id, 'Optimal projected lineup')
         depth = dimension(roster_id, 'Useful projected depth')
         overall = unavailable('Overall team assessment')
         future = unavailable('Long-term dynasty utility')
-        draft = _relative('Future Capital', roster_id, picks, ('Existing canonical pick model; separate from player value.',))
+        owned = tuple(assess_pick_range(pick, league_id=grading[roster_id].league_id)
+                      for pick in decision.profile.picks)
+        pick_evidence = tuple({'identity': dict(pick),
+                               'market': canonical_pick_market(pick, market_data or {})} for pick in owned)
+        priced = sum(row['market']['normalized_market_price'] is not None for row in pick_evidence)
+        draft = unavailable('Future Capital assessment')
         window = build_competitive_window(current_strength=lineup.score, overall_strength=None,
             future_strength=None, depth=depth.score, youth=None, draft_capital=draft.score,
             risk=None, confidence=0)
@@ -103,7 +97,14 @@ def _from_grading_evidence(decisions, grading):
             decision.profile.wins + decision.profile.losses + decision.profile.ties == 0,
             None, None, None, None, dimension(roster_id, 'Market asset strength'),
             dimension(roster_id, 'Production quality'),
-            grading[roster_id].league_id, grading[roster_id].generation)
+            grading[roster_id].league_id, grading[roster_id].generation,
+            {'league_id': grading[roster_id].league_id, 'roster_id': roster_id,
+             'generation': grading[roster_id].generation, 'owned_pick_count': len(owned),
+             'priced_pick_count': priced, 'picks': pick_evidence,
+             'portfolio': pick_portfolio(owned, league_id=grading[roster_id].league_id,
+                                         generation=grading[roster_id].generation),
+             'availability': 'available' if priced == len(owned) else 'partial' if priced else 'unavailable',
+             'assessment': 'No scalar portfolio grade; inventory and Market evidence are separate from weekly strength.'})
     ages = [age for decision in decisions.values() for age in decision.profile.known_ages]
     summary = LeagueTeamSummary(None, mean(ages) if ages else None, None, 0, 0,
         'Unavailable', 'Unavailable', None, None, 'Unavailable', 'Unavailable',

@@ -65,7 +65,15 @@ def isolated_default_fois_storage():
 def execute(run_id: str, progress: ValidationProgress | None = None) -> HttpValidationResult:
     result = HttpValidationResult(run_id=run_id)
     server = None
-    record = progress.record if progress is not None else lambda *_args, **_kwargs: None
+    def record(event, **fields):
+        # Diagnostic I/O must fail validation, never bypass mandatory teardown.
+        # In particular Windows may deny replacement while an external reader
+        # holds the progress snapshot without the coordinated read lock.
+        if progress is not None:
+            try:
+                progress.record(event, **fields)
+            except OSError as exc:
+                result.errors.append(f"Progress evidence write failed: {exc}")
     record("worker_phase", phase="entry", status="started")
     with tempfile.TemporaryFile() as log, isolated_default_fois_storage(), validation_startup_schedule():
         try:

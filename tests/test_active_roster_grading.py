@@ -10,6 +10,19 @@ from tests.test_trade_intelligence import fixture_data
 
 
 class ActiveRosterGradingTests(unittest.TestCase):
+    def test_future_capital_missing_quotes_are_not_legacy_scores(self):
+        result = self.engine.analyze(self.data, 1)
+        card = result.roster.team_intelligence[1]
+        evidence = card.future_capital_evidence
+        self.assertEqual(evidence['league_id'], card.league_id)
+        self.assertEqual(evidence['generation'], card.generation)
+        self.assertEqual(evidence['priced_pick_count'], 0)
+        self.assertEqual(evidence['owned_pick_count'], len(result.decision.profile.picks))
+        self.assertIsNone(card.draft_capital.score)
+        self.assertIsNone(card.future_strength)
+        for row in evidence['picks']:
+            self.assertIsNone(row['market']['normalized_market_price'])
+
     def test_dossier_rejects_unscoped_production_and_stale_brain_rank(self):
         player = self.data['teams'][0]['players'][0]
         key = player['id']

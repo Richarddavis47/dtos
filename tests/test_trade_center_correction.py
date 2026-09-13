@@ -41,9 +41,9 @@ class TradeValueIntegrityTests(unittest.TestCase):
         workspace = build_trade_workspace(fixture_data(), 1)
         unknown_first = next(asset for asset in workspace["pools"][1] if asset.kind == "pick" and asset.round == 1)
         self.assertEqual(unknown_first.projected_range, "UNKNOWN")
-        self.assertLess(unknown_first.trade_value, 900)
+        self.assertIsNone(unknown_first.trade_value)
 
-    def test_projected_range_changes_pick_value_without_exact_slot_fabrication(self) -> None:
+    def test_team_records_cannot_manufacture_range_or_market_price(self) -> None:
         data = fixture_data()
         for roster_id in (1, 2, 3):
             data["teams"][roster_id - 1]["picks_owned"] = []
@@ -57,10 +57,10 @@ class TradeValueIntegrityTests(unittest.TestCase):
             {"season": 2027, "round": 1, "original_roster_id": 1, "current_owner_id": 1},
         ]
         picks = [asset for asset in build_trade_workspace(data, 1)["pools"][1] if asset.kind == "pick"]
-        self.assertEqual({pick.projected_range for pick in picks}, {"EARLY", "LATE"})
-        self.assertEqual({pick.projected_range_confidence for pick in picks}, {"MEDIUM"})
+        self.assertEqual({pick.projected_range for pick in picks}, {"UNKNOWN"})
+        self.assertEqual({pick.projected_range_confidence for pick in picks}, {"LOW"})
         self.assertEqual({pick.exact_slot for pick in picks}, {None})
-        self.assertEqual(len({pick.trade_value for pick in picks}), 2)
+        self.assertEqual({pick.trade_value for pick in picks}, {None})
 
 
 class TradeWorkflowConformanceTests(unittest.TestCase):
@@ -101,7 +101,8 @@ class TradeWorkflowConformanceTests(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["calculated"])
-        self.assertGreater(response.json()["count"], 0)
+        self.assertEqual(response.json()["count"], 0)
+        self.assertTrue(response.json()["quiet_state"])
 
     def test_manager_ui_exposes_real_multi_asset_edit_adjust_and_repair_controls(self) -> None:
         async def noop() -> None:

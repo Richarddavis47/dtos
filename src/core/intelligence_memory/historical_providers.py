@@ -129,13 +129,17 @@ class DynastyProcessHistoricalProvider:
                 season, round_number = parts[:2]
                 label = {"1": "1st", "2": "2nd", "3": "3rd", "4": "4th"}.get(round_number)
                 if label:
-                    prefixes = {f"{season} Early {label}", f"{season} Mid {label}", f"{season} Late {label}"}
-                    matched = [row for row in rows if str(row.get("player") or "") in prefixes]
+                    # An owned, unresolved pick identifies a year/round, not a
+                    # projected range. Averaging three range quotes invents a
+                    # generic quote that the provider never published.
+                    matched = [row for row in rows if str(row.get("player") or "") == f"{season} {label}"]
         values = [self._number(row.get("value_2qb")) for row in matched]
         values = [value for value in values if value is not None]
         if not values:
             return ()
-        value = sum(values) / len(values)
+        if len(set(values)) != 1:
+            return ()  # Conflicting identities cannot become a synthetic average.
+        value = values[0]
         return (SourceObservation(
             provider=self.provider_id, raw_value=value, normalized_value=value,
             observed_at=observed_at, source_identity=f"github:{sha[:12]}:{asset_id}",
@@ -146,7 +150,7 @@ class DynastyProcessHistoricalProvider:
             metadata={
                 "repository": DYNASTYPROCESS_REPOSITORY,
                 "snapshot_commit": sha[:12], "format": "2QB",
-                "matching": "fantasypros_to_sleeper" if context["asset_type"] == "player" else "generic_pick_round_average",
+                "matching": "fantasypros_to_sleeper" if context["asset_type"] == "player" else "explicit_generic_pick_round",
             },
         ),)
 

@@ -12,6 +12,15 @@ APPROVED_HISTORICAL_PROVIDERS = frozenset({"dynastyprocess"})
 SCHEMA_SUPPORTED_PROVIDERS = frozenset({"dynastyprocess", "fantasycalc"})
 
 
+def supported_quote_identity(observation: SourceObservation) -> bool:
+    """Keep retained synthetic range averages out of canonical Market evidence.
+
+    The original observation remains stored for audit; this is a read boundary,
+    not a rewrite of historical source records.
+    """
+    return observation.metadata.get("matching") != "generic_pick_round_average"
+
+
 @dataclass(frozen=True)
 class HistoricalMarketSelection:
     provenance: ProvenanceType
@@ -33,6 +42,8 @@ def select_historical_market(
     event = datetime.fromisoformat(event_at)
     eligible = []
     for observation in observations:
+        if not supported_quote_identity(observation):
+            continue
         if observation.provider.casefold() not in approved_providers:
             continue
         if not observation.observed_at or observation.normalized_value is None:

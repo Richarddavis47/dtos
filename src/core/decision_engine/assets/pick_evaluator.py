@@ -7,7 +7,7 @@ from src.core.decision_engine.models.evaluation import EvaluationFactor
 from src.core.decision_engine.models.team_profile import TeamProfile
 
 
-def evaluate_pick_assets(profile: TeamProfile) -> tuple[float, tuple[EvaluationFactor, ...], tuple[str, ...]]:
+def evaluate_pick_assets(profile: TeamProfile) -> tuple[float | None, tuple[EvaluationFactor, ...], tuple[str, ...]]:
     context = AssetContext(
         profile.league_id,
         profile.active_front_office_id,
@@ -20,4 +20,4 @@ def evaluate_pick_assets(profile: TeamProfile) -> tuple[float, tuple[EvaluationF
         EvaluationFactor(item.factor, item.observed_value, item.impact, item.explanation, item.source)
         for item in result.evidence
     )
-    return float(result.score), factors, result.limitations
+    return float(result.score) if result.score is not None else None, factors, result.limitations
