@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import unittest
+from datetime import datetime, timezone
 
 import httpx
 
@@ -39,6 +40,42 @@ class FixtureClient:
 
 
 class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_missing_family_refresh_failure_preserves_other_provider_and_player_cache(self) -> None:
+        stamp = datetime.now(timezone.utc).isoformat()
+        cached = {'providers': {'FantasyCalc': {'9509': {'value': 10000}}},
+                  'pick_quotes': {'DynastyProcess': []},
+                  'provider_status': {name: {'status': 'healthy', 'last_refresh': stamp}
+                                      for name in ('FantasyCalc', 'DynastyProcess')}}
+        result = await refresh_public_market(FixtureClient({
+            FANTASYCALC_URL: FixtureResponse(status=503)}), cached)
+        self.assertEqual(result['providers'], cached['providers'])
+        self.assertNotIn('FantasyCalc', result['pick_quotes'])
+        self.assertEqual(result['provider_status']['FantasyCalc']['refresh_result'], 'cached_fallback')
+        self.assertEqual(result['provider_status']['DynastyProcess'], cached['provider_status']['DynastyProcess'])
+        self.assertEqual(result['pick_quotes']['DynastyProcess'], [])
+
+    async def test_healthy_legacy_cache_materializes_missing_pick_family_once(self) -> None:
+        cached = {'providers': {}, 'provider_status': {
+            name: {'status': 'healthy', 'last_refresh': datetime.now(timezone.utc).isoformat()}
+            for name in ('FantasyCalc', 'DynastyProcess')}}
+        client = FixtureClient({
+            FANTASYCALC_URL: FixtureResponse(json_value=[{'player': {
+                'position': 'PICK', 'name': '2027 1st', 'sleeperId': 'FP_2027_1'}, 'value': 4000}]),
+            DYNASTYPROCESS_VALUES_URL: FixtureResponse(text='player,pos,value_2qb,scrape_date\n2027 Early 1st,PICK,5000,2026-09-01\n'),
+            DYNASTYPROCESS_IDS_URL: FixtureResponse(text='fantasypros_id,sleeper_id\n'),
+        })
+        result = await refresh_public_market(client, cached)
+        self.assertEqual(len(result['pick_quotes']['FantasyCalc']), 1)
+        self.assertEqual(result['pick_quotes']['FantasyCalc'][0]['pick_type'], 'generic_round')
+        self.assertEqual(result['pick_quotes']['DynastyProcess'][0]['range'], 'EARLY')
+        self.assertEqual(result['pick_quotes']['DynastyProcess'][0]['source_updated_at'], '2026-09-01T00:00:00+00:00')
+        # A completed family, including a legitimately empty one, is not a cache miss.
+        result['pick_quotes']['DynastyProcess'] = []
+        replay = await refresh_public_market(FixtureClient({}), result)
+        self.assertEqual(replay['pick_quotes'], result['pick_quotes'])
+        for name in ('FantasyCalc', 'DynastyProcess'):
+            self.assertEqual(replay['provider_status'][name], result['provider_status'][name])
+
     def test_player_and_market_api_use_same_current_normalized_price(self) -> None:
         platform = build_data_platform()
         data = {'players': self.players, 'market_data': {'providers': {

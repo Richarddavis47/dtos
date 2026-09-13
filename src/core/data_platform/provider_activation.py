@@ -89,7 +89,9 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
     pick_quotes = dict(previous.get("pick_quotes") or {})
     from src.core.data_platform.pick_quotes import pick_concept
 
-    if refresh_due(statuses.get("FantasyCalc")):
+    # Older healthy caches predate retained pick evidence. Materialize a missing
+    # family during preparation; an existing empty family is a valid fetch result.
+    if "FantasyCalc" not in pick_quotes or refresh_due(statuses.get("FantasyCalc")):
         try:
             response = await client.get(FANTASYCALC_URL)
             response.raise_for_status()
@@ -139,7 +141,7 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
         except Exception as exc:  # provider isolation is intentional
             statuses["FantasyCalc"] = _status(enabled=True, state="failed", result="cached_fallback" if providers.get("FantasyCalc") else "failed", records=len(providers.get("FantasyCalc") or {}), reason=f"FantasyCalc temporarily unavailable: {type(exc).__name__}.")
 
-    if refresh_due(statuses.get("DynastyProcess")):
+    if "DynastyProcess" not in pick_quotes or refresh_due(statuses.get("DynastyProcess")):
         try:
             value_response = await client.get(DYNASTYPROCESS_VALUES_URL)
             ids_response = await client.get(DYNASTYPROCESS_IDS_URL)

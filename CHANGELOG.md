@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.18.1 - Pick Evidence Cache Upgrade
+
+- Materialize absent provider pick-quote families during preparation even when a pre-upgrade player cache remains within its refresh interval.
+- Preserve legitimate empty quote sets, normal refresh timing after materialization, source timestamps, provider isolation and disclosed cached fallback on fetch failure.
+- No request-path analysis, synthetic price, schema change or infrastructure change. Batch 4 live acceptance remains pending; Batch 5 is not started.
+
 # v1.18.0 - FOIS and Pick Evidence Intelligence (candidate)
 
 - Reconcile Results and historical GM tenure; separate activity, process, outcomes, confidence and evidence availability.
