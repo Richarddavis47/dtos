@@ -139,7 +139,7 @@ class ValuationUniverseTests(unittest.TestCase):
         layers = self.universe.by_id["player:1"]["layers"]
         self.assertIsNone(layers["intrinsic_dtos_value"]["value"])
         self.assertIsNone(layers["league_adjusted_value"]["value"])
-        self.assertIsNone(layers["market_value"]["value"])  # Unproven multi-format consensus.
+        self.assertEqual(layers["market_value"]["value"], 750)  # FC price is not an intrinsic fallback.
 
 
 if __name__ == "__main__":

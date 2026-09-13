@@ -13,6 +13,7 @@ from src.core.freshness import assess_freshness
 from src.core.valuation.config import CANONICAL_MAX, DEFAULT_CONFIG, NORMALIZATION_VERSION, ValuationConfig
 from src.core.valuation.models import NormalizedValuation
 from src.core.valuation.source_time import market_times
+from src.core.valuation.quote_eligibility import exclusion_reason
 
 
 def prepare_distribution(
@@ -131,6 +132,9 @@ def prepare_market_normalization(market_data: dict[str, Any]) -> None:
 
 def normalize_cached_value(provider: str, row: dict[str, Any], **kwargs: Any) -> NormalizedValuation:
     """Use a matching pre-filter reference; stale/raw-changed references fail closed."""
+    rejected = exclusion_reason(provider, row)
+    if rejected:
+        return NormalizedValuation(provider, 0, 0, 0, 0, None, None, 0, 'unavailable', NORMALIZATION_VERSION, rejected)
     clocks = market_times(row, kwargs.get('updated_at'))
     kwargs['updated_at'] = clocks['source_updated_at']
     normalized = normalize_value(provider, float(row["value"]), **kwargs)

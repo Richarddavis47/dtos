@@ -8,6 +8,7 @@ from typing import Any, Iterator
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.valuation.calibration import cached_market_consensus
+from src.core.valuation.quote_eligibility import exclusion_reason
 from src.core.valuation.config import NORMALIZATION_VERSION, VALUATION_SCHEMA_VERSION
 from src.core.valuation.models import CalibrationStatus
 from src.core.valuation.normalization import normalize_cached_value, normalize_internal, prepare_distribution
@@ -125,7 +126,7 @@ def _provider_rows(
         confidence = int(raw.get("confidence") or 0)
         if raw_value is not None and name in distributions:
             item = normalize_cached_value(name, raw, prepared_distribution=distributions[name], updated_at=raw.get("updated_at"), provider_confidence=confidence if raw.get("confidence") is not None else 70)
-            normalized = item.normalized_value
+            normalized = item.normalized_value if item.confidence_score > 0 else None
             confidence = item.confidence_score
         status = provider_status.get(name) or provider_status.get(source_name) or {}
         rows.append({
@@ -138,7 +139,7 @@ def _provider_rows(
             "last_updated": raw.get("updated_at") or status.get("last_refresh"),
             "confidence": confidence,
             "availability": "available" if raw_value is not None else str(status.get("status") or "unavailable"),
-            "reason": None if raw_value is not None else status.get("reason") or "No current value is available for this asset.",
+            "reason": exclusion_reason(name, raw) if raw_value is not None else status.get("reason") or "No current value is available for this asset.",
             "source_version": NORMALIZATION_VERSION,
         })
     return rows
