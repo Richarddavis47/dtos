@@ -106,6 +106,12 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         if front_office is None:
             return JSONResponse({"status": "manager_context_required", "active_front_office": None, "count": 0, "opportunities": [], "reason": "Choose the franchise you control before using Trade Center."})
         result = await view(front_office)
+        if result.get('search_state') == 'not_started':
+            return JSONResponse({'active_front_office': int(result['active_team']['roster_id']),
+                'count': 0, 'opportunities': [], 'canonical_bilateral_evaluations': [],
+                'availability': 'not_started', 'decision_confidence': None,
+                'reason': 'Run the authenticated Recommended Trades workflow to discover current opportunities.',
+                'workflow_url': f'/trades/recommended?front_office={int(result["active_team"]["roster_id"])}'})
         payload = {
             "active_front_office": int(result["active_team"].get("roster_id") or 0),
             "count": len(result["dossiers"]),

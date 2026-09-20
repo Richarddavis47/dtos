@@ -32,6 +32,7 @@ class CompetitiveWindowContract:
     weaknesses: tuple[str, ...]
     generated_at: str = field(compare=False)
     version: str = COMPETITIVE_WINDOW_CONTRACT_VERSION
+    production_profile: dict | None = None
 
     @classmethod
     def generated(

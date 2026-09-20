@@ -17,13 +17,15 @@ from src.platform.storage_gate import connect
 from src.core.projection_intelligence.sleeper_provider import (
     PARSER_VERSION, SOURCE_CLASSIFICATION, freshness_state, parse_projection_feed,
 )
-from src.core.projection_intelligence.scoring import fantasy_points
+from src.core.projection_intelligence.scoring import (
+    fantasy_points, sleeper_web_display, SCORING_METHOD_VERSION, DISPLAY_METHOD_VERSION,
+)
 from src.core.projection_intelligence.consumer_registry import projection_consumer_health
 
 PROJECTION_SCHEMA_VERSION = "2.0"
 PROJECTION_MODEL_VERSION = "sleeper-canonical-weekly-1"
 PROJECTION_CONTRACT_VERSION = "2"
-PROJECTION_SEMANTIC_POLICY_VERSION = "3"
+PROJECTION_SEMANTIC_POLICY_VERSION = "7"
 PROVIDER_CACHE_SEASONS = 6
 
 
@@ -64,6 +66,7 @@ def _projection_semantics(players: dict[str, dict[str, Any]]) -> dict[str, Any]:
         "provider_id", "scoring_profile_id", "canonical_projection",
         "availability", "availability_state", "projection_confidence",
         "source_freshness", "sleeper_evidence_fingerprint",
+        "scoring_method_version", "display_method_version", "sleeper_web_display_projection",
     )
     return {
         player_id: {field: row.get(field) for field in fields}
@@ -151,7 +154,10 @@ class ProjectionService:
     def _initialize(self) -> None:
         with closing(self._connect()) as connection:
             connection.executescript(state_storage.SCHEMA)
+            connection.execute("CREATE TABLE IF NOT EXISTS projection_source_history (observation_id INTEGER PRIMARY KEY, season INTEGER NOT NULL, week INTEGER NOT NULL, observed_at TEXT NOT NULL, fingerprint TEXT NOT NULL, payload TEXT NOT NULL)")
+            connection.execute("CREATE INDEX IF NOT EXISTS projection_source_history_scope ON projection_source_history(season, week, observation_id)")
             connection.execute("CREATE TABLE IF NOT EXISTS projection_snapshots (snapshot_id TEXT PRIMARY KEY, league_id TEXT NOT NULL, season INTEGER NOT NULL, week INTEGER, generated_at TEXT NOT NULL, payload TEXT NOT NULL)")
+            connection.execute("CREATE TABLE IF NOT EXISTS projection_publication_heads (league_id TEXT PRIMARY KEY, snapshot_id TEXT NOT NULL, published_at TEXT NOT NULL)")
             connection.execute("CREATE TABLE IF NOT EXISTS projection_actuals (snapshot_id TEXT NOT NULL, player_id TEXT NOT NULL, actual_points REAL NOT NULL, recorded_at TEXT NOT NULL, PRIMARY KEY(snapshot_id, player_id))")
             connection.execute("CREATE TABLE IF NOT EXISTS sleeper_projection_snapshots (fingerprint TEXT PRIMARY KEY, season INTEGER NOT NULL, week INTEGER NOT NULL, retrieved_at TEXT NOT NULL, payload TEXT NOT NULL)")
             connection.commit()
@@ -165,6 +171,13 @@ class ProjectionService:
                     (self._league_id,),
                 ).fetchone()
             external = connection.execute("SELECT fingerprint, retrieved_at FROM sleeper_projection_snapshots ORDER BY retrieved_at DESC LIMIT 1").fetchone()
+            head = connection.execute(
+                "SELECT s.payload FROM projection_publication_heads h JOIN projection_snapshots s ON s.snapshot_id=h.snapshot_id "
+                "WHERE (? IS NULL OR h.league_id=?) ORDER BY h.published_at DESC LIMIT 1",
+                (self._league_id, self._league_id),
+            ).fetchone()
+            if head:
+                row = head
         try:
             if row:
                 restored = self._decode_snapshot(row["payload"])
@@ -253,16 +266,24 @@ class ProjectionService:
         """Persist one disposable provider week without publishing active state."""
         with self._lock:
             self._external_requests += 1
-        rows, fingerprint, report = parse_projection_feed(
-            payload, season=int(season), week=int(week), scoring=scoring,
-        )
+        if payload is None:
+            rows, report = {}, {"received": 0, "accepted": 0, "malformed": 0, "duplicates": 0}
+            fingerprint = _digest({'season': int(season), 'week': int(week), 'state': 'fetch_unavailable'})
+        else:
+            rows, fingerprint, report = parse_projection_feed(
+                payload, season=int(season), week=int(week), scoring=scoring,
+            )
         snapshot = {
             "provider_id": "sleeper_projections", "source_classification": SOURCE_CLASSIFICATION,
             "parser_version": PARSER_VERSION, "season": int(season), "week": int(week),
             "retrieved_at": _now(), "semantic_fingerprint": fingerprint,
             "players": rows, "normalization": report,
+            "availability_state": "fetch_unavailable" if payload is None else "observed",
         }
         with closing(self._connect()) as connection:
+            self._record_source_observation(connection, snapshot)
+            connection.execute("DELETE FROM sleeper_projection_snapshots WHERE season=? AND week=? AND fingerprint<>?",
+                               (int(season), int(week), fingerprint))
             connection.execute(
                 "INSERT INTO sleeper_projection_snapshots VALUES (?, ?, ?, ?, ?) "
                 "ON CONFLICT(fingerprint) DO UPDATE SET retrieved_at=excluded.retrieved_at, payload=excluded.payload",
@@ -272,6 +293,158 @@ class ProjectionService:
             self._prune_provider_cache(connection)
             connection.commit()
         return {"week": int(week), "players": len(rows), "semantic_fingerprint": fingerprint}
+
+    @staticmethod
+    def _record_source_observation(connection: sqlite3.Connection, snapshot: dict[str, Any]) -> None:
+        """Keep semantic transitions as shared player references, not copied universes.
+
+        Observation time gates historical knowledge. Provider effective time is
+        retained on each player and never used to backdate availability.
+        """
+        scope = (snapshot['season'], snapshot['week'])
+        latest = connection.execute(
+            "SELECT fingerprint FROM projection_source_history WHERE season=? AND week=? ORDER BY observation_id DESC LIMIT 1", scope,
+        ).fetchone()
+        if latest is None:
+            previous = connection.execute(
+                "SELECT payload FROM sleeper_projection_snapshots WHERE season=? AND week=? ORDER BY retrieved_at DESC LIMIT 1", scope,
+            ).fetchone()
+            if previous:
+                prior = json.loads(previous['payload'])
+                ProjectionService._append_source_observation(connection, prior)
+                if prior['semantic_fingerprint'] == snapshot['semantic_fingerprint']:
+                    return
+        elif latest['fingerprint'] == snapshot['semantic_fingerprint']:
+            return
+        ProjectionService._append_source_observation(connection, snapshot)
+
+    @staticmethod
+    def _append_source_observation(connection: sqlite3.Connection, snapshot: dict[str, Any]) -> None:
+        source = {**snapshot, 'model_version': 'sleeper-source-statistics',
+                  'players': {key: {field: value for field, value in row.items() if field != 'league_projection'}
+                              for key, row in snapshot['players'].items()}}
+        payload = state_storage.encode(connection, source)
+        connection.execute("INSERT INTO projection_source_history(season,week,observed_at,fingerprint,payload) VALUES (?,?,?,?,?)",
+                           (snapshot['season'], snapshot['week'], snapshot['retrieved_at'], snapshot['semantic_fingerprint'], payload))
+
+    def source_as_of(self, *, season: int, week: int, observed_as_of: str) -> dict[str, Any] | None:
+        boundary = datetime.fromisoformat(observed_as_of)
+        if boundary.tzinfo is None:
+            raise ValueError('Historical projection boundary requires timezone')
+        boundary_text = boundary.astimezone(timezone.utc).isoformat()
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT payload FROM projection_source_history WHERE season=? AND week=? AND observed_at<=? ORDER BY observation_id DESC LIMIT 1",
+                (season, week, boundary_text),
+            ).fetchone()
+            return state_storage.decode(connection, row['payload']) if row else None
+
+    def publish_horizon(
+        self, payloads: dict[int, Any], *, data: dict[str, Any], league_id: str,
+        season: int, current_week: int, response_bytes: int = 0,
+        transport_details: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Validate all requested weeks, commit once, then swap the published handle.
+
+        Week artifacts are immutable and share player states. A manifest pins every
+        consumer read to exactly one set of source/scoring/player generations.
+        Fetch failures are explicit unavailable observations, never old quotes.
+        """
+        if (current_week not in payloads or not payloads
+                or any(not isinstance(week, int) or not 1 <= week <= 18 for week in payloads)):
+            raise ProjectionInputError('Projection publication requires valid current and horizon weeks')
+        league = data.get('league') or {}
+        if (self._league_id not in (None, str(league_id))
+                or str(league.get('league_id') or league_id) != str(league_id)
+                or int(league.get('season') or season) != season):
+            raise ProjectionInputError('Projection publication league/season mismatch')
+        scoring = data.get('scoring_settings') or league.get('scoring_settings') or {}
+        scoring_id = self._scoring_profile_id or _digest(scoring)
+        players, normalization = self._players(data)
+        observed = _now()
+        prepared, sources = {}, {}
+        with self._lock:
+            self._generation_state = 'generating'
+        try:
+            for week, payload in sorted(payloads.items()):
+                if payload is None:
+                    rows, report = {}, {'accepted': 0, 'received': 0}
+                    fingerprint = _digest({'season': season, 'week': week, 'state': 'fetch_unavailable'})
+                else:
+                    rows, fingerprint, report = parse_projection_feed(payload, season=season, week=week, scoring=scoring)
+                source = {'provider_id': 'sleeper_projections', 'source_classification': SOURCE_CLASSIFICATION,
+                          'parser_version': PARSER_VERSION, 'season': season, 'week': week,
+                          'retrieved_at': observed, 'semantic_fingerprint': fingerprint,
+                          'players': rows, 'normalization': report,
+                          'availability_state': 'fetch_unavailable' if payload is None else 'observed'}
+                sources[week] = source
+                canonical = {str(player.get('id') or player.get('player_id')): self._canonical_projection(
+                    player, rows.get(str(player.get('id') or player.get('player_id'))),
+                    season=season, week=week, scoring_profile_id=scoring_id,
+                    sleeper_freshness=freshness_state((rows.get(str(player.get('id') or player.get('player_id'))) or {}).get('source_updated_at')),
+                    evidence_fingerprint=fingerprint, scoring_settings=scoring) for player in players}
+                identity = {'league_id': str(league_id), 'season': season, 'week': week,
+                            'schema_version': PROJECTION_SCHEMA_VERSION, 'model_version': PROJECTION_MODEL_VERSION,
+                            'contract_version': PROJECTION_CONTRACT_VERSION,
+                            'semantic_policy_version': PROJECTION_SEMANTIC_POLICY_VERSION,
+                            'scoring_profile_id': scoring_id, 'players': _projection_semantics(canonical)}
+                snapshot_id = _digest(identity)
+                for row in canonical.values():
+                    row.update(projection_snapshot_id=snapshot_id, generated_at=observed)
+                prepared[week] = {**identity, 'players': canonical, 'projection_snapshot_id': snapshot_id,
+                                  'generated_at': observed, 'scoring_settings': scoring,
+                                  'canonical_provider': 'Sleeper', 'providers': provider_registry(),
+                                  'consumer_migration': projection_consumer_health(),
+                                  'legacy_production_projection_consumers': 0,
+                                  'sleeper_evidence_snapshot_id': fingerprint}
+            manifest = {str(week): row['projection_snapshot_id'] for week, row in prepared.items()}
+            generation = _digest({'league': str(league_id), 'season': season, 'current_week': current_week, 'weeks': manifest})
+            published = {**prepared[current_week], 'projection_snapshot_id': generation,
+                         'horizon_snapshot_ids': manifest, 'horizon_generation': generation,
+                         'weeks_requested': sorted(prepared),
+                         'weeks_supported': [week for week, row in prepared.items()
+                                             if any(p['canonical_projection'] is not None for p in row['players'].values())]}
+            with closing(self._connect()) as connection:
+                with connection:
+                    for week, source in sources.items():
+                        self._record_source_observation(connection, source)
+                        connection.execute('DELETE FROM sleeper_projection_snapshots WHERE season=? AND week=? AND fingerprint<>?',
+                                           (season, week, source['semantic_fingerprint']))
+                        connection.execute('INSERT OR IGNORE INTO sleeper_projection_snapshots VALUES (?,?,?,?,?)',
+                                           (source['semantic_fingerprint'], season, week, observed, json.dumps(source, sort_keys=True)))
+                    for candidate in [*prepared.values(), published]:
+                        existing = connection.execute('SELECT payload FROM projection_snapshots WHERE snapshot_id=?',
+                                                      (candidate['projection_snapshot_id'],)).fetchone()
+                        if existing is None:
+                            encoded = state_storage.encode(connection, candidate)
+                            connection.execute('INSERT INTO projection_snapshots VALUES (?,?,?,?,?,?)',
+                                               (candidate['projection_snapshot_id'], league_id, season, candidate['week'], observed, encoded))
+                        elif candidate is published:
+                            published = state_storage.decode(connection, existing['payload'])
+                    connection.execute('INSERT INTO projection_publication_heads VALUES (?,?,?) ON CONFLICT(league_id) DO UPDATE SET snapshot_id=excluded.snapshot_id, published_at=excluded.published_at WHERE snapshot_id<>excluded.snapshot_id',
+                                       (league_id, generation, observed))
+                    self._prune_provider_cache(connection)
+            with self._lock:
+                changed = (self._snapshot or {}).get('projection_snapshot_id') != generation
+                self._snapshot = published
+                data['projection_intelligence'] = published
+                self._normalization = normalization
+                self._generation_state = 'ready'
+                self._refreshing = False
+                self._last_success_at = observed
+                self._external_last_success = observed
+                self._external_fingerprint = sources[current_week]['semantic_fingerprint']
+                self._external_bytes += response_bytes
+                self._external_transport = dict(transport_details or {})
+                self._generations += 1
+                self._durable_publications += int(changed)
+                self._compatibility, self._compatibility_reason = snapshot_compatibility(published)
+            return published
+        except Exception as exc:
+            self.fail_external_refresh(exc)
+            with self._lock:
+                self._generation_state = 'stale' if self._snapshot else 'failed'
+            raise
 
     @staticmethod
     def _prune_provider_cache(connection: sqlite3.Connection) -> None:
@@ -330,6 +503,9 @@ class ProjectionService:
                 "players": rows, "normalization": report,
             }
             with closing(self._connect()) as connection:
+                self._record_source_observation(connection, snapshot)
+                connection.execute("DELETE FROM sleeper_projection_snapshots WHERE season=? AND week=? AND fingerprint<>?",
+                                   (season, week, fingerprint))
                 connection.execute(
                     "INSERT INTO sleeper_projection_snapshots VALUES (?, ?, ?, ?, ?) "
                     "ON CONFLICT(fingerprint) DO UPDATE SET retrieved_at=excluded.retrieved_at, payload=excluded.payload",
@@ -464,6 +640,7 @@ class ProjectionService:
         cls, player: dict[str, Any], evidence: dict[str, Any] | None,
         *, season: int, week: int | None, scoring_profile_id: str,
         sleeper_freshness: str, evidence_fingerprint: str | None,
+        scoring_settings: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         player_id = str(player.get("id") or player.get("player_id"))
         value = (evidence or {}).get("league_projection")
@@ -473,7 +650,7 @@ class ProjectionService:
             from src.core.projection_intelligence.scoring import STAT_KEYS
             if not any(key in STAT_KEYS for key in (evidence['projected_stats'] or {})):
                 value = None
-        projected = round(float(value), 2) if value is not None else None
+        projected = float(value) if value is not None else None
         availability = cls._availability(player, evidence)
         state = "projected_zero" if projected == 0 else "projected" if projected is not None else "unavailable"
         confidence = (
@@ -490,6 +667,13 @@ class ProjectionService:
             "provider": "Sleeper", "provider_id": "sleeper_projections",
             "scoring_profile_id": scoring_profile_id,
             "canonical_projection": projected,
+            "projection_concept": "source_stats_league_scored_decimal",
+            "scoring_method_version": SCORING_METHOD_VERSION,
+            "sleeper_web_display_projection": (sleeper_web_display(
+                evidence.get('projected_stats') or {}, scoring_settings,
+                evidence.get('source_stat_order'))
+                if projected is not None and evidence is not None and scoring_settings is not None else None),
+            "display_method_version": DISPLAY_METHOD_VERSION,
             "weekly_projected_points": projected,
             "weekly_median": projected,
             "expected_points_per_game": projected,
@@ -568,7 +752,6 @@ class ProjectionService:
         )
         scoring_profile_id = self._scoring_profile_id or _digest(scoring)
         projections = {}
-        sleeper_freshness = freshness_state((external_snapshot or {}).get("retrieved_at"))
         for player in players:
             player_id = str(player.get("id") or player.get("player_id"))
             evidence = external_players.get(player_id)
@@ -583,8 +766,9 @@ class ProjectionService:
             projections[player_id] = self._canonical_projection(
                 player, evidence, season=season, week=week,
                 scoring_profile_id=scoring_profile_id,
-                sleeper_freshness=sleeper_freshness,
+                sleeper_freshness=freshness_state((evidence or {}).get("source_updated_at")),
                 evidence_fingerprint=(external_snapshot or {}).get("semantic_fingerprint"),
+                scoring_settings=scoring,
             )
         identity = {
             "league_id": league_id, "season": season, "week": week,
@@ -651,23 +835,32 @@ class ProjectionService:
         snapshot = self.snapshot()
         return (snapshot.get("players") or {}).get(str(player_id)) if snapshot else None
 
-    def week_snapshot(self, week: int) -> dict[str, Any] | None:
+    def week_snapshot(self, week: int, *, generation_snapshot: dict[str, Any] | None = None) -> dict[str, Any] | None:
         """Return a durable canonical week without provider access."""
         if not 1 <= int(week) <= 18:
             return None
-        snapshot = self.snapshot()
+        snapshot = generation_snapshot if generation_snapshot is not None else self.snapshot()
+        expected_league = self._league_id or str((self.snapshot() or {}).get('league_id') or '')
+        if snapshot and (str(snapshot.get('league_id') or '') != expected_league
+                         or snapshot_compatibility(snapshot)[0] != 'compatible'):
+            return None
         if snapshot and int(snapshot.get("week") or 0) == int(week):
             return snapshot
+        if snapshot and 'horizon_snapshot_ids' in snapshot:
+            identity = snapshot['horizon_snapshot_ids'].get(str(week))
+            if identity is None:
+                return None
+            with closing(self._connect()) as connection:
+                row = connection.execute('SELECT payload FROM projection_snapshots WHERE snapshot_id=?', (identity,)).fetchone()
+                candidate = state_storage.decode(connection, row['payload']) if row else None
+            if (snapshot_compatibility(candidate)[0] != 'compatible'
+                    or candidate.get('league_id') != snapshot.get('league_id')
+                    or candidate.get('season') != snapshot.get('season')):
+                return None
+            return {**candidate, 'horizon_generation': snapshot['horizon_generation']}
         league_id = self._league_id or str((snapshot or {}).get("league_id") or "")
-        with closing(self._connect()) as connection:
-            row = connection.execute(
-                "SELECT payload FROM projection_snapshots WHERE league_id=? AND week=? "
-                "ORDER BY generated_at DESC LIMIT 1", (league_id, int(week)),
-            ).fetchone()
-        if row:
-            candidate = self._decode_snapshot(row["payload"])
-            if snapshot_compatibility(candidate)[0] == "compatible":
-                return candidate
+        # Historical prepared snapshots are not current future-week evidence.
+        # Reconcile the current source head under the active scoring generation.
         if not snapshot:
             return None
         season = int(snapshot.get("season") or 0)
@@ -678,7 +871,6 @@ class ProjectionService:
         scoring_profile_id = str(snapshot.get("scoring_profile_id") or _digest(scoring))
         source_players = snapshot.get("players") or {}
         evidence_players = external.get("players") or {}
-        freshness = freshness_state(external.get("retrieved_at"))
         players: dict[str, Any] = {}
         for player_id, prior in source_players.items():
             evidence = evidence_players.get(player_id)
@@ -689,8 +881,10 @@ class ProjectionService:
                 )}
             players[player_id] = self._canonical_projection(
                 prior, evidence, season=season, week=int(week),
-                scoring_profile_id=scoring_profile_id, sleeper_freshness=freshness,
+                scoring_profile_id=scoring_profile_id,
+                sleeper_freshness=freshness_state((evidence or {}).get("source_updated_at")),
                 evidence_fingerprint=external.get("semantic_fingerprint"),
+                scoring_settings=scoring,
             )
         identity = {
             "league_id": league_id, "season": season, "week": int(week),

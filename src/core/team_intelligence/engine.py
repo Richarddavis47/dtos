@@ -41,14 +41,14 @@ def build_team_intelligence(
     league_rooms: dict[int, dict[str, int]],
     league_players: dict[int, dict[str, Any]],
     league_metrics: dict[int, dict[str, float]],
-    *, grading=None, market_data=None,
+    *, grading=None, market_data=None, strength_profile=None,
 ) -> tuple[dict[int, TeamIntelligenceCard], LeagueTeamSummary]:
     if grading is not None:
-        return _from_grading_evidence(decisions, grading, market_data or {})
+        return _from_grading_evidence(decisions, grading, market_data or {}, strength_profile)
     raise ValueError('Generation-bound roster grading evidence is required; legacy scalar fallback is retired.')
 
 
-def _from_grading_evidence(decisions, grading, market_data=None):
+def _from_grading_evidence(decisions, grading, market_data=None, strength_profile=None):
     """Adapt the generation-bound dimensions; never reuse legacy card scores."""
     from src.core.intelligence.roster_grading import rank_roster_dimension
     rows = tuple(grading.values())
@@ -86,6 +86,15 @@ def _from_grading_evidence(decisions, grading, market_data=None):
         window = build_competitive_window(current_strength=lineup.score, overall_strength=None,
             future_strength=None, depth=depth.score, youth=None, draft_capital=draft.score,
             risk=None, confidence=0)
+        if strength_profile is not None:
+            from dataclasses import replace
+            if strength_profile['league_id'] != grading[roster_id].league_id:
+                raise ValueError('Competitive Window strength league mismatch')
+            # Explicit evidence, not a replacement for assets/longevity/future capital.
+            window = replace(window, production_profile={
+                'generation': strength_profile['semantic_generation'],
+                'projection_generation': strength_profile['projection_generation'],
+                **strength_profile['teams'].get(str(roster_id), {})})
         cards[roster_id] = TeamIntelligenceCard(roster_id, overall, lineup,
             unavailable('Intrinsic dynasty utility'), lineup, depth,
             {position: unavailable(f'{position} evidence assessment') for position in POSITIONS},

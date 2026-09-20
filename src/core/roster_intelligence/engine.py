@@ -43,7 +43,8 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
                 if item.player_id not in lineup.optimal_starter_ids
                 and str(player.get('roster_slot') or '').upper() not in {'IR', 'TAXI', 'RESERVE'}]
             backup_result = optimal_legal_lineup(reserves, context.settings.get('roster_positions') or ())
-            backup = backup_result.projected_points if backup_result.available else 0
+            # Depth is the supported reserve contribution, not a second full team.
+            backup = backup_result.known_starters_subtotal
         grading[roster_id] = grade_roster_evidence(league_id=context.league_id, roster_id=roster_id,
             generation=context.evidence_generation, players=tuple(evidence_players),
             actual_starter_ids=lineup.actual_starter_ids, optimal_starter_ids=lineup.optimal_starter_ids,
@@ -63,8 +64,10 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
                 'Longevity context is not a dynasty price.', 'Review evidence')
     league_rooms = {key: dict.fromkeys(POSITIONS) for key in grading}
     league_metrics = {key: {name: item.value for name, item in row.dimensions.items()} for key, row in grading.items()}
+    from src.core.intelligence.team_strength import compatible_profile
     teams, summary = build_team_intelligence(intelligence.decisions, league_rooms, league_players, league_metrics, grading=grading,
-                                           market_data=context.cached_data.get('market_data'))
+                                           market_data=context.cached_data.get('market_data'),
+                                           strength_profile=compatible_profile(context.cached_data, context.projection_snapshot))
     assessment = build_team_assessment(context, teams[context.active_roster_id])
     window = assessment.team.competitive_window
     rooms = {p: PositionRoomReport(p, GradeDimension('Position evidence', None, 'Unavailable',

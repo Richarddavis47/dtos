@@ -31,8 +31,8 @@ def _points(value: Any) -> float | None:
 def build_roster_evidence(context: Any) -> RosterEvidence:
     """Only pinned canonical weekly projections enter the lineup calculation.
 
-    Existing submitted starters remain untouched. A missing projection for an
-    eligible roster player prevents claiming a provably optimal complete lineup.
+    Existing submitted starters remain untouched. Optimal means optimal among
+    supported projections; missing players remain explicit coverage limitations.
     Market price, legacy player scores and historic points are never substitutes.
     """
     snapshot = context.projection_snapshot or {}
@@ -64,9 +64,10 @@ def build_roster_evidence(context: Any) -> RosterEvidence:
         {'id': key, 'position': player.get('position'), 'name': player.get('name'),
          'projected_points': points[key]} for key, player in eligible
     ), slots)
-    complete = (candidate.available and len(candidate.entries) == slot_count
-                and all(points[key] is not None for key, _ in eligible))
+    complete = candidate.available and len(candidate.entries) == slot_count
     limitations = []
+    if any(points[key] is None for key, _ in eligible):
+        limitations.append('Optimal lineup is limited to players with supported projections; unknown players are not ranked as zero.')
     if actual_total is None:
         limitations.append('Actual starter projection coverage is incomplete.')
     if not complete:

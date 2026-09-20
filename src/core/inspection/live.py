@@ -116,8 +116,10 @@ def matchup_semantic(
                 "position": player.get("position"), "nfl_team": player.get("nfl_team"),
                 "lineup_slot": player.get("slot"),
                 "displayed": {"canonical_projection": canonical,
+                              "sleeper_web_display_projection": row.get("sleeper_web_display_projection"),
                               "provider": "Sleeper", "actual_points": player.get("points")},
-                "canonical": {"canonical_projection": canonical, "provider": "Sleeper"},
+                "canonical": {"canonical_projection": canonical, "provider": "Sleeper",
+                              "sleeper_web_display_projection": row.get("sleeper_web_display_projection")},
                 "projection_state": "projected_zero" if canonical == 0 else "available" if canonical is not None else "unavailable",
                 "technical_details": {"projection_snapshot_id": row.get("projection_snapshot_id")},
             })

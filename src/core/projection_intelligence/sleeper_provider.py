@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from math import isfinite
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -13,7 +14,7 @@ from src.core.projection_intelligence.scoring import STAT_KEYS, fantasy_points
 
 PROVIDER_ID = "sleeper_projections"
 SOURCE_CLASSIFICATION = "Sleeper Canonical Weekly Projection Evidence"
-PARSER_VERSION = "2.1"
+PARSER_VERSION = "3.1"
 TRANSPORT_VERSION = "1.0"
 REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 ALLOWED_PROJECTION_HOSTS = frozenset({"api.sleeper.app", "api.sleeper.com"})
@@ -22,7 +23,20 @@ ALLOWED_STATS = frozenset({
     "pass_yd", "pass_td", "pass_int", "pass_2pt", "rush_yd", "rush_td",
     "rush_2pt", "rec", "rec_yd", "rec_td", "rec_2pt", "fum_lost",
     "fgm", "fgmiss", "xpm", "xpmiss", "pts_std", "pts_half_ppr", "pts_ppr",
-})
+}) | frozenset(STAT_KEYS)
+
+
+def source_update_time(value: Any) -> str | None:
+    """Sleeper projection timestamps are Unix milliseconds or explicit ISO times."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        if isinstance(value, (int, float)):
+            return datetime.fromtimestamp(value / 1000, timezone.utc).isoformat()
+        parsed = datetime.fromisoformat(value)
+        return parsed.astimezone(timezone.utc).isoformat() if parsed.tzinfo else None
+    except (ValueError, TypeError, OverflowError, OSError):
+        return None
 
 
 class SleeperProjectionSchemaError(ValueError):
@@ -66,9 +80,14 @@ def parse_projection_feed(
             continue
         normalized_stats: dict[str, float] = {}
         invalid = False
-        for key in ALLOWED_STATS & stats.keys():
+        for key in stats:
+            if key not in ALLOWED_STATS:
+                continue
             try:
                 normalized_stats[key] = float(stats[key])
+                if isinstance(stats[key], bool) or not isfinite(normalized_stats[key]):
+                    invalid = True
+                    break
             except (TypeError, ValueError):
                 invalid = True
                 break
@@ -85,27 +104,28 @@ def parse_projection_feed(
             "team": item.get("team"),
             "opponent": item.get("opponent"),
             "projected_stats": normalized_stats,
+            "source_stat_order": list(normalized_stats),
             "displayed_projection": float(displayed) if displayed is not None else None,
             "league_projection": (fantasy_points(normalized_stats, scoring, position)
                 if any(key in STAT_KEYS for key in normalized_stats) else None),
             "source_company": item.get("company"),
-            "source_updated_at": item.get("updated_at") or item.get("last_modified"),
+            "source_updated_at": source_update_time(item.get("updated_at") or item.get("last_modified")),
         }
         if player_id in rows:
             duplicates += 1
         rows[player_id] = row
     if payload and not rows:
         raise SleeperProjectionSchemaError("Sleeper projection response contained no valid records.")
-    fingerprint = _digest({
+    fingerprint = _digest({"season": season, "week": week, "players": {
         player_id: {
             key: value for key, value in row.items()
             if key in {
                 "player_id", "season", "week", "position", "team",
-                "opponent", "projected_stats",
+                "opponent", "projected_stats", "source_stat_order", "source_updated_at", "source_company",
             }
         }
         for player_id, row in rows.items()
-    })
+    }})
     return rows, fingerprint, {
         "received": len(payload), "accepted": len(rows),
         "malformed": malformed, "duplicates": duplicates,
@@ -188,8 +208,15 @@ class SleeperProjectionClient:
 def freshness_state(timestamp: str | None, *, now: datetime | None = None) -> str:
     if not timestamp:
         return "Unavailable"
-    observed = datetime.fromisoformat(timestamp)
-    age = (now or datetime.now(timezone.utc)) - observed
+    try:
+        observed = datetime.fromisoformat(timestamp)
+        if observed.tzinfo is None:
+            return "Unavailable"
+        age = (now or datetime.now(timezone.utc)) - observed
+    except (TypeError, ValueError, OverflowError):
+        return "Unavailable"
+    if age < timedelta(0):
+        return "Unavailable"
     if age <= timedelta(hours=1):
         return "Fresh"
     if age <= timedelta(hours=6):

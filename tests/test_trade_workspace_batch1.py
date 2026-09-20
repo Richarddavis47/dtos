@@ -61,6 +61,20 @@ class AuthenticatedTradeBoundaryTests(unittest.TestCase):
         context = self.client.get("/api/trades/workspace").json()["workspace_context"]
         return self.client.post("/api/trades/" + path, json={**self.payload, "workspace_context": context, **(payload or {})}, headers={"X-CSRF-Token": self.csrf})
 
+    def test_manual_missing_price_returns_bounded_assessment_not_input_error(self):
+        from dataclasses import replace
+        from services.trade_intelligence import build_asset_pool
+        def missing_price(*args, **kwargs):
+            return tuple(replace(asset, trade_value=None) if asset.asset_id == self.payload['assets_sent'][0] else asset
+                         for asset in build_asset_pool(*args, **kwargs))
+        with patch('services.trade_intelligence.build_asset_pool', side_effect=missing_price):
+            response = self._post()
+        self.assertEqual(response.status_code, 200)
+        result = response.json()['evaluation']
+        self.assertIn(result['market_evidence']['availability'], ('partial', 'unavailable'))
+        self.assertIsNone(result['values']['sent'])
+        self.assertIsNone(result['recommendation'])
+
     def test_wrong_active_franchise_is_rejected_server_side(self):
         response = self._post({"active_roster_id": 2})
         self.assertEqual(response.status_code, 422)
@@ -156,9 +170,12 @@ class AuthenticatedTradeBoundaryTests(unittest.TestCase):
         self.assertFalse(response.json()["search_completed"])
 
     def test_generation_respects_explicit_counterparty(self):
-        response = self._post({"workflow": "recommended"}, path="generate")
+        response = self._post({"workflow": "shop", "asset_id": "1-QB-0"}, path="generate")
         self.assertEqual(response.status_code, 200)
         for row in response.json()["results"]:
             self.assertEqual(row["proposal"]["partner_roster_id"], 2)
+        # Proactive discovery does not inherit the editable proposal's partner.
+        response = self._post({"workflow": "recommended"}, path="generate")
+        self.assertEqual(response.status_code, 422)
         response = self._post({"workflow": "trade_for", "asset_id": "2-QB-0", "partner_roster_id": 1}, path="generate")
         self.assertEqual(response.json()["detail"]["code"], "legality_rejected")

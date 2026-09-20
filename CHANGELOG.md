@@ -1,5 +1,14 @@
 # Changelog
 
+# v1.19.0 - Bilateral Trade and Multi-Horizon Intelligence (candidate)
+
+- Preserve precise supported weekly projections, source freshness and missing-versus-zero semantics through atomic horizon publication.
+- Prepare optimal legal lineups and explicit current-week, Next-N, regular-season, playoff and depth/bye evidence under each league's rules.
+- Use one bilateral evaluator across Create Trade, Trade For, Shop Asset, Recommended Trades, Adjust Offer and alternatives.
+- Keep Market fairness, Package Quality, strategic fit, counterparty plausibility, confidence and limitations distinct; never fabricate offers or unavailable evidence.
+- Bound generated searches, preserve request-local constraints and hypothetical ownership isolation, and deduplicate unchanged semantic history.
+- Implementation checkpoint complete. Required comprehensive release and production acceptance pending. Batch 6 not started.
+
 # v1.18.1 - Pick Evidence Cache Upgrade
 
 - Materialize absent provider pick-quote families during preparation even when a pre-upgrade player cache remains within its refresh interval.

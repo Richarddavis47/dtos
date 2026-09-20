@@ -92,7 +92,9 @@ class ActiveRosterGradingTests(unittest.TestCase):
         del self.data['market_data']['providers']['FantasyCalc'][missing]
         result = self.engine.analyze(self.data, 1)
         card = result.team_assessment.team
-        self.assertIsNone(card.starting_lineup.score)
+        self.assertIsNotNone(card.starting_lineup.score)
+        self.assertTrue(any('supported projections' in reason
+                            for reason in result.team_assessment.roster_evidence.limitations))
         self.assertIsNone(card.market_asset_strength.score)
         self.assertEqual(card.current_window.value, 'Unavailable')
         self.assertNotEqual(card.overall.grade, 'F')

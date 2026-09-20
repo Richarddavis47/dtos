@@ -4,6 +4,11 @@ from .global_evidence import GlobalEvidenceStore
 
 def team_schedule(store: GlobalEvidenceStore, team: str, *, season: int, as_of: str) -> dict:
     facts = store.read('schedule', None, season=season, as_of=as_of)
+    return schedule_from_facts(facts, team, season=season, as_of=as_of)
+
+
+def schedule_from_facts(facts: list[dict], team: str, *, season: int, as_of: str) -> dict:
+    """Reuse one bounded canonical read across a background preparation flight."""
     games = []
     regular_weeks = set()
     team_weeks: dict[str, list[int]] = {}

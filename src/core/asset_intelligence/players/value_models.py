@@ -35,7 +35,11 @@ def canonical_evidence(profile: PlayerProfile, context: AssetContext | None) -> 
         projection = (snapshot.get("players") or {}).get(profile.player_id)
     points = projection.get("weekly_projected_points") if projection is not None and snapshot.get("week") is not None and projection.get("week") == snapshot.get("week") else None
     rows.append(Evidence("Canonical weekly projection", str(points) if points is not None else "Unavailable", 0,
-        "Published Sleeper projection; not an actual NFL result or a dynasty value.", "Sleeper canonical projection", points is not None))
+        "Unrounded decimal league-scored Sleeper statistics; not an actual NFL result or a dynasty value.", "Sleeper canonical projection", points is not None))
+    if points is not None and projection.get("sleeper_web_display_projection") is not None:
+        rows.append(Evidence("Sleeper web display", projection["sleeper_web_display_projection"], 0,
+            "Same underlying evidence, with Sleeper's source-order display formatting; not a second forecast.",
+            "Sleeper web display compatibility", True))
     return tuple(rows)
 
 

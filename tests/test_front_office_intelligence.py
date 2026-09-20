@@ -75,7 +75,7 @@ class FrontOfficeIntelligenceTests(unittest.TestCase):
         self.assertIn("Franchise Management Profile", page.text)
         self.assertNotIn("<details open", page.text)
 
-    def test_trade_and_front_office_serialize_identical_brain_decision_contracts(self) -> None:
+    def test_trade_navigation_does_not_claim_front_office_recommendation(self) -> None:
         async def noop() -> None:
             return None
 
@@ -87,11 +87,12 @@ class FrontOfficeIntelligenceTests(unittest.TestCase):
         client = TestClient(app)
         office = client.get("/api/front-offices?front_office=1").json()
         trade = client.get("/api/trades?front_office=1").json()
-        for key in (
-            "decision_confidence", "decision_confidence_version", "brain_snapshot_id",
-            "recommendation_timestamp", "decision_provenance", "recommendation_explanation",
-        ):
-            self.assertEqual(office[key], trade[key], key)
+        self.assertIsNotNone(office['decision_confidence'])
+        self.assertEqual(trade['availability'], 'not_started')
+        self.assertIsNone(trade['decision_confidence'])
+        self.assertEqual(trade['canonical_bilateral_evaluations'], [])
+        self.assertEqual(trade['opportunities'], [])
+        self.assertEqual(trade['workflow_url'], '/trades/recommended?front_office=1')
 
 
 class FrontOfficeRequestSchedulingTests(unittest.IsolatedAsyncioTestCase):

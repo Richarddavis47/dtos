@@ -1,4 +1,22 @@
-# DTOS v1.18.1 - Pick Evidence Cache Upgrade
+# DTOS v1.19.0 - Bilateral Trade and Multi-Horizon Intelligence (candidate)
+
+Batch 5 connects supported weekly projections and optimal legal lineups to
+current-week, Next-N, regular-season, playoff-window and depth/bye evidence.
+Actual submitted lineups remain separate. Missing weeks and incomplete lineups
+are disclosed rather than extrapolated or filled with zero.
+
+Create Trade, Trade For, Shop Asset, Recommended Trades, Adjust Offer and
+alternatives share one bilateral evaluation. Market fairness, package quality,
+strategic fit, counterparty plausibility and evidence confidence remain distinct.
+Searches are bounded, editable proposals retain ownership safeguards, and no
+credible result is fabricated when the evidence does not support one.
+
+Historical storage deduplicates unchanged semantic evidence. No paid
+infrastructure, authentication or retired visual-system changes are included.
+Implementation checkpoint complete; release gates, deployment and authenticated
+production acceptance remain pending. Batch 6 is not started.
+
+## Previous release: DTOS v1.18.1 - Pick Evidence Cache Upgrade
 
 Corrects the production upgrade case where a healthy pre-Batch-4 player cache
 deferred missing Pick Market evidence until its next daily refresh. Preparation

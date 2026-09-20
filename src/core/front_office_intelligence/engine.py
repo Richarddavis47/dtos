@@ -171,7 +171,9 @@ def build_league_model(data: dict[str, Any], decisions: dict[int, TeamDecision] 
         from src.core.intelligence.orchestrator import intelligence_orchestrator
 
         first_roster = int(teams[0].get("roster_id") or 0)
-        return intelligence_orchestrator.analyze(data, first_roster).front_office_model
+        # Building canonical Front Office context must not trigger a second,
+        # legacy recommendation search as an incidental dependency.
+        return intelligence_orchestrator.analyze(data, first_roster, include_trade_opportunities=False).front_office_model
     if any(str(decision.profile.league_id) != league_id for decision in decisions.values()):
         raise ValueError("Decision Engine output belongs to a different league.")
     reports = {roster_id: _profile(decision, data) for roster_id, decision in decisions.items()}

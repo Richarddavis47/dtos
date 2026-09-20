@@ -72,7 +72,31 @@ def generate_proposals(
     *,
     required_sent_asset_id: str | None = None,
     required_received_asset_id: str | None = None,
+    construction_only: bool = False,
+    search_diagnostics: dict | None = None,
+    return_preference: dict | None = None,
 ) -> tuple[TradeProposal, ...]:
+    if construction_only:
+        if required_sent_asset_id:
+            # Search the other side's bounded return pool around the owned
+            # shopped asset, then restore the canonical user perspective.
+            mirrored = _canonical_candidates(partner_roster_id, active_roster_id, incoming_pool, outgoing_pool,
+                                             required_sent_asset_id, search_diagnostics, return_preference)
+            if search_diagnostics is not None:
+                for field in ('shortlisted_asset_ids', 'shortlist_excluded_asset_ids'):
+                    if field in search_diagnostics:
+                        row = search_diagnostics[field]
+                        row['sent'], row['received'] = row['received'], row['sent']
+                if 'shortlisted_outgoing' in search_diagnostics:
+                    search_diagnostics['shortlisted_outgoing'], search_diagnostics['shortlisted_incoming'] = (
+                        search_diagnostics['shortlisted_incoming'], search_diagnostics['shortlisted_outgoing'])
+                for boundary in search_diagnostics.get('package_boundaries', []):
+                    for row in boundary['nearest_constructions']:
+                        row['assets_sent'], row['assets_received'] = row['assets_received'], row['assets_sent']
+            return tuple(TradeProposal(active_roster_id, partner_roster_id, p.assets_received, p.assets_sent,
+                                       'Shop return: ' + p.package_type) for p in mirrored)
+        return _canonical_candidates(active_roster_id, partner_roster_id, outgoing_pool, incoming_pool,
+                                     required_received_asset_id, search_diagnostics)
     outgoing = _shortlist_with_required(outgoing_pool, required_sent_asset_id)
     incoming = _shortlist_with_required(incoming_pool, required_received_asset_id)
     proposals = []
@@ -116,4 +140,86 @@ def generate_proposals(
         if candidates:
             _, _, sent, received = min(candidates, key=lambda item: (item[0], item[1], tuple(asset.asset_id for asset in item[2]), tuple(asset.asset_id for asset in item[3])))
             proposals.append(TradeProposal(active_roster_id, partner_roster_id, sent, received, label))
+    return tuple(proposals)
+
+
+def _diverse_shortlist(pool, target, limit=12):
+    """Round-robin asset type/position groups; price orders within groups only."""
+    groups = {}
+    for asset in pool:
+        if asset.trade_value is not None:
+            key = (asset.kind, asset.position or 'PICK')
+            groups.setdefault(key, []).append(asset)
+    for rows in groups.values():
+        rows.sort(key=lambda a: (abs(a.trade_value - target.trade_value), a.asset_id))
+    selected = []
+    while len(selected) < limit and any(groups.values()):
+        for key in sorted(groups):
+            if groups[key] and len(selected) < limit:
+                selected.append(groups[key].pop(0))
+    return tuple(selected)
+
+
+def _canonical_candidates(active_id, partner_id, outgoing_pool, incoming_pool, target_id, diagnostics=None, return_preference=None):
+    """Bounded Trade For search ordering, never a valuation/acceptance decision.
+
+    Raw acquisition-price distance chooses one construction per existing shape.
+    No price-ratio rejection, universal discount, fit scalar or legacy guardrail.
+    The target is constrained before selection, not filtered out afterward.
+    """
+    target = next((a for a in incoming_pool if a.asset_id == target_id), None)
+    if target is None or target.trade_value is None:
+        if diagnostics is not None:
+            diagnostics.update(unavailable_target_price=True, constructed_candidates=0)
+        return ()
+    outgoing = _diverse_shortlist(outgoing_pool, target)
+    incoming = (target, *_diverse_shortlist(tuple(a for a in incoming_pool if a.asset_id != target_id), target, 11))
+    proposals, seen = [], set()
+    pair_count = 0
+    boundaries = []
+    for label, sent_count, received_count, sent_kind, received_kind in PACKAGE_SHAPES:
+        candidates = ((sent, received) for sent in combinations(outgoing, sent_count)
+                      if _matches(sent, sent_kind)
+                      if not return_preference or return_preference['name'] != 'draft_capital' or any(a.kind == 'pick' for a in sent)
+                      if not return_preference or return_preference['name'] != 'position_need' or any(a.position == return_preference['position'] for a in sent)
+                      for received in combinations(incoming, received_count)
+                      if _matches(received, received_kind) and any(a.asset_id == target_id for a in received))
+        chosen, best_key = None, None
+        nearest = []
+        shape_count = 0
+        for sent, received in candidates:
+            pair_count += 1
+            shape_count += 1
+            key = (abs(sum(a.trade_value for a in sent) - sum(a.trade_value for a in received)),
+                   tuple(a.asset_id for a in sent), tuple(a.asset_id for a in received))
+            if diagnostics is not None:
+                nearest.append(key)
+                nearest.sort()
+                del nearest[3:]
+            if best_key is None or key < best_key:
+                chosen, best_key = (sent, received), key
+        if diagnostics is not None:
+            boundaries.append({'shape': label, 'candidate_count': shape_count,
+                               'nearest_constructions': [
+                                   {'raw_market_distance': key[0], 'assets_sent': list(key[1]),
+                                    'assets_received': list(key[2]),
+                                    'selection': 'selected_before_exact_deduplication' if index == 0 else 'pruned_search_budget',
+                                    'quality': 'not_assessed'}
+                                   for index, key in enumerate(nearest)]})
+        if chosen is not None:
+            sent, received = chosen
+            identity = (tuple(sorted(a.asset_id for a in sent)), tuple(sorted(a.asset_id for a in received)))
+            if identity not in seen:
+                seen.add(identity)
+                proposals.append(TradeProposal(active_id, partner_id, sent, received, label))
+    if diagnostics is not None:
+        diagnostics.update(shortlisted_outgoing=len(outgoing), shortlisted_incoming=len(incoming),
+                           cheap_package_pairs_inspected=pair_count, constructed_candidates=len(proposals),
+                           shortlisted_asset_ids={'sent': [a.asset_id for a in outgoing], 'received': [a.asset_id for a in incoming]},
+                           shortlist_excluded_asset_ids={
+                               'sent': [a.asset_id for a in outgoing_pool if a not in outgoing],
+                               'received': [a.asset_id for a in incoming_pool if a not in incoming]},
+                           package_boundaries=boundaries,
+                           pruning='position/type diversification then raw Market proximity; not a recommendation',
+                           exhaustive=False)
     return tuple(proposals)

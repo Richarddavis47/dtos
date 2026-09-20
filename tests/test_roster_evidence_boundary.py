@@ -33,8 +33,9 @@ class RosterEvidenceBoundaryTests(unittest.TestCase):
         ctx.roster['players'][2].update(dtos_value=999, projected_points=99, fantasy_points=100)
         row = build_roster_evidence(ctx)
         self.assertEqual(row.actual_lineup_projection, 25)
-        self.assertIsNone(row.optimal_lineup_projection)
-        self.assertEqual(row.optimal_starter_ids, ())
+        self.assertEqual(row.optimal_lineup_projection, 25)
+        self.assertEqual(set(row.optimal_starter_ids), {'q1', 'w1'})
+        self.assertTrue(any('unknown players' in reason for reason in row.limitations))
 
     def test_real_zero_preserved(self):
         ctx = context()
