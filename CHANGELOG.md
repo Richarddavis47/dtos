@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.19.1 - Trade Point Presentation
+
+- Present projected lineup and horizon changes consistently to two decimal places without altering canonical values or evaluation results.
+- Preserve unavailable evidence and genuine numeric zero across manual and generated trade displays.
+- Narrow live-acceptance correction; v1.19.0 remains immutable. Batch 6 remains not started.
+
 # v1.19.0 - Bilateral Trade and Multi-Horizon Intelligence (candidate)
 
 - Preserve precise supported weekly projections, source freshness and missing-versus-zero semantics through atomic horizon publication.
