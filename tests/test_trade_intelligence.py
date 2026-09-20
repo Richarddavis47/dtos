@@ -223,10 +223,9 @@ class TradeIntelligenceTests(unittest.TestCase):
         from services.trade_intelligence import build_trade_center
         expected = build_trade_center(self.data, 1)
         self.assertEqual(api.json()["count"], len(expected["canonical_results"]))
-        self.assertIsNotNone(api.json()["decision_confidence"])
-        self.assertEqual(api.json()["availability"], "available")
-        self.assertTrue(api.json()["brain_snapshot_id"])
-        self.assertTrue(api.json()["decision_provenance"])
+        self.assertIsNone(api.json()["decision_confidence"])
+        self.assertEqual(api.json()["availability"], "not_started")
+        self.assertIn('/trades/recommended', api.json()['workflow_url'])
         self.assertEqual(page.status_code, 200)
         if expected["canonical_results"]:
             self.assertIn('data-dtos-component="recommendation"', page.text)
@@ -253,8 +252,10 @@ class TradeIntelligenceTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         evaluation = response.json()["evaluation"]
         self.assertTrue(evaluation["provenance"]["workflow_independent"])
-        self.assertIn(evaluation["recommendation"], {"SMASH ACCEPT", "WORTH PURSUING", "FAIR / OPTIONAL", "NOT WORTH IT", "REJECT"})
-        self.assertIn(evaluation["dimensions"]["confidence"]["assessment"], {"HIGH", "MEDIUM", "LOW"})
+        self.assertIn(evaluation["recommendation"], {None, "SMASH ACCEPT", "WORTH PURSUING", "FAIR / OPTIONAL", "NOT WORTH IT", "REJECT"})
+        if evaluation['recommendation'] is None:
+            self.assertTrue(evaluation['recommendation_trace']['rule_reasons'])
+        self.assertIn(evaluation["dimensions"]["confidence"]["assessment"], {"HIGH", "MEDIUM", "LOW", "LIMITED"})
         page = client.get("/trades?front_office=1")
         self.assertIn("Create Trade", page.text)
         self.assertIn("Trade For", page.text)

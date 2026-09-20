@@ -24,6 +24,7 @@ class TeamAssessment:
     projected_starter_count: int
     limitations: tuple[str, ...]
     roster_evidence: RosterEvidence | None = None
+    multi_horizon_strength: dict[str, Any] | None = None
 
     @property
     def current_outlook(self) -> str:
@@ -69,9 +70,13 @@ def build_team_assessment(context: Any, team: TeamIntelligenceCard) -> TeamAsses
         limitations.append("Complete starter projection evidence is unavailable; no missing player is scored as zero.")
     if floor is None or ceiling is None:
         limitations.append("Canonical weekly uncertainty bounds are unavailable; no floor/ceiling is inferred from a strength index.")
+    from .team_strength import compatible_profile
+    profile = compatible_profile(context.cached_data, snapshot)
+    strength = ({'generation': profile['semantic_generation'], 'projection_generation': profile['projection_generation'],
+                 **profile['teams'].get(str(team.roster_id), {})} if profile else None)
     return TeamAssessment(
         context.league_id, team.roster_id, context.evidence_generation,
         snapshot.get("projection_snapshot_id"), snapshot.get("generated_at"), week,
         team, total("weekly_projected_points"), floor, ceiling, len(ids), covered,
-        tuple(dict.fromkeys((*limitations, *roster_evidence.limitations))), roster_evidence,
+        tuple(dict.fromkeys((*limitations, *roster_evidence.limitations))), roster_evidence, strength,
     )

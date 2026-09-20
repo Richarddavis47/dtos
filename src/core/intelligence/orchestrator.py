@@ -92,10 +92,10 @@ class IntelligenceOrchestrator:
     def context(self, data: dict[str, Any], roster_id: int, user_preferences: dict[str, Any] | None = None) -> IntelligenceContext:
         return build_context(data, roster_id, user_preferences)
 
-    def analyze(self, data: dict[str, Any], roster_id: int, user_preferences: dict[str, Any] | None = None, *, refresh: bool = False) -> IntelligenceResult:
+    def analyze(self, data: dict[str, Any], roster_id: int, user_preferences: dict[str, Any] | None = None, *, refresh: bool = False, include_trade_opportunities: bool = True) -> IntelligenceResult:
         context = self.context(data, roster_id, user_preferences)
         prefix = f"snapshot:{context.snapshot_key}:"
-        key = prefix + "result"
+        key = prefix + ("result" if include_trade_opportunities else "result_without_trade_opportunities")
         if refresh:
             self.cache.invalidate(prefix)
         before_hits = self.cache.hits
@@ -129,7 +129,8 @@ class IntelligenceOrchestrator:
             }
             decision = decisions[roster_id]
             offices = pipeline.run("front_office_intelligence", self.cache.get_or_create, prefix + "front_offices", lambda: self.registry.provider("front_office")(context, decisions))
-            trades = pipeline.run("trade_intelligence", self.cache.get_or_create, prefix + "trades", lambda: self.registry.provider("trade")(context, decisions, offices))
+            trades = (pipeline.run("trade_intelligence", self.cache.get_or_create, prefix + "trades", lambda: self.registry.provider("trade")(context, decisions, offices))
+                      if include_trade_opportunities else ())
             market = market_intelligence.attach_trade_impacts(market, trades)
             trades = tuple(replace(dossier, market=impact) for dossier, impact in zip(trades, market.trade_impacts))
             top_trade = trades[0] if trades else None
@@ -159,7 +160,9 @@ class IntelligenceOrchestrator:
                 front_office_evidence=offices.reports[roster_id].front_office_evidence,
             )
             partial = IntelligenceResult(context, decision, decisions, player_portfolio, pick_portfolio, player_reports, offices, trades, market, player_values, roster, None, recommendation, pipeline.timings_ms, False, brain, brain_decision)
-            league = pipeline.run("league_intelligence", self.cache.get_or_create, prefix + "league_intelligence", lambda: self.registry.provider("league_intelligence")(partial))
+            league = pipeline.run("league_intelligence", self.cache.get_or_create,
+                                  prefix + ("league_intelligence" if include_trade_opportunities else "league_intelligence_without_trade_opportunities"),
+                                  lambda: self.registry.provider("league_intelligence")(partial))
             pipeline.timings_ms["orchestration_total"] = round((perf_counter() - total_started) * 1000, 3)
             return replace(partial, league=league, timings_ms=pipeline.timings_ms, team_assessment=assessment)
 

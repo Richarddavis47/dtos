@@ -79,7 +79,7 @@ def matchup_projection_mismatches(
                 if field.get("field") == "pregame_projection"
             ]
             if canonical is not None:
-                expected = f"{float(canonical):.2f}"
+                expected = displayed.get("sleeper_web_display_projection") or f"{float(canonical):.2f}"
                 if not any(
                     field.get("availability") == "available"
                     and field.get("value") == expected

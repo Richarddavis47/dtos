@@ -89,7 +89,10 @@ class TradeHistoricalUpgradeTests(unittest.TestCase):
     def test_market_trend_informs_timing_not_value(self) -> None:
         result = evaluate_trade_request(self.data, self.payload)["evaluation"]
         self.assertEqual(len(result["dimensions"]["historical_counterparty_evidence"]["trend_signals"]), 1)
-        self.assertIn("does not alter canonical value", result["why_now"])
+        history = result["dimensions"]["historical_counterparty_evidence"]
+        self.assertIn('MARKET_TIMING_CONTEXT', history['reason_codes'])
+        without = dict(self.data, market_trend_summaries={})
+        self.assertEqual(result['values'], evaluate_trade_request(without, self.payload)['evaluation']['values'])
 
     def test_generation_reads_one_bounded_context_not_per_candidate(self) -> None:
         target = self.workspace["pools"][2][0].asset_id

@@ -55,7 +55,8 @@ class TradeWorkspaceBrowserTests(unittest.TestCase):
                         page.locator("#trade-tray-view").click()
                         self.assertTrue(page.locator("#trade-review").is_visible())
                         page.get_by_role("button", name="Evaluate Trade", exact=True).click()
-                        page.get_by_text("Market Balance is unavailable", exact=False).wait_for()
+                        page.get_by_text("Market Balance: PARTIAL", exact=True).wait_for()
+                        self.assertIn('Unavailable', page.locator('#trade-balance').inner_text())
                         self.assertIn("4 assets", page.locator("#trade-tray-text").inner_text())
                         # Publish legitimate fixture-only external evidence,
                         # then verify the successful valuation interaction too.

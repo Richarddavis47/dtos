@@ -287,12 +287,15 @@ def create_teams_router(
             f'<a class="card" href="/players/{quote(str(player.get("id") or ""))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Starter")}</a>'
             for player in starters
         ) or '<div class="ds-empty"><b>No starting lineup is available.</b>Sleeper has not supplied a current starter assignment.</div>'
+        from src.ui.team_strength import strength_panel
+        multi_horizon_html = strength_panel(assessment.multi_horizon_strength)
         body = f"""
 {TEAM_HQ_CSS}
 <a class="back" href="/teams">← All Teams</a>
 <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><h2>{escape(team['team_name'])}</h2><div class="thq-meta"><span>Overall Grade {view['team_intelligence'].overall.grade}</span><span>·</span><span>Assessment rank {_display(view['rank'])}</span><span>·</span><span>{_display(view['team_intelligence'].overall.percentile)} percentile</span></div></div></div><div><span class="thq-badge">{escape(view['competitive_window'].classification.value)}</span><div class="thq-updated">Last Updated<br><b>{escape(view['last_updated'])}</b></div></div></header>
 <section class="thq-section"><div class="thq-section-head"><h2>DTOS Team Assessment</h2><span>Answer and action first</span></div>{recommendation_card}</section>
 <section class="thq-section"><div class="thq-section-head"><h2>Starting Lineup</h2><span>The players carrying this franchise now</span></div><div class="thq-starters">{starter_cards}</div></section>
+{multi_horizon_html}
 <section class="thq-section"><div class="thq-section-head"><h2>Strengths &amp; Needs</h2><span>Current and future league-relative evidence</span></div><div class="thq-intel">{intelligence_cards}{league_rankings}</div><p class="muted">{escape(' '.join(assessment.limitations))}</p><p class="muted">Projection week: {escape(str(assessment.projection_week or 'Unavailable'))} · Coverage: {assessment.projected_starter_count}/{assessment.starter_count} starters · As of: {escape(assessment.projection_as_of or 'Unavailable')}</p></section>
 <section class="thq-section" id="assets"><div class="thq-section-head"><h2>Core Assets</h2><span>Roster construction and flexibility</span></div><div class="thq-cards">{_asset_cards(view['snapshot'])}</div></section>
 <section class="thq-section"><div class="thq-section-head"><h2>Full Roster</h2><span>Position rooms and current lineup designation</span></div><div class="thq-roster">{_roster_rooms(view)}</div></section>

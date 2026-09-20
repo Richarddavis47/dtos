@@ -91,9 +91,14 @@ class IntelligencePlatformTests(unittest.TestCase):
 
     def test_application_services_use_orchestrator_boundary(self) -> None:
         root = Path(__file__).resolve().parents[1]
-        for relative in ("services/trade_intelligence.py", "services/front_office_intelligence.py", "services/team_headquarters.py", "services/asset_intelligence.py", "services/commissioner.py"):
+        for relative in ("services/front_office_intelligence.py", "services/team_headquarters.py", "services/asset_intelligence.py", "services/commissioner.py"):
             source = (root / relative).read_text(encoding="utf-8")
             self.assertIn("intelligence_orchestrator", source, relative)
+        from src.platform.validation.release import architecture_violations
+        self.assertEqual(architecture_violations(root), ())
+        trade_source = (root / 'services/trade_intelligence.py').read_text(encoding='utf-8')
+        self.assertIn('from src.core.intelligence import', trade_source)
+        self.assertIn('evaluate_bilateral(', trade_source)
         self.assertNotIn("src.core.trade_intelligence import", (root / "services/trade_intelligence.py").read_text(encoding="utf-8"))
         self.assertNotIn("src.core.front_office_intelligence import", (root / "services/front_office_intelligence.py").read_text(encoding="utf-8"))
 

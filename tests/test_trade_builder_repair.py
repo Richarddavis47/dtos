@@ -131,7 +131,7 @@ class TradeRepairContractTests(unittest.TestCase):
         self.assertIn("body.requested_mode !== extra.repair_mode", script)
         self.assertIn("body.returned_modes?.some(mode => mode !== extra.repair_mode)", script)
         self.assertIn("body.target_preserved !== true", script)
-        self.assertIn("row.proposal.assets_received.length !== selected.received.length", script)
+        self.assertIn("selected.received.some(id => !row.proposal.assets_received.includes(id))", script)
         self.assertIn("DTOS rejected a mismatched repair mode.", script)
 
     def test_player_picker_uses_one_neutral_market_positional_rank_contract(self) -> None:
@@ -150,7 +150,9 @@ class TradeRepairContractTests(unittest.TestCase):
             "asset_id": self.target, "protected_assets": [asset.asset_id for asset in self.workspace["pools"][1]],
         })
         self.assertEqual(result["count"], 0)
-        self.assertEqual(len(result["next_paths"]), 3)
+        self.assertTrue(result['next_paths'])
+        self.assertTrue(any('bounded search' in path for path in result['next_paths']))
+        self.assertTrue(any('protected/excluded' in path for path in result['next_paths']))
         self.assertIn("No legitimate", result["quiet_state"])
         self.assertEqual(result["provider_requests"] if "provider_requests" in result else 0, 0)
 

@@ -67,6 +67,9 @@ def build_context(data: dict[str, Any], roster_id: int, user_preferences: dict[s
     snapshot_key = f"{league_id}:{len(teams)}:{len(transactions)}:{players_updated}:{data.get('week', '')}:{front_office_generation}:{behavior_generation}:{market_generation}"
     brain_generation = str((data.get("valuation_intelligence") or {}).get("semantic_generation") or "pending")
     production_generation = str((data.get("canonical_player_production") or {}).get("generation") or "unprepared")
+    from .team_strength import compatible_profile
+    strength = compatible_profile(data, projection_snapshot)
+    snapshot_key += ':' + str((strength or {}).get('semantic_generation') or 'team-strength-unavailable')
     snapshot_key += f":{generations}:{brain_generation}:{projection_generation}:{production_generation}:roster-evidence-grading-v2:pick-evidence-no-scalar-v1"
     evidence_generation = sha256(snapshot_key.encode()).hexdigest()
     # Selection scopes the view cache, not the league's canonical evidence generation.

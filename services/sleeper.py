@@ -210,9 +210,8 @@ async def _sync_sleeper(
                             season=projection_season,
                             week=matchup_week,
                         )
-                        cached_weeks = set(projections.cached_weeks(projection_season))
                         for projection_week in range(1, 19):
-                            if projection_week == matchup_week or projection_week in cached_weeks:
+                            if projection_week <= matchup_week:
                                 continue
                             try:
                                 week_payload, week_bytes, _week_transport = await SLEEPER_PROJECTION_CLIENT.fetch(
@@ -221,6 +220,7 @@ async def _sync_sleeper(
                                 projection_week_payloads.append((projection_week, week_payload))
                                 projection_bytes += week_bytes
                             except Exception as exc:
+                                projection_week_payloads.append((projection_week, None))
                                 logger.info(
                                     "Sleeper projection Week %s is unavailable: %s",
                                     projection_week, type(exc).__name__,
@@ -492,23 +492,13 @@ async def _sync_sleeper(
                     )
                 try:
                     if projection_payload is not None:
-                        scoring = state["data"].get("scoring_settings") or (
-                            state["data"].get("league") or {}
-                        ).get("scoring_settings") or {}
-                        for projection_week, week_payload in projection_week_payloads:
-                            await asyncio.to_thread(
-                                projections.cache_sleeper_week, week_payload,
-                                scoring=scoring,
-                                season=int((nfl_state or {}).get("season") or league.get("season") or utcnow().year),
-                                week=projection_week,
-                            )
                         await asyncio.to_thread(
-                            projections.ingest_sleeper,
-                            projection_payload,
+                            projections.publish_horizon,
+                            {matchup_week: projection_payload, **dict(projection_week_payloads)},
                             data=state["data"],
                             league_id=league_id,
                             season=int((nfl_state or {}).get("season") or league.get("season") or utcnow().year),
-                            week=matchup_week,
+                            current_week=matchup_week,
                             response_bytes=projection_bytes,
                             transport_details=projection_transport,
                         )
@@ -522,6 +512,16 @@ async def _sync_sleeper(
                     logger.exception(
                         "Projection generation failed; canonical intelligence will publish an explicit unavailable state"
                     )
+                try:
+                    from src.core.intelligence.team_strength import prepare_for_data
+                    from src.core.intelligence.strength_history import record_strength_history
+                    from src.core.history_context.metadata import minimal_metadata_store
+                    strength = await asyncio.to_thread(prepare_for_data, projections, state['data'])
+                    await asyncio.to_thread(record_strength_history, minimal_metadata_store, strength,
+                                            observed_at=utcnow().isoformat())
+                except Exception:
+                    state['data'].pop('team_strength', None)
+                    logger.exception('Team Strength preparation unavailable; projection evidence remains separate')
                 with lifecycle_coordinator.phase("valuation_intelligence") as phase:
                     from services.player_evidence import prepare_player_production
                     production_evidence = await asyncio.to_thread(

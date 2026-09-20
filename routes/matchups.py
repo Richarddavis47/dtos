@@ -79,12 +79,14 @@ def _starter_projection_html(row: dict[str, Any] | None) -> str:
         f'<details><summary>Technical Details</summary><small>Provider: Sleeper. '
         f'Availability: {escape(str(projection.get("projection_availability") or "projected"))}. '
         f'Confidence: {escape(str(projection.get("projection_confidence") if projection.get("projection_confidence") is not None else "Unavailable"))}%. '
-        f'DTOS consumes this league-scored value without blending a separate weekly forecast.</small></details>'
+        f'DTOS uses the unrounded league-scored total for intelligence; the displayed '
+        f'player projection follows Sleeper web formatting where source-order evidence is available.</small></details>'
     )
+    display = escape(str(projection.get("sleeper_web_display_projection") or _projection_value(sleeper)))
     return (
         '<div class="starter-projections" data-dtos-semantic-field="pregame_projection" '
-        f'data-dtos-availability="available" data-dtos-value="{_projection_value(sleeper)}">'
-        f'<span><small>Pregame projection</small><b>{_projection_value(sleeper)}</b></span>'
+        f'data-dtos-availability="available" data-dtos-value="{display}">'
+        f'<span><small>Pregame projection</small><b>{display}</b></span>'
         f'</div>{technical}'
     )
 

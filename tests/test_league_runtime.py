@@ -26,7 +26,7 @@ from src.core.league_runtime import (
 )
 from src.core.asset_market import AssetMarketCache, asset_market_cache
 from services import sleeper as sleeper_service
-from src.core.projection_intelligence.service import ProjectionService
+from src.core.projection_intelligence.service import ProjectionService, PROJECTION_SEMANTIC_POLICY_VERSION
 from src.core.fois.repository import FOISRepository
 from src.core.fois.service import FOISService
 from src.platform.league_context import LeagueContextMiddleware, current_league_context
@@ -205,7 +205,7 @@ class LeaguePersistenceIsolationTests(unittest.TestCase):
                 a = {
                     "league_id": "100", "schema_version": "2.0",
                     "model_version": "sleeper-canonical-weekly-1",
-                    "contract_version": "2", "semantic_policy_version": "3",
+                    "contract_version": "2", "semantic_policy_version": PROJECTION_SEMANTIC_POLICY_VERSION,
                     "projection_snapshot_id": "a", "generated_at": "2026-01-01T00:00:00+00:00",
                 }
                 b = {**a, "league_id": "200", "projection_snapshot_id": "b", "generated_at": "2026-01-02T00:00:00+00:00"}

@@ -560,7 +560,7 @@ class ProjectionIntelligenceTests(unittest.TestCase):
         self.assertEqual(migration["migrated_consumers"], migration["intended_consumers"])
         self.assertEqual(migration["legacy_production_consumers"], 0)
 
-    def test_timestamp_only_refresh_keeps_semantic_identity_and_refreshes_cache_age(self) -> None:
+    def test_provider_update_changes_provenance_identity_without_inventing_price_movement(self) -> None:
         original = self.sleeper_payload()
         original[0]["updated_at"] = "2026-08-01T00:00:00+00:00"
         self.assertTrue(self.service.ingest_sleeper(
@@ -569,10 +569,10 @@ class ProjectionIntelligenceTests(unittest.TestCase):
         fingerprint = self.service.health()["external_provider"]["semantic_fingerprint"]
         changed_timestamp = copy.deepcopy(original)
         changed_timestamp[0]["updated_at"] = "2026-08-02T00:00:00+00:00"
-        self.assertFalse(self.service.ingest_sleeper(
+        self.assertTrue(self.service.ingest_sleeper(
             changed_timestamp, data=fixture(), league_id="league", season=2026, week=4,
         ))
-        self.assertEqual(
+        self.assertNotEqual(
             self.service.health()["external_provider"]["semantic_fingerprint"], fingerprint,
         )
         with sqlite3.connect(self.service._database_file) as connection:

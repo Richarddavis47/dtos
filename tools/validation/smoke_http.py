@@ -127,6 +127,23 @@ def validate_product_contract(body: bytes, path: str, *, recommendation: bool = 
         raise AssertionError(f"{path}: shared recommendation contract is missing")
 
 
+def validate_trade_navigation_contract(body: bytes, payload: dict, roster_id: int) -> None:
+    """Navigation must expose workflows without inventing an evaluated trade."""
+    validate_product_contract(body, "/trades")
+    html = body.decode("utf-8", errors="replace")
+    for workflow in ("create", "trade-for", "shop", "recommended"):
+        if f'href="/trades/{workflow}?front_office={roster_id}"' not in html:
+            raise AssertionError(f"Trade navigation is missing scoped {workflow} workflow")
+    if (
+        payload.get("availability") != "not_started"
+        or payload.get("decision_confidence") is not None
+        or payload.get("count") != 0
+        or payload.get("opportunities") != []
+        or payload.get("canonical_bilateral_evaluations") != []
+    ):
+        raise AssertionError("Trade navigation claims evaluation before a requested search")
+
+
 def validate_asset_market_contract(body: bytes, path: str) -> str:
     """Validate a directory surface and return its canonical dataset identity."""
     validate_product_contract(body, path)
@@ -583,8 +600,10 @@ def main() -> int:
         trade_path = f"/trades?front_office={roster_id}"
         trade_body = get(args.base_url, trade_path)
         validate_team_identity(trade_body, trade_path)
-        validate_product_contract(trade_body, trade_path, recommendation=True)
         trade_api = json.loads(get(args.base_url, f"/api/trades?front_office={roster_id}"))
+        validate_trade_navigation_contract(
+            trade_body, trade_api, expected_front_office_context(roster_id),
+        )
         if int(trade_api.get("active_front_office") or 0) != expected_front_office_context(roster_id):
             raise AssertionError("Trade Center context does not match authenticated membership.")
 

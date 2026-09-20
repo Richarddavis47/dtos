@@ -203,7 +203,7 @@ def _canonical_card(row: dict) -> str:
 
 def trade_center(view: dict) -> str:
     active = view["active_team"]
-    unified = view["unified_recommendation"]
+    unified = view.get("unified_recommendation")
     active_id = int(active.get("roster_id") or 0)
     options = "".join(
         f'<option value="{int(team.get("roster_id") or 0)}" {"selected" if int(team.get("roster_id") or 0) == active_id else ""}>{escape(str(team.get("owner") or team.get("team_name")))}</option>'
@@ -218,6 +218,8 @@ def trade_center(view: dict) -> str:
             ("recommended", "Recommended Trades", "Only worthwhile bilateral opportunities."),
         )
     )
+    if view.get('search_state') == 'not_started' and not view.get('canonical_results'):
+        return f'''{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Center</div><h2>{escape(str(active.get("team_name") or active.get("owner") or "Unassigned Franchise"))}</h2><p>Choose a workflow to explore an editable, hypothetical trade.</p></div><form class="ti-selector" method="get"><label>Active Front Office<select name="front_office" onchange="this.form.submit()">{options}</select></label></form></section><nav class="ti-workflows">{workflows}</nav><section class="card"><h3>Find credible opportunities</h3><p>No recommendation search has run in this session. Recommendations use the same bilateral assessment as manual trades.</p><a class="ti-action" href="/trades/recommended?front_office={active_id}">Discover Recommended Trades</a></section>'''
     cards = "".join(_canonical_card({**row, "active_team_name": active.get("team_name") or row.get("active_team_name") or "Your franchise"}) for row in view.get("canonical_results", ()))
     if not cards:
         cards = '<div class="card ti-empty"><div><div class="ds-eyebrow">No clean trade right now</div><h3>No realistic bilateral opportunity clears every gate.</h3><p>DTOS checked neutral market value, roster effects, package quality, counterparty fit, and evidence confidence. Try building a proposal or targeting a specific asset.</p><div class="ti-actions"><a class="ti-action" href="/trades/create">Create a Trade</a><a class="ti-action" href="/trades/trade-for">Trade For a Player</a></div></div></div>'
@@ -240,11 +242,11 @@ def trade_center(view: dict) -> str:
         expected_impact = "Your roster remains unchanged."
     primary = recommendation_panel(
         title=primary_title, recommendation=primary_recommendation,
-        confidence=unified.confidence.score,
+        confidence=unified.confidence.score if unified else None,
         primary_reason=primary_reason,
         evidence=primary_evidence,
         expected_impact=expected_impact,
         action_label="Review Recommended Offers", action_href="#recommended-offers",
-        limitations=unified.why_not,
+        limitations=unified.why_not if unified else (),
     )
     return f'''{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Center</div><h2>{escape(str(active.get("team_name") or active.get("owner") or "Unassigned Franchise"))}</h2><p>Neutral market value and team-specific fit are evaluated separately.</p></div><form class="ti-selector" method="get"><label>Active Front Office<select name="front_office" onchange="this.form.submit()">{options}</select></label></form></section><nav class="ti-workflows">{workflows}</nav>{primary}<div class="ti-list" id="recommended-offers">{cards}</div><script src="/static/js/trade_workspace.js" defer></script>'''

@@ -72,6 +72,15 @@ def _player_asset(
 
 def _pick_asset(pick: dict[str, Any], context: AssetContext, source_roster_id: int,
                 market_data: dict[str, Any] | None = None) -> TradeAsset:
+    # Canonical ledgers use year; Sleeper adapters may retain season. Never let
+    # the generic report's missing-season default collapse future identities.
+    year, season = pick.get('year'), pick.get('season')
+    if year is not None and season is not None and int(year) != int(season):
+        raise ValueError('Conflicting canonical pick year/season')
+    if year is None and season is None:
+        raise ValueError('Canonical pick year unavailable')
+    pick = {**pick, 'year': int(year if year is not None else season),
+            'season': int(year if year is not None else season)}
     report = evaluate_pick(pick, context)
     asset_id = f"{report.season}-R{report.round}-{pick.get('original_roster_id') or pick.get('roster_id') or 'unknown'}"
     from src.core.data_platform.pick_quotes import canonical_pick_market

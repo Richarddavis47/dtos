@@ -372,7 +372,7 @@ def create_market_router(
                 forward_html = ""
                 if forward:
                     weekly = forward.get("weekly_projected_points")
-                    weekly_display = "Bye / unavailable" if weekly is None else f"{weekly:.1f}"
+                    weekly_display = "Unavailable" if weekly is None else escape(str(forward.get("sleeper_web_display_projection") or f"{weekly:.2f}"))
                     confidence = forward.get("projection_confidence")
                     confidence_html = "Unavailable" if confidence is None else f"{confidence}%"
                     forward_html = f'''<section class="card"><p class="eyebrow">Canonical Weekly Projection</p>{f'<div class="summary-grid"><article class="metric"><b>{weekly_display}</b><span>Sleeper projection</span></article><article class="metric"><b>{confidence_html}</b><span>Evidence confidence</span></article></div>' if weekly is not None else '<div class="evidence-unavailable"><b>Weekly projection unavailable.</b><br>Sleeper has not supplied a canonical projection for this asset and matchup context.</div>'}<details><summary>Evidence</summary><p>Sleeper supplies the weekly projection under this league's scoring profile. DTOS does not fabricate a fallback.</p></details></section>'''
