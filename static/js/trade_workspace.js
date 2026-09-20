@@ -1,6 +1,12 @@
 /* One temporary, account/session/league-bound proposal. No external execution. */
 (() => {
   'use strict';
+  // Presentation only: retain canonical precision and unavailable evidence.
+  function displayPoints(value) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) return 'Unavailable';
+    const displayed = value.toFixed(2);
+    return displayed === '-0.00' ? '0.00' : displayed;
+  }
   document.querySelectorAll('[data-trade-proposal]').forEach(button => button.onclick = async () => {
     button.disabled = true;
     try {
@@ -121,7 +127,7 @@
     for (const [which, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
       const impact = e.lineup_impact?.[which], quality = e.dimensions?.package_quality?.[which];
       if (quality) out.append(node('p', title + ' package: ' + quality.assessment), node('small', quality.explanation));
-      if (impact) out.append(node('p', title + ' projected lineup change: ' + (impact.delta == null ? 'Unavailable' : String(impact.delta))), node('small', impact.delta == null ? impact.post?.reason || impact.pre?.reason || 'Canonical projection evidence is incomplete.' : 'Optimal legal lineup, before versus after.'));
+      if (impact) out.append(node('p', title + ' projected lineup change: ' + displayPoints(impact.delta)), node('small', impact.delta == null ? impact.post?.reason || impact.pre?.reason || 'Canonical projection evidence is incomplete.' : 'Optimal legal lineup, before versus after.'));
       const horizons = e.multi_horizon_impact?.sides?.[which]?.horizons || {};
       const strategy = e.dimensions?.strategic_fit?.[which];
       if (strategy) {
@@ -133,19 +139,19 @@
       }
       for (const [key, horizon] of Object.entries(horizons)) {
         const label = {current_week: 'Current week', next_n: 'Next-N', rest_of_regular_season: 'Rest of regular season', playoff_window: 'Playoff window'}[key] || key;
-        out.append(node('p', `${title} · ${label}: ${horizon.delta == null ? 'Unavailable' : horizon.delta}`),
+        out.append(node('p', `${title} · ${label}: ${displayPoints(horizon.delta)}`),
           node('small', `Supported weeks: before ${horizon.pre_supported_weeks.length}/${horizon.weeks_requested?.length || 0}; after ${horizon.post_supported_weeks.length}/${horizon.weeks_requested?.length || 0}. Optimal before versus optimal after.`));
         if (horizon.delta == null && horizon.supported_week_delta_subtotal != null)
-          out.append(node('small', `Comparable-week change subtotal: ${horizon.supported_week_delta_subtotal} across ${horizon.comparable_weeks.length} weeks. Not a complete horizon projection.`));
+          out.append(node('small', `Comparable-week change subtotal: ${displayPoints(horizon.supported_week_delta_subtotal)} across ${horizon.comparable_weeks.length} weeks. Not a complete horizon projection.`));
       }
     }
     if (opportunity) {
       out.append(node('h4', 'Why now · supported context'));
-      for (const c of opportunity.why_now?.catalysts || []) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${c.delta}`), node('small', c.limitation));
+      for (const c of opportunity.why_now?.catalysts || []) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(c.delta)}`), node('small', c.limitation));
       if (!opportunity.why_now?.catalysts?.length) out.append(node('p', 'No supported current catalyst is available.'));
       if (opportunity.stable_opportunity_reasons?.length) {
         out.append(node('h4', 'Supported trade fit — not urgency'));
-        for (const c of opportunity.stable_opportunity_reasons) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${c.delta}`));
+        for (const c of opportunity.stable_opportunity_reasons) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(c.delta)}`));
       }
     } else if (e.why_now) out.append(node('h4', 'Why now'), node('p', e.why_now));
     if (e.major_limitations?.length) out.append(node('h4', 'Evidence limitations'), node('p', e.major_limitations.join(', ').replaceAll('_', ' ')));

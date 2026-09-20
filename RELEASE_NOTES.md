@@ -1,4 +1,13 @@
-# DTOS v1.19.0 - Bilateral Trade and Multi-Horizon Intelligence (candidate)
+# DTOS v1.19.1 - Trade Point Presentation
+
+Projected point changes use consistent two-decimal presentation across manual
+and generated trade evidence. Canonical precision, scoring, recommendation logic,
+missing evidence and true zero are unchanged. This narrowly corrects a display
+issue found during Batch 5 live acceptance. v1.19.0 remains immutable.
+
+Batch 5 production acceptance continues; Batch 6 is not started.
+
+# DTOS v1.19.0 - Bilateral Trade and Multi-Horizon Intelligence
 
 Batch 5 connects supported weekly projections and optimal legal lineups to
 current-week, Next-N, regular-season, playoff-window and depth/bye evidence.
