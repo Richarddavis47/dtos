@@ -25,7 +25,9 @@ class TradeCenterAccessibilityTests(unittest.TestCase):
                     with self.subTest(workflow=workflow, viewport=viewport_name):
                         page.set_viewport_size(viewport)
                         page.set_content(trade_workflow(view, workflow))
-                        disclosure = page.locator("details")
+                        # The assistance disclosure is distinct from the
+                        # always-present Market Balance evidence disclosure.
+                        disclosure = page.locator("#trade-assist details")
                         hidden_actions = disclosure.locator("button")
                         self.assertEqual(hidden_actions.count(), 15)
                         self.assertTrue(all(hidden_actions.evaluate_all(

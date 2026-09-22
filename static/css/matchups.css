@@ -1,1 +1,14 @@
-/* Matchups module styles migration target. */
+/* Prepared season navigation: conclusion first, detail on demand. */
+.season-week-nav,.season-week-nav form{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.season-week-nav{margin:16px 0}
+.season-week-nav a,.season-overview a{display:inline-flex;min-height:44px;align-items:center;padding:8px 12px;border:1px solid var(--border);border-radius:8px}
+.season-week-nav form{margin:0}
+.season-overview>div{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0}
+.season-overview [aria-current]{border-color:var(--accent-primary)}
+.season-matchup{margin-block:16px}
+.season-sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.season-sides>*{min-width:0;overflow-wrap:anywhere}
+.season-starters{padding:0;list-style:none}
+.season-starters li{display:grid;gap:4px;border-bottom:1px solid var(--border);padding:10px 0}
+.season-starters a{display:inline-flex;align-items:center;min-height:44px}
+@media(max-width:650px){.season-sides{grid-template-columns:1fr}.season-week-nav{gap:8px}.season-week-nav form{width:100%}}

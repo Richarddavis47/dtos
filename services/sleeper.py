@@ -173,6 +173,11 @@ async def _sync_sleeper(
                     sleeper_get(client, "/players/nfl/trending/add?lookback_hours=24&limit=50"),
                     sleeper_get(client, "/players/nfl/trending/drop?lookback_hours=24&limit=50"),
                 )
+                from services.matchup_season import prepare_season_matchups
+                season_matchups = await prepare_season_matchups(
+                    league, matchup_week, matchups,
+                    lambda path: sleeper_get(client, path), observed_at=utcnow().isoformat(),
+                )
                 draft_picks = []
                 for draft in drafts or ():
                     draft_id = str(draft.get("draft_id") or "")
@@ -439,6 +444,7 @@ async def _sync_sleeper(
                 "draft_picks": draft_picks,
                 "transactions": transactions,
                 "matchups": matchup_groups,
+                "season_matchups": season_matchups,
                 "nfl_state": nfl_state,
                 "week": matchup_week,
                 "players": players,

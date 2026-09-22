@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import time
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -19,6 +20,29 @@ class IntelligencePlatformTests(unittest.TestCase):
     def setUp(self) -> None:
         self.data = fixture_data()
         self.orchestrator = IntelligenceOrchestrator(IntelligenceRegistry(), IntelligenceCache(default_ttl=60))
+
+    def test_dossier_skips_unrelated_trade_search_without_changing_player_report(self):
+        player = self.data['teams'][0]['players'][0]
+        legacy_result = self.orchestrator.analyze(self.data, 1)
+        with patch.object(self.orchestrator, 'analyze', return_value=legacy_result):
+            expected = self.orchestrator.player_report(self.data, player, 1)
+        self.orchestrator.cache.invalidate()
+        provider = self.orchestrator.registry.provider
+        def no_trade(name):
+            if name == 'trade':
+                raise AssertionError('Dossier started Trade search')
+            return provider(name)
+        start = time.perf_counter()
+        with patch.object(self.orchestrator.registry, 'provider', side_effect=no_trade):
+            actual = self.orchestrator.player_report(self.data, player, 1)
+        cold = time.perf_counter() - start
+        start = time.perf_counter()
+        warm = self.orchestrator.player_report(self.data, player, 1)
+        elapsed = time.perf_counter() - start
+        self.assertEqual(actual, expected)
+        self.assertEqual(warm, expected)
+        print({'scope': 'dossier report assembly; fixture, not full HTTP/production latency',
+               'cold_seconds': cold, 'warm_seconds': elapsed})
 
     def test_all_four_registered_providers_produce_one_recommendation(self) -> None:
         result = self.orchestrator.analyze(self.data, 1)

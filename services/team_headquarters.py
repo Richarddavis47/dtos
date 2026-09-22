@@ -18,13 +18,22 @@ POSITION_TARGETS = {
 }
 
 
-def build_team_directory(data: dict[str, Any]) -> dict[int, dict[str, Any]]:
+def build_team_directory(data: dict[str, Any], *, prepared_only: bool = False) -> dict[int, dict[str, Any]]:
     """Return one league-relative, offseason-aware directory card per franchise."""
     teams = data.get("teams") or []
     if not teams:
         return {}
     active_id = min(int(team.get("roster_id") or 0) for team in teams)
-    intelligence = intelligence_orchestrator.analyze(data, active_id).roster.team_intelligence
+    if prepared_only:
+        context = intelligence_orchestrator.context(data, active_id)
+        result = intelligence_orchestrator.cache.peek(f'snapshot:{context.snapshot_key}:result_without_trade_opportunities')
+        if result is None:
+            result = intelligence_orchestrator.cache.peek(f'snapshot:{context.snapshot_key}:result')
+        if result is None:
+            return {}
+    else:
+        result = intelligence_orchestrator.analyze(data, active_id, include_trade_opportunities=False)
+    intelligence = result.roster.team_intelligence
     return {
         roster_id: {
             "preseason": card.preseason,
@@ -182,7 +191,7 @@ def build_team_headquarters(
         return None
     players = _enriched_players(team, data)
     snapshot = _asset_snapshot(players, team)
-    intelligence = intelligence_orchestrator.analyze(data, roster_id)
+    intelligence = intelligence_orchestrator.analyze(data, roster_id, include_trade_opportunities=False)
     grades = calculate_team_grades(players, team, intelligence.roster)
     decision = intelligence.decision
     organization = intelligence.front_office_model.reports[roster_id]
@@ -235,7 +244,7 @@ def build_team_headquarters(
             "points_against": float(team.get("points_against") or 0),
             "max_points": float(team.get("max_points") or 0),
             "streak": "Unavailable",
-            "standing": f"#{rank} of {len(teams)}",
+            "standing": f"#{rank} of {len(teams)}" if rank is not None else "Unavailable",
         },
     }
 

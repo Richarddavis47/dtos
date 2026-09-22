@@ -24,7 +24,10 @@ def season_calendar(league: dict) -> dict:
         return result
     start, current, completed = source['start_week'], source['leg'], source['last_scored_leg']
     first, teams, kind = source['playoff_week_start'], source['playoff_teams'], source['playoff_round_type']
-    if (not 1 <= start <= current <= 18 or not 0 <= completed <= 18 or completed >= current
+    # Completed Sleeper seasons retain leg == last_scored_leg. This does not
+    # authorize an in-season current week to be treated as final.
+    completed_season = league.get('status') == 'complete' and completed == current
+    if (not 1 <= start <= current <= 18 or not 0 <= completed <= 18 or (completed >= current and not completed_season)
             or not start < first <= 18 or teams not in (4, 6, 8)
             or kind not in (0, 1, 2) or source['playoff_type'] != 0):
         return result

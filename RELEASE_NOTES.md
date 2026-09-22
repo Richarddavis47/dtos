@@ -1,4 +1,17 @@
-# DTOS v1.19.1 - Trade Point Presentation
+# DTOS v1.20.0 - Manager Experience and Reporting
+
+Batch 6 brings full-season Matchups and Matchup Desk, clearer player projections,
+shared evidence explanations, Home attention, and weekly league reports into the
+manager experience. Team HQ, Market, History and FOIS now distinguish scope,
+availability and confidence more consistently across mobile and desktop.
+
+Historical views retain their time boundaries; projected playoff positions and
+opponents are not presented as locked results. Existing Trade, Market, Pick and
+FOIS intelligence remains unchanged. Cross-league isolation and bounded prepared
+reads are preserved. Required release validation and production acceptance are
+performed before publication.
+
+## Previous release: DTOS v1.19.1 - Trade Point Presentation
 
 Projected point changes use consistent two-decimal presentation across manual
 and generated trade evidence. Canonical precision, scoring, recommendation logic,

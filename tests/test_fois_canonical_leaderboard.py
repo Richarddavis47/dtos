@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -56,6 +57,30 @@ def _data(count: int = 10) -> dict[str, object]:
 
 
 class CanonicalFOISLeaderboardTests(unittest.IsolatedAsyncioTestCase):
+    async def test_unavailable_overall_has_no_numeric_leaderboard_or_api_rank(self) -> None:
+        data = _data(2)
+        with patch.dict(os.environ, {"DTOS_FOIS_ENABLED": "1"}):
+            scores = await self.service.generate(data)
+        unavailable = tuple(replace(score, overall_score=None, overall_letter_grade=None) for score in scores)
+        app = FastAPI()
+        app.include_router(create_fois_router(service=self.service, require_data=lambda: data,
+            page=lambda _title, body: HTMLResponse(body)))
+        with patch.object(self.repository, 'league', return_value=unavailable):
+            client = TestClient(app)
+            page = client.get('/fois')
+            self.assertEqual(page.status_code, 200)
+            self.assertEqual(page.text.count('data-fois-rank="unavailable"'), 2)
+            self.assertIn('Not ranked — insufficient evidence', page.text)
+            rows = client.get('/api/fois/leagues/season-2026/rankings').json()['rankings']
+            self.assertTrue(all(row['rank'] is None for row in rows))
+            self.assertTrue(all(row['rank_scope'] == 'league_current_overall_fois' for row in rows))
+            with patch.object(self.repository, 'score_for_gm', return_value=unavailable[0]):
+                profile = client.get(f'/fois/gms/{unavailable[0].gm_id}?league_id=season-2026')
+            self.assertEqual(profile.status_code, 200)
+            self.assertIn('Not ranked — insufficient evidence', profile.text)
+            self.assertIn('League overall FOIS rank', profile.text)
+            self.assertNotIn('#1 of', profile.text)
+
     def setUp(self) -> None:
         self.directory = tempfile.TemporaryDirectory()
         self.repository = FOISRepository(Path(self.directory.name) / "fois.sqlite3")
@@ -200,6 +225,9 @@ class CanonicalFOISLeaderboardTests(unittest.IsolatedAsyncioTestCase):
         profile = client.get(f"/fois/gms/{gm_id}?league_id=season-2026")
         self.assertIn("CURRENT GM PROFILE", profile.text)
         self.assertIn("GM History", profile.text)
+        self.assertIn('dtos-explanation', profile.text)
+        self.assertIn('FOIS evidence explained', profile.text)
+        self.assertIn('Results is only one category', profile.text)
 
     async def test_completed_generation_defers_disposable_render_until_first_request(self) -> None:
         data = _data()

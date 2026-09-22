@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from math import sqrt
+from decimal import Decimal
+from math import isfinite, sqrt
 from statistics import mean, median, pstdev
 from time import perf_counter
+from types import SimpleNamespace
 from typing import Any
 
 from app_metadata import BUILD_NUMBER, VERSION
+from services.matchup_season import season_week_view
 
 REFERENCE_PLAYERS = {
     "J. Daniels": 17.91, "B. Robinson": 21.68, "O. Hampton": 15.88,
@@ -19,10 +22,20 @@ REFERENCE_TEAMS = {"Puka Cola Quantum": 188.32, "Bottom Feeders": 91.91}
 
 
 def _number(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
     try:
-        return float(value) if value is not None else None
+        result = float(value) if value is not None else None
+        return result if result is not None and isfinite(result) else None
     except (TypeError, ValueError):
         return None
+
+
+def _complete_total(values: list[float | None]) -> float | None:
+    """A forensic source subtotal must not masquerade as a complete projection."""
+    if not values or any(value is None for value in values):
+        return None
+    return float(sum((Decimal(str(value)) for value in values), Decimal(0)))
 
 
 def _difference(left: Any, right: Any) -> float | None:
@@ -191,21 +204,25 @@ def build_projection_audit(
         timings["player_catalog_ms"] = round((perf_counter() - stage) * 1000, 3)
 
     stage = perf_counter()
-    for matchup_id, sides in sorted((data.get("matchups") or {}).items(), key=lambda item: str(item[0])):
+    selected_week = int(data.get('week') or 1)
+    reader = SimpleNamespace(snapshot=lambda: projection_snapshot,
+        week_snapshot=lambda week, **kwargs: projection_snapshot if week == projection_snapshot.get('week') else None)
+    prepared_view = season_week_view(data, selected_week, reader)
+    for matchup_id, sides in sorted(prepared_view['groups'].items(), key=lambda item: str(item[0])):
         matchup_teams = []
         team_projections = []
         for side in sides:
             starters = []
             for player in side.get("lineup") or []:
-                player_id = str(player.get("id") or player.get("player_id") or "")
-                projection = players.get(player_id) or {}
+                player_id = str(player.get("player_id") or "")
+                projection = (players.get(player_id) or {}) if prepared_view.get('projection_generation') else {}
                 asset_id = f"player:{player_id}"
                 asset = market.by_id.get(asset_id) or {}
                 values = dict(asset.get("values") or {})
                 sleeper = projection.get("sleeper_projection")
                 dtos = projection.get("dtos_projection")
                 raw_dtos = projection.get("raw_dtos_projection")
-                canonical = projection.get("canonical_projection", projection.get("weekly_projected_points"))
+                canonical = player['projection']
                 difference = _difference(dtos, sleeper)
                 pct = None
                 if difference is not None and _number(sleeper) not in (None, 0):
@@ -216,7 +233,7 @@ def build_projection_audit(
                     "asset_id": asset_id, "player_name": player.get("name"),
                     "position": player.get("position"), "nfl_team": player.get("nfl_team"),
                     "nfl_opponent": projection.get("opponent"), "lineup_slot": player.get("slot"),
-                    "actual_points": player.get("points"), "sleeper_projection": sleeper,
+                    "actual_points": player.get("actual"), "sleeper_projection": sleeper,
                     "raw_dtos_projection": raw_dtos,
                     "dtos_projection": dtos, "calibrated_dtos_projection": dtos,
                     "canonical_projection": canonical,
@@ -269,14 +286,15 @@ def build_projection_audit(
             sleeper_values = [_number(row["sleeper_projection"]) for row in starters]
             raw_dtos_values = [_number(row["raw_dtos_projection"]) for row in starters]
             dtos_values = [_number(row["dtos_projection"]) for row in starters]
-            canonical_values = [_number(row["canonical_projection"]) for row in starters]
-            sleeper_total = round(sum(value for value in sleeper_values if value is not None), 3)
-            raw_dtos_total = round(sum(value for value in raw_dtos_values if value is not None), 3)
-            dtos_total = round(sum(value for value in dtos_values if value is not None), 3)
-            canonical_total = round(sum(value for value in canonical_values if value is not None), 3)
+            sleeper_total = _complete_total(sleeper_values)
+            raw_dtos_total = _complete_total(raw_dtos_values)
+            dtos_total = _complete_total(dtos_values)
+            canonical_total = side['projection']
+            if len(starters) != side['expected_slots']:
+                sleeper_total = raw_dtos_total = dtos_total = None
             team = {
                 "team": side.get("team"), "gm": side.get("owner"),
-                "roster_id": side.get("roster_id"), "actual_score": side.get("points"),
+                "roster_id": side.get("roster_id"), "actual_score": side.get("actual"),
                 "starters": starters, "sleeper_projected_total": sleeper_total,
                 "sleeper_full_precision_total": sleeper_total,
                 "sleeper_projection_coverage": sum(value is not None for value in sleeper_values),
@@ -285,9 +303,10 @@ def build_projection_audit(
                 "dtos_projected_total": dtos_total, "dtos_full_precision_total": dtos_total,
                 "dtos_projection_coverage": sum(value is not None for value in dtos_values),
                 "canonical_team_projection": canonical_total,
-                "floor": round(sum(_number(row["projection_floor"]) or 0 for row in starters), 3),
-                "ceiling": round(sum(_number(row["projection_ceiling"]) or 0 for row in starters), 3),
-                "sleeper_total_difference": 0.0, "dtos_total_difference": 0.0,
+                "floor": _complete_total([_number(row["projection_floor"]) for row in starters]),
+                "ceiling": _complete_total([_number(row["projection_ceiling"]) for row in starters]),
+                "sleeper_total_difference": 0.0 if sleeper_total is not None else None,
+                "dtos_total_difference": 0.0 if dtos_total is not None else None,
                 "team_intelligence": _unavailable("No persisted canonical team-intelligence snapshot is available without regeneration."),
                 "front_office_recommendation": _unavailable("No persisted canonical recommendation is available without regeneration."),
                 "trade_intelligence": _unavailable("No persisted canonical trade recommendation is available without regeneration."),
@@ -301,7 +320,7 @@ def build_projection_audit(
                 "raw_dtos_projected_total", "dtos_projected_total", "canonical_team_projection",
             )})
             team_projections.append(canonical_total)
-        projected_margin = round(abs(team_projections[0] - team_projections[1]), 3) if len(team_projections) == 2 else None
+        projected_margin = round(abs(team_projections[0] - team_projections[1]), 3) if len(team_projections) == 2 and all(value is not None for value in team_projections) else None
         matchups.append({"matchup_id": str(matchup_id), "state": "current", "teams": matchup_teams, "projected_margin": projected_margin})
     if timings is not None:
         timings["matchup_reconciliation_ms"] = round(
@@ -311,7 +330,8 @@ def build_projection_audit(
     stage = perf_counter()
     differences = [row["dtos_minus_sleeper"] for row in audited_players if row["dtos_minus_sleeper"] is not None]
     absolute_differences = [abs(value) for value in differences]
-    team_differences = [abs(float(row["dtos_projected_total"]) - float(row["sleeper_projected_total"])) for row in teams]
+    team_differences = [abs(float(row["dtos_projected_total"]) - float(row["sleeper_projected_total"])) for row in teams
+                        if row["dtos_projected_total"] is not None and row["sleeper_projected_total"] is not None]
     by_name = {str(row.get("player_name")): row for row in audited_players}
     reference_players = []
     for name, reference in REFERENCE_PLAYERS.items():
@@ -336,6 +356,8 @@ def build_projection_audit(
             "asset_market_generation": identity.get("market_generation"),
         },
         "provider_health": projection_health,
+        "matchup_evidence": {key: prepared_view.get(key) for key in
+            ('week', 'period', 'availability', 'generation', 'projection_generation', 'opponents_locked')},
         "matchups": matchups, "teams": teams, "players": audited_players,
         "all_players": all_players,
         "all_player_audit": {

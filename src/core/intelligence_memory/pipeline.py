@@ -127,6 +127,12 @@ class CheckpointPipeline:
         asset = ((data.get("valuation_intelligence") or {}).get("assets") or {}).get(
             asset_id
         ) or {}
+        if 'market_observation_evidence' in asset:
+            accepted = asset.get('market_observation_evidence') or {}
+            price = ((asset.get('valuation_layers') or {}).get('market_value') or {}).get('value')
+            if price is None or accepted.get('canonical_value') != price:
+                return ()
+            return tuple(SourceObservation(**row) for row in accepted.get('observations') or ())
         rows = []
         for item in asset.get("evidence_sources") or ():
             provider = str(item.get("provider_id") or "").strip()

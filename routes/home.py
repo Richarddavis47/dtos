@@ -9,8 +9,13 @@ from fastapi.responses import HTMLResponse
 
 from services.team_headquarters import build_team_directory
 from services.transactions import normalize_transactions
+from services.matchup_season import current_matchup_groups
 from src.ui.intelligence_presentation import league_is_preseason, record_evidence
 from src.ui.render_cache import GenerationRenderCache
+from services.home_attention import attention_state
+from services.attention_changes import pick_changes
+from src.ui.home_attention import attention_panel
+from src.platform.league_context import current_league_context
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -58,20 +63,29 @@ def create_home_router(
             else (str((data.get("league") or {}).get("league_id") or "default"), id(data))
         )
         generation = repr(retained_generation)
-        cache_key = (retained_generation, front_office)
+        directory = build_team_directory(data, prepared_only=True) if data.get('teams') else {}
+        cache_key = (retained_generation, front_office, repr(directory))
 
         def render_body() -> bytes:
-            return _home_body(data, front_office).encode("utf-8")
+            return _home_body(data, front_office, directory).encode("utf-8")
 
         body = home_body_render_cache.get_or_build(
             cache_key, generation, render_body,
         ).decode("utf-8")
-        return page("Home", body)
+        # Outside body cache: changed projection admission must not leave stale
+        # Attention beside otherwise unchanged Home content. No preparation.
+        selected = _selected_team(data, front_office)
+        active = current_league_context()
+        projection = active.projection.snapshot() if active is not None else None
+        from config import METADATA_DATABASE_FILE
+        rid = selected.get('roster_id') if selected else None
+        changes, coverage = pick_changes(data, rid, METADATA_DATABASE_FILE)
+        attention = attention_panel(attention_state(data, rid, projection, change_rows=changes, change_coverage=coverage))
+        return page("Home", attention + body)
 
-    def _home_body(data: dict[str, Any], front_office: int | None) -> str:
+    def _home_body(data: dict[str, Any], front_office: int | None, directory: dict) -> str:
         teams = data.get("teams") or []
         team = _selected_team(data, front_office)
-        directory = build_team_directory(data) if teams else {}
         selector = _team_selector(data, team)
         if team is None:
             return selector + '<div class="ds-empty"><b>No franchise is available.</b>The current Sleeper context has no team roster to brief.</div>'
@@ -105,7 +119,7 @@ def create_home_router(
         ) + '</div>' + ('<p>Canonical team assessment rankings unavailable.</p>' if not rankings else '') + '<p><a href="/teams">Open team assessments →</a></p>'
 
         matchups = []
-        for matchup_id, sides in sorted((data.get("matchups") or {}).items())[:5]:
+        for matchup_id, sides in sorted(current_matchup_groups(data).items())[:5]:
             names = " vs ".join(str(side.get("team") or "Unassigned") for side in sides[:2])
             matchups.append(f'<a class="ux-action" href="/matchups/{escape(str(matchup_id))}"><span><b>{escape(names)}</b><p>Week {escape(str(data.get("week") or "—"))} matchup</p></span><span>→</span></a>')
         matchup_html = '<div class="card ux-action-list">' + ("".join(matchups) or '<p class="muted">No current matchup pairing is available.</p>') + "</div>"
@@ -126,7 +140,7 @@ def create_home_router(
         body = (
             header
             + _section("Preseason Briefing" if preseason else "Weekly Recap", "What matters for your franchise now", f'<div class="card ux-recap"><p>{escape(recap)}</p><a href="/league">Open league briefing →</a></div>')
-            + _section("What Should I Do?", "Highest-value next steps from existing intelligence", action_html)
+            + _section("Explore", "Useful destinations—not personalized Attention recommendations", action_html)
             + _section("Team Assessment Rankings", "Canonical team assessment · not standings or FOIS GM rankings", rank_html)
             + _section("This Week", "Current Sleeper matchup evidence", matchup_html)
             + _section("Market Movers", "Meaningful movement only", '<div class="card"><p class="muted">Market movement is shown only when timestamped comparable observations cross the established threshold.</p><a href="/market#market-movers">Review market evidence →</a></div>')
@@ -141,7 +155,7 @@ def create_home_router(
         data = require_data()
         teams = data.get("teams") or []
         preseason = league_is_preseason(data)
-        directory = build_team_directory(data) if teams else {}
+        directory = build_team_directory(data) if teams and preseason else {}
         if preseason:
             ordered = sorted(teams, key=lambda team: int(directory.get(int(team.get("roster_id") or 0), {}).get("rank") or 999))
             standings = "".join(
@@ -151,13 +165,13 @@ def create_home_router(
         else:
             ordered = teams
             standings = "".join(
-                f'<tr><td>{index}</td><td><a href="/teams/{int(team.get("roster_id") or 0)}">{escape(str(team.get("team_name") or "Team"))}</a></td><td>{escape(record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=True))}</td><td>{escape(f"{float(team['points_for']):.2f}" if team.get("points_for") is not None else "Unavailable")}</td></tr>'
+                f'<tr><td>Unavailable</td><td><a href="/teams/{int(team.get("roster_id") or 0)}">{escape(str(team.get("team_name") or "Team"))}</a></td><td>{escape(record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=True))}</td><td>{escape(f"{float(team['points_for']):.2f}" if team.get("points_for") is not None else "Unavailable")}</td></tr>'
                 for index, team in enumerate(teams, start=1)
             )
         franchise_rows = []
         for index, team in enumerate(ordered, start=1):
             roster_id = int(team.get("roster_id") or 0)
-            rank = directory.get(roster_id, {}).get("rank") if preseason else index
+            rank = directory.get(roster_id, {}).get("rank") if preseason else None
             record = "Preseason outlook" if preseason else record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=True)
             points = "" if preseason else (f"{float(team['points_for']):,.2f} PF" if team.get("points_for") is not None else "Points unavailable")
             medal = f" rank-{rank}" if rank in (1, 2, 3) else ""
@@ -166,6 +180,7 @@ def create_home_router(
             franchise_rows.append(f'<a class="league-standing" href="/teams/{roster_id}">{content}<span aria-hidden="true">›</span></a>' if roster_id > 0 else f'<div class="league-standing">{content}</div>')
         visual_standings = '<div class="league-standings">' + "".join(franchise_rows) + '</div>'
         destinations = (
+            ("Weekly Report", "Prepared league recap and supported changes", "/reports/weekly"),
             ("Matchups", "Weekly competition and starter evidence", "/matchups"),
             ("FOIS", "General-manager performance and confidence", "/fois"),
             ("Transactions", "Trades, waivers, adds, and drops", "/transactions"),
@@ -175,7 +190,7 @@ def create_home_router(
         links = '<div class="grid">' + "".join(f'<a class="card" href="{href}"><h3>{title}</h3><p class="muted">{description}</p></a>' for title, description, href in destinations) + "</div>"
         body = (
             _section("Preseason League Briefing" if preseason else "League Recap", "A league-wide view, separate from your personal front office", f'<div class="card ux-recap"><p>{escape("Regular-season games have not started. Review roster direction, recent activity, market movement, and Week 1 preparation." if preseason else f"{len(teams)} franchises · Week {data.get('week') or '—'} · Season {(data.get('league') or {}).get('season') or '—'}")}</p></div>')
-            + _section("Preseason Rankings" if preseason else "Current Rankings", "Preseason team outlook—not current results or FOIS" if preseason else "Current-season results—not FOIS", visual_standings + f'<details><summary>Compare standings in detail</summary><div class="card ds-table-wrap"><table><thead><tr><th>Rank</th><th>Franchise</th><th>{"State" if preseason else "Record"}</th><th>{"" if preseason else "Points"}</th></tr></thead><tbody>{standings}</tbody></table></div></details>')
+            + _section("Preseason Rankings" if preseason else "Current Records", "Preseason team outlook—not current results or FOIS" if preseason else "Current-season results—not FOIS. Official standings rank unavailable; list order is not playoff seeding.", visual_standings + f'<details><summary>Compare standings in detail</summary><div class="card ds-table-wrap"><table><thead><tr><th>Rank</th><th>Franchise</th><th>{"State" if preseason else "Record"}</th><th>{"" if preseason else "Points"}</th></tr></thead><tbody>{standings}</tbody></table></div></details>')
             + _section("League Intelligence", "Competition, management, activity, and history", links)
         )
         return page("League", body)

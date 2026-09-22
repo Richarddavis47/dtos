@@ -40,6 +40,8 @@ class MarketObservationMaterialityPolicy:
             return True
         if self._providers(previous.provider_evidence) != self._providers(provider_evidence):
             return True
+        if comparison_metadata(previous.provider_evidence) != comparison_metadata(provider_evidence):
+            return True
         canonical_delta = abs(float(previous.canonical_value) - canonical_value)
         canonical_base = max(abs(float(previous.canonical_value)), 1.0)
         if (
@@ -114,6 +116,7 @@ def semantic_fingerprint(
         "normalized_value": row.normalized_value,
         "source_identity": row.source_identity,
         "normalization_version": row.normalization_version,
+        "comparison_semantics": (row.metadata or {}).get('comparison_semantics'),
     } for row in provider_evidence]
     payload = {
         "asset_id": asset_id, "asset_type": asset_type,
@@ -130,3 +133,10 @@ def semantic_fingerprint(
     return hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode()
     ).hexdigest()
+
+
+def comparison_metadata(rows: Iterable[SourceObservation]) -> tuple[str, ...]:
+    """Only semantic identity changes, never retrieval-time churn."""
+    return tuple(sorted(json.dumps({'provider': r.provider,
+        'identity': (r.metadata or {}).get('comparison_semantics')}, sort_keys=True,
+        separators=(',', ':')) for r in rows))

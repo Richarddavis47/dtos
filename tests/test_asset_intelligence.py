@@ -35,6 +35,12 @@ class AssetIntelligenceTests(unittest.TestCase):
                 self.assertTrue(evidence.explanation)
                 self.assertTrue(evidence.source)
 
+    def test_prepared_week_browsing_survives_unavailable_valuation(self):
+        report = evaluate_player(self.player, self.contender)
+        html = player_dossier(report, {'roster_id': 1, 'owner': 'Alex'},
+            [{'roster_id': 1, 'owner': 'Alex'}], weekly_projection_html='<section>Week 5 · 27.33</section>')
+        self.assertEqual(html.count('Week 5 · 27.33'), 1)
+
     def test_team_fit_changes_with_front_office_context(self) -> None:
         contender = evaluate_player(self.player, self.contender)
         rebuilder_context = AssetContext(

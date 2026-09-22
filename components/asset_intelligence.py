@@ -5,6 +5,7 @@ from html import escape
 from urllib.parse import quote
 
 from src.ui import player_summary, recommendation_panel
+from src.ui.intelligence_presentation import exact_rank
 
 from src.core.asset_intelligence import AssetEvaluation, PlayerReport
 
@@ -52,15 +53,19 @@ def _scoped_rank_summary(scoped_ranks: dict) -> str:
         pair = scoped_ranks.get(key) or {}
         overall = pair.get("overall") or {}
         positional = pair.get("position") or {}
-        rank = overall.get("rank")
-        position_rank = positional.get("rank")
-        display = (f"#{rank} overall · {positional.get('position', '')} #{position_rank}"
-            f" · {overall.get('ranked_count', 0)} ranked players") if rank is not None else "Unavailable"
+        rank = exact_rank(overall.get("rank"))
+        position_rank = exact_rank(positional.get("rank"))
+        parts = [f'{rank} overall' if rank.startswith('#') else 'Overall rank unavailable']
+        parts.append(f"{positional.get('position') or 'Position'} {position_rank}" if position_rank.startswith('#')
+                     else 'Position rank unavailable')
+        count = overall.get('ranked_count')
+        parts.append(f'{count} ranked players' if count is not None else 'Ranked-universe coverage unavailable')
+        display = ' · '.join(parts)
         lines.append(f"<p><b>{escape(label)}:</b> {escape(display)}</p>")
     return "".join(lines)
 
 
-def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict]) -> str:
+def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict], *, weekly_projection_html: str | None = None) -> str:
     profile = report.profile
     options = "".join(
         f'<option value="{int(team.get("roster_id") or 0)}" {"selected" if int(team.get("roster_id") or 0) == int(selected_team.get("roster_id") or 0) else ""}>{escape(str(team.get("owner") or team.get("team_name")))}</option>'
@@ -99,7 +104,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict])
     )
     primary_recommendation = recommendation_panel(title=report.recommendation.action, recommendation=report.recommendation.summary, confidence=report.recommendation.confidence, primary_reason=recommendation_evidence[0] if recommendation_evidence else report.executive_summary, evidence=recommendation_evidence, expected_impact="Aligns this player's role and value with the selected Front Office direction.", action_label=trade_action, action_href=trade_href, limitations=tuple(report.risk.limitations))
     value = report.value_profile
-    integrated = ""
+    integrated = weekly_projection_html or ""
     if value is not None:
         card = value.intelligence_card
         market_range = f"{value.market_range[0]:.0f}–{value.market_range[1]:.0f}" if value.market_range else "No enabled market provider returned a value."
@@ -108,7 +113,8 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict])
         providers = ", ".join(f"{item.provider}: raw {item.raw_value:g} → {item.normalized_value}/1000" for item in card.provider_evidence) if card and card.provider_evidence else "No calibrated provider evidence."
         calibration = f'{escape(card.calibration_status.value)} · {card.confidence_score}% confidence' if card else "insufficient_data"
         warning = "" if card and card.calibration_status.value == "calibrated" else "Experimental — market calibration incomplete."
-        integrated = f'''<p class="muted"><b>Calibration:</b> {calibration}. {escape(warning)}</p><section class="ai-sections"><article class="ai-card"><h3>Independent Evidence · Market price 0–1000</h3><ul><li><b>DTOS Intrinsic:</b> {_number(value.dtos_dynasty.value)}</li><li><b>Market Consensus:</b> {value.market_consensus.value if value.market_consensus.value is not None else "Unavailable"} ({escape(value.market_consensus.status.value)})</li><li><b>Normalized Market Range:</b> {escape(market_range)}</li><li><b>Canonical Value Gap:</b> {value.value_gap if value.value_gap is not None else "Unavailable"}</li><li><b>Win-Now / Rebuild:</b> {_number(value.contender.value)} / {_number(value.rebuilder.value)}</li><li><b>Liquidity (0–100):</b> {_number(value.trade_liquidity.value)}</li><li><b>Posture:</b> {escape(value.market_posture)}</li><li><b>Provider Evidence:</b> {escape(providers)}</li></ul></article><article class="ai-card"><h3>Weekly Outlook · {escape(projection.status.value)}</h3><ul><li><b>Projection:</b> {_number(projection.projected_points)}</li><li><b>Floor / Median / Ceiling:</b> {_number(projection.floor)} / {_number(projection.median)} / {_number(projection.ceiling)}</li><li><b>Role:</b> {escape(value.lineup.role)}</li><li><b>Above Replacement:</b> {_number(value.lineup.points_above_replacement, signed=True)}</li><li><b>Above Current Starter:</b> {_number(value.lineup.points_above_current_starter, signed=True)}</li><li><b>Source:</b> {escape(projection.source)}</li></ul></article><article class="ai-card"><h3>Production</h3><ul><li><b>Season Average:</b> {production if production is not None else "Unavailable"}</li><li><b>Consistency:</b> {value.production.consistency if value.production.consistency is not None else "Unavailable"}</li><li><b>Trend:</b> {escape(value.production.trend)}</li><li><b>Status:</b> {escape(value.production.status.value)}</li></ul></article><article class="ai-card"><h3>Positional Context</h3>{_scoped_rank_summary(value.positional.scoped_ranks)}<ul><li><b>Roster Dynasty Position Rank:</b> {_number(value.positional.dynasty_rank)}</li><li><b>Roster Weekly Position Rank:</b> {value.positional.weekly_rank if value.positional.weekly_rank is not None else "Unavailable"}</li><li><b>Tier:</b> {escape(value.positional.tier)}</li><li><b>Scarcity:</b> {_number(value.positional.scarcity)}</li><li><b>Replacement Gap:</b> {_number(value.positional.replacement_gap, signed=True)}</li></ul><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{"".join(f"<li>{escape(item)}</li>" for item in value.evidence)}</ul></details></article></section>'''
+        weekly_outlook = weekly_projection_html if weekly_projection_html is not None else f'''<article class="ai-card"><h3>Weekly Outlook · {escape(projection.status.value)}</h3><ul><li><b>Projection:</b> {_number(projection.projected_points)}</li><li><b>Floor / Median / Ceiling:</b> {_number(projection.floor)} / {_number(projection.median)} / {_number(projection.ceiling)}</li><li><b>Role:</b> {escape(value.lineup.role)}</li><li><b>Above Replacement:</b> {_number(value.lineup.points_above_replacement, signed=True)}</li><li><b>Above Current Starter:</b> {_number(value.lineup.points_above_current_starter, signed=True)}</li><li><b>Source:</b> {escape(projection.source)}</li></ul></article>'''
+        integrated = f'''<p class="muted"><b>Calibration:</b> {calibration}. {escape(warning)}</p><section class="ai-sections"><article class="ai-card"><h3>Independent Evidence · Market price 0–1000</h3><ul><li><b>DTOS Intrinsic:</b> {_number(value.dtos_dynasty.value)}</li><li><b>Market Consensus:</b> {value.market_consensus.value if value.market_consensus.value is not None else "Unavailable"} ({escape(value.market_consensus.status.value)})</li><li><b>Normalized Market Range:</b> {escape(market_range)}</li><li><b>Canonical Value Gap:</b> {value.value_gap if value.value_gap is not None else "Unavailable"}</li><li><b>Win-Now / Rebuild:</b> {_number(value.contender.value)} / {_number(value.rebuilder.value)}</li><li><b>Liquidity (0–100):</b> {_number(value.trade_liquidity.value)}</li><li><b>Posture:</b> {escape(value.market_posture)}</li><li><b>Provider Evidence:</b> {escape(providers)}</li></ul></article>{weekly_outlook}<article class="ai-card"><h3>Production</h3><ul><li><b>Season Average:</b> {production if production is not None else "Unavailable"}</li><li><b>Consistency:</b> {value.production.consistency if value.production.consistency is not None else "Unavailable"}</li><li><b>Trend:</b> {escape(value.production.trend)}</li><li><b>Status:</b> {escape(value.production.status.value)}</li></ul></article><article class="ai-card"><h3>Positional Context</h3>{_scoped_rank_summary(value.positional.scoped_ranks)}<ul><li><b>Roster Dynasty Position Rank:</b> {_number(value.positional.dynasty_rank)}</li><li><b>Roster Weekly Position Rank:</b> {value.positional.weekly_rank if value.positional.weekly_rank is not None else "Unavailable"}</li><li><b>Tier:</b> {escape(value.positional.tier)}</li><li><b>Scarcity:</b> {_number(value.positional.scarcity)}</li><li><b>Replacement Gap:</b> {_number(value.positional.replacement_gap, signed=True)}</li></ul><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{"".join(f"<li>{escape(item)}</li>" for item in value.evidence)}</ul></details></article></section>'''
         production_reason = value.production.limitations[0] if value.production.limitations else "No supported production-stat provider is configured."
         integrated = integrated.replace("Season Average:</b> Unavailable", f"Season Average:</b> {escape(production_reason)}")
         integrated = integrated.replace("Consistency:</b> Unavailable", f"Consistency:</b> {escape(production_reason)}")

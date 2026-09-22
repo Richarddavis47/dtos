@@ -55,7 +55,15 @@ class TradeWorkspaceBrowserTests(unittest.TestCase):
                         page.locator("#trade-tray-view").click()
                         self.assertTrue(page.locator("#trade-review").is_visible())
                         page.get_by_role("button", name="Evaluate Trade", exact=True).click()
-                        page.get_by_text("Market Balance: PARTIAL", exact=True).wait_for()
+                        explanation = page.locator('#trade-result .dtos-explanation')
+                        explanation.wait_for()
+                        disclosure = explanation.locator('summary').first
+                        self.assertGreaterEqual(disclosure.bounding_box()['height'], 44)
+                        disclosure.focus()
+                        page.keyboard.press('Enter')
+                        self.assertTrue(explanation.locator('details').first.evaluate('(e) => e.open'))
+                        self.assertIn('Some assets lack supported acquisition prices', explanation.inner_text())
+                        page.locator('.tw-market-detail > summary').click()
                         self.assertIn('Unavailable', page.locator('#trade-balance').inner_text())
                         self.assertIn("4 assets", page.locator("#trade-tray-text").inner_text())
                         # Publish legitimate fixture-only external evidence,

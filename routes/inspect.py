@@ -22,7 +22,8 @@ from src.core.valuation.universe import LAYER_NAMES, ValuationUniverse
 from src.core.valuation_intelligence import valuation_intelligence_report
 from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
-from src.core.inspection.live import LiveInspection, matchup_semantic
+from src.core.inspection.live import LiveInspection, prepared_matchup_semantic
+from services.matchup_season import current_matchup_groups
 
 historical_store = canonical_history_store
 
@@ -123,7 +124,7 @@ def create_inspection_router(
     async def live_matchups() -> Any:
         inspector = live()
         rows = []
-        for matchup_id, sides in sorted((inspector.data.get("matchups") or {}).items()):
+        for matchup_id, sides in sorted(current_matchup_groups(inspector.data).items()):
             rows.append({"matchup_id": str(matchup_id),
                          "teams": [side.get("team") for side in sides],
                          "human_url": f"/matchups/{matchup_id}",
@@ -134,7 +135,7 @@ def create_inspection_router(
     @router.get("/live/matchups/{matchup_id}")
     async def live_matchup(matchup_id: str) -> Any:
         inspector = live()
-        result = matchup_semantic(inspector.data, matchup_id, inspector.projection_snapshot)
+        result = prepared_matchup_semantic(inspector.data, matchup_id, inspector.projection_snapshot)
         if result is None:
             raise HTTPException(404, "Current matchup is unavailable.")
         return {"identity": inspector.identity(), **result, "projection_audit": "/api/audit/projections/current"}
@@ -206,7 +207,7 @@ def create_inspection_router(
         needle = q.casefold()
         rows = [jsonable_encoder(row) for row in inspector.surfaces
                 if needle in f"{row.title} {row.category} {row.route}".casefold()][:limit]
-        for matchup_id, sides in sorted((inspector.data.get("matchups") or {}).items()):
+        for matchup_id, sides in sorted(current_matchup_groups(inspector.data).items()):
             title = f"Matchup {matchup_id}: " + " vs ".join(str(side.get("team")) for side in sides)
             if needle not in title.casefold():
                 continue

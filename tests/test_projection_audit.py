@@ -62,6 +62,29 @@ class Score:
     evidence_references: tuple[str, ...] = ("projection_snapshot:projection-1",)
 
 
+def prepare_audit_fixture(data, snapshot):
+    from src.core.intelligence.season_calendar import season_calendar
+    from services.matchup_season import METHOD
+    data['week'] = snapshot['week']
+    data['league'].update(season='2026', sport='nfl', status='in_season', settings={
+        'leg': 1, 'last_scored_leg': 0, 'start_week': 1, 'playoff_week_start': 15,
+        'playoff_teams': 6, 'playoff_round_type': 0, 'playoff_type': 0})
+    sides = [side for group in data['matchups'].values() for side in group]
+    data['teams'] = [{'roster_id': side['roster_id'], 'team_name': side['team']} for side in sides]
+    data['players'] = {p['id']: {'full_name': p['name'], 'position': p.get('position')}
+                       for side in sides for p in side['lineup']}
+    data['roster_positions'] = ['QB'] * max(len(side['lineup']) for side in sides)
+    data['season_matchups'] = {'league_id': 'league-1', 'season': '2026', 'methodology': METHOD,
+        'calendar_reference': season_calendar(data['league'])['reference'], 'semantic_generation': 'fixture',
+        'weeks': {str(snapshot['week']): {'availability': 'available', 'rows': [
+            {'roster_id': side['roster_id'], 'matchup_id': int(mid), 'points': side['points'],
+             'starters': [p['id'] for p in side['lineup']],
+             'starters_points': [p.get('points') for p in side['lineup']]}
+            for mid, group in data['matchups'].items() for side in group]}}}
+    snapshot.update(league_id='league-1', horizon_generation='fixture')
+    return data, snapshot
+
+
 def fixture():
     data = {
         "league": {"league_id": "league-1", "name": "Day Traders"},
@@ -87,10 +110,27 @@ def fixture():
                             "projection_confidence": 84, "projection_agreement": "High",
                             "sleeper_freshness": "Fresh"}},
     }
-    return data, snapshot
+    return prepare_audit_fixture(data, snapshot)
 
 
 class ProjectionAuditTests(unittest.IsolatedAsyncioTestCase):
+    def test_missing_projection_cannot_become_zero_total_or_margin(self):
+        data, snapshot = fixture()
+        result = build_projection_audit(data=data, projection_snapshot=snapshot,
+            projection_health={}, market=FakeMarket(), fois_scores=())
+        missing = result['teams'][1]
+        for field in ('canonical_team_projection', 'sleeper_projected_total',
+                      'raw_dtos_projected_total', 'dtos_projected_total', 'floor', 'ceiling'):
+            self.assertIsNone(missing[field], field)
+        self.assertIsNone(result['matchups'][0]['projected_margin'])
+
+    def test_complete_total_preserves_zero_and_decimal_precision(self):
+        from services.projection_audit import _complete_total
+        self.assertEqual(_complete_total([0.0]), 0.0)
+        self.assertEqual(_complete_total([19.924, 27.335]), 47.259)
+        self.assertIsNone(_complete_total([0.0, None]))
+        self.assertIsNone(_complete_total([]))
+
     def test_player_calibration_restores_team_separation_without_copying_sleeper(self):
         data, snapshot = fixture()
         data["matchups"] = {"5": [{
@@ -116,6 +156,7 @@ class ProjectionAuditTests(unittest.IsolatedAsyncioTestCase):
             "4": {"sleeper_projection": 3.0, "raw_dtos_projection": 10.0,
                   "dtos_projection": 4.0, "canonical_projection": 4.0},
         }
+        prepare_audit_fixture(data, snapshot)
         result = build_projection_audit(
             data=data, projection_snapshot=snapshot, projection_health={"status": "ready"},
             market=FakeMarket(), fois_scores=(), now="2026-08-11T00:00:00+00:00",

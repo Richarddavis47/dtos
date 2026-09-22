@@ -237,6 +237,8 @@ def evaluate_trade_request(
     }
     evaluation["provenance"]["evaluation_id"] = sha256(json.dumps(identity_input, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:24]
     evaluation["provenance"]["inputs"] = identity_input
+    from services.trade_explanation import render_trade_explanation
+    evaluation['explanation_html'] = render_trade_explanation(evaluation, league_id=identity_input['league_id'])
     evaluation["actions"] = ["EDIT TRADE", "ADJUST OFFER"]
     if not evaluation["generated_trade_eligible"]:
         evaluation["repair_paths"] = ["MAKE THIS TRADE WORK", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE TARGET"]

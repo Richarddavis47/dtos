@@ -7,6 +7,7 @@ from src.core.valuation.ranking import RANK_METHODOLOGY
 from src.core.valuation.intrinsic_profile import PROFILE_VERSION
 from src.core.valuation.player_methodology import METHOD_VERSION
 from src.core.valuation.consensus import MARKET_SELECTION_VERSION
+from src.core.valuation.observation_identity import OBSERVATION_IDENTITY_VERSION
 
 
 METHODOLOGY = {
@@ -14,6 +15,7 @@ METHODOLOGY = {
     'normalization': NORMALIZATION_VERSION, 'rank_scope': RANK_METHODOLOGY,
     'intrinsic_profile': PROFILE_VERSION, 'production': METHOD_VERSION,
     'provider_compatibility': MARKET_SELECTION_VERSION,
+    'market_observation_identity': OBSERVATION_IDENTITY_VERSION,
     'source_clocks': 'retrieval-source-publication-separated-1',
     'grading': 'roster-evidence-grading-v2', 'missing_data': 'missing-not-zero-1',
 }

@@ -256,6 +256,7 @@ def _score_asset(asset: dict[str, Any], rows: list[dict[str, Any]], providers: d
     return {
         "asset_id": asset["asset_id"], "asset_type": asset["asset_type"], "display_name": resolve_asset_name(asset),
         "pick_market_evidence": asset.get('pick_market_evidence'),
+        "market_observation_evidence": asset.get('market_observation_evidence'),
         "pick_context": asset.get('pick_context'),
         "scores": {"coverage": coverage, "confidence": confidence, "agreement": agreement},
         "valuation_layers": {name: layers.get(name) for name in ("market_value", "intrinsic_dtos_value", "league_adjusted_value", "contender_value", "rebuilder_value")},

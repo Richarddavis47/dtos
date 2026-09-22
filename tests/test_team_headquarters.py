@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import threading
 import time
 import unittest
@@ -12,7 +13,7 @@ from fastapi.responses import HTMLResponse
 from httpx import ASGITransport, AsyncClient
 
 from routes.teams import create_teams_router
-from services.team_headquarters import build_team_headquarters, calculate_team_grades
+from services.team_headquarters import build_team_directory, build_team_headquarters, calculate_team_grades
 from tests.test_trade_intelligence import fixture_data
 
 
@@ -106,6 +107,22 @@ class TeamHeadquartersTests(unittest.TestCase):
     def test_unknown_team_returns_none(self) -> None:
         self.assertIsNone(build_team_headquarters(self.data, 999))
 
+    def test_team_and_directory_reads_never_request_trade_opportunity_search(self):
+        from src.core.intelligence import IntelligenceCache, IntelligenceOrchestrator, IntelligenceRegistry
+        engine = IntelligenceOrchestrator(IntelligenceRegistry(), IntelligenceCache())
+        original = copy.deepcopy(self.data)
+        with patch('services.team_headquarters.intelligence_orchestrator', engine), \
+                patch('src.core.intelligence.orchestrator.trade_intelligence.opportunities',
+                      side_effect=AssertionError('Team read must not search trades')), \
+                patch.object(engine, 'analyze', wraps=engine.analyze) as analyze:
+            first = build_team_headquarters(self.data, 1)
+            again = build_team_headquarters(self.data, 1)
+            directory = build_team_directory(self.data)
+        self.assertEqual(first['assessment'], again['assessment'])
+        self.assertEqual(set(directory), {1, 2})
+        self.assertTrue(all(call.kwargs['include_trade_opportunities'] is False for call in analyze.call_args_list))
+        self.assertEqual(self.data, original)
+
 
 class TeamHeadquartersRequestSchedulingTests(unittest.IsolatedAsyncioTestCase):
     @staticmethod
@@ -177,6 +194,8 @@ class TeamHeadquartersRequestSchedulingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(team_response.status_code, 200)
         self.assertIn("<h2>Team 1</h2>", team_response.text)
         self.assertIn('data-dtos-component="recommendation"', team_response.text)
+        self.assertIn('submitted starters</summary>', team_response.text)
+        self.assertIn('Full Roster · position rooms and current lineup designation</summary>', team_response.text)
 
     async def test_team_hq_worker_failure_propagates(self) -> None:
         app = await self._application(fixture_data())

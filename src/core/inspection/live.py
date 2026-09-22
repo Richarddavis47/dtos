@@ -5,6 +5,7 @@ import re
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any, Iterable, Iterator
+from types import SimpleNamespace
 
 from fastapi.routing import APIRoute
 
@@ -13,6 +14,7 @@ from services.history import history_progress_contracts
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.inspection.discovery import discover_pages
 from src.ui.intelligence_presentation import matchup_game_state, projection_presentation_value
+from services.matchup_season import season_week_view
 
 LIVE_INSPECTION_SCHEMA_VERSION = "1.0"
 _PRIVATE_PREFIXES = (
@@ -152,6 +154,36 @@ def matchup_semantic(
             "read_only": True,
         },
     }
+
+
+def prepared_matchup_semantic(data: dict, matchup_id: str, projection_snapshot: dict | None) -> dict | None:
+    """Inspection serializes the same prepared view; it does not score lineups."""
+    week = int(data.get('week') or 1)
+    service = SimpleNamespace(snapshot=lambda: projection_snapshot,
+        week_snapshot=lambda selected, **kw: projection_snapshot if selected == (projection_snapshot or {}).get('week') else None)
+    view = season_week_view(data, week, service)
+    sides = view['groups'].get(str(matchup_id))
+    if not sides:
+        return None
+    teams = []
+    for side in sides:
+        total = {'canonical_projection': side['projection'], 'availability': 'available' if side['projection'] is not None else 'unavailable',
+                 'known_subtotal': side['known_subtotal']}
+        starters = []
+        for player in side['lineup']:
+            canonical = {'canonical_projection': player['projection'], 'sleeper_web_display_projection': player['projection_display'], 'provider': 'Sleeper'}
+            starters.append({'player_id': player['player_id'], 'player_name': player['name'], 'position': player['position'],
+                             'lineup_slot': player['slot'], 'canonical': canonical,
+                             'displayed': {**canonical, 'actual_points': player['actual']}})
+        teams.append({'roster_id': side['roster_id'], 'team_name': side['team'], 'actual_score': side['actual'],
+                      'starters': starters, 'canonical_totals': total, 'displayed_totals': dict(total),
+                      'optimal': side['optimal'], 'coverage': {'canonical': f'{side["supported_slots"]}/{side["expected_slots"]}',
+                                                             'canonical_status': side['coverage']}})
+    return {'surface_id': f'matchup-{matchup_id}', 'surface_type': 'matchup', 'matchup_id': str(matchup_id),
+            'human_url': f'/matchups/{matchup_id}?week={week}', 'semantic_url': f'/api/inspect/live/matchups/{matchup_id}',
+            'title': ' vs '.join(side['team'] for side in sides), 'status': view['period'], 'teams': teams,
+            'presentation_state': view['states'].get(str(matchup_id)), 'week': week,
+            'technical_details': {'read_only': True, 'source_generation': view['generation'], 'projection_generation': view['projection_generation']}}
 
 
 class LiveInspection:

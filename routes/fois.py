@@ -131,7 +131,9 @@ def create_fois_router(
         ))
         return {**_metadata(scores[0] if scores else None), "league_id": league_id,
                 **service.repository.canonical_health(league_id, FOIS_MODEL_VERSION),
-                "rankings": [{"rank": index, **_summary(score)} for index, score in enumerate(scores, 1)]}
+                "rankings": [{"rank": index if score.overall_score is not None else None,
+                              "rank_scope": "league_current_overall_fois", **_summary(score)}
+                             for index, score in enumerate(scores, 1)]}
 
     @router.get("/api/fois/leagues/{league_id}/gms")
     async def gms(league_id: str) -> dict[str, Any]:
@@ -283,9 +285,9 @@ def create_fois_router(
             -row.confidence, row.gm_id or "",
         ))
         cards = "".join(
-            f'<article class="card fois-leader" data-fois-current="true" data-fois-rank="{rank}" data-fois-gm="{escape(score.gm_id or "")}">'
-            f'<div class="fois-rank"><span>League Rank</span><b>#{rank}</b></div>'
-            f'<div><p class="eyebrow">CURRENT · {exact_rank(rank, len(ranked_scores))}</p><h3><a href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}">{escape(score.gm_name or "GM")}</a></h3>'
+            f'<article class="card fois-leader" data-fois-current="true" data-fois-rank="{rank if score.overall_score is not None else "unavailable"}" data-fois-gm="{escape(score.gm_id or "")}">'
+            f'<div class="fois-rank"><span>League overall FOIS rank</span><b>{exact_rank(rank if score.overall_score is not None else None)}</b></div>'
+            f'<div><p class="eyebrow">CURRENT · {exact_rank(rank if score.overall_score is not None else None, sum(row.overall_score is not None for row in ranked_scores))}</p><h3><a href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}">{escape(score.gm_name or "GM")}</a></h3>'
             f'<p class="muted">{escape(score.franchise_name or "Current franchise")}</p></div>'
             f'<div class="fois-score"><b>{score.overall_score if score.overall_score is not None else "—"}</b><span>{escape(score.overall_letter_grade or "Insufficient evidence")}</span></div>'
             f'<div class="fois-evidence"><b>{score.confidence:.0f}% confidence</b><span>{score.completeness:.0f}% evidence coverage · {score.supported_weight:.0f}% supported weight</span></div>'
@@ -364,6 +366,9 @@ def create_fois_router(
         data = require_data()
         selected_league = league_id.strip() or str((data.get("league") or {}).get("league_id") or "")
         score = gm_score(selected_league, gm_id)
+        from services.team_fois_explanations import fois_explanation
+        from src.ui.explanations import explanation_panel
+        explanation_html = explanation_panel(fois_explanation(score, league_id=selected_league))
         history = tuple(
             row for row in service.repository.timeline(selected_league, gm_id)
             if row.evaluation_kind != "current_canonical"
@@ -372,7 +377,8 @@ def create_fois_router(
             -(row.overall_score if row.overall_score is not None else -1),
             -row.confidence, row.gm_id or "",
         ))
-        rank = next((index for index, row in enumerate(rankings, 1) if row.gm_id == gm_id), None)
+        rank = next((index for index, row in enumerate(rankings, 1)
+                     if row.gm_id == gm_id and row.overall_score is not None), None)
         categories = "".join(
             f'<article class="card"><h3>{escape(item.category_name)}</h3>'
             f'<p class="score">{item.normalized_score if item.normalized_score is not None else "Insufficient evidence"} {escape(item.letter_grade or "")}</p>'
@@ -386,10 +392,10 @@ def create_fois_router(
             f'<li data-fois-history="true"><b>HISTORICAL SNAPSHOT</b> · {escape(row.generated_at[:10])} · '
             f'{row.overall_score if row.overall_score is not None else "Unavailable"} {escape(row.overall_letter_grade or "")}</li>'
             for row in reversed(history)
-        ) or "<li>No earlier meaningful FOIS snapshot exists.</li>"
+        ) or "<li>No earlier meaningful FOIS snapshot is available in retained history.</li>"
         body = f'''<a class="back" href="/fois?league_id={escape(selected_league)}">← GM Leaderboard</a><p class="eyebrow">CURRENT GM PROFILE</p><h2>{escape(score.gm_name or "General Manager")}</h2><p>{escape(score.franchise_name or "Current franchise")}</p>
-<div class="summary-grid"><article class="metric"><b>{exact_rank(rank, len(rankings))}</b><span>League Rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not ranked"} {escape(score.overall_letter_grade or "")}</b><span>FOIS Score</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Confidence</span></article><article class="metric"><b>{score.completeness:.0f}%</b><span>Evidence Coverage</span></article><article class="metric"><b>{score.supported_weight:.0f}%</b><span>Supported Weight</span></article></div>
-<section class="card"><h3>Executive Summary</h3><p>{escape(score.executive_summary)}</p><p><b>Management momentum:</b> {escape(human_status(score.management_momentum))}</p></section>
+<div class="summary-grid"><article class="metric"><b>{exact_rank(rank, sum(row.overall_score is not None for row in rankings))}</b><span>League overall FOIS rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not ranked"} {escape(score.overall_letter_grade or "")}</b><span>FOIS Score</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Confidence</span></article><article class="metric"><b>{score.completeness:.0f}%</b><span>Evidence Coverage</span></article><article class="metric"><b>{score.supported_weight:.0f}%</b><span>Supported Weight</span></article></div>
+<section class="card"><h3>Executive Summary</h3><p>{escape(score.executive_summary)}</p><p><b>Management momentum:</b> {escape(human_status(score.management_momentum))}</p></section>{explanation_html}
 <div class="card-grid">{categories}</div><div class="grid"><section class="card"><h3>Top strengths</h3><ul>{strengths}</ul></section><section class="card"><h3>Improvement areas</h3><ul>{weaknesses}</ul></section></div><details class="card" data-fois-history-count="{len(history)}"><summary>GM History · {len(history)} earlier snapshot(s)</summary><ul>{historical_rows}</ul></details>{details}'''
         return page(f"{score.gm_name or 'GM'} — Executive Profile", body) if page else HTMLResponse(body)
 

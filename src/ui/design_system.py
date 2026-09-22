@@ -103,6 +103,7 @@ def manager_navigation(title: str, *, roster_id: int | None = None) -> str:
     secondary = (
         ("FOIS", "/fois"), ("Commissioner", "/commissioner"),
         ("History", "/history"), ("Transactions", "/transactions"),
+        ("Weekly Report", "/reports/weekly"),
         ("Draft Capital", "/picks"), ("Advanced", "/brain"),
         ("Calibration", "/valuation/calibration"), ("Settings", "/settings"),
     )
@@ -110,16 +111,20 @@ def manager_navigation(title: str, *, roster_id: int | None = None) -> str:
     return f'<nav class="manager-nav" aria-label="Primary navigation">{links}</nav><details class="secondary-nav"><summary>More league tools</summary><div>{tools}</div></details>'
 
 
-def player_summary(*, player_id: str, name: str, position: str | None, nfl_team: str | None, context: str | None = None) -> str:
+def player_summary(*, player_id: str, name: str, position: str | None, nfl_team: str | None, context: str | None = None, projection: dict | None = None) -> str:
     """Render a reusable provider-backed player identity with safe fallback."""
     safe_id = "".join(character for character in str(player_id) if character.isalnum() or character in {"-", "_"})
     initials = "".join(part[:1] for part in name.split()[:2]).upper() or "DT"
     metadata = " · ".join(item for item in (position, nfl_team, context) if item)
+    weekly = '' if projection is None else (
+        f'<span class="player-week-projection" data-projection-week="{int(projection["week"])}" '
+        f'data-projection-availability="{escape(projection["availability"])}">'
+        f'Week {int(projection["week"])} · Sleeper {escape(projection["display"])}</span>')
     image = (
         f'<img class="player-headshot" src="https://sleepercdn.com/content/nfl/players/{escape(safe_id)}.jpg" alt="{escape(name)} headshot" loading="lazy" onerror="this.hidden=true">'
         if safe_id else ""
     )
-    return f'<span class="player-summary"><span class="player-portrait">{image}<span class="player-headshot-fallback" aria-hidden="true">{escape(initials)}</span></span><span class="player-summary-copy"><b>{escape(name)}</b><span>{escape(metadata or "Player details unavailable")}</span></span></span>'
+    return f'<span class="player-summary"><span class="player-portrait">{image}<span class="player-headshot-fallback" aria-hidden="true">{escape(initials)}</span></span><span class="player-summary-copy"><b>{escape(name)}</b><span>{escape(metadata or "Player details unavailable")}</span>{weekly}</span></span>'
 
 
 def recommendation_panel(*, title: str, recommendation: str, confidence: int, primary_reason: str, evidence: tuple[str, ...], expected_impact: str, action_label: str, action_href: str, limitations: tuple[str, ...] = ()) -> str:

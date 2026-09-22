@@ -3,6 +3,8 @@ from __future__ import annotations
 import unittest
 from html.parser import HTMLParser
 from unittest.mock import patch
+from types import SimpleNamespace
+from tests.matchup_prepared_fixture import prepared_fixture
 
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import HTMLResponse
@@ -291,8 +293,8 @@ class LiveInspectionTests(unittest.TestCase):
             ensure_fresh=fresh, require_data=lambda: data,
             page=lambda title, body: HTMLResponse(f"<h1>{title}</h1>{body}"),
         ))
-        with (patch("routes.matchups.matchup_player_values", return_value={}),
-              patch("routes.matchups.matchup_projection", return_value=projection)):
+        data, projection_service = prepared_fixture(data, projection)
+        with patch("routes.matchups.current_league_context", return_value=SimpleNamespace(projection=projection_service)):
             response = TestClient(app).get("/matchups/1")
         self.assertEqual(response.status_code, 200)
         self.assertIn("Pregame projection", response.text)
@@ -345,11 +347,11 @@ class LiveInspectionTests(unittest.TestCase):
         app.include_router(create_matchups_router(
             ensure_fresh=fresh, require_data=lambda: data,
             page=lambda title, body: HTMLResponse(
-                f"<style>.score-row small,.starter-projections small{{text-transform:uppercase}}</style><h1>{title}</h1>{body}"
+                f"<style>[data-dtos-semantic-field]{{text-transform:uppercase}}</style><h1>{title}</h1>{body}"
             ),
         ))
-        with (patch("routes.matchups.matchup_player_values", return_value={}),
-              patch("routes.matchups.matchup_projection", return_value=projection)):
+        data, projection_service = prepared_fixture(data, projection)
+        with patch("routes.matchups.current_league_context", return_value=SimpleNamespace(projection=projection_service)):
             response = TestClient(app).get("/matchups/1")
         semantic = matchup_semantic(data, "1", {"players": {
             "10": {"canonical_projection": 16.71}, "20": {"canonical_projection": 0.0},
@@ -368,7 +370,7 @@ class LiveInspectionTests(unittest.TestCase):
                     text: field.innerText,
                 })),
             }))""")
-            team_cards = page.locator(".scoreboard-side, .matchup-team").all_inner_texts()
+            team_cards = page.locator(".season-sides > section").all_inner_texts()
             browser.close()
         self.assertIn("PREGAME PROJECTION", visible)
         self.assertEqual(len(starter_cards), 2)

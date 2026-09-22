@@ -12,6 +12,7 @@ from app_metadata import VERSION
 from services.front_office_intelligence import build_front_office_center
 from src.core.intelligence.serialization import recommendation_contract
 from services.transactions import normalize_transactions
+from services.matchup_season import season_week_view
 from src.core.intelligence.cache import intelligence_cache
 from src.core.intelligence import intelligence_orchestrator
 from src.core.valuation import NORMALIZATION_VERSION, VALUATION_SCHEMA_VERSION, build_canonical_consensus, normalize_value
@@ -271,7 +272,11 @@ def public_transactions(data: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def public_matchups(data: dict[str, Any]) -> dict[str, Any]:
-    return {"week": data.get("week"), "matchups": _safe(data.get("matchups") or {})}
+    view = season_week_view(data, int(data.get('week') or 1), None)
+    return {"week": view['week'], "matchups": _safe(view['groups']),
+            'availability': view['availability'], 'methodology': view['methodology'],
+            'generation': view['generation'], 'playoff_byes': view['byes'],
+            'projection_context': 'pairing/source scores only; use prepared projection API for weekly projections'}
 
 
 def public_picks(data: dict[str, Any]) -> dict[str, Any]:

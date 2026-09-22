@@ -1272,6 +1272,40 @@ class AssetMarketTests(unittest.TestCase):
                 self.assertEqual(self._ready_get(client, "/api/market/trending").status_code, 200)
                 sync.assert_not_awaited()
 
+    def test_card_and_detail_projection_follow_new_projection_not_old_market_cache(self):
+        from types import SimpleNamespace
+        from time import perf_counter
+        self.data['league']['season'] = 2026
+        self.data['week'] = 2
+        snapshot = {'league_id': self.league_id, 'season': 2026, 'week': 2,
+                    'horizon_generation': 'projection-one', 'horizon_snapshot_ids': {'2': 'p2'},
+                    'players': {'10213': {'canonical_projection': 27.335,
+                                         'sleeper_web_display_projection': '27.33'}}}
+        service = SimpleNamespace(snapshot=lambda: snapshot, week_snapshot=lambda *a, **k: snapshot)
+        app = FastAPI()
+        app.include_router(create_market_router(require_data=lambda: self.data, state=self.state,
+            league_id=self.league_id, page=lambda title, body: HTMLResponse(body)))
+        with patch('routes.market.historical_store', self.store), patch('routes.market.projection_service', service):
+            client = TestClient(app)
+            first = self._ready_get(client, '/market?selected=player%3A10213').text
+            self.assertIn('Week 2 · Sleeper 27.33', first)
+            self.assertIn('<b>27.33</b><span>Sleeper projection', first)
+            price = self._ready_get(client, '/api/market/assets/player:10213').json()['asset']['values']['market_value']
+            snapshot.update(horizon_generation='projection-two')
+            snapshot['players']['10213'].update(canonical_projection=31.014, sleeper_web_display_projection='31.01')
+            second = self._ready_get(client, '/market?selected=player%3A10213').text
+            self.assertIn('Week 2 · Sleeper 31.01', second)
+            self.assertIn('<b>31.01</b><span>Sleeper projection', second)
+            self.assertNotIn('Sleeper 27.33', second)
+            self.assertEqual(self._ready_get(client, '/api/market/assets/player:10213').json()['asset']['values']['market_value'], price)
+            start = perf_counter()
+            warm = client.get('/market?selected=player%3A10213')
+            elapsed = perf_counter() - start
+            self.assertEqual(warm.status_code, 200)
+            self.assertIn('Week 2 · Sleeper 31.01', warm.text)
+            print({'scope': 'local prepared Market fixture; complete parent read including cards/detail',
+                   'warm_seconds': elapsed})
+
     def test_trending_http_handles_legacy_draft_identity_as_observed_at(self) -> None:
         malformed = "2026-draft-1319750580377251840-13"
         memory = IntelligenceCheckpointStore(Path(self.temp.name) / "intelligence.sqlite3")

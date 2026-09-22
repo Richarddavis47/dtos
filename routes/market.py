@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from html import escape
 from typing import Any, Callable
+from types import SimpleNamespace
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -23,6 +24,8 @@ from services.history import (
 from src.ui.intelligence_presentation import available
 from src.ui.render_cache import GenerationRenderCache
 from src.ui import player_summary
+from src.core.projection_intelligence import projection_service
+from services.player_projection_view import player_projection_view, player_projection_views
 
 RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[..., HTMLResponse]
@@ -64,6 +67,15 @@ def _trend_boundary_notice(trend: dict[str, Any]) -> str:
         'format, methodology or time ordering cannot support a numerical comparison. '
         'This is not player movement.</p>'
     )
+
+
+def _trend_observation_summary(trend: dict[str, Any]) -> str:
+    """Only comparable evidence gets numerical movement presentation."""
+    count = trend.get('checkpoint_count', 0)
+    if trend.get('comparison_reasons') or trend.get('direction') not in ('rising', 'falling', 'stable', 'volatile'):
+        return f'{count} retained checkpoints · Numerical movement unavailable: comparable history is required.'
+    return (f'{count} meaningful checkpoints · {escape(str(trend["magnitude_band"]))} movement · '
+            f'observed range {escape(available(trend.get("observed_low")))}–{escape(available(trend.get("observed_high")))}')
 
 
 def create_market_router(
@@ -291,12 +303,18 @@ def create_market_router(
         data = selected_state.get("data") or {}
         league_name = str((data.get("league") or {}).get("name") or "Sleeper League")
         generation = str(market.semantic_generation)
+        projection_context = context_resolver() if context_resolver is not None else None
+        projection_reader = getattr(projection_context, 'projection', None) or projection_service
+        pinned_projection = projection_reader.snapshot()
+        pinned_reader = SimpleNamespace(snapshot=lambda: pinned_projection, week_snapshot=projection_reader.week_snapshot)
+        projection_key = ((pinned_projection or {}).get('horizon_generation'), data.get('week'),
+                          repr(data.get('scoring_settings') or (data.get('league') or {}).get('scoring_settings') or {}))
         route_variant = "market"
         key = (
             route_variant, selected_league, generation, market.dataset_version,
             VERSION, BUILD_NUMBER, league_name, selected_state.get("last_sync"),
             selected_state.get("last_error"), q, position, availability, sort,
-            direction, front_office, selected, offset, limit,
+            direction, front_office, selected, offset, limit, projection_key,
         )
         render_cache = home_render_cache if route_variant == "home" else market_render_cache
         body_cache = (
@@ -306,7 +324,7 @@ def create_market_router(
         body_key = (
             route_variant, selected_league, generation, market.dataset_version,
             VERSION, BUILD_NUMBER, q, position, availability, sort,
-            direction, front_office, selected, offset, limit,
+            direction, front_office, selected, offset, limit, projection_key,
         )
 
         def render_body() -> bytes:
@@ -316,6 +334,9 @@ def create_market_router(
                 position=position or None, availability=availability or None,
             )
             rows = result.get("assets") or result.get("results") or []
+            card_projections = player_projection_views(data,
+                [str(row.get('asset_id', '')).split(':', 1)[1] for row in rows
+                 if str(row.get('asset_id', '')).startswith('player:')], pinned_reader)
             add_trends(market, rows, selected_league)
             table_rows = []
             market_cards = []
@@ -341,6 +362,7 @@ def create_market_router(
                         position=str(row.get("position") or ""),
                         nfl_team=str(row.get("nfl_team") or "Free Agent"),
                         context=f'Result #{row.get("result_position") or index}',
+                        projection=card_projections.get(asset_id.split(':', 1)[1]),
                     )
                     if asset_id.startswith("player:") else
                     f'<b>{escape(display_name)}</b><br><code>{escape(asset_id)}</code>'
@@ -368,12 +390,12 @@ def create_market_router(
                 )
                 history = detail.get("history") or {}
                 layers = detail.get("value_layers") or {}
-                forward = (detail.get("valuation") or {}).get("forward_production") or {}
                 forward_html = ""
-                if forward:
-                    weekly = forward.get("weekly_projected_points")
-                    weekly_display = "Unavailable" if weekly is None else escape(str(forward.get("sleeper_web_display_projection") or f"{weekly:.2f}"))
-                    confidence = forward.get("projection_confidence")
+                if str(asset['asset_id']).startswith('player:'):
+                    selected_projection = player_projection_view(data, str(asset['asset_id']).split(':', 1)[1], pinned_reader)
+                    weekly = selected_projection['value']
+                    weekly_display = escape(selected_projection['display'])
+                    confidence = selected_projection['confidence']
                     confidence_html = "Unavailable" if confidence is None else f"{confidence}%"
                     forward_html = f'''<section class="card"><p class="eyebrow">Canonical Weekly Projection</p>{f'<div class="summary-grid"><article class="metric"><b>{weekly_display}</b><span>Sleeper projection</span></article><article class="metric"><b>{confidence_html}</b><span>Evidence confidence</span></article></div>' if weekly is not None else '<div class="evidence-unavailable"><b>Weekly projection unavailable.</b><br>Sleeper has not supplied a canonical projection for this asset and matchup context.</div>'}<details><summary>Evidence</summary><p>Sleeper supplies the weekly projection under this league's scoring profile. DTOS does not fabricate a fallback.</p></details></section>'''
                 values = asset.get("values") or {}
@@ -388,8 +410,11 @@ def create_market_router(
                     f'<li>{escape(name.replace("_", " ").title())}: {float(row["change"]):+,.0f}</li>'
                     for name, row in trend["milestones"].items()
                 )
-                trend_html = f'''<section class="card"><p class="eyebrow">Observed Market Trend</p><h3>{escape(str(trend["direction"]).replace("_", " ").upper())} · {escape(trend["confidence"].upper())} CONFIDENCE</h3><p>{trend["checkpoint_count"]} meaningful Step 2 checkpoints · {escape(trend["magnitude_band"])} movement · observed range {available(trend["observed_low"])}–{available(trend["observed_high"])}</p>{f'<ul>{milestone_html}</ul>' if milestone_html else '<p class="muted">No supported milestone comparison is available yet.</p>'}<p class="muted">Sparse observed checkpoints; no daily values are inferred.</p></section>'''
+                trend_html = f'''<section class="card"><p class="eyebrow">Observed Market Trend</p><h3>{escape(str(trend["direction"]).replace("_", " ").upper())} · {escape(trend["confidence"].upper())} CONFIDENCE</h3><p>{_trend_observation_summary(trend)}</p>{f'<ul>{milestone_html}</ul>' if milestone_html else '<p class="muted">No supported milestone comparison is available yet.</p>'}<p class="muted">Sparse observed checkpoints; no daily values are inferred.</p></section>'''
                 trend_html += _trend_boundary_notice(trend)
+                from services.asset_explanations import market_explanation
+                from src.ui.explanations import explanation_panel
+                trend_html += explanation_panel(market_explanation(detail, trend, league_id=selected_league))
                 expanded = f'''<section class="card" id="selected-asset" tabindex="-1"><p class="eyebrow">Expanded Asset</p><h2>{escape(asset["display_name"])}</h2><p>{escape(str(asset.get("position") or asset["asset_type"]))} · {escape(str(asset.get("nfl_team") or "No NFL team"))}</p>{value_html}<p><b>DTOS view:</b> {escape(recommendation["primary_reason"])}</p><p><a href="{escape(asset["canonical_url"])}">Open canonical dossier</a> · <a href="{trade_href}">Trade Intelligence</a></p><details><summary>Why?</summary><p>Decision confidence: {escape(available(recommendation.get("confidence"), reason="Unavailable"))}</p><p>Historical availability: {escape(asset["historical_availability"])}</p><p>Missing evidence: {escape(", ".join(recommendation["missing_evidence"]) or "None reported")}</p></details><details class="technical-details"><summary>Technical Details</summary><p>Asset: <code>{escape(asset["asset_id"])}</code></p><p>Brain snapshot: <code>{escape(recommendation["brain_snapshot_id"])}</code></p><p>Market generation: <code>{escape(detail["market_generation"])}</code></p><p>Valuation generation: <code>{escape(str(detail.get("valuation_generation") or "Unavailable"))}</code></p><p>Historical dataset: <code>{escape(detail["historical_dataset_version"])}</code></p><p>Historical evidence records: {len(history.get("events") or history.get("ownership_intervals") or [])}</p></details></section>{trend_html}{forward_html}'''
             def options(values: Any, selected_value: str) -> str:
                 return "".join(
