@@ -107,11 +107,17 @@ class MinimalMetadataStore:
         value = self.get("sleeper_season_chain", str(league_id))
         return dict(value) if isinstance(value, dict) else None
 
-    def record_sync_generation(self, league_id: str, generation: str) -> None:
-        self.put("sync_generation", str(league_id), {
+    def record_sync_generation(self, league_id: str, generation: str) -> bool:
+        """Write only semantic generation changes, not every unchanged poll."""
+        key = str(league_id)
+        value = self.get("sync_generation", key)
+        if isinstance(value, dict) and value.get("generation") == str(generation):
+            return False
+        self.put("sync_generation", key, {
             "generation": str(generation),
             "recorded_at": datetime.now(timezone.utc).isoformat(),
         })
+        return True
 
     def database_uuid(self) -> str:
         return str(self.get("system", "database_uuid"))

@@ -265,6 +265,26 @@ class MarketWarmingValidationTests(unittest.TestCase):
         body = get_market_page("http://dtos", "/market", request=request)
         self.assertEqual(validate_asset_market_contract(body, "/market"), "generation-1")
 
+    def test_blocker_can_publish_atomically_between_page_probes(self) -> None:
+        request = _Requests(**{
+            "_market": [
+                _response(503, {"detail": MARKET_WARMING_DETAIL}),
+                _response(200, _market_page()),
+            ],
+            "_api_market_health": [
+                _response(200, _warming_health(
+                    build_active=False, phase="historical_import", build_count=4,
+                )),
+                _response(200, _ready_health(build_count=5)),
+            ],
+        })
+        clock = _Clock()
+        body = get_market_page(
+            "http://dtos", "/market", request=request,
+            sleeper=clock.sleep, clock=clock,
+        )
+        self.assertEqual(validate_asset_market_contract(body, "/market"), "generation-1")
+
 
 if __name__ == "__main__":
     unittest.main()

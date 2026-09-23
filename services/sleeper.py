@@ -62,6 +62,23 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def selected_league_week(league: dict[str, Any], nfl_state: dict[str, Any] | None) -> int:
+    """Resolve week within the selected league season, never another NFL season."""
+    settings = league.get("settings") or {}
+    try:
+        league_season = int(league["season"])
+        global_season = int((nfl_state or {}).get("season"))
+        global_week = int((nfl_state or {}).get("week"))
+        league_week = int(settings.get("leg"))
+    except (KeyError, TypeError, ValueError):
+        raise ValueError("Sleeper league/NFL season-week identity is incomplete.") from None
+    season_type = str((nfl_state or {}).get("season_type") or "").casefold()
+    selected = global_week if global_season == league_season and season_type in {"regular", "post"} else league_week
+    if not 1 <= selected <= 18:
+        raise ValueError("Sleeper selected league week is outside the supported NFL calendar.")
+    return selected
+
+
 def league_cache_file(league_id: str) -> Path:
     """Resolve a league-specific cache while retaining the legacy default path."""
     if str(league_id) == str(LEAGUE_ID):
@@ -147,6 +164,12 @@ async def _sync_sleeper(
         if state["syncing"]:
             return state
         state["syncing"] = True
+        last_valid = {
+            "data": state.get("data") or {},
+            "last_sync": state.get("last_sync"),
+            "transactions_last_sync": state.get("transactions_last_sync"),
+            "transactions_last_error": state.get("transactions_last_error"),
+        }
         try:
             lifecycle_context = lifecycle_coordinator.phase("sleeper_sync")
             lifecycle_context.__enter__()
@@ -163,9 +186,11 @@ async def _sync_sleeper(
                     sleeper_get(client, "/state/nfl"),
                 )
 
-                week = int((nfl_state or {}).get("week") or 1)
-                season_type = (nfl_state or {}).get("season_type") or "regular"
-                matchup_week = week if season_type in {"regular", "post"} else 1
+                # Global NFL state can already describe the next season while
+                # this connected league still describes the completed season.
+                # Never fetch/publish another season's projections into it.
+                projection_season = int(league["season"])
+                matchup_week = selected_league_week(league, nfl_state)
 
                 matchups, transactions, trending_adds, trending_drops = await asyncio.gather(
                     sleeper_get(client, f"/league/{league_id}/matchups/{matchup_week}"),
@@ -208,7 +233,6 @@ async def _sync_sleeper(
                 projection_week_payloads: list[tuple[int, Any]] = []
                 projection_claimed = projections.begin_external_refresh()
                 if projection_claimed:
-                    projection_season = int((nfl_state or {}).get("season") or league.get("season") or utcnow().year)
                     try:
                         projection_payload, projection_bytes, projection_transport = await SLEEPER_PROJECTION_CLIENT.fetch(
                             client,
@@ -503,7 +527,7 @@ async def _sync_sleeper(
                             {matchup_week: projection_payload, **dict(projection_week_payloads)},
                             data=state["data"],
                             league_id=league_id,
-                            season=int((nfl_state or {}).get("season") or league.get("season") or utcnow().year),
+                            season=projection_season,
                             current_week=matchup_week,
                             response_bytes=projection_bytes,
                             transport_details=projection_transport,
@@ -557,6 +581,13 @@ async def _sync_sleeper(
             intelligence_cache.invalidate("crawl:")
             logger.info("Sleeper sync complete: %s teams", len(team_rows))
         except Exception as exc:
+            # Candidate construction mutates process-local working state before
+            # the final durable cache publication. Any uncaught preparation
+            # failure must restore the exact last-valid read generation.
+            state["data"] = last_valid["data"]
+            state["last_sync"] = last_valid["last_sync"]
+            state["transactions_last_sync"] = last_valid["transactions_last_sync"]
+            state["transactions_last_error"] = last_valid["transactions_last_error"]
             state["last_error"] = f"{type(exc).__name__}: {exc}"
             logger.exception("Sleeper sync failed")
         finally:

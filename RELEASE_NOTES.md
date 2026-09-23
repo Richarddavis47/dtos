@@ -1,4 +1,17 @@
-# DTOS v1.20.0 - Manager Experience and Reporting
+# DTOS v1.21.0 - Season Operations and Final Acceptance
+
+Batch 7 completes DTOS season operations and final integrated acceptance. A
+completed league now retains its own season and week when the global NFL clock
+moves forward. Projection restoration requires an exact league, season, week
+and scoring match, while failed preparation restores the last valid active
+state without publishing partial evidence.
+
+Unchanged refreshes and synchronization markers remain deduplicated. Historical
+reports, Matchups, Trade, Market, Picks, FOIS and team context retain their
+temporal and league boundaries across Day Traders and Super Flexxxin. No new
+database schema, durable intelligence store or paid infrastructure is included.
+
+## Previous release: DTOS v1.20.0 - Manager Experience and Reporting
 
 Batch 6 brings full-season Matchups and Matchup Desk, clearer player projections,
 shared evidence explanations, Home attention, and weekly league reports into the

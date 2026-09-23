@@ -76,6 +76,20 @@ class _BattleCardParser(HTMLParser):
 
 
 class LiveInspectionTests(unittest.TestCase):
+    @patch("src.core.inspection.live.history_progress_contracts", return_value=PROGRESS)
+    def test_identity_uses_selected_league_season_without_projection(self, _progress):
+        data = {
+            "league": {"league_id": "league", "name": "Completed", "season": "2025"},
+            "nfl_state": {"season": "2026", "week": 3, "season_type": "regular"},
+            "week": 17,
+        }
+        identity = LiveInspection(
+            state={"data": data}, routes=FastAPI().routes, league_id="league",
+            projection_snapshot=None, market=None, fois_scores=(),
+        ).identity()
+        self.assertEqual(identity["season"], "2025")
+        self.assertEqual(identity["week"], 17)
+
     def test_browser_text_normalization_is_narrow_and_semantic(self):
         self.assertEqual(
             normalized_manager_text("  PREGAME\n projection  "),

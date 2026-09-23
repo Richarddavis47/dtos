@@ -223,6 +223,18 @@ class ProjectionService:
         requested_league = str((data.get("league") or {}).get("league_id") or "")
         if requested_league and snapshot_league != requested_league:
             return False
+        # A restart/failed refresh must not attach an old season, week or
+        # scoring generation merely because its league identity still matches.
+        league = data.get("league") or {}
+        season = data.get("season") or league.get("season")
+        week = data.get("week") or data.get("leg")
+        if season is not None and str(snapshot.get("season")) != str(season):
+            return False
+        if week is not None and str(snapshot.get("week")) != str(week):
+            return False
+        scoring = data.get("scoring_settings", league.get("scoring_settings"))
+        if scoring is not None and snapshot.get("scoring_settings") != scoring:
+            return False
         data["projection_intelligence"] = snapshot
         return True
 
@@ -285,8 +297,7 @@ class ProjectionService:
             connection.execute("DELETE FROM sleeper_projection_snapshots WHERE season=? AND week=? AND fingerprint<>?",
                                (int(season), int(week), fingerprint))
             connection.execute(
-                "INSERT INTO sleeper_projection_snapshots VALUES (?, ?, ?, ?, ?) "
-                "ON CONFLICT(fingerprint) DO UPDATE SET retrieved_at=excluded.retrieved_at, payload=excluded.payload",
+                "INSERT OR IGNORE INTO sleeper_projection_snapshots VALUES (?, ?, ?, ?, ?)",
                 (fingerprint, int(season), int(week), snapshot["retrieved_at"],
                  json.dumps(snapshot, sort_keys=True, separators=(",", ":"))),
             )
@@ -507,8 +518,7 @@ class ProjectionService:
                 connection.execute("DELETE FROM sleeper_projection_snapshots WHERE season=? AND week=? AND fingerprint<>?",
                                    (season, week, fingerprint))
                 connection.execute(
-                    "INSERT INTO sleeper_projection_snapshots VALUES (?, ?, ?, ?, ?) "
-                    "ON CONFLICT(fingerprint) DO UPDATE SET retrieved_at=excluded.retrieved_at, payload=excluded.payload",
+                    "INSERT OR IGNORE INTO sleeper_projection_snapshots VALUES (?, ?, ?, ?, ?)",
                     (fingerprint, season, week, retrieved_at, json.dumps(snapshot, sort_keys=True, separators=(",", ":"))),
                 )
                 self._prune_provider_cache(connection)

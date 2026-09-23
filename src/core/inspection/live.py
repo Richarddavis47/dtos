@@ -212,7 +212,7 @@ class LiveInspection:
             "environment": "production" if "onrender.com" in str(__import__('os').getenv("DTOS_PUBLIC_URL", "")) else "application",
             "live_inspection_schema": LIVE_INSPECTION_SCHEMA_VERSION,
             "league_id": self.league_id, "league_name": league.get("name"),
-            "season": (self.projection_snapshot or {}).get("season") or (self.data.get("nfl_state") or {}).get("season"),
+            "season": (self.projection_snapshot or {}).get("season") or league.get("season"),
             "week": (self.projection_snapshot or {}).get("week") or self.data.get("week"),
             "brain_snapshot_id": market_identity.get("brain_snapshot_id"),
             "projection_snapshot_id": (self.projection_snapshot or {}).get("projection_snapshot_id"),
