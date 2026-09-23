@@ -106,5 +106,5 @@ class PreparedPlayerRankTests(unittest.TestCase):
         from components.asset_intelligence import _scoped_rank_summary
         html = _scoped_rank_summary({"roster_dynasty": {"overall": {"rank": 1}},
             "league_universe_intrinsic": {"overall": {"rank": 1}}})
-        self.assertIn("Global DTOS intrinsic dynasty:</b> Unavailable", html)
+        self.assertIn("Global DTOS intrinsic dynasty:</b> Overall rank unavailable", html)
         self.assertNotIn("#1", html)

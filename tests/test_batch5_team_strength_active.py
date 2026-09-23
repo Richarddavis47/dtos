@@ -71,6 +71,17 @@ class ActiveStrengthTests(unittest.TestCase):
                 self.assertEqual(assessment.team.competitive_window.production_profile, assessment.multi_horizon_strength)
                 self.assertIsNone(assessment.team.overall.score)
                 self.assertIn('Playoff-window strength', strength_panel(assessment.multi_horizon_strength))
+                explained = strength_panel(assessment.multi_horizon_strength, league_id=assessment.league_id,
+                                           roster_id=assessment.roster_id, players=data['teams'][0]['players'])
+                self.assertIn('dtos-explanation', explained)
+                self.assertIn('Team Strength explained', explained)
+                self.assertIn('Current-week optimal lineup · compare submitted starters', explained)
+                self.assertIn('DTOS has not changed your Sleeper lineup', explained)
+                self.assertIn('Source evidence support:', explained)
+                current = assessment.multi_horizon_strength['weekly'][2]
+                for entry in current['optimal']['entries']:
+                    self.assertIn(f'{entry["projected_points"]} projected points', explained)
+                    self.assertIn(f'/players/{entry["asset_id"]}', explained)
                 data['league']['settings']['playoff_round_type'] = 1
                 self.assertIsNone(compatible_profile(data, service.snapshot()))
                 stale = engine.analyze(data, 1)

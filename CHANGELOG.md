@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.20.0 - Manager Experience and Reporting
+
+- Present full-season Matchups and Matchup Desk with projected-versus-locked playoff states and historical boundaries.
+- Add supported player projection context, shared evidence explanations, Home attention, and weekly league reports.
+- Clarify Team HQ, Market, rank, history and FOIS presentation without changing canonical player, Trade, Pick or FOIS conclusions.
+- Preserve league isolation, prepared reads, responsive controls and bounded unchanged-read storage.
+
 # v1.19.1 - Trade Point Presentation
 
 - Present projected lineup and horizon changes consistently to two decimal places without altering canonical values or evaluation results.

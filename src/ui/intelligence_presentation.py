@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from html import escape
+from decimal import Decimal, InvalidOperation
 from typing import Any, Iterable
 
 _STATUS_LABELS = {
@@ -129,10 +130,23 @@ def matchup_score_hierarchy(
 
 
 def exact_rank(value: Any, total: Any = None) -> str:
-    if value in (None, "", 0, "0"):
+    def ordinal(raw: Any) -> int | None:
+        if isinstance(raw, bool):
+            return None
+        try:
+            number = Decimal(str(raw))
+        except (InvalidOperation, ValueError):
+            return None
+        if not number.is_finite() or number <= 0 or number != number.to_integral_value():
+            return None
+        return int(number)
+
+    rank = ordinal(value)
+    if rank is None:
         return "Not ranked — insufficient evidence"
-    suffix = f" of {total}" if total not in (None, "", 0, "0") else ""
-    return f"#{value}{suffix}"
+    count = ordinal(total)
+    suffix = f" of {count}" if count is not None else ""
+    return f"#{rank}{suffix}"
 
 
 def historical_availability(progress: dict[str, Any] | None) -> str:

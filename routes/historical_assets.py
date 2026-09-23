@@ -131,6 +131,9 @@ def create_historical_assets_router(
             if dossier.get("selected_player_url") else "Not exercised"
         )
         pick_title = f'{dossier.get("season", "Future")} Round {dossier.get("round", "?")} Pick'
+        from services.asset_explanations import pick_history_explanation
+        from src.ui.explanations import explanation_panel
+        history_explanation = explanation_panel(pick_history_explanation(dossier, league_id=selected_league()))
         facts = require_data()
         active_id = int(front_office or 0)
         original_id = str(dossier.get("original_roster") or "")
@@ -157,7 +160,7 @@ def create_historical_assets_router(
             else:
                 trade_action = '<a class="button" href="/trades">Choose a franchise to trade this pick</a>'
         details = technical_details((("Canonical pick identity", pick_id), ("Slot status", dossier.get("slot_status"))))
-        body = f'''<a class="back" href="/picks">← Back to Draft Capital</a><h2>{escape(pick_title)}</h2>
+        body = f'''<a class="back" href="/picks">← Back to Draft Capital</a><h2>{escape(pick_title)}</h2>{history_explanation}
 <div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(str(dossier.get("current_owner") or "Unknown"))}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article></div>
 <div class="card"><h3>Pick Conversion</h3><p>{selected}</p><p>{trade_action}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
 <div class="card"><h3>Ownership Chain</h3><table><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div>{details}'''

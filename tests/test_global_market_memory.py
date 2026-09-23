@@ -158,7 +158,7 @@ class GlobalSparseMarketMemoryTests(unittest.TestCase):
 
     def test_materiality_policy_is_centralized_and_versioned(self) -> None:
         policy = MarketObservationMaterialityPolicy()
-        self.assertEqual(policy.version, "1.0")
+        self.assertEqual(policy.version, "1.1")
         self.assertEqual(policy.canonical_value_delta, 250.0)
         self.assertEqual(policy.canonical_relative_delta, 0.08)
         self.assertEqual(policy.provider_value_delta, 250.0)

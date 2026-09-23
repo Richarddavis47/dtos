@@ -25,6 +25,12 @@ class IntelligenceCache:
         self.misses = 0
         self.invalidations = 0
 
+    def peek(self, key: Hashable) -> Any | None:
+        """Read an unexpired prepared value without invoking a factory."""
+        with self._lock:
+            entry = self._entries.get(key)
+            return entry.value if entry is not None and entry.expires_at > monotonic() else None
+
     def get_or_create(self, key: Hashable, factory: Callable[[], Any], ttl: float | None = None) -> Any:
         now = monotonic()
         with self._lock:

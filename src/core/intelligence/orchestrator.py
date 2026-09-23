@@ -229,7 +229,10 @@ class IntelligenceOrchestrator:
         }
 
     def player_report(self, data: dict[str, Any], player: dict[str, Any], roster_id: int) -> Any:
-        result = self.analyze(data, roster_id)
+        # Player evidence does not consume generated Trade opportunities.
+        # Keep the existing cached player/roster boundary without launching a
+        # search merely because a manager opens a dossier.
+        result = self.analyze(data, roster_id, include_trade_opportunities=False)
         report = evaluate_player(player, _asset_context(result.context, result.decision))
         value_profile = result.player_values.get(str(player.get("id") or player.get("player_id")))
         market = result.market.assets.get(str(player.get("id") or player.get("player_id")))

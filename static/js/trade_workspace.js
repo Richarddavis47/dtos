@@ -88,6 +88,10 @@
     const sent = totals('sent'), received = totals('received'), balance = el('trade-balance'); balance.replaceChildren(node('h3', 'Market Balance'), node('p', `You send: ${sent ?? 'Unavailable'} · You receive: ${received ?? 'Unavailable'}`), node('small', 'Neutral market relationship only — not the Trade Intelligence recommendation.'));
     el('trade-context').textContent = `${team(active)?.team_name || 'Your franchise'} → ${team(partner())?.team_name || 'Choose partner'} · Active league ${workspace.manager_context.league_id}`;
     el('trade-run').disabled = busy || !selected.sent.length || !selected.received.length;
+    el('trade-find').disabled = busy || entryBlocked;
+    el('trade-apply-adjust').disabled = busy;
+    if (el('recommendation-refresh')) el('recommendation-refresh').disabled = busy;
+    root.setAttribute('aria-busy', String(busy));
   }
   function review() { el('trade-review').hidden = false; el('trade-board').hidden = true; el('trade-review').focus(); }
   function edit() { el('trade-board').hidden = false; el('trade-review').hidden = true; el('trade-assist').hidden = true; el('trade-partner').focus(); }
@@ -103,7 +107,15 @@
     return body;
   }
   function showEvaluation(e, opportunity = null) {
-    const out = el('trade-result'); out.hidden = false; out.className = ''; out.replaceChildren(node('h3', e.recommendation || 'Assessment unavailable'), node('p', e.dominant_reason));
+    const out = el('trade-result'); out.hidden = false; out.className = ''; out.replaceChildren();
+    if (e.explanation_html) {
+      // Same-origin server renderer escapes all evidence text. No client-side
+      // recommendation/scoring or reason-code interpretation is performed.
+      const document = new DOMParser().parseFromString(e.explanation_html, 'text/html');
+      out.append(...document.body.childNodes);
+      if (e.legality?.execution_status) out.append(node('p', e.legality.execution_status));
+    } else {
+    out.append(node('h3', e.recommendation || 'Assessment unavailable'), node('p', e.dominant_reason));
     if (e.legality?.execution_status) out.append(node('p', e.legality.execution_status));
     if (e.recommendation_trace) {
       const trace = node('details'); trace.append(node('summary', 'Recommendation evidence'));
@@ -145,6 +157,7 @@
           out.append(node('small', `Comparable-week change subtotal: ${displayPoints(horizon.supported_week_delta_subtotal)} across ${horizon.comparable_weeks.length} weeks. Not a complete horizon projection.`));
       }
     }
+    }
     if (opportunity) {
       out.append(node('h4', 'Why now · supported context'));
       for (const c of opportunity.why_now?.catalysts || []) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(c.delta)}`), node('small', c.limitation));
@@ -156,15 +169,28 @@
     } else if (e.why_now) out.append(node('h4', 'Why now'), node('p', e.why_now));
     if (e.major_limitations?.length) out.append(node('h4', 'Evidence limitations'), node('p', e.major_limitations.join(', ').replaceAll('_', ' ')));
   }
-  function openOffer(row) { el('trade-partner').value = String(row.proposal.partner_roster_id); selected.sent = [...row.proposal.assets_sent]; selected.received = [...row.proposal.assets_received]; changed(); review(); showEvaluation(row.evaluation, row.opportunity); }
+  function focusResult() { el('trade-result').focus(); }
+  function openOffer(row) { el('trade-partner').value = String(row.proposal.partner_roster_id); selected.sent = [...row.proposal.assets_sent]; selected.received = [...row.proposal.assets_received]; changed(); review(); showEvaluation(row.evaluation, row.opportunity); focusResult(); }
+  function offerCard(row) {
+    const card = node('article', null, 'tw-offer');
+    card.append(node('h3', row.evaluation?.recommendation || 'Recommendation unavailable'));
+    if (row.repair_type) card.append(node('p', row.repair_type));
+    const b = node('button', 'Open editable offer: ' + (row.proposal_presentation?.send || []).map(a => a.label).join(' + ') + ' → ' + (row.proposal_presentation?.receive || []).map(a => a.label).join(' + '));
+    b.type = 'button'; b.onclick = () => openOffer(row); card.append(b);
+    if (row.evaluation?.explanation_html) {
+      const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
+      const parsed = new DOMParser().parseFromString(row.evaluation.explanation_html, 'text/html');
+      detail.append(...parsed.body.childNodes); card.append(detail);
+    }
+    return card;
+  }
   function offers(body) {
     if (flow === 'recommended' && body.workflow === 'recommended') {
       displayedFamilies = (body.results || []).map(row => row.family_id);
       const out = el('trade-result'); out.hidden = false; out.replaceChildren();
       if (!body.results?.length) out.append(node('p', body.quiet_state || 'No credible opportunity.'));
       for (const row of body.results || []) {
-        out.append(node('h3', row.evaluation.recommendation), node('p', (row.opportunity?.reason_tags || []).join(' · ')));
-        const b = node('button', 'Open editable offer: ' + (row.proposal_presentation?.send || []).map(a => a.label).join(' + ') + ' → ' + (row.proposal_presentation?.receive || []).map(a => a.label).join(' + ')); b.type = 'button'; b.onclick = () => openOffer(row); out.append(b);
+        out.append(offerCard(row));
       }
       for (const reason of body.discovery?.limitations || []) out.append(node('small', reason.replaceAll('_', ' ')));
       for (const [reason, count] of Object.entries(body.search_evidence?.rejection_reason_counts || {})) out.append(node('small', reason.replaceAll('_', ' ') + ': ' + count + ' evaluated candidates'));
@@ -177,14 +203,14 @@
       for (const market of body.markets) {
         out.append(node('h3', team(market.counterparty_roster_id)?.team_name || 'Counterparty'),
           node('p', market.buyer_rationale?.explanation || 'Review the shared counterparty evidence.'));
-        for (const row of market.returns) { const b = node('button', 'Open editable offer: ' + (row.proposal_presentation?.send || []).map(a => a.label).join(' + ') + ' → ' + (row.proposal_presentation?.receive || []).map(a => a.label).join(' + ')); b.type = 'button'; b.onclick = () => openOffer(row); out.append(b); }
+        for (const row of market.returns) out.append(offerCard(row));
       }
       if (!body.markets.length) for (const [reason, count] of Object.entries(body.search_evidence?.rejection_reason_counts || {})) out.append(node('small', reason.replaceAll('_', ' ') + ': ' + count + ' evaluated candidates'));
       return;
     }
     if (!body.results?.length) return message(body.quiet_state || 'No credible adjustment found. Your proposal is unchanged.');
     const out = el('trade-result'); out.hidden = false; out.replaceChildren();
-    for (const row of body.results) { const b = node('button', 'Open editable offer: ' + (row.proposal_presentation?.send || []).map(a => a.label).join(' + ') + ' → ' + (row.proposal_presentation?.receive || []).map(a => a.label).join(' + ')); b.type = 'button'; b.onclick = () => openOffer(row); out.append(b); }
+    for (const row of body.results) out.append(offerCard(row));
   }
   async function run(path, extra = {}) {
     if (busy || !workspace) return;
@@ -205,7 +231,8 @@
       const text = (extra.instruction || '').trim().toLowerCase();
       extra.repair_mode = text === 'alternative target' ? 'ALTERNATIVE_TARGET' : text === 'alternative construction' ? 'ALTERNATIVE_CONSTRUCTION' : 'MAKE_THIS_TRADE_WORK';
     }
-    busy = true; const started = revision; paint(); message('Working on your proposal…');
+    busy = true; const started = revision; paint();
+    message(path === 'generate' ? 'Searching supported bilateral options… Your proposal stays intact.' : path === 'assist' ? 'Checking revised offers… Your original proposal stays intact.' : 'Evaluating your proposal…');
     try {
       const body = await post(path, extra);
       if (started !== revision) return;
@@ -215,7 +242,10 @@
         if (body.requested_mode !== extra.repair_mode || body.returned_modes?.some(mode => mode !== extra.repair_mode) || invalidPreservation) throw new Error('DTOS rejected a mismatched repair mode. Your proposal is unchanged.');
       }
       if (path === 'evaluate') { review(); showEvaluation(body.evaluation); } else offers(body);
-    } catch (error) { message(error.message, true); } finally { busy = false; paint(); }
+    } catch (error) { if (started === revision) message(error.message, true); } finally {
+      busy = false; paint();
+      if (started === revision && !el('trade-result').hidden) focusResult();
+    }
   }
   el('trade-view').onclick = review; el('trade-tray-view').onclick = review; el('trade-edit').onclick = edit;
   el('trade-run').onclick = () => run('evaluate'); el('trade-find').onclick = () => run('generate');

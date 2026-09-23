@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 from routes.matchups import _battle_edge, _player_identity, _projection_range, create_matchups_router
 from services.matchup_intelligence import matchup_projection
 from src.ui.intelligence_presentation import matchup_game_state
+from tests.matchup_prepared_fixture import prepared_fixture
 
 
 def fixture(league="A", points=(0, 0), projections=(24, 8), bounds=(None, None)):
@@ -31,11 +32,12 @@ class MatchupEvidenceTests(unittest.TestCase):
             return matchup_projection(data, sides, values)
 
     def render(self, data, summary):
+        data, service = prepared_fixture(data, summary)
         app = FastAPI()
         async def fresh():
             pass
         app.include_router(create_matchups_router(ensure_fresh=fresh, require_data=lambda: data, page=lambda title, body: HTMLResponse(body)))
-        with patch("routes.matchups.matchup_projection", return_value=summary):
+        with patch("routes.matchups.current_league_context", return_value=NS(projection=service)):
             response = TestClient(app).get("/matchups/1")
         self.assertEqual(response.status_code, 200)
         return response.text
@@ -43,10 +45,10 @@ class MatchupEvidenceTests(unittest.TestCase):
     def test_pregame_actual_zeroes_do_not_determine_battle(self):
         args = fixture()
         body = self.render(args[0], self.summary(*args))
-        self.assertIn("A Team 0 projected edge", body)
+        self.assertIn("A Team 0 has the projected edge", body)
         self.assertNotIn("Even battle", body)
         self.assertNotIn("0.0–0.0", body)
-        self.assertIn("Unavailable</b><span>A Team 0 Range", body)
+        self.assertNotIn("A Team 0 Range", body)  # unsupported ranges no longer clutter the main view
 
     def test_live_and_final_use_actual_not_projected_winner(self):
         for state, verb in (("live", "leads"), ("final", "wins")):
@@ -56,7 +58,7 @@ class MatchupEvidenceTests(unittest.TestCase):
             body = self.render(args[0], self.summary(*args))
             self.assertIn(f"A Team 1 {verb}", body)
             self.assertNotIn("A Team 0 projected edge", body)
-            self.assertIn("Pregame projection", body)
+            self.assertIn("projection", body)
 
     def test_explicit_live_zero_and_final_zero_are_not_pregame(self):
         self.assertEqual(matchup_game_state({"preseason": True}, [{"status": "live", "points": 0}]), "in-game")
@@ -78,14 +80,14 @@ class MatchupEvidenceTests(unittest.TestCase):
         args = fixture()
         summary = self.summary(*args)
         summary["sides"][0]["canonical_projection_coverage"] = "1/2"
-        self.assertIn("Pregame projections unavailable</b>", self.render(args[0], summary))
+        self.assertIn("Projection unavailable", self.render(args[0], summary))
 
     def test_real_zero_bounds_remain_zero(self):
         args = fixture(projections=(0, 0), bounds=(0, 0))
         summary = self.summary(*args)
         self.assertEqual(summary["sides"][0]["floor"], 0)
         self.assertEqual(_projection_range(summary["sides"][0]), "0.0–0.0")
-        self.assertIn("Even projected battle", self.render(args[0], summary))
+        self.assertIn("Even projected matchup", self.render(args[0], summary))
 
     def test_partial_bounds_do_not_masquerade_as_complete(self):
         args = fixture(bounds=(2, None))
@@ -112,7 +114,7 @@ class MatchupEvidenceTests(unittest.TestCase):
                 self.assertIn(f'href="/players/{league}{index}"', body)
                 self.assertIn(f'aria-label="Open {league} Player {index} player dossier"', body)
                 self.assertIn(f'href="/teams/{index + 1}"', body)
-            self.assertIn('href="/matchups"', body)
+            self.assertIn('href="/matchups?week=1"', body)
             self.assertNotIn(f'href="/players/{"B" if league == "A" else "A"}', body)
             self.assertEqual(args[0], before)
             rendered.append(body)

@@ -55,6 +55,9 @@ def create_draft_router(
                          "year": canonical.get("year", canonical.get("season"))}
             scoped = assess_pick_range(canonical, league_id=league_id)
             market = canonical_pick_market(scoped, data.get("market_data") or {})
+            from services.asset_explanations import pick_explanation
+            from src.ui.explanations import explanation_panel
+            shared_explanation = explanation_panel(pick_explanation(scoped, market, league_id=league_id))
             price = market["normalized_market_price"]
             price_text = "Unavailable" if price is None else str(price)
             quote = market.get("quote") or {}
@@ -88,7 +91,7 @@ def create_draft_router(
                 f'<p class="pick-owner"><span>Current owner</span>{franchise(owner_id)}</p>'
                 f'<p class="pick-owner"><span>Original franchise</span>{franchise(roster_id)}</p>'
                 f'<div class="pick-outlook"><b>Market price: {price_text}</b><span>{market_text} · {provider} · {concept}</span></div>'
-                f'<p class="muted">Projected range: {range_text} · Confidence: {confidence} · Exact slot: {exact}</p>{details}</article>'
+                f'<p class="muted">Projected range: {range_text} · Confidence: {confidence} · Exact slot: {exact}</p>{details}{shared_explanation}</article>'
             )
             rows.append(
                 f'<tr><td><a href="/picks/{escape(pick_id)}">{escape(str(pick.get("season", "")))}</a></td>'

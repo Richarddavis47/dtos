@@ -1,6 +1,7 @@
 """DTOS Transactions Center routes and presentation."""
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 from html import escape
 from typing import Any, Awaitable, Callable
@@ -17,6 +18,10 @@ from services.transactions import transaction_center
 from src.core.data_platform import data_platform
 from src.core.historical_memory.read_model import historical_graph
 from src.core.history_context import canonical_history_store
+from src.core.projection_intelligence import projection_service
+from src.platform.league_context import current_league_context
+from services.player_projection_view import player_projection_view
+from src.ui.player_projections import player_projection_panel
 
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -366,13 +371,30 @@ def create_transactions_router(
             url="/transactions?" + urlencode(parameters), status_code=303
         )
 
+    @router.get("/players/{player_id}/projections", response_class=HTMLResponse)
+    async def player_week_projection(player_id: str, front_office: int | None = None,
+                                     week: int | None = Query(default=None, ge=1, le=18)) -> HTMLResponse:
+        await ensure_fresh()
+        data = require_data()
+        if player_id not in (data.get('players') or {}):
+            raise HTTPException(404, 'Player not found')
+        active = current_league_context()
+        view = await asyncio.to_thread(player_projection_view, data, player_id,
+            active.projection if active else projection_service, week)
+        return HTMLResponse(player_projection_panel(view, front_office))
+
     @router.get("/players/{player_id}", response_class=HTMLResponse)
-    async def player_page(player_id: str, front_office: int | None = None) -> HTMLResponse:
+    async def player_page(player_id: str, front_office: int | None = None,
+                          week: int | None = Query(default=None, ge=1, le=18)) -> HTMLResponse:
         await ensure_fresh()
         data = require_data()
         player = (data.get("players") or {}).get(player_id)
         if not player:
             raise HTTPException(404, "Player not found")
+        active = current_league_context()
+        projection_view = await asyncio.to_thread(player_projection_view, data, player_id,
+            active.projection if active else projection_service, week)
+        weekly_panel = player_projection_panel(projection_view, front_office)
         try:
             report, selected_team, teams = build_player_dossier(data, player_id, front_office)
         except ValueError as exc:
@@ -395,6 +417,9 @@ def create_transactions_router(
         history = historical_graph(canonical_history_store, selected_league, data).player_dossier(player_id)
         history_league_name = escape(str((data.get("league") or {}).get("name") or "Active League"))
         consensus = live["consensus"]
+        from services.asset_explanations import player_profile_explanation
+        from src.ui.explanations import explanation_panel
+        profile_explanation = explanation_panel(player_profile_explanation(report, league_id=selected_league))
         provider_values = "".join(
             f'<tr><td>{escape(str(row["provider"]))}</td><td>{escape(str(row["value"] if row["value"] is not None else row["availability"]))}</td><td>{escape(str(row["freshness"]))}</td><td>{escape(str(row["confidence"]))}%</td><td>{escape(str((live["provider_availability"].get(row["provider"]) or {}).get("reason", "Available")))}</td></tr>'
             for row in live["provider_values"]
@@ -445,7 +470,8 @@ def create_transactions_router(
         body = f"""
 {TRANSACTIONS_CSS}
 <a class="back" href="/transactions">← Back to Transactions Center</a>
-{player_dossier(report, selected_team, teams)}
+{player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel)}
+{profile_explanation}
 {live_panel}
 {historical_panel}
 <h2>Recent Transactions</h2><div class="grid">{cards}</div>

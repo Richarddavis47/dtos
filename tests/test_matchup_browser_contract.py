@@ -26,8 +26,11 @@ class MatchupBrowserTests(unittest.TestCase):
                                 route.fulfill(status=200, content_type="image/png", body=image)
                             elif url == "https://dtos.test/matchups/1":
                                 route.fulfill(status=200, content_type="text/html; charset=utf-8", body=html)
-                            elif url in {"https://dtos.test/players/A0", "https://dtos.test/teams/1", "https://dtos.test/matchups"}:
+                            elif url in {"https://dtos.test/players/A0", "https://dtos.test/teams/1", "https://dtos.test/matchups?week=1"}:
                                 route.fulfill(status=200, content_type="text/html", body="<h1>Existing destination</h1>")
+                            elif url.endswith('/static/css/matchups.css'):
+                                from pathlib import Path
+                                route.fulfill(status=200, content_type='text/css', body=Path('static/css/matchups.css').read_text(encoding='utf-8'))
                             else:
                                 route.abort()
                         context.route("**/*", transport)
@@ -50,8 +53,8 @@ class MatchupBrowserTests(unittest.TestCase):
                         page.get_by_role("link", name="A Team 0", exact=True).click()
                         self.assertEqual(page.url, "https://dtos.test/teams/1")
                         page.goto("https://dtos.test/matchups/1")
-                        page.get_by_role("link", name="← All Matchups", exact=True).click()
-                        self.assertEqual(page.url, "https://dtos.test/matchups")
+                        page.get_by_role("link", name="All Week 1 matchups", exact=True).click()
+                        self.assertEqual(page.url, "https://dtos.test/matchups?week=1")
             finally:
                 browser.close()
 

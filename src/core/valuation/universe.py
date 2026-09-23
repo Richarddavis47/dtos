@@ -7,7 +7,8 @@ from datetime import datetime, timezone
 from typing import Any, Iterator
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
-from src.core.valuation.calibration import cached_market_consensus
+from src.core.valuation.calibration import cached_market_results
+from src.core.valuation.observation_identity import observation_evidence
 from src.core.valuation.quote_eligibility import exclusion_reason
 from src.core.valuation.config import NORMALIZATION_VERSION, VALUATION_SCHEMA_VERSION
 from src.core.valuation.models import CalibrationStatus
@@ -196,18 +197,24 @@ class ValuationUniverse:
         player_context = self._player_context()
         providers, distributions = _provider_context(self.data)
         provider_status = ((self.data.get("market_data") or {}).get("provider_status") or {})
-        consensus = cached_market_consensus(self.data.get("market_data") or {}, (str(key) for key in players))
+        consensus = cached_market_results(self.data.get("market_data") or {}, (str(key) for key in players))
         for player_id, row in sorted(players.items(), key=lambda item: str(item[0])):
             if isinstance(row, dict):
                 # Catalog identity/player facts win over roster-specific enrichment.
                 merged = {**player_context.get(str(player_id), {}), **row}
                 merged.setdefault("id", str(player_id))
                 merged.setdefault("team", row.get("nfl_team") or row.get("team"))
-                yield self._player(
+                result = consensus.get(str(player_id))
+                asset = self._player(
                     str(player_id), merged, owners.get(str(player_id)),
-                    consensus.get(str(player_id)), providers, distributions,
+                    (result.market_consensus, result.confidence_score, result.calibration_status) if result else None, providers, distributions,
                     provider_status,
                 )
+                asset['market_observation_evidence'] = observation_evidence(
+                    [(r.provider, (providers.get(r.provider) or {}).get(str(player_id)) or {}, r.normalized_value)
+                     for r in result.providers_used] if result else [],
+                    canonical_value=result.market_consensus if result else None)
+                yield asset
         for row in sorted(
             self.data.get("pick_ledger") or [],
             key=lambda item: (
@@ -355,6 +362,8 @@ class ValuationUniverse:
             "asset_id": asset_id, "asset_type": "pick",
             "identity": {"player_name": None, "position": "PICK", "nfl_team": None, "sleeper_id": None, "current_owner": {"roster_id": int(pick.get("current_owner_id") or 0), "team_name": pick.get("current_owner")}, "free_agent": False, "draft_pick_description": f"{season} Round {round_number} ({pick.get('original_team') or f'Roster {original}'})", "year": season, "round": round_number, "projected_slot": pick.get("projected_slot"), "rookie_class": season, "status": "Owned"},
             "layers": layers, "providers": provider_rows, "pick_market_evidence": evidence,
+            "market_observation_evidence": observation_evidence(
+                [(quote.get('provider'), quote, market)] if market is not None else [], canonical_value=market),
             "pick_context": {"original_franchise": original, "current_owner": pick.get('current_owner_id'),
                              "projected_range": pick.get('projected_range', 'UNKNOWN'),
                              "range_confidence": pick.get('projected_range_confidence'),

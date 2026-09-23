@@ -8,6 +8,7 @@ from typing import Iterable
 from .models import (
     CheckpointTrigger, EvidenceCompleteness, IntelligenceCheckpoint,
     ProvenanceType, SourceObservation,
+    NORMALIZATION_VERSION,
 )
 from .store import IntelligenceCheckpointStore
 from .market_memory import market_context_id
@@ -82,6 +83,14 @@ class IntelligenceMemoryService:
         market_observations: Iterable[SourceObservation] | None = None,
         knowledge_state: str | None = None,
     ) -> CheckpointCaptureResult:
+        observations = tuple(observations)
+        provider_evidence = tuple(market_observations) if market_observations is not None else observations
+        versions = {row.normalization_version for row in provider_evidence}
+        # New explicit producer identity carries its actual normalization. Legacy
+        # captures keep their legacy default; no history is reinterpreted.
+        normalization_version = (next(iter(versions)) if len(versions) == 1
+            and all((row.metadata or {}).get('comparison_semantics') for row in provider_evidence)
+            else NORMALIZATION_VERSION)
         checkpoint = IntelligenceCheckpoint(
             checkpoint_id=self.identifier(
                 asset_id, league_id, timestamp, trigger.value, event_id,
@@ -96,6 +105,7 @@ class IntelligenceMemoryService:
             rebuilder_value=rebuilder_value, market_value=market_value,
             confidence=max(0, min(100, int(confidence))),
             evidence_completeness=completeness, model_version=model_version,
+            normalization_version=normalization_version,
             brain_identity=brain_identity, related_event_id=event_id,
             observations=tuple(observations), knowledge_state=knowledge_state,
         )
@@ -104,10 +114,7 @@ class IntelligenceMemoryService:
         )
         persisted, inserted, decision, observation_created, reference_created = self.store.put_sparse(
             checkpoint, market_context_id=context_id,
-            provider_evidence=(
-                tuple(market_observations)
-                if market_observations is not None else tuple(observations)
-            ),
+            provider_evidence=provider_evidence,
         )
         return CheckpointCaptureResult(
             persisted, inserted, decision.value,

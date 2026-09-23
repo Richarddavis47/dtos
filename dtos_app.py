@@ -34,6 +34,7 @@ from routes.inspect import create_inspection_router
 from routes.intelligence_memory import create_intelligence_memory_router
 from routes.league_runtime import create_league_runtime_router
 from routes.matchups import create_matchups_router
+from routes.weekly_report import create_weekly_report_router
 from routes.market import create_market_router
 from routes.settings import create_settings_router
 from routes.teams import create_teams_router
@@ -902,6 +903,8 @@ app.include_router(create_inspection_router(
     context_resolver=current_league_context,
     resource_health=_resource_health,
 ))
+
+app.include_router(create_weekly_report_router(require_data=require_data, page=page))
 
 app.include_router(
     create_matchups_router(

@@ -4,6 +4,8 @@ from __future__ import annotations
 import unittest
 from time import perf_counter
 from unittest.mock import patch
+from types import SimpleNamespace
+from tests.matchup_prepared_fixture import prepared_fixture
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -111,7 +113,8 @@ class UXFoundationTests(unittest.TestCase):
         self.assertEqual(first.status_code, 200)
         self.assertTrue(all(response.content == first.content for response in repeated))
         self.assertEqual(changed.status_code, 200)
-        self.assertEqual(build.call_count, 2)
+        self.assertEqual(build.call_count, 12)
+        self.assertTrue(all(call.kwargs.get('prepared_only') for call in build.call_args_list))
         health = home_body_render_cache.health()
         self.assertEqual(health["manager_home_body_render_cache_hits"], 10)
         self.assertEqual(health["manager_home_body_render_cache_misses"], 2)
@@ -141,7 +144,8 @@ class UXFoundationTests(unittest.TestCase):
                 response = client.get("/?front_office=1")
                 samples.append((perf_counter() - started) * 1000)
                 self.assertEqual(response.content, expected)
-        self.assertEqual(build.call_count, 1)
+        self.assertEqual(build.call_count, 11)
+        self.assertTrue(all(call.kwargs.get('prepared_only') for call in build.call_args_list))
         self.assertLess(max(samples), 500)
 
     def test_primary_navigation_has_exactly_five_manager_destinations(self) -> None:
@@ -162,19 +166,26 @@ class UXFoundationTests(unittest.TestCase):
         }):
             html = self._client().get("/?front_office=1").text
         headings = (
-            "Weekly Recap", "What Should I Do?", "Rankings", "This Week",
+            "Weekly Recap", "Explore", "Rankings", "This Week",
             "Market Movers", "League Activity", "My Assets",
         )
         positions = [html.index(heading) for heading in headings]
         self.assertEqual(positions, sorted(positions))
         self.assertIn("North Stars", html)
+        self.assertIn('aria-label="Home Attention"', html)
+        self.assertIn('Attention coverage', html)
+        self.assertNotIn('Highest-value next steps', html)
         self.assertIn("Canonical team assessment", html)
         self.assertIn("not standings or FOIS GM rankings", html)
         self.assertNotIn("system health", html.casefold())
 
     def test_league_hub_keeps_fois_and_current_rankings_distinct(self) -> None:
-        html = self._client().get("/league").text
-        self.assertIn("Current Rankings", html)
+        with patch('routes.home.build_team_directory', side_effect=AssertionError('Record view must not construct intelligence')):
+            html = self._client().get("/league").text
+        self.assertIn("Current Records", html)
+        self.assertIn("list order is not playoff seeding", html)
+        self.assertNotIn('aria-label="Rank 1"', html)
+        self.assertIn('href="/reports/weekly"', html)
         self.assertIn("Current-season results—not FOIS", html)
         self.assertIn("General-manager performance and confidence", html)
         self.assertIn("League Intelligence", html)
@@ -331,10 +342,8 @@ class UXFoundationTests(unittest.TestCase):
             require_data=lambda: data,
             page=lambda title, body: HTMLResponse(f"<h1>{title}</h1>{body}"),
         ))
-        with (
-            patch("routes.matchups.matchup_player_values", return_value={}),
-            patch("routes.matchups.matchup_projection", return_value=projection),
-        ):
+        data, projection_service = prepared_fixture(data, projection)
+        with patch("routes.matchups.current_league_context", return_value=SimpleNamespace(projection=projection_service)):
             client = TestClient(app)
             directory = client.get("/matchups").text
             detail = client.get("/matchups/1").text

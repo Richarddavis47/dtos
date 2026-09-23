@@ -8,6 +8,7 @@ from typing import Callable
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
+from src.ui.season_history import season_history_summary
 
 from services.history import (
     data_quality,
@@ -166,6 +167,7 @@ def create_history_router(
 <a class="back" href="/history">← History Index</a><h2>{season} Season Archive</h2>
 <p><b>Status:</b> {escape(archive['display_status'])}</p><p class="muted">{escape(status_detail)}</p>
 <div class="season-podium"><article class="season-champion"><span class="identity-kicker">{season} Champion</span><h3 class="{'status-trophy' if champion.get('team_name') else ''}">{escape(str(champion.get('team_name') or 'Pending / unavailable'))}</h3></article><article class="season-runner-up"><span>Runner-up</span><b>{escape(str(runner_up.get('team_name') or 'Pending / unavailable'))}</b></article></div>
+{season_history_summary(archive)}
 <p class="season-counts"><b>{archive['counts']['matchups']}</b> Matchups · <b>{archive['counts']['transactions']}</b> Transactions</p>
 <section class="card"><h3>Final Standings</h3><div class="ds-table-wrap"><table><thead><tr><th>Rank</th><th>Team</th><th>GM</th><th>Record</th><th>PF</th><th>PA</th><th>Postseason</th></tr></thead><tbody>{standings}</tbody></table></div></section>
 <section class="card"><h3>Weekly Results</h3>{weeks}</section>
