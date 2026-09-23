@@ -1,5 +1,14 @@
 # Changelog
 
+# v1.21.0 - Season Operations and Final Acceptance
+
+- Keep completed leagues on their selected league season and week when the global NFL clock advances.
+- Restore projections only when league, season, week and scoring identities all match.
+- Restore the exact last-valid active state after failed preparation and resume canonical evidence after recovery.
+- Deduplicate unchanged projection refreshes and synchronization markers without adding a new schema or durable store.
+- Preserve historical reports, matchups, Trade, Picks, FOIS, Market and team context across two-league and season transitions.
+- Complete responsive, accessibility, lifecycle and bounded-storage acceptance for the integrated DTOS product.
+
 # v1.20.0 - Manager Experience and Reporting
 
 - Present full-season Matchups and Matchup Desk with projected-versus-locked playoff states and historical boundaries.

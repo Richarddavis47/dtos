@@ -388,6 +388,16 @@ def get_market_page(
                 health = json.loads(health_body)
                 cache = health.get("cache") or {}
                 final_count = int(cache.get("build_count") or 0)
+                final_lifecycle = cache.get("lifecycle") or {}
+                final_ready = (
+                    health.get("status") == "ready"
+                    and not bool(cache.get("build_active"))
+                    and bool(cache.get("last_valid_model"))
+                    and final_lifecycle.get("market_build_allowed") is True
+                    and str(final_lifecycle.get("phase") or "idle") == "idle"
+                )
+                if final_ready:
+                    eligible_seen = True
                 if not eligible_seen or initial_build_count is None:
                     raise AssertionError(
                         f"{path}: lifecycle blocker never transitioned to eligibility"
