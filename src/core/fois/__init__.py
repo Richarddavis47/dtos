@@ -1,7 +1,5 @@
 """Public Front Office Intelligence System foundation."""
 from src.core.fois.configuration import DEFAULT_FOIS_CONFIGURATION, validate_configuration
-from src.core.fois.engine import FOISEngine
-from src.core.fois.cycles import CompetitiveCycleAnalyzer
 from src.core.fois.models import (
     FOIS_MODEL_VERSION,
     FOIS_CATEGORY_DEFINITION_VERSION,
@@ -24,6 +22,19 @@ from src.core.fois.models import (
 )
 from src.core.fois.registry import DEFAULT_METRIC_REGISTRY, MetricDefinition
 from src.core.fois.repository import FOISRepository
+
+
+def __getattr__(name):
+    # Storage-only tools do not need evaluators or their application services.
+    # Preserve public class identities without opening unrelated stores while
+    # importing the codec/repository during an operator-controlled migration.
+    if name == 'FOISEngine':
+        from src.core.fois.engine import FOISEngine
+        return FOISEngine
+    if name == 'CompetitiveCycleAnalyzer':
+        from src.core.fois.cycles import CompetitiveCycleAnalyzer
+        return CompetitiveCycleAnalyzer
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
 
 __all__ = [
     "DEFAULT_FOIS_CONFIGURATION",
