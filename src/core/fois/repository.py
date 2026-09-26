@@ -125,7 +125,7 @@ class FOISRepository:
         payload = json.dumps(asdict(score), sort_keys=True, separators=(",", ":"))
         with self._lock, self._connection() as connection:
             existing = connection.execute(
-                "SELECT source_fingerprint FROM fois_scores_v2 WHERE score_key=?",
+                "SELECT source_fingerprint,payload FROM fois_scores_v2 WHERE score_key=?",
                 (score.score_key,),
             ).fetchone()
             if existing and existing["source_fingerprint"] == source_fingerprint:
@@ -149,7 +149,8 @@ class FOISRepository:
             snapshot_id = __import__("hashlib").sha256(
                 f"{score.score_key}|{source_fingerprint}".encode()
             ).hexdigest()
-            history_payload = state_storage.encode(connection, json.loads(payload))
+            history_payload = state_storage.encode(connection, json.loads(payload),
+                base_payload=json.loads(existing['payload']) if existing else None)
             connection.execute(
                 """INSERT OR IGNORE INTO fois_snapshot_history(
                 snapshot_id,score_key,tenure_id,league_id,gm_id,model_version,

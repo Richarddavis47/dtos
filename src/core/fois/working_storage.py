@@ -7,6 +7,8 @@ from contextlib import closing
 from pathlib import Path
 
 from src.core.fois.repository import FOISRepository
+from src.core.fois import state_storage
+import zlib
 from src.platform.storage_gate import connect
 
 
@@ -35,12 +37,31 @@ def prepare(source: Path, target: Path, league_id: str) -> None:
     with closing(connect(source, readonly=True)) as origin:
         origin.execute("BEGIN")
         groups = list(_rows(origin, league_id))
+        # Carry only current roots' bounded delta dependencies, not historical
+        # observations. Otherwise a scratch full base could collide with an
+        # existing delta base and silently exceed the replay-depth bound.
+        dependencies = {}
+        def retain(identity):
+            if identity in dependencies:
+                return
+            row = origin.execute('SELECT * FROM fois_semantic_states WHERE state_id=?', (identity,)).fetchone()
+            if row is None:
+                return
+            if row[4] != league_id:
+                raise RuntimeError('FOIS current dependency league mismatch')
+            dependencies[identity] = row
+            if row[1] == state_storage.DELTA_FORMAT:
+                retain(json.loads(zlib.decompress(row[2]))['base'])
+        for (payload,) in origin.execute('SELECT payload FROM fois_scores_v2 WHERE league_id=?', (league_id,)):
+            retain(state_storage.split(json.loads(payload))[0])
     with working._connection() as destination:
         for table, rows in groups:
             if rows:
                 destination.executemany(
                     f"INSERT INTO {table} VALUES ({','.join('?' for _ in rows[0])})", rows,
                 )
+        if dependencies:
+            destination.executemany('INSERT INTO fois_semantic_states VALUES (?,?,?,?,?)', dependencies.values())
         destination.execute("CREATE TABLE compute_boundary(league_id TEXT PRIMARY KEY, identity TEXT)")
         destination.execute("INSERT INTO compute_boundary VALUES (?,?)", (league_id, _identity(groups)))
         destination.commit()
@@ -60,7 +81,7 @@ def publish(working_path: Path, repository: FOISRepository, league_id: str) -> N
         ).fetchone()
         if boundary is None or _identity(_rows(connection, league_id)) != boundary[0]:
             raise RuntimeError("FOIS league evidence advanced before publication")
-        for table in ("fois_scores_v2", "fois_gm_tenures", "fois_snapshot_history"):
+        for table in ("fois_scores_v2", "fois_gm_tenures", "fois_snapshot_history", "fois_semantic_states"):
             if connection.execute(
                 f"SELECT 1 FROM flight.{table} WHERE league_id<>? LIMIT 1", (league_id,),
             ).fetchone():

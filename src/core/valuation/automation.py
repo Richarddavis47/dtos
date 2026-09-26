@@ -7,6 +7,7 @@ from statistics import mean, median
 from typing import Any
 
 from app_metadata import VERSION
+from src.core.operational_history import calibration_history
 from src.core.valuation.universe import ValuationUniverse
 
 
@@ -235,9 +236,7 @@ def audit_market_calibration(data: dict[str, Any], state: dict[str, Any], *, app
     }
     previous = data.get("calibration_report") or {}
     applied_rows = [row for row in report["recommendations"] if row["applied"]]
-    history = list(data.get("calibration_history") or [])
-    if not history or previous.get("generated_at") != generated_at:
-        history.append({
+    history = calibration_history(data.get("calibration_history") or [], {
             "timestamp": generated_at, "model_version": report["model_version"],
             "calibration_categories": [row["category"] for row in applied_rows] or ["No calibration required"],
             "evidence_summary": f"Audited {len(universe.assets)} assets with {len(healthy_market_providers)} healthy market providers.",

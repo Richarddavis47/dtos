@@ -28,7 +28,7 @@ KINDS = {
     }, 'fois_semantic_states'),
     'projection': (projection, 'projection_snapshots', {
         'projection_snapshots', 'projection_actuals', 'sleeper_projection_snapshots',
-        'projection_player_states',
+        'projection_player_states', 'projection_publication_heads', 'projection_source_history',
     }, 'projection_player_states'),
 }
 
@@ -63,7 +63,7 @@ def digest(connection, kind):
         count = 0
         for record in _ordered_rows(connection, table):
             row = list(record)
-            if table == history:
+            if table == history or (kind == 'projection' and table == 'projection_source_history'):
                 index = columns.index('payload')
                 row[index] = codec.decode(connection, row[index])
             body = json.dumps(row, sort_keys=True, separators=(',', ':'), default=lambda b: {'bytes': base64.b64encode(b).decode()}).encode()
@@ -112,16 +112,27 @@ def migrate(path: Path, kind: str, *, maximum_bytes: int, reserve_bytes: int,
                     for sql in _tables(source).values():
                         destination.execute(sql)
                     destination.executescript(codec.SCHEMA)
-                    # Retain existing states too; no orphan/unique data deletion.
-                    for table in sorted(_tables(source), key=lambda name: name != states):
+                    # Re-encode referenced history first, then preserve any
+                    # otherwise unclassified physical states without deleting them.
+                    bases = {}
+                    for table in sorted(_tables(source), key=lambda name: name == states):
                         columns = [row[1] for row in source.execute(f'PRAGMA table_info({_quote(table)})')]
                         count = 0
-                        for record in _ordered_rows(source, table):
+                        records = (source.execute('SELECT * FROM fois_snapshot_history ORDER BY score_key,generated_at,snapshot_id')
+                                   if kind == 'fois' and table == history else _ordered_rows(source, table))
+                        for record in records:
                             row = list(record)
-                            if table == history:
+                            if table == history or (kind == 'projection' and table == 'projection_source_history'):
                                 index = columns.index('payload')
                                 payload = codec.decode(source, row[index])
-                                row[index] = json.dumps(payload, sort_keys=True, separators=(',', ':')) if restore_legacy else codec.encode(destination, payload)
+                                if restore_legacy:
+                                    row[index] = json.dumps(payload, sort_keys=True, separators=(',', ':'))
+                                elif kind == 'fois':
+                                    key = payload['score_key']
+                                    row[index] = codec.encode(destination, payload, base_payload=bases.get(key))
+                                    bases[key] = payload
+                                else:
+                                    row[index] = codec.encode(destination, payload)
                             destination.execute(f'INSERT OR IGNORE INTO {_quote(table)} VALUES ({",".join("?" for _ in row)})', row)
                             count += 1
                             if count % 32 == 0:

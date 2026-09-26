@@ -1,4 +1,15 @@
-# DTOS v1.21.0 - Season Operations and Final Acceptance
+# DTOS v1.21.1 - Bounded Historical Storage
+
+This corrective release reduces redundant historical storage and keeps
+unchanged refreshes deduplicated. FOIS conclusions, retained projection evidence,
+scoring precision, and account/league boundaries remain unchanged.
+
+Normal product reads remain compatible across the storage update. Historical
+evidence availability stays explicit; current evidence is never substituted
+for unavailable historical observations. Detailed operational acceptance
+evidence remains private.
+
+## Previous release: DTOS v1.21.0 - Season Operations and Final Acceptance
 
 Batch 7 completes DTOS season operations and final integrated acceptance. A
 completed league now retains its own season and week when the global NFL clock

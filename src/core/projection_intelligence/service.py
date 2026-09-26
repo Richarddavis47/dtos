@@ -12,7 +12,7 @@ from statistics import mean, median
 from typing import Any
 
 from config import LEAGUE_ID, PROJECTION_DATABASE_FILE
-from src.core.projection_intelligence import state_storage
+from src.core.projection_intelligence import state_storage, retention
 from src.platform.storage_gate import connect
 from src.core.projection_intelligence.sleeper_provider import (
     PARSER_VERSION, SOURCE_CLASSIFICATION, freshness_state, parse_projection_feed,
@@ -153,7 +153,11 @@ class ProjectionService:
 
     def _initialize(self) -> None:
         with closing(self._connect()) as connection:
+            fresh_store = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='projection_snapshots'").fetchone() is None
             connection.executescript(state_storage.SCHEMA)
+            if fresh_store:
+                connection.executescript(retention.SCHEMA)
+                connection.execute('INSERT OR IGNORE INTO projection_retention_policy VALUES (?)', (retention.POLICY,))
             connection.execute("CREATE TABLE IF NOT EXISTS projection_source_history (observation_id INTEGER PRIMARY KEY, season INTEGER NOT NULL, week INTEGER NOT NULL, observed_at TEXT NOT NULL, fingerprint TEXT NOT NULL, payload TEXT NOT NULL)")
             connection.execute("CREATE INDEX IF NOT EXISTS projection_source_history_scope ON projection_source_history(season, week, observation_id)")
             connection.execute("CREATE TABLE IF NOT EXISTS projection_snapshots (snapshot_id TEXT PRIMARY KEY, league_id TEXT NOT NULL, season INTEGER NOT NULL, week INTEGER, generated_at TEXT NOT NULL, payload TEXT NOT NULL)")
@@ -293,7 +297,7 @@ class ProjectionService:
             "availability_state": "fetch_unavailable" if payload is None else "observed",
         }
         with closing(self._connect()) as connection:
-            self._record_source_observation(connection, snapshot)
+            source_changed = self._record_source_observation(connection, snapshot)
             connection.execute("DELETE FROM sleeper_projection_snapshots WHERE season=? AND week=? AND fingerprint<>?",
                                (int(season), int(week), fingerprint))
             connection.execute(
@@ -302,11 +306,13 @@ class ProjectionService:
                  json.dumps(snapshot, sort_keys=True, separators=(",", ":"))),
             )
             self._prune_provider_cache(connection)
+            if source_changed:
+                retention.collect(connection)
             connection.commit()
         return {"week": int(week), "players": len(rows), "semantic_fingerprint": fingerprint}
 
     @staticmethod
-    def _record_source_observation(connection: sqlite3.Connection, snapshot: dict[str, Any]) -> None:
+    def _record_source_observation(connection: sqlite3.Connection, snapshot: dict[str, Any]) -> bool:
         """Keep semantic transitions as shared player references, not copied universes.
 
         Observation time gates historical knowledge. Provider effective time is
@@ -324,10 +330,11 @@ class ProjectionService:
                 prior = json.loads(previous['payload'])
                 ProjectionService._append_source_observation(connection, prior)
                 if prior['semantic_fingerprint'] == snapshot['semantic_fingerprint']:
-                    return
+                    return True
         elif latest['fingerprint'] == snapshot['semantic_fingerprint']:
-            return
+            return False
         ProjectionService._append_source_observation(connection, snapshot)
+        return True
 
     @staticmethod
     def _append_source_observation(connection: sqlite3.Connection, snapshot: dict[str, Any]) -> None:
@@ -348,7 +355,9 @@ class ProjectionService:
                 "SELECT payload FROM projection_source_history WHERE season=? AND week=? AND observed_at<=? ORDER BY observation_id DESC LIMIT 1",
                 (season, week, boundary_text),
             ).fetchone()
-            return state_storage.decode(connection, row['payload']) if row else None
+            if row and json.loads(row['payload']).get('$storage') != retention.PROVENANCE:
+                return state_storage.decode(connection, row['payload'])
+            return None
 
     def publish_horizon(
         self, payloads: dict[int, Any], *, data: dict[str, Any], league_id: str,
@@ -417,8 +426,9 @@ class ProjectionService:
                                              if any(p['canonical_projection'] is not None for p in row['players'].values())]}
             with closing(self._connect()) as connection:
                 with connection:
+                    changed_storage = False
                     for week, source in sources.items():
-                        self._record_source_observation(connection, source)
+                        changed_storage = self._record_source_observation(connection, source) or changed_storage
                         connection.execute('DELETE FROM sleeper_projection_snapshots WHERE season=? AND week=? AND fingerprint<>?',
                                            (season, week, source['semantic_fingerprint']))
                         connection.execute('INSERT OR IGNORE INTO sleeper_projection_snapshots VALUES (?,?,?,?,?)',
@@ -427,14 +437,20 @@ class ProjectionService:
                         existing = connection.execute('SELECT payload FROM projection_snapshots WHERE snapshot_id=?',
                                                       (candidate['projection_snapshot_id'],)).fetchone()
                         if existing is None:
+                            changed_storage = True
                             encoded = state_storage.encode(connection, candidate)
                             connection.execute('INSERT INTO projection_snapshots VALUES (?,?,?,?,?,?)',
                                                (candidate['projection_snapshot_id'], league_id, season, candidate['week'], observed, encoded))
                         elif candidate is published:
                             published = state_storage.decode(connection, existing['payload'])
+                    old_head = connection.execute('SELECT snapshot_id FROM projection_publication_heads WHERE league_id=?', (league_id,)).fetchone()
+                    if old_head and old_head[0] != generation:
+                        retention.previous_head(connection, league_id)
                     connection.execute('INSERT INTO projection_publication_heads VALUES (?,?,?) ON CONFLICT(league_id) DO UPDATE SET snapshot_id=excluded.snapshot_id, published_at=excluded.published_at WHERE snapshot_id<>excluded.snapshot_id',
                                        (league_id, generation, observed))
                     self._prune_provider_cache(connection)
+                    if changed_storage:
+                        retention.collect(connection)
             with self._lock:
                 changed = (self._snapshot or {}).get('projection_snapshot_id') != generation
                 self._snapshot = published
@@ -826,10 +842,12 @@ class ProjectionService:
                     "UPDATE projection_snapshots SET league_id=?, season=?, week=?, generated_at=?, payload=? WHERE snapshot_id=?",
                     (league_id, season, week, generated_at, payload, snapshot_id),
                 )
+                retention.collect(connection)
                 connection.commit()
             else:
                 payload = state_storage.encode(connection, snapshot)
                 connection.execute("INSERT INTO projection_snapshots VALUES (?, ?, ?, ?, ?, ?)", (snapshot_id, league_id, season, week, generated_at, payload))
+                retention.collect(connection)
                 connection.commit()
         return snapshot, normalization, published
 

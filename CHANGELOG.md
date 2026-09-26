@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.21.1 - Bounded Historical Storage
+
+- Reduce redundant historical storage while preserving FOIS conclusions and retained projection evidence.
+- Keep unchanged refreshes deduplicated and distinguish unavailable historical evidence from current evidence.
+- Preserve league isolation, projection precision, and normal product reads across storage updates.
+- Keep detailed operational acceptance evidence private.
+
 # v1.21.0 - Season Operations and Final Acceptance
 
 - Keep completed leagues on their selected league season and week when the global NFL clock advances.
