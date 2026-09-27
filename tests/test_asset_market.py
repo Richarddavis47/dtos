@@ -410,6 +410,22 @@ class AssetMarketTests(unittest.TestCase):
         self.assertIsNone(artifact)
         self.assertEqual(reason, "schema_incompatible")
 
+    def test_release_change_requires_new_readiness_artifact_identity(self) -> None:
+        # A storage-only release still crosses the existing Market release
+        # boundary. Do not silently reuse/rename an old authorized artifact.
+        old_path = self.market._artifact_path
+        checksum = self.cache._artifact_checksum(old_path)
+        with patch('src.core.asset_market.engine.VERSION', 'migration-compatibility-fixture'), patch(
+            'src.core.asset_market.engine.BUILD_NUMBER', -1
+        ):
+            contract = self.cache.artifact_contract(self.data, self.state, self.store, self.league_id)
+            generation = self.cache.durable_generation(self.data, self.state, self.store, self.league_id, contract)
+            self.assertNotEqual(self.cache.artifact_path(self.store, generation), old_path)
+            artifact, reason = self.cache._discover_artifact(self.store, generation, contract)
+            self.assertIsNone(artifact)
+            self.assertEqual(reason, 'schema_incompatible')
+        self.assertEqual(self.cache._artifact_checksum(old_path), checksum)
+
     def test_material_brain_value_change_invalidates_artifact(self) -> None:
         changed = copy.deepcopy(self.data)
         changed["valuation_intelligence"]["assets"]["player:10213"][

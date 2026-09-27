@@ -9,6 +9,7 @@ from typing import Any
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.freshness import assess_freshness, freshness_policy_manifest
+from src.core.operational_history import provider_history
 from src.core.provider_network.contracts import EvidenceObservation
 from src.core.provider_network.registry import EVIDENCE_CONTRACT_VERSION, PROVIDER_REGISTRY_VERSION, provider_registry
 from src.core.provider_network.trades import observed_trades
@@ -201,9 +202,9 @@ def build_provider_network(data: dict[str, Any], state: dict[str, Any]) -> dict[
         "safety": {"asset_integrity_score": 100 if universe.status()["duplicate_identities"] == 0 else 0, "restricted_raw_data_exposed": False, "single_family_calibration_allowed": False, "unsafe_adjustments": 0},
     }
     data["provider_network"] = result
-    history = list(data.get("provider_reliability_history") or [])
-    history.extend(result["reliability_history"])
-    data["provider_reliability_history"] = history
+    data["provider_reliability_history"] = provider_history(
+        data.get("provider_reliability_history") or [], result["reliability_history"],
+    )
     return result
 
 
