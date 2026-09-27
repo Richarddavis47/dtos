@@ -26,6 +26,8 @@ with patch.object(sqlite3, 'connect', side_effect=AssertionError('Import opened 
     import tools.staged_fois_cutover
     import tools.staged_projection_cutover
     import tools.storage_maintenance
+    import tools.recovery_command
+    import tools.recovery_stream
 import sys
 assert 'src.core.projection_intelligence.service' not in sys.modules
 assert 'dtos_app' not in sys.modules

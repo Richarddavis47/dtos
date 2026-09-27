@@ -1,4 +1,13 @@
-# DTOS v1.21.1 - Bounded Historical Storage
+# DTOS v1.21.2 - Guarded Storage Recovery
+
+This narrow corrective release strengthens storage-recovery tooling safety and
+migration compatibility. Recovery remains explicitly operator-controlled, with
+verified rollback protection and separate validation and acceptance stages.
+
+Player projections, FOIS conclusions, historical evidence and account/league
+boundaries are unchanged. Detailed operational acceptance evidence remains private.
+
+## Previous release: DTOS v1.21.1 - Bounded Historical Storage
 
 This corrective release reduces redundant historical storage and keeps
 unchanged refreshes deduplicated. FOIS conclusions, retained projection evidence,
