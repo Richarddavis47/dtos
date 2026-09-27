@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.21.2 - Guarded Storage Recovery
+
+- Strengthen operator-controlled storage recovery and rollback verification.
+- Retain the previous store until explicit validation and acceptance complete.
+- Enforce bounded recovery resources without changing product evidence or league isolation.
+- Keep detailed operational acceptance evidence private.
+
 # v1.21.1 - Bounded Historical Storage
 
 - Reduce redundant historical storage while preserving FOIS conclusions and retained projection evidence.

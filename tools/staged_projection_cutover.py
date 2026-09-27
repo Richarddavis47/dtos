@@ -40,6 +40,8 @@ def boundary(path, *, compact):
 
 
 def publish(live, candidate, backup, *, source_sha256, candidate_sha256, rollback=False):
+    if os.environ.get('RENDER'):
+        raise RuntimeError('Legacy replacement is not admitted on Render; use retained recovery tooling')
     for expected in (source_sha256, candidate_sha256):
         if len(expected) != 64 or any(c not in '0123456789abcdef' for c in expected):
             raise ValueError('Explicit lowercase SHA256 identities are required')

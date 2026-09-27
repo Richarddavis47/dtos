@@ -101,7 +101,7 @@ def verify_copy(source_path, target_path):
                 'player_states': len(references), 'policy': retention.POLICY}
 
 
-def build_copy(source_path, target_path, *, maximum_bytes, reserve_bytes=0):
+def build_copy(source_path, target_path, *, maximum_bytes, reserve_bytes=0, progress_check=None):
     source_path, target_path = Path(source_path).resolve(), Path(target_path).absolute()
     if target_path.exists() or target_path.is_symlink() or source_path == target_path:
         raise ValueError("Target must be a new local file, not the source")
@@ -115,6 +115,7 @@ def build_copy(source_path, target_path, *, maximum_bytes, reserve_bytes=0):
         sqlite3.connect(source_path.as_uri() + "?mode=ro", uri=True)
     ) as source:
         source.execute("PRAGMA query_only=ON")
+        source.execute("PRAGMA temp_store=MEMORY")
         source.execute("BEGIN")
         schemas = dict(
             source.execute(
@@ -130,6 +131,8 @@ def build_copy(source_path, target_path, *, maximum_bytes, reserve_bytes=0):
         proof = hashlib.sha256()
         counts = {}
         with closing(sqlite3.connect(target_path)) as target:
+            target.execute("PRAGMA page_size=4096")
+            target.execute("PRAGMA temp_store=MEMORY")
             target.execute("PRAGMA synchronous=FULL")
             target.execute(f"PRAGMA max_page_count={maximum_bytes // 4096}")
             for sql in schemas.values():
@@ -173,6 +176,8 @@ def build_copy(source_path, target_path, *, maximum_bytes, reserve_bytes=0):
                     )
                     retained += 1
                 counts[table] = retained
+                if progress_check:
+                    progress_check()
             for identity in sorted(state_ids):
                 row = source.execute(
                     "SELECT * FROM projection_player_states WHERE state_id=?",
@@ -189,6 +194,8 @@ def build_copy(source_path, target_path, *, maximum_bytes, reserve_bytes=0):
                 "SELECT sql FROM sqlite_master WHERE type='index' AND sql IS NOT NULL"
             ):
                 target.execute(sql)
+                if progress_check:
+                    progress_check()
             target.commit()
             for table, identity_column, retained_ids in (
                 ("projection_snapshots", "snapshot_id", keep),

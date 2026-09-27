@@ -76,6 +76,8 @@ def digest(connection, kind):
 
 def migrate(path: Path, kind: str, *, maximum_bytes: int, reserve_bytes: int,
             restore_legacy: bool = False, before_publish=None):
+    if os.environ.get('RENDER'):
+        raise RuntimeError('In-place migration is not admitted on Render; use retained recovery tooling')
     if path.is_symlink() or not path.is_file():
         raise ValueError('Migration requires an existing regular database')
     path = path.resolve()
