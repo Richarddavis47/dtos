@@ -30,7 +30,11 @@ class CacheBudget:
 
 JSON_BUDGET = CacheBudget(64 * MIB, 256 * MIB, 30 * 86400)
 SEASON_BUDGET = CacheBudget(2 * MIB, 64 * MIB, 365 * 86400)
-MARKET_BUDGET = CacheBudget(64 * MIB, 256 * MIB, 0)
+# The retained full-universe read model already exceeds 64 MiB (about 76 MiB
+# before this release). Permit a bounded 128 MiB generation, not an unbounded
+# SQLite file; aggregate admission covers three resident generations plus one
+# replacement candidate. The existing journal/headroom reservation still applies.
+MARKET_BUDGET = CacheBudget(128 * MIB, 512 * MIB, 0)
 SEASON_LEAGUE_BYTES = 8 * MIB
 SEASON_COUNT = 6
 

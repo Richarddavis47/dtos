@@ -109,6 +109,31 @@ class CacheBudgetTests(unittest.TestCase):
             self.assertEqual(target.read_bytes(), b'last-valid')
             self.assertEqual(list(Path(root).glob('*.partial')), [])
 
+    def test_market_full_universe_materialization_fits_bounded_budget(self):
+        import sqlite3
+        from contextlib import closing
+        from src.core.asset_market.read_model import build_read_model
+        from src.platform.cache_budget import MARKET_BUDGET, MIB
+        # A full directory legitimately exceeds the former 64 MiB cap. Keep
+        # payload contents unchanged and exercise the real SQLite writer.
+        count = 12322
+        def rows():
+            for index in range(count):
+                identity = f'player:{index}'
+                yield ({'asset_id': identity, 'asset_type': 'player',
+                        'display_name': identity, 'availability': 'available'},
+                       {'asset_id': identity, 'evidence': 'e' * 6000})
+        with tempfile.TemporaryDirectory() as root:
+            target = Path(root) / '.history.asset-market-full.sqlite3'
+            build_read_model(target, 'full', rows(), {})
+            self.assertGreater(target.stat().st_size, 64 * MIB)
+            self.assertLessEqual(target.stat().st_size, MARKET_BUDGET.maximum_entry_bytes)
+            with closing(sqlite3.connect(target)) as db:
+                self.assertEqual(db.execute('SELECT count(*) FROM assets').fetchone()[0], count)
+                self.assertEqual(db.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
+            self.assertEqual(MARKET_BUDGET.maximum_aggregate_bytes,
+                             4 * MARKET_BUDGET.maximum_entry_bytes)
+
     def test_market_orphan_candidates_count_towards_admission_not_silently_ignored(self):
         from src.platform.cache_budget import market_admission
         with tempfile.TemporaryDirectory() as root:
