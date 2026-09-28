@@ -108,6 +108,8 @@ class CheckpointPipeline:
             temporal_distance_seconds=None,
             metadata={
                 "evidence_type": "canonical_weekly_projection",
+                "projection_snapshot_id": projection.get("projection_snapshot_id"),
+                "league_id": (data.get("league") or {}).get("league_id"),
                 "source_updated_at": projection.get("source_timestamp"),
                 "season": projection.get("season"),
                 "week": projection.get("week"),
@@ -118,6 +120,56 @@ class CheckpointPipeline:
                 "freshness": projection.get("source_freshness"),
             },
         ),)
+
+    @staticmethod
+    def _event_projection_observations(
+        data: dict[str, Any], asset_id: str, *, event_time: Any,
+    ) -> tuple[SourceObservation, ...]:
+        """Sparse event evidence, never today's projection backdated to a decision.
+
+        The retained fact is self-contained (value, scope, source identity and
+        knowledge boundary); retaining it does not pin a full projection universe.
+        """
+        envelope = data.get("projection_intelligence") or {}
+        league = data.get("league") or {}
+        if not league.get("league_id") or str(envelope.get("league_id")) != str(league["league_id"]):
+            return ()
+        scoring = data.get("scoring_settings", league.get("scoring_settings"))
+        if scoring is None or envelope.get("scoring_settings") != scoring:
+            return ()
+        if str(envelope.get("season")) != str(league.get("season")):
+            return ()
+        if not data.get("week") or str(envelope.get("week")) != str(data["week"]):
+            return ()
+        try:
+            boundary = _canonical_timestamp(event_time)
+            event = datetime.fromisoformat(boundary) if boundary else None
+            if event is None or event.tzinfo is None:
+                return ()
+            observations = CheckpointPipeline._projection_observations(data, asset_id)
+            for observation in observations:
+                known = datetime.fromisoformat(str(observation.observed_at).replace("Z", "+00:00"))
+                published = datetime.fromisoformat(str(envelope.get("generated_at")).replace("Z", "+00:00"))
+                if known.tzinfo is None or published.tzinfo is None or max(known, published) > event:
+                    return ()
+                if str(observation.metadata.get("season")) != str(league.get("season")):
+                    return ()
+                if str(observation.metadata.get("week")) != str(envelope.get("week")):
+                    return ()
+                # Projection's scoring identity is not the runtime cache key
+                # (which also contains lineup slots). Verify its own publisher.
+                if not envelope.get("scoring_profile_id") or observation.metadata.get("scoring_profile_id") != envelope["scoring_profile_id"]:
+                    return ()
+                publication = (envelope.get("horizon_snapshot_ids") or {}).get(
+                    str(envelope.get("week")), envelope.get("projection_snapshot_id"),
+                )
+                if not publication or observation.metadata.get("projection_snapshot_id") != publication:
+                    return ()
+                if not observation.source_identity:
+                    return ()
+            return observations
+        except (ValueError, TypeError, OverflowError, OSError):
+            return ()
 
     @staticmethod
     def _market_observations(
@@ -245,8 +297,12 @@ class CheckpointPipeline:
                         event_id=event_id, roster_id=roster_id,
                         confidence=85 if values["market_value"] is not None else 0,
                         observations=(
-                            self._projection_observations(data, asset_id)
-                            if provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
+                            self._event_projection_observations(
+                                data, asset_id, event_time=transaction.get("created"),
+                            )
+                            if (provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
+                                and transaction.get("status") == "complete"
+                                and kind in {"trade", "waiver", "free_agent"})
                             else ()
                         ),
                         market_observations=(
@@ -289,7 +345,9 @@ class CheckpointPipeline:
                         roster_id=str(pick.get("roster_id") or "") or None,
                         confidence=85 if values["market_value"] is not None else 0,
                         observations=(
-                            self._projection_observations(data, f"player:{player_id}")
+                            self._event_projection_observations(
+                                data, f"player:{player_id}", event_time=selection_time,
+                            )
                             if provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
                             else ()
                         ),

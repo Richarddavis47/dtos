@@ -43,6 +43,7 @@ def create_front_offices_router(*, ensure_fresh: Callable[[], Awaitable[None]], 
                 "identity_records": len(item["identities"]),
                 "standing_records": len(item["standings"]),
                 "transaction_records": len(item["transactions"]),
+                "partial_historical_families": item.get("partial_historical_families", []),
                 "detail_url": f'/api/history/franchises/{roster_id}',
             }
             for roster_id, item in result["franchise_histories"].items()

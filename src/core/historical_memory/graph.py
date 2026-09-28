@@ -73,6 +73,7 @@ class HistoricalAssetGraph:
         self._identity_by_provider_id: dict[str, dict[str, Any] | None] = {}
         self._identity_positions: dict[str, str] | None = None
         self._records_cache: dict[str, list[dict[str, Any]]] = {}
+        self._partial_record_families: set[str] = set()
         self._index_lock = threading.RLock()
         self._events_all: list[dict[str, Any]] | None = None
         self._events_by_asset: dict[str, list[dict[str, Any]]] = {}
@@ -129,6 +130,7 @@ class HistoricalAssetGraph:
             "player_summary_cache_hits": self._player_dossier_hits,
             "player_summary_cache_entries": len(self._player_dossiers),
             "player_summary_cache_limit": PLAYER_DOSSIER_CACHE_LIMIT,
+            "partial_historical_families": sorted(self._partial_record_families),
         }
 
     def _record_query(self, started: float, hydrated: int) -> None:
@@ -161,9 +163,18 @@ class HistoricalAssetGraph:
 
     def _records(self, entity_type: str) -> list[dict[str, Any]]:
         if entity_type not in self._records_cache:
-            _, rows = self.store.records(
-                self.league_id, entity_type, limit=100_000,
-            )
+            from src.core.history_context.recovery import HistoricalRecoveryUnavailable
+            try:
+                _, rows = self.store.records(
+                    self.league_id, entity_type, limit=100_000,
+                )
+            except HistoricalRecoveryUnavailable:
+                # Cross-family graph queries may retain supported seasons and
+                # transactions when optional identity/roster context is absent.
+                # Keep that limitation visible; never fill it from current data.
+                self._partial_record_families.add(entity_type)
+                _, supported = self.store.records(self.league_id, None, limit=100_000)
+                rows = [row for row in supported if row['entity_type'] == entity_type]
             self._records_cache[entity_type] = rows
         return self._records_cache[entity_type]
 
@@ -828,9 +839,7 @@ class HistoricalAssetGraph:
         target = franchise_id(self.league_id, roster_id)
         records = {}
         for entity in ("franchise_identity", "season_standing", "weekly_roster"):
-            _, records[entity] = self.store.records(
-                self.league_id, entity, franchise_id=target, limit=100_000,
-            )
+            records[entity] = [row for row in self._records(entity) if row.get('franchise_id') == target]
         transactions = [row for row in self.transaction_archive() if str(roster_id) in {str(value) for value in row["roster_ids"]}]
         return {
             "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
@@ -838,6 +847,7 @@ class HistoricalAssetGraph:
             "standings": records["season_standing"],
             "roster_snapshots": records["weekly_roster"],
             "transactions": transactions,
+            "partial_historical_families": sorted(self._partial_record_families),
             "season_status": {
                 str(season): "in_progress" if season >= datetime.now(timezone.utc).year else "complete"
                 for season in sorted({int(row["season"]) for row in records["season_standing"]})

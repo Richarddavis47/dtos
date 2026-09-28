@@ -431,6 +431,19 @@ def build_read_model(
     *, chunk_size: int = 32, yield_control: Callable[[], None] | None = None,
     admission_observer: Callable[[str, dict[str, Any], dict[str, Any]], None] | None = None,
 ) -> MarketReadModel:
+    from src.platform.cache_budget import market_admission
+    with market_admission(target):
+        return _build_read_model(target, generation, rows, metadata, stage_observer,
+                                 chunk_size=chunk_size, yield_control=yield_control,
+                                 admission_observer=admission_observer)
+
+
+def _build_read_model(
+    target: Path, generation: str, rows: Iterator[tuple[dict[str, Any], dict[str, Any]]],
+    metadata: dict[str, Any], stage_observer: Callable[[dict[str, Any]], None] | None = None,
+    *, chunk_size: int = 32, yield_control: Callable[[], None] | None = None,
+    admission_observer: Callable[[str, dict[str, Any], dict[str, Any]], None] | None = None,
+) -> MarketReadModel:
     """Stream one generation to SQLite, then publish it atomically."""
     if chunk_size < 1:
         raise ValueError("chunk_size must be positive")
@@ -465,6 +478,9 @@ def build_read_model(
         started = time.perf_counter()
         connection = sqlite3.connect(temporary, timeout=30)
         try:
+            from src.platform.cache_budget import MARKET_BUDGET
+            page_size = connection.execute('PRAGMA page_size').fetchone()[0]
+            connection.execute(f'PRAGMA max_page_count={MARKET_BUDGET.maximum_entry_bytes // page_size}')
             connection.executescript(SCHEMA)
             connection.execute("PRAGMA journal_mode=DELETE")
             connection.execute("PRAGMA synchronous=FULL")

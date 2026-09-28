@@ -93,6 +93,10 @@ def load_cache(
     cache_file = league_cache_file(league_id)
     if not cache_file.exists():
         return
+    from src.platform.cache_budget import JSON_BUDGET, reusable
+    if not reusable(cache_file, JSON_BUDGET):
+        logger.warning("Cached league state requires source refresh under cache retention policy")
+        return
     try:
         payload = json.loads(cache_file.read_text(encoding="utf-8"))
         cached_league = str(((payload.get("data") or {}).get("league") or {}).get("league_id") or league_id)
@@ -115,7 +119,9 @@ def save_cache(
         cache_file.parent.mkdir(parents=True, exist_ok=True)
         payload = {k: v for k, v in state.items() if not k.endswith("syncing")}
         encoder = json.JSONEncoder(separators=(",", ":"), ensure_ascii=False)
-        with lifecycle_coordinator.phase("cache_persistence") as phase:
+        from src.platform.cache_budget import json_admission
+        publication_bytes = sum(len(chunk.encode('utf-8')) for chunk in encoder.iterencode(payload))
+        with json_admission(cache_file, CACHE_FILE, publication_bytes), lifecycle_coordinator.phase("cache_persistence") as phase:
             phase.update({
                 "serialization_state": "streaming",
                 "cache_entry_count": len(payload),

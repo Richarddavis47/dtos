@@ -1,4 +1,14 @@
-# DTOS v1.21.2 - Guarded Storage Recovery
+# DTOS v1.21.3 - Bounded Storage Retention
+
+This corrective release bounds redundant operational retention, strengthens
+historical cache recovery, and adds bounded storage-growth monitoring.
+
+Supported historical evidence remains available across recovery. Missing
+historical evidence stays explicit and is never replaced with current evidence.
+Fantasy intelligence semantics and account/league isolation are preserved.
+Detailed operational acceptance evidence remains private.
+
+## Previous release: DTOS v1.21.2 - Guarded Storage Recovery
 
 This narrow corrective release strengthens storage-recovery tooling safety and
 migration compatibility. Recovery remains explicitly operator-controlled, with

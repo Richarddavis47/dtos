@@ -15,7 +15,7 @@ import psutil
 
 from config import (
     HISTORY_DATABASE_FILE, HISTORY_STORAGE_ROOT, INTELLIGENCE_CHECKPOINT_FILE,
-    PROJECTION_DATABASE_FILE, SLEEPER_SEASON_CACHE_ROOT,
+    PROJECTION_DATABASE_FILE, SLEEPER_SEASON_CACHE_ROOT, CACHE_FILE,
 )
 from src.core.asset_market.read_model import (
     HARD_CGROUP_BYTES, RESERVED_BYTES, TARGET_CGROUP_BYTES,
@@ -244,6 +244,9 @@ def runtime_component_sizes(runtime: Any) -> dict[str, Any]:
 
 
 def disk_health(history_database: Path) -> dict[str, Any]:
+    from src.platform.cache_budget import JSON_BUDGET, SEASON_BUDGET, json_family
+    from src.platform.storage_monitor import health as retention_health
+    from src.platform.storage_accounting import health as accounting_health
     usage = shutil.disk_usage(history_database.parent)
     projection = Path(PROJECTION_DATABASE_FILE)
     artifacts = list(history_database.parent.glob(
@@ -285,6 +288,8 @@ def disk_health(history_database: Path) -> dict[str, Any]:
     metadata_bytes = history_database.stat().st_size if history_database.exists() else 0
     provider_cache_bytes = sum(path.stat().st_size for path in cache_files)
     operational_artifact_bytes = sum(path.stat().st_size for path in artifacts)
+    json_files = json_family(CACHE_FILE)
+    json_cache_bytes = sum(path.stat().st_size for path in json_files)
     return {
         "status": status,
         "thresholds": {"warning_free_ratio": 0.20, "critical_free_ratio": 0.10},
@@ -300,6 +305,19 @@ def disk_health(history_database: Path) -> dict[str, Any]:
             "automatic_prune_eligible": "disposable_provider_cache",
         },
         "projection_database_bytes": projection.stat().st_size if projection.exists() else 0,
+        "retention_monitor": retention_health(),
+        "durable_storage_monitor": accounting_health(),
+        "cache_retention": {
+            "json_bytes": json_cache_bytes,
+            "json_aggregate_limit": JSON_BUDGET.maximum_aggregate_bytes,
+            "season_bytes": provider_cache_bytes,
+            "season_aggregate_limit": SEASON_BUDGET.maximum_aggregate_bytes,
+            "budget_breached": (
+                json_cache_bytes > JSON_BUDGET.maximum_aggregate_bytes
+                or provider_cache_bytes > SEASON_BUDGET.maximum_aggregate_bytes
+                or any(path.stat().st_size > JSON_BUDGET.maximum_entry_bytes for path in json_files)
+            ),
+        },
         "market_artifact_count": len(artifacts),
         "market_artifact_bytes": sum(path.stat().st_size for path in artifacts),
         "market_artifacts": {
