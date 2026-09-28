@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.21.3 - Bounded Storage Retention
+
+- Bound redundant operational history while preserving meaningful historical evidence.
+- Preserve supported historical reads and explicit missing-evidence states across cache recovery.
+- Validate cache publication before retiring eligible recoverable entries.
+- Add bounded storage-growth monitoring without changing fantasy intelligence semantics.
+- Keep detailed operational and capacity acceptance evidence private.
+
 # v1.21.2 - Guarded Storage Recovery
 
 - Strengthen operator-controlled storage recovery and rollback verification.

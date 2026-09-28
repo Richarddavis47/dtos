@@ -164,6 +164,9 @@ class FOISRepository:
                 "INSERT OR IGNORE INTO fois_evidence_links(score_key,evidence_id,evidence_type) VALUES (?,?,?)",
                 ((score.score_key, evidence_id, "canonical_history") for evidence_id in score.evidence_references),
             )
+            from src.core.fois import retention
+            retention.record(connection, snapshot_id)
+            retention.collect(connection)
             connection.commit()
         return True
 

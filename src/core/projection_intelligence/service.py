@@ -352,10 +352,13 @@ class ProjectionService:
         boundary_text = boundary.astimezone(timezone.utc).isoformat()
         with closing(self._connect()) as connection:
             row = connection.execute(
-                "SELECT payload FROM projection_source_history WHERE season=? AND week=? AND observed_at<=? ORDER BY observation_id DESC LIMIT 1",
+                "SELECT observation_id,payload FROM projection_source_history WHERE season=? AND week=? AND observed_at<=? ORDER BY observation_id DESC LIMIT 1",
                 (season, week, boundary_text),
             ).fetchone()
             if row and json.loads(row['payload']).get('$storage') != retention.PROVENANCE:
+                from . import provenance_retention
+                if not provenance_retention.visible(connection, row['observation_id'], boundary_text):
+                    return None
                 return state_storage.decode(connection, row['payload'])
             return None
 

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Query
 
 from config import SLEEPER_SEASON_CACHE_ROOT
 from src.core.history_context.season_cache import SleeperSeasonCache
+from src.core.history_context.store import canonical_history_store
 from services.matchup_season import prepare_season_matchups
 from services.weekly_report import weekly_facts
 from services.weekly_report_stories import compose_report
@@ -27,6 +28,10 @@ def create_weekly_report_router(*, require_data, page, cache=None):
         data = active
         if target_season != active_season:
             retained = await asyncio.to_thread(archive.read, root_id, target_season)
+            if retained is None:
+                retained = await asyncio.to_thread(
+                    canonical_history_store.recovered_season_source, root_id, target_season,
+                )
             if retained is None:
                 return page('Weekly League Report', render_report(None, league.get('name', ''), target_season, target_week))
             source = retained.facts

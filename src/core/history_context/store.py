@@ -121,7 +121,207 @@ class CanonicalHistoryStore:
         return {"mapping": self._generation, "observations": self._generation}
 
     def _cache_index(self, league_id: str) -> dict[int, str]:
-        return sleeper_season_cache.checksum_index(league_id)
+        from .recovery import HistoricalCheckpoints
+        return {**HistoricalCheckpoints(sleeper_season_cache.root).index(league_id),
+                **sleeper_season_cache.checksum_index(league_id)}
+
+    def preserve_reader_checkpoint(self, league_id: str, season: int, *, current_season: int) -> bool:
+        """Explicit prerequisite, not authorization to evict a whole season."""
+        from .recovery import HistoricalCheckpoints, HistoricalRecoveryUnavailable
+        cached = sleeper_season_cache.read(league_id, season)
+        if cached is None or season >= current_season - 1:
+            raise HistoricalRecoveryUnavailable('Missing cache or protected current/prior season')
+        source = cached.facts.get('league') or {}
+        if int(source.get('season') or 0) != int(season):
+            raise HistoricalRecoveryUnavailable('Provider season identity mismatch')
+        if cached.completeness.get('league') != 'available':
+            raise HistoricalRecoveryUnavailable('Incomplete historical checkpoint inputs')
+        families = self._supported_families(cached)
+        return HistoricalCheckpoints(sleeper_season_cache.root).preserve(
+            league=league_id, season=season, source_league=source.get('league_id'),
+            source_checksum=cached.checksum, records=self._season_records(league_id, season), families=families)
+
+    @staticmethod
+    def _supported_families(cached) -> set[str]:
+        """One availability contract for provider cache and compact recovery."""
+        families = {'league_season'}
+        users, rosters = cached.facts.get('users'), cached.facts.get('rosters')
+        valid_users = (
+            cached.completeness.get('users') == 'available'
+            and isinstance(users, list) and all(
+                isinstance(row, dict) and str(row.get('user_id') or '')
+                for row in users
+            )
+            and len({str(row['user_id']) for row in users}) == len(users)
+        )
+        valid_rosters = (cached.completeness.get('rosters') == 'available'
+                         and isinstance(rosters, list) and all(isinstance(row, dict) for row in rosters))
+        owners = {str(row.get('owner_id') or '') for row in rosters or ()
+                  if isinstance(row, dict) and row.get('owner_id')}
+        if valid_users and valid_rosters and owners <= {str(row['user_id']) for row in users}:
+            families.add('franchise_identity')
+        if cached.completeness.get('rosters') == 'available':
+            families.update(('season_standing', 'roster_snapshot'))
+        if cached.completeness.get('matchups') == 'available':
+            families.update(('player_week', 'matchup'))
+        if cached.completeness.get('transactions') == 'available':
+            families.update(('trade', 'transaction'))
+        if cached.completeness.get('drafts') == 'available':
+            families.add('draft')
+        if cached.completeness.get('draft_picks') == 'available':
+            families.add('draft_pick')
+        if cached.completeness.get('traded_picks') == 'available':
+            families.add('pick_snapshot')
+        if (cached.completeness.get('winners_bracket') == 'available'
+                and cached.completeness.get('losers_bracket') == 'available'):
+            families.add('playoff_bracket')
+        if cached.completeness.get('winners_bracket') == 'available':
+            families.add('playoff_result')
+        return families
+
+    def historical_availability(self, league_id: str, season: int) -> dict[str, Any]:
+        from .recovery import HistoricalCheckpoints
+        cached = sleeper_season_cache.read(league_id, season)
+        if cached is not None:
+            return {'state': 'cached', 'covered_families': sorted(self._supported_families(cached))}
+        checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
+        return {'state': 'partial' if checkpoint else 'unavailable',
+                'covered_families': checkpoint['families'] if checkpoint else [],
+                'reason': 'compact_canonical_checkpoint' if checkpoint else 'historical_recovery_required'}
+
+    def recovered_season_source(self, league_id: str, season: int):
+        """Rebuild the bounded weekly-report source surface from canonical rows.
+
+        This is not the raw provider season and is used only when that cache is
+        absent. Missing families stay absent so consumers report partial state.
+        """
+        from .recovery import HistoricalCheckpoints
+        from .season_cache import CachedSeason
+        checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
+        if checkpoint is None:
+            return None
+        families, rows = set(checkpoint['families']), checkpoint['records']
+        required = {'league_season', 'franchise_identity', 'roster_snapshot', 'matchup', 'player_week'}
+        if not required <= families:
+            return None
+        by_type = {kind: [row for row in rows if row['entity_type'] == kind] for kind in families}
+        league_payload = by_type['league_season'][0]['payload']
+        source_league = checkpoint['source_league_id']
+        league = {
+            'league_id': source_league, 'season': str(season),
+            'name': league_payload.get('league_name'), 'status': league_payload.get('status'),
+            'total_rosters': league_payload.get('total_rosters'),
+            'settings': league_payload.get('settings') or {},
+            'scoring_settings': league_payload.get('scoring_settings') or {},
+            'roster_positions': league_payload.get('roster_positions') or [],
+        }
+        roster_rows = {int(row['payload']['roster_id']): row['payload'] for row in by_type['roster_snapshot']}
+        rosters = [{**payload, 'roster_id': rid} for rid, payload in roster_rows.items()]
+        player_weeks = {}
+        for row in by_type['player_week']:
+            payload = row['payload']
+            key = (int(row['week']), int(payload['roster_id']))
+            player_weeks.setdefault(key, []).append((str(row['player_id']), payload))
+        matchups = {}
+        for row in by_type['matchup']:
+            payload, week = row['payload'], int(row['week'])
+            for rid in payload.get('franchises') or ():
+                rid = int(rid)
+                players = player_weeks.get((week, rid), [])
+                points = {player: item.get('fantasy_points') for player, item in players}
+                matchups.setdefault(str(week), []).append({
+                    'roster_id': rid, 'matchup_id': payload.get('matchup_id'),
+                    'points': (payload.get('team_points') or {}).get(str(rid)),
+                    'players': list(points), 'players_points': points,
+                    'starters': [player for player, item in players if item.get('starter')],
+                })
+        facts = {'league': league, 'rosters': rosters, 'matchups': matchups}
+        if {'trade', 'transaction'} & families:
+            transactions = {}
+            for kind in ('trade', 'transaction'):
+                for row in by_type.get(kind, []):
+                    transactions.setdefault(str(row.get('week') or 0), []).append(row['payload'])
+            facts['transactions'] = transactions
+        if 'playoff_bracket' in families:
+            for name in ('winners_bracket', 'losers_bracket'):
+                facts[name] = [{key: value for key, value in row['payload'].items() if key != 'bracket'}
+                               for row in by_type[name and 'playoff_bracket']
+                               if row['payload'].get('bracket') == name]
+        completeness = {key: ('available' if key in facts else 'unavailable') for key in (
+            'league', 'users', 'rosters', 'matchups', 'transactions', 'drafts',
+            'draft_picks', 'traded_picks', 'winners_bracket', 'losers_bracket')}
+        return CachedSeason(str(league_id), int(season), 'partial', completeness, facts,
+                            checkpoint['source_checksum'])
+
+    async def recover_historical_season(self, league_id: str, season: int, fetch_facts) -> dict[str, Any]:
+        """Explicit preparation boundary; never fetch on synchronous page reads."""
+        from .recovery import HistoricalCheckpoints, HistoricalRecoveryUnavailable
+        from src.platform.cache_budget import CacheAdmissionError
+        import httpx
+        checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
+        if checkpoint is None:
+            return self.historical_availability(league_id, season)
+        try:
+            facts = await fetch_facts(checkpoint['source_league_id'], int(season))
+            source = (facts or {}).get('league') or {}
+            if str(source.get('league_id')) != checkpoint['source_league_id'] or int(source.get('season') or 0) != int(season):
+                raise HistoricalRecoveryUnavailable('Upstream historical scope unavailable')
+            rebuilt = sleeper_season_cache.normalize(league_id, season, facts)
+            if rebuilt.checksum != checkpoint['source_checksum']:
+                raise HistoricalRecoveryUnavailable('Upstream differs from preserved historical boundary')
+            sleeper_season_cache.write(rebuilt)
+        except (OSError, ValueError, CacheAdmissionError, httpx.HTTPError) as exc:
+            return {**self.historical_availability(league_id, season), 'recovery_error': type(exc).__name__}
+        return self.historical_availability(league_id, season)
+
+    async def publish_with_verified_turnover(
+        self, league_id: str, current_season: int, incoming, fetch_facts,
+    ) -> dict[str, Any]:
+        """Publish one raw cache entry after exact oldest-first turnover proof.
+
+        This is an explicit background-preparation operation. It is not called
+        by page reads and is not enabled against production by this change.
+        """
+        from src.core.history_context.recovery import HistoricalCheckpoints, HistoricalRecoveryUnavailable
+        from src.platform.cache_budget import SEASON_COUNT, SEASON_LEAGUE_BYTES
+        if incoming.league_id != str(league_id):
+            raise HistoricalRecoveryUnavailable('Incoming cache league mismatch')
+        seasons = list(sleeper_season_cache.available_seasons(league_id))
+        existing = incoming.season in seasons
+        current_bytes = sum(sleeper_season_cache.path(league_id, value).stat().st_size for value in seasons)
+        replacing = sleeper_season_cache.path(league_id, incoming.season).stat().st_size if existing else 0
+        incoming_bytes = sleeper_season_cache.encoded_size(incoming)
+        candidates = [value for value in seasons if value < int(current_season) - 1 and value != incoming.season]
+        planned = []
+        planned_bytes = current_bytes
+        planned_count = len(seasons)
+        while ((planned_count + (0 if existing else 1) > SEASON_COUNT)
+               or planned_bytes - replacing + incoming_bytes > SEASON_LEAGUE_BYTES):
+            if not candidates:
+                raise HistoricalRecoveryUnavailable('No verified old cache is eligible for turnover')
+            season = candidates.pop(0)
+            cached = sleeper_season_cache.read(league_id, season)
+            if cached is None:
+                raise HistoricalRecoveryUnavailable('Turnover candidate disappeared')
+            self.preserve_reader_checkpoint(league_id, season, current_season=current_season)
+            checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
+            facts = await fetch_facts(checkpoint['source_league_id'], season)
+            rebuilt = sleeper_season_cache.normalize(league_id, season, facts or {})
+            if not facts or rebuilt.checksum != cached.checksum or rebuilt.checksum != checkpoint['source_checksum']:
+                raise HistoricalRecoveryUnavailable('Exact upstream rebuild proof failed')
+            size = sleeper_season_cache.path(league_id, season).stat().st_size
+            planned.append({'season': season, 'raw_bytes': size, 'source_checksum': cached.checksum,
+                            'checkpoint_bytes': HistoricalCheckpoints(sleeper_season_cache.root).path(league_id, season).stat().st_size})
+            planned_count -= 1
+            planned_bytes -= size
+        # All candidates have exact source/checkpoint proof before the first
+        # cache is removed. A failed proof above leaves every raw cache intact.
+        sleeper_season_cache.write(incoming, verified_evictions={
+            item['season']: item['source_checksum'] for item in planned})
+        return {'evicted': planned, 'retained_raw_seasons': list(sleeper_season_cache.available_seasons(league_id)),
+                'raw_bytes': sum(sleeper_season_cache.path(league_id, value).stat().st_size
+                                 for value in sleeper_season_cache.available_seasons(league_id)),
+                'maximum_raw_seasons': SEASON_COUNT, 'maximum_raw_bytes': SEASON_LEAGUE_BYTES}
 
     def season_chain(self, league_id: str) -> dict[str, Any] | None:
         """Return the compact durable discovery manifest for progress surfaces."""
@@ -132,15 +332,22 @@ class CanonicalHistoryStore:
         return cached.facts if cached else None
 
     def ownership_observations(self, league_id: str) -> dict[str, Any]:
-        """Background reconciliation only; no provider reads or permanent copy."""
+        """Background reconciliation over canonical records; no provider reads."""
         from .ownership import reconcile_ownership
         seasons = []
         for season in sorted(self._cache_index(str(league_id))):
-            facts = self._facts(str(league_id), season)
-            if facts:
-                seasons.append({'league': facts.get('league') or {}, 'rosters': [
-                    {key: row.get(key) for key in ('roster_id', 'owner_id', 'co_owners')}
-                    for row in facts.get('rosters') or []]})
+            _, league_rows = self.records(league_id, 'league_season', season=season, limit=1)
+            _, roster_rows = self.records(league_id, 'roster_snapshot', season=season, limit=None)
+            if league_rows and roster_rows:
+                league = league_rows[0]['payload']
+                seasons.append({'league': {
+                    'league_id': league.get('sleeper_season_league_id') or league_id,
+                    'previous_league_id': league.get('previous_league_id'), 'season': season,
+                }, 'rosters': [{
+                    'roster_id': row['payload'].get('roster_id'),
+                    'owner_id': row['payload'].get('owner_id'),
+                    'co_owners': row['payload'].get('co_owners') or [],
+                } for row in roster_rows]})
         return reconcile_ownership(seasons)
 
     @staticmethod
@@ -168,7 +375,9 @@ class CanonicalHistoryStore:
         from .results import matchup_result, standing_points
         facts = self._facts(league_id, season)
         if not facts:
-            return []
+            from .recovery import HistoricalCheckpoints
+            checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
+            return checkpoint['records'] if checkpoint else []
         league = facts.get("league") or {}
         rows = [self._record(league_id, season, "league_season", league_id, {
             "sleeper_season_league_id": league.get("league_id"),
@@ -292,6 +501,10 @@ class CanonicalHistoryStore:
         self, league_id: str, season: int, entity_type: str,
     ) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
+        if sleeper_season_cache.read(league_id, season) is None:
+            from .recovery import HistoricalCheckpoints
+            checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
+            return [row for row in checkpoint['records'] if row['entity_type'] == entity_type] if checkpoint else []
         transactions_by_week = sleeper_season_cache.section(
             league_id, season, "transactions",
         ) or {}
@@ -396,6 +609,18 @@ class CanonicalHistoryStore:
                 current_season = 0
             if current_season and current_season not in seasons:
                 seasons.insert(0, current_season)
+        from .recovery import HistoricalCheckpoints, HistoricalRecoveryUnavailable
+        coverage = {}
+        for selected in seasons:
+            cached = sleeper_season_cache.read(league_id, selected)
+            if cached is not None:
+                coverage[selected] = self._supported_families(cached)
+            else:
+                checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, selected)
+                if checkpoint:
+                    coverage[selected] = set(checkpoint['families'])
+            if selected in coverage and entity_type is not None and entity_type not in coverage[selected]:
+                raise HistoricalRecoveryUnavailable('Requested historical family requires source recovery; coverage is partial')
         if entity_type in {"trade", "transaction"}:
             rows = [
                 row for selected in seasons
@@ -406,6 +631,8 @@ class CanonicalHistoryStore:
                 row for selected in seasons
                 for row in self._season_records(league_id, selected)
             ]
+        rows = [row for row in rows if row['season'] not in coverage
+                or row['entity_type'] in coverage[row['season']]]
         for selected in seasons:
             rows.extend(self._current_records(league_id, selected))
         rows = list({str(row["record_key"]): row for row in rows}.values())
@@ -468,16 +695,22 @@ class CanonicalHistoryStore:
         return {"status": "complete", "run_id": "sleeper-cache", "completed_at": None} if seasons else None
 
     def season_player_leaders(self, league_id: str, season: int, limit: int = 40) -> tuple[int, list[dict[str, Any]]]:
-        facts = self._facts(league_id, season)
-        if not facts:
-            return 0, []
-        count = 0
         totals: dict[str, float] = defaultdict(float)
-        for matchups in (facts.get("matchups") or {}).values():
-            for matchup in matchups or ():
-                for player_id, score in (matchup.get("players_points") or {}).items():
-                    totals[str(player_id)] += float(score or 0)
-                    count += 1
+        cached = sleeper_season_cache.read(league_id, season)
+        if cached is not None:
+            from .recovery import HistoricalRecoveryUnavailable
+            if 'player_week' not in self._supported_families(cached):
+                raise HistoricalRecoveryUnavailable('Historical player-week source unavailable')
+            count = 0
+            for matchups in (cached.facts.get('matchups') or {}).values():
+                for matchup in matchups or ():
+                    for player_id, score in (matchup.get('players_points') or {}).items():
+                        totals[str(player_id)] += float(score or 0)
+                        count += 1
+        else:
+            count, rows = self.records(league_id, 'player_week', season=season, limit=None)
+            for row in rows:
+                totals[str(row['player_id'])] += float((row.get('payload') or {}).get('fantasy_points') or 0)
         ranked = sorted(totals.items(), key=lambda item: (-item[1], item[0]))[:limit]
         return count, [{"player_id": player_id, "points": points,
                         "display_name": (self._identities.get(player_id) or {}).get("display_name"),

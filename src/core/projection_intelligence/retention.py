@@ -72,6 +72,7 @@ def plan(db):
         "sleeper_projection_snapshots",
         "projection_previous_heads",
         "projection_retention_policy",
+        "projection_source_expiry",
         "sqlite_sequence",
     }
     if tables - allowed:
@@ -177,6 +178,11 @@ def collect(db):
     if not enabled(db):
         return
     keep, source_keep = plan(db)
+    from . import provenance_retention
+    provenance_plan = None
+    if provenance_retention.enabled(db):
+        provenance_plan = provenance_retention.plan(db, keep)
+        source_keep = set(provenance_plan['retained'])
     state_ids = set()
     for sid, payload in db.execute(
         "SELECT snapshot_id,payload FROM projection_snapshots"
@@ -192,7 +198,7 @@ def collect(db):
         envelope, refs = unpack(payload)
         if oid in source_keep:
             state_ids.update(ref[0] for ref in refs.values())
-        elif refs or "players" in json.loads(payload):
+        elif provenance_plan is None and (refs or "players" in json.loads(payload)):
             compact = json.dumps(
                 {"$storage": PROVENANCE, "envelope": envelope},
                 sort_keys=True,
@@ -202,6 +208,8 @@ def collect(db):
                 "UPDATE projection_source_history SET payload=? WHERE observation_id=?",
                 (compact, oid),
             )
+    if provenance_plan is not None:
+        provenance_retention.collect(db, provenance_plan)
     # Temporary table is connection-local and never adds a durable source copy.
     db.execute(
         "CREATE TEMP TABLE IF NOT EXISTS retained_projection_states(state_id TEXT PRIMARY KEY)"
@@ -219,6 +227,8 @@ def collect(db):
     db.execute(
         "DELETE FROM projection_player_states WHERE state_id NOT IN (SELECT state_id FROM retained_projection_states)"
     )
+    from src.platform.storage_monitor import observe
+    observe(db, 'projection')
 
 
 def pin_snapshot(db, *, event_id, snapshot_id):

@@ -62,8 +62,18 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         self.assertEqual(rows[0].roster_id, "2")
 
     def test_material_player_event_keeps_only_compact_projection_evidence(self) -> None:
+        # A completed event after this correctly scoped publication can retain
+        # its compact point-in-time fact. The old fixture backdated 2026 evidence
+        # into 2025 and supplied no completion/knowledge/publication identity.
+        envelope = self.data['projection_intelligence']
+        envelope.update(league_id='L1', season=2026, week=1,
+                        scoring_settings={'rec': 1}, scoring_profile_id='profile-one',
+                        generated_at='2026-09-01T00:00:00+00:00',
+                        projection_snapshot_id='published-one')
+        envelope['players']['1'].update(generated_at=envelope['generated_at'],
+                                        projection_snapshot_id='published-one')
         trade = {"transaction_id": "projection-T1", "type": "trade",
-                 "created": 1_750_000_000_000, "adds": {"1": 2}}
+                 "status": "complete", "created": "2026-09-02T00:00:00+00:00", "adds": {"1": 2}}
         self.pipeline.ingest_transactions(self.data, [trade])
         observation = self.store.checkpoints()[0].observations[0]
         self.assertEqual(observation.provider, "Sleeper")

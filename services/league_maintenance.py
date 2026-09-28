@@ -38,6 +38,8 @@ def ensure_periodic_refresh(
                     "failed" if runtime.state.get("last_error") else "complete"
                 )
                 runtime.lifecycle.pop("refresh_error_type", None)
+                from src.platform.storage_accounting import periodic_storage_accounting
+                await asyncio.to_thread(periodic_storage_accounting)
 
     task = asyncio.create_task(maintain(), name=name)
     runtime.background_tasks.add(task)

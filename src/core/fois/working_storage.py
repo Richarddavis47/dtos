@@ -100,4 +100,9 @@ def publish(working_path: Path, repository: FOISRepository, league_id: str) -> N
             )
         for table in ("fois_takeover_snapshots", "fois_semantic_states", "fois_snapshot_history", "fois_evidence_links"):
             connection.execute(f"INSERT OR IGNORE INTO {table} SELECT * FROM flight.{table}")
+        from src.core.fois import retention
+        if retention.enabled(connection):
+            for (snapshot_id,) in connection.execute('SELECT snapshot_id FROM flight.fois_snapshot_history ORDER BY rowid').fetchall():
+                retention.record(connection, snapshot_id)
+            retention.collect(connection)
         connection.commit()

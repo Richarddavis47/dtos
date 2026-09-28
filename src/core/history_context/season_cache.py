@@ -84,7 +84,7 @@ class SleeperSeasonCache:
                 if key[0] == path:
                     self._section_cache.pop(key, None)
 
-    def write(self, season: CachedSeason) -> Path:
+    def write(self, season: CachedSeason, *, verified_evictions: dict[int, str] | None = None) -> Path:
         path = self.path(season.league_id, season.season)
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = json.dumps({
@@ -92,14 +92,30 @@ class SleeperSeasonCache:
             "status": season.status, "completeness": season.completeness,
             "facts": season.facts, "checksum": season.checksum,
         }, sort_keys=True, separators=(",", ":")).encode()
+        from src.platform.cache_budget import require_season, CacheAdmissionError
+        from src.platform.storage_gate import database_gate
+        compressed = gzip.compress(payload, compresslevel=6)
         temporary: str | None = None
         try:
-            with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as handle:
-                temporary = handle.name
-                handle.write(gzip.compress(payload, compresslevel=6))
-                handle.flush()
-                os.fsync(handle.fileno())
-            os.replace(temporary, path)
+            with database_gate(self.root / '.season-cache-quota', exclusive=True):
+                evictions = verified_evictions or {}
+                for year, checksum in evictions.items():
+                    old = self.read(season.league_id, year)
+                    if year == season.season or old is None or old.checksum != checksum:
+                        raise CacheAdmissionError('Verified turnover source changed before publication')
+                require_season(path, self.root, len(compressed), excluded=[
+                    self.path(season.league_id, year) for year in evictions])
+                with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as handle:
+                    temporary = handle.name
+                    handle.write(compressed)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                os.replace(temporary, path)
+                # Publish successfully before removing recoverable old caches.
+                # Failed admission/preparation therefore preserves every source.
+                temporary = None
+                for year in evictions:
+                    self.delete(season.league_id, year)
             temporary = None
             stat = path.stat()
             identity = (
@@ -115,6 +131,15 @@ class SleeperSeasonCache:
             if temporary:
                 Path(temporary).unlink(missing_ok=True)
         return path
+
+    @staticmethod
+    def encoded_size(season: CachedSeason) -> int:
+        payload = json.dumps({
+            "league_id": season.league_id, "season": season.season,
+            "status": season.status, "completeness": season.completeness,
+            "facts": season.facts, "checksum": season.checksum,
+        }, sort_keys=True, separators=(",", ":")).encode()
+        return len(gzip.compress(payload, compresslevel=6))
 
     def read(self, league_id: str, season: int) -> CachedSeason | None:
         path = self.path(league_id, season)
@@ -217,11 +242,30 @@ class SleeperSeasonCache:
         self, league_id: str | None = None, manifest: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         files = list(self.root.rglob("*.json.gz")) if self.root.exists() else []
+        from collections import Counter
+        from src.platform.cache_budget import SEASON_BUDGET, SEASON_COUNT, SEASON_LEAGUE_BYTES
+        namespace_counts = Counter(path.parent for path in files)
+        namespace_bytes = Counter()
+        for path in files:
+            namespace_bytes[path.parent] += path.stat().st_size
+        breaches = (
+            sum(path.stat().st_size for path in files) > SEASON_BUDGET.maximum_aggregate_bytes
+            or any(path.stat().st_size > SEASON_BUDGET.maximum_entry_bytes for path in files)
+            or any(count > SEASON_COUNT for count in namespace_counts.values())
+            or any(size > SEASON_LEAGUE_BYTES for size in namespace_bytes.values())
+        )
         result: dict[str, Any] = {
-                "status": "healthy", "ownership": "disposable_provider_cache",
+                "status": "retention_review_required" if breaches else "healthy", "ownership": "disposable_provider_cache",
                 "completed_seasons": len(files),
                 "bytes": sum(path.stat().st_size for path in files),
                 "rebuildable": True,
+                "retention": {
+                    "maximum_seasons_per_namespace": SEASON_COUNT,
+                    "maximum_bytes_per_namespace": SEASON_LEAGUE_BYTES,
+                    "maximum_aggregate_bytes": SEASON_BUDGET.maximum_aggregate_bytes,
+                    "automatic_eviction": False,
+                    "refetchability": "must_be_verified_before_eviction",
+                },
         }
         if league_id is not None:
             rows = list((manifest or {}).get("seasons") or [])
