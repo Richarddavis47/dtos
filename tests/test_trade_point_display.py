@@ -1,4 +1,6 @@
 """Browser-executed presentation proof; canonical numeric evidence is untouched."""
+
+from tools.validation.browser_runtime import launch_chromium
 import re
 import unittest
 from pathlib import Path
@@ -11,7 +13,7 @@ class TradePointDisplayTests(unittest.TestCase):
         source = Path('static/js/trade_workspace.js').read_text(encoding='utf-8')
         function = re.search(r'  function displayPoints\(value\) \{.*?\n  \}', source, re.S).group()
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch(headless=True)
+            browser = launch_chromium(runtime, headless=True)
             page = browser.new_page()
             result = page.evaluate('''() => {
                 FUNCTION

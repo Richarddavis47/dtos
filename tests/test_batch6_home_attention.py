@@ -1,3 +1,5 @@
+
+from tools.validation.browser_runtime import launch_chromium
 import unittest
 from copy import deepcopy
 from unittest.mock import patch
@@ -82,7 +84,7 @@ class AttentionTests(unittest.TestCase):
         self.profile['teams']['1']['weekly']['2']['optimal'] = {'available': False, 'unsupported_slots': ['QB']}
         html = attention_panel(self.run_state())
         with sync_playwright() as browser_engine:
-            browser = browser_engine.chromium.launch(headless=True)
+            browser = launch_chromium(browser_engine, headless=True)
             try:
                 for width in (390, 1280):
                     page = browser.new_page(viewport={'width': width, 'height': 900})
