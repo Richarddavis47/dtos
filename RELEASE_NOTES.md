@@ -1,4 +1,15 @@
-# DTOS v1.21.3 - Bounded Storage Retention
+# DTOS v1.21.4 - Protected Projection Evidence
+
+This narrow correction protects the complete source evidence required by retained
+Projection generations. Unsupported legacy evidence remains auditable but is not
+presented as supported historical evidence.
+
+Operational generation changes validate both active and rollback evidence before
+publication. Prepared reads, scoring precision, explicit missing evidence and
+league isolation are preserved. Retention remains bounded by protected evidence.
+Detailed operational acceptance evidence remains private.
+
+## Previous release: DTOS v1.21.3 - Bounded Storage Retention
 
 This corrective release bounds redundant operational retention, strengthens
 historical cache recovery, and adds bounded storage-growth monitoring.

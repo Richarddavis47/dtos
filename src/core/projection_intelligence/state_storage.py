@@ -46,7 +46,13 @@ def encode(connection: sqlite3.Connection, snapshot: dict) -> str:
     return canonical({"$storage": FORMAT, "data": base64.b64encode(zlib.compress(body)).decode("ascii")})
 
 
-def decode(connection: sqlite3.Connection, value: str) -> dict:
+def decode(connection: sqlite3.Connection, value: str, *, audit: bool = False) -> dict:
+    from . import quarantine, retention
+    envelope, _ = retention.unpack(value)
+    if not audit and envelope.get('projection_snapshot_id') in quarantine.identities(connection):
+        return {**envelope, 'players': {}, 'canonical_provider': None,
+                'availability': 'unavailable', 'provenance_classification': quarantine.CLASSIFICATION,
+                'limitations': ['Original historical projection source provenance is unavailable.']}
     payload = json.loads(value)
     if payload.get("$storage") != FORMAT:
         return payload

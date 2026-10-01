@@ -33,7 +33,7 @@ jobs:
           docker run --rm --memory 2g --memory-swap 2g --cpus 2 \
             --env DTOS_DISPOSABLE_RECOVERY_TEST=1 \
             dtos-market-cgroup:validation \
-            sh -c 'python -m tools.validation.recovery_quiescence_linux && python -m unittest tests.test_retained_storage_recovery tests.test_retained_projection_recovery tests.test_storage_command_imports tests.test_storage_maintenance'
+            sh -c 'python -m tools.validation.recovery_quiescence_linux && python -m unittest tests.test_retained_storage_recovery tests.test_retained_projection_recovery tests.test_storage_command_imports tests.test_storage_maintenance tests.test_projection_root_transition tests.test_projection_quarantine tests.test_projection_provenance_retention'
       - name: Run 2 GiB cgroup lifecycle
         run: |
           mkdir -p .validation/linux-market-${{ matrix.scenario }}

@@ -181,13 +181,15 @@ class ProjectionTransitionTests(unittest.TestCase):
     def test_unchanged_provider_cache_and_sync_marker_do_not_rewrite(self):
         service = self.service()
         payload = feed(2026, 1)
-        with patch('src.core.projection_intelligence.service._now', side_effect=['first', 'second']):
+        first_observed = '2026-09-01T12:00:00+00:00'
+        later_observed = '2026-09-01T12:15:00+00:00'
+        with patch('src.core.projection_intelligence.service._now', side_effect=[first_observed, later_observed]):
             service.cache_sleeper_week(payload, scoring={'pass_yd': .04, 'pass_td': 6, 'rec': 1}, season=2026, week=1)
             service.cache_sleeper_week(payload, scoring={'pass_yd': .04, 'pass_td': 6, 'rec': 1}, season=2026, week=1)
         with closing(sqlite3.connect(self.database)) as connection:
             rows = connection.execute('SELECT retrieved_at FROM sleeper_projection_snapshots').fetchall()
             history = connection.execute('SELECT count(*) FROM projection_source_history').fetchone()[0]
-        self.assertEqual(rows, [('first',)])
+        self.assertEqual(rows, [(first_observed,)])
         self.assertEqual(history, 1)
 
         metadata_path = Path(self.temporary.name) / 'metadata.sqlite3'

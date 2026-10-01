@@ -131,6 +131,8 @@ class CheckpointPipeline:
         knowledge boundary); retaining it does not pin a full projection universe.
         """
         envelope = data.get("projection_intelligence") or {}
+        if envelope.get('provenance_classification') == 'UNSUPPORTED_LEGACY_PROVENANCE':
+            return ()
         league = data.get("league") or {}
         if not league.get("league_id") or str(envelope.get("league_id")) != str(league["league_id"]):
             return ()
