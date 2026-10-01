@@ -13,6 +13,7 @@ import shutil
 import sqlite3
 
 from src.core.projection_intelligence import retention, state_storage
+from src.core.projection_intelligence import quarantine
 
 ALLOWED = {
     "projection_snapshots",
@@ -25,6 +26,7 @@ ALLOWED = {
     "projection_previous_heads",
     "projection_checkpoint_roots",
     "projection_source_roots",
+    "projection_snapshot_quarantine",
 }
 
 
@@ -55,6 +57,7 @@ def verify_copy(source_path, target_path):
         if original - ALLOWED or compact != original | policy_tables:
             raise ValueError('Projection table identity changed')
         keep, source_keep = retention.plan(source)
+        keep |= quarantine.identities(source)
         references = set()
         counts = {}
         for table in sorted(compact - {'projection_player_states', 'projection_retention_policy'}):
@@ -127,6 +130,7 @@ def build_copy(source_path, target_path, *, maximum_bytes, reserve_bytes=0, prog
         if source.execute("SELECT 1 FROM sqlite_master WHERE type IN ('trigger','view') LIMIT 1").fetchone():
             raise ValueError('Projection triggers/views require retention review')
         keep, source_keep = retention.plan(source)
+        keep |= quarantine.identities(source)
         state_ids = set()
         proof = hashlib.sha256()
         counts = {}
@@ -215,8 +219,8 @@ def build_copy(source_path, target_path, *, maximum_bytes, reserve_bytes=0, prog
                             raise ValueError("Historical provenance changed")
                         continue
                     a, b = (
-                        state_storage.decode(source, old),
-                        state_storage.decode(target, new),
+                        state_storage.decode(source, old, audit=True),
+                        state_storage.decode(target, new, audit=True),
                     )
                     if a != b:
                         raise ValueError("Retained projection output changed")

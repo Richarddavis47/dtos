@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.21.4 - Protected Projection Evidence
+
+- Preserve complete source evidence while supported Projection generations remain protected.
+- Keep unsupported legacy evidence auditable without presenting it as supported historical evidence.
+- Validate atomic operational generation transitions and distinct, fully sourced rollback baselines.
+- Preserve prepared reads, scoring precision, missing-data semantics and league isolation.
+- Keep detailed operational acceptance evidence private.
+
 # v1.21.3 - Bounded Storage Retention
 
 - Bound redundant operational history while preserving meaningful historical evidence.

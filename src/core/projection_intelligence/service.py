@@ -12,7 +12,7 @@ from statistics import mean, median
 from typing import Any
 
 from config import LEAGUE_ID, PROJECTION_DATABASE_FILE
-from src.core.projection_intelligence import state_storage, retention
+from src.core.projection_intelligence import state_storage, retention, quarantine
 from src.platform.storage_gate import connect
 from src.core.projection_intelligence.sleeper_provider import (
     PARSER_VERSION, SOURCE_CLASSIFICATION, freshness_state, parse_projection_feed,
@@ -33,6 +33,8 @@ def snapshot_compatibility(snapshot: Any) -> tuple[str, str]:
     """Classify persisted metadata against the running projection contract."""
     if not isinstance(snapshot, dict):
         return "corrupt", "Projection snapshot payload is not an object."
+    if snapshot.get('provenance_classification') == 'UNSUPPORTED_LEGACY_PROVENANCE':
+        return 'unsupported_provenance', 'Original historical projection source provenance is unavailable.'
     if str(snapshot.get("schema_version") or "") != PROJECTION_SCHEMA_VERSION:
         return "incompatible_schema", "Persisted projection schema differs from the required schema."
     if str(snapshot.get("model_version") or "") != PROJECTION_MODEL_VERSION:
@@ -437,6 +439,8 @@ class ProjectionService:
                         connection.execute('INSERT OR IGNORE INTO sleeper_projection_snapshots VALUES (?,?,?,?,?)',
                                            (source['semantic_fingerprint'], season, week, observed, json.dumps(source, sort_keys=True)))
                     for candidate in [*prepared.values(), published]:
+                        if candidate['projection_snapshot_id'] in quarantine.identities(connection):
+                            raise ValueError('Quarantined projection identity cannot be republished')
                         existing = connection.execute('SELECT payload FROM projection_snapshots WHERE snapshot_id=?',
                                                       (candidate['projection_snapshot_id'],)).fetchone()
                         if existing is None:
@@ -444,6 +448,7 @@ class ProjectionService:
                             encoded = state_storage.encode(connection, candidate)
                             connection.execute('INSERT INTO projection_snapshots VALUES (?,?,?,?,?,?)',
                                                (candidate['projection_snapshot_id'], league_id, season, candidate['week'], observed, encoded))
+                            quarantine.validate_publication(connection, candidate['projection_snapshot_id'])
                         elif candidate is published:
                             published = state_storage.decode(connection, existing['payload'])
                     old_head = connection.execute('SELECT snapshot_id FROM projection_publication_heads WHERE league_id=?', (league_id,)).fetchone()
@@ -828,6 +833,8 @@ class ProjectionService:
         }
         with closing(self._connect()) as connection:
             existing = connection.execute("SELECT payload FROM projection_snapshots WHERE snapshot_id=?", (snapshot_id,)).fetchone()
+            if snapshot_id in quarantine.identities(connection):
+                raise ValueError('Quarantined projection identity cannot be republished')
             existing_snapshot = None
             if existing:
                 try:
@@ -845,11 +852,13 @@ class ProjectionService:
                     "UPDATE projection_snapshots SET league_id=?, season=?, week=?, generated_at=?, payload=? WHERE snapshot_id=?",
                     (league_id, season, week, generated_at, payload, snapshot_id),
                 )
+                quarantine.validate_publication(connection, snapshot_id)
                 retention.collect(connection)
                 connection.commit()
             else:
                 payload = state_storage.encode(connection, snapshot)
                 connection.execute("INSERT INTO projection_snapshots VALUES (?, ?, ?, ?, ?, ?)", (snapshot_id, league_id, season, week, generated_at, payload))
+                quarantine.validate_publication(connection, snapshot_id)
                 retention.collect(connection)
                 connection.commit()
         return snapshot, normalization, published
@@ -945,6 +954,8 @@ class ProjectionService:
 
     def record_actual(self, snapshot_id: str, player_id: str, actual_points: float) -> None:
         with closing(self._connect()) as connection:
+            if snapshot_id in quarantine.identities(connection):
+                raise ValueError('Quarantined projection cannot receive a canonical actual root')
             connection.execute("INSERT OR IGNORE INTO projection_actuals VALUES (?, ?, ?, ?)", (snapshot_id, str(player_id), float(actual_points), _now()))
             connection.commit()
 

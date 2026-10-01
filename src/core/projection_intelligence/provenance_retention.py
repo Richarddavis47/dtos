@@ -32,7 +32,7 @@ def enabled(db):
     ).fetchone())
 
 
-def plan(db, retained_snapshots):
+def plan(db, retained_snapshots, *, snapshot_only=False):
     """Read-only complete plan. Unknown/missing references fail closed."""
     from .retention import PROVENANCE, unpack
 
@@ -62,8 +62,9 @@ def plan(db, retained_snapshots):
     keep = set()
     # One current and one rollback source per provider-cache scope. No arbitrary
     # refresh history window; cache seasons are bounded by the publisher.
-    for scope in db.execute("SELECT DISTINCT season,week FROM sleeper_projection_snapshots"):
-        keep.update(row[0] for row in by_scope.get(tuple(scope), [])[-2:])
+    if not snapshot_only:
+        for scope in db.execute("SELECT DISTINCT season,week FROM sleeper_projection_snapshots"):
+            keep.update(row[0] for row in by_scope.get(tuple(scope), [])[-2:])
     for sid in retained_snapshots:
         row = db.execute("SELECT payload FROM projection_snapshots WHERE snapshot_id=?", (sid,)).fetchone()
         if row is None:
@@ -80,7 +81,7 @@ def plan(db, retained_snapshots):
         if not matching:
             raise ValueError("Retained projection has no valid source provenance")
         keep.add(matching[-1][0])
-    if 'projection_source_roots' in tables:
+    if not snapshot_only and 'projection_source_roots' in tables:
         keep.update(r[0] for r in db.execute("SELECT observation_id FROM projection_source_roots"))
     lookup = {r[0]: r for r in rows}
     if keep - lookup.keys():
@@ -94,6 +95,7 @@ def plan(db, retained_snapshots):
         fingerprint.update(json.dumps(list(row), separators=(',', ':')).encode())
     fingerprint.update(json.dumps([sorted(retained_snapshots), sorted(keep), sorted(ends.items())], separators=(',', ':')).encode())
     return {
+        'scope': 'snapshot_closure' if snapshot_only else 'full_retention',
         'policy': VERSION, 'digest': fingerprint.hexdigest(),
         'retained': sorted(keep), 'reclaimable': sorted(lookup.keys() - keep),
         'reclaimable_payload_bytes': sum(len(lookup[k][5].encode()) for k in lookup.keys() - keep),
@@ -120,6 +122,8 @@ def collect(db, candidate):
     """Apply only inside the publisher's atomic transaction, after admission."""
     if not enabled(db):
         raise ValueError("Projection provenance collection is not admitted")
+    if candidate.get('scope') != 'full_retention':
+        raise ValueError('Snapshot-only proof cannot authorize source collection')
     for oid, boundary in candidate['valid_until'].items():
         db.execute("INSERT INTO projection_source_expiry VALUES (?,?) ON CONFLICT(observation_id) DO UPDATE SET valid_until=excluded.valid_until WHERE valid_until IS NOT excluded.valid_until", (oid, boundary))
     db.executemany("DELETE FROM projection_source_history WHERE observation_id=?", ((k,) for k in candidate['reclaimable']))

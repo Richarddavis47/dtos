@@ -73,6 +73,7 @@ def plan(db):
         "projection_previous_heads",
         "projection_retention_policy",
         "projection_source_expiry",
+        "projection_snapshot_quarantine",
         "sqlite_sequence",
     }
     if tables - allowed:
@@ -86,6 +87,8 @@ def plan(db):
                 or envelope.get('season') != season or envelope.get('week') != week):
             raise ValueError('Projection row/envelope identity mismatch')
         snapshots[sid] = envelope
+    from . import quarantine
+    quarantined = quarantine.identities(db)
     roots = set()
     for league, sid in db.execute(
         "SELECT league_id,snapshot_id FROM projection_publication_heads"
@@ -99,6 +102,8 @@ def plan(db):
     for sid, league in db.execute(
         "SELECT snapshot_id,league_id FROM projection_snapshots ORDER BY generated_at DESC,rowid DESC"
     ):
+        if sid in quarantined:
+            continue
         if recent.get(league, 0) < 2:
             roots.add(sid)
             recent[league] = recent.get(league, 0) + 1
@@ -115,6 +120,8 @@ def plan(db):
     keep = set()
 
     def visit(sid, parent=None, week=None):
+        if sid in quarantined:
+            raise ValueError('Quarantined projection has a canonical retention root')
         if sid not in snapshots:
             raise ValueError("Missing retained projection snapshot")
         row = snapshots[sid]
@@ -162,6 +169,33 @@ def plan(db):
         if scope in source_scopes and counts.get(scope, 0) < SOURCE_WINDOW:
             source_keep.add(oid)
         counts[scope] = counts.get(scope, 0) + 1
+    # A retained derived snapshot also roots the source known at its original
+    # publication boundary. The recent-source window alone is not reachability:
+    # quiet leagues and historical events can outlive eight source transitions.
+    # Missing legacy sources remain missing; strict provenance admission still
+    # rejects them. Never fabricate a source from a derived or current value.
+    from .provenance_retention import stamp
+    observations = {}
+    expiry = dict(db.execute('SELECT observation_id,valid_until FROM projection_source_expiry')) if 'projection_source_expiry' in tables else {}
+    for oid, season, week, observed, fingerprint in db.execute(
+        "SELECT observation_id,season,week,observed_at,fingerprint "
+        "FROM projection_source_history ORDER BY observation_id"
+    ):
+        observations.setdefault((season, week), []).append((oid, stamp(observed), fingerprint))
+    for sid in keep:
+        snapshot = snapshots[sid]
+        fingerprint = snapshot.get('sleeper_evidence_snapshot_id')
+        if not fingerprint:
+            continue
+        boundary = stamp(snapshot['generated_at'])
+        group = observations.get((snapshot['season'], snapshot['week']), [])
+        for index, row in enumerate(group):
+            ends = [stamp(value) for value in (
+                expiry.get(row[0]), group[index + 1][1] if index + 1 < len(group) else None,
+            ) if value is not None]
+            end = min(ends) if ends else None
+            if row[2] == fingerprint and row[1] <= boundary and (end is None or boundary < end):
+                source_keep.add(row[0])
     if "projection_source_roots" in tables:
         for (oid,) in db.execute("SELECT observation_id FROM projection_source_roots"):
             row = db.execute(
@@ -183,11 +217,13 @@ def collect(db):
     if provenance_retention.enabled(db):
         provenance_plan = provenance_retention.plan(db, keep)
         source_keep = set(provenance_plan['retained'])
+    from . import quarantine
+    quarantined = quarantine.identities(db)
     state_ids = set()
     for sid, payload in db.execute(
         "SELECT snapshot_id,payload FROM projection_snapshots"
     ).fetchall():
-        if sid in keep:
+        if sid in keep or sid in quarantined:
             _, refs = unpack(payload)
             state_ids.update(ref[0] for ref in refs.values())
         else:
@@ -232,6 +268,9 @@ def collect(db):
 
 
 def pin_snapshot(db, *, event_id, snapshot_id):
+    from . import quarantine, provenance_retention
+    if snapshot_id in quarantine.identities(db):
+        raise ValueError('Unsupported projection cannot become a canonical historical checkpoint')
     if (
         not event_id
         or not db.execute(
@@ -245,6 +284,11 @@ def pin_snapshot(db, *, event_id, snapshot_id):
     ).fetchone()
     if existing and existing[0] != snapshot_id:
         raise ValueError("Historical projection event cannot be rewritten")
+    payload = db.execute('SELECT payload FROM projection_snapshots WHERE snapshot_id=?', (snapshot_id,)).fetchone()[0]
+    envelope, _ = unpack(payload)
+    if not envelope.get('sleeper_evidence_snapshot_id'):
+        raise ValueError('Historical projection checkpoint requires source provenance')
+    provenance_retention.plan(db, {snapshot_id})
     db.execute(
         "INSERT OR IGNORE INTO projection_checkpoint_roots VALUES (?,?)",
         (event_id, snapshot_id),
