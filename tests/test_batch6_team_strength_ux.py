@@ -1,4 +1,6 @@
 """Prepared-only Team HQ presentation; no optimization or remote calls."""
+
+from tools.validation.browser_runtime import launch_chromium
 from copy import deepcopy
 import unittest
 from unittest.mock import patch
@@ -79,7 +81,7 @@ class TeamStrengthUXTests(unittest.TestCase):
     def test_mobile_desktop_disclosures_links_and_contained_table(self):
         profile = prepared_profile()
         with sync_playwright() as engine:
-            browser = engine.chromium.launch(headless=True)
+            browser = launch_chromium(engine, headless=True)
             try:
                 for width in (375, 390, 1280):
                     with self.subTest(width=width):

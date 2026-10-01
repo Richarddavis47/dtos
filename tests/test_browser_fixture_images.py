@@ -1,3 +1,5 @@
+
+from tools.validation.browser_runtime import launch_chromium
 import os
 from io import BytesIO
 import tempfile
@@ -95,7 +97,7 @@ class FixtureImagesTests(unittest.TestCase):
 
     def test_representative_cards_decode_and_bad_html_still_fails(self):
         with patch.dict(os.environ, {"DTOS_PRODUCTION_SHAPED_FIXTURE": "1", "RENDER": ""}), sync_playwright() as pw:
-            browser = pw.chromium.launch(headless=True)
+            browser = launch_chromium(pw, headless=True)
             try:
                 for width in (390, 1440):
                     page = browser.new_page(viewport={"width": width, "height": 900})

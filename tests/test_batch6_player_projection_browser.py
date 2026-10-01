@@ -1,4 +1,6 @@
 """Bounded mobile/desktop week-navigation acceptance using the shipped script."""
+
+from tools.validation.browser_runtime import launch_chromium
 from pathlib import Path
 import unittest
 from urllib.parse import parse_qs, urlparse
@@ -30,7 +32,7 @@ class PlayerProjectionBrowserTests(unittest.TestCase):
             projection=player_projection_view(data, '2', service, 3))
         html = f'<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>{css}</style></head><body><main class="wrap"><a id="compact-card" href="/players/2">{card}</a>{panel(3)}</main></body></html>'
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = launch_chromium(p, headless=True)
             try:
                 for width in (375, 390, 1280):
                     with browser.new_context(viewport={'width': width, 'height': 900}) as context:

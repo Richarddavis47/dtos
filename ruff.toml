@@ -1,0 +1,6 @@
+# Preserve the historical release gate, independently of Ruff's newer defaults.
+# No path exclusions or per-file suppressions: all repository Python is checked.
+target-version = "py312"
+
+[lint]
+select = ["E4", "E7", "E9", "F"]

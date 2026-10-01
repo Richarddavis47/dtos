@@ -1,4 +1,6 @@
 """Focused mobile/desktop Matchups interaction proof; no capture artifacts."""
+
+from tools.validation.browser_runtime import launch_chromium
 import unittest
 
 from playwright.sync_api import sync_playwright
@@ -16,7 +18,7 @@ class MatchupBrowserTests(unittest.TestCase):
         html = f'<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>{CSS}</style></head><body><main class="wrap"><h1>Matchup</h1>{body}</main></body></html>'
         image = image_bytes("matchup-navigation")
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = launch_chromium(p, headless=True)
             try:
                 for viewport in ({"width": 375, "height": 844}, {"width": 390, "height": 844}, {"width": 1280, "height": 900}):
                     with browser.new_context(viewport=viewport) as context:

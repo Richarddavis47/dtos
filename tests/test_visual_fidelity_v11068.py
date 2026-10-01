@@ -1,6 +1,8 @@
 """Structural visual-fidelity contracts for v1.10.68."""
 from __future__ import annotations
 
+from tools.validation.browser_runtime import launch_chromium
+
 import unittest
 from pathlib import Path
 
@@ -35,7 +37,7 @@ class VisualFidelityTests(unittest.TestCase):
             '<span id="fire" class="status-hot">W4</span>'
         )
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
+            browser = launch_chromium(playwright, headless=True)
             try:
                 page = browser.new_page()
                 page.set_content(markup)
@@ -123,7 +125,7 @@ class VisualFidelityTests(unittest.TestCase):
             '<section id="content"><h2>Trade opportunities</h2></section></main>'
         )
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
+            browser = launch_chromium(playwright, headless=True)
             try:
                 for width in (320, 390, 768, 1280, 1600):
                     with self.subTest(width=width):

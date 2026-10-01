@@ -1,4 +1,6 @@
 """Focused real Chromium journeys through authenticated local Trade APIs."""
+
+from tools.validation.browser_runtime import launch_chromium
 import base64
 import unittest
 from datetime import datetime, timezone
@@ -15,7 +17,7 @@ class TradeWorkspaceBrowserTests(unittest.TestCase):
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = launch_chromium(p, headless=True)
             try:
                 for width in (390, 1280):
                     with self.subTest(width=width):

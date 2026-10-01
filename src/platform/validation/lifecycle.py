@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO, Callable
 
+import psutil
+
 from src.platform.validation.process_detection import (
     ProcessRecord, descendants, processes_for_run, windows_process_inventory,
 )
@@ -22,14 +24,20 @@ def available_port() -> int:
 
 
 def listening_pids(port: int) -> set[int]:
-    result = subprocess.run(["netstat", "-ano", "-p", "tcp"], capture_output=True, text=True, check=True)
-    suffix = f":{port}"
-    return {
-        int(columns[4]) for line in result.stdout.splitlines()
-        if len(columns := line.split()) >= 5 and columns[0].upper() == "TCP"
-        and columns[1].endswith(suffix) and columns[3].upper() == "LISTENING"
-        and columns[4].isdigit()
-    }
+    """Inspect TCP listeners on either OS; inventory failures must fail validation.
+
+    Keep all addresses (including IPv6) and match only LISTEN, not established
+    connections or TIME_WAIT. A listener without an observable PID is unsafe
+    evidence for both ownership and cleanup, so never treat it as a free port.
+    """
+    connections = psutil.net_connections(kind="tcp")
+    listeners = [
+        item for item in connections
+        if item.status == psutil.CONN_LISTEN and item.laddr.port == port
+    ]
+    if any(item.pid is None for item in listeners):
+        raise RuntimeError(f"Cannot determine PID for TCP listener on port {port}.")
+    return {item.pid for item in listeners}
 
 
 @dataclass(frozen=True)

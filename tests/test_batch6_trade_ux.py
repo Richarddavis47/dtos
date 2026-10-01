@@ -1,4 +1,6 @@
 """Shipped UI handoffs using one actual evaluator output, not search acceptance."""
+
+from tools.validation.browser_runtime import launch_chromium
 from copy import deepcopy
 import unittest
 from urllib.parse import urlsplit
@@ -17,7 +19,7 @@ class TradeUXTests(unittest.TestCase):
         offer = evaluate_trade_request(fixture.data, fixture.payload)
         original = deepcopy(offer)
         with sync_playwright() as engine:
-            browser = engine.chromium.launch(headless=True)
+            browser = launch_chromium(engine, headless=True)
             try:
                 for width in (390, 1280):
                     for flow in ('trade-for', 'shop', 'recommended', 'create'):
@@ -106,7 +108,7 @@ class TradeUXTests(unittest.TestCase):
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
         with sync_playwright() as engine:
-            browser = engine.chromium.launch(headless=True)
+            browser = launch_chromium(engine, headless=True)
             try:
                 for width in (390, 1280):
                     with self.subTest(width=width):

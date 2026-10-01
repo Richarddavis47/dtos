@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tools.validation.browser_runtime import launch_chromium
+
 import unittest
 from html.parser import HTMLParser
 from unittest.mock import patch
@@ -371,7 +373,7 @@ class LiveInspectionTests(unittest.TestCase):
             "10": {"canonical_projection": 16.71}, "20": {"canonical_projection": 0.0},
         }})
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
+            browser = launch_chromium(playwright, headless=True)
             page = browser.new_page()
             page.set_content(response.text)
             visible = page.locator("body").inner_text()
