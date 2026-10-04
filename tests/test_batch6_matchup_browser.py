@@ -1,4 +1,6 @@
 """Bounded candidate-only season navigation and touch/keyboard proof."""
+
+from tools.validation.browser_runtime import launch_chromium
 from pathlib import Path
 import unittest
 
@@ -17,7 +19,7 @@ class SeasonBrowserTests(unittest.TestCase):
         data['season_matchups']['weeks']['2']['rows'][0]['points'] = 12
         css = Path('static/css/matchups.css').read_text(encoding='utf-8')
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = launch_chromium(p, headless=True)
             try:
                 for width in (390, 1280):
                     page = browser.new_page(viewport={'width': width, 'height': 900})
@@ -50,7 +52,7 @@ class SeasonBrowserTests(unittest.TestCase):
         html = ('<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1">'
                 f'<style>{CSS}\n{css}</style></head><body><main class="wrap"><h1>Week 3</h1>{body}</main></body></html>')
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = launch_chromium(p, headless=True)
             try:
                 for width in (375, 390, 1280):
                     with browser.new_context(viewport={'width': width, 'height': 900}) as context:

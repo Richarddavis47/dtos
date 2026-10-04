@@ -1,4 +1,6 @@
 """Authenticated local UI handoff fixtures, not fabricated real Shop offers."""
+
+from tools.validation.browser_runtime import launch_chromium
 import json
 import unittest
 from urllib.parse import urlsplit
@@ -14,7 +16,7 @@ class ShopHandoffTests(unittest.TestCase):
         self.addCleanup(fixture.doCleanups)
         offer = evaluate_trade_request(fixture.data, fixture.payload)
         with sync_playwright() as engine:
-            browser = engine.chromium.launch(headless=True)
+            browser = launch_chromium(engine, headless=True)
             for width in (390, 1280):
                 with self.subTest(width=width):
                     page = browser.new_page(viewport={'width': width, 'height': 900})

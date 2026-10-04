@@ -1,6 +1,8 @@
 """Real-browser Trade Center interaction regressions through v1.10.57."""
 from __future__ import annotations
 
+from tools.validation.browser_runtime import launch_chromium
+
 import json
 import unittest
 from pathlib import Path
@@ -38,7 +40,7 @@ class TradeCenterBrowserTests(unittest.TestCase):
         filters = ("ALL", "QB", "RB", "WR", "TE", "PICKS")
 
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
+            browser = launch_chromium(playwright, headless=True)
             for width, height in viewports:
                 with self.subTest(viewport=f"{width}x{height}"):
                     page = browser.new_page(viewport={"width": width, "height": height})
@@ -138,7 +140,7 @@ class TradeCenterBrowserTests(unittest.TestCase):
             }
 
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
+            browser = launch_chromium(playwright, headless=True)
             page = browser.new_page(viewport={"width": 390, "height": 844})
             page.set_default_timeout(5_000)
 

@@ -1,6 +1,8 @@
 """Rendered Trade Center accessibility regressions for v1.10.52."""
 from __future__ import annotations
 
+from tools.validation.browser_runtime import launch_chromium
+
 import unittest
 
 from playwright.sync_api import sync_playwright
@@ -18,7 +20,7 @@ class TradeCenterAccessibilityTests(unittest.TestCase):
             "mobile": {"width": 390, "height": 844},
         }
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
+            browser = launch_chromium(playwright, headless=True)
             page = browser.new_page()
             for workflow in ("create", "recommended", "shop", "trade-for"):
                 for viewport_name, viewport in viewports.items():

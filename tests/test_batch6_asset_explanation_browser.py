@@ -1,4 +1,6 @@
 """Bounded disclosure proof; fixtures are not production acceptance evidence."""
+
+from tools.validation.browser_runtime import launch_chromium
 import unittest
 
 from playwright.sync_api import sync_playwright
@@ -19,7 +21,7 @@ class AssetExplanationBrowserTests(unittest.TestCase):
                              {'normalized_market_price': None}, league_id='A'),
         ]
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = launch_chromium(p, headless=True)
             try:
                 for width in (375, 390, 1280):
                     for view in views:

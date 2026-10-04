@@ -6,6 +6,8 @@ a loopback-only test server; external traffic is denied except fixture images.
 """
 from __future__ import annotations
 
+from tools.validation.browser_runtime import launch_chromium
+
 import tempfile
 import socket
 import threading
@@ -131,7 +133,7 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                 browser = None
                 try:
                     self.assertTrue(server.started)
-                    browser = playwright.chromium.launch(headless=True)
+                    browser = launch_chromium(playwright, headless=True)
                     for viewport in ({"width": 1280, "height": 900}, {"width": 390, "height": 844}):
                         for account, sequence in (("alpha", ("100", "200", "100")), ("beta", ("300",))):
                             with browser.new_context(viewport=viewport) as context:
