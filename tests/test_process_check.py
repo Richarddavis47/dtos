@@ -71,6 +71,20 @@ class ProcessCheckTests(unittest.TestCase):
         item = record(12, "python.exe", "python.exe -m tools.validation.server_host --port 8123")
         self.assertTrue(is_dtos_server(item))
 
+    def test_versioned_interpreter_resolved_from_virtualenv_is_detected(self) -> None:
+        for executable in ("python3.12", "python3.13", "python3.12.exe"):
+            with self.subTest(executable=executable):
+                item = record(12, "python", "python -B -m tools.validation.server_host", executable=executable)
+                self.assertTrue(is_dtos_server(item))
+                item = record(12, "python", "python -m uvicorn dtos_app:app", executable=executable)
+                self.assertTrue(is_dtos_server(item))
+
+    def test_versioned_interpreter_does_not_admit_unrelated_commands_or_names(self) -> None:
+        self.assertFalse(is_dtos_server(record(12, "python", "python -m http.server", executable="python3.12")))
+        for executable in ("python3.12-helper", "python-malicious", "python3.12.exe.bak"):
+            with self.subTest(executable=executable):
+                self.assertFalse(is_dtos_server(record(12, "python", "python -m tools.validation.server_host", executable=executable)))
+
     def test_powershell_query_text_is_not_a_server(self) -> None:
         item = record(11, "powershell.exe", "powershell -Command search uvicorn dtos_app:app")
         self.assertFalse(is_dtos_server(item))

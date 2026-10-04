@@ -1,7 +1,6 @@
 """Authentication and league-scoped authorization at the ASGI boundary."""
 from __future__ import annotations
 
-import hmac
 import os
 import re
 from contextvars import ContextVar
@@ -11,6 +10,7 @@ from urllib.parse import parse_qsl, urlencode
 from starlette.responses import JSONResponse, RedirectResponse
 
 from src.core.accounts import AccountContext, AccountService, LeagueMembership
+from src.platform.inspection_security import inspection_authorized, operations_path
 
 SESSION_COOKIE = "dtos_session"
 _CURRENT_ACCOUNT: ContextVar[AccountContext | None] = ContextVar("dtos_account", default=None)
@@ -66,9 +66,7 @@ class AccountContextMiddleware:
         self.required = required
 
     def _inspection_context(self, scope: dict[str, Any]) -> AccountContext | None:
-        expected = os.getenv("DTOS_INSPECTION_AUTH_TOKEN", "")
-        supplied = _header(scope, b"x-dtos-inspection-auth")
-        if not (expected and supplied and hmac.compare_digest(expected, supplied)):
+        if not inspection_authorized(scope):
             return None
         league_id = os.getenv("DTOS_INSPECTION_LEAGUE_ID", "").strip()
         roster_value = os.getenv("DTOS_INSPECTION_ROSTER_ID", "").strip()
@@ -104,6 +102,11 @@ class AccountContextMiddleware:
             await self.app(scope, receive, send)
             return
         path, method = str(scope.get("path") or "/"), str(scope.get("method") or "GET").upper()
+        if operations_path(path):
+            # Operational boundary and router require the same token. Do not
+            # read sessions, fabricate accounts, or rewrite league parameters.
+            await self.app(scope, receive, send)
+            return
         token = _cookies(scope).get(SESSION_COOKIE, "")
         context = self.service.store.context_for_session(token) if token else None
         inspection_context = self._inspection_context(scope)

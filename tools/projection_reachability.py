@@ -22,15 +22,29 @@ CLASSES = ("ACTIVE_REACHABLE", "HISTORICAL_CHECKPOINT_REACHABLE",
            "SOURCE_PROVENANCE_REQUIRED", "REBUILDABLE", "UNREACHABLE_LEGACY", "UNKNOWN")
 
 
-def unpack(value: str) -> tuple[dict, dict]:
+def unpack(value: str, *, max_decoded_bytes: int | None = None, budget=None) -> tuple[dict, dict]:
+    if max_decoded_bytes is not None and len(value.encode()) > max_decoded_bytes:
+        raise InspectionLimit('Projection payload budget exceeded')
     body = json.loads(value)
+    if budget is not None:
+        budget.decoded(len(value.encode()))
     if body.get('$storage') == 'projection-provenance-v1':
         return body['envelope'], {}
     if "$storage" not in body:
         return body, {}
     if body.get("$storage") != FORMAT:
         raise ValueError("Unknown projection storage format")
-    decoded = json.loads(zlib.decompress(base64.b64decode(body["data"], validate=True)))
+    compressed = base64.b64decode(body["data"], validate=True)
+    if max_decoded_bytes is None:
+        raw = zlib.decompress(compressed)
+    else:
+        decoder = zlib.decompressobj()
+        raw = decoder.decompress(compressed, max_decoded_bytes + 1)
+        if len(raw) > max_decoded_bytes or not decoder.eof:
+            raise InspectionLimit('Projection decoding budget exceeded')
+    decoded = json.loads(raw)
+    if budget is not None:
+        budget.decoded(len(raw))
     envelope, references = decoded["envelope"], decoded["players"]
     if not isinstance(envelope, dict) or not isinstance(references, dict):
         raise ValueError("Invalid projection envelope")
@@ -38,6 +52,10 @@ def unpack(value: str) -> tuple[dict, dict]:
            or not isinstance(ref[0], str) for ref in references.values()):
         raise ValueError("Invalid projection player references")
     return envelope, references
+
+
+class InspectionLimit(RuntimeError):
+    """Fail closed rather than return an incomplete graph as valid."""
 
 
 def horizon_references(envelope: dict) -> dict[str, str]:
@@ -52,12 +70,24 @@ def horizon_references(envelope: dict) -> dict[str, str]:
     return manifest
 
 
-def analyze(connection: sqlite3.Connection, *, historical_ids=(), details=False) -> dict:
+def analyze(connection: sqlite3.Connection, *, historical_ids=(), details=False,
+            budget=None, inventory=None) -> dict:
+    def decode(payload):
+        if budget is not None:
+            budget.check()
+        return unpack(payload, max_decoded_bytes=budget.max_decoded_bytes if budget else None, budget=budget)
+
+    class Errors(list):
+        def append(self, value):
+            if budget is not None and len(self) >= budget.max_errors:
+                raise InspectionLimit('Projection error budget exceeded')
+            super().append(value)
+
     tables = {r[0] for r in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     if not {"projection_snapshots", "projection_player_states"} <= tables:
         raise ValueError("Unsupported projection store")
     totals = {key: Counter(rows=0, payload_bytes=0) for key in CLASSES}
-    records, errors, snapshots = [], [], {}
+    records, errors, snapshots = [], Errors(), {}
     state_classes = {}
     snapshot_classes = {}
     allowed = {'projection_snapshots', 'projection_player_states', 'projection_publication_heads',
@@ -68,6 +98,8 @@ def analyze(connection: sqlite3.Connection, *, historical_ids=(), details=False)
         errors.append(dict(table=table, reason='UNKNOWN_TABLE_REQUIRES_REVIEW'))
 
     def record(table, identity, classification, size, reason):
+        if budget is not None:
+            budget.check()
         totals[classification].update(rows=1, payload_bytes=size)
         if details:
             records.append(dict(table=table, identity=identity, classification=classification,
@@ -76,12 +108,23 @@ def analyze(connection: sqlite3.Connection, *, historical_ids=(), details=False)
     for sid, league, season, week, stamp, payload in connection.execute(
             "SELECT snapshot_id,league_id,season,week,generated_at,payload FROM projection_snapshots"):
         try:
-            envelope, refs = unpack(payload)
+            if budget is not None and len(snapshots) >= budget.max_snapshots:
+                raise InspectionLimit('Projection snapshot budget exceeded')
+            envelope, refs = decode(payload)
             if (str(envelope.get("league_id")) != str(league)
                     or envelope.get("season") != season or envelope.get("week") != week
                     or envelope.get("projection_snapshot_id") != sid):
                 raise ValueError("Snapshot row/envelope identity mismatch")
             horizon_references(envelope)
+            if budget is not None:
+                if len(envelope.get('horizon_snapshot_ids', {})) > 18:
+                    raise InspectionLimit('Projection horizon budget exceeded')
+                # Preserve only graph/inventory metadata, including for legacy
+                # inline snapshots. Never retain their broad player universe.
+                envelope = {key: envelope[key] for key in (
+                    'projection_snapshot_id', 'league_id', 'season', 'week', 'generated_at',
+                    'scoring_profile_id', 'model_version', 'contract_version',
+                    'horizon_snapshot_ids', 'sleeper_evidence_snapshot_id') if key in envelope}
             # Keep only envelopes in memory. Production contains millions of
             # historical references; retaining every decoded map is unbounded.
             snapshots[sid] = (envelope, {}, len(payload.encode()), stamp)
@@ -147,6 +190,10 @@ def analyze(connection: sqlite3.Connection, *, historical_ids=(), details=False)
     priorities = {name: i for i, name in enumerate(CLASSES)}
     def state_refs(refs, classification):
         for ref in refs.values():
+            if budget is not None:
+                budget.check()
+                if len(state_classes) >= budget.max_references:
+                    raise InspectionLimit('Projection reference budget exceeded')
             sid = ref[0]
             existing = state_classes.get(sid)
             if existing is None or priorities[classification] < priorities[existing]:
@@ -156,7 +203,7 @@ def analyze(connection: sqlite3.Connection, *, historical_ids=(), details=False)
         _, _, size, _ = snapshots[sid]
         classification = snapshot_classes.get(sid, "UNREACHABLE_LEGACY")
         if classification not in ("UNREACHABLE_LEGACY", "UNKNOWN"):
-            _, refs = unpack(payload)
+            _, refs = decode(payload)
             state_refs(refs, classification)
         record("projection_snapshots", sid, classification, size,
                "Reachability from current/event roots" if classification != "UNREACHABLE_LEGACY"
@@ -180,7 +227,7 @@ def analyze(connection: sqlite3.Connection, *, historical_ids=(), details=False)
                 "SELECT observation_id,season,week,payload FROM projection_source_history"):
             classification = "SOURCE_PROVENANCE_REQUIRED" if oid in source_keep else "UNREACHABLE_LEGACY"
             try:
-                _, refs = unpack(payload)
+                _, refs = decode(payload)
                 if classification != "UNREACHABLE_LEGACY":
                     state_refs(refs, classification)
             except (ValueError, KeyError, TypeError, zlib.error) as exc:
@@ -210,6 +257,44 @@ def analyze(connection: sqlite3.Connection, *, historical_ids=(), details=False)
     if details:
         summary["rows"] = sorted(records, key=lambda row: (row['table'], str(row['identity'])))
     summary["report_sha256"] = hashlib.sha256(json.dumps(summary, sort_keys=True).encode()).hexdigest()
+    if inventory is not None:
+        # Only the requested page is exported; never player references/payloads.
+        offset, limit, destination = inventory
+        previous = {r[0] for r in connection.execute('SELECT snapshot_id FROM projection_previous_heads')} if 'projection_previous_heads' in tables else set()
+        head_ids = {r[1] for r in heads}
+        horizon_ids = {child for env, _, _, _ in snapshots.values() for child in horizon_references(env).values()}
+        for sid in sorted(snapshots)[offset:offset + limit]:
+            env = snapshots[sid][0]
+            source = env.get('sleeper_evidence_snapshot_id')
+            source_rows = list(connection.execute(
+                'SELECT observation_id,payload FROM projection_source_history WHERE season=? AND week=? AND fingerprint=? '
+                'AND julianday(observed_at)<=julianday(?) ORDER BY observation_id DESC LIMIT 1',
+                (env.get('season'), env.get('week'), source, env.get('generated_at')))) if source and 'projection_source_history' in tables else []
+            if source_rows:
+                oid = source_rows[0][0]
+                end = connection.execute('SELECT 1 FROM projection_source_history WHERE season=? AND week=? '
+                                         'AND observation_id>? AND julianday(observed_at)<=julianday(?) LIMIT 1',
+                                         (env.get('season'), env.get('week'), oid, env.get('generated_at'))).fetchone()
+                expired = connection.execute('SELECT 1 FROM projection_source_expiry WHERE observation_id=? '
+                                             'AND julianday(valid_until)<=julianday(?) LIMIT 1',
+                                             (oid, env.get('generated_at'))).fetchone() if 'projection_source_expiry' in tables else None
+                if end or expired:
+                    source_rows = []
+            provenance = bool(source_rows)
+            if budget is not None and source_rows:
+                budget.decoded(len(source_rows[0][1].encode()))
+            full_source = bool(source_rows and json.loads(source_rows[0][1]).get('$storage') in (None, FORMAT))
+            destination.append({'snapshot_id': sid, 'league_id': env.get('league_id'), 'season': env.get('season'),
+                                'week': env.get('week'), 'scoring_profile_id': env.get('scoring_profile_id'),
+                                'classification': snapshot_classes.get(sid, 'UNREACHABLE_LEGACY'),
+                                'publication_head': sid in head_ids, 'rollback_head': sid in previous,
+                                'historical_root': sid in historical, 'horizon_member': sid in horizon_ids,
+                                'horizon_root': bool(env.get('horizon_snapshot_ids')),
+                                'source_available': full_source, 'provenance_available': provenance,
+                                'source_fingerprint': source,
+                                'envelope_sha256': hashlib.sha256(json.dumps(env, sort_keys=True).encode()).hexdigest()})
+        summary = {'report': summary, 'snapshots': destination, 'total': len(snapshots), 'limit': limit, 'offset': offset,
+                   'next_offset': offset + limit if offset + limit < len(snapshots) else None}
     return summary
 
 

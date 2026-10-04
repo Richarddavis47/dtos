@@ -31,6 +31,8 @@ from routes.history import create_history_router
 from routes.home import create_home_router
 from routes.historical_assets import create_historical_assets_router
 from routes.inspect import create_inspection_router
+from routes.operations_inspect import create_operations_inspection_router
+from src.platform.inspection_security import OperationalInspectionBoundary
 from routes.intelligence_memory import create_intelligence_memory_router
 from routes.league_runtime import create_league_runtime_router
 from routes.matchups import create_matchups_router
@@ -897,6 +899,8 @@ app.include_router(
     )
 )
 
+app.add_middleware(OperationalInspectionBoundary)
+app.include_router(create_operations_inspection_router())
 app.include_router(create_inspection_router(
     state=runtime_state, route_provider=lambda: app.routes, league_id=LEAGUE_ID,
     projection_service=projection_service, market_cache=asset_market_cache,

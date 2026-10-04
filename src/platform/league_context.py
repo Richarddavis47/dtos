@@ -7,6 +7,7 @@ from typing import Any
 from urllib.parse import parse_qs
 
 from starlette.responses import JSONResponse
+from src.platform.inspection_security import operations_path
 
 from src.core.league_runtime import (
     CanonicalLeagueContext, LeagueRuntimeError, LeagueRuntimeManager,
@@ -75,7 +76,7 @@ class LeagueContextMiddleware:
         self.import_enabled = import_enabled
 
     async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
-        if scope.get("type") != "http":
+        if scope.get("type") != "http" or operations_path(str(scope.get('path') or '')):
             await self.app(scope, receive, send)
             return
         query = parse_qs(scope.get("query_string", b"").decode("latin-1"))

@@ -1,10 +1,9 @@
 """Application boundary for the feature-flagged FOIS foundation."""
 from __future__ import annotations
 
-import os
 from contextlib import closing
 from pathlib import Path
-from tempfile import gettempdir
+from config import fois_database_path
 
 from src.core.fois.repository import FOISRepository
 from src.core.fois.history import load_results_history
@@ -17,14 +16,7 @@ from src.platform.storage_gate import connect
 
 
 def _database_path() -> Path:
-    storage_root = os.getenv("DTOS_HISTORY_STORAGE_ROOT")
-    default = Path(storage_root) / "dtos_fois.sqlite3" if storage_root else Path(gettempdir()) / "dtos_fois.sqlite3"
-    return Path(
-        os.getenv(
-            "DTOS_FOIS_DB_FILE",
-            str(default),
-        )
-    )
+    return fois_database_path()
 
 
 def storage_summary() -> dict[str, int]:
