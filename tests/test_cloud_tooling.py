@@ -94,7 +94,23 @@ class BrowserSelectionTests(unittest.TestCase):
         executable.touch()
         executable.chmod(0o755)
         with patch.dict(os.environ, {browser_runtime.EXECUTABLE_ENV: str(executable)}):
-            self.assertEqual(browser_runtime.chromium_executable(self.playwright), str(executable))
+            # Path.resolve() can canonicalize the drive/directory case on Windows.
+            self.assertEqual(browser_runtime.chromium_executable(self.playwright), str(executable.resolve()))
+
+    def test_relative_override_is_resolved_before_launch(self):
+        self.pinned.touch()
+        # Stay on the working directory's drive, including on Windows CI.
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            executable = Path(folder) / "system-chrome"
+            executable.touch()
+            executable.chmod(0o755)
+            (Path(folder) / "subdir").mkdir()
+            relative = Path(folder).relative_to(Path.cwd()) / "subdir" / ".." / executable.name
+            with patch.dict(os.environ, {browser_runtime.EXECUTABLE_ENV: str(relative)}):
+                browser_runtime.launch_chromium(self.playwright, headless=True)
+            self.playwright.chromium.launch.assert_called_once_with(
+                headless=True, executable_path=str(executable.resolve()),
+            )
 
     def test_launch_failure_is_not_retried_with_another_browser(self):
         self.pinned.touch()
