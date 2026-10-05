@@ -98,17 +98,19 @@ def plausibility(strategy, package, market_return, historical):
     if (strategy.get('roster_capacity') or {}).get('additional_spots_to_resolve'):
         state = 'INSUFFICIENT EVIDENCE'
         reasons.append('COUNTERPARTY_CAPACITY_UNRESOLVED')
+    explanation = capital_fit['explanation'] if capital_fit else 'Supported counterparty effects; not a prediction of manager behavior.'
+    if 'COUNTERPARTY_SUPPORTED_PRODUCTION_TRADEOFF' in reasons:
+        explanation = 'Material legal-lineup production is gained at bounded Market cost; capital spent remains a cost and manager strategy is unconfirmed.'
+    elif 'COUNTERPARTY_SUPPORTED_CAPITAL_TRADEOFF' in reasons:
+        explanation = 'Meaningful priced future capital is gained at broadly balanced Market terms; current production and reserve costs remain disclosed, and manager strategy is unconfirmed.'
+    elif 'COUNTERPARTY_SUPPORTED_DEPTH_GAIN' in reasons:
+        explanation = 'Supported roster coverage improves without a current-production loss; Market and capacity costs remain separate. This is not an acceptance prediction.'
     return {'label': 'Counterparty Plausibility', 'assessment': state,
             'reason_codes': reasons, 'historical_context': historical,
             'history_role': 'supporting context only; never a deterministic veto',
-            'acceptance_probability': None,
-            'explanation': ('Material legal-lineup production is gained at bounded Market cost; capital spent remains a cost and manager strategy is unconfirmed.'
-                            if 'COUNTERPARTY_SUPPORTED_PRODUCTION_TRADEOFF' in reasons else
-                            'Meaningful priced future capital is gained at broadly balanced Market terms; current production and reserve costs remain disclosed, and manager strategy is unconfirmed.'
-                            if 'COUNTERPARTY_SUPPORTED_CAPITAL_TRADEOFF' in reasons else
-                            capital_fit['explanation'] if capital_fit else 'Supported roster coverage improves without a current-production loss; Market and capacity costs remain separate. This is not an acceptance prediction.'
-                            if 'COUNTERPARTY_SUPPORTED_DEPTH_GAIN' in reasons else
-                            'Supported counterparty effects; not a prediction of manager behavior.'),
+            'acceptance_probability': None, 'explanation': explanation,
+            'policy': {'severe_market_loss_ratio': .50, 'unknown_direction_production_min_return_ratio': .80,
+                       'unknown_direction_capital_min_return_ratio': .85, 'requires_complete_projection_and_capital': True},
             'manager_history': {'availability': 'supported' if historical and historical.get('evidence_references') else 'limited',
                                 'disclosure': None if historical and historical.get('evidence_references') else 'Limited manager-history evidence'},
             'manager_strategy': strategy.get('manager_strategy')}

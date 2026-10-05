@@ -57,7 +57,7 @@ class SearchFunnel:
         self.counts['constructions_pruned'] += max(0, generated - len(proposals))
         self.stages.append({'partner_id': partner, **(diagnostics or {})})
 
-    def assessed(self, row, *, filtered=False):
+    def assessed(self, row, *, filtered=False, filter_reason=None):
         state = classify(row['evaluation'])
         row['search_result_type'] = state
         self.counts['evaluated'] += 1
@@ -71,7 +71,10 @@ class SearchFunnel:
         reasons = list(e.get('recommendation_trace', {}).get('rule_reasons') or [])
         if state == 'COUNTERPARTY LIMITED':
             reasons += (e.get('dimensions', {}).get('counterparty_plausibility') or {}).get('reason_codes') or []
-        if state not in ELIGIBLE:
+        if state not in ELIGIBLE or (filtered and filter_reason):
+            if filtered and state in ELIGIBLE:
+                state = 'FILTERED'
+                reasons = [filter_reason]
             reasons = reasons or [state.replace(' ', '_')]
             self.reasons.update(reasons)
             # A real assessed package, never target context dressed as an offer.
@@ -82,6 +85,7 @@ class SearchFunnel:
                     'Provide the missing named evidence; the trade is not established.' if state == 'MISSING REQUIRED EVIDENCE'
                     else 'Resolve the identified ownership or roster constraint before reconsidering.' if state == 'HARD INVALID'
                     else 'Change the package to address the other roster’s stated cost.' if state == 'COUNTERPARTY LIMITED'
+                    else 'Relax the named adjustment requirement only if you choose to; this package failed that requirement.' if state == 'FILTERED'
                     else 'Reduce the stated Market, production or package cost; strategy alone is not compensation.')})
         return state in ELIGIBLE and not filtered
 
@@ -96,7 +100,7 @@ class SearchFunnel:
 
     def near(self):
         # Prefer a supported strategic near miss over absent evidence or invalidity.
-        order = {'COUNTERPARTY LIMITED': 0, 'STRATEGICALLY POOR': 1,
+        order = {'FILTERED': 0, 'COUNTERPARTY LIMITED': 0, 'STRATEGICALLY POOR': 1,
                  'MISSING REQUIRED EVIDENCE': 2, 'HARD INVALID': 3}
         return sorted(self.near_misses, key=lambda r: (order[r['blocker_type']],
             abs(1 - ((r['evaluation'].get('values') or {}).get('ratio', 1) or 1)),

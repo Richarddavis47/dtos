@@ -269,7 +269,7 @@ class TradeIntelligenceTests(unittest.TestCase):
             self.assertIn('id="trade-sent-board"', workflow_page.text)
             self.assertIn('id="trade-received-board"', workflow_page.text)
             self.assertIn('/static/js/trade_workspace.js', workflow_page.text)
-            self.assertIn("Generate revised offer", workflow_page.text)
+            self.assertIn("Preview revised offers", workflow_page.text)
         autocomplete = client.get("/api/trades/assets?q=Player&front_office=1")
         self.assertEqual(autocomplete.status_code, 200)
         self.assertTrue(autocomplete.json()["results"])

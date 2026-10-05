@@ -230,3 +230,21 @@ class DiscoveryRepairTests(unittest.TestCase):
             self.assertIn('range_confidence', pick)
             production = row['evaluation']['dimensions']['strategic_fit']['active']['production_evidence']
             self.assertEqual(production['weeks_counted_once'], [2, 3, 4, 5])
+
+    def test_unpriced_target_is_missing_evidence_before_any_evaluation(self):
+        from dataclasses import replace
+        workspace = build_trade_workspace(self.data, 1)
+        workspace['pools'][2] = tuple(replace(a, trade_value=None) if a.asset_id == '2w' else a for a in workspace['pools'][2])
+        with patch('services.trade_intelligence.build_trade_workspace', return_value=workspace), \
+                patch('services.trade_intelligence.evaluate_trade_request', side_effect=AssertionError('unpriced target evaluated')):
+            result = self.search('trade_for', asset_id='2w')
+        self.assertEqual(result['result_state'], 'MISSING REQUIRED EVIDENCE')
+        self.assertEqual(result['search_evidence']['missing_asset_ids'], ['2w'])
+        self.assertEqual(result['search_evidence']['full_evaluations'], 0)
+
+    def test_adjustment_funnel_records_instruction_pruning_and_assessment_separately(self):
+        result = assist_trade_request(self.data, self.proposal(sent=['1q', '2028-R2-21'], instruction='make it cheaper'))
+        d = result['search_evidence']
+        self.assertGreater(d['constructions_generated'], d['evaluated'])
+        self.assertGreater(d['constructions_pruned'], 0)
+        self.assertEqual(d['evaluated'], sum(d[k] for k in ('hard_invalid', 'missing_evidence', 'counterparty_limited', 'strategically_rejected', 'filtered', 'eligible')))
