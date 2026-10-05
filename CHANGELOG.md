@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.21.7 - Trade Discovery + Repair Reliability
+
+- Expand bounded trade discovery when the first pass yields too few credible choices, with diverse recommendation families and session browsing.
+- Preserve exact Shop assets and Trade For targets while searching varied packages and precise repair constraints.
+- Preview alternatives before adoption; explain evaluated near misses, strategic costs and limited manager history.
+- Keep canonical Market prices, capital evidence, legal-lineup production and hard constraints separate.
+
 # v1.21.6 - Trade Center Capital + Strategy Reconciliation
 
 - Evaluate legal draft-capital trades under Win Now, Retool and Rebuild strategies.

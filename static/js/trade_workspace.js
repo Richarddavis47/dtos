@@ -29,7 +29,7 @@
   const flow = root.dataset.tradeWorkflow.replace('-', '_');
   let workspace, revision = 0, side = 'sent', busy = false, entryBlocked = false;
   let shopTarget = flow === 'shop' ? root.dataset.preloadAsset || null : null;
-  const excludedFamilies = new Set(); let displayedFamilies = [];
+  const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let searchExhausted = false; const protectedAssets = new Set(), excludedAssets = new Set();
   const selected = {sent: [], received: []}, filters = {sent: {q: '', pos: 'ALL'}, received: {q: '', pos: 'ALL'}};
   const team = id => workspace?.teams.find(t => t.roster_id === Number(id));
   const asset = id => workspace?.teams.flatMap(t => t.assets).find(a => a.asset_id === id);
@@ -38,7 +38,7 @@
   const storageKey = () => 'dtos-trade-workspace:' + workspace.workspace_context.binding;
   const node = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
   function message(text, error = false) { const box = el('trade-result'); box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
-  function payload() { return {workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], asset_id: flow === 'shop' ? shopTarget || selected.sent[0] : selected.received[0], workspace_context: workspace.workspace_context}; }
+  function payload() { return {workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...protectedAssets], excluded_assets: [...excludedAssets], asset_id: flow === 'shop' ? shopTarget || selected.sent[0] : selected.received[0], workspace_context: workspace.workspace_context}; }
   function persist() { try { sessionStorage.setItem(storageKey(), JSON.stringify({partner: partner(), selected, ownership: workspace.workspace_context.ownership_generation})); } catch (_) { /* Storage-disabled browsing still works in this page. */ } }
   function changed() { const focusId = document.activeElement?.dataset.assetId; revision++; el('trade-result').hidden = true; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
   function toggle(which, id) { if (busy) return; if (flow === 'shop' && which === 'sent' && id === shopTarget && selected.sent.includes(id)) return message('The shopped asset stays fixed. Choose Build My Own to leave this search.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); }
@@ -90,7 +90,7 @@
     el('trade-run').disabled = busy || !selected.sent.length || !selected.received.length;
     el('trade-find').disabled = busy || entryBlocked;
     el('trade-apply-adjust').disabled = busy;
-    if (el('recommendation-refresh')) el('recommendation-refresh').disabled = busy;
+    if (el('recommendation-refresh')) el('recommendation-refresh').disabled = busy || searchExhausted;
     root.setAttribute('aria-busy', String(busy));
   }
   function review() { el('trade-review').hidden = false; el('trade-board').hidden = true; el('trade-review').focus(); }
@@ -171,29 +171,66 @@
   }
   function focusResult() { el('trade-result').focus(); }
   function openOffer(row) { el('trade-partner').value = String(row.proposal.partner_roster_id); selected.sent = [...row.proposal.assets_sent]; selected.received = [...row.proposal.assets_received]; changed(); review(); showEvaluation(row.evaluation, row.opportunity); focusResult(); }
-  function offerCard(row) {
+  function previewOffer(row) {
+    const original = {sent: [...selected.sent], received: [...selected.received], partner: partner()};
+    const out = el('trade-result'); out.hidden = false; out.replaceChildren(node('h3', 'Alternative preview'));
+    const names = ids => ids.map(id => label(asset(id) || {label: id})).join(' + ') || 'None';
+    out.append(node('p', 'Original: ' + names(original.sent) + ' → ' + names(original.received)),
+      node('p', 'Alternative: ' + names(row.proposal.assets_sent) + ' → ' + names(row.proposal.assets_received)));
+    const cost = ids => ids.every(id => asset(id)?.trade_value != null) ? ids.reduce((sum, id) => sum + asset(id).trade_value, 0) : null;
+    const oldCost = cost(original.sent), newCost = cost(row.proposal.assets_sent);
+    if (original.sent.length && oldCost != null && newCost != null) out.append(node('p', 'Outgoing Market cost: ' + oldCost + ' → ' + newCost));
+    out.append(offerCard(row, true));
+    const adopt = node('button', 'Adopt alternative'); adopt.type = 'button'; adopt.onclick = () => openOffer(row);
+    const keep = node('button', 'Keep original'); keep.type = 'button'; keep.onclick = () => { if (lastOffers) offers(lastOffers); else message('Original proposal kept.'); };
+    out.append(adopt, keep); focusResult();
+  }
+  function offerCard(row, preview = false) {
     const card = node('article', null, 'tw-offer');
-    card.append(node('h3', row.evaluation?.recommendation || 'Recommendation unavailable'));
+    const e = row.evaluation || {};
+    card.append(node('h3', e.recommendation || 'Recommendation unavailable'));
     if (row.repair_type) card.append(node('p', row.repair_type));
-    const b = node('button', 'Open editable offer: ' + (row.proposal_presentation?.send || []).map(a => a.label).join(' + ') + ' → ' + (row.proposal_presentation?.receive || []).map(a => a.label).join(' + '));
-    b.type = 'button'; b.onclick = () => openOffer(row); card.append(b);
-    if (row.evaluation?.explanation_html) {
+    card.append(node('p', (row.proposal_presentation?.send || []).map(a => a.label).join(' + ') + ' → ' + (row.proposal_presentation?.receive || []).map(a => a.label).join(' + ')),
+      node('p', 'Why this helps me: ' + (e.why_you_would_do_it || e.dominant_reason || 'Review the supported evidence.')),
+      node('p', 'Major drawback: ' + (e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ') || e.major_limitations?.join('; ').replaceAll('_', ' ') || 'No material drawback identified in available evidence.')),
+      node('p', 'Counterparty: ' + (e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.')));
+    const intent = e.dimensions?.strategic_fit?.active?.manager_strategy?.strategy;
+    if (intent) card.append(node('p', 'Strategy: ' + intent));
+    const history = e.dimensions?.counterparty_plausibility?.manager_history?.disclosure;
+    if (history) card.append(node('small', history));
+    if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.onclick = () => previewOffer(row); card.append(b); }
+    if (e.explanation_html) {
       const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
-      const parsed = new DOMParser().parseFromString(row.evaluation.explanation_html, 'text/html');
+      const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html');
       detail.append(...parsed.body.childNodes); card.append(detail);
+    }
+    if (row.variants?.length && !preview) {
+      const detail = node('details'); detail.append(node('summary', 'Related package variants'));
+      for (const variant of row.variants) detail.append(offerCard(variant)); card.append(detail);
     }
     return card;
   }
+  function searchDetails(body, out) {
+    if (body.near_misses?.length) {
+      const detail = node('details'); detail.append(node('summary', 'Evaluated near misses'));
+      for (const row of body.near_misses) detail.append(node('p', (row.proposal_presentation?.send || []).map(a => a.label).join(' + ') + ' → ' + (row.proposal_presentation?.receive || []).map(a => a.label).join(' + ')),
+        node('p', row.blocker_type + ': ' + row.blockers.join(', ').replaceAll('_', ' ')), node('p', row.smallest_optional_relaxation));
+      out.append(detail);
+    }
+    if (body.search_evidence) { const detail = node('details'); detail.append(node('summary', 'Technical search details'), node('pre', JSON.stringify(body.search_evidence, null, 2))); out.append(detail); }
+  }
   function offers(body) {
+    lastOffers = body;
     if (flow === 'recommended' && body.workflow === 'recommended') {
       displayedFamilies = (body.results || []).map(row => row.family_id);
+      searchExhausted = body.has_more === false;
       const out = el('trade-result'); out.hidden = false; out.replaceChildren();
       if (!body.results?.length) out.append(node('p', body.quiet_state || 'No credible opportunity.'));
       for (const row of body.results || []) {
         out.append(offerCard(row));
       }
       for (const reason of body.discovery?.limitations || []) out.append(node('small', reason.replaceAll('_', ' ')));
-      for (const [reason, count] of Object.entries(body.search_evidence?.rejection_reason_counts || {})) out.append(node('small', reason.replaceAll('_', ' ') + ': ' + count + ' evaluated candidates'));
+      searchDetails(body, out);
       return;
     }
     if (flow === 'shop' && body.markets) {
@@ -205,12 +242,13 @@
           node('p', market.buyer_rationale?.explanation || 'Review the shared counterparty evidence.'));
         for (const row of market.returns) out.append(offerCard(row));
       }
-      if (!body.markets.length) for (const [reason, count] of Object.entries(body.search_evidence?.rejection_reason_counts || {})) out.append(node('small', reason.replaceAll('_', ' ') + ': ' + count + ' evaluated candidates'));
+      searchDetails(body, out);
       return;
     }
-    if (!body.results?.length) return message(body.quiet_state || 'No credible adjustment found. Your proposal is unchanged.');
+    if (!body.results?.length) { message(body.quiet_state || 'No credible adjustment found. Your proposal is unchanged.'); searchDetails(body, el('trade-result')); return; }
     const out = el('trade-result'); out.hidden = false; out.replaceChildren();
     for (const row of body.results) out.append(offerCard(row));
+    searchDetails(body, out);
   }
   async function run(path, extra = {}) {
     if (busy || !workspace) return;
@@ -218,15 +256,19 @@
     if (path === 'generate' && ((flow === 'shop' && !shopTarget && selected.sent.length !== 1) || (flow === 'trade_for' && selected.received.length !== 1))) return message('Choose one target asset for this search. Multi-asset proposals can still be evaluated directly.', true);
     if (path === 'generate' && flow === 'shop') {
       shopTarget = shopTarget || selected.sent[0];
-      extra = {...extra, partner_roster_id: 0, asset_id: shopTarget,
+      extra = {...extra, partner_roster_id: partner(), asset_id: shopTarget,
         shop_preference: el('shop-preference').value,
         shop_position: el('shop-preference').value === 'position_need' ? el('shop-position').value : null,
         protected_assets: Array.from(el('shop-protected').selectedOptions, option => option.value)};
     }
     if (path === 'generate' && flow === 'recommended') extra = {...extra, partner_roster_id: 0, asset_id: null,
       recommendation_filter: el('recommendation-filter').value, excluded_recommendation_families: [...excludedFamilies]};
-    if (path === 'assist') {
+    if (path === 'assist' || path === 'alternatives') {
       extra.origin_workflow = flow;
+      const instruction = (extra.instruction || '').toLowerCase();
+      const exact = extra.constraint_asset_id;
+      if (exact && /^(keep|protect|do not trade|don't trade)/.test(instruction)) protectedAssets.add(exact);
+      if (exact && /^(replace|exclude)/.test(instruction)) excludedAssets.add(exact);
       if (flow === 'shop') extra.origin_asset_id = shopTarget || selected.sent[0];
       const text = (extra.instruction || '').trim().toLowerCase();
       extra.repair_mode = text === 'alternative target' ? 'ALTERNATIVE_TARGET' : text === 'alternative construction' ? 'ALTERNATIVE_CONSTRUCTION' : 'MAKE_THIS_TRADE_WORK';
@@ -238,7 +280,8 @@
       if (started !== revision) return;
       if (path === 'assist') {
         const lostTarget = body.results?.some(row => selected.received.some(id => !row.proposal.assets_received.includes(id)));
-        const invalidPreservation = body.results?.length && extra.repair_mode !== 'ALTERNATIVE_TARGET' && (body.target_preserved !== true || lostTarget);
+        const youngerChange = (extra.instruction || '').toLowerCase().includes('younger') && !['shop', 'trade_for'].includes(flow);
+        const invalidPreservation = body.results?.length && !youngerChange && extra.repair_mode !== 'ALTERNATIVE_TARGET' && (body.target_preserved !== true || lostTarget);
         if (body.requested_mode !== extra.repair_mode || body.returned_modes?.some(mode => mode !== extra.repair_mode) || invalidPreservation) throw new Error('DTOS rejected a mismatched repair mode. Your proposal is unchanged.');
       }
       if (path === 'evaluate') { review(); showEvaluation(body.evaluation); } else offers(body);
@@ -255,22 +298,28 @@
     location.assign('/trades/create?front_office=' + active);
   };
   el('trade-adjust').onclick = () => { el('trade-assist').hidden = false; el('trade-instruction').focus(); };
-  el('trade-apply-adjust').onclick = () => run('assist', {instruction: el('trade-instruction').value || 'make this trade work'});
-  root.querySelectorAll('[data-adjust]').forEach(b => b.onclick = () => { el('trade-instruction').value = b.dataset.adjust; });
+  el('trade-apply-adjust').onclick = () => run('assist', {instruction: el('trade-instruction').value || 'make this trade work', constraint_asset_id: el('trade-constraint-asset').value || null});
+  el('trade-alternatives').onclick = () => run('alternatives');
+  root.querySelectorAll('[data-adjust]').forEach(b => b.onclick = () => {
+    const exact = asset(el('trade-constraint-asset').value), instruction = b.dataset.adjust;
+    if ((instruction.includes('this pick') && exact?.kind !== 'pick') || (instruction.includes('this player') && exact?.kind !== 'player') || (instruction.includes('this asset') && !exact)) return message('Choose the specific owned player or pick first.', true);
+    el('trade-instruction').value = instruction;
+  });
   root.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { side = b.dataset.side; root.querySelectorAll('[data-side]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); paint(); });
   el('trade-partner').onchange = () => { selected.received = []; changed(); };
-  el('trade-strategy').onchange = () => { revision++; excludedFamilies.clear(); el('trade-result').hidden = true; };
+  el('trade-strategy').onchange = () => { revision++; excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; };
   matchMedia('(max-width:760px)').addEventListener('change', () => { if (workspace) paint(); });
   fetch('/api/trades/workspace?front_office=' + active, {credentials: 'same-origin'}).then(async response => { if (!response.ok) throw new Error('Unable to load this authorized workspace.'); return response.json(); }).then(data => {
     workspace = data;
+    for (const a of team(active)?.assets || []) { const option = node('option', label(a) + (a.kind === 'pick' ? ' · Original franchise ' + a.original_roster_id + ' · ' + a.asset_id : '')); option.value = a.asset_id; el('trade-constraint-asset').append(option); }
     if (flow === 'recommended') {
       el('trade-find').textContent = 'Discover Recommended Trades';
       el('recommendation-refresh').onclick = () => {
         if (busy) return;
-        for (const family of displayedFamilies) if (excludedFamilies.size < 64) excludedFamilies.add(family);
+        for (const family of displayedFamilies) if (excludedFamilies.size < 256) excludedFamilies.add(family);
         run('generate');
       };
-      el('recommendation-filter').onchange = () => { revision++; el('trade-result').hidden = true; };
+      el('recommendation-filter').onchange = () => { excludedFamilies.clear(); searchExhausted = false; revision++; el('trade-result').hidden = true; };
     }
     if (flow === 'shop') {
       for (const a of team(active)?.assets || []) { const option = node('option', label(a)); option.value = a.asset_id; el('shop-protected').append(option); }

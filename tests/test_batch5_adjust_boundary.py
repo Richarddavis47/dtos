@@ -21,12 +21,14 @@ class AdjustBoundaryTests(unittest.TestCase):
                     'values': {'ratio': 1}, 'provenance': {'evaluation_id': '|'.join(candidate['assets_sent'] + candidate['assets_received'])}}}
         with patch('services.trade_intelligence.evaluate_trade_request', side_effect=assessed):
             kept = assist_trade_request(data, dict(payload, protected_assets=['1-QB-0']))
-            self.assertEqual(kept['count'], 1)
+            self.assertGreater(kept['count'], 0)
+            self.assertLessEqual(kept['count'], 3)
             self.assertNotIn('1-QB-0', kept['results'][0]['proposal']['assets_sent'])
             self.assertTrue(kept['target_preserved'])
             self.assertTrue(all(reader is readers[0] for reader in readers))
             added = assist_trade_request(data, dict(payload, instruction='get another player back'))
-            self.assertEqual(added['count'], 1)
+            self.assertGreater(added['count'], 0)
+            self.assertLessEqual(added['count'], 3)
             self.assertGreater(len(added['results'][0]['proposal']['assets_received']), 1)
             self.assertTrue(added['target_preserved'])
         self.assertEqual(data, before)

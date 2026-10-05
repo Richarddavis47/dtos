@@ -54,15 +54,30 @@ def plausibility(strategy, package, market_return, historical):
     capital_fit = strategy.get('capital_strategy_fit')
     material_gain = strategy['production_evidence']['material_gain']
     material_loss = strategy['production_evidence']['material_loss']
-    if capital_fit:
+    ratio = strategy.get('market_return_ratio')
+    if ratio is not None and ratio < .50:
+        state, reasons = 'LOW', ['COUNTERPARTY_SEVERE_MARKET_LOSS']
+    elif capital_fit:
         recommendation = capital_fit['recommendation']
         state = ('PLAUSIBLE' if recommendation in ('SMASH ACCEPT', 'WORTH PURSUING', 'FAIR / OPTIONAL')
                  else 'LOW' if recommendation else 'INSUFFICIENT EVIDENCE')
         reasons = [capital_fit['reason_code']]
         if recommendation == 'FAIR / OPTIONAL' and capital_fit['reason_code'] == 'CAPITAL_AND_LINEUP_PARITY':
             state, reasons = 'INSUFFICIENT EVIDENCE', ['COUNTERPARTY_TRADEOFF_UNRESOLVED']
-    elif strategy.get('market_return_ratio') is not None and strategy['market_return_ratio'] < .50:
-        state, reasons = 'LOW', ['COUNTERPARTY_SEVERE_MARKET_LOSS']
+        # A manager's unobserved intent is not required to establish a concrete
+        # production benefit at bounded Market cost. Do not invent that intent.
+        capital = strategy['future_capital'].get('assessment') or {}
+        if (recommendation is None and capital.get('availability') == 'supported' and strategy['projection_coverage_complete']
+                and strategy['manager_strategy']['strategy'] is None and material_gain
+                and package['assessment'] != 'POOR' and not material_loss and not losses and ratio is not None and ratio >= .80):
+            state, reasons = 'PLAUSIBLE', ['COUNTERPARTY_SUPPORTED_PRODUCTION_TRADEOFF',
+                                          'COUNTERPARTY_STRATEGY_UNCONFIRMED']
+        elif (recommendation is None and capital.get('availability') == 'supported'
+                and strategy['projection_coverage_complete'] and strategy['manager_strategy']['strategy'] is None
+                and package['assessment'] != 'POOR' and capital.get('meaningful_gain')
+                and ratio is not None and ratio >= .85):
+            state, reasons = 'PLAUSIBLE', ['COUNTERPARTY_SUPPORTED_CAPITAL_TRADEOFF',
+                                          'COUNTERPARTY_STRATEGY_UNCONFIRMED']
     elif material_loss and gains:
         state, reasons = 'LOW', ['COUNTERPARTY_MATERIAL_PRODUCTION_LOSS']
     elif package['assessment'] == 'POOR':
@@ -73,7 +88,10 @@ def plausibility(strategy, package, market_return, historical):
         state, reasons = 'LOW', ['COUNTERPARTY_LINEUP_LOSS_WITHOUT_SUPPORTED_COMPENSATION']
     elif material_gain and not losses and market_return is not None and market_return >= 0 and strategy['projection_coverage_complete'] and not any(d < 0 for d in strategy['reserve_slot_changes'].values()):
         state, reasons = 'STRONG', ['COUNTERPARTY_LINEUP_AND_MARKET_GAIN']
-    elif (material_gain and not losses) or (market_return is not None and market_return > 0 and not losses):
+    elif (strategy['projection_coverage_complete'] and not losses and market_return is not None and market_return >= 0
+          and any(d >= 1 for d in strategy['reserve_slot_changes'].values())):
+        state, reasons = 'PLAUSIBLE', ['COUNTERPARTY_SUPPORTED_DEPTH_GAIN']
+    elif (material_gain and not material_loss) or (market_return is not None and market_return > 0 and not losses):
         state, reasons = 'PLAUSIBLE', ['SUPPORTED_COUNTERPARTY_BENEFIT']
     else:
         state, reasons = 'INSUFFICIENT EVIDENCE', ['COUNTERPARTY_TRADEOFF_UNRESOLVED']
@@ -84,8 +102,34 @@ def plausibility(strategy, package, market_return, historical):
             'reason_codes': reasons, 'historical_context': historical,
             'history_role': 'supporting context only; never a deterministic veto',
             'acceptance_probability': None,
-            'explanation': (capital_fit['explanation'] if capital_fit else 'Supported counterparty effects; not a prediction of manager behavior.'),
+            'explanation': ('Material legal-lineup production is gained at bounded Market cost; capital spent remains a cost and manager strategy is unconfirmed.'
+                            if 'COUNTERPARTY_SUPPORTED_PRODUCTION_TRADEOFF' in reasons else
+                            'Meaningful priced future capital is gained at broadly balanced Market terms; current production and reserve costs remain disclosed, and manager strategy is unconfirmed.'
+                            if 'COUNTERPARTY_SUPPORTED_CAPITAL_TRADEOFF' in reasons else
+                            capital_fit['explanation'] if capital_fit else 'Supported roster coverage improves without a current-production loss; Market and capacity costs remain separate. This is not an acceptance prediction.'
+                            if 'COUNTERPARTY_SUPPORTED_DEPTH_GAIN' in reasons else
+                            'Supported counterparty effects; not a prediction of manager behavior.'),
+            'manager_history': {'availability': 'supported' if historical and historical.get('evidence_references') else 'limited',
+                                'disclosure': None if historical and historical.get('evidence_references') else 'Limited manager-history evidence'},
             'manager_strategy': strategy.get('manager_strategy')}
+
+
+def disclosed_costs(strategy, market_return):
+    costs = []
+    production = strategy['production_evidence']
+    mean = production['mean_weekly_delta']
+    if mean is not None and mean < 0:
+        costs.append(f'Optimal legal-lineup production falls {abs(mean):.2f} points per supported week')
+    net = (strategy['future_capital'].get('assessment') or {}).get('net_market_value')
+    if net is not None and net < 0:
+        costs.append(f'Spends {abs(net):.0f} Market units of future capital')
+    if market_return is not None and market_return < 0:
+        costs.append(f'Market overpay of {abs(market_return):.0f} units')
+    if any(d < 0 for d in strategy['reserve_slot_changes'].values()):
+        costs.append('Reserve coverage declines in supported weeks')
+    if (strategy.get('roster_capacity') or {}).get('additional_spots_to_resolve'):
+        costs.append('Roster capacity requires resolution')
+    return costs
 
 
 def reconcile_result(result, proposal, impact, historical=None, *, team_windows=None, manager_strategies=None):
@@ -154,6 +198,17 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
             trace.append('PURSUIT_ONLY_MARKET_TERMS_UNRESOLVED')
         elif difference < 0:
             trace.append('MARKET_PREMIUM_FOR_SUPPORTED_LINEUP_BENEFIT')
+    elif (complete and not losses and market['availability'] == 'full' and packages['active']['assessment'] != 'POOR'
+          and active['production_evidence']['material_gain']
+          and active.get('market_return_ratio') is not None
+          and active['market_return_ratio'] >= (.65 if active['manager_strategy']['strategy'] == 'WIN NOW' else .85)):
+        recommendation = 'WORTH PURSUING'
+        trace.append('MATERIAL_PRODUCTION_GAIN_WITH_DISCLOSED_ROSTER_COST')
+    elif (complete and not losses and depth_gain and market['availability'] == 'full'
+          and packages['active']['assessment'] != 'POOR' and active.get('market_return_ratio') is not None
+          and active['market_return_ratio'] >= .85):
+        recommendation = 'FAIR / OPTIONAL'
+        trace.append('SUPPORTED_DEPTH_GAIN_WITH_DISCLOSED_MARKET_COST')
     elif (complete and not gains and not losses and not depth_gain and not depth_loss
           and difference == 0 and packages['active']['assessment'] != 'POOR'):
         recommendation = 'FAIR / OPTIONAL'
@@ -228,8 +283,17 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
         package_quality=packages, counterparty_plausibility=plausible,
         best_for=best_for,
         confidence=confidence_profile)
-    result['why_you_would_do_it'] = (active.get('capital_strategy_fit') or {}).get('explanation', 'Review supported user-side effects and explicit limitations.')
+    mean = active['production_evidence']['mean_weekly_delta']
+    help_text = (f'Optimal legal-lineup production improves {mean:.2f} points per supported week.' if mean is not None and mean > 0
+                 else 'Supported reserve coverage improves while current production is preserved.' if depth_gain and not losses
+                 else 'Review the separate supported Market, lineup and roster effects.')
+    result['why_you_would_do_it'] = (active.get('capital_strategy_fit') or {}).get('explanation', help_text)
+    result['major_drawback'] = '; '.join(disclosed_costs(active, difference)) or 'No material downside identified in supported evidence; projections remain conditional.'
+    partner_costs = disclosed_costs(strategies['partner'], -difference if difference is not None else None)
     result['why_they_would_do_it'] = plausible['explanation']
+    result['counterparty_summary'] = plausible['explanation'] + (' Costs: ' + '; '.join(partner_costs) + '.' if partner_costs else '')
+    if plausible['manager_history']['disclosure']:
+        result['counterparty_summary'] += ' ' + plausible['manager_history']['disclosure'] + '.'
     result['perspectives'] = {'for_your_team': recommendation or 'UNAVAILABLE', 'bilateral_reality': plausible['assessment']}
-    result.setdefault('provenance', {})['strategy_methodology'] = 'scoped-trade-effects-v3-capital'
+    result.setdefault('provenance', {})['strategy_methodology'] = 'scoped-trade-effects-v4-discovery'
     return result

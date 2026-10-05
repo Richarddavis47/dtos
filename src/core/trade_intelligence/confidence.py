@@ -20,7 +20,9 @@ def evidence_confidence(market, strategies, historical, proposal, impact):
              for a in (*proposal.assets_sent, *proposal.assets_received) if a.kind == 'pick']
     complete = all(s['projection_coverage_complete'] for s in strategies.values())
     return {
-        'assessment': 'MEDIUM' if market['availability'] == 'full' and complete else 'LIMITED',
+        'assessment': ('HIGH' if historical and historical.get('evidence_references') else 'MEDIUM')
+        if market['availability'] == 'full' and complete else 'LIMITED',
+        'manager_history_disclosure': None if historical and historical.get('evidence_references') else 'Limited manager-history evidence',
         'explanation': 'Support for bounded Market/lineup conclusions; not acceptance probability or outcome certainty.',
         'dimensions': {
             'market': {'availability': market['availability'],

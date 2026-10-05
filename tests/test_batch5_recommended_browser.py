@@ -45,6 +45,7 @@ class RecommendedHandoffTests(unittest.TestCase):
                     page.goto('https://dtos.test/trades/recommended')
                     page.get_by_role('button', name='Discover Recommended Trades').click()
                     page.get_by_role('button', name='Open editable offer:', exact=False).click()
+                    page.get_by_role('button', name='Adopt alternative', exact=True).click()
                     self.assertEqual(searches[-1]['partner_roster_id'], 0)
                     self.assertIsNone(searches[-1]['asset_id'])
                     page.get_by_text('No supported current catalyst is available.', exact=True).wait_for()

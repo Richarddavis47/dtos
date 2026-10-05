@@ -46,6 +46,7 @@ class ShopHandoffTests(unittest.TestCase):
                     page.locator('#shop-position').select_option('WR')
                     page.locator('#trade-find').click()
                     page.get_by_role('button', name='Open editable offer:', exact=False).click()
+                    page.get_by_role('button', name='Adopt alternative', exact=True).click()
                     self.assertEqual(searches[0]['shop_position'], 'WR')
                     self.assertEqual(searches[0]['partner_roster_id'], 0)
                     self.assertEqual(searches[0]['asset_id'], '1-QB-0')
