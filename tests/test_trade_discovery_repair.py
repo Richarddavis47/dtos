@@ -248,3 +248,18 @@ class DiscoveryRepairTests(unittest.TestCase):
         self.assertGreater(d['constructions_generated'], d['evaluated'])
         self.assertGreater(d['constructions_pruned'], 0)
         self.assertEqual(d['evaluated'], sum(d[k] for k in ('hard_invalid', 'missing_evidence', 'counterparty_limited', 'strategically_rejected', 'filtered', 'eligible')))
+
+    def test_proposal_locks_remain_hard_independent_of_strategy(self):
+        from services.trade_intelligence import TradeInputError
+        for strategy in ('WIN NOW', 'RETOOL', 'REBUILD'):
+            with self.subTest(strategy=strategy), self.assertRaises(TradeInputError) as error:
+                evaluate_trade_request(self.data, self.proposal(strategy=strategy, protected_assets=['1q']),
+                                       projection_reader=self.fixture.reader)
+            self.assertEqual(error.exception.assets, ('1q',))
+
+    def test_positive_average_does_not_hide_a_supported_horizon_cost(self):
+        from src.core.trade_intelligence.strategy_dimensions import disclosed_costs
+        strategy = {'production_evidence': {'mean_weekly_delta': 2},
+            'horizons': {'current_week': {'delta': -3}, 'next_n': {'delta': 6}},
+            'future_capital': {}, 'reserve_slot_changes': {}}
+        self.assertIn('Supported production declines in current week', disclosed_costs(strategy, 0))

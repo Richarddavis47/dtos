@@ -122,6 +122,9 @@ def disclosed_costs(strategy, market_return):
     mean = production['mean_weekly_delta']
     if mean is not None and mean < 0:
         costs.append(f'Optimal legal-lineup production falls {abs(mean):.2f} points per supported week')
+    losing_horizons = [name.replace('_', ' ') for name, h in strategy['horizons'].items() if h.get('delta') is not None and h['delta'] < 0]
+    if losing_horizons and (mean is None or mean >= 0):
+        costs.append('Supported production declines in ' + ', '.join(losing_horizons))
     net = (strategy['future_capital'].get('assessment') or {}).get('net_market_value')
     if net is not None and net < 0:
         costs.append(f'Spends {abs(net):.0f} Market units of future capital')

@@ -300,6 +300,13 @@
   el('trade-adjust').onclick = () => { el('trade-assist').hidden = false; el('trade-instruction').focus(); };
   el('trade-apply-adjust').onclick = () => run('assist', {instruction: el('trade-instruction').value || 'make this trade work', constraint_asset_id: el('trade-constraint-asset').value || null});
   el('trade-alternatives').onclick = () => run('alternatives');
+  el('trade-release-lock').onclick = () => {
+    if (busy) return;
+    const exact = el('trade-constraint-asset').value;
+    if (!exact) return message('Choose the exact adjustment lock to remove.', true);
+    protectedAssets.delete(exact); excludedAssets.delete(exact); revision++;
+    message('Adjustment lock removed for ' + label(asset(exact)) + '. Original proposal kept.');
+  };
   root.querySelectorAll('[data-adjust]').forEach(b => b.onclick = () => {
     const exact = asset(el('trade-constraint-asset').value), instruction = b.dataset.adjust;
     if ((instruction.includes('this pick') && exact?.kind !== 'pick') || (instruction.includes('this player') && exact?.kind !== 'player') || (instruction.includes('this asset') && !exact)) return message('Choose the specific owned player or pick first.', true);

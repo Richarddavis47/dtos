@@ -72,7 +72,9 @@ diverse first/next pages, fewer than five, Shop player/pick across all teams and
 optional partner, actual Trade For owner and varied shapes, cheaper preview,
 protected player and one exact pick with other picks usable, younger return,
 missing history, bad counterparty, unsupported goal, actual near miss and
-impossible locks. Further tests cover progressive expansion, unknown direction,
+impossible locks. Further tests cover progressive expansion, unknown direction, hard proposal locks,
+accurate instruction-pruning diagnostics, explicit unpriced targets, disclosed
+individual-horizon losses despite a positive mean,
 exact acquired-pick fields and unique supported weeks. Existing capital fixtures
 retain all six package families, three strategies, five labels, materiality and
 missing-evidence semantics.

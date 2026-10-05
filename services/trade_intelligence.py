@@ -201,6 +201,10 @@ def evaluate_trade_request(
     if payload.get('strategy') is not None:
         _requested_strategy({}, payload)
     validate_trade_ownership(workspace, payload)
+    locked = set(payload.get('protected_assets') or ()) & set(payload['assets_sent'])
+    locked |= set(payload.get('excluded_assets') or ()) & set((*payload['assets_sent'], *payload['assets_received']))
+    if locked:
+        raise TradeInputError('legality_rejected', 'The proposal violates an exact protected or excluded asset constraint.', tuple(sorted(locked)))
     teams = {int(team.get("roster_id") or 0): team for team in workspace["teams"]}
     if active_id not in teams or partner_id not in teams or active_id == partner_id:
         raise ValueError("A valid bilateral pair of distinct teams is required.")
@@ -500,7 +504,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     enriched['addition_kind'] = 'pick' if add_pick else None
     original_started = perf_counter()
     assess_original = win_now or requested_mode is RepairMode.ALTERNATIVE_TARGET
-    original_result = evaluate_trade_request(data, dict(payload, workflow='adjust'), workspace=workspace,
+    original_result = evaluate_trade_request(data, dict(payload, workflow='adjust', protected_assets=[], excluded_assets=[]), workspace=workspace,
                                             evidence_context=evidence_context, projection_reader=reader) if assess_original else None
     evaluation_count = 1 if assess_original else 0
     evaluation_seconds = perf_counter() - original_started if assess_original else 0.0
