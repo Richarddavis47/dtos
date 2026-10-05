@@ -60,6 +60,19 @@ with visibility of its own process/socket inventory. Use disposable local cache
 and storage paths for smoke tests; preserve any explicitly supplied environment
 overrides. Never aim these checks at a production origin.
 
+For the Linux 2 GiB lifecycle scenarios, use the generator commands, archive
+flags and limits in `.github/workflows/linux-market-lifecycle.yml`, with
+disk-backed fixture/output directories under `.validation/`, as CI does. Check
+the backing filesystem with `stat -f -c %T .validation` after creating the
+directory. On the managed Cloud worker, `/workspace` is disk-backed and `/tmp`
+is tmpfs. A tmpfs fixture charges database and WAL bytes to the container as
+nonreclaimable file memory; this changes the archive/page-cache workload and can
+kill fixture generation before the application starts. It can also force repeated
+Market memory-admission deferrals. Use disposable disk-backed directories for
+these production-shaped fixtures and run scenarios independently, matching the
+CI matrix. Keep the complete fixture scale, 2 GiB memory/swap limits, two CPUs,
+one-semantic-child assertion, zero-OOM checks and cleanup requirements unchanged.
+
 The 2026-10-01 verification used a separate source checkout and a newly created
 virtual environment on the saved Cloud worker (not a newly provisioned Cloud
 image). Setup and dependency integrity passed with Python 3.12.14; GitHub and

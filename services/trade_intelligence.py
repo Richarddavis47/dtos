@@ -64,6 +64,20 @@ def validate_trade_ownership(workspace: dict, payload: dict) -> None:
     if wrong:
         names = ", ".join(assets[i].label for i in wrong)
         raise TradeInputError("ownership_changed", f"Trade needs refreshing: {names} no longer belongs to the selected sending franchise.", wrong)
+    from src.core.intelligence import trade_pick_identity_errors
+    invalid_picks = tuple(i for i in (*sent, *received) if trade_pick_identity_errors(assets[i]))
+    if invalid_picks:
+        raise TradeInputError('pick_identity_invalid', 'The exact pick identity or current owner is inconsistent. Refresh the workspace.', invalid_picks)
+
+
+def _requested_strategy(workspace, payload):
+    """Request-local manager intent; search preferences do not change judgment."""
+    from src.core.intelligence import resolve_trade_strategy
+    explicit = payload.get('strategy')
+    if explicit is not None and resolve_trade_strategy(explicit)['strategy'] is None:
+        raise TradeInputError('invalid_strategy', 'Choose WIN NOW, RETOOL or REBUILD.')
+    if explicit is not None:
+        workspace['requested_strategy'] = explicit
 
 
 @dataclass(frozen=True)
@@ -184,6 +198,8 @@ def evaluate_trade_request(
     active_id = int(payload.get("active_roster_id") or 0)
     partner_id = int(payload.get("partner_roster_id") or 0)
     workspace = workspace or build_trade_workspace(data, active_id)
+    if payload.get('strategy') is not None:
+        _requested_strategy({}, payload)
     validate_trade_ownership(workspace, payload)
     teams = {int(team.get("roster_id") or 0): team for team in workspace["teams"]}
     if active_id not in teams or partner_id not in teams or active_id == partner_id:
@@ -217,6 +233,8 @@ def evaluate_trade_request(
             player_database=data.get("players") or {}, ownership=ownership,
             horizon_impact=horizon_impact,
             team_windows=workspace.get('competitive_windows'),
+            manager_strategies={str(active_id): payload.get('strategy') or workspace.get('requested_strategy') or teams[active_id].get('strategy'),
+                                str(partner_id): teams[partner_id].get('strategy')},
             evidence_context=evidence_context or build_trade_evidence_context(
                 data, (assets[item] for item in (*sent_ids, *received_ids)),
             ),
@@ -248,6 +266,9 @@ def evaluate_trade_request(
             "asset_id": item.asset_id, "label": item.label, "kind": item.kind,
             "position": item.position, "positional_rank": item.positional_rank,
             "market_value": item.trade_value, "projected_range": item.projected_range,
+            "year": item.season, "round": item.round,
+            "original_franchise": item.original_roster_id, "current_owner": item.current_owner_id,
+            "exact_slot": item.exact_slot,
             "range_confidence": item.projected_range_confidence,
             "headshot_url": (
                 f"https://sleepercdn.com/content/nfl/players/{player_id}.jpg"
@@ -369,6 +390,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     reader = _SearchProjectionReader(_trade_projection_service(data))
     active_id = int(payload.get("active_roster_id") or 0)
     workspace = build_trade_workspace(data, active_id)
+    _requested_strategy(workspace, payload)
     validate_trade_ownership(workspace, payload)
     evidence_context = build_trade_evidence_context(
         data, (asset for pool in workspace["pools"].values() for asset in pool),
@@ -624,6 +646,7 @@ def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> 
     reader = _SearchProjectionReader(_trade_projection_service(data))
     active_id = int(payload.get("active_roster_id") or 0)
     workspace = build_trade_workspace(data, active_id)
+    _requested_strategy(workspace, payload)
     evidence_context = build_trade_evidence_context(
         data, (asset for pool in workspace["pools"].values() for asset in pool),
     )
@@ -789,6 +812,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
     boundary = _trade_search_boundary(data) if targeted_search else None
     projection_reader = _SearchProjectionReader(_trade_projection_service(data)) if targeted_search else None
     workspace = build_trade_workspace(data, active_id)
+    _requested_strategy(workspace, payload)
     teams = {int(team.get("roster_id") or 0): team for team in workspace["teams"]}
     ownership = {asset.asset_id: roster_id for roster_id, pool in workspace["pools"].items() for asset in pool}
     if target and target not in ownership:
@@ -975,6 +999,7 @@ def _generate_recommended(data, payload):
     boundary = _trade_search_boundary(data)
     reader = _SearchProjectionReader(_trade_projection_service(data))
     workspace = build_trade_workspace(data, int(payload.get('active_roster_id') or 0))
+    _requested_strategy(workspace, payload)
     assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
     discovery = discover(data, workspace, reader, protected, excluded, excluded_families=excluded_families)
     evidence_context = build_trade_evidence_context(data, assets.values())

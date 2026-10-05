@@ -144,12 +144,16 @@ def evaluate_bilateral(
     evidence_context: TradeEvidenceContext | None = None,
     horizon_impact: dict[str, Any] | None = None,
     team_windows: dict[str, Any] | None = None,
+    manager_strategies: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Evaluate one exact construction; workflow does not influence analytical truth."""
     ownership = ownership or {}
     errors = []
     all_assets = (*proposal.assets_sent, *proposal.assets_received)
     ids = [asset.asset_id for asset in all_assets]
+    from src.core.trade_intelligence.capital_assessment import pick_identity_errors
+    for asset in all_assets:
+        errors.extend(pick_identity_errors(asset))
     if len(ids) != len(set(ids)):
         errors.append("duplicate_asset")
     for asset in proposal.assets_sent:
@@ -209,7 +213,10 @@ def evaluate_bilateral(
                 'profile_rebuilds': 0, 'trend_rebuilds': 0,
             },
         }
-        result = reconcile_result(result, proposal, horizon_impact, historical, team_windows=team_windows)
+        result = reconcile_result(result, proposal, horizon_impact, historical, team_windows=team_windows,
+                                  manager_strategies=manager_strategies or {
+                                      str(proposal.active_roster_id): active_team.get('strategy'),
+                                      str(proposal.partner_roster_id): partner_team.get('strategy')})
         result['dimensions']['package_evidence'] = result['dimensions']['package_quality']
         return result
     if market['availability'] != 'full':

@@ -1,4 +1,16 @@
-# DTOS v1.21.5 - Private Operations Inspection
+# DTOS v1.21.6 - Trade Center Capital + Strategy Reconciliation
+
+Trade Center now evaluates legal trades involving draft capital under Win Now,
+Retool and Rebuild strategies. Recommendations distinguish Market value,
+legal-lineup production, future capital, strategy fit and the other manager's
+benefit, with strategic costs explained rather than hidden.
+
+Exact pick identity and missing-evidence states remain explicit. Strategy never
+changes Market prices, and picks receive no fabricated weekly projections.
+The shared evaluation applies to Create Trade, recommendations, shopping,
+Trade For, adjustments and alternatives.
+
+## Previous release: DTOS v1.21.5 - Private Operations Inspection
 
 Authorized operators can retrieve predefined, bounded operational evidence over
 HTTPS using the existing inspection credential. Diagnostics preserve stored data

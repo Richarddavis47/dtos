@@ -161,6 +161,7 @@ class TradeStrategyTests(unittest.TestCase):
         result = {'legal': True, 'market_evidence': market_balance(proposal.assets_sent, proposal.assets_received), 'dimensions': {}}
         impact = {'sides': {'active': side(1, -10), 'partner': side(2, 10)}}
         report = reconcile_result(result, proposal, impact)
-        self.assertIsNone(report['recommendation'])
-        self.assertIn('LONG_TERM_COMPENSATION_UNESTABLISHED', report['reason_codes'])
+        self.assertEqual(report['recommendation'], 'REJECT')
+        self.assertIn('SEVERE_MARKET_LOSS', report['reason_codes'])
+        self.assertIsNone(report['dimensions']['strategic_fit']['active']['future_capital']['utility_delta'])
         self.assertEqual(report['dimensions']['strategic_fit']['active']['future_capital']['received'][0]['canonical_owner'], 2)

@@ -38,7 +38,7 @@
   const storageKey = () => 'dtos-trade-workspace:' + workspace.workspace_context.binding;
   const node = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
   function message(text, error = false) { const box = el('trade-result'); box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
-  function payload() { return {workflow: flow, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], asset_id: flow === 'shop' ? shopTarget || selected.sent[0] : selected.received[0], workspace_context: workspace.workspace_context}; }
+  function payload() { return {workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], asset_id: flow === 'shop' ? shopTarget || selected.sent[0] : selected.received[0], workspace_context: workspace.workspace_context}; }
   function persist() { try { sessionStorage.setItem(storageKey(), JSON.stringify({partner: partner(), selected, ownership: workspace.workspace_context.ownership_generation})); } catch (_) { /* Storage-disabled browsing still works in this page. */ } }
   function changed() { const focusId = document.activeElement?.dataset.assetId; revision++; el('trade-result').hidden = true; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
   function toggle(which, id) { if (busy) return; if (flow === 'shop' && which === 'sent' && id === shopTarget && selected.sent.includes(id)) return message('The shopped asset stays fixed. Choose Build My Own to leave this search.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); }
@@ -259,6 +259,7 @@
   root.querySelectorAll('[data-adjust]').forEach(b => b.onclick = () => { el('trade-instruction').value = b.dataset.adjust; });
   root.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { side = b.dataset.side; root.querySelectorAll('[data-side]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); paint(); });
   el('trade-partner').onchange = () => { selected.received = []; changed(); };
+  el('trade-strategy').onchange = () => { revision++; excludedFamilies.clear(); el('trade-result').hidden = true; };
   matchMedia('(max-width:760px)').addEventListener('change', () => { if (workspace) paint(); });
   fetch('/api/trades/workspace?front_office=' + active, {credentials: 'same-origin'}).then(async response => { if (!response.ok) throw new Error('Unable to load this authorized workspace.'); return response.json(); }).then(data => {
     workspace = data;

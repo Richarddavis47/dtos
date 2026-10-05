@@ -95,7 +95,7 @@ def evaluate_horizon_impact(data, proposal, service):
         }
         for horizon in sides[label]['horizons'].values():
             comparable = {week: sides[label]['weekly'][week]['delta']
-                          for week in horizon['weeks_requested']
+                          for week in horizon['weeks_requested'] or []
                           if week in sides[label]['weekly'] and sides[label]['weekly'][week]['delta'] is not None}
             horizon['comparable_weeks'] = list(comparable)
             horizon['supported_week_delta_subtotal'] = (

@@ -82,6 +82,18 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
         if quality.get('explanation'):
             advanced.append(Statement('PACKAGE_QUALITY', quality['explanation'], (key,)))
         strategy = (dims.get('strategic_fit') or {}).get(side) or {}
+        fit = strategy.get('capital_strategy_fit') or {}
+        if fit.get('explanation'):
+            key = add(f'{side}.strategy_fit', f'{label} strategy and capital assessment', fit['explanation'], kind=K.INTERPRETATION)
+            statement = Statement('CAPITAL_STRATEGY_FIT', f'{label}: {fit["explanation"]}', (key,))
+            if side == 'active':
+                why.insert(0, statement)
+            else:
+                advanced.append(statement)
+        capital = (strategy.get('future_capital') or {}).get('assessment') or {}
+        for field, title in (('received_market_value', 'Capital received'), ('sent_market_value', 'Capital spent'), ('net_market_value', 'Net capital')):
+            if capital:
+                add(f'{side}.capital.{field}', f'{label} · {title}', capital.get(field), unit='canonical Market price')
         for horizon, title in HORIZONS.items():
             row = (strategy.get('horizons') or {}).get(horizon) or {}
             key = add(f'{side}.{horizon}', f'{label} · {title} optimal-lineup change', row.get('delta'), unit='fantasy points')
@@ -131,6 +143,8 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
     if partner_reasons:
         advanced.extend(partner_reasons)
         why = why[:2] + [Statement('COUNTERPARTY_RATIONALE', 'Why they may consider it: ' + partner_reasons[0].text, (key,))]
+    elif partner.get('explanation'):
+        why = why[:2] + [Statement('COUNTERPARTY_RATIONALE', 'Why they may consider it: ' + partner['explanation'], (key,))]
     if partner.get('explanation'):
         advanced.append(Statement('COUNTERPARTY_CONTEXT', partner['explanation'], (key,)))
     confidence = dims.get('confidence') or {}

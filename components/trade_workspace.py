@@ -27,6 +27,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <section class="card ti-hero"><div><div class="identity-kicker">Trade Center · {escape(title)}</div><h2>{escape(title)}</h2><p>Choose a partner. Build your proposal. Review the intelligence.</p></div><a class="ti-action" href="/trades?front_office={active}">All Trade Workflows</a></section>
 <section id="trade-builder" class="card tw-workspace" data-trade-workflow="{workflow}" data-front-office="{active}" data-league="{escape(league, quote=True)}" data-preload-asset="{escape(str(asset_id or ''), quote=True)}" data-owner-roster="{int(owner_roster_id or 0)}">
 <label for="trade-partner">Counterparty</label><select id="trade-partner"><option value="">Choose a trade partner</option></select>
+<label for="trade-strategy">Your strategy</label><select id="trade-strategy"><option value="">Use supported competitive window</option><option value="WIN NOW">WIN NOW</option><option value="RETOOL">RETOOL</option><option value="REBUILD">REBUILD</option></select>
 <p id="trade-context" class="muted">Loading current league assets…</p>
 <section id="trade-target" class="tw-target" hidden aria-label="Selected trade target"></section>
 {shop_controls}

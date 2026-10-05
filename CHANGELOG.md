@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.21.6 - Trade Center Capital + Strategy Reconciliation
+
+- Evaluate legal draft-capital trades under Win Now, Retool and Rebuild strategies.
+- Keep Market prices, legal-lineup production, future capital, strategy fit and counterparty plausibility distinct.
+- Disclose strategic costs, preserve exact pick identity and keep missing evidence explicit across Trade Center workflows.
+
 # v1.21.5 - Private Operations Inspection
 
 - Add authenticated, bounded read-only operational diagnostics over HTTPS.
