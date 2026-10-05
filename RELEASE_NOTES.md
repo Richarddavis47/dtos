@@ -1,4 +1,11 @@
-# DTOS v1.21.4 - Protected Projection Evidence
+# DTOS v1.21.5 - Private Operations Inspection
+
+Authorized operators can retrieve predefined, bounded operational evidence over
+HTTPS using the existing inspection credential. Diagnostics preserve stored data
+and normal product behavior. Detailed operational and security evidence remains
+private. This candidate requires release validation before merge or deployment.
+
+## Previous release: DTOS v1.21.4 - Protected Projection Evidence
 
 This narrow correction protects the complete source evidence required by retained
 Projection generations. Unsupported legacy evidence remains auditable but is not

@@ -65,6 +65,28 @@ class ServerLifecycleTests(unittest.TestCase):
             with self.assertRaises(TimeoutError):
                 tracked.wait_until_ready(timeout=.01)
 
+    def test_versioned_direct_and_child_listener_require_matching_run(self) -> None:
+        for pid, parent in ((100, 1), (321, 100)):
+            with self.subTest(pid=pid), tempfile.TemporaryDirectory() as folder:
+                item = ProcessRecord(pid, parent, "python", "python3.12",
+                                     f"python -m tools.validation.server_host --validation-run-id {RUN_ID}")
+                tracked = server(Path(folder), [{pid}], [[item]])
+                tracked.wait_until_ready(timeout=.1)
+                self.assertEqual(tracked.runtime_pid, pid)
+                wrong_run = ProcessRecord(pid, parent, "python", "python3.12",
+                                          "python -m tools.validation.server_host --validation-run-id other")
+                tracked = server(Path(folder), [{pid}], [[wrong_run]])
+                with self.assertRaises(TimeoutError):
+                    tracked.wait_until_ready(timeout=.01)
+
+    def test_startup_replacement_must_match_run_and_listener(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            tracked = server(Path(folder), [{999}, {321}],
+                             [[record(999, run_id="other"), record(100)],
+                              [record(321, 100)]])
+            tracked.wait_until_ready(timeout=.5)
+        self.assertEqual(tracked.runtime_pid, 321)
+
     def test_graceful_cleanup_verifies_run_and_port_release(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             tracked = server(Path(folder), [{321}, set(), set()], [[record(321)], [], []])

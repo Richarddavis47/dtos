@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.21.5 - Private Operations Inspection
+
+- Add authenticated, bounded read-only operational diagnostics over HTTPS.
+- Reuse the existing inspection security boundary and preserve normal product behavior.
+- Keep detailed operational and security validation evidence private.
+
 # v1.21.4 - Protected Projection Evidence
 
 - Preserve complete source evidence while supported Projection generations remain protected.

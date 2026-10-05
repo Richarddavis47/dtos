@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -25,7 +26,9 @@ def is_dtos_server(record: ProcessRecord, excluded_pids: set[int] | None = None)
     if record.pid in (excluded_pids or set()):
         return False
     executable_name = (Path(record.executable).name or record.name).lower()
-    if executable_name not in {"python", "python.exe", "python3", "python3.exe", "uvicorn", "uvicorn.exe"}:
+    # psutil resolves virtualenv symlinks to versioned interpreter executables.
+    python = re.fullmatch(r"python(?:3(?:\.\d+)?)?(?:\.exe)?", executable_name)
+    if not python and executable_name not in {"uvicorn", "uvicorn.exe"}:
         return False
     arguments = record.arguments.lower()
     return (

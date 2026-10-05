@@ -160,6 +160,15 @@ class Settings:
 
 
 SETTINGS = Settings.from_environment()
+
+
+def fois_database_path() -> Path:
+    """Resolve FOIS storage without importing/initializing its application service."""
+    storage_root = os.getenv('DTOS_HISTORY_STORAGE_ROOT')
+    default = Path(storage_root) / 'dtos_fois.sqlite3' if storage_root else Path(gettempdir()) / 'dtos_fois.sqlite3'
+    return Path(os.getenv('DTOS_FOIS_DB_FILE', str(default)))
+
+
 LEAGUE_ID = SETTINGS.league_id
 SLEEPER_BASE = SETTINGS.sleeper_base
 SYNC_MINUTES = SETTINGS.sync_minutes
