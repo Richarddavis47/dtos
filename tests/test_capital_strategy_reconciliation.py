@@ -14,7 +14,7 @@ from routes.trades import create_trades_router
 
 from services.trade_intelligence import (
     TradeInputError, assist_trade_request, build_trade_workspace, evaluate_trade_request,
-    generate_trade_workflow, _trade_for_eligible,
+    generate_trade_workflow, create_trade_alternatives, _trade_for_eligible,
 )
 from src.core.intelligence.team_strength import prepare_for_data
 from src.core.projection_intelligence.service import ProjectionService
@@ -289,6 +289,15 @@ class CapitalStrategyTests(unittest.TestCase):
                 'instruction': 'make this trade work'})
             self.assertGreater(adjusted['count'], 0)
             self.assertTrue(all(_trade_for_eligible(row['evaluation']) for row in adjusted['results']))
+            alternatives = create_trade_alternatives(self.data, {'active_roster_id': 2, 'partner_roster_id': 1,
+                'assets_sent': ['2028-R4-4'], 'assets_received': ['a'], 'strategy': 'WIN NOW'})
+            self.assertGreater(alternatives['count'], 0)
+            for row in alternatives['results']:
+                self.assertTrue(_trade_for_eligible(row['evaluation']))
+                self.assertEqual(row['evaluation']['recommendation_trace']['manager_strategy']['strategy'], 'WIN NOW')
+                manual = evaluate_trade_request(self.data, dict(row['proposal'], strategy='WIN NOW'),
+                                                projection_reader=self.reader)['evaluation']
+                self.assertEqual(row['evaluation'], manual)
         self.assertEqual(self.data, before)
 
     def test_route_api_strategy_and_capital_contract(self):
