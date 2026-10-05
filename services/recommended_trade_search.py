@@ -107,6 +107,41 @@ def discover(data, workspace, reader, protected, excluded, *, max_theses=6, excl
                   'assessment': 'discovery_only_not_net_trade_impact'}
                  for send in diverse(outgoing) for receive in diverse(incoming)]
         pairs.sort(key=lambda p: (order(p['receive']), order(p['send'])))
+        # Bounded capital theses reuse the same observed player slot opportunity.
+        # Picks supply acquisition capital, never fictional slot production.
+        from src.core.intelligence import resolve_trade_strategy
+        team = next((t for t in workspace.get('teams', []) if int(t['roster_id']) == active), {})
+        window = (workspace.get('competitive_windows') or {}).get(str(active))
+        if not window or window.get('generation') != profile['semantic_generation']:
+            window = None
+        intent = resolve_trade_strategy(workspace.get('requested_strategy') or team.get('strategy'), window)['strategy']
+        def priced_picks(owner):
+            return sorted((a for a in workspace['pools'][owner] if a.kind == 'pick'
+                           and a.trade_value is not None and a.asset_id not in excluded
+                           and (owner != active or a.asset_id not in protected)),
+                          key=lambda a: (-a.trade_value, a.asset_id))
+        capital_pairs = []
+        for player_rows, pick_rows, buying in ((incoming, priced_picks(active), True),
+                                              (outgoing, priced_picks(rid), False)):
+            if intent not in (('WIN NOW', 'RETOOL') if buying else ('REBUILD', 'RETOOL')):
+                continue
+            for player in diverse(player_rows):
+                price = next(a.trade_value for a in workspace['pools'][rid if buying else active]
+                             if a.asset_id == player['asset_id'])
+                picks = sorted(pick_rows, key=lambda a: (abs(a.trade_value - price), a.asset_id))
+                if not picks:
+                    continue
+                pick = {'asset_id': picks[0].asset_id, 'weeks': [], 'position': None}
+                capital_pairs.append({'partner_id': rid, 'send': pick if buying else player,
+                    'receive': player if buying else pick, 'type': 'CAPITAL_SUPPORTED_SLOT_OPPORTUNITY',
+                    'league_id': profile['league_id'], 'season': profile['season'],
+                    'current_week': profile['current_week'], 'generation': profile['semantic_generation'],
+                    'projection_generation': profile['projection_generation'],
+                    'assessment': 'discovery_only_not_net_trade_impact'})
+        # Preserve the two-thesis per-counterparty budget and reserve one slot
+        # for a supported capital thesis when explicit strategy identifies one.
+        if capital_pairs:
+            pairs = pairs[:1] + capital_pairs[:1] if pairs else capital_pairs[:2]
         if pairs:
             by_partner[rid] = pairs[:2]
     report['discovered_counterparties'] = len(by_partner)
@@ -126,7 +161,7 @@ def discover(data, workspace, reader, protected, excluded, *, max_theses=6, excl
                   session_excluded_theses=len(all_theses) - len(eligible_theses),
                   candidate_theses=len(all_theses), generation=profile['semantic_generation'],
                   discovery_seconds=perf_counter() - started)
-    report['limitations'] = ['BOUNDED_PLAYER_LINEUP_DISCOVERY', 'NOT_EXHAUSTIVE_DYNASTY_OR_PICK_OPPORTUNITY_SEARCH']
+    report['limitations'] = ['BOUNDED_PLAYER_AND_CAPITAL_DISCOVERY', 'NOT_EXHAUSTIVE_DYNASTY_OR_PICK_OPPORTUNITY_SEARCH']
     return report
 
 
@@ -136,7 +171,8 @@ def construct(workspace, thesis, protected, excluded):
     incoming = tuple(a for a in workspace['pools'][partner] if a.asset_id not in excluded)
     sent = next(a for a in outgoing if a.asset_id == thesis['send']['asset_id'])
     received = next(a for a in incoming if a.asset_id == thesis['receive']['asset_id'])
-    rows = [TradeProposal(active, partner, (sent,), (received,), 'Complementary player exchange')]
+    rows = [TradeProposal(active, partner, (sent,), (received,),
+                          'Capital / production exchange' if sent.kind == 'pick' or received.kind == 'pick' else 'Complementary player exchange')]
     candidates = generate_proposals(active, partner, outgoing, incoming,
         required_received_asset_id=received.asset_id, construction_only=True)
     seen = {(tuple(a.asset_id for a in rows[0].assets_sent), tuple(a.asset_id for a in rows[0].assets_received))}

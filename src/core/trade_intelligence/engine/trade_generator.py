@@ -177,7 +177,12 @@ def _canonical_candidates(active_id, partner_id, outgoing_pool, incoming_pool, t
     proposals, seen = [], set()
     pair_count = 0
     boundaries = []
-    for label, sent_count, received_count, sent_kind, received_kind in PACKAGE_SHAPES:
+    # Keep the six-shape budget, but allow a single pick to buy a player and
+    # require a player return when shopping a pick (via the mirrored path).
+    # Exact asset IDs and prices still choose the construction; only the shared
+    # evaluator decides whether the capital sacrifice fits either manager.
+    shapes = (("1-for-1", 1, 1, 'player' if target.kind == 'pick' else None, target.kind), *PACKAGE_SHAPES[1:])
+    for label, sent_count, received_count, sent_kind, received_kind in shapes:
         candidates = ((sent, received) for sent in combinations(outgoing, sent_count)
                       if _matches(sent, sent_kind)
                       if not return_preference or return_preference['name'] != 'draft_capital' or any(a.kind == 'pick' for a in sent)
