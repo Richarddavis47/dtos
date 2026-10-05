@@ -263,3 +263,19 @@ class DiscoveryRepairTests(unittest.TestCase):
             'horizons': {'current_week': {'delta': -3}, 'next_n': {'delta': 6}},
             'future_capital': {}, 'reserve_slot_changes': {}}
         self.assertIn('Supported production declines in current week', disclosed_costs(strategy, 0))
+
+    def test_weak_history_reference_does_not_create_high_confidence_or_veto(self):
+        from src.core.trade_intelligence.confidence import evidence_confidence, manager_history_evidence
+        from src.core.trade_intelligence.market_balance import market_balance
+        from src.core.trade_intelligence.models import TradeProposal
+        workspace = build_trade_workspace(self.data, 1)
+        assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
+        proposal = TradeProposal(1, 2, (assets['1q'],), (assets['2w'],), 'Fixture')
+        market = market_balance(proposal.assets_sent, proposal.assets_received)
+        strategies = {'active': {'horizons': {}, 'projection_coverage_complete': True,
+                                 'competitive_window': None, 'roster_capacity': None}}
+        for source_confidence, expected in (('LOW', 'MEDIUM'), ('MEDIUM', 'MEDIUM'), ('HIGH', 'HIGH')):
+            history = {'evidence_references': ['prepared-reference'], 'confidence': source_confidence}
+            profile = evidence_confidence(market, strategies, history, proposal, {})
+            self.assertEqual(profile['assessment'], expected)
+            self.assertEqual(manager_history_evidence(history)['availability'], 'supported' if expected == 'HIGH' else 'limited')

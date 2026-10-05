@@ -54,7 +54,7 @@ costs; supported depth gains can be optional. Both sides retain benefit and cost
 assessment. Severe Market losses and materially losing weak-signal trades remain
 out. Unknown counterparty direction may permit an observed meaningful production
 or capital story at bounded Market terms; direction is disclosed as unconfirmed.
-Missing history reduces confidence to Medium rather than vetoing the trade.
+Missing or weak history reduces confidence to Medium rather than vetoing the trade.
 No acceptance probability or guarantee is produced.
 
 Funnel diagnostics include eligible partners, pools, generated/pruned, evaluated,
@@ -84,8 +84,8 @@ verify the original remains unchanged until explicit adoption, Keep Original,
 editable handoff, navigation/context isolation and phone readability. This is
 not physical iPhone or Safari testing.
 
-Final release-gate results are recorded after execution below. No merge or
-deployment is part of this candidate-preparation task.
+Final release-gate execution results are recorded in the release PR after
+validation. No merge or deployment is part of this candidate-preparation task.
 
 ## Scout acceptance handoff
 

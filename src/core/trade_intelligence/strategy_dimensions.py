@@ -105,14 +105,14 @@ def plausibility(strategy, package, market_return, historical):
         explanation = 'Meaningful priced future capital is gained at broadly balanced Market terms; current production and reserve costs remain disclosed, and manager strategy is unconfirmed.'
     elif 'COUNTERPARTY_SUPPORTED_DEPTH_GAIN' in reasons:
         explanation = 'Supported roster coverage improves without a current-production loss; Market and capacity costs remain separate. This is not an acceptance prediction.'
+    from .confidence import manager_history_evidence
     return {'label': 'Counterparty Plausibility', 'assessment': state,
             'reason_codes': reasons, 'historical_context': historical,
             'history_role': 'supporting context only; never a deterministic veto',
             'acceptance_probability': None, 'explanation': explanation,
             'policy': {'severe_market_loss_ratio': .50, 'unknown_direction_production_min_return_ratio': .80,
                        'unknown_direction_capital_min_return_ratio': .85, 'requires_complete_projection_and_capital': True},
-            'manager_history': {'availability': 'supported' if historical and historical.get('evidence_references') else 'limited',
-                                'disclosure': None if historical and historical.get('evidence_references') else 'Limited manager-history evidence'},
+            'manager_history': manager_history_evidence(historical),
             'manager_strategy': strategy.get('manager_strategy')}
 
 
