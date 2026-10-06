@@ -10,6 +10,10 @@ from time import perf_counter
 
 from src.core.intelligence import AssetContext, TradeAsset, TradeEvidenceContext, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, build_trade_evidence_context, evaluate_bilateral, generate_proposals
 from src.core.valuation import cached_market_consensus
+from services.trade_cheaper_repair import (
+    REPAIR_EVALUATION_BUDGET, REPAIR_OPTION_LIMIT, cheaper_phase,
+    market_cost, no_cheaper_reason, repair_family,
+)
 
 
 class RepairMode(StrEnum):
@@ -419,8 +423,9 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     instruction = str(payload.get("instruction") or payload.get("action") or "make this trade work").strip()
     lowered = instruction.casefold()
     requested_mode = _repair_mode(payload, instruction)
+    cheaper = 'cheaper' in lowered
     younger_target_change = 'younger' in lowered and payload.get('origin_workflow') not in ('shop', 'trade_for')
-    target_preservation_required = payload.get('origin_workflow') == 'trade_for' or (requested_mode is not RepairMode.ALTERNATIVE_TARGET and not younger_target_change)
+    target_preservation_required = cheaper or payload.get('origin_workflow') == 'trade_for' or (requested_mode is not RepairMode.ALTERNATIVE_TARGET and not younger_target_change)
     enriched = dict(payload)
     protected = {str(item) for item in payload.get("protected_assets") or ()}
     excluded = {str(item) for item in payload.get("excluded_assets") or ()}
@@ -501,70 +506,147 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     add_pick = "add a pick" in lowered or 'add pick' in lowered or outgoing_pick_required
     another_player = "another player back" in lowered or "get player back" in lowered
     expand = "expand" in lowered or "bigger deal" in lowered
-    cheaper = "cheaper" in lowered
     younger = "younger" in lowered
     win_now = "win-now" in lowered or "win now" in lowered
     enriched['replacement_position'] = requested_position
     enriched['replacement_kind'] = requested_kind
     enriched['addition_kind'] = 'pick' if add_pick else None
+    if cheaper:
+        # Cost repair keeps the current negotiation objective even if another
+        # instruction also asks about target alternatives.
+        target_preservation_required = True
+        missing_prices = [a.asset_id for a in (*original_sent_assets, *original_received_assets)
+                          if market_cost((a,)) is None]
+        if missing_prices:
+            return {'instruction': instruction, 'requested_mode': requested_mode.value,
+                'returned_modes': [], 'count': 0, 'results': [], 'near_misses': [],
+                'preview_only': True, 'original_proposal': {k: payload[k] for k in
+                    ('active_roster_id', 'partner_roster_id', 'assets_sent', 'assets_received')},
+                'state': 'MISSING_REQUIRED_EVIDENCE', 'result_state': 'MISSING REQUIRED EVIDENCE',
+                'quiet_state': 'A cheaper comparison is unavailable: required canonical Market prices are missing for '
+                    + ', '.join(f'{by_id[i].label} ({i})' for i in missing_prices) + '.',
+                'constraints': {'protected_assets': sorted(protected), 'excluded_assets': sorted(excluded)},
+                'target_preservation_required': True, 'target_asset_ids': sorted(original_received),
+                'target_preserved': None, 'search_completed': False, 'calculated': True,
+                'provider_requests': 0, 'asset_market_constructions': 0,
+                'search_evidence': {'full_evaluations': 0, 'evaluated': 0,
+                    'evaluation_budget': REPAIR_EVALUATION_BUDGET, 'budget_reached': False,
+                    'missing_asset_ids': missing_prices, 'repair_stop_reason': 'MISSING_CURRENT_MARKET_PRICE'}}
     original_started = perf_counter()
     assess_original = win_now or requested_mode is RepairMode.ALTERNATIVE_TARGET
     original_result = evaluate_trade_request(data, dict(payload, workflow='adjust', protected_assets=[], excluded_assets=[]), workspace=workspace,
                                             evidence_context=evidence_context, projection_reader=reader) if assess_original else None
     evaluation_count = 1 if assess_original else 0
     evaluation_seconds = perf_counter() - original_started if assess_original else 0.0
-    construction_started = perf_counter()
-    construction_diagnostics = {}
-    proposals = _bounded_adjustment_candidates(workspace, enriched,
-        allow_target_change=not target_preservation_required, search_diagnostics=construction_diagnostics)
-    construction_seconds = perf_counter() - construction_started
     from services.trade_search_policy import SearchFunnel, result_state
-    funnel = SearchFunnel(160, [int(payload['partner_roster_id'])], workspace['pools'])
-    funnel.construction(int(payload['partner_roster_id']), proposals, construction_diagnostics)
+    from collections import Counter
+    funnel = SearchFunnel(REPAIR_EVALUATION_BUDGET, [int(payload['partner_roster_id'])], workspace['pools'])
+    construction_seconds = 0.0
+    proposals = []
+    repair_prunes, missing_candidates = Counter(), set()
+    cheaper_count, credible_families = 0, set()
+    repair_stop_reason = 'CONSTRUCTIONS_EXHAUSTED'
     candidates = []
-    for proposal in proposals:
+
+    def proposal_stream():
+        nonlocal construction_seconds, cheaper_count, repair_stop_reason
+        seen = set()
+        for phase in (range(3) if cheaper else range(1)):
+            stage = perf_counter()
+            diagnostics = {}
+            if cheaper:
+                batch, diagnostics = cheaper_phase(workspace, enriched, phase, seen)
+                repair_prunes.update(diagnostics['prune_reason_counts'])
+                cheaper_count += diagnostics['cheaper_by_price_candidates']
+                missing_candidates.update(diagnostics['missing_asset_ids'])
+            else:
+                batch = _bounded_adjustment_candidates(workspace, enriched,
+                    allow_target_change=not target_preservation_required, search_diagnostics=diagnostics)
+            construction_seconds += perf_counter() - stage
+            proposals.extend(batch)
+            funnel.construction(int(payload['partner_roster_id']), batch, diagnostics)
+            for proposal in batch:
+                if cheaper and len(credible_families) >= REPAIR_OPTION_LIMIT:
+                    repair_stop_reason = 'SUFFICIENT_USEFUL_ALTERNATIVES'
+                    return
+                if cheaper and evaluation_count >= funnel.budget:
+                    repair_stop_reason = 'EVALUATION_BUDGET_EXHAUSTED'
+                    return
+                yield proposal
+            if cheaper and len(credible_families) >= REPAIR_OPTION_LIMIT:
+                repair_stop_reason = 'SUFFICIENT_USEFUL_ALTERNATIVES'
+                return
+
+    def prune(reason):
+        funnel.counts['constructions_pruned'] += 1
+        if cheaper:
+            repair_prunes[reason] += 1
+
+    for proposal in proposal_stream():
         # Instruction predicates precede expensive assessment; canonical quality
         # is never patched to satisfy a preference.
         if requested_position and not any(a.position == requested_position for a in proposal.assets_sent):
-            funnel.counts['constructions_pruned'] += 1
+            prune('REQUESTED_OUTGOING_POSITION_NOT_MET')
             continue
         if requested_kind and not any(a.kind == requested_kind for a in proposal.assets_sent):
-            funnel.counts['constructions_pruned'] += 1
+            prune('REQUESTED_OUTGOING_KIND_NOT_MET')
             continue
         sent_set = {a.asset_id for a in proposal.assets_sent}
         received_set = {a.asset_id for a in proposal.assets_received}
         if sent_set == original_sent and received_set == original_received:
-            funnel.counts['constructions_pruned'] += 1
+            prune('UNCHANGED_CURRENT_PROPOSAL')
             continue
-        if cheaper and (any(a.trade_value is None for a in (*proposal.assets_sent, *original_sent_assets))
-                        or sum(a.trade_value for a in proposal.assets_sent) >= sum(a.trade_value for a in original_sent_assets)):
-            funnel.counts['constructions_pruned'] += 1
-            continue
+        if cheaper:
+            invalid_objective = (required_outgoing - sent_set) or (original_received - received_set)
+            if invalid_objective:
+                prune('REQUIRED_SHOP_ANCHOR_MISSING' if required_outgoing - sent_set else 'REQUIRED_INCOMING_TARGET_MISSING')
+                continue
+            if protected & sent_set or excluded & (sent_set | received_set):
+                prune('EXACT_LOCK_CONFLICT')
+                continue
+            cost = market_cost(proposal.assets_sent)
+            if cost is None or cost >= market_cost(original_sent_assets):
+                prune('MISSING_MARKET_PRICE' if cost is None else 'EQUAL_OR_HIGHER_OUTGOING_COST')
+                continue
         if add_pick:
             old_picks = {a.asset_id for a in (*original_sent_assets, *original_received_assets) if a.kind == 'pick'}
             new_picks = {a.asset_id for a in (proposal.assets_sent if outgoing_pick_required else
                                              (*proposal.assets_sent, *proposal.assets_received)) if a.kind == 'pick'}
             if not new_picks - old_picks:
-                funnel.counts['constructions_pruned'] += 1
+                prune('NO_ADDITIONAL_PICK')
                 continue
         if another_player and not {a.asset_id for a in proposal.assets_received if a.kind == 'player'} - original_received:
-            funnel.counts['constructions_pruned'] += 1
+            prune('NO_ADDITIONAL_RETURN_PLAYER')
             continue
         if expand and len(proposal.assets_sent) + len(proposal.assets_received) <= len(original_sent) + len(original_received):
-            funnel.counts['constructions_pruned'] += 1
+            prune('EXPANDED_PACKAGE_REQUIRED')
             continue
         if younger:
             old_players = [a for a in original_received_assets if a.kind == 'player']
             new_players = [a for a in proposal.assets_received if a.kind == 'player']
             if (not old_players or not new_players or any(a.age is None for a in (*old_players, *new_players))
                     or sum(a.age for a in new_players) / len(new_players) >= sum(a.age for a in old_players) / len(old_players)):
-                funnel.counts['constructions_pruned'] += 1
+                prune('YOUNGER_RETURN_NOT_SUPPORTED')
                 continue
         stage = perf_counter()
-        result = evaluate_trade_request(
-            data, _proposal_payload(proposal), workspace=workspace,
-            evidence_context=evidence_context, projection_reader=reader,
-        )
+        candidate_payload = _proposal_payload(proposal)
+        if cheaper:
+            candidate_payload.update(strategy=payload.get('strategy'),
+                protected_assets=sorted(protected), excluded_assets=sorted(excluded))
+        try:
+            result = evaluate_trade_request(data, candidate_payload, workspace=workspace,
+                evidence_context=evidence_context, projection_reader=reader)
+        except TradeInputError as exc:
+            if not cheaper:
+                raise
+            # Input gates are hard reasons, never an accepted cheaper preview.
+            evaluation_seconds += perf_counter() - stage
+            evaluation_count += 1
+            funnel.counts['evaluated'] += 1
+            field = 'missing_evidence' if exc.code == 'market_evidence_unavailable' else 'hard_invalid'
+            funnel.counts[field] += 1
+            funnel.reasons[exc.code] += 1
+            continue
         evaluation_seconds += perf_counter() - stage
         evaluation_count += 1
         if not _trade_for_eligible(result['evaluation']):
@@ -639,8 +721,23 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
             result['objective_evidence'] = {'scope': 'same requested asset role/position or pick year/round',
                                            'target_changed': True, 'quality': 'shared evaluator, not role matching'}
         funnel.assessed(result)
+        if cheaper:
+            before = market_cost(original_sent_assets)
+            after = market_cost(sent_assets)
+            result['adjustment_evidence'] = {'concept': 'strictly_lower_canonical_outgoing_market_cost',
+                'current_outgoing_cost': before, 'alternative_outgoing_cost': after,
+                'market_cost_reduction': before - after, 'strategy_changes_prices': False}
+            credible_families.add(repair_family(result['proposal'], by_id))
         candidates.append((distance, target_changed, abs(1 - result["evaluation"]["values"]["ratio"]), result))
-    candidates.sort(key=lambda row: (row[0], row[2], row[3]["evaluation"]["provenance"]["evaluation_id"]))
+    if cheaper:
+        from services.trade_search_policy import rank_key
+        candidates.sort(key=lambda row: (row[0], market_cost(tuple(by_id[i] for i in row[3]['proposal']['assets_sent'])), rank_key(row[3])))
+        distinct = {}
+        for row in candidates:
+            distinct.setdefault(repair_family(row[3]['proposal'], by_id), row)
+        candidates = list(distinct.values())
+    else:
+        candidates.sort(key=lambda row: (row[0], row[2], row[3]["evaluation"]["provenance"]["evaluation_id"]))
     target_preserving = [row for row in candidates if not row[1]]
     closest_rows = candidates if younger_target_change else target_preserving
     closest = closest_rows[0][3] if closest_rows else None
@@ -676,6 +773,24 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     }[requested_mode]
     if requested_mode is RepairMode.ALTERNATIVE_TARGET and (original_credible or target_preserving):
         no_path = 'A credible original-target construction exists; an alternative target is not needed for repair.'
+    repair_diagnostics = {}
+    if cheaper:
+        repair_diagnostics = {'repair_objective': 'MAKE_IT_CHEAPER',
+            'current_outgoing_market_cost': market_cost(original_sent_assets),
+            'cheaper_by_price_candidates': cheaper_count, 'prune_reason_counts': dict(repair_prunes),
+            'lock_conflict': repair_prunes['EXACT_LOCK_CONFLICT'],
+            'missing_market_price_before_evaluation': repair_prunes['MISSING_MARKET_PRICE'],
+            'hard_invalid_before_evaluation': sum(repair_prunes[k] for k in
+                ('ASSET_NOT_OWNED', 'INVALID_PICK_IDENTITY', 'DUPLICATE_ASSET', 'EMPTY_OUTGOING_PACKAGE')),
+            'missing_asset_ids': sorted(missing_candidates), 'credible_cheaper': funnel.counts['eligible'],
+            'repair_stop_reason': repair_stop_reason,
+            'unevaluated_constructions': max(0, funnel.counts['constructions_generated']
+                - funnel.counts['constructions_pruned'] - funnel.counts['evaluated']),
+            'additional_current_offer_evaluations': int(assess_original)}
+        repair_diagnostics['budget_reached'] = evaluation_count >= funnel.budget
+        no_path = no_cheaper_reason(funnel, repair_diagnostics)
+        if missing_candidates:
+            no_path += ' Missing prices: ' + ', '.join(f'{by_id[i].label} ({i})' for i in sorted(missing_candidates)) + '.'
     if _trade_search_boundary(data) != boundary:
         raise TradeInputError('workspace_context_changed', 'Canonical evidence changed during adjustment. Refresh and try again.')
     return {
@@ -701,6 +816,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
         "target_preserved": target_preserved,
         'state': 'ADJUSTMENT_AVAILABLE' if options else 'NO_CREDIBLE_ADJUSTMENT',
         'search_evidence': {**funnel.result(len(options)), 'stages': funnel.stages, 'constructed': len(proposals), 'full_evaluations': evaluation_count,
+            **repair_diagnostics,
             'projection_weeks_read': len(reader.weeks), 'provider_requests': 0, 'durable_writes': 0,
             'timings_seconds': {'construction': construction_seconds, 'shared_evaluation': evaluation_seconds,
                                'total': perf_counter() - started}},
