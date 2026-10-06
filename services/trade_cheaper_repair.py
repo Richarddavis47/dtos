@@ -4,7 +4,7 @@ from heapq import nsmallest
 from itertools import combinations
 from math import isfinite
 
-from src.core.trade_intelligence.models import TradeProposal
+from src.core.intelligence import TradeProposal
 
 
 REPAIR_EVALUATION_BUDGET = 160
