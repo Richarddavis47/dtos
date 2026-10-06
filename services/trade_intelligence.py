@@ -482,13 +482,18 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     if (protected & excluded or (no_picks and outgoing_pick_required)
             or required_outgoing & (protected | excluded)
             or (target_preservation_required and original_received & excluded)):
+        blocking_ids = sorted((protected & excluded) | (required_outgoing & (protected | excluded))
+                              | (original_received & excluded)
+                              | (protected if no_picks and outgoing_pick_required else set()))
+        blocking_names = ', '.join(f'{by_id[item].label if item in by_id else item} ({item})' for item in blocking_ids)
         return {'instruction': instruction, 'requested_mode': requested_mode.value, 'returned_modes': [],
                 'count': 0, 'results': [], 'state': 'CONSTRAINT_CONFLICT',
                 'quiet_state': 'The constraint conflicts with the preserved trade objective. Change the objective explicitly.',
                 'search_completed': False, 'target_preserved': None,
                 'constraints': {'protected_assets': sorted(protected), 'excluded_assets': sorted(excluded)},
-                'blocking_asset_ids': sorted((protected & excluded) | (required_outgoing & (protected | excluded)) | (original_received & excluded)),
-                'smallest_optional_relaxation': 'Remove the conflicting exact lock or explicitly choose a different trade objective.'}
+                'blocking_asset_ids': blocking_ids,
+                'conflict_explanation': f'Your exact lock on {blocking_names} conflicts with the required trade objective. No package was evaluated for this conflicting request.',
+                'smallest_optional_relaxation': f'Remove the conflicting exact lock on {blocking_names}, or explicitly choose a different trade objective.'}
     original_sent_assets = tuple(by_id[item] for item in original_sent if item in by_id)
     original_received_assets = tuple(by_id[item] for item in original_received if item in by_id)
     requested_position = next((position for position in ("WR", "RB", "QB", "TE") if f"{position.casefold()}s instead" in lowered or f"{position.casefold()} instead" in lowered or f"use {position.casefold()}" in lowered), None)
@@ -906,6 +911,17 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             raise TradeInputError("legality_rejected", "The selected counterparty does not own the requested target or is not a valid trade partner.")
         partner_ids = [requested_partner]
     target_asset = next(a for a in workspace['pools'][ownership[target]] if a.asset_id == target)
+    if (workflow == 'shop' and target in protected | excluded) or (workflow == 'trade_for' and target in excluded):
+        objective = 'required outgoing Shop asset' if workflow == 'shop' else 'required incoming Trade For target'
+        explanation = f'Your exact lock on {target_asset.label} ({target}) conflicts with the {objective}. No package was evaluated for this conflicting request.'
+        return {'workflow': workflow, 'target_asset_id': target, 'count': 0, 'results': [],
+                'state': 'CONSTRAINT_CONFLICT', 'result_state': 'CONSTRAINT CONFLICT',
+                'quiet_state': explanation, 'conflict_explanation': explanation,
+                'blocking_asset_ids': [target],
+                'smallest_optional_relaxation': f'Remove the conflicting exact lock on {target_asset.label} ({target}), or explicitly choose a different trade objective.',
+                'constraints': {'protected_assets': sorted(protected), 'excluded_assets': sorted(excluded)},
+                'search_completed': False, 'search_evidence': {'full_evaluations': 0, 'bounded': True},
+                **({'markets': []} if workflow == 'shop' else {}), 'provider_requests': 0}
     if target_asset.trade_value is None:
         return {'workflow': workflow, 'target_asset_id': target, 'count': 0, 'results': [],
                 'result_state': 'MISSING REQUIRED EVIDENCE', 'quiet_state': 'Canonical Market price is unavailable for the selected exact asset.',

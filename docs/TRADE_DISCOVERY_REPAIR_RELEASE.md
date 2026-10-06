@@ -139,3 +139,60 @@ release.
 **Phone items:** visible label/package/strategy, why it helps, major drawback,
 counterparty summary and primary preview/adopt action. Ensure long pick identity,
 expanded technical evidence and preview controls do not overflow or block actions.
+
+## Scout A–C correction checkpoint
+
+Scout identified three release blockers after the initial green PR: Shop selection
+used a different lock store from repair, structured conflicts were discarded by the
+UI, and targeted URL defaults replaced restored package sides. These are corrected
+within v1.21.7, without changing discovery ranking or canonical valuation.
+
+The account/session/league-bound workspace now persists one schema-2 state:
+current proposal, original proposal, preview proposal, adopted proposal, required
+outgoing Shop anchor, required incoming Trade For target, exact protected/excluded
+asset IDs, adjustment constraints and workflow origin. Asset controls read/write
+that state. Backend-interpreted exact locks join the same state. Old saved proposal
+shapes migrate on read. Exact canonical pick IDs retain year/round/original
+franchise identity; no generic round lock is substituted.
+
+Restored current/adopted packages take precedence over URL preload defaults.
+An empty targeted workspace still initializes from its URL. Shop and Trade For
+anchors survive adoption, repair, navigation and reload. Build My Own deliberately
+starts a blank manual proposal and releases the search objective while retaining
+explicit protected/excluded IDs; removing a lock requires an explicit action.
+Deliberately adopting a new Recommended idea replaces the old search objective
+while preserving exact locks; preview/Keep Original does not change that objective.
+Saved adjustment controls are restored from the same session state.
+
+Direct contradictory locks show their exact asset, objective conflict and optional
+change before evaluation. They are not called evaluated near misses. Assessed near
+misses retain their package/evaluation/blocker fields through rendering. Neither
+path automatically changes a lock. Preview reload retains the original/current
+proposal; adoption is the deliberate change to the current proposal.
+
+`tests/test_trade_scout_state_browser.py` adds Scout-specific cross-flow, actual
+API conflict serialization/presentation, exact one-pick protection, Shop pick
+anchors, multi-asset reload, stale/different URL precedence, empty initialization,
+preview/keep/adopt and 375/390px checks. These are responsive Chromium checks,
+not physical iPhone/Safari acceptance. They are also included in browser CI.
+
+### Focused live Scout handoff after deployment
+
+- A–B: Shop A + protect B → Generate → Preview → Adopt → Cheaper → Alternatives.
+  A must stay outgoing and B excluded, including after reload/navigation. Protect
+  one exact acquired pick; other picks must remain usable.
+- C: Try a safe impossible lock. The exact blocker and smallest optional change
+  must appear; no lock changes automatically. Direct logical conflicts must not
+  pretend a package was evaluated.
+- D: Preview an alternative; original/current stays intact. Keep Original preserves
+  it. Adopt Alternative deliberately changes it.
+- E–G: Reload Shop A+B→X and Trade For A→X+Y; entire packages and anchors survive.
+  In a cleared/empty session, targeted URLs must still initialize correctly.
+- H: Check 375/390px responsive widths for long pick identities, readable blockers,
+  optional changes, Keep/Adopt controls and status visibility above sticky controls.
+  Record physical iPhone separately if used.
+- I–K: Recheck Recommended/Next Five diversity, Shop/Trade For useful live choices,
+  and Dan with limited manager history. Missing history alone cannot veto; required
+  missing prices/projections and materially bad bilateral terms still can.
+- L: Safely recheck Pitts→first under the three strategies and Bijan→fourth rejection.
+  Do not submit a trade, change a lineup or mutate Sleeper.

@@ -6,6 +6,7 @@
 - Preserve exact Shop assets and Trade For targets while searching varied packages and precise repair constraints.
 - Preview alternatives before adoption; explain evaluated near misses, strategic costs and limited manager history.
 - Keep canonical Market prices, capital evidence, legal-lineup production and hard constraints separate.
+- Retain exact session locks across workflows, present specific conflicts, and preserve adopted packages on targeted reload.
 
 # v1.21.6 - Trade Center Capital + Strategy Reconciliation
 

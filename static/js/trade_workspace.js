@@ -19,7 +19,13 @@
         const assets = w.teams.find(t => t.roster_id === owner)?.assets || [];
         if (!Array.isArray(ids) || ids.some(id => !assets.some(a => a.asset_id === id))) throw new Error('Ownership changed');
       }
-      sessionStorage.setItem('dtos-trade-workspace:' + w.workspace_context.binding, JSON.stringify({partner: proposal.partner_roster_id, selected: {sent: proposal.assets_sent, received: proposal.assets_received}, ownership: w.workspace_context.ownership_generation}));
+      const key = 'dtos-trade-workspace:' + w.workspace_context.binding;
+      const saved = JSON.parse(sessionStorage.getItem(key) || 'null') || {};
+      sessionStorage.setItem(key, JSON.stringify({...saved, schema: 2,
+        currentProposal: {partner: proposal.partner_roster_id, sent: proposal.assets_sent, received: proposal.assets_received},
+        originalProposal: null, previewProposal: null, adoptedProposal: null,
+        originWorkflow: 'create', requiredOutgoingAsset: null, requiredIncomingAsset: null,
+        ownership: w.workspace_context.ownership_generation}));
       location.assign('/trades/create?front_office=' + proposal.active_roster_id);
     } catch (_) { button.textContent = 'Unable to open this proposal. Refresh the page and try again.'; button.disabled = false; }
   });
@@ -28,20 +34,26 @@
   const el = id => document.getElementById(id), active = Number(root.dataset.frontOffice);
   const flow = root.dataset.tradeWorkflow.replace('-', '_');
   let workspace, revision = 0, side = 'sent', busy = false, entryBlocked = false;
-  let shopTarget = flow === 'shop' ? root.dataset.preloadAsset || null : null;
-  const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let searchExhausted = false; const protectedAssets = new Set(), excludedAssets = new Set();
-  const selected = {sent: [], received: []}, filters = {sent: {q: '', pos: 'ALL'}, received: {q: '', pos: 'ALL'}};
+  // One account/session/league-bound state. Controls are views of these exact IDs.
+  const session = {schema: 2, currentProposal: {sent: [], received: [], partner: 0}, originalProposal: null,
+    previewProposal: null, adoptedProposal: null, requiredOutgoingAsset: null, requiredIncomingAsset: null,
+    protectedAssets: [], excludedAssets: [], adjustmentConstraints: {}, originWorkflow: flow};
+  const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let searchExhausted = false;
+  const selected = session.currentProposal, filters = {sent: {q: '', pos: 'ALL'}, received: {q: '', pos: 'ALL'}};
   const team = id => workspace?.teams.find(t => t.roster_id === Number(id));
   const asset = id => workspace?.teams.flatMap(t => t.assets).find(a => a.asset_id === id);
   const label = a => a.raw_label || a.label;
-  const partner = () => Number(el('trade-partner').value);
+  const partner = () => selected.partner;
+  const setPartner = id => { selected.partner = Number(id); el('trade-partner').value = String(id); };
   const storageKey = () => 'dtos-trade-workspace:' + workspace.workspace_context.binding;
   const node = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
   function message(text, error = false) { const box = el('trade-result'); box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
-  function payload() { return {workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...protectedAssets], excluded_assets: [...excludedAssets], asset_id: flow === 'shop' ? shopTarget || selected.sent[0] : selected.received[0], workspace_context: workspace.workspace_context}; }
-  function persist() { try { sessionStorage.setItem(storageKey(), JSON.stringify({partner: partner(), selected, ownership: workspace.workspace_context.ownership_generation})); } catch (_) { /* Storage-disabled browsing still works in this page. */ } }
-  function changed() { const focusId = document.activeElement?.dataset.assetId; revision++; el('trade-result').hidden = true; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
-  function toggle(which, id) { if (busy) return; if (flow === 'shop' && which === 'sent' && id === shopTarget && selected.sent.includes(id)) return message('The shopped asset stays fixed. Choose Build My Own to leave this search.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); }
+  function payload() { return {workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...session.protectedAssets], excluded_assets: [...session.excludedAssets], asset_id: flow === 'shop' ? session.requiredOutgoingAsset || selected.sent[0] : session.requiredIncomingAsset || selected.received[0], workspace_context: workspace.workspace_context}; }
+  function persist() { try { sessionStorage.setItem(storageKey(), JSON.stringify({...session, strategy: el('trade-strategy').value, ownership: workspace.workspace_context.ownership_generation})); } catch (_) { /* Storage-disabled browsing still works in this page. */ } }
+  function syncLocks() { if (el('shop-protected')) for (const option of el('shop-protected').options) option.selected = session.protectedAssets.includes(option.value); }
+  function addLock(kind, id) { if (!session[kind].includes(id)) session[kind].push(id); syncLocks(); persist(); }
+  function changed() { const focusId = document.activeElement?.dataset.assetId; revision++; session.previewProposal = null; el('trade-result').hidden = true; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
+  function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); }
   function identity(a) {
     const box = node('span');
     if (a.kind === 'player' && a.headshot_url) { const image = node('img'); image.src = a.headshot_url; image.alt = ''; image.loading = 'lazy'; image.onerror = () => image.remove(); box.append(image); }
@@ -73,10 +85,10 @@
   }
   function paint() {
     board('sent'); board('received');
-    const targetBox = el('trade-target'), targetId = flow === 'trade_for' ? selected.received[0] : flow === 'shop' ? selected.sent[0] : null, target = asset(targetId);
+    const targetBox = el('trade-target'), targetId = session.requiredIncomingAsset || session.requiredOutgoingAsset, target = asset(targetId);
     targetBox.replaceChildren(); targetBox.hidden = !target || entryBlocked;
     if (target && !entryBlocked) {
-      targetBox.append(node('h3', flow === 'shop' ? 'Asset you are shopping' : 'Player or pick you want'), identity(target));
+      targetBox.append(node('h3', session.requiredOutgoingAsset ? 'Asset you are shopping' : 'Player or pick you want'), identity(target));
       const owner = workspace.teams.find(t => t.assets.some(a => a.asset_id === targetId));
       const ownerLink = node('a', 'Current owner: ' + owner.team_name); ownerLink.href = '/teams/' + owner.roster_id; targetBox.append(ownerLink);
       if (target.kind === 'player') { const dossier = node('a', 'Open player dossier'); dossier.href = '/players/' + encodeURIComponent(target.asset_id.replace(/^player:/, '')); targetBox.append(dossier); }
@@ -90,6 +102,7 @@
     el('trade-run').disabled = busy || !selected.sent.length || !selected.received.length;
     el('trade-find').disabled = busy || entryBlocked;
     el('trade-apply-adjust').disabled = busy;
+    el('trade-build-own').hidden = flow === 'create' && !session.requiredOutgoingAsset && !session.requiredIncomingAsset;
     if (el('recommendation-refresh')) el('recommendation-refresh').disabled = busy || searchExhausted;
     root.setAttribute('aria-busy', String(busy));
   }
@@ -170,9 +183,27 @@
     if (e.major_limitations?.length) out.append(node('h4', 'Evidence limitations'), node('p', e.major_limitations.join(', ').replaceAll('_', ' ')));
   }
   function focusResult() { el('trade-result').focus(); }
-  function openOffer(row) { el('trade-partner').value = String(row.proposal.partner_roster_id); selected.sent = [...row.proposal.assets_sent]; selected.received = [...row.proposal.assets_received]; changed(); review(); showEvaluation(row.evaluation, row.opportunity); focusResult(); }
+  const newRecommendedObjective = row => (row.workflow || row.proposal.preview_origin_workflow) === 'recommended' && session.originWorkflow !== 'recommended';
+  function offerConflict(row) {
+    const p = row.proposal;
+    if (p.assets_sent.some(id => session.protectedAssets.includes(id) || session.excludedAssets.includes(id)) || p.assets_received.some(id => session.excludedAssets.includes(id))) return 'This offer violates an exact asset lock. Your proposal is unchanged.';
+    if (!newRecommendedObjective(row)) {
+      if ((session.requiredOutgoingAsset && !p.assets_sent.includes(session.requiredOutgoingAsset)) || (session.requiredIncomingAsset && !p.assets_received.includes(session.requiredIncomingAsset))) return 'This offer removes the required trade target. Your proposal is unchanged.';
+      if (session.requiredIncomingAsset && !team(p.partner_roster_id)?.assets.some(a => a.asset_id === session.requiredIncomingAsset)) return 'The required target belongs to a different owner. Your proposal is unchanged.';
+    }
+    return null;
+  }
+  function openOffer(row) {
+    const conflict = offerConflict(row); if (conflict) return message(conflict, true);
+    if (newRecommendedObjective(row)) { session.requiredOutgoingAsset = null; session.requiredIncomingAsset = null; session.originWorkflow = 'recommended'; }
+    setPartner(row.proposal.partner_roster_id); selected.sent = [...row.proposal.assets_sent]; selected.received = [...row.proposal.assets_received];
+    session.adoptedProposal = {...selected, sent: [...selected.sent], received: [...selected.received]};
+    changed(); review(); showEvaluation(row.evaluation || {}, row.opportunity); focusResult();
+  }
   function previewOffer(row) {
+    const conflict = offerConflict(row); if (conflict) return message(conflict, true);
     const original = {sent: [...selected.sent], received: [...selected.received], partner: partner()};
+    session.originalProposal = original; session.previewProposal = {...row.proposal, preview_origin_workflow: row.workflow || row.proposal.preview_origin_workflow || session.originWorkflow}; persist();
     const out = el('trade-result'); out.hidden = false; out.replaceChildren(node('h3', 'Alternative preview'));
     const names = ids => ids.map(id => label(asset(id) || {label: id})).join(' + ') || 'None';
     out.append(node('p', 'Original: ' + names(original.sent) + ' → ' + names(original.received)),
@@ -182,7 +213,7 @@
     if (original.sent.length && oldCost != null && newCost != null) out.append(node('p', 'Outgoing Market cost: ' + oldCost + ' → ' + newCost));
     out.append(offerCard(row, true));
     const adopt = node('button', 'Adopt alternative'); adopt.type = 'button'; adopt.onclick = () => openOffer(row);
-    const keep = node('button', 'Keep original'); keep.type = 'button'; keep.onclick = () => { if (lastOffers) offers(lastOffers); else message('Original proposal kept.'); };
+    const keep = node('button', 'Keep original'); keep.type = 'button'; keep.onclick = () => { session.previewProposal = null; persist(); if (lastOffers) offers(lastOffers); else message('Original proposal kept.'); };
     out.append(adopt, keep); focusResult();
   }
   function offerCard(row, preview = false) {
@@ -211,10 +242,29 @@
     return card;
   }
   function searchDetails(body, out) {
+    const assessedBlocker = body.near_misses?.find(row => row.proposal && row.evaluation && (row.blocking_asset_ids?.length || row.conflict_explanation));
+    const blocker = body.blocking_asset_ids?.length || body.conflict_explanation || body.smallest_optional_relaxation ? body : assessedBlocker;
+    if (blocker) {
+      const conflict = node('section', null, 'tw-conflict');
+      conflict.append(node('h4', blocker === body ? 'Exact constraint conflict' : 'Evaluated package blocker'));
+      for (const id of blocker.blocking_asset_ids || []) conflict.append(node('p', 'Blocking asset: ' + label(asset(id) || {label: id}) + ' · ' + id));
+      if (blocker.conflict_explanation) conflict.append(node('p', blocker.conflict_explanation));
+      else if (blocker.blocking_asset_ids?.length) conflict.append(node('p', 'These exact locks conflict with the required trade objective.'));
+      if (blocker.smallest_optional_relaxation) conflict.append(node('p', 'Optional change: ' + blocker.smallest_optional_relaxation));
+      conflict.append(node('small', 'Your locks and original proposal remain unchanged.'));
+      out.append(conflict);
+    }
     if (body.near_misses?.length) {
       const detail = node('details'); detail.append(node('summary', 'Evaluated near misses'));
-      for (const row of body.near_misses) detail.append(node('p', (row.proposal_presentation?.send || []).map(a => a.label).join(' + ') + ' → ' + (row.proposal_presentation?.receive || []).map(a => a.label).join(' + ')),
-        node('p', row.blocker_type + ': ' + row.blockers.join(', ').replaceAll('_', ' ')), node('p', row.smallest_optional_relaxation));
+      for (const row of body.near_misses) {
+        const p = row.proposal;
+        if (!p || !row.evaluation) continue; // A near miss must be an assessed package.
+        const names = (presented, ids) => presented?.length ? presented.map(a => a.label).join(' + ') : (ids || []).map(id => label(asset(id) || {label: id})).join(' + ');
+        detail.append(node('p', names(row.proposal_presentation?.send, p.assets_sent) + ' → ' + names(row.proposal_presentation?.receive, p.assets_received)),
+          node('p', row.conflict_explanation || row.blocker_type + ': ' + (row.blockers || []).join(', ').replaceAll('_', ' ')));
+        for (const id of row.blocking_asset_ids || []) detail.append(node('p', 'Blocking asset: ' + label(asset(id) || {label: id}) + ' · ' + id));
+        if (row.smallest_optional_relaxation) detail.append(node('p', 'Optional change: ' + row.smallest_optional_relaxation));
+      }
       out.append(detail);
     }
     if (body.search_evidence) { const detail = node('details'); detail.append(node('summary', 'Technical search details'), node('pre', JSON.stringify(body.search_evidence, null, 2))); out.append(detail); }
@@ -245,7 +295,7 @@
       searchDetails(body, out);
       return;
     }
-    if (!body.results?.length) { message(body.quiet_state || 'No credible adjustment found. Your proposal is unchanged.'); searchDetails(body, el('trade-result')); return; }
+    if (!body.results?.length) { message(body.conflict_explanation || body.quiet_state || 'No credible adjustment found. Your proposal is unchanged.'); searchDetails(body, el('trade-result')); return; }
     const out = el('trade-result'); out.hidden = false; out.replaceChildren();
     for (const row of body.results) out.append(offerCard(row));
     searchDetails(body, out);
@@ -253,34 +303,38 @@
   async function run(path, extra = {}) {
     if (busy || !workspace) return;
     if (path === 'generate' && entryBlocked) return;
-    if (path === 'generate' && ((flow === 'shop' && !shopTarget && selected.sent.length !== 1) || (flow === 'trade_for' && selected.received.length !== 1))) return message('Choose one target asset for this search. Multi-asset proposals can still be evaluated directly.', true);
+    if (path === 'generate' && ((flow === 'shop' && !session.requiredOutgoingAsset && selected.sent.length !== 1) || (flow === 'trade_for' && !session.requiredIncomingAsset && selected.received.length !== 1))) return message('Choose one target asset for this search. Multi-asset proposals can still be evaluated directly.', true);
     if (path === 'generate' && flow === 'shop') {
-      shopTarget = shopTarget || selected.sent[0];
-      extra = {...extra, partner_roster_id: partner(), asset_id: shopTarget,
+      session.requiredOutgoingAsset = session.requiredOutgoingAsset || selected.sent[0]; session.requiredIncomingAsset = null; session.originWorkflow = 'shop';
+      extra = {...extra, partner_roster_id: partner(), asset_id: session.requiredOutgoingAsset,
         shop_preference: el('shop-preference').value,
-        shop_position: el('shop-preference').value === 'position_need' ? el('shop-position').value : null,
-        protected_assets: Array.from(el('shop-protected').selectedOptions, option => option.value)};
+        shop_position: el('shop-preference').value === 'position_need' ? el('shop-position').value : null};
     }
+    if (path === 'generate' && flow === 'trade_for') { session.requiredIncomingAsset = session.requiredIncomingAsset || selected.received[0]; session.requiredOutgoingAsset = null; session.originWorkflow = 'trade_for'; }
     if (path === 'generate' && flow === 'recommended') extra = {...extra, partner_roster_id: 0, asset_id: null,
       recommendation_filter: el('recommendation-filter').value, excluded_recommendation_families: [...excludedFamilies]};
     if (path === 'assist' || path === 'alternatives') {
-      extra.origin_workflow = flow;
+      extra.origin_workflow = session.originWorkflow;
       const instruction = (extra.instruction || '').toLowerCase();
       const exact = extra.constraint_asset_id;
-      if (exact && /^(keep|protect|do not trade|don't trade)/.test(instruction)) protectedAssets.add(exact);
-      if (exact && /^(replace|exclude)/.test(instruction)) excludedAssets.add(exact);
-      if (flow === 'shop') extra.origin_asset_id = shopTarget || selected.sent[0];
+      if (exact && /^(keep|protect|do not trade|don't trade)/.test(instruction)) addLock('protectedAssets', exact);
+      if (exact && /^(replace|exclude)/.test(instruction)) addLock('excludedAssets', exact);
+      if (session.requiredOutgoingAsset) extra.origin_asset_id = session.requiredOutgoingAsset;
       const text = (extra.instruction || '').trim().toLowerCase();
       extra.repair_mode = text === 'alternative target' ? 'ALTERNATIVE_TARGET' : text === 'alternative construction' ? 'ALTERNATIVE_CONSTRUCTION' : 'MAKE_THIS_TRADE_WORK';
+      session.adjustmentConstraints = {instruction: extra.instruction || '', constraint_asset_id: exact || null, repair_mode: extra.repair_mode};
     }
+    session.previewProposal = null; persist();
     busy = true; const started = revision; paint();
     message(path === 'generate' ? 'Searching supported bilateral options… Your proposal stays intact.' : path === 'assist' ? 'Checking revised offers… Your original proposal stays intact.' : 'Evaluating your proposal…');
     try {
       const body = await post(path, extra);
       if (started !== revision) return;
+      for (const id of body.constraints?.protected_assets || []) addLock('protectedAssets', id);
+      for (const id of body.constraints?.excluded_assets || []) addLock('excludedAssets', id);
       if (path === 'assist') {
         const lostTarget = body.results?.some(row => selected.received.some(id => !row.proposal.assets_received.includes(id)));
-        const youngerChange = (extra.instruction || '').toLowerCase().includes('younger') && !['shop', 'trade_for'].includes(flow);
+        const youngerChange = (extra.instruction || '').toLowerCase().includes('younger') && !['shop', 'trade_for'].includes(session.originWorkflow);
         const invalidPreservation = body.results?.length && !youngerChange && extra.repair_mode !== 'ALTERNATIVE_TARGET' && (body.target_preserved !== true || lostTarget);
         if (body.requested_mode !== extra.repair_mode || body.returned_modes?.some(mode => mode !== extra.repair_mode) || invalidPreservation) throw new Error('DTOS rejected a mismatched repair mode. Your proposal is unchanged.');
       }
@@ -294,27 +348,32 @@
   el('trade-run').onclick = () => run('evaluate'); el('trade-find').onclick = () => run('generate');
   el('trade-build-own').onclick = () => {
     if (busy || !workspace) return;
-    try { sessionStorage.removeItem(storageKey()); } catch (_) { /* Storage is optional. */ }
+    session.requiredOutgoingAsset = null; session.requiredIncomingAsset = null; session.originWorkflow = 'create';
+    selected.sent = []; selected.received = []; setPartner(0);
+    session.originalProposal = null; session.adoptedProposal = null; session.previewProposal = null; persist();
     location.assign('/trades/create?front_office=' + active);
   };
   el('trade-adjust').onclick = () => { el('trade-assist').hidden = false; el('trade-instruction').focus(); };
   el('trade-apply-adjust').onclick = () => run('assist', {instruction: el('trade-instruction').value || 'make this trade work', constraint_asset_id: el('trade-constraint-asset').value || null});
+  const saveAdjustment = () => { session.adjustmentConstraints = {...session.adjustmentConstraints, instruction: el('trade-instruction').value, constraint_asset_id: el('trade-constraint-asset').value || null}; persist(); };
+  el('trade-instruction').oninput = saveAdjustment; el('trade-constraint-asset').onchange = saveAdjustment;
   el('trade-alternatives').onclick = () => run('alternatives');
   el('trade-release-lock').onclick = () => {
     if (busy) return;
     const exact = el('trade-constraint-asset').value;
     if (!exact) return message('Choose the exact adjustment lock to remove.', true);
-    protectedAssets.delete(exact); excludedAssets.delete(exact); revision++;
+    session.protectedAssets = session.protectedAssets.filter(id => id !== exact); session.excludedAssets = session.excludedAssets.filter(id => id !== exact); syncLocks(); persist(); revision++;
     message('Adjustment lock removed for ' + label(asset(exact)) + '. Original proposal kept.');
   };
   root.querySelectorAll('[data-adjust]').forEach(b => b.onclick = () => {
     const exact = asset(el('trade-constraint-asset').value), instruction = b.dataset.adjust;
     if ((instruction.includes('this pick') && exact?.kind !== 'pick') || (instruction.includes('this player') && exact?.kind !== 'player') || (instruction.includes('this asset') && !exact)) return message('Choose the specific owned player or pick first.', true);
     el('trade-instruction').value = instruction;
+    saveAdjustment();
   });
   root.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { side = b.dataset.side; root.querySelectorAll('[data-side]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); paint(); });
-  el('trade-partner').onchange = () => { selected.received = []; changed(); };
-  el('trade-strategy').onchange = () => { revision++; excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; };
+  el('trade-partner').onchange = () => { if (session.requiredIncomingAsset) { el('trade-partner').value = String(partner()); return message('The required target stays with its actual owner. Choose Build My Own to change the objective.', true); } setPartner(el('trade-partner').value); selected.received = []; changed(); };
+  el('trade-strategy').onchange = () => { revision++; excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; persist(); };
   matchMedia('(max-width:760px)').addEventListener('change', () => { if (workspace) paint(); });
   fetch('/api/trades/workspace?front_office=' + active, {credentials: 'same-origin'}).then(async response => { if (!response.ok) throw new Error('Unable to load this authorized workspace.'); return response.json(); }).then(data => {
     workspace = data;
@@ -331,19 +390,41 @@
     if (flow === 'shop') {
       for (const a of team(active)?.assets || []) { const option = node('option', label(a)); option.value = a.asset_id; el('shop-protected').append(option); }
       el('shop-preference').onchange = () => { el('shop-position').disabled = el('shop-preference').value !== 'position_need'; revision++; el('trade-result').hidden = true; };
-      for (const id of ['shop-position', 'shop-protected']) el(id).onchange = () => { revision++; el('trade-result').hidden = true; };
+      el('shop-position').onchange = () => { revision++; el('trade-result').hidden = true; };
+      el('shop-protected').onchange = () => { session.protectedAssets = Array.from(el('shop-protected').selectedOptions, option => option.value); revision++; session.previewProposal = null; el('trade-result').hidden = true; persist(); };
     }
     try { for (const key of Object.keys(sessionStorage)) if (key.startsWith('dtos-trade-workspace:') && key !== storageKey()) sessionStorage.removeItem(key); } catch (_) { /* Storage is optional. */ }
     for (const t of data.teams) if (t.roster_id !== active) { const option = node('option', t.team_name); option.value = t.roster_id; el('trade-partner').append(option); }
     try {
       const saved = JSON.parse(sessionStorage.getItem(storageKey()) || 'null');
-      if (saved && team(saved.partner) && Array.isArray(saved.selected?.sent) && Array.isArray(saved.selected?.received)) {
-        el('trade-partner').value = saved.partner; selected.sent = saved.selected.sent; selected.received = saved.selected.received;
+      const proposal = saved?.currentProposal || (saved?.selected ? {...saved.selected, partner: saved.partner} : null);
+      if (proposal && (team(proposal.partner) || Number(proposal.partner) === 0) && Array.isArray(proposal.sent) && Array.isArray(proposal.received)) {
+        setPartner(proposal.partner); selected.sent = [...proposal.sent]; selected.received = [...proposal.received];
+        for (const key of ['originalProposal', 'previewProposal', 'adoptedProposal', 'requiredOutgoingAsset', 'requiredIncomingAsset', 'adjustmentConstraints', 'originWorkflow']) if (saved.schema === 2 && key in saved) session[key] = saved[key];
+        for (const key of ['protectedAssets', 'excludedAssets']) if (Array.isArray(saved[key])) session[key] = [...new Set(saved[key])];
+        if (saved.strategy && Array.from(el('trade-strategy').options).some(o => o.value === saved.strategy)) el('trade-strategy').value = saved.strategy;
         if (saved.ownership !== data.workspace_context.ownership_generation) message('Ownership has changed. Your proposal is retained for review; evaluation will identify any assets that moved.', true);
       }
     } catch (_) { /* No persisted draft is required. */ }
     const preload = root.dataset.preloadAsset;
-    if (preload) { const owner = data.teams.find(t => t.assets.some(a => a.asset_id === preload)); if (!owner || (flow === 'shop' && owner.roster_id !== active) || (flow === 'trade_for' && owner.roster_id === active)) { entryBlocked = true; el('trade-find').disabled = true; message('This asset is not currently owned by the required franchise. Review current ownership or choose another Trade Center entry.', true); } else { if (flow === 'shop') selected.sent = [preload]; else { el('trade-partner').value = owner.roster_id; selected.received = [preload]; } } }
-    el('trade-find').hidden = flow === 'create'; paint();
+    if (preload) {
+      const owner = data.teams.find(t => t.assets.some(a => a.asset_id === preload));
+      if (!owner || (flow === 'shop' && owner.roster_id !== active) || (flow === 'trade_for' && owner.roster_id === active)) {
+        if (!selected.sent.length && !selected.received.length) { entryBlocked = true; message('This asset is not currently owned by the required franchise. Review current ownership or choose another Trade Center entry.', true); }
+      } else if (!selected.sent.length && !selected.received.length) {
+        session.originWorkflow = flow;
+        if (flow === 'shop') { selected.sent = [preload]; session.requiredOutgoingAsset = preload; session.requiredIncomingAsset = null; }
+        else { setPartner(owner.roster_id); selected.received = [preload]; session.requiredIncomingAsset = preload; session.requiredOutgoingAsset = null; }
+      } else if (flow === 'shop' && selected.sent.includes(preload) && !session.requiredIncomingAsset) {
+        session.requiredOutgoingAsset = session.requiredOutgoingAsset || preload; session.originWorkflow = 'shop';
+      } else if (flow === 'trade_for' && selected.received.includes(preload) && !session.requiredOutgoingAsset) {
+        session.requiredIncomingAsset = session.requiredIncomingAsset || preload; session.originWorkflow = 'trade_for';
+      }
+      // Existing current/adopted packages take precedence over URL defaults.
+    }
+    el('trade-instruction').value = session.adjustmentConstraints.instruction || '';
+    el('trade-constraint-asset').value = session.adjustmentConstraints.constraint_asset_id || '';
+    syncLocks(); el('trade-find').hidden = flow === 'create'; persist(); paint();
+    if (session.previewProposal) previewOffer({proposal: session.previewProposal});
   }).catch(error => message(error.message, true));
 })();

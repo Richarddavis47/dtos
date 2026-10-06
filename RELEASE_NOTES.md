@@ -9,6 +9,10 @@ Trade For retains the target's actual owner and explores different acquisition
 packages. Adjustments use exact asset constraints and preview alternatives before
 you choose to adopt them or keep the original.
 
+Protected assets now remain locked across generation, adoption and repair. Exact
+constraint conflicts stay visible, and adopted multi-asset packages survive targeted
+page reloads.
+
 Results disclose strategic costs, limited manager-history evidence and evaluated
 near misses. Missing required evidence stays unavailable. Market prices, exact
 pick identity and the capital/strategy contract remain unchanged.
