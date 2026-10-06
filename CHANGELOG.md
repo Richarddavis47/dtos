@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.21.10 / build 2110 — Responsive Technical Details
+
+- Wrap complete technical identifiers inside shared progressive disclosures so
+  opening Brain snapshot/hash evidence cannot widen manager-facing pages.
+- Keep expanded Market unavailable-value metrics bounded at 320px.
+- Add responsive Chromium contracts at 320/375/390 and desktop widths for full
+  evidence selection, shared definition lists and local evidence-table scrolling.
+
 # v1.21.9 - Canonical Asset Facts
 
 - Resolve dossier Market headlines globally, independently of Front Office roster membership.

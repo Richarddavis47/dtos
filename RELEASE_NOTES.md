@@ -1,4 +1,12 @@
-# DTOS v1.21.9 - Canonical Asset Facts
+# DTOS v1.21.10 - Responsive Technical Details
+
+Long Brain snapshot identifiers, hashes and other technical evidence now wrap
+inside their disclosures, preserving the full selectable value without widening
+the page. Expanded Market details also keep unavailable-value text bounded at
+320px. Canonical values, provenance, ownership, projections and Trade behavior
+are unchanged.
+
+## Previous release: DTOS v1.21.9 - Canonical Asset Facts
 
 Player dossier Market values now use the same global canonical price as Market
 and Trade, even when a player belongs to another franchise or is a free agent.
