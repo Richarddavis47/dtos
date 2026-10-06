@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.21.8 - Make It Cheaper Repair Completeness
+
+- Try cheaper current-offer substitutions before expanding through bounded package changes.
+- Return a small evaluated set with strictly lower canonical outgoing Market cost while retaining exact targets and locks.
+- Explain repair pruning, missing evidence and bounded-search exhaustion; keep alternatives preview-only until adoption.
+
 # v1.21.7 - Trade Discovery + Repair Reliability
 
 - Expand bounded trade discovery when the first pass yields too few credible choices, with diverse recommendation families and session browsing.

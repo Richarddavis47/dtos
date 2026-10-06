@@ -221,6 +221,10 @@
     const e = row.evaluation || {};
     card.append(node('h3', e.recommendation || 'Recommendation unavailable'));
     if (row.repair_type) card.append(node('p', row.repair_type));
+    if (row.adjustment_evidence?.concept === 'strictly_lower_canonical_outgoing_market_cost') {
+      const cost = row.adjustment_evidence;
+      card.append(node('p', `Outgoing Market cost: ${cost.current_outgoing_cost} → ${cost.alternative_outgoing_cost} (${cost.market_cost_reduction} lower).`));
+    }
     card.append(node('p', (row.proposal_presentation?.send || []).map(a => a.label).join(' + ') + ' → ' + (row.proposal_presentation?.receive || []).map(a => a.label).join(' + ')),
       node('p', 'Why this helps me: ' + (e.why_you_would_do_it || e.dominant_reason || 'Review the supported evidence.')),
       node('p', 'Major drawback: ' + (e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ') || e.major_limitations?.join('; ').replaceAll('_', ' ') || 'No material drawback identified in available evidence.')),

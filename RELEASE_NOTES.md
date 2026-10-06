@@ -1,4 +1,16 @@
-# DTOS v1.21.7 - Trade Discovery + Repair Reliability
+# DTOS v1.21.8 - Make It Cheaper Repair Completeness
+
+Make It Cheaper now searches lower-cost substitutions around your current offer
+before expanding through bounded package changes. Credible alternatives must cost
+less at canonical Market prices and preserve required Shop assets, Trade For
+targets and exact protections.
+
+Results show the outgoing cost reduction and explain why a cheaper route could
+not qualify, including missing evidence or an exhausted search budget. Alternatives
+remain previews until you choose to adopt them. Discovery, strategy assessment
+and canonical prices remain unchanged.
+
+## Previous release: DTOS v1.21.7 - Trade Discovery + Repair Reliability
 
 Trade Center searches more credible package constructions when its first pass
 finds too few useful choices. Recommended Trades prioritizes varied opportunities
