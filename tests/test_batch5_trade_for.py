@@ -17,7 +17,7 @@ class TradeForTests(unittest.TestCase):
         target = next(a for a in workspace['pools'][2] if a.asset_id == '2-QB-0')
         proposals = tuple(TradeProposal(1, 2, (a,), (target,), '1-for-1') for a in outgoing)
         def supported_fixture(data, payload, **kwargs):
-            return {'proposal': {'assets_sent': payload['assets_sent'], 'assets_received': payload['assets_received']},
+            return {'proposal': dict(payload),
                     'evaluation': {'generated_trade_eligible': False, 'recommendation': 'FAIR / OPTIONAL',
                         'legal': True, 'legality': {'execution_status': 'NO IDENTIFIED OWNERSHIP OR CAPACITY BLOCKER'},
                         'dimensions': {'counterparty_plausibility': {'assessment': 'PLAUSIBLE'}, 'confidence': {'assessment': 'MEDIUM'}},

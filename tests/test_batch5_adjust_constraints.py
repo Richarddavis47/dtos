@@ -50,7 +50,8 @@ class AdjustmentConstraintTests(unittest.TestCase):
         a = self.assets['1-QB-0']
         with patch('services.trade_intelligence.evaluate_trade_request', side_effect=self.assess):
             result = assist_trade_request(self.data, dict(self.payload, instruction=f'replace {a.label}'))
-        self.assertEqual(result['count'], 1)
+        self.assertGreater(result['count'], 0)
+        self.assertLessEqual(result['count'], 3)
         self.assertNotIn(a.asset_id, result['results'][0]['proposal']['assets_sent'])
 
     def test_add_pick_preserves_owned_identity_and_does_not_alias(self):
@@ -62,7 +63,8 @@ class AdjustmentConstraintTests(unittest.TestCase):
         with patch('services.trade_intelligence.build_trade_workspace', return_value=self.workspace), \
                 patch('services.trade_intelligence.evaluate_trade_request', side_effect=self.assess):
             result = assist_trade_request(self.data, dict(self.payload, instruction='add outgoing pick'))
-        self.assertEqual(result['count'], 1)
+        self.assertGreater(result['count'], 0)
+        self.assertLessEqual(result['count'], 3)
         picks = [self.assets[i] for i in result['results'][0]['proposal']['assets_sent'] if self.assets[i].kind == 'pick']
         self.assertTrue(picks)
         for pick in picks:
@@ -72,14 +74,16 @@ class AdjustmentConstraintTests(unittest.TestCase):
     def test_cheaper_uses_supported_price_not_asset_count(self):
         with patch('services.trade_intelligence.evaluate_trade_request', side_effect=self.assess):
             result = assist_trade_request(self.data, dict(self.payload, assets_sent=['1-QB-0', '1-QB-1'], instruction='cheaper'))
-        self.assertEqual(result['count'], 1)
+        self.assertGreater(result['count'], 0)
+        self.assertLessEqual(result['count'], 3)
         cost = sum(self.assets[i].trade_value for i in result['results'][0]['proposal']['assets_sent'])
         self.assertLess(cost, self.assets['1-QB-0'].trade_value + self.assets['1-QB-1'].trade_value)
 
     def test_expand_requires_actual_added_player_contribution(self):
         with patch('services.trade_intelligence.evaluate_trade_request', side_effect=self.assess):
             result = assist_trade_request(self.data, dict(self.payload, instruction='expand trade'))
-        self.assertEqual(result['count'], 1)
+        self.assertGreater(result['count'], 0)
+        self.assertLessEqual(result['count'], 3)
         proposal = result['results'][0]['proposal']
         self.assertGreater(len(proposal['assets_sent']) + len(proposal['assets_received']), 2)
         def no_contribution(*args, **kwargs):
@@ -97,7 +101,8 @@ class AdjustmentConstraintTests(unittest.TestCase):
         with patch('services.trade_intelligence.build_trade_workspace', return_value=self.workspace), \
                 patch('services.trade_intelligence.evaluate_trade_request', side_effect=self.assess):
             result = assist_trade_request(self.data, dict(self.payload, instruction='younger'))
-        self.assertEqual(result['count'], 1)
+        self.assertGreater(result['count'], 0)
+        self.assertLessEqual(result['count'], 3)
         self.assertIn('2-QB-1', result['results'][0]['proposal']['assets_received'])
         def rejected(*args, **kwargs):
             row = self.assess(*args, **kwargs)
@@ -124,7 +129,8 @@ class AdjustmentConstraintTests(unittest.TestCase):
             return row
         with patch('services.trade_intelligence.evaluate_trade_request', side_effect=supported_gain):
             result = assist_trade_request(self.data, dict(self.payload, instruction='win-now'))
-        self.assertEqual(result['count'], 1)
+        self.assertGreater(result['count'], 0)
+        self.assertLessEqual(result['count'], 3)
         self.assertEqual(result['results'][0]['adjustment_evidence']['unavailable_horizons'], [])
 
     def test_alternative_target_not_used_when_original_is_credible(self):
@@ -144,7 +150,8 @@ class AdjustmentConstraintTests(unittest.TestCase):
         with patch('services.trade_intelligence._bounded_adjustment_candidates', return_value=(candidate,)), \
                 patch('services.trade_intelligence.evaluate_trade_request', side_effect=assessed):
             result = assist_trade_request(self.data, dict(self.payload, instruction='alternative target'))
-        self.assertEqual(result['count'], 1)
+        self.assertGreater(result['count'], 0)
+        self.assertLessEqual(result['count'], 3)
         self.assertFalse(result['target_preserved'])
         self.assertTrue(result['results'][0]['objective_evidence']['target_changed'])
 

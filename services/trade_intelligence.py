@@ -201,6 +201,10 @@ def evaluate_trade_request(
     if payload.get('strategy') is not None:
         _requested_strategy({}, payload)
     validate_trade_ownership(workspace, payload)
+    locked = set(payload.get('protected_assets') or ()) & set(payload['assets_sent'])
+    locked |= set(payload.get('excluded_assets') or ()) & set((*payload['assets_sent'], *payload['assets_received']))
+    if locked:
+        raise TradeInputError('legality_rejected', 'The proposal violates an exact protected or excluded asset constraint.', tuple(sorted(locked)))
     teams = {int(team.get("roster_id") or 0): team for team in workspace["teams"]}
     if active_id not in teams or partner_id not in teams or active_id == partner_id:
         raise ValueError("A valid bilateral pair of distinct teams is required.")
@@ -313,7 +317,7 @@ def _proposal_payload(proposal: TradeProposal, workflow: str = "adjust") -> dict
 
 
 def _bounded_adjustment_candidates(
-    workspace: dict[str, Any], payload: dict[str, Any], *, allow_target_change: bool = False,
+    workspace: dict[str, Any], payload: dict[str, Any], *, allow_target_change: bool = False, search_diagnostics=None,
 ) -> tuple[TradeProposal, ...]:
     """Build deterministic nearby and generated alternatives from cached pools only."""
     active_id = int(payload.get("active_roster_id") or 0)
@@ -338,8 +342,16 @@ def _bounded_adjustment_candidates(
     allowed_ids = {a.asset_id for a in allowed_active}
     sent = tuple(a for a in sent if a.asset_id in allowed_ids)
     allowed_partner = tuple(a for a in pools[partner_id] if a.asset_id not in excluded)
-    candidates = list(generate_proposals(active_id, partner_id, allowed_active, allowed_partner,
-                                        construction_only=True))
+    candidates = []
+    cheap_count = 0
+    targets = allowed_partner if allow_target_change else tuple(a for a in allowed_partner if a.asset_id in received_ids)
+    for target in targets[:12]:
+        for phase in range(2):
+            diagnostics = {}
+            candidates.extend(generate_proposals(active_id, partner_id, allowed_active, allowed_partner,
+                required_received_asset_id=target.asset_id, construction_only=True, search_phase=phase, search_diagnostics=diagnostics))
+            cheap_count += diagnostics.get('cheap_package_pairs_inspected', 0)
+    base_count = len(candidates)
     if sent and received:
         candidates.append(TradeProposal(active_id, partner_id, sent, received, 'Constrained Original'))
     active_options = sorted(
@@ -380,7 +392,14 @@ def _bounded_adjustment_candidates(
                 or (not allow_target_change and not required_targets.issubset(received_key))):
             continue
         unique.setdefault((sent_key, received_key), proposal)
-    return tuple(unique[key] for key in sorted(unique))[:250]
+    if search_diagnostics is not None:
+        search_diagnostics.update(cheap_package_pairs_inspected=cheap_count + len(candidates) - base_count,
+            constructed_candidates=min(len(unique), 160), constraint_filtered=len(candidates) - len(unique),
+            unique_package_budget=160, target_asset_ids=sorted(required_targets))
+    return tuple(sorted(unique.values(), key=lambda p: (
+        abs(sum(a.trade_value for a in p.assets_sent) - sum(a.trade_value for a in p.assets_received)),
+        sum(a.trade_value for a in p.assets_sent),
+        tuple(a.asset_id for a in p.assets_sent), tuple(a.asset_id for a in p.assets_received))))[:160]
 
 
 def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
@@ -400,14 +419,25 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     instruction = str(payload.get("instruction") or payload.get("action") or "make this trade work").strip()
     lowered = instruction.casefold()
     requested_mode = _repair_mode(payload, instruction)
-    target_preservation_required = requested_mode is not RepairMode.ALTERNATIVE_TARGET
+    younger_target_change = 'younger' in lowered and payload.get('origin_workflow') not in ('shop', 'trade_for')
+    target_preservation_required = payload.get('origin_workflow') == 'trade_for' or (requested_mode is not RepairMode.ALTERNATIVE_TARGET and not younger_target_change)
     enriched = dict(payload)
     protected = {str(item) for item in payload.get("protected_assets") or ()}
     excluded = {str(item) for item in payload.get("excluded_assets") or ()}
     active_assets = workspace["pools"].get(active_id, ())
     all_assets = tuple(asset for pool in workspace["pools"].values() for asset in pool)
     by_id = {asset.asset_id: asset for asset in all_assets}
-    no_picks = any(text in lowered for text in ('do not trade pick', "don't trade pick", 'no outgoing pick'))
+    exact_asset = payload.get('constraint_asset_id')
+    if exact_asset:
+        if exact_asset not in {a.asset_id for a in active_assets}:
+            raise ValueError('Select an exact owned asset for this adjustment constraint.')
+        if ('this pick' in lowered and by_id[exact_asset].kind != 'pick') or ('this player' in lowered and by_id[exact_asset].kind != 'player'):
+            raise ValueError('The selected exact asset does not match the requested player/pick constraint.')
+        if any(prefix in lowered for prefix in ('keep', 'protect', 'do not trade', "don't trade")):
+            protected.add(exact_asset)
+        elif any(prefix in lowered for prefix in ('replace', 'exclude')):
+            excluded.add(exact_asset)
+    no_picks = not exact_asset and any(text in lowered for text in ('do not trade picks', "don't trade picks", 'no outgoing picks'))
     if no_picks:
         protected.update(a.asset_id for a in active_assets if a.kind == 'pick')
     for asset in active_assets:
@@ -452,11 +482,18 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     if (protected & excluded or (no_picks and outgoing_pick_required)
             or required_outgoing & (protected | excluded)
             or (target_preservation_required and original_received & excluded)):
+        blocking_ids = sorted((protected & excluded) | (required_outgoing & (protected | excluded))
+                              | (original_received & excluded)
+                              | (protected if no_picks and outgoing_pick_required else set()))
+        blocking_names = ', '.join(f'{by_id[item].label if item in by_id else item} ({item})' for item in blocking_ids)
         return {'instruction': instruction, 'requested_mode': requested_mode.value, 'returned_modes': [],
                 'count': 0, 'results': [], 'state': 'CONSTRAINT_CONFLICT',
                 'quiet_state': 'The constraint conflicts with the preserved trade objective. Change the objective explicitly.',
                 'search_completed': False, 'target_preserved': None,
-                'constraints': {'protected_assets': sorted(protected), 'excluded_assets': sorted(excluded)}}
+                'constraints': {'protected_assets': sorted(protected), 'excluded_assets': sorted(excluded)},
+                'blocking_asset_ids': blocking_ids,
+                'conflict_explanation': f'Your exact lock on {blocking_names} conflicts with the required trade objective. No package was evaluated for this conflicting request.',
+                'smallest_optional_relaxation': f'Remove the conflicting exact lock on {blocking_names}, or explicitly choose a different trade objective.'}
     original_sent_assets = tuple(by_id[item] for item in original_sent if item in by_id)
     original_received_assets = tuple(by_id[item] for item in original_received if item in by_id)
     requested_position = next((position for position in ("WR", "RB", "QB", "TE") if f"{position.casefold()}s instead" in lowered or f"{position.casefold()} instead" in lowered or f"use {position.casefold()}" in lowered), None)
@@ -472,44 +509,56 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     enriched['addition_kind'] = 'pick' if add_pick else None
     original_started = perf_counter()
     assess_original = win_now or requested_mode is RepairMode.ALTERNATIVE_TARGET
-    original_result = evaluate_trade_request(data, dict(payload, workflow='adjust'), workspace=workspace,
+    original_result = evaluate_trade_request(data, dict(payload, workflow='adjust', protected_assets=[], excluded_assets=[]), workspace=workspace,
                                             evidence_context=evidence_context, projection_reader=reader) if assess_original else None
     evaluation_count = 1 if assess_original else 0
     evaluation_seconds = perf_counter() - original_started if assess_original else 0.0
     construction_started = perf_counter()
+    construction_diagnostics = {}
     proposals = _bounded_adjustment_candidates(workspace, enriched,
-        allow_target_change=requested_mode is RepairMode.ALTERNATIVE_TARGET)
+        allow_target_change=not target_preservation_required, search_diagnostics=construction_diagnostics)
     construction_seconds = perf_counter() - construction_started
+    from services.trade_search_policy import SearchFunnel, result_state
+    funnel = SearchFunnel(160, [int(payload['partner_roster_id'])], workspace['pools'])
+    funnel.construction(int(payload['partner_roster_id']), proposals, construction_diagnostics)
     candidates = []
     for proposal in proposals:
         # Instruction predicates precede expensive assessment; canonical quality
         # is never patched to satisfy a preference.
         if requested_position and not any(a.position == requested_position for a in proposal.assets_sent):
+            funnel.counts['constructions_pruned'] += 1
             continue
         if requested_kind and not any(a.kind == requested_kind for a in proposal.assets_sent):
+            funnel.counts['constructions_pruned'] += 1
             continue
         sent_set = {a.asset_id for a in proposal.assets_sent}
         received_set = {a.asset_id for a in proposal.assets_received}
         if sent_set == original_sent and received_set == original_received:
+            funnel.counts['constructions_pruned'] += 1
             continue
         if cheaper and (any(a.trade_value is None for a in (*proposal.assets_sent, *original_sent_assets))
                         or sum(a.trade_value for a in proposal.assets_sent) >= sum(a.trade_value for a in original_sent_assets)):
+            funnel.counts['constructions_pruned'] += 1
             continue
         if add_pick:
             old_picks = {a.asset_id for a in (*original_sent_assets, *original_received_assets) if a.kind == 'pick'}
             new_picks = {a.asset_id for a in (proposal.assets_sent if outgoing_pick_required else
                                              (*proposal.assets_sent, *proposal.assets_received)) if a.kind == 'pick'}
             if not new_picks - old_picks:
+                funnel.counts['constructions_pruned'] += 1
                 continue
         if another_player and not {a.asset_id for a in proposal.assets_received if a.kind == 'player'} - original_received:
+            funnel.counts['constructions_pruned'] += 1
             continue
         if expand and len(proposal.assets_sent) + len(proposal.assets_received) <= len(original_sent) + len(original_received):
+            funnel.counts['constructions_pruned'] += 1
             continue
         if younger:
             old_players = [a for a in original_received_assets if a.kind == 'player']
             new_players = [a for a in proposal.assets_received if a.kind == 'player']
             if (not old_players or not new_players or any(a.age is None for a in (*old_players, *new_players))
                     or sum(a.age for a in new_players) / len(new_players) >= sum(a.age for a in old_players) / len(old_players)):
+                funnel.counts['constructions_pruned'] += 1
                 continue
         stage = perf_counter()
         result = evaluate_trade_request(
@@ -519,22 +568,29 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
         evaluation_seconds += perf_counter() - stage
         evaluation_count += 1
         if not _trade_for_eligible(result['evaluation']):
+            funnel.assessed(result)
             continue
         sent = set(result["proposal"]["assets_sent"])
         received = set(result["proposal"]["assets_received"])
         sent_assets = tuple(by_id[item] for item in sent)
         received_assets = tuple(by_id[item] for item in received)
         if requested_kind and not any(asset.kind == requested_kind for asset in sent_assets):
+            funnel.assessed(result, filtered=True, filter_reason='REQUESTED_OUTGOING_KIND_NOT_MET')
             continue
         if requested_position and not any(asset.position == requested_position for asset in sent_assets):
+            funnel.assessed(result, filtered=True, filter_reason='REQUESTED_OUTGOING_POSITION_NOT_MET')
             continue
         if add_pick and sum(asset.kind == "pick" for asset in (*sent_assets, *received_assets)) <= sum(asset.kind == "pick" for asset in (*original_sent_assets, *original_received_assets)):
+            funnel.assessed(result, filtered=True, filter_reason='NO_ADDITIONAL_PICK')
             continue
         if another_player and sum(asset.kind == "player" for asset in received_assets) <= sum(asset.kind == "player" for asset in original_received_assets):
+            funnel.assessed(result, filtered=True, filter_reason='NO_ADDITIONAL_RETURN_PLAYER')
             continue
         if expand and len(sent_assets) + len(received_assets) <= len(original_sent_assets) + len(original_received_assets):
+            funnel.assessed(result, filtered=True, filter_reason='EXPANDED_PACKAGE_REQUIRED')
             continue
         if cheaper and sum(asset.trade_value for asset in sent_assets) >= sum(asset.trade_value for asset in original_sent_assets):
+            funnel.assessed(result, filtered=True, filter_reason='LOWER_MARKET_COST_REQUIRED')
             continue
         if expand:
             packages = (result['evaluation'].get('dimensions') or {}).get('package_quality') or {}
@@ -543,6 +599,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
             if (not new_incoming and not new_outgoing
                     or not new_incoming.issubset((packages.get('active') or {}).get('incoming_lineup_contributors') or [])
                     or not new_outgoing.issubset((packages.get('partner') or {}).get('incoming_lineup_contributors') or [])):
+                funnel.assessed(result, filtered=True, filter_reason='ADDED_PLAYER_HAS_NO_SUPPORTED_LINEUP_CONTRIBUTION')
                 continue
         if win_now:
             def near(result):
@@ -553,16 +610,19 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
                     or a.get('delta') is None or b.get('delta') is None for a, b in comparable)
                     or not any(a['delta'] > b['delta'] for a, b in comparable)
                     or any(a['delta'] < b['delta'] for a, b in comparable)):
+                funnel.assessed(result, filtered=True, filter_reason='WIN_NOW_NO_SUPPORTED_NEAR_TERM_IMPROVEMENT')
                 continue
             longer = [(current.get(h) or {}, original.get(h) or {}) for h in ('rest_of_regular_season', 'playoff_window')]
             if any(a.get('availability') == b.get('availability') == 'complete'
                    and a.get('delta') is not None and b.get('delta') is not None
                    and a['delta'] < b['delta'] for a, b in longer):
+                funnel.assessed(result, filtered=True, filter_reason='WIN_NOW_SUPPORTED_LATER_HORIZON_REGRESSION')
                 continue
             def depth(row):
                 return (((row['evaluation'].get('dimensions') or {}).get('strategic_fit') or {}).get('active') or {}).get('reserve_slot_changes') or {}
             prior_depth, revised_depth = depth(original_result), depth(result)
             if any(revised_depth[w] < prior_depth[w] for w in revised_depth.keys() & prior_depth.keys()):
+                funnel.assessed(result, filtered=True, filter_reason='WIN_NOW_RESERVE_COVERAGE_REGRESSION')
                 continue
             result['adjustment_evidence'] = {'concept': 'supported_near_term_gain_without_comparable_horizon_or_depth_regression',
                 'unavailable_horizons': [name for name in ('rest_of_regular_season', 'playoff_window')
@@ -574,13 +634,16 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
             old_roles = {(a.kind, a.position if a.kind == 'player' else (a.season, a.round)) for a in original_received_assets}
             new_roles = {(a.kind, a.position if a.kind == 'player' else (a.season, a.round)) for a in received_assets}
             if not old_roles.issubset(new_roles):
+                funnel.assessed(result, filtered=True, filter_reason='TARGET_ROLE_OR_POSITION_CHANGED')
                 continue
             result['objective_evidence'] = {'scope': 'same requested asset role/position or pick year/round',
                                            'target_changed': True, 'quality': 'shared evaluator, not role matching'}
+        funnel.assessed(result)
         candidates.append((distance, target_changed, abs(1 - result["evaluation"]["values"]["ratio"]), result))
     candidates.sort(key=lambda row: (row[0], row[2], row[3]["evaluation"]["provenance"]["evaluation_id"]))
     target_preserving = [row for row in candidates if not row[1]]
-    closest = target_preserving[0][3] if target_preserving else None
+    closest_rows = candidates if younger_target_change else target_preserving
+    closest = closest_rows[0][3] if closest_rows else None
     def construction_signature(ids):
         return sorted((a.kind, a.asset_id if a.kind == 'player' else
                        str((a.season, a.round, a.projected_range, a.exact_slot))) for a in (by_id[i] for i in ids))
@@ -593,7 +656,9 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     options: list[dict[str, Any]] = []
     if requested_mode is RepairMode.MAKE_THIS_TRADE_WORK and closest:
         closest["repair_type"] = "MAKE THIS TRADE WORK"
-        options.append(closest)
+        for _, _, _, row in closest_rows[:3]:
+            row['repair_type'] = 'MAKE THIS TRADE WORK'
+            options.append(row)
     if requested_mode is RepairMode.ALTERNATIVE_CONSTRUCTION and materially_different:
         materially_different["repair_type"] = "ALTERNATIVE CONSTRUCTION"
         options.append(materially_different)
@@ -620,6 +685,8 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
         "target_preservation_required": target_preservation_required,
         "count": len(options),
         "results": options,
+        "preview_only": True, "original_proposal": {k: payload[k] for k in ('active_roster_id', 'partner_roster_id', 'assets_sent', 'assets_received')},
+        "near_misses": funnel.near(), "result_state": result_state(funnel, options),
         "quiet_state": None if options else no_path,
         "search_completed": True,
         "next_valid_actions": (
@@ -633,7 +700,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
         "target_asset_ids": sorted(original_received),
         "target_preserved": target_preserved,
         'state': 'ADJUSTMENT_AVAILABLE' if options else 'NO_CREDIBLE_ADJUSTMENT',
-        'search_evidence': {'constructed': len(proposals), 'full_evaluations': evaluation_count,
+        'search_evidence': {**funnel.result(len(options)), 'stages': funnel.stages, 'constructed': len(proposals), 'full_evaluations': evaluation_count,
             'projection_weeks_read': len(reader.weeks), 'provider_requests': 0, 'durable_writes': 0,
             'timings_seconds': {'construction': construction_seconds, 'shared_evaluation': evaluation_seconds,
                                'total': perf_counter() - started}},
@@ -661,19 +728,32 @@ def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> 
     target_id = max((by_id[item] for item in received_ids), key=lambda asset: (asset.trade_value, asset.asset_id)).asset_id
     original = (frozenset(sent_ids), frozenset(received_ids))
     assessed_packages = {}
+    from services.trade_search_policy import SearchFunnel, result_state
+    funnel = SearchFunnel(160, [int(payload['partner_roster_id'])], workspace['pools'])
+    if payload.get('origin_workflow') == 'shop':
+        shop_asset = payload.get('origin_asset_id')
+        if shop_asset not in sent_ids:
+            raise ValueError('Alternative must preserve the exact original Shop asset.')
+        payload = dict(payload, required_outgoing_assets=[shop_asset])
 
     def evaluated(candidate_payload: dict[str, Any]) -> list[dict[str, Any]]:
         rows = []
-        for proposal in _bounded_adjustment_candidates(workspace, candidate_payload):
+        diagnostics = {}
+        proposals = _bounded_adjustment_candidates(workspace, candidate_payload, search_diagnostics=diagnostics)
+        funnel.construction(int(payload['partner_roster_id']), proposals, diagnostics)
+        for proposal in proposals:
             from copy import deepcopy
             key = (proposal.active_roster_id, proposal.partner_roster_id,
                    tuple(sorted(a.asset_id for a in proposal.assets_sent)),
                    tuple(sorted(a.asset_id for a in proposal.assets_received)))
             if key not in assessed_packages:
+                if len(assessed_packages) >= funnel.budget:
+                    continue
                 assessed_packages[key] = evaluate_trade_request(
                     data, _proposal_payload(proposal, "create_alternative"),
                     workspace=workspace, evidence_context=evidence_context, projection_reader=reader,
                 )
+                funnel.assessed(assessed_packages[key])
             result = deepcopy(assessed_packages[key])
             if _trade_for_eligible(result['evaluation']):
                 rows.append(result)
@@ -707,9 +787,12 @@ def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> 
         raise TradeInputError('workspace_context_changed', 'Canonical evidence changed during alternative construction. Refresh and try again.')
     return {
         "count": len(chosen[:3]), "results": chosen[:3], "protected_asset_id": key_asset_id,
+        "preview_only": True, "original_proposal": {k: payload[k] for k in ('active_roster_id', 'partner_roster_id', 'assets_sent', 'assets_received')},
+        "near_misses": funnel.near(), "result_state": result_state(funnel, chosen[:3]),
+        "search_evidence": {**funnel.result(len(chosen[:3])), 'full_evaluations': len(assessed_packages)},
         "target_asset_id": target_id, "calculated": True, "provider_requests": 0,
         "asset_market_constructions": 0,
-        "quiet_state": None if chosen else "The original construction is currently the strongest legitimate path; no materially different alternative clears bilateral quality gates.",
+        "quiet_state": None if chosen else "No credible alternative within the bounded search. Review the evaluated packages and their blockers.",
     }
 
 
@@ -827,12 +910,38 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
         if requested_partner not in partner_ids:
             raise TradeInputError("legality_rejected", "The selected counterparty does not own the requested target or is not a valid trade partner.")
         partner_ids = [requested_partner]
+    target_asset = next(a for a in workspace['pools'][ownership[target]] if a.asset_id == target)
+    if (workflow == 'shop' and target in protected | excluded) or (workflow == 'trade_for' and target in excluded):
+        objective = 'required outgoing Shop asset' if workflow == 'shop' else 'required incoming Trade For target'
+        explanation = f'Your exact lock on {target_asset.label} ({target}) conflicts with the {objective}. No package was evaluated for this conflicting request.'
+        return {'workflow': workflow, 'target_asset_id': target, 'count': 0, 'results': [],
+                'state': 'CONSTRAINT_CONFLICT', 'result_state': 'CONSTRAINT CONFLICT',
+                'quiet_state': explanation, 'conflict_explanation': explanation,
+                'blocking_asset_ids': [target],
+                'smallest_optional_relaxation': f'Remove the conflicting exact lock on {target_asset.label} ({target}), or explicitly choose a different trade objective.',
+                'constraints': {'protected_assets': sorted(protected), 'excluded_assets': sorted(excluded)},
+                'search_completed': False, 'search_evidence': {'full_evaluations': 0, 'bounded': True},
+                **({'markets': []} if workflow == 'shop' else {}), 'provider_requests': 0}
+    if target_asset.trade_value is None:
+        return {'workflow': workflow, 'target_asset_id': target, 'count': 0, 'results': [],
+                'result_state': 'MISSING REQUIRED EVIDENCE', 'quiet_state': 'Canonical Market price is unavailable for the selected exact asset.',
+                'search_evidence': {'full_evaluations': 0, 'missing_asset_ids': [target], 'bounded': True,
+                    'stages': [{'partner_id': ownership[target], 'stage': 'required_target_market_evidence',
+                                'unavailable_target_price': True, 'constructed_candidates': 0}]},
+                'constraints': {'protected_assets': sorted(protected), 'excluded_assets': sorted(excluded)},
+                **({'markets': []} if workflow == 'shop' else {}), 'provider_requests': 0}
+    eligible_partner_ids = tuple(partner_ids)
     shop_preference = None
     shop_discovery = []
     shop_markets = []
     if workflow == 'shop':
-        from services.shop_asset_search import preference, discover
+        from services.shop_asset_search import preference, discover, unsupported_requirement
         shop_preference = preference(payload)
+        unsupported = unsupported_requirement(workspace, partner_ids, shop_preference, excluded)
+        if unsupported:
+            return {'workflow': 'shop', 'count': 0, 'results': [], 'markets': [], 'shop_preference': shop_preference,
+                    'result_state': 'UNSUPPORTED GOAL', 'quiet_state': unsupported,
+                    'search_evidence': {'full_evaluations': 0, 'bounded': True}, 'provider_requests': 0}
         target_asset = next(a for a in workspace['pools'][active_id] if a.asset_id == target)
         shop_discovery = discover(workspace, partner_ids, target_asset, shop_preference, excluded)
         if target in protected | excluded:
@@ -849,60 +958,86 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
     full_evaluations = 0
     generation_seconds = evaluation_seconds = 0.0
     stage_counts, rejection_reasons = [], {}
-    for partner_id in partner_ids:
-        generation_started = perf_counter()
-        diagnostics = {}
-        outgoing = tuple(a for a in workspace['pools'][active_id] if a.asset_id not in protected | excluded) if targeted_search else workspace['pools'][active_id]
-        incoming = tuple(a for a in workspace['pools'][partner_id] if a.asset_id not in excluded) if targeted_search else workspace['pools'][partner_id]
-        proposals = generate_proposals(
-            active_id, partner_id,
-            outgoing, incoming,
-            required_sent_asset_id=target if workflow == "shop" else None,
-            required_received_asset_id=target if workflow == "trade_for" else None,
-            construction_only=targeted_search,
-            search_diagnostics=diagnostics,
-            **({'return_preference': shop_preference} if workflow == 'shop' else {}),
-        )
-        generation_seconds += perf_counter() - generation_started
-        stage_counts.append({'partner_id': partner_id, 'initial_league_asset_universe': sum(len(p) for p in workspace['pools'].values()),
-                             'after_ownership': {'sent': len(workspace['pools'][active_id]), 'received': len(workspace['pools'][partner_id])},
-                             'after_constraints': {'sent': len(outgoing), 'received': len(incoming)}, **diagnostics})
-        proposals_considered += len(proposals)
-        for proposal in proposals:
-            sent = tuple(asset.asset_id for asset in proposal.assets_sent)
-            received = tuple(asset.asset_id for asset in proposal.assets_received)
-            if protected.intersection(sent) or excluded.intersection((*sent, *received)):
-                continue
-            if workflow == "trade_for" and target not in received:
-                continue
-            if workflow == "shop" and target not in sent:
-                continue
-            evaluation_started = perf_counter()
-            result = evaluate_trade_request(
-                data, _proposal_payload(proposal, workflow), workspace=workspace,
-                evidence_context=evidence_context,
-                **({'projection_reader': projection_reader} if targeted_search else {}),
+    from services.trade_search_policy import SearchFunnel, diverse_rows, result_state
+    funnel = SearchFunnel(240, eligible_partner_ids, workspace['pools'])
+    assessed = set()
+    for phase in range(3):
+        for partner_id in partner_ids:
+            generation_started = perf_counter()
+            diagnostics = {}
+            outgoing = tuple(a for a in workspace['pools'][active_id] if a.asset_id not in protected | excluded) if targeted_search else workspace['pools'][active_id]
+            incoming = tuple(a for a in workspace['pools'][partner_id] if a.asset_id not in excluded) if targeted_search else workspace['pools'][partner_id]
+            proposals = generate_proposals(
+                active_id, partner_id,
+                outgoing, incoming,
+                required_sent_asset_id=target if workflow == "shop" else None,
+                required_received_asset_id=target if workflow == "trade_for" else None,
+                construction_only=targeted_search,
+                search_diagnostics=diagnostics,
+                search_phase=phase,
+                **({'return_preference': shop_preference} if workflow == 'shop' else {}),
             )
-            evaluation_seconds += perf_counter() - evaluation_started
-            full_evaluations += 1
-            qualifies = _trade_for_eligible(result['evaluation']) if targeted_search else result['evaluation']['generated_trade_eligible']
-            result['workflow_eligibility'] = {'workflow': workflow, 'eligible': qualifies}
-            if qualifies:
-                result["partner_team_name"] = str(teams[partner_id].get("team_name") or teams[partner_id].get("owner") or "Unassigned Franchise")
-                generated.append(result)
-            else:
-                proposals_rejected += 1
-                for reason in result['evaluation'].get('recommendation_trace', {}).get('rule_reasons', []):
-                    rejection_reasons[reason] = rejection_reasons.get(reason, 0) + 1
-                plausibility = result['evaluation'].get('dimensions', {}).get('counterparty_plausibility', {}).get('assessment')
-                if plausibility in ('LOW', 'INSUFFICIENT EVIDENCE'):
-                    key = 'COUNTERPARTY_' + plausibility.replace(' ', '_')
-                    rejection_reasons[key] = rejection_reasons.get(key, 0) + 1
+            generation_seconds += perf_counter() - generation_started
+            stage_counts.append({'partner_id': partner_id, 'initial_league_asset_universe': sum(len(p) for p in workspace['pools'].values()),
+                                 'after_ownership': {'sent': len(workspace['pools'][active_id]), 'received': len(workspace['pools'][partner_id])},
+                                 'after_constraints': {'sent': len(outgoing), 'received': len(incoming)}, **diagnostics})
+            proposals_considered += len(proposals)
+            funnel.construction(partner_id, proposals, diagnostics)
+            for proposal in proposals:
+                sent = tuple(asset.asset_id for asset in proposal.assets_sent)
+                received = tuple(asset.asset_id for asset in proposal.assets_received)
+                if protected.intersection(sent) or excluded.intersection((*sent, *received)):
+                    continue
+                if workflow == "trade_for" and target not in received:
+                    continue
+                if workflow == "shop" and target not in sent:
+                    continue
+                signature = (partner_id, tuple(sorted(sent)), tuple(sorted(received)))
+                if signature in assessed or full_evaluations >= funnel.budget:
+                    continue
+                assessed.add(signature)
+                evaluation_started = perf_counter()
+                result = evaluate_trade_request(
+                    data, _proposal_payload(proposal, workflow), workspace=workspace,
+                    evidence_context=evidence_context,
+                    **({'projection_reader': projection_reader} if targeted_search else {}),
+                )
+                evaluation_seconds += perf_counter() - evaluation_started
+                full_evaluations += 1
+                qualifies = funnel.assessed(result)
+                result['workflow_eligibility'] = {'workflow': workflow, 'eligible': qualifies}
+                if qualifies:
+                    result["partner_team_name"] = str(teams[partner_id].get("team_name") or teams[partner_id].get("owner") or "Unassigned Franchise")
+                    generated.append(result)
+                else:
+                    proposals_rejected += 1
+                    for reason in result['evaluation'].get('recommendation_trace', {}).get('rule_reasons', []):
+                        rejection_reasons[reason] = rejection_reasons.get(reason, 0) + 1
+                    plausibility = result['evaluation'].get('dimensions', {}).get('counterparty_plausibility', {}).get('assessment')
+                    if plausibility in ('LOW', 'INSUFFICIENT EVIDENCE'):
+                        key = 'COUNTERPARTY_' + plausibility.replace(' ', '_')
+                        rejection_reasons[key] = rejection_reasons.get(key, 0) + 1
+        assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
+        if (len(diverse_rows(generated, assets, limit=5)) >= 5 or full_evaluations >= funnel.budget
+                or not partner_ids or not any(a.asset_id not in protected | excluded for a in workspace['pools'][active_id])
+                or projection_reader.snapshot() is None
+                or (not generated and full_evaluations and funnel.counts['missing_evidence'] == full_evaluations)):
+            break
     if workflow == 'trade_for':
         generated.sort(key=lambda row: (row['evaluation']['values']['sent'],
                                        row['evaluation']['provenance']['evaluation_id']))
         by_id = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
         generated = _distinct_trade_for_offers(generated, by_id)
+        # Prefer different constructions before tiny variants with the same shape.
+        shapes, rest = {}, []
+        for row in generated:
+            shape = (tuple(sorted(by_id[i].kind for i in row['proposal']['assets_sent'])),
+                     tuple(sorted(by_id[i].kind for i in row['proposal']['assets_received'])))
+            if shape not in shapes:
+                shapes[shape] = row
+            else:
+                rest.append(row)
+        generated = list(shapes.values()) + rest
     elif workflow == 'shop':
         from services.shop_asset_search import rank_returns
         assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
@@ -948,18 +1083,20 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
         raise TradeInputError('workspace_context_changed', 'Canonical evidence changed during trade search. Refresh and run the search again.')
     return {
         "workflow": workflow, "target_asset_id": target or None,
+        "result_state": "HARD INVALID" if target in excluded or (workflow == "shop" and target in protected) else result_state(funnel, generated[:limit]), "near_misses": funnel.near(),
         "count": min(len(generated), limit), "results": generated[:limit],
         "quiet_state": None if generated else (("The shopped asset is protected or excluded by this search's constraints." if target in protected | excluded else "No credible market in this bounded Shop search.") if workflow == 'shop' else "No legitimate bilateral construction clears the current constraints."),
         **({'shop_preference': shop_preference, 'markets': shop_markets, 'counterparty_discovery': shop_discovery} if workflow == 'shop' else {}),
         "next_paths": next_paths,
         "closest_path": closest_path,
         "search_evidence": {
+            **funnel.result(min(len(generated), limit)),
             'stages': stage_counts, 'rejection_reason_counts': rejection_reasons,
             'timings_seconds': {'candidate_generation': generation_seconds, 'shared_evaluation': evaluation_seconds,
                                'total_workflow': perf_counter() - started},
             'full_evaluations': full_evaluations,
             "partner_count": len(partner_ids),
-            "package_shapes": 6,
+            "package_shapes": max((row.get("shape_count", 6) for row in stage_counts), default=6),
             "proposals_considered": proposals_considered,
             "proposals_rejected": proposals_rejected,
             "result_count": min(len(generated), limit),
@@ -988,12 +1125,17 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
 
 
 def _generate_recommended(data, payload):
-    """Proactive bounded search; every assessed package uses the existing service."""
-    from services.recommended_trade_search import session_constraints, discover, construct, family_identity, surface_evidence, rank
+    """Progressive bounded discovery with actual evaluated near misses."""
+    from services.recommended_trade_search import session_constraints, discover, construct, family_identity, surface_evidence
+    from services.trade_search_policy import SearchFunnel, diverse_rows, result_state
     started = perf_counter()
     selected_filter, excluded_families = session_constraints(payload)
     if payload.get('asset_id') or payload.get('partner_roster_id'):
         raise ValueError('Recommended Trades discovers its own targets and counterparties.')
+    if selected_filter == 'sell_high':
+        return {'workflow': 'recommended', 'count': 0, 'results': [], 'result_state': 'UNSUPPORTED GOAL',
+                'quiet_state': 'Sell High requires comparable Market movement and a supported sale rationale; that evidence is unavailable.',
+                'search_evidence': {'full_evaluations': 0, 'bounded': True}, 'provider_requests': 0, 'durable_writes': 0}
     protected = {str(a) for a in payload.get('protected_assets') or []}
     excluded = {str(a) for a in payload.get('excluded_assets') or []}
     boundary = _trade_search_boundary(data)
@@ -1001,66 +1143,72 @@ def _generate_recommended(data, payload):
     workspace = build_trade_workspace(data, int(payload.get('active_roster_id') or 0))
     _requested_strategy(workspace, payload)
     assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
-    discovery = discover(data, workspace, reader, protected, excluded, excluded_families=excluded_families)
+    projection_available = bool(reader.snapshot() and str(reader.snapshot().get('league_id')) == str(workspace['manager_context'].league_id))
     evidence_context = build_trade_evidence_context(data, assets.values())
-    evaluated, constructed, seen, rejected = [], 0, set(), {}
+    funnel = SearchFunnel(180, [rid for rid in workspace['pools'] if rid != workspace['active_roster_id']], workspace['pools'])
+    evaluated, constructed, seen = [], 0, set()
     construction_seconds = evaluation_seconds = derivation_seconds = 0.0
-    for thesis in discovery['theses']:
-        stage = perf_counter()
-        proposals = construct(workspace, thesis, protected, excluded)
-        construction_seconds += perf_counter() - stage
-        constructed += len(proposals)
-        for proposal in proposals:
-            p = _proposal_payload(proposal, 'recommended')
-            key = (p['partner_roster_id'], tuple(sorted(p['assets_sent'])), tuple(sorted(p['assets_received'])))
-            if key in seen:
-                continue
-            seen.add(key)
-            stage = perf_counter()
-            row = evaluate_trade_request(data, p, workspace=workspace, evidence_context=evidence_context, projection_reader=reader)
-            evaluation_seconds += perf_counter() - stage
-            qualifies = _trade_for_eligible(row['evaluation'])
-            row['workflow_eligibility'] = {'workflow': 'recommended', 'eligible': qualifies}
-            if not qualifies:
-                reasons = row['evaluation'].get('recommendation_trace', {}).get('rule_reasons') or ['SHARED_SAFEGUARD_NOT_MET']
-                for reason in reasons:
-                    rejected[reason] = rejected.get(reason, 0) + 1
-                continue
-            stage = perf_counter()
-            row['family_id'] = thesis.get('family_id') or family_identity(workspace['manager_context'].league_id, row, assets)
-            row['opportunity'] = surface_evidence(row)
-            row['discovery_thesis'] = thesis
-            derivation_seconds += perf_counter() - stage
-            evaluated.append(row)
-    stage = perf_counter()
-    ranked = rank(evaluated)
-    ranking_seconds = perf_counter() - stage
-    stage = perf_counter()
     tag = {'win_now': 'WIN-NOW OPPORTUNITY', 'value': 'VALUE OPPORTUNITY', 'roster_fit': 'ROSTER CONSTRUCTION',
-           'future': 'FUTURE VALUE', 'sell_high': 'SELL-HIGH OPPORTUNITY'}.get(selected_filter)
-    results, families = [], set(excluded_families)
-    for row in ranked:
-        if row['family_id'] in families or (tag and tag not in row['opportunity']['reason_tags']):
-            continue
-        families.add(row['family_id'])
-        results.append(row)
-        if len(results) == 5:
+           'future': 'FUTURE VALUE'}.get(selected_filter)
+    discoveries = []
+    for phase in range(3):
+        discovery = discover(data, workspace, reader, protected, excluded, max_theses=(6, 24, 48)[phase],
+                             excluded_families=excluded_families, search_phase=phase)
+        discoveries.append(discovery)
+        # Round-robin theses across teams before considering variants.
+        packages = []
+        for thesis in discovery['theses']:
+            stage = perf_counter()
+            diagnostics = {}
+            proposals = construct(workspace, thesis, protected, excluded, search_phase=phase, search_diagnostics=diagnostics)
+            construction_seconds += perf_counter() - stage
+            constructed += len(proposals)
+            funnel.construction(thesis['partner_id'], proposals, diagnostics)
+            packages.append((thesis, proposals))
+        for index in range((3, 6, 8)[phase]):
+            for thesis, proposals in packages:
+                if index >= len(proposals) or len(seen) >= funnel.budget:
+                    continue
+                p = _proposal_payload(proposals[index], 'recommended')
+                key = (p['partner_roster_id'], tuple(sorted(p['assets_sent'])), tuple(sorted(p['assets_received'])))
+                if key in seen:
+                    continue
+                seen.add(key)
+                stage = perf_counter()
+                row = evaluate_trade_request(data, p, workspace=workspace, evidence_context=evidence_context, projection_reader=reader)
+                evaluation_seconds += perf_counter() - stage
+                stage = perf_counter()
+                row['family_id'] = family_identity(workspace['manager_context'].league_id, row, assets)
+                row['opportunity'] = surface_evidence(row)
+                row['discovery_thesis'] = thesis
+                derivation_seconds += perf_counter() - stage
+                filtered = row['family_id'] in excluded_families or bool(tag and tag not in row['opportunity']['reason_tags'])
+                qualifies = funnel.assessed(row, filtered=filtered)
+                row['workflow_eligibility'] = {'workflow': 'recommended', 'eligible': qualifies}
+                if qualifies:
+                    evaluated.append(row)
+        results = diverse_rows(evaluated, assets)
+        if len(results) >= 5 or len(seen) >= funnel.budget or not projection_available:
             break
-    diversity_seconds = perf_counter() - stage
+    results = diverse_rows(evaluated, assets)
     if _trade_search_boundary(data) != boundary:
         raise TradeInputError('workspace_context_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
     return {'workflow': 'recommended', 'count': len(results), 'results': results,
-            'quiet_state': None if results else 'No credible opportunity in this bounded search with the current evidence and session filters.',
+            'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results), 'near_misses': funnel.near(),
+            'quiet_state': None if results else 'Canonical projection evidence is unavailable for this league.' if not projection_available
+                else 'Required trade evidence is unavailable; review the evaluated near misses.' if result_state(funnel, results) == 'MISSING REQUIRED EVIDENCE'
+                else 'No credible result within the bounded search and current filters. Review evaluated near misses.',
             'recommendation_filter': selected_filter, 'discovery': discovery,
-            'search_evidence': {'full_evaluations': len(seen), 'packages_constructed': constructed,
-                'qualifying_before_session_filter': len(evaluated), 'rejection_reason_counts': rejected,
-                'timings_seconds': {'discovery': discovery['discovery_seconds'], 'candidate_generation': construction_seconds,
-                    'shared_evaluation': evaluation_seconds, 'reason_derivation': derivation_seconds,
-                    'ranking': ranking_seconds, 'diversity': diversity_seconds, 'total_workflow': perf_counter() - started},
+            'has_more': bool(results and projection_available and (discovery.get('omitted_theses') or len(evaluated) > len(results) or phase < 2)),
+            'search_evidence': {**funnel.result(len(results)), 'stages': funnel.stages, 'phases': len(discoveries),
+                'full_evaluations': len(seen), 'packages_constructed': constructed,
+                'qualifying_before_session_filter': funnel.counts['eligible'] + funnel.counts['filtered'],
+                'timings_seconds': {'discovery': sum(d['discovery_seconds'] for d in discoveries), 'candidate_generation': construction_seconds,
+                    'shared_evaluation': evaluation_seconds, 'reason_derivation': derivation_seconds, 'total_workflow': perf_counter() - started},
                 'bounded': True, 'projection_weeks_read': len(reader.weeks), 'provider_requests': 0,
                 'raw_history_scans': 0, 'durable_writes': 0},
             'constraints': {'protected_assets': sorted(protected), 'excluded_assets': sorted(excluded)},
-            'session': {'persistence': 'request_only', 'excluded_family_count': len(excluded_families), 'maximum_families': 64},
+            'session': {'persistence': 'request_only', 'excluded_family_count': len(excluded_families), 'maximum_families': 256},
             'provider_requests': 0, 'durable_writes': 0, 'generated_only_after_counterparty_gate': True}
 
 

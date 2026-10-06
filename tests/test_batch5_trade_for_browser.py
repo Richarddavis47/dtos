@@ -43,6 +43,7 @@ class TradeForHandoffTests(unittest.TestCase):
                     page.locator('#trade-target:not([hidden])').wait_for()
                     page.locator('#trade-find').click()
                     page.get_by_role('button', name='Open editable offer:', exact=False).click()
+                    page.get_by_role('button', name='Adopt alternative', exact=True).click()
                     self.assertEqual(page.locator('#trade-review button[data-asset-id="1-QB-0"]').count(), 1)
                     self.assertEqual(page.locator('#trade-review button[data-asset-id="2-QB-0"]').count(), 1)
                     page.locator('#trade-adjust').click()

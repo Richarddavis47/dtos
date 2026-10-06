@@ -1,4 +1,23 @@
-# DTOS v1.21.6 - Trade Center Capital + Strategy Reconciliation
+# DTOS v1.21.7 - Trade Discovery + Repair Reliability
+
+Trade Center searches more credible package constructions when its first pass
+finds too few useful choices. Recommended Trades prioritizes varied opportunities
+and supports browsing the next five without requiring five results.
+
+Shop retains the selected player or exact pick and can search all eligible teams.
+Trade For retains the target's actual owner and explores different acquisition
+packages. Adjustments use exact asset constraints and preview alternatives before
+you choose to adopt them or keep the original.
+
+Protected assets now remain locked across generation, adoption and repair. Exact
+constraint conflicts stay visible, and adopted multi-asset packages survive targeted
+page reloads.
+
+Results disclose strategic costs, limited manager-history evidence and evaluated
+near misses. Missing required evidence stays unavailable. Market prices, exact
+pick identity and the capital/strategy contract remain unchanged.
+
+## Previous release: DTOS v1.21.6 - Trade Center Capital + Strategy Reconciliation
 
 Trade Center now evaluates legal trades involving draft capital under Win Now,
 Retool and Rebuild strategies. Recommendations distinguish Market value,

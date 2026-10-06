@@ -119,7 +119,7 @@ class TradeWorkflowConformanceTests(unittest.TestCase):
         self.assertIn('id="trade-received-board"', text)
         self.assertIn("trade-sent-chips", text)
         self.assertIn("trade-received-chips", text)
-        self.assertIn("Generate revised offer", text)
+        self.assertIn("Preview revised offers", text)
         for label in (
             "Keep this player", "Do not trade this pick", "Replace this asset",
             "Use WRs instead", "Use RBs instead", "Use picks instead", "Add a pick",

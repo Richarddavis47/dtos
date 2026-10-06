@@ -25,7 +25,7 @@ class ShopAssetFoundationTests(unittest.TestCase):
                     'counterparty_plausibility': {'assessment': 'PLAUSIBLE', 'explanation': 'Fixture supported benefit'},
                     'confidence': {'assessment': 'MEDIUM'},
                     'package_quality': {'active': {'incoming_lineup_contributors': payload['assets_received']}},
-                    'strategic_fit': {'active': {'horizons': {'current_week': {'delta': 1 if partner == 2 else 8}},
+                    'strategic_fit': {'active': {'production_evidence': {'mean_weekly_delta': 1 if partner == 2 else 8}, 'horizons': {'current_week': {'delta': 1 if partner == 2 else 8}},
                                                 'future_capital': {'received': []}}}}}}
             recorded.append(deepcopy(result['evaluation']))
             return result
@@ -80,7 +80,7 @@ class ShopAssetFoundationTests(unittest.TestCase):
                 'dimensions': {'confidence': {'assessment': 'MEDIUM'},
                     'counterparty_plausibility': {'assessment': 'PLAUSIBLE'},
                     'package_quality': {'active': {'assessment': 'BOUNDED CONTRIBUTION', 'incoming_lineup_contributors': [pid]}},
-                    'strategic_fit': {'active': {'horizons': {'current_week': {'delta': delta}}, 'future_capital': {'received': []}}}}}}
+                    'strategic_fit': {'active': {'production_evidence': {'mean_weekly_delta': delta}, 'horizons': {'current_week': {'delta': delta}}, 'future_capital': {'received': []}}}}}}
         rows = [row('old', 'SMASH ACCEPT', 1), row('young', 'FAIR / OPTIONAL', 7)]
         before = deepcopy(rows)
         self.assertEqual(rank_returns(rows, assets, preference({}))[0][0], rows[0])
@@ -91,7 +91,7 @@ class ShopAssetFoundationTests(unittest.TestCase):
         self.assertEqual(rank_returns(rows, assets, preference({'shop_preference': 'draft_capital'})), [])
         rows[0]['evaluation']['dimensions']['package_quality']['active']['incoming_lineup_contributors'] = []
         ranked = rank_returns(rows, assets, preference({'shop_preference': 'position_need', 'shop_position': 'WR'}))
-        self.assertEqual([row[0] for row in ranked], [rows[1]])
+        self.assertEqual([row[0] for row in ranked], [rows[1], rows[0]])  # Position content is distinct from starter utility.
 
     def test_preference_constraints_change_construction_before_evaluation(self):
         from dataclasses import replace

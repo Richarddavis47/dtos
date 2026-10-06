@@ -1,6 +1,13 @@
 """Evidence coverage by dimension; no probability or recommendation strength."""
 
 
+def manager_history_evidence(historical):
+    supported = bool(historical and historical.get('evidence_references') and historical.get('confidence') == 'HIGH')
+    return {'availability': 'supported' if supported else 'limited',
+            'confidence': (historical or {}).get('confidence') or 'UNAVAILABLE',
+            'disclosure': None if supported else 'Limited manager-history evidence'}
+
+
 def evidence_confidence(market, strategies, historical, proposal, impact):
     projections = {}
     for side, strategy in strategies.items():
@@ -19,8 +26,11 @@ def evidence_confidence(market, strategies, historical, proposal, impact):
               'exact_slot': a.exact_slot}
              for a in (*proposal.assets_sent, *proposal.assets_received) if a.kind == 'pick']
     complete = all(s['projection_coverage_complete'] for s in strategies.values())
+    history = manager_history_evidence(historical)
     return {
-        'assessment': 'MEDIUM' if market['availability'] == 'full' and complete else 'LIMITED',
+        'assessment': ('HIGH' if history['availability'] == 'supported' else 'MEDIUM')
+        if market['availability'] == 'full' and complete else 'LIMITED',
+        'manager_history_disclosure': history['disclosure'],
         'explanation': 'Support for bounded Market/lineup conclusions; not acceptance probability or outcome certainty.',
         'dimensions': {
             'market': {'availability': market['availability'],

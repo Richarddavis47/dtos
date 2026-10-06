@@ -141,7 +141,7 @@ class RecommendedBoundaryTests(unittest.TestCase):
         self.assertNotEqual(first, family_identity('other', {'proposal': p}, assets))
         self.assertEqual(session_constraints({'excluded_recommendation_families': [first]})[1], {first})
         with self.assertRaises(ValueError):
-            session_constraints({'excluded_recommendation_families': [first] * 65})
+            session_constraints({'excluded_recommendation_families': [first] * 257})
         with self.assertRaises(ValueError):
             session_constraints({'recommendation_filter': ['invalid']})
 
@@ -158,7 +158,7 @@ class RecommendedBoundaryTests(unittest.TestCase):
                 'legality': {'execution_status': 'NO IDENTIFIED OWNERSHIP OR CAPACITY BLOCKER'},
                 'dimensions': {'counterparty_plausibility': {'assessment': 'PLAUSIBLE'}, 'confidence': {'assessment': 'MEDIUM'}},
                 'provenance': {'evaluation_id': 'one'}}}
-        with patch('services.recommended_trade_search.discover', return_value={'theses': [{}], 'discovery_seconds': 0}), \
+        with patch('services.recommended_trade_search.discover', return_value={'theses': [{'partner_id': 2}], 'omitted_theses': [], 'discovery_seconds': 0}), \
                 patch('services.recommended_trade_search.construct', return_value=[proposal]), \
                 patch('services.trade_intelligence.evaluate_trade_request', side_effect=assessed), \
                 patch('src.core.trade_intelligence.engine.trade_generator._value', side_effect=AssertionError('legacy')):

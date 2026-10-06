@@ -117,3 +117,12 @@ zero-finding authoritative gate with an error-count budget: that would allow new
 errors to offset fixes. Any future expansion of the required rules needs its own
 reviewed scope and cleanup. Complete product releases still use the canonical
 release command (on Linux: `.venv/bin/python -m tools.validation.validate_release`).
+
+## Trade discovery and repair acceptance
+
+`python -m unittest tests.test_trade_discovery_repair` runs deterministic real
+Market/legal-lineup fixtures for progressive search, diverse recommendation pages,
+Shop anchors, Trade For ownership/package diversity, cheaper previews, exact locks,
+younger returns, limited history, bad counterparty terms and evaluated near misses.
+Existing Batch 5, capital/strategy, authenticated workspace and browser contracts
+remain release gates. See [Scout handoff and release evidence](TRADE_DISCOVERY_REPAIR_RELEASE.md).

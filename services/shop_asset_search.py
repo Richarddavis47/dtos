@@ -49,7 +49,7 @@ def ranking_evidence(row, assets):
     ids = set(package.get('incoming_lineup_contributors') or [])
     incoming = [assets[pid] for pid in row['proposal']['assets_received']]
     contributors = [a for a in incoming if a.kind == 'player' and a.asset_id.removeprefix('player:') in ids]
-    ages = [a.age for a in contributors if getattr(a, 'age', None) is not None and a.age > 0]
+    ages = [a.age for a in incoming if a.kind == 'player' if getattr(a, 'age', None) is not None and a.age > 0]
     return {'recommendation': evaluation.get('recommendation'),
             'plausibility': (dimensions.get('counterparty_plausibility') or {}).get('assessment'),
             'confidence': (dimensions.get('confidence') or {}).get('assessment'),
@@ -59,7 +59,10 @@ def ranking_evidence(row, assets):
             'package_reason_codes': package.get('reason_codes') or [],
             'lineup_loss_weeks': package.get('loss_weeks') or [],
             'contributing_positions': sorted({a.position for a in contributors if a.position}),
-            'contributor_mean_age': sum(ages) / len(ages) if ages and len(ages) == len(contributors) else None,
+            'contributor_mean_age': sum(ages) / len(ages) if ages and len(ages) == sum(a.kind == 'player' for a in incoming) else None,
+            'received_positions': sorted({a.position for a in incoming if a.kind == 'player' and a.position}),
+            'production_evidence': strategy.get('production_evidence') or {},
+            'capital_assessment': (strategy.get('future_capital') or {}).get('assessment') or {},
             'future_capital': (strategy.get('future_capital') or {}).get('received') or [],
             'longevity': strategy.get('longevity'), 'liquidity': strategy.get('liquidity')}
 
@@ -71,29 +74,41 @@ def rank_returns(rows, assets, pref):
         return (value is None, -value if value is not None else 0)
     for row in rows:
         evidence = ranking_evidence(row, assets)
-        horizons = evidence['horizons']
         quality = {'SMASH ACCEPT': 0, 'WORTH PURSUING': 1, 'FAIR / OPTIONAL': 2}.get(evidence['recommendation'], 3)
         plausibility = {'STRONG': 0, 'PLAUSIBLE': 1}.get(evidence['plausibility'], 2)
         confidence = {'HIGH': 0, 'MEDIUM': 1}.get(evidence['confidence'], 2)
-        impact = tuple(descending(horizons.get(name)) for name in ('current_week', 'next_n', 'rest_of_regular_season', 'playoff_window'))
+        impact = descending(evidence['production_evidence'].get('mean_weekly_delta'))
         depth = evidence['depth_by_week']
         # Slot-weeks are coverage evidence, not a monetary or dynasty score.
         depth_order = descending(sum(depth.values()) if depth else None)
         base = (quality, plausibility, confidence, len(evidence['lineup_loss_weeks']))
         name = pref['name']
-        if name == 'position_need' and pref['position'] not in evidence['contributing_positions']:
-            continue  # A position label alone is not supported lineup utility.
+        if name == 'position_need' and pref['position'] not in evidence['received_positions']:
+            continue  # Position preference is package content; utility stays separate.
         if name == 'draft_capital' and not evidence['future_capital']:
             continue
         if name == 'win_now' or name == 'position_need':
             key = (impact, depth_order, base)
         elif name == 'draft_capital':
-            key = (base, -len(evidence['future_capital']), impact)
+            key = (base, descending(evidence['capital_assessment'].get('net_market_value')), impact)
         elif name == 'youth_rebuild':
             age = evidence['contributor_mean_age']
-            key = (base, age is None, age if age is not None else 0, -len(evidence['future_capital']), impact)
+            key = (base, age is None, age if age is not None else 0, descending(evidence['capital_assessment'].get('net_market_value')), impact)
         else:
             key = (base, impact, depth_order)
         decorated.append((key, row['evaluation']['provenance']['evaluation_id'], row, evidence))
     decorated.sort(key=lambda item: (item[0], item[1]))
     return [(row, evidence) for _, _, row, evidence in decorated]
+
+
+def unsupported_requirement(workspace, partner_ids, pref, excluded):
+    pool = [a for rid in partner_ids for a in workspace['pools'][rid]
+            if a.asset_id not in excluded and a.trade_value is not None]
+    name = pref['name']
+    if name == 'draft_capital' and not any(a.kind == 'pick' for a in pool):
+        return 'Draft Capital requires an owned, priced pick return in the selected market.'
+    if name == 'position_need' and not any(a.position == pref['position'] for a in pool):
+        return f"Position Need requires an owned {pref['position']} return in the selected market."
+    if name == 'youth_rebuild' and not any(a.kind == 'pick' or a.age is not None for a in pool):
+        return 'Youth / Rebuild requires supported player ages or priced future capital in the selected market.'
+    return None

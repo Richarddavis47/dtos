@@ -12,7 +12,7 @@ from time import perf_counter
 from src.core.intelligence.team_strength import compatible_profile
 from src.core.intelligence import lineup_slot_eligible as _eligible, TradeProposal, generate_proposals
 
-METHOD = 'recommended-opportunities-v1'
+METHOD = 'recommended-opportunities-v2-progressive'
 FILTERS = {'all', 'win_now', 'value', 'roster_fit', 'future', 'sell_high'}
 
 
@@ -21,15 +21,15 @@ def session_constraints(payload):
     if not isinstance(selected, str) or selected not in FILTERS:
         raise ValueError('Unsupported Recommended Trades filter.')
     excluded = payload.get('excluded_recommendation_families') or []
-    if (not isinstance(excluded, list) or len(excluded) > 64
+    if (not isinstance(excluded, list) or len(excluded) > 256
             or any(not isinstance(value, str) or len(value) != 64
                    or any(c not in '0123456789abcdef' for c in value) for value in excluded)):
-        raise ValueError('Recommendation refresh requires at most 64 valid session family identities.')
+        raise ValueError('Recommendation refresh requires at most 256 valid session family identities.')
     return selected, set(excluded)
 
 
-def discover(data, workspace, reader, protected, excluded, *, max_theses=6, excluded_families=()):
-    """Complementary supported slot opportunities; six theses, not all packages.
+def discover(data, workspace, reader, protected, excluded, *, max_theses=6, excluded_families=(), search_phase=0):
+    """Supported slot opportunities first; bounded Market construction expansion.
 
     A potential incoming player must beat an eligible supported optimal slot in
     at least one published week. Pair with an owned outgoing player independently
@@ -44,10 +44,12 @@ def discover(data, workspace, reader, protected, excluded, *, max_theses=6, excl
     report = {'methodology': METHOD, 'potential_counterparties': len(partners),
               'discovered_counterparties': 0, 'theses': [], 'omitted_theses': [],
               'limitations': [], 'durable_writes': 0}
-    if profile is None:
+    if profile is None and not search_phase:
         report['limitations'] = ['COMPATIBLE_PREPARED_LINEUPS_UNAVAILABLE']
         report['discovery_seconds'] = perf_counter() - started
         return report
+    profile = profile or {'teams': {}, 'league_id': str(workspace['manager_context'].league_id),
+        'semantic_generation': None, 'projection_generation': None, 'season': None, 'current_week': None, 'scoring_profile_id': None}
     weeks = sorted({int(w) for row in profile['teams'].values() for w in row['weekly']})
     snapshots = {w: reader.week_snapshot(w, generation_snapshot=reader.snapshot()) for w in weeks}
     for week, snapshot in snapshots.items():
@@ -87,7 +89,9 @@ def discover(data, workspace, reader, protected, excluded, *, max_theses=6, excl
     for rid in partners:
         own, other = profile['teams'].get(str(active)), profile['teams'].get(str(rid))
         if not own or not other:
-            continue
+            if not search_phase:
+                continue
+            own = other = {'weekly': {}}
         incoming = [row for a in workspace['pools'][rid] if (row := opportunity(a, own, other))]
         outgoing = [row for a in workspace['pools'][active] if a.asset_id not in protected
                     and (row := opportunity(a, other, own))]
@@ -98,7 +102,7 @@ def discover(data, workspace, reader, protected, excluded, *, max_theses=6, excl
             groups = defaultdict(list)
             for row in sorted(rows, key=order):
                 groups[row['position']].append(row)
-            return [rows[0] for _, rows in sorted(groups.items())]
+            return [r for _, rows in sorted(groups.items()) for r in rows[:1 + search_phase]]
         pairs = [{'partner_id': rid, 'send': send, 'receive': receive,
                   'type': 'COMPLEMENTARY_SUPPORTED_SLOT_OPPORTUNITY',
                   'league_id': profile['league_id'], 'season': profile['season'],
@@ -142,12 +146,27 @@ def discover(data, workspace, reader, protected, excluded, *, max_theses=6, excl
         # for a supported capital thesis when explicit strategy identifies one.
         if capital_pairs:
             pairs = pairs[:1] + capital_pairs[:1] if pairs else capital_pairs[:2]
+        if search_phase:
+            # Slot-only theses miss reserve consolidation and intentional capital exchanges.
+            # Price is a cheap construction ordering, never a bilateral benefit verdict.
+            own_pool = [a for a in workspace['pools'][active] if a.trade_value is not None
+                        and a.asset_id not in protected | excluded]
+            other_pool = [a for a in workspace['pools'][rid] if a.trade_value is not None and a.asset_id not in excluded]
+            market_pairs = []
+            for receive in sorted(other_pool, key=lambda a: (-a.trade_value, a.asset_id))[:12 + 6 * search_phase]:
+                for send in sorted(own_pool, key=lambda a: (abs(a.trade_value - receive.trade_value), a.asset_id))[:2 + search_phase]:
+                    market_pairs.append({'partner_id': rid,
+                        'send': {'asset_id': send.asset_id, 'weeks': [], 'position': send.position},
+                        'receive': {'asset_id': receive.asset_id, 'weeks': [], 'position': receive.position},
+                        'type': 'CANONICAL_MARKET_PACKAGE_SEARCH', 'league_id': profile['league_id'],
+                        'assessment': 'construction_only_not_a_benefit_or_acceptance_claim'})
+            pairs += market_pairs
         if pairs:
-            by_partner[rid] = pairs[:2]
+            by_partner[rid] = pairs[:(2, 12, 24)[search_phase]]
     report['discovered_counterparties'] = len(by_partner)
     # Round-robin opportunities across counterparties avoids filling the budget
     # with variations from the first franchise. Deterministic, never randomized.
-    all_theses = [rows[index] for index in range(2) for _, rows in sorted(by_partner.items()) if index < len(rows)]
+    all_theses = [rows[index] for index in range((2, 12, 24)[search_phase]) for _, rows in sorted(by_partner.items()) if index < len(rows)]
     assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
     eligible_theses = []
     for thesis in all_theses:
@@ -165,7 +184,7 @@ def discover(data, workspace, reader, protected, excluded, *, max_theses=6, excl
     return report
 
 
-def construct(workspace, thesis, protected, excluded):
+def construct(workspace, thesis, protected, excluded, *, search_phase=0, search_diagnostics=None):
     active, partner = workspace['active_roster_id'], thesis['partner_id']
     outgoing = tuple(a for a in workspace['pools'][active] if a.asset_id not in protected | excluded)
     incoming = tuple(a for a in workspace['pools'][partner] if a.asset_id not in excluded)
@@ -174,7 +193,7 @@ def construct(workspace, thesis, protected, excluded):
     rows = [TradeProposal(active, partner, (sent,), (received,),
                           'Capital / production exchange' if sent.kind == 'pick' or received.kind == 'pick' else 'Complementary player exchange')]
     candidates = generate_proposals(active, partner, outgoing, incoming,
-        required_received_asset_id=received.asset_id, construction_only=True)
+        required_received_asset_id=received.asset_id, construction_only=True, search_phase=search_phase, search_diagnostics=search_diagnostics)
     seen = {(tuple(a.asset_id for a in rows[0].assets_sent), tuple(a.asset_id for a in rows[0].assets_received))}
     for candidate in candidates:
         key = (tuple(a.asset_id for a in candidate.assets_sent), tuple(a.asset_id for a in candidate.assets_received))
@@ -182,20 +201,23 @@ def construct(workspace, thesis, protected, excluded):
             continue
         seen.add(key)
         rows.append(candidate)
-        if len(rows) == 3:
+        if len(rows) == (3, 6, 8)[search_phase]:
             break
+    if search_diagnostics is not None:
+        search_diagnostics['cheap_package_pairs_inspected'] = search_diagnostics.get('cheap_package_pairs_inspected', 0) + 1
+        search_diagnostics['constructed_candidates'] = len(rows)
+        search_diagnostics['required_thesis_outgoing'] = sent.asset_id
     return rows
 
 
 def family_identity(league_id, row, assets):
-    """Ignore nominal pick sweeteners for a player thesis, not actual ownership."""
+    """Group secondary variants by primary asset identities; retain exact packages."""
     p = row['proposal']
-    def signature(ids):
-        players = sorted(i for i in ids if assets[i].kind == 'player')
-        return players or sorted((str(assets[i].season), str(assets[i].round),
-                                  str(assets[i].projected_range), str(assets[i].exact_slot)) for i in ids)
+    def primary(ids):
+        players = [assets[i] for i in ids if assets[i].kind == 'player']
+        return max(players or [assets[i] for i in ids], key=lambda a: (a.trade_value or 0, a.asset_id)).asset_id
     return sha256(json.dumps([str(league_id), p['active_roster_id'], p['partner_roster_id'],
-                             signature(p['assets_sent']), signature(p['assets_received'])], sort_keys=True).encode()).hexdigest()
+                             primary(p['assets_sent']), primary(p['assets_received'])]).encode()).hexdigest()
 
 
 def surface_evidence(row):
@@ -253,23 +275,16 @@ def surface_evidence(row):
         tags.append('VALUE OPPORTUNITY')
         price_edge = {'source_concept': 'canonical_external_acquisition_price_difference',
                       'difference': market['difference'], 'meaning': 'Market price edge, not an intrinsic bargain or trend'}
+    capital = ((dimensions.get('strategic_fit') or {}).get('active') or {}).get('future_capital') or {}
+    if ((capital.get('assessment') or {}).get('net_market_value') or 0) > 0:
+        tags.append('FUTURE VALUE')
     return {'reason_tags': tags, 'stable_opportunity_reasons': stable,
-        'unsupported_tags': {'FUTURE VALUE': 'No independently supported long-term utility conclusion.',
-                             'SELL-HIGH OPPORTUNITY': 'No comparable current Market movement plus supported sale rationale.'},
+        'unsupported_tags': {'SELL-HIGH OPPORTUNITY': 'No comparable current Market movement plus supported sale rationale.'},
         'market_price_edge': price_edge, 'why_now': {'availability': 'supported_current_state' if catalysts else 'unavailable',
         'catalysts': catalysts, 'historical_movement': None, 'urgency': None,
         'limitations': ['NO_COMPARABLE_CHANGE_CATALYST_ESTABLISHED']}}
 
 
 def rank(rows):
-    def order(row):
-        e = row['evaluation']
-        d = e.get('dimensions') or {}
-        horizons = ((d.get('strategic_fit') or {}).get('active') or {}).get('horizons') or {}
-        return ({'SMASH ACCEPT': 0, 'WORTH PURSUING': 1, 'FAIR / OPTIONAL': 2}.get(e.get('recommendation'), 3),
-                {'STRONG': 0, 'PLAUSIBLE': 1}.get((d.get('counterparty_plausibility') or {}).get('assessment'), 2),
-                {'HIGH': 0, 'MEDIUM': 1}.get((d.get('confidence') or {}).get('assessment'), 2),
-                tuple((horizons.get(n, {}).get('delta') is None, -(horizons.get(n, {}).get('delta') or 0))
-                      for n in ('current_week', 'next_n', 'rest_of_regular_season', 'playoff_window')),
-                row['family_id'], e['provenance']['evaluation_id'])
-    return sorted(rows, key=order)
+    from services.trade_search_policy import rank_key
+    return sorted(rows, key=rank_key)
