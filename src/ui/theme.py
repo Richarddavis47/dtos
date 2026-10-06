@@ -130,7 +130,9 @@ nav[aria-label="Market pagination"]{display:flex;gap:12px;align-items:center;fle
 .ux-recap{border-left:3px solid var(--accent);line-height:1.65}
 .ux-recap p{max-width:760px}
 .ux-answer{border-left:3px solid var(--accent)}
-.technical-details{margin-top:12px}.technical-details>summary{cursor:pointer;color:var(--muted);font-size:12px}
+.technical-details{margin-top:12px;min-width:0;max-width:100%;overflow-wrap:anywhere}.technical-details>summary{cursor:pointer;color:var(--muted);font-size:12px}
+.technical-details :is(p,dl,dt,dd){min-width:0;max-width:100%}.technical-details code{white-space:normal;overflow-wrap:anywhere;word-break:normal}
+#selected-asset .summary-grid>.metric{min-width:0;overflow-wrap:anywhere}
 .evidence-unavailable{padding:14px;border:1px dashed var(--border);border-radius:var(--radius-md);color:var(--muted)}
 .player-summary{display:flex;align-items:center;gap:12px;min-width:0}
 .player-portrait{position:relative;flex:0 0 52px;width:52px;height:52px}
