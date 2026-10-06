@@ -117,6 +117,7 @@ def build_asset_pool(
     team: dict[str, Any],
     recipient_context: AssetContext,
     market_values: dict[str, tuple[int | None, int, CalibrationStatus]] | None = None,
+    *, market_facts: dict | None = None,
 ) -> tuple[TradeAsset, ...]:
     roster_id = int(team.get("roster_id") or 0)
     database = data.get("players") or {}
@@ -134,4 +135,7 @@ def build_asset_pool(
         _pick_asset(_pick_context(pick, data), recipient_context, roster_id, data.get('market_data'))
         for pick in team.get("picks_owned") or []
     )
+    if market_facts is not None:
+        from dataclasses import replace
+        players = tuple(replace(asset, market_fact=market_facts[asset.asset_id].to_dict()) for asset in players)
     return players + picks

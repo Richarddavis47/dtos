@@ -154,6 +154,7 @@ def _summary(asset: dict[str, Any], brain_asset: dict[str, Any] | None) -> dict[
         "year": identity.get("year"),
         "round": identity.get("round"),
         "values": values,
+        "market_fact": asset.get("market_fact"),
         "confidence": int(scores.get("confidence", audit.get("confidence") or 0)),
         "agreement": int(scores["agreement"]) if scores.get("agreement") is not None else None,
         "evidence_coverage": int(scores.get("coverage") or 0),

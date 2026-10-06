@@ -66,6 +66,16 @@
     button.dataset.assetId = a.asset_id; button.setAttribute('aria-label', (selected[which].includes(a.asset_id) ? 'Remove ' : 'Add ') + label(a) + (which === 'sent' ? ' — you send' : ' — you receive'));
     button.setAttribute('aria-pressed', String(selected[which].includes(a.asset_id))); button.onclick = () => toggle(which, a.asset_id); row.append(button);
     if (a.kind === 'player') { const link = node('a', 'Dossier'); link.href = '/players/' + encodeURIComponent(a.asset_id.replace(/^player:/, '')); link.setAttribute('aria-label', 'Open ' + label(a) + ' player dossier'); row.append(link); }
+    if (a.market_fact) {
+      const f = a.market_fact, details = node('details');
+      details.append(node('summary', 'Market evidence'),
+        node('p', f.unavailability_reason || `${f.freshness} · ${f.evidence_coverage.join(', ')} · Evidence confidence ${f.confidence}/100`),
+        node('small', `${f.fallback ? 'Last valid provider evidence · ' : ''}${f.source_updated_at ? 'Source as of ' + f.source_updated_at : 'Source timestamp unavailable'} · Retrieved ${f.retrieved_at || 'unavailable'}`),
+        node('p', 'Source generation: ' + f.generation));
+      details.style.overflowWrap = 'anywhere'; details.style.minWidth = '0';
+      details.dataset.marketGeneration = f.generation;
+      row.append(details);
+    }
     if (review) row.classList.add('tw-selected');
     return row;
   }

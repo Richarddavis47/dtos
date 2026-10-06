@@ -235,19 +235,36 @@ class IntelligenceOrchestrator:
         result = self.analyze(data, roster_id, include_trade_opportunities=False)
         report = evaluate_player(player, _asset_context(result.context, result.decision))
         value_profile = result.player_values.get(str(player.get("id") or player.get("player_id")))
-        market = result.market.assets.get(str(player.get("id") or player.get("player_id")))
-        if market is None or market.consensus.value is None:
-            return replace(report, value_profile=value_profile)
+        from src.core.valuation.calibration import cached_market_facts
+        player_id = str(player.get("id") or player.get("player_id"))
+        fact = cached_market_facts(data.get("market_data") or {}, (player_id,))[player_id]
+        if value_profile is not None:
+            from src.core.player_value_projection.models import DataStatus, ValueMetric
+            from src.core.valuation import CalibrationStatus
+            metric = ValueMetric(fact.value, "Canonical external Market price",
+                DataStatus.FALLBACK if fact.value is not None and fact.fallback else
+                DataStatus.CACHED if fact.value is not None else DataStatus.UNAVAILABLE,
+                fact.confidence, fact.retrieved_at,
+                (fact.unavailability_reason,) if fact.unavailability_reason else ())
+            card = value_profile.intelligence_card
+            if card is not None:
+                card = replace(card, market_value=fact.value, trade_value=fact.value,
+                    confidence_score=fact.confidence, provider_evidence=fact.providers_used,
+                    calibration_status=CalibrationStatus(fact.calibration_status))
+            values = [p.normalized_value for p in fact.providers_used]
+            value_profile = replace(value_profile, market_consensus=metric,
+                market_range=(min(values), max(values)) if values else None,
+                intelligence_card=card)
+        evidence = tuple(Evidence(p.provider, str(p.normalized_value), 0,
+            "Canonical normalized external Market evidence; independent of roster context.",
+            p.provider, True) for p in fact.providers_used)
         market_value = AssetEvaluation(
-            "Market Value",
-            market.consensus.value,
-            market.consensus.confidence,
-            f"External provider consensus with {market.consensus.agreement}% agreement; independent from DTOS intrinsic value.",
-            tuple(Evidence(item.factor, item.observed_value, item.impact, item.explanation, item.source, item.available) for item in market.evidence),
-            tuple(f"Missing provider: {name}" for name in market.consensus.missing_providers),
-            scale_maximum=1000,
+            "Market Value", fact.value, fact.confidence,
+            fact.unavailability_reason or f"{len(fact.evidence_coverage)} supported Market source(s); independent of DTOS intrinsic value.",
+            evidence, (fact.unavailability_reason,) if fact.unavailability_reason else (), scale_maximum=1000,
         )
-        return replace(report, core_values=replace(report.core_values, market=market_value), value_profile=value_profile)
+        return replace(report, core_values=replace(report.core_values, market=market_value),
+                       value_profile=value_profile, market_fact=fact)
 
     def pick_report(self, data: dict[str, Any], pick: dict[str, Any], roster_id: int) -> Any:
         result = self.analyze(data, roster_id)

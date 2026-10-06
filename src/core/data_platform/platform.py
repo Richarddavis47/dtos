@@ -104,7 +104,7 @@ class DataPlatform:
     def trend(self, key: str, category: str | None = None):
         return trend(key, self.warehouse.history(key, category))
 
-    def player_report(self, player_id: str, data: dict[str, Any]) -> dict[str, Any]:
+    def player_report(self, player_id: str, data: dict[str, Any], *, market_fact=None) -> dict[str, Any]:
         players = data.get("players") or {}
         resolver = PlayerIdentityResolver(players)
         player = resolver.resolve(player_id)
@@ -119,6 +119,20 @@ class DataPlatform:
         values = tuple(self.fetch(provider.metadata.name, player_id, context, mode=mode, allow_cached=False) for provider in providers)
         result = self._market_consensus(player_id, values, market_data,
                                        tuple(provider.metadata.name for provider in providers))
+        from src.core.valuation.calibration import cached_market_facts
+        fact = market_fact or cached_market_facts(market_data, (player_id,))[player_id]
+        if fact.player_id != player_id:
+            raise ValueError("Pinned Market player identity mismatch")
+        # Provider rows remain inspectable raw evidence; the global canonical
+        # resolver alone selects the price, freshness and evidence confidence.
+        canonical = asdict(result)
+        canonical['evidence_state'] = ('MARKET UNAVAILABLE' if fact.value is None else
+            'MULTI-PROVIDER CONSENSUS' if len(fact.providers_used) > 1 else 'SINGLE-PROVIDER MARKET')
+        canonical.update(value=fact.value, confidence=fact.confidence, agreement=fact.agreement,
+            calibration_status=fact.calibration_status, warning=fact.warning,
+            updated_at=fact.retrieved_at,
+            missing_providers=tuple(p.metadata.name for p in providers if p.metadata.name not in fact.evidence_coverage),
+            dispersion=result.dispersion if len(fact.providers_used) > 1 else None, provider_weights=tuple((p.provider, p.weight) for p in fact.providers_used))
         status_rows = market_data.get("provider_status") or {}
         availability = {}
         for row in values:
@@ -132,7 +146,7 @@ class DataPlatform:
             provider.metadata.name: ((market_data.get("providers") or {}).get(provider.metadata.name) or {}).get(player_id)
             for provider in providers
         }
-        return {"normalized_player": asdict(player), "provider_values": tuple(asdict(row) for row in values), "provider_details": details, "consensus": asdict(result), "market_trend": asdict(self.trend(player_id, "market")), "provider_availability": availability, "provider_health": market_data.get("provider_status") or {}, "attribution": market_data.get("attribution") or {}, "player_context": player_context(player_id, data), "normalization": {"identity": "canonical DTOS player", "contract": "NormalizedPlayer + DataEnvelope", "provider_ids": player.provider_ids}, "unavailable_reasons": tuple(sorted({row.limitations[0] for row in values if row.value is None and row.limitations}))}
+        return {"normalized_player": asdict(player), "provider_values": tuple(asdict(row) for row in values), "provider_details": details, "consensus": canonical, "market_fact": fact.to_dict(), "market_trend": asdict(self.trend(player_id, "market")), "provider_availability": availability, "provider_health": market_data.get("provider_status") or {}, "attribution": market_data.get("attribution") or {}, "player_context": player_context(player_id, data), "normalization": {"identity": "canonical DTOS player", "contract": "NormalizedPlayer + DataEnvelope", "provider_ids": player.provider_ids}, "unavailable_reasons": tuple(sorted({row.limitations[0] for row in values if row.value is None and row.limitations}))}
 
     def refresh(self, category: str, context: dict[str, Any], keys: tuple[str, ...], *, provider_name: str | None = None) -> tuple[RefreshResult, ...]:
         providers = (self.registry.provider(provider_name),) if provider_name else self.registry.providers(category)

@@ -66,6 +66,9 @@ class MarketIntelligence:
             for provider in providers
         }
         health: dict[str, dict[str, object]] = {provider.metadata.name: {"status": "unavailable", "available_quotes": 0, "latency_ms": 0.0, "last_updated": None} for provider in providers}
+        from dataclasses import replace
+        from src.core.valuation.calibration import cached_market_facts
+        facts = cached_market_facts(market_data, intrinsic_by_id) if provider_rows else {}
         for asset_id, intrinsic in intrinsic_by_id.items():
             asset = {**(players.get(asset_id) or {}), "id": asset_id, "player_id": asset_id}
             quotes = tuple(
@@ -75,7 +78,7 @@ class MarketIntelligence:
                         asset_id,
                         {"asset": asset, "market_data": market_data, "namespace": namespace},
                         mode=context_mode,
-                        allow_cached=allow_cached_fallback,
+                        allow_cached=allow_cached_fallback and not bool(provider_rows),
                     ),
                     market_data,
                     provider_distributions[provider.metadata.name],
@@ -104,6 +107,12 @@ class MarketIntelligence:
                         "provider-price-observation-v2", source_row.get("rank"), source_row.get("tier"),
                         source_row.get("source_updated_at"), source_row.get("published_at")))
             consensus = build_consensus(asset_id, quotes, tuple(provider.metadata.name for provider in providers))
+            if asset_id in facts:
+                fact = facts[asset_id]
+                consensus = replace(consensus, value=fact.value, confidence=fact.confidence,
+                    agreement=fact.agreement, updated_at=fact.retrieved_at,
+                    calibration_status=fact.calibration_status, warning=fact.warning,
+                    provider_weights=tuple((p.provider, p.weight) for p in fact.providers_used))
             self.history.append(tuple(asset_snapshots))
             trend = calculate_trend(self.history.for_asset(asset_id))
             gap = value_gap(intrinsic, consensus.value, consensus.confidence)

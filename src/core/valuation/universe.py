@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Any, Iterator
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
-from src.core.valuation.calibration import cached_market_results
+from src.core.valuation.calibration import cached_market_facts
 from src.core.valuation.observation_identity import observation_evidence
 from src.core.valuation.quote_eligibility import exclusion_reason
 from src.core.valuation.config import NORMALIZATION_VERSION, VALUATION_SCHEMA_VERSION
@@ -197,7 +197,7 @@ class ValuationUniverse:
         player_context = self._player_context()
         providers, distributions = _provider_context(self.data)
         provider_status = ((self.data.get("market_data") or {}).get("provider_status") or {})
-        consensus = cached_market_results(self.data.get("market_data") or {}, (str(key) for key in players))
+        consensus = cached_market_facts(self.data.get("market_data") or {}, (str(key) for key in players))
         for player_id, row in sorted(players.items(), key=lambda item: str(item[0])):
             if isinstance(row, dict):
                 # Catalog identity/player facts win over roster-specific enrichment.
@@ -207,13 +207,19 @@ class ValuationUniverse:
                 result = consensus.get(str(player_id))
                 asset = self._player(
                     str(player_id), merged, owners.get(str(player_id)),
-                    (result.market_consensus, result.confidence_score, result.calibration_status) if result else None, providers, distributions,
+                    (result.value, result.confidence, CalibrationStatus(result.calibration_status)) if result else None, providers, distributions,
                     provider_status,
                 )
                 asset['market_observation_evidence'] = observation_evidence(
                     [(r.provider, (providers.get(r.provider) or {}).get(str(player_id)) or {}, r.normalized_value)
                      for r in result.providers_used] if result else [],
-                    canonical_value=result.market_consensus if result else None)
+                    canonical_value=result.value if result else None)
+                asset['market_fact'] = result.to_dict()
+                for layer_name in ('market_value', 'provider_consensus'):
+                    asset['layers'][layer_name].update(
+                        generation=result.generation, freshness=result.freshness,
+                        reason=result.unavailability_reason,
+                        limitations=[result.unavailability_reason] if result.unavailability_reason else [])
                 yield asset
         for row in sorted(
             self.data.get("pick_ledger") or [],

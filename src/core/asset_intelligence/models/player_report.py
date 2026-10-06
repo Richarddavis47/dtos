@@ -53,3 +53,4 @@ class PlayerReport:
     recommendation: AssetRecommendation
     limitations: tuple[str, ...]
     value_profile: Any = None
+    market_fact: Any = None

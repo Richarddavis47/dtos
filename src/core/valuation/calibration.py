@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 
 from src.core.valuation.consensus import build_canonical_consensus
-from src.core.valuation.models import CalibrationStatus, CanonicalConsensus, NormalizedValuation
+from src.core.valuation.models import CalibrationStatus, CanonicalConsensus, NormalizedValuation, PlayerMarketFact
 from src.core.valuation.normalization import normalize_cached_value, prepare_distribution
 
 
@@ -170,3 +170,66 @@ def cached_market_results(market_data: dict[str, Any], player_ids: Iterable[str]
         )
         result[str(player_id)] = consensus
     return result
+
+
+def cached_market_facts(market_data: dict[str, Any], player_ids: Iterable[str]) -> dict[str, PlayerMarketFact]:
+    """One published-snapshot boundary shared by Market, dossiers and Trade.
+
+    Reuse canonical selection/normalization. Do not consult provider namespaces,
+    warehouses or manager portfolios to replace absent published evidence.
+    Retained provider rows remain eligible under the existing quote policy.
+    """
+    from hashlib import sha256
+    import json
+    from src.core.valuation.quote_eligibility import exclusion_reason
+    from src.core.valuation.source_time import market_times
+    from src.core.valuation.consensus import MARKET_SELECTION_VERSION
+    from src.core.valuation.config import NORMALIZATION_VERSION
+
+    results = cached_market_results(market_data, player_ids)
+    providers = market_data.get("providers") or {}
+    statuses = market_data.get("provider_status") or {}
+    facts = {}
+    reasons = {
+        "AMBIGUOUS_UNRESOLVED_PLAYER_IDENTITY": "Player identity is unresolved in Market evidence.",
+        "STALE_BEYOND_USABLE_POLICY": "Market evidence is stale beyond the accepted usable policy.",
+        "INCOMPATIBLE_PROVIDER_FORMAT": "No supported Market evidence in a compatible format.",
+        "HISTORICAL_ONLY_EVIDENCE": "Only historical Market evidence is available; no supported current quote.",
+        "ZERO_CONFIDENCE_INVALID_QUOTE": "No valid supported Market evidence is available.",
+    }
+    for player_id, result in results.items():
+        used = tuple(p.provider for p in result.providers_used)
+        rows = {name: table[player_id] for name, table in providers.items()
+                if name in {"FantasyCalc", "DynastyProcess"} and isinstance(table, dict)
+                and isinstance(table.get(player_id), dict)}
+        clocks = tuple({"provider": name, **market_times(rows[name])} for name in used)
+        source_time = max((r["source_updated_at"] for r in clocks if r["source_updated_at"]), default=None)
+        retrieved = max((r["retrieved_at"] for r in clocks if r["retrieved_at"]), default=None)
+        fallback = any(rows[name].get("retrieval_mode") == "cached_fallback"
+                       or (statuses.get(name) or {}).get("refresh_result") == "cached_fallback" for name in used)
+        freshnesses = {p.freshness for p in result.providers_used}
+        freshness = next(iter(freshnesses)) if len(freshnesses) == 1 else "mixed" if freshnesses else "unavailable"
+        reason = None
+        if result.market_consensus is None:
+            excluded = [exclusion_reason(name, row) for name, row in rows.items() if row]
+            reason = next((reasons[key] for key in reasons if key in excluded), None)
+            if reason is None:
+                reason = ("Market generation is warming; no valid published Market evidence is available."
+                          if market_data.get("status") == "warming" and not any(rows.values())
+                          else result.warning if any(row.get("value") is not None for row in rows.values())
+                          else "No supported Market evidence is available for this player.")
+        # Per-asset source generation: independent of league/strategy/ownership.
+        # Include the selected normalized result and source references so legacy
+        # caches and freshness transitions cannot masquerade as one generation.
+        identity = [player_id, NORMALIZATION_VERSION, MARKET_SELECTION_VERSION,
+                    market_data.get("generation"), market_data.get("generated_at"),
+                    rows, result, fallback, freshness, reason]
+        generation = sha256(json.dumps(identity, sort_keys=True, default=lambda v: v.__dict__,
+                                        separators=(",", ":")).encode()).hexdigest()
+        facts[player_id] = PlayerMarketFact(player_id, result.market_consensus, generation,
+            market_data.get("generated_at"), source_time, retrieved, freshness,
+            "available" if result.market_consensus is not None else "unavailable", reason,
+            result.confidence_score, used, result.providers_used, result.calibration_status.value,
+            max(0, 100 - round(result.provider_spread / 4)) if result.provider_spread is not None else None,
+            result.warning, fallback, clocks)
+    return facts

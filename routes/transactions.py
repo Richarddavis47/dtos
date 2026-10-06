@@ -22,6 +22,7 @@ from src.core.projection_intelligence import projection_service
 from src.platform.league_context import current_league_context
 from services.player_projection_view import player_projection_view
 from src.ui.player_projections import player_projection_panel
+from src.ui.market_facts import market_fact_html
 
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -412,7 +413,12 @@ def create_transactions_router(
         name = player.get("full_name") or " ".join(
             value for value in (player.get("first_name"), player.get("last_name")) if value
         ) or player_id
-        live = data_platform.player_report(player_id, data)
+        live = data_platform.player_report(player_id, data, market_fact=report.market_fact)
+        # Reuse the same selected-week/scoring/generation as the numeric panel.
+        projection_availability = (
+            f"Available · Sleeper week {projection_view['week']} · {projection_view['display']} points"
+            if projection_view['value'] is not None else projection_view['reason']
+        )
         selected_league = str((data.get("league") or {}).get("league_id") or LEAGUE_ID)
         history = historical_graph(canonical_history_store, selected_league, data).player_dossier(player_id)
         history_league_name = escape(str((data.get("league") or {}).get("name") or "Active League"))
@@ -432,7 +438,7 @@ def create_transactions_router(
         fantasycalc = live["provider_details"].get("FantasyCalc") or {}
         trend_value = fantasycalc.get("trend_30_day")
         trend_label = f"{trend_value:+}" if isinstance(trend_value, (int, float)) else "No historical provider trend is available."
-        consensus_value = consensus["value"] if consensus["value"] is not None else (consensus.get("warning") or "No supported combined Market price; inspect separate provider evidence.")
+        consensus_value = consensus["value"] if consensus["value"] is not None else "Unavailable"
         attribution = " · ".join(
             f'<a href="{escape(str(item["url"]))}" target="_blank" rel="noopener">{escape(str(item["label"]))}</a>'
             for item in live["attribution"].values()
@@ -440,11 +446,11 @@ def create_transactions_router(
         depth_role = metadata.get("depth_chart_role") if metadata.get("depth_chart_role") is not None else reasons["depth_chart_role"]
         bye_week = metadata.get("bye_week") if metadata.get("bye_week") is not None else reasons["bye_week"]
         live_panel = f'''<section class="card"><h2>Live Data &amp; Market</h2>
-<div class="grid"><div><div class="muted">{escape(consensus["evidence_state"])} · 0–1000</div><div class="stat">{escape(str(consensus_value))}</div><p>Evidence confidence {consensus["confidence"]}/100 · Agreement {str(consensus["agreement"]) + "/100" if consensus["agreement"] is not None else "Unavailable"}</p><p>FantasyCalc raw-price 30-day change (provider units): {escape(str(trend_label))}</p></div>
+<div class="grid"><div><div class="muted">{escape(consensus["evidence_state"])} · 0–1000</div><div class="stat">{escape(str(consensus_value))}</div><p>Evidence confidence {consensus["confidence"]}/100 · Agreement {str(consensus["agreement"]) + "/100" if consensus["agreement"] is not None else "Unavailable"}</p>{market_fact_html(live["market_fact"])}<p>FantasyCalc raw-price 30-day change (provider units): {escape(str(trend_label))}</p></div>
 <div><div class="muted">Player Context</div><p><b>{escape(str(normalized["position"]))}</b> · {escape(str(normalized["nfl_team"]))} · {escape(human_status(normalized["status"]))}</p><p>Age: {escape(available(metadata.get("age"), reason="Age is not supplied by the current source."))}</p><p>Depth chart: {escape(str(depth_role))} · Bye: {escape(str(bye_week))}</p></div></div>
-<div class="ds-table-wrap" tabindex="0" role="region" aria-label="Provider value evidence"><table><thead><tr><th>Provider</th><th>Value / State</th><th>Freshness</th><th>Confidence</th><th>Availability reason</th></tr></thead><tbody>{provider_values}</tbody></table></div>
+<div class="ds-table-wrap" tabindex="0" role="region" aria-label="Provider value evidence"><table><thead><tr><th>Provider</th><th>Raw provider value / State</th><th>Freshness</th><th>Confidence</th><th>Availability reason</th></tr></thead><tbody>{provider_values}</tbody></table></div>
 <h3>League Context</h3><div class="grid"><div><b>Trending</b><p>{league_context["trending_adds"]} adds · {league_context["trending_drops"]} drops (Sleeper, last cached window)</p></div><div><b>Ownership</b><p>{escape(str(league_context["owned_by"] or "Not rostered in the active league."))}</p></div><div><b>Transactions</b><p>{league_context["transaction_count"]} cached league transactions</p></div></div>
-<h3>Data Availability</h3><ul><li><b>ADP:</b> {escape(str(reasons["adp"]))}</li><li><b>Current projections:</b> {escape(str(reasons["projection"]))}</li><li><b>Production:</b> {escape(str(reasons["production"]))}</li><li><b>Usage:</b> {escape(str(reasons["usage"]))}</li></ul>
+<h3>Data Availability</h3><ul><li><b>ADP:</b> {escape(str(reasons["adp"]))}</li><li><b>Current projections:</b> {escape(str(projection_availability))}</li><li><b>Production:</b> {escape(str(reasons["production"]))}</li><li><b>Usage:</b> {escape(str(reasons["usage"]))}</li></ul>
 <p class="muted">Sources: {attribution} · Sleeper player, league, transaction, and trending metadata.</p></section>'''
         cards = "".join(
             '<div class="card">'

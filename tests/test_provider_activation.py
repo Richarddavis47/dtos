@@ -145,7 +145,7 @@ class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
                     "players": {"9509": {"weekly_projected_points": 0.0,
                                           "source_freshness": "fresh"}}}}
         context = player_context("9509", data)
-        self.assertIsNone(context["availability"]["projection"])
+        self.assertEqual(context["availability"]["projection"], "Available · Sleeper week 1 · 0.0 points")
         self.assertEqual(context["projection_evidence"]["value"], 0.0)
         data["league"]["league_id"] = "B"
         other = player_context("9509", data)
