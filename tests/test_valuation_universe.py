@@ -56,13 +56,13 @@ class ValuationUniverseTests(unittest.TestCase):
     def test_all_layers_remain_separate_and_traceable(self) -> None:
         layers = self.universe.by_id["player:1"]["layers"]
         self.assertEqual(tuple(layers), LAYER_NAMES)
-        for layer in layers.values():
+        for name, layer in layers.items():
             self.assertEqual(
                 set(layer),
                 {
                     "value", "source", "version", "generated_at", "confidence",
                     "availability", "reason", "limitations",
-                },
+                } | ({"generation", "freshness"} if name in {"market_value", "provider_consensus"} else set()),
             )
         self.assertNotEqual(layers["market_value"]["source"], layers["intrinsic_dtos_value"]["source"])
 

@@ -228,7 +228,7 @@ def player_context(player_id: str, data: dict[str, Any]) -> dict[str, Any]:
         "availability": {
             "adp": "Sleeper and Underdog do not expose an approved public ADP feed to this deployment.",
             "production": "Consult canonical_evidence for season-scoped production; this legacy context does not attach a production window.",
-            "projection": None if projected is not None else "Canonical Sleeper projection evidence is unavailable for this player in the active league snapshot; missing evidence is not zero.",
+            "projection": f"Available · Sleeper week {snapshot.get('week')} · {projected} points" if projected is not None else "Canonical Sleeper projection evidence is unavailable for this player in the active league snapshot; missing evidence is not zero.",
             "usage": "No supported snap-share or route-usage provider is configured.",
             "depth_chart_role": None if role is not None else "Sleeper player metadata does not currently provide a depth-chart role for this player.",
             "bye_week": None if player.get("bye_week") is not None else "Consult canonical_evidence.schedule for source-backed schedule/bye evidence; Sleeper metadata alone does not supply this field.",

@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.21.9 - Canonical Asset Facts
+
+- Resolve dossier Market headlines globally, independently of Front Office roster membership.
+- Share canonical value, source generation, source/retrieval times, freshness, provider support and unavailable reasons across Market, dossier and Trade boundaries.
+- Preserve provider normalization, strategy price invariance, exact pick identity and league ownership context.
+- Render selected-week Sleeper projection availability from the same prepared evidence as its numeric panel.
+- Add deterministic cross-page HTTP and responsive Chromium 375/390 contracts, including retained and unavailable evidence.
+
 # v1.21.8 - Make It Cheaper Repair Completeness
 
 - Try cheaper current-offer substitutions before expanding through bounded package changes.

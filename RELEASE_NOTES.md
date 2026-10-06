@@ -1,4 +1,15 @@
-# DTOS v1.21.8 - Make It Cheaper Repair Completeness
+# DTOS v1.21.9 - Canonical Asset Facts
+
+Player dossier Market values now use the same global canonical price as Market
+and Trade, even when a player belongs to another franchise or is a free agent.
+Front Office context continues to govern ownership, roster fit and trade actions.
+
+Market evidence discloses source generation, source time when available, retrieval
+time, freshness and retained-provider fallback. Missing evidence has a readable
+reason. Provider normalization and prices are preserved. Sleeper projection
+availability now agrees with the selected-week numeric projection panel.
+
+## Previous release: DTOS v1.21.8 - Make It Cheaper Repair Completeness
 
 Make It Cheaper now searches lower-cost substitutions around your current offer
 before expanding through bounded package changes. Credible alternatives must cost

@@ -38,6 +38,8 @@ def market_data() -> dict:
     for index, player in enumerate(data["players"].values()):
         base = 48 + index % 20
         player.update({"fantasycalc_value": base})
+    data['market_data']['providers'] = {'FantasyCalc': {
+        pid: {'value': row['fantasycalc_value'], 'confidence': 85} for pid, row in data['players'].items()}}
     return data
 
 
@@ -233,17 +235,14 @@ class MarketIntegrationTests(unittest.TestCase):
         self.assertEqual(report.core_values.dynasty.name, "Intrinsic dynasty utility")
 
     def test_dossier_market_value_is_not_clamped_to_legacy_100_point_scale(self) -> None:
-        from dataclasses import replace
-        from unittest.mock import patch
-        result = self.orchestrator.analyze(self.data, 1)
-        player_id = next(iter(result.player_reports))
-        market = result.market.assets[player_id]
-        corrected = replace(market, consensus=replace(market.consensus, value=812))
-        result = replace(result, market=replace(result.market, assets={**result.market.assets, player_id: corrected}))
+        player_id = next(iter(self.data['players']))
+        self.data['market_data']['providers'] = {'FantasyCalc': {player_id: {'value': 9744, 'confidence': 85}}}
+        from src.core.valuation.calibration import cached_market_facts
+        expected = cached_market_facts(self.data['market_data'], (player_id,))[player_id].value
         player = self.data['players'][player_id]
-        with patch.object(self.orchestrator, 'analyze', return_value=result):
-            report = self.orchestrator.player_report(self.data, {**player, 'id': player_id}, 1)
-        self.assertEqual(report.core_values.market.score, 812)
+        report = self.orchestrator.player_report(self.data, {**player, 'id': player_id}, 1)
+        self.assertEqual(report.core_values.market.score, expected)
+        self.assertGreater(expected, 100)
         self.assertEqual(report.core_values.market.scale_maximum, 1000)
         self.assertEqual(report.core_values.dynasty.scale_maximum, 100)
 

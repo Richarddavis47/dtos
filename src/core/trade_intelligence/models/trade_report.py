@@ -57,6 +57,7 @@ class TradeAsset:
     age: float | None = None
     positional_rank: str | None = None
     pick_market_evidence: dict[str, Any] | None = None
+    market_fact: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)

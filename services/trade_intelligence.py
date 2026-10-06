@@ -9,7 +9,7 @@ import json
 from time import perf_counter
 
 from src.core.intelligence import AssetContext, TradeAsset, TradeEvidenceContext, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, build_trade_evidence_context, evaluate_bilateral, generate_proposals
-from src.core.valuation import cached_market_consensus
+from src.core.valuation.calibration import cached_market_facts
 from services.trade_cheaper_repair import (
     REPAIR_EVALUATION_BUDGET, REPAIR_OPTION_LIMIT, cheaper_phase,
     market_cost, no_cheaper_reason, repair_family,
@@ -181,11 +181,14 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
     model = build_league_model(data)
     decisions = {identifier: report.decision for identifier, report in model.reports.items()}
     player_ids = {str(player.get("id") or player.get("player_id")) for team in teams for player in team.get("players") or ()}
-    market_values = cached_market_consensus(data.get("market_data") or {}, player_ids)
+    market_facts = cached_market_facts(data.get("market_data") or {}, player_ids)
+    from src.core.valuation import CalibrationStatus
+    market_values = {key: (fact.value, fact.confidence, CalibrationStatus(fact.calibration_status))
+                     for key, fact in market_facts.items()}
     pools = {}
     for team in teams:
         identifier = int(team.get("roster_id") or 0)
-        pools[identifier] = build_asset_pool(data, team, _context(decisions[identifier]), market_values)
+        pools[identifier] = build_asset_pool(data, team, _context(decisions[identifier]), market_values, market_facts=market_facts)
     pools = apply_positional_ranks(pools)
     windows = {str(identifier): {'classification': decision.competitive_window.classification.value,
                                 'confidence': decision.competitive_window.confidence,
@@ -273,7 +276,7 @@ def evaluate_trade_request(
         return {
             "asset_id": item.asset_id, "label": item.label, "kind": item.kind,
             "position": item.position, "positional_rank": item.positional_rank,
-            "market_value": item.trade_value, "projected_range": item.projected_range,
+            "market_value": item.trade_value, "market_fact": item.market_fact, "projected_range": item.projected_range,
             "year": item.season, "round": item.round,
             "original_franchise": item.original_roster_id, "current_owner": item.current_owner_id,
             "exact_slot": item.exact_slot,
@@ -1348,7 +1351,7 @@ def autocomplete_trade_assets(data: dict[str, Any], query: str, active_roster_id
                 "owned_by_active_roster": roster_id == workspace["active_roster_id"],
                 "projected_range": asset.projected_range, "range_confidence": asset.projected_range_confidence,
                 "exact_slot": asset.exact_slot, "positional_rank": asset.positional_rank,
-                "market_value": asset.trade_value,
+                "market_value": asset.trade_value, "market_fact": asset.market_fact,
             })
     rows.sort(key=lambda row: (not str(row["label"]).casefold().startswith(needle), str(row["label"]).casefold(), row["asset_id"]))
     return {"query": query, "count": min(len(rows), limit), "results": rows[:limit], "ownership_revalidation_required": True}

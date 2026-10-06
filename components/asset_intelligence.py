@@ -6,6 +6,7 @@ from urllib.parse import quote
 
 from src.ui import player_summary, recommendation_panel
 from src.ui.intelligence_presentation import exact_rank
+from src.ui.market_facts import market_fact_html
 
 from src.core.asset_intelligence import AssetEvaluation, PlayerReport
 
@@ -72,7 +73,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
         for team in teams
     )
     values = "".join(
-        f'<article class="ai-value"><span>{escape(value.name)}</span><b>{_number(value.score)}</b><small>Scale 0–{value.scale_maximum} · {value.confidence}% confidence</small>{_evidence(value)}</article>'
+        f'<article class="ai-value"><span>{escape(value.name)}</span><b>{_number(value.score)}</b><small>Scale 0–{value.scale_maximum} · {value.confidence}% {"evidence confidence" if value is report.core_values.market else "confidence"}</small>{market_fact_html(report.market_fact) if value is report.core_values.market else ""}{_evidence(value)}</article>'
         for value in (report.core_values.dynasty, report.core_values.redraft, report.core_values.market, report.core_values.team_fit)
     )
     snapshot = (("Asset Tier", report.archetypes[0]), ("Position", profile.position), ("NFL Team", profile.nfl_team), ("Age", str(profile.age or "Sleeper metadata does not provide age.")), ("Experience", str(profile.experience if profile.experience is not None else "Sleeper metadata does not provide NFL experience.")), ("Contract", profile.contract_status if profile.contract_status != "Unavailable" else "No supported provider supplies contract data."), ("Injury", profile.injury_status), ("Bye", profile.bye_week if profile.bye_week != "Unavailable" else "Sleeper metadata does not currently provide a bye week."))

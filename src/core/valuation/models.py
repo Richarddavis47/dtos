@@ -93,3 +93,33 @@ class TradeGuardrailResult:
     offered_value: int
     requested_value: int
     confidence_score: int
+
+
+@dataclass(frozen=True)
+class PlayerMarketFact:
+    """Global evidence facts; no manager strategy, ownership or roster fit."""
+    player_id: str
+    value: int | None
+    generation: str
+    generated_at: str | None
+    source_updated_at: str | None
+    retrieved_at: str | None
+    freshness: str
+    availability: str
+    unavailability_reason: str | None
+    confidence: int
+    evidence_coverage: tuple[str, ...]
+    providers_used: tuple[ConsensusProvider, ...]
+    calibration_status: str
+    agreement: int | None
+    warning: str | None
+    fallback: bool
+    source_times: tuple[dict, ...]
+
+    def to_dict(self) -> dict:
+        """JSON-native facts for durable canonical snapshots and API consumers."""
+        from dataclasses import asdict
+        row = asdict(self)
+        for key in ('evidence_coverage', 'providers_used', 'source_times'):
+            row[key] = list(row[key])
+        return row

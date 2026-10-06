@@ -1,6 +1,8 @@
 """Server-rendered Trade Intelligence components."""
 from __future__ import annotations
 
+from src.ui.market_facts import market_fact_html
+
 from html import escape
 import json
 from urllib.parse import quote
@@ -178,7 +180,7 @@ def _canonical_card(row: dict) -> str:
             rendered.append(
                 f'<{tag}{destination} class="ti-proposal-asset {"ti-player-tile" if kind == "player" else "ti-pick-tile"}">'
                 f'{image}<span><b>{escape(str(item.get("label") or item.get("asset_id") or "Asset"))}</b>'
-                f'<small>{escape(context)}</small></span><strong>{shown_value}</strong></{tag}>'
+                f'<small>{escape(context)}</small></span><strong>{shown_value}</strong></{tag}>{market_fact_html(item.get("market_fact"))}'
             )
         return "".join(rendered)
 
