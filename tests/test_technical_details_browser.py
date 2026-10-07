@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from playwright.sync_api import sync_playwright
 
 from app_metadata import VERSION
+from routes.draft import create_draft_router
 from routes.market import create_market_router
 from routes.transactions import create_transactions_router
 from src.core.asset_market import AssetMarketCache
@@ -33,7 +34,7 @@ class TechnicalDetailsBrowserTests(unittest.TestCase):
             browser = launch_chromium(pw, headless=True)
             try:
                 for width in WIDTHS:
-                    with browser.new_context(viewport={'width': width, 'height': 900}) as context:
+                    with browser.new_context(viewport={'width': width, 'height': 900}, has_touch=width < 600) as context:
                         def transport(route):
                             from urllib.parse import urlsplit
                             url = urlsplit(route.request.url)
@@ -115,10 +116,49 @@ class TechnicalDetailsBrowserTests(unittest.TestCase):
                     if page.locator('#selected-asset').count():
                         brain = page.locator('#selected-asset .technical-details code').nth(1)
                         self.assertEqual(brain.text_content(), LONG_BRAIN)
+                        if width < 600:
+                            self.assertGreater(brain.evaluate('''el=>{
+                                const range=document.createRange(); range.selectNodeContents(el);
+                                return range.getClientRects().length;
+                            }'''), 1)
                         # Wide evidence tables retain local scroll, including at 320px.
-                        table_wrap = page.locator('.technical-details > div').first
+                        table_wrap = page.get_by_role('region', name='Full Market evidence')
                         self.assertEqual(table_wrap.evaluate('el=>getComputedStyle(el).overflowX'), 'auto')
-                        table_wrap.evaluate('el=>el.scrollLeft=el.scrollWidth')
+                        table = table_wrap.locator('table')
+                        self.assertEqual(table.evaluate('el=>getComputedStyle(el).overflowWrap'), 'normal')
+                        columns = table.locator('th').evaluate_all('''cells=>cells.map(el=>{
+                            const style=getComputedStyle(el), canvas=document.createElement('canvas');
+                            const ctx=canvas.getContext('2d'); ctx.font=style.font;
+                            return {text:el.textContent, width:el.getBoundingClientRect().width,
+                                minimum:ctx.measureText(el.textContent).width+parseFloat(style.paddingLeft)+parseFloat(style.paddingRight)};
+                        })''')
+                        for column in columns:
+                            self.assertGreaterEqual(column['width'] + 1, column['minimum'], column['text'])
+                        for cell in table.locator('td').all():
+                            if cell.text_content().strip().replace(',', '').isdigit():
+                                self.assertEqual(cell.evaluate('el=>getComputedStyle(el).overflowWrap'), 'normal')
+                        if width < 600:
+                            self.assertGreater(table_wrap.evaluate('el=>el.scrollWidth'), table_wrap.evaluate('el=>el.clientWidth'))
+                            table_wrap.scroll_into_view_if_needed()
+                            table_wrap.hover()
+                            page.mouse.wheel(180, 0)
+                            page.wait_for_function('(el)=>el.scrollLeft>0', arg=table_wrap.element_handle())
+                            table_wrap.evaluate('el=>el.scrollLeft=0')
+                            table_wrap.focus()
+                            page.keyboard.press('ArrowRight')
+                            page.wait_for_function('(el)=>el.scrollLeft>0', arg=table_wrap.element_handle())
+                            table_wrap.evaluate('el=>el.scrollLeft=0')
+                            bounds = table_wrap.bounding_box()
+                            session = page.context.new_cdp_session(page)
+                            session.send('Input.synthesizeScrollGesture', {'x': bounds['x'] + bounds['width']/2,
+                                'y': (max(0, bounds['y']) + min(900, bounds['y'] + bounds['height']))/2,
+                                'xDistance': -150,
+                                'yDistance': 0, 'gestureSourceType': 'touch'})
+                            page.wait_for_function('(el)=>el.scrollLeft>0', arg=table_wrap.element_handle())
+                            session.detach()
+                        else:
+                            self.assertLessEqual(table_wrap.evaluate('el=>el.scrollWidth'), table_wrap.evaluate('el=>el.clientWidth') + 1)
+                        print(f'Market evidence responsive Chromium: viewport={width}, table={table.evaluate("el=>el.getBoundingClientRect().width")}, container={table_wrap.evaluate("el=>el.clientWidth")}, readable/local scroll PASS')
                         self.assert_bounded(page, width)
                     print(f'Technical Details responsive Chromium: viewport={width}, page={page.evaluate("document.documentElement.scrollWidth")}, closed/open PASS')
                 self.browse(pages, inspect)
@@ -151,3 +191,31 @@ class TechnicalDetailsBrowserTests(unittest.TestCase):
             details.locator('summary').click()
             self.assert_bounded(page, width)
         self.browse({'/technical': html}, inspect)
+
+    def test_shared_pick_evidence_table_preserves_words(self):
+        import dtos_app
+        data = facts_fixture()
+        data['traded_picks'] = [{'season': '2028', 'round': 1, 'roster_id': 1, 'owner_id': 2}]
+        async def fresh():
+            pass
+        app = FastAPI()
+        app.include_router(create_draft_router(ensure_fresh=fresh, require_data=lambda: data,
+            page=lambda title, body: dtos_app.page(title, body)))
+        with TestClient(app) as client:
+            response = client.get('/picks')
+            self.assertEqual(response.status_code, 200)
+        def inspect(page, width):
+            self.assert_bounded(page, width)
+            page.get_by_text('Compare all pick evidence', exact=True).click()
+            self.assert_bounded(page, width)
+            table = page.locator('.technical-details table')
+            self.assertEqual(table.evaluate('el=>getComputedStyle(el).overflowWrap'), 'normal')
+            for cell in table.locator('th,td').all():
+                self.assertEqual(cell.evaluate('el=>getComputedStyle(el).wordBreak'), 'normal')
+            wrapper = table.locator('..')
+            if width < 600:
+                self.assertGreater(wrapper.evaluate('el=>el.scrollWidth'), wrapper.evaluate('el=>el.clientWidth'))
+                wrapper.evaluate('el=>el.scrollLeft=el.scrollWidth')
+                self.assertGreater(wrapper.evaluate('el=>el.scrollLeft'), 0)
+                self.assert_bounded(page, width)
+        self.browse({'/picks': response.text}, inspect)
