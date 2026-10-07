@@ -186,4 +186,3 @@ class TradeNavigationBrowserTests(unittest.TestCase):
         with fixture.page() as (page, requests):
             fixture.ready(page, '/trades/create')
             self.assertEqual(fixture.proposal(page), {'sent': [], 'received': [], 'partner': 0})
-

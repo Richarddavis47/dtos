@@ -161,4 +161,3 @@ class TradeNavigationIdentityTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 422)
                 self.assertEqual(response.json()['detail']['code'], 'workspace_context_changed')
                 engine.assert_not_called()
-
