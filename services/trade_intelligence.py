@@ -810,7 +810,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
         if missing_candidates:
             no_path += ' Missing prices: ' + ', '.join(f'{by_id[i].label} ({i})' for i in sorted(missing_candidates)) + '.'
     if _trade_search_boundary(data) != boundary:
-        raise TradeInputError('workspace_context_changed', 'Canonical evidence changed during adjustment. Refresh and try again.')
+        raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during adjustment. Refresh and try again.')
     return {
         "instruction": instruction,
         "requested_mode": requested_mode.value,
@@ -919,7 +919,7 @@ def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> 
     choose(all_rows, "SAME TARGET, DIFFERENT PACKAGE", lambda sent, received: target_id in received and len(sent ^ original[0]) + len(received ^ original[1]) >= 2)
     choose(all_rows, "EXPAND THE DEAL", lambda sent, received: len(sent) + len(received) > len(sent_ids) + len(received_ids))
     if _trade_search_boundary(data) != boundary:
-        raise TradeInputError('workspace_context_changed', 'Canonical evidence changed during alternative construction. Refresh and try again.')
+        raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during alternative construction. Refresh and try again.')
     return {
         "count": len(chosen[:3]), "results": chosen[:3], "protected_asset_id": key_asset_id,
         "preview_only": True, "original_proposal": {k: payload[k] for k in ('active_roster_id', 'partner_roster_id', 'assets_sent', 'assets_received')},
@@ -1225,7 +1225,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             "availability": "target_context_only_not_a_verified_acquisition_path",
         }
     if targeted_search and _trade_search_boundary(data) != boundary:
-        raise TradeInputError('workspace_context_changed', 'Canonical evidence changed during trade search. Refresh and run the search again.')
+        raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during trade search. Refresh and run the search again.')
     return {
         "workflow": workflow, "target_asset_id": target or None,
         "result_state": "HARD INVALID" if target in excluded or (workflow == "shop" and target in protected) else result_state(funnel, generated[:limit]), "near_misses": funnel.near(),
@@ -1338,7 +1338,7 @@ def _generate_recommended(data, payload):
             break
     results = diverse_rows(evaluated, assets)
     if _trade_search_boundary(data) != boundary:
-        raise TradeInputError('workspace_context_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
+        raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
     return {'workflow': 'recommended', 'count': len(results), 'results': results,
             'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results), 'near_misses': funnel.near(),
             'quiet_state': None if results else 'Canonical projection evidence is unavailable for this league.' if not projection_available
@@ -1408,7 +1408,7 @@ def compare_trade_requests(data: dict[str, Any], proposals: list[dict[str, Any]]
     sortable = [dict(row, family_id=row['evaluation']['provenance']['evaluation_id']) for row in evaluations]
     ranked = [{key: value for key, value in row.items() if key != 'family_id'} for row in rank(sortable)]
     if _trade_search_boundary(data) != boundary:
-        raise TradeInputError('workspace_context_changed', 'Canonical evidence changed during comparison. Refresh and try again.')
+        raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during comparison. Refresh and try again.')
     preferred = ranked[0]['evaluation']['provenance']['evaluation_id'] if _trade_for_eligible(ranked[0]['evaluation']) else None
     return {"count": len(ranked), "preferred_evaluation_id": preferred, "comparisons": ranked,
             "basis": ["Canonical Recommendation", "Counterparty Plausibility", "Confidence", "Scoped Horizon Effects"],

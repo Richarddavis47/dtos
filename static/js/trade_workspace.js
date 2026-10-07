@@ -33,7 +33,7 @@
   if (!root) return;
   const el = id => document.getElementById(id), active = Number(root.dataset.frontOffice);
   const flow = root.dataset.tradeWorkflow.replace('-', '_');
-  let workspace, revision = 0, side = 'sent', busy = false, entryBlocked = false;
+  let workspace, revision = 0, runSequence = 0, side = 'sent', busy = false, entryBlocked = false;
   // One account/session/league-bound state. Controls are views of these exact IDs.
   const session = {schema: 2, currentProposal: {sent: [], received: [], partner: 0}, originalProposal: null,
     previewProposal: null, adoptedProposal: null, requiredOutgoingAsset: null, requiredIncomingAsset: null,
@@ -118,13 +118,20 @@
   }
   function review() { el('trade-review').hidden = false; el('trade-board').hidden = true; el('trade-review').focus(); }
   function edit() { el('trade-board').hidden = false; el('trade-review').hidden = true; el('trade-assist').hidden = true; el('trade-partner').focus(); }
-  async function post(path, extra = {}) {
-    const response = await fetch('/api/trades/' + path, {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': workspace.csrf_token}, body: JSON.stringify({...payload(), ...extra})});
+  async function post(path, requestPayload) {
+    const response = await fetch('/api/trades/' + path, {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': workspace.csrf_token}, body: JSON.stringify(requestPayload)});
     let body; try { body = await response.json(); } catch (_) { throw new Error("DTOS couldn't complete this evaluation. Your proposal is still intact."); }
     if (!response.ok) {
       const d = body.detail; const code = typeof d === 'string' ? d : d?.code || body.status;
       if (code === 'csrf_rejected' || code === 'authentication_required') throw new Error('Your secure session needs refreshing. Your proposal is still intact. Reload and sign in if needed.');
-      if (code === 'workspace_context_changed' || code === 'unauthorized_league' || code === 'unauthorized_franchise') throw new Error('This workspace belongs to a different account, league or franchise. Reload before evaluating.');
+      if (code === 'workspace_context_changed' || code === 'unauthorized_league' || code === 'unauthorized_franchise') {
+        const error = new Error('DTOS could not verify this workspace for your current session, league or franchise. Open Trade Center to load your authorized workspace. Your draft has not been submitted.');
+        error.code = code; throw error;
+      }
+      if (code === 'canonical_evidence_changed') {
+        const error = new Error('Market or projection evidence refreshed during this search. Your proposal and exact protections are unchanged. Try again when the refresh settles.');
+        error.code = code; throw error;
+      }
       throw new Error(d?.message || (typeof d === 'string' ? d : "DTOS couldn't complete this evaluation. Your proposal is still intact."));
     }
     return body;
@@ -339,10 +346,18 @@
       session.adjustmentConstraints = {instruction: extra.instruction || '', constraint_asset_id: exact || null, repair_mode: extra.repair_mode};
     }
     session.previewProposal = null; persist();
-    busy = true; const started = revision; paint();
+    busy = true; const started = revision, startedRun = ++runSequence;
+    // Freeze the exact request, including binding, anchors and locks. A retry
+    // must never reinterpret it under a newer navigation or strategy intent.
+    const requestPayload = {...payload(), ...extra}; paint();
     message(path === 'generate' ? 'Searching supported bilateral options… Your proposal stays intact.' : path === 'assist' ? 'Checking revised offers… Your original proposal stays intact.' : 'Evaluating your proposal…');
     try {
-      const body = await post(path, extra);
+      let body;
+      try { body = await post(path, requestPayload); } catch (error) {
+        if (error.code !== 'canonical_evidence_changed' || started !== revision) throw error;
+        message('Evidence refreshed. Checking the same request once more… Your proposal stays intact.');
+        body = await post(path, requestPayload);
+      }
       if (started !== revision) return;
       for (const id of body.constraints?.protected_assets || []) addLock('protectedAssets', id);
       for (const id of body.constraints?.excluded_assets || []) addLock('excludedAssets', id);
@@ -353,9 +368,17 @@
         if (body.requested_mode !== extra.repair_mode || body.returned_modes?.some(mode => mode !== extra.repair_mode) || invalidPreservation) throw new Error('DTOS rejected a mismatched repair mode. Your proposal is unchanged.');
       }
       if (path === 'evaluate') { review(); showEvaluation(body.evaluation); } else offers(body);
-    } catch (error) { if (started === revision) message(error.message, true); } finally {
-      busy = false; paint();
-      if (started === revision && !el('trade-result').hidden) focusResult();
+    } catch (error) { if (started === revision) {
+      message(error.message, true);
+      if (['workspace_context_changed', 'unauthorized_league', 'unauthorized_franchise'].includes(error.code)) {
+        const link = node('a', 'Open current Trade Center'); link.href = '/trades';
+        el('trade-result').append(link);
+      }
+    } } finally {
+      if (startedRun === runSequence) {
+        busy = false; paint();
+        if (started === revision && !el('trade-result').hidden) focusResult();
+      }
     }
   }
   el('trade-view').onclick = review; el('trade-tray-view').onclick = review; el('trade-edit').onclick = edit;
@@ -388,6 +411,12 @@
   root.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { side = b.dataset.side; root.querySelectorAll('[data-side]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); paint(); });
   el('trade-partner').onchange = () => { if (session.requiredIncomingAsset) { el('trade-partner').value = String(partner()); return message('The required target stays with its actual owner. Choose Build My Own to change the objective.', true); } setPartner(el('trade-partner').value); selected.received = []; changed(); };
   el('trade-strategy').onchange = () => { revision++; excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; persist(); };
+  // A document restored from browser history must not accept a response from
+  // work started before leaving it. Normal navigation loads fresh server context.
+  addEventListener('pagehide', () => {
+    revision++; runSequence++;
+    if (busy) { busy = false; el('trade-result').hidden = true; if (workspace) paint(); }
+  });
   matchMedia('(max-width:760px)').addEventListener('change', () => { if (workspace) paint(); });
   fetch('/api/trades/workspace?front_office=' + active, {credentials: 'same-origin'}).then(async response => { if (!response.ok) throw new Error('Unable to load this authorized workspace.'); return response.json(); }).then(data => {
     workspace = data;
