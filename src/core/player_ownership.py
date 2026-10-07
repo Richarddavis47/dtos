@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from hashlib import sha256
 import json
+import re
 
 
 def _roster_id(value) -> int:
@@ -23,7 +24,7 @@ class PlayerOwnershipIndex:
         teams = data.get("teams") or []
         self.rosters = {_roster_id(team.get("roster_id")) for team in teams}
         expected = (data.get("league") or {}).get("total_rosters")
-        self.complete = bool(teams) and 0 not in self.rosters and len(self.rosters) == len(teams)
+        self.complete = bool(teams) and all(roster_id > 0 for roster_id in self.rosters) and len(self.rosters) == len(teams)
         if expected is not None:
             self.complete = self.complete and len(teams) == _roster_id(expected)
         snapshot = []
@@ -45,7 +46,7 @@ class PlayerOwnershipIndex:
                 })
             snapshot.append((roster_id, team.get("team_name"), team.get("owner"), sorted(members)))
         self.generation = sha256(json.dumps((
-            (data.get("league") or {}).get("league_id"), self.complete, sorted(snapshot),
+            (data.get("league") or {}).get("league_id"), self.complete, sorted(snapshot, key=lambda row: row[0]), sorted(self.players),
         ), separators=(",", ":")).encode()).hexdigest()
 
     def resolve(self, player_id: str, active_roster_id: int | None = None) -> dict:
@@ -79,6 +80,6 @@ class PlayerOwnershipIndex:
 def targeted_player_action(data: dict, player_id: str, active_roster_id: int) -> dict | None:
     """Only players use these capabilities; exact picks keep their own boundary."""
     player_id = str(player_id).removeprefix("player:")
-    if player_id not in (data.get("players") or {}):
+    if player_id not in (data.get("players") or {}) and re.fullmatch(r"[0-9]{4}-R[1-9][0-9]*-[1-9][0-9]*", player_id):
         return None
     return PlayerOwnershipIndex(data).resolve(player_id, active_roster_id)

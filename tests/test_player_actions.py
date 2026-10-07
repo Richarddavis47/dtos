@@ -110,6 +110,22 @@ class PlayerActionTests(unittest.TestCase):
             self.data['teams'][team_index]['players'].remove(player)
         self.assertEqual(cached_market_facts(self.data['market_data'], ['10225'])['10225'].to_dict(), original)
 
+    def test_identity_resolution_invalidates_cached_capabilities(self):
+        before = PlayerOwnershipIndex(self.data).resolve('10225', 1)
+        del self.data['players']['10225']
+        after = PlayerOwnershipIndex(self.data).resolve('10225', 1)
+        self.assertEqual(after['state'], 'UNKNOWN')
+        self.assertNotEqual(before['generation'], after['generation'])
+        self.assertNotIn('TRADE_FOR', after['actions'])
+        with TestClient(player_app(self.data)) as client:
+            for asset_id in ('10225', 'player:10225', 'unresolved'):
+                response = client.get(f'/trades/trade-for?front_office=1&asset_id={asset_id}')
+                self.assertEqual(response.status_code, 422)
+                self.assertIn('identity is unresolved', response.text)
+        self.data['teams'][1]['roster_id'] = 1
+        self.data['teams'][1]['team_name'] = None
+        self.assertEqual(PlayerOwnershipIndex(self.data).resolve('free', 1)['state'], 'UNKNOWN')
+
     def test_targeted_links_and_api_reject_free_agent_before_search(self):
         with TestClient(player_app(self.data)) as client, patch('services.trade_intelligence.build_trade_workspace') as workspace:
             for route in ('trade-for', 'shop'):

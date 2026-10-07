@@ -44,7 +44,8 @@ per candidate. Exact picks retain their existing ownership/identity checks.
 
 Current ownership overlays a retained price artifact independently. Market render
 keys include the league ownership digest, so drops/acquisitions update labels and
-capabilities without requiring a fresh price generation. Canonical facts,
+capabilities without requiring a fresh price generation. Catalogue identity loss
+also changes the capability generation; unresolved IDs reject direct entry. Canonical facts,
 provider normalization, Market freshness/generation, strategy prices and
 projections are unchanged. No schema, upstream access, worker or infrastructure
 change is introduced.
@@ -62,11 +63,12 @@ keyboard focus, no empty action containers and no page-level horizontal overflow
 This does not represent physical iPhone/Safari testing.
 
 Focused ownership/canonical/browser coverage passed 158 tests; final service,
-manual-ownership and recent Trade coverage passed 117 tests. The ten-team,
-300-player ownership map plus all card capability lookups measured 0.375 ms p50
-and 1.395 ms worst over 100 controlled runs. Prepared fixture HTTP boundaries
-(five runs each) measured p50/worst milliseconds: Market list 1.69/49.60, dossier
-3.50/40.11, valid Trade For entry 1.02/1.89, free-agent rejection 1.01/1.12.
+manual-ownership and recent Trade coverage passed 117 tests. Final cache/identity,
+browser and service coverage passed 33 tests. The ten-team, 300-player ownership
+map plus all card capability lookups measured 0.392 ms p50 and 0.725 ms worst
+across 100 controlled runs. Prepared fixture HTTP boundaries (five runs each)
+measured p50/worst milliseconds: Market list 1.32/30.11, dossier
+3.27/26.33, valid Trade For entry 1.04/1.52, free-agent rejection 1.00/1.21.
 These are isolated fixture timings, not live production claims. Ownership
 resolution adds zero upstream calls, database queries, persistent cache or workers.
 
