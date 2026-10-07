@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.21.11 / build 2111 — Readable Market Evidence
+
+- Scope arbitrary wrapping to technical values, preserving complete selectable identifiers.
+- Restore intrinsic evidence-table column widths with bounded local scrolling and keyboard focus.
+- Verify readable headers, numeric cells, wheel/keyboard/touch-style scrolling and phone bounds in Chromium.
+
 # v1.21.10 / build 2110 — Responsive Technical Details
 
 - Wrap complete technical identifiers inside shared progressive disclosures so

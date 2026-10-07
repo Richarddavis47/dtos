@@ -1,4 +1,11 @@
-# DTOS v1.21.10 - Responsive Technical Details
+# DTOS v1.21.11 - Readable Market Evidence
+
+Full Market Evidence preserves readable column widths and scrolls inside its
+bounded container on phones. Brain snapshot identifiers and source fingerprints
+continue to wrap completely and remain selectable. Canonical values, ownership,
+provenance, projection availability and Trade behavior are unchanged.
+
+## Previous release: DTOS v1.21.10 - Responsive Technical Details
 
 Long Brain snapshot identifiers, hashes and other technical evidence now wrap
 inside their disclosures, preserving the full selectable value without widening
