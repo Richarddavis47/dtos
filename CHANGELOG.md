@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.21.15 / build 2115 — Trade Workspace Navigation Reliability
+
+- Separate canonical evidence publication during search from authenticated workspace identity rejection.
+- Retry a changed-evidence search once with the same binding, target, proposal and exact protections while intent remains current.
+- Ignore pre-navigation responses and keep their completion from unlocking or replacing a newer search.
+- Keep genuine account/session/league/franchise mismatches blocked with an authorized Trade Center recovery link.
+- Cover the Daniels/McBride Cheaper navigation journey, history/reload, isolated accounts/leagues, bounded retries and phone presentation.
+
 # v1.21.14 / build 2114 — Ownership Label Presentation
 
 - Place ownership wrapping in the rendered shared theme and remove the unused migration-file rule.

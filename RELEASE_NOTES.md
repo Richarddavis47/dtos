@@ -1,3 +1,13 @@
+# DTOS v1.21.15 / build 2115 — Trade Workspace Navigation Reliability
+
+A canonical Market or projection publication during discovery previously appeared as a different account, league or franchise. DTOS now preserves the mixed-generation rejection, checks the identical request once more when intent is unchanged, and reports an evidence refresh honestly if it continues. Genuine identity mismatches remain blocked and offer a link to the current authorized Trade Center.
+
+Navigation invalidates old search results and their loading-state ownership. Proposals, adopted alternatives, exact locks and Shop/Trade For anchors retain their existing persistence behavior. No authentication, CSRF, tenant isolation, ownership, Market-price, search-budget or trade-quality checks change.
+
+Responsive Chromium coverage includes the Daniels/McBride Cheaper → Build My Own → dossier → Trade For journey at 320/375/390px, plus history, reload, pending requests and isolated workspace bindings. Physical iPhone/Safari acceptance remains for independent device testing.
+
+See [the identity/navigation audit and Scout checks](docs/TRADE_WORKSPACE_NAVIGATION_RELEASE.md).
+
 # DTOS v1.21.14 - Ownership Label Presentation
 
 Ownership-aware player actions from v1.21.13 are preserved. Complete long franchise

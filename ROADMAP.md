@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Trade Workspace Navigation Reliability — DTOS v1.21.15
+
+- Distinguish authenticated workspace rejection from a canonical evidence publication during search.
+- Recover with one identical-request retry under unchanged intent, retaining authorization, anchors and exact protections.
+- Prevent pre-navigation results and loading completion from replacing newer user intent.
+- Cover authenticated account/league/session isolation and Daniels/McBride navigation at phone widths.
+
 ### Season-Scoped Historical Checkpoint Compatibility - DTOS v1.8.8
 
 - Validate completed seasons against only the canonical mappings referenced by their evidence.
