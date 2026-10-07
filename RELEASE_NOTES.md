@@ -1,4 +1,21 @@
-# DTOS v1.21.11 - Readable Market Evidence
+# DTOS v1.21.12 - Faster Trade Discovery
+
+Trade search removes repeated legal-lineup and package-construction work. Exact
+lineup results can be reused briefly within the same account/session, league and
+evidence generation, with strict memory limits. Recommended, Next Five, Shop,
+Trade For and repair retain their existing evaluation budgets and quality gates.
+Canonical prices, ownership, strategy assessment, explanations, near misses and
+exact protections are preserved. Phone loading and stale-result guards remain
+intact.
+
+Controlled Day Traders-shaped fixtures preserve every result while reducing
+Recommended from 149.4 seconds to a 5.68-second median. A conservative publication
+with different projections in all 13 weeks improved from 154.5 seconds to an
+18.09-second cold median, 2.55 seconds warm, and 10.79 seconds for Next Five.
+These are fixture measurements, not production timing claims. See
+[the performance release evidence](docs/TRADE_DISCOVERY_PERFORMANCE_RELEASE.md).
+
+## Previous release: DTOS v1.21.11 - Readable Market Evidence
 
 Full Market Evidence preserves readable column widths and scrolls inside its
 bounded container on phones. Brain snapshot identifiers and source fingerprints

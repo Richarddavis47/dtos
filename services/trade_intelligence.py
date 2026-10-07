@@ -413,7 +413,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     """Return calculated repair/adjustment options, never static action labels."""
     started = perf_counter()
     boundary = _trade_search_boundary(data)
-    reader = _SearchProjectionReader(_trade_projection_service(data))
+    reader = _search_reader(data, payload, boundary)
     active_id = int(payload.get("active_roster_id") or 0)
     workspace = build_trade_workspace(data, active_id)
     _requested_strategy(workspace, payload)
@@ -821,6 +821,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
         'search_evidence': {**funnel.result(len(options)), 'stages': funnel.stages, 'constructed': len(proposals), 'full_evaluations': evaluation_count,
             **repair_diagnostics,
             'projection_weeks_read': len(reader.weeks), 'provider_requests': 0, 'durable_writes': 0,
+            'reuse': reader.lineup_memo.status(),
             'timings_seconds': {'construction': construction_seconds, 'shared_evaluation': evaluation_seconds,
                                'total': perf_counter() - started}},
     }
@@ -965,10 +966,13 @@ def _trade_projection_service(data):
 
 class _SearchProjectionReader:
     """Request-local immutable-generation reads; no cross-search cache/storage."""
-    def __init__(self, service):
+    def __init__(self, service, *, reuse_scope=None):
+        from src.core.intelligence import SearchLineupMemo
         self.service = service
         self.pinned = service.snapshot()
         self.weeks = {}
+        self.lineup_memo = SearchLineupMemo(reuse_scope if reuse_scope is not None else object())
+        self.lineup_solver = self.lineup_memo.solve
 
     def snapshot(self):
         return self.pinned
@@ -979,6 +983,12 @@ class _SearchProjectionReader:
         if week not in self.weeks:
             self.weeks[week] = self.service.week_snapshot(week, generation_snapshot=self.pinned)
         return self.weeks[week]
+
+
+def _search_reader(data, payload, boundary):
+    from services.trade_workspace_context import workspace_context
+    binding = workspace_context(data, int(payload.get('active_roster_id') or 0))['binding']
+    return _SearchProjectionReader(_trade_projection_service(data), reuse_scope=(binding, boundary))
 
 
 def _trade_search_boundary(data: dict[str, Any]) -> str:
@@ -1012,7 +1022,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
     protected = {str(item) for item in payload.get("protected_assets") or ()}
     excluded = {str(item) for item in payload.get("excluded_assets") or ()}
     boundary = _trade_search_boundary(data) if targeted_search else None
-    projection_reader = _SearchProjectionReader(_trade_projection_service(data)) if targeted_search else None
+    projection_reader = _search_reader(data, payload, boundary) if targeted_search else None
     workspace = build_trade_workspace(data, active_id)
     _requested_strategy(workspace, payload)
     teams = {int(team.get("roster_id") or 0): team for team in workspace["teams"]}
@@ -1223,6 +1233,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             "behavior_profiles_loaded": len(evidence_context.behavior_by_roster),
             "trend_summaries_loaded": len(evidence_context.trends_by_asset),
             "historical_context_duration_ms": evidence_context.preparation_duration_ms,
+            "reuse": projection_reader.lineup_memo.status(),
             "wrong_league_evidence_rejected": evidence_context.wrong_league_evidence_rejected,
             "wrong_league_evidence_consumed": evidence_context.wrong_league_evidence_consumed,
             "provider_requests": 0,
@@ -1258,7 +1269,7 @@ def _generate_recommended(data, payload):
     protected = {str(a) for a in payload.get('protected_assets') or []}
     excluded = {str(a) for a in payload.get('excluded_assets') or []}
     boundary = _trade_search_boundary(data)
-    reader = _SearchProjectionReader(_trade_projection_service(data))
+    reader = _search_reader(data, payload, boundary)
     workspace = build_trade_workspace(data, int(payload.get('active_roster_id') or 0))
     _requested_strategy(workspace, payload)
     assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
@@ -1325,6 +1336,7 @@ def _generate_recommended(data, payload):
                 'timings_seconds': {'discovery': sum(d['discovery_seconds'] for d in discoveries), 'candidate_generation': construction_seconds,
                     'shared_evaluation': evaluation_seconds, 'reason_derivation': derivation_seconds, 'total_workflow': perf_counter() - started},
                 'bounded': True, 'projection_weeks_read': len(reader.weeks), 'provider_requests': 0,
+                'reuse': reader.lineup_memo.status(),
                 'raw_history_scans': 0, 'durable_writes': 0},
             'constraints': {'protected_assets': sorted(protected), 'excluded_assets': sorted(excluded)},
             'session': {'persistence': 'request_only', 'excluded_family_count': len(excluded_families), 'maximum_families': 256},

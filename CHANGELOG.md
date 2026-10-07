@@ -1,5 +1,12 @@
 # Changelog
 
+# v1.21.12 / build 2112 — Faster Trade Discovery
+
+- Reuse exact immutable lineup mathematics across matching search/session generations with bounded TTL, byte and entry limits.
+- Avoid allocating losing lineup transitions and repeatedly filtering, valuing and sorting identical package combinations.
+- Preserve all progressive search budgets, package ordering, evidence, counterparty gates, strategy judgments and near misses.
+- Add repeated cold/warm and budget-exhaustion profiles, exact before/after contracts, cache safety and phone stale-response coverage.
+
 # v1.21.11 / build 2111 — Readable Market Evidence
 
 - Scope arbitrary wrapping to technical values, preserving complete selectable identifiers.
