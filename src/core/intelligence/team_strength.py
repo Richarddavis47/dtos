@@ -58,7 +58,8 @@ def prepare_team_strength(service: Any, *, league_id: str, season: int, current_
                           regular_season_weeks: list[int] | None,
                           playoff_rounds: list[list[int]] | None,
                           calendar_reference: str | None, next_n: int = 3,
-                          bye_evidence: dict | None = None, timings: dict | None = None) -> dict:
+                          bye_evidence: dict | None = None, timings: dict | None = None,
+                          lineup_solver=None) -> dict:
     """Pin one publication, score each team/week once, then compose horizons.
 
     ``rosters`` contain canonical IDs in players/starters/reserve/taxi. Actual
@@ -71,6 +72,7 @@ def prepare_team_strength(service: Any, *, league_id: str, season: int, current_
     _weeks([current_week])
     started = perf_counter()
     optimization_seconds = 0.0
+    solve = lineup_solver or optimal_legal_lineup
     pinned = service.snapshot()
     if (not pinned or str(pinned.get('league_id')) != str(league_id)
             or pinned.get('season') != season or pinned.get('week') != current_week
@@ -133,10 +135,10 @@ def prepare_team_strength(service: Any, *, league_id: str, season: int, current_
                      'bye_week': byes.get(pid)}
                     for pid in ids]
             optimization_started = perf_counter()
-            lineup = optimal_legal_lineup(pool, roster_positions, week=week)
+            lineup = solve(pool, roster_positions, week=week)
             selected = {entry.asset_id for entry in lineup.entries}
             reserves = [player for player in pool if player['id'] not in selected]
-            reserve_lineup = optimal_legal_lineup(reserves, roster_positions, week=week)
+            reserve_lineup = solve(reserves, roster_positions, week=week)
             optimization_seconds += perf_counter() - optimization_started
             weekly[week] = {'available': lineup.available, 'optimal': asdict(lineup),
                 'projection_snapshot_id': (snapshot or {}).get('projection_snapshot_id'),

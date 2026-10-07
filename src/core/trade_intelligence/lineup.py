@@ -99,14 +99,17 @@ def optimal_legal_lineup(players: Iterable[dict[str, Any]], roster_positions: It
                 # state, preserving every legal assignment and canonical tie-break.
                 if index and slots[index - 1] == slot and not mask & (1 << (index - 1)):
                     continue
-                candidate = (score + projection, selected + (LineupEntry(slot, asset_id, label, position, projection),))
+                candidate_score = score + projection
                 current = updated.get(mask | bit)
+                if current is not None and candidate_score < current[0]:
+                    continue
                 # Tie keys matter only on equal scores. Building them for every
                 # losing/winning assignment added substantial profiled overhead.
-                if current is None or candidate[0] > current[0] or (candidate[0] == current[0] and
-                        tuple((entry.slot, entry.asset_id) for entry in candidate[1]) <
+                if current is None or candidate_score > current[0] or (
+                        tuple((entry.slot, entry.asset_id) for entry in selected) + ((slot, asset_id),) <
                         tuple((entry.slot, entry.asset_id) for entry in current[1])):
-                    updated[mask | bit] = candidate
+                    updated[mask | bit] = (candidate_score,
+                        selected + (LineupEntry(slot, asset_id, label, position, projection),))
         states = updated
     _, entries = max(states.values(), key=lambda row: (len(row[1]), row[0], tuple((entry.slot, entry.asset_id) for entry in row[1])))
     if not entries:

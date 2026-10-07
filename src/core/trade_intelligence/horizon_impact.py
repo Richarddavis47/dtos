@@ -66,7 +66,8 @@ def evaluate_horizon_impact(data, proposal, service):
     # Reuse its accepted lineups rather than solving identical assignments on
     # every proposal. Copy the derived view so callers cannot mutate the cache.
     pre = {'teams': {rid: deepcopy(prepared['teams'][rid]) for rid in (active, partner)}}
-    post = prepare_team_strength(reader, rosters=after, **common)
+    post = prepare_team_strength(reader, rosters=after,
+        lineup_solver=getattr(service, 'lineup_solver', None), **common)
     sides = {}
     for label, rid in (('active', active), ('partner', partner)):
         pre_team, post_team = pre['teams'][rid], post['teams'][rid]

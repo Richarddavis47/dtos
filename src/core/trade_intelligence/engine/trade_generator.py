@@ -187,28 +187,34 @@ def _canonical_candidates(active_id, partner_id, outgoing_pool, incoming_pool, t
     shapes = (("1-for-1", 1, 1, 'player' if target.kind == 'pick' else None, target.kind), *PACKAGE_SHAPES[1:])
     if search_phase:
         shapes += (('1-for-2', 1, 2, None, None), ('3-for-1', 3, 1, None, None))
+    sent_packages, received_packages = {}, {}
+    def valued(pool, count, cache):
+        if count not in cache:
+            cache[count] = tuple((assets, sum(a.trade_value for a in assets), tuple(a.asset_id for a in assets))
+                                 for assets in combinations(pool, count))
+        return cache[count]
     for label, sent_count, received_count, sent_kind, received_kind in shapes:
-        candidates = ((sent, received) for sent in combinations(outgoing, sent_count)
+        sends = [(sent, price, ids) for sent, price, ids in valued(outgoing, sent_count, sent_packages)
                       if _matches(sent, sent_kind)
                       if not return_preference or return_preference['name'] != 'draft_capital' or any(a.kind == 'pick' for a in sent)
-                      if not return_preference or return_preference['name'] != 'position_need' or any(a.position == return_preference['position'] for a in sent)
-                      for received in combinations(incoming, received_count)
-                      if _matches(received, received_kind) and any(a.asset_id == target_id for a in received))
+                      if not return_preference or return_preference['name'] != 'position_need' or any(a.position == return_preference['position'] for a in sent)]
+        receives = [(received, price, ids) for received, price, ids in valued(incoming, received_count, received_packages)
+                    if _matches(received, received_kind) and target_id in ids]
         best = []
         nearest = []
-        shape_count = 0
-        for sent, received in candidates:
-            pair_count += 1
-            shape_count += 1
-            key = (abs(sum(a.trade_value for a in sent) - sum(a.trade_value for a in received)),
-                   tuple(a.asset_id for a in sent), tuple(a.asset_id for a in received))
-            best.append((key, sent, received))
-            best.sort(key=lambda row: row[0])
-            del best[per_shape:]
-            if diagnostics is not None:
-                nearest.append(key)
-                nearest.sort()
-                del nearest[3:]
+        shape_count = len(sends) * len(receives)
+        pair_count += shape_count
+        for sent, sent_price, sent_ids in sends:
+            for received, received_price, received_ids in receives:
+                key = (abs(sent_price - received_price), sent_ids, received_ids)
+                if len(best) < per_shape or key < best[-1][0]:
+                    best.append((key, sent, received))
+                    best.sort(key=lambda row: row[0])
+                    del best[per_shape:]
+                if diagnostics is not None and (len(nearest) < 3 or key < nearest[-1]):
+                    nearest.append(key)
+                    nearest.sort()
+                    del nearest[3:]
         if diagnostics is not None:
             boundaries.append({'shape': label, 'candidate_count': shape_count,
                                'nearest_constructions': [
