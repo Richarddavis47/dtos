@@ -24,6 +24,7 @@ from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.inspection.live import LiveInspection, prepared_matchup_semantic
 from services.matchup_season import current_matchup_groups
+from src.core.player_ownership import PlayerOwnershipIndex
 
 historical_store = canonical_history_store
 
@@ -148,15 +149,17 @@ def create_inspection_router(
         owned = {str(player.get("id") or player.get("player_id"))
                  for team in inspector.data.get("teams") or []
                  for player in team.get("players") or []}
+        ownership = PlayerOwnershipIndex(inspector.data)
         projections = (inspector.projection_snapshot or {}).get("players") or {}
         relevant = owned | set(projections)
         rows = []
         for player_id in sorted(relevant):
             player = (inspector.data.get("players") or {}).get(player_id) or {}
+            current_ownership = ownership.resolve(player_id)
             rows.append({"player_id": player_id,
                          "display_name": player.get("full_name") or player.get("first_name") or player_id,
                          "position": player.get("position"), "nfl_team": player.get("team"),
-                         "ownership_state": "rostered" if player_id in owned else "free_agent",
+                         "ownership_state": "unknown" if current_ownership["state"] == "UNKNOWN" else "rostered" if current_ownership["owner"] else "free_agent",
                          "human_url": f"/players/{player_id}",
                          "semantic_url": f"/api/inspect/player/{player_id}"})
         return {"identity": inspector.identity(), **inspector.page(rows, limit, offset, "players")}

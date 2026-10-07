@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from src.ui.intelligence_presentation import available, human_status, technical_details
 
 from components.asset_intelligence import player_dossier
+from src.core.player_ownership import PlayerOwnershipIndex
 from config import LEAGUE_ID
 from services.asset_intelligence import build_player_dossier
 from services.transactions import transaction_center
@@ -400,6 +401,7 @@ def create_transactions_router(
             report, selected_team, teams = build_player_dossier(data, player_id, front_office)
         except ValueError as exc:
             raise HTTPException(404, str(exc)) from exc
+        ownership = PlayerOwnershipIndex(data).resolve(player_id, int(selected_team.get("roster_id") or 0))
         view = transaction_center(
             data,
             {
@@ -449,7 +451,7 @@ def create_transactions_router(
 <div class="grid"><div><div class="muted">{escape(consensus["evidence_state"])} · 0–1000</div><div class="stat">{escape(str(consensus_value))}</div><p>Evidence confidence {consensus["confidence"]}/100 · Agreement {str(consensus["agreement"]) + "/100" if consensus["agreement"] is not None else "Unavailable"}</p>{market_fact_html(live["market_fact"])}<p>FantasyCalc raw-price 30-day change (provider units): {escape(str(trend_label))}</p></div>
 <div><div class="muted">Player Context</div><p><b>{escape(str(normalized["position"]))}</b> · {escape(str(normalized["nfl_team"]))} · {escape(human_status(normalized["status"]))}</p><p>Age: {escape(available(metadata.get("age"), reason="Age is not supplied by the current source."))}</p><p>Depth chart: {escape(str(depth_role))} · Bye: {escape(str(bye_week))}</p></div></div>
 <div class="ds-table-wrap" tabindex="0" role="region" aria-label="Provider value evidence"><table><thead><tr><th>Provider</th><th>Raw provider value / State</th><th>Freshness</th><th>Confidence</th><th>Availability reason</th></tr></thead><tbody>{provider_values}</tbody></table></div>
-<h3>League Context</h3><div class="grid"><div><b>Trending</b><p>{league_context["trending_adds"]} adds · {league_context["trending_drops"]} drops (Sleeper, last cached window)</p></div><div><b>Ownership</b><p>{escape(str(league_context["owned_by"] or "Not rostered in the active league."))}</p></div><div><b>Transactions</b><p>{league_context["transaction_count"]} cached league transactions</p></div></div>
+<h3>League Context</h3><div class="grid"><div><b>Trending</b><p>{league_context["trending_adds"]} adds · {league_context["trending_drops"]} drops (Sleeper, last cached window)</p></div><div><b>Ownership</b><p>{escape(ownership["label"])}</p></div><div><b>Transactions</b><p>{league_context["transaction_count"]} cached league transactions</p></div></div>
 <h3>Data Availability</h3><ul><li><b>ADP:</b> {escape(str(reasons["adp"]))}</li><li><b>Current projections:</b> {escape(str(projection_availability))}</li><li><b>Production:</b> {escape(str(reasons["production"]))}</li><li><b>Usage:</b> {escape(str(reasons["usage"]))}</li></ul>
 <p class="muted">Sources: {attribution} · Sleeper player, league, transaction, and trending metadata.</p></section>'''
         cards = "".join(
@@ -476,7 +478,7 @@ def create_transactions_router(
         body = f"""
 {TRANSACTIONS_CSS}
 <a class="back" href="/transactions">← Back to Transactions Center</a>
-{player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel)}
+{player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
 {profile_explanation}
 {live_panel}
 {historical_panel}

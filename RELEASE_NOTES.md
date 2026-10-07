@@ -1,4 +1,18 @@
-# DTOS v1.21.12 - Faster Trade Discovery
+# DTOS v1.21.13 - Ownership-Aware Player Actions
+
+Free agents keep their canonical Market value and show Free Agent status without
+an impossible Trade For action. My players expose Shop; other-owned players expose
+Trade For with the actual owning franchise. Incomplete or conflicting roster
+evidence shows Ownership unavailable and disables ownership-dependent actions.
+Targeted links are checked before an editor opens, and generation rejects an
+unsupported player with an explicit ownership explanation.
+
+Ownership labels and actions update from current league evidence even while a
+last-valid Market price generation is retained. Market prices, projections, exact
+pick identity and accepted Trade search/repair behavior remain unchanged.
+See [validation and Scout handoff](docs/OWNERSHIP_AWARE_PLAYER_ACTIONS_RELEASE.md).
+
+## Previous release: DTOS v1.21.12 - Faster Trade Discovery
 
 Trade search removes repeated legal-lineup and package-construction work. Exact
 lineup results can be reused briefly within the same account/session, league and

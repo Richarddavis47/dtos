@@ -10,6 +10,7 @@ from time import perf_counter
 
 from src.core.intelligence import AssetContext, TradeAsset, TradeEvidenceContext, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, build_trade_evidence_context, evaluate_bilateral, generate_proposals
 from src.core.valuation.calibration import cached_market_facts
+from src.core.player_ownership import PlayerOwnershipIndex, targeted_player_action
 from services.trade_cheaper_repair import (
     REPAIR_EVALUATION_BUDGET, REPAIR_OPTION_LIMIT, cheaper_phase,
     market_cost, no_cheaper_reason, repair_family,
@@ -46,6 +47,15 @@ class TradeInputError(ValueError):
         self.code, self.assets = code, assets
 
 
+def validate_targeted_player_action(data: dict, asset_id: str, active_id: int, workflow: str) -> dict | None:
+    ownership = targeted_player_action(data, asset_id, active_id)
+    required = "SHOP_ASSET" if workflow == "shop" else "TRADE_FOR"
+    if ownership is not None and required not in ownership["actions"]:
+        reason = ownership["reason"] or ("Shop Asset requires a player on My Team." if workflow == "shop" else "Trade For requires a player owned by another franchise.")
+        raise TradeInputError("player_action_unavailable", f'{ownership["label"]}. {reason}', (asset_id,))
+    return ownership
+
+
 def validate_trade_ownership(workspace: dict, payload: dict) -> None:
     active, partner = int(payload.get("active_roster_id") or 0), int(payload.get("partner_roster_id") or 0)
     pools = workspace["pools"]
@@ -64,6 +74,11 @@ def validate_trade_ownership(workspace: dict, payload: dict) -> None:
     missing = tuple(str(i) for i in (*sent, *received) if i not in assets)
     if missing:
         raise TradeInputError("missing_asset", "Trade needs refreshing: selected assets are no longer available in this league.", missing)
+    index = workspace.get("player_ownership")
+    if index is not None:
+        unresolved = tuple(i for i in (*sent, *received) if assets[i].kind == "player" and index.resolve(i, active)["state"] == "UNKNOWN")
+        if unresolved:
+            raise TradeInputError("ownership_unavailable", "Current player ownership is unresolved. Refresh league evidence before evaluating this proposal.", unresolved)
     wrong = tuple(i for ids, owner in ((sent, active), (received, partner)) for i in ids if assets[i].source_roster_id != owner)
     if wrong:
         names = ", ".join(assets[i].label for i in wrong)
@@ -194,7 +209,7 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
                                 'confidence': decision.competitive_window.confidence,
                                 'generation': (decision.competitive_window.production_profile or {}).get('generation')}
                for identifier, decision in decisions.items() if decision.competitive_window is not None}
-    return {"active_roster_id": roster_id, "manager_context": manager, "teams": teams, "pools": pools, "workflows": WORKFLOWS,
+    return {"active_roster_id": roster_id, "manager_context": manager, "teams": teams, "pools": pools, "workflows": WORKFLOWS, "player_ownership": PlayerOwnershipIndex(data),
             'competitive_windows': windows}
 
 
@@ -1019,6 +1034,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
     target = str(payload.get("asset_id") or "")
     if targeted_search and not target:
         raise ValueError('Targeted trade search requires a specific canonical asset.')
+    validate_targeted_player_action(data, target, active_id, workflow)
     protected = {str(item) for item in payload.get("protected_assets") or ()}
     excluded = {str(item) for item in payload.get("excluded_assets") or ()}
     boundary = _trade_search_boundary(data) if targeted_search else None

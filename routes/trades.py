@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from html import escape
+from services.trade_intelligence import validate_targeted_player_action
 import logging
 from pathlib import Path
 from typing import Any, Awaitable, Callable
@@ -77,9 +79,18 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         if front_office is None:
             return page("Trade Center", manager_context_selection(list(require_data().get("teams") or []), workflow=workflow))
         try:
+            context = workflow_view(front_office)
+            if asset_id and workflow in {"shop", "trade-for"}:
+                ownership = validate_targeted_player_action(require_data(), asset_id, int(context["active_team"]["roster_id"]), workflow)
+                if ownership:
+                    owner_roster_id = ownership["owner"]["roster_id"]
             body = trade_workflow(
-                workflow_view(front_office), workflow, asset_id, owner_roster_id,
+                context, workflow, asset_id, owner_roster_id,
             )
+        except TradeInputError as exc:
+            response = page("Trade Center", f'<section class="card"><h2>Player action unavailable</h2><p>{escape(str(exc))}</p><a class="ds-action" href="/market">View Market</a></section>')
+            response.status_code = 422
+            return response
         except ValueError as exc:
             raise HTTPException(404, str(exc)) from exc
         return page("Trade Center", body)

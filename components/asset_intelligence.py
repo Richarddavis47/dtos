@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from html import escape
-from urllib.parse import quote
 
 from src.ui import player_summary, recommendation_panel
 from src.ui.intelligence_presentation import exact_rank
 from src.ui.market_facts import market_fact_html
+from src.ui.player_actions import player_action, player_actions_html
+from src.core.player_ownership import PlayerOwnershipIndex
 
 from src.core.asset_intelligence import AssetEvaluation, PlayerReport
 
@@ -66,7 +67,7 @@ def _scoped_rank_summary(scoped_ranks: dict) -> str:
     return "".join(lines)
 
 
-def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict], *, weekly_projection_html: str | None = None) -> str:
+def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict], *, weekly_projection_html: str | None = None, ownership: dict | None = None) -> str:
     profile = report.profile
     options = "".join(
         f'<option value="{int(team.get("roster_id") or 0)}" {"selected" if int(team.get("roster_id") or 0) == int(selected_team.get("roster_id") or 0) else ""}>{escape(str(team.get("owner") or team.get("team_name")))}</option>'
@@ -85,24 +86,9 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
     recommendation_evidence = tuple(f"{item.factor}: {item.observed_value} — {item.explanation}" for item in report.recommendation.evidence)
     active_roster_id = int(selected_team.get("roster_id") or 0)
     player_id = str(profile.player_id)
-    owner_roster_id = next(
-        (
-            int(team.get("roster_id") or 0)
-            for team in teams
-            if player_id in {
-                str(item.get("id") or item.get("player_id")) if isinstance(item, dict) else str(item)
-                for item in team.get("players", ())
-            }
-        ),
-        0,
-    )
-    owned = owner_roster_id == active_roster_id
-    trade_workflow = "shop" if owned else "trade-for"
-    trade_action = "Shop Asset" if owned else "Trade For"
-    trade_href = (
-        f"/trades/{trade_workflow}?front_office={active_roster_id}"
-        f"&asset_id={quote(player_id, safe='')}&owner_roster_id={owner_roster_id}"
-    )
+    ownership = ownership or PlayerOwnershipIndex({"teams": teams, "players": {player_id: profile}}).resolve(player_id, active_roster_id)
+    trade_action, trade_href = player_action(ownership, player_id, active_roster_id)
+    actions_html = player_actions_html(ownership, player_id, active_roster_id)
     primary_recommendation = recommendation_panel(title=report.recommendation.action, recommendation=report.recommendation.summary, confidence=report.recommendation.confidence, primary_reason=recommendation_evidence[0] if recommendation_evidence else report.executive_summary, evidence=recommendation_evidence, expected_impact="Aligns this player's role and value with the selected Front Office direction.", action_label=trade_action, action_href=trade_href, limitations=tuple(report.risk.limitations))
     value = report.value_profile
     integrated = weekly_projection_html or ""
@@ -122,7 +108,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
         integrated = integrated.replace("Trend:</b> Unavailable", f"Trend:</b> {escape(production_reason)}")
     return f"""
 {ASSET_CSS}
-<section class="card ai-context"><div><div class="identity-kicker">Player Dossier</div><div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=profile.nfl_team)}</div><p class="muted">{escape(report.executive_summary)}</p><div class="ds-actions"><a class="ds-action primary" href="{trade_href}">{trade_action}</a>{f'<a class="ds-action" href="/teams/{owner_roster_id}">View owning franchise</a>' if owner_roster_id else '<span class="pill">Unrostered in this league</span>'}</div></div><form method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section>
+<section class="card ai-context"><div><div class="identity-kicker">Player Dossier</div><div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=profile.nfl_team)}</div><p class="muted">{escape(report.executive_summary)}</p>{actions_html}</div><form method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section>
 {primary_recommendation}
 <section class="ai-values">{values}</section>
 {integrated}
