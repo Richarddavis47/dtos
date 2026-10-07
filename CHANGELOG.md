@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.21.13 / build 2113 — Ownership-Aware Player Actions
+
+- Resolve supported player actions from one request-scoped league ownership map.
+- Show Free Agent or unresolved ownership without impossible Trade For/Shop actions.
+- Reject unsupported player deep links before opening a trade editor and return an explicit API rejection.
+- Keep current ownership/action labels coherent through retained Market artifacts and roster transitions without changing prices or pick identity.
+- Cover phone widths, shared entry points, ownership transitions and accepted Trade contracts.
+
 # v1.21.12 / build 2112 — Faster Trade Discovery
 
 - Reuse exact immutable lineup mathematics across matching search/session generations with bounded TTL, byte and entry limits.

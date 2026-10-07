@@ -220,6 +220,11 @@ def create_api_router(
             report = data_platform.player_report(player_id, data)
         except KeyError:
             return JSONResponse({"detail": "Player not found"}, status_code=404)
+        from src.core.player_ownership import PlayerOwnershipIndex
+        from src.platform.account_context import current_account
+        account = current_account()
+        roster_id = account.membership.roster_id if account and account.membership else None
+        report["ownership"] = PlayerOwnershipIndex(data).resolve(player_id, roster_id)
         report["canonical_evidence"] = await asyncio.to_thread(
             canonical_player_evidence, player_id, data, expected_league_id=selected_league(),
         )
