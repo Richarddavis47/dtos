@@ -80,7 +80,14 @@ class MultiAccountMarketTests(unittest.TestCase):
             markets = {}
             manager = LeagueRuntimeManager(max_warm=3, hydrator=None)
             for league in ("100", "200", "300"):
-                data = {"league": {"league_id": league, "name": "Same league name"}}
+                data = {
+                    "league": {"league_id": league, "name": "Same league name", "total_rosters": 2},
+                    "players": {"4984": {"full_name": "Same Player", "position": "QB", "team": "BUF"}},
+                    "teams": [
+                        {"roster_id": 1, "team_name": "Same franchise name", "players": []},
+                        {"roster_id": 2, "team_name": f"private-owner-{league}", "players": [{"id": "4984"}]},
+                    ],
+                }
                 state = {"data": data, "last_sync": "same-sync"}
                 runtime = manager.attach_default(league, state, warm=True)
                 market = _Market("same-generation")
