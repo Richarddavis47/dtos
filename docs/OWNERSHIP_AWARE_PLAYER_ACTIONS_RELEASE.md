@@ -1,4 +1,4 @@
-# Ownership-aware player actions · v1.21.13 / build 2113
+# Ownership-aware player actions · v1.21.14 / build 2114
 
 ## Reconciliation and reproduction
 
@@ -50,6 +50,17 @@ provider normalization, Market freshness/generation, strategy prices and
 projections are unchanged. No schema, upstream access, worker or infrastructure
 change is introduced.
 
+## Final presentation correction
+
+v1.21.13 shipped the ownership/action correction. A post-deploy probe caught the
+optional ownership wrapping rule in an unused theme migration file. An added
+unbroken franchise-name fixture reproduced page widths 1,427px (dossier) and
+1,254px (Market) at phone sizes. v1.21.14 moves that rule into the rendered shared
+theme and applies the dedicated label class to Market cards, action status and
+Live Data ownership. Complete names remain inspectable. The rule does not apply
+to structured table cells or change canonical data/actions. Phone and desktop
+long-name cases now join the existing acceptance coverage.
+
 ## Validation
 
 Deterministic coverage includes free-agent dossier and Market cards/detail/API,
@@ -80,7 +91,7 @@ technical identifier/evidence-table coverage remain required.
 
 ## Scout live acceptance
 
-Test LIVE PRODUCTION v1.21.13 / build 2113. For Darius Slayton or another current
+Test LIVE PRODUCTION v1.21.14 / build 2114. For Darius Slayton or another current
 free agent, compare Market and dossier: canonical value remains available, league
 status agrees and Trade For is absent. A safe direct Trade For path must explain
 unavailability without inventing an owner or opening an empty editor. Do not
@@ -99,3 +110,7 @@ Label LIVE PRODUCTION, RESPONSIVE CHROMIUM and PHYSICAL IPHONE/SAFARI distinctly
 Continue recording separately: cold Recommended around 24 seconds, Next Five
 loading feedback below the viewport and incomplete physical Safari coverage.
 No waiver/acquisition engine or unrelated performance change belongs to this release.
+
+Post-deploy logs also showed a pre-existing Team Strength week-alignment rejection
+(current fantasy week differs from prepared projection week); the same log was
+observed on v1.21.12 before this work. Keep it separate for Main Chat.

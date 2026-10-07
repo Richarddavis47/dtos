@@ -31,6 +31,9 @@ class PlayerActionsBrowserTests(unittest.TestCase):
                     for pid in ('free', '10225', '1-QB-0'):
                         pages[f'/players/{pid}'] = client.get(f'/players/{pid}?front_office=1').text
                         pages[f'/market/{pid}'] = client.get(f'/market?front_office=1&selected=player:{pid}').text
+                    data['teams'][1]['team_name'] = 'Franchise' * 24
+                    pages['/players/long-owner'] = client.get('/players/10225?front_office=1').text
+                    pages['/market/long-owner'] = client.get('/market?front_office=1&selected=player:10225').text
                     data['league']['total_rosters'] = 10
                     pages['/players/unknown'] = client.get('/players/free?front_office=1').text
                     blocked = client.get('/trades/trade-for?front_office=1&asset_id=free')
@@ -62,6 +65,7 @@ class PlayerActionsBrowserTests(unittest.TestCase):
                                             continue
                                         ownership = page.locator('.player-ownership').first
                                         self.assertTrue(ownership.is_visible())
+                                        self.assertEqual(ownership.locator(".player-ownership-label").evaluate("el=>getComputedStyle(el).overflowWrap"), "anywhere")
                                         if path.endswith('free'):
                                             self.assertIn('Free Agent', ownership.inner_text())
                                             self.assertEqual(ownership.locator('a').count(), 0)
@@ -70,6 +74,8 @@ class PlayerActionsBrowserTests(unittest.TestCase):
                                             self.assertIn('Ownership unavailable', ownership.inner_text())
                                             self.assertEqual(ownership.locator('a').count(), 0)
                                         else:
+                                            if path.endswith('long-owner'):
+                                                self.assertIn('Franchise' * 24, ownership.inner_text())
                                             label = 'Shop Asset' if path.endswith('1-QB-0') else 'Trade For'
                                             action = ownership.get_by_role('link', name=label, exact=True)
                                             self.assertTrue(action.is_visible())

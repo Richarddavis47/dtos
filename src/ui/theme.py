@@ -91,6 +91,8 @@ nav[aria-label="Market pagination"]{display:flex;gap:12px;align-items:center;fle
 .ds-freshness{font-size:11px;color:var(--muted);text-align:right;max-width:220px;overflow-wrap:anywhere}
 .ds-freshness b{font-weight:500}
 .ds-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.player-ownership{min-width:0}
+.player-ownership-label{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .ds-action,.ux-primary-action,.ux-secondary-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;font-size:13px;font-weight:700;border:1px solid var(--border);border-radius:var(--radius-sm)}
 .ds-action:hover,.ux-secondary-action:hover{background:var(--surface-interactive)}
 .ds-action.primary,.ux-primary-action,.btn{background:linear-gradient(110deg,var(--accent),var(--accent-strong));color:#0c1908;border-color:var(--accent)}

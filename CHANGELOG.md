@@ -1,5 +1,11 @@
 # Changelog
 
+# v1.21.14 / build 2114 — Ownership Label Presentation
+
+- Place ownership wrapping in the rendered shared theme and remove the unused migration-file rule.
+- Keep complete long franchise names bounded in Market cards, dossier actions and Live Data ownership.
+- Extend responsive Chromium ownership coverage with unbroken long names at phone and desktop widths.
+
 # v1.21.13 / build 2113 — Ownership-Aware Player Actions
 
 - Resolve supported player actions from one request-scoped league ownership map.
