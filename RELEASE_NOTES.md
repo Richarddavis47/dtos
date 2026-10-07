@@ -1,4 +1,14 @@
-# DTOS v1.21.13 - Ownership-Aware Player Actions
+# DTOS v1.21.14 - Ownership Label Presentation
+
+Ownership-aware player actions from v1.21.13 are preserved. Complete long franchise
+names now wrap in Market cards, dossier action status and Live Data ownership.
+The rule lives in the rendered shared theme, scoped to ownership labels so
+structured evidence tables keep readable columns and local scrolling.
+Responsive Chromium covers 320/375/390 and desktop, including unbroken long names.
+Canonical facts, player action eligibility, exact picks and Trade behavior are
+unchanged. See [validation and Scout handoff](docs/OWNERSHIP_AWARE_PLAYER_ACTIONS_RELEASE.md).
+
+## Previous release: DTOS v1.21.13 - Ownership-Aware Player Actions
 
 Free agents keep their canonical Market value and show Free Agent status without
 an impossible Trade For action. My players expose Shop; other-owned players expose

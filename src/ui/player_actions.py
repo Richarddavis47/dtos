@@ -20,4 +20,4 @@ def player_actions_html(ownership: dict, player_id: str, active_roster_id: int) 
     reason = f'<p class="muted">{escape(ownership["reason"])}</p>' if ownership["reason"] else ""
     controls = f'<div class="ds-actions">{action}{franchise}</div>' if action or franchise else ""
     return (f'<div class="player-ownership" data-ownership-state="{ownership["state"]}">'
-            f'<span class="pill">{escape(ownership["label"])}</span>{reason}{controls}</div>')
+            f'<span class="pill player-ownership-label">{escape(ownership["label"])}</span>{reason}{controls}</div>')
