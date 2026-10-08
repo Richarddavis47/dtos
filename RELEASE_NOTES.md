@@ -1,3 +1,13 @@
+# DTOS v1.21.18 / build 2118 — Calculator Balancing Feedback
+
+Balance now immediately shows “Finding balancing options…” beside the action. Package add/remove, incoming protection and exact-lock actions visibly disable during processing. Asset search, evidence, navigation and compatible team/strategy changes remain usable; newer intent cancels the obsolete search. The offer stays intact until explicit adoption. Controls recover after results, empty results, errors or a 45-second timeout.
+
+Canonical Market pricing, ownership, exact picks, balancing construction and Preview / Keep Original / Adopt are unchanged. Responsive Chromium covers 320/375/390px; physical iPhone/Safari remains independent testing.
+
+See [validation and Scout handoff](docs/CALCULATOR_BALANCE_FEEDBACK.md).
+
+# Previous release
+
 # DTOS v1.21.17 / build 2117 — Trade Calculator & Smart Offer Editor
 
 Trade Center now includes a Trade Calculator. Select two teams and use their searchable owned-player and exact-pick lists. Individual canonical Market prices, package totals and the numerical gap update immediately. The favored side is the team receiving more Market value; this is not a guaranteed better trade. Equal totals are approximately balanced. Missing prices remain unavailable, with partial known subtotals and no definitive verdict.

@@ -151,10 +151,10 @@ class CalculatorBrowserTests(unittest.TestCase):
         with self.fixture.page(workspace=self.data, api=hold) as (page, _):
             self.build(page)
             page.click('#trade-balance-offer')
-            page.wait_for_function('document.querySelector("#trade-builder").getAttribute("aria-busy") === "true"')
+            page.wait_for_function('document.querySelector("#trade-balance-offer").getAttribute("aria-busy") === "true"')
             page.select_option('#trade-partner', '')
             pending[0].fulfill(json={'results': [self.fixture.offer(['player:a'], ['player:x'])]})
-            page.wait_for_function('document.querySelector("#trade-builder").getAttribute("aria-busy") === "false"')
+            page.wait_for_function('document.querySelector("#trade-balance-offer").getAttribute("aria-busy") === "false"')
             self.assertEqual(self.state(page)['currentProposal']['received'], [])
             self.assertTrue(page.locator('#trade-result').is_hidden())
 
