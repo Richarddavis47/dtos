@@ -1,4 +1,14 @@
-# DTOS v1.21.15 / build 2115 — Trade Workspace Navigation Reliability
+# DTOS v1.21.16 / build 2116 — Explicit Trade Navigation
+
+Selecting a new player in Trade For or Shop now replaces an incompatible saved target and package. Exact protections stay enforced, and feedback explains when the previous package is cleared. Build My Own, Preview, Keep Original and Adopt retain their established behavior.
+
+An ordinary reload keeps a matching adopted multi-asset proposal. Back/forward restores the draft for that browser entry rather than a newer unrelated target. Only the freshly authorized server binding permits restoration; account, league, franchise, ownership and CSRF checks remain intact. Pending pre-navigation searches cannot replace the new selection.
+
+Responsive Chromium covers both workflow directions, same-tab/fresh-tab selection and reload/history at 320/375/390px. No Market, projection, discovery, repair or performance calculation changes are included. Physical iPhone/Safari remains separate acceptance.
+
+See [the explicit navigation audit and Scout handoff](docs/EXPLICIT_TRADE_NAVIGATION_RELEASE.md).
+
+# Previous release: DTOS v1.21.15 / build 2115 — Trade Workspace Navigation Reliability
 
 A canonical Market or projection publication during discovery previously appeared as a different account, league or franchise. DTOS now preserves the mixed-generation rejection, checks the identical request once more when intent is unchanged, and reports an evidence refresh honestly if it continues. Genuine identity mismatches remain blocked and offer a link to the current authorized Trade Center.
 

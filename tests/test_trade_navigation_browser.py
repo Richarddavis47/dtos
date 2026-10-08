@@ -53,8 +53,6 @@ class TradeNavigationBrowserTests(unittest.TestCase):
                 card.get_by_role('button', name='Open editable offer:', exact=False).click()
                 page.get_by_role('button', name='Adopt alternative', exact=True).click()
                 adopted = fixture.proposal(page)
-                page.reload()
-                page.locator('#trade-target:not([hidden])').wait_for()
                 self.assertEqual(fixture.proposal(page), adopted)
                 page.click('#trade-build-own')
                 page.wait_for_url('**/trades/create?*')

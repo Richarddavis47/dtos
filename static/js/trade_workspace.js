@@ -33,7 +33,7 @@
   if (!root) return;
   const el = id => document.getElementById(id), active = Number(root.dataset.frontOffice);
   const flow = root.dataset.tradeWorkflow.replace('-', '_');
-  let workspace, revision = 0, runSequence = 0, side = 'sent', busy = false, entryBlocked = false;
+  let workspace, revision = 0, runSequence = 0, side = 'sent', busy = false, entryBlocked = false, departed = false;
   // One account/session/league-bound state. Controls are views of these exact IDs.
   const session = {schema: 2, currentProposal: {sent: [], received: [], partner: 0}, originalProposal: null,
     previewProposal: null, adoptedProposal: null, requiredOutgoingAsset: null, requiredIncomingAsset: null,
@@ -49,7 +49,25 @@
   const node = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
   function message(text, error = false) { const box = el('trade-result'); box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
   function payload() { return {workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...session.protectedAssets], excluded_assets: [...session.excludedAssets], asset_id: flow === 'shop' ? session.requiredOutgoingAsset || selected.sent[0] : session.requiredIncomingAsset || selected.received[0], workspace_context: workspace.workspace_context}; }
-  function persist() { try { sessionStorage.setItem(storageKey(), JSON.stringify({...session, strategy: el('trade-strategy').value, ownership: workspace.workspace_context.ownership_generation})); } catch (_) { /* Storage-disabled browsing still works in this page. */ } }
+  function persist() {
+    if (departed) return;
+    const draft = {...session, strategy: el('trade-strategy').value, ownership: workspace.workspace_context.ownership_generation};
+    try { sessionStorage.setItem(storageKey(), JSON.stringify(draft)); } catch (_) { /* Storage-disabled browsing still works in this page. */ }
+    // Each browser entry retains its own small draft, not search results. Only
+    // reload/history may restore it, and only under fresh server authorization.
+    try { history.replaceState({...history.state, dtosTrade: {
+      binding: workspace.workspace_context.binding, workflow: flow,
+      preload: root.dataset.preloadAsset, draft
+    }}, ''); } catch (_) { /* History-disabled browsing still works. */ }
+  }
+  function restoredDraft() {
+    if (departed) return null;
+    const navigation = performance.getEntriesByType('navigation')[0]?.type;
+    const entry = history.state?.dtosTrade;
+    if (['reload', 'back_forward'].includes(navigation) && entry?.binding === workspace.workspace_context.binding &&
+        entry.workflow === flow && entry.preload === root.dataset.preloadAsset) return entry.draft;
+    return JSON.parse(sessionStorage.getItem(storageKey()) || 'null');
+  }
   function syncLocks() { if (el('shop-protected')) for (const option of el('shop-protected').options) option.selected = session.protectedAssets.includes(option.value); }
   function addLock(kind, id) { if (!session[kind].includes(id)) session[kind].push(id); syncLocks(); persist(); }
   function changed() { const focusId = document.activeElement?.dataset.assetId; revision++; session.previewProposal = null; el('trade-result').hidden = true; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
@@ -414,8 +432,16 @@
   // A document restored from browser history must not accept a response from
   // work started before leaving it. Normal navigation loads fresh server context.
   addEventListener('pagehide', () => {
-    revision++; runSequence++;
+    departed = true; revision++; runSequence++;
     if (busy) { busy = false; el('trade-result').hidden = true; if (workspace) paint(); }
+  });
+  addEventListener('pageshow', event => {
+    // BF-cache keeps this document's own proposal and locks. Make it the active
+    // draft again; a later explicit action must start from this history entry.
+    if (event.persisted) {
+      departed = false;
+      if (workspace && history.state?.dtosTrade?.binding === workspace.workspace_context.binding) persist();
+    }
   });
   matchMedia('(max-width:760px)').addEventListener('change', () => { if (workspace) paint(); });
   fetch('/api/trades/workspace?front_office=' + active, {credentials: 'same-origin'}).then(async response => { if (!response.ok) throw new Error('Unable to load this authorized workspace.'); return response.json(); }).then(data => {
@@ -436,10 +462,10 @@
       el('shop-position').onchange = () => { revision++; el('trade-result').hidden = true; };
       el('shop-protected').onchange = () => { session.protectedAssets = Array.from(el('shop-protected').selectedOptions, option => option.value); revision++; session.previewProposal = null; el('trade-result').hidden = true; persist(); };
     }
-    try { for (const key of Object.keys(sessionStorage)) if (key.startsWith('dtos-trade-workspace:') && key !== storageKey()) sessionStorage.removeItem(key); } catch (_) { /* Storage is optional. */ }
+    if (!departed) try { for (const key of Object.keys(sessionStorage)) if (key.startsWith('dtos-trade-workspace:') && key !== storageKey()) sessionStorage.removeItem(key); } catch (_) { /* Storage is optional. */ }
     for (const t of data.teams) if (t.roster_id !== active) { const option = node('option', t.team_name); option.value = t.roster_id; el('trade-partner').append(option); }
     try {
-      const saved = JSON.parse(sessionStorage.getItem(storageKey()) || 'null');
+      const saved = restoredDraft();
       const proposal = saved?.currentProposal || (saved?.selected ? {...saved.selected, partner: saved.partner} : null);
       if (proposal && (team(proposal.partner) || Number(proposal.partner) === 0) && Array.isArray(proposal.sent) && Array.isArray(proposal.received)) {
         setPartner(proposal.partner); selected.sent = [...proposal.sent]; selected.received = [...proposal.received];
@@ -453,21 +479,30 @@
     if (preload) {
       const owner = data.teams.find(t => t.assets.some(a => a.asset_id === preload));
       if (!owner || (flow === 'shop' && owner.roster_id !== active) || (flow === 'trade_for' && owner.roster_id === active)) {
-        if (!selected.sent.length && !selected.received.length) { entryBlocked = true; message('This asset is not currently owned by the required franchise. Review current ownership or choose another Trade Center entry.', true); }
-      } else if (!selected.sent.length && !selected.received.length) {
-        session.originWorkflow = flow;
-        if (flow === 'shop') { selected.sent = [preload]; session.requiredOutgoingAsset = preload; session.requiredIncomingAsset = null; }
-        else { setPartner(owner.roster_id); selected.received = [preload]; session.requiredIncomingAsset = preload; session.requiredOutgoingAsset = null; }
-      } else if (flow === 'shop' && selected.sent.includes(preload) && !session.requiredIncomingAsset) {
-        session.requiredOutgoingAsset = session.requiredOutgoingAsset || preload; session.originWorkflow = 'shop';
-      } else if (flow === 'trade_for' && selected.received.includes(preload) && !session.requiredOutgoingAsset) {
-        session.requiredIncomingAsset = session.requiredIncomingAsset || preload; session.originWorkflow = 'trade_for';
+        entryBlocked = true; message('This asset is not currently owned by the required franchise. Review current ownership or choose another Trade Center entry.', true);
+      } else {
+        const compatible = session.originWorkflow === flow && (flow === 'shop'
+          ? session.requiredOutgoingAsset === preload && !session.requiredIncomingAsset && selected.sent.includes(preload)
+          : session.requiredIncomingAsset === preload && !session.requiredOutgoingAsset && selected.received.includes(preload));
+        if (!compatible) {
+          const replaced = selected.sent.length || selected.received.length;
+          // Explicit entry targets outrank unrelated restored intent. Exact
+          // locks survive within this authorized binding and remain enforced.
+          revision++;
+          selected.sent = []; selected.received = []; setPartner(0);
+          session.originalProposal = null; session.previewProposal = null; session.adoptedProposal = null;
+          session.adjustmentConstraints = {}; session.originWorkflow = flow;
+          session.requiredOutgoingAsset = flow === 'shop' ? preload : null;
+          session.requiredIncomingAsset = flow === 'trade_for' ? preload : null;
+          if (flow === 'shop') selected.sent = [preload];
+          else { setPartner(owner.roster_id); selected.received = [preload]; }
+          if (replaced) message((flow === 'shop' ? 'Now shopping ' : 'Now pursuing ') + label(asset(preload)) + '. The previous package was cleared. Exact protections are retained.');
+        } else if (flow === 'trade_for') setPartner(owner.roster_id);
       }
-      // Existing current/adopted packages take precedence over URL defaults.
     }
     el('trade-instruction').value = session.adjustmentConstraints.instruction || '';
     el('trade-constraint-asset').value = session.adjustmentConstraints.constraint_asset_id || '';
     syncLocks(); el('trade-find').hidden = flow === 'create'; persist(); paint();
-    if (session.previewProposal) previewOffer({proposal: session.previewProposal});
+    if (session.previewProposal && !entryBlocked) previewOffer({proposal: session.previewProposal});
   }).catch(error => message(error.message, true));
 })();

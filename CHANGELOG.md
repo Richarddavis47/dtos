@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.21.16 / build 2116 — Explicit Trade Navigation
+
+- Replace incompatible restored targets and proposals when a new Shop/Trade For action is selected.
+- Retain exact protections and clear the previous targeted package, preview and adjustment context predictably.
+- Restore each authorized browser history entry's own draft on reload/back-forward, preserving matching adopted multi-asset packages.
+- Keep unsupported ownership entries blocked even when a saved proposal exists; preserve all server identity and ownership checks.
+- Cover both workflow directions, target switching, legacy drafts, pending work, fresh tabs and 320/375/390px responsive Chromium.
+
 # v1.21.15 / build 2115 — Trade Workspace Navigation Reliability
 
 - Separate canonical evidence publication during search from authenticated workspace identity rejection.

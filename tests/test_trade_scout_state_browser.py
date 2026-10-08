@@ -39,7 +39,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
         requests, errors = [], []
         with sync_playwright() as engine:
             browser = launch_chromium(engine, headless=True)
-            page = browser.new_page(viewport={'width': width, 'height': 844})
+            context = browser.new_context(viewport={'width': width, 'height': 844})
+            page = context.new_page()
             page.set_default_timeout(6000)
             page.on('pageerror', lambda error: errors.append(str(error)))
 
@@ -74,7 +75,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
                     return r.fulfill(content_type='text/html; charset=utf-8', body=trade_workspace({'active_team': {'roster_id': 1}}, workflow, preload))
                 r.abort()
 
-            page.route('**/*', route)
+            page.context.route('**/*', route)
             try:
                 yield page, requests
                 self.assertEqual(errors, [])
@@ -158,17 +159,19 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
                 self.assertEqual(self.proposal(page)[which], [value])
                 self.assertIn(value[-1].upper(), page.locator('#trade-target').inner_text())
 
-    def test_saved_offer_wins_over_different_or_stale_url_defaults(self):
+    def test_new_target_replaces_incompatible_offer_and_invalid_entry_stays_blocked(self):
         with self.page() as (page, _):
             self.ready(page, '/trades/shop?asset_id=player:a')
             page.click('#trade-find')
             self.adopt(page)
-            original = self.proposal(page)
-            for preload in ('player:d', 'player:missing', 'player:x'):
+            self.ready(page, '/trades/shop?asset_id=player:d')
+            self.assertEqual(self.proposal(page), {'sent': ['player:d'], 'received': [], 'partner': 0})
+            self.assertIn('D', page.locator('#trade-target').inner_text())
+            for preload in ('player:missing', 'player:x'):
                 self.ready(page, '/trades/shop?asset_id=' + preload)
-                self.assertEqual(self.proposal(page), original)
-                self.assertIn('A', page.locator('#trade-target').inner_text())
-                self.assertTrue(page.locator('#trade-find').is_enabled())
+                self.assertIn('not currently owned', page.locator('#trade-result').inner_text())
+                self.assertTrue(page.locator('#trade-target').is_hidden())
+                self.assertTrue(page.locator('#trade-find').is_disabled())
 
     def test_explicit_new_recommended_adoption_changes_objective_not_locks(self):
         def api(r, p):
@@ -219,7 +222,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             page.get_by_role('button', name='Adopt alternative', exact=True).click()
             self.assertEqual(self.proposal(page)['sent'], ['player:a'])
 
-    def test_manual_navigation_and_reverse_shop_transition_preserve_locks_and_package(self):
+    def test_explicit_shop_replaces_manual_package_and_preserves_locks(self):
         with self.page() as (page, requests):
             self.ready(page, '/trades/create')
             page.get_by_label('Counterparty', exact=True).select_option('2')
@@ -232,9 +235,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             page.fill('#trade-instruction', 'keep this player')
             page.click('#trade-apply-adjust')
             page.get_by_role('button', name='Open editable offer:', exact=False).wait_for()
-            original = self.proposal(page)
             self.ready(page, '/trades/shop?asset_id=player:a')
-            self.assertEqual(self.proposal(page), original)
+            self.assertEqual(self.proposal(page), {'sent': ['player:a'], 'received': [], 'partner': 0})
             self.assertEqual(page.locator('#shop-protected').evaluate('n => [...n.selectedOptions].map(o => o.value)'), ['player:b'])
             page.click('#trade-find')
             self.adopt(page)
