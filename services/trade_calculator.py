@@ -11,7 +11,7 @@ import json
 from time import perf_counter
 
 from services import trade_intelligence as trade
-from src.core.trade_intelligence.market_balance import market_balance
+from src.core.intelligence import trade_market_balance as market_balance
 
 CONSTRUCTION_BUDGET = 512
 EVALUATION_BUDGET = 8
