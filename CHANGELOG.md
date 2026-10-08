@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.21.19 / build 2119 — Offer-Bound Balancing Feedback
+
+- Bind calculator loading/completion/error feedback to its exact offer revision and request generation.
+- Clear invalid balancing status and retained suggestions when the offer or balancing context changes.
+- Clear obsolete balancing previews on exact-lock and strategy changes while preserving unrelated workspace messages.
+- Preserve Market arithmetic, balancing construction, ownership, exact picks and explicit adoption.
+- Cover equal-value pick swaps, rebalancing, pending stale responses, reload/navigation and 320/375/390px responsive Chromium.
+
 # v1.21.18 / build 2118 — Calculator Balancing Feedback
 
 - Show immediate, accessible processing feedback beside Balance without hiding the offer.
