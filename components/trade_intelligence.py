@@ -200,6 +200,7 @@ def _canonical_card(row: dict) -> str:
         for key, label in (("value_fairness", "Market fairness"), ("strategic_fit", "Roster fit"), ("counterparty_plausibility", "Counterparty"), ("confidence", "Evidence"))
     ) + '</div>'
     edit_action = '<button type="button" class="ti-action" data-trade-proposal="' + escape(json.dumps(proposal), quote=True) + '">Edit Trade</button>'
+    edit_action += '<button type="button" class="ti-action" data-trade-destination="calculator" data-trade-proposal="' + escape(json.dumps(proposal), quote=True) + '">Open in Calculator</button>'
     return f'''<article class="ti-card"><div class="ti-head"><div class="ti-opportunity-label"><div class="ti-priority">{escape(str(evaluation["recommendation"]))} · {escape(str(best_for))}</div><div class="ti-confidence">{escape(str(confidence))} confidence</div></div><h3>Trade with {escape(partner)}</h3></div><div class="ti-franchises"><div class="ti-franchise"><b>{escape(active)}</b><span>Your franchise</span></div><div class="ti-arrow">⇄</div><div class="ti-franchise"><b>{escape(partner)}</b><span>Trade partner</span></div></div><div class="ti-assets"><div class="ti-package"><span>You send</span>{sent}</div><div class="ti-arrow">→</div><div class="ti-package"><span>You receive</span>{received}</div></div><div class="ti-values"><span>Neutral market: <b>{values["sent"]}</b> sent / <b>{values["received"]}</b> received</span><span>{escape(str(evaluation["perspectives"]["bilateral_reality"]))}</span></div>{impact_strip}<div class="ti-bilateral"><div class="ti-reason"><span>Why you should consider this</span>{escape(str(evaluation["why_you_would_do_it"]))}</div><div class="ti-reason"><span>Why they should consider this</span>{escape(str(evaluation["why_they_would_do_it"]))}</div></div><details class="ti-details"><summary class="ti-card-action">View trade details</summary><h4>Evidence and constraints</h4><p><b>Assessment:</b> {escape(str(evaluation["dominant_reason"]))}</p><p><b>Why now:</b> {escape(str(evaluation.get("why_now") or "No supported timing signal."))}</p><p><b>Historical counterparty evidence:</b> {escape(str(historical.get("assessment") or "INSUFFICIENT EVIDENCE"))} · {escape(str(historical.get("confidence") or "LOW"))} confidence</p><ul>{history_reasons}</ul><p>Package quality, optimal legal lineup effects, counterparty plausibility, and evidence confidence are included in the canonical evaluation. Historical evidence is context, not a promise of acceptance.</p></details>{edit_action}</article>'''
 
 
@@ -214,6 +215,7 @@ def trade_center(view: dict) -> str:
     workflows = "".join(
         f'<a class="ti-workflow" href="/trades/{identifier}?front_office={active_id}"><b>{label}</b><span>{description}</span></a>'
         for identifier, label, description in (
+            ("calculator", "Trade Calculator", "Compare canonical prices and preview balanced offers."),
             ("create", "Create Trade", "Build, evaluate, and improve a bilateral proposal."),
             ("trade-for", "Trade For", "Pursue an asset another franchise owns."),
             ("shop", "Shop Asset", "Search the league for legitimate markets."),

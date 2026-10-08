@@ -216,6 +216,7 @@ class TradeIntelligenceTests(unittest.TestCase):
         client = TestClient(app)
         api = client.get("/api/trades?front_office=1")
         page = client.get("/trades?front_office=1")
+        self.assertIn("Trade Calculator", page.text)
         self.assertEqual(api.status_code, 200)
         # Equal fixture quotes do not guarantee a bilateral improvement. The
         # API must expose the same admitted recommendations as the shared path,
@@ -234,7 +235,7 @@ class TradeIntelligenceTests(unittest.TestCase):
             self.assertIn("View trade details", page.text)
         self.assertNotIn("<details open", page.text)
 
-    def test_trade_center_exposes_four_shared_workflows_and_manual_evaluation(self) -> None:
+    def test_trade_center_exposes_shared_workflows_and_manual_evaluation(self) -> None:
         async def noop() -> None:
             return None
 
@@ -244,7 +245,7 @@ class TradeIntelligenceTests(unittest.TestCase):
         client = TestClient(app)
         workspace = client.get("/api/trades/workspace?front_office=1")
         self.assertEqual(workspace.status_code, 200)
-        self.assertEqual({item["id"] for item in workspace.json()["workflows"]}, {"create", "trade_for", "shop", "recommended"})
+        self.assertEqual({item["id"] for item in workspace.json()["workflows"]}, {"calculator", "create", "trade_for", "shop", "recommended"})
         teams = {team["roster_id"]: team for team in workspace.json()["teams"]}
         sent = teams[1]["assets"][0]["asset_id"]
         received = teams[2]["assets"][0]["asset_id"]
@@ -261,7 +262,7 @@ class TradeIntelligenceTests(unittest.TestCase):
         self.assertIn("Trade For", page.text)
         self.assertIn("Shop Asset", page.text)
         self.assertIn("Recommended Trades", page.text)
-        for route, marker in (("/trades/create", "create"), ("/trades/trade-for", "trade-for"), ("/trades/shop", "shop"), ("/trades/recommended", "recommended")):
+        for route, marker in (("/trades/calculator", "calculator"), ("/trades/create", "create"), ("/trades/trade-for", "trade-for"), ("/trades/shop", "shop"), ("/trades/recommended", "recommended")):
             workflow_page = client.get(f"{route}?front_office=1")
             self.assertEqual(workflow_page.status_code, 200)
             self.assertIn(f'data-trade-workflow="{marker}"', workflow_page.text)

@@ -70,7 +70,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
                         body['markets'] = [{'counterparty_roster_id': 2, 'returns': [offered]}]
                     return r.fulfill(json=body)
                 workflow = parsed.path.rsplit('/', 1)[-1]
-                if workflow in ('shop', 'trade-for', 'create', 'recommended'):
+                if workflow in ('shop', 'trade-for', 'create', 'recommended', 'calculator'):
                     preload = parse_qs(parsed.query).get('asset_id', [None])[0]
                     return r.fulfill(content_type='text/html; charset=utf-8', body=trade_workspace({'active_team': {'roster_id': 1}}, workflow, preload))
                 r.abort()

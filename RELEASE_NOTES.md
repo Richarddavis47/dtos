@@ -1,3 +1,17 @@
+# DTOS v1.21.17 / build 2117 — Trade Calculator & Smart Offer Editor
+
+Trade Center now includes a Trade Calculator. Select two teams and use their searchable owned-player and exact-pick lists. Individual canonical Market prices, package totals and the numerical gap update immediately. The favored side is the team receiving more Market value; this is not a guaranteed better trade. Equal totals are approximately balanced. Missing prices remain unavailable, with partial known subtotals and no definitive verdict.
+
+Balance Offer checks a bounded set of owned additions, substitutions, removals and small combinations, then assesses a short list with the existing bilateral evaluator. Market arithmetic remains separate from strategy, legal-lineup contribution, package quality, roster capacity and counterparty plausibility. Poor stuffing and unresolved capacity are disclosed as near misses. Adjustments preview the original/new totals, gap, rationale and drawback; only Adopt changes the current offer. Exact locks and required targets are never automatically relaxed.
+
+Generated/adopted offers open in the same calculator without losing exact assets or compatible constraints. Advanced DTOS analysis uses the existing evaluator separately. Reload, explicit target precedence, ownership, tenant isolation, CSRF and stale-result guards are preserved. No trade is sent to Sleeper.
+
+Responsive Chromium covers 320/375/390px and desktop. Physical iPhone/Safari and authenticated production timing remain independent Scout acceptance.
+
+See [calculator architecture, validation and Scout handoff](docs/TRADE_CALCULATOR_RELEASE.md).
+
+# Previous release
+
 # DTOS v1.21.16 / build 2116 — Explicit Trade Navigation
 
 Selecting a new player in Trade For or Shop now replaces an incompatible saved target and package. Exact protections stay enforced, and feedback explains when the previous package is cleared. Build My Own, Preview, Keep Original and Adopt retain their established behavior.

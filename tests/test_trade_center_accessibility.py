@@ -22,7 +22,7 @@ class TradeCenterAccessibilityTests(unittest.TestCase):
         with sync_playwright() as playwright:
             browser = launch_chromium(playwright, headless=True)
             page = browser.new_page()
-            for workflow in ("create", "recommended", "shop", "trade-for"):
+            for workflow in ("calculator", "create", "recommended", "shop", "trade-for"):
                 for viewport_name, viewport in viewports.items():
                     with self.subTest(workflow=workflow, viewport=viewport_name):
                         page.set_viewport_size(viewport)

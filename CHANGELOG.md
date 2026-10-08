@@ -1,5 +1,14 @@
 # Changelog
 
+# v1.21.17 / build 2117 — Trade Calculator & Smart Offer Editor
+
+- Add a discoverable Trade Calculator using the existing canonical player/pick adapters and owned-asset editor.
+- Show immediate individual prices, complete/partial totals, receiving-side Market advantage and exact numerical gap; strategy does not reprice assets.
+- Preview bounded owned additions, swaps, removals and small combinations with separate bilateral quality/capacity/strategy cautions.
+- Preserve exact pick identity, outgoing protections, required incoming/Shop anchors, original offers and explicit adoption.
+- Reuse prepared canonical facts and existing request-scoped projection/lineup memoization; only requested balancing or advanced analysis builds strategic evidence.
+- Cover arithmetic, missing prices, ownership/security, generation changes, integration, reload/navigation and responsive Chromium at 320/375/390px.
+
 # v1.21.16 / build 2116 — Explicit Trade Navigation
 
 - Replace incompatible restored targets and proposals when a new Shop/Trade For action is selected.
