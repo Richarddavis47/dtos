@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Explicit Trade Navigation — DTOS v1.21.16
+
+- Give newly selected Shop/Trade For targets precedence over incompatible restored intent.
+- Preserve matching adopted packages and exact protections on ordinary reload.
+- Retain each browser history entry's small draft under fresh authorized workspace identity.
+- Verify same-tab/fresh-tab agreement, workflow switching, pending searches and phone presentation.
+
 ### Trade Workspace Navigation Reliability — DTOS v1.21.15
 
 - Distinguish authenticated workspace rejection from a canonical evidence publication during search.
