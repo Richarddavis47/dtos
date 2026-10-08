@@ -79,10 +79,12 @@ class CalculatorBalanceFeedbackBrowserTests(unittest.TestCase):
                 self.assertIn('timed out' if outcome == 'timeout' else 'No balancing' if outcome == 'empty' else 'unavailable' if outcome == 'error' else 'could not connect', text)
 
     def test_changed_intent_cancels_pending_balance_and_old_response_cannot_restore_it(self):
-        for intent in ('partner', 'strategy', 'navigate'):
+        for intent in ('partner', 'strategy', 'navigate', 'build_own'):
             pending = []
             with self.subTest(intent=intent), self.fixture.fixture.page(workspace=self.fixture.data, api=lambda route, payload: pending.append(route)) as (page, _):
                 self.fixture.build(page)
+                if intent == 'build_own':
+                    page.get_by_role('button', name='Keep incoming target', exact=True).click()
                 page.click('#trade-balance-offer')
                 page.wait_for_timeout(30)
                 if intent == 'partner':
@@ -90,6 +92,10 @@ class CalculatorBalanceFeedbackBrowserTests(unittest.TestCase):
                 elif intent == 'strategy':
                     page.locator('summary').filter(has_text='Strategy for advanced').click()
                     page.select_option('#trade-strategy', 'REBUILD')
+                elif intent == 'build_own':
+                    page.click('#trade-build-own')
+                    page.wait_for_url('**/trades/create?front_office=1')
+                    page.locator('#trade-context').get_by_text('Active league', exact=False).wait_for()
                 else:
                     self.fixture.fixture.ready(page, '/trades/trade-for?front_office=1&asset_id=player:y')
                 if intent == 'strategy':
@@ -102,7 +108,7 @@ class CalculatorBalanceFeedbackBrowserTests(unittest.TestCase):
                 page.wait_for_timeout(50)
                 self.assertEqual(self.fixture.state(page)['currentProposal'], state)
                 self.assertNotIn('Alternative preview', page.locator('#trade-result').inner_text())
-                if intent != 'navigate':
+                if intent not in ('navigate', 'build_own'):
                     self.assertFalse(page.locator('#trade-balance-offer').get_attribute('aria-busy') == 'true')
                     self.assertTrue(page.get_by_role('button', name='Remove A from calculator', exact=True).is_enabled())
 

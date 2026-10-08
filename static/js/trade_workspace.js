@@ -42,7 +42,7 @@
   const balanceStatus = text => { if (calculator) el('calculator-balance-status').textContent = text; };
   function cancelBalance() {
     if (!balanceRequest) return;
-    balanceRequest.abort(); balanceRequest = null; runSequence++; busy = false;
+    balanceRequest.abort(); balanceRequest = null; revision++; runSequence++; busy = false;
     balanceStatus('Search cancelled. Your current offer is retained.');
   }
   // One account/session/league-bound state. Controls are views of these exact IDs.
