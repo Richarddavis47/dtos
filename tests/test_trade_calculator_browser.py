@@ -163,3 +163,17 @@ class CalculatorBrowserTests(unittest.TestCase):
             self.build(page)
             self.assertIn('Side A favored', page.locator('#calculator-verdict').inner_text())
             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 1281)
+
+    def test_changed_generation_offers_explicit_refresh_preserving_offer(self):
+        def refreshed(route, payload):
+            route.fulfill(status=422, json={'detail': {'code': 'canonical_evidence_changed', 'message': 'Market changed.'}})
+        with self.fixture.page(workspace=self.data, api=refreshed) as (page, requests):
+            self.build(page)
+            original = self.state(page)['currentProposal']
+            page.click('#trade-balance-offer')
+            page.get_by_role('button', name='Reload Market facts', exact=True).wait_for()
+            self.assertEqual(len(requests), 2)
+            self.assertEqual(self.state(page)['currentProposal'], original)
+            page.get_by_role('button', name='Reload Market facts', exact=True).click()
+            page.locator('#calculator-verdict').get_by_text('Side A favored', exact=False).wait_for()
+            self.assertEqual(self.state(page)['currentProposal'], original)

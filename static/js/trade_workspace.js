@@ -452,6 +452,11 @@
       if (path === 'evaluate') { review(); showEvaluation(body.evaluation); } else offers(body);
     } catch (error) { if (started === revision) {
       message(error.message, true);
+      if (path === 'balance' && error.code === 'canonical_evidence_changed') {
+        message('Market evidence changed. Your offer and exact protections are intact. Reload Market facts before balancing.', true);
+        const reload = node('button', 'Reload Market facts'); reload.type = 'button'; reload.onclick = () => location.reload();
+        el('trade-result').append(reload);
+      }
       if (['workspace_context_changed', 'unauthorized_league', 'unauthorized_franchise'].includes(error.code)) {
         const link = node('a', 'Open current Trade Center'); link.href = '/trades';
         el('trade-result').append(link);
