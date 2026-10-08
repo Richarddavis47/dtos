@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Offer-Bound Balancing Feedback — DTOS v1.21.19
+
+- Associate balancing status and retained options with the current offer/request.
+- Invalidate obsolete completion feedback and previews without changing pricing or balancing.
+- Verify equal-value picks, subsequent searches, async navigation and phone presentation.
+
 ### Calculator Balancing Feedback — DTOS v1.21.18
 
 - Give immediate nearby feedback and visible selective disabled states during balancing.

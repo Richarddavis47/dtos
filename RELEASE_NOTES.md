@@ -1,3 +1,13 @@
+# DTOS v1.21.19 / build 2119 — Offer-Bound Balancing Feedback
+
+The calculator now clears old balancing completion feedback when an offer edit invalidates its options. Feedback belongs to the exact offer revision and request generation. Equal-value offers correctly disable Balance without suggesting nonexistent previews; rebalancing produces fresh feedback. Exact-lock and strategy changes clear obsolete balancing previews while keeping the offer, protections and unrelated workspace messages intact.
+
+Canonical prices, totals, candidate construction, ownership, acquired-pick identity, Preview / Keep Original / Adopt and Trade integrations are unchanged. Responsive Chromium covers 320/375/390px; physical iPhone/Safari and authenticated live acceptance remain Scout checks.
+
+See [reproduction, validation and Scout handoff](docs/CALCULATOR_STALE_FEEDBACK.md).
+
+# Previous release
+
 # DTOS v1.21.18 / build 2118 — Calculator Balancing Feedback
 
 Balance now immediately shows “Finding balancing options…” beside the action. Package add/remove, incoming protection and exact-lock actions visibly disable during processing. Asset search, evidence, navigation and compatible team/strategy changes remain usable; newer intent cancels the obsolete search. The offer stays intact until explicit adoption. Controls recover after results, empty results, errors or a 45-second timeout.

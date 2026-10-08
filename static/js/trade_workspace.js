@@ -39,7 +39,18 @@
   const flow = calculator ? 'create' : root.dataset.tradeWorkflow.replace('-', '_');
   let workspace, revision = 0, runSequence = 0, side = 'sent', busy = false, entryBlocked = false, departed = false;
   let balanceRequest = null;
-  const balanceStatus = text => { if (calculator) el('calculator-balance-status').textContent = text; };
+  let balanceFeedback = null;
+  const balanceStatus = (text, offerRevision = revision, requestGeneration = runSequence) => {
+    if (!calculator || offerRevision !== revision || requestGeneration !== runSequence) return;
+    balanceFeedback = {text, offerRevision, requestGeneration};
+    el('calculator-balance-status').textContent = balanceFeedback.text;
+  };
+  function clearStaleBalanceFeedback() {
+    if (!balanceFeedback || (balanceFeedback.offerRevision === revision && balanceFeedback.requestGeneration === runSequence)) return;
+    balanceFeedback = null; el('calculator-balance-status').textContent = '';
+    if (lastOffersIsBalance) { lastOffers = null; lastOffersIsBalance = false; }
+  }
+  const clearBalancePreview = () => { if (session.previewProposal?.preview_balance_adjustment) session.previewProposal = null; };
   function cancelBalance() {
     if (!balanceRequest) return;
     balanceRequest.abort(); balanceRequest = null; revision++; runSequence++; busy = false;
@@ -49,7 +60,7 @@
   const session = {schema: 2, currentProposal: {sent: [], received: [], partner: 0}, originalProposal: null,
     previewProposal: null, adoptedProposal: null, requiredOutgoingAsset: null, requiredIncomingAsset: null,
     protectedAssets: [], excludedAssets: [], adjustmentConstraints: {}, originWorkflow: flow};
-  const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let searchExhausted = false;
+  const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let lastOffersIsBalance = false; let searchExhausted = false;
   const selected = session.currentProposal, filters = {sent: {q: '', pos: 'ALL'}, received: {q: '', pos: 'ALL'}};
   const team = id => workspace?.teams.find(t => t.roster_id === Number(id));
   const asset = id => workspace?.teams.flatMap(t => t.assets).find(a => a.asset_id === id);
@@ -130,6 +141,7 @@
     container.append(search, chips, results); renderRows();
   }
   function paint() {
+    clearStaleBalanceFeedback();
     board('sent'); board('received');
     const targetBox = el('trade-target'), targetId = session.requiredIncomingAsset || session.requiredOutgoingAsset, target = asset(targetId);
     targetBox.replaceChildren(); targetBox.hidden = !target || entryBlocked;
@@ -328,7 +340,7 @@
     }
     out.append(offerCard(row, true));
     const adopt = node('button', 'Adopt alternative'); adopt.type = 'button'; adopt.onclick = () => openOffer(row);
-    const keep = node('button', 'Keep original'); keep.type = 'button'; keep.disabled = busy; keep.onclick = () => { session.previewProposal = null; persist(); if (lastOffers) offers(lastOffers); else message('Original proposal kept.'); };
+    const keep = node('button', 'Keep original'); keep.type = 'button'; keep.disabled = busy; keep.onclick = () => { session.previewProposal = null; persist(); if (lastOffers) offers(lastOffers, lastOffersIsBalance); else message('Original proposal kept.'); };
     out.append(adopt, keep); focusResult();
   }
   function offerCard(row, preview = false) {
@@ -390,8 +402,8 @@
     }
     if (body.search_evidence) { const detail = node('details'); detail.append(node('summary', 'Technical search details'), node('pre', JSON.stringify(body.search_evidence, null, 2))); out.append(detail); }
   }
-  function offers(body) {
-    lastOffers = body;
+  function offers(body, isBalance = false) {
+    lastOffers = body; lastOffersIsBalance = isBalance;
     if (flow === 'recommended' && body.workflow === 'recommended') {
       displayedFamilies = (body.results || []).map(row => row.family_id);
       searchExhausted = body.has_more === false;
@@ -472,11 +484,11 @@
         const invalidPreservation = body.results?.length && !youngerChange && extra.repair_mode !== 'ALTERNATIVE_TARGET' && (body.target_preserved !== true || lostTarget);
         if (body.requested_mode !== extra.repair_mode || body.returned_modes?.some(mode => mode !== extra.repair_mode) || invalidPreservation) throw new Error('DTOS rejected a mismatched repair mode. Your proposal is unchanged.');
       }
-      if (path === 'balance') balanceStatus(body.results?.length ? 'Balancing options ready. Preview before adopting.' : 'No balancing options returned. Your offer is unchanged.');
-      if (path === 'evaluate') { review(); showEvaluation(body.evaluation); } else offers(body);
+      if (path === 'balance') balanceStatus(body.results?.length ? 'Balancing options ready. Preview before adopting.' : 'No balancing options returned. Your offer is unchanged.', started, startedRun);
+      if (path === 'evaluate') { review(); showEvaluation(body.evaluation); } else offers(body, path === 'balance');
     } catch (error) { if (started === revision) {
       const feedback = timedOut ? 'Balancing timed out. Your offer is unchanged. Try again.' : path === 'balance' && error instanceof TypeError ? 'Balancing could not connect. Your offer is unchanged. Try again.' : error.message;
-      if (path === 'balance') balanceStatus(feedback);
+      if (path === 'balance') balanceStatus(feedback, started, startedRun);
       message(feedback, true);
       if (path === 'balance' && error.code === 'canonical_evidence_changed') {
         message('Market evidence changed. Your offer and exact protections are intact. Reload Market facts before balancing.', true);
@@ -501,7 +513,7 @@
   if (calculator) {
     el('trade-balance-offer').onclick = () => run('balance');
     el('calculator-protect').onclick = () => { el('trade-assist').hidden = false; el('trade-constraint-asset').focus(); };
-    el('calculator-lock').onclick = () => { if (busy) return; const exact = el('trade-constraint-asset').value; if (!exact) return message('Choose an exact owned player or pick to protect.', true); addLock('protectedAssets', exact); revision++; paint(); message('Exact outgoing protection added. Original offer retained; remove this asset if it is currently outgoing.'); };
+    el('calculator-lock').onclick = () => { if (busy) return; const exact = el('trade-constraint-asset').value; if (!exact) return message('Choose an exact owned player or pick to protect.', true); addLock('protectedAssets', exact); revision++; clearBalancePreview(); persist(); paint(); message('Exact outgoing protection added. Original offer retained; remove this asset if it is currently outgoing.'); };
   }
   el('trade-build-own').onclick = () => {
     if (!workspace) return;
@@ -520,7 +532,7 @@
     if (busy) return;
     const exact = el('trade-constraint-asset').value;
     if (!exact) return message('Choose the exact adjustment lock to remove.', true);
-    session.protectedAssets = session.protectedAssets.filter(id => id !== exact); session.excludedAssets = session.excludedAssets.filter(id => id !== exact); syncLocks(); persist(); revision++;
+    session.protectedAssets = session.protectedAssets.filter(id => id !== exact); session.excludedAssets = session.excludedAssets.filter(id => id !== exact); syncLocks(); revision++; clearBalancePreview(); persist(); paint();
     message('Adjustment lock removed for ' + label(asset(exact)) + '. Original proposal kept.');
   };
   root.querySelectorAll('[data-adjust]').forEach(b => b.onclick = () => {
@@ -531,7 +543,7 @@
   });
   root.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { side = b.dataset.side; root.querySelectorAll('[data-side]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); paint(); });
   el('trade-partner').onchange = () => { if (session.requiredIncomingAsset) { el('trade-partner').value = String(partner()); return message('The required target stays with its actual owner. Choose Build My Own to change the objective.', true); } setPartner(el('trade-partner').value); selected.received = []; changed(); };
-  el('trade-strategy').onchange = () => { cancelBalance(); revision++; if (workspace) paint(); excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; persist(); };
+  el('trade-strategy').onchange = () => { cancelBalance(); revision++; clearBalancePreview(); if (workspace) paint(); excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; persist(); };
   // A document restored from browser history must not accept a response from
   // work started before leaving it. Normal navigation loads fresh server context.
   addEventListener('pagehide', () => {
