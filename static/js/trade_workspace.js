@@ -38,6 +38,13 @@
   const calculator = root.dataset.tradeWorkflow === 'calculator';
   const flow = calculator ? 'create' : root.dataset.tradeWorkflow.replace('-', '_');
   let workspace, revision = 0, runSequence = 0, side = 'sent', busy = false, entryBlocked = false, departed = false;
+  let balanceRequest = null;
+  const balanceStatus = text => { if (calculator) el('calculator-balance-status').textContent = text; };
+  function cancelBalance() {
+    if (!balanceRequest) return;
+    balanceRequest.abort(); balanceRequest = null; runSequence++; busy = false;
+    balanceStatus('Search cancelled. Your current offer is retained.');
+  }
   // One account/session/league-bound state. Controls are views of these exact IDs.
   const session = {schema: 2, currentProposal: {sent: [], received: [], partner: 0}, originalProposal: null,
     previewProposal: null, adoptedProposal: null, requiredOutgoingAsset: null, requiredIncomingAsset: null,
@@ -74,7 +81,7 @@
   }
   function syncLocks() { if (el('shop-protected')) for (const option of el('shop-protected').options) option.selected = session.protectedAssets.includes(option.value); }
   function addLock(kind, id) { if (!session[kind].includes(id)) session[kind].push(id); syncLocks(); persist(); }
-  function changed() { const focusId = document.activeElement?.dataset.assetId; revision++; session.previewProposal = null; el('trade-result').hidden = true; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
+  function changed() { cancelBalance(); const focusId = document.activeElement?.dataset.assetId; revision++; session.previewProposal = null; el('trade-result').hidden = true; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
   function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); }
   function identity(a) {
     const box = node('span');
@@ -86,7 +93,7 @@
     const row = node('div', null, 'tw-asset'), button = node('button'); button.type = 'button'; button.append(identity(a));
     button.append(node('strong', a.trade_value == null ? 'Unavailable' : String(a.trade_value)));
     button.dataset.assetId = a.asset_id; button.setAttribute('aria-label', (selected[which].includes(a.asset_id) ? 'Remove ' : 'Add ') + label(a) + (which === 'sent' ? ' — you send' : ' — you receive'));
-    button.setAttribute('aria-pressed', String(selected[which].includes(a.asset_id))); button.onclick = () => toggle(which, a.asset_id); row.append(button);
+    button.disabled = busy; button.setAttribute('aria-pressed', String(selected[which].includes(a.asset_id))); button.onclick = () => toggle(which, a.asset_id); row.append(button);
     if (a.kind === 'player') { const link = node('a', 'Dossier'); link.href = '/players/' + encodeURIComponent(a.asset_id.replace(/^player:/, '')); link.setAttribute('aria-label', 'Open ' + label(a) + ' player dossier'); row.append(link); }
     const evidence = marketEvidence(a); if (evidence) row.append(evidence);
     if (review) row.classList.add('tw-selected');
@@ -142,6 +149,12 @@
     el('trade-run').disabled = busy || !selected.sent.length || !selected.received.length;
     el('trade-find').disabled = busy || entryBlocked;
     el('trade-apply-adjust').disabled = busy;
+    for (const id of ['trade-alternatives', 'calculator-lock', 'trade-release-lock']) if (el(id)) el(id).disabled = busy;
+    if (calculator) {
+      el('trade-balance-offer').textContent = balanceRequest ? 'Finding balancing options…' : 'Balance offer · preview options';
+      el('trade-balance-offer').setAttribute('aria-busy', String(Boolean(balanceRequest)));
+    }
+    el('trade-build-own').disabled = busy && !balanceRequest;
     el('trade-build-own').hidden = flow === 'create' && !session.requiredOutgoingAsset && !session.requiredIncomingAsset;
     if (el('recommendation-refresh')) el('recommendation-refresh').disabled = busy || searchExhausted;
     root.setAttribute('aria-busy', String(busy));
@@ -180,10 +193,10 @@
         const a = asset(id), row = node('div', null, 'tw-calculator-asset');
         const owner = workspace.teams.find(t => t.assets.some(item => item.asset_id === id));
         row.append(node('span', `${a ? label(a) : 'Ownership unavailable'} · ${a?.kind === 'pick' ? 'Pick' : 'Player'} · ${owner?.team_name || 'Owner unavailable'} · ${a?.trade_value ?? 'Market unavailable'}`));
-        const remove = node('button', 'Remove'); remove.type = 'button'; remove.setAttribute('aria-label', 'Remove ' + (a ? label(a) : id) + ' from calculator'); remove.onclick = () => toggle(which, id); row.append(remove); list.append(row);
+        const remove = node('button', 'Remove'); remove.type = 'button'; remove.disabled = busy; remove.setAttribute('aria-label', 'Remove ' + (a ? label(a) : id) + ' from calculator'); remove.onclick = () => toggle(which, id); row.append(remove); list.append(row);
         const evidence = marketEvidence(a); if (evidence) list.append(evidence);
         if (which === 'received' && a) {
-          const keep = node('button', session.requiredIncomingAsset === id ? 'Release incoming target' : 'Keep incoming target'); keep.type = 'button'; keep.onclick = () => { if (busy) return; session.requiredIncomingAsset = session.requiredIncomingAsset === id ? null : id; changed(); }; list.append(keep);
+          const keep = node('button', session.requiredIncomingAsset === id ? 'Release incoming target' : 'Keep incoming target'); keep.type = 'button'; keep.disabled = busy; keep.onclick = () => { if (busy) return; session.requiredIncomingAsset = session.requiredIncomingAsset === id ? null : id; changed(); }; list.append(keep);
         }
       }
     }
@@ -191,8 +204,8 @@
   }
   function review() { el('trade-review').hidden = false; el('trade-board').hidden = true; el('trade-review').focus(); }
   function edit() { el('trade-board').hidden = false; el('trade-review').hidden = true; el('trade-assist').hidden = true; el('trade-partner').focus(); }
-  async function post(path, requestPayload) {
-    const response = await fetch('/api/trades/' + path, {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': workspace.csrf_token}, body: JSON.stringify(requestPayload)});
+  async function post(path, requestPayload, signal) {
+    const response = await fetch('/api/trades/' + path, {signal, method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': workspace.csrf_token}, body: JSON.stringify(requestPayload)});
     let body; try { body = await response.json(); } catch (_) { throw new Error("DTOS couldn't complete this evaluation. Your proposal is still intact."); }
     if (!response.ok) {
       const d = body.detail; const code = typeof d === 'string' ? d : d?.code || body.status;
@@ -313,7 +326,7 @@
     }
     out.append(offerCard(row, true));
     const adopt = node('button', 'Adopt alternative'); adopt.type = 'button'; adopt.onclick = () => openOffer(row);
-    const keep = node('button', 'Keep original'); keep.type = 'button'; keep.onclick = () => { session.previewProposal = null; persist(); if (lastOffers) offers(lastOffers); else message('Original proposal kept.'); };
+    const keep = node('button', 'Keep original'); keep.type = 'button'; keep.disabled = busy; keep.onclick = () => { session.previewProposal = null; persist(); if (lastOffers) offers(lastOffers); else message('Original proposal kept.'); };
     out.append(adopt, keep); focusResult();
   }
   function offerCard(row, preview = false) {
@@ -433,16 +446,20 @@
     if (path === 'balance') extra = {...extra, market_generation: workspace.calculator_generation, required_outgoing_asset: session.requiredOutgoingAsset, required_incoming_asset: session.requiredIncomingAsset};
     session.previewProposal = null; persist();
     busy = true; const started = revision, startedRun = ++runSequence;
+    const controller = path === 'balance' ? new AbortController() : null;
+    let timedOut = false;
+    const timeout = controller ? setTimeout(() => { timedOut = true; controller.abort(); }, 45000) : null;
+    if (controller) { balanceRequest = controller; balanceStatus('Finding balancing options… Asset changes pause until this search finishes. Your offer stays intact.'); }
     // Freeze the exact request, including binding, anchors and locks. A retry
     // must never reinterpret it under a newer navigation or strategy intent.
     const requestPayload = {...payload(), ...extra}; paint();
     message(path === 'balance' ? 'Checking owned, lock-respecting Market adjustments… Your original stays intact.' : path === 'generate' ? 'Searching supported bilateral options… Your proposal stays intact.' : path === 'assist' ? 'Checking revised offers… Your original proposal stays intact.' : 'Evaluating your proposal…');
     try {
       let body;
-      try { body = await post(path, requestPayload); } catch (error) {
+      try { body = await post(path, requestPayload, controller?.signal); } catch (error) {
         if (error.code !== 'canonical_evidence_changed' || started !== revision) throw error;
         message('Evidence refreshed. Checking the same request once more… Your proposal stays intact.');
-        body = await post(path, requestPayload);
+        body = await post(path, requestPayload, controller?.signal);
       }
       if (started !== revision) return;
       for (const id of body.constraints?.protected_assets || []) addLock('protectedAssets', id);
@@ -453,9 +470,12 @@
         const invalidPreservation = body.results?.length && !youngerChange && extra.repair_mode !== 'ALTERNATIVE_TARGET' && (body.target_preserved !== true || lostTarget);
         if (body.requested_mode !== extra.repair_mode || body.returned_modes?.some(mode => mode !== extra.repair_mode) || invalidPreservation) throw new Error('DTOS rejected a mismatched repair mode. Your proposal is unchanged.');
       }
+      if (path === 'balance') balanceStatus(body.results?.length ? 'Balancing options ready. Preview before adopting.' : 'No balancing options returned. Your offer is unchanged.');
       if (path === 'evaluate') { review(); showEvaluation(body.evaluation); } else offers(body);
     } catch (error) { if (started === revision) {
-      message(error.message, true);
+      const feedback = timedOut ? 'Balancing timed out. Your offer is unchanged. Try again.' : path === 'balance' && error instanceof TypeError ? 'Balancing could not connect. Your offer is unchanged. Try again.' : error.message;
+      if (path === 'balance') balanceStatus(feedback);
+      message(feedback, true);
       if (path === 'balance' && error.code === 'canonical_evidence_changed') {
         message('Market evidence changed. Your offer and exact protections are intact. Reload Market facts before balancing.', true);
         const reload = node('button', 'Reload Market facts'); reload.type = 'button'; reload.onclick = () => location.reload();
@@ -466,7 +486,9 @@
         el('trade-result').append(link);
       }
     } } finally {
+      if (timeout !== null) clearTimeout(timeout);
       if (startedRun === runSequence) {
+        if (balanceRequest === controller) balanceRequest = null;
         busy = false; paint();
         if (started === revision && !el('trade-result').hidden) focusResult();
       }
@@ -480,7 +502,8 @@
     el('calculator-lock').onclick = () => { if (busy) return; const exact = el('trade-constraint-asset').value; if (!exact) return message('Choose an exact owned player or pick to protect.', true); addLock('protectedAssets', exact); revision++; paint(); message('Exact outgoing protection added. Original offer retained; remove this asset if it is currently outgoing.'); };
   }
   el('trade-build-own').onclick = () => {
-    if (busy || !workspace) return;
+    if (!workspace) return;
+    cancelBalance(); if (busy) return;
     session.requiredOutgoingAsset = null; session.requiredIncomingAsset = null; session.originWorkflow = 'create';
     selected.sent = []; selected.received = []; setPartner(0);
     session.originalProposal = null; session.adoptedProposal = null; session.previewProposal = null; persist();
@@ -506,12 +529,12 @@
   });
   root.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { side = b.dataset.side; root.querySelectorAll('[data-side]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); paint(); });
   el('trade-partner').onchange = () => { if (session.requiredIncomingAsset) { el('trade-partner').value = String(partner()); return message('The required target stays with its actual owner. Choose Build My Own to change the objective.', true); } setPartner(el('trade-partner').value); selected.received = []; changed(); };
-  el('trade-strategy').onchange = () => { revision++; excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; persist(); };
+  el('trade-strategy').onchange = () => { cancelBalance(); revision++; if (workspace) paint(); excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; persist(); };
   // A document restored from browser history must not accept a response from
   // work started before leaving it. Normal navigation loads fresh server context.
   addEventListener('pagehide', () => {
-    departed = true; revision++; runSequence++;
-    if (busy) { busy = false; el('trade-result').hidden = true; if (workspace) paint(); }
+    cancelBalance(); departed = true; revision++; runSequence++;
+    busy = false; el('trade-result').hidden = true; if (workspace) paint();
   });
   addEventListener('pageshow', event => {
     // BF-cache keeps this document's own proposal and locks. Make it the active

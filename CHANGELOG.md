@@ -1,5 +1,13 @@
 # Changelog
 
+# v1.21.18 / build 2118 — Calculator Balancing Feedback
+
+- Show immediate, accessible processing feedback beside Balance without hiding the offer.
+- Visibly disable package edits and protection changes that cannot run during a search; retain search, evidence and navigation.
+- Cancel obsolete balancing requests on newer intent/navigation, bound waiting to 45 seconds and restore controls on all completion paths.
+- Preserve canonical prices, exact ownership/picks, balancing construction and explicit preview/adoption.
+- Cover pending controls, duplicate clicks, success/empty/error/network/timeout and stale results at 320/375/390px responsive Chromium.
+
 # v1.21.17 / build 2117 — Trade Calculator & Smart Offer Editor
 
 - Add a discoverable Trade Calculator using the existing canonical player/pick adapters and owned-asset editor.

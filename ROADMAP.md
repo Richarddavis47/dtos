@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Calculator Balancing Feedback — DTOS v1.21.18
+
+- Give immediate nearby feedback and visible selective disabled states during balancing.
+- Clean up success, error, timeout and obsolete navigation without altering calculator facts or offers.
+- Validate phone interaction, recent Trade behavior and unchanged release/resource gates.
+
 ### Trade Calculator & Smart Offer Editor — DTOS v1.21.17
 
 - Compare canonical asset prices immediately in the existing owned-asset workspace.
