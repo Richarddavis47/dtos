@@ -170,6 +170,7 @@ def build_trade_workflow_context(
 
 
 WORKFLOWS = (
+    {"id": "calculator", "label": "Trade Calculator", "description": "Compare canonical Market values, preview balancing and request deeper analysis."},
     {"id": "create", "label": "Create Trade", "description": "Manually build and evaluate any bilateral proposal."},
     {"id": "trade_for", "label": "Trade For", "description": "Choose another team's asset and find realistic acquisition paths."},
     {"id": "shop", "label": "Shop Asset", "description": "Choose an owned asset and find legitimate markets."},
@@ -187,30 +188,33 @@ def _context(decision) -> AssetContext:
     )
 
 
-def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = None) -> dict[str, Any]:
+def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = None, *, market_only: bool = False,
+                          canonical_market_facts: dict | None = None) -> dict[str, Any]:
     teams = list(data.get("teams") or [])
     if not teams:
         raise ValueError("No Front Office is available for Trade Intelligence.")
     manager = resolve_controlled_manager_context(data, active_roster_id)
     roster_id = manager.roster_id
-    model = build_league_model(data)
-    decisions = {identifier: report.decision for identifier, report in model.reports.items()}
+    # Calculator readiness uses the same canonical adapters, without FOIS or
+    # legal-lineup preparation. Context cannot alter an acquisition price.
+    decisions = {} if market_only else {identifier: report.decision for identifier, report in build_league_model(data).reports.items()}
     player_ids = {str(player.get("id") or player.get("player_id")) for team in teams for player in team.get("players") or ()}
-    market_facts = cached_market_facts(data.get("market_data") or {}, player_ids)
+    market_facts = canonical_market_facts if canonical_market_facts is not None else cached_market_facts(data.get("market_data") or {}, player_ids)
     from src.core.valuation import CalibrationStatus
     market_values = {key: (fact.value, fact.confidence, CalibrationStatus(fact.calibration_status))
                      for key, fact in market_facts.items()}
     pools = {}
     for team in teams:
         identifier = int(team.get("roster_id") or 0)
-        pools[identifier] = build_asset_pool(data, team, _context(decisions[identifier]), market_values, market_facts=market_facts)
+        context = AssetContext(manager.league_id, identifier, data.get('league') or {}) if market_only else _context(decisions[identifier])
+        pools[identifier] = build_asset_pool(data, team, context, market_values, market_facts=market_facts)
     pools = apply_positional_ranks(pools)
     windows = {str(identifier): {'classification': decision.competitive_window.classification.value,
                                 'confidence': decision.competitive_window.confidence,
                                 'generation': (decision.competitive_window.production_profile or {}).get('generation')}
                for identifier, decision in decisions.items() if decision.competitive_window is not None}
     return {"active_roster_id": roster_id, "manager_context": manager, "teams": teams, "pools": pools, "workflows": WORKFLOWS, "player_ownership": PlayerOwnershipIndex(data),
-            'competitive_windows': windows}
+            'competitive_windows': windows, 'canonical_market_facts': market_facts}
 
 
 def evaluate_trade_request(

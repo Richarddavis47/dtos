@@ -19,6 +19,7 @@ from src.core.request_execution import run_manager_read
 from src.platform.account_context import current_account
 from services.trade_workspace_context import workspace_context, authorize_workspace
 from services.trade_intelligence import TradeInputError
+from services.trade_calculator import calculate_trade_market, balance_trade_market, market_generation
 
 _STATIC_ROOT = Path(__file__).resolve().parents[1] / "static"
 _WORKSPACE_JS = (_STATIC_ROOT / "js" / "trade_workspace.js").read_text(encoding="utf-8")
@@ -99,6 +100,10 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     async def create_trade_page(front_office: int | None = None) -> HTMLResponse:
         return await workflow_page("create", front_office)
 
+    @router.get("/trades/calculator", response_class=HTMLResponse)
+    async def calculator_page(front_office: int | None = None) -> HTMLResponse:
+        return await workflow_page("calculator", front_office)
+
     @router.get("/trades/trade-for", response_class=HTMLResponse)
     async def trade_for_page(front_office: int | None = None, asset_id: str | None = None, owner_roster_id: int | None = None) -> HTMLResponse:
         return await workflow_page("trade-for", front_office, asset_id, owner_roster_id)
@@ -133,11 +138,12 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         return JSONResponse(jsonable_encoder(payload))
 
     @router.get("/api/trades/workspace", response_class=JSONResponse)
-    async def trade_workspace(front_office: int | None = None) -> JSONResponse:
+    async def trade_workspace(front_office: int | None = None, mode: str = "") -> JSONResponse:
         await ensure_fresh()
         try:
             workspace = await run_manager_read(
-                lambda: build_trade_workspace(require_data(), front_office),
+                lambda: build_trade_workspace(require_data(), front_office, market_only=True) if mode == 'calculator'
+                else build_trade_workspace(require_data(), front_office),
             )
         except ValueError as exc:
             raise HTTPException(404, str(exc)) from exc
@@ -174,6 +180,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
                 for team in workspace["teams"]
             ],
             "session_persistence": "temporary",
+            "calculator_generation": market_generation(workspace),
             "bilateral_only": True,
             "workspace_context": workspace_context(require_data(), workspace["active_roster_id"]),
             "csrf_token": current_account().csrf_token if current_account() else "",
@@ -185,6 +192,26 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             },
         }
         return JSONResponse(jsonable_encoder(payload))
+
+    @router.post("/api/trades/calculate", response_class=JSONResponse)
+    async def calculate_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
+        await ensure_fresh()
+        try:
+            authorize_workspace(require_data(), payload)
+            result = await run_manager_read(lambda: calculate_trade_market(require_data(), payload))
+        except Exception as exc:
+            raise _trade_failure(exc) from exc
+        return JSONResponse(jsonable_encoder(result))
+
+    @router.post("/api/trades/balance", response_class=JSONResponse)
+    async def balance_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
+        await ensure_fresh()
+        try:
+            authorize_workspace(require_data(), payload)
+            result = await run_manager_read(lambda: balance_trade_market(require_data(), payload))
+        except Exception as exc:
+            raise _trade_failure(exc) from exc
+        return JSONResponse(jsonable_encoder(result))
 
     @router.post("/api/trades/evaluate", response_class=JSONResponse)
     async def evaluate_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:

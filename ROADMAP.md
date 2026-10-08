@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Trade Calculator & Smart Offer Editor — DTOS v1.21.17
+
+- Compare canonical asset prices immediately in the existing owned-asset workspace.
+- Preview bounded ownership- and lock-aware Market balancing with separate package/strategy assessment.
+- Preserve exact acquired picks, adoption, navigation precedence and advanced-analysis integration.
+- Validate phone presentation, generation consistency, resource bounds and independent live Scout acceptance.
+
 ### Explicit Trade Navigation — DTOS v1.21.16
 
 - Give newly selected Shop/Trade For targets precedence over incompatible restored intent.
