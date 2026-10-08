@@ -84,12 +84,12 @@ prepared projection weeks (synthetic, read-only, not a live SLA):
 
 | Operation | p50 | Worst |
 |---|---:|---:|
-| Calculator asset readiness | 32 ms | 57 ms |
-| Server canonical recalculation | 34 ms | 36 ms |
-| Owned balancing | 222 ms | 318 ms |
-| Existing advanced evaluation | 89 ms | 121 ms |
-| Browser fixture readiness | 78 ms | 167 ms |
-| Browser asset edit/recalculation | 1.4 ms | 2.3 ms |
+| Calculator asset readiness | 32 ms | 66 ms |
+| Server canonical recalculation | 33 ms | 34 ms |
+| Owned balancing | 199 ms | 267 ms |
+| Existing advanced evaluation with prepared legal-lineup evidence | 153 ms | 187 ms |
+| Browser fixture readiness | 71 ms | 170 ms |
+| Browser asset edit/recalculation | 1.3 ms | 2.5 ms |
 
 Browser edits issued zero POSTs. Balancing assessed eight of 217 constructions,
 read four projection weeks, created zero workers and retained zero candidate
