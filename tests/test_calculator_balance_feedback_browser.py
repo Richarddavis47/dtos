@@ -20,6 +20,7 @@ class CalculatorBalanceFeedbackBrowserTests(unittest.TestCase):
                 status.get_by_text('Finding balancing options…', exact=False).wait_for()
                 self.assertTrue(page.locator('#trade-balance-offer').is_disabled())
                 self.assertEqual(page.locator('#trade-balance-offer').get_attribute('aria-busy'), 'true')
+                self.assertEqual(page.locator('#trade-builder').get_attribute('aria-busy'), 'false')
                 remove = page.get_by_role('button', name='Remove A from calculator', exact=True)
                 self.assertTrue(remove.is_disabled())
                 self.assertEqual(remove.evaluate('(e) => getComputedStyle(e).cursor'), 'not-allowed')

@@ -157,7 +157,9 @@
     el('trade-build-own').disabled = busy && !balanceRequest;
     el('trade-build-own').hidden = flow === 'create' && !session.requiredOutgoingAsset && !session.requiredIncomingAsset;
     if (el('recommendation-refresh')) el('recommendation-refresh').disabled = busy || searchExhausted;
-    root.setAttribute('aria-busy', String(busy));
+    // Keep the calculator live status outside a busy ancestor so assistive
+    // technology announces processing immediately. Balance owns aria-busy.
+    root.setAttribute('aria-busy', String(busy && !calculator));
   }
   function paintCalculator() {
     // Exact decimal arithmetic over the prepared canonical numbers, never
