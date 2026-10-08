@@ -27,7 +27,7 @@ class CalculatorBrowserTests(unittest.TestCase):
         if route.request.url.endswith('/balance'):
             self.assertEqual(payload['assets_sent'], ['player:a'])
         offered = self.fixture.offer(['player:a', 'pick:2028:1:3'], ['player:x'])
-        offered['balance_adjustment'] = {'change': 'ADD_PICK', 'original': {'sent': {'total': 400}, 'received': {'total': 600}, 'absolute_gap': 200},
+        offered['balance_adjustment'] = {'change': 'ADD_PICK', 'market_generation': 'canonical-fixture', 'original': {'sent': {'total': 400}, 'received': {'total': 600}, 'absolute_gap': 200},
             'suggested': {'sent': {'total': 600}, 'received': {'total': 600}, 'absolute_gap': 0},
             'reason': 'Narrower owned exact-pick gap.', 'meaning': 'Market adjustment, not a guaranteed better trade.', 'strategic_caution': True}
         if route.request.url.endswith('/evaluate'):
@@ -177,3 +177,23 @@ class CalculatorBrowserTests(unittest.TestCase):
             page.get_by_role('button', name='Reload Market facts', exact=True).click()
             page.locator('#calculator-verdict').get_by_text('Side A favored', exact=False).wait_for()
             self.assertEqual(self.state(page)['currentProposal'], original)
+
+    def test_price_refresh_invalidates_only_restored_preview_not_current_offer_or_locks(self):
+        with self.fixture.page(workspace=self.data, api=self.balancing) as (page, _):
+            self.build(page)
+            page.click('#calculator-protect')
+            page.select_option('#trade-constraint-asset', 'player:b')
+            page.click('#calculator-lock')
+            original = self.state(page)['currentProposal']
+            page.click('#trade-balance-offer')
+            page.get_by_role('button', name='Preview adjustment', exact=True).click()
+            fresh = copy.deepcopy(self.data)
+            fresh['calculator_generation'] = 'new-generation'
+            fresh['teams'][0]['assets'][0]['trade_value'] = 450
+            page.route('**/api/trades/workspace?*', lambda route: route.fulfill(json=fresh))
+            page.reload()
+            page.locator('#trade-result').get_by_text('Market evidence updated.', exact=False).wait_for()
+            self.assertIn('Value gap: 150', page.locator('#trade-balance').inner_text())
+            self.assertIsNone(self.state(page)['previewProposal'])
+            self.assertEqual(self.state(page)['currentProposal'], original)
+            self.assertEqual(self.state(page)['protectedAssets'], ['player:b'])

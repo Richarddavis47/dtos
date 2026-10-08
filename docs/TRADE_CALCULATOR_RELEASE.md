@@ -71,7 +71,9 @@ identities and compatible constraints. Advanced analysis receives the same
 package. Existing binding-keyed session/history drafts, account/league/franchise
 validation, CSRF, explicit target precedence and stale-response guards remain.
 A changed Market fingerprint or a canonical publication during balancing rejects
-mixed-generation output. No new cache, workers, schema/index or provider calls
+mixed-generation output. A restored balancing preview from an older Market
+generation is discarded with an explanation; the current offer and locks survive.
+No new cache, workers, schema/index or provider calls
 are introduced. Existing bounded account/session/league/generation lineup reuse
 has its original 32 MiB/8,192-entry/180-second limits.
 

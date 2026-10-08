@@ -182,6 +182,7 @@ def balance_trade_market(data, payload):
         poor = any(q.get('assessment') == 'POOR' for q in qualities.values() if isinstance(q, dict))
         capacity = any((q.get('roster_capacity') or {}).get('additional_spots_to_resolve') for q in qualities.values() if isinstance(q, dict))
         row['balance_adjustment'] = {'change': change, 'original': base, 'suggested': market,
+                                    'market_generation': original['market_generation'],
                                     'gap_reduction': float(Decimal(str(base['absolute_gap'])) - Decimal(str(gap))),
                                     'reason': 'Narrower canonical Market gap with current ownership and exact constraints preserved.',
                                     'meaning': 'Market adjustment, not a guaranteed better trade or manager acceptance.',

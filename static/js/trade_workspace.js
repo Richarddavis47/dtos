@@ -292,6 +292,11 @@
   }
   function previewOffer(row) {
     const conflict = offerConflict(row); if (conflict) return message(conflict, true);
+    const adjustment = row.balance_adjustment || row.proposal.preview_balance_adjustment;
+    if (adjustment && adjustment.market_generation !== workspace.calculator_generation) {
+      session.previewProposal = null; persist();
+      return message('Market evidence updated. Your current offer and protections are retained; balance again to preview current totals.', true);
+    }
     const original = {sent: [...selected.sent], received: [...selected.received], partner: partner()};
     const summary = row.evaluation ? Object.fromEntries(['recommendation', 'dominant_reason', 'why_you_would_do_it', 'major_drawback', 'counterparty_summary', 'why_they_would_do_it'].filter(key => typeof row.evaluation[key] === 'string').map(key => [key, row.evaluation[key].slice(0, 1200)])) : row.proposal.preview_assessment;
     session.originalProposal = original; session.previewProposal = {...row.proposal, preview_assessment: summary, preview_balance_adjustment: row.balance_adjustment || row.proposal.preview_balance_adjustment, preview_origin_workflow: row.workflow || row.proposal.preview_origin_workflow || session.originWorkflow}; persist();
@@ -302,7 +307,6 @@
     const cost = ids => ids.every(id => asset(id)?.trade_value != null) ? ids.reduce((sum, id) => sum + asset(id).trade_value, 0) : null;
     const oldCost = cost(original.sent), newCost = cost(row.proposal.assets_sent);
     if (original.sent.length && oldCost != null && newCost != null) out.append(node('p', 'Outgoing Market cost: ' + oldCost + ' → ' + newCost));
-    const adjustment = row.balance_adjustment || row.proposal.preview_balance_adjustment;
     if (adjustment) {
       for (const [heading, m] of [['Original', adjustment.original], ['Suggested', adjustment.suggested]]) out.append(node('p', `${heading} Market: ${m.sent.total} sent / ${m.received.total} received · Gap ${m.absolute_gap}`));
       out.append(node('p', adjustment.reason), node('small', adjustment.meaning));
