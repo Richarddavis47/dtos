@@ -246,9 +246,11 @@ class ExplicitNavigationBrowserTests(unittest.TestCase):
                      'requiredOutgoingAsset': None, 'currentProposal': {'sent': [], 'received': ['player:y'], 'partner': 2}}
             page.evaluate('dispatchEvent(new PageTransitionEvent("pagehide", {persisted:true}))')
             page.evaluate('draft => sessionStorage.setItem("dtos-trade-workspace:scout-session", JSON.stringify(draft))', newer)
+            page.evaluate('sessionStorage.setItem("dtos-trade-workspace:new-authorized-binding", "new league draft")')
             pending[0].fulfill(json=self.data)
             page.locator('#trade-context').get_by_text('Active league', exact=False).wait_for()
             self.assertEqual(self.state(page), newer)
+            self.assertEqual(page.evaluate('sessionStorage.getItem("dtos-trade-workspace:new-authorized-binding")'), 'new league draft')
 
 
 if __name__ == '__main__':

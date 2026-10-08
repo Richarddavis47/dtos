@@ -61,6 +61,7 @@
     }}, ''); } catch (_) { /* History-disabled browsing still works. */ }
   }
   function restoredDraft() {
+    if (departed) return null;
     const navigation = performance.getEntriesByType('navigation')[0]?.type;
     const entry = history.state?.dtosTrade;
     if (['reload', 'back_forward'].includes(navigation) && entry?.binding === workspace.workspace_context.binding &&
@@ -461,7 +462,7 @@
       el('shop-position').onchange = () => { revision++; el('trade-result').hidden = true; };
       el('shop-protected').onchange = () => { session.protectedAssets = Array.from(el('shop-protected').selectedOptions, option => option.value); revision++; session.previewProposal = null; el('trade-result').hidden = true; persist(); };
     }
-    try { for (const key of Object.keys(sessionStorage)) if (key.startsWith('dtos-trade-workspace:') && key !== storageKey()) sessionStorage.removeItem(key); } catch (_) { /* Storage is optional. */ }
+    if (!departed) try { for (const key of Object.keys(sessionStorage)) if (key.startsWith('dtos-trade-workspace:') && key !== storageKey()) sessionStorage.removeItem(key); } catch (_) { /* Storage is optional. */ }
     for (const t of data.teams) if (t.roster_id !== active) { const option = node('option', t.team_name); option.value = t.roster_id; el('trade-partner').append(option); }
     try {
       const saved = restoredDraft();
