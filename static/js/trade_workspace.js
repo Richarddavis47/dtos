@@ -40,6 +40,12 @@
   let workspace, revision = 0, runSequence = 0, side = 'sent', busy = false, entryBlocked = false, departed = false;
   let balanceRequest = null;
   let balanceFeedback = null;
+  let searchFeedback = null;
+  function searchStatus(text, state, offerRevision = revision, requestGeneration = runSequence) {
+    if (!el('recommendation-status') || offerRevision !== revision || requestGeneration !== runSequence) return;
+    searchFeedback = {text, state, offerRevision, requestGeneration};
+    el('recommendation-status').textContent = text; el('recommendation-status').dataset.state = state;
+  }
   const balanceStatus = (text, offerRevision = revision, requestGeneration = runSequence) => {
     if (!calculator || offerRevision !== revision || requestGeneration !== runSequence) return;
     balanceFeedback = {text, offerRevision, requestGeneration};
@@ -94,10 +100,22 @@
   function addLock(kind, id) { if (!session[kind].includes(id)) session[kind].push(id); syncLocks(); persist(); }
   function changed() { cancelBalance(); const focusId = document.activeElement?.dataset.assetId; revision++; session.previewProposal = null; el('trade-result').hidden = true; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
   function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); }
+  function lockDetail(id) {
+    const meanings = [];
+    if (session.protectedAssets.includes(id)) meanings.push('Do not trade this exact outgoing asset.');
+    if (session.excludedAssets.includes(id)) meanings.push('Exclude this exact asset from alternatives.');
+    if (id === session.requiredIncomingAsset) meanings.push('Keep this incoming Trade For target.');
+    if (id === session.requiredOutgoingAsset) meanings.push('Keep this outgoing Shop anchor.');
+    if (!meanings.length) return null;
+    const detail = node('details', null, 'ds-badge-detail'); detail.dataset.badge = 'protection';
+    detail.append(node('summary', '🔒 Protected'), node('p', label(asset(id) || {label:id}) + ' · ' + id + ': ' + meanings.join(' ')));
+    return detail;
+  }
   function identity(a) {
     const box = node('span');
     if (a.kind === 'player' && a.headshot_url) { const image = node('img'); image.src = a.headshot_url; image.alt = ''; image.loading = 'lazy'; image.onerror = () => image.remove(); box.append(image); }
-    box.append(node('b', label(a)), node('small', a.kind === 'pick' ? [a.season, 'Round ' + a.round, 'Original: ' + label(a)].join(' · ') : [a.position, a.nfl_team, a.positional_rank].filter(Boolean).join(' · ')));
+    box.append(node('b', label(a)), ...(a.kind === 'player' && ['QB','RB','WR','TE'].includes(a.position) ? [node('span', a.position, 'ds-position')] : []), node('small', a.kind === 'pick' ? [a.season, 'Round ' + a.round, 'Original: ' + label(a)].join(' · ') : [['QB','RB','WR','TE'].includes(a.position) ? null : a.position, a.nfl_team, a.positional_rank].filter(Boolean).join(' · ')));
+    if (session.protectedAssets.includes(a.asset_id) || session.excludedAssets.includes(a.asset_id) || a.asset_id === session.requiredIncomingAsset || a.asset_id === session.requiredOutgoingAsset) { const lock = node('span', '🔒 Exact protected asset', 'ds-lock'); lock.title = label(a) + ' · ' + a.asset_id; box.append(lock); }
     return box;
   }
   function assetRow(a, which, review = false) {
@@ -106,6 +124,7 @@
     button.dataset.assetId = a.asset_id; button.setAttribute('aria-label', (selected[which].includes(a.asset_id) ? 'Remove ' : 'Add ') + label(a) + (which === 'sent' ? ' — you send' : ' — you receive'));
     button.disabled = busy; button.setAttribute('aria-pressed', String(selected[which].includes(a.asset_id))); button.onclick = () => toggle(which, a.asset_id); row.append(button);
     if (a.kind === 'player') { const link = node('a', 'Dossier'); link.href = '/players/' + encodeURIComponent(a.asset_id.replace(/^player:/, '')); link.setAttribute('aria-label', 'Open ' + label(a) + ' player dossier'); row.append(link); }
+    const protection = lockDetail(a.asset_id); if (protection) row.append(protection);
     const evidence = marketEvidence(a); if (evidence) row.append(evidence);
     if (review) row.classList.add('tw-selected');
     return row;
@@ -142,6 +161,9 @@
   }
   function paint() {
     clearStaleBalanceFeedback();
+    if (searchFeedback && (searchFeedback.offerRevision !== revision || searchFeedback.requestGeneration !== runSequence)) {
+      searchFeedback = null; el('recommendation-status').textContent = ''; delete el('recommendation-status').dataset.state;
+    }
     board('sent'); board('received');
     const targetBox = el('trade-target'), targetId = session.requiredIncomingAsset || session.requiredOutgoingAsset, target = asset(targetId);
     targetBox.replaceChildren(); targetBox.hidden = !target || entryBlocked;
@@ -198,7 +220,7 @@
     if (ownershipInvalid) box.append(node('p', 'Ownership invalid or unavailable: this retained hypothetical offer is not executable. Remove moved assets or select their current owner before balancing.', 'tw-error'));
     box.append(node('small', 'Market value ≠ lineup impact ≠ future capital ≠ strategy fit. Advanced DTOS analysis evaluates these separately.'));
     const locks = [...session.protectedAssets, ...session.excludedAssets];
-    if (locks.length) box.append(node('p', 'Exact protections: ' + locks.map(id => label(asset(id) || {label: id})).join('; ')));
+    if (locks.length) box.append(node('p', '🔒 Exact protections: ' + locks.map(id => label(asset(id) || {label: id})).join('; ')));
     if (selected.sent.some(id => session.protectedAssets.includes(id)) || [...selected.sent, ...selected.received].some(id => session.excludedAssets.includes(id))) box.append(node('p', 'Protected-asset conflict: remove the protected asset from this offer or explicitly release its lock.', 'tw-error'));
     for (const which of ['sent', 'received']) {
       const list = el('calculator-' + which); list.replaceChildren();
@@ -207,7 +229,7 @@
         const a = asset(id), row = node('div', null, 'tw-calculator-asset');
         const owner = workspace.teams.find(t => t.assets.some(item => item.asset_id === id));
         row.append(node('span', `${a ? label(a) : 'Ownership unavailable'} · ${a?.kind === 'pick' ? 'Pick' : 'Player'} · ${owner?.team_name || 'Owner unavailable'} · ${a?.trade_value ?? 'Market unavailable'}`));
-        const remove = node('button', 'Remove'); remove.type = 'button'; remove.disabled = busy; remove.setAttribute('aria-label', 'Remove ' + (a ? label(a) : id) + ' from calculator'); remove.onclick = () => toggle(which, id); row.append(remove); list.append(row);
+        const remove = node('button', 'Remove'); remove.type = 'button'; remove.disabled = busy; remove.setAttribute('aria-label', 'Remove ' + (a ? label(a) : id) + ' from calculator'); remove.onclick = () => toggle(which, id); row.append(remove); const protection = lockDetail(id); if (protection) row.append(protection); list.append(row);
         const evidence = marketEvidence(a); if (evidence) list.append(evidence);
         if (which === 'received' && a) {
           const keep = node('button', session.requiredIncomingAsset === id ? 'Release incoming target' : 'Keep incoming target'); keep.type = 'button'; keep.disabled = busy; keep.onclick = () => { if (busy) return; session.requiredIncomingAsset = session.requiredIncomingAsset === id ? null : id; changed(); }; list.append(keep);
@@ -237,7 +259,7 @@
     return body;
   }
   function showEvaluation(e, opportunity = null) {
-    const out = el('trade-result'); out.hidden = false; out.className = ''; out.replaceChildren();
+    const out = el('trade-result'); if (calculator) root.append(out); out.hidden = false; out.className = ''; out.replaceChildren();
     if (e.explanation_html) {
       // Same-origin server renderer escapes all evidence text. No client-side
       // recommendation/scoring or reason-code interpretation is performed.
@@ -348,21 +370,29 @@
     const e = row.evaluation || row.proposal.preview_assessment || {};
     const balance = row.balance_adjustment || row.proposal.preview_balance_adjustment;
     card.append(node('h3', balance ? 'Market adjustment · preview' : e.recommendation || 'Recommendation unavailable'));
+    if (balance) {
+      const before = preview ? session.originalProposal || selected : selected;
+      const describe = (oldIds, newIds, side) => { const added = newIds.filter(id => !oldIds.includes(id)), removed = oldIds.filter(id => !newIds.includes(id)); return [added.length ? 'Add ' + added.map(id => label(asset(id) || {label:id})).join(' + ') + ' to ' + side : '', removed.length ? 'Remove ' + removed.map(id => label(asset(id) || {label:id})).join(' + ') + ' from ' + side : ''].filter(Boolean).join('; '); };
+      card.append(node('p', [describe(before.sent, row.proposal.assets_sent, 'Side A · you send'), describe(before.received, row.proposal.assets_received, 'Side B · you receive')].filter(Boolean).join('; '), 'tw-adjustment'));
+    }
     if (balance) card.append(node('p', balance.change.replaceAll('_', ' ') + ` · Gap ${balance.original.absolute_gap} → ${balance.suggested.absolute_gap}`), node('p', 'Separate DTOS assessment: ' + (e.recommendation || 'Unavailable')), node('small', balance.strategic_caution ? 'Market balance improves; roster, strategy or counterparty evidence raises a caution. Review the major drawback.' : balance.meaning));
     if (row.repair_type) card.append(node('p', row.repair_type));
     if (row.adjustment_evidence?.concept === 'strictly_lower_canonical_outgoing_market_cost') {
       const cost = row.adjustment_evidence;
       card.append(node('p', `Outgoing Market cost: ${cost.current_outgoing_cost} → ${cost.alternative_outgoing_cost} (${cost.market_cost_reduction} lower).`));
     }
-    card.append(node('p', (row.proposal_presentation?.send || []).map(a => a.label).join(' + ') + ' → ' + (row.proposal_presentation?.receive || []).map(a => a.label).join(' + ')),
+    const sentRows = row.proposal_presentation?.send || row.proposal.assets_sent.map(id => ({label: label(asset(id) || {label:id})}));
+    const receivedRows = row.proposal_presentation?.receive || row.proposal.assets_received.map(id => ({label: label(asset(id) || {label:id})}));
+    card.append(node('p', sentRows.map(a => a.label).join(' + ') + ' → ' + receivedRows.map(a => a.label).join(' + ')),
       node('p', 'Why this helps me: ' + (e.why_you_would_do_it || e.dominant_reason || 'Review the supported evidence.')),
-      node('p', 'Major drawback: ' + (e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ') || e.major_limitations?.join('; ').replaceAll('_', ' ') || 'No material drawback identified in available evidence.')),
+      node('p', 'Major drawback: ' + (e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ') || e.major_limitations?.join('; ').replaceAll('_', ' ') || 'No material drawback identified in available evidence.'), 'tw-drawback'),
       node('p', 'Counterparty: ' + (e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.')));
+    for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
     const intent = e.dimensions?.strategic_fit?.active?.manager_strategy?.strategy;
     if (intent) card.append(node('p', 'Strategy: ' + intent));
     const history = e.dimensions?.counterparty_plausibility?.manager_history?.disclosure;
     if (history) card.append(node('small', history));
-    if (!preview) { const b = node('button', balance ? 'Preview adjustment' : 'Open editable offer: preview'); b.type = 'button'; b.onclick = () => previewOffer(row); card.append(b); }
+    if (!preview) { const b = node('button', balance ? 'Preview adjustment' : 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
     if (e.explanation_html) {
       const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
       const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html');
@@ -404,6 +434,7 @@
   }
   function offers(body, isBalance = false) {
     lastOffers = body; lastOffersIsBalance = isBalance;
+    if (calculator && isBalance) el('calculator-balance-status').after(el('trade-result'));
     if (flow === 'recommended' && body.workflow === 'recommended') {
       displayedFamilies = (body.results || []).map(row => row.family_id);
       searchExhausted = body.has_more === false;
@@ -466,7 +497,9 @@
     if (controller) { balanceRequest = controller; balanceStatus('Finding balancing options… Asset changes pause until this search finishes. Your offer stays intact.'); }
     // Freeze the exact request, including binding, anchors and locks. A retry
     // must never reinterpret it under a newer navigation or strategy intent.
-    const requestPayload = {...payload(), ...extra}; paint();
+    const requestPayload = {...payload(), ...extra};
+    if (path === 'generate') searchStatus('Searching supported trades… Your offer stays intact.', 'loading', started, startedRun);
+    paint();
     message(path === 'balance' ? 'Checking owned, lock-respecting Market adjustments… Your original stays intact.' : path === 'generate' ? 'Searching supported bilateral options… Your proposal stays intact.' : path === 'assist' ? 'Checking revised offers… Your original proposal stays intact.' : 'Evaluating your proposal…');
     try {
       let body;
@@ -485,10 +518,12 @@
         if (body.requested_mode !== extra.repair_mode || body.returned_modes?.some(mode => mode !== extra.repair_mode) || invalidPreservation) throw new Error('DTOS rejected a mismatched repair mode. Your proposal is unchanged.');
       }
       if (path === 'balance') balanceStatus(body.results?.length ? 'Balancing options ready. Preview before adopting.' : 'No balancing options returned. Your offer is unchanged.', started, startedRun);
+      if (path === 'generate') searchStatus(body.results?.length ? 'Trade options ready. Review before adopting.' : 'No credible options found in this search. Review the search details below.', 'complete', started, startedRun);
       if (path === 'evaluate') { review(); showEvaluation(body.evaluation); } else offers(body, path === 'balance');
     } catch (error) { if (started === revision) {
       const feedback = timedOut ? 'Balancing timed out. Your offer is unchanged. Try again.' : path === 'balance' && error instanceof TypeError ? 'Balancing could not connect. Your offer is unchanged. Try again.' : error.message;
       if (path === 'balance') balanceStatus(feedback, started, startedRun);
+      if (path === 'generate') searchStatus(feedback, 'error', started, startedRun);
       message(feedback, true);
       if (path === 'balance' && error.code === 'canonical_evidence_changed') {
         message('Market evidence changed. Your offer and exact protections are intact. Reload Market facts before balancing.', true);

@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Phone-First Front Office — DTOS v1.21.20
+
+- Consolidate the existing shared theme and interaction primitives; preserve specialized evidence overflow contracts.
+- Ground league badges in admitted source facts and authenticated ownership; omit unsupported movement and streaks.
+- Bring Balance changes and Next Five feedback near their actions, with exact protection and numeric display polish.
+- Preserve all intelligence, navigation, security and resource gates; capture fixture before/after views and live Scout checks.
+
 ### Offer-Bound Balancing Feedback — DTOS v1.21.19
 
 - Associate balancing status and retained options with the current offer/request.

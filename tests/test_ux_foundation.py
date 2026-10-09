@@ -202,7 +202,8 @@ class UXFoundationTests(unittest.TestCase):
         self.assertIn("sleepercdn.com/content/nfl/players/10213.jpg", html)
         self.assertIn('alt="Example Player headshot"', html)
         self.assertIn("player-headshot-fallback", html)
-        self.assertIn("WR · BUF · WR #3", html)
+        self.assertIn('data-position="WR">WR</span>', html)
+        self.assertIn("BUF · WR #3", html)
 
     def test_missing_numeric_evidence_is_not_zero(self) -> None:
         self.assertEqual(numeric_evidence(None), "Not yet available")
