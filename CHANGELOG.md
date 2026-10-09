@@ -1,3 +1,11 @@
+# DTOS v1.21.22 / build 2122 — Readable Dossier Status
+
+The actual player-dossier intelligence cards now adapt to a 220px minimum where space permits and stack on narrow phones. Short availability words remain intact at the existing readable value size. The correction targets `article.ai-value > b`, preserving evidence disclosures, technical identifier wrapping and locally scrollable Market tables.
+
+Real `/players/11563` (Bo Nix) and `/players/10225` (McBride) route browser coverage checks status text geometry, labels, numeric values, evidence disclosure and page bounds at 320/375/390px and desktop. No intelligence, pricing, projection, protection or Trade behavior changes.
+
+See [reproduction, visual evidence and Scout handoff](docs/DOSSIER_STATUS_WRAPPING.md).
+
 # DTOS v1.21.21 / build 2121 — Accessible Phone Details
 
 - Stack narrow FOIS leaderboard cards and wrap full manager/franchise names without changing scores or ranks.
