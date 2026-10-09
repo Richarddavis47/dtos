@@ -102,24 +102,32 @@
   function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); }
   function lockDetail(id) {
     const meanings = [];
-    if (session.protectedAssets.includes(id)) meanings.push('Do not trade this exact outgoing asset.');
+    const kind = asset(id)?.kind || id.split(':')[0];
+    if (session.protectedAssets.includes(id)) meanings.push(kind === 'pick' ? 'This exact pick cannot be added to your outgoing offer; other picks in the same round may still be used.' : kind === 'player' ? 'This player cannot be added to your outgoing offer.' : 'This exact asset cannot be added to your outgoing offer.');
     if (session.excludedAssets.includes(id)) meanings.push('Exclude this exact asset from alternatives.');
     if (id === session.requiredIncomingAsset) meanings.push('Keep this incoming Trade For target.');
     if (id === session.requiredOutgoingAsset) meanings.push('Keep this outgoing Shop anchor.');
     if (!meanings.length) return null;
     const detail = node('details', null, 'ds-badge-detail'); detail.dataset.badge = 'protection';
-    detail.append(node('summary', '🔒 Protected'), node('p', label(asset(id) || {label:id}) + ' · ' + id + ': ' + meanings.join(' ')));
+    detail.dataset.assetId = id;
+    const title = session.protectedAssets.includes(id) ? 'Exact protected asset' : session.excludedAssets.includes(id) ? 'Excluded exact asset' : id === session.requiredOutgoingAsset ? 'Required outgoing Shop asset' : 'Required incoming Trade For target';
+    detail.append(node('summary', '🔒 ' + title), node('p', label(asset(id) || {label:id}) + ' · ' + id + ': ' + meanings.join(' ')));
     return detail;
   }
-  function identity(a) {
-    const box = node('span');
+  function identity(a, insideAction = false) {
+    const box = node(insideAction ? 'span' : 'div');
     if (a.kind === 'player' && a.headshot_url) { const image = node('img'); image.src = a.headshot_url; image.alt = ''; image.loading = 'lazy'; image.onerror = () => image.remove(); box.append(image); }
     box.append(node('b', label(a)), ...(a.kind === 'player' && ['QB','RB','WR','TE'].includes(a.position) ? [node('span', a.position, 'ds-position')] : []), node('small', a.kind === 'pick' ? [a.season, 'Round ' + a.round, 'Original: ' + label(a)].join(' · ') : [['QB','RB','WR','TE'].includes(a.position) ? null : a.position, a.nfl_team, a.positional_rank].filter(Boolean).join(' · ')));
-    if (session.protectedAssets.includes(a.asset_id) || session.excludedAssets.includes(a.asset_id) || a.asset_id === session.requiredIncomingAsset || a.asset_id === session.requiredOutgoingAsset) { const lock = node('span', '🔒 Exact protected asset', 'ds-lock'); lock.title = label(a) + ' · ' + a.asset_id; box.append(lock); }
+    const protection = lockDetail(a.asset_id);
+    if (protection) {
+      // Asset buttons keep the interactive disclosure beside, not inside, the action.
+      if (insideAction) { const lock = node('span', '🔒', 'ds-lock'); lock.setAttribute('aria-hidden', 'true'); box.append(lock); }
+      else box.append(protection);
+    }
     return box;
   }
   function assetRow(a, which, review = false) {
-    const row = node('div', null, 'tw-asset'), button = node('button'); button.type = 'button'; button.append(identity(a));
+    const row = node('div', null, 'tw-asset'), button = node('button'); button.type = 'button'; button.append(identity(a, true));
     button.append(node('strong', a.trade_value == null ? 'Unavailable' : String(a.trade_value)));
     button.dataset.assetId = a.asset_id; button.setAttribute('aria-label', (selected[which].includes(a.asset_id) ? 'Remove ' : 'Add ') + label(a) + (which === 'sent' ? ' — you send' : ' — you receive'));
     button.disabled = busy; button.setAttribute('aria-pressed', String(selected[which].includes(a.asset_id))); button.onclick = () => toggle(which, a.asset_id); row.append(button);
@@ -219,8 +227,13 @@
     if (complete) box.append(node('p', 'Value gap: ' + shown(difference < 0n ? -difference : difference) + ' canonical Market points. This is an asset-price difference, not a guaranteed better trade.'));
     if (ownershipInvalid) box.append(node('p', 'Ownership invalid or unavailable: this retained hypothetical offer is not executable. Remove moved assets or select their current owner before balancing.', 'tw-error'));
     box.append(node('small', 'Market value ≠ lineup impact ≠ future capital ≠ strategy fit. Advanced DTOS analysis evaluates these separately.'));
-    const locks = [...session.protectedAssets, ...session.excludedAssets];
-    if (locks.length) box.append(node('p', '🔒 Exact protections: ' + locks.map(id => label(asset(id) || {label: id})).join('; ')));
+    const locks = [...new Set([...session.protectedAssets, ...session.excludedAssets, session.requiredOutgoingAsset, session.requiredIncomingAsset].filter(Boolean))];
+    if (locks.length) {
+      const details = node('details', null, 'ds-badge-detail'); details.dataset.badge = 'protection-summary';
+      details.append(node('summary', '🔒 Exact protections: ' + locks.length));
+      for (const id of locks) details.append(lockDetail(id).querySelector('p'));
+      box.append(details);
+    }
     if (selected.sent.some(id => session.protectedAssets.includes(id)) || [...selected.sent, ...selected.received].some(id => session.excludedAssets.includes(id))) box.append(node('p', 'Protected-asset conflict: remove the protected asset from this offer or explicitly release its lock.', 'tw-error'));
     for (const which of ['sent', 'received']) {
       const list = el('calculator-' + which); list.replaceChildren();
@@ -610,7 +623,7 @@
       for (const a of team(active)?.assets || []) { const option = node('option', label(a)); option.value = a.asset_id; el('shop-protected').append(option); }
       el('shop-preference').onchange = () => { el('shop-position').disabled = el('shop-preference').value !== 'position_need'; revision++; el('trade-result').hidden = true; };
       el('shop-position').onchange = () => { revision++; el('trade-result').hidden = true; };
-      el('shop-protected').onchange = () => { session.protectedAssets = Array.from(el('shop-protected').selectedOptions, option => option.value); revision++; session.previewProposal = null; el('trade-result').hidden = true; persist(); };
+      el('shop-protected').onchange = () => { session.protectedAssets = Array.from(el('shop-protected').selectedOptions, option => option.value); revision++; session.previewProposal = null; el('trade-result').hidden = true; persist(); paint(); };
     }
     if (!departed) try { for (const key of Object.keys(sessionStorage)) if (key.startsWith('dtos-trade-workspace:') && key !== storageKey()) sessionStorage.removeItem(key); } catch (_) { /* Storage is optional. */ }
     for (const t of data.teams) if (t.roster_id !== active) { const option = node('option', t.team_name); option.value = t.roster_id; el('trade-partner').append(option); }

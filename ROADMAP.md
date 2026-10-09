@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### Accessible Phone Details — DTOS v1.21.21
+
+- Correct narrow FOIS name/score overlap with reusable responsive layout.
+- Reconcile accessible protection explanations with the existing exact-lock/required-anchor state.
+- Keep short dossier availability words readable while preserving specialized evidence overflow contracts.
+
 ### Phone-First Front Office — DTOS v1.21.20
 
 - Consolidate the existing shared theme and interaction primitives; preserve specialized evidence overflow contracts.
