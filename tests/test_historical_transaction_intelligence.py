@@ -197,7 +197,7 @@ class HistoricalTransactionIntelligenceTests(unittest.TestCase):
 
     def test_current_bilateral_engine_is_not_called_or_modified(self) -> None:
         result = self.evaluate()
-        self.assertEqual(result.method_version, "historical-trade-process-outcome-3")
+        self.assertEqual(result.method_version, "historical-trade-process-outcome-4")
         self.assertNotIn("SMASH ACCEPT", str(result.private_contract()))
 
 

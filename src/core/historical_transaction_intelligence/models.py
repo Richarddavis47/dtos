@@ -7,7 +7,7 @@ from typing import Any, Mapping
 
 
 HISTORICAL_TRANSACTION_SCHEMA_VERSION = "historical-transaction-intelligence-1"
-HISTORICAL_TRANSACTION_METHOD_VERSION = "historical-trade-process-outcome-3"
+HISTORICAL_TRANSACTION_METHOD_VERSION = "historical-trade-process-outcome-4"
 
 
 class ProcessClassification(StrEnum):
@@ -42,6 +42,11 @@ class HistoricalDecisionDimension:
     assessment: str
     explanation: str
     evidence_available: bool = True
+    evidence_week: int | None = None
+    evidence_reason: str | None = None
+    source_references: tuple[str, ...] = ()
+    before_points: float | None = None
+    after_points: float | None = None
 
 
 @dataclass(frozen=True)

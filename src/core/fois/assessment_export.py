@@ -7,7 +7,8 @@ from src.core.historical_transaction_intelligence.models import HISTORICAL_TRANS
 
 DIMENSION_FIELDS = ('dimension', 'name', 'assessment', 'difference', 'change',
                     'scope', 'references', 'reference', 'baseline_reference',
-                    'horizon_days', 'as_of', 'evidence_available')
+                    'horizon_days', 'as_of', 'evidence_available', 'evidence_week',
+                    'evidence_reason', 'source_references', 'before_points', 'after_points')
 
 
 def assessment_record(row, category, *, league_id, franchise_id):
@@ -51,6 +52,8 @@ nor an observed Market direction creates a missing quality magnitude.
         values, confidence, supported_confidence = [], Counter(), Counter()
         classifications, limitations, dimensions = Counter(), Counter(), {}
         horizons = []
+        lineup_weeks, lineup_missing = Counter(), Counter()
+        lineup_before, lineup_after = [], []
         for record in records:
             item = record[side]
             confidence[str(item.get('confidence'))] += 1
@@ -61,6 +64,15 @@ nor an observed Market direction creates a missing quality magnitude.
                 if item.get('classification'):
                     classifications[item['classification']] += 1
             for dimension in item.get('dimensions') or []:
+                if dimension.get('name') == 'lineup_impact':
+                    if dimension.get('evidence_available') and dimension.get('evidence_week') is not None:
+                        lineup_weeks[str(dimension['evidence_week'])] += 1
+                        if dimension.get('before_points') is not None:
+                            lineup_before.append(dimension['before_points'])
+                        if dimension.get('after_points') is not None:
+                            lineup_after.append(dimension['after_points'])
+                    elif dimension.get('evidence_reason'):
+                        lineup_missing[dimension['evidence_reason']] += 1
                 if dimension.get('evidence_available') is False:
                     continue
                 name = dimension.get('dimension') or dimension.get('name')
@@ -85,4 +97,10 @@ nor an observed Market direction creates a missing quality magnitude.
             'dimensions': {key: dict(value) for key, value in dimensions.items()},
             'observation_horizon_days': {'minimum': min(horizons), 'maximum': max(horizons)} if horizons else None,
         }
+        if lineup_weeks or lineup_missing:
+            result[side]['lineup_evidence'] = {
+                'weeks': dict(lineup_weeks), 'missing_reasons': dict(lineup_missing),
+                'before_points': {'minimum': min(lineup_before), 'maximum': max(lineup_before)} if lineup_before else None,
+                'after_points': {'minimum': min(lineup_after), 'maximum': max(lineup_after)} if lineup_after else None,
+            }
     return result

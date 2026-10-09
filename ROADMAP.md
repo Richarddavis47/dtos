@@ -1,3 +1,8 @@
+### Historical Common-Week Evidence — DTOS v1.21.27
+
+- Correct historical lineup evidence-week admission without changing legal lineup or scoring formulas.
+- Preserve retained grades, verify actual spawn parity and qualify existing integration/lineage limitations.
+
 # DTOS Development Roadmap
 
 ### FOIS Final Trust & Verification — DTOS v1.21.26

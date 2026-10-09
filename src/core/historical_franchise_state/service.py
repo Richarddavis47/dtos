@@ -303,6 +303,7 @@ class HistoricalFranchiseStateService:
     def _lineup_and_production(
         self, league_id: str, franchise_id: str, boundary: HistoricalBoundary,
         player_ids: set[str], roster_positions: tuple[str, ...],
+        *, selected_week: int | None = None,
     ) -> tuple[HistoricalLineupState, dict[str, float]]:
         rows = self._records(league_id, boundary.season, "player_week")
         eligible = []
@@ -324,7 +325,7 @@ class HistoricalFranchiseStateService:
         for (_, player_id), values in observations.items():
             if len(values) == 1:
                 production[player_id] += next(iter(values))
-        evidence_week = max((int(row.get("week") or 0) for row in eligible), default=None)
+        evidence_week = selected_week if selected_week is not None else max((int(row.get("week") or 0) for row in eligible), default=None)
         latest = [row for row in eligible if int(row.get("week") or 0) == evidence_week]
         actual = tuple(sorted(
             str(row["player_id"]) for row in latest
@@ -333,6 +334,7 @@ class HistoricalFranchiseStateService:
         ))
         weekly_points = {player_id: next(iter(values)) for (week, player_id), values
                          in observations.items() if week == evidence_week and len(values) == 1}
+        references = tuple(sorted({str(row["record_key"]) for row in latest if row.get("record_key")}))
         positions = {
             player_id: str(((self.history.store.identity_for_provider_id(player_id) or {}).get("metadata") or {}).get("position") or "")
             for player_id in player_ids
@@ -349,7 +351,7 @@ class HistoricalFranchiseStateService:
         if not evidence_week or any(player_id not in weekly_points for player_id in eligible_ids):
             reasons.append("incomplete_historical_player_week_coverage")
         if reasons:
-            return HistoricalLineupState(actual_starters=actual, evidence_week=evidence_week, reason_codes=tuple(reasons)), dict(production)
+            return HistoricalLineupState(actual_starters=actual, evidence_week=evidence_week, reason_codes=tuple(reasons), source_references=references), dict(production)
         # Reuse the canonical exact legal assignment. These inputs are historical
         # actuals, not forecasts; no submitted Sleeper slots determine the optimum.
         result = optimal_legal_lineup(({
@@ -358,10 +360,11 @@ class HistoricalFranchiseStateService:
         } for player_id in sorted(eligible_ids)), slots)
         return HistoricalLineupState(
             actual_starters=actual, optimal_starters=tuple(entry.asset_id for entry in result.entries),
-            actual_points=sum(weekly_points.get(player_id, 0) for player_id in actual) if latest else None,
+            actual_points=sum(weekly_points[player_id] for player_id in actual) if actual and all(player_id in weekly_points for player_id in actual) else None,
             optimal_points=result.projected_points if result.available and not result.missing_player_ids else None,
             evidence_week=evidence_week,
             reason_codes=() if result.available else ("incomplete_legal_historical_lineup",),
+            source_references=references,
         ), dict(production)
 
     @staticmethod
@@ -521,7 +524,7 @@ class HistoricalFranchiseStateService:
             lineup, record, window_state,
             known_value if market_ratio == 1 and assets else None,
             known_value, market_ratio, dict(position_counts), coverage,
-            tuple(warnings), settings_refs, len(events) - len(later), tuple(trace),
+            tuple(warnings), tuple(sorted(set(settings_refs + lineup.source_references))), len(events) - len(later), tuple(trace),
         )
         if not include_trace:
             with self._lock:
@@ -537,10 +540,71 @@ class HistoricalFranchiseStateService:
         if event is None:
             raise KeyError("Unknown event boundary for selected league.")
         common = {"season": event.season, "occurred_at": event.occurred_at, "week": event.week, "event_id": event.event_id}
-        return (
+        before, after = (
             self.reconstruct(league_id, franchise_id, HistoricalBoundary(**common, mode=BoundaryMode.BEFORE), include_trace=include_trace),
             self.reconstruct(league_id, franchise_id, HistoricalBoundary(**common, mode=BoundaryMode.AT_OR_BEFORE), include_trace=include_trace),
         )
+        return self._align_lineup_weeks(before, after)
+
+    def _align_lineup_weeks(
+        self, before: HistoricalFranchiseState, after: HistoricalFranchiseState,
+    ) -> tuple[HistoricalFranchiseState, HistoricalFranchiseState]:
+        """Latest complete common pre-decision week, independent of its delta."""
+        if (before.lineup.evidence_week == after.lineup.evidence_week
+                and before.lineup.evidence_week is not None
+                and before.lineup.optimal_points is not None
+                and after.lineup.optimal_points is not None):
+            return before, after
+        player_ids = {asset.asset_id for state in (before, after) for asset in state.players}
+        positions = {player: str(((self.history.store.identity_for_provider_id(player) or {}).get("metadata") or {}).get("position") or "")
+                     for player in player_ids}
+        required = {player for player, position in positions.items() if position in {"QB", "RB", "WR", "TE"}}
+        observations: defaultdict[tuple[int, str], set[float]] = defaultdict(set)
+        for row in self._records(before.league_id, before.boundary.season, "player_week"):
+            week, player = int(row.get("week") or 0), str(row.get("player_id") or "")
+            if player not in required or not all(self._completed_week_at_boundary(week, state.boundary) for state in (before, after)):
+                continue
+            points = number((row.get("payload") or {}).get("points"))
+            if points is not None:
+                observations[(week, player)].add(float(points))
+        complete: defaultdict[int, set[str]] = defaultdict(set)
+        for (week, player), values in observations.items():
+            if len(values) == 1:
+                complete[week].add(player)
+        candidates = sorted((week for week, players in complete.items() if required and required <= players), reverse=True)
+        selected = None
+        lineups = None
+        if positions and all(positions.values()):
+            for week in candidates:
+                attempted = tuple(self._lineup_and_production(
+                    state.league_id, state.franchise_id, state.boundary,
+                    {asset.asset_id for asset in state.players}, state.roster_positions,
+                    selected_week=week,
+                )[0] for state in (before, after))
+                if all(lineup.optimal_points is not None for lineup in attempted):
+                    selected, lineups = week, attempted
+                    break
+        aligned = []
+        for index, state in enumerate((before, after)):
+            if lineups is None:
+                lineup = replace(state.lineup, optimal_points=None, optimal_starters=(),
+                                 actual_points=None, actual_starters=(), evidence_week=None, reason_codes=tuple(dict.fromkeys(
+                                     (*state.lineup.reason_codes, "no_common_supported_historical_week"))))
+            else:
+                earlier = any(selected < (other.lineup.evidence_week or selected) for other in (before, after))
+                lineup = replace(lineups[index], reason_codes=("earlier_common_historical_week",) if earlier else ())
+            coverage = dict(state.coverage)
+            coverage[CoverageDimension.LINEUP.value] = EvidenceCoverage(
+                ReconstructionAvailability.COMPLETE if lineup.optimal_points is not None else ReconstructionAvailability.UNAVAILABLE,
+                90 if lineup.optimal_points is not None else 0,
+                lineup.reason_codes or ("historical_week_lineup",), lineup.source_references,
+            )
+            aligned.append(replace(state, lineup=lineup, coverage=coverage,
+                availability=ReconstructionAvailability.PARTIAL if state.availability is ReconstructionAvailability.COMPLETE and lineup.optimal_points is None else state.availability,
+                confidence=round(mean(item.confidence for item in coverage.values())),
+                state_id=semantic_identity("historical-common-week-state", state.state_id, selected, HISTORICAL_FRANCHISE_STATE_METHOD_VERSION),
+                evidence_references=tuple(sorted((set(state.evidence_references) - set(state.lineup.source_references)) | set(lineup.source_references)))))
+        return tuple(aligned)
 
     async def reconstruct_async(
         self, league_id: str, franchise_id: str, boundary: HistoricalBoundary,

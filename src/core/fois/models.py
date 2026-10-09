@@ -11,6 +11,7 @@ FOIS_METRIC_DEFINITION_VERSION = "5.0"
 FOIS_CONFIGURATION_VERSION = "5.1"
 FOIS_EVIDENCE_VERSION = "2.0"
 FOIS_CONFIDENCE_VERSION = "1.0"
+FOIS_EVIDENCE_INTEGRITY_VERSION = "fois-evidence-integrity-2"
 
 
 class EvaluationKind(str, Enum):
@@ -138,7 +139,11 @@ class FrontOfficeIntelligenceScore:
     trade_partner_count: int = 0
     front_office_evidence: dict[str, Any] | None = None
     gm_behavioral_profile: dict[str, Any] | None = None
-    evidence_integrity_version: str | None = "fois-evidence-integrity-1"
+    evidence_integrity_version: str | None = FOIS_EVIDENCE_INTEGRITY_VERSION
+
+    @property
+    def evidence_revalidated(self) -> bool:
+        return self.evidence_integrity_version == FOIS_EVIDENCE_INTEGRITY_VERSION
 
 
 @dataclass(frozen=True)
