@@ -1,3 +1,11 @@
+# DTOS v1.21.26 / build 2126 — FOIS Final Trust & Verification
+
+Front Offices no longer invents a roster-need negotiation angle when none is established. Executive Profiles preserve supported category accomplishments while explaining unavailable overall comparisons. Historical computation is independently verified through the actual source adapters and spawned worker using disposable evidence.
+
+Existing historical grades and ambiguous lineage are retained, not revalidated or regenerated. No scoring, Market pricing, Trade algorithms or storage policy changes.
+
+See [verification, impact limits, future regeneration plan and Scout checks](docs/FOIS_FINAL_TRUST_VERIFICATION.md).
+
 # DTOS v1.21.25 / build 2125 — FOIS Evidence Integrity & Trust
 
 Historical evaluation now preserves compact player eligibility, uses complete legal lineups and admits only comparable decision-time Market evidence. Behavioral support counts independent transactions, shares a two-sided package vocabulary with Trade and withholds unsupported price tendencies. Front Offices separates current holdings from preferences and provides no acceptance probabilities. Executive Profiles expose supported behavioral evidence and readable unavailable states.

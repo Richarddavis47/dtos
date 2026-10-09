@@ -366,7 +366,7 @@ def create_fois_router(
         data = require_data()
         selected_league = league_id.strip() or str((data.get("league") or {}).get("league_id") or "")
         score = gm_score(selected_league, gm_id)
-        from services.team_fois_explanations import fois_explanation
+        from services.team_fois_explanations import fois_explanation, strengths_context
         from src.ui.explanations import explanation_panel
         explanation_html = explanation_panel(fois_explanation(score, league_id=selected_league))
         history = tuple(
@@ -385,7 +385,8 @@ def create_fois_router(
             f'<p>{escape(item.explanation)}</p><p>Confidence {item.confidence:.0f}% · Evidence completeness {item.completeness:.0f}%</p></article>'
             for item in score.category_scores
         )
-        strengths = "".join(f"<li>{escape(item)}</li>" for item in score.strengths) or "<li>No evidence-supported strength is established yet.</li>"
+        strengths = "".join(f"<li>{escape(item)}</li>" for item in score.strengths)
+        strengths_summary = escape(strengths_context(score))
         weaknesses = "".join(f"<li>{escape(item)}</li>" for item in score.weaknesses) or "<li>No evidence-supported weakness is established yet.</li>"
         details = technical_details((("GM identity", score.gm_id), ("FOIS model", score.model_version), ("Brain snapshot", score.brain_snapshot_id), ("Generated", score.generated_at)))
         historical_rows = "".join(
@@ -419,7 +420,7 @@ def create_fois_router(
         body = f'''<a class="back" href="/fois?league_id={escape(selected_league)}">← GM Leaderboard</a><p class="eyebrow">CURRENT GM PROFILE</p><h2>{escape(score.gm_name or "General Manager")}</h2><p>{escape(score.franchise_name or "Current franchise")}</p>
 <div class="summary-grid"><article class="metric"><b>{exact_rank(rank, sum(row.overall_score is not None for row in rankings))}</b><span>League overall FOIS rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not ranked"} {escape(score.overall_letter_grade or "")}</b><span>FOIS Score</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Confidence</span></article><article class="metric"><b>{score.completeness:.0f}%</b><span>Evidence Coverage</span></article><article class="metric"><b>{score.supported_weight:.0f}%</b><span>Supported Weight</span></article></div>
 <section class="card"><h3>Executive Summary</h3><p>{escape(score.executive_summary)}</p><p><b>Management momentum:</b> {escape(human_status(score.management_momentum))}</p><p class="muted">Completed seasons alone do not establish movement. A comparable historical momentum assessment is required.</p></section>{explanation_html}
-<div class="card-grid">{categories}</div><div class="grid"><section class="card"><h3>Top strengths</h3><ul>{strengths}</ul></section><section class="card"><h3>Improvement areas</h3><ul>{weaknesses}</ul></section></div><details class="card" data-fois-history-count="{len(history)}"><summary>GM History · {len(history)} earlier snapshot(s)</summary><ul>{historical_rows}</ul></details>{details}'''
+<div class="card-grid">{categories}</div><div class="grid"><section class="card" data-fois-strengths><h3>Top strengths</h3><p>{strengths_summary}</p>{'<ul>' + strengths + '</ul>' if strengths else ''}</section><section class="card"><h3>Improvement areas</h3><ul>{weaknesses}</ul></section></div><details class="card" data-fois-history-count="{len(history)}"><summary>GM History · {len(history)} earlier snapshot(s)</summary><ul>{historical_rows}</ul></details>{details}'''
         body = ('<style>.fois-profile{min-width:0}.fois-profile .dtos-explanation li,.fois-profile .fois-behavior p,.fois-profile .fois-behavior code{overflow-wrap:anywhere;word-break:normal}.fois-behavior summary{min-height:44px;cursor:pointer}.fois-behavior summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}</style>'
                 + '<div class="fois-profile">' + preservation + body
                 + '<section class="card"><h3>Management behavior and evidence</h3>' + behavioral_html + '</section></div>')
