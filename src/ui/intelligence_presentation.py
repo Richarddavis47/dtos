@@ -56,6 +56,20 @@ def numeric_evidence(value: Any, *, reason: str = "Not yet available") -> str:
     return str(value)
 
 
+def manager_points(value: Any) -> str:
+    """Readable derived-point display; never applied to raw/Sleeper source values."""
+    if value is None:
+        return 'Unavailable'
+    try:
+        number = Decimal(str(value))
+        if not number.is_finite():
+            return 'Unavailable'
+        rounded = number.quantize(Decimal('0.01'))
+        return '0' if rounded == 0 else format(rounded, 'f').rstrip('0').rstrip('.')
+    except (InvalidOperation, ValueError, TypeError):
+        return str(value)
+
+
 def projection_coverage_count(coverage: Any) -> int:
     """Return the contributing projection count from a compact coverage value."""
     if isinstance(coverage, int):

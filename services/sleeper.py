@@ -320,6 +320,7 @@ async def _sync_sleeper(
                     "owner": owner.get("display_name") or owner.get("username") or "Unassigned",
                     "team_name": metadata.get("team_name") or owner.get("display_name") or "Unassigned Franchise",
                     "avatar": owner.get("avatar"),
+                    "official_standing_rank": settings.get("rank"),
                     "wins": settings.get("wins", 0),
                     "losses": settings.get("losses", 0),
                     "ties": settings.get("ties", 0),

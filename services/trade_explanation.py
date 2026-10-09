@@ -3,6 +3,7 @@ from src.core.explanations import (
     Availability as A, EvidenceContext, EvidenceItem, EvidenceKind as K,
     Explanation, Statement,
 )
+from src.ui.intelligence_presentation import manager_points
 
 
 HORIZONS = {'current_week': 'Current week', 'next_n': 'Next-N',
@@ -54,7 +55,8 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
     def add(key, label, value, *, unit='classification', state=None, kind=K.DERIVED):
         evidence.append(EvidenceItem(key, label, kind, ctx, key, unit,
             state or (A.UNAVAILABLE if value is None else A.AVAILABLE),
-            None if value is None else str(value)))
+            None if value is None else manager_points(value)
+            if unit == 'fantasy points' and not key.startswith('weekly.') else str(value)))
         return key
 
     def reason(code, key):
@@ -99,7 +101,7 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
             key = add(f'{side}.{horizon}', f'{label} · {title} optimal-lineup change', row.get('delta'), unit='fantasy points')
             if side == 'active':
                 active_impact_keys.append(key)
-                active_impacts.append(f"{title}: {row['delta']}" if row.get('delta') is not None else f'{title}: Unavailable')
+                active_impacts.append(f"{title}: {manager_points(row.get('delta'))}")
             if row.get('weeks_requested') is not None:
                 add(f'{key}.coverage', f'{label} · {title} requested / supported before / supported after weeks',
                     ' / '.join(', '.join(map(str, row.get(field) or [])) or 'none' for field in

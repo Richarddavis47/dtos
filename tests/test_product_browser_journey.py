@@ -50,6 +50,11 @@ from tools.validation.browser_contract import A11Y_SCRIPT
 
 
 class ProductBrowserJourneyTests(unittest.TestCase):
+    viewports = ({"width": 1280, "height": 900}, {"width": 390, "height": 844})
+
+    def audit_page(self, page, path, viewport):
+        """Extension point for shared presentation contracts using the real routers."""
+
     def test_authenticated_product_navigation_and_league_switching(self):
         import dtos_app
 
@@ -134,7 +139,7 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                 try:
                     self.assertTrue(server.started)
                     browser = launch_chromium(playwright, headless=True)
-                    for viewport in ({"width": 1280, "height": 900}, {"width": 390, "height": 844}):
+                    for viewport in self.viewports:
                         for account, sequence in (("alpha", ("100", "200", "100")), ("beta", ("300",))):
                             with browser.new_context(viewport=viewport) as context:
                                 context.add_cookies([{"name": "dtos_session", "value": tokens[account], "url": origin}])
@@ -188,6 +193,7 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                                                 ), [], "Player values/unavailable states must fit their cards without truncation")
                                             if path.startswith("/trades/"):
                                                 page.locator("#trade-sent-board input[type=search]").wait_for(state="visible")
+                                            self.audit_page(page, path, viewport)
                                             accessibility = page.evaluate(A11Y_SCRIPT)
                                             for key in ("buttons_without_names", "links_without_names", "images_without_alt", "inputs_without_labels"):
                                                 self.assertEqual(accessibility[key], 0, (path, key))

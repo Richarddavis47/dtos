@@ -1,3 +1,15 @@
+# DTOS v1.21.20 / build 2120 — Phone-First Front Office
+
+DTOS now uses coordinated charcoal surfaces, green actions, consistent controls and neutral position chips across its existing manager shell. Home separates official records from DTOS strength assessments and puts secondary intelligence behind disclosures. Canonical Market values retain their distinct color and prices.
+
+League medals require a complete, unique Sleeper-reported official rank set. A defending-champion trophy requires the active league’s immediately preceding completed season and resolved championship bracket. Badge explanations work with touch and keyboard; You follows authenticated league membership. Missing historical movement/streak evidence is omitted rather than invented.
+
+Calculator Balance options now appear beside the action with concrete owned player/exact-pick changes and an explicit preview button. Exact protections are inspectable, the protection form stacks cleanly, derived Trade point summaries display sensible precision, and Next Five shows nearby feedback without stale completion messages. No pricing, discovery, balancing, lineup or strategy engine changes are included.
+
+Responsive Chromium covers 320/375/390px and desktop. See [visual evidence, architecture and Scout handoff](docs/PHONE_FIRST_DESIGN.md). Physical iPhone/Safari testing and authenticated live interaction remain independent Scout acceptance.
+
+# Previous release
+
 # DTOS v1.21.19 / build 2119 — Offer-Bound Balancing Feedback
 
 The calculator now clears old balancing completion feedback when an offer edit invalidates its options. Feedback belongs to the exact offer revision and request generation. Equal-value offers correctly disable Balance without suggesting nonexistent previews; rebalancing produces fresh feedback. Exact-lock and strategy changes clear obsolete balancing previews while keeping the offer, protections and unrelated workspace messages intact.

@@ -1,3 +1,12 @@
+# DTOS v1.21.20 / build 2120 — Phone-First Front Office
+
+- Consolidate the shared charcoal surfaces, green actions, neutral position chips, touch targets, focus, disabled/loading/error and disclosure primitives.
+- Keep official standings medals separate from DTOS/FOIS assessments; admit champion trophies only from the active league’s prior completed championship bracket. Explain factual badges on tap/keyboard; You uses authenticated membership.
+- Keep Home concise with two supported Attention items at most, clear record/strength labels and progressive detail.
+- Bring concrete owned/exact balancing changes and previews beside Balance; show Next Five feedback beside its action and invalidate obsolete status.
+- Stack exact protection labels/controls and format derived Trade summary points without changing underlying or weekly technical precision.
+- Preserve canonical values, ownership, workflows, navigation, security and the 2 GiB lifecycle contract.
+
 # Changelog
 
 # v1.21.19 / build 2119 — Offer-Bound Balancing Feedback
