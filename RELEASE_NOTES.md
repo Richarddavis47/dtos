@@ -1,3 +1,11 @@
+# DTOS v1.21.23 / build 2123 — Clear User Journeys
+
+Trade evaluation now lands on its current verdict, uses neutral assessment wording, and keeps the major drawback nearby. Recommended discovery appears before manual construction. Shop explicitly defaults to all eligible teams; missing-source guidance names evidence limits and supported next steps.
+
+Exact acquired-pick dossiers resolve available league-specific franchise names, retain complete technical identities, and scroll ownership history locally. Sparse Market selections show an explicit detail-unavailable destination. My Team roster and Calculator Balance have early access links. FOIS movement and trading-style labels withhold unsupported historical conclusions without changing scoring or trade intelligence.
+
+See [audit reconciliation, acceptance and Scout handoff](docs/USER_JOURNEY_CORRECTIONS.md).
+
 # DTOS v1.21.22 / build 2122 — Readable Dossier Status
 
 The actual player-dossier intelligence cards now adapt to a 220px minimum where space permits and stack on narrow phones. Short availability words remain intact at the existing readable value size. The correction targets `article.ai-value > b`, preserving evidence disclosures, technical identifier wrapping and locally scrollable Market tables.

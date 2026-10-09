@@ -135,8 +135,21 @@ def create_historical_assets_router(
         from src.ui.explanations import explanation_panel
         history_explanation = explanation_panel(pick_history_explanation(dossier, league_id=selected_league()))
         facts = require_data()
+        # Resolve only identities belonging to this league. Keep the canonical
+        # historical owner intact rather than replacing it with a guessed team.
+        franchise_names = {}
+        for team in facts.get('teams') or ():
+            roster_id = str(team.get('roster_id') or '')
+            name = str(team.get('team_name') or team.get('owner') or '')
+            if roster_id and name:
+                franchise_names[roster_id] = name
+                franchise_names[f'{selected_league()}:franchise:{roster_id}'] = name
+        raw_owner = str(dossier.get('current_owner') or '')
+        owner_name = franchise_names.get(raw_owner, 'Ownership name unavailable')
+        original_identity = str(dossier.get('original_franchise_id') or '')
+        original_name = franchise_names.get(original_identity, 'Original franchise name unavailable')
         active_id = int(front_office or 0)
-        original_id = str(dossier.get("original_roster") or "")
+        original_id = original_identity.removeprefix(f'{selected_league()}:franchise:')
         current_pick = next(
             (
                 row for row in facts.get("pick_ledger") or ()
@@ -159,11 +172,11 @@ def create_historical_assets_router(
                 )
             else:
                 trade_action = '<a class="button" href="/trades">Choose a franchise to trade this pick</a>'
-        details = technical_details((("Canonical pick identity", pick_id), ("Slot status", dossier.get("slot_status"))))
-        body = f'''<a class="back" href="/picks">← Back to Draft Capital</a><h2>{escape(pick_title)}</h2>{history_explanation}
-<div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(str(dossier.get("current_owner") or "Unknown"))}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article></div>
+        details = technical_details((("Canonical pick identity", pick_id), ("Current owner identity", raw_owner or 'Unavailable'), ("Original franchise identity", dossier.get('original_franchise_id')), ("Slot status", dossier.get("slot_status"))))
+        body = f'''<section class="pick-dossier"><a class="back" href="/picks">← Back to Draft Capital</a><h2>{escape(pick_title)}</h2>{history_explanation}
+<div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(owner_name)}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article><article class="metric"><b>{escape(original_name)}</b><span>Original franchise</span></article></div>
 <div class="card"><h3>Pick Conversion</h3><p>{selected}</p><p>{trade_action}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
-<div class="card"><h3>Ownership Chain</h3><table><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div>{details}'''
+<div class="card"><h3>Ownership Chain</h3><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Pick ownership history"><table class="pick-history-table"><caption>Verified ownership events for this exact pick</caption><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div></div>{details}</section>'''
         return page(f"{pick_id} — Pick Dossier", body)
 
     @router.get("/api/trades/history/{transaction_id}")

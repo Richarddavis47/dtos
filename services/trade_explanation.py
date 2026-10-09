@@ -159,7 +159,10 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
         row = reason(code, key)
         if row:
             risks.append(row)
-    return Explanation('Why DTOS recommends this', league_id, (ctx,), tuple(evidence), conclusion,
+    if result.get('major_drawback'):
+        key = add('major_drawback', 'Canonical major drawback', result['major_drawback'], kind=K.INTERPRETATION)
+        risks.insert(0, Statement('CANONICAL_MAJOR_DRAWBACK', result['major_drawback'], (key,)))
+    return Explanation('DTOS trade assessment', league_id, (ctx,), tuple(evidence), conclusion,
                        tuple(why[:3]), tuple(risks[:3]), confidence_rows, tuple(limits), tuple(advanced))
 
 

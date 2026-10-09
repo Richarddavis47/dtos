@@ -267,6 +267,7 @@ input:disabled,select:disabled{color:var(--text-muted);background:var(--surface-
 .league-place{color:var(--text-secondary)}
 .fois-rank b,.fois-score span{color:var(--text-secondary)}
 .ds-table-wrap{min-width:0;overscroll-behavior-x:contain}
+.pick-dossier{min-width:0;max-width:100%}.pick-dossier .metric{min-width:0}.pick-dossier .metric>b{overflow-wrap:anywhere;font-size:clamp(1rem,3vw,1.35rem)}.pick-dossier .dtos-explanation{overflow-wrap:anywhere}.pick-history-table{min-width:42rem}.pick-history-table th,.pick-history-table td{overflow-wrap:normal;word-break:normal}
 .grid{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
 .player-summary-copy .ds-position{display:inline-flex;color:var(--text-secondary);margin-right:4px}
 @media(max-width:760px){.ux-feature{padding:16px}.ux-feature h2{font-size:27px}.ds-page-header .ds-actions{gap:8px}.ds-page-header .ds-action{padding:8px 12px}.league-standing{padding:10px;gap:8px}.league-points{font-size:11px}.ds-section-actions{display:grid;gap:8px}.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

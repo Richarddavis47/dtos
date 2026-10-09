@@ -204,11 +204,13 @@ def create_market_router(
 
     def ownership_row(row, index, front_office=None):
         # Current league context remains independent of a retained price artifact.
-        if str(row.get("asset_id", "")).startswith("player:"):
+        asset_id = str(row.get('asset_id') or '')
+        if asset_id.startswith(('player:', 'DTOS-P-')):
             account = current_account()
             active = front_office if front_office is not None else (account.membership.roster_id if account and account.membership else None)
             row = dict(row)
-            row["ownership"] = index.resolve(row["asset_id"].split(":", 1)[1], active)
+            player_id = asset_id.removeprefix('player:').removeprefix('DTOS-P-')
+            row["ownership"] = index.resolve(player_id, active)
             row["owner"] = row["ownership"]["owner"]
             if row["ownership"]["state"] == "UNKNOWN":
                 row["availability"] = "ownership_unavailable"
@@ -409,6 +411,18 @@ def create_market_router(
                 )
             detail = market.detail(selected, front_office) if selected else None
             expanded = ""
+            if selected and detail is None:
+                # Historical search identities need not exist in the current
+                # canonical Market index. Never turn absent detail into pricing
+                # or ownership, and never leave the selected link a silent no-op.
+                expanded = ('<section class="card" id="selected-asset" tabindex="-1">'
+                            '<h2>Asset details unavailable</h2>'
+                            '<p>This result has no supported detail in the current Market generation. '
+                            'A historical identity does not establish current pricing or ownership.</p>'
+                            '<p><a class="ds-action" href="/market">Browse current Market</a> '
+                            '<a class="ds-action" href="/history">Review league history</a></p>'
+                            '<details class="technical-details"><summary>Selected identity</summary>'
+                            f'<code>{escape(selected)}</code></details></section>')
             if detail:
                 asset, recommendation = detail["asset"], detail["recommendation"]
                 trend = trend_service.trend_for_asset(

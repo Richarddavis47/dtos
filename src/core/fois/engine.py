@@ -389,7 +389,9 @@ class FOISEngine:
             facts.brain_snapshot_id,
             facts.brain_version,
             current_team_score=facts.current_team_score,
-            management_momentum="Stable" if completed else "Unavailable",
+            # Completed results alone do not establish a historical trend.
+            # No comparable momentum assessment is supplied by this evaluator.
+            management_momentum="Unavailable",
             strengths=strengths,
             weaknesses=weaknesses,
             franchise_name=facts.franchise_name,

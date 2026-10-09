@@ -456,6 +456,10 @@ def _score(payload: dict) -> FrontOfficeIntelligenceScore:
     return FrontOfficeIntelligenceScore(
         **{
             **payload,
+            # Legacy Stable was inferred from any completed season, not a
+            # comparable trend. Withhold it on read as well as new evaluation;
+            # retained source evidence, scores and stored payload stay intact.
+            "management_momentum": "Unavailable",
             "category_scores": tuple(_category(row) for row in payload["category_scores"]),
             "evidence_references": tuple(payload["evidence_references"]),
             "warnings": tuple(payload["warnings"]),
