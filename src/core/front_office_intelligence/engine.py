@@ -107,8 +107,8 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
         Evidence("Future capital", str(pick_portfolio.score), 0,
             "Independent pick evidence; no player/pick scalar comparison.", "Asset Intelligence"),
     )
-    strengths = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score >= 70) or ("No position crossed the v1 strength threshold.",)
-    constraints = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score < 55) or ("No position crossed the v1 need threshold.",)
+    strengths = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score is not None and evaluation.score >= 70) or ("No supported position crossed the v1 strength threshold.",)
+    constraints = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score is not None and evaluation.score < 55) or ("No supported position crossed the v1 need threshold.",)
     window = decision.competitive_window
     summary = f"{profile.team_name} is currently classified as {window.classification.value} with a {', '.join(philosophies).lower()} approach. {style}. This profile describes cached fantasy-football actions only."
     shared = (data.get("front_office_evidence") or {}).get(str(profile.roster_id))
@@ -116,7 +116,7 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
 
 
 def _needs(decision: TeamDecision) -> set[str]:
-    return {position for position, evaluation in decision.position_evaluations.items() if evaluation.score < 55}
+    return {position for position, evaluation in decision.position_evaluations.items() if evaluation.score is not None and evaluation.score < 55}
 
 
 def _surpluses(decision: TeamDecision) -> set[str]:
@@ -133,15 +133,30 @@ def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: Front
         bilateral = sum(str(item.get("type") or "").lower() == "trade" and {first.roster_id, second.roster_id}.issubset(_roster_ids(item)) for item in _canonical_transactions(data))
     score = min(100, 40 + 15 * len(first_matches) + 15 * len(second_matches) + min(bilateral, 3) * 5)
     shared = tuple(sorted(first_matches | second_matches))
+    needs_available = all(
+        report.decision.position_evaluations
+        and all(item.score is not None for item in report.decision.position_evaluations.values())
+        for report in (first, second)
+    )
+    angles = []
+    for recipient, supplier, matches in ((first, second, first_matches), (second, first, second_matches)):
+        if matches:
+            angles.append(f"{recipient.team_name}'s supported {', '.join(sorted(matches))} need with {supplier.team_name}'s observed depth surplus")
+    if angles:
+        opening = "Consider " + "; ".join(angles) + ". Check the offer's Market, roster and capital tradeoffs separately."
+    elif needs_available:
+        opening = "No specific need-based negotiation angle is established. Review the offer's Market, roster and capital tradeoffs."
+    else:
+        opening = "Current roster-need evidence is unavailable or incomplete; no specific need-based negotiation angle is established."
     conflicts = tuple(sorted(_needs(first.decision) & _needs(second.decision)))
     themes = tuple((["Roster Balance"] if shared else ["Value Discovery"]) + (["Established Trade Channel"] if bilateral else []))
     evidence = (
-        Evidence("Complementary position needs", ", ".join(shared) or "None", len(shared) * 15, "Decision Engine needs are compared with the other roster's observable depth surplus.", "Decision Engine"),
+        Evidence("Complementary position needs", ", ".join(shared) or ("None" if needs_available else "Unavailable"), len(shared) * 15, "Decision Engine needs are compared with the other roster's observable depth surplus; this is current roster context, not a historical preference.", "Decision Engine", bool(shared) or needs_available),
         Evidence("Conflicting priorities", ", ".join(conflicts) or "None", -len(conflicts) * 5, "Shared needs may reduce easy asset matches.", "Decision Engine"),
         Evidence("Previous bilateral trades", str(bilateral), min(bilateral, 3) * 5, "Completed cached trades provide a limited familiarity signal, not a personal inference.", "Sleeper cached transactions"),
     )
     forecast = NegotiationForecast(
-        "Open with a balanced Asset Intelligence package addressing an observed roster need.",
+        opening,
         "Current roster needs can inform an offer, but holdings do not establish documented acquisition preferences or a counteroffer pattern.",
         None,
         "Do not exceed the Trade Intelligence package boundary or sacrifice the Active Front Office's independent future outlook.",

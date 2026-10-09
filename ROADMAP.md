@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### FOIS Final Trust & Verification — DTOS v1.21.26
+
+- Correct unsupported need advice and category-versus-overall strength wording.
+- Independently verify raw historical evidence through full/spawn production paths.
+- Preserve retained grades and lineage; document impact limits and future authorized regeneration.
+
+
 ### FOIS Evidence Integrity & Trust — DTOS v1.21.25
 
 - Correct existing historical evidence admission and behavioral sample independence without introducing a scoring model.

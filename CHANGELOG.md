@@ -1,3 +1,10 @@
+## v1.21.26 / build 2126 — FOIS Final Trust & Verification
+
+- Ground legacy negotiation advice in supported complementary needs; disclose missing need evidence.
+- Distinguish supported category findings from an unavailable overall strongest-area comparison without recomputing retained grades.
+- Add independent raw-source verification across actual full/spawn FOIS, historical quotes, behavioral packages and non-destructive storage boundaries.
+- Document retained-grade impact limits and a planning-only future regeneration process.
+
 # DTOS v1.21.25 / build 2125 — FOIS Evidence Integrity & Trust
 
 - Fail closed on missing historical eligibility, incomplete weekly coverage and incompatible Market observations; preserve incoming-player evidence across franchises.

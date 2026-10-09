@@ -6,6 +6,21 @@ from src.core.explanations import (
 from services.trade_explanation import HORIZONS
 
 
+def strengths_context(score) -> str:
+    """Describe supported categories without recomputing retained grades or ranks."""
+    supported = [item for item in score.category_scores if item.normalized_score is not None]
+    if not supported:
+        return "Category accomplishments are unavailable: there is not enough supported evidence to identify an overall strongest area."
+    if len(supported) == 1:
+        return f"{supported[0].category_name} findings are supported, but more comparable category evidence is needed to identify an overall strongest area."
+    if score.strongest_category:
+        label = next((item.category_name for item in supported if item.category_key == score.strongest_category), score.strongest_category)
+        return f"This assessment identifies {label} as its strongest area. Supported category findings remain separate from the overall comparison."
+    if len({item.normalized_score for item in supported}) == 1:
+        return "Supported categories have equal scores in this assessment; no single overall strongest area is established."
+    return "Category-specific findings are supported, but an overall strongest-area comparison is not established in this assessment."
+
+
 def _item(ctx, key, label, value, unit, state=None, kind=K.DERIVED):
     return EvidenceItem(key, label, kind, ctx, key, unit,
                         state or (A.UNAVAILABLE if value is None else A.AVAILABLE),
