@@ -1,5 +1,10 @@
 # DTOS Development Roadmap
 
+### Reachable Trade Actions — DTOS v1.21.24
+
+- Eliminate shared proposal-tray interception without changing Trade state or intelligence.
+- Verify actual pointer targets, keyboard, loading and dynamic navigation across phone/desktop workflows.
+
 ### Clear User Journeys — DTOS v1.21.23
 
 - Reconcile Scout live findings with source and controlled-browser evidence.

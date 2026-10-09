@@ -1,3 +1,9 @@
+# DTOS v1.21.24 / build 2124 — Reachable Trade Actions
+
+The proposal tray now occupies its own space near the start of the Trade workspace instead of floating over enabled actions. Its asset counts and View Trade action remain available; Recommended discovery stays ahead of it. No proposal, pricing or intelligence changes.
+
+See [reproduction, acceptance and Scout handoff](docs/PROPOSAL_TRAY_VISIBILITY.md).
+
 # DTOS v1.21.23 / build 2123 — Clear User Journeys
 
 Trade evaluation now lands on its current verdict, uses neutral assessment wording, and keeps the major drawback nearby. Recommended discovery appears before manual construction. Shop explicitly defaults to all eligible teams; missing-source guidance names evidence limits and supported next steps.
