@@ -142,6 +142,8 @@ nav[aria-label="Market pagination"]{display:flex;gap:12px;align-items:center;fle
 .technical-details :is(p,dt,dd){overflow-wrap:anywhere}
 .technical-details :is(p,dl,dt,dd){min-width:0;max-width:100%}.technical-details code{white-space:normal;overflow-wrap:anywhere;word-break:normal}
 #selected-asset .summary-grid>.metric{min-width:0;overflow-wrap:anywhere}
+#selected-asset .summary-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))}
+#selected-asset .summary-grid>.metric>b{overflow-wrap:normal;word-break:normal}
 .evidence-unavailable{padding:14px;border:1px dashed var(--border);border-radius:var(--radius-md);color:var(--muted)}
 .player-summary{display:flex;align-items:center;gap:12px;min-width:0}
 .player-portrait{position:relative;flex:0 0 52px;width:52px;height:52px}
@@ -180,7 +182,11 @@ a:has(>.player-summary):hover .player-summary-copy b{color:var(--accent)}
 .pick-owner{margin:14px 0;font-size:14px}.pick-owner span{display:block;font-size:12px;color:var(--muted)}.pick-owner a:hover{color:var(--accent)}
 .pick-outlook{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--border)}.pick-outlook b{color:var(--blue);font-size:22px}.pick-outlook span{font-size:12px;color:var(--muted)}
 .card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0}
-.fois-leaderboard{gap:14px}.fois-leader{grid-template-columns:52px minmax(150px,1.2fr) 80px minmax(150px,1fr);gap:16px;border-left:3px solid var(--border)}
+.fois-leaderboard{gap:14px}.fois-leader{grid-template-columns:52px minmax(0,1.2fr) max-content minmax(0,1fr);gap:16px;border-left:3px solid var(--border)}
+.fois-leader>div{min-width:0}.fois-leader :is(h3,p){overflow-wrap:anywhere}.fois-score b{white-space:nowrap}
+.fois-leader[data-fois-rank=unavailable]{grid-template-columns:minmax(0,1fr)}
+.fois-leader[data-fois-rank=unavailable]>*{grid-column:1}
+.fois-leader[data-fois-rank=unavailable] .fois-rank b{display:block;width:auto;height:auto;border:0;border-radius:0;font-size:14px;text-align:left}
 
 
 
@@ -197,8 +203,9 @@ a:has(>.player-summary):hover .player-summary-copy b{color:var(--accent)}
 @media(max-width:760px){
  .pick-asset-grid{grid-template-columns:1fr}
  .card-grid{grid-template-columns:1fr}
- .fois-leader{grid-template-columns:40px minmax(0,1fr) 65px;gap:10px}
- .fois-leader>.ds-action,.fois-leader>div:nth-of-type(5),.fois-leader .fois-evidence{grid-column:2/4}
+ .fois-leader{grid-template-columns:minmax(0,1fr);gap:10px}
+ .fois-leader>.ds-action,.fois-leader>div:nth-of-type(5),.fois-leader .fois-evidence{grid-column:1}
+ .fois-rank{display:flex;align-items:center;flex-wrap:wrap;gap:12px}.fois-score{display:flex;align-items:baseline;flex-wrap:wrap;gap:12px}
  .wrap{padding:12px 14px calc(88px + env(safe-area-inset-bottom))}
  .top{min-height:44px}.brand p{font-size:11px}
  .account-context summary{flex-wrap:wrap;gap:4px 10px}

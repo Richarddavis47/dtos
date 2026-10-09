@@ -1,3 +1,15 @@
+# DTOS v1.21.21 / build 2121 — Accessible Phone Details
+
+Narrow FOIS leaderboard cards now stack manager identity and score, retain complete names and keep desktop columns readable. GM scores and rankings are unchanged.
+
+Shop protection badges and Calculator protection summaries use native tap/click/keyboard disclosures. Explanations come from the existing exact protection and required-anchor state; opening or closing details never edits the offer or constraints. Exact-pick explanations clarify that other same-round picks remain available.
+
+Player-dossier value cards adapt their width so short status words such as Unavailable stay intact. Long technical identifiers still wrap and structured Market evidence tables still scroll locally.
+
+See [reproduction, validation and Scout handoff](docs/PHONE_VISUAL_CORRECTIONS.md). Responsive Chromium covers 320/375/390px and desktop; physical iPhone/Safari and authenticated live acceptance remain Scout checks.
+
+# Previous release
+
 # DTOS v1.21.20 / build 2120 — Phone-First Front Office
 
 DTOS now uses coordinated charcoal surfaces, green actions, consistent controls and neutral position chips across its existing manager shell. Home separates official records from DTOS strength assessments and puts secondary intelligence behind disclosures. Canonical Market values retain their distinct color and prices.

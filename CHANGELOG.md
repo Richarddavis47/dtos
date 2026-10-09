@@ -1,3 +1,10 @@
+# DTOS v1.21.21 / build 2121 — Accessible Phone Details
+
+- Stack narrow FOIS leaderboard cards and wrap full manager/franchise names without changing scores or ranks.
+- Reuse native protection disclosures for Shop badges and Calculator summaries; distinguish exact locks from required workflow anchors and update explanations with current state.
+- Keep dossier short availability words intact through responsive value-card sizing; preserve technical wrapping and local evidence-table scrolling.
+- Preserve all pricing, balancing, discovery, ownership, navigation, security and resource contracts.
+
 # DTOS v1.21.20 / build 2120 — Phone-First Front Office
 
 - Consolidate the shared charcoal surfaces, green actions, neutral position chips, touch targets, focus, disabled/loading/error and disclosure primitives.
