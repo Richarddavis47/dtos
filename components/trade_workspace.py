@@ -43,6 +43,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <section id="trade-builder" class="card tw-workspace" data-trade-workflow="{workflow}" data-front-office="{active}" data-league="{escape(league, quote=True)}" data-preload-asset="{escape(str(asset_id or ''), quote=True)}" data-owner-roster="{int(owner_roster_id or 0)}">
 {heading if compact else ''}{jump}{discovery}
 {recommended_controls}
+<div id="trade-tray" class="tw-tray" hidden><span id="trade-tray-text"></span><button id="trade-tray-view" type="button">View Trade</button></div>
 <label for="trade-partner">Counterparty</label><select id="trade-partner"><option value="">{partner_placeholder}</option></select>{partner_help}
 {strategy_open}<label for="trade-strategy">Your strategy</label><select id="trade-strategy"><option value="">Use supported competitive window</option><option value="WIN NOW">WIN NOW</option><option value="RETOOL">RETOOL</option><option value="REBUILD">REBUILD</option></select>{strategy_close}
 <p id="trade-context" class="muted">Loading current league assets…</p>
@@ -57,5 +58,4 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <button id="trade-build-own" type="button" {'hidden' if workflow == 'create' else ''}>Build My Own</button>
 <section id="trade-result" role="status" aria-live="polite" tabindex="-1" hidden></section>
 {market_detail}
-<div id="trade-tray" class="tw-tray" hidden><span id="trade-tray-text"></span><button id="trade-tray-view" type="button">View Trade</button></div>
 <p class="muted">Ownership is revalidated before evaluation. Market Balance is neutral market evidence, not the recommendation. DTOS evaluates proposals; it does not send trades to Sleeper.</p></section><script src="/static/js/trade_workspace.js" defer></script>'''

@@ -1,3 +1,10 @@
+# DTOS v1.21.24 / build 2124 — Reachable Trade Actions
+
+- Place the shared proposal summary and View Trade action in normal document flow, preserving send/receive counts and persisted assets without blocking workflow controls.
+- Keep Recommended discovery ahead of the proposal tray and reserve navigation clearance when controls scroll into view.
+- Add actual authenticated-route pointer hit-testing, real clicks, nearby loading, keyboard, history/reload and cross-workflow responsive coverage.
+- Preserve pricing, intelligence, exact protections, preview/adoption, account boundaries and the unchanged 2 GiB release gates.
+
 # DTOS v1.21.23 / build 2123 — Clear User Journeys
 
 Trade evaluation now lands on its current verdict, uses neutral assessment wording, and keeps the major drawback nearby. Recommended discovery appears before manual construction. Shop explicitly defaults to all eligible teams; missing-source guidance names evidence limits and supported next steps.
