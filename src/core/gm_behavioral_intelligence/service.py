@@ -3,14 +3,17 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, OrderedDict
 from threading import RLock
 from time import perf_counter
+from math import isfinite
 from typing import Iterable
 
 from src.core.fois.facts import TradeFact
 from src.core.front_office_evidence.models import FrontOfficeEvidenceSummary
 from src.core.intelligence.league_scope import league_id_from_data
+from src.core.trade_intelligence.package_shape import package_shape
+from src.core.historical_intelligence.market_comparison import value_ratio
 
 from .models import (
     GM_BEHAVIOR_METHOD_VERSION, GM_BEHAVIOR_SCHEMA_VERSION,
@@ -45,7 +48,7 @@ class GMBehavioralIntelligenceService:
 
     def __init__(self) -> None:
         self._lock = RLock()
-        self._cache: dict[str, GMBehavioralProfile] = {}
+        self._cache: OrderedDict[str, GMBehavioralProfile] = OrderedDict()
         self._metrics = Counter({
             "profiles_built": 0, "evaluations_consumed": 0,
             "cache_hits": 0, "cache_misses": 0, "provider_calls": 0,
@@ -58,11 +61,12 @@ class GMBehavioralIntelligenceService:
         key: str, counts: Counter[str], references: tuple[str, ...],
         *, opportunities: int | None = None, observed: int | None = None,
         minimum: int = 3,
+        asset_counts: Counter[str] | None = None,
     ) -> BehavioralDimension:
         samples = sum(counts.values()) if observed is None else observed
         denominator = opportunities if opportunities is not None else samples
         coverage = round(samples / denominator, 4) if denominator else 0.0
-        tendency = _tendency(counts, minimum)
+        tendency = _tendency(counts, minimum) if samples >= minimum else "insufficient_evidence"
         explanation = (
             f"Observed {samples} supported decisions; dominant evidence is "
             f"{tendency.replace('_', ' ')}."
@@ -73,22 +77,31 @@ class GMBehavioralIntelligenceService:
             key, tendency, _confidence(samples, coverage), samples,
             opportunities, coverage, dict(sorted(counts.items())), explanation,
             references[:25],
+            dict(asset_counts) if asset_counts else None,
         )
 
     def build_profile(
         self, *, evidence: FrontOfficeEvidenceSummary, trades: Iterable[TradeFact],
     ) -> GMBehavioralProfile:
-        rows = tuple(sorted(trades, key=lambda row: (row.occurred_at or "", row.transaction_id)))
-        cache_key = _digest((evidence.semantic_identity, GM_BEHAVIOR_METHOD_VERSION))
+        rows = tuple(sorted({(row.season, row.transaction_id): row for row in trades}.values(),
+                            key=lambda row: (row.occurred_at or "", row.transaction_id)))
+        # The canonical summary identity includes every behavioral dependency,
+        # including price admission and references. Avoid serializing history
+        # again on a warm bounded-cache read.
+        cache_key = _digest((evidence.league_id, evidence.franchise_id, evidence.gm_id,
+                             evidence.semantic_identity, GM_BEHAVIOR_METHOD_VERSION))
         with self._lock:
             cached = self._cache.get(cache_key)
             if cached is not None:
+                self._cache.move_to_end(cache_key)
                 self._metrics["cache_hits"] += 1
                 return cached
             self._metrics["cache_misses"] += 1
         started = perf_counter()
         counters: dict[str, Counter[str]] = defaultdict(Counter)
         refs: dict[str, set[str]] = defaultdict(set)
+        asset_counts: dict[str, Counter[str]] = defaultdict(Counter)
+        supported_transactions: Counter[str] = Counter()
         priced = 0
         midpoint = len(rows) // 2
         for row_index, row in enumerate(rows):
@@ -99,35 +112,43 @@ class GMBehavioralIntelligenceService:
             if in_count or out_count:
                 direction = "consolidation" if out_count > in_count else "diversification" if in_count > out_count else "balanced"
                 counters["package_style"][direction] += 1
-                asset_types = (*row.incoming_asset_types, *row.outgoing_asset_types)
-                package = (
-                    "player_plus_pick" if "player" in asset_types and "pick" in asset_types
-                    else "pick_heavy" if asset_types.count("pick") > asset_types.count("player")
-                    else "one_for_one" if in_count == out_count == 1
-                    else "multi_asset"
-                )
+                package = package_shape(row.incoming_asset_types, row.outgoing_asset_types)
                 counters["package_preference"][package] += 1
                 counters["deal_size"]["large" if in_count + out_count >= 4 else "small"] += 1
                 refs["package_style"].add(reference)
                 refs["package_preference"].add(reference)
                 refs["deal_size"].add(reference)
+            observations: dict[str, set[str]] = defaultdict(set)
             for asset_type in row.incoming_asset_types:
-                counters["asset_direction"][f"acquire_{asset_type}"] += 1
+                observations["asset_direction"].add(f"acquire_{asset_type}")
+                asset_counts["asset_direction"][f"acquire_{asset_type}"] += 1
                 if asset_type == "pick":
-                    counters["draft_capital"]["acquire_pick"] += 1
+                    observations["draft_capital"].add("acquire_pick")
+                    asset_counts["draft_capital"]["acquire_pick"] += 1
             for asset_type in row.outgoing_asset_types:
-                counters["asset_direction"][f"dispose_{asset_type}"] += 1
+                observations["asset_direction"].add(f"dispose_{asset_type}")
+                asset_counts["asset_direction"][f"dispose_{asset_type}"] += 1
                 if asset_type == "pick":
-                    counters["draft_capital"]["dispose_pick"] += 1
+                    observations["draft_capital"].add("dispose_pick")
+                    asset_counts["draft_capital"]["dispose_pick"] += 1
             for position in row.incoming_positions:
                 if position:
-                    counters["positional"][f"acquire_{position.upper()}"] += 1
+                    observations["positional"].add(f"acquire_{position.upper()}")
+                    asset_counts["positional"][f"acquire_{position.upper()}"] += 1
             for position in row.outgoing_positions:
                 if position:
-                    counters["positional"][f"dispose_{position.upper()}"] += 1
-            if row.known_incoming_value is not None and row.known_outgoing_value is not None:
+                    observations["positional"].add(f"dispose_{position.upper()}")
+                    asset_counts["positional"][f"dispose_{position.upper()}"] += 1
+            for key, labels in observations.items():
+                counters[key].update(labels)
+                supported_transactions[key] += 1
+                refs[key].add(reference)
+            if (row.market_comparable is True and row.market_coverage_ratio == 1
+                    and all(isinstance(value, (int, float)) and not isinstance(value, bool)
+                            and isfinite(value) and value >= 0
+                            for value in (row.known_incoming_value, row.known_outgoing_value))):
                 priced += 1
-                ratio = row.known_incoming_value / max(row.known_outgoing_value, 1.0)
+                ratio = value_ratio(row.known_incoming_value, row.known_outgoing_value)
                 counters["price_behavior"]["value_positive" if ratio > 1.05 else "premium_paid" if ratio < .95 else "balanced"] += 1
                 refs["price_behavior"].add(reference)
             if row.competitive_window_at_trade:
@@ -148,17 +169,14 @@ class GMBehavioralIntelligenceService:
             if in_count or out_count:
                 counters["recency"][f"{era}:{direction}"] += 1
                 refs["recency"].add(reference)
-            for key in ("asset_direction", "draft_capital", "positional"):
-                if counters[key]:
-                    refs[key].add(reference)
         dimensions = (
             self._dimension("activity", counters["activity"], tuple(sorted(refs["activity"])), minimum=2),
-            self._dimension("asset_direction", counters["asset_direction"], tuple(sorted(refs["asset_direction"]))),
+            self._dimension("asset_direction", counters["asset_direction"], tuple(sorted(refs["asset_direction"])), observed=supported_transactions["asset_direction"], opportunities=len(rows), asset_counts=asset_counts["asset_direction"]),
             self._dimension("package_style", counters["package_style"], tuple(sorted(refs["package_style"]))),
             self._dimension("package_preference", counters["package_preference"], tuple(sorted(refs["package_preference"]))),
             self._dimension("deal_size", counters["deal_size"], tuple(sorted(refs["deal_size"]))),
-            self._dimension("draft_capital", counters["draft_capital"], tuple(sorted(refs["draft_capital"]))),
-            self._dimension("positional", counters["positional"], tuple(sorted(refs["positional"]))),
+            self._dimension("draft_capital", counters["draft_capital"], tuple(sorted(refs["draft_capital"])), observed=supported_transactions["draft_capital"], opportunities=len(rows), asset_counts=asset_counts["draft_capital"]),
+            self._dimension("positional", counters["positional"], tuple(sorted(refs["positional"])), observed=supported_transactions["positional"], opportunities=len(rows), asset_counts=asset_counts["positional"]),
             self._dimension("price_behavior", counters["price_behavior"], tuple(sorted(refs["price_behavior"])), opportunities=len(rows), observed=priced),
             self._dimension("competitive_window", counters["window_behavior"], tuple(sorted(refs["window_behavior"]))),
             self._dimension("window_dependent_behavior", counters["window_actions"], tuple(sorted(refs["window_actions"]))),
@@ -183,6 +201,8 @@ class GMBehavioralIntelligenceService:
         )
         with self._lock:
             self._cache[cache_key] = profile
+            while len(self._cache) > 64:
+                self._cache.popitem(last=False)
             self._metrics["profiles_built"] += 1
             self._metrics["evaluations_consumed"] += len(rows)
             self._metrics["aggregation_passes"] += 1

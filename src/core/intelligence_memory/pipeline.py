@@ -11,7 +11,7 @@ from src.core.valuation_intelligence.changes import METHODOLOGY_ID
 from src.core.league_runtime.identity import scoring_profile_id
 
 from .models import CheckpointTrigger, EvidenceCompleteness, ProvenanceType
-from .models import PickLineage, SourceObservation
+from .models import ExactPickLineage, SourceObservation
 from .relevance import (
     material_related_candidates, milestone_asset_ids, related_player_candidates,
 )
@@ -365,13 +365,23 @@ class CheckpointPipeline:
                     )
                 else:
                     self._counts["undated_draft_events"] += 1
-                round_number = int(pick.get("round") or max(1, int(float(number))))
-                roster_id = str(pick.get("roster_id") or "unknown")
-                generic = f"pick:{context['season']}:{round_number}:{roster_id}"
-                self.service.store.put_lineage(PickLineage(
-                    lineage_id=self.service.identifier("lineage", draft_id, number),
-                    generic_pick_id=generic, season=context["season"], round=round_number,
-                    original_roster_id=roster_id, exact_slot=str(number),
+                try:
+                    selection = int(number)
+                    round_number = int(pick.get("round") or 0)
+                except (TypeError, ValueError):
+                    selection = round_number = 0
+                roster_id = str(pick.get("roster_id") or "")
+                if (not context["league_id"] or selection <= 0 or str(selection) != str(number)
+                        or round_number <= 0 or not roster_id):
+                    self._counts["exact_draft_lineage_identity_unavailable"] += 1
+                    continue
+                original = pick.get("original_roster_id")
+                self.service.store.put_exact_lineage(ExactPickLineage(
+                    lineage_id=self.service.identifier("exact-lineage-v2", context["league_id"], draft_id, context["season"], round_number, selection),
+                    league_id=context["league_id"], draft_id=draft_id,
+                    season=context["season"], round=round_number, selection=selection,
+                    selecting_roster_id=roster_id,
+                    original_roster_id=str(original) if original is not None else None,
                     selected_player_id=f"player:{player_id}", selected_at=selection_time,
                 ))
         return self.health()

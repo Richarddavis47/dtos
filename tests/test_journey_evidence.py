@@ -42,8 +42,11 @@ class JourneyEvidenceTests(unittest.TestCase):
     def test_adequate_relevant_trade_history_keeps_behavior_available(self):
         data = fixture_data()
         data['transactions'] = [{'type': 'trade', 'roster_ids': [1, 2]} for _ in range(5)]
-        self.assertEqual(build_league_model(data).reports[1].negotiation_style, 'Selective trade participant')
-        self.assertIn('insufficient', build_league_model(data).reports[3].negotiation_style.lower())
+        report = build_league_model(data).reports[1]
+        self.assertIn('5 observed completed trades', report.negotiation_style)
+        self.assertIn('observation period unavailable', report.negotiation_style)
+        self.assertNotIn('Selective trade participant', report.negotiation_style)
+        self.assertIn('0 observed completed trades', build_league_model(data).reports[3].negotiation_style)
 
     def test_one_season_cannot_establish_stable_momentum(self):
         score = FOISEngine().evaluate(FOISFacts(
@@ -56,7 +59,8 @@ class JourneyEvidenceTests(unittest.TestCase):
             data = fixture_data()
             data['transactions'] = [{'type': 'trade', 'roster_ids': [1, 2]} for _ in range(count)]
             report = build_league_model(data).reports[1]
-            self.assertIn('insufficient', report.negotiation_style.lower())
+            self.assertIn(f'{count} observed completed trades', report.negotiation_style)
+            self.assertIn('does not establish skill or selectivity', report.negotiation_style)
             self.assertNotIn('Conservative Trader', report.philosophies)
 
     def test_sparse_market_selection_has_visible_recovery(self):

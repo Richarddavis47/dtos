@@ -28,7 +28,8 @@ def assemble_front_office_evidence(
     trades: Iterable[TradeFact],
 ) -> FrontOfficeEvidenceSummary:
     """Summarize Step 4 trade-side evidence without rescanning history."""
-    rows = tuple(sorted(trades, key=lambda row: (row.occurred_at or "", row.transaction_id)))
+    rows = tuple(sorted({(row.season, row.transaction_id): row for row in trades}.values(),
+                        key=lambda row: (row.occurred_at or "", row.transaction_id)))
     process = Counter(row.process_classification or "unavailable" for row in rows)
     outcomes = Counter(row.outcome_classification or "unavailable" for row in rows)
     confidence = Counter(row.process_confidence or "unavailable" for row in rows)
@@ -62,6 +63,9 @@ def assemble_front_office_evidence(
             "known_incoming_value": row.known_incoming_value,
             "known_outgoing_value": row.known_outgoing_value,
             "market_coverage_ratio": row.market_coverage_ratio,
+            "market_comparable": row.market_comparable,
+            "market_unavailable_reason": row.market_unavailable_reason,
+            "evidence_references": row.evidence_references,
             "competitive_window_at_trade": row.competitive_window_at_trade,
             "season_phase": row.season_phase,
         } for row in rows),

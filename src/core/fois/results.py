@@ -132,7 +132,7 @@ class ResultsScorer:
         ]
         rebuilds = [
             cycle.duration for cycle in analysis.competitive_cycles
-            if cycle.cycle_type == "rebuild"
+            if cycle.cycle_type in {"rebuild", "poor_results", "rebuild_or_poor_results"}
         ]
         reloads = [
             cycle.reload_time for cycle in contention
@@ -241,8 +241,8 @@ class ResultsScorer:
                 self._rebuild_score(rebuilds), len(rebuilds) or count,
                 confidence, completeness,
                 (
-                    f"Longest rebuild {max(rebuilds)} season(s); one or two seasons remain within the accepted productive-cycle threshold."
-                    if rebuilds else "No rebuild cycle detected."
+                    f"Longest rebuild or poor-results period {max(rebuilds)} season(s); one or two seasons remain within the accepted productive-cycle threshold."
+                    if rebuilds else "No supported rebuild or poor-results cycle detected. Losing records alone do not establish rebuilding intent."
                 ),
                 directionality=Directionality.LOWER_IS_BETTER,
             ),
@@ -335,6 +335,8 @@ class ResultsScorer:
 
     @staticmethod
     def _explanation(category, analysis) -> str:
+        if category.normalized_score is None:
+            return "Results unavailable: insufficient completed-season evidence to evaluate results, strengths or prolonged weakness."
         strengths = " ".join(analysis.strengths) or "No supported strength yet."
         weaknesses = " ".join(analysis.weaknesses) or "No prolonged weakness detected."
         return (

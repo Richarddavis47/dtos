@@ -1,3 +1,10 @@
+# DTOS v1.21.25 / build 2125 — FOIS Evidence Integrity & Trust
+
+- Fail closed on missing historical eligibility, incomplete weekly coverage and incompatible Market observations; preserve incoming-player evidence across franchises.
+- Admit price behavior only from complete comparable packages; count independent transactions and share oriented package shapes with Trade.
+- Replace unsupported acceptance and preference claims with factual context; surface supported profile dimensions and accessible evidence.
+- Preserve pre-integrity persisted grades without regeneration and namespace future exact pick-lineage records without migrating legacy history.
+
 # DTOS v1.21.24 / build 2124 — Reachable Trade Actions
 
 - Place the shared proposal summary and View Trade action in normal document flow, preserving send/receive counts and persisted assets without blocking workflow controls.

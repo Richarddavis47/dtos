@@ -364,15 +364,16 @@ class FOISEngine:
         )
         strengths = tuple(row.category_name for row in ordered
                           if differentiated and row.normalized_score > ordered[-1].normalized_score)[:2]
+        strengths = tuple(dict.fromkeys((*strengths, *(strength for row in category_scores
+                                                       for strength in row.strengths))))
         weaknesses = (weakest,) if weakest is not None else ()
         partners = {row.partner_id for row in facts.trades if row.partner_id}
         tendencies = []
-        if len(facts.trades) >= self.configuration.minimum_sample_sizes.get("tendencies", 5):
-            tendencies.append(
-                "Aggressive trader" if len(facts.trades) >= 15 else "Selective trader"
-            )
-        if len(facts.waivers) >= self.configuration.minimum_sample_sizes.get("tendencies", 5):
-            tendencies.append("Waiver-active")
+        if facts.trades:
+            years = sorted({row.season for row in facts.trades})
+            tendencies.append(f"{len(facts.trades)} observed trades in {len(years)} observed season(s), {years[0]}–{years[-1]}; activity is not skill or selectivity.")
+        if facts.waivers:
+            tendencies.append(f"{len(facts.waivers)} observed waiver decisions; no activity rate inferred.")
         unavailable_tendencies = () if tendencies else ("TENDENCY_UNAVAILABLE",)
         return FrontOfficeIntelligenceScore(
             VERSION, facts.league_id, facts.franchise_id, facts.owner_id, start, end,

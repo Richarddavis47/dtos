@@ -51,6 +51,9 @@ def fois_explanation(score, *, league_id: str) -> Explanation:
                 _item(ctx, 'coverage', 'Evidence coverage', score.completeness, 'coverage'),
                 _item(ctx, 'tenure', 'Assessed manager tenure', score.tenure_id or score.owner_id, 'tenure identity')]
     limits = []
+    if score.evidence_integrity_version is None:
+        limits.append(Statement('RETAINED_ASSESSMENT_NOT_REVALIDATED',
+            'These stored grades predate the evidence-integrity correction. They have been preserved, not recalculated or newly validated. Historical regeneration needs separate authorization.', ('overall',)))
     for category in score.category_scores:
         key = category.category_key
         evidence.append(_item(ctx, key, category.category_name, category.normalized_score, 'category score'))

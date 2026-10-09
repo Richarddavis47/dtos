@@ -51,6 +51,7 @@ class FOISService:
             Callable[[dict[str, Any], tuple[Any, ...]], None]
         ] = []
         self.engine = FOISEngine()
+        self.prepared_evidence: dict[str, dict[str, Any]] = {}
         self._status: dict[str, Any] = {
             "state": "disabled" if not fois_enabled() else "waiting",
             "last_run": None,
@@ -96,6 +97,7 @@ class FOISService:
                 scores, canonical, execution_metrics = await self._isolated_executor(
                     data, self.repository,
                 )
+                prepared = execution_metrics.pop("prepared_evidence", {})
                 for listener in tuple(self._generation_listeners):
                     try:
                         await asyncio.to_thread(listener, data, scores)
@@ -104,6 +106,9 @@ class FOISService:
                             "FOIS generation listener failed: type=%s",
                             type(exc).__name__,
                         )
+                for name, rows in prepared.items():
+                    if name in {"front_office_evidence", "gm_behavioral_intelligence"}:
+                        data[name] = rows
             self._status.update({
                 "state": "complete",
                 "last_run": scores[0].generated_at if scores else None,
@@ -162,6 +167,8 @@ class FOISService:
         scores = []
         snapshots_written = 0
         snapshots_deduplicated = 0
+        assessments_preserved = 0
+        self.prepared_evidence = {"front_office_evidence": {}, "gm_behavioral_intelligence": {}}
         teams = data.get("teams") or ()
         canonical_brain = None
         if teams and supplied_history is None:
@@ -285,6 +292,8 @@ class FOISService:
                 gm_behavioral_profile=behavioral_profile.contract(),
             )
             score = self.engine.evaluate(facts)
+            self.prepared_evidence["front_office_evidence"][roster_id] = shared_evidence.contract()
+            self.prepared_evidence["gm_behavioral_intelligence"][roster_id] = behavioral_profile.contract()
             fingerprint = hashlib.sha256(
                 json.dumps(asdict(facts), sort_keys=True, default=str).encode()
             ).hexdigest()
@@ -292,6 +301,10 @@ class FOISService:
                 snapshots_written += 1
             else:
                 snapshots_deduplicated += 1
+                retained = self.repository.get(league_id, identity.franchise_id, score.model_version)
+                if retained and retained.score_key == score.score_key:
+                    score = retained
+                    assessments_preserved += int(retained.evidence_integrity_version is None)
             LOGGER.info(
                 "FOIS franchise evaluated: model=%s league=%s franchise=%s "
                 "window=%s-%s status=%s",
@@ -306,6 +319,7 @@ class FOISService:
         self._status.update({
             "snapshots_written": snapshots_written,
             "snapshots_deduplicated": snapshots_deduplicated,
+            "retained_assessments_not_revalidated": assessments_preserved,
             "gm_behavioral_intelligence": gm_behavioral_intelligence.health(),
         })
         completed = tuple(scores)
@@ -317,4 +331,5 @@ class FOISService:
                     "FOIS generation listener failed: type=%s",
                     type(exc).__name__,
                 )
+        data.update(self.prepared_evidence)
         return completed

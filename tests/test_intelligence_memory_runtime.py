@@ -104,7 +104,7 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         )
 
     def test_draft_selection_and_lineage_are_idempotent(self) -> None:
-        pick = {"draft_id": "D1", "player_id": "1", "pick_no": 1.04,
+        pick = {"draft_id": "D1", "player_id": "1", "pick_no": 4,
                 "round": 1, "roster_id": 3,
                 "picked_at": "2026-05-01T00:00:00+00:00"}
         self.pipeline.ingest_drafts(self.data, [pick], observed_at="2026-05-01T00:00:00+00:00")
@@ -126,8 +126,8 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         self.assertEqual(self.store.checkpoints(), [])
         with self.store._connect() as connection:
             lineage = connection.execute(
-                "SELECT * FROM pick_lineage WHERE generic_pick_id=?",
-                ("pick:2026:2:3",),
+                "SELECT * FROM exact_pick_lineage WHERE draft_id=? AND selection=?",
+                ("1319750580377251840", 13),
             ).fetchone()
         self.assertIsNotNone(lineage)
         self.assertIsNone(lineage["selected_at"])
@@ -135,15 +135,15 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         self.assertEqual(self.pipeline.health()["undated_draft_events"], 2)
 
     def test_draft_real_timestamp_is_canonical_temporal_evidence(self) -> None:
-        pick = {"draft_id": "D2", "player_id": "1", "pick_no": 2.01,
+        pick = {"draft_id": "D2", "player_id": "1", "pick_no": 13,
                 "round": 2, "roster_id": 3, "created": 1_777_593_600_000}
         self.pipeline.ingest_drafts(self.data, [pick])
         checkpoint = self.store.checkpoints()[0]
         self.assertEqual(checkpoint.timestamp, "2026-05-01T00:00:00+00:00")
         with self.store._connect() as connection:
             selected_at = connection.execute(
-                "SELECT selected_at FROM pick_lineage WHERE generic_pick_id=?",
-                ("pick:2026:2:3",),
+                "SELECT selected_at FROM exact_pick_lineage WHERE draft_id=? AND selection=?",
+                ("D2", 13),
             ).fetchone()[0]
         self.assertEqual(selected_at, "2026-05-01T00:00:00+00:00")
 

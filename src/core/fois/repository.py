@@ -128,6 +128,11 @@ class FOISRepository:
                 "SELECT source_fingerprint,payload FROM fois_scores_v2 WHERE score_key=?",
                 (score.score_key,),
             ).fetchone()
+            # Publication of corrected computation is not authorization to
+            # regenerate retained pre-integrity grades. Preserve their payload,
+            # fingerprint, generation time and snapshots byte-for-byte.
+            if existing and json.loads(existing["payload"]).get("evidence_integrity_version") != "fois-evidence-integrity-1":
+                return False
             if existing and existing["source_fingerprint"] == source_fingerprint:
                 return False
             connection.execute(
@@ -443,6 +448,11 @@ def _category(payload: dict) -> FrontOfficeCategoryScore:
     return FrontOfficeCategoryScore(
         **{
             **payload,
+            "explanation": (
+                "Results unavailable: insufficient completed-season evidence to evaluate results, strengths or prolonged weakness."
+                if payload.get("category_key") == "results" and payload.get("normalized_score") is None
+                else payload["explanation"]
+            ),
             "metric_scores": tuple(_metric(row) for row in payload["metric_scores"]),
             "evidence_references": tuple(payload["evidence_references"]),
             "warnings": tuple(payload["warnings"]),
@@ -456,16 +466,19 @@ def _score(payload: dict) -> FrontOfficeIntelligenceScore:
     return FrontOfficeIntelligenceScore(
         **{
             **payload,
+            "evidence_integrity_version": payload.get("evidence_integrity_version"),
             # Legacy Stable was inferred from any completed season, not a
             # comparable trend. Withhold it on read as well as new evaluation;
             # retained source evidence, scores and stored payload stay intact.
             "management_momentum": "Unavailable",
             "category_scores": tuple(_category(row) for row in payload["category_scores"]),
             "evidence_references": tuple(payload["evidence_references"]),
-            "warnings": tuple(payload["warnings"]),
+            "warnings": tuple(payload["warnings"]) + (() if payload.get("evidence_integrity_version") else (
+                "RETAINED_ASSESSMENT_NOT_REVALIDATED: Stored grades predate the evidence-integrity correction. Historical regeneration has not been performed.",
+            )),
             "strengths": tuple(payload.get("strengths") or ()),
             "weaknesses": tuple(payload.get("weaknesses") or ()),
-            "tendencies": tuple(payload.get("tendencies") or ()),
+            "tendencies": tuple(payload.get("tendencies") or ()) if payload.get("evidence_integrity_version") else (),
             "unavailable_tendencies": tuple(payload.get("unavailable_tendencies") or ()),
         }
     )

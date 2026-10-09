@@ -32,7 +32,8 @@ def seasons(count: int = 16) -> tuple[SeasonResult, ...]:
 class FOISGeneralManagerIntelligenceTests(unittest.IsolatedAsyncioTestCase):
     def test_one_supported_category_is_not_both_strength_and_weakness(self) -> None:
         score = FOISEngine().evaluate(FOISFacts("league", "franchise", "owner", seasons(3)))
-        self.assertEqual(score.strengths, ())
+        self.assertNotIn("Results", score.strengths)
+        self.assertIn("2 playoff appearance(s).", score.strengths)
         self.assertEqual(score.weaknesses, ())
         self.assertIsNone(score.strongest_category)
         self.assertIsNone(score.weakest_category)

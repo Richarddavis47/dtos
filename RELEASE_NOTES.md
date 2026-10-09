@@ -1,3 +1,11 @@
+# DTOS v1.21.25 / build 2125 — FOIS Evidence Integrity & Trust
+
+Historical evaluation now preserves compact player eligibility, uses complete legal lineups and admits only comparable decision-time Market evidence. Behavioral support counts independent transactions, shares a two-sided package vocabulary with Trade and withholds unsupported price tendencies. Front Offices separates current holdings from preferences and provides no acceptance probabilities. Executive Profiles expose supported behavioral evidence and readable unavailable states.
+
+Pre-integrity persisted assessments are preserved and visibly labeled **not revalidated**. No historical grades were bulk regenerated. New exact draft-lineage records use league/draft/selection identity; ambiguous legacy records remain untouched. Scoring weights and canonical current prices are unchanged.
+
+See [evidence contracts, preservation policy, validation and Scout handoff](docs/FOIS_EVIDENCE_INTEGRITY.md).
+
 # DTOS v1.21.24 / build 2124 — Reachable Trade Actions
 
 The proposal tray now occupies its own space near the start of the Trade workspace instead of floating over enabled actions. Its asset counts and View Trade action remain available; Recommended discovery stays ahead of it. No proposal, pricing or intelligence changes.

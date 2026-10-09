@@ -229,7 +229,6 @@ def _load_results_history(
         for checkpoint in definitive:
             if checkpoint.roster_id is not None:
                 roster_values[str(checkpoint.roster_id)] += float(checkpoint.market_value)
-        fully_gradable = bool(checkpoints) and len(definitive) == len(checkpoints)
         for roster_id in payload.get("roster_ids") or ():
             partners = [
                 str(value) for value in payload.get("roster_ids") or ()
@@ -306,17 +305,9 @@ def _load_results_history(
                      "evidence_available": item.evidence_available}
                     for item in side.process.dimensions
                 ] if side is not None else None},
-                "process_score": (
-                    process_scores.get(process_classification)
-                    if side is not None else round(
-                        50 + 50 * (
-                            roster_values.get(str(roster_id), 0.0)
-                            - sum(value for key, value in roster_values.items() if key != str(roster_id))
-                        ) / max(1.0, sum(roster_values.values())),
-                        2,
-                    )
-                    if fully_gradable and roster_values else None
-                ),
+                # Process grading has one evidence-admission boundary. A legacy
+                # priced subset cannot bypass Step 4's compatibility decision.
+                "process_score": process_scores.get(process_classification) if side is not None else None,
                 "outcome_score": outcome_scores.get(outcome_classification),
                 "process_classification": process_classification,
                 "process_confidence": side.process.confidence.value if side is not None else None,
@@ -335,6 +326,8 @@ def _load_results_history(
                 "known_incoming_value": side.process.known_incoming_value if side is not None else None,
                 "known_outgoing_value": side.process.known_outgoing_value if side is not None else None,
                 "market_coverage_ratio": side.process.market_coverage_ratio if side is not None else None,
+                "market_comparable": side.process.market_comparable if side is not None else False,
+                "market_unavailable_reason": side.process.market_unavailable_reason if side is not None else "historical_market_comparison_unavailable",
                 "competitive_window_at_trade": window,
                 "season_phase": phase,
             })

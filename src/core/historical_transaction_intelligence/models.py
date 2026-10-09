@@ -7,7 +7,7 @@ from typing import Any, Mapping
 
 
 HISTORICAL_TRANSACTION_SCHEMA_VERSION = "historical-transaction-intelligence-1"
-HISTORICAL_TRANSACTION_METHOD_VERSION = "historical-trade-process-outcome-2"
+HISTORICAL_TRANSACTION_METHOD_VERSION = "historical-trade-process-outcome-3"
 
 
 class ProcessClassification(StrEnum):
@@ -54,6 +54,8 @@ class HistoricalProcessEvaluation:
     known_incoming_value: float
     market_coverage_ratio: float
     missing_asset_ids: tuple[str, ...]
+    market_comparable: bool = False
+    market_unavailable_reason: str | None = None
 
 
 @dataclass(frozen=True)

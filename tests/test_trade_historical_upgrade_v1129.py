@@ -35,6 +35,7 @@ class TradeHistoricalUpgradeTests(unittest.TestCase):
             "2": {
                 "league_id": str(self.data["league"]["league_id"]),
                 "overall_confidence": "high", "evidence_completeness": 90,
+                "method_version": "step6-canonical-decision-aggregation-2",
                 "dimensions": [
                     _dimension("asset_direction", "acquire_player"),
                     _dimension("positional", f"acquire_{self.workspace['pools'][1][0].position}"),

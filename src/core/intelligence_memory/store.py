@@ -15,7 +15,7 @@ from typing import Any, Iterator
 from .models import (
     CheckpointTrigger, EvidenceCompleteness, GlobalMarketObservation,
     HistoricalResolutionState, IntelligenceCheckpoint, MarketObservationDecision, MarketObservationReference,
-    PickLineage, ProvenanceType, SourceObservation,
+    ExactPickLineage, PickLineage, ProvenanceType, SourceObservation,
 )
 from .market_memory import MarketObservationMaterialityPolicy, semantic_fingerprint
 from .market import supported_quote_identity
@@ -77,6 +77,19 @@ CREATE TABLE IF NOT EXISTS intelligence_audit (
   checkpoint_id TEXT NOT NULL,
   action TEXT NOT NULL,
   occurred_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS exact_pick_lineage (
+  lineage_id TEXT PRIMARY KEY,
+  league_id TEXT NOT NULL,
+  draft_id TEXT NOT NULL,
+  season INTEGER NOT NULL,
+  round INTEGER NOT NULL,
+  selection INTEGER NOT NULL,
+  selecting_roster_id TEXT NOT NULL,
+  original_roster_id TEXT,
+  selected_player_id TEXT NOT NULL,
+  selected_at TEXT,
+  UNIQUE(league_id,draft_id,selection)
 );
 CREATE TABLE IF NOT EXISTS global_market_observations (
   observation_id TEXT PRIMARY KEY,
@@ -891,6 +904,7 @@ class IntelligenceCheckpointStore:
     ) -> list[Any]:
         """The same projection for ordinary reads and a flight's read snapshot."""
         from src.core.historical_intelligence.models import GlobalMarketCheckpoint
+        from src.core.historical_intelligence.market_comparison import retained_comparison_identity
 
         bounded = max(1, min(int(limit), 500))
         # Historical roster facts carry Sleeper's numeric player ID. Durable
@@ -931,6 +945,14 @@ class IntelligenceCheckpointStore:
                 continue
             provider_rows = tuple(item.__dict__ for item in observation.provider_evidence)
             providers = sorted({item.provider for item in observation.provider_evidence})
+            semantics = [item.metadata.get("comparison_semantics") for item in observation.provider_evidence]
+            identity = retained_comparison_identity(
+                semantics[0] if semantics and all(row == semantics[0] for row in semantics) else None,
+                providers,
+            )
+            # Legacy opaque versions/context hashes cannot prove the units of a
+            # retained number. Preserve it, but withhold historical fairness.
+            canonical = bool(identity and identity[:2] == ("external_market_normalized_index", "0-1000"))
             result.append(GlobalMarketCheckpoint(
                 checkpoint_id=observation.observation_id,
                 asset_id=observation.asset_id,
@@ -950,6 +972,8 @@ class IntelligenceCheckpointStore:
                 normalization_version=observation.normalization_version,
                 materiality_policy_version=observation.materiality_policy_version,
                 provider_observations=provider_rows,
+                value_concept="canonical_market" if canonical else None,
+                comparison_identity=identity if canonical else (),
             ))
         return result
 
@@ -1163,6 +1187,27 @@ class IntelligenceCheckpointStore:
             ).fetchone()
         return row is not None
 
+    def put_exact_lineage(self, lineage: ExactPickLineage) -> bool:
+        """Future exact writes only. Never read or reinterpret legacy lineage."""
+        if (not lineage.lineage_id or not lineage.league_id or not lineage.draft_id
+                or any(not isinstance(value, int) or isinstance(value, bool) or value <= 0
+                       for value in (lineage.selection, lineage.round, lineage.season))
+                or not lineage.selecting_roster_id or not lineage.selected_player_id):
+            raise ValueError("Exact league/draft/selection identity is required.")
+        with self._lock, self._connect() as connection:
+            existing = connection.execute(
+                "SELECT * FROM exact_pick_lineage WHERE league_id=? AND draft_id=? AND selection=?",
+                (lineage.league_id, lineage.draft_id, lineage.selection),
+            ).fetchone()
+            if existing:
+                if (existing["season"], existing["round"], existing["selected_player_id"]) != (
+                        lineage.season, lineage.round, lineage.selected_player_id):
+                    raise ValueError("Conflicting exact draft selection evidence.")
+                return False
+            connection.execute("INSERT INTO exact_pick_lineage VALUES(?,?,?,?,?,?,?,?,?,?)",
+                               tuple(lineage.__dict__.values()))
+            return True
+
     def put_lineage(self, lineage: PickLineage) -> tuple[PickLineage, bool]:
         with self._lock, self._connect() as connection:
             existing = connection.execute(
@@ -1193,11 +1238,13 @@ class IntelligenceCheckpointStore:
                 "SELECT provenance_type,COUNT(*) FROM intelligence_checkpoints GROUP BY provenance_type"
             ).fetchall())
             lineage = connection.execute("SELECT COUNT(*) FROM pick_lineage").fetchone()[0]
+            exact_lineage = connection.execute("SELECT COUNT(*) FROM exact_pick_lineage").fetchone()[0]
         size = self.path.stat().st_size if self.path.exists() else 0
         return {
             "status": "healthy", "schema_version": SCHEMA_VERSION,
             "ownership": "permanent_dtos_intelligence", "checkpoint_count": count,
-            "provenance_counts": provenance, "pick_lineage_count": lineage,
+            "provenance_counts": provenance, "pick_lineage_count": lineage + exact_lineage,
+            "legacy_pick_lineage_count": lineage, "exact_pick_lineage_count": exact_lineage,
             "bytes": size, "immutable": True, "daily_logging": False,
         }
 

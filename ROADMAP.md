@@ -1,5 +1,11 @@
 # DTOS Development Roadmap
 
+### FOIS Evidence Integrity & Trust — DTOS v1.21.25
+
+- Correct existing historical evidence admission and behavioral sample independence without introducing a scoring model.
+- Preserve retained assessments and ambiguous lineage; disclose unvalidated grades and improve supported manager explanations.
+- Verify league-specific Trade context, responsive disclosures and unchanged resource/release gates.
+
 ### Reachable Trade Actions — DTOS v1.21.24
 
 - Eliminate shared proposal-tray interception without changing Trade state or intelligence.

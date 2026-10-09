@@ -15,6 +15,7 @@ from src.core.historical_intelligence import (
 )
 from src.core.trade_intelligence.bilateral import evaluate_package_quality
 from src.core.trade_intelligence.models import TradeAsset
+from src.core.historical_intelligence.market_comparison import comparison_reason, value_ratio
 
 from .models import (
     ConfidenceLevel, HISTORICAL_TRANSACTION_METHOD_VERSION,
@@ -82,8 +83,10 @@ class HistoricalTransactionIntelligenceService:
         coverage = known_count / len(all_assets) if all_assets else 0.0
         missing = tuple(asset.asset_id for asset in all_assets if asset.market_value is None)
         dimensions: list[HistoricalDecisionDimension] = []
-        if known_count and not missing:
-            ratio = known_in / max(known_out, 1.0)
+        reason = comparison_reason(all_assets, boundary=after.boundary.occurred_at or before.boundary.occurred_at)
+        comparable = reason is None and bool(incoming) and bool(outgoing)
+        if comparable:
+            ratio = value_ratio(known_in, known_out)
             fairness = "balanced" if .8 <= ratio <= 1.25 else "favorable" if ratio > 1.25 else "premium_paid"
             dimensions.append(HistoricalDecisionDimension(
                 "value_fairness", fairness,
@@ -92,7 +95,7 @@ class HistoricalTransactionIntelligenceService:
         else:
             ratio = 1.0
             dimensions.append(HistoricalDecisionDimension(
-                "value_fairness", "unknown", "A complete contemporaneous package price is unavailable; priced subsets cannot establish package fairness.", False,
+                "value_fairness", "unknown", f"Historical package fairness unavailable: {reason or 'historical_market_one_side_empty'}. Priced subsets cannot establish fairness.", False,
             ))
         roster_id = int(before.franchise_id.rsplit(":", 1)[-1])
         shared_package = evaluate_package_quality(
@@ -100,9 +103,12 @@ class HistoricalTransactionIntelligenceService:
             tuple(_trade_asset(asset, roster_id) for asset in outgoing),
         )
         package = shared_package.assessment.casefold().replace(" ", "_")
+        if not comparable:
+            package = "unavailable"
         dimensions.append(HistoricalDecisionDimension(
             "package_quality", package,
-            shared_package.explanation,
+            shared_package.explanation if comparable else f"Comparable complete acquisition prices are unavailable: {reason or 'historical_market_one_side_empty'}.",
+            comparable,
         ))
         before_lineup, after_lineup = before.lineup.optimal_points, after.lineup.optimal_points
         lineup_available = before_lineup is not None and after_lineup is not None
@@ -132,17 +138,21 @@ class HistoricalTransactionIntelligenceService:
         superflex = any(slot.upper() in {"SUPER_FLEX", "SUPERFLEX", "Q_W_R_T"} for slot in before.roster_positions)
         incoming_qb = max((float(asset.market_value or 0) for asset in incoming if asset.position == "QB"), default=0)
         outgoing_qb = max((float(asset.market_value or 0) for asset in outgoing if asset.position == "QB"), default=0)
+        scarcity_available = comparable and bool(before.roster_positions) and all(
+            asset.position for asset in all_assets if asset.asset_type == "player")
         dimensions.append(HistoricalDecisionDimension(
-            "scarcity", "material_qb_cost" if superflex and outgoing_qb > incoming_qb else "no_supported_veto",
-            "Scarcity uses the historical league format and contemporaneous positions/values.",
-            bool(before.roster_positions),
+            "scarcity", ("material_qb_cost" if superflex and outgoing_qb > incoming_qb else "no_supported_veto") if scarcity_available else "unavailable",
+            "Scarcity uses the historical league format and contemporaneous positions/values." if scarcity_available else "Complete comparable historical prices and position evidence are required for scarcity assessment.",
+            scarcity_available,
         ))
         dimensions.append(HistoricalDecisionDimension(
-            "risk", "partially_observed" if missing else "observed",
+            "risk", "partially_observed" if missing or not comparable else "observed",
             "Risk confidence reflects historical market, lineup, age, and pick uncertainty coverage; no later injury is used.",
         ))
         confidence_score = min(before.confidence, after.confidence, round(coverage * 100))
-        if coverage < 1:
+        if not comparable:
+            confidence_score = 0
+        if not comparable:
             classification = ProcessClassification.INSUFFICIENT
         elif ratio >= .8 and (fit == "aligned" or (lineup_delta is not None and lineup_delta >= 0)):
             classification = ProcessClassification.SOUND if ratio <= 1.25 else ProcessClassification.STRONG
@@ -158,6 +168,7 @@ class HistoricalTransactionIntelligenceService:
         return HistoricalProcessEvaluation(
             classification, _confidence(confidence_score), tuple(dimensions),
             tuple(explanations), known_out, known_in, round(coverage, 4), missing,
+            comparable, None if comparable else reason or "historical_market_one_side_empty",
         )
 
     @staticmethod
@@ -173,7 +184,8 @@ class HistoricalTransactionIntelligenceService:
                 ("No later accepted Step 3 state is available at this as-of boundary.",),
             )
         dimensions: list[HistoricalDecisionDimension] = []
-        value_available = post.roster_market_value is not None and later.roster_market_value is not None
+        value_available = (post.roster_market_value is not None and later.roster_market_value is not None
+                           and comparison_reason((*post.players, *later.players)) is None)
         value_delta = later.roster_market_value - post.roster_market_value if value_available else None
         dimensions.append(HistoricalDecisionDimension(
             "later_market_value", "positive" if value_delta and value_delta > 0 else "negative" if value_delta and value_delta < 0 else "mixed_or_unknown",
