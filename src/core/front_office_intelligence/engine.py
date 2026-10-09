@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from itertools import combinations
 from typing import Any
+from src.core.fois.configuration import DEFAULT_FOIS_CONFIGURATION
 
 from src.core.asset_intelligence import AssetContext, Evidence
 from src.core.asset_intelligence.portfolio import evaluate_pick_portfolio
@@ -78,10 +79,9 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
     if profile.draft_pick_count >= 10:
         philosophies.append("Draft-Centric")
     # Portfolio magnitude cannot establish a manager's investment philosophy.
-    if activity.trades >= 5:
+    minimum_tendencies = DEFAULT_FOIS_CONFIGURATION.minimum_sample_sizes['tendencies']
+    if activity.trades >= 15:
         philosophies.append("Aggressive Trader")
-    elif activity.trades == 0:
-        philosophies.append("Conservative Trader")
     known = len(profile.known_ages)
     young_share = profile.young_player_count / known if known else 0
     veteran_share = profile.veteran_player_count / known if known else 0
@@ -94,9 +94,14 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
         preferences.append(AssetPreference("Pick collector", "Observed", (Evidence("Draft assets owned", str(profile.draft_pick_count), profile.draft_pick_count, "Owned draft capital exceeds the v1 ten-pick observation threshold.", "Sleeper cached pick ledger"),)))
     if not preferences:
         preferences.append(AssetPreference("No strong preference established", "Neutral", (Evidence("Preference sample", "Insufficient differentiating evidence", 0, "DTOS does not assign an asset preference without an observable threshold.", "Cached roster and transaction history", False),)))
-    style = "Active trade participant" if activity.trades >= 5 else "Selective trade participant" if activity.trades else "Neutral default — insufficient trade history"
+    style = ("Active trade participant" if activity.trades >= 15 else
+             "Selective trade participant" if activity.trades >= minimum_tendencies else
+             f"Insufficient trade history — {activity.trades} observations; {minimum_tendencies} required")
     confidence = min(90, 35 + min(known, 20) + min(activity.trades * 5, 25) + (10 if profile.draft_pick_count else 0))
     evidence = activity.evidence + tuple(item for pref in preferences for item in pref.evidence) + (
+        Evidence("Negotiation style sample", str(activity.trades), activity.trades,
+                 f"Behavioral tendencies require at least {minimum_tendencies} relevant trade observations. Roster ages and pick holdings do not establish trading habits.",
+                 "League-specific cached trade history", activity.trades >= minimum_tendencies),
         Evidence("Competitive window", decision.competitive_window.classification.value, 0,
             "Shared generation-bound assessment; missing direction is not rebuild behavior.", "Canonical team assessment",
             decision.competitive_window.classification.value != "Unavailable"),

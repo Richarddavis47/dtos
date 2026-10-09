@@ -72,7 +72,7 @@
   const asset = id => workspace?.teams.flatMap(t => t.assets).find(a => a.asset_id === id);
   const label = a => a.raw_label || a.label;
   const partner = () => selected.partner;
-  const setPartner = id => { selected.partner = Number(id); el('trade-partner').value = String(id); };
+  const setPartner = id => { selected.partner = Number(id); el('trade-partner').value = Number(id) ? String(id) : ''; };
   const storageKey = () => 'dtos-trade-workspace:' + workspace.workspace_context.binding;
   const node = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
   function message(text, error = false) { const box = el('trade-result'); box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
@@ -187,7 +187,7 @@
     const totals = which => { const rows = selected[which].map(asset); return rows.length && rows.every(a => a && a.trade_value != null) ? rows.reduce((sum, a) => sum + a.trade_value, 0) : null; };
     const sent = totals('sent'), received = totals('received'), balance = el('trade-balance'); balance.replaceChildren(node('h3', 'Market Balance'), node('p', `You send: ${sent ?? 'Unavailable'} · You receive: ${received ?? 'Unavailable'}`), node('small', 'Neutral market relationship only — not the Trade Intelligence recommendation.'));
     if (calculator) paintCalculator();
-    el('trade-context').textContent = `${team(active)?.team_name || 'Your franchise'} → ${team(partner())?.team_name || 'Choose partner'} · Active league ${workspace.manager_context.league_id}`;
+    el('trade-context').textContent = `${team(active)?.team_name || 'Your franchise'} → ${team(partner())?.team_name || (flow === 'shop' ? 'All eligible teams' : 'Choose partner')} · Active league ${workspace.manager_context.league_id}`;
     el('trade-run').disabled = busy || !selected.sent.length || !selected.received.length;
     el('trade-find').disabled = busy || entryBlocked;
     el('trade-apply-adjust').disabled = busy;
@@ -334,7 +334,12 @@
     } else if (e.why_now) out.append(node('h4', 'Why now'), node('p', e.why_now));
     if (e.major_limitations?.length) out.append(node('h4', 'Evidence limitations'), node('p', e.major_limitations.join(', ').replaceAll('_', ' ')));
   }
-  function focusResult() { el('trade-result').focus(); }
+  function focusResult() {
+    // Focusing a tall container alone can reveal its bottom rather than verdict.
+    const result = el('trade-result');
+    result.focus({preventScroll: true});
+    result.scrollIntoView({block: 'start', behavior: 'instant'});
+  }
   const newRecommendedObjective = row => (row.workflow || row.proposal.preview_origin_workflow) === 'recommended' && session.originWorkflow !== 'recommended';
   function offerConflict(row) {
     const p = row.proposal;
@@ -439,7 +444,11 @@
         detail.append(node('p', names(row.proposal_presentation?.send, p.assets_sent) + ' → ' + names(row.proposal_presentation?.receive, p.assets_received)),
           node('p', row.conflict_explanation || row.blocker_type + ': ' + (row.blockers || []).join(', ').replaceAll('_', ' ')));
         for (const id of row.blocking_asset_ids || []) detail.append(node('p', 'Blocking asset: ' + label(asset(id) || {label: id}) + ' · ' + id));
-        if (row.smallest_optional_relaxation) detail.append(node('p', 'Optional change: ' + row.smallest_optional_relaxation));
+        if (row.smallest_optional_relaxation) detail.append(node('p', (row.blocker_type === 'MISSING REQUIRED EVIDENCE' ? 'Evidence limit: ' : 'Optional change: ') + row.smallest_optional_relaxation));
+        if (row.blocker_type === 'MISSING REQUIRED EVIDENCE') {
+          const market = node('a', 'Review current Market evidence'); market.href = '/market';
+          detail.append(market);
+        }
       }
       out.append(detail);
     }
@@ -666,6 +675,7 @@
     el('trade-instruction').value = session.adjustmentConstraints.instruction || '';
     el('trade-constraint-asset').value = session.adjustmentConstraints.constraint_asset_id || '';
     syncLocks(); el('trade-find').hidden = flow === 'create'; persist(); paint();
+    if (flow === 'recommended') searchStatus('Ready to discover supported opportunities.', 'ready');
     if (session.previewProposal && !entryBlocked) previewOffer({proposal: session.previewProposal});
   }).catch(error => message(error.message, true));
 })();

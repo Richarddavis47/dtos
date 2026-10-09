@@ -39,6 +39,30 @@ def classify(evaluation):
 ELIGIBLE = {'CREDIBLE RECOMMENDATION', 'OPTIONAL / LOWER-RANKED TRADE'}
 
 
+def missing_evidence_guidance(evaluation):
+    """Name source limits without offering an unsupported evidence-upload action."""
+    missing = []
+    if (evaluation.get('market_evidence') or {}).get('availability') in ('partial', 'unavailable'):
+        missing.append('canonical Market pricing for every asset')
+    reasons = (evaluation.get('recommendation_trace') or {}).get('rule_reasons') or []
+    strategies = (evaluation.get('dimensions') or {}).get('strategic_fit') or {}
+    if 'SUPPORTED_TEAM_IMPACT_UNAVAILABLE' in reasons or any(
+        row.get('projection_coverage_complete') is False
+        or row.get('production_evidence', {}).get('mean_weekly_delta') is None
+        for row in strategies.values() if isinstance(row, dict)
+    ):
+        missing.append('canonical projection coverage and optimal legal-lineup impact')
+    if 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in reasons:
+        missing.append('supported future-capital trade-off evidence')
+    if not missing:
+        missing.append('sufficient support for the named assessment limitations')
+    return ('Missing: ' + '; '.join(missing) + '. These are system/source evidence limits. '
+            'This screen cannot supply or upload that evidence. Review the Market or assessment '
+            'evidence, or try again after source data updates. You can edit assets, strategy and '
+            'exact protections, but those edits do not supply missing source evidence. '
+            'No recommendation is established.')
+
+
 class SearchFunnel:
     def __init__(self, budget, partners=(), pools=None):
         self.budget = budget
@@ -82,7 +106,7 @@ class SearchFunnel:
                 'proposal': row['proposal'], 'proposal_presentation': row.get('proposal_presentation'),
                 'evaluation': e, 'blockers': reasons, 'eligible': False,
                 'smallest_optional_relaxation': (
-                    'Provide the missing named evidence; the trade is not established.' if state == 'MISSING REQUIRED EVIDENCE'
+                    missing_evidence_guidance(e) if state == 'MISSING REQUIRED EVIDENCE'
                     else 'Resolve the identified ownership or roster constraint before reconsidering.' if state == 'HARD INVALID'
                     else 'Change the package to address the other roster’s stated cost.' if state == 'COUNTERPARTY LIMITED'
                     else 'Relax the named adjustment requirement only if you choose to; this package failed that requirement.' if state == 'FILTERED'

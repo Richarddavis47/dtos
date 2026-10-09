@@ -1,5 +1,12 @@
 # DTOS Development Roadmap
 
+### Clear User Journeys — DTOS v1.21.23
+
+- Reconcile Scout live findings with source and controlled-browser evidence.
+- Improve verdict orientation, optional Shop scope and honest evidence recovery.
+- Preserve exact pick identity with readable ownership/history and explicit sparse Market detail fallback.
+- Surface roster/Balance access and withhold unsupported FOIS historical labels.
+
 ### Readable Dossier Status — DTOS v1.21.22
 
 - Correct the actual ai-value player-dossier cards; retain short status words and readable labels.
