@@ -304,7 +304,7 @@ class FOISService:
                 retained = self.repository.get(league_id, identity.franchise_id, score.model_version)
                 if retained and retained.score_key == score.score_key:
                     score = retained
-                    assessments_preserved += int(retained.evidence_integrity_version is None)
+                    assessments_preserved += int(not retained.evidence_revalidated)
             LOGGER.info(
                 "FOIS franchise evaluated: model=%s league=%s franchise=%s "
                 "window=%s-%s status=%s",

@@ -1,3 +1,9 @@
+## v1.21.27 / build 2127 — Historical Common-Week Evidence
+
+- Compare before/after legal lineups only on the latest complete common pre-decision week. Preserve week/source provenance and fail closed when evidence is incompatible.
+- Extend existing same-key preservation to earlier integrity-versioned assessments; no historical regeneration or migration.
+- Verify real full/spawn computation and qualify confidence-ranking and exact-lineage documentation.
+
 ## v1.21.26 / build 2126 — FOIS Final Trust & Verification
 
 - Ground legacy negotiation advice in supported complementary needs; disclose missing need evidence.

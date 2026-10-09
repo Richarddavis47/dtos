@@ -19,6 +19,7 @@ from src.core.fois.models import (
     MetricStatus,
     EvaluationKind,
     FOIS_MODEL_VERSION,
+    FOIS_EVIDENCE_INTEGRITY_VERSION,
     GMTenure,
     TakeoverSnapshot,
 )
@@ -129,9 +130,9 @@ class FOISRepository:
                 (score.score_key,),
             ).fetchone()
             # Publication of corrected computation is not authorization to
-            # regenerate retained pre-integrity grades. Preserve their payload,
+            # regenerate grades from earlier evidence contracts. Preserve payload,
             # fingerprint, generation time and snapshots byte-for-byte.
-            if existing and json.loads(existing["payload"]).get("evidence_integrity_version") != "fois-evidence-integrity-1":
+            if existing and json.loads(existing["payload"]).get("evidence_integrity_version") != FOIS_EVIDENCE_INTEGRITY_VERSION:
                 return False
             if existing and existing["source_fingerprint"] == source_fingerprint:
                 return False
@@ -473,7 +474,7 @@ def _score(payload: dict) -> FrontOfficeIntelligenceScore:
             "management_momentum": "Unavailable",
             "category_scores": tuple(_category(row) for row in payload["category_scores"]),
             "evidence_references": tuple(payload["evidence_references"]),
-            "warnings": tuple(payload["warnings"]) + (() if payload.get("evidence_integrity_version") else (
+            "warnings": tuple(payload["warnings"]) + (() if payload.get("evidence_integrity_version") == FOIS_EVIDENCE_INTEGRITY_VERSION else (
                 "RETAINED_ASSESSMENT_NOT_REVALIDATED: Stored grades predate the evidence-integrity correction. Historical regeneration has not been performed.",
             )),
             "strengths": tuple(payload.get("strengths") or ()),

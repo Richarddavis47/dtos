@@ -1,3 +1,9 @@
+# DTOS v1.21.27 / build 2127 — Historical Common-Week Evidence
+
+Historical trade evaluation no longer compares production from different weeks. It selects the latest complete eligible common week, discloses earlier-week use and withholds unavailable deltas. Market fairness remains independent.
+
+Existing assessments retain their original grades/provenance; no regeneration, migration or backfill occurs. See [verification and Scout checks](docs/HISTORICAL_EVIDENCE_WEEKS.md).
+
 # DTOS v1.21.26 / build 2126 — FOIS Final Trust & Verification
 
 Front Offices no longer invents a roster-need negotiation angle when none is established. Executive Profiles preserve supported category accomplishments while explaining unavailable overall comparisons. Historical computation is independently verified through the actual source adapters and spawned worker using disposable evidence.

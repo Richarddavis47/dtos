@@ -18,6 +18,12 @@ from tests.test_trade_intelligence import fixture_data
 
 class FinalTrustBrowserTests(unittest.TestCase):
     def test_real_retained_category_only_and_unavailable_profiles(self):
+        self.check_retained_profiles(None)
+
+    def test_prior_integrity_grades_remain_retained_at_actual_routes(self):
+        self.check_retained_profiles("fois-evidence-integrity-1")
+
+    def check_retained_profiles(self, prior_version):
         import dtos_app
         fixture = fois.FOISPresentationTests()
         fixture.setUp()
@@ -28,7 +34,7 @@ class FinalTrustBrowserTests(unittest.TestCase):
             fixture.repository.save(replace(score, strengths=()), 'retained-generation')
             with fixture.repository._connection() as connection:
                 payload = json.loads(connection.execute('SELECT payload FROM fois_scores_v2').fetchone()[0])
-                payload.pop('evidence_integrity_version')
+                payload['evidence_integrity_version'] = prior_version
                 connection.execute('UPDATE fois_scores_v2 SET payload=?', (json.dumps(payload),))
                 connection.commit()
                 before = [tuple(row) for row in connection.execute('SELECT * FROM fois_scores_v2')]

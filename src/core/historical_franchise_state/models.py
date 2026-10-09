@@ -7,7 +7,7 @@ from typing import Any, Mapping
 
 
 HISTORICAL_FRANCHISE_STATE_SCHEMA_VERSION = "historical-franchise-state-1"
-HISTORICAL_FRANCHISE_STATE_METHOD_VERSION = "reverse-event-reconstruction-3"
+HISTORICAL_FRANCHISE_STATE_METHOD_VERSION = "reverse-event-reconstruction-4"
 
 
 class BoundaryMode(StrEnum):
@@ -81,6 +81,7 @@ class HistoricalLineupState:
     optimal_points: float | None = None
     evidence_week: int | None = None
     reason_codes: tuple[str, ...] = ()
+    source_references: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

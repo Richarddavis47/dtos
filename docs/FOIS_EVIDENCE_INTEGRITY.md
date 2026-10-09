@@ -38,7 +38,7 @@ There is no release-triggered bulk score regeneration, backfill, history migrati
 
 ## Exact lineage boundary
 
-Future draft selections use additive `exact_pick_lineage` storage with league, draft, season, round and exact selection identity. Selecting roster and explicitly known original roster are separate fields; selecting roster does not establish original ownership. Missing exact selection identity fails closed. Repeated identical selections deduplicate; conflicting evidence is rejected.
+Future draft selections use additive `exact_pick_lineage` storage with league, draft, season, round and exact selection identity. Selecting roster and explicitly known original roster are separate fields; selecting roster does not establish original ownership. Missing exact selection identity fails closed. Repeated league/draft/selection writes deduplicate. Existing selection conflicts are rejected only when season, round or selected player differs. Changes to original/selecting roster, selection timestamp or lineage ID are not checked by that duplicate path; the first stored metadata is retained. This is narrower than a general contradiction validator.
 
 Legacy `pick_lineage` is not scanned, migrated, merged or reinterpreted by this new writer. Existing ambiguous records remain as they were and need separately authorized review. Exact lineage is compact permanent intelligence, not a new historical snapshot system.
 
@@ -74,3 +74,7 @@ Controlled performance (15 sequential runs, not live latency): 500-trade cold ag
 GitHub CI, immutable publication, deployment identity and public readiness are reported after release. Authenticated historical numerical acceptance remains unverified here and belongs to independent Scout testing; retained grades are not claimed corrected.
 
 The first lifecycle CI attempt and one justified retry failed before testing because Docker Hub returned HTTP 429. CI now pulls the official Python mirror pinned to the same Linux amd64 manifest digest (`97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4`), verified against Docker Hub. Image contents, lifecycle commands, resource limits and assertions are unchanged; the Dockerfile default remains the existing Python tag.
+
+## v1.21.27 evidence-week qualification
+
+The current evidence-integrity contract is `fois-evidence-integrity-2`. Existing same-key assessments with absent or earlier integrity versions are retained byte-for-byte and marked not revalidated for the current contract. Ordinary new-contract assessments can refresh under the existing policy; no baseline assessments are bulk regenerated. See [historical week verification](HISTORICAL_EVIDENCE_WEEKS.md).

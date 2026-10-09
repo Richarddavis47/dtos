@@ -45,6 +45,31 @@ def _trade_asset(asset: object, roster_id: int) -> TradeAsset:
     )
 
 
+def _lineup_comparison_reason(before: HistoricalFranchiseState, after: HistoricalFranchiseState) -> str | None:
+    if (before.league_id, before.franchise_id, before.boundary.season) != (after.league_id, after.franchise_id, after.boundary.season):
+        return "historical_lineup_context_mismatch"
+    if not before.roster_positions or before.roster_positions != after.roster_positions or before.scoring_settings != after.scoring_settings or before.league_settings != after.league_settings:
+        return "historical_lineup_rules_mismatch"
+    if not before.scoring_settings:
+        return "historical_lineup_scoring_unavailable"
+    if (before.boundary.occurred_at, before.boundary.event_id, before.boundary.week) != (after.boundary.occurred_at, after.boundary.event_id, after.boundary.week):
+        return "historical_lineup_decision_boundary_mismatch"
+    week = before.lineup.evidence_week
+    if week is None or week != after.lineup.evidence_week:
+        return "no_common_supported_historical_week"
+    if not all(HistoricalFranchiseStateService._completed_week_at_boundary(week, state.boundary) for state in (before, after)):
+        return "historical_lineup_week_outside_decision_boundary"
+    if before.lineup.optimal_points is None or after.lineup.optimal_points is None:
+        return "incomplete_common_week_lineup_evidence"
+    if any(not asset.asset_id or not asset.position for state in (before, after) for asset in state.players):
+        return "missing_normalized_player_positions"
+    if any(state.coverage.get("lineup") is None or state.coverage["lineup"].availability is not ReconstructionAvailability.COMPLETE for state in (before, after)):
+        return "incomplete_common_week_lineup_evidence"
+    if any(not state.lineup.source_references for state in (before, after)):
+        return "missing_historical_lineup_provenance"
+    return None
+
+
 class HistoricalTransactionIntelligenceService:
     """Evaluate canonical trades without independently reading or replaying history."""
 
@@ -111,12 +136,21 @@ class HistoricalTransactionIntelligenceService:
             comparable,
         ))
         before_lineup, after_lineup = before.lineup.optimal_points, after.lineup.optimal_points
-        lineup_available = before_lineup is not None and after_lineup is not None
+        lineup_reason = _lineup_comparison_reason(before, after)
+        lineup_available = lineup_reason is None
         lineup_delta = round(after_lineup - before_lineup, 2) if lineup_available else None
+        earlier = any("earlier_common_historical_week" in state.lineup.reason_codes for state in (before, after))
         dimensions.append(HistoricalDecisionDimension(
             "lineup_impact", "improved" if lineup_delta and lineup_delta > 0 else "declined" if lineup_delta and lineup_delta < 0 else "neutral_or_unknown",
-            f"Historically supported optimal-lineup delta was {lineup_delta:.2f}." if lineup_available else "Historical projection coverage is insufficient; no numeric lineup delta was fabricated.",
+            (f"Historically supported optimal-lineup delta was {lineup_delta:.2f}, using common Week {before.lineup.evidence_week}."
+             + (" An earlier complete common week was selected; newer observations did not support both rosters." if earlier else ""))
+            if lineup_available else f"Historical lineup comparison unavailable: {lineup_reason}; no numeric lineup delta was fabricated. Evidence limits: {', '.join(sorted(set(before.lineup.reason_codes + after.lineup.reason_codes))) or lineup_reason}.",
             lineup_available,
+            evidence_week=before.lineup.evidence_week if lineup_available else None,
+            evidence_reason=lineup_reason,
+            source_references=tuple(sorted(set(before.lineup.source_references + after.lineup.source_references))),
+            before_points=before_lineup if lineup_available else None,
+            after_points=after_lineup if lineup_available else None,
         ))
         window = before.competitive_window.classification
         incoming_picks = sum(asset.asset_type == "pick" for asset in incoming)
@@ -146,7 +180,7 @@ class HistoricalTransactionIntelligenceService:
             scarcity_available,
         ))
         dimensions.append(HistoricalDecisionDimension(
-            "risk", "partially_observed" if missing or not comparable else "observed",
+            "risk", "partially_observed" if missing or not comparable or not lineup_available else "observed",
             "Risk confidence reflects historical market, lineup, age, and pick uncertainty coverage; no later injury is used.",
         ))
         confidence_score = min(before.confidence, after.confidence, round(coverage * 100))

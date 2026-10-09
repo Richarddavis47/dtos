@@ -302,7 +302,11 @@ def _load_results_history(
                 "owner_id": owner_by_roster_season.get((str(roster_id), season)),
                 "process_evidence": {**process, "historical_process_dimensions": [
                     {"name": item.name, "assessment": item.assessment,
-                     "evidence_available": item.evidence_available}
+                     "evidence_available": item.evidence_available,
+                     **({"evidence_week": item.evidence_week, "evidence_reason": item.evidence_reason,
+                         "source_references": item.source_references,
+                         "before_points": item.before_points, "after_points": item.after_points}
+                        if item.name == "lineup_impact" else {})}
                     for item in side.process.dimensions
                 ] if side is not None else None},
                 # Process grading has one evidence-admission boundary. A legacy
