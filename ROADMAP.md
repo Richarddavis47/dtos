@@ -1,5 +1,10 @@
 # DTOS Development Roadmap
 
+### Readable Dossier Status — DTOS v1.21.22
+
+- Correct the actual ai-value player-dossier cards; retain short status words and readable labels.
+- Exercise real Bo Nix and numeric McBride routes at phone and desktop widths.
+
 ### Accessible Phone Details — DTOS v1.21.21
 
 - Correct narrow FOIS name/score overlap with reusable responsive layout.

@@ -17,16 +17,16 @@ ASSET_CSS = """
 .ai-context .ds-actions{justify-content:flex-start}.ai-context form{display:grid;gap:8px}
 .ai-player-identity{margin:12px 0}.ai-player-identity .player-portrait,.ai-player-identity .player-headshot,.ai-player-identity .player-headshot-fallback{width:88px;height:88px;flex-basis:88px;border-radius:16px}
 .ai-player-identity .player-summary-copy b{font-size:28px}.ai-player-identity .player-summary-copy span{font-size:14px}
-.ai-values{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.ai-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin:20px 0}
 .ai-value{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px}
-.ai-value b{font-size:30px;color:var(--blue);display:block;margin:8px 0;overflow-wrap:anywhere}
+.ai-value>b{font-size:30px;color:var(--blue);display:block;margin:8px 0;overflow-wrap:normal;word-break:normal}
 .ai-value span{font-size:13px;color:var(--text-secondary)}.ai-value small{display:block;color:var(--muted);margin:6px 0}
 .ai-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0;align-items:start}
 .ai-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px}
 .ai-card h3{margin:0 0 12px;font-size:19px}.ai-card ul{padding-left:20px;margin:8px 0}.ai-card li{margin:8px 0;color:var(--text-secondary)}
 .ai-evidence summary{cursor:pointer;color:var(--accent);font-size:13px;min-height:44px;display:flex;align-items:center}
 .ai-evidence li{margin-bottom:8px}.ai-recommendation{border-color:#365334}.ai-priority{font-size:12px;color:var(--gold)}
-@media(max-width:760px){.ai-context{grid-template-columns:1fr}.ai-values{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-sections{grid-template-columns:1fr}.ai-player-identity .player-summary-copy b{font-size:24px}}
+@media(max-width:760px){.ai-context{grid-template-columns:1fr}.ai-sections{grid-template-columns:1fr}.ai-player-identity .player-summary-copy b{font-size:24px}}
 </style>
 """
 
