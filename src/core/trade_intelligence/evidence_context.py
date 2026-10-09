@@ -10,7 +10,7 @@ from src.core.market_trends import MarketTrendService
 
 
 TRADE_HISTORY_SCHEMA_VERSION = "trade-historical-context-1"
-TRADE_HISTORY_METHOD_VERSION = "step8-bilateral-evidence-1"
+TRADE_HISTORY_METHOD_VERSION = "step8-bilateral-evidence-2"
 
 
 @dataclass(frozen=True)
@@ -112,12 +112,17 @@ def assess_historical_fit(
             "liquidity_supported": False,
         }
     profile = context.behavior_by_roster.get(str(partner_roster_id), {})
+    from src.core.gm_behavioral_intelligence.models import GM_BEHAVIOR_METHOD_VERSION
+    if profile.get("method_version") != GM_BEHAVIOR_METHOD_VERSION:
+        # Cached pre-integrity asset counts and price subsets were not admitted
+        # under this contract. They cannot become new historical-fit support.
+        profile = {}
     reasons: list[str] = []
     references: list[str] = []
     reason_codes: list[str] = []
     score = 0
     confidence = str(profile.get("overall_confidence") or "low").upper()
-    incoming = tuple(partner_receives)
+    incoming, outgoing = tuple(partner_receives), tuple(active_receives)
     asset_direction = _dimension(profile, "asset_direction")
     positional = _dimension(profile, "positional")
     package = _dimension(profile, "package_preference") or _dimension(profile, "package_style")
@@ -135,8 +140,9 @@ def assess_historical_fit(
             references.extend(str(value) for value in row.get("evidence_references") or ())
     if package and str(package.get("confidence") or "low") != "low":
         tendency = str(package.get("tendency") or "")
-        shape = "multi_asset" if len(incoming) > 1 else "one_for_one"
-        if tendency in {shape, "mixed"}:
+        from src.core.trade_intelligence.package_shape import package_shape
+        shape = package_shape((asset.kind for asset in incoming), (asset.kind for asset in outgoing))
+        if tendency == shape:
             score += 1
             reasons.append(f"The package is consistent with supported {tendency.replace('_', ' ')} evidence.")
             reason_codes.append("PACKAGE_STYLE_MATCH")

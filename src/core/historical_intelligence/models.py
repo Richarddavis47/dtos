@@ -105,6 +105,8 @@ class GlobalMarketCheckpoint:
     normalization_version: str | None = None
     materiality_policy_version: str | None = None
     provider_observations: tuple[Mapping[str, Any], ...] = ()
+    value_concept: str | None = None
+    comparison_identity: tuple[str, ...] = ()
     schema_version: str = HISTORICAL_INTELLIGENCE_SCHEMA_VERSION
     method_version: str = HISTORICAL_INTELLIGENCE_METHOD_VERSION
 
@@ -127,10 +129,13 @@ class GlobalMarketCheckpoint:
         normalization_version: str | None = None,
         materiality_policy_version: str | None = None,
         provider_observations: tuple[Mapping[str, Any], ...] = (),
+        value_concept: str | None = None,
+        comparison_identity: tuple[str, ...] = (),
     ) -> "GlobalMarketCheckpoint":
         return cls(
             checkpoint_id=semantic_identity(
                 "market-checkpoint", asset_id, occurred_at, provider, classification,
+                market_context_id, normalization_version, value_concept, comparison_identity,
             ),
             asset_id=str(asset_id), occurred_at=str(occurred_at),
             provider=str(provider), normalized_value=float(normalized_value),
@@ -143,6 +148,7 @@ class GlobalMarketCheckpoint:
             normalization_version=normalization_version,
             materiality_policy_version=materiality_policy_version,
             provider_observations=tuple(dict(row) for row in provider_observations),
+            value_concept=value_concept, comparison_identity=tuple(comparison_identity),
         )
 
     def public_contract(self) -> dict[str, Any]:
@@ -163,6 +169,8 @@ class GlobalMarketCheckpoint:
             "normalization_version": self.normalization_version,
             "materiality_policy_version": self.materiality_policy_version,
             "provider_observations": [dict(row) for row in self.provider_observations],
+            "value_concept": self.value_concept,
+            "comparison_identity": list(self.comparison_identity),
             "schema_version": self.schema_version,
             "method_version": self.method_version,
         }

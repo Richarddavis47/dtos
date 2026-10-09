@@ -21,7 +21,9 @@ def checkpoint(asset: str, when: str, value: float) -> GlobalMarketCheckpoint:
     return GlobalMarketCheckpoint.create(
         asset_id=asset, occurred_at=when, provider="market",
         normalized_value=value, confidence=90, classification="event_relevant",
-        reason_codes=("trade",),
+        reason_codes=("trade",), market_context_id="test-context",
+        normalization_version="test-normalized-v1", value_concept="canonical_market",
+        comparison_identity=("normalized-market", "0-1000", "test-format", "test-method", "canonical"),
     )
 
 
@@ -195,7 +197,7 @@ class HistoricalTransactionIntelligenceTests(unittest.TestCase):
 
     def test_current_bilateral_engine_is_not_called_or_modified(self) -> None:
         result = self.evaluate()
-        self.assertEqual(result.method_version, "historical-trade-process-outcome-2")
+        self.assertEqual(result.method_version, "historical-trade-process-outcome-3")
         self.assertNotIn("SMASH ACCEPT", str(result.private_contract()))
 
 

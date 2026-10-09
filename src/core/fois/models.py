@@ -138,6 +138,7 @@ class FrontOfficeIntelligenceScore:
     trade_partner_count: int = 0
     front_office_evidence: dict[str, Any] | None = None
     gm_behavioral_profile: dict[str, Any] | None = None
+    evidence_integrity_version: str | None = "fois-evidence-integrity-1"
 
 
 @dataclass(frozen=True)

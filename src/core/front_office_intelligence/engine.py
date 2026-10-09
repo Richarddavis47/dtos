@@ -51,7 +51,7 @@ def _activity(data: dict[str, Any], roster_id: int, pick_count: int) -> Activity
         if isinstance(item.get("drops"), dict) and roster_id in _roster_ids({"roster_ids": item["drops"].values()}):
             counts["drop"] += 1
     total = sum(counts.values())
-    level = "High observed activity" if total >= 12 else "Moderate observed activity" if total >= 5 else "Limited observed history"
+    level = f"{counts['trade']} observed completed trades; observation period not established"
     evidence = (
         Evidence("Completed trades", str(counts["trade"]), counts["trade"], "Counts cached transactions involving this roster.", "Sleeper cached transactions"),
         Evidence("Roster transactions", str(total - counts["trade"]), total - counts["trade"], "Counts cached waiver, add, and drop actions involving this roster.", "Sleeper cached transactions"),
@@ -77,26 +77,25 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
     else:
         philosophies.append("Balanced")
     if profile.draft_pick_count >= 10:
-        philosophies.append("Draft-Centric")
+        philosophies.append("Draft-capital holdings")
     # Portfolio magnitude cannot establish a manager's investment philosophy.
     minimum_tendencies = DEFAULT_FOIS_CONFIGURATION.minimum_sample_sizes['tendencies']
-    if activity.trades >= 15:
-        philosophies.append("Aggressive Trader")
     known = len(profile.known_ages)
     young_share = profile.young_player_count / known if known else 0
     veteran_share = profile.veteran_player_count / known if known else 0
     preferences: list[AssetPreference] = []
     if known and young_share >= .35:
-        preferences.append(AssetPreference("Values youth", "Observed", (Evidence("Age 24 and under", f"{profile.young_player_count} of {known}", young_share * 100, "Current roster construction contains a meaningful young-player share.", "Sleeper roster ages"),)))
+        preferences.append(AssetPreference("Youth-heavy current roster", "Current holdings", (Evidence("Age 24 and under", f"{profile.young_player_count} of {known}", young_share * 100, "Current holdings do not establish a historical preference for acquiring youth.", "Sleeper roster ages"),)))
     if known and veteran_share >= .35:
-        preferences.append(AssetPreference("Values veterans", "Observed", (Evidence("Age 28 and older", f"{profile.veteran_player_count} of {known}", veteran_share * 100, "Current roster construction contains a meaningful veteran share.", "Sleeper roster ages"),)))
+        preferences.append(AssetPreference("Veteran-heavy current roster", "Current holdings", (Evidence("Age 28 and older", f"{profile.veteran_player_count} of {known}", veteran_share * 100, "Current holdings do not establish a historical preference for acquiring veterans.", "Sleeper roster ages"),)))
     if profile.draft_pick_count >= 10:
-        preferences.append(AssetPreference("Pick collector", "Observed", (Evidence("Draft assets owned", str(profile.draft_pick_count), profile.draft_pick_count, "Owned draft capital exceeds the v1 ten-pick observation threshold.", "Sleeper cached pick ledger"),)))
+        preferences.append(AssetPreference("Draft-capital holdings", "Current holdings", (Evidence("Draft assets owned", str(profile.draft_pick_count), profile.draft_pick_count, "Owned picks describe current capital, not an observed acquisition preference.", "Sleeper cached pick ledger"),)))
     if not preferences:
         preferences.append(AssetPreference("No strong preference established", "Neutral", (Evidence("Preference sample", "Insufficient differentiating evidence", 0, "DTOS does not assign an asset preference without an observable threshold.", "Cached roster and transaction history", False),)))
-    style = ("Active trade participant" if activity.trades >= 15 else
-             "Selective trade participant" if activity.trades >= minimum_tendencies else
-             f"Insufficient trade history — {activity.trades} observations; {minimum_tendencies} required")
+    shared_behavior = (data.get("gm_behavioral_intelligence") or {}).get(str(profile.roster_id)) or {}
+    first, last = shared_behavior.get("first_observed_at"), shared_behavior.get("last_observed_at")
+    period = f" from {str(first)[:10]} to {str(last)[:10]}" if first and last else "; observation period unavailable"
+    style = f"{activity.trades} observed completed trades{period}. Activity does not establish skill or selectivity."
     confidence = min(90, 35 + min(known, 20) + min(activity.trades * 5, 25) + (10 if profile.draft_pick_count else 0))
     evidence = activity.evidence + tuple(item for pref in preferences for item in pref.evidence) + (
         Evidence("Negotiation style sample", str(activity.trades), activity.trades,
@@ -136,8 +135,6 @@ def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: Front
     shared = tuple(sorted(first_matches | second_matches))
     conflicts = tuple(sorted(_needs(first.decision) & _needs(second.decision)))
     themes = tuple((["Roster Balance"] if shared else ["Value Discovery"]) + (["Established Trade Channel"] if bilateral else []))
-    enough_history = bilateral >= 3 and first.activity.trades >= 5 and second.activity.trades >= 5
-    probability = min(65, 35 + bilateral * 5 + len(shared) * 3) if enough_history else None
     evidence = (
         Evidence("Complementary position needs", ", ".join(shared) or "None", len(shared) * 15, "Decision Engine needs are compared with the other roster's observable depth surplus.", "Decision Engine"),
         Evidence("Conflicting priorities", ", ".join(conflicts) or "None", -len(conflicts) * 5, "Shared needs may reduce easy asset matches.", "Decision Engine"),
@@ -145,12 +142,12 @@ def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: Front
     )
     forecast = NegotiationForecast(
         "Open with a balanced Asset Intelligence package addressing an observed roster need.",
-        "Expect a counter emphasizing this Front Office's documented asset preferences." if any(p.strength == "Observed" for p in second.asset_preferences) else "No evidence-supported counter pattern is available; use a neutral value-balanced structure.",
-        probability,
+        "Current roster needs can inform an offer, but holdings do not establish documented acquisition preferences or a counteroffer pattern.",
+        None,
         "Do not exceed the Trade Intelligence package boundary or sacrifice the Active Front Office's independent future outlook.",
         ("Player plus pick", "Tier-down package", "Equivalent positional target"),
         tuple(second.constraints[:2]),
-        (("Acceptance probability is conservative and based only on sufficient completed trade history.",) if probability is not None else ("Acceptance probability is unavailable because cached trade history is insufficient.",)),
+        ("Acceptance probability is unavailable: attempted/rejected offer evidence and calibration are not available. Compatibility is an uncalibrated roster-context indicator, not a probability.",),
         evidence,
     )
     difficulty = "Favorable" if score >= 75 else "Workable" if score >= 55 else "Difficult"

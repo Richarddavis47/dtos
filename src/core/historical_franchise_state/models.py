@@ -7,7 +7,7 @@ from typing import Any, Mapping
 
 
 HISTORICAL_FRANCHISE_STATE_SCHEMA_VERSION = "historical-franchise-state-1"
-HISTORICAL_FRANCHISE_STATE_METHOD_VERSION = "reverse-event-reconstruction-2"
+HISTORICAL_FRANCHISE_STATE_METHOD_VERSION = "reverse-event-reconstruction-3"
 
 
 class BoundaryMode(StrEnum):
@@ -66,6 +66,11 @@ class HistoricalAssetState:
     market_confidence: int | None = None
     season_to_date_points: float | None = None
     age_as_of: float | None = None
+    market_provider: str | None = None
+    market_context_id: str | None = None
+    market_normalization_version: str | None = None
+    market_value_concept: str | None = None
+    market_comparison_identity: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -75,6 +80,7 @@ class HistoricalLineupState:
     actual_points: float | None = None
     optimal_points: float | None = None
     evidence_week: int | None = None
+    reason_codes: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

@@ -117,6 +117,20 @@ class PickLineage:
 
 
 @dataclass(frozen=True)
+class ExactPickLineage:
+    lineage_id: str
+    league_id: str
+    draft_id: str
+    season: int
+    round: int
+    selection: int
+    selecting_roster_id: str
+    original_roster_id: str | None
+    selected_player_id: str
+    selected_at: str | None = None
+
+
+@dataclass(frozen=True)
 class HistoricalTradeAssessment:
     status: EvidenceCompleteness
     process_grade_eligible: bool

@@ -40,13 +40,13 @@ class FrontOfficeIntelligenceTests(unittest.TestCase):
         report = build_league_model(self.data).compatibility(1, 2)
         self.assertIsNone(report.forecast.acceptance_probability)
         self.assertTrue(report.forecast.evidence)
-        self.assertIn("insufficient", " ".join(report.forecast.notes).lower())
+        self.assertIn("calibration", " ".join(report.forecast.notes).lower())
 
-    def test_sufficient_observed_history_enables_conservative_probability(self) -> None:
+    def test_completed_history_does_not_establish_acceptance_probability(self) -> None:
         self.data["transactions"] = [{"type": "trade", "roster_ids": [1, 2]} for _ in range(5)]
         report = build_league_model(self.data).compatibility(1, 2)
-        self.assertIsNotNone(report.forecast.acceptance_probability)
-        self.assertLessEqual(report.forecast.acceptance_probability, 65)
+        self.assertIsNone(report.forecast.acceptance_probability)
+        self.assertIn("uncalibrated", " ".join(report.forecast.notes))
 
     def test_trade_intelligence_consumes_front_office_model(self) -> None:
         with patch("src.core.trade_intelligence.engine.trade_engine.build_asset_pool") as assets:

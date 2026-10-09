@@ -28,7 +28,7 @@ class CompetitiveCycleAnalyzer:
         timeline = self._timeline(ordered)
         cycles = self._cycles(timeline)
         windows = self._windows(timeline)
-        rebuilds = [cycle.duration for cycle in cycles if cycle.cycle_type == "rebuild"]
+        rebuilds = [cycle.duration for cycle in cycles if cycle.cycle_type in {"rebuild", "poor_results", "rebuild_or_poor_results"}]
         reloads = [
             cycle.reload_time
             for cycle in cycles
@@ -96,14 +96,14 @@ class CompetitiveCycleAnalyzer:
             elif row.playoff or (win_rate is not None and win_rate > .5):
                 state = "contender"
                 reason = "Playoff qualification or a winning regular season."
-            elif row.rebuilding or bottom_quartile or (
+            elif bottom_quartile or (
                 win_rate is not None and win_rate < .36
             ):
-                state = "rebuild"
-                reason = "Bottom-quartile finish or sub-.360 observed win rate."
-            elif previous_state == "rebuild" and (win_rate or 0) >= .43:
+                state = "poor_results"
+                reason = "Bottom-quartile finish or sub-.360 observed win rate; intentional rebuilding is not established."
+            elif previous_state in {"rebuild", "poor_results"} and (win_rate or 0) >= .43:
                 state = "ascending"
-                reason = "Improved from a rebuild toward contention."
+                reason = "Results improved toward contention; prior rebuilding intent requires separate evidence."
             elif previous_state in {"contender", "elite_contender"}:
                 state = "reload" if (win_rate or 0) >= .43 else "decline"
                 reason = (
@@ -141,8 +141,8 @@ class CompetitiveCycleAnalyzer:
         def family(state: str) -> str:
             if state in {"contender", "elite_contender"}:
                 return "contention"
-            if state == "rebuild":
-                return "rebuild"
+            if state in {"rebuild", "poor_results"}:
+                return "weak_results_period"
             return "transition"
 
         groups: list[list[SeasonTimeline]] = []
@@ -154,6 +154,9 @@ class CompetitiveCycleAnalyzer:
         cycles: list[CompetitiveCycle] = []
         for index, rows in enumerate(groups, 1):
             kind = family(rows[0].state)
+            if kind == "weak_results_period":
+                states = {row.state for row in rows}
+                kind = "rebuild" if states == {"rebuild"} else "poor_results" if states == {"poor_results"} else "rebuild_or_poor_results"
             effective = {
                 row.season: (
                     1
@@ -227,7 +230,7 @@ class CompetitiveCycleAnalyzer:
             "contention"
             if timeline[-1].state in {"contender", "elite_contender"}
             else "rebuild"
-            if timeline[-1].state == "rebuild"
+            if timeline[-1].state in {"rebuild", "poor_results"}
             else "transition"
         )
         for row in reversed(timeline):
@@ -235,7 +238,7 @@ class CompetitiveCycleAnalyzer:
                 "contention"
                 if row.state in {"contender", "elite_contender"}
                 else "rebuild"
-                if row.state == "rebuild"
+                if row.state in {"rebuild", "poor_results"}
                 else "transition"
             )
             if row_family != current_family:
@@ -285,11 +288,11 @@ class CompetitiveCycleAnalyzer:
     ) -> tuple[str, ...]:
         weaknesses: list[str] = []
         longest = max(
-            (cycle.duration for cycle in cycles if cycle.cycle_type == "rebuild"),
+            (cycle.duration for cycle in cycles if cycle.cycle_type in {"rebuild", "poor_results", "rebuild_or_poor_results"}),
             default=0,
         )
         if longest > 2:
-            weaknesses.append(f"{longest}-season rebuild exceeded the target.")
+            weaknesses.append(f"{longest}-season rebuild or poor-results period exceeded the outcome-duration target; intent is not inferred.")
         losing = sum(
             (row.wins or 0) < (row.losses or 0)
             for row in timeline

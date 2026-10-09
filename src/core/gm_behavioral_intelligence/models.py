@@ -6,7 +6,7 @@ from typing import Any
 
 
 GM_BEHAVIOR_SCHEMA_VERSION = "gm-behavioral-intelligence-1"
-GM_BEHAVIOR_METHOD_VERSION = "step6-canonical-decision-aggregation-1"
+GM_BEHAVIOR_METHOD_VERSION = "step6-canonical-decision-aggregation-2"
 
 
 @dataclass(frozen=True)
@@ -20,6 +20,7 @@ class BehavioralDimension:
     supporting_counts: dict[str, int]
     explanation: str
     evidence_references: tuple[str, ...] = ()
+    supporting_asset_counts: dict[str, int] | None = None
 
 
 @dataclass(frozen=True)

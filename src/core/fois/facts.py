@@ -60,6 +60,8 @@ class TradeFact:
     market_coverage_ratio: float | None = None
     competitive_window_at_trade: str | None = None
     season_phase: str | None = None
+    market_comparable: bool = False
+    market_unavailable_reason: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(

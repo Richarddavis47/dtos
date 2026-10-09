@@ -17,7 +17,7 @@ DATA_OWNERSHIP = {
         "retention": "permanent_compact",
         "categories": (
             "intelligence_checkpoints", "fois_scores", "decision_provenance",
-            "projection_outcomes", "point_in_time_market_evidence", "pick_lineage",
+            "projection_outcomes", "point_in_time_market_evidence", "pick_lineage", "exact_pick_lineage",
         ),
     },
     "shared_global": {

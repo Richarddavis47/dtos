@@ -287,7 +287,7 @@ def create_fois_router(
         cards = "".join(
             f'<article class="card fois-leader" data-fois-current="true" data-fois-rank="{rank if score.overall_score is not None else "unavailable"}" data-fois-gm="{escape(score.gm_id or "")}">'
             f'<div class="fois-rank"><span>League overall FOIS rank</span><b>{exact_rank(rank if score.overall_score is not None else None)}</b></div>'
-            f'<div><p class="eyebrow">CURRENT · {exact_rank(rank if score.overall_score is not None else None, sum(row.overall_score is not None for row in ranked_scores))}</p><h3><a href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}">{escape(score.gm_name or "GM")}</a></h3>'
+            f'<div><p class="eyebrow">{"RETAINED · NOT REVALIDATED" if score.evidence_integrity_version is None else "CURRENT"} · {exact_rank(rank if score.overall_score is not None else None, sum(row.overall_score is not None for row in ranked_scores))}</p><h3><a href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}">{escape(score.gm_name or "GM")}</a></h3>'
             f'<p class="muted">{escape(score.franchise_name or "Current franchise")}</p></div>'
             f'<div class="fois-score"><b>{score.overall_score if score.overall_score is not None else "—"}</b><span>{escape(score.overall_letter_grade or "Insufficient evidence")}</span></div>'
             f'<div class="fois-evidence"><b>{score.confidence:.0f}% confidence</b><span>{score.completeness:.0f}% evidence coverage · {score.supported_weight:.0f}% supported weight</span></div>'
@@ -393,10 +393,36 @@ def create_fois_router(
             f'{row.overall_score if row.overall_score is not None else "Unavailable"} {escape(row.overall_letter_grade or "")}</li>'
             for row in reversed(history)
         ) or "<li>No earlier meaningful FOIS snapshot is available in retained history.</li>"
+        from src.core.gm_behavioral_intelligence.models import GM_BEHAVIOR_METHOD_VERSION
+        roster_id = score.franchise_id.rsplit(":", 1)[-1]
+        profile = (data.get("gm_behavioral_intelligence") or {}).get(roster_id) or score.gm_behavioral_profile or {}
+        behavioral_html = '<p>Supported behavioral evidence unavailable. Current holdings do not establish trading preferences.</p>'
+        if (profile.get("league_id") == selected_league
+                and profile.get("gm_id") == score.gm_id
+                and profile.get("method_version") == GM_BEHAVIOR_METHOD_VERSION):
+            rows = []
+            for dimension in profile.get("dimensions") or ():
+                references = "".join(f'<li><code>{escape(str(reference))}</code></li>'
+                                     for reference in dimension.get("evidence_references") or ())
+                counts = "; ".join(f'{str(key).replace("_", " ")}: {value}'
+                                   for key, value in (dimension.get("supporting_counts") or {}).items())
+                assets = "; ".join(f'{str(key).replace("_", " ")}: {value}'
+                                   for key, value in (dimension.get("supporting_asset_counts") or {}).items())
+                rows.append(f'<details class="fois-behavior"><summary>{escape(str(dimension.get("key") or "").replace("_", " ").title())} · {escape(str(dimension.get("confidence") or "low"))} evidence confidence</summary>'
+                            f'<p>{escape(str(dimension.get("explanation") or "Unavailable"))}</p>'
+                            f'<p>{dimension.get("sample_count", 0)} independent supported transactions · coverage {dimension.get("coverage", 0):.0%}</p>'
+                            f'<p>{escape(counts)}</p>' + (f'<p>Assets within those transactions: {escape(assets)}</p>' if assets else '')
+                            + f'<ul>{references}</ul></details>')
+            behavioral_html = '<p>League-specific observations describe supported actions, not personality, skill or acceptance probabilities. Historical habits do not override your selected strategy.</p>' + "".join(rows)
+        preservation = ('<p class="notice" role="status">Retained historical assessment: these grades predate the evidence-integrity correction. They remain unchanged and have not been revalidated. Regeneration requires separate authorization.</p>'
+                        if score.evidence_integrity_version is None else '')
         body = f'''<a class="back" href="/fois?league_id={escape(selected_league)}">← GM Leaderboard</a><p class="eyebrow">CURRENT GM PROFILE</p><h2>{escape(score.gm_name or "General Manager")}</h2><p>{escape(score.franchise_name or "Current franchise")}</p>
 <div class="summary-grid"><article class="metric"><b>{exact_rank(rank, sum(row.overall_score is not None for row in rankings))}</b><span>League overall FOIS rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not ranked"} {escape(score.overall_letter_grade or "")}</b><span>FOIS Score</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Confidence</span></article><article class="metric"><b>{score.completeness:.0f}%</b><span>Evidence Coverage</span></article><article class="metric"><b>{score.supported_weight:.0f}%</b><span>Supported Weight</span></article></div>
 <section class="card"><h3>Executive Summary</h3><p>{escape(score.executive_summary)}</p><p><b>Management momentum:</b> {escape(human_status(score.management_momentum))}</p><p class="muted">Completed seasons alone do not establish movement. A comparable historical momentum assessment is required.</p></section>{explanation_html}
 <div class="card-grid">{categories}</div><div class="grid"><section class="card"><h3>Top strengths</h3><ul>{strengths}</ul></section><section class="card"><h3>Improvement areas</h3><ul>{weaknesses}</ul></section></div><details class="card" data-fois-history-count="{len(history)}"><summary>GM History · {len(history)} earlier snapshot(s)</summary><ul>{historical_rows}</ul></details>{details}'''
+        body = ('<style>.fois-profile{min-width:0}.fois-profile .dtos-explanation li,.fois-profile .fois-behavior p,.fois-profile .fois-behavior code{overflow-wrap:anywhere;word-break:normal}.fois-behavior summary{min-height:44px;cursor:pointer}.fois-behavior summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}</style>'
+                + '<div class="fois-profile">' + preservation + body
+                + '<section class="card"><h3>Management behavior and evidence</h3>' + behavioral_html + '</section></div>')
         return page(f"{score.gm_name or 'GM'} — Executive Profile", body) if page else HTMLResponse(body)
 
     return router

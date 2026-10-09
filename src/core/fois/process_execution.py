@@ -145,6 +145,15 @@ def compact_fois_input(data: dict[str, Any]) -> dict[str, Any]:
         for name in ("league", "league_settings", "teams", "brain_semantic_metrics")
         if name in data
     }
+    # The history store resolves eligibility from normalized identities, not
+    # current team rows. Keep the minimal complete global identity projection:
+    # historical players may no longer appear on any current league roster.
+    compact["normalized_players"] = {
+        str(player_id): {key: row[key] for key in
+                        ("name", "position", "team", "provider_ids", "birthdate", "birth_date") if key in row}
+        for player_id, row in (data.get("normalized_players") or {}).items()
+        if isinstance(row, dict)
+    }
     if report:
         compact["valuation_intelligence"] = compact_report
     if "fois_history" in data:
@@ -218,6 +227,7 @@ def _compute_fois_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "source_bytes": source_bytes,
         "compact_input_bytes": compact_input_bytes,
         "history_metrics": history_metrics,
+        "prepared_evidence": service.prepared_evidence,
     }
 
 
@@ -349,5 +359,6 @@ async def generate_fois_isolated(
             "parent_duration_ms": round((perf_counter() - started) * 1000, 3),
             "exit_status": 0,
             "reaped": False,
+            "prepared_evidence": result.get("prepared_evidence") or {},
         }
         return scores, canonical, metrics

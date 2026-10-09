@@ -25,6 +25,9 @@ from .models import (
     HISTORICAL_FRANCHISE_STATE_METHOD_VERSION,
 )
 from src.core.history_context.results import number
+from src.core.trade_intelligence.lineup import (
+    BENCH_SLOTS, FLEX_ELIGIBILITY, optimal_legal_lineup,
+)
 
 
 def _franchise_id(league_id: str, value: object) -> str:
@@ -266,7 +269,7 @@ class HistoricalFranchiseStateService:
                     direction=CheckpointDirection.AT_OR_BEFORE,
                 )
                 self._metrics["global_market_lookups"] += 1
-            identity = self.history.store.identity_for_provider_id(player_id) or {}
+            identity = (self.history.store.identity_for_provider_id(player_id) or {}) if not player_id.startswith("PICK-") else {}
             metadata = identity.get("metadata") or {}
             position = metadata.get("position")
             age = None
@@ -282,13 +285,18 @@ class HistoricalFranchiseStateService:
             if value is not None:
                 known += value
             assets.append(HistoricalAssetState(
-                asset_id=player_id, asset_type="player", position=position,
+                asset_id=player_id, asset_type="pick" if player_id.startswith("PICK-") else "player", position=position,
                 market_value=value,
                 market_checkpoint_id=checkpoint.checkpoint_id if checkpoint else None,
                 market_observed_at=checkpoint.occurred_at if checkpoint else None,
                 market_confidence=checkpoint.confidence if checkpoint else None,
                 season_to_date_points=(production or {}).get(player_id),
                 age_as_of=age,
+                market_provider=checkpoint.provider if checkpoint else None,
+                market_context_id=checkpoint.market_context_id if checkpoint else None,
+                market_normalization_version=checkpoint.normalization_version if checkpoint else None,
+                market_value_concept=checkpoint.value_concept if checkpoint else None,
+                market_comparison_identity=checkpoint.comparison_identity if checkpoint else (),
             ))
         return assets, known, sum(row.market_value is not None for row in assets)
 
@@ -299,8 +307,6 @@ class HistoricalFranchiseStateService:
         rows = self._records(league_id, boundary.season, "player_week")
         eligible = []
         for row in rows:
-            if str(row.get("franchise_id") or "") != franchise_id:
-                continue
             week = int(row.get("week") or 0)
             if not self._completed_week_at_boundary(week, boundary):
                 continue
@@ -309,46 +315,53 @@ class HistoricalFranchiseStateService:
             player_id = str(row.get("player_id") or "")
             if player_id in player_ids:
                 eligible.append(row)
-        production: defaultdict[str, float] = defaultdict(float)
+        # A league-scored player/week is reusable after ownership changes.
+        # Duplicate roster observations must agree, not add production twice.
+        observations: defaultdict[tuple[int, str], set[float]] = defaultdict(set)
         for row in eligible:
-            production[str(row["player_id"])] += float((row.get("payload") or {}).get("points") or 0)
+            observations[(int(row["week"]), str(row["player_id"]))].add(float(row["payload"]["points"]))
+        production: defaultdict[str, float] = defaultdict(float)
+        for (_, player_id), values in observations.items():
+            if len(values) == 1:
+                production[player_id] += next(iter(values))
         evidence_week = max((int(row.get("week") or 0) for row in eligible), default=None)
         latest = [row for row in eligible if int(row.get("week") or 0) == evidence_week]
         actual = tuple(sorted(
             str(row["player_id"]) for row in latest
             if (row.get("payload") or {}).get("starter")
+            and str(row.get("franchise_id") or "") == franchise_id
         ))
-        weekly_points = {
-            str(row["player_id"]): float((row.get("payload") or {}).get("points") or 0)
-            for row in latest
-        }
+        weekly_points = {player_id: next(iter(values)) for (week, player_id), values
+                         in observations.items() if week == evidence_week and len(values) == 1}
         positions = {
             player_id: str(((self.history.store.identity_for_provider_id(player_id) or {}).get("metadata") or {}).get("position") or "")
             for player_id in player_ids
         }
-        remaining = set(player_ids)
-        optimal: list[str] = []
-        ignored_slots = {"BN", "BENCH", "IR", "TAXI", "RESERVE", "K", "DEF"}
-        for slot in roster_positions:
-            normalized = slot.upper()
-            if normalized in ignored_slots:
-                continue
-            if normalized in {"FLEX", "RB_WR_TE", "W_R_T"}:
-                allowed = {"RB", "WR", "TE"}
-            elif normalized in {"SUPER_FLEX", "SUPERFLEX", "Q_W_R_T"}:
-                allowed = {"QB", "RB", "WR", "TE"}
-            else:
-                allowed = {normalized}
-            candidates = [player_id for player_id in remaining if positions.get(player_id) in allowed and player_id in weekly_points]
-            if candidates:
-                selected = max(candidates, key=lambda player_id: (weekly_points.get(player_id, 0), player_id))
-                optimal.append(selected)
-                remaining.remove(selected)
+        aliases = {"RB_WR_TE": "FLEX", "W_R_T": "FLEX", "SUPERFLEX": "SUPER_FLEX", "Q_W_R_T": "SUPER_FLEX"}
+        slots = tuple(aliases.get(slot.upper(), slot.upper()) for slot in roster_positions)
+        supported = {"QB", "RB", "WR", "TE", *FLEX_ELIGIBILITY}
+        reasons = []
+        if any(slot not in supported and slot not in BENCH_SLOTS for slot in slots):
+            reasons.append("unsupported_historical_lineup_slots")
+        if not player_ids or any(not positions[player_id] for player_id in player_ids):
+            reasons.append("missing_normalized_player_positions")
+        eligible_ids = {player_id for player_id in player_ids if positions[player_id] in supported}
+        if not evidence_week or any(player_id not in weekly_points for player_id in eligible_ids):
+            reasons.append("incomplete_historical_player_week_coverage")
+        if reasons:
+            return HistoricalLineupState(actual_starters=actual, evidence_week=evidence_week, reason_codes=tuple(reasons)), dict(production)
+        # Reuse the canonical exact legal assignment. These inputs are historical
+        # actuals, not forecasts; no submitted Sleeper slots determine the optimum.
+        result = optimal_legal_lineup(({
+            "id": player_id, "position": positions[player_id],
+            "projected_points": weekly_points.get(player_id),
+        } for player_id in sorted(eligible_ids)), slots)
         return HistoricalLineupState(
-            actual_starters=actual, optimal_starters=tuple(optimal),
+            actual_starters=actual, optimal_starters=tuple(entry.asset_id for entry in result.entries),
             actual_points=sum(weekly_points.get(player_id, 0) for player_id in actual) if latest else None,
-            optimal_points=sum(weekly_points.get(player_id, 0) for player_id in optimal) if latest else None,
+            optimal_points=result.projected_points if result.available and not result.missing_player_ids else None,
             evidence_week=evidence_week,
+            reason_codes=() if result.available else ("incomplete_legal_historical_lineup",),
         ), dict(production)
 
     @staticmethod
@@ -430,7 +443,10 @@ class HistoricalFranchiseStateService:
             league_id, franchise_id, evidence_boundary, players, roster_positions,
         )
         assets, known_value, known_count = self._market_assets(players, effective_time, production)
-        selected_picks = tuple(HistoricalAssetState(asset_id=pick, asset_type="pick") for pick, owner in sorted(picks.items()) if owner == franchise_id)
+        pick_assets, _, _ = self._market_assets(
+            (pick for pick, owner in sorted(picks.items()) if owner == franchise_id), effective_time,
+        )
+        selected_picks = tuple(pick_assets)
         position_counts: defaultdict[str, int] = defaultdict(int)
         for asset in assets:
             position_counts[str(asset.position or "UNKNOWN")] += 1
@@ -446,7 +462,7 @@ class HistoricalFranchiseStateService:
             CoverageDimension.OWNERSHIP.value: self._coverage(ReconstructionAvailability.COMPLETE if ownership_available else ReconstructionAvailability.UNAVAILABLE, 95 if ownership_available else 0, "reverse_event_reconstruction" if ownership_available else "missing_roster_snapshot"),
             CoverageDimension.PICKS.value: self._coverage(ReconstructionAvailability.COMPLETE if picks else ReconstructionAvailability.PARTIAL, 85 if picks else 35, "provider_pick_snapshot" if picks else "pick_snapshot_unavailable"),
             CoverageDimension.MARKET.value: self._coverage(ReconstructionAvailability.COMPLETE if market_ratio == 1 else ReconstructionAvailability.PARTIAL if market_available else ReconstructionAvailability.UNAVAILABLE, round(market_ratio * 100), "at_or_before_global_checkpoint" if market_available else "historical_market_unavailable"),
-            CoverageDimension.LINEUP.value: self._coverage(ReconstructionAvailability.COMPLETE if lineup.evidence_week is not None else ReconstructionAvailability.UNAVAILABLE, 90 if lineup.evidence_week is not None else 0, "historical_week_lineup" if lineup.evidence_week is not None else "historical_lineup_unavailable"),
+            CoverageDimension.LINEUP.value: self._coverage(ReconstructionAvailability.COMPLETE if lineup.optimal_points is not None else ReconstructionAvailability.UNAVAILABLE, 90 if lineup.optimal_points is not None else 0, *(lineup.reason_codes or ("historical_week_lineup" if lineup.optimal_points is not None else "historical_lineup_unavailable",))),
             CoverageDimension.PRODUCTION.value: self._coverage(ReconstructionAvailability.COMPLETE if production else ReconstructionAvailability.UNAVAILABLE, 90 if production else 0, "season_to_date_actuals" if production else "historical_production_unavailable"),
             CoverageDimension.STANDINGS.value: self._coverage(ReconstructionAvailability.COMPLETE if record.games_observed else ReconstructionAvailability.PARTIAL, 90 if record.games_observed else 25, "matchups_through_boundary"),
             CoverageDimension.AGE.value: self._coverage(

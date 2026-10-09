@@ -36,6 +36,7 @@ def trade(
         known_incoming_value=value_in, known_outgoing_value=value_out,
         market_coverage_ratio=(1.0 if value_in is not None and value_out is not None else 0.0),
         competitive_window_at_trade=window, season_phase=phase,
+        market_comparable=value_in is not None and value_out is not None,
     )
 
 
