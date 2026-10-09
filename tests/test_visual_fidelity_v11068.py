@@ -20,7 +20,10 @@ class VisualFidelityTests(unittest.TestCase):
         self.assertIn(".ux-command-grid", DESIGN_SYSTEM_CSS)
         self.assertIn(".ux-feature", DESIGN_SYSTEM_CSS)
         self.assertIn(".podium-grid", DESIGN_SYSTEM_CSS)
-        self.assertIn('.podium-card[data-rank="1"]', DESIGN_SYSTEM_CSS)
+        self.assertNotIn('.podium-card[data-rank="1"]', DESIGN_SYSTEM_CSS)
+        self.assertIn(".ds-badge-detail[data-badge=standing-1]", DESIGN_SYSTEM_CSS)
+        self.assertIn(".ds-badge-detail[data-badge=standing-2]", DESIGN_SYSTEM_CSS)
+        self.assertIn(".ds-badge-detail[data-badge=standing-3]", DESIGN_SYSTEM_CSS)
         self.assertIn(".status-trophy", DESIGN_SYSTEM_CSS)
 
     def test_semantic_symbol_css_survives_python_string_rendering(self) -> None:

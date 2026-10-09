@@ -518,7 +518,7 @@
         if (body.requested_mode !== extra.repair_mode || body.returned_modes?.some(mode => mode !== extra.repair_mode) || invalidPreservation) throw new Error('DTOS rejected a mismatched repair mode. Your proposal is unchanged.');
       }
       if (path === 'balance') balanceStatus(body.results?.length ? 'Balancing options ready. Preview before adopting.' : 'No balancing options returned. Your offer is unchanged.', started, startedRun);
-      if (path === 'generate') searchStatus(body.results?.length ? 'Trade options ready. Review before adopting.' : body.quiet_state || 'No credible options found in this search.', 'complete', started, startedRun);
+      if (path === 'generate') searchStatus(body.results?.length ? 'Trade options ready. Review before adopting.' : 'No credible options found in this search. Review the search details below.', 'complete', started, startedRun);
       if (path === 'evaluate') { review(); showEvaluation(body.evaluation); } else offers(body, path === 'balance');
     } catch (error) { if (started === revision) {
       const feedback = timedOut ? 'Balancing timed out. Your offer is unchanged. Try again.' : path === 'balance' && error instanceof TypeError ? 'Balancing could not connect. Your offer is unchanged. Try again.' : error.message;

@@ -74,11 +74,11 @@ class TradeUXTests(unittest.TestCase):
                             self.assertEqual(page.evaluate('document.activeElement.id'), 'trade-result')
                             card = page.locator('.tw-offer')
                             self.assertEqual(card.locator('h3').first.inner_text(), offer['evaluation']['recommendation'] or 'Recommendation unavailable')
-                            summary = card.locator('summary').first
+                            summary = card.locator('summary').filter(has_text='Why this offer · evidence and risks')
                             self.assertGreaterEqual(summary.bounding_box()['height'], 44)
                             summary.focus()
                             page.keyboard.press('Enter')
-                            self.assertTrue(card.locator('details').first.evaluate('(e) => e.open'))
+                            self.assertTrue(summary.evaluate('(e) => e.parentElement.open'))
                             compact_text = card.locator('.dtos-explanation').inner_text()
                             original_count = page.locator('#trade-sent-chips .tw-asset').count()
                             card.get_by_role('button', name='Open editable offer:', exact=False).click()
