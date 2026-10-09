@@ -26,7 +26,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build production-equivalent image
-        run: docker build --file tools/validation/Dockerfile.market-cgroup --tag dtos-market-cgroup:validation .
+        # Official Python mirror; this amd64 digest is identical to Docker Hub's
+        # python:3.12.10-slim-bookworm, without its shared-runner pull-rate limit.
+        run: >-
+          docker build --file tools/validation/Dockerfile.market-cgroup
+          --build-arg PYTHON_BASE_IMAGE=public.ecr.aws/docker/library/python@sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4
+          --tag dtos-market-cgroup:validation .
       - name: Guarded recovery lifecycle on Linux
         if: matrix.scenario == 'ordinary'
         run: |
