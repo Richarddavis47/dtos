@@ -228,4 +228,3 @@ class DetailRouteBrowserTests(unittest.TestCase):
                             page.close()
             finally:
                 browser.close()
-

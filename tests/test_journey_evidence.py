@@ -98,4 +98,3 @@ class JourneyEvidenceTests(unittest.TestCase):
         self.assertIn('Current owner identity', response.text)
         self.assertIn('ROOT:franchise:2', response.text)
         self.assertIn('aria-label="Pick ownership history"', response.text)
-
