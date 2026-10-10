@@ -18,6 +18,7 @@ from src.ui.badges import champion_badge, defending_champion, you_badge
 from src.platform.league_context import current_league_context
 from src.core.projection_intelligence import projection_service
 from services.player_projection_view import player_projection_views
+from src.core.history_context.results import number
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -98,6 +99,11 @@ TEAM_HQ_CSS = """
 
 def _display(value: Any) -> str:
     return "Unavailable" if value is None else str(value)
+
+
+def _points(value: Any) -> str:
+    score = number(value)
+    return "Unavailable" if score is None else f"{score:.2f}"
 
 
 def _player_tier(player: dict[str, Any]) -> str:
@@ -216,7 +222,7 @@ def create_teams_router(
             firsts = team.get("pick_counts", {}).get("1", 0)
             outlook = directory[int(team["roster_id"])]
             result = (f'<p class="record">Projected finish: {_display(outlook["rank"])} · Projected wins: {_display(outlook["projected_wins"])}</p>' if outlook["preseason"] else f'<p class="record">{team["wins"]}-{team["losses"]}-{team["ties"]}</p>')
-            performance = (f'<div class="metric"><b>{outlook["playoff_odds"]}%</b><span>Playoff Odds</span></div><div class="metric"><b>{outlook["championship_odds"]}%</b><span>Championship Odds</span></div>' if outlook["preseason"] else f'<div class="metric"><b>{team["points_for"]:.2f}</b><span>Points For</span></div><div class="metric"><b>{team["max_points"]:.2f}</b><span>Max PF</span></div>')
+            performance = (f'<div class="metric"><b>{outlook["playoff_odds"]}%</b><span>Playoff Odds</span></div><div class="metric"><b>{outlook["championship_odds"]}%</b><span>Championship Odds</span></div>' if outlook["preseason"] else f'<div class="metric"><b>{_points(team.get("points_for"))}</b><span>Points For</span></div><div class="metric"><b>{team["max_points"]:.2f}</b><span>Max PF</span></div>')
             cards.append(
                 f'<a class="card team team-link" href="/teams/{team["roster_id"]}"><div class="team-head">{_franchise_portrait(team)}<div><div class="identity-kicker">Owner: {escape(team["owner"])}</div><h3 class="franchise-name">{escape(team["team_name"])}{you_badge(data, int(team["roster_id"]))}</h3></div><div class="rank-badge">{escape(outlook["grade"])}</div></div>{result}<div class="summary-grid">{performance}<div class="metric"><b>{len(team["players"])}</b><span>Players</span></div><div class="metric"><b>{firsts}</b><span>Future 1sts</span></div></div><p class="muted">{starters} starters · {len(team.get("picks_owned", []))} total future picks</p><span class="team-open">Open Team HQ <span aria-hidden="true">→</span></span></a>'
             )
@@ -240,7 +246,7 @@ def create_teams_router(
         performance_metrics = (
             (("Projected Wins", _display(view["team_intelligence"].projected_wins)), ("Power Ranking", _display(view["rank"])), ("Championship Odds", _display(view["team_intelligence"].championship_odds)), ("Playoff Odds", _display(view["team_intelligence"].playoff_odds)))
             if view["preseason"] else
-            (("Record", performance["record"]), ("Points For", f'{performance["points_for"]:.2f}'), ("Points Against", f'{performance["points_against"]:.2f}'), ("Max PF", f'{performance["max_points"]:.2f}'), ("League Standing", performance["standing"]))
+            (("Record", performance["record"]), ("Points For", _points(performance["points_for"])), ("Points Against", _points(performance["points_against"])), ("Max PF", f'{performance["max_points"]:.2f}'), ("League Standing", performance["standing"]))
         )
         performance_cards = "".join(
             f'<article class="thq-kpi"><span>{escape(label)}</span><b>{escape(str(value))}</b></article>'

@@ -51,7 +51,7 @@ def standing_badge(rank: int | None) -> str:
         return ""
     medal = {1: "Gold", 2: "Silver", 3: "Bronze"}.get(rank)
     return explained_badge(
-        f"#{rank}",
+        f"{ {1: '🥇', 2: '🥈', 3: '🥉'}.get(rank, '')} #{rank}",
         f"Official Sleeper league standings: place {rank}. "
         + (f"{medal} marks this official placement." if medal else ""),
         f"standing-{rank}",

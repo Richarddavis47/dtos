@@ -74,7 +74,7 @@ class SeasonBrowserTests(unittest.TestCase):
                         player = page.get_by_role('link', name='Open Player 1 player dossier', exact=True)
                         player.focus()
                         player.press('Enter')
-                        self.assertEqual(page.url, 'https://dtos.test/players/1')
+                        self.assertEqual(page.url, 'https://dtos.test/players/1?week=3&matchup=1')
                         page.goto(url)
                         page.get_by_label('Week', exact=True).select_option('4')
                         page.get_by_role('button', name='Go to week', exact=True).click()

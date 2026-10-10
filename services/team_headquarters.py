@@ -8,6 +8,7 @@ from typing import Any
 
 from services.transactions import normalize_transactions
 from src.core.intelligence import intelligence_orchestrator
+from src.core.history_context.results import number
 
 CORE_POSITIONS = ("QB", "RB", "WR", "TE")
 POSITION_TARGETS = {
@@ -240,8 +241,8 @@ def build_team_headquarters(
         "timeline": _timeline(data, roster_id),
         "performance": {
             "record": f"{team.get('wins', 0)}-{team.get('losses', 0)}-{team.get('ties', 0)}",
-            "points_for": float(team.get("points_for") or 0),
-            "points_against": float(team.get("points_against") or 0),
+            "points_for": number(team.get("points_for")),
+            "points_against": number(team.get("points_against")),
             "max_points": float(team.get("max_points") or 0),
             "streak": "Unavailable",
             "standing": f"#{rank} of {len(teams)}" if rank is not None else "Unavailable",

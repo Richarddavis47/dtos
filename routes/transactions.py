@@ -387,7 +387,8 @@ def create_transactions_router(
 
     @router.get("/players/{player_id}", response_class=HTMLResponse)
     async def player_page(player_id: str, front_office: int | None = None,
-                          week: int | None = Query(default=None, ge=1, le=18)) -> HTMLResponse:
+                          week: int | None = Query(default=None, ge=1, le=18),
+                          matchup: str | None = Query(default=None, max_length=80)) -> HTMLResponse:
         await ensure_fresh()
         data = require_data()
         player = (data.get("players") or {}).get(player_id)
@@ -475,8 +476,12 @@ def create_transactions_router(
         historical_panel = f'''<section class="card"><h2>{history_league_name} Career History</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}">Open complete historical performance</a></p>{historical_details}
 <h3>Annual League History</h3><div style="overflow-x:auto"><table><thead><tr><th>Season</th><th>Status</th><th>Games</th><th>Starts</th><th>Bench</th><th>Points</th><th>Overall</th><th>Position</th><th>Complete</th></tr></thead><tbody>{season_history}</tbody></table></div>
 <h3>Ownership Timeline</h3><ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></section>'''
+        matchup_return = ''
+        if week is not None and matchup and (matchup.isdecimal() or (matchup.startswith('unassigned-') and matchup[11:].isdecimal())):
+            matchup_return = f'<link rel="stylesheet" href="/static/css/matchups.css"><a class="back matchup-return" href="/matchups/{escape(matchup)}?week={week}">← Back to Week {week} matchup</a>'
         body = f"""
 {TRANSACTIONS_CSS}
+{matchup_return}
 <a class="back" href="/transactions">← Back to Transactions Center</a>
 {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
 {profile_explanation}

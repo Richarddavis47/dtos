@@ -197,7 +197,9 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
             projection = ((snapshot or {}).get("players") or {}).get(pid) or {}
             value = number(projection.get("canonical_projection"))
             return {"player_id": pid, "name": player.get("full_name") or ("Empty slot" if pid == "0" else pid),
-                           "position": player.get("position"), "slot": slot,
+                           "position": player.get("position"), "nfl_team": player.get("team"),
+                           "status": player.get("injury_status") or player.get("status"),
+                           "identity_available": bool(player), "slot": slot,
                            "actual": actual, "projection": value,
                            "projection_display": projection.get("sleeper_web_display_projection") if value is not None else None}
         lineup = []
@@ -207,6 +209,19 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
             lineup.append(player_row(pid, slots[index] if index < len(slots) else "Source starter", actual))
         bench = [player_row(str(pid), "Non-starter", number((row.get("players_points") or {}).get(str(pid))))
                  for pid in row.get("players") or [] if str(pid) not in starter_ids]
+        # Weekly sources do not retain historical IR/taxi assignments. Current
+        # roster facts may classify only the current selected week, never history.
+        reserve, taxi = [], []
+        roster_sections_available = week == current and not historical and isinstance(team.get('players'), list)
+        if roster_sections_available:
+            classifications = {str(p.get('id')): p.get('roster_slot') for p in team['players'] if isinstance(p, dict)}
+            weekly_ids = {p['player_id'] for p in lineup + bench}
+            for pid, section in classifications.items():
+                if pid not in weekly_ids:
+                    bench.append(player_row(pid, 'Non-starter', number((row.get('players_points') or {}).get(pid))))
+            reserve = [p for p in bench if classifications.get(p['player_id']) == 'IR']
+            taxi = [p for p in bench if classifications.get(p['player_id']) == 'Taxi']
+            bench = [p for p in bench if classifications.get(p['player_id']) not in {'IR', 'Taxi'}]
         supported = [p["projection"] for p in lineup if p["projection"] is not None]
         total = float(sum((Decimal(str(value)) for value in supported), Decimal(0))) if supported else None
         complete = bool(slots) and len(lineup) == len(slots) and len(supported) == len(slots)
@@ -214,6 +229,8 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
         if score is None:
             score = number(row.get("points"))
         side = {"roster_id": rid, "team": team.get("team_name") or f"Franchise {rid}", "lineup": lineup, "bench": bench,
+                "owner": team.get("owner"), "avatar": team.get("avatar"),
+                "reserve": reserve, "taxi": taxi, "roster_sections_available": roster_sections_available,
                 "actual": score, "projection": total if complete else None,
                 "known_subtotal": total, "supported_slots": len(supported), "expected_slots": len(slots),
                 "coverage": "complete" if complete else "partial" if supported else "unavailable"}
