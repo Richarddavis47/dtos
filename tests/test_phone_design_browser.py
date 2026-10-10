@@ -133,10 +133,11 @@ class FocusedPhoneInteractionTests(unittest.TestCase):
                 )
                 self.assertEqual(
                     page.locator("#trade-result").evaluate(
-                        "e=>e.parentElement.className"
+                        "e=>e.parentElement.id"
                     ),
-                    "tw-calculator",
+                    "trade-balancing",
                 )
+                self.assertEqual(page.locator("#trade-result").evaluate("e=>e.previousElementSibling.id"), "calculator-balance-status")
                 self.assertEqual(fixture.state(page)["currentProposal"], original)
                 preview.click()
                 page.get_by_role("button", name="Keep original", exact=True).click()

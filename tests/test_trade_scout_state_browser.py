@@ -100,6 +100,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
         for width in (375, 390):
             with self.subTest(width=width), self.page(width) as (page, requests):
                 self.ready(page, '/trades/shop?asset_id=player:a')
+                if not page.locator('#shop-refinements').evaluate('n => n.open'):
+                    page.locator('#shop-refinements > summary').click()
                 page.locator('#shop-protected').select_option('player:b')
                 page.click('#trade-find')
                 self.adopt(page)
@@ -121,7 +123,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
                 self.assertEqual(self.proposal(page)['sent'], ['player:a'])
                 page.click('#trade-alternatives')
                 page.get_by_role('button', name='Open editable offer:', exact=False).wait_for()
-                for _, request in requests:
+                self.assertEqual(requests[0][1]['protected_assets'], [])  # Automatic initial search precedes refinement.
+                for _, request in requests[1:]:
                     self.assertEqual(request['protected_assets'], ['player:b'])
                     self.assertNotIn('player:b', request['assets_sent'])
                 for path, request in requests:
@@ -183,6 +186,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
                 r.fulfill(json={'workflow': 'recommended', 'results': [offered], 'has_more': False})
         with self.page(api=api) as (page, _):
             self.ready(page, '/trades/shop?asset_id=player:a')
+            if not page.locator('#shop-refinements').evaluate('n => n.open'):
+                page.locator('#shop-refinements > summary').click()
             page.locator('#shop-protected').select_option('player:b')
             page.click('#trade-find')
             self.adopt(page)
@@ -253,6 +258,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             r.fulfill(json={'markets': [{'counterparty_roster_id': 2, 'returns': [offered]}], 'results': [offered]})
         with self.page(api=api) as (page, requests):
             self.ready(page, '/trades/shop?asset_id=player:a')
+            if not page.locator('#shop-refinements').evaluate('n => n.open'):
+                page.locator('#shop-refinements > summary').click()
             page.locator('#shop-protected').select_option('pick:2028:1:3')
             page.click('#trade-find')
             self.adopt(page)
@@ -278,6 +285,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             r.fulfill(json=body)
         with self.page(api=api) as (page, requests):
             self.ready(page, '/trades/shop?asset_id=' + pick)
+            if not page.locator('#shop-refinements').evaluate('n => n.open'):
+                page.locator('#shop-refinements > summary').click()
             page.locator('#shop-protected').select_option('player:b')
             page.click('#trade-find')
             self.adopt(page)
@@ -289,7 +298,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             self.adopt(page)
             page.click('#trade-alternatives')
             page.get_by_role('button', name='Open editable offer:', exact=False).wait_for()
-            for path, request in requests:
+            self.assertEqual(requests[0][1]['protected_assets'], [])
+            for path, request in requests[1:]:
                 self.assertEqual(request['protected_assets'], ['player:b'])
                 self.assertNotIn(pick, request['protected_assets'])
                 if path != 'generate':
@@ -310,6 +320,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
                 r.fulfill(json=response.json())
             with self.subTest(width=width), self.page(width, api=api, workspace=workspace) as (page, requests):
                 self.ready(page, '/trades/shop?asset_id=' + pick['asset_id'])
+                if not page.locator('#shop-refinements').evaluate('n => n.open'):
+                    page.locator('#shop-refinements > summary').click()
                 page.locator('#shop-protected').select_option(pick['asset_id'])
                 page.click('#trade-find')
                 page.locator('.tw-conflict').wait_for()
@@ -317,6 +329,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
                 page.get_by_label('Counterparty', exact=True).select_option('2')
                 page.get_by_role('button', name='Their assets', exact=True).click()
                 page.locator('#trade-received-board button[data-asset-id="2-QB-0"]').click()
+                if not page.locator('#shop-refinements').evaluate('n => n.open'):
+                    page.locator('#shop-refinements > summary').click()
                 page.locator('#shop-protected').select_option(pick['asset_id'])
                 page.click('#trade-adjust')
                 page.fill('#trade-instruction', 'make it cheaper')
@@ -349,6 +363,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
         for width in (375, 390):
             with self.subTest(width=width), self.page(width, api=api) as (page, _):
                 self.ready(page, '/trades/shop?asset_id=player:a')
+                if not page.locator('#shop-refinements').evaluate('n => n.open'):
+                    page.locator('#shop-refinements > summary').click()
                 page.locator('#shop-protected').select_option(pick['asset_id'])
                 page.click('#trade-find')
                 page.get_by_role('button', name='Open editable offer:', exact=False).click()

@@ -4,6 +4,7 @@ from src.core.explanations import (
     Explanation, Statement,
 )
 from src.ui.intelligence_presentation import manager_points
+from html import escape
 
 
 HORIZONS = {'current_week': 'Current week', 'next_n': 'Next-N',
@@ -171,4 +172,23 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
     from src.ui.explanations import explanation_panel
     view = trade_explanation(result, league_id=league_id)
     weekly = tuple(item.key for item in view.evidence if item.key.startswith('weekly.'))
-    return explanation_panel(view, evidence_groups=(('Weekly optimal-lineup detail', weekly),) if weekly else ())
+    rendered = explanation_panel(view, evidence_groups=(('Weekly optimal-lineup detail', weekly),) if weekly else ())
+    # Reuse completed canonical conclusions; no new bilateral scoring or inferred benefit.
+    teams = []
+    dims = result.get('dimensions') or {}
+    for side, title, reason in (('active', 'Your team · gains and sacrifices', 'why_you_would_do_it'),
+                                ('partner', 'Their team · benefits and costs', 'why_they_would_do_it')):
+        quality = (dims.get('package_quality') or {}).get(side) or {}
+        context = result.get(reason) or 'No supported team-specific rationale is established.'
+        tradeoff = quality.get('explanation') or 'Package trade-offs are unavailable.'
+        production = ((dims.get('strategic_fit') or {}).get(side) or {}).get('production_evidence') or {}
+        weekly = manager_points(production.get('mean_weekly_delta'))
+        teams.append('<section><h4>' + title + '</h4><p>' + escape(context) + '</p><p>Supported weekly optimal-lineup change: ' + escape(weekly) + '</p><details><summary>Package trade-offs</summary><p>' + escape(tradeoff) + '</p></details></section>')
+    summary = '<section class="tw-team-summary" aria-label="Both teams assessment">' + ''.join(teams) + '</section>'
+    risk_start = rendered.find('<h4>Trade-off / risk</h4>')
+    risk = ''
+    if risk_start >= 0:
+        risk_end = rendered.index('</ul>', risk_start) + len('</ul>')
+        risk = rendered[risk_start:risk_end]
+        rendered = rendered[:risk_start] + rendered[risk_end:]
+    return rendered.replace('</p>', '</p>' + risk + summary, 1)

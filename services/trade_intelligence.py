@@ -171,7 +171,7 @@ def build_trade_workflow_context(
 
 WORKFLOWS = (
     {"id": "calculator", "label": "Trade Calculator", "description": "Compare canonical Market values, preview balancing and request deeper analysis."},
-    {"id": "create", "label": "Create Trade", "description": "Manually build and evaluate any bilateral proposal."},
+    {"id": "create", "label": "Build a Trade", "description": "Manually build and evaluate any bilateral proposal."},
     {"id": "trade_for", "label": "Trade For", "description": "Choose another team's asset and find realistic acquisition paths."},
     {"id": "shop", "label": "Shop Asset", "description": "Choose an owned asset and find legitimate markets."},
     {"id": "recommended", "label": "Recommended Trades", "description": "Review the few bilateral opportunities DTOS believes deserve attention."},
@@ -860,7 +860,7 @@ def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> 
     sent_ids = tuple(str(item) for item in payload.get("assets_sent") or ())
     received_ids = tuple(str(item) for item in payload.get("assets_received") or ())
     if not sent_ids or not received_ids or any(item not in by_id for item in (*sent_ids, *received_ids)):
-        raise ValueError("Create Trade alternatives require one valid asset on each side.")
+        raise ValueError("Build a Trade alternatives require one valid asset on each side.")
     validate_trade_ownership(workspace, payload)
     _require_acquisition_prices(tuple(by_id[item] for item in (*sent_ids, *received_ids)))
     key_asset_id = str(payload.get("protected_asset_id") or max((by_id[item] for item in sent_ids), key=lambda asset: (asset.trade_value, asset.asset_id)).asset_id)
@@ -1173,8 +1173,8 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
                 or (not generated and full_evaluations and funnel.counts['missing_evidence'] == full_evaluations)):
             break
     if workflow == 'trade_for':
-        generated.sort(key=lambda row: (row['evaluation']['values']['sent'],
-                                       row['evaluation']['provenance']['evaluation_id']))
+        from services.trade_search_policy import rank_key
+        generated.sort(key=rank_key)
         by_id = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
         generated = _distinct_trade_for_offers(generated, by_id)
         # Prefer different constructions before tiny variants with the same shape.
@@ -1209,7 +1209,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             row["evaluation"]["provenance"]["evaluation_id"],
         ))
     limit = 5 if workflow in {"shop", "recommended"} else 3
-    offer_labels = ("LOWEST MARKET COST FOUND", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE CONSTRUCTION") if workflow == "trade_for" else ()
+    offer_labels = ("BEST SUPPORTED FIT FOUND", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE CONSTRUCTION") if workflow == "trade_for" else ()
     for index, result in enumerate(generated[:limit]):
         if index < len(offer_labels):
             result["offer_level"] = offer_labels[index]
@@ -1219,7 +1219,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
         target_asset = next(asset for asset in workspace["pools"][ownership[target]] if asset.asset_id == target)
         next_paths = [
             "No candidate in this bounded search cleared the shared bilateral evaluator.",
-            "Review protected/excluded assets or inspect a specific construction in Create Trade.",
+            "Review protected/excluded assets or inspect a specific construction in Build a Trade.",
         ]
         closest_path = {
             "target_asset_id": target,
@@ -1234,6 +1234,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
         "workflow": workflow, "target_asset_id": target or None,
         "result_state": "HARD INVALID" if target in excluded or (workflow == "shop" and target in protected) else result_state(funnel, generated[:limit]), "near_misses": funnel.near(),
         "count": min(len(generated), limit), "results": generated[:limit],
+        "exploratory_results": funnel.explore({a.asset_id: a for pool in workspace["pools"].values() for a in pool}) if workflow == "trade_for" else [],
         "quiet_state": None if generated else (("The shopped asset is protected or excluded by this search's constraints." if target in protected | excluded else "No credible market in this bounded Shop search.") if workflow == 'shop' else "No legitimate bilateral construction clears the current constraints."),
         **({'shop_preference': shop_preference, 'markets': shop_markets, 'counterparty_discovery': shop_discovery} if workflow == 'shop' else {}),
         "next_paths": next_paths,
@@ -1344,6 +1345,7 @@ def _generate_recommended(data, payload):
     if _trade_search_boundary(data) != boundary:
         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
     return {'workflow': 'recommended', 'count': len(results), 'results': results,
+            'exploratory_results': funnel.explore(assets, excluded_families=excluded_families) if not results else [],
             'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results), 'near_misses': funnel.near(),
             'quiet_state': None if results else 'Canonical projection evidence is unavailable for this league.' if not projection_available
                 else 'Required trade evidence is unavailable; review the evaluated near misses.' if result_state(funnel, results) == 'MISSING REQUIRED EVIDENCE'

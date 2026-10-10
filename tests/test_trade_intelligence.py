@@ -216,7 +216,7 @@ class TradeIntelligenceTests(unittest.TestCase):
         client = TestClient(app)
         api = client.get("/api/trades?front_office=1")
         page = client.get("/trades?front_office=1")
-        self.assertIn("Trade Calculator", page.text)
+        self.assertIn("Build a Trade", page.text)
         self.assertEqual(api.status_code, 200)
         # Equal fixture quotes do not guarantee a bilateral improvement. The
         # API must expose the same admitted recommendations as the shared path,
@@ -258,9 +258,9 @@ class TradeIntelligenceTests(unittest.TestCase):
             self.assertTrue(evaluation['recommendation_trace']['rule_reasons'])
         self.assertIn(evaluation["dimensions"]["confidence"]["assessment"], {"HIGH", "MEDIUM", "LOW", "LIMITED"})
         page = client.get("/trades?front_office=1")
-        self.assertIn("Create Trade", page.text)
+        self.assertIn("Build a Trade", page.text)
         self.assertIn("Trade For", page.text)
-        self.assertIn("Shop Asset", page.text)
+        self.assertIn("Shop / Trade Away", page.text)
         self.assertIn("Recommended Trades", page.text)
         for route, marker in (("/trades/calculator", "calculator"), ("/trades/create", "create"), ("/trades/trade-for", "trade-for"), ("/trades/shop", "shop"), ("/trades/recommended", "recommended")):
             workflow_page = client.get(f"{route}?front_office=1")

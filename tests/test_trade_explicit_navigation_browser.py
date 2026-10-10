@@ -89,6 +89,8 @@ class ExplicitNavigationBrowserTests(unittest.TestCase):
             self.dossiers(page)
             self.fixture.ready(page, '/trades/shop?asset_id=player:a')
             locks = ['player:b', 'pick:2028:1:3']
+            if not page.locator('#shop-refinements').evaluate('n => n.open'):
+                page.locator('#shop-refinements > summary').click()
             page.locator('#shop-protected').select_option(locks)
             page.click('#trade-find')
             self.fixture.adopt(page)
@@ -104,7 +106,7 @@ class ExplicitNavigationBrowserTests(unittest.TestCase):
                 self.assertIsNone(state[key])
             self.assertEqual(state['adjustmentConstraints'], {})
             self.assertEqual(state['protectedAssets'], locks)
-            self.assertIn('previous package was cleared', page.locator('#trade-result').inner_text())
+            self.assertIn('previous package was cleared', page.locator('#trade-entry-feedback').inner_text())
             page.click('#trade-find')
             self.fixture.adopt(page)
             self.assertEqual(requests[-1][1]['asset_id'], 'player:y')
@@ -163,7 +165,6 @@ class ExplicitNavigationBrowserTests(unittest.TestCase):
         with self.fixture.page(workspace=self.data, api=hold) as (page, requests):
             self.dossiers(page)
             self.fixture.ready(page, '/trades/trade-for?asset_id=player:x')
-            page.click('#trade-find')
             page.wait_for_function('document.querySelector("#trade-builder").getAttribute("aria-busy")==="true"')
             old_route = pending[0][0]
             # BF-cache retains a document, but its old run loses result ownership.
@@ -171,7 +172,6 @@ class ExplicitNavigationBrowserTests(unittest.TestCase):
             self.select(page, 'shop', 'player:a')
             self.assert_target(page, 'shop', 'player:a')
             old_route.fulfill(json={'results': [self.fixture.offer(['player:d'], ['player:x'])], 'count': 1})
-            page.click('#trade-find')
             page.wait_for_function('document.querySelector("#trade-builder").getAttribute("aria-busy")==="true"')
             self.assertEqual(requests[-1][1]['asset_id'], 'player:a')
             pending[-1][0].fulfill(json={'markets': [{'counterparty_roster_id': 2,
@@ -223,12 +223,15 @@ class ExplicitNavigationBrowserTests(unittest.TestCase):
             self.assertEqual(entry['unrelated'], 'retain')
             self.assertLess(len(str(entry)), 4096)
             self.assertNotIn('results', entry['dtosTrade']['draft'])
-            self.assertEqual(requests, [])  # No discovery/upstream request per navigation.
+            self.assertEqual(len(requests), 1)  # Fresh explicit target searches once; reload does not rerun.
+            self.assertEqual(requests[0][0], 'generate')
             self.assertLess(perf_counter() - started, 3)
 
     def test_bfcache_reactivates_its_own_draft_without_reusing_pending_results(self):
         with self.fixture.page(workspace=self.data) as (page, _):
             self.fixture.ready(page, '/trades/shop?asset_id=player:a')
+            if not page.locator('#shop-refinements').evaluate('n => n.open'):
+                page.locator('#shop-refinements > summary').click()
             page.locator('#shop-protected').select_option(['player:b', 'pick:2028:1:3'])
             current = self.state(page)
             page.evaluate('dispatchEvent(new PageTransitionEvent("pagehide", {persisted: true}))')

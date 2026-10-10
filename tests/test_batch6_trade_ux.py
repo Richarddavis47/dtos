@@ -54,9 +54,9 @@ class TradeUXTests(unittest.TestCase):
                                 page.locator('#trade-received-board button[data-asset-id="2-QB-0"]').click()
                                 page.locator('#trade-adjust').click()
                                 page.locator('#trade-apply-adjust').click()
-                            else:
+                            elif flow == 'recommended':
                                 page.locator('#trade-find').click()
-                            page.locator('#trade-builder[aria-busy="true"]').wait_for()
+                            page.locator('#trade-apply-adjust:disabled').wait_for(state='attached')
                             self.assertTrue(page.locator('#trade-find').is_disabled())
                             self.assertTrue(page.locator('#trade-apply-adjust').is_disabled())
                             self.assertIn('proposal stays intact', page.locator('#trade-result').inner_text())
@@ -84,7 +84,9 @@ class TradeUXTests(unittest.TestCase):
                             card.get_by_role('button', name='Open editable offer:', exact=False).click()
                             self.assertEqual(page.locator('#trade-sent-chips .tw-asset').count(), original_count)
                             page.get_by_role('button', name='Adopt alternative', exact=True).click()
-                            self.assertEqual(page.locator('#trade-result .dtos-explanation').inner_text(), compact_text)
+                            # Workspace adds its existing Balance navigation next
+                            # to the verdict; the actual assessment stays identical.
+                            self.assertEqual(page.locator('#trade-result .dtos-explanation').inner_text(), compact_text.replace('\nTrade-off / risk', '\nOptions to balance this trade\nTrade-off / risk', 1))
                             self.assertEqual(page.locator('#trade-review button[data-asset-id="1-QB-0"]').count(), 1)
                             self.assertEqual(page.locator('#trade-review button[data-asset-id="2-QB-0"]').count(), 1)
                             self.assertEqual(page.evaluate('document.activeElement.id'), 'trade-result')
@@ -97,8 +99,11 @@ class TradeUXTests(unittest.TestCase):
                                 weekly.focus()
                                 page.keyboard.press('Enter')
                                 self.assertTrue(weekly.evaluate('(e) => e.parentElement.open'))
-                            self.assertTrue(page.locator('.tw-market-detail').evaluate('(e) => !e.open'))
-                            self.assertTrue(page.evaluate("Boolean(document.querySelector('#trade-result').compareDocumentPosition(document.querySelector('.tw-market-detail')) & Node.DOCUMENT_POSITION_FOLLOWING)"))
+                            if flow == 'create':
+                                self.assertTrue(page.locator('#trade-balance').is_visible())
+                            else:
+                                self.assertTrue(page.locator('.tw-market-detail').evaluate('(e) => !e.open'))
+                                self.assertTrue(page.evaluate("Boolean(document.querySelector('#trade-result').compareDocumentPosition(document.querySelector('.tw-market-detail')) & Node.DOCUMENT_POSITION_FOLLOWING)"))
                             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                             self.assertFalse(errors, errors)
                             page.close()

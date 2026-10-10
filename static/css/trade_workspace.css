@@ -27,3 +27,11 @@
 
 /* Proposal controls reserve their own space; only primary navigation overlays the viewport. */
 .tw-workspace button,.tw-workspace select,.tw-workspace input,.tw-workspace summary,.tw-workspace a{scroll-margin-top:16px;scroll-margin-bottom:calc(100px + env(safe-area-inset-bottom))}
+
+.tw-market-bar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--surface-elevated);margin:10px 0}.tw-market-bar>span{min-width:0}.tw-market-bar .advantage{background:var(--accent)}.tw-market-bar .disadvantage{background:var(--error,#e88383)}.tw-market-bar .neutral{background:var(--text-muted)}.tw-market-verdict{font-weight:650}#trade-balancing{min-width:0}#trade-balancing>button{min-height:44px;width:100%}.tw-workspace #shop-refinements>summary{min-height:44px;display:flex;align-items:center;cursor:pointer}
+
+.tw-market-caption{display:flex;justify-content:space-between;gap:16px;font-size:.85rem}.tw-market-caption>span{min-width:0;overflow-wrap:anywhere}.tw-market-caption>span:last-child{text-align:right}.tw-team-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px}.tw-team-summary>section{min-width:0}
+
+.tw-calculator #trade-balance p{margin:6px 0;line-height:1.3}.tw-calculator #trade-balance h3{margin:0 0 8px}.tw-calculator #trade-balance h4{margin:8px 0}.tw-calculator #trade-balance small{display:block;font-size:.85rem}#trade-balancing h3{font-size:1rem;margin:8px 0}.tw-market-caption{line-height:1.25}
+
+.tw-workspace[data-trade-workflow=create] .tw-asset-results,.tw-workspace[data-trade-workflow=calculator] .tw-asset-results{max-height:min(52vh,480px);overflow-y:auto;padding:4px}.tw-asset-results:focus-visible{outline:3px solid var(--focus);outline-offset:3px}

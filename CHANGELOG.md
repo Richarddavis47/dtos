@@ -1,3 +1,11 @@
+## DTOS v1.21.28 / build 2128 — Simple Trade, Supported Discovery
+
+Build a Trade shows live canonical Market totals, favored manager, gap and a relative-value bar before evaluation. The existing Calculator Balance engine is available alongside the assessment, with preview and explicit adoption. Shop and Trade For begin a bounded search on a fresh valid target entry; refinements retain exact protections.
+
+Trade For and empty Recommended searches can expose supported unfavorable alternatives separately, without changing their labels or promoting missing evidence. Trade For orders qualifying offers by the existing separate-dimension strategy ranking instead of outgoing price alone. Historical grades, valuation formulas and storage remain unchanged.
+
+See [contracts, validation and Scout handoff](docs/TRADE_SIMPLE_DISCOVERY.md).
+
 ## v1.21.27 / build 2127 — Historical Common-Week Evidence
 
 - Compare before/after legal lineups only on the latest complete common pre-decision week. Preserve week/source provenance and fail closed when evidence is incompatible.

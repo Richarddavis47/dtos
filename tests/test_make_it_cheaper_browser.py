@@ -47,6 +47,7 @@ class CheaperRepairBrowserTests(unittest.TestCase):
     def start_offer(self, page):
         self.harness.ready(page, '/trades/shop?asset_id=daniels')
         page.get_by_label('Your strategy', exact=True).select_option('WIN NOW')
+        page.locator('#shop-refinements > summary').click()
         page.locator('#shop-protected').select_option(['bijan', '2027-R4-3'])
         page.click('#trade-find')
         self.harness.adopt(page)
