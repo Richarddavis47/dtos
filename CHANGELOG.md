@@ -1,3 +1,11 @@
+## DTOS v1.21.29 / build 2129 — Preview Context, Explicit Shop Scope
+
+Trade previews retain bounded structured assessment context across reload, including exploratory qualification, major drawbacks, confidence/limitations and provenance. Restored evidence is explicitly not revalidated. Balance preserves the completed offer assessment separately from search/loading feedback.
+
+New explicit Shop assets start All eligible teams / Best Overall unless fresh navigation explicitly supplies supported refinements. Compatible same-asset resume preserves chosen scope without duplicate automatic searches. Pricing, intelligence, exact protections and historical records are unchanged.
+
+See [contracts, validation boundaries and Scout handoff](docs/TRADE_PREVIEW_SCOPE.md).
+
 ## DTOS v1.21.28 / build 2128 — Simple Trade, Supported Discovery
 
 Build a Trade shows live canonical Market totals, favored manager, gap and a relative-value bar before evaluation. The existing Calculator Balance engine is available alongside the assessment, with preview and explicit adoption. Shop and Trade For begin a bounded search on a fresh valid target entry; refinements retain exact protections.
