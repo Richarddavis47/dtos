@@ -1,3 +1,9 @@
+## DTOS v1.21.30 / build 2130 — Canonical Projection Freshness
+
+Trade uses the actual canonical Sleeper publication identity rather than a constant fallback. Freshness checks cover exploratory alternatives, qualifying results, assessed near misses and Shop returns. Changed evidence qualifies retained assessments without erasing their drawbacks; existing reevaluation and preview/adoption remain explicit.
+
+No new projection model, pricing/ranking change, historical regeneration or storage migration. See [source contract, evidence boundaries and Scout handoff](docs/CANONICAL_PROJECTION_FRESHNESS.md).
+
 ## DTOS v1.21.29 / build 2129 — Preview Context, Explicit Shop Scope
 
 Trade previews retain bounded structured assessment context across reload, including exploratory qualification, major drawbacks, confidence/limitations and provenance. Restored evidence is explicitly not revalidated. Balance preserves the completed offer assessment separately from search/loading feedback.

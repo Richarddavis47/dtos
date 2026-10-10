@@ -213,7 +213,10 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
                                 'confidence': decision.competitive_window.confidence,
                                 'generation': (decision.competitive_window.production_profile or {}).get('generation')}
                for identifier, decision in decisions.items() if decision.competitive_window is not None}
+    from src.core.projection_intelligence.service import canonical_projection_identity
+    projection_identity = canonical_projection_identity(_trade_projection_service(data).snapshot(), manager.league_id)
     return {"active_roster_id": roster_id, "manager_context": manager, "teams": teams, "pools": pools, "workflows": WORKFLOWS, "player_ownership": PlayerOwnershipIndex(data),
+            'projection_evidence': projection_identity,
             'competitive_windows': windows, 'canonical_market_facts': market_facts}
 
 
@@ -249,14 +252,16 @@ def evaluate_trade_request(
     if str(payload.get('workflow') or 'create') != 'create':
         _require_acquisition_prices(proposal.assets_sent + proposal.assets_received)
     try:
+        from src.core.projection_intelligence.service import canonical_projection_identity
+        # Pin the same published handle used by legal-lineup reconstruction.
+        # Search readers are already pinned and retain their bounded memo.
+        projections = projection_reader or _trade_projection_service(data)
+        if not isinstance(projections, _SearchProjectionReader):
+            projections = _SearchProjectionReader(projections)
+        projection_identity = canonical_projection_identity(projections.snapshot(), str((data.get('league') or {}).get('league_id') or ''))
         horizon_impact = None
         if str(payload.get('workflow') or 'create') in {'create', 'trade_for', 'shop', 'recommended', 'adjust', 'create_alternative'}:
-            from src.platform.league_context import current_league_context
-            from src.core.projection_intelligence import projection_service
             from src.core.intelligence import evaluate_horizon_impact
-            runtime = current_league_context()
-            league_id = str((data.get('league') or {}).get('league_id') or '')
-            projections = projection_reader or (runtime.projection if runtime is not None and runtime.league_id == league_id else projection_service)
             horizon_impact = evaluate_horizon_impact(data, proposal, projections)
         evaluation = evaluate_bilateral(
             proposal, active_team=teams[active_id], partner_team=teams[partner_id], league=data.get("league") or {},
@@ -273,12 +278,15 @@ def evaluate_trade_request(
         # Once input/ownership checks passed, an evaluator exception is not a
         # stale proposal and must not expose internal exception text to users.
         raise RuntimeError("Canonical trade evaluation unavailable") from exc
+    if canonical_projection_identity(projections.service.snapshot(), projection_identity['league_id'])['generation'] != projection_identity['generation']:
+        raise TradeInputError('canonical_evidence_changed', 'Canonical projection evidence changed during evaluation. Try the same offer again.')
     identity_input = {
         "league_id": str((data.get("league") or {}).get("league_id") or data.get("league_id") or ""),
         "active_roster_id": active_id, "partner_roster_id": partner_id,
         "assets_sent": sorted(sent_ids), "assets_received": sorted(received_ids),
         "market_generation": str((data.get("market_data") or {}).get("generation") or (data.get("market_data") or {}).get("generated_at") or "current"),
-        "projection_generation": str((data.get("projection_intelligence") or {}).get("generation") or "current"),
+        "projection_generation": projection_identity['generation'],
+        "projection_evidence": projection_identity,
         "historical_generation": evaluation.get("provenance", {}).get("historical_context_generation"),
         "result_digest": sha256(json.dumps(evaluation, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest(),
         "evaluator": "bilateral_trade_v3",
