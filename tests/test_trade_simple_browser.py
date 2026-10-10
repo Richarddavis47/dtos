@@ -286,6 +286,22 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
                         self.assertEqual(len(requests), n + 1)
                         self.assertEqual(requests[-1][1]["partner_roster_id"], 2)
                         self.assertEqual(requests[-1][1]["assets_received"], ["2w"])
+                        if (width, height) == (390, 844):
+                            # Actual engine exploration, not a patched label:
+                            # preserve structured evidence across the process's
+                            # real authenticated route transport and reload.
+                            costly = page.locator('.tw-offer').filter(has_text='Exploratory only').first
+                            costly.get_by_role('button', name='Open editable offer:', exact=False).click()
+                            context_before = page.evaluate('JSON.parse(sessionStorage.getItem(Object.keys(sessionStorage).find(k=>k.startsWith("dtos-trade-workspace:")))).previewProposal.preview_context')
+                            self.assertEqual(context_before['evaluation']['recommendation'], 'NOT WORTH IT')
+                            page.reload()
+                            page.get_by_role('button', name='Adopt alternative', exact=True).wait_for()
+                            self.assertIn('Exploratory only', page.locator('#trade-result').inner_text())
+                            self.assertIn(context_before['evaluation']['major_drawback'], page.locator('#trade-result').inner_text())
+                            click('#trade-result button:text-is("Adopt alternative")')
+                            self.assertIn('NOT WORTH IT', page.locator('#trade-result').inner_text())
+                            self.assertIn(context_before['evaluation']['major_drawback'], page.locator('#trade-result').inner_text())
+                            self.assertIn('not revalidated', page.locator('#trade-result').inner_text().lower())
                         page.goto("https://dtos.test/trades/recommended")
                         start = perf_counter()
                         click("#trade-find")
