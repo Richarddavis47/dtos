@@ -181,6 +181,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             ],
             "session_persistence": "temporary",
             "calculator_generation": market_generation(workspace),
+            "projection_evidence": workspace['projection_evidence'],
             "bilateral_only": True,
             "workspace_context": workspace_context(require_data(), workspace["active_roster_id"]),
             "csrf_token": current_account().csrf_token if current_account() else "",

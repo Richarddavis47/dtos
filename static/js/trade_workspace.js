@@ -69,6 +69,8 @@
     protectedAssets: [], excludedAssets: [], adjustmentConstraints: {}, originWorkflow: flow, shopSearchPartner: 0,
     shopScopeAsset: null, shopPreference: 'best_overall', shopPosition: 'QB', currentAssessment: null};
   const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let lastOffersIsBalance = false; let searchExhausted = false;
+  const latestEvidence = {};
+  const sourceKeys = ['market_generation', 'projection_generation', 'historical_generation'];
   const selected = session.currentProposal, filters = {sent: {q: '', pos: 'ALL'}, received: {q: '', pos: 'ALL'}};
   const team = id => workspace?.teams.find(t => t.roster_id === Number(id));
   const asset = id => workspace?.teams.flatMap(t => t.assets).find(a => a.asset_id === id);
@@ -196,6 +198,7 @@
     for (const id of ['shop-preference','shop-protected']) if (el(id)) el(id).disabled = busy;
     if (el('shop-position')) el('shop-position').disabled = busy || el('shop-preference').value !== 'position_need';
     el('trade-run').disabled = busy || !selected.sent.length || !selected.received.length;
+    root.querySelectorAll('[data-reevaluate]').forEach(button => { button.disabled = el('trade-run').disabled; });
     el('trade-find').disabled = busy || entryBlocked;
     el('trade-apply-adjust').disabled = busy;
     for (const id of ['trade-alternatives', 'calculator-lock', 'trade-release-lock']) if (el(id)) el(id).disabled = busy;
@@ -339,6 +342,9 @@
     if (identity.strategy !== el('trade-strategy').value) reasons.push('strategy changed');
     if (identity.binding !== workspace.workspace_context.binding || identity.ownership !== workspace.workspace_context.ownership_generation) reasons.push('ownership context changed');
     if (identity.market !== workspace.calculator_generation) reasons.push('Market evidence changed');
+    const inputs = context.evaluation?.provenance?.inputs || {};
+    for (const key of sourceKeys) if (Object.hasOwn(latestEvidence, key) && Object.hasOwn(inputs, key) && inputs[key] !== latestEvidence[key]) reasons.push(key.replace('_generation', '') + ' evidence changed');
+    if (workspace.projection_evidence && !Object.hasOwn(inputs, 'projection_generation')) reasons.push('projection identity unavailable in retained context');
     if (context.stale_reason) reasons.push(context.stale_reason);
     return context.restored || reasons.length ? 'Retained assessment context · not revalidated. ' + (reasons.length ? reasons.join('; ') + '. ' : '') + 'Reevaluate to establish a current assessment; prior benefits and drawbacks are retained.' : '';
   }
@@ -346,7 +352,33 @@
     if (context?.exploration) out.append(node('p', 'Exploratory only · ' + (context.search_result_type || 'supported alternative') + ' · not a qualified bilateral recommendation', 'tw-drawback'));
     if (context?.identity?.ownership && context.identity.ownership !== workspace.workspace_context.ownership_generation) out.append(node('p', 'Ownership has changed. Your proposal is retained for review; evaluation will identify any assets that moved.', 'tw-drawback'));
     const qualification = contextQualification(context, proposal);
-    if (qualification) out.append(node('p', qualification, 'tw-drawback'));
+    if (qualification) { out.append(node('p', qualification, 'tw-drawback')); reevaluateAction(out); }
+  }
+  function reevaluateAction(out) {
+    if (out.querySelector('[data-reevaluate]')) return;
+    const button = node('button', 'Reevaluate Trade'); button.type = 'button'; button.dataset.reevaluate = 'true';
+    button.disabled = busy || !selected.sent.length || !selected.received.length;
+    button.onclick = () => run('evaluate'); out.append(button);
+  }
+  function assessedRows(body) {
+    // Explicit bounded response collections; no arbitrary payload traversal.
+    return [...(body.results || []), ...(body.exploratory_results || []), ...(body.near_misses || []),
+      ...(body.comparisons || []), ...(body.markets || []).flatMap(m => m.returns || []),
+      ...(body.evaluation ? [{evaluation: body.evaluation}] : [])];
+  }
+  function observeEvidence(body) {
+    const rows = assessedRows(body).filter(row => !row.evaluation?.provenance?.inputs?.league_id || row.evaluation.provenance.inputs.league_id === workspace.manager_context.league_id);
+    for (const row of rows) {
+      const inputs = row.evaluation?.provenance?.inputs;
+      if (!inputs) continue;
+      for (const key of sourceKeys) if (Object.hasOwn(inputs, key)) latestEvidence[key] = inputs[key];
+    }
+    const changedSource = context => {
+      const inputs = context?.evaluation?.provenance?.inputs;
+      return inputs && sourceKeys.some(key => Object.hasOwn(inputs, key) && Object.hasOwn(latestEvidence, key) && inputs[key] !== latestEvidence[key]);
+    };
+    if (changedSource(session.currentAssessment)) staleAssessment('Source evidence changed since the completed assessment');
+    if (changedSource(session.previewProposal?.preview_context)) { session.previewProposal.preview_context.restored = true; session.previewProposal.preview_context.stale_reason = 'Source evidence changed since this preview'; persist(); }
   }
   function retainAssessment() {
     if (!session.currentAssessment || el('trade-evaluation-retained')) return;
@@ -359,6 +391,7 @@
     session.currentAssessment.restored = true; session.currentAssessment.stale_reason = reason;
     const out = el('trade-evaluation-retained') || el('trade-result');
     if (!out.querySelector('[data-assessment-stale]')) { const notice = node('p', contextQualification(session.currentAssessment), 'tw-drawback'); notice.dataset.assessmentStale = 'true'; out.prepend(notice); }
+    reevaluateAction(out);
     persist();
   }
   function showEvaluation(e, opportunity = null, context = null) {
@@ -668,9 +701,7 @@
         body = await post(path, requestPayload, controller?.signal);
       }
       if (started !== revision) return;
-      const priorInputs = session.currentAssessment?.evaluation?.provenance?.inputs;
-      const responseInputs = (body.results || []).find(row => row.evaluation?.provenance?.inputs)?.evaluation.provenance.inputs;
-      if (priorInputs && responseInputs && ['market_generation', 'projection_generation', 'historical_generation'].some(key => Object.hasOwn(priorInputs, key) && Object.hasOwn(responseInputs, key) && priorInputs[key] !== responseInputs[key])) staleAssessment('Source evidence changed since the completed assessment');
+      observeEvidence(body);
       for (const id of body.constraints?.protected_assets || []) addLock('protectedAssets', id);
       for (const id of body.constraints?.excluded_assets || []) addLock('excludedAssets', id);
       if (path === 'assist') {
@@ -847,6 +878,7 @@
       if (Array.from(el('shop-position').options).some(o => o.value === session.shopPosition)) el('shop-position').value = session.shopPosition;
     }
     syncLocks(); el('trade-find').hidden = flow === 'create'; persist(); paint();
+    if (data.projection_evidence) latestEvidence.projection_generation = data.projection_evidence.generation;
     if (flow === 'recommended') searchStatus('Ready to discover supported opportunities.', 'ready');
     if (session.currentAssessment && !entryBlocked) showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment);
     if (session.previewProposal && !entryBlocked) previewOffer({proposal: session.previewProposal});

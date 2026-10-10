@@ -61,6 +61,26 @@ def _digest(value: Any) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
+def canonical_projection_identity(snapshot: dict | None, league_id: str) -> dict[str, Any]:
+    """Describe the publisher's immutable evidence, never a consumer result.
+
+    Publication timestamps are explanatory metadata, not generation identity.
+    Horizon publications already hash their immutable weekly manifest. Missing
+    or foreign evidence has no generation; it cannot masquerade as "current".
+    """
+    snapshot = snapshot or {}
+    if str(snapshot.get('league_id') or '') != str(league_id) or not snapshot.get('projection_snapshot_id'):
+        return {'generation': None, 'league_id': str(league_id), 'availability': 'unavailable'}
+    return {
+        'generation': snapshot['projection_snapshot_id'], 'availability': 'published',
+        **{key: snapshot.get(key) for key in (
+            'league_id', 'season', 'week', 'scoring_profile_id', 'canonical_provider',
+            'projection_snapshot_id', 'horizon_generation', 'horizon_snapshot_ids',
+            'sleeper_evidence_snapshot_id', 'schema_version', 'model_version',
+            'contract_version', 'semantic_policy_version')},
+    }
+
+
 def _projection_semantics(players: dict[str, dict[str, Any]]) -> dict[str, Any]:
     """Retain only fields that can change canonical weekly decisions."""
     fields = (
