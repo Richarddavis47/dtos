@@ -86,7 +86,7 @@ details[open]>.ti-card-action:after{content:" −"}
 .ti-empty h3{color:var(--text);font-size:22px}.ti-empty .ti-actions{justify-content:center}
 @media(max-width:760px){
  .ti-hero{padding:16px}.ti-hero h2{font-size:24px}
- .ti-workflow{padding:12px 4px}.ti-workflow b{font-size:12px}.ti-workflow span{display:none}
+ .ti-workflows{grid-template-columns:repeat(2,minmax(0,1fr))}.ti-workflow{min-width:0;padding:12px 4px}.ti-workflow b{font-size:12px}.ti-workflow span{display:none}
  .ti-builder{grid-template-columns:1fr}.ti-grid{grid-template-columns:1fr}
  .ti-head{padding:14px 14px 8px}.ti-head h3{font-size:18px}
  .ti-franchises{padding:12px 14px}.ti-assets{padding:0 12px;gap:6px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
@@ -215,10 +215,9 @@ def trade_center(view: dict) -> str:
     workflows = "".join(
         f'<a class="ti-workflow" href="/trades/{identifier}?front_office={active_id}"><b>{label}</b><span>{description}</span></a>'
         for identifier, label, description in (
-            ("calculator", "Trade Calculator", "Compare canonical prices and preview balanced offers."),
-            ("create", "Create Trade", "Build, evaluate, and improve a bilateral proposal."),
+            ("create", "Build a Trade", "See live Market totals, evaluate, and preview balancing options."),
             ("trade-for", "Trade For", "Pursue an asset another franchise owns."),
-            ("shop", "Shop Asset", "Search the league for legitimate markets."),
+            ("shop", "Shop / Trade Away", "Search the league for legitimate markets."),
             ("recommended", "Recommended Trades", "Only worthwhile bilateral opportunities."),
         )
     )
@@ -226,7 +225,7 @@ def trade_center(view: dict) -> str:
         return f'''{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Center</div><h2>{escape(str(active.get("team_name") or active.get("owner") or "Unassigned Franchise"))}</h2><p>Choose a workflow to explore an editable, hypothetical trade.</p></div><form class="ti-selector" method="get"><label>Active Front Office<select name="front_office" onchange="this.form.submit()">{options}</select></label></form></section><nav class="ti-workflows">{workflows}</nav><section class="card"><h3>Find credible opportunities</h3><p>No recommendation search has run in this session. Recommendations use the same bilateral assessment as manual trades.</p><a class="ti-action" href="/trades/recommended?front_office={active_id}">Discover Recommended Trades</a></section>'''
     cards = "".join(_canonical_card({**row, "active_team_name": active.get("team_name") or row.get("active_team_name") or "Your franchise"}) for row in view.get("canonical_results", ()))
     if not cards:
-        cards = '<div class="card ti-empty"><div><div class="ds-eyebrow">No clean trade right now</div><h3>No realistic bilateral opportunity clears every gate.</h3><p>DTOS checked neutral market value, roster effects, package quality, counterparty fit, and evidence confidence. Try building a proposal or targeting a specific asset.</p><div class="ti-actions"><a class="ti-action" href="/trades/create">Create a Trade</a><a class="ti-action" href="/trades/trade-for">Trade For a Player</a></div></div></div>'
+        cards = '<div class="card ti-empty"><div><div class="ds-eyebrow">No clean trade right now</div><h3>No realistic bilateral opportunity clears every gate.</h3><p>DTOS checked neutral market value, roster effects, package quality, counterparty fit, and evidence confidence. Try building a proposal or targeting a specific asset.</p><div class="ti-actions"><a class="ti-action" href="/trades/create">Build a Trade</a><a class="ti-action" href="/trades/trade-for">Trade For a Player</a></div></div></div>'
     first = (view.get("canonical_results") or [None])[0]
     if first:
         evaluation = first["evaluation"]

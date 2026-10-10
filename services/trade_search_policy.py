@@ -39,6 +39,29 @@ def classify(evaluation):
 ELIGIBLE = {'CREDIBLE RECOMMENDATION', 'OPTIONAL / LOWER-RANKED TRADE'}
 
 
+def supported_exploration(evaluation):
+    """An unfavorable assessment is inspectable, not a promoted recommendation.
+
+    Independently check evidence: classify() can label a rejected trade before
+    looking at missing inputs. No extra discovery or price construction occurs.
+    """
+    dims = evaluation.get('dimensions') or {}
+    if evaluation.get('legal') is not True or (evaluation.get('legality') or {}).get('execution_status') != 'NO IDENTIFIED OWNERSHIP OR CAPACITY BLOCKER':
+        return False
+    if evaluation.get('recommendation') not in ('SMASH ACCEPT', 'WORTH PURSUING', 'FAIR / OPTIONAL', 'NOT WORTH IT', 'REJECT'):
+        return False
+    if (evaluation.get('market_evidence') or {}).get('availability') != 'full':
+        return False
+    strategies = dims.get('strategic_fit') or {}
+    for side in ('active', 'partner'):
+        row = strategies.get(side) or {}
+        if row.get('projection_coverage_complete') is not True or (row.get('production_evidence') or {}).get('mean_weekly_delta') is None:
+            return False
+    if 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in (evaluation.get('recommendation_trace') or {}).get('rule_reasons', []):
+        return False
+    return (dims.get('confidence') or {}).get('assessment') in ('MEDIUM', 'HIGH')
+
+
 def missing_evidence_guidance(evaluation):
     """Name source limits without offering an unsupported evidence-upload action."""
     missing = []
@@ -73,6 +96,7 @@ class SearchFunnel:
         self.stages = []
         self.pools = {str(rid): len(pool) for rid, pool in (pools or {}).items()}
         self.near_misses = []
+        self.explorations = []
 
     def construction(self, partner, proposals, diagnostics=None):
         self.teams.add(partner)
@@ -92,6 +116,10 @@ class SearchFunnel:
             field = 'filtered'
         self.counts[field] += 1
         e = row['evaluation']
+        if not filtered and state not in ELIGIBLE and supported_exploration(e):
+            self.explorations.append({**row, 'exploration': True})
+            self.explorations.sort(key=exploration_key)
+            del self.explorations[12:]
         reasons = list(e.get('recommendation_trace', {}).get('rule_reasons') or [])
         if state == 'COUNTERPARTY LIMITED':
             reasons += (e.get('dimensions', {}).get('counterparty_plausibility') or {}).get('reason_codes') or []
@@ -121,6 +149,10 @@ class SearchFunnel:
                 'ranked': self.counts['eligible'], 'displayed': displayed,
                 'evaluation_budget': self.budget, 'budget_reached': self.counts['evaluated'] >= self.budget,
                 'rejection_reason_counts': dict(self.reasons), 'bounded': True}
+
+    def explore(self, assets, *, excluded_families=()):
+        return [row for row in diverse_rows(self.explorations, assets, limit=3, ranker=exploration_key)
+                if row.get("family_id") not in excluded_families]
 
     def near(self):
         # Prefer a supported strategic near miss over absent evidence or invalidity.
@@ -163,12 +195,22 @@ def rank_key(row):
             (e.get('provenance') or {}).get('evaluation_id', str(row.get('proposal'))))
 
 
-def diverse_rows(rows, assets, *, limit=5):
+def exploration_key(row):
+    """Prefer a supported negotiation angle among non-recommended alternatives.
+
+    Their original recommendation and price remain intact. Recommendation
+    ranking uses rank_key unchanged; this orders only the separate exploration.
+    """
+    counterparty = (row['evaluation'].get('dimensions') or {}).get('counterparty_plausibility') or {}
+    return ({'STRONG': 0, 'PLAUSIBLE': 1}.get(counterparty.get('assessment'), 2), rank_key(row))
+
+
+def diverse_rows(rows, assets, *, limit=5, ranker=rank_key):
     """Primary identities define families; variants live inside their detail."""
     from hashlib import sha256
     import json
     families = {}
-    for row in sorted(rows, key=rank_key):
+    for row in sorted(rows, key=ranker):
         p = row['proposal']
         def primary(ids):
             players = [assets[i] for i in ids if assets[i].kind == 'player']
@@ -191,7 +233,7 @@ def diverse_rows(rows, assets, *, limit=5):
         # Prefer distinct targets/outgoing/partners before a second related idea.
         pending.sort(key=lambda r: (r['ranking_evidence']['primary_target'] in targets,
             r['ranking_evidence']['primary_outgoing'] in outgoing,
-            r['proposal']['partner_roster_id'] in partners, rank_key(r)))
+            r['proposal']['partner_roster_id'] in partners, ranker(r)))
         row = pending.pop(0)
         chosen.append(row)
         targets.add(row['ranking_evidence']['primary_target'])

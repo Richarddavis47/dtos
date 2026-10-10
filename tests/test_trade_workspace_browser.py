@@ -59,14 +59,16 @@ class TradeWorkspaceBrowserTests(unittest.TestCase):
                         page.get_by_role("button", name="Evaluate Trade", exact=True).click()
                         explanation = page.locator('#trade-result .dtos-explanation')
                         explanation.wait_for()
-                        disclosure = explanation.locator('summary').first
+                        disclosure = explanation.get_by_text('Supporting evidence and limitations', exact=True)
                         self.assertGreaterEqual(disclosure.bounding_box()['height'], 44)
                         disclosure.focus()
                         page.keyboard.press('Enter')
-                        self.assertTrue(explanation.locator('details').first.evaluate('(e) => e.open'))
+                        self.assertTrue(disclosure.evaluate('(e) => e.parentElement.open'))
                         self.assertIn('Some assets lack supported acquisition prices', explanation.inner_text())
-                        page.locator('.tw-market-detail > summary').click()
-                        self.assertIn('Unavailable', page.locator('#trade-balance').inner_text())
+                        self.assertTrue(page.locator('#trade-balance').is_visible())
+                        self.assertIn('Partial · known subtotal', page.locator('#trade-balance').inner_text())
+                        self.assertIn('Cannot determine reliably', page.locator('#calculator-verdict').inner_text())
+                        self.assertTrue(page.locator('#trade-balance-offer').is_disabled())
                         self.assertIn("4 assets", page.locator("#trade-tray-text").inner_text())
                         # Publish legitimate fixture-only external evidence,
                         # then verify the successful valuation interaction too.

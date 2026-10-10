@@ -1,3 +1,10 @@
+### Simple Trade, Supported Discovery — DTOS v1.21.28
+
+- Four primary entry points; immediate canonical Market comparison in Build.
+- Reuse Balance beside evaluation with previews, explicit adoption and exact protections.
+- Automatic target discovery, optional refinements and separately labeled supported exploration.
+- Preserve bounded searches, FOIS retained grades and lean storage; verify actual responsive journeys.
+
 ### Historical Common-Week Evidence — DTOS v1.21.27
 
 - Correct historical lineup evidence-week admission without changing legal lineup or scoring formulas.

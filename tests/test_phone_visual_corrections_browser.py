@@ -88,6 +88,7 @@ class PhoneVisualCorrectionTests(unittest.TestCase):
                 detail.locator("summary").click()
                 self.assertFalse(detail.evaluate("e=>e.open"))
                 self.assertEqual(fixture.state(page), before)
+                page.locator("#shop-refinements > summary").click()
                 page.select_option("#shop-protected", "player:b")
                 page.click("#trade-edit")
                 player_lock = page.locator('#trade-sent-board [data-badge=protection][data-asset-id="player:b"]')

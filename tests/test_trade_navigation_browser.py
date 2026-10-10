@@ -59,6 +59,8 @@ class TradeNavigationBrowserTests(unittest.TestCase):
                 page.locator('#trade-context').get_by_text('Active league', exact=False).wait_for()
                 self.assertEqual(fixture.proposal(page)['sent'], [])
 
+                page.get_by_label('Your strategy', exact=True).select_option('WIN NOW')
+
                 def dossier(route):
                     response = fixture.account.client.get('/players/mcbride')
                     self.assertEqual(response.status_code, 200, response.text)
@@ -70,8 +72,6 @@ class TradeNavigationBrowserTests(unittest.TestCase):
                 page.locator('#trade-target:not([hidden])').wait_for()
                 self.assertIn('Trey McBride', page.locator('#trade-target').inner_text())
                 self.assertEqual(page.get_by_label('Counterparty', exact=True).input_value(), '2')
-                page.get_by_label('Your strategy', exact=True).select_option('WIN NOW')
-                page.click('#trade-find')
                 page.locator('.tw-offer').first.wait_for()
                 self.assertEqual([status for status, _ in responses], [422, 200])
                 self.assertEqual(responses[0][1]['detail']['code'], 'canonical_evidence_changed')
@@ -103,7 +103,6 @@ class TradeNavigationBrowserTests(unittest.TestCase):
 
                 with self.subTest(width=width, code=code), fixture.page(width, api=reject) as (page, requests):
                     fixture.ready(page, '/trades/trade-for?asset_id=player:x&owner_roster_id=1')
-                    page.click('#trade-find')
                     page.wait_for_function('document.querySelector("#trade-builder").getAttribute("aria-busy")==="false"')
                     if code == 'canonical_evidence_changed':
                         self.assertEqual(len(requests), 2)

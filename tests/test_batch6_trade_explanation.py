@@ -71,7 +71,30 @@ class ActiveTradeExplanationTests(unittest.TestCase):
         result['provenance'].update(evaluation_id='completed', inputs={'league_id': 'A'})
         original = copy.deepcopy(result)
         html = render_trade_explanation(result, league_id='A')
-        before_detail = html.split('<details>')[0]
+        # Package disclosures can precede technical evidence. Assert that every
+        # primary horizon is outside *all* closed disclosures, not a tag index.
+        from html.parser import HTMLParser
+
+        class PrimaryText(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.closed, self.text = [], []
+
+            def handle_starttag(self, tag, attrs):
+                if tag == 'details':
+                    self.closed.append('open' not in dict(attrs))
+
+            def handle_endtag(self, tag):
+                if tag == 'details':
+                    self.closed.pop()
+
+            def handle_data(self, data):
+                if not any(self.closed):
+                    self.text.append(data)
+
+        primary = PrimaryText()
+        primary.feed(html)
+        before_detail = ''.join(primary.text)
         self.assertIn('Current week: 5', before_detail)
         self.assertIn('Playoff window: -9', before_detail)
         self.assertIn('Rest of regular season: Unavailable', before_detail)
