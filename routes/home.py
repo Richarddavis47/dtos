@@ -17,6 +17,7 @@ from src.ui.render_cache import GenerationRenderCache
 from services.home_attention import attention_state
 from services.attention_changes import pick_changes
 from src.ui.home_attention import attention_panel
+from src.ui.standings import render_standings
 from src.platform.league_context import current_league_context
 
 EnsureFresh = Callable[[], Awaitable[None]]
@@ -148,7 +149,7 @@ def create_home_router(
             "Your current result and league position are summarized above. Recent transactions and matchup evidence provide the current front-office context."
         )
         body = (
-            header + '<!--home-attention-->'
+            header + _section('Standings', 'Official records and scoring · not DTOS power rankings', render_standings(data, champion=champion)) + '<!--home-attention-->'
             + _section("Preseason Briefing" if preseason else "Weekly Recap", "What matters for your franchise now", f'<div class="card ux-recap"><p>{escape(recap)}</p><a href="/league">Open league briefing →</a></div>')
             + _section("Explore", "Useful destinations—not personalized Attention recommendations", action_html)
             + '<details class="ds-home-detail"><summary>DTOS team assessment · not official standings</summary>' + _section("Team Assessment Rankings", "Canonical team assessment · not standings or FOIS GM rankings", rank_html) + '</details>'
@@ -165,34 +166,14 @@ def create_home_router(
         data = require_data()
         teams = data.get("teams") or []
         preseason = league_is_preseason(data)
-        directory = build_team_directory(data) if teams and preseason else {}
         ranks = official_ranks(data)
-        champion = defending_champion(data)
+        visual_standings = render_standings(data)
+        preseason_analysis = ''
         if preseason:
-            ordered = sorted(teams, key=lambda team: int(directory.get(int(team.get("roster_id") or 0), {}).get("rank") or 999))
-            standings = "".join(
-                f'<tr><td><span class="podium-rank">#{escape(str(directory.get(int(team.get("roster_id") or 0), {}).get("rank") or "—"))}</span></td><td><a href="/teams/{int(team.get("roster_id") or 0)}">{escape(str(team.get("team_name") or "Team"))}</a></td><td colspan="2">Preseason outlook</td></tr>'
-                for team in ordered
-            )
-        else:
-            ordered = sorted(teams, key=lambda team: ranks.get(int(team["roster_id"]), 999)) if ranks else teams
-            standings = "".join(
-                f'<tr><td>{ranks.get(int(team["roster_id"]), "Unavailable")}</td><td><a href="/teams/{int(team.get("roster_id") or 0)}">{escape(str(team.get("team_name") or "Team"))}</a></td><td>{escape(record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=True))}</td><td>{escape(f"{float(team['points_for']):.2f}" if team.get("points_for") is not None else "Unavailable")}</td></tr>'
-                for index, team in enumerate(teams, start=1)
-            )
-        franchise_rows = []
-        for index, team in enumerate(ordered, start=1):
-            roster_id = int(team.get("roster_id") or 0)
-            rank = directory.get(roster_id, {}).get("rank") if preseason else ranks.get(roster_id)
-            record = "Preseason outlook" if preseason else record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=True)
-            points = "" if preseason else (f"{float(team['points_for']):,.2f} PF" if team.get("points_for") is not None else "Points unavailable")
-            identity = escape(str(team.get("team_name") or "Team"))
-            placement = (standing_badge(rank) if ranks else f'<span class="league-place">{escape(str(rank or "—"))}</span>')
-            badges = champion_badge(champion, roster_id)
-            content = f'{placement}<span class="league-franchise"><a href="/teams/{roster_id}">{identity}{you_badge(data, roster_id)}</a><span>{escape(str(record))}</span></span><span class="league-points">{escape(points)}</span>'
-            franchise_rows.append(f'<article class="league-standing">{content}<div class="ds-badges">{badges}</div></article>')
-
-        visual_standings = '<div class="league-standings">' + "".join(franchise_rows) + '</div>'
+            directory = build_team_directory(data, prepared_only=True) if teams else {}
+            ordered = sorted(teams, key=lambda t: directory.get(int(t['roster_id']), {}).get('rank') or 999)
+            rows = ''.join(f'<li><a href="/teams/{int(t["roster_id"])}">{escape(str(t.get("team_name") or "Franchise"))}</a> · DTOS assessment rank {escape(str(directory.get(int(t["roster_id"]), {}).get("rank") or "Unavailable"))}</li>' for t in ordered)
+            preseason_analysis = '<details><summary>Preseason Rankings · DTOS assessment, not official standings</summary><ul>' + rows + '</ul></details>'
         destinations = (
             ("Weekly Report", "Prepared league recap and supported changes", "/reports/weekly"),
             ("Matchups", "Weekly competition and starter evidence", "/matchups"),
@@ -204,7 +185,7 @@ def create_home_router(
         links = '<div class="grid">' + "".join(f'<a class="card" href="{href}"><h3>{title}</h3><p class="muted">{description}</p></a>' for title, description, href in destinations) + "</div>"
         body = (
             _section("Preseason League Briefing" if preseason else "League Recap", "A league-wide view, separate from your personal front office", f'<div class="card ux-recap"><p>{escape("Regular-season games have not started. Review roster direction, recent activity, market movement, and Week 1 preparation." if preseason else f"{len(teams)} franchises · Week {data.get('week') or '—'} · Season {(data.get('league') or {}).get('season') or '—'}")}</p></div>')
-            + _section("Preseason Rankings" if preseason else "Official Standings" if ranks else "Current Records", "Preseason team outlook—not current results or FOIS" if preseason else "Official Sleeper-reported standings—not DTOS team assessments or FOIS." if ranks else "Current-season results—not FOIS. Official standings rank unavailable; list order is not playoff seeding.", visual_standings + f'<details><summary>Compare standings in detail</summary><div class="card ds-table-wrap"><table><thead><tr><th>Rank</th><th>Franchise</th><th>{"State" if preseason else "Record"}</th><th>{"" if preseason else "Points"}</th></tr></thead><tbody>{standings}</tbody></table></div></details>')
+            + _section("Official Standings" if ranks else "Current Records", "League-specific Sleeper records and scoring", visual_standings) + preseason_analysis
             + _section("League Intelligence", "Competition, management, activity, and history", links)
         )
         return page("League", body)

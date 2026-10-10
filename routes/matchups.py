@@ -23,6 +23,7 @@ from src.ui import player_summary
 from services.matchup_season import season_week_view
 from src.core.projection_intelligence import projection_service
 from src.platform.league_context import current_league_context
+from src.platform.account_context import current_account
 from src.ui.matchup_season import render_season_week
 
 _MATCHUP_CSS = (Path(__file__).resolve().parents[1] / 'static' / 'css' / 'matchups.css').read_text(encoding='utf-8')
@@ -192,6 +193,13 @@ def create_matchups_router(
         context = current_league_context()
         service = context.projection if context else projection_service
         view = await asyncio.to_thread(season_week_view, data, selected, service)
+        account = current_account()
+        membership = account.membership if account else None
+        viewer = membership.roster_id if membership and membership.league_id == view['league_id'] else None
+        view['viewer_roster_id'] = viewer
+        for sides in view['groups'].values():
+            for side in sides:
+                side['is_viewer'] = side['roster_id'] == viewer
         return selected, view, data
 
     @router.get("/matchups", response_class=HTMLResponse)

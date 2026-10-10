@@ -1,14 +1,15 @@
-/* Prepared season navigation: conclusion first, detail on demand. */
-.season-week-nav,.season-week-nav form{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.season-week-nav{margin:16px 0}
+/* Prepared evidence, compact phone-first matchup and standings presentation. */
+.season-week-nav,.season-week-nav form{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.season-week-nav{margin:12px 0}.season-week-nav form{margin:0}
 .season-week-nav a,.season-overview a{display:inline-flex;min-height:44px;align-items:center;padding:8px 12px;border:1px solid var(--border);border-radius:8px}
-.season-week-nav form{margin:0}
-.season-overview>div{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0}
-.season-overview [aria-current]{border-color:var(--accent-primary)}
-.season-matchup{margin-block:16px}
-.season-sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
-.season-sides>*{min-width:0;overflow-wrap:anywhere}
-.season-starters{padding:0;list-style:none}
-.season-starters li{display:grid;gap:4px;border-bottom:1px solid var(--border);padding:10px 0}
-.season-starters a{display:inline-flex;align-items:center;min-height:44px}
-@media(max-width:650px){.season-sides{grid-template-columns:1fr}.season-week-nav{gap:8px}.season-week-nav form{width:100%}}
+.season-overview>div{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0}.season-overview [aria-current]{border-color:var(--accent-primary)}
+.season-matchup{margin-block:12px;min-width:0}.season-sides,.matchup-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.season-sides>*{min-width:0;overflow-wrap:anywhere}.matchup-card-link{display:block;color:inherit;text-decoration:none;min-height:44px;border-radius:8px;padding:6px}
+.matchup-card-link:hover{background:var(--surface-raised,#25302b)}.matchup-card-link:focus-visible,.matchup-player-link:focus-visible{outline:3px solid var(--accent-primary,#39d98a);outline-offset:3px}
+.matchup-status{font-size:.85rem;margin-bottom:12px;overflow-wrap:anywhere;color:var(--accent-primary,#39d98a)}.matchup-team{display:flex;align-items:center;gap:8px;min-width:0}.matchup-team>div{min-width:0}.matchup-team small{display:block;overflow-wrap:anywhere}.matchup-avatar{width:32px;height:32px;border-radius:50%;flex:0 0 32px;object-fit:cover;background:#303a35}.matchup-avatar.initials{display:grid;place-items:center}
+.matchup-score,.matchup-projected{display:flex;flex-direction:column;margin-top:8px}.matchup-score b{font-size:1.65rem;font-variant-numeric:tabular-nums}.matchup-projected b{font-size:1.1rem}.matchup-card-side small{font-size:.75rem;line-height:1.4}.matchup-warning{display:block;margin-top:8px;overflow-wrap:anywhere}
+.matchup-evidence{margin-top:12px}.matchup-evidence p{overflow-wrap:anywhere}.matchup-roster h3{margin:18px 0 8px}.matchup-roster-row{border-bottom:1px solid var(--border);padding:8px 0}.matchup-slot{text-align:center;font-size:.75rem;color:var(--accent-primary,#39d98a);margin-bottom:4px}.matchup-player{min-width:0;overflow-wrap:anywhere}.matchup-player-link{display:flex;min-height:44px;align-items:center;color:inherit;text-decoration:none}.matchup-player .player-summary{gap:6px;min-width:0}.matchup-player .player-portrait{width:28px;height:28px;flex:0 0 28px}.matchup-player .player-headshot{width:28px;height:28px}.matchup-player .player-summary-copy{min-width:0}.matchup-player .player-summary-copy b{font-size:.82rem;line-height:1.25}.matchup-player .player-summary-copy>span{font-size:.68rem}.matchup-player .ds-position{font-size:.65rem;padding:1px 3px}.matchup-player-points{display:flex;gap:8px;margin-top:5px;font-variant-numeric:tabular-nums}.matchup-player-points>span{min-width:0;flex:1}.matchup-player-points small{display:block;font-size:.65rem}.matchup-player-points b{font-size:.83rem}.matchup-player.empty{font-size:.75rem;color:var(--muted)}
+.standings-panel{min-width:0}.compact-standings{width:100%;table-layout:fixed;border-collapse:collapse;font-variant-numeric:tabular-nums}.compact-standings th,.compact-standings td{padding:8px 4px;overflow-wrap:anywhere;text-align:right;vertical-align:top}.compact-standings th:first-child,.compact-standings td:first-child{text-align:left;width:48%}.compact-standings thead th{font-size:.7rem}.compact-standings td{font-size:.78rem}.standings-team{display:flex;gap:6px;align-items:center;text-align:left}.standings-team>div{min-width:0}.standings-team a{display:inline-flex;min-height:44px;align-items:center;overflow-wrap:anywhere}.standings-team .matchup-avatar{width:24px;height:24px;flex-basis:24px}.standing-rank{display:block;font-size:.7rem}.standings-you{background:rgba(57,217,138,.08);border-left:3px solid var(--accent-primary,#39d98a)}.playoff-boundary td{border-top:2px solid var(--accent-primary,#39d98a);text-align:left!important;color:var(--accent-primary,#39d98a)}.standing-indicators{display:flex;flex-wrap:wrap;gap:4px}.standing-indicators .ds-badge-detail{font-size:.7rem}.standing-indicators .ds-badge-detail p{font-size:.8rem}.standings-panel details p{overflow-wrap:anywhere}
+@media(max-width:650px){.season-week-nav form{width:100%}.season-sides,.matchup-pair{gap:8px}.season-matchup{padding:12px}.matchup-team{align-items:flex-start;gap:6px}.matchup-team b{font-size:.85rem}.matchup-team small{font-size:.68rem}.compact-standings th,.compact-standings td{padding:7px 3px}.compact-standings th:first-child,.compact-standings td:first-child{width:45%}.standings-team .matchup-avatar{display:none}}
+
+.matchup-return{display:inline-flex;align-items:center;min-height:44px;padding:8px 0}

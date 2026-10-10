@@ -28,7 +28,7 @@ class MatchupBrowserTests(unittest.TestCase):
                                 route.fulfill(status=200, content_type="image/png", body=image)
                             elif url == "https://dtos.test/matchups/1":
                                 route.fulfill(status=200, content_type="text/html; charset=utf-8", body=html)
-                            elif url in {"https://dtos.test/players/A0", "https://dtos.test/teams/1", "https://dtos.test/matchups?week=1"}:
+                            elif url in {"https://dtos.test/players/A0?week=1&matchup=1", "https://dtos.test/teams/1", "https://dtos.test/matchups?week=1"}:
                                 route.fulfill(status=200, content_type="text/html", body="<h1>Existing destination</h1>")
                             elif url.endswith('/static/css/matchups.css'):
                                 from pathlib import Path
@@ -47,10 +47,10 @@ class MatchupBrowserTests(unittest.TestCase):
                         player.focus()
                         self.assertTrue(player.evaluate("e => e === document.activeElement"))
                         player.press("Enter")
-                        self.assertEqual(page.url, "https://dtos.test/players/A0")
+                        self.assertEqual(page.url, "https://dtos.test/players/A0?week=1&matchup=1")
                         page.goto("https://dtos.test/matchups/1")
                         page.get_by_role("link", name="Open A Player 0 player dossier", exact=True).click()
-                        self.assertEqual(page.url, "https://dtos.test/players/A0")
+                        self.assertEqual(page.url, "https://dtos.test/players/A0?week=1&matchup=1")
                         page.goto("https://dtos.test/matchups/1")
                         page.get_by_role("link", name="A Team 0", exact=True).click()
                         self.assertEqual(page.url, "https://dtos.test/teams/1")

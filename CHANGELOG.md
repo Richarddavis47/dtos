@@ -1,3 +1,12 @@
+## v1.21.31 · build 2131 — Phone Matchups & Standings
+
+- Compact side-by-side matchups, authenticated own-matchup-first ordering, full-card activation and preserved selected-week navigation.
+- Aligned submitted starters plus visible bench, current IR and taxi; canonical player dossiers return to the same matchup/week. Historical IR/taxi assignments remain unavailable rather than inferred.
+- Prominent shared Home/League standings with official records, PF/PA, own-team highlighting, evidence-gated medals/champion badges and completed-game streaks.
+- Official ranks and playoff boundaries remain unavailable unless complete rank and standard non-division qualification evidence supports them. No invented win probability or remaining-game estimate.
+- Reuses canonical Sleeper projections and prepared optimal-lineup evidence, separately labeled; no new model, polling, storage migration or historical-grade regeneration.
+- See `docs/MATCHUPS_STANDINGS_PHONE.md` for acceptance evidence, limitations and Scout handoff.
+
 ## DTOS v1.21.30 / build 2130 — Canonical Projection Freshness
 
 Trade uses the actual canonical Sleeper publication identity rather than a constant fallback. Freshness checks cover exploratory alternatives, qualifying results, assessed near misses and Shop returns. Changed evidence qualifies retained assessments without erasing their drawbacks; existing reevaluation and preview/adoption remain explicit.

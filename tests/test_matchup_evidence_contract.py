@@ -111,7 +111,7 @@ class MatchupEvidenceTests(unittest.TestCase):
             before = copy.deepcopy(args[0])
             body = self.render(args[0], self.summary(*args))
             for index in range(2):
-                self.assertIn(f'href="/players/{league}{index}"', body)
+                self.assertIn(f'href="/players/{league}{index}?week=1&amp;matchup=1"', body)
                 self.assertIn(f'aria-label="Open {league} Player {index} player dossier"', body)
                 self.assertIn(f'href="/teams/{index + 1}"', body)
             self.assertIn('href="/matchups?week=1"', body)
