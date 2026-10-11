@@ -13,3 +13,11 @@
 @media(max-width:650px){.season-week-nav form{width:100%}.season-sides,.matchup-pair{gap:8px}.season-matchup{padding:12px}.matchup-team{align-items:flex-start;gap:6px}.matchup-team b{font-size:.85rem}.matchup-team small{font-size:.68rem}.compact-standings th,.compact-standings td{padding:7px 3px}.compact-standings th:first-child,.compact-standings td:first-child{width:45%}.standings-team .matchup-avatar{display:none}}
 
 .matchup-return{display:inline-flex;align-items:center;min-height:44px;padding:8px 0}
+
+/* Badge explanations use a full-width table row rather than the name column. */
+.compact-standings .standings-explanations td{width:auto;text-align:left;padding-top:0}
+.standing-indicators .ds-badge-detail[open]{flex-basis:100%;min-width:0}
+.standing-indicators .ds-badge-detail[open] p{max-width:none;margin:6px 0 10px}
+.standing-position{display:block;font-size:.7rem;color:var(--accent-primary,#39d98a)}
+.standings-panel summary:focus-visible{outline:3px solid var(--accent-primary,#39d98a);outline-offset:2px}
+@media(min-width:375px){.standings-team .matchup-avatar{display:block}}

@@ -77,7 +77,7 @@ class StructuredIdentityTests(unittest.TestCase):
         b = source_generations(league_data("200"), "scoring-b")
         self.assertEqual(set(a), {
             "sleeper_canonical", "settings_scoring", "rosters", "matchups",
-            "picks", "transactions", "projections",
+            "picks", "transactions", "projections", "season_matchups",
         })
         self.assertNotEqual(a["sleeper_canonical"], b["sleeper_canonical"])
         self.assertNotEqual(a["settings_scoring"], b["settings_scoring"])

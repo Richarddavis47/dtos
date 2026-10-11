@@ -747,6 +747,7 @@ def home_presentation_generation() -> tuple[object, ...]:
         return (
             context.league_id,
             tuple(sorted(context.runtime.source_generations.items())),
+            str((context.data.get("season_matchups") or {}).get("semantic_generation") or "season-matchups:unavailable"),
             str(
                 context.data.get(
                     "asset_market_semantic_revision", "market:pending",
@@ -757,6 +758,7 @@ def home_presentation_generation() -> tuple[object, ...]:
     return (
         LEAGUE_ID,
         id(data),
+        str((data.get("season_matchups") or {}).get("semantic_generation") or "season-matchups:unavailable"),
         str(data.get("asset_market_semantic_revision", "market:pending")),
     )
 

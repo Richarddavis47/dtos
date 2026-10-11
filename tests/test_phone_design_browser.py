@@ -64,11 +64,19 @@ class SharedPhoneDesignBrowserTests(journey.ProductBrowserJourneyTests):
                 "rgb(182, 194, 203)",
             )
         if path == "/league":
-            # This fixture has no official rank/history: assessments must have no medals.
+            # Complete source records now support explicitly statistical placements.
             self.assertEqual(
-                page.locator("[data-badge^=standing-], [data-badge=champion]").count(),
-                0,
+                page.locator(".compact-standings .standing-rank").all_text_contents(),
+                ["#1", "#2", "#3"],
             )
+            badges = page.locator(".compact-standings [data-badge^=standing-]")
+            self.assertEqual(badges.count(), 3)
+            for badge in badges.all():
+                self.assertIn("DTOS-organized standings", badge.locator("p").text_content())
+                self.assertNotIn("Official Sleeper league standings", badge.locator("p").text_content())
+            # Absent championship/source-rank evidence still cannot be manufactured.
+            self.assertEqual(page.locator("[data-badge=champion]").count(), 0)
+            self.assertIn("not Sleeper-supplied playoff seeds", page.locator(".standings-panel").inner_text())
 
 
 class FocusedPhoneInteractionTests(unittest.TestCase):

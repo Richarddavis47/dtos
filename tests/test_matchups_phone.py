@@ -133,14 +133,15 @@ class MatchupsPhoneTests(unittest.TestCase):
         self.assertIsNone(playoff_boundary(self.data, {})[0])
         for i,t in enumerate(self.data['teams'],1):
             t['official_standing_rank'] = i
+            t['points_for'] = 125.45 - i
         for rid in range(3,7):
-            self.data['teams'].append({'roster_id':rid,'team_name':f'Franchise {rid}','official_standing_rank':rid})
+            self.data['teams'].append({'roster_id':rid,'team_name':f'Franchise {rid}','official_standing_rank':rid,'wins':1,'losses':0,'ties':0,'points_for':125.45-rid,'points_against':110.67})
         ranks = {rid:rid for rid in range(1,7)}
         self.assertEqual(playoff_boundary(self.data, ranks)[0],4)
         text = render_standings(self.data)
         self.assertIn('123.45', text)
         self.assertIn('110.67', text)
-        self.assertIn('Playoff-position boundary', text)
+        self.assertIn('Current playoff-position cutoff', text)
         self.assertIn('🥇', text)
         for setting,value in [('divisions',2), ('playoff_type',1), ('playoff_type',None)]:
             other = copy.deepcopy(self.data)
@@ -208,8 +209,8 @@ class MatchupsPhoneTests(unittest.TestCase):
     def test_standings_missing_rank_and_scoring_never_fabricated(self):
         self.data['teams'][0].update(points_for=None, points_against=None)
         text=render_standings(self.data)
-        self.assertIn('Official rank unavailable',text)
-        self.assertNotIn('Playoff-position boundary',text)
+        self.assertIn('Rank unavailable',text)
+        self.assertNotIn('Current playoff-position cutoff',text)
         self.assertNotIn('🥇',text)
         self.assertIn('Unavailable',text)
         from src.core.history_context.results import standing_points

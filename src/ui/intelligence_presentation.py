@@ -112,7 +112,7 @@ def record_evidence(
     """Return a real record only after competitive scoring has started."""
     if not season_started:
         return "Regular-season record not started"
-    if wins is None or losses is None:
+    if any(type(value) is not int or value < 0 for value in (wins, losses, ties)):
         return "Record unavailable"
     return f"{int(wins)}-{int(losses)}-{int(ties or 0)}"
 

@@ -28,6 +28,7 @@ from src.platform.lifecycle import lifecycle_coordinator
 from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence
 from services.history import player_history_evidence_batch
+from services.standings import record_fields, standings_order
 from config import (
     CACHE_FILE,
     LEAGUE_ID,
@@ -322,15 +323,14 @@ async def _sync_sleeper(
                     "team_name": metadata.get("team_name") or owner.get("display_name") or "Unassigned Franchise",
                     "avatar": owner.get("avatar"),
                     "official_standing_rank": settings.get("rank"),
-                    "wins": settings.get("wins", 0),
-                    "losses": settings.get("losses", 0),
-                    "ties": settings.get("ties", 0),
+                    **record_fields(settings),
+                    "division": settings.get("division"),
                     "points_for": standing_points(settings, "fpts"),
                     "points_against": standing_points(settings, "fpts_against"),
                     "max_points": round((settings.get("ppts", 0) or 0) + (settings.get("ppts_decimal", 0) or 0) / 100, 2),
                     "players": player_rows,
                 })
-            team_rows.sort(key=lambda t: (-t["wins"], t["losses"], -(t["points_for"] or 0)))
+            team_rows = standings_order({"league": league, "teams": team_rows})["teams"]
 
             # Build a complete future-pick ledger, including untraded original picks.
             try:
