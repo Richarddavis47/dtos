@@ -118,7 +118,8 @@ def create_historical_assets_router(
         return _response("pick_lineage", len(dossier["events"]), dossier["events"], pick=dossier)
 
     @router.get("/picks/{pick_id}", response_class=HTMLResponse)
-    async def pick_page(pick_id: str, front_office: int | None = None) -> HTMLResponse:
+    async def pick_page(pick_id: str, front_office: int | None = None,
+                        from_team: int | None = Query(default=None, ge=1)) -> HTMLResponse:
         dossier = graph().pick_dossier(pick_id)
         if dossier is None:
             raise HTTPException(404, "Pick not found")
@@ -135,6 +136,8 @@ def create_historical_assets_router(
         from src.ui.explanations import explanation_panel
         history_explanation = explanation_panel(pick_history_explanation(dossier, league_id=selected_league()))
         facts = require_data()
+        team_return = (f'<a class="back" href="/teams/{from_team}#draft-capital">← Back to My Team draft capital</a>'
+                       if from_team is not None and any(t.get('roster_id') == from_team for t in facts.get('teams') or []) else '')
         # Resolve only identities belonging to this league. Keep the canonical
         # historical owner intact rather than replacing it with a guessed team.
         franchise_names = {}
@@ -177,7 +180,7 @@ def create_historical_assets_router(
 <div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(owner_name)}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article><article class="metric"><b>{escape(original_name)}</b><span>Original franchise</span></article></div>
 <div class="card"><h3>Pick Conversion</h3><p>{selected}</p><p>{trade_action}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
 <div class="card"><h3>Ownership Chain</h3><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Pick ownership history"><table class="pick-history-table"><caption>Verified ownership events for this exact pick</caption><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div></div>{details}</section>'''
-        return page(f"{pick_id} — Pick Dossier", body)
+        return page(f"{pick_id} — Pick Dossier", team_return + body)
 
     @router.get("/api/trades/history/{transaction_id}")
     async def historical_trade_api(transaction_id: str) -> JSONResponse:

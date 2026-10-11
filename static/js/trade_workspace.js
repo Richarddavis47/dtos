@@ -84,6 +84,12 @@
   function persist(updateHistory = true, draftSession = session) {
     if (departed) return;
     const draft = {...draftSession, strategy: el('trade-strategy').value, ownership: workspace.workspace_context.ownership_generation};
+    if (window.dtosStrategy) {
+      const retained = window.dtosStrategy.set(workspace.workspace_context, draft.strategy);
+      let feedback = el('trade-strategy-feedback');
+      if (!feedback) { feedback = node('p', '', 'ds-inline-feedback'); feedback.id = 'trade-strategy-feedback'; feedback.setAttribute('role', 'status'); el('trade-strategy').after(feedback); }
+      feedback.textContent = retained ? '' : 'Strategy could not be retained for fresh navigation: browser session storage is unavailable or full.';
+    }
     try { sessionStorage.setItem(storageKey(), JSON.stringify(draft)); } catch (_) { /* Storage-disabled browsing still works in this page. */ }
     if (!updateHistory) return;
     // Each browser entry retains its own small draft, not search results. Only
@@ -786,6 +792,7 @@
     if (event.persisted) {
       departed = false;
       if (workspace && history.state?.dtosTrade?.binding === workspace.workspace_context.binding) {
+        if (window.dtosStrategy) el('trade-strategy').value = window.dtosStrategy.get(workspace.workspace_context);
         if (session.currentAssessment) { session.currentAssessment = restoreContext(session.currentAssessment); showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment); }
         if (session.previewProposal) { if (session.previewProposal.preview_context) session.previewProposal.preview_context = restoreContext(session.previewProposal.preview_context); previewOffer({proposal: session.previewProposal}); }
         persist();
@@ -795,6 +802,7 @@
   matchMedia('(max-width:760px)').addEventListener('change', () => { if (workspace) paint(); });
   fetch('/api/trades/workspace?front_office=' + active + (marketEditor ? '&mode=calculator' : ''), {credentials: 'same-origin'}).then(async response => { if (!response.ok) throw new Error('Unable to load this authorized workspace.'); return response.json(); }).then(data => {
     workspace = data;
+    if (window.dtosStrategy) el('trade-strategy').value = window.dtosStrategy.get(data.workspace_context);
     for (const a of team(active)?.assets || []) { const option = node('option', label(a) + (a.kind === 'pick' ? ' · Original franchise ' + a.original_roster_id + ' · ' + a.asset_id : '')); option.value = a.asset_id; el('trade-constraint-asset').append(option); }
     if (flow === 'recommended') {
       el('trade-find').textContent = 'Discover Recommended Trades';
@@ -825,7 +833,10 @@
         // never a freshly validated assessment or an inferred endorsement.
         if (session.previewProposal && !session.previewProposal.preview_context) session.previewProposal.preview_context = {...assessmentContext({proposal: session.previewProposal}), restored: true, stale_reason: 'Legacy preview qualification and supporting evidence were not retained'};
         for (const key of ['protectedAssets', 'excludedAssets']) if (Array.isArray(saved[key])) session[key] = [...new Set(saved[key])];
-        if (saved.strategy && Array.from(el('trade-strategy').options).some(o => o.value === saved.strategy)) el('trade-strategy').value = saved.strategy;
+        if (saved.strategy && Array.from(el('trade-strategy').options).some(o => o.value === saved.strategy) && !window.dtosStrategy?.has(data.workspace_context)) {
+          window.dtosStrategy?.set(data.workspace_context, saved.strategy);
+          el('trade-strategy').value = saved.strategy;
+        }
         if (saved.ownership !== data.workspace_context.ownership_generation) message('Ownership has changed. Your proposal is retained for review; evaluation will identify any assets that moved.', true);
       }
     } catch (_) { /* No persisted draft is required. */ }
@@ -877,6 +888,7 @@
       if (Array.from(el('shop-preference').options).some(o => o.value === session.shopPreference)) el('shop-preference').value = session.shopPreference;
       if (Array.from(el('shop-position').options).some(o => o.value === session.shopPosition)) el('shop-position').value = session.shopPosition;
     }
+    if (window.dtosStrategy) el('trade-strategy').value = window.dtosStrategy.get(data.workspace_context);
     syncLocks(); el('trade-find').hidden = flow === 'create'; persist(); paint();
     if (data.projection_evidence) latestEvidence.projection_generation = data.projection_evidence.generation;
     if (flow === 'recommended') searchStatus('Ready to discover supported opportunities.', 'ready');

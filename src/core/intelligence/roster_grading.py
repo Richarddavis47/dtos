@@ -24,6 +24,7 @@ class GradeDimension:
     confidence: int
     covered: int
     expected: int
+    known_subtotal: float | None = None
 
 
 @dataclass(frozen=True)
@@ -44,7 +45,9 @@ def grade_roster_evidence(*, league_id: str, roster_id: int, generation: str,
                          players: tuple[PlayerGradingEvidence, ...],
                          actual_starter_ids: tuple[str, ...], optimal_starter_ids: tuple[str, ...],
                          actual_points: float | None, optimal_points: float | None,
-                         legal_backup_points: float | None) -> RosterGradingEvidence:
+                         legal_backup_points: float | None,
+                         backup_covered: int | None = None,
+                         backup_expected: int | None = None) -> RosterGradingEvidence:
     """Publish supported dimensions without inventing an overall letter grade.
 
     Optimal and legal-backup points come from the canonical legal-lineup solver,
@@ -83,11 +86,20 @@ def grade_roster_evidence(*, league_id: str, roster_id: int, generation: str,
     for name, value, count in (
         ('Actual lineup expectation', actual_points, len(actual_starter_ids)),
         ('Optimal projected lineup', optimal_points, len(optimal_starter_ids)),
-        ('Useful projected depth', legal_backup_points, len(players) - len(optimal_starter_ids)),
     ):
         dimensions[name] = GradeDimension(name, value, 'weekly projected points',
             min((p.projection_confidence for p in players), default=0) if value is not None else 0,
             count if value is not None else 0, count)
+    reserves = tuple(p for p in players if p.player_id not in optimal_starter_ids)
+    expected = len(reserves) if backup_expected is None else backup_expected
+    covered = sum(p.projected_points is not None for p in reserves) if backup_covered is None else backup_covered
+    if not 0 <= covered <= expected:
+        raise ValueError('Invalid reserve projection coverage')
+    complete = expected > 0 and covered == expected and legal_backup_points is not None
+    dimensions['Useful projected depth'] = GradeDimension('Useful projected depth',
+        legal_backup_points if complete else None, 'weekly projected points',
+        min((p.projection_confidence for p in reserves), default=0) if complete else 0,
+        covered, expected, legal_backup_points)
     return RosterGradingEvidence(league_id, roster_id, generation, dimensions,
                                 actual_starter_ids, optimal_starter_ids)
 

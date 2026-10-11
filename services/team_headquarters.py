@@ -183,7 +183,7 @@ def _timeline(data: dict[str, Any], roster_id: int) -> list[dict[str, Any]]:
 
 
 def build_team_headquarters(
-    data: dict[str, Any], roster_id: int, last_updated: Any = None
+    data: dict[str, Any], roster_id: int, last_updated: Any = None, *, strategy: str = ''
 ) -> dict[str, Any] | None:
     """Build the presentation-neutral Team Headquarters view model."""
     teams = data.get("teams") or []
@@ -192,7 +192,7 @@ def build_team_headquarters(
         return None
     players = _enriched_players(team, data)
     snapshot = _asset_snapshot(players, team)
-    intelligence = intelligence_orchestrator.analyze(data, roster_id, include_trade_opportunities=False)
+    intelligence = intelligence_orchestrator.analyze(data, roster_id, user_preferences={'strategy': strategy}, include_trade_opportunities=False)
     grades = calculate_team_grades(players, team, intelligence.roster)
     decision = intelligence.decision
     organization = intelligence.front_office_model.reports[roster_id]
@@ -214,8 +214,13 @@ def build_team_headquarters(
         ]
         for position in CORE_POSITIONS
     }
+    from services.my_team_overview import roster_overview
+    overview = roster_overview(data, intelligence, players)
     return {
         "team": team,
+        "overview": overview,
+        "strategy": strategy,
+        "projection_snapshot": intelligence.context.projection_snapshot,
         "rank": rank,
         "last_updated": updated,
         "snapshot": snapshot,
@@ -240,12 +245,12 @@ def build_team_headquarters(
         },
         "timeline": _timeline(data, roster_id),
         "performance": {
-            "record": f"{team.get('wins', 0)}-{team.get('losses', 0)}-{team.get('ties', 0)}",
+            "record": (f"{team['wins']}-{team['losses']}-{team['ties']}" if all(team.get(k) is not None for k in ('wins', 'losses', 'ties')) else 'Unavailable'),
             "points_for": number(team.get("points_for")),
             "points_against": number(team.get("points_against")),
-            "max_points": float(team.get("max_points") or 0),
+            "max_points": number(team.get("max_points")),
             "streak": "Unavailable",
-            "standing": f"#{rank} of {len(teams)}" if rank is not None else "Unavailable",
+            "standing": overview['standing'],
         },
     }
 

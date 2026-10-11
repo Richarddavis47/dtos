@@ -24,6 +24,7 @@ from services.trade_calculator import calculate_trade_market, balance_trade_mark
 _STATIC_ROOT = Path(__file__).resolve().parents[1] / "static"
 _WORKSPACE_JS = (_STATIC_ROOT / "js" / "trade_workspace.js").read_text(encoding="utf-8")
 _WORKSPACE_CSS = (_STATIC_ROOT / "css" / "trade_workspace.css").read_text(encoding="utf-8")
+_STRATEGY_JS = (_STATIC_ROOT / "js" / "strategy_session.js").read_text(encoding="utf-8")
 
 
 def _trade_failure(exc: Exception) -> HTTPException:
@@ -45,6 +46,10 @@ PageRenderer = Callable[[str, str], HTMLResponse]
 
 def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData, page: PageRenderer) -> APIRouter:
     router = APIRouter()
+
+    @router.get("/static/js/strategy_session.js", include_in_schema=False)
+    async def strategy_script() -> Response:
+        return Response(_STRATEGY_JS, media_type="text/javascript", headers={"Cache-Control": "no-cache"})
 
     @router.get("/static/js/trade_workspace.js", include_in_schema=False)
     async def workspace_script() -> Response:

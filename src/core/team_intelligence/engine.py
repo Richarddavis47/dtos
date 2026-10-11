@@ -63,11 +63,14 @@ def _from_grading_evidence(decisions, grading, market_data=None, strength_profil
         item = grading[roster_id].dimensions[name]
         values = tuple(row.dimensions[name].value for row in rows if row.dimensions[name].value is not None)
         if item.value is None:
-            return unavailable(name)
+            return RelativeGrade(name, None, 'Unavailable', None, None, 0,
+                (f'Evidence coverage {item.covered}/{item.expected}; complete comparable evidence is unavailable.',
+                 f'Known supported subtotal: {item.known_subtotal:g} points; not complete depth.' if item.known_subtotal is not None else 'Missing values are not zero.'))
         percentile = _percentile(item.value, values)
         return RelativeGrade(name, percentile, _letter(percentile), percentile,
-            ranks[name][roster_id], size,
+            ranks[name][roster_id], len(values),
             (f'{item.value:g} {item.units}; coverage {item.covered}/{item.expected}.',
+             f'Comparison includes {len(values)} of {size} franchises with complete evidence for this dimension.',
              'This dimension is not an overall dynasty or competitive-window grade.'))
     cards = {}
     from src.core.data_platform.pick_quotes import canonical_pick_market

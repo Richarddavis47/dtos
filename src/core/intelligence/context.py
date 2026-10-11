@@ -41,6 +41,9 @@ def build_context(data: dict[str, Any], roster_id: int, user_preferences: dict[s
     runtime = current_league_context()
     service = runtime.projection if runtime is not None and runtime.league_id == league_id else projection_service
     projection_snapshot = service.snapshot()
+    if projection_snapshot and data.get('week') is not None and projection_snapshot.get('week') != (data['week'] or 1):
+        if str(data['week'] or 1) in (projection_snapshot.get('horizon_snapshot_ids') or {}):
+            projection_snapshot = service.week_snapshot(data['week'] or 1, generation_snapshot=projection_snapshot)
     if projection_snapshot and str(projection_snapshot.get("league_id") or "") != league_id:
         projection_snapshot = None
     projection_generation = str((projection_snapshot or {}).get("projection_snapshot_id") or "unavailable")
@@ -73,7 +76,7 @@ def build_context(data: dict[str, Any], roster_id: int, user_preferences: dict[s
     snapshot_key += f":{generations}:{brain_generation}:{projection_generation}:{production_generation}:roster-evidence-grading-v2:pick-evidence-no-scalar-v1"
     evidence_generation = sha256(snapshot_key.encode()).hexdigest()
     # Selection scopes the view cache, not the league's canonical evidence generation.
-    snapshot_key += f":{roster_id}:{id(data)}"
+    snapshot_key += f":{roster_id}:{id(data)}:{(user_preferences or {}).get('strategy', '')}"
     return IntelligenceContext(
         league_id, roster_id, league, roster, teams, tuple(roster.get("picks_owned") or ()), settings,
         tuple(team for team in teams if int(team.get("roster_id") or 0) != roster_id),

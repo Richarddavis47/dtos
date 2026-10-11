@@ -8,9 +8,11 @@ from src.core.intelligence.roster_grading import (
 
 def roster(roster_id, price, points, depth, longevity=50):
     return grade_roster_evidence(league_id='league', roster_id=roster_id, generation='g1',
-        players=(PlayerGradingEvidence('p', price, 80, points, longevity, 70),),
+        players=(PlayerGradingEvidence('p', price, 80, points, longevity, 70),
+                 PlayerGradingEvidence('reserve', 0 if price is not None else None, 80, depth, longevity, 70)),
         actual_starter_ids=('p',), optimal_starter_ids=('p',) if points is not None else (),
-        actual_points=points, optimal_points=points, legal_backup_points=depth)
+        actual_points=points, optimal_points=points, legal_backup_points=depth,
+        backup_covered=int(depth is not None), backup_expected=1)
 
 
 class RosterGradingDimensionsTests(unittest.TestCase):

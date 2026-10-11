@@ -48,8 +48,11 @@ class ActivePlayerPagesTests(unittest.TestCase):
             stack.enter_context(patch('routes.transactions.historical_graph', return_value=history))
             stack.enter_context(patch('routes.teams.historical_graph', return_value=history))
             for module in ('routes.transactions', 'routes.teams'):
-                stack.enter_context(patch(module + '.current_league_context', return_value=SimpleNamespace(projection=service)))
+                stack.enter_context(patch(module + '.current_league_context', return_value=SimpleNamespace(league_id='league-1', projection=service)))
+            stack.enter_context(patch('src.core.projection_intelligence.projection_service.snapshot', return_value=snapshot))
+            stack.enter_context(patch('src.core.projection_intelligence.projection_service.week_snapshot', side_effect=service.week_snapshot))
             stack.enter_context(patch('services.asset_intelligence.intelligence_orchestrator', engine))
+            stack.enter_context(patch('services.team_headquarters.intelligence_orchestrator', engine))
             client = stack.enter_context(TestClient(app))
             timings = {}
             for label, path in [('dossier_cold', f'/players/{pid}?week=2'),

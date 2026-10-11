@@ -20,7 +20,9 @@ def workspace_context(data: dict, roster_id: int) -> dict:
     generation = hashlib.sha256(json.dumps(sorted(ownership), separators=(",", ":")).encode()).hexdigest()
     identity = (account.account_id, account.session_id) if account else ("local", "local")
     binding = hashlib.sha256(json.dumps((identity, league_id, roster_id), separators=(",", ":")).encode()).hexdigest()
-    return {"league_id": league_id, "roster_id": roster_id, "binding": binding, "ownership_generation": generation, "schema": 1}
+    from services.strategy_session import strategy_scope
+    return {"league_id": league_id, "roster_id": roster_id, "binding": binding, "ownership_generation": generation, "schema": 1,
+            "strategy_scope": strategy_scope()}
 
 
 def authorize_workspace(data: dict, payload: dict) -> None:

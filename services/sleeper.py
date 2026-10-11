@@ -327,7 +327,7 @@ async def _sync_sleeper(
                     "division": settings.get("division"),
                     "points_for": standing_points(settings, "fpts"),
                     "points_against": standing_points(settings, "fpts_against"),
-                    "max_points": round((settings.get("ppts", 0) or 0) + (settings.get("ppts_decimal", 0) or 0) / 100, 2),
+                    "max_points": standing_points(settings, 'ppts'),
                     "players": player_rows,
                 })
             team_rows = standings_order({"league": league, "teams": team_rows})["teams"]
