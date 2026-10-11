@@ -10,8 +10,9 @@ from fastapi.responses import HTMLResponse
 from services.team_headquarters import build_team_directory
 from services.transactions import normalize_transactions
 from services.matchup_season import current_matchup_groups
+from services.standings import standings_order
 from src.ui.intelligence_presentation import league_is_preseason, record_evidence
-from src.ui.badges import champion_badge, defending_champion, official_ranks, standing_badge, you_badge
+from src.ui.badges import champion_badge, defending_champion, standing_badge, you_badge
 from src.platform.account_context import current_account
 from src.ui.render_cache import GenerationRenderCache
 from services.home_attention import attention_state
@@ -107,7 +108,7 @@ def create_home_router(
         record = record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=not preseason)
         ranking_label = "preseason outlook" if preseason else "current league outlook"
         competitive = f'#{outlook.get("rank", "—")} in the {ranking_label}' if outlook.get("rank") else f'{ranking_label.title()} not yet available'
-        header = f'''<div class="ux-command-grid"><article class="ux-feature"><p class="identity-kicker">Your front office · {escape(str(team.get("owner") or "Unassigned"))}</p><h2>{escape(str(team.get("team_name") or "Franchise"))}{you_badge(data, roster_id)}</h2><div class="ds-badges">{standing_badge(official_ranks(data).get(roster_id))}{champion_badge(champion, roster_id)}</div><p class="ux-feature-copy"><b>{escape("Preseason · official record not started" if preseason else "Official record: " + record)}</b></p><p class="ux-feature-copy">DTOS strength assessment: {escape(competitive)}. DTOS has organized the current league evidence around the decisions that matter to this franchise.</p><div class="ux-feature-actions"><a class="ux-primary-action" href="/teams/{roster_id}">Open My Team</a><a class="ux-secondary-action" href="/trades?front_office={roster_id}">Work the trade desk</a></div></article><aside class="card ux-signal-rail"><div class="identity-kicker">Right now</div><a class="ux-signal" href="/league"><span class="ux-signal-icon">#</span><span><b>{escape(str(outlook.get("rank") or "—"))}</b><small>{escape(ranking_label)}</small></span><span aria-hidden="true">→</span></a><a class="ux-signal" href="/teams/{roster_id}#assets"><span class="ux-signal-icon">◎</span><span><b>{len(team.get("players") or [])} players</b><small>{len(team.get("picks_owned") or [])} future picks</small></span><span aria-hidden="true">→</span></a><a class="ux-signal" href="/trades?front_office={roster_id}"><span class="ux-signal-icon">⇄</span><span><b>Trade desk</b><small>Bilateral opportunities</small></span><span aria-hidden="true">→</span></a></aside></div>{selector}'''
+        header = f'''<div class="ux-command-grid"><article class="ux-feature"><p class="identity-kicker">Your front office · {escape(str(team.get("owner") or "Unassigned"))}</p><h2>{escape(str(team.get("team_name") or "Franchise"))}{you_badge(data, roster_id)}</h2><div class="ds-badges">{standing_badge(standings_order(data)["ranks"].get(roster_id), derived=True)}{champion_badge(champion, roster_id)}</div><p class="ux-feature-copy"><b>{escape("Preseason · official record not started" if preseason else "Official record: " + record)}</b></p><p class="ux-feature-copy">DTOS strength assessment: {escape(competitive)}. DTOS has organized the current league evidence around the decisions that matter to this franchise.</p><div class="ux-feature-actions"><a class="ux-primary-action" href="/teams/{roster_id}">Open My Team</a><a class="ux-secondary-action" href="/trades?front_office={roster_id}">Work the trade desk</a></div></article><aside class="card ux-signal-rail"><div class="identity-kicker">Right now</div><a class="ux-signal" href="/league"><span class="ux-signal-icon">#</span><span><b>{escape(str(outlook.get("rank") or "—"))}</b><small>{escape(ranking_label)}</small></span><span aria-hidden="true">→</span></a><a class="ux-signal" href="/teams/{roster_id}#assets"><span class="ux-signal-icon">◎</span><span><b>{len(team.get("players") or [])} players</b><small>{len(team.get("picks_owned") or [])} future picks</small></span><span aria-hidden="true">→</span></a><a class="ux-signal" href="/trades?front_office={roster_id}"><span class="ux-signal-icon">⇄</span><span><b>Trade desk</b><small>Bilateral opportunities</small></span><span aria-hidden="true">→</span></a></aside></div>{selector}'''
 
         actions = [
             ("Review your team direction", "See the current roster assessment, needs, and core assets.", f"/teams/{roster_id}"),
@@ -166,7 +167,6 @@ def create_home_router(
         data = require_data()
         teams = data.get("teams") or []
         preseason = league_is_preseason(data)
-        ranks = official_ranks(data)
         visual_standings = render_standings(data)
         preseason_analysis = ''
         if preseason:
@@ -185,7 +185,7 @@ def create_home_router(
         links = '<div class="grid">' + "".join(f'<a class="card" href="{href}"><h3>{title}</h3><p class="muted">{description}</p></a>' for title, description, href in destinations) + "</div>"
         body = (
             _section("Preseason League Briefing" if preseason else "League Recap", "A league-wide view, separate from your personal front office", f'<div class="card ux-recap"><p>{escape("Regular-season games have not started. Review roster direction, recent activity, market movement, and Week 1 preparation." if preseason else f"{len(teams)} franchises · Week {data.get('week') or '—'} · Season {(data.get('league') or {}).get('season') or '—'}")}</p></div>')
-            + _section("Official Standings" if ranks else "Current Records", "League-specific Sleeper records and scoring", visual_standings) + preseason_analysis
+            + _section("Standings", "League-specific Sleeper records and scoring", visual_standings) + preseason_analysis
             + _section("League Intelligence", "Competition, management, activity, and history", links)
         )
         return page("League", body)

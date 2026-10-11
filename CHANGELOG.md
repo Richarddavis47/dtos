@@ -1,3 +1,11 @@
+## v1.21.33 · build 2133 — Source-Backed Standings & Playoff Positioning
+
+- Shared Home/League standings rank complete, equal-opportunity/equal-tie-count records by wins then source cumulative Points For, with explicit DTOS provenance. Equal record/PF placements remain unresolved; PA and roster IDs do not break ties.
+- Supported standard leagues show a current playoff-position cutoff; complete division rules use per-team indicators. Unknown division/custom rules withhold qualification without hiding valid statistical ranks. This is not final seeding, clinching or a bye guarantee.
+- Comparable complete weekly evidence supports separately labeled reconstructed movement. Cumulative source PF/PA remain authoritative. Home consumes the prepared season-matchup semantic identity directly, including historical recovery/corrections.
+- Badge explanations expand across the standings panel, with truthful missing-record states and singular streak wording.
+- No projection/Market/Trade scoring changes, historical-grade regeneration, storage migration, backfill or new polling. See [contracts, limitations and Scout acceptance](docs/STANDINGS_POSITIONING.md).
+
 ## v1.21.32 · build 2132 — Matchup Portrait Readability
 
 - Matchup wrappers, loaded headshots and fallback initials share one contained 28px sizing contract. Shared portraits on other pages remain unchanged.

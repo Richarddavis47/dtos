@@ -182,8 +182,8 @@ class UXFoundationTests(unittest.TestCase):
     def test_league_hub_keeps_fois_and_current_rankings_distinct(self) -> None:
         with patch('routes.home.build_team_directory', side_effect=AssertionError('Record view must not construct intelligence')):
             html = self._client().get("/league").text
-        self.assertIn("Current Records", html)
-        self.assertIn("list order is not playoff seeding", html)
+        self.assertIn("Standings ranked by Sleeper record, then Points For", html)
+        self.assertIn("not Sleeper-supplied playoff seeds", html)
         self.assertNotIn('aria-label="Rank 1"', html)
         self.assertIn('href="/reports/weekly"', html)
         self.assertIn("Current-season results—not FOIS", html)

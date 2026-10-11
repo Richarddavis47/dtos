@@ -46,20 +46,21 @@ def official_ranks(data: dict) -> dict[int, int]:
     return {int(team["roster_id"]): rank for team, rank in zip(teams, ranks)}
 
 
-def standing_badge(rank: int | None) -> str:
+def standing_badge(rank: int | None, *, derived: bool = False) -> str:
     if rank is None:
         return ""
     medal = {1: "Gold", 2: "Silver", 3: "Bronze"}.get(rank)
     return explained_badge(
         f"{ {1: '🥇', 2: '🥈', 3: '🥉'}.get(rank, '')} #{rank}",
-        f"Official Sleeper league standings: place {rank}. "
-        + (f"{medal} marks this official placement." if medal else ""),
+        (f"DTOS-organized standings: place {rank}, by Sleeper record then Points For. " if derived
+         else f"Official Sleeper league standings: place {rank}. ")
+        + (f"{medal} marks this {'statistical' if derived else 'official'} placement." if medal else ""),
         f"standing-{rank}",
     )
 
 
 def movement_badge(
-    current: int | None, previous: int | None, period: str | None
+    current: int | None, previous: int | None, period: str | None, *, derived: bool = False
 ) -> str:
     if (
         not period
@@ -73,7 +74,7 @@ def movement_badge(
         return ""
     return explained_badge(
         ("↑" if change > 0 else "↓") + str(abs(change)),
-        f"Official standings movement over {period}: #{previous} to #{current}. Not a win/loss streak.",
+        f"{'DTOS-derived' if derived else 'Official'} standings movement over {period}: #{previous} to #{current}. Not a win/loss streak.",
         "movement",
     )
 
@@ -94,7 +95,7 @@ def streak_badge(results: list[str], period: str | None) -> str:
         count += 1
     return explained_badge(
         f"{last}{count}",
-        f"{count} consecutive {'wins' if last == 'W' else 'losses'} in {period}. Not rank movement.",
+        f"{count} consecutive {('win' if last == 'W' else 'loss') if count == 1 else ('wins' if last == 'W' else 'losses')} in {period}. Head-to-head results, not rank movement.",
         "streak",
     )
 
