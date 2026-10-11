@@ -1,3 +1,10 @@
+## v1.21.32 · build 2132 — Matchup Portrait Readability
+
+- Matchup wrappers, loaded headshots and fallback initials share one contained 28px sizing contract. Shared portraits on other pages remain unchanged.
+- Rendered image-state tests cover loaded, loading, failed and missing images; long identity/status text; actual/unavailable projected points; both sides and empty slots at short/tall phone and desktop widths.
+- Scoring, Sleeper projections, lineup rules, standings, Trade intelligence and historical persistence are unchanged.
+- See `docs/MATCHUP_PORTRAIT_READABILITY.md` for geometry validation, evidence boundaries and Scout handoff.
+
 ## v1.21.31 · build 2131 — Phone Matchups & Standings
 
 - Compact side-by-side matchups, authenticated own-matchup-first ordering, full-card activation and preserved selected-week navigation.
