@@ -55,6 +55,12 @@ class ProductBrowserJourneyTests(unittest.TestCase):
     def audit_page(self, page, path, viewport):
         """Extension point for shared presentation contracts using the real routers."""
 
+    def configure_app(self, app, common):
+        """Allow journey-specific existing product routers, without replacing them."""
+
+    def configure_data(self, data, league):
+        """Additional source-shaped facts for focused product journeys."""
+
     def test_authenticated_product_navigation_and_league_switching(self):
         import dtos_app
 
@@ -86,6 +92,7 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                 data["roster_positions"] = data["league"]["roster_positions"]
                 data["matchups"] = {"1": [dict(team=team["team_name"], owner=team["owner"], roster_id=team["roster_id"], points=0, record="0-0", players=team["players"], starters=[]) for team in data["teams"][:2]]}
                 data["traded_picks"] = [{"season": "2027", "round": 1, "roster_id": 1, "owner_id": 2, "previous_owner_id": 1}]
+                self.configure_data(data, league)
                 state = {"data": data, "last_sync": "fixture-boundary"}
                 runtime = manager.attach_default(league, state, warm=True)
                 market = _Market(f"generation-{league}")
@@ -123,6 +130,7 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                 state={}, league_id="100", context_resolver=current_league_context))
             app.include_router(create_fois_router(require_data=data, page=dtos_app.page,
                 service=FOISService(repository=FOISRepository(Path(folder) / "fois.sqlite3"))))
+            self.configure_app(app, common)
 
             with patch.object(dtos_app, "account_store", store), patch(
                 "services.sleeper.sleeper_get", side_effect=AssertionError("request-time provider call"),

@@ -37,6 +37,7 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
                 quality.confidence if quality else 0, price_confidence,
                 int(projected.get('projection_confidence') or 0)))
         backup = None
+        reserves = []
         if lineup.optimal_lineup_projection is not None:
             reserves = [{'id': item.player_id, 'position': player.get('position'), 'projected_points': item.projected_points}
                 for item, player in zip(evidence_players, other.profile.players)
@@ -49,7 +50,9 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
             generation=context.evidence_generation, players=tuple(evidence_players),
             actual_starter_ids=lineup.actual_starter_ids, optimal_starter_ids=lineup.optimal_starter_ids,
             actual_points=lineup.actual_lineup_projection, optimal_points=lineup.optimal_lineup_projection,
-            legal_backup_points=backup)
+            legal_backup_points=backup,
+            backup_covered=sum(row['projected_points'] is not None for row in reserves),
+            backup_expected=len(reserves))
         league_players[roster_id] = {}
         for item, player in zip(evidence_players, other.profile.players):
             row = projection_rows.get(item.player_id) or {}

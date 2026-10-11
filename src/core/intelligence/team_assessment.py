@@ -52,7 +52,7 @@ def build_team_assessment(context: Any, team: TeamIntelligenceCard) -> TeamAsses
         raise ValueError("Team assessment projection league mismatch")
     ids = tuple(dict.fromkeys(str(row.get("id") or row.get("player_id")) for row in context.roster.get("players") or () if row.get("roster_slot") == "Starter"))
     rows = snapshot.get("players") or {}
-    week = snapshot.get("week")
+    week = roster_evidence.projection_week
     selected = [rows.get(key) or {} for key in ids]
 
     def total(field: str) -> float | None:

@@ -32,7 +32,9 @@ def _decision_provider(context: IntelligenceContext) -> dict[int, Any]:
         int(team.get("roster_id") or 0): evaluate_team(
             context.cached_data,
             int(team.get("roster_id") or 0),
-            DecisionContext(int(team.get("roster_id") or 0), context.league_id, context.settings),
+            DecisionContext(int(team.get("roster_id") or 0), context.league_id, context.settings,
+                            (context.user_preferences.get('strategy') or 'Unspecified')
+                            if int(team.get('roster_id') or 0) == context.active_roster_id else 'Unspecified'),
         )
         for team in context.teams
     }

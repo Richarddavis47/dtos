@@ -120,8 +120,9 @@ def _needs(decision: TeamDecision) -> set[str]:
 
 
 def _surpluses(decision: TeamDecision) -> set[str]:
-    targets = {"QB": 2, "RB": 4, "WR": 5, "TE": 2}
-    return {position for position, room in decision.profile.position_rooms.items() if room.total_players > targets[position]}
+    # Holdings alone cannot establish expendability. No validated removal-cost
+    # assessment is published in this contract; compatibility must not invent it.
+    return set()
 
 
 def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: FrontOfficeReport) -> CompatibilityReport:

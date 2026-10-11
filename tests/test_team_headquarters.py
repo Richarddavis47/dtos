@@ -164,7 +164,7 @@ class TeamHeadquartersRequestSchedulingTests(unittest.IsolatedAsyncioTestCase):
         release = threading.Event()
         real_builder = build_team_headquarters
 
-        def slow_builder(payload: dict, roster_id: int, last_sync=None):
+        def slow_builder(payload: dict, roster_id: int, last_sync=None, **kwargs):
             started.set()
             self.assertTrue(release.wait(2.0))
             return real_builder(payload, roster_id, last_sync)

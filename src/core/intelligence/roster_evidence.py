@@ -1,9 +1,9 @@
 """Generation-pinned roster evidence; no interchangeable player-value scalar."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from math import isfinite
 from typing import Any
 
-from src.core.trade_intelligence.lineup import BENCH_SLOTS, optimal_legal_lineup
+from src.core.trade_intelligence.lineup import BENCH_SLOTS, FLEX_ELIGIBILITY, optimal_legal_lineup
 
 
 @dataclass(frozen=True)
@@ -20,6 +20,7 @@ class RosterEvidence:
     projection_covered: int
     roster_count: int
     limitations: tuple[str, ...]
+    positions: dict = field(default_factory=dict)
 
 
 def _points(value: Any) -> float | None:
@@ -46,6 +47,14 @@ def build_roster_evidence(context: Any) -> RosterEvidence:
     if any(not key for key in identifiers) or len(set(identifiers)) != len(identifiers):
         raise ValueError('Roster evidence requires unique canonical player identities')
     week = snapshot.get('week')
+    data = getattr(context, 'cached_data', {})
+    league = data.get('league') or {}
+    scoring = data.get('scoring_settings') or league.get('scoring_settings') or {}
+    incompatible = ((data.get('week') is not None and week != (data['week'] or 1))
+                    or (league.get('season') is not None and str(snapshot.get('season')) != str(league['season']))
+                    or (scoring and snapshot.get('scoring_settings') != scoring))
+    if incompatible:
+        week = None
     rows = snapshot.get('players') or {}
     points = {
         key: _points(rows.get(key, {}).get('weekly_projected_points'))
@@ -66,15 +75,35 @@ def build_roster_evidence(context: Any) -> RosterEvidence:
     ), slots)
     complete = candidate.available and len(candidate.entries) == slot_count
     limitations = []
+    if incompatible:
+        limitations.append('Published projections do not match the current league week, season or scoring context; reevaluation awaits compatible Sleeper evidence.')
     if any(points[key] is None for key, _ in eligible):
         limitations.append('Optimal lineup is limited to players with supported projections; unknown players are not ranked as zero.')
     if actual_total is None:
         limitations.append('Actual starter projection coverage is incomplete.')
     if not complete:
         limitations.append('A complete optimal projected lineup is unavailable; missing players are not zero.')
+    chosen = {entry.asset_id for entry in candidate.entries} if complete else set(actual)
+    positions = {}
+    for position in ('QB', 'RB', 'WR', 'TE'):
+        room = [(key, player) for key, player in eligible if player.get('position') == position]
+        starters = [key for key, _ in room if key in chosen]
+        reserves = [key for key, _ in room if key not in chosen]
+        known = [key for key in reserves if points[key] is not None]
+        positions[position] = {
+            'starting_players': starters, 'starting_count': len(starters),
+            'starting_points': sum(points[key] for key in starters) if starters and all(points[key] is not None for key in starters) else None,
+            'required_slots': slots.count(position),
+            'eligible_flex_slots': sum(position in FLEX_ELIGIBILITY.get(slot, set()) for slot in slots),
+            'reserve_ids': reserves, 'reserve_covered': len(known), 'reserve_expected': len(reserves),
+            'best_reserve_points': max((points[key] for key in known), default=None),
+            'projection_week': week, 'lineup_basis': 'optimal legal lineup' if complete else 'submitted starters',
+            'availability': 'complete' if reserves and len(known) == len(reserves) else 'partial' if known else 'unavailable',
+            'surplus': None,
+        }
     return RosterEvidence(context.league_id, roster_id, context.evidence_generation,
         snapshot.get('projection_snapshot_id') or snapshot.get('generation'), week,
         actual, actual_total,
         tuple(entry.asset_id for entry in candidate.entries) if complete else (),
         candidate.projected_points if complete else None,
-        sum(value is not None for value in points.values()), len(players), tuple(limitations))
+        sum(value is not None for value in points.values()), len(players), tuple(limitations), positions)

@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from services.team_fois_explanations import strengths_context
 from src.core.front_office_intelligence import build_league_model
@@ -39,16 +40,30 @@ class TrustWordingTests(unittest.TestCase):
         decision = self.first.decision
         evaluation = next(iter(decision.position_evaluations.values()))
         first = replace(self.first, decision=replace(decision, position_evaluations={'WR': replace(evaluation, score=30)}))
-        rooms = dict(self.second.decision.profile.position_rooms)
-        rooms['WR'] = replace(rooms['WR'], total_players=8)
-        second = replace(self.second, decision=replace(self.second.decision, profile=replace(self.second.decision.profile, position_rooms=rooms)))
-        result = self.report(first, second)
+        second = self.second
+        # Isolate wording over an admitted surplus; player count cannot supply it.
+        def admitted_surplus(decision):
+            return {'WR'} if decision.profile.roster_id == second.roster_id else set()
+        with patch('src.core.front_office_intelligence.engine._surpluses', side_effect=admitted_surplus):
+            result = self.report(first, second)
+            reversed_result = _compatibility(self.data, second, first)
         self.assertIn('WR', result.shared_interests)
         self.assertIn(first.team_name, result.forecast.opening_recommendation)
         self.assertIn(second.team_name, result.forecast.opening_recommendation)
         self.assertIn('supported WR need', result.forecast.opening_recommendation)
-        reversed_result = _compatibility(self.data, second, first)
         self.assertIn(first.team_name + "'s supported WR need", reversed_result.forecast.opening_recommendation)
+
+    def test_player_quantity_does_not_establish_complementary_surplus(self):
+        decision = self.first.decision
+        evaluation = next(iter(decision.position_evaluations.values()))
+        first = replace(self.first, decision=replace(decision, position_evaluations={'WR': replace(evaluation, score=30)}))
+        rooms = dict(self.second.decision.profile.position_rooms)
+        rooms['WR'] = replace(rooms['WR'], total_players=8)
+        second = replace(self.second, decision=replace(self.second.decision, profile=replace(self.second.decision.profile, position_rooms=rooms)))
+        result = self.report(first, second)
+        self.assertEqual(result.shared_interests, ())
+        self.assertNotIn('observed depth surplus', result.forecast.opening_recommendation)
+        self.assertIsNone(result.forecast.acceptance_probability)
 
     def test_missing_need_evidence_is_unavailable_not_none(self):
         missing = replace(self.first, decision=replace(self.first.decision, position_evaluations={}))

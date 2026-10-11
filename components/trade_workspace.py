@@ -60,4 +60,4 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <button id="trade-build-own" type="button" {'hidden' if workflow == 'create' else ''}>Build My Own</button>
 <section id="trade-result" role="status" aria-live="polite" tabindex="-1" hidden></section>
 {market_detail}{balance_controls if not market_editor else ""}
-<p class="muted">Ownership is revalidated before evaluation. Market Balance is neutral market evidence, not the recommendation. DTOS evaluates proposals; it does not send trades to Sleeper.</p></section><script src="/static/js/trade_workspace.js" defer></script>'''
+<p class="muted">Ownership is revalidated before evaluation. Market Balance is neutral market evidence, not the recommendation. DTOS evaluates proposals; it does not send trades to Sleeper.</p></section><script src="/static/js/strategy_session.js" defer></script><script src="/static/js/trade_workspace.js" defer></script>'''

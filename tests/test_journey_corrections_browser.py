@@ -41,8 +41,7 @@ class JourneyPlacementBrowserTests(journey.ProductBrowserJourneyTests):
             access = page.get_by_role('link', name='View full roster')
             self.assertLess(access.bounding_box()['y'], viewport['height'] * 1.5)
             access.click()
-            roster = page.get_by_text('Full Roster · position rooms and current lineup designation', exact=True)
-            roster.click()
+            self.assertTrue(page.locator('#my-team-roster').evaluate('e => e.open'), 'Roster shortcut opens the inventory in one action')
             self.assertTrue(page.locator('.thq-roster').is_visible())
 
 

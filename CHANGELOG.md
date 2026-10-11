@@ -1,3 +1,11 @@
+## v1.21.34 · build 2134 — My Team Evidence & Session Intent
+
+- League/franchise strategy lives separately from temporary Trade proposals in a bounded, account-session-scoped browser cookie; league switching and proposal cleanup preserve the selected goal.
+- Partial reserve projections retain a qualified known subtotal without a complete depth grade. Genuine zero remains distinct from missing evidence; holdings alone no longer establish surplus.
+- My Team presents roster identity, strategy, supported starter contributions, backup risks and existing record/PF standings first. Roster and capital shortcuts, canonical player/pick dossiers and direct owned-asset Shop actions reuse existing workflows.
+- Current-week canonical evidence is pinned across the page; incompatible rollover/scoring/season evidence is withheld. Comparative grades disclose the complete-evidence cohort, and missing Max PF remains unavailable.
+- No new projection or valuation engine, permanent roster/preferences store, provider backfill, migration or historical FOIS regeneration. See [audit reconciliation and Scout scenarios](docs/MY_TEAM_INTELLIGENCE.md).
+
 ## v1.21.33 · build 2133 — Source-Backed Standings & Playoff Positioning
 
 - Shared Home/League standings rank complete, equal-opportunity/equal-tie-count records by wins then source cumulative Points For, with explicit DTOS provenance. Equal record/PF placements remain unresolved; PA and roster IDs do not break ties.
