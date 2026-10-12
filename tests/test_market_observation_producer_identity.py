@@ -70,7 +70,7 @@ class ProducerIdentityTests(unittest.TestCase):
             store = IntelligenceCheckpointStore(Path(temp) / 'memory.db')
             for n, value in enumerate((9000, 3000), 1):
                 data, asset = prepared(value)
-                evidence = CheckpointPipeline._market_observations(data, 'player:1')
+                evidence = tuple(replace(row, observed_at=f'2026-09-{n:02}T12:00:00Z') for row in CheckpointPipeline._market_observations(data, 'player:1'))
                 store.put_sparse(checkpoint(str(n), asset['layers']['market_value']['value'], f'2026-09-{n:02}T12:00:00Z'),
                                  market_context_id='test', provider_evidence=evidence)
             trend = MarketTrendService(store).trend_for_asset('player:1', None)

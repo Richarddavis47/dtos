@@ -347,7 +347,8 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
                 "drafts": [{"draft_id": "draft", "type": "rookie"}],
                 "draft_picks": [{
                     "draft_id": "draft", "pick_no": 1, "round": 1,
-                    "roster_id": 3, "picked_by": 2, "player_id": "old-player",
+                    "roster_id": 3, "original_roster_id": 3,
+                    "picked_by": "manager-user", "player_id": "old-player",
                 }],
                 "transactions": {"4": [{
                     "transaction_id": "trade-1", "type": "trade", "status": "complete",

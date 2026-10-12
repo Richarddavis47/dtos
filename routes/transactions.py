@@ -102,7 +102,7 @@ def _asset_html(asset: dict[str, Any]) -> str:
             f'{escape(str(asset["label"]))}</a>'
         )
     else:
-        label = f'<b>{escape(str(asset["label"]))}</b>'
+        label = f'<a href="/picks/{quote(str(asset["canonical_pick_id"]))}">{escape(str(asset["label"]))}</a>' if asset.get('canonical_pick_id') else f'<b>{escape(str(asset["label"]))}</b>'
     movement_parts = []
     if asset.get("source_id"):
         movement_parts.append(
@@ -168,10 +168,12 @@ def _transactions_table(view: dict[str, Any], filters: dict[str, Any]) -> str:
             for team in transaction["teams"]
         ) or "—"
         assets = "".join(_asset_html(asset) for asset in transaction["assets"]) or "—"
+        trade_detail = (f'<br><a class="timeline-link" href="/trades/history/{quote(str(transaction["id"]), safe="")}">View completed trade trail</a>'
+                        if transaction['type'] == 'trade' and transaction['status'] in {'complete', 'completed'} else '')
         rows.append(
             "<tr>"
             f'<td class="tx-time"><b>{escape(transaction["timestamp"])}</b></td>'
-            f'<td><span class="tx-type {escape(transaction["type"])}">{escape(transaction["type_label"])}</span><br><small class="muted">{escape(transaction["status"])}</small></td>'
+            f'<td><span class="tx-type {escape(transaction["type"])}">{escape(transaction["type_label"])}</span><br><small class="muted">{escape(transaction["status"])}</small>{trade_detail}</td>'
             f'<td><div class="tx-teams">{teams}</div></td>'
             f'<td><div class="tx-assets">{assets}</div></td>'
             "</tr>"
@@ -398,7 +400,8 @@ def create_transactions_router(
                           week: int | None = Query(default=None, ge=1, le=18),
                           matchup: str | None = Query(default=None, max_length=80),
                           from_team: int | None = Query(default=None, ge=1),
-                          from_section: str = Query(default='full-roster', max_length=40)) -> HTMLResponse:
+                          from_section: str = Query(default='full-roster', max_length=40),
+                          from_trade: str | None = Query(default=None, max_length=100)) -> HTMLResponse:
         await ensure_fresh()
         data = require_data()
         player = (data.get("players") or {}).get(player_id)
@@ -478,15 +481,15 @@ def create_transactions_router(
             f'<tr><td>{row["season"]}</td><td>{escape(human_status(row["status"]))}</td><td>{escape(str(row["games_observed"]))}</td><td>{escape(str(row["starts"]))}</td><td>{escape(str(row["bench_appearances"]))}</td><td>{escape(available(row["fantasy_points"], reason="No verified production"))}</td><td>{escape(available(row["overall_rank"], reason="Not ranked"))}</td><td>{escape(available(row["positional_rank"], reason="Not ranked"))}</td><td>{escape(str(row["completeness_percentage"]))}%</td></tr>'
             for row in history["season_summaries"]
         ) or '<tr><td colspan="9">No supported annual observations are available.</td></tr>'
-        ownership_history = "".join(
-            f'<li>{escape(str(row["season"]))} Week {escape(str(row["week"] or "Unknown"))}: {escape(row["event_type"].replace("_", " ").title())} — {escape(row["event_status"])} <small>{escape(row["source_record_id"])}</small></li>'
-            for row in history["ownership_timeline"]
-        ) or f'<li>No verified {history_league_name} ownership event is available in the retained league history.</li>'
+        from src.ui.trade_timeline import render_ownership_events
+        ownership_history = render_ownership_events(history['ownership_timeline']) or f'<li>No verified {history_league_name} ownership event is available.</li>'
         origin = history["league_origin"]
         historical_details = technical_details((("Canonical identity", history["identity"]["canonical_id"]), ("Identity resolution", history["identity"]["resolution_status"])))
         historical_panel = f'''<section class="card"><h2>{history_league_name} Career History</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}">Open complete historical performance</a></p>{historical_details}
 <h3>Annual League History</h3><div style="overflow-x:auto"><table><thead><tr><th>Season</th><th>Status</th><th>Games</th><th>Starts</th><th>Bench</th><th>Points</th><th>Overall</th><th>Position</th><th>Complete</th></tr></thead><tbody>{season_history}</tbody></table></div>
 <h3>Ownership Timeline</h3><ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></section>'''
+        original = historical_graph(canonical_history_store, selected_league, data).trade_dossier(from_trade) if from_trade else None
+        trade_return = f'<a class="back" href="/trades/history/{quote(original["transaction_id"], safe="")}">← Back to original trade timeline</a>' if original else ''
         matchup_return = ''
         section = from_section if from_section in {'full-roster', 'my-team-advanced'} else 'full-roster'
         team_return = (f'<a class="back" href="/teams/{from_team}#{section}">← Back to My Team {"intelligence" if section == "my-team-advanced" else "roster"}</a>'
@@ -495,6 +498,7 @@ def create_transactions_router(
             matchup_return = f'<link rel="stylesheet" href="/static/css/matchups.css"><a class="back matchup-return" href="/matchups/{escape(matchup)}?week={week}">← Back to Week {week} matchup</a>'
         body = f"""
 {TRANSACTIONS_CSS}
+{trade_return}
 {matchup_return}
 {team_return or '<a class="back" href="/transactions">← Back to Transactions Center</a>'}
 {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}

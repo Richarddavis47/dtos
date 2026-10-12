@@ -9,15 +9,16 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from pathlib import Path
 from threading import RLock
 from typing import Any, Iterable
 
 from config import SLEEPER_SEASON_CACHE_ROOT
 from .season_cache import SleeperSeasonCache
-from .timestamps import canonical_transaction_timestamp, canonical_draft_bounds
+from .timestamps import canonical_transaction_timestamp
 from .playoffs import playoff_facts
+from .assets import draft_pick, future_pick_id, reconcile_player_weeks, PlayerWeekIndexLimit
 
 from .metadata import minimal_metadata_store
 
@@ -40,6 +41,8 @@ class CanonicalHistoryStore:
         self._identities: dict[str, dict[str, Any]] = {}
         self._relevance: dict[str, dict[str, tuple[str, ...]]] = {}
         self._generation = 0
+        self._event_indexes = OrderedDict()
+        self._player_index_cache = None
         self._dataset_metrics = {"point_queries": 0, "archive_scans": 0}
 
     def update_current(self, league_id: str, data: dict[str, Any]) -> None:
@@ -62,6 +65,8 @@ class CanonicalHistoryStore:
             "players": identities, "projections": data.get("projection_intelligence") or {},
             "valuation": data.get("valuation_intelligence") or {},
             "market": data.get("market_data") or {},
+            "transactions": data.get("transactions") or [], "season_transactions": data.get("season_transactions") or {}, "drafts": data.get("drafts") or [],
+            "draft_picks": data.get("draft_picks") or [], "traded_picks": data.get("traded_picks") or [],
         })
         with self._lock:
             self._current[key] = data
@@ -371,13 +376,27 @@ class CanonicalHistoryStore:
             "timestamp_provenance": timestamp_provenance,
         }
 
-    def _season_records(self, league_id: str, season: int) -> list[dict[str, Any]]:
+    def _season_records(self, league_id: str, season: int, families: set[str] | None = None, player_filter: str | None = None) -> list[dict[str, Any]]:
         from .results import matchup_result, standing_points
         facts = self._facts(league_id, season)
         if not facts:
             from .recovery import HistoricalCheckpoints
             checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
             return checkpoint['records'] if checkpoint else []
+        if families is not None:
+            # Project only the requested source families before constructing rows.
+            # Event lookups never materialize the player-week universe.
+            facts = dict(facts)
+            if not families & {'player_week', 'matchup'}:
+                facts['matchups'] = {}
+            if not families & {'trade', 'transaction'}:
+                facts['transactions'] = {}
+            if 'draft_pick' not in families:
+                facts['draft_picks'] = []
+            if 'pick_snapshot' not in families:
+                facts['traded_picks'] = []
+            if not families & {'playoff_result', 'playoff_bracket'}:
+                facts['winners_bracket'] = facts['losers_bracket'] = []
         league = facts.get("league") or {}
         rows = [self._record(league_id, season, "league_season", league_id, {
             "sleeper_season_league_id": league.get("league_id"),
@@ -433,9 +452,13 @@ class CanonicalHistoryStore:
                 if row.get("matchup_id") is not None:
                     grouped[int(row["matchup_id"])].append(row)
                 points = row.get("players_points") or {}
+                membership = set(map(str, row.get("players") or ())) | set(map(str, row.get("starters") or ())) | set(map(str, points))
+                if player_filter is not None:
+                    membership.intersection_update({str(player_filter)})
                 starters = set(map(str, row.get("starters") or ()))
                 roster_id = int(row.get("roster_id") or 0)
-                for player_id, score in points.items():
+                for player_id in sorted(membership - {"0", "", "None"}):
+                    score = points.get(player_id)
                     rows.append(self._record(
                         league_id, season, "player_week",
                         f"{week}:{roster_id}:{player_id}",
@@ -453,7 +476,7 @@ class CanonicalHistoryStore:
             week = int(week_key)
             for transaction in transactions or []:
                 transaction_id = str(transaction.get("transaction_id") or _digest(transaction)[:16])
-                payload = dict(transaction)
+                payload = {**transaction, "source_league_id": league.get("league_id") or league_id}
                 payload.setdefault("roster_ids", transaction.get("roster_ids") or [])
                 entity = "trade" if transaction.get("type") == "trade" else "transaction"
                 occurred_at, timestamp_provenance = canonical_transaction_timestamp(payload)
@@ -468,17 +491,14 @@ class CanonicalHistoryStore:
         drafts_by_id = {str(draft.get('draft_id')): draft for draft in facts.get('drafts') or []
                         if draft.get('draft_id')}
         for pick in facts.get("draft_picks") or []:
-            if str(pick.get('draft_id')) in drafts_by_id:
-                pick = {**pick, **canonical_draft_bounds(drafts_by_id[str(pick['draft_id'])])}
-            pick_id = str(pick.get("pick_no") or pick.get("pick_id") or _digest(pick)[:16])
-            if pick.get("draft_id"):
-                pick_id = f"{pick['draft_id']}:{pick_id}"
-            roster_id = pick.get("roster_id")
-            rows.append(self._record(
-                league_id, season, "draft_pick", pick_id, dict(pick),
-                player_id=str(pick.get("player_id") or "") or None,
-                franchise_id=f"{league_id}:franchise:{roster_id}" if roster_id is not None else None,
-            ))
+            pick = draft_pick(pick, drafts_by_id.get(str(pick.get('draft_id')), {}),
+                              str(league.get('league_id') or league_id), season)
+            pick_id = pick.get('selection_id') or str(pick.get('pick_id') or _digest(pick)[:16])
+            roster_id = pick.get('selecting_roster_id')
+            rows.append(self._record(league_id, season, 'draft_pick', pick_id, pick,
+                player_id=str(pick.get('player_id') or '') or None,
+                franchise_id=f'{league_id}:franchise:{roster_id}' if roster_id is not None else None,
+                occurred_at=pick.get('selected_at')))
         for pick in facts.get("traded_picks") or []:
             source_id = str(pick.get("pick_id") or _digest(pick)[:16])
             rows.append(self._record(
@@ -520,7 +540,8 @@ class CanonicalHistoryStore:
                 transaction_id = str(
                     transaction.get("transaction_id") or _digest(transaction)[:16]
                 )
-                payload = dict(transaction)
+                source = sleeper_season_cache.section(league_id, season, "league") or {}
+                payload = {**transaction, "source_league_id": source.get("league_id") or league_id}
                 payload.setdefault("roster_ids", transaction.get("roster_ids") or [])
                 occurred_at, timestamp_provenance = canonical_transaction_timestamp(payload)
                 rows.append(self._record(
@@ -562,6 +583,7 @@ class CanonicalHistoryStore:
                 "sleeper_roster_id": roster_id,
                 "owner_id": str(team.get("owner_id") or ""),
                 "dtos_display_name": team.get("team_name") or team.get("owner"),
+                "sleeper_username": team.get("owner"),
                 "franchise_id": franchise,
             }, franchise_id=franchise))
             rows.append(self._record(league_id, season, "roster_snapshot", str(roster_id), {
@@ -575,7 +597,21 @@ class CanonicalHistoryStore:
         for pick in data.get("traded_picks") or ():
             source_id = str(pick.get("pick_id") or _digest(pick)[:16])
             rows.append(self._record(league_id, season, "pick_snapshot", source_id, dict(pick)))
-        transactions = data.get("transactions") or ()
+        drafts = {str(d.get('draft_id')): d for d in data.get('drafts') or ()}
+        for draft_id, draft in drafts.items():
+            rows.append(self._record(league_id, season, 'draft', draft_id, dict(draft)))
+        for raw in data.get('draft_picks') or ():
+            pick = draft_pick(raw, drafts.get(str(raw.get('draft_id')), {}), league_id, season)
+            if pick['selection_id']:
+                rows.append(self._record(league_id, season, 'draft_pick', pick['selection_id'], pick,
+                    player_id=str(pick.get('player_id') or '') or None,
+                    franchise_id=f"{league_id}:franchise:{pick['selecting_roster_id']}", occurred_at=pick.get('selected_at')))
+        buckets = data.get('season_transactions') or {}
+        current_transactions = data.get('transactions') or ()
+        if isinstance(current_transactions, dict):
+            current_transactions = [dict(row, leg=int(week)) for week, bucket in current_transactions.items() for row in bucket or ()]
+        transactions = [dict(row, leg=int(week)) for week, bucket in buckets.items() for row in bucket or ()] + list(current_transactions)
+        transactions = list({str(row.get('transaction_id') or _digest(row)): row for row in transactions}.values())
         if isinstance(transactions, dict):
             transaction_rows = [row for values in transactions.values() for row in values or ()]
         else:
@@ -596,6 +632,27 @@ class CanonicalHistoryStore:
         self, league_id: str, entity_type: str | None, *, season: int | None = None,
         week: int | None = None, franchise_id: str | None = None,
         player_id: str | None = None, limit: int | None = 100, offset: int = 0,
+    ) -> tuple[int, list[dict[str, Any]]]:
+        if entity_type == 'player_week' and player_id is not None:
+            try:
+                _totals, by_player = self._player_week_index(league_id)
+            except PlayerWeekIndexLimit:
+                return self._record_page(league_id, entity_type, season=season,
+                    week=week, franchise_id=franchise_id, player_id=player_id,
+                    limit=limit, offset=offset)
+            rows = [r for r in by_player.get(str(player_id), ())
+                    if (season is None or r['season'] == season)
+                    and (week is None or r['week'] == week)
+                    and (franchise_id is None or r['franchise_id'] == franchise_id)]
+            return len(rows), rows[offset:] if limit is None else rows[offset:offset + limit]
+        return self._record_page(league_id, entity_type, season=season, week=week,
+            franchise_id=franchise_id, player_id=player_id, limit=limit, offset=offset)
+
+    def _record_page(
+        self, league_id: str, entity_type: str | None, *, season: int | None = None,
+        week: int | None = None, franchise_id: str | None = None,
+        player_id: str | None = None, limit: int | None = 100, offset: int = 0,
+        _families: set[str] | None = None,
     ) -> tuple[int, list[dict[str, Any]]]:
         if season is not None:
             seasons = [season]
@@ -629,7 +686,7 @@ class CanonicalHistoryStore:
         else:
             rows = [
                 row for selected in seasons
-                for row in self._season_records(league_id, selected)
+                for row in self._season_records(league_id, selected, _families or ({entity_type} if entity_type else None), player_filter=player_id if entity_type == 'player_week' else None)
             ]
         rows = [row for row in rows if row['season'] not in coverage
                 or row['entity_type'] in coverage[row['season']]]
@@ -638,6 +695,7 @@ class CanonicalHistoryStore:
         rows = list({str(row["record_key"]): row for row in rows}.values())
         rows = [row for row in rows if (
             (entity_type is None or row["entity_type"] == entity_type)
+            and (_families is None or row["entity_type"] in _families)
             and (week is None or row["week"] == week)
             and (franchise_id is None or row["franchise_id"] == franchise_id)
             and (player_id is None or row["player_id"] == player_id)
@@ -726,15 +784,7 @@ class CanonicalHistoryStore:
 
     @staticmethod
     def _canonical_pick_id(payload: dict[str, Any], season: int) -> str | None:
-        pick_season = payload.get("season") or season
-        round_number = payload.get("round")
-        original_roster = (
-            payload.get("roster_id") or payload.get("original_roster_id")
-            or payload.get("original_franchise")
-        )
-        if round_number in (None, "") or original_roster in (None, ""):
-            return None
-        return f"PICK-{pick_season}-R{round_number}-ORIG{original_roster}"
+        return future_pick_id(payload, season, selection=bool(payload.get('selection_id') or payload.get('player_id')))
 
     def distinct_pick_ids(self, league_id: str) -> list[str]:
         _, rows = self.records(league_id, None, limit=1_000_000)
@@ -781,9 +831,50 @@ class CanonicalHistoryStore:
         return matches[:limit]
 
     def transaction_record(self, league_id: str, transaction_id: str) -> dict[str, Any] | None:
-        _, rows = self.records(league_id, None, limit=1_000_000)
-        return next((row for row in rows if row["entity_type"] in {"trade", "transaction"}
-                     and str(row["source_record_id"]) == str(transaction_id)), None)
+        families, _index = self._event_index(league_id)
+        return next((row for kind in ('trade', 'transaction') for row in families[kind]
+                     if str(row['source_record_id']) == str(transaction_id)), None)
+
+    def _event_index(self, league_id: str):
+        """Two resident generations; no player-week universe retained in this index."""
+        key = (str(league_id), self.dataset_version(league_id))
+        with self._lock:
+            if key in self._event_indexes:
+                self._event_indexes.move_to_end(key)
+                return self._event_indexes[key]
+        kinds = ('draft_pick', 'transaction', 'trade', 'pick_snapshot', 'weekly_roster', 'draft', 'roster_snapshot')
+        _, rows = self._record_page(league_id, None, limit=100_001, _families=set(kinds))
+        if len(rows) > 100_000:
+            raise ValueError('Historical event preparation exceeds bounded record limit')
+        kinds = ('draft_pick', 'transaction', 'trade', 'pick_snapshot', 'weekly_roster', 'draft', 'roster_snapshot')
+        families = {kind: [] for kind in kinds}
+        assets = defaultdict(list)
+        for row in rows:
+            kind, payload = row['entity_type'], row['payload']
+            if kind not in families:
+                continue
+            families[kind].append(row)
+            ids = set()
+            if kind == 'draft_pick':
+                if row.get('player_id'):
+                    ids.add('DTOS-P-' + str(row['player_id']))
+                ids.add(payload.get('selection_id'))
+                ids.add(self._canonical_pick_id(payload, row['season']))
+            elif kind in ('transaction', 'trade'):
+                ids.update('DTOS-P-' + str(player) for player in {*(payload.get('adds') or {}), *(payload.get('drops') or {})})
+                ids.update(self._canonical_pick_id(p, row['season']) for p in payload.get('draft_picks') or ())
+            elif kind == 'pick_snapshot':
+                ids.add(self._canonical_pick_id(payload, row['season']))
+            elif kind in ('weekly_roster', 'roster_snapshot'):
+                ids.update('DTOS-P-' + str(p) for p in payload.get('players') or ())
+            for identity in ids - {None}:
+                assets[identity].append(row)
+        result = families, dict(assets)
+        with self._lock:
+            self._event_indexes[key] = result
+            while len(self._event_indexes) > 2:
+                self._event_indexes.popitem(last=False)
+        return result
 
     def discoverable_trade_records(self, league_id: str, limit: int = 3) -> list[dict[str, Any]]:
         _, rows = self.records(league_id, "trade", limit=1_000_000)
@@ -799,54 +890,38 @@ class CanonicalHistoryStore:
     def asset_event_records(
         self, league_id: str, asset_id: str,
     ) -> dict[str, list[dict[str, Any]]]:
-        entity_types = (
-            "draft_pick", "transaction", "trade", "pick_snapshot",
-            "weekly_roster", "draft",
-        )
-        result = {entity_type: [] for entity_type in entity_types}
-        _, rows = self.records(league_id, None, limit=1_000_000)
-        if asset_id.startswith("DTOS-P-"):
-            player_id = asset_id.removeprefix("DTOS-P-")
-            selected = [row for row in rows if (
-                (row["entity_type"] == "draft_pick" and row.get("player_id") == player_id)
-                or (row["entity_type"] in {"transaction", "trade"} and (
-                    player_id in (row["payload"].get("adds") or {})
-                    or player_id in (row["payload"].get("drops") or {})
-                ))
-                or (row["entity_type"] == "weekly_roster" and player_id in {
-                    *map(str, row["payload"].get("starters") or ()),
-                    *map(str, row["payload"].get("bench") or ()),
-                })
-            )]
-        elif asset_id.startswith("PICK-"):
-            selected = []
-            for row in rows:
-                payload = row.get("payload") or {}
-                if row["entity_type"] in {"draft_pick", "pick_snapshot"}:
-                    if self._canonical_pick_id(payload, int(row["season"])) == asset_id:
-                        selected.append(row)
-                elif row["entity_type"] in {"transaction", "trade"} and any(
-                    self._canonical_pick_id(pick, int(row["season"])) == asset_id
-                    for pick in payload.get("draft_picks") or []
-                ):
-                    selected.append(row)
-        else:
-            selected = []
-        selected.extend(row for row in rows if row["entity_type"] == "draft")
-        selected.sort(key=lambda row: (
-            -int(row["season"]), -int(row.get("week") or 0),
-            str(row["entity_type"]), str(row["source_record_id"]),
-        ))
-        for row in selected:
-            result[row["entity_type"]].append(row)
+        families, assets = self._event_index(league_id)
+        result = {kind: [] for kind in families}
+        for row in assets.get(asset_id, ()):
+            result[row['entity_type']].append(row)
+        result['draft'] = list(families['draft'])
         return result
 
     def player_week_totals(self, league_id: str) -> dict[int, dict[str, float]]:
-        _, rows = self.records(league_id, "player_week", limit=1_000_000)
-        result: dict[int, dict[str, float]] = defaultdict(lambda: defaultdict(float))
-        for row in rows:
-            result[int(row["season"])][str(row["player_id"])] += float(row["payload"].get("fantasy_points") or 0)
-        return {season: dict(players) for season, players in result.items()}
+        return self._player_week_index(league_id)[0]
+
+    def _player_week_index(self, league_id: str):
+        """One generation of reconciled rows, shared by totals and targeted reads."""
+        key = (str(league_id), self.dataset_version(league_id))
+        with self._lock:
+            if self._player_index_cache and self._player_index_cache[0] == key:
+                if self._player_index_cache[1] is None:
+                    raise PlayerWeekIndexLimit('Historical player-week comparison exceeds bounded preparation')
+                return self._player_index_cache[1:]
+            count, rows = self._record_page(league_id, 'player_week', limit=100_001)
+            if count > 100_000:
+                self._player_index_cache = (key, None, None)
+                raise PlayerWeekIndexLimit('Historical player-week comparison exceeds bounded preparation')
+            totals, by_player = {}, defaultdict(list)
+            for row in reconcile_player_weeks(rows):
+                player = str(row['player_id'])
+                by_player[player].append(row)
+                points = row['payload'].get('fantasy_points')
+                if points is not None:
+                    season = totals.setdefault(int(row['season']), {})
+                    season[player] = season.get(player, 0) + float(points)
+            self._player_index_cache = (key, totals, dict(by_player))
+            return self._player_index_cache[1:]
 
     def entity_counts_by_season(
         self, league_id: str, entity_types: Iterable[str] | str | None = None,
@@ -889,7 +964,9 @@ class CanonicalHistoryStore:
                 payload = row.get("payload") or {}
                 if row["entity_type"] == "draft_pick" and row.get("player_id"):
                     append_event_id(row)
-                    append_event_id(row, str(row["player_id"]))
+                    append_event_id(row, "selection:" + str(row["player_id"]))
+                    if self._canonical_pick_id(payload, row["season"]):
+                        append_event_id(row, str(row["player_id"]))
                 elif row["entity_type"] in {"transaction", "trade"}:
                     for player, roster in (payload.get("adds") or {}).items():
                         append_event_id(row, f"add:{player}:{roster}")
@@ -901,8 +978,9 @@ class CanonicalHistoryStore:
                             orphaned_events += 1
                 elif row["entity_type"] == "pick_snapshot":
                     append_event_id(row)
-                elif row["entity_type"] == "weekly_roster":
+                elif row["entity_type"] in {"weekly_roster", "roster_snapshot"}:
                     players = dict.fromkeys([
+                        *(payload.get("players") or []),
                         *(payload.get("starters") or []), *(payload.get("bench") or []),
                     ])
                     for player in players:

@@ -70,3 +70,30 @@ def retained_comparison_identity(semantics: dict | None, providers: Iterable[str
     except (ValueError, TypeError):
         return None
     return (*identity[:2], projected, *identity[3:])
+
+
+def observation_clocks(observation, boundary: str | None = None):
+    """Read provider clocks, never certify an event attachment as quote time.
+
+    A provider's observation clock is its publication/knowledge boundary unless
+    it explicitly supplies a separate knowledge clock. Application retrieval is
+    not a substitute. Legacy outer dates remain stored unchanged.
+    """
+    from src.core.history_context.timestamps import canonical_utc_timestamp
+    boundary = canonical_utc_timestamp(boundary) if boundary else None
+    rows = tuple(getattr(observation, "provider_evidence", ()))
+    if not rows:
+        return None
+    quotes, known = [], []
+    for row in rows:
+        quote = canonical_utc_timestamp(row.observed_at)
+        metadata = row.metadata or {}
+        knowledge = canonical_utc_timestamp(metadata.get('source_knowledge_at') or metadata.get('known_at') or row.observed_at)
+        if not quote or not knowledge or not row.source_identity:
+            return None
+        if boundary and (quote > boundary or knowledge > boundary):
+            return None
+        quotes.append(quote)
+        known.append(knowledge)
+    return {'quote_observed_at': max(quotes), 'oldest_quote_at': min(quotes),
+            'source_knowledge_at': max(known), 'retained_attachment_at': observation.observed_at}

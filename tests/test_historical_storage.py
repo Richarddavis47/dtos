@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from src.core.historical_memory.read_model import HistoricalReadModelCache
+from src.core.historical_memory.read_model import HistoricalReadModelCache, READ_MODEL_VERSION
 from src.core.historical_memory.storage import validate_historical_storage
 from src.core.historical_memory.store import HistoricalStore
 
@@ -94,7 +94,7 @@ class HistoricalStorageTests(unittest.TestCase):
             cache.get(store, "L", {"players": {}})
             manifest_path = Path(directory) / "historical_read_model_manifest.json"
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        self.assertEqual(manifest["schema_version"], "1.1")
+        self.assertEqual(manifest["schema_version"], READ_MODEL_VERSION)
         self.assertEqual(manifest["cache_key"], cache.metadata()["cache_key"])
         self.assertTrue(manifest["dataset_version"])
 

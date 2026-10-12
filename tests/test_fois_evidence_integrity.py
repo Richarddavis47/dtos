@@ -204,7 +204,7 @@ class HistoricalMarketIntegrityTests(unittest.TestCase):
                 market_context_id='same', provider_evidence=tuple(replace(row, metadata={}) for row in evidence))
             with store._connect() as connection:
                 before = [tuple(row) for row in connection.execute('SELECT * FROM global_market_observations')]
-            legacy = store.global_market_checkpoints(asset_id='1')[-1]
+            legacy = next(row for row in store.global_market_checkpoints(asset_id='1') if not row.value_concept)
             self.assertIsNone(legacy.value_concept)
             self.assertEqual(legacy.comparison_identity, ())
             with store._connect() as connection:

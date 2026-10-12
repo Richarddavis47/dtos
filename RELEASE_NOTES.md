@@ -1,3 +1,13 @@
+## v1.21.37 · build 2137 — Historical Trade Timeline Foundation
+
+- Honor explicit My Team full-roster return intent over saved closed disclosure state; keep strategy writes unchanged.
+
+- Preserve exact league/draft/selection identity, original franchise and selecting roster; expose confirmed pick-to-player conversions and directed subsequent transactions through existing historical dossiers.
+- Admit historical Market evidence by provider quote/knowledge clocks and compatible canonical units; retain missing pick prices, stale qualifications and original evidence without historical repair.
+- Preserve nullable started production, genuine zero, deduplicated player weeks and observed ownership separately from last scoring franchise; qualify uncertain chronology.
+- Add bounded generation-aware event/selection reuse, current source-family freshness, completed-trade/pick actions and phone-readable timelines. No new permanent history store, pricing/projection model or FOIS regeneration.
+- See `docs/HISTORICAL_TRADE_TIMELINE.md` for limits and Scout acceptance.
+
 ## v1.21.36 · build 2136 — Assessment Context & Display Integrity
 
 - Preserve the original evaluated strategy, source identity, rationale and stale qualification through old rendered offer controls, Preview and Adopt; reconcile shared intent before response admission.
