@@ -50,7 +50,8 @@ def player_projection_view(data: dict, player_id: str, service, week: int | None
         # screen-specific rounding is performed here.
         display = row.get('sleeper_web_display_projection')
         result.update(display=str(display) if display is not None else str(value),
-                      availability='available', reason=None)
+                      availability='available', reason=None,
+                      display_reason=None if display is not None else 'Canonical league-scored Sleeper statistics; exact Sleeper display replay is unverified.')
     else:
         result['reason'] = row.get('availability_reason') or 'No supported player projection for this week.'
     return result

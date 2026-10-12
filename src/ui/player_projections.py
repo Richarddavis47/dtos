@@ -13,15 +13,17 @@ def player_projection_panel(view: dict, front_office: int | None = None) -> str:
                       for w in sorted(set(weeks) | {selected}))
     office = f'<input type="hidden" name="front_office" value="{front_office}">' if front_office is not None else ''
     path = '/players/' + quote(view['player_id'], safe='')
+    origin = view.get('navigation_context') or {}
+    office += ''.join(f'<input type="hidden" name="{escape(key)}" value="{escape(str(value))}">' for key, value in origin.items() if key in {'from_team', 'from_section'})
     links = []
     for label, choices in (('Previous week', [w for w in weeks if w < selected]),
                            ('Next week', [w for w in weeks if w > selected])):
         if choices:
-            query = {'week': choices[-1] if label.startswith('Previous') else choices[0]}
+            query = {**origin, 'week': choices[-1] if label.startswith('Previous') else choices[0]}
             if front_office is not None:
                 query['front_office'] = front_office
             links.append(f'<a class="button" href="{path}?{escape(urlencode(query))}">{label}</a>')
-    reason = f'<p>{escape(str(view["reason"]))}</p>' if view.get('reason') else ''
+    reason = ''.join(f'<p>{escape(str(view[key]))}</p>' for key in ('reason', 'display_reason') if view.get(key))
     return ('<link rel="stylesheet" href="/static/css/matchups.css">'
         f'<section class="card" id="player-weekly-projections" data-week-endpoint="{path}/projections" aria-label="Weekly Sleeper projections"><h2>Weekly Sleeper projections</h2>'
         f'<p>Week {selected} · <strong data-projection-week="{selected}" '

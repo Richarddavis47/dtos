@@ -6,7 +6,7 @@ from decimal import Decimal, ROUND_FLOOR, ROUND_HALF_UP
 
 
 SCORING_METHOD_VERSION = "sleeper-coefficient-4dp-decimal-v1"
-DISPLAY_METHOD_VERSION = "sleeper-web-sequential-number-tofixed2-v1"
+DISPLAY_METHOD_VERSION = "sleeper-web-sequential-number-tofixed2-qualified-v2"
 
 
 def scoring_coefficient(value: Any) -> Decimal:
@@ -52,7 +52,7 @@ def fantasy_points(stats: dict[str, Any], scoring: dict[str, Any], position: str
 
 
 def sleeper_web_display(stats: dict[str, Any], scoring: dict[str, Any],
-                        source_stat_order: list[str] | None) -> str | None:
+                        source_stat_order: list[str] | None, position: str = "") -> str | None:
     """Replay only the proven web display rule, never an optimization input.
 
     Public Sleeper code iterates Object.keys(stats), adds binary64 calcFn
@@ -63,6 +63,11 @@ def sleeper_web_display(stats: dict[str, Any], scoring: dict[str, Any],
     if (source_stat_order is None or len(source_stat_order) != len(set(source_stat_order))
             or set(source_stat_order) != set(stats)
             or not any(key in STAT_KEYS for key in stats)):
+        return None
+    # The canonical league conversion supports position-based reception scoring.
+    # Raw-stat replay cannot establish Sleeper's UI bonus synthesis when the
+    # position bonus field is absent. Do not claim its unscored subtotal is exact.
+    if position.upper() == 'TE' and 'bonus_rec_te' not in stats and scoring_coefficient(scoring.get('bonus_rec_te', scoring.get('rec_te'))):
         return None
     total = 0.0
     for key in source_stat_order:

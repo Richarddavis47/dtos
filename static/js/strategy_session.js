@@ -29,7 +29,11 @@
   if (!root) return;
   const context = JSON.parse(root.dataset.myTeamContext), select = document.getElementById('my-team-strategy');
   if (select) {
-    select.value = get(context);
+    const reconcile = () => { select.value = get(context); };
+    reconcile();
+    addEventListener('focus', reconcile);
+    addEventListener('pageshow', reconcile);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reconcile(); });
     select.onchange = () => {
       const ok = set(context, select.value);
       document.getElementById('my-team-strategy-feedback').textContent = ok ? 'Strategy saved for this league and franchise in this signed-in browser session.' : 'Strategy could not be retained. Browser session storage is unavailable or full.';
@@ -51,4 +55,5 @@
       });
     });
   } catch (_) { /* Core controls remain available without browser storage. */ }
+  if (location.hash === '#my-team-advanced') document.getElementById('my-team-advanced').open = true;
 })();

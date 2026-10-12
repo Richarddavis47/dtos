@@ -1,3 +1,11 @@
+## v1.21.35 · build 2135 — My Team Status & Intent Integrity
+
+- Source availability is enriched before roster-group copies, preserving known injury/status evidence on every roster card and truthful missing states.
+- Shared strategy writes occur only on explicit selection or validated migration. Older tabs reconcile shared intent on return and ordinary edits, retaining compatible packages while qualifying strategy-dependent assessments.
+- Submitted, optimal/horizon and bye-context player dossiers retain validated My Team section/franchise and supported selected-week context; primary roster and exact-pick returns remain intact.
+- Missing TE bonus-stat evidence cannot claim an exact Sleeper source-order display replay. Existing canonical league scoring remains unchanged, and the displayed comparison is explicitly qualified; explicit bonus fields are not counted twice.
+- No new projection/scoring engine, permanent preference/roster storage, polling, migration or historical FOIS regeneration. See [correction contracts and Scout handoff](docs/MY_TEAM_FINAL_CORRECTNESS.md).
+
 ## v1.21.34 · build 2134 — My Team Evidence & Session Intent
 
 - League/franchise strategy lives separately from temporary Trade proposals in a bounded, account-session-scoped browser cookie; league switching and proposal cleanup preserve the selected goal.

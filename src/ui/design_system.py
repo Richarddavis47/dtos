@@ -120,7 +120,8 @@ def player_summary(*, player_id: str, name: str, position: str | None, nfl_team:
     weekly = '' if projection is None else (
         f'<span class="player-week-projection" data-projection-week="{int(projection["week"])}" '
         f'data-projection-availability="{escape(projection["availability"])}">'
-        f'Week {int(projection["week"])} · Sleeper {escape(projection["display"])}</span>')
+        f'Week {int(projection["week"])} · Sleeper {escape(projection["display"])}</span>'
+        + (f'<small class="player-projection-qualification">{escape(projection["display_reason"])}</small>' if projection.get('display_reason') else ''))
     image = (
         f'<img class="player-headshot" src="https://sleepercdn.com/content/nfl/players/{escape(safe_id)}.jpg" alt="{escape(name)} headshot" loading="lazy" onerror="this.hidden=true">'
         if safe_id else ""

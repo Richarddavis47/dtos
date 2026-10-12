@@ -1,10 +1,10 @@
 """Compact scoped strength display; no generic grade or hidden partial total."""
 from html import escape
-from urllib.parse import quote
+from services.asset_intelligence import contextual_player_url
 
 
 def strength_panel(profile: dict | None, *, league_id: str | None = None, roster_id: int | None = None,
-                   players: list[dict] | None = None) -> str:
+                   players: list[dict] | None = None, from_team: int | None = None) -> str:
     if not profile:
         return '<section class="thq-section"><h2>Projected Team Strength</h2><p>Compatible multi-week evidence is not prepared.</p></section>'
     explanation = ''
@@ -14,8 +14,8 @@ def strength_panel(profile: dict | None, *, league_id: str | None = None, roster
         explanation = explanation_panel(team_strength_explanation(profile, league_id=league_id, roster_id=roster_id))
     names = {str(player['id']): str(player.get('name') or player['id']) for player in players or []}
 
-    def player_link(pid):
-        return f'<a href="/players/{quote(str(pid), safe="")}">{escape(names.get(str(pid), str(pid)))}</a>'
+    def player_link(pid, week=None):
+        return f'<a href="{escape(contextual_player_url(str(pid), from_team=from_team, section="my-team-advanced", week=week))}">{escape(names.get(str(pid), str(pid)))}</a>'
 
     cards = []
     labels = {'current_week': 'Current-week strength', 'next_n': 'Next-N strength',
@@ -52,10 +52,10 @@ def strength_panel(profile: dict | None, *, league_id: str | None = None, roster
             if selected == actual and optimal.get('available'):
                 comparison = 'These players match the submitted starters.'
             else:
-                incoming = ', '.join(player_link(pid) for pid in sorted(selected - actual)) or 'None'
-                outgoing = ', '.join(player_link(pid) for pid in sorted(actual - selected)) or 'None'
+                incoming = ', '.join(player_link(pid, current_week) for pid in sorted(selected - actual)) or 'None'
+                outgoing = ', '.join(player_link(pid, current_week) for pid in sorted(actual - selected)) or 'None'
                 comparison = f'In the supported optimal lineup, not submitted: {incoming}. Submitted, not in this optimal lineup: {outgoing}.'
-        rows = ''.join(f'<li>{escape(str(entry["slot"]))} · {player_link(entry["asset_id"])} · '
+        rows = ''.join(f'<li>{escape(str(entry["slot"]))} · {player_link(entry["asset_id"], current_week)} · '
                        f'{escape(str(entry["projected_points"]))} projected points</li>' for entry in entries)
         availability = 'Complete legal projected lineup.' if optimal.get('available') else 'Partial lineup only; missing evidence prevents a complete team projection.'
         lineup_html = f'<p>Week {current_week} · {availability}</p><p>{comparison}</p><ul class="thq-optimal">{rows}</ul>'
@@ -69,9 +69,9 @@ def strength_panel(profile: dict | None, *, league_id: str | None = None, roster
         entering = row.get('optimal_entries_since_previous_week') or []
         delta = row.get('total_change_since_previous_week')
         pressure.append(f'<li>Week {week}: prior optimal starters on a known NFL bye: '
-                        + ', '.join(player_link(pid) for pid in byes)
+                        + ', '.join(player_link(pid, int(week)) for pid in byes)
                         + '. Entering this week’s optimal lineup: '
-                        + (', '.join(player_link(pid) for pid in entering) or 'None supported')
+                        + (', '.join(player_link(pid, int(week)) for pid in entering) or 'None supported')
                         + f'. Whole-lineup projected change: {escape(str(delta)) if delta is not None else "Unavailable"}.</li>')
     depth = ('<h3>Upcoming bye / depth context</h3><ul>' + ''.join(pressure[:3]) + '</ul>'
              '<p>Whole-lineup changes are not attributed only to byes. Reserve coverage is not an injury forecast.</p>') if pressure else (

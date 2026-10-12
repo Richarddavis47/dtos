@@ -207,6 +207,8 @@ def build_team_headquarters(
             updated = str(last_updated)
     else:
         updated = "Unavailable"
+    from services.my_team_overview import roster_overview
+    overview = roster_overview(data, intelligence, players)
     roster_groups = {
         position: [
             {**player, "intelligence": intelligence.roster.players.get(str(player.get("id")))}
@@ -214,8 +216,6 @@ def build_team_headquarters(
         ]
         for position in CORE_POSITIONS
     }
-    from services.my_team_overview import roster_overview
-    overview = roster_overview(data, intelligence, players)
     return {
         "team": team,
         "overview": overview,

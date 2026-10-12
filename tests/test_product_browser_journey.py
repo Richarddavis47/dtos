@@ -58,6 +58,9 @@ class ProductBrowserJourneyTests(unittest.TestCase):
     def configure_app(self, app, common):
         """Allow journey-specific existing product routers, without replacing them."""
 
+    def configure_context(self, context):
+        """Publish source fixtures through the existing canonical service when needed."""
+
     def configure_data(self, data, league):
         """Additional source-shaped facts for focused product journeys."""
 
@@ -105,6 +108,8 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                     runtime=runtime, league_id=league, data=data, state=state, market=_Cache(market),
                     projection=ProjectionService(Path(folder) / f"projection-{league}.sqlite3", league_id=league),
                 )
+
+                self.configure_context(runtime.canonical_context)
 
             async def fresh():
                 pass  # Published fixture state; provider access is forbidden below.
