@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from src.core.intelligence import intelligence_orchestrator
 
@@ -88,3 +88,14 @@ def build_pick_reports(data: dict[str, Any], picks: list[dict[str, Any]]) -> lis
         }
         reports.append((pick, intelligence_orchestrator.pick_report(data, enriched, int(team.get("roster_id") or 0))))
     return reports
+
+
+def contextual_player_url(player_id: str, *, from_team: int | None = None, section: str = 'full-roster', week: int | None = None) -> str:
+    """Reuse the canonical dossier and its validated current-league return contract."""
+    query = {}
+    if from_team is not None and from_team > 0:
+        query.update(from_team=from_team, from_section=section if section in {'full-roster', 'my-team-advanced'} else 'full-roster')
+    if week is not None and 1 <= week <= 18:
+        query['week'] = week
+    path = '/players/' + quote(str(player_id), safe='')
+    return path + ('?' + urlencode(query) if query else '')

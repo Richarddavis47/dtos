@@ -42,4 +42,4 @@ jobs:
           python -m pip install -r requirements-validation.txt
           python -m playwright install --with-deps chromium
       - name: My Team evidence and authenticated session journeys
-        run: python -m unittest tests.test_my_team_intelligence tests.test_my_team_intelligence_browser
+        run: python -m unittest tests.test_my_team_intelligence tests.test_my_team_intelligence_browser tests.test_my_team_final tests.test_my_team_final_browser

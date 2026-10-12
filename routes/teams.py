@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from config import LEAGUE_ID
+from services.asset_intelligence import contextual_player_url
 from services.team_headquarters import build_team_directory, build_team_headquarters
 from src.core.historical_memory.read_model import historical_graph
 from src.core.history_context import canonical_history_store
@@ -165,7 +166,7 @@ def _roster_rooms(view: dict[str, Any]) -> str:
         rows = []
         for player in players:
             pid = str(player["id"])
-            target = '/players/' + quote(pid) + '?' + urlencode({'from_team': view['team']['roster_id']})
+            target = contextual_player_url(pid, from_team=view['team']['roster_id'], week=view['overview']['projection_week'])
             quote_value = player.get('intelligence')
             price = quote_value.market_value if quote_value is not None else None
             projection = view['projection_views'].get(pid)
@@ -183,7 +184,7 @@ def _key_players(view):
     if not leaders:
         return '<p>Key Market assets cannot be identified without supported canonical prices. The full roster remains available above.</p>'
     return '<p>Highest supported canonical Market values; this does not rank weekly production.</p><div class="thq-actions">' + ''.join(
-        f'<a class="thq-action" href="/players/{quote(str(p["id"]))}?from_team={view["team"]["roster_id"]}">{escape(p["name"])} · {p["intelligence"].market_value:g}</a>' for p in leaders
+        f'<a class="thq-action" href="{escape(contextual_player_url(str(p["id"]), from_team=view["team"]["roster_id"], week=view["overview"]["projection_week"]))}">{escape(p["name"])} · {p["intelligence"].market_value:g}</a>' for p in leaders
     ) + '</div>'
 
 
@@ -326,12 +327,12 @@ def create_teams_router(
         starters = [player for player in team.get("players") or [] if player.get("roster_slot") == "Starter"]
         card_projections = view['projection_views']
         starter_cards = "".join(
-            f'<a class="card" href="/players/{quote(str(player.get("id") or ""))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Submitted starter", projection=card_projections.get(str(player.get("id") or "")))}</a>'
+            f'<a class="card" href="{escape(contextual_player_url(str(player.get("id") or ""), from_team=roster_id, section="my-team-advanced", week=view["overview"]["projection_week"]))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Submitted starter", projection=card_projections.get(str(player.get("id") or "")))}</a>'
             for player in starters
         ) or '<div class="ds-empty"><b>No starting lineup is available.</b>Sleeper has not supplied a current starter assignment.</div>'
         from src.ui.team_strength import strength_panel
         multi_horizon_html = strength_panel(assessment.multi_horizon_strength, league_id=assessment.league_id,
-                                           roster_id=assessment.roster_id, players=team.get('players'))
+                                           roster_id=assessment.roster_id, players=team.get('players'), from_team=roster_id)
         binding = workspace_context(data, roster_id)
         context_json = escape(json.dumps(binding, separators=(',', ':')), quote=True)
         options = ''.join(f'<option value="{escape(value)}" {"selected" if value == strategy else ""}>{escape(value or "Use supported competitive window")}</option>' for value in ('', 'WIN NOW', 'RETOOL', 'REBUILD'))

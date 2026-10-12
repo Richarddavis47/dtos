@@ -725,7 +725,7 @@ class ProjectionService:
             "scoring_method_version": SCORING_METHOD_VERSION,
             "sleeper_web_display_projection": (sleeper_web_display(
                 evidence.get('projected_stats') or {}, scoring_settings,
-                evidence.get('source_stat_order'))
+                evidence.get('source_stat_order'), str(player.get('position') or evidence.get('position') or ''))
                 if projected is not None and evidence is not None and scoring_settings is not None else None),
             "display_method_version": DISPLAY_METHOD_VERSION,
             "weekly_projected_points": projected,

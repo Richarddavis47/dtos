@@ -373,9 +373,16 @@ def create_transactions_router(
             url="/transactions?" + urlencode(parameters), status_code=303
         )
 
+    def team_origin(data, from_team, from_section):
+        if from_team is None or not any(t.get('roster_id') == from_team for t in data.get('teams') or []):
+            return {}
+        return {'from_team': from_team, 'from_section': from_section if from_section in {'full-roster', 'my-team-advanced'} else 'full-roster'}
+
     @router.get("/players/{player_id}/projections", response_class=HTMLResponse)
     async def player_week_projection(player_id: str, front_office: int | None = None,
-                                     week: int | None = Query(default=None, ge=1, le=18)) -> HTMLResponse:
+                                     week: int | None = Query(default=None, ge=1, le=18),
+                                     from_team: int | None = Query(default=None, ge=1),
+                                     from_section: str = Query(default='full-roster', max_length=40)) -> HTMLResponse:
         await ensure_fresh()
         data = require_data()
         if player_id not in (data.get('players') or {}):
@@ -383,13 +390,15 @@ def create_transactions_router(
         active = current_league_context()
         view = await asyncio.to_thread(player_projection_view, data, player_id,
             active.projection if active else projection_service, week)
+        view['navigation_context'] = team_origin(data, from_team, from_section)
         return HTMLResponse(player_projection_panel(view, front_office))
 
     @router.get("/players/{player_id}", response_class=HTMLResponse)
     async def player_page(player_id: str, front_office: int | None = None,
                           week: int | None = Query(default=None, ge=1, le=18),
                           matchup: str | None = Query(default=None, max_length=80),
-                          from_team: int | None = Query(default=None, ge=1)) -> HTMLResponse:
+                          from_team: int | None = Query(default=None, ge=1),
+                          from_section: str = Query(default='full-roster', max_length=40)) -> HTMLResponse:
         await ensure_fresh()
         data = require_data()
         player = (data.get("players") or {}).get(player_id)
@@ -398,6 +407,7 @@ def create_transactions_router(
         active = current_league_context()
         projection_view = await asyncio.to_thread(player_projection_view, data, player_id,
             active.projection if active else projection_service, week)
+        projection_view['navigation_context'] = team_origin(data, from_team, from_section)
         weekly_panel = player_projection_panel(projection_view, front_office)
         try:
             report, selected_team, teams = build_player_dossier(data, player_id, front_office)
@@ -478,7 +488,8 @@ def create_transactions_router(
 <h3>Annual League History</h3><div style="overflow-x:auto"><table><thead><tr><th>Season</th><th>Status</th><th>Games</th><th>Starts</th><th>Bench</th><th>Points</th><th>Overall</th><th>Position</th><th>Complete</th></tr></thead><tbody>{season_history}</tbody></table></div>
 <h3>Ownership Timeline</h3><ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></section>'''
         matchup_return = ''
-        team_return = (f'<a class="back" href="/teams/{from_team}#full-roster">← Back to My Team roster</a>'
+        section = from_section if from_section in {'full-roster', 'my-team-advanced'} else 'full-roster'
+        team_return = (f'<a class="back" href="/teams/{from_team}#{section}">← Back to My Team {"intelligence" if section == "my-team-advanced" else "roster"}</a>'
                        if from_team is not None and any(t.get('roster_id') == from_team for t in data.get('teams') or []) else '')
         if week is not None and matchup and (matchup.isdecimal() or (matchup.startswith('unassigned-') and matchup[11:].isdecimal())):
             matchup_return = f'<link rel="stylesheet" href="/static/css/matchups.css"><a class="back matchup-return" href="/matchups/{escape(matchup)}?week={week}">← Back to Week {week} matchup</a>'
@@ -487,6 +498,7 @@ def create_transactions_router(
 {matchup_return}
 {team_return or '<a class="back" href="/transactions">← Back to Transactions Center</a>'}
 {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
+<p class="player-reported-status">Sleeper reported status: {escape(str(player.get("injury_status") or player.get("status") or "Unavailable"))}</p>
 {profile_explanation}
 {live_panel}
 {historical_panel}

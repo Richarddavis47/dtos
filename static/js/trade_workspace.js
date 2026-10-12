@@ -80,16 +80,11 @@
   const storageKey = () => 'dtos-trade-workspace:' + workspace.workspace_context.binding;
   const node = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
   function message(text, error = false) { const box = el('trade-result'); delete box.dataset.assessment; box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
-  function payload() { return {workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...session.protectedAssets], excluded_assets: [...session.excludedAssets], asset_id: flow === 'shop' ? session.requiredOutgoingAsset || selected.sent[0] : session.requiredIncomingAsset || selected.received[0], workspace_context: workspace.workspace_context}; }
+  function payload() { reconcileStrategy(); return {workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...session.protectedAssets], excluded_assets: [...session.excludedAssets], asset_id: flow === 'shop' ? session.requiredOutgoingAsset || selected.sent[0] : session.requiredIncomingAsset || selected.received[0], workspace_context: workspace.workspace_context}; }
   function persist(updateHistory = true, draftSession = session) {
     if (departed) return;
+    reconcileStrategy();
     const draft = {...draftSession, strategy: el('trade-strategy').value, ownership: workspace.workspace_context.ownership_generation};
-    if (window.dtosStrategy) {
-      const retained = window.dtosStrategy.set(workspace.workspace_context, draft.strategy);
-      let feedback = el('trade-strategy-feedback');
-      if (!feedback) { feedback = node('p', '', 'ds-inline-feedback'); feedback.id = 'trade-strategy-feedback'; feedback.setAttribute('role', 'status'); el('trade-strategy').after(feedback); }
-      feedback.textContent = retained ? '' : 'Strategy could not be retained for fresh navigation: browser session storage is unavailable or full.';
-    }
     try { sessionStorage.setItem(storageKey(), JSON.stringify(draft)); } catch (_) { /* Storage-disabled browsing still works in this page. */ }
     if (!updateHistory) return;
     // Each browser entry retains its own small draft, not search results. Only
@@ -779,7 +774,31 @@
   });
   root.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { side = b.dataset.side; root.querySelectorAll('[data-side]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); paint(); });
   el('trade-partner').onchange = () => { if (flow === 'shop') { session.shopSearchPartner = Number(el('trade-partner').value || 0); if (!selected.received.length) selected.partner = session.shopSearchPartner; changed(); if (session.requiredOutgoingAsset) run('generate'); return; } if (session.requiredIncomingAsset) { el('trade-partner').value = String(partner()); return message('The required target stays with its actual owner. Choose Build My Own to change the objective.', true); } setPartner(el('trade-partner').value); selected.received = []; changed(); if (flow === 'shop' && session.requiredOutgoingAsset) run('generate'); };
-  el('trade-strategy').onchange = () => { el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; if (workspace) paint(); excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; persist(); };
+  function writeStrategyIntent() {
+    if (!workspace || !window.dtosStrategy) return;
+    const retained = window.dtosStrategy.set(workspace.workspace_context, el('trade-strategy').value);
+    let feedback = el('trade-strategy-feedback');
+    if (!feedback) { feedback = node('p', '', 'ds-inline-feedback'); feedback.id = 'trade-strategy-feedback'; feedback.setAttribute('role', 'status'); el('trade-strategy').after(feedback); }
+    feedback.textContent = retained ? '' : 'Strategy could not be retained for fresh navigation: browser session storage is unavailable or full.';
+  }
+  function reconcileStrategy() {
+    if (!workspace || !window.dtosStrategy || departed) return;
+    const intent = window.dtosStrategy.get(workspace.workspace_context);
+    if (intent === el('trade-strategy').value) return;
+    el('trade-strategy').value = intent;
+    cancelBalance(); revision++; runSequence++;
+    lastOffers = null; lastOffersIsBalance = false; excludedFamilies.clear(); searchExhausted = false;
+    if (session.previewProposal?.preview_context) {
+      session.previewProposal.preview_context.restored = true;
+      session.previewProposal.preview_context.stale_reason = 'Strategy changed in another tab';
+    }
+    if (session.currentAssessment) staleAssessment('Strategy changed in another tab');
+    else if (session.previewProposal) previewOffer({proposal: session.previewProposal});
+    if (workspace) paint();
+  }
+  addEventListener('focus', reconcileStrategy);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) reconcileStrategy(); });
+  el('trade-strategy').onchange = () => { writeStrategyIntent(); el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; if (workspace) paint(); excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; persist(); };
   // A document restored from browser history must not accept a response from
   // work started before leaving it. Normal navigation loads fresh server context.
   addEventListener('pagehide', () => {
@@ -792,7 +811,7 @@
     if (event.persisted) {
       departed = false;
       if (workspace && history.state?.dtosTrade?.binding === workspace.workspace_context.binding) {
-        if (window.dtosStrategy) el('trade-strategy').value = window.dtosStrategy.get(workspace.workspace_context);
+        reconcileStrategy();
         if (session.currentAssessment) { session.currentAssessment = restoreContext(session.currentAssessment); showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment); }
         if (session.previewProposal) { if (session.previewProposal.preview_context) session.previewProposal.preview_context = restoreContext(session.previewProposal.preview_context); previewOffer({proposal: session.previewProposal}); }
         persist();
