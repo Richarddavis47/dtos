@@ -184,6 +184,9 @@ class GlobalMarketObservation:
     normalization_version: str = NORMALIZATION_VERSION
     materiality_policy_version: str = MARKET_MATERIALITY_POLICY_VERSION
     schema_version: str = MARKET_OBSERVATION_SCHEMA_VERSION
+    # Read-only provenance when a legacy event attachment is replayed using its
+    # provider clock. Never persisted or included in observation identity.
+    retained_attachment_at: str | None = None
 
     def public(self) -> dict[str, Any]:
         result = asdict(self)

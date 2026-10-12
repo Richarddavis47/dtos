@@ -100,10 +100,13 @@ def worker(code, root, publish):
                 row["match_state"] == "DATED_ESTIMATE"
                 and row["temporal_confidence"] < 65
             )
+            assert row['retained_attachment_at'] == '2026-03-01T00:00:00Z', row
+            assert row['observed_at'] == '2026-02-01T00:00:00Z', row
         results[name] = {
             "value": row["value"],
             "state": row["match_state"],
             "quote_at": row["observed_at"],
+            "retained_attachment_at": row.get("retained_attachment_at"),
             "confidence": row["temporal_confidence"],
         }
     assert json.loads((root / "before.json").read_text()) == json.loads(
