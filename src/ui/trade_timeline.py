@@ -54,16 +54,27 @@ def render_timeline(model, dossier, *, return_url="/transactions"):
             f"<details class='card timeline-asset'><summary>{safe(branch['label'])} · {len(moves)} supported subsequent events</summary><ol class='timeline-events'>{''.join(moves) or '<li>No later event admitted from prepared evidence.</li>'}</ol><p class='timeline-state'>{safe(branch['state'])}{' · ' + safe(branch.get('current_observed_owner_name') or 'Franchise name unavailable') if branch['current_observed_owner'] else ''}</p>{warnings}</details>"
         )
     evidence = dossier["trade_time_intelligence"]
+    for movement in model.get("faab_movements") or ():
+        amount = format(movement["amount"], "g")
+        summary.append(
+            f"<li class='timeline-faab'><b>{safe(amount)} FAAB</b><div>{safe(movement['sent_by']['name'])} → {safe(movement['received_by']['name'])}</div><details><summary>FAAB source</summary><p>{safe(movement['provenance'])}</p><p>Source league: {safe(movement['source_league_id'])} · Transaction: {safe(movement['transaction_id'])}</p></details></li>"
+        )
     if evidence.get("fairness_state") == "comparable_exact_evidence":
         price_text = "Complete comparable decision-time Market evidence is available. No automatic trade winner is declared."
     elif evidence.get("fairness_state") == "estimated_comparison":
         price_text = "Compatible dated estimates are available; they are not exact trade-time quotes. Process quality requires additional evidence."
     else:
         price_text = "Decision-time Market fairness unavailable: complete compatible dated prices are required, including exact picks."
+    if dossier.get("faab"):
+        price_text += " FAAB is shown as original trade consideration; player/pick Market totals do not value FAAB or establish fairness of the whole trade."
     quotes = []
     for row in evidence["assets"]:
+        attachment = (
+            f"<p>Original retained attachment: {safe(row['retained_attachment_at'])} · attachment time is separate from quote observation.</p>"
+            if row.get('retained_attachment_at') else ""
+        )
         quotes.append(
-            f"<li>{safe(row['asset_id'])}: {safe(row.get('match_state'))} · {safe(row.get('value') if row.get('value') is not None else 'Value unavailable')}<p>Quote observed: {safe(row.get('observed_at') or 'Unavailable')} · Source knowledge: {safe(row.get('source_knowledge_at') or 'Unavailable')} · Confidence: {safe(row.get('temporal_confidence', 0))}</p><p>{safe(row.get('limitation') or '')}</p></li>"
+            f"<li>{safe(row['asset_id'])}: {safe(row.get('match_state'))} · {safe(row.get('value') if row.get('value') is not None else 'Value unavailable')}<p>Quote observed: {safe(row.get('observed_at') or 'Unavailable')} · Source knowledge: {safe(row.get('source_knowledge_at') or 'Unavailable')} · Confidence: {safe(row.get('temporal_confidence', 0))}</p>{attachment}<p>{safe(row.get('limitation') or '')}</p></li>"
         )
     technical = [f"{k}: {v}" for k, v in dossier["source"].items()]
     return (

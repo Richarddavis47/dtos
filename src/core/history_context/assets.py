@@ -66,6 +66,7 @@ def future_pick_id(
 
 def reconcile_player_weeks(rows: list[dict]) -> list[dict]:
     """One player/week score, retaining membership, nullable starts and conflicts."""
+    import json
     from .results import number
 
     grouped: dict[tuple, list[dict]] = {}
@@ -87,15 +88,32 @@ def reconcile_player_weeks(rows: list[dict]) -> list[dict]:
         }
         known = scores - {None}
         franchises = {v.get("franchise_id") for v in values}
-        row = dict(values[0])
+        # Reconciliation may be repeated by graph and HTTP consumers. Retained
+        # conflict evidence must not disappear just because its score is null.
+        reasons = {v["payload"].get("scoring_conflict_reason") for v in values
+                   if v["payload"].get("scoring_conflict_reason")}
+        if len(known) > 1:
+            reasons.add("Conflicting numeric scores in the same source generation")
+        if len(franchises) > 1:
+            reasons.add("Conflicting franchises for the same player week")
+        conflict = bool(reasons) or any(v["payload"].get("scoring_conflict") for v in values)
+        if conflict and not reasons:
+            reasons.add("Retained scoring conflict")
+        row = dict(values[0] if len(values) == 1 else min(values, key=lambda v: (str(v.get("record_key") or ""),
+                                             str(v.get("franchise_id") or ""),
+                                             json.dumps(v, sort_keys=True, default=str))))
         payload = dict(row["payload"])
-        score = next(iter(known)) if len(known) == 1 and len(franchises) == 1 else None
+        score = next(iter(known)) if len(known) == 1 and not conflict else None
         payload.update(
             fantasy_points=score,
             points=score,
             starter=any(v["payload"].get("starter") for v in values),
-            scoring_conflict=len(known) > 1 or len(franchises) > 1,
+            scoring_conflict=conflict,
         )
+        if reasons:
+            payload["scoring_conflict_reason"] = "; ".join(sorted(reasons))
+        else:
+            payload.pop("scoring_conflict_reason", None)
         row["payload"] = payload
         result.append(row)
     return result

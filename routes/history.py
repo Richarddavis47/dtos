@@ -194,7 +194,13 @@ def create_history_router(
     @router.get("/history/team/{franchise_id:path}", response_class=HTMLResponse)
     async def team_history_page(franchise_id: str) -> HTMLResponse:
         selected = selected_league()
-        snapshots = history_records(selected, "team_intelligence_snapshot", franchise_id=franchise_id, limit=100)
+        from src.core.history_context.recovery import HistoricalRecoveryUnavailable
+        try:
+            snapshots = history_records(selected, "team_intelligence_snapshot", franchise_id=franchise_id, limit=100)
+        except HistoricalRecoveryUnavailable:
+            # Optional intelligence is not a prerequisite for displaying
+            # directly observed franchise and season roster evidence.
+            snapshots = {"count": 0, "records": []}
         identities = history_records(selected, "franchise_identity", franchise_id=franchise_id, limit=100)
         if not snapshots["count"] and not identities["count"]:
             raise HTTPException(404, "No historical franchise observations are available.")
@@ -207,6 +213,14 @@ def create_history_router(
             for row in snapshots["records"]
         ) or '<article class="card"><p class="muted">No Team Intelligence snapshots exist for this historical roster state.</p></article>'
         current_name = next((str(row["payload"].get("dtos_display_name")) for row in identities["records"] if row["payload"].get("dtos_display_name")), "Franchise")
-        return page(f"{current_name} — Franchise History", f'<h2>Franchise History</h2><ul>{names}</ul><h3>Competitive Direction Over Time</h3><div class="grid">{trajectory}</div>')
+        try:
+            rosters = history_records(selected, "roster_snapshot", franchise_id=franchise_id, limit=100)
+        except HistoricalRecoveryUnavailable:
+            rosters = {"count": 0, "records": []}
+        roster_cards = ''.join(
+            f'<article class="card"><h3>{row["season"]} observed roster</h3><p>{len(row["payload"].get("players") or [])} players in the source season snapshot.</p><p class="muted">This is not a roster for every historical week. Weekly roster evidence is separate and may be unavailable.</p></article>'
+            for row in rosters["records"]
+        ) or '<p class="muted">Season roster snapshot unavailable; no weekly holdings are inferred.</p>'
+        return page(f"{current_name} — Franchise History", f'<h2>Franchise History</h2><ul>{names}</ul><h3>Observed season roster snapshots</h3><div class="grid">{roster_cards}</div><h3>Competitive Direction Over Time</h3><div class="grid">{trajectory}</div>')
 
     return router

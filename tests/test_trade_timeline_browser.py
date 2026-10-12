@@ -24,6 +24,8 @@ class TradeTimelineBrowserTests(unittest.TestCase):
         self.fixture.setUp()
         self.fixture.load()
         self.fixture.load(1)
+        from tests.test_historical_faab_conflicts import publish_faab
+        publish_faab(self.fixture)
 
     def tearDown(self):
         self.fixture.tearDown()
@@ -65,8 +67,10 @@ class TradeTimelineBrowserTests(unittest.TestCase):
                 for url in (
                     [
                         "/trades/history/1333655835015942144",
+                        "/trades/history/965057520920260608",
                         "/picks/PICK-2026-R1-ORIG4?from_trade=1333655835015942144",
                         "/history",
+                        "/history/team/" + DAY + ":franchise:3",
                     ]
                     if league == DAY
                     else ["/history"]
@@ -87,8 +91,22 @@ class TradeTimelineBrowserTests(unittest.TestCase):
                     )
                     if url.startswith("/trades/history"):
                         text = page.locator(".trade-timeline").inner_text()
-                        self.assertIn("Denzel Boston", text)
-                        self.assertIn("exact selection time unavailable", text)
+                        if url.endswith("965057520920260608"):
+                            faab = page.locator('.timeline-faab')
+                            self.assertEqual(faab.count(), 1)
+                            self.assertIn('100 FAAB', faab.inner_text())
+                            self.assertIn('Nasty Navel Lasers → zkobes', faab.inner_text())
+                            self.assertEqual(page.locator('.timeline-asset').count(), 8)
+                            source = faab.locator('summary')
+                            source.focus()
+                            self.assertNotEqual(source.evaluate('(el)=>getComputedStyle(el).outlineStyle'), 'none')
+                            page.keyboard.press('Enter')
+                            self.assertFalse(faab.locator('details').evaluate('(el)=>el.open'))
+                            source.click()
+                            self.assertTrue(faab.locator('details').evaluate('(el)=>el.open'))
+                        else:
+                            self.assertIn("Denzel Boston", text)
+                            self.assertIn("exact selection time unavailable", text)
                         self.assertIn("No trade winner", text)
                         self.assertIn("NOT REVALIDATED", text)
                         control = page.locator(".timeline-asset summary").first
@@ -113,6 +131,9 @@ class TradeTimelineBrowserTests(unittest.TestCase):
                         self.assertNotIn(
                             "Not exercised", page.locator("body").inner_text()
                         )
+                        self.assertIn('Consumed by verified draft conversion', page.locator('body').inner_text())
+                    if url.startswith('/history/team/'):
+                        self.assertIn('not a roster for every historical week', page.locator('body').inner_text())
                 page.close()
             browser.close()
 

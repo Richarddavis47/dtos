@@ -1,3 +1,11 @@
+## v1.21.38 · build 2138 — Historical FAAB and Score Conflict Integrity
+
+- Show original directed FAAB consideration beside historical players and exact picks, with franchise names and source provenance; do not assign a Market price to FAAB.
+- Reconcile all player-week observations before canonical key collapse. Conflicting scores or franchises remain unavailable with retained reasons; identical observations deduplicate, zero remains valid and later source generations can correct scores.
+- Limit last-scored ownership to actually scored evidence, distinguish observed season roster snapshots from weekly holdings, retain original quote attachment clocks and describe consumed picks as verified conversions.
+- Preserve exact lineage, legacy evidence, bounded caches and the 2 GiB resource contract. No new store, migration, provider backfill, scoring/projection model or FOIS regeneration.
+- See `docs/HISTORICAL_FAAB_SCORE_INTEGRITY.md` for contracts, validation and Scout checks.
+
 ## v1.21.37 · build 2137 — Historical Trade Timeline Foundation
 
 - Honor explicit My Team full-roster return intent over saved closed disclosure state; keep strategy writes unchanged.

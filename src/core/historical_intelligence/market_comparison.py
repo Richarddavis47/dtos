@@ -96,4 +96,5 @@ def observation_clocks(observation, boundary: str | None = None):
         quotes.append(quote)
         known.append(knowledge)
     return {'quote_observed_at': max(quotes), 'oldest_quote_at': min(quotes),
-            'source_knowledge_at': max(known), 'retained_attachment_at': observation.observed_at}
+            'source_knowledge_at': max(known), 'retained_attachment_at':
+            getattr(observation, 'retained_attachment_at', None) or observation.observed_at}

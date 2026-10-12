@@ -1006,7 +1006,8 @@ class IntelligenceCheckpointStore:
             row = self._decode_observation(raw)
             clocks = observation_clocks(row, boundary)
             if clocks:
-                admitted.append(replace(row, observed_at=clocks['quote_observed_at']))
+                admitted.append(replace(row, observed_at=clocks['quote_observed_at'],
+                                        retained_attachment_at=clocks['retained_attachment_at']))
         return max(admitted, key=lambda r: r.observed_at) if admitted else None
 
     def market_memory_health(self) -> dict[str, Any]:

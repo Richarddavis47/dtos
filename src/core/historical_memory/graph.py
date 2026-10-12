@@ -459,7 +459,13 @@ class HistoricalAssetGraph:
                 status="in_progress" if season >= current_year else "complete" if len(weeks) == 18 else "incomplete",
             )
             summary_row = asdict(summary)
-            summary_row['last_scored_franchise_id'] = franchises[-1] if franchises else None
+            latest_scored = max((int(row.get('week') or 0) for row in observed), default=None)
+            latest_owners = {row.get('franchise_id') for row in observed
+                             if int(row.get('week') or 0) == latest_scored}
+            summary_row['last_scored_franchise_id'] = next(iter(latest_owners)) if len(latest_owners) == 1 else None
+            summary_row['scoring_conflicts'] = [{'week': row.get('week'),
+                'reason': row['payload'].get('scoring_conflict_reason') or 'Retained scoring conflict'}
+                for row in season_rows if row['payload'].get('scoring_conflict')]
             summary_row['observed_roster_franchise_ids'] = sorted({row.get('franchise_id') for row in self._records('roster_snapshot')
                 if row['season'] == season and raw_id in set(map(str, row['payload'].get('players') or ())) and row.get('franchise_id')})
             summary_row['production_scope'] = 'Observed season weeks, not production attributed to a trade or holding interval'
@@ -866,7 +872,7 @@ class HistoricalAssetGraph:
     def franchise_history(self, roster_id: str) -> dict[str, Any]:
         target = franchise_id(self.league_id, roster_id)
         records = {}
-        for entity in ("franchise_identity", "season_standing", "weekly_roster"):
+        for entity in ("franchise_identity", "season_standing", "weekly_roster", "roster_snapshot"):
             records[entity] = [row for row in self._records(entity) if row.get('franchise_id') == target]
         transactions = [row for row in self.transaction_archive() if str(roster_id) in {str(value) for value in row["roster_ids"]}]
         return {
@@ -874,6 +880,8 @@ class HistoricalAssetGraph:
             "franchise_id": target, "identities": records["franchise_identity"],
             "standings": records["season_standing"],
             "roster_snapshots": records["weekly_roster"],
+            "observed_season_roster_snapshots": records["roster_snapshot"],
+            "roster_coverage_note": "Season roster snapshots are observed source holdings, not weekly historical rosters. Missing weekly rosters remain unavailable.",
             "transactions": transactions,
             "partial_historical_families": sorted(self._partial_record_families),
             "season_status": {

@@ -96,6 +96,29 @@ def timeline(graph, dossier):
         )
 
     branches, seen_events, budget = [], set(), MAX_EVENTS
+    faab_movements, faab_seen, faab_limits = [], set(), []
+    from src.core.history_context.results import number
+    for movement in dossier.get("faab") or ():
+        amount = number(movement.get("amount"))
+        sender, receiver = movement.get("sender"), movement.get("receiver")
+        if amount is None or amount < 0 or not all(str(v).isdigit() and int(v) > 0 for v in (sender, receiver)):
+            faab_limits.append("A FAAB movement has incomplete amount or franchise evidence.")
+            continue
+        identity = (int(sender), int(receiver), amount)
+        if identity in faab_seen:
+            continue
+        faab_seen.add(identity)
+        if len(faab_movements) >= MAX_ASSETS:
+            faab_limits.append("FAAB presentation limit reached; original source retains all movements.")
+            break
+        faab_movements.append({
+            "amount": amount,
+            "sent_by": franchise(f"{graph.league_id}:franchise:{int(sender)}", dossier["season"]),
+            "received_by": franchise(f"{graph.league_id}:franchise:{int(receiver)}", dossier["season"]),
+            "source_league_id": dossier["source"]["source_league_id"],
+            "transaction_id": dossier["transaction_id"],
+            "provenance": "Sleeper completed transaction waiver_budget; original trade consideration, not a Market asset valuation",
+        })
     for asset, original_events in list(summary.items())[:MAX_ASSETS]:
         movements, limits = [], []
         outgoing = sorted(
@@ -312,12 +335,13 @@ def timeline(graph, dossier):
         "trade_id": dossier["trade_id"],
         "occurred_at": dossier.get("occurred_at"),
         "branches": branches,
+        "faab_movements": faab_movements,
         "participants": [
             franchise(f, dossier["season"]) for f in dossier["participating_franchises"]
         ],
         "event_limit": MAX_EVENTS,
         "events_rendered": MAX_EVENTS - budget,
-        "limitations": [
+        "limitations": sorted(set(faab_limits)) + [
             "Prepared source coverage is partial; an absent event is not proof of no movement.",
             "Manager identities are season observations, not exact takeover dates.",
             "No trade winner, championship causality or descendant-value allocation is calculated.",

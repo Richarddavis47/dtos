@@ -692,7 +692,12 @@ class CanonicalHistoryStore:
                 or row['entity_type'] in coverage[row['season']]]
         for selected in seasons:
             rows.extend(self._current_records(league_id, selected))
-        rows = list({str(row["record_key"]): row for row in rows}.values())
+        # Numeric observations sharing a canonical key are evidence, not
+        # successive corrections. Admit the whole published generation before
+        # key deduplication, otherwise row order silently chooses the score.
+        player_rows = reconcile_player_weeks([r for r in rows if r['entity_type'] == 'player_week'])
+        rows = list({str(row["record_key"]): row for row in rows
+                     if row['entity_type'] != 'player_week'}.values()) + player_rows
         rows = [row for row in rows if (
             (entity_type is None or row["entity_type"] == entity_type)
             and (_families is None or row["entity_type"] in _families)

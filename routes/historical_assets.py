@@ -149,7 +149,8 @@ def create_historical_assets_router(
                 franchise_names[roster_id] = name
                 franchise_names[f'{selected_league()}:franchise:{roster_id}'] = name
         raw_owner = str(dossier.get('current_owner') or '')
-        owner_name = franchise_names.get(raw_owner, 'Ownership name unavailable')
+        owner_name = ('Consumed by verified draft conversion' if dossier.get('exercised')
+                      else franchise_names.get(raw_owner, 'Ownership name unavailable'))
         original_identity = str(dossier.get('original_franchise_id') or '')
         original_name = franchise_names.get(original_identity, 'Original franchise name unavailable')
         active_id = int(front_office or 0)
@@ -164,7 +165,7 @@ def create_historical_assets_router(
             None,
         )
         trade_action = ""
-        if current_pick:
+        if current_pick and not dossier.get('exercised'):
             owner_id = int(current_pick.get("current_owner_id") or 0)
             trade_asset_id = f'{int(current_pick["season"])}-R{int(current_pick["round"])}-{current_pick["original_roster_id"]}'
             if active_id:
