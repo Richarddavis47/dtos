@@ -28,7 +28,7 @@ Canonical player-week membership retains missing starter scores. Known zero, unk
 
 Existing `/trades/history/{transaction_id}` shows league, date, season-associated franchises/managers and exact sent/received assets, then expandable observed movements and confirmed pick-to-player transitions. Later packages link to their actual trade dossier. No descendant values or consideration shares are summed. Current source holdings are displayed separately from last observed movements; unsupported continuity remains incomplete.
 
-Completed-trade and exact-pick actions reuse existing Transactions/player/pick/history routes. Player/pick `from_trade` return context is validated against selected-league evidence. Directed player movement legs are grouped for readability. Historical-page disclosures wrap within phone panels; no new navigation framework is introduced.
+Completed-trade and exact-pick actions reuse existing Transactions/player/pick/history routes. Player/pick `from_trade` return context is validated against selected-league evidence. Directed player movement legs are grouped for readability. Historical-page disclosures wrap within phone panels. Explicit My Team roster return fragments open the roster even when its saved disclosure state is closed; no new navigation framework or strategy write is introduced.
 
 ## Bounds and persistence
 

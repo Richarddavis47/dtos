@@ -53,6 +53,13 @@ class MyTeamIntelligenceBrowserTests(journeys.ProductBrowserJourneyTests):
             page.wait_for_load_state('domcontentloaded')
             back = page.get_by_role('link', name='← Back to My Team roster', exact=True)
             self.assertEqual(back.get_attribute('href'), '/teams/1#full-roster')
+            # Explicit return intent must override a closed saved disclosure,
+            # including an old/missed asynchronous toggle publication.
+            page.evaluate('''key => {
+                const saved = JSON.parse(sessionStorage.getItem(key) || '{}');
+                saved['my-team-roster'] = false;
+                sessionStorage.setItem(key, JSON.stringify(saved));
+            }''', 'dtos-my-team:' + context['binding'])
             back.click()
             page.wait_for_load_state('domcontentloaded')
             self.assertTrue(page.locator('#my-team-roster').evaluate('e => e.open'))

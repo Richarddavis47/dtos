@@ -56,4 +56,5 @@
     });
   } catch (_) { /* Core controls remain available without browser storage. */ }
   if (location.hash === '#my-team-advanced') document.getElementById('my-team-advanced').open = true;
+  if (location.hash === '#full-roster') document.getElementById('my-team-roster').open = true;
 })();
