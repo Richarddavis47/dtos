@@ -259,7 +259,6 @@ class CheckpointPipeline:
         provenance: ProvenanceType = ProvenanceType.LIVE_CAPTURED,
         observed_at: str | None = None,
     ) -> dict[str, Any]:
-        fallback = observed_at or datetime.now(timezone.utc).isoformat()
         context = self._context(data, provenance=provenance)
         with self._lock:
             for transaction in transactions or ():
@@ -267,6 +266,11 @@ class CheckpointPipeline:
                 event_id = str(transaction.get("transaction_id") or "")
                 if not event_id:
                     self._counts["materiality_skips"] += 1
+                    continue
+                from src.core.history_context.timestamps import canonical_transaction_timestamp
+                occurred_at, _timestamp_provenance = canonical_transaction_timestamp(transaction)
+                if not occurred_at:
+                    self._counts['undated_transaction_events'] += 1
                     continue
                 kind = str(transaction.get("type") or "").casefold()
                 trigger_assets: list[tuple[CheckpointTrigger, str, str | None]] = []
@@ -295,12 +299,12 @@ class CheckpointPipeline:
                     self._capture(
                         trigger, asset_id=asset_id,
                         asset_type="future_pick" if is_pick else "player",
-                        timestamp=_timestamp(transaction.get("created"), fallback),
+                        timestamp=occurred_at,
                         event_id=event_id, roster_id=roster_id,
                         confidence=85 if values["market_value"] is not None else 0,
                         observations=(
                             self._event_projection_observations(
-                                data, asset_id, event_time=transaction.get("created"),
+                                data, asset_id, event_time=occurred_at,
                             )
                             if (provenance is not ProvenanceType.HISTORICAL_SOURCE_BACKFILL
                                 and transaction.get("status") == "complete"
@@ -323,7 +327,10 @@ class CheckpointPipeline:
     ) -> dict[str, Any]:
         context = self._context(data, provenance=provenance)
         with self._lock:
+            from src.core.history_context.assets import draft_pick
+            drafts = {str(row.get('draft_id')): row for row in data.get('drafts') or ()}
             for pick in picks or ():
+                pick = draft_pick(pick, drafts.get(str(pick.get('draft_id')), {}), context['league_id'], context['season'])
                 self._counts["canonical_events_observed"] += 1
                 player_id = str(pick.get("player_id") or "")
                 draft_id = str(pick.get("draft_id") or "")

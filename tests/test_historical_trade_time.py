@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import replace
+from tests.test_market_observation_producer_identity import prepared
+from src.core.intelligence_memory.pipeline import CheckpointPipeline
+
 import tempfile
 import unittest
 from types import SimpleNamespace
@@ -79,6 +83,8 @@ class HistoricalTradeTimeTests(unittest.TestCase):
             self.assertEqual(dropped[0]["occurred_at"], "2023-11-14T22:13:20Z")
 
     def test_trade_time_matching_uses_pre_event_observation_and_partial_coverage(self) -> None:
+        data, _asset = prepared()
+        evidence = tuple(replace(row, observed_at='2025-08-24T12:00:00Z') for row in CheckpointPipeline._market_observations(data, 'player:1'))
         class Memory:
             calls = []
 
@@ -88,7 +94,7 @@ class HistoricalTradeTimeTests(unittest.TestCase):
                     return None
                 return SimpleNamespace(
                     observation_id="OBS-1", observed_at="2025-08-24T12:00:00Z",
-                    canonical_value=700, provenance_type=SimpleNamespace(
+                    canonical_value=700, provider_evidence=evidence, normalization_version=evidence[0].normalization_version, market_context_id='test', confidence=85, provenance_type=SimpleNamespace(
                         value="historical_source_backfill",
                     ),
                 )

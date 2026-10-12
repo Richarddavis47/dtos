@@ -21,6 +21,7 @@ from src.core.historical_memory.models import (
     PlayerSeasonSummary,
 )
 from src.core.history_context.store import CanonicalHistoryStore as HistoricalStore
+from src.core.history_context.assets import draft_selection_id, future_pick_id, reconcile_player_weeks, PlayerWeekIndexLimit
 
 
 COMPLETED_STATUSES = {"complete", "completed"}
@@ -83,6 +84,8 @@ class HistoricalAssetGraph:
         self._directory_ids: dict[str, list[str]] | None = None
         self._trade_dossiers_cache: list[dict[str, Any]] | None = None
         self._trade_by_id: dict[str, dict[str, Any]] = {}
+        self._timelines = OrderedDict()
+        self._exact_lineages = {}
         self._transaction_archive_cache: list[dict[str, Any]] | None = None
         self._coverage_cache: dict[str, Any] | None = None
         self._player_dossiers: OrderedDict[tuple[str, str, str, str], dict[str, Any]] = OrderedDict()
@@ -233,24 +236,40 @@ class HistoricalAssetGraph:
             sleeper_player_id = str(payload.get("player_id") or row.get("player_id") or "")
             if not sleeper_player_id:
                 continue
-            pick = canonical_pick_id(
-                row["season"], payload.get("round") or "UNKNOWN",
-                payload.get("roster_id") or payload.get("original_franchise") or "UNKNOWN",
-            )
-            events.append(self._event(
-                row, canonical_player_id(sleeper_player_id), "player",
-                "startup_draft_selection" if self._draft_type(payload.get("draft_id")) == "startup" else "rookie_draft_selection",
-                "completed", parent_id=pick,
-                to_roster=payload.get("picked_by") or payload.get("roster_id"),
-                original_roster=payload.get("roster_id") or payload.get("original_franchise"),
-            ))
-            events.append(self._event(
-                row, pick, "pick", "pick_exercise", "completed",
-                parent_id=str(payload.get("draft_id") or "") or None,
-                to_roster=payload.get("picked_by") or payload.get("roster_id"),
-                original_roster=payload.get("roster_id") or payload.get("original_franchise"),
-                suffix=sleeper_player_id,
-            ))
+            selection = payload.get('selection_id') or draft_selection_id(
+                self._source_league(row), str(payload.get('draft_id') or ''), payload.get('pick_no'))
+            if not selection:
+                selection = 'UNRESOLVED-SELECTION-' + canonical_event_id(self.league_id, row['source_record_id'])
+            pick = future_pick_id(payload, row['season'], selection=True)
+            selecting = payload.get('selecting_roster_id') or payload.get('roster_id')
+            original = payload.get('original_roster_id')
+            memory = self._intelligence_store
+            if memory is None:
+                from src.core.intelligence_memory import intelligence_checkpoint_store
+                memory = intelligence_checkpoint_store
+            if hasattr(memory, 'exact_lineages') and str(payload.get('pick_no')).isdigit():
+                key = (self._source_league(row), str(payload.get('draft_id') or ''))
+                if key not in self._exact_lineages:
+                    self._exact_lineages[key] = memory.exact_lineages(league_id=key[0], draft_id=key[1])
+                retained = self._exact_lineages[key].get(int(payload['pick_no']))
+                if retained and (retained.selected_player_id != 'player:' + sleeper_player_id
+                                 or retained.season != int(row['season']) or retained.round != int(payload.get('round') or 0)):
+                    pick = None  # Conflicting exact source/retained evidence cannot create a conversion.
+                elif retained and original is None and retained.original_roster_id is not None:
+                    original = retained.original_roster_id
+                    pick = canonical_pick_id(row['season'], payload['round'], original)
+
+            events.append(self._event(row, canonical_player_id(sleeper_player_id), 'player',
+                'draft_selection', 'completed', parent_id=selection, to_roster=selecting,
+                original_roster=original))
+            # A unique selection always exists independently of a future-pick conversion.
+            events.append(self._event(row, selection, 'selection', 'draft_selection', 'completed',
+                parent_id=str(payload.get('draft_id') or '') or None, to_roster=selecting,
+                original_roster=original, suffix='selection:' + sleeper_player_id))
+            if pick:
+                events.append(self._event(row, pick, 'pick', 'pick_exercise', 'completed',
+                    parent_id=str(payload.get('draft_id') or '') or None, to_roster=selecting,
+                    original_roster=original, suffix=sleeper_player_id))
         for row in (*self._records("transaction"), *self._records("trade")):
             payload = row["payload"]
             status = str(payload.get("status") or "unknown").casefold()
@@ -298,9 +317,9 @@ class HistoricalAssetGraph:
                 to_roster=payload.get("owner_id") or payload.get("current_owner_id"),
                 original_roster=payload.get("roster_id") or payload.get("original_roster_id"),
             ))
-        for row in self._records("weekly_roster"):
+        for row in (*self._records("weekly_roster"), *self._records("roster_snapshot")):
             payload = row["payload"]
-            for player in dict.fromkeys([*(payload.get("starters") or []), *(payload.get("bench") or [])]):
+            for player in dict.fromkeys([*(payload.get("players") or []), *(payload.get("starters") or []), *(payload.get("bench") or [])]):
                 events.append(self._event(
                     row, canonical_player_id(str(player)), "player", "roster_snapshot",
                     "completed", to_franchise=row.get("franchise_id"),
@@ -308,7 +327,7 @@ class HistoricalAssetGraph:
                 ))
         result = [asdict(event) for event in events]
         result.sort(key=lambda item: (
-            item["season"], item["week"] or 0, item["occurred_at"] or item["observed_at"],
+            item["season"], item["week"] or 0, item["occurred_at"] or item["observed_at"] or "",
             0 if item.get("from_franchise_id") and not item.get("to_franchise_id") else 1,
             item["event_id"],
         ))
@@ -349,16 +368,24 @@ class HistoricalAssetGraph:
         completed = [
             event for event in events
             if event["event_status"].casefold() in COMPLETED_STATUSES
-            and event["event_type"] != "roster_snapshot"
+            and event["event_type"] not in {"roster_snapshot", "pick_snapshot"}
         ]
         snapshots = [event for event in events if event["event_type"] == "roster_snapshot"]
+        ambiguous = {e['event_id'] for e in completed if not e.get('occurred_at')}
+        clocks = {}
+        for event in completed:
+            clocks.setdefault((event.get('occurred_at'), event.get('parent_id')), []).append(event)
+        # Separate transactions sharing a clock have no established order.
+        for event in completed:
+            if sum(1 for stamp, parent in clocks if stamp == event.get('occurred_at') and parent != event.get('parent_id')):
+                ambiguous.add(event['event_id'])
         intervals: list[OwnershipInterval] = []
         active: dict[str, Any] | None = None
         for event in completed:
             outgoing = event.get("from_franchise_id")
             incoming = event.get("to_franchise_id")
             if outgoing and active and active["franchise_id"] == outgoing:
-                intervals.append(self._close_interval(active, event))
+                intervals.append(self._close_interval(active, event, "uncertain_chronology" if ambiguous else "verified"))
                 active = None
             if incoming:
                 if active and active["franchise_id"] != incoming:
@@ -370,13 +397,13 @@ class HistoricalAssetGraph:
         snapshot_owners = [event["to_franchise_id"] for event in snapshots if event.get("to_franchise_id")]
         latest_snapshot_owner = snapshot_owners[-1] if snapshot_owners else None
         if active:
-            status = "verified" if latest_snapshot_owner in {None, active["franchise_id"]} else "warning_snapshot_disagreement"
+            status = "uncertain_chronology" if ambiguous else "verified" if latest_snapshot_owner in {None, active["franchise_id"]} else "warning_snapshot_disagreement"
             intervals.append(OwnershipInterval(
                 asset_id=asset_id, franchise_id=active["franchise_id"],
                 acquisition_event_id=active["event"]["event_id"],
                 acquired_at=active["event"]["occurred_at"], disposition_event_id=None,
                 disposed_at=None, duration_days=None, season=active["event"]["season"],
-                season_end_owner=True, source_event_ids=tuple(active["sources"]),
+                season_end_owner=False, source_event_ids=tuple(active["sources"]),
                 reconciliation_status=status,
             ))
         elif latest_snapshot_owner:
@@ -385,7 +412,7 @@ class HistoricalAssetGraph:
                 asset_id=asset_id, franchise_id=latest_snapshot_owner,
                 acquisition_event_id=snapshot["event_id"], acquired_at=snapshot["occurred_at"],
                 disposition_event_id=None, disposed_at=None, duration_days=None,
-                season=snapshot["season"], season_end_owner=True,
+                season=snapshot["season"], season_end_owner=False,
                 source_event_ids=(snapshot["event_id"],),
                 reconciliation_status="snapshot_only",
             ))
@@ -407,7 +434,7 @@ class HistoricalAssetGraph:
         for season, season_rows in sorted(by_season.items()):
             observed = [row for row in season_rows if row["payload"].get("fantasy_points") is not None]
             points = round(sum(float(row["payload"]["fantasy_points"]) for row in observed), 2) if observed else None
-            weeks = {int(row["week"]) for row in season_rows if row.get("week")}
+            weeks = {int(row["week"]) for row in observed if row.get("week")}
             expected = set(range(1, 19))
             player_totals = (self._player_totals_by_season or {}).get(season, {})
             ordered = sorted(player_totals.items(), key=lambda item: (-item[1], item[0]))
@@ -422,33 +449,35 @@ class HistoricalAssetGraph:
                 fantasy_points=points,
                 points_per_game=round(points / len(observed), 2) if points is not None and observed else None,
                 overall_rank=rank, positional_rank=self._positional_rank(raw_id, player_totals),
-                starter_points=round(sum(float(row["payload"].get("fantasy_points") or 0) for row in observed if row["payload"].get("starter")), 2) if observed else None,
-                end_of_season_franchise_id=franchises[-1] if franchises else None,
+                starter_points=(round(sum(float(row["payload"]["fantasy_points"]) for row in observed if row["payload"].get("starter")), 2)
+                    if any(row["payload"].get("starter") for row in observed) and not any(row["payload"].get("starter") and row["payload"].get("fantasy_points") is None for row in season_rows) else None),
+                end_of_season_franchise_id=None,
                 franchise_ids=franchises,
                 completeness_percentage=round(100 * len(weeks) / 18, 1),
                 missing_weeks=tuple(sorted(expected - weeks)),
                 source_record_ids=tuple(sorted(str(row["source_record_id"]) for row in season_rows)),
-                status="in_progress" if season >= current_year else "complete" if len(weeks) >= 14 else "incomplete",
+                status="in_progress" if season >= current_year else "complete" if len(weeks) == 18 else "incomplete",
             )
-            summaries.append(asdict(summary))
+            summary_row = asdict(summary)
+            summary_row['last_scored_franchise_id'] = franchises[-1] if franchises else None
+            summary_row['observed_roster_franchise_ids'] = sorted({row.get('franchise_id') for row in self._records('roster_snapshot')
+                if row['season'] == season and raw_id in set(map(str, row['payload'].get('players') or ())) and row.get('franchise_id')})
+            summary_row['production_scope'] = 'Observed season weeks, not production attributed to a trade or holding interval'
+            summaries.append(summary_row)
         return summaries
 
     def _ensure_player_indexes(self, player_id: str) -> None:
         with self._index_lock:
             if self._player_totals_by_season is None:
-                self._player_totals_by_season = self.store.player_week_totals(
-                    self.league_id,
-                )
+                try:
+                    self._player_totals_by_season = self.store.player_week_totals(self.league_id)
+                except PlayerWeekIndexLimit:
+                    self._player_totals_by_season = {}
+                    self._partial_record_families.add('player_week_comparison_limit')
             if player_id not in self._player_rows_by_id:
-                _, rows = self.store.records(
-                    self.league_id, "player_week", player_id=player_id,
-                    limit=100_000,
-                )
-                rows.sort(key=lambda row: (
-                    int(row["season"]), row.get("week") or 0,
-                    row["source_record_id"],
-                ))
-                self._player_rows_by_id[player_id] = rows
+                _, rows = self.store.records(self.league_id, 'player_week',
+                    player_id=player_id, limit=100_000)
+                self._player_rows_by_id[player_id] = reconcile_player_weeks(rows)
             self._approximate_size_bytes = self._estimate_index_size()
 
     def player_dossier(self, player_id: str) -> dict[str, Any]:
@@ -500,7 +529,8 @@ class HistoricalAssetGraph:
             "limitations": [
                 "Historical value at event remains unavailable without a timestamped valuation snapshot.",
                 "Missing Sleeper observations are not converted to zero.",
-            ],
+            ] + (["Historical comparison ranks unavailable: league-wide preparation exceeds the bounded index; supported individual scores remain available."]
+                 if 'player_week_comparison_limit' in self._partial_record_families else []),
         }
 
     def player_trades(self, player_id: str) -> list[dict[str, Any]]:
@@ -513,7 +543,7 @@ class HistoricalAssetGraph:
         return sorted(
             (dossier for dossier in dossiers if dossier is not None),
             key=lambda item: (
-                item["season"], item["week"] or 0, item["occurred_at"],
+                item["season"], item["week"] or 0, item["occurred_at"] or "",
                 item["trade_id"],
             ),
             reverse=True,
@@ -531,10 +561,7 @@ class HistoricalAssetGraph:
             candidates = self.store.asset_event_records(
                 self.league_id, pick_id,
             )["draft_pick"]
-            row = next((row for row in candidates if canonical_event_id(
-                self.league_id, row["entity_type"], row["season"], row.get("week") or "",
-                row["source_record_id"], str(row.get("player_id") or ""),
-            ) == exercise["event_id"]), None)
+            row = next((row for row in candidates if str(row['source_record_id']) == str(exercise['source_record_id'])), None)
             if row and row.get("player_id"):
                 selected_player = canonical_player_id(str(row["player_id"]))
         # Preserve chronology, including a return to a previous owner. Global
@@ -542,6 +569,8 @@ class HistoricalAssetGraph:
         owners: list[str] = []
         chain_gaps: list[str] = []
         for event in events:
+            if event["event_type"] in {"pick_snapshot", "pick_exercise"}:
+                continue
             if event["event_status"].casefold() not in COMPLETED_STATUSES:
                 continue
             outgoing = event.get("from_franchise_id")
@@ -559,13 +588,14 @@ class HistoricalAssetGraph:
             "original_franchise_id": franchise_id(self.league_id, parts.get("original_roster")),
             "owner_chain": owners,
             "ownership_chain_gaps": chain_gaps,
-            "current_owner": owners[-1] if owners else None,
+            "current_owner": None if exercise else owners[-1] if owners else None,
+            "last_observed_holder": owners[-1] if owners else None,
             "events": events,
-            "exercised": bool(exercise), "selected_player_id": selected_player,
+            "exercised": bool(exercise), "conversion_state": "confirmed" if exercise else "not_confirmed_from_available_evidence", "selected_player_id": selected_player,
             "selected_player_url": f"/players/{selected_player.removeprefix('DTOS-P-')}" if selected_player else None,
             "slot_status": "determined" if exercise else "unknown",
             "reconciliation_status": ("ownership_chain_gap" if chain_gaps else
-                                      "verified" if owners else "no_historical_events"),
+                                      "uncertain_chronology" if any(not e.get("occurred_at") for e in events if e["event_type"] not in {"pick_snapshot", "pick_exercise"}) else "verified" if owners else "no_historical_events"),
             "provenance": ["Sleeper drafts", "Sleeper traded-pick transaction snapshots"],
         }
 
@@ -601,7 +631,7 @@ class HistoricalAssetGraph:
                 "source": self._source(row),
                 "raw_transaction": payload,
             })
-        dossiers.sort(key=lambda item: (item["season"], item["week"] or 0, item["occurred_at"], item["trade_id"]), reverse=True)
+        dossiers.sort(key=lambda item: (item["season"], item["week"] or 0, item["occurred_at"] or "", item["trade_id"]), reverse=True)
         self._trade_dossiers_cache = dossiers
         self._trade_by_id = {
             key: dossier
@@ -662,6 +692,20 @@ class HistoricalAssetGraph:
         self._trade_by_id[trade_id] = dossier
         return dossier
 
+    def trade_timeline(self, transaction_id: str):
+        from .timeline import timeline
+        if transaction_id in self._timelines:
+            self._timelines.move_to_end(transaction_id)
+            return copy.deepcopy(self._timelines[transaction_id])
+        dossier = self.trade_dossier(transaction_id)
+        if dossier is None or dossier['status'].casefold() not in COMPLETED_STATUSES:
+            return None
+        result = timeline(self, dossier)
+        self._timelines[transaction_id] = result
+        while len(self._timelines) > 32:
+            self._timelines.popitem(last=False)
+        return copy.deepcopy(result)
+
     def trade_time_coverage(self) -> dict[str, Any]:
         """Return bounded canonical timestamp/process coverage by season."""
         dossiers = self.trade_dossiers()
@@ -720,94 +764,78 @@ class HistoricalAssetGraph:
         if store is None:
             from src.core.intelligence_memory import intelligence_checkpoint_store
             store = intelligence_checkpoint_store
+        from types import SimpleNamespace
         from src.core.intelligence_memory.confidence import temporal_confidence
         from src.core.intelligence_memory.market_memory import market_context_id
-        asset_rows = []
+        from src.core.intelligence_memory.market import supported_quote_identity
+        from src.core.historical_intelligence.market_comparison import (
+            comparison_reason, retained_comparison_identity, observation_clocks)
+        from src.core.history_context.timestamps import canonical_utc_timestamp
+        boundary = canonical_utc_timestamp(occurred_at)
+        asset_rows, compare = [], []
         for asset_id in unique_assets:
-            asset_type = "pick" if asset_id.startswith("PICK-") else "player"
-            if asset_type == "player":
-                memory_asset_id = "player:" + asset_id.removeprefix("DTOS-P-")
+            is_pick = asset_id.startswith('PICK-')
+            if is_pick:
+                parts = self._pick_parts(asset_id)
+                memory_id = f"pick:{parts.get('season')}:{parts.get('round')}:{parts.get('original_roster')}"
             else:
-                parts = asset_id.split("-")
-                memory_asset_id = (
-                    f"pick:{parts[1]}:{parts[2].removeprefix('R')}:"
-                    f"{parts[3].removeprefix('ORIG')}"
-                )
-            observation = store.observation_at_or_before(
-                asset_id=memory_asset_id,
-                market_context_id=market_context_id(
-                    asset_type=asset_type, scoring_profile_id=None,
-                ),
-                event_at=occurred_at,
-            )
-            if observation is None:
-                asset_rows.append({
-                    "asset_id": asset_id, "match_state": "UNAVAILABLE",
-                    "value": None, "observation_id": None, "observed_at": None,
-                    "temporal_confidence": 0, "provenance": "unavailable",
-                })
-                continue
-            confidence, temporal_reason = temporal_confidence(
-                observation.observed_at, occurred_at,
-            )
-            distance = (
-                datetime.fromisoformat(occurred_at.replace("Z", "+00:00"))
-                - datetime.fromisoformat(observation.observed_at.replace("Z", "+00:00"))
-            ).total_seconds()
-            state = (
-                "EXACT" if distance == 0 else
-                "NEARBY_HIGH_CONFIDENCE" if confidence >= 82 else
-                "NEARBY_MODERATE_CONFIDENCE" if confidence >= 65 else
-                "SINGLE_SOURCE"
-            )
-            asset_rows.append({
-                "asset_id": asset_id, "match_state": state,
-                "value": observation.canonical_value,
-                "observation_id": observation.observation_id,
-                "observed_at": observation.observed_at,
-                "temporal_confidence": confidence,
-                "temporal_reason": temporal_reason,
-                "provenance": observation.provenance_type.value,
-            })
-        valued = [item for item in asset_rows if item["value"] is not None]
-        state = (
-            "complete" if asset_rows and len(valued) == len(asset_rows) else
-            "partial" if valued else "unavailable"
-        )
-        definitive = [
-            item for item in valued
-            if item["provenance"] in {"live_captured", "historical_source_backfill"}
-            and item["temporal_confidence"] >= 65
-        ]
-        # Values are grouped by the side receiving the asset. Unknown sides are
-        # excluded rather than interpreted as zero.
-        destinations = {
-            event["asset_id"]: event.get("to_franchise_id")
-            for event in events if event.get("to_franchise_id")
-        }
-        side_totals: dict[str, float] = {}
-        for item in valued:
-            side = destinations.get(item["asset_id"])
-            if side:
-                side_totals[side] = side_totals.get(side, 0.0) + float(item["value"])
-        confidence = min((item["temporal_confidence"] for item in valued), default=0)
-        return {
-            "coverage_state": state,
-            "process_state": (
-                "gradable" if asset_rows and len(definitive) == len(asset_rows)
-                else "not_gradable"
-            ),
-            "outcome_state": "separate_current_state",
-            "valued_assets": len(valued), "total_assets": len(asset_rows),
-            "coverage_percentage": round(100 * len(valued) / len(asset_rows), 1)
-            if asset_rows else 0.0,
-            "side_totals": side_totals, "assets": asset_rows,
-            "confidence": confidence,
-            "reason": "pre_event_market_evidence_only",
-            "later_observation_substitution": False,
-            "unavailable_assets_are_zero": False,
-            "pick_hindsight_used": False,
-        }
+                memory_id = 'player:' + asset_id.removeprefix('DTOS-P-')
+            kinds = ('future_pick', 'pick') if is_pick else ('player',)
+            candidates = [store.observation_at_or_before(asset_id=memory_id,
+                market_context_id=market_context_id(asset_type=kind, scoring_profile_id=None), event_at=occurred_at)
+                for kind in kinds]
+            candidates = [r for r in candidates if r is not None]
+            observation = max(candidates, key=lambda r: r.observed_at) if candidates else None
+            clocks = observation_clocks(observation, boundary) if observation else None
+            identity = None
+            if observation and clocks:
+                semantics = [r.metadata.get('comparison_semantics') for r in observation.provider_evidence]
+                providers = tuple(sorted({r.provider for r in observation.provider_evidence}))
+                identity = retained_comparison_identity(semantics[0] if semantics and all(s == semantics[0] for s in semantics) else None, providers)
+                if (not identity or identity[:2] != ('external_market_normalized_index', '0-1000')
+                    or any(not supported_quote_identity(r) or (r.metadata or {}).get('asset_id') not in (None, memory_id) for r in observation.provider_evidence)):
+                    identity = None
+            foreign_context = observation and any(r.metadata.get('league_id') not in (None, '', self.league_id, (row.get('payload') or {}).get('source_league_id')) for r in getattr(observation, 'provider_evidence', ()))
+            value = observation.canonical_value if observation and identity and clocks and not foreign_context else None
+            confidence, reason = temporal_confidence(clocks['oldest_quote_at'] if clocks else None, occurred_at)
+            entry = {'asset_id': asset_id, 'value': value,
+                'match_state': ('EXACT' if clocks and clocks['oldest_quote_at'] == boundary and clocks['source_knowledge_at'] == boundary else 'DATED_ESTIMATE') if value is not None else 'UNAVAILABLE',
+                'observation_id': observation.observation_id if observation else None,
+                'observed_at': clocks['quote_observed_at'] if clocks else None,
+                'source_knowledge_at': clocks['source_knowledge_at'] if clocks else None,
+                'retained_attachment_at': clocks['retained_attachment_at'] if clocks else None,
+                'market_context_id': getattr(observation, "market_context_id", None) if observation else None,
+                'provider_evidence': [r.__dict__ for r in getattr(observation, "provider_evidence", ())] if observation else [],
+                'normalization_version': getattr(observation, "normalization_version", None) if observation else None,
+                'comparison_identity': identity, 'temporal_confidence': min(confidence, getattr(observation, "confidence", 0)) if value is not None else 0,
+                'source_quote_confidence': getattr(observation, 'confidence', None),
+                'temporal_reason': reason, 'provenance': observation.provenance_type.value if observation else 'unavailable',
+                'limitation': 'Dated estimates require event-stability evidence; proximity alone does not establish an exact price.'}
+            asset_rows.append(entry)
+            # Asset-type contexts are verified by exact lookup above. Shared
+            # price units are compared using the admitted producer identity.
+            compare.append(SimpleNamespace(market_value=value,
+                market_provider='|'.join(sorted({r.provider for r in getattr(observation, "provider_evidence", ())})) if observation else None,
+                market_context_id=str(identity), market_normalization_version=getattr(observation, "normalization_version", None) if observation else None,
+                market_value_concept='canonical_market' if identity else None,
+                market_comparison_identity=identity, market_observed_at=entry['observed_at']))
+        reason = comparison_reason(compare, boundary=occurred_at)
+        complete = reason is None and bool(compare)
+        exact = complete and all(r['match_state'] == 'EXACT' for r in asset_rows)
+        destinations = {e['asset_id']:e.get('to_franchise_id') for e in events if e.get('to_franchise_id')}
+        totals = {}
+        if complete and all(destinations.get(r['asset_id']) for r in asset_rows):
+            for r in asset_rows:
+                side = destinations[r['asset_id']]
+                totals[side] = totals.get(side, 0) + float(r['value'])
+        return {'coverage_state': 'complete' if complete else 'partial' if any(r['value'] is not None for r in asset_rows) else 'unavailable',
+            'process_state': 'gradable' if exact and len(totals) >= 2 else 'not_gradable',
+            'fairness_state': 'comparable_exact_evidence' if exact and len(totals) >= 2 else 'estimated_comparison' if complete else 'unavailable',
+            'outcome_state':'separate_current_state', 'valued_assets':sum(r['value'] is not None for r in asset_rows),
+            'total_assets':len(asset_rows), 'coverage_percentage':round(100*sum(r['value'] is not None for r in asset_rows)/len(asset_rows),1) if asset_rows else 0,
+            'side_totals':totals, 'assets':asset_rows, 'confidence':min((r['temporal_confidence'] for r in asset_rows), default=0),
+            'reason':reason or 'complete_compatible_dated_evidence', 'later_observation_substitution':False,
+            'unavailable_assets_are_zero':False, 'pick_hindsight_used':False}
 
     def transaction_archive(self) -> list[dict[str, Any]]:
         if self._transaction_archive_cache is not None:
@@ -831,7 +859,7 @@ class HistoricalAssetGraph:
                 "waiver_budget": payload.get("waiver_budget") or [],
                 "source": self._source(row), "raw": payload,
             })
-        result.sort(key=lambda item: (item["season"], item["week"] or 0, item["occurred_at"], item["transaction_id"]), reverse=True)
+        result.sort(key=lambda item: (item["season"], item["week"] or 0, item["occurred_at"] or "", item["transaction_id"]), reverse=True)
         self._transaction_archive_cache = result
         return list(result)
 
@@ -1016,7 +1044,7 @@ class HistoricalAssetGraph:
             "player_history_schema_version": PLAYER_HISTORY_SCHEMA_VERSION,
             "importer_version": IMPORTER_VERSION,
             "seasons": seasons, "counts_by_season": counts,
-            "asset_event_count": event_statistics["asset_event_count"],
+            "asset_event_count": len(self._events_all) if self._events_all is not None else event_statistics["asset_event_count"],
             "duplicate_event_ids": event_statistics["duplicate_event_ids"],
             "resolved_identity_count": identity_count - len(unresolved),
             "unresolved_identity_count": len(unresolved),

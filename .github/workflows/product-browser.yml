@@ -58,3 +58,20 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - name: Real prior publisher and isolated current reader
         run: python -m tools.validation.projection_display_cross_version --browser
+
+  historical-trade-timeline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-validation.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: Historical evidence, source identity and phone routes
+        run: python -m unittest tests.test_trade_timeline tests.test_trade_timeline_browser.TradeTimelineBrowserTests tests.test_historical_trade_time tests.test_fois_evidence_integrity
+      - name: Real prior quote publisher and current reader
+        run: python -m tools.validation.trade_quote_cross_version

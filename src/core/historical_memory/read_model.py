@@ -19,7 +19,7 @@ from src.core.historical_memory.models import (
 )
 from src.core.history_context.store import CanonicalHistoryStore as HistoricalStore
 
-READ_MODEL_VERSION = "1.1"
+READ_MODEL_VERSION = "1.2"
 MAX_CACHE_ENTRIES = 1
 
 
@@ -62,10 +62,12 @@ class HistoricalReadModelCache:
         dataset_version: str | None = None,
     ) -> tuple[str, str]:
         dataset_version = dataset_version or store.dataset_version(league_id)
+        from src.core.intelligence_memory import intelligence_checkpoint_store
+        observation_generation = intelligence_checkpoint_store.observation_generation()
         source = "|".join((
             str(store.path.resolve()), league_id, dataset_version, HISTORICAL_SCHEMA_VERSION,
             IMPORTER_VERSION, HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
-            PLAYER_HISTORY_SCHEMA_VERSION, READ_MODEL_VERSION,
+            PLAYER_HISTORY_SCHEMA_VERSION, READ_MODEL_VERSION, str(observation_generation),
             _current_identity(data),
         ))
         return hashlib.sha256(source.encode()).hexdigest(), dataset_version

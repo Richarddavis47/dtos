@@ -59,7 +59,7 @@ class DynastyProcessHistoricalProvider:
             return response.text
 
     def _commit(self, at_or_before: str) -> tuple[str, str] | None:
-        month = at_or_before[:7]
+        month = at_or_before
         with self._lock:
             cached = self._commit_months.get(month)
             if cached and cached[1] <= at_or_before:
@@ -78,6 +78,8 @@ class DynastyProcessHistoricalProvider:
         result = str(row.get("sha") or ""), str(stamp or "")
         with self._lock:
             self._commit_months[month] = result
+            if len(self._commit_months) > 64:
+                self._commit_months.pop(next(iter(self._commit_months)))
         return result
 
     def _snapshot(self, sha: str) -> tuple[dict[str, dict[str, str]], tuple[dict[str, str], ...]]:

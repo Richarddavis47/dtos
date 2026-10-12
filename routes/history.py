@@ -69,6 +69,7 @@ def create_history_router(
 <details class="card technical-details"><summary>Historical Import Reliability</summary><p><b>Historical coverage:</b> {escape(progress['display_status'])} <code>{escape(progress['status'])}</code></p><p><b>Progress:</b> {progress['completed_steps']}/{progress['total_steps']} seasons{percentage}</p><p><b>Completed:</b> {escape(completed_seasons)}</p>{pending_detail}<p><b>Current refresh job:</b> {escape(str(latest_progress.get('current_season') or latest_job.get('current_season') or 'waiting'))} {escape(str(latest_progress.get('current_data_type') or 'player_week'))} · {latest_progress.get('completed_steps', 0)}/{latest_progress.get('total_steps', 0)} {escape(str(latest_progress.get('status') or 'waiting'))}</p><p><b>Foundation import:</b> {escape(str(completeness['status']).title())}</p><p><b>Overall historical readiness:</b> {escape('Ready with expected current-season evidence pending' if progress['status'] == 'completed_with_pending' else progress['display_status'])}</p><p class="muted">Current segment: {escape(str(progress.get('current_season') or 'waiting'))} / {escape(str(progress.get('current_data_type') or 'player_week'))}. Progress consistent: {str(progress['consistent']).lower()}. Retry count: {escape(str(latest_job.get('retry_count') or 0))}. Last progress: {escape(str(latest_job.get('last_progress_at') or 'No persisted progress yet'))}.</p><p>Provider coverage: {escape(', '.join(item['name'] for item in providers['providers']))}</p></details>
 <p><a class="btn" href="/api/crawl/history">Open Historical API</a> <a class="btn" href="/api/history/coverage">Historical Coverage</a> <a class="btn" href="/search">Search Historical Assets</a></p>
 """
+        body = '<style>.history-page{min-width:0;overflow-wrap:anywhere}.history-page .card,.history-page .grid>*{min-width:0}.history-page code{white-space:normal;overflow-wrap:anywhere}.history-page .grid{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}</style><div class="history-page">' + body + '</div>'
         return page("League History", body)
 
     @router.get("/api/history/seasons")
@@ -186,7 +187,7 @@ def create_history_router(
             for season, summary in career["seasons"].items()
         )
         return page(
-            f"{career.get('player_name') or 'Player'} — Historical Performance",
+            f"{career.get('player_name') or player_id} — Historical Performance",
             f'<a class="back" href="/players/{escape(player_id)}">← Back to connected Player Dossier</a><h2>Historical Performance</h2><p class="muted">Weekly gaps are not connected or converted to zero.</p><div class="grid">{seasons}</div><div class="card"><h3>Usage</h3><p>{escape(career["usage"]["reason"])}</p></div>',
         )
 

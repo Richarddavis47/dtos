@@ -119,7 +119,8 @@ def create_historical_assets_router(
 
     @router.get("/picks/{pick_id}", response_class=HTMLResponse)
     async def pick_page(pick_id: str, front_office: int | None = None,
-                        from_team: int | None = Query(default=None, ge=1)) -> HTMLResponse:
+                        from_team: int | None = Query(default=None, ge=1),
+                        from_trade: str | None = Query(default=None, max_length=100)) -> HTMLResponse:
         dossier = graph().pick_dossier(pick_id)
         if dossier is None:
             raise HTTPException(404, "Pick not found")
@@ -129,7 +130,7 @@ def create_historical_assets_router(
         ) or '<tr><td colspan="5">No verified ownership events are available.</td></tr>'
         selected = (
             f'<a href="{escape(dossier["selected_player_url"])}">{escape(dossier["selected_player_id"])}</a>'
-            if dossier.get("selected_player_url") else "Not exercised"
+            if dossier.get("selected_player_url") else "Draft conversion not confirmed from available evidence"
         )
         pick_title = f'{dossier.get("season", "Future")} Round {dossier.get("round", "?")} Pick'
         from services.asset_explanations import pick_history_explanation
@@ -180,13 +181,16 @@ def create_historical_assets_router(
 <div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(owner_name)}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article><article class="metric"><b>{escape(original_name)}</b><span>Original franchise</span></article></div>
 <div class="card"><h3>Pick Conversion</h3><p>{selected}</p><p>{trade_action}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
 <div class="card"><h3>Ownership Chain</h3><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Pick ownership history"><table class="pick-history-table"><caption>Verified ownership events for this exact pick</caption><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div></div>{details}</section>'''
-        return page(f"{pick_id} — Pick Dossier", team_return + body)
+        origin = graph().trade_dossier(from_trade) if from_trade else None
+        trade_return = f'<a class="back" href="/trades/history/{quote(origin["transaction_id"], safe="")}">← Back to original trade timeline</a>' if origin else ''
+        return page(f"{pick_title} — Pick Dossier", trade_return + team_return + body)
 
     @router.get("/api/trades/history/{transaction_id}")
     async def historical_trade_api(transaction_id: str) -> JSONResponse:
         dossier = graph().trade_dossier(transaction_id)
         if dossier is None:
             raise HTTPException(404, "Historical trade not found")
+        dossier['timeline'] = graph().trade_timeline(transaction_id)
         return JSONResponse(jsonable_encoder(dossier))
 
     @router.get("/api/history/trades/coverage")
@@ -194,18 +198,17 @@ def create_historical_assets_router(
         return JSONResponse(jsonable_encoder(graph().trade_time_coverage()))
 
     @router.get("/trades/history/{transaction_id}", response_class=HTMLResponse)
-    async def historical_trade_page(transaction_id: str) -> HTMLResponse:
+    async def historical_trade_page(transaction_id: str, from_trade: str | None = Query(default=None, max_length=100)) -> HTMLResponse:
         dossier = graph().trade_dossier(transaction_id)
         if dossier is None:
             raise HTTPException(404, "Historical trade not found")
-        assets = "".join(
-            f'<li><a href="{_asset_url(item)}">{escape(item["asset_id"])}</a> — {escape(item["event_type"])} — {escape(item["event_status"])}</li>'
-            for item in dossier["asset_events"]
-        ) or "<li>No normalized asset legs were available.</li>"
-        body = f'''<a class="back" href="/trades">← Back to Trade Center</a><h2>Historical Trade</h2>
-<div class="summary-grid"><article class="metric"><b>{escape(str(dossier["season"]))}</b><span>Season</span></article><article class="metric"><b>{escape(str(dossier["week"]))}</b><span>Week</span></article><article class="metric"><b>{escape(dossier["status"])}</b><span>Status</span></article><article class="metric"><b>{len(dossier["asset_events"])}</b><span>Asset Legs</span></article></div>
-<div class="card"><h3>Assets Exchanged</h3><ul>{assets}</ul></div><div class="card"><h3>Valuation Disclosure</h3><p>Occurred at: {escape(str(dossier.get("occurred_at") or "Unavailable"))}</p><p>Execution-time coverage: {escape(str(dossier["trade_time_intelligence"]["coverage_state"]))} ({dossier["trade_time_intelligence"]["valued_assets"]}/{dossier["trade_time_intelligence"]["total_assets"]} assets).</p><p>Process: {escape(str(dossier["trade_time_intelligence"]["process_state"]))}. Outcome is evaluated separately.</p><p class="muted">Current values are never represented as historical values; unavailable assets are not treated as zero.</p></div>'''
-        return page(f"Trade {transaction_id} — Historical Dossier", body)
+        from src.ui.trade_timeline import render_timeline
+        model = graph().trade_timeline(transaction_id)
+        if model is None:
+            raise HTTPException(404, 'Completed trade evidence unavailable')
+        origin = graph().trade_dossier(from_trade) if from_trade else None
+        return_url = f"/trades/history/{origin['transaction_id']}" if origin else '/transactions'
+        return page('Historical Trade Timeline', render_timeline(model, dossier, return_url=return_url))
 
     @router.get("/api/history/transactions")
     async def historical_transactions(

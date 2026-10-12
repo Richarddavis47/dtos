@@ -85,6 +85,15 @@ class IntelligenceMemoryService:
     ) -> CheckpointCaptureResult:
         observations = tuple(observations)
         provider_evidence = tuple(market_observations) if market_observations is not None else observations
+        from types import SimpleNamespace
+        from src.core.historical_intelligence.market_comparison import observation_clocks
+        if provider_evidence and any(row.observed_at for row in provider_evidence):
+            clocks = observation_clocks(SimpleNamespace(provider_evidence=provider_evidence, observed_at=timestamp), timestamp)
+            if clocks is None:
+                market_value = None
+                completeness = EvidenceCompleteness.UNAVAILABLE
+                confidence = 0
+                knowledge_state = 'market_clock_not_decision_eligible'
         versions = {row.normalization_version for row in provider_evidence}
         # New explicit producer identity carries its actual normalization. Legacy
         # captures keep their legacy default; no history is reinterpreted.

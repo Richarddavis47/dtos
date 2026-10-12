@@ -64,7 +64,11 @@ class SleeperHistoricalSource:
                 for week in transaction_weeks
             ))
             draft_rows = []
-            for draft in drafts or ():
+            for index, draft in enumerate(drafts or ()):
+                detail = await self._get(client, f"/draft/{draft.get('draft_id')}") if draft.get("draft_id") else None
+                if isinstance(detail, dict) and str(detail.get("draft_id")) == str(draft.get("draft_id")) and str(detail.get("league_id")) == str(league_id):
+                    draft = {**draft, **detail}
+                    drafts[index] = draft
                 draft_id = str(draft.get("draft_id") or "")
                 if draft_id:
                     for pick in await self._get(client, f"/draft/{draft_id}/picks") or ():

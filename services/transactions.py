@@ -71,6 +71,7 @@ def _pick_asset(
     round_number = str(pick.get("round") or "?")
     return {
         "kind": "pick",
+        "canonical_pick_id": f"PICK-{pick.get('season')}-R{pick.get('round')}-ORIG{pick.get('roster_id')}" if all(pick.get(k) is not None for k in ('season', 'round', 'roster_id')) else None,
         "action": "Draft pick",
         "label": f"{season} Round {round_number}",
         "position": "PICK",

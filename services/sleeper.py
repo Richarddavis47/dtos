@@ -211,10 +211,26 @@ async def _sync_sleeper(
                     league, matchup_week, matchups,
                     lambda path: sleeper_get(client, path), observed_at=utcnow().isoformat(),
                 )
+                previous = state.get('data') or {}
+                same_season = str((previous.get('league') or {}).get('season')) == str(league.get('season'))
+                retained_buckets = previous.get('season_transactions') or {} if same_season else {}
+                season_transactions = {str(matchup_week): transactions}
+                async def previous_transactions(transaction_week):
+                    try:
+                        return await sleeper_get(client, f'/league/{league_id}/transactions/{transaction_week}')
+                    except Exception:
+                        return None
+                for transaction_week, rows in zip(range(0, matchup_week), await asyncio.gather(*(
+                    previous_transactions(w) for w in range(0, matchup_week)
+                ))):
+                    season_transactions[str(transaction_week)] = rows if rows is not None else retained_buckets.get(str(transaction_week))
                 draft_picks = []
-                for draft in drafts or ():
+                for index, draft in enumerate(drafts or ()):
                     draft_id = str(draft.get("draft_id") or "")
                     if draft_id and str(draft.get("status") or "").casefold() == "complete":
+                        detail = await sleeper_get(client, f"/draft/{draft_id}")
+                        if isinstance(detail, dict) and str(detail.get("draft_id")) == draft_id and str(detail.get("league_id")) == str(league_id):
+                            drafts[index] = {**draft, **detail}
                         draft_picks.extend(await sleeper_get(client, f"/draft/{draft_id}/picks") or ())
 
                 cached_players = (state.get("data") or {}).get("players") or {}
@@ -475,6 +491,7 @@ async def _sync_sleeper(
                 "drafts": drafts,
                 "draft_picks": draft_picks,
                 "transactions": transactions,
+                "season_transactions": season_transactions,
                 "matchups": matchup_groups,
                 "season_matchups": season_matchups,
                 "nfl_state": nfl_state,
@@ -661,6 +678,9 @@ async def sync_transactions(
                     client, f"/league/{league_id}/transactions/{week}"
                 )
             data["transactions"] = transactions
+            data.setdefault('season_transactions', {})[str(week)] = transactions
+            from src.core.history_context import canonical_history_store
+            canonical_history_store.update_current(league_id, data)
             state["transactions_last_sync"] = utcnow().isoformat()
             state["transactions_last_error"] = None
             from src.core.intelligence_memory import checkpoint_pipeline

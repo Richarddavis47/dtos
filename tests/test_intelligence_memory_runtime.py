@@ -157,7 +157,8 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         self.assertEqual(rows[0].knowledge_state, "scheduled_global_market_benchmark")
 
     def test_historical_backfill_is_explicit_not_live(self) -> None:
-        trade = {"transaction_id": "old", "type": "trade", "adds": {"1": 2}}
+        trade = {"transaction_id": "old", "type": "trade", "adds": {"1": 2},
+                 "created": "2022-09-01T00:00:00+00:00"}
         self.pipeline.ingest_transactions(
             self.data, [trade], provenance=ProvenanceType.HISTORICAL_SOURCE_BACKFILL,
             observed_at="2022-09-01T00:00:00+00:00",
@@ -168,14 +169,22 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         self.assertEqual(self.store.market_memory_health()["observation_count"], 0)
 
     def test_leagues_are_isolated(self) -> None:
-        trade = {"transaction_id": "same", "type": "trade", "adds": {"1": 2}}
+        trade = {"transaction_id": "same", "type": "trade", "adds": {"1": 2},
+                 "created": "2026-09-01T00:00:00+00:00"}
         self.pipeline.ingest_transactions(self.data, [trade])
         other = {**self.data, "league": {**self.data["league"], "league_id": "L2"}}
         self.pipeline.ingest_transactions(other, [trade])
         self.assertEqual(len(self.store.checkpoints()), 2)
 
+    def test_retrieval_clock_does_not_invent_transaction_time(self) -> None:
+        trade = {"transaction_id": "undated", "type": "trade", "adds": {"1": 2}}
+        self.pipeline.ingest_transactions(self.data, [trade],
+            observed_at="2026-09-01T00:00:00+00:00")
+        self.assertEqual(self.store.checkpoints(), [])
+
     def test_missing_current_market_is_unavailable_not_historical_fallback(self) -> None:
-        trade = {"transaction_id": "T2", "type": "trade", "adds": {"99": 2}}
+        trade = {"transaction_id": "T2", "type": "trade", "adds": {"99": 2},
+                 "created": "2026-09-01T00:00:00+00:00"}
         self.pipeline.ingest_transactions(self.data, [trade])
         row = self.store.checkpoints()[0]
         self.assertIsNone(row.market_value)

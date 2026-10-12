@@ -42,8 +42,8 @@ def _pick_identity(payload: Mapping[str, Any], season: int) -> str | None:
     year = payload.get("season") or payload.get("year") or season
     round_number = payload.get("round")
     original = (
-        payload.get("roster_id") or payload.get("original_roster_id")
-        or payload.get("original_franchise") or payload.get("owner_id")
+        payload.get("original_roster_id") if payload.get("draft_id") else payload.get("roster_id") or payload.get("original_roster_id")
+        or payload.get("original_franchise")
     )
     if round_number in (None, "") or original in (None, ""):
         return None
@@ -188,7 +188,7 @@ class HistoricalIntelligenceService:
                 "qualified_roster_ids", "semifinal_roster_ids", "championship_roster_ids",
                 "first_round_bye_roster_ids",
                 "reason_codes", "waiver_budget", "settings",
-                "draft_id", "picked_by", "draft_start_at", "draft_last_pick_at", "draft_status",
+                "draft_id", "original_roster_id", "selection_id", "picked_by", "draft_start_at", "draft_last_pick_at", "draft_status",
             ) if key in payload
         }
         return HistoricalEvent(

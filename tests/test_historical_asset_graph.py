@@ -48,7 +48,7 @@ class HistoricalAssetGraphTests(unittest.TestCase):
             "draft_pick", "pick-1", 2025,
             {
                 "draft_id": "draft-1", "round": 1, "pick_no": 1,
-                "roster_id": 1, "picked_by": 1, "player_id": "p1",
+                "roster_id": 1, "original_roster_id": 1, "picked_by": "manager-user-id", "player_id": "p1",
                 "source_league_id": "L25",
             },
             player_id="p1",

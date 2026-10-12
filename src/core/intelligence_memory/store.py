@@ -395,6 +395,14 @@ class IntelligenceCheckpointStore:
         provider_evidence = tuple(
             checkpoint.observations if provider_evidence is None else provider_evidence
         )
+        # The event reference keeps checkpoint.timestamp. The shared Market
+        # observation retains the provider quote clock, not the attachment clock.
+        from src.core.history_context.timestamps import canonical_utc_timestamp
+        quote_times = [canonical_utc_timestamp(r.observed_at) for r in provider_evidence]
+        if quote_times and all(quote_times):
+            if max(quote_times) > canonical_utc_timestamp(checkpoint.timestamp):
+                return None, MarketObservationDecision.UNAVAILABLE, False
+            checkpoint = replace(checkpoint, timestamp=max(quote_times))
         fingerprint = semantic_fingerprint(
             asset_id=checkpoint.asset_id, asset_type=checkpoint.asset_type,
             market_context_id=market_context_id, canonical_value=canonical_value,
@@ -943,6 +951,8 @@ class IntelligenceCheckpointStore:
             observation = self._decode_observation(raw)
             if any(not supported_quote_identity(item) for item in observation.provider_evidence):
                 continue
+            from src.core.historical_intelligence.market_comparison import observation_clocks
+            clocks = observation_clocks(observation)
             provider_rows = tuple(item.__dict__ for item in observation.provider_evidence)
             providers = sorted({item.provider for item in observation.provider_evidence})
             semantics = [item.metadata.get("comparison_semantics") for item in observation.provider_evidence]
@@ -952,11 +962,11 @@ class IntelligenceCheckpointStore:
             )
             # Legacy opaque versions/context hashes cannot prove the units of a
             # retained number. Preserve it, but withhold historical fairness.
-            canonical = bool(identity and identity[:2] == ("external_market_normalized_index", "0-1000"))
+            canonical = bool(clocks and identity and identity[:2] == ("external_market_normalized_index", "0-1000"))
             result.append(GlobalMarketCheckpoint(
                 checkpoint_id=observation.observation_id,
                 asset_id=observation.asset_id,
-                occurred_at=observation.observed_at,
+                occurred_at=max(clocks['quote_observed_at'], clocks['source_knowledge_at']) if clocks else observation.observed_at,
                 provider=providers[0] if len(providers) == 1 else "dtos_consensus",
                 normalized_value=float(observation.canonical_value),
                 confidence=int(observation.confidence),
@@ -981,14 +991,23 @@ class IntelligenceCheckpointStore:
         self, *, asset_id: str, market_context_id: str, event_at: str,
     ) -> GlobalMarketObservation | None:
         """Read one legitimate pre-event state without creating an observation."""
+        from src.core.historical_intelligence.market_comparison import observation_clocks
+        from src.core.history_context.timestamps import canonical_utc_timestamp
+        boundary = canonical_utc_timestamp(event_at)
+        if not boundary:
+            return None
         with self._connect() as connection:
-            row = connection.execute(
-                """SELECT * FROM global_market_observations
-                WHERE asset_id=? AND market_context_id=? AND observed_at<=?
-                ORDER BY observed_at DESC,created_at DESC LIMIT 1""",
-                (asset_id, market_context_id, event_at),
-            ).fetchone()
-        return self._decode_observation(row) if row else None
+            rows = connection.execute("""SELECT * FROM global_market_observations
+                WHERE asset_id=? AND market_context_id=?
+                ORDER BY observed_at DESC,created_at DESC LIMIT 500""",
+                (asset_id, market_context_id)).fetchall()
+        admitted = []
+        for raw in rows:
+            row = self._decode_observation(raw)
+            clocks = observation_clocks(row, boundary)
+            if clocks:
+                admitted.append(replace(row, observed_at=clocks['quote_observed_at']))
+        return max(admitted, key=lambda r: r.observed_at) if admitted else None
 
     def market_memory_health(self) -> dict[str, Any]:
         with self._connect() as connection:
@@ -1186,6 +1205,25 @@ class IntelligenceCheckpointStore:
                 (league_id, event_id, asset_id, trigger_type),
             ).fetchone()
         return row is not None
+
+    def observation_generation(self):
+        """Immutable observation publication identity; references/retrieval do not change it."""
+        with self._connect() as connection:
+            return int(connection.execute('SELECT COALESCE(MAX(rowid),0) FROM global_market_observations').fetchone()[0])
+
+    def exact_lineages(self, *, league_id: str, draft_id: str):
+        with self._connect() as connection:
+            rows = connection.execute('SELECT * FROM exact_pick_lineage WHERE league_id=? AND draft_id=? LIMIT 1001', (league_id, draft_id)).fetchall()
+        if len(rows) > 1000:
+            raise ValueError('Exact draft lineage exceeds supported selection bound')
+        return {row['selection']: ExactPickLineage(**dict(row)) for row in rows}
+
+    def exact_lineage(self, *, league_id: str, draft_id: str, selection: int):
+        """Read exact namespaced evidence only; never query the legacy table."""
+        with self._connect() as connection:
+            row = connection.execute('SELECT * FROM exact_pick_lineage WHERE league_id=? AND draft_id=? AND selection=?',
+                                     (league_id, draft_id, selection)).fetchone()
+        return ExactPickLineage(**dict(row)) if row else None
 
     def put_exact_lineage(self, lineage: ExactPickLineage) -> bool:
         """Future exact writes only. Never read or reinterpret legacy lineage."""
