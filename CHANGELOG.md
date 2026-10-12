@@ -1,3 +1,10 @@
+## v1.21.36 · build 2136 — Assessment Context & Display Integrity
+
+- Preserve the original evaluated strategy, source identity, rationale and stale qualification through old rendered offer controls, Preview and Adopt; reconcile shared intent before response admission.
+- Qualify incompatible retained projection display methods independently of canonical scoring compatibility, preserving original evidence and canonical Sleeper-sourced values even after failed refresh.
+- Add real prior-version publisher/current-reader, no-growth and responsive route checks plus multi-tab retained assessment journeys. No new persistent storage, projection model or Market changes.
+- See `docs/ASSESSMENT_DISPLAY_INTEGRITY.md` for contracts and Scout acceptance scenarios.
+
 ## v1.21.35 · build 2135 — My Team Status & Intent Integrity
 
 - Source availability is enriched before roster-group copies, preserving known injury/status evidence on every roster card and truthful missing states.

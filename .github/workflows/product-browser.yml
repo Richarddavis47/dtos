@@ -42,4 +42,19 @@ jobs:
           python -m pip install -r requirements-validation.txt
           python -m playwright install --with-deps chromium
       - name: My Team evidence and authenticated session journeys
-        run: python -m unittest tests.test_my_team_intelligence tests.test_my_team_intelligence_browser tests.test_my_team_final tests.test_my_team_final_browser
+        run: python -m unittest tests.test_my_team_intelligence tests.test_my_team_intelligence_browser tests.test_my_team_final tests.test_my_team_final_browser tests.test_legacy_display_integrity tests.test_assessment_context_browser
+
+  projection-display-cross-version:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-validation.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: Real prior publisher and isolated current reader
+        run: python -m tools.validation.projection_display_cross_version --browser

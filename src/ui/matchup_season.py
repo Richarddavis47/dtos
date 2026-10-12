@@ -81,13 +81,14 @@ def _player_cell(player, week, identity, state, *, starter=False):
     else:
         content += '<small>Dossier unavailable</small>' if pid != '0' else ''
     projected = escape(str(player.get('projection_display') or _points(player['projection'])))
+    qualification = f'<small>{escape(player["projection_display_reason"])}</small>' if player.get('projection_display_reason') and player['projection'] is not None else ''
     actual = '' if state == 'pregame' else f'<span><small>Actual</small><b>{_points(player["actual"])}</b></span>'
     label = 'Pregame projection · Sleeper' if player['projection'] is not None else 'Projection unavailable'
     return (f'<div class="matchup-player{" battle-side" if starter else ""}">{content}<div class="matchup-player-points">'
             f'{actual}'
             f'<span data-dtos-semantic-field="pregame_projection" data-dtos-availability="{"available" if player["projection"] is not None else "unavailable"}" '
             f'data-dtos-value="{projected if player["projection"] is not None else ""}" '
-            f'data-canonical-value="{player["projection"] if player["projection"] is not None else ""}"><small>{label}</small><b>{projected}</b></span></div></div>')
+            f'data-canonical-value="{player["projection"] if player["projection"] is not None else ""}"><small>{label}</small><b>{projected}</b>{qualification}</span></div></div>')
 
 
 def _aligned_roster(sides, week, identity, state):

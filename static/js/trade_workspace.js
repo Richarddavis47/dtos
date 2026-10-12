@@ -316,8 +316,10 @@
       search_result_type: boundedEvidence(value.search_result_type), stale_reason: boundedEvidence(value.stale_reason), restored: true,
       evaluation: boundedEvidence(value.evaluation || {}), opportunity: boundedEvidence(value.opportunity)};
   }
+  const assessedOfferContexts = new WeakMap();
   function assessmentContext(row) {
-    if (row.proposal?.preview_context) return restoreContext(row.proposal.preview_context);
+    if (assessedOfferContexts.has(row)) return assessedOfferContexts.get(row);
+    if (row.proposal?.preview_context) return row.proposal.preview_context;
     const e = row.evaluation || row.proposal?.preview_assessment || {};
     const keys = ['recommendation', 'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'why_they_would_do_it', 'counterparty_summary', 'provenance', 'major_risks', 'major_limitations', 'recommendation_trace', 'legality', 'dimensions'];
     const context = {schema: 1, evaluation: boundedEvidence(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]]))),
@@ -352,6 +354,7 @@
   function contextNotice(out, context, proposal) {
     if (context?.exploration) out.append(node('p', 'Exploratory only · ' + (context.search_result_type || 'supported alternative') + ' · not a qualified bilateral recommendation', 'tw-drawback'));
     if (context?.identity?.ownership && context.identity.ownership !== workspace.workspace_context.ownership_generation) out.append(node('p', 'Ownership has changed. Your proposal is retained for review; evaluation will identify any assets that moved.', 'tw-drawback'));
+    if (context?.identity) { const summary = node('p', 'Assessment strategy: ' + (context.identity.strategy || 'Use supported competitive window') + ' · Current selected strategy: ' + (el('trade-strategy').value || 'Use supported competitive window')); summary.dataset.assessmentStrategy = context.identity.strategy || ''; out.append(summary); }
     const qualification = contextQualification(context, proposal);
     if (qualification) { out.append(node('p', qualification, 'tw-drawback')); reevaluateAction(out); }
   }
@@ -490,6 +493,7 @@
     return null;
   }
   function openOffer(row) {
+    reconcileStrategy();
     const conflict = offerConflict(row); if (conflict) return message(conflict, true);
     if (newRecommendedObjective(row)) { session.requiredOutgoingAsset = null; session.requiredIncomingAsset = null; session.originWorkflow = 'recommended'; }
     setPartner(row.proposal.partner_roster_id); selected.sent = [...row.proposal.assets_sent]; selected.received = [...row.proposal.assets_received];
@@ -498,6 +502,7 @@
     changed(); session.currentAssessment = context; persist(); review(); showEvaluation(row.evaluation || context.evaluation || {}, row.opportunity || context.opportunity, context); focusResult();
   }
   function previewOffer(row) {
+    reconcileStrategy();
     const conflict = offerConflict(row); if (conflict) return message(conflict, true);
     const adjustment = row.balance_adjustment || row.proposal.preview_balance_adjustment;
     if (adjustment && adjustment.market_generation !== workspace.calculator_generation) {
@@ -506,7 +511,7 @@
     }
     const original = {sent: [...selected.sent], received: [...selected.received], partner: partner()};
     const context = assessmentContext(row);
-    row = {...row, evaluation: row.evaluation || context.evaluation, exploration: context.exploration, search_result_type: context.search_result_type, opportunity: row.opportunity || context.opportunity};
+    row = {...row, proposal: {...row.proposal, preview_context: context}, evaluation: row.evaluation || context.evaluation, exploration: context.exploration, search_result_type: context.search_result_type, opportunity: row.opportunity || context.opportunity};
     retainAssessment();
     session.originalProposal = original; session.previewProposal = {...row.proposal, preview_context: context, preview_balance_adjustment: row.balance_adjustment || row.proposal.preview_balance_adjustment, preview_origin_workflow: row.workflow || row.proposal.preview_origin_workflow || session.originWorkflow}; persist();
     const out = el('trade-result'); out.hidden = false; out.replaceChildren(node('h3', 'Alternative preview'));
@@ -522,12 +527,14 @@
       out.append(node('p', adjustment.reason), node('small', adjustment.meaning));
     }
     out.append(offerCard(row, true));
-    const qualification = contextQualification(context, row.proposal); if (qualification) out.append(node('p', qualification, 'tw-drawback'));
+    contextNotice(out, context, row.proposal);
     const adopt = node('button', 'Adopt alternative'); adopt.type = 'button'; adopt.onclick = () => openOffer(row);
     const keep = node('button', 'Keep original'); keep.type = 'button'; keep.disabled = busy; keep.onclick = () => { session.previewProposal = null; persist(); if (lastOffers) offers(lastOffers, lastOffersIsBalance); else if (session.currentAssessment) showEvaluation(session.currentAssessment.evaluation, session.currentAssessment.opportunity, session.currentAssessment); else message('Original proposal kept.'); };
     out.append(adopt, keep); focusResult();
   }
   function offerCard(row, preview = false) {
+    const context = assessmentContext(row);
+    assessedOfferContexts.set(row, context);
     const card = node('article', null, 'tw-offer');
     const e = row.evaluation || row.proposal.preview_assessment || {};
     const balance = row.balance_adjustment || row.proposal.preview_balance_adjustment;
@@ -682,7 +689,7 @@
     }
     if (path === 'balance') extra = {...extra, market_generation: workspace.calculator_generation, required_outgoing_asset: session.requiredOutgoingAsset, required_incoming_asset: session.requiredIncomingAsset};
     session.previewProposal = null; persist();
-    if (path === 'balance') retainAssessment();
+    if (path === 'balance' || path === 'evaluate') retainAssessment();
     busy = true; const started = revision, startedRun = ++runSequence;
     const controller = new AbortController(); activeRequest = controller;
     let timedOut = false;
@@ -701,8 +708,10 @@
         message('Evidence refreshed. Checking the same request once more… Your proposal stays intact.');
         body = await post(path, requestPayload, controller?.signal);
       }
+      reconcileStrategy();
       if (started !== revision) return;
       observeEvidence(body);
+      if (path === 'evaluate' && !body.evaluation?.recommendation && !body.evaluation?.explanation_html) throw new Error('Evaluation incomplete. Retained assessment is not revalidated; try Reevaluate Trade again.');
       for (const id of body.constraints?.protected_assets || []) addLock('protectedAssets', id);
       for (const id of body.constraints?.excluded_assets || []) addLock('excludedAssets', id);
       if (path === 'assist') {
@@ -794,6 +803,10 @@
     }
     if (session.currentAssessment) staleAssessment('Strategy changed in another tab');
     else if (session.previewProposal) previewOffer({proposal: session.previewProposal});
+    root.querySelectorAll('[data-assessment-strategy]').forEach(summary => { summary.textContent = 'Assessment strategy: ' + (summary.dataset.assessmentStrategy || 'Use supported competitive window') + ' · Current selected strategy: ' + (intent || 'Use supported competitive window'); });
+    root.querySelectorAll('.tw-offer').forEach(card => {
+      if (!card.querySelector('[data-offer-stale]')) { const notice = node('p', 'Retained offer assessment · not revalidated after strategy change. Preview retains its original strategy; reevaluate after adoption.', 'tw-drawback'); notice.dataset.offerStale = 'true'; card.prepend(notice); }
+    });
     if (workspace) paint();
   }
   addEventListener('focus', reconcileStrategy);
