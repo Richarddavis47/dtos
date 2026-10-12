@@ -48,6 +48,31 @@ def snapshot_compatibility(snapshot: Any) -> tuple[str, str]:
     return "compatible", "Persisted projection snapshot matches the running contract."
 
 
+def qualify_retained_display(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Apply only the read contract; preserve publication identity and raw storage.
+
+    Scoring compatibility does not establish exact display-method compatibility.
+    A legacy subtotal is retained as provenance, never reused as exact display.
+    Canonical league-scored Sleeper evidence remains independently available.
+    """
+    players = snapshot.get("players") or {}
+    qualified = {}
+    for player_id, row in players.items():
+        if row.get("display_method_version") == DISPLAY_METHOD_VERSION:
+            qualified[player_id] = row
+            continue
+        qualified[player_id] = {
+            **row,
+            "retained_display_evidence": row.get("retained_display_evidence") or {
+                "value": row.get("sleeper_web_display_projection"),
+                "method_version": row.get("display_method_version"),
+            },
+            "sleeper_web_display_projection": None,
+            "display_reason": "Retained display method is incompatible; canonical league-scored Sleeper statistics are shown; exact Sleeper display replay is unverified.",
+        }
+    return {**snapshot, "players": qualified}
+
+
 class ProjectionInputError(ValueError):
     """A sanitized canonical-player input contract violation."""
 
@@ -885,7 +910,7 @@ class ProjectionService:
 
     def _decode_snapshot(self, payload: str) -> dict[str, Any]:
         with closing(self._connect()) as connection:
-            return state_storage.decode(connection, payload)
+            return qualify_retained_display(state_storage.decode(connection, payload))
 
     def snapshot(self) -> dict[str, Any] | None:
         with self._lock:
@@ -912,7 +937,7 @@ class ProjectionService:
                 return None
             with closing(self._connect()) as connection:
                 row = connection.execute('SELECT payload FROM projection_snapshots WHERE snapshot_id=?', (identity,)).fetchone()
-                candidate = state_storage.decode(connection, row['payload']) if row else None
+                candidate = qualify_retained_display(state_storage.decode(connection, row['payload'])) if row else None
             if (snapshot_compatibility(candidate)[0] != 'compatible'
                     or candidate.get('league_id') != snapshot.get('league_id')
                     or candidate.get('season') != snapshot.get('season')):

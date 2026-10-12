@@ -201,7 +201,8 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
                            "status": player.get("injury_status") or player.get("status"),
                            "identity_available": bool(player), "slot": slot,
                            "actual": actual, "projection": value,
-                           "projection_display": projection.get("sleeper_web_display_projection") if value is not None else None}
+                           "projection_display": projection.get("sleeper_web_display_projection") if value is not None else None,
+                           "projection_display_reason": projection.get("display_reason")}
         lineup = []
         for index, pid in enumerate(starter_ids):
             actuals = row.get("starters_points") or []
