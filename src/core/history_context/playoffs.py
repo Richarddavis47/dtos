@@ -69,7 +69,7 @@ def admitted_bracket_row(row: Mapping[str, Any], roster_ids: set[int] | None = N
     return admitted
 
 
-def admitted_playoff_result(payload: Mapping[str, Any]) -> dict[str, Any]:
+def admitted_playoff_result(payload: Mapping[str, Any], roster_ids: set[int] | None = None) -> dict[str, Any]:
     """Apply the same outcome contract on retained checkpoint reads, without repair."""
     result = dict(payload)
     participants = payload.get('championship_roster_ids')
@@ -79,7 +79,7 @@ def admitted_playoff_result(payload: Mapping[str, Any]) -> dict[str, Any]:
         participants = []
     pair = admitted_bracket_row({'w': payload.get('champion_roster_id'), 'l': payload.get('runner_up_roster_id'),
                                 **{key: value for key, value in zip(('t1', 't2'), participants or [])},
-                                'outcome_reason_codes': participant_reasons})
+                                'outcome_reason_codes': participant_reasons}, roster_ids)
     reasons = [r for r in payload.get('reason_codes') or [] if isinstance(r, str)] if isinstance(payload.get('reason_codes', []), list) else []
     reasons.extend(pair['outcome_reason_codes'])
     result.update(champion_roster_id=pair['w'], runner_up_roster_id=pair['l'])
@@ -88,7 +88,7 @@ def admitted_playoff_result(payload: Mapping[str, Any]) -> dict[str, Any]:
     conflicting_ranks = set()
     for rank, value in (placements if isinstance(placements, Mapping) else {}).items():
         identity = roster_identity(value)
-        if identity is None or roster_identity(rank) is None or (pair['outcome_reason_codes'] and str(rank) in {'1', '2'}):
+        if identity is None or (roster_ids is not None and identity not in roster_ids) or roster_identity(rank) is None or (pair['outcome_reason_codes'] and str(rank) in {'1', '2'}):
             reasons.append('placement_identity_unavailable_or_conflicted')
         else:
             normalized_rank = str(roster_identity(rank))

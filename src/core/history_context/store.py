@@ -453,6 +453,7 @@ class CanonicalHistoryStore:
         league = mapping(facts.get("league"))
         rows = [self._record(league_id, season, "league_season", league_id, {
             "sleeper_season_league_id": league.get("league_id"),
+            "sleeper_season": league.get("season"),
             "previous_league_id": league.get("previous_league_id"),
             "league_name": league.get("name") or "Sleeper League",
             "status": league.get("status"),

@@ -745,10 +745,15 @@ def _build_season_archive_section(
     if section == "playoffs":
         playoffs = read(league_id, "playoff_result", season=season, limit=10)
         brackets = read(league_id, "playoff_bracket", season=season, limit=10)
-        from src.core.history_context.playoffs import roster_identity
-        placement = next((row['payload'] for row in playoffs['records']), {})
+        from src.core.history_context.playoffs import admitted_playoff_result, roster_identity
+        placement = admitted_playoff_result(next((row['payload'] for row in playoffs['records']), {}), set(names))
         return {
             "result": placement, "brackets": brackets["records"],
+            "historical_roster_ids": sorted(names),
+            "season_context": next((
+                {"season": row["season"], **row["payload"]}
+                for row in read(league_id, "league_season", season=season, limit=1)["records"]
+            ), {}),
             "champion": names.get(roster_identity(placement.get("champion_roster_id"))),
             "runner_up": names.get(roster_identity(placement.get("runner_up_roster_id"))),
         }

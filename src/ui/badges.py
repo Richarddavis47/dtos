@@ -100,38 +100,45 @@ def streak_badge(results: list[str], period: str | None) -> str:
     )
 
 
-def defending_champion(data: dict, cache=None) -> tuple[int, int] | None:
-    """Use the active league's immediately preceding completed season bracket."""
-    from src.core.history_context.playoffs import playoff_facts
+def defending_champion(data: dict) -> tuple[int, int] | None:
+    """Consume the canonical historical result, never re-score raw UI brackets.
 
-    if cache is None:
-        from services.history import sleeper_season_cache
+    Historical roster membership and source identity are independent of the
+    active roster list. The latter only determines where an admitted badge fits.
+    """
+    from services.history import season_archive_section
+    from src.core.history_context.playoffs import roster_identity
 
-        cache = sleeper_season_cache
     league = data.get("league") or {}
     league_id = str(league.get("league_id") or "")
     try:
         season = int(league["season"]) - 1
         if not league_id:
             return None
-        historical = cache.section(league_id, season, "league") or {}
-        if historical.get("status") != "complete" or str(
-            historical.get("season")
-        ) != str(season):
-            return None
-        result = playoff_facts(
-            cache.section(league_id, season, "winners_bracket") or []
-        )
-        champion = int(result.get("champion_roster_id") or 0)
-        finalist = int(result.get("runner_up_roster_id") or 0)
+        evidence = season_archive_section(league_id, season, "playoffs")
+        historical = evidence.get("season_context") or {}
+        source = str(historical.get("sleeper_season_league_id") or "")
+        predecessor = str(league.get("previous_league_id") or "")
         if (
-            not champion
-            or not finalist
-            or champion == finalist
-            or {str(champion), str(finalist)} != set(result["championship_roster_ids"])
+            historical.get("status") != "complete"
+            or str(historical.get("season")) != str(season)
+            or str(historical.get("sleeper_season")) != str(season)
+            or not source
+            or source != (predecessor or league_id)
         ):
             return None
-        if champion not in {int(team["roster_id"]) for team in data.get("teams") or []}:
+        result = evidence.get("result") or {}
+        champion = roster_identity(result.get("champion_roster_id"))
+        finalist = roster_identity(result.get("runner_up_roster_id"))
+        participants = [roster_identity(value) for value in result.get("championship_roster_ids") or []]
+        historical_rosters = set(evidence.get("historical_roster_ids") or [])
+        if (
+            champion is None or finalist is None or champion == finalist
+            or len(participants) != 2 or set(participants) != {champion, finalist}
+            or not {champion, finalist} <= historical_rosters
+        ):
+            return None
+        if champion not in {roster_identity(team.get("roster_id")) for team in data.get("teams") or []}:
             return None
         return season, champion
     except (OSError, ValueError, KeyError, TypeError):
