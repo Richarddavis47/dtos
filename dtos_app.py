@@ -892,7 +892,7 @@ app.include_router(create_home_router(
 ))
 
 app.include_router(create_history_router(
-    league_id=LEAGUE_ID, page=page, league_resolver=current_league_id,
+    league_id=LEAGUE_ID, page=page, league_resolver=current_league_id, require_data=require_data,
 ))
 app.include_router(
     create_historical_assets_router(

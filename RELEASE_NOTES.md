@@ -1,3 +1,14 @@
+## v1.21.39 · build 2139 — Historical Trade Source Integrity and Readable Insights
+
+- Separate current pick ledger ownership from historical holders; preserve consumed picks, exact conversions and source-scoped observation dates.
+- Keep known trades and independent history sections available under partial/missing source evidence. Explain acquired, empty, unavailable, unacquired and malformed periods.
+- Repair Archive filters, optional numeric form fields and pagination using source-season franchise/manager facts.
+- Preserve original-trade returns across picks, converted players, historical performance and subsequent trades; reject foreign origins.
+- Group original consideration by franchise, retain directed FAAB once, expose converted-player endpoints and readable historical evidence links.
+- Preserve unknown lineup roles and scoring conflicts; disclose partial recipient-roster production without assigning season totals or exact holding-period benefit.
+- Explain provider, units/context, dates, normalization, coverage and rejected raw quotes while preserving historical admission gates.
+- Reuse bounded canonical services/caches. No new permanent store, provider backfill, pricing/projection engine, legacy rewrite or historical FOIS regeneration.
+
 ## v1.21.38 · build 2138 — Historical FAAB and Score Conflict Integrity
 
 - Show original directed FAAB consideration beside historical players and exact picks, with franchise names and source provenance; do not assign a Market price to FAAB.

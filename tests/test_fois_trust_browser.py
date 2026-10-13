@@ -83,7 +83,7 @@ class FOISTrustBrowserTests(unittest.TestCase):
                 self.assertTrue(summary.evaluate('e=>e.parentElement.open'))
                 self.assertIn(code, page.inner_text('.dtos-explanation'))
                 evidence = page.locator('.fois-behavior').first
-                control = evidence.locator('summary')
+                control = evidence.locator(':scope > summary')
                 control.click()
                 self.assertTrue(evidence.evaluate('e=>e.open'))
                 control.click()

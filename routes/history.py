@@ -6,7 +6,7 @@ from datetime import date
 from html import escape
 from typing import Callable
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from src.ui.season_history import season_history_summary
 
@@ -28,11 +28,20 @@ PageRenderer = Callable[[str, str], HTMLResponse]
 def create_history_router(
     *, league_id: str, page: PageRenderer,
     league_resolver: Callable[[], str] | None = None,
+    require_data: Callable[[], dict] | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["history"])
 
     def selected_league() -> str:
         return league_resolver() if league_resolver else league_id
+
+    def trade_context(identity):
+        from services.asset_intelligence import validated_trade_origin
+        from src.core.historical_memory.read_model import historical_graph
+        from services.history import historical_store
+        data = require_data() if require_data else {'league': {'league_id': selected_league()}}
+        model = historical_graph(historical_store, selected_league(), data)
+        return model, validated_trade_origin(model, identity)
 
     @router.get("/history", response_class=HTMLResponse)
     async def league_history_page() -> HTMLResponse:
@@ -173,22 +182,30 @@ def create_history_router(
 <section class="card"><h3>Final Standings</h3><div class="ds-table-wrap"><table><thead><tr><th>Rank</th><th>Team</th><th>GM</th><th>Record</th><th>PF</th><th>PA</th><th>Postseason</th></tr></thead><tbody>{standings}</tbody></table></div></section>
 <section class="card"><h3>Weekly Results</h3>{weeks}</section>
 <section class="card"><h3>Season Leaders</h3><ol>{leaders}</ol></section>
-<div class="grid"><article class="card"><h3>Draft</h3><p>{archive['counts']['draft_picks']} recorded selections.</p><a class="ds-action" href="/api/history/seasons/{season}/draft">Draft evidence (JSON)</a></article><article class="card"><h3>Transactions</h3><p>{archive['counts']['transactions']} recorded moves.</p><a class="ds-action" href="/api/history/seasons/{season}/transactions">Transaction evidence (JSON)</a></article><article class="card"><h3>Postseason</h3><p>{'Verified results available.' if archive['availability']['playoffs'] else 'Verified bracket results unavailable.'}</p><a class="ds-action" href="/api/history/seasons/{season}/playoffs">Postseason evidence (JSON)</a></article></div>
+<div class="grid"><article class="card"><h3>Draft</h3><p>{archive['counts']['draft_picks']} recorded selections.</p><a class="ds-action" href="/api/history/seasons/{season}/draft">Draft evidence (JSON)</a></article><article class="card"><h3>Transactions</h3><p>{archive['counts']['transactions']} recorded moves.</p><a class="ds-action" href="/transactions?scope=all_history&season={season}&type=trade">Explore completed trades</a><details><summary>Source transaction evidence</summary><a class="ds-action" href="/api/history/seasons/{season}/transactions">Transaction evidence (JSON)</a></details></article><article class="card"><h3>Postseason</h3><p>{'Verified results available.' if archive['availability']['playoffs'] else 'Verified bracket results unavailable.'}</p><a class="ds-action" href="/api/history/seasons/{season}/playoffs">Postseason evidence (JSON)</a></article></div>
 """
-        return page(f"{season} Season Archive", body)
+        from src.ui.trade_timeline import render_source_coverage
+        return page(f"{season} Season Archive", body + render_source_coverage({'seasons': archive.get('source_coverage', [])}))
 
     @router.get("/history/player/{player_id}", response_class=HTMLResponse)
-    async def player_history_page(player_id: str) -> HTMLResponse:
+    async def player_history_page(player_id: str, from_trade: str | None = Query(default=None, max_length=100)) -> HTMLResponse:
         career = player_career(selected_league(), player_id)
-        if not career["weekly_record_count"]:
+        from services.asset_intelligence import contextual_player_url
+        from urllib.parse import quote
+        model, origin = trade_context(from_trade)
+        facts = require_data() if require_data else {}
+        if not career["weekly_record_count"] and player_id not in (facts.get('players') or {}):
             raise HTTPException(404, "No historical player observations are available.")
+        name = model.player_identity(player_id)['display_label']
+        return_link = (f'<a class="back" href="/trades/history/{quote(origin["transaction_id"], safe="")}">← Back to original trade timeline</a>' if origin else '')
+        player_url = contextual_player_url(player_id, from_trade=origin['transaction_id'] if origin else None)
         seasons = "".join(
             f'<article class="card"><h3>{escape(season)}</h3><p><b>{summary["season_total"]}</b> points · {summary["points_per_game"]} PPG</p><p>Floor {summary["floor"]} · Ceiling {summary["ceiling"]} · Consistency {summary["consistency_score"]}</p></article>'
             for season, summary in career["seasons"].items()
         )
         return page(
-            f"{career.get('player_name') or player_id} — Historical Performance",
-            f'<a class="back" href="/players/{escape(player_id)}">← Back to connected Player Dossier</a><h2>Historical Performance</h2><p class="muted">Weekly gaps are not connected or converted to zero.</p><div class="grid">{seasons}</div><div class="card"><h3>Usage</h3><p>{escape(career["usage"]["reason"])}</p></div>',
+            f"{name} — Historical Performance",
+            f'{return_link}<a class="back" href="{escape(player_url)}">← Back to connected Player Dossier</a><h2>{escape(name)} · Historical Performance</h2><p class="muted">Observed season production is not a trade-benefit total. Weekly gaps are not connected or converted to zero.</p><div class="grid">{seasons or "<p>Historical scoring unavailable; no production total is inferred.</p>"}</div><div class="card"><h3>Usage</h3><p>{escape(career["usage"]["reason"])}</p></div>',
         )
 
     @router.get("/history/team/{franchise_id:path}", response_class=HTMLResponse)
@@ -221,6 +238,8 @@ def create_history_router(
             f'<article class="card"><h3>{row["season"]} observed roster</h3><p>{len(row["payload"].get("players") or [])} players in the source season snapshot.</p><p class="muted">This is not a roster for every historical week. Weekly roster evidence is separate and may be unavailable.</p></article>'
             for row in rosters["records"]
         ) or '<p class="muted">Season roster snapshot unavailable; no weekly holdings are inferred.</p>'
-        return page(f"{current_name} — Franchise History", f'<h2>Franchise History</h2><ul>{names}</ul><h3>Observed season roster snapshots</h3><div class="grid">{roster_cards}</div><h3>Competitive Direction Over Time</h3><div class="grid">{trajectory}</div>')
+        roster_id = franchise_id.rsplit(':', 1)[-1]
+        trades_link = f'<a class="ds-action" href="/transactions?scope=all_history&type=trade&team={roster_id}">Explore this franchise’s completed trades</a>' if roster_id.isdigit() else ''
+        return page(f"{current_name} — Franchise History", f'<h2>Franchise History</h2>{trades_link}<p>Managers are season observations; exact takeover dates remain unavailable.</p><ul>{names}</ul><h3>Observed season roster snapshots</h3><div class="grid">{roster_cards}</div><h3>Competitive Direction Over Time</h3><div class="grid">{trajectory}</div>')
 
     return router

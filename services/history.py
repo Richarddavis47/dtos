@@ -624,8 +624,10 @@ def history_records(
     league_id: str, entity_type: str | None, *, season: int | None = None,
     week: int | None = None, franchise_id: str | None = None,
     player_id: str | None = None, limit: int = 100, offset: int = 0,
+    allow_partial: bool = False,
 ) -> dict[str, Any]:
-    count, rows = historical_store.records(
+    reader = getattr(historical_store, 'optional_records', historical_store.records) if allow_partial else historical_store.records
+    count, rows = reader(
         league_id, entity_type, season=season, week=week,
         franchise_id=franchise_id, player_id=player_id, limit=limit, offset=offset,
     )
@@ -662,6 +664,7 @@ def season_archive(league_id: str, season: int) -> dict[str, Any]:
     }
     current = season == date.today().year
     complete = all(expected.values()) and not current
+    coverage = historical_store.source_coverage(league_id) if hasattr(historical_store, 'source_coverage') else {}
     return {
         "schema_version": HISTORICAL_SCHEMA_VERSION,
         "season": season,
@@ -685,6 +688,7 @@ def season_archive(league_id: str, season: int) -> dict[str, Any]:
             "player_weeks": leaders["player_week_count"],
         },
         "provider_requests": 0,
+        "source_coverage": [row for row in coverage.get('seasons', []) if row['season'] == season],
     }
 
 
@@ -695,7 +699,7 @@ _SEASON_SECTION_CACHE_LIMIT = 96
 
 def _season_names(league_id: str, season: int) -> dict[int, dict[str, str]]:
     identities = history_records(
-        league_id, "franchise_identity", season=season, limit=100,
+        league_id, "franchise_identity", season=season, limit=100, allow_partial=True,
     )
     names: dict[int, dict[str, str]] = {}
     for row in identities["records"]:
@@ -731,14 +735,16 @@ def season_archive_section(league_id: str, season: int, section: str) -> dict[st
 def _build_season_archive_section(
     league_id: str, season: int, section: str,
 ) -> dict[str, Any]:
+    from functools import partial
+    read = partial(history_records, allow_partial=True)
     names = _season_names(league_id, season) if section in {"identity", "standings", "playoffs", "weeks"} else {}
     if section == "identity":
-        league = history_records(league_id, "league_season", season=season, limit=1)
+        league = read(league_id, "league_season", season=season, limit=1)
         payload = league["records"][0]["payload"] if league["records"] else {}
         return {"league_name": payload.get("league_name") or "Sleeper League", "names": names}
     if section == "playoffs":
-        playoffs = history_records(league_id, "playoff_result", season=season, limit=10)
-        brackets = history_records(league_id, "playoff_bracket", season=season, limit=10)
+        playoffs = read(league_id, "playoff_result", season=season, limit=10)
+        brackets = read(league_id, "playoff_bracket", season=season, limit=10)
         placement = next((row["payload"] for row in playoffs["records"] if row["payload"].get("champion_roster_id") is not None), {})
         return {
             "result": placement, "brackets": brackets["records"],
@@ -746,7 +752,7 @@ def _build_season_archive_section(
             "runner_up": names.get(int(placement.get("runner_up_roster_id") or 0)),
         }
     if section == "standings":
-        standings = history_records(league_id, "season_standing", season=season, limit=100)
+        standings = read(league_id, "season_standing", season=season, limit=100)
         playoff = season_archive_section(league_id, season, "playoffs")["result"]
         places = {int(roster_id): int(place) for place, roster_id in (playoff.get("placements") or {}).items()}
         rows = []
@@ -763,7 +769,7 @@ def _build_season_archive_section(
             })
         return {"standings": rows}
     if section == "weeks":
-        matchups = history_records(league_id, "matchup", season=season, limit=500)
+        matchups = read(league_id, "matchup", season=season, limit=500)
         weekly: dict[int, list[dict[str, Any]]] = {}
         for record in matchups["records"]:
             payload = record["payload"]
@@ -776,12 +782,12 @@ def _build_season_archive_section(
             })
         return {"weeks": [{"week": week, "matchups": rows} for week, rows in sorted(weekly.items()) if week], "count": matchups["count"]}
     if section == "transactions":
-        transactions = history_records(league_id, "transaction", season=season, limit=1000)
-        trades = history_records(league_id, "trade", season=season, limit=1000)
+        transactions = read(league_id, "transaction", season=season, limit=1000)
+        trades = read(league_id, "trade", season=season, limit=1000)
         return {"records": [*trades["records"], *transactions["records"]], "count": trades["count"] + transactions["count"]}
     if section == "draft":
-        drafts = history_records(league_id, "draft", season=season, limit=20)
-        picks = history_records(league_id, "draft_pick", season=season, limit=500)
+        drafts = read(league_id, "draft", season=season, limit=20)
+        picks = read(league_id, "draft_pick", season=season, limit=500)
         return {"drafts": drafts["records"], "picks": picks["records"], "pick_count": picks["count"]}
     if section == "leaders":
         count, rows = historical_store.season_player_leaders(league_id, season, limit=40)
@@ -808,7 +814,8 @@ def season_index(league_id: str) -> dict[str, Any]:
 
 
 def player_career(league_id: str, player_id: str) -> dict[str, Any]:
-    count, rows = historical_store.records(league_id, "player_week", player_id=player_id, limit=1000)
+    reader = getattr(historical_store, 'optional_records', historical_store.records)
+    count, rows = reader(league_id, "player_week", player_id=player_id, limit=1000)
     by_season: dict[int, list[dict[str, Any]]] = {}
     for row in rows:
         by_season.setdefault(int(row["season"]), []).append(row["payload"])

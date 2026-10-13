@@ -401,9 +401,13 @@ def create_fois_router(
         if (profile.get("league_id") == selected_league
                 and profile.get("gm_id") == score.gm_id
                 and profile.get("method_version") == GM_BEHAVIOR_METHOD_VERSION):
+            from src.core.history_context import canonical_history_store
+            from src.core.historical_memory.read_model import historical_graph
+            from src.ui.trade_timeline import readable_trade_reference
+            history_graph = historical_graph(canonical_history_store, selected_league, data)
             rows = []
             for dimension in profile.get("dimensions") or ():
-                references = "".join(f'<li><code>{escape(str(reference))}</code></li>'
+                references = "".join(f'<li>{readable_trade_reference(reference, history_graph)}</li>'
                                      for reference in dimension.get("evidence_references") or ())
                 counts = "; ".join(f'{str(key).replace("_", " ")}: {value}'
                                    for key, value in (dimension.get("supporting_counts") or {}).items())
