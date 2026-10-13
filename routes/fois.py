@@ -389,6 +389,23 @@ def create_fois_router(
         strengths_summary = escape(strengths_context(score))
         weaknesses = "".join(f"<li>{escape(item)}</li>" for item in score.weaknesses) or "<li>No evidence-supported weakness is established yet.</li>"
         details = technical_details((("GM identity", score.gm_id), ("FOIS model", score.model_version), ("Brain snapshot", score.brain_snapshot_id), ("Generated", score.generated_at)))
+        activity_html = '<p>Event-level activity unavailable from this retained profile. <a href="/history">Review league history</a>.</p>'
+        if str((data.get('league') or {}).get('league_id')) == selected_league:
+            from src.core.history_context import canonical_history_store
+            from src.core.historical_memory.read_model import historical_graph
+            history_graph = historical_graph(canonical_history_store, selected_league, data)
+            activity = []
+            seen = set()
+            for reference in score.evidence_references[:25]:
+                resolved = history_graph.trade_reference(str(reference))
+                if not resolved or resolved['transaction_id'] in seen:
+                    continue
+                if score.franchise_id not in resolved['participating_franchises']:
+                    continue
+                seen.add(resolved['transaction_id'])
+                activity.append('<li><a class="ds-action" href="' + escape(resolved['url'], quote=True) + '">' + escape(resolved['label']) + '</a></li>')
+            if activity:
+                activity_html = '<p>Supported completed trades from up to 25 retained profile references. Historical actors follow season observations; exact takeover timing is not inferred. Activity links do not revalidate grades; retained historical assessments remain NOT REVALIDATED.</p><ul>' + ''.join(activity) + '</ul>'
         historical_rows = "".join(
             f'<li data-fois-history="true"><b>HISTORICAL SNAPSHOT</b> · {escape(row.generated_at[:10])} · '
             f'{row.overall_score if row.overall_score is not None else "Unavailable"} {escape(row.overall_letter_grade or "")}</li>'
@@ -427,6 +444,7 @@ def create_fois_router(
 <div class="card-grid">{categories}</div><div class="grid"><section class="card" data-fois-strengths><h3>Top strengths</h3><p>{strengths_summary}</p>{'<ul>' + strengths + '</ul>' if strengths else ''}</section><section class="card"><h3>Improvement areas</h3><ul>{weaknesses}</ul></section></div><details class="card" data-fois-history-count="{len(history)}"><summary>GM History · {len(history)} earlier snapshot(s)</summary><ul>{historical_rows}</ul></details>{details}'''
         body = ('<style>.fois-profile{min-width:0}.fois-profile .dtos-explanation li,.fois-profile .fois-behavior p,.fois-profile .fois-behavior code{overflow-wrap:anywhere;word-break:normal}.fois-behavior summary{min-height:44px;cursor:pointer}.fois-behavior summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}</style>'
                 + '<div class="fois-profile">' + preservation + body
+                + '<section class="card"><h3>Activity · completed trade evidence</h3>' + activity_html + '</section>'
                 + '<section class="card"><h3>Management behavior and evidence</h3>' + behavioral_html + '</section></div>')
         return page(f"{score.gm_name or 'GM'} — Executive Profile", body) if page else HTMLResponse(body)
 

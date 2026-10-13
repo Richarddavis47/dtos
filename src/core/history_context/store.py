@@ -549,11 +549,14 @@ class CanonicalHistoryStore:
                 league_id, season, "pick_snapshot", source_id, dict(pick),
             ))
         brackets = []
+        from .playoffs import admitted_bracket_row, roster_identity
+        roster_ids = {identity for row in object_rows(facts.get('rosters'))
+                      if (identity := roster_identity(row.get('roster_id'))) is not None}
         for bracket_name in ("winners_bracket", "losers_bracket"):
             for row in object_rows(facts.get(bracket_name)):
                 if not isinstance(row.get('m'), (int, str)):
                     continue
-                payload = {**row, "bracket": bracket_name}
+                payload = {**admitted_bracket_row(row, roster_ids or None), "bracket": bracket_name}
                 rows.append(self._record(league_id, season, "playoff_bracket", f"{bracket_name}:{row.get('m')}", payload))
                 brackets.append(payload)
         winners = [row for row in brackets if row["bracket"] == "winners_bracket"]
@@ -752,6 +755,10 @@ class CanonicalHistoryStore:
                 or row['entity_type'] in coverage[row['season']]]
         for selected in seasons:
             rows.extend(self._current_records(league_id, selected))
+        from .playoffs import admitted_bracket_row, admitted_playoff_result
+        rows = [{**row, 'payload': admitted_bracket_row(row['payload'])} if row['entity_type'] == 'playoff_bracket'
+                else {**row, 'payload': admitted_playoff_result(row['payload'])} if row['entity_type'] == 'playoff_result'
+                else row for row in rows]
         # Numeric observations sharing a canonical key are evidence, not
         # successive corrections. Admit the whole published generation before
         # key deduplication, otherwise row order silently chooses the score.

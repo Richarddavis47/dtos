@@ -153,7 +153,7 @@ def _historical_archive_row(row: dict[str, Any]) -> str:
     asset_count = len(set(row["adds"]) | set(row["drops"])) + len(row["draft_picks"])
     faab = f" · {len(row.get('waiver_budget') or [])} FAAB movement(s)" if row.get('waiver_budget') else ''
     return (
-        f'<tr><td>{escape(str(row["season"]))} W{escape(str(row["week"] or "?"))}</td>'
+        f'<tr><td>{escape(str(row["season"]))} Week {escape(str(row["week"] if row["week"] is not None else "?"))}</td>'
         f'<td>{escape(str(row["occurred_at"] or "Date unavailable"))}</td>'
         f'<td>{escape(row["type"].replace("_", " ").title())}<p>{escape(row.get("franchise_summary") or "Franchise identities unavailable")}</p></td>'
         f'<td>{escape(str(row["status"]))}</td><td>{asset_count} assets{faab}</td><td>{detail}</td></tr>'
@@ -348,7 +348,7 @@ def create_transactions_router(
     <div class="tx-field"><label for="per_page">Page size</label><select id="per_page" name="per_page">{page_options}</select></div>
     <div class="tx-field"><label for="scope">History scope</label><select id="scope" name="scope">{scope_options}</select></div>
     <div class="tx-field"><label for="season">Season</label><input id="season" type="number" name="season" value="{escape(str(season or ""))}" min="2021"></div>
-    <div class="tx-field"><label for="week">Week</label><input id="week" type="number" name="week" value="{escape(str(week or ""))}" min="1" max="18"></div>
+    <div class="tx-field"><label for="week">Week</label><input id="week" type="number" name="week" value="{escape(str(week if week is not None else ""))}" min="0" max="18"><small>Week 0 includes offseason transactions.</small></div>
     <div class="tx-field"><label for="status">Status</label><select id="status" name="status">{_option("", "All statuses", status)}{_option("complete", "Completed", status)}{_option("failed", "Failed", status)}{_option("pending", "Pending", status)}</select></div>
     <input type="hidden" name="sort" value="{escape(sort)}"><input type="hidden" name="direction" value="{escape(direction)}">
     <div class="tx-filter-actions"><button type="submit">Apply filters</button><a class="tx-reset" href="/transactions">Reset</a></div>
@@ -486,9 +486,14 @@ def create_transactions_router(
         ownership_history = render_ownership_events(history['ownership_timeline'], graph=history_graph, from_trade=original['transaction_id'] if original else None) or f'<li>No verified {history_league_name} ownership event is available.</li>'
         origin = history["league_origin"]
         historical_details = technical_details((("Canonical identity", history["identity"]["canonical_id"]), ("Identity resolution", history["identity"]["resolution_status"])))
+        current_observation = history.get('current_owner_observation') or {}
+        current_observation_html = ('<p class="historical-current-owner" style="overflow-wrap:anywhere;min-width:0">Current owner observed: '
+            + escape(str(current_observation.get('current_observed_owner_name') or 'Unavailable')) + ' · as of '
+            + escape(str(current_observation.get('as_of') or 'date unavailable'))
+            + ' · DTOS Sleeper retrieval/sync observation, not acquisition or ownership-change time. Missing intervals do not establish uninterrupted ownership.</p>')
         historical_panel = f'''<section class="card"><h2>{history_league_name} Career History</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}{origin_query}">Open observed historical performance</a></p>{historical_details}<p>Unknown lineup roles remain separate from bench. Missing weekly scoring remains unavailable.</p>
 <h3>Annual League History</h3><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Observed season production"><table><thead><tr><th>Season</th><th>Status</th><th>Scored observations</th><th>Known starts</th><th>Explicit bench</th><th>Unknown role</th><th>Observed points</th><th>Sample overall rank</th><th>Sample position rank</th><th>Scored-week coverage</th></tr></thead><tbody>{season_history}</tbody></table></div>
-<h3>Ownership Timeline</h3><ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></section>'''
+<h3>Ownership Timeline</h3>{current_observation_html}<ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></section>'''
         trade_return = f'<a class="back" href="/trades/history/{quote(original["transaction_id"], safe="")}">← Back to original trade timeline</a>' if original else ''
         matchup_return = ''
         section = from_section if from_section in {'full-roster', 'my-team-advanced'} else 'full-roster'

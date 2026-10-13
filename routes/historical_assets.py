@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from html import escape
+from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from services.history import history_progress_contracts
 from src.core.historical_memory.read_model import historical_graph
@@ -22,6 +23,7 @@ from services.asset_intelligence import contextual_player_url, validated_trade_o
 RequireData = Callable[[], dict[str, Any]]
 historical_store = canonical_history_store
 PageRenderer = Callable[[str, str], HTMLResponse]
+_PRODUCTION_JS = (Path(__file__).resolve().parents[1] / 'static/js/history-production.js').read_text(encoding='utf-8')
 
 
 def create_historical_assets_router(
@@ -29,6 +31,10 @@ def create_historical_assets_router(
     league_resolver: Callable[[], str] | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["historical-assets"])
+
+    @router.get('/static/js/history-production.js', include_in_schema=False)
+    async def production_script() -> Response:
+        return Response(_PRODUCTION_JS, media_type='text/javascript', headers={'Cache-Control': 'no-cache'})
 
     def graph():
         return historical_graph(historical_store, selected_league(), require_data())
@@ -190,12 +196,12 @@ def create_historical_assets_router(
                 trade_action = '<a class="button" href="/trades">Choose a franchise to trade this pick</a>'
         details = technical_details((("Canonical pick identity", pick_id), ("Current owner identity", raw_owner or 'Unavailable'), ("Original franchise identity", dossier.get('original_franchise_id')), ("Slot status", dossier.get("slot_status"))))
         holding = dossier.get('current_owner_observation') or {}
-        observation_note = '<p>Current source observation as of ' + escape(str(holding.get('as_of') or 'date unavailable')) + '. An observation date is not an acquisition date.</p>' if raw_owner else ''
+        observation_note = '<p>Current owner observed as of ' + escape(str(holding.get('as_of') or 'date unavailable')) + ' · DTOS Sleeper retrieval/sync observation, not the ownership-change or acquisition time.</p>' if raw_owner else ''
         transition_note = '<p role="status">The current source owner differs from the last historical holder; the intervening transition is unresolved. No intermediate trade is inferred.</p>' if dossier.get('current_owner_transition_unresolved') else ''
         last_note = '<p>Last historical holder: ' + escape(dossier.get('last_observed_holder_name') or 'Unavailable') + ' · ' + escape(str(dossier.get('reconciliation_status')).replace('_', ' ')) + '</p>'
         endpoint = dossier.get('selected_player_observation') or {}
         endpoint_note = ('<p>Drafted player current observed owner: ' + escape(endpoint.get('current_observed_owner_name') or 'Unavailable')
-                         + ' · as of ' + escape(str(endpoint.get('as_of') or 'date unavailable')) + '. This does not establish uninterrupted ownership.</p>') if dossier.get('selected_player_id') else ''
+                         + ' · as of ' + escape(str(endpoint.get('as_of') or 'date unavailable')) + ' · DTOS Sleeper retrieval/sync observation. This does not establish uninterrupted ownership.</p>') if dossier.get('selected_player_id') else ''
         body = f'''<section class="pick-dossier"><a class="back" href="/picks">← Back to Draft Capital</a><h2>{escape(pick_title)}</h2>{history_explanation}
 <div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(owner_name)}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article><article class="metric"><b>{escape(original_name)}</b><span>Original franchise</span></article></div>
 {observation_note}{transition_note}{last_note}<div class="card"><h3>Pick Conversion</h3><p>{selected}</p>{endpoint_note}<p>{trade_action}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
@@ -256,7 +262,7 @@ def create_historical_assets_router(
         if historical_store.dataset_version(selected_league()) != current_generation:
             return HTMLResponse('<p role="status">Source evidence changed. Reload the trade before reviewing production.</p>', status_code=409)
         from src.ui.trade_timeline import render_production
-        return HTMLResponse(render_production(rows, selected_league(), current_generation))
+        return HTMLResponse(render_production(rows, selected_league(), current_generation, transaction_id))
 
     @router.get("/api/history/transactions")
     async def historical_transactions(
