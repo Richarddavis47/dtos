@@ -608,6 +608,7 @@ class HistoricalAssetGraph:
         self._ensure_player_indexes(raw_id)
         rows = [r for r in self._player_rows_by_id.get(raw_id, ()) if r.get('franchise_id') == franchise_id
                 and (minimum_season is None or r['season'] >= minimum_season)]
+        observed_rows = sorted(rows, key=lambda r: (int(r['season']), int(r['week']) if r.get('week') is not None else -1))
         known = [r for r in rows if r['payload'].get('fantasy_points') is not None]
         def subtotal(values):
             return round(sum(r['payload']['fantasy_points'] for r in values), 2) if values else None
@@ -619,7 +620,7 @@ class HistoricalAssetGraph:
                 'observed_weeks': [{'season': r['season'], 'week': r['week'],
                                     'points': r['payload'].get('fantasy_points'),
                                     'role': r['payload'].get('lineup_role', 'unknown'),
-                                    'conflict': r['payload'].get('scoring_conflict', False)} for r in rows],
+                                    'conflict': r['payload'].get('scoring_conflict', False)} for r in observed_rows],
                 'scored_observations': len(known), 'membership_observations': len(rows),
                 'missing_score_observations': len(rows) - len(known),
                 'supported_starts': sum(r['payload'].get('starter') is True for r in rows),

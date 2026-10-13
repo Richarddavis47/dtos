@@ -1,3 +1,10 @@
+## v1.21.41 · build 2141 — Historical Playoff Participant Integrity
+
+- Validate known/resolved playoff participants before set conversion; withhold contradictory championship and placement conclusions while preserving independent history and raw source evidence.
+- Apply the same qualification to retained historical results without rewriting checkpoints or regenerating FOIS grades. Preserve valid absent/null participant outcomes, observed advancement and first-round byes.
+- Display historical recipient-production weeks in numeric season/week order without changing scoring, role admission or ownership intervals.
+- Preserve released production-script delivery, scoped ownership timing, exact lineage, directed FAAB and historical Market gates. No new store, backfill, migration or scoring/projection model.
+
 ## v1.21.40 · build 2140 — Historical Source Delivery and Ownership Freshness
 
 - Serve historical-production JavaScript through the released router asset contract; remove the fixture-only static mount. Add bounded requests, visible errors, keyboard retry and obsolete-response protection.
