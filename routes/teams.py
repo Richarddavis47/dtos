@@ -226,9 +226,13 @@ def _positional_depth(view):
     return '<div class="thq-cards">' + ''.join(rows) + '</div>'
 
 
-def _timeline(view: dict[str, Any]) -> str:
+def _timeline(view: dict[str, Any], graph=None) -> str:
+    def event_url(event):
+        resolver = getattr(graph, 'trade_reference', None)
+        resolved = resolver(str(event['id'])) if callable(resolver) else None
+        return resolved['url'] if isinstance(resolved, dict) and isinstance(resolved.get('url'), str) else '/transactions?q=' + quote(str(event['id']))
     rows = "".join(
-        f'<article class="thq-event"><time>{escape(event["timestamp"])}</time><span class="thq-event-type">{escape(event["type"])}</span><span class="thq-event-assets">{escape(event["actions"])} · {escape(", ".join(str(asset["label"]) for asset in event["assets"]) or "No asset detail available")}</span><a href="/transactions?q={quote(str(event["id"]))}">View</a></article>'
+        f'<article class="thq-event"><time>{escape(event["timestamp"])}</time><span class="thq-event-type">{escape(event["type"])}</span><span class="thq-event-assets">{escape(event["actions"])} · {escape(", ".join(str(asset["label"]) for asset in event["assets"]) or "No asset detail available")}</span><a href="{escape(event_url(event))}">View</a></article>'
         for event in view["timeline"]
     )
     return rows or '<div class="card muted">No recent cached transactions involve this team.</div>'
@@ -285,6 +289,7 @@ def create_teams_router(
         if view is None:
             raise HTTPException(404, "Team not found")
         team = view["team"]
+        franchise_history_url = '/history/team/' + quote(str((data.get('league') or {}).get('league_id') or '') + ':franchise:' + str(roster_id), safe='')
         view['can_shop'] = editable
         active_context = current_league_context()
         service = active_context.projection if active_context else projection_service
@@ -317,11 +322,10 @@ def create_teams_router(
         )
         assessment = view['assessment']
         selected_league = str((data.get("league") or {}).get("league_id") or LEAGUE_ID)
-        franchise_history = await run_manager_read(
-            lambda: historical_graph(
-                canonical_history_store, selected_league, data,
-            ).franchise_history(str(team["roster_id"])),
-        )
+        def prepare_history():
+            model = historical_graph(canonical_history_store, selected_league, data)
+            return model.franchise_history(str(team['roster_id'])), _timeline(view, model)
+        franchise_history, activity_html = await run_manager_read(prepare_history)
         historical_seasons = len({row["season"] for row in franchise_history["standings"]})
         historical_transactions = len(franchise_history["transactions"])
         starters = [player for player in team.get("players") or [] if player.get("roster_slot") == "Starter"]
@@ -352,7 +356,7 @@ def create_teams_router(
 <section class="thq-section" id="positional-depth"><div class="thq-section-head"><h2>Starter strength and positional depth</h2><span>Week {escape(str(overview['projection_week'] or 'unavailable'))} · DTOS-derived lineup contributions using Sleeper projections</span></div>{_positional_depth(view)}</section>
 <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster"><summary>Full Roster · position rooms and current lineup designation</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players · canonical Market assets</summary>{_key_players(view)}</details></section>
 <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Exact original franchise and current ownership</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick outlook follows the original franchise. Unknown range means no supported interval is published; picks have no weekly projection.</p></section>
-<section class="thq-section"><details class="thq-strength-detail" id="my-team-advanced"><summary>Advanced intelligence · Market, production and legal-lineup evidence</summary><div class="thq-evidence-body"><p>Comparison ranks include only franchises with complete evidence for that named dimension. Coverage is evidence support, not an outcome probability. Overall dynasty utility and competitive-window aggregates remain unavailable without an approved model.</p><div class="thq-grades">{_team_intelligence(view)}</div>{_decision_horizons(view)}{multi_horizon_html}<h3>Submitted Starting Lineup</h3><p>Sleeper assignments remain separate from the DTOS optimal legal lineup.</p><details class="thq-strength-detail"><summary>View {len(starters)} submitted starters</summary><div class="thq-starters">{starter_cards}</div></details><h3>Roster facts</h3><div class="thq-cards">{_asset_cards(view['snapshot'])}</div><h3>Current Team Performance</h3><div class="thq-performance">{performance_cards}</div><div class="thq-summary">{summary}</div><h3>Activity</h3><div class="thq-timeline">{_timeline(view)}</div><h3>Franchise History</h3><p>{historical_seasons} retained seasons · {historical_transactions} transactions. Historical FOIS grades are retained / NOT REVALIDATED.</p><a class="thq-action" href="/history">League History</a><a class="thq-action" href="/front-offices?front_office={roster_id}">Front Office Dossier</a><details><summary>Unsupported forecasts and future models</summary><div class="thq-future-grid">{future}</div></details></div></details></section>
+<section class="thq-section"><details class="thq-strength-detail" id="my-team-advanced"><summary>Advanced intelligence · Market, production and legal-lineup evidence</summary><div class="thq-evidence-body"><p>Comparison ranks include only franchises with complete evidence for that named dimension. Coverage is evidence support, not an outcome probability. Overall dynasty utility and competitive-window aggregates remain unavailable without an approved model.</p><div class="thq-grades">{_team_intelligence(view)}</div>{_decision_horizons(view)}{multi_horizon_html}<h3>Submitted Starting Lineup</h3><p>Sleeper assignments remain separate from the DTOS optimal legal lineup.</p><details class="thq-strength-detail"><summary>View {len(starters)} submitted starters</summary><div class="thq-starters">{starter_cards}</div></details><h3>Roster facts</h3><div class="thq-cards">{_asset_cards(view['snapshot'])}</div><h3>Current Team Performance</h3><div class="thq-performance">{performance_cards}</div><div class="thq-summary">{summary}</div><h3>Activity</h3><div class="thq-timeline">{activity_html}</div><h3>Franchise History</h3><p>{historical_seasons} retained seasons · {historical_transactions} transactions. Historical FOIS grades are retained / NOT REVALIDATED.</p><a class="thq-action" href="{franchise_history_url}">Franchise History</a><a class="thq-action" href="/history">League History</a><a class="thq-action" href="/front-offices?front_office={roster_id}">Front Office Dossier</a><details><summary>Unsupported forecasts and future models</summary><div class="thq-future-grid">{future}</div></details></div></details></section>
 </section><script src="/static/js/strategy_session.js" defer></script>
 """
         return page(f'{team["team_name"]} Headquarters', body)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from src.core.history_context.assets import future_pick_id
 
 from src.core.history_context.timestamps import canonical_utc_timestamp
 
@@ -64,36 +65,6 @@ def timeline(graph, dossier):
         return canonical_utc_timestamp(
             row.get("draft_start_at")
         ), canonical_utc_timestamp(row.get("draft_last_pick_at"))
-
-    def observed_owner(asset):
-        # Current source holding, not last scored owner or last deterministic event.
-        data = graph.current_data
-        if str((data.get("league") or {}).get("league_id")) != graph.league_id:
-            return None
-        if asset.startswith("DTOS-P-"):
-            player = asset.removeprefix("DTOS-P-")
-            owners = [
-                t.get("roster_id")
-                for t in data.get("teams") or ()
-                if any(
-                    str(p.get("id") or p.get("player_id")) == player
-                    for p in t.get("players") or ()
-                )
-            ]
-        else:
-            parts = graph._pick_parts(asset)
-            owners = [
-                p.get("current_owner_id")
-                for p in data.get("pick_ledger") or ()
-                if str(p.get("season")) == parts.get("season")
-                and str(p.get("round")) == parts.get("round")
-                and str(p.get("original_roster_id")) == parts.get("original_roster")
-            ]
-        return (
-            f"{graph.league_id}:franchise:{owners[0]}"
-            if len(owners) == 1 and owners[0] is not None
-            else None
-        )
 
     branches, seen_events, budget = [], set(), MAX_EVENTS
     faab_movements, faab_seen, faab_limits = [], set(), []
@@ -303,7 +274,13 @@ def timeline(graph, dossier):
                 "Timeline limit reached; open an individual asset or later trade for more evidence."
             )
         converted = any(m.get("selected_player_id") for m in movements)
-        current_owner = None if converted else observed_owner(asset)
+        observation = graph.current_asset_observation(asset) if not converted else {}
+        current_owner = observation.get('current_observed_owner')
+        conversion = next((m for m in movements if m.get('selected_player_id')), None)
+        converted_asset = ({'player_id': conversion['selected_player_id'], 'name': conversion['selected_player_label'],
+                            'url': conversion['selected_player_url'],
+                            **graph.current_asset_observation(conversion['selected_player_id'])}
+                           if conversion else None)
         current_team = next(
             (t for t in graph.current_data.get("teams") or ()
              if current_owner == f"{graph.league_id}:franchise:{t.get('roster_id')}"),
@@ -319,6 +296,9 @@ def timeline(graph, dossier):
                 "events": movements,
                 "current_observed_owner": current_owner,
                 "current_observed_owner_name": current_team.get("team_name") or current_team.get("owner"),
+                "current_owner_observation": observation,
+                "converted_asset": converted_asset,
+                "last_verified_event": movements[-1] if movements else None,
                 "state": "Converted into confirmed drafted player"
                 if converted
                 else "Current owner observed"
@@ -327,6 +307,12 @@ def timeline(graph, dossier):
                 "limitations": sorted(set(limits)),
             }
         )
+    unresolved = []
+    for pick in (dossier.get('raw_transaction') or {}).get('draft_picks') or []:
+        if future_pick_id(pick, dossier['season']) is None:
+            unresolved.append({'label': f"{pick.get('season') or 'Year unavailable'} Round {pick.get('round') or '?'} · original franchise unavailable",
+                               'sender': franchise(f"{graph.league_id}:franchise:{pick['previous_owner_id']}", dossier['season']) if pick.get('previous_owner_id') else None,
+                               'receiver': franchise(f"{graph.league_id}:franchise:{pick['owner_id']}", dossier['season']) if pick.get('owner_id') else None})
     return {
         "league_id": graph.league_id,
         "league_name": (graph.current_data.get("league") or {}).get("name")
@@ -335,10 +321,13 @@ def timeline(graph, dossier):
         "trade_id": dossier["trade_id"],
         "occurred_at": dossier.get("occurred_at"),
         "branches": branches,
+        "unresolved_consideration": unresolved[:MAX_ASSETS],
         "faab_movements": faab_movements,
         "participants": [
             franchise(f, dossier["season"]) for f in dossier["participating_franchises"]
         ],
+        "source_coverage": graph.store.source_coverage(graph.league_id) if hasattr(graph.store, 'source_coverage') else {},
+        "generation": graph.store.dataset_version(graph.league_id),
         "event_limit": MAX_EVENTS,
         "events_rendered": MAX_EVENTS - budget,
         "limitations": sorted(set(faab_limits)) + [

@@ -104,10 +104,16 @@ def reconcile_player_weeks(rows: list[dict]) -> list[dict]:
                                              json.dumps(v, sort_keys=True, default=str))))
         payload = dict(row["payload"])
         score = next(iter(known)) if len(known) == 1 and not conflict else None
+        roles = {v["payload"].get("starter") for v in values
+                 if isinstance(v["payload"].get("starter"), bool)}
+        role_conflict = len(roles) > 1 or any(v["payload"].get("lineup_role_conflict") for v in values)
+        starter = next(iter(roles)) if len(roles) == 1 and not role_conflict and len(franchises) == 1 else None
         payload.update(
             fantasy_points=score,
             points=score,
-            starter=any(v["payload"].get("starter") for v in values),
+            starter=starter,
+            lineup_role="starter" if starter is True else "bench" if starter is False else "unknown",
+            lineup_role_conflict=role_conflict,
             scoring_conflict=conflict,
         )
         if reasons:

@@ -90,12 +90,26 @@ def build_pick_reports(data: dict[str, Any], picks: list[dict[str, Any]]) -> lis
     return reports
 
 
-def contextual_player_url(player_id: str, *, from_team: int | None = None, section: str = 'full-roster', week: int | None = None) -> str:
+def contextual_player_url(player_id: str, *, from_team: int | None = None, section: str = 'full-roster', week: int | None = None, from_trade: str | None = None) -> str:
     """Reuse the canonical dossier and its validated current-league return contract."""
     query = {}
+    if from_trade:
+        query['from_trade'] = from_trade
     if from_team is not None and from_team > 0:
         query.update(from_team=from_team, from_section=section if section in {'full-roster', 'my-team-advanced'} else 'full-roster')
     if week is not None and 1 <= week <= 18:
         query['week'] = week
     path = '/players/' + quote(str(player_id), safe='')
     return path + ('?' + urlencode(query) if query else '')
+
+
+def validated_trade_origin(graph, identity: str | None) -> dict | None:
+    """Resolve only a completed source event in the selected league chain."""
+    if not identity or len(identity) > 100:
+        return None
+    origin = graph.trade_dossier(identity)
+    if not origin or origin.get('status', '').casefold() not in {'complete', 'completed'}:
+        return None
+    if identity.startswith('TRADE-') and identity != origin['trade_id']:
+        return None
+    return origin

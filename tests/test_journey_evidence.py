@@ -85,6 +85,8 @@ class JourneyEvidenceTests(unittest.TestCase):
                 'previous_owner_id': 3, 'owner_id': 2,
             }], 'source_league_id': 'L26',
         })
+        fixture.current_data['league'] = {'league_id': fixture.league_id, 'season': 2026}
+        fixture.current_data['pick_ledger'] = [{'season': 2027, 'round': 4, 'original_roster_id': 3, 'current_owner_id': 2}]
         fixture.current_data['teams'] = [
             {'roster_id': 2, 'team_name': 'Current human franchise'},
             {'roster_id': 3, 'team_name': 'Original human franchise'},

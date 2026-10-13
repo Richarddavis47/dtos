@@ -19,7 +19,7 @@ from src.core.historical_memory.models import (
 )
 from src.core.history_context.store import CanonicalHistoryStore as HistoricalStore
 
-READ_MODEL_VERSION = "1.3"
+READ_MODEL_VERSION = "1.4"
 MAX_CACHE_ENTRIES = 1
 
 

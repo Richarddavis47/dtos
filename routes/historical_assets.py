@@ -16,6 +16,7 @@ from src.core.historical_memory.models import HISTORICAL_ASSET_GRAPH_SCHEMA_VERS
 from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.ui.intelligence_presentation import event_label, human_status, technical_details
+from services.asset_intelligence import contextual_player_url, validated_trade_origin
 
 
 RequireData = Callable[[], dict[str, Any]]
@@ -124,12 +125,22 @@ def create_historical_assets_router(
         dossier = graph().pick_dossier(pick_id)
         if dossier is None:
             raise HTTPException(404, "Pick not found")
+        origin = validated_trade_origin(graph(), from_trade)
+        def event_link(item):
+            parent = item.get('parent_id')
+            event = validated_trade_origin(graph(), parent) if parent and parent.startswith('TRADE-') else None
+            label = escape(event_label(item['event_type']))
+            if event:
+                suffix = '?from_trade=' + quote(origin['transaction_id'], safe='') if origin else ''
+                return f'<a class="ds-action" href="/trades/history/{quote(event["transaction_id"], safe="")}{suffix}">{label}</a>'
+            return label
         rows = "".join(
-            f'<tr><td>{escape(str(item["season"]))}</td><td>{escape(event_label(item["event_type"]))}</td><td>{escape(str(item.get("from_franchise_name") or item.get("from_franchise_id") or "Original owner"))}</td><td>{escape(str(item.get("to_franchise_name") or item.get("to_franchise_id") or "Current owner"))}</td><td>{escape(human_status(item["event_status"]))}</td></tr>'
+            f'<tr><td>{escape(str(item["season"]))}<p>{escape(str(item.get("occurred_at") or "Date unavailable"))}</p></td><td>{event_link(item)}</td><td>{escape(str(item.get("from_franchise_name") or "Original owner unavailable"))}</td><td>{escape(str(item.get("to_franchise_name") or "Holder unavailable"))}</td><td>{escape(human_status(item["event_status"]))}</td></tr>'
             for item in dossier["events"]
         ) or '<tr><td colspan="5">No verified ownership events are available.</td></tr>'
+        selected_url = contextual_player_url(dossier['selected_player_id'].removeprefix('DTOS-P-'), from_trade=origin['transaction_id'] if origin else None) if dossier.get('selected_player_id') else None
         selected = (
-            f'<a href="{escape(dossier["selected_player_url"])}">{escape(dossier["selected_player_id"])}</a>'
+            f'<a class="ds-action" href="{escape(selected_url)}">{escape(dossier["selected_player_name"])}</a>'
             if dossier.get("selected_player_url") else "Draft conversion not confirmed from available evidence"
         )
         pick_title = f'{dossier.get("season", "Future")} Round {dossier.get("round", "?")} Pick'
@@ -150,7 +161,7 @@ def create_historical_assets_router(
                 franchise_names[f'{selected_league()}:franchise:{roster_id}'] = name
         raw_owner = str(dossier.get('current_owner') or '')
         owner_name = ('Consumed by verified draft conversion' if dossier.get('exercised')
-                      else franchise_names.get(raw_owner, 'Ownership name unavailable'))
+                      else franchise_names.get(raw_owner, 'Current ownership unavailable'))
         original_identity = str(dossier.get('original_franchise_id') or '')
         original_name = franchise_names.get(original_identity, 'Original franchise name unavailable')
         active_id = int(front_office or 0)
@@ -165,7 +176,7 @@ def create_historical_assets_router(
             None,
         )
         trade_action = ""
-        if current_pick and not dossier.get('exercised'):
+        if current_pick and dossier.get('current_owner') and not dossier.get('exercised'):
             owner_id = int(current_pick.get("current_owner_id") or 0)
             trade_asset_id = f'{int(current_pick["season"])}-R{int(current_pick["round"])}-{current_pick["original_roster_id"]}'
             if active_id:
@@ -178,11 +189,17 @@ def create_historical_assets_router(
             else:
                 trade_action = '<a class="button" href="/trades">Choose a franchise to trade this pick</a>'
         details = technical_details((("Canonical pick identity", pick_id), ("Current owner identity", raw_owner or 'Unavailable'), ("Original franchise identity", dossier.get('original_franchise_id')), ("Slot status", dossier.get("slot_status"))))
+        holding = dossier.get('current_owner_observation') or {}
+        observation_note = '<p>Current source observation as of ' + escape(str(holding.get('as_of') or 'date unavailable')) + '. An observation date is not an acquisition date.</p>' if raw_owner else ''
+        transition_note = '<p role="status">The current source owner differs from the last historical holder; the intervening transition is unresolved. No intermediate trade is inferred.</p>' if dossier.get('current_owner_transition_unresolved') else ''
+        last_note = '<p>Last historical holder: ' + escape(dossier.get('last_observed_holder_name') or 'Unavailable') + ' · ' + escape(str(dossier.get('reconciliation_status')).replace('_', ' ')) + '</p>'
+        endpoint = dossier.get('selected_player_observation') or {}
+        endpoint_note = ('<p>Drafted player current observed owner: ' + escape(endpoint.get('current_observed_owner_name') or 'Unavailable')
+                         + ' · as of ' + escape(str(endpoint.get('as_of') or 'date unavailable')) + '. This does not establish uninterrupted ownership.</p>') if dossier.get('selected_player_id') else ''
         body = f'''<section class="pick-dossier"><a class="back" href="/picks">← Back to Draft Capital</a><h2>{escape(pick_title)}</h2>{history_explanation}
 <div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(owner_name)}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article><article class="metric"><b>{escape(original_name)}</b><span>Original franchise</span></article></div>
-<div class="card"><h3>Pick Conversion</h3><p>{selected}</p><p>{trade_action}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
+{observation_note}{transition_note}{last_note}<div class="card"><h3>Pick Conversion</h3><p>{selected}</p>{endpoint_note}<p>{trade_action}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
 <div class="card"><h3>Ownership Chain</h3><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Pick ownership history"><table class="pick-history-table"><caption>Verified ownership events for this exact pick</caption><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div></div>{details}</section>'''
-        origin = graph().trade_dossier(from_trade) if from_trade else None
         trade_return = f'<a class="back" href="/trades/history/{quote(origin["transaction_id"], safe="")}">← Back to original trade timeline</a>' if origin else ''
         return page(f"{pick_title} — Pick Dossier", trade_return + team_return + body)
 
@@ -207,9 +224,39 @@ def create_historical_assets_router(
         model = graph().trade_timeline(transaction_id)
         if model is None:
             raise HTTPException(404, 'Completed trade evidence unavailable')
-        origin = graph().trade_dossier(from_trade) if from_trade else None
-        return_url = f"/trades/history/{origin['transaction_id']}" if origin else '/transactions'
-        return page('Historical Trade Timeline', render_timeline(model, dossier, return_url=return_url))
+        origin = validated_trade_origin(graph(), from_trade)
+        return_url = f"/trades/history/{origin['transaction_id']}" if origin and origin['transaction_id'] != dossier['transaction_id'] else '/transactions'
+        return page('Historical Trade Timeline', render_timeline(model, dossier, return_url=return_url, origin_id=origin['transaction_id'] if origin else None))
+
+    @router.get('/trades/history/{transaction_id}/production', response_class=HTMLResponse)
+    async def historical_trade_production(transaction_id: str, generation: str | None = Query(default=None, max_length=128)):
+        import asyncio
+        model = graph()
+        current_generation = historical_store.dataset_version(selected_league())
+        if generation and generation != current_generation:
+            return HTMLResponse('<p role="status">Source evidence changed. Reload the trade before reviewing production.</p>', status_code=409)
+        timeline = model.trade_timeline(transaction_id)
+        if timeline is None:
+            raise HTTPException(404, 'Completed trade evidence unavailable')
+        def prepare():
+            rows = []
+            seen = set()
+            for branch in timeline['branches']:
+                player = (branch.get('converted_asset') or {}).get('player_id') or branch['asset_id']
+                if not player.startswith('DTOS-P-') or len(branch['received_by']) != 1:
+                    continue
+                recipient = branch['received_by'][0]
+                if (player, recipient['id']) in seen:
+                    continue
+                seen.add((player, recipient['id']))
+                rows.append({'name': model.player_identity(player)['display_label'], 'recipient': recipient['name'],
+                             **model.recipient_production(player, recipient['id'], minimum_season=timeline['season'])})
+            return rows
+        rows = await asyncio.to_thread(prepare)
+        if historical_store.dataset_version(selected_league()) != current_generation:
+            return HTMLResponse('<p role="status">Source evidence changed. Reload the trade before reviewing production.</p>', status_code=409)
+        from src.ui.trade_timeline import render_production
+        return HTMLResponse(render_production(rows, selected_league(), current_generation))
 
     @router.get("/api/history/transactions")
     async def historical_transactions(
