@@ -161,18 +161,19 @@ class PlayoffParticipantIntegrityTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), before)
 
     def test_conflicted_trophy_is_absent_and_other_league_isolated(self):
-        data = {**self.fixture.data, 'league': {**self.fixture.data['league'], 'season': '2027'}}
+        data = {**self.fixture.data, 'league': {**self.fixture.data['league'], 'season': '2027', 'previous_league_id': fixtures.DAY}}
         facts, _ = self.publish([{'m': 1, 'p': 1, 't1': 1, 't2': 1, 'w': 1, 'l': 2}])
         facts['league']['status'] = 'complete'
         self.fixture.publish(facts)
-        cache = self.fixture.fixture.cache
-        self.assertIsNone(defending_champion(data, cache))
-        self.assertEqual(champion_badge(defending_champion(data, cache), 1), '')
+        self.fixture.data["league"] = data["league"]
+        self.fixture.fixture.store.update_current(fixtures.DAY, self.fixture.data)
+        self.assertIsNone(defending_champion(data))
+        self.assertEqual(champion_badge(defending_champion(data), 1), '')
         facts['winners_bracket'][0]['t2'] = 2
         self.fixture.publish(facts)
-        self.assertEqual(defending_champion(data, cache), (2026, 1))
+        self.assertEqual(defending_champion(data), (2026, 1))
         other = {**data, 'league': {**data['league'], 'league_id': fixtures.ARK}}
-        self.assertNotEqual(defending_champion(other, cache), (2026, 1))
+        self.assertNotEqual(defending_champion(other), (2026, 1))
 
     def test_numeric_production_order_keeps_scores_roles_and_intervals_unchanged(self):
         facts = copy.deepcopy(self.fixture.fixture.sources[0])

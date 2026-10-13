@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from src.core.history_context.season_cache import SleeperSeasonCache
+from src.core.history_context.store import CanonicalHistoryStore
 from src.ui.badges import (
     champion_badge,
     defending_champion,
@@ -56,29 +57,37 @@ class PhoneDesignSemanticTests(unittest.TestCase):
                 "league": {"league_id": "A", "season": "2026"},
                 "teams": [{"roster_id": 1}, {"roster_id": 2}],
             }
+            store = CanonicalHistoryStore()
+            for target, value in (("src.core.history_context.store.sleeper_season_cache", cache),
+                                  ("services.history.historical_store", store)):
+                patched = patch(target, value)
+                patched.start()
+                self.addCleanup(patched.stop)
             facts = {
-                "league": {"status": "complete", "season": "2025"},
+                "league": {"league_id": "A", "status": "complete", "season": "2025"},
+                "rosters": [{"roster_id": 1, "owner_id": "u1"}, {"roster_id": 2, "owner_id": "u2"}],
+                "users": [{"user_id": "u1", "display_name": "One"}, {"user_id": "u2", "display_name": "Two"}],
                 "winners_bracket": [
                     {"m": 1, "p": 1, "r": 2, "t1": 1, "t2": 2, "w": 2, "l": 1}
                 ],
             }
             cache.write(cache.normalize("A", 2025, facts))
-            self.assertEqual(defending_champion(data, cache), (2025, 2))
+            self.assertEqual(defending_champion(data), (2025, 2))
             self.assertIn("2025", champion_badge((2025, 2), 2))
             self.assertIn("winners-bracket", champion_badge((2025, 2), 2))
             self.assertEqual(champion_badge((2025, 2), 1), "")
             other = copy.deepcopy(data)
             other["league"]["league_id"] = "B"
-            self.assertIsNone(defending_champion(other, cache))
+            self.assertIsNone(defending_champion(other))
             for field, value in (("status", "in_season"), ("season", "2024")):
                 bad = copy.deepcopy(facts)
                 bad["league"][field] = value
                 cache.write(cache.normalize("A", 2025, bad))
-                self.assertIsNone(defending_champion(data, cache))
+                self.assertIsNone(defending_champion(data))
             bad = copy.deepcopy(facts)
             bad["winners_bracket"][0]["w"] = None
             cache.write(cache.normalize("A", 2025, bad))
-            self.assertIsNone(defending_champion(data, cache))
+            self.assertIsNone(defending_champion(data))
 
     def test_rank_movement_and_completed_streak_are_separate_explained_facts(self):
         move = movement_badge(2, 4, "Week 4 to Week 5")

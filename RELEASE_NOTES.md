@@ -1,3 +1,10 @@
+## v1.21.42 · build 2142 — Championship Evidence Consistency
+
+- Home, League and My Team trophies now consume the same admitted canonical historical playoff result as season history, rather than deriving a champion from raw bracket rows.
+- Require completed historical source-season identity, historical roster membership, distinct admitted finalists and matching predecessor linkage. Current roster membership cannot validate a historical opponent.
+- Reuse the existing bounded, generation-aware season cache; corrected or conflicting historical evidence invalidates the trophy decision and warm Home presentation. Preserve raw evidence and retained FOIS grades.
+- Preserve valid Day Traders championship provenance, partial-history availability, numeric production weeks, exact lineage, FAAB and all pricing/projection safeguards. No new permanent store, backfill, migration or engine.
+
 ## v1.21.41 · build 2141 — Historical Playoff Participant Integrity
 
 - Validate known/resolved playoff participants before set conversion; withhold contradictory championship and placement conclusions while preserving independent history and raw source evidence.
