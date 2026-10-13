@@ -46,6 +46,28 @@ def source_generations(data: dict[str, Any], scoring_profile: str) -> dict[str, 
     }
 
 
+def ownership_source_data(data: dict[str, Any], state: dict[str, Any],
+                          generations: dict[str, str] | None = None) -> dict[str, Any]:
+    """Carry surrounding source-read metadata without modifying prepared facts.
+
+    last_sync describes DTOS's source synchronization, not an acquisition time.
+    Admit it only from the state publishing this exact league data object.
+    """
+    return {**data, 'ownership_source_observation': ownership_source_observation(data, state, generations)}
+
+
+def ownership_source_observation(data: dict[str, Any], state: dict[str, Any],
+                                 generations: dict[str, str] | None = None) -> dict[str, Any]:
+    """Read scoped synchronization metadata without changing fact identities."""
+    from src.core.history_context.timestamps import canonical_utc_timestamp
+    return {
+        'league_id': str((data.get('league') or {}).get('league_id') or ''),
+        'observed_at': canonical_utc_timestamp(state.get('last_sync')) if state.get('data') is data else None,
+        'observation_kind': 'DTOS Sleeper retrieval/sync observation',
+        'source_generations': {key: value for key, value in (generations or {}).items() if key in {'rosters', 'picks'}},
+    }
+
+
 @dataclass(slots=True)
 class CanonicalLeagueContext:
     """Presentation-ready, league-scoped canonical product dependencies."""

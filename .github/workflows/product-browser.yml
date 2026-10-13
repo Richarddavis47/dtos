@@ -72,6 +72,6 @@ jobs:
       - run: python -m pip install -r requirements-validation.txt
       - run: python -m playwright install --with-deps chromium
       - name: Historical evidence, source identity and phone routes
-        run: python -m unittest tests.test_trade_timeline tests.test_historical_faab_conflicts tests.test_historical_tracker_phase2 tests.test_historical_tracker_phase2_browser tests.test_trade_timeline_browser.TradeTimelineBrowserTests tests.test_historical_trade_time tests.test_fois_evidence_integrity
+        run: python -m unittest tests.test_trade_timeline tests.test_historical_faab_conflicts tests.test_historical_tracker_phase2 tests.test_historical_tracker_phase2_browser tests.test_history_final_source tests.test_history_final_source_browser tests.test_trade_timeline_browser.TradeTimelineBrowserTests tests.test_historical_trade_time tests.test_fois_evidence_integrity
       - name: Real prior quote publisher and current reader
         run: python -m tools.validation.trade_quote_cross_version

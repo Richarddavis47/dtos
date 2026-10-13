@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from collections import OrderedDict
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Callable
 
 from src.core.historical_memory.graph import HistoricalAssetGraph
 from src.core.historical_memory.models import (
@@ -19,7 +19,7 @@ from src.core.historical_memory.models import (
 )
 from src.core.history_context.store import CanonicalHistoryStore as HistoricalStore
 
-READ_MODEL_VERSION = "1.4"
+READ_MODEL_VERSION = "1.5"
 MAX_CACHE_ENTRIES = 1
 
 
@@ -37,7 +37,9 @@ def _current_identity(data: dict[str, Any]) -> str:
         )
         for player_id, player in sorted(players.items())
     ]
-    source = json.dumps(stable, separators=(",", ":"), default=str)
+    holdings = [(str(t.get('roster_id')), sorted(str(p.get('id') or p.get('player_id'))
+                for p in t.get('players') or [] if isinstance(p, dict))) for t in data.get('teams') or []]
+    source = json.dumps((stable, sorted(holdings), data.get('pick_ledger') or []), separators=(",", ":"), default=str)
     return hashlib.sha256(source.encode()).hexdigest()
 
 
@@ -83,6 +85,7 @@ class HistoricalReadModelCache:
         with self._lock:
             graph = self._entries.get(key)
             if graph is not None:
+                graph.refresh_current_observation(data)
                 self._hits += 1
                 self._entries.move_to_end(key)
                 self._active_key = key
@@ -183,12 +186,23 @@ class HistoricalReadModelCache:
 
 
 historical_read_model_cache = HistoricalReadModelCache()
+_ownership_observation_reader: Callable[[dict[str, Any], str], dict[str, Any] | None] | None = None
+
+
+def configure_ownership_observation_reader(reader: Callable[[dict[str, Any], str], dict[str, Any] | None]) -> None:
+    """Bind application source state to the shared historical read boundary."""
+    global _ownership_observation_reader
+    _ownership_observation_reader = reader
 
 
 def historical_graph(
     store: HistoricalStore, league_id: str, data: dict[str, Any],
     dataset_version: str | None = None,
 ) -> HistoricalAssetGraph:
+    if _ownership_observation_reader is not None:
+        observation = _ownership_observation_reader(data, league_id)
+        if observation is not None:
+            data = {**data, 'ownership_source_observation': observation}
     return historical_read_model_cache.get(
         store, league_id, data, dataset_version,
     )

@@ -10,7 +10,6 @@ from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
 
 from routes.historical_assets import create_historical_assets_router
@@ -58,7 +57,6 @@ class TrackerPhase2Tests(unittest.TestCase):
             ensure_fresh=prepared, refresh_transactions=prepared,
             require_data=lambda: self.data, state={}, page=page))
         app.include_router(create_history_router(league_id=DAY, page=page, require_data=lambda: self.data, league_resolver=resolver))
-        app.mount('/static', StaticFiles(directory='static'), name='static')
         self.app = app
         self.client = self.stack.enter_context(TestClient(app, raise_server_exceptions=False))
 

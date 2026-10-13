@@ -508,14 +508,14 @@ class HistoricalAssetGraph:
             if cached is not None:
                 self._player_dossier_hits += 1
                 self._player_dossiers.move_to_end(cache_key)
-                return copy.deepcopy(cached)
+                return {**copy.deepcopy(cached), 'current_owner_observation': self.current_asset_observation(canonical_id)}
             dossier = self._build_player_dossier(player_id, canonical_id)
             self._player_dossiers[cache_key] = dossier
             self._player_dossiers.move_to_end(cache_key)
             while len(self._player_dossiers) > PLAYER_DOSSIER_CACHE_LIMIT:
                 self._player_dossiers.popitem(last=False)
             self._player_dossier_build_count += 1
-            return copy.deepcopy(dossier)
+            return {**copy.deepcopy(dossier), 'current_owner_observation': self.current_asset_observation(canonical_id)}
 
     def _build_player_dossier(
         self, player_id: str, canonical_id: str,
@@ -554,8 +554,13 @@ class HistoricalAssetGraph:
         """Current prepared Sleeper holding, never inferred from historic legs."""
         from src.core.history_context.timestamps import canonical_utc_timestamp
         data = self.current_data
+        metadata = data.get('ownership_source_observation') or {}
+        scoped = str(metadata.get('league_id')) == self.league_id
         observation = {'current_observed_owner': None, 'current_observed_owner_name': None,
                        'as_of': None, 'state': 'unavailable', 'source': 'Prepared current Sleeper ownership'}
+        observation['observation_kind'] = metadata.get('observation_kind') if scoped else 'Prepared source observation; timing unavailable'
+        observation['source_generation'] = self._cache_metadata.get('dataset_version') or self.store.dataset_version(self.league_id)
+        observation['ownership_source_generations'] = metadata.get('source_generations', {}) if scoped else {}
         if str((data.get('league') or {}).get('league_id')) != self.league_id:
             return observation
         teams = {str(t.get('roster_id')): t for t in data.get('teams') or [] if isinstance(t, dict)}
@@ -583,9 +588,19 @@ class HistoricalAssetGraph:
         team = teams[owner]
         observation.update(current_observed_owner=franchise_id(self.league_id, owner),
                            current_observed_owner_name=team.get('team_name') or team.get('owner') or f'Franchise {owner}',
-                           as_of=canonical_utc_timestamp(data.get('last_sync') or data.get('updated_at') or (data.get('league') or {}).get('last_refresh')),
+                           as_of=canonical_utc_timestamp(metadata.get('observed_at') if scoped else
+                               data.get('last_sync') or data.get('updated_at') or (data.get('league') or {}).get('last_refresh')),
                            state='observed')
         return observation
+
+    def refresh_current_observation(self, data: dict[str, Any]) -> None:
+        """Refresh retrieval metadata without rebuilding indexes or writing history."""
+        with self._index_lock:
+            previous = self.current_data
+            self.current_data = data
+            fields = ('ownership_source_observation', 'last_sync', 'updated_at')
+            if any(previous.get(key) != data.get(key) for key in fields):
+                self._timelines.clear()
 
     def recipient_production(self, player_id: str, franchise_id: str, *, minimum_season: int | None = None) -> dict[str, Any]:
         """Supported franchise/week subtotals, never whole-season trade credit."""
@@ -644,6 +659,7 @@ class HistoricalAssetGraph:
             return None
         parties = [self.franchise_label(franchise_id(self.league_id, roster), row['season']) for roster in row['payload'].get('roster_ids') or []]
         return {'url': '/trades/history/' + raw, 'transaction_id': raw,
+                'participating_franchises': [franchise_id(self.league_id, roster) for roster in row['payload'].get('roster_ids') or []],
                 'label': f"{row['season']} · {row.get('occurred_at') or 'Date unavailable'} · " + ' ↔ '.join(parties)}
 
     def player_trades(self, player_id: str) -> list[dict[str, Any]]:

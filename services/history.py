@@ -745,16 +745,20 @@ def _build_season_archive_section(
     if section == "playoffs":
         playoffs = read(league_id, "playoff_result", season=season, limit=10)
         brackets = read(league_id, "playoff_bracket", season=season, limit=10)
-        placement = next((row["payload"] for row in playoffs["records"] if row["payload"].get("champion_roster_id") is not None), {})
+        from src.core.history_context.playoffs import roster_identity
+        placement = next((row['payload'] for row in playoffs['records']), {})
         return {
             "result": placement, "brackets": brackets["records"],
-            "champion": names.get(int(placement.get("champion_roster_id") or 0)),
-            "runner_up": names.get(int(placement.get("runner_up_roster_id") or 0)),
+            "champion": names.get(roster_identity(placement.get("champion_roster_id"))),
+            "runner_up": names.get(roster_identity(placement.get("runner_up_roster_id"))),
         }
     if section == "standings":
         standings = read(league_id, "season_standing", season=season, limit=100)
         playoff = season_archive_section(league_id, season, "playoffs")["result"]
-        places = {int(roster_id): int(place) for place, roster_id in (playoff.get("placements") or {}).items()}
+        from src.core.history_context.playoffs import roster_identity
+        raw_places = playoff.get('placements')
+        places = {identity: int(place) for place, roster_id in (raw_places if isinstance(raw_places, dict) else {}).items()
+                  if (identity := roster_identity(roster_id)) is not None and roster_identity(place) is not None}
         rows = []
         for record in sorted(standings["records"], key=lambda item: int(item["payload"].get("rank") or 999)):
             payload = record["payload"]

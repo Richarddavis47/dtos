@@ -67,6 +67,10 @@ def family_observed(facts: dict, family: str) -> bool:
 def season_coverage(facts: dict, season: int) -> dict:
     league = facts.get("league") if isinstance(facts.get("league"), dict) else {}
     limitations = []
+    from .playoffs import admitted_bracket_row
+    for family in ('winners_bracket', 'losers_bracket'):
+        if any(admitted_bracket_row(row)['outcome_reason_codes'] for row in object_rows(facts.get(family))):
+            limitations.append(f'{family.replace("_", " ").title()}: malformed or conflicting outcome identities withheld; independent season evidence remains available.')
     for week, rows in readable_buckets(facts, 'matchups').items():
         if any(not isinstance(row.get('starters'), list) for row in rows):
             limitations.append(f'Week {week}: missing or malformed starters leave lineup roles unknown.')

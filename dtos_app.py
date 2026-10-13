@@ -30,6 +30,7 @@ from routes.hq import create_hq_router
 from routes.history import create_history_router
 from routes.home import create_home_router
 from routes.historical_assets import create_historical_assets_router
+from src.core.historical_memory.read_model import configure_ownership_observation_reader
 from routes.inspect import create_inspection_router
 from routes.operations_inspect import create_operations_inspection_router
 from src.platform.inspection_security import OperationalInspectionBoundary
@@ -740,6 +741,17 @@ def require_data() -> dict[str, Any]:
     return data
 
 
+def historical_ownership_observation(data: dict[str, Any], league_id: str) -> dict[str, Any] | None:
+    """Bind historical reads to the exact state publishing their current facts."""
+    context = current_league_context()
+    state = context.state if context is not None else STATE
+    if state.get('data') is not data or str((data.get('league') or {}).get('league_id')) != league_id:
+        return None
+    from src.core.league_runtime.context import ownership_source_observation
+    runtime = getattr(context, 'runtime', None)
+    return ownership_source_observation(data, state, getattr(runtime, 'source_generations', None))
+
+
 def home_presentation_generation() -> tuple[object, ...]:
     """Return retained O(1) identities for the manager Home presentation cache."""
     context = current_league_context()
@@ -894,6 +906,7 @@ app.include_router(create_home_router(
 app.include_router(create_history_router(
     league_id=LEAGUE_ID, page=page, league_resolver=current_league_id, require_data=require_data,
 ))
+configure_ownership_observation_reader(historical_ownership_observation)
 app.include_router(
     create_historical_assets_router(
         league_id=LEAGUE_ID, require_data=require_data, page=page,

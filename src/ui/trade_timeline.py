@@ -30,7 +30,7 @@ def render_source_coverage(coverage):
             + ''.join(rows) + '</ul></details>')
 
 
-def render_production(rows, league, generation):
+def render_production(rows, league, generation, transaction_id=''):
     def points(value):
         return 'Unavailable' if value is None else f'{value:.2f}'
     cards = []
@@ -44,7 +44,7 @@ def render_production(rows, league, generation):
 <p>{row['scored_observations']} scored / {row['membership_observations']} observed franchise-week memberships · {row['supported_starts']} supported starts · {row['unknown_role_observations']} unknown roles · {row['missing_score_observations']} missing/conflicted scores.</p>
 <p>{escape(row['scope'])}</p><p><b>Complete holding-period benefit: Unavailable.</b> {escape(row['limitation'])}</p>
 <details><summary>Observed weeks and independent ownership intervals</summary><ul>{observations or '<li>No scored roster weeks admitted.</li>'}</ul><h5>Intervals · not a continuous ownership guarantee</h5><ul>{intervals or '<li>Ownership interval evidence unavailable.</li>'}</ul></details></article>''')
-    return f'<section data-production-result data-league="{escape(league, quote=True)}" data-generation="{escape(generation, quote=True)}">' + ''.join(cards) + '<p>Scores are Sleeper actual observations. Season totals, projections, current value and championships are separate; no causal trade credit is calculated.</p></section>'
+    return f'<section data-production-result data-trade="{escape(transaction_id, quote=True)}" data-league="{escape(league, quote=True)}" data-generation="{escape(generation, quote=True)}">' + (''.join(cards) or '<p>No supported recipient player-week scoring evidence is available.</p>') + '<p>Scores are Sleeper actual observations. Season totals, projections, current value and championships are separate; no causal trade credit is calculated.</p></section>'
 
 
 def readable_trade_reference(reference, graph):
@@ -78,13 +78,20 @@ def _quote_card(row, label):
     confidence = row.get('source_quote_confidence')
     if confidence is None:
         confidence = (row.get('retained_observation') or {}).get('source_confidence')
-    attachment = '<p>Original retained attachment: ' + safe(row['retained_attachment_at']) + ' · separate from quote observation.</p>' if row.get('retained_attachment_at') else ''
+    from src.core.history_context.timestamps import canonical_utc_timestamp
+    attachment_reference = row.get('retained_attachment_at')
+    # This legacy field can contain an event ID. Only the timestamp contract's
+    # ISO representation establishes a retained attachment clock.
+    attachment_time = canonical_utc_timestamp(attachment_reference) if isinstance(attachment_reference, str) and 'T' in attachment_reference else None
+    attachment = ('<p>Original retained attachment timestamp: ' + safe(attachment_time) + ' · separate from quote observation.</p>'
+                  if attachment_time else '<p>Legacy retained attachment reference: ' + safe(row['retained_attachment_at'])
+                  + ' · identifier, not a supported timestamp.</p>' if row.get('retained_attachment_at') else '')
     return f'''<li><h4>{safe(row.get('asset_name') or label)}</h4><p>{safe(row.get('match_state'))} · {safe(value)}</p>
 <p>{safe(row.get('admission_reason') or 'No admitted quote; original trade time or source evidence is unavailable.')}</p>
 <p>Provider: {safe(names)} · {safe(units)}</p><p>Source format: {safe('; '.join(contexts) or 'Unavailable')}. Provider format is not proof of exact historical league-format parity.</p>
 <p>Quote observed: {safe(row.get('observed_at') or 'Unavailable')} · Source knowledge: {safe(row.get('source_knowledge_at') or 'Unavailable')}</p>{attachment}
-<p>Normalization version: {safe(version)} · Comparison version: {safe(identity[3] if identity else 'Unavailable')}.</p><p>Temporal confidence: {safe(row.get('temporal_confidence', 0))} · Source observation confidence: {safe(confidence if confidence is not None else 'Unavailable')}. Confidence is not a trade outcome probability.</p>
-<p>{safe(row.get('limitation') or '')}</p><details><summary>Retained raw observations · excluded unless admitted above</summary><ul>{raw or '<li>No raw quote in available exact asset/context evidence.</li>'}</ul></details></li>'''
+<p>Normalization version: {safe(version)} · Comparison version: {safe(identity[3] if identity else 'Unavailable')}.</p><p>Comparison temporal confidence: {safe(row.get('temporal_confidence')) if row.get('value') is not None else 'Not eligible for comparison'} · Source observation confidence: {safe(confidence if confidence is not None else 'Unavailable')}. Ineligibility does not imply zero source confidence. Confidence is not a trade outcome probability.</p>
+<p>{safe(row.get('limitation') or '') if row.get('match_state') == 'DATED_ESTIMATE' else ''}</p><details><summary>Retained raw observations · excluded unless admitted above</summary><ul>{raw or '<li>No raw quote in available exact asset/context evidence.</li>'}</ul></details></li>'''
 
 
 def render_timeline(model, dossier, *, return_url="/transactions", origin_id=None):
@@ -170,7 +177,7 @@ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=Non
     if unresolved:
         participants += '<article class="card"><h4>Unresolved original consideration</h4><ul>' + unresolved + '</ul></article>'
     production_url = f"/trades/history/{quote(dossier['transaction_id'], safe='')}/production?generation={quote(model.get('generation') or '', safe='')}"
-    production = f'''<details class="card" data-production-endpoint="{href(production_url)}" data-league="{href(model['league_id'])}" data-generation="{href(model.get('generation') or '')}"><summary>Supported production · recipient roster weeks and interval limits</summary><div data-production-content aria-live="polite">Open to retrieve existing scoring evidence. Complete holding-period benefit may remain unavailable.</div></details><script defer src="/static/js/history-production.js"></script>'''
+    production = f'''<details class="card" data-trade="{href(dossier['transaction_id'])}" data-production-endpoint="{href(production_url)}" data-league="{href(model['league_id'])}" data-generation="{href(model.get('generation') or '')}"><summary>Supported production · recipient roster weeks and interval limits</summary><div data-production-content aria-live="polite">Open to retrieve existing scoring evidence. Complete holding-period benefit may remain unavailable.</div></details><script defer src="/static/js/history-production.js"></script>'''
     back_label = 'Back to original trade timeline' if return_url.startswith('/trades/history/') else 'Back to transaction history'
     try:
         trade_date = datetime.fromisoformat(model['occurred_at'].replace('Z', '+00:00')).strftime('%b %d, %Y · %H:%M UTC')
@@ -179,7 +186,7 @@ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=Non
     technical = [f"{k}: {v}" for k, v in dossier["source"].items()]
     return (
         CSS
-        + f'''<section class="trade-timeline"><a class="back" href="{href(return_url)}">← {back_label}</a><h2>Original completed trade</h2><p><b>{safe(model["league_name"])} · {safe(model["season"])} · {safe(trade_date)}</b></p><section><h3>Assets sent and received</h3><p>{safe(' ↔ '.join(p['name'] for p in model['participants']))}</p><div class="timeline-sides">{participants}</div>{'<h4>FAAB consideration</h4><ul>' + ''.join(cash) + '</ul>' if cash else ''}<details><summary>Historical manager context</summary><p>Managers are season observations; exact trade-time takeover timing is not established.</p></details></section><h3>Subsequent events & confirmed current state</h3><p>Current roster observations and last transfers are separate. An as-of date is not an acquisition timestamp; missing intervals do not establish uninterrupted ownership.</p>{"".join(branches)}{production}<section class="card"><h3>At the time: Market evidence</h3><p>{price_text}</p><p>{evidence.get('valued_assets', 0)} / {evidence.get('total_assets', 0)} assets have admitted compatible pre-trade quotes. Retained raw observations do not establish comparable package coverage.</p><p>Trade reference date: {safe(trade_date)}. Production, present Market value and later team outcomes are separate. Retained FOIS grades remain NOT REVALIDATED.</p><details class="timeline-evidence"><summary>Prices, dates and limitations</summary><ul>{"".join(quotes)}</ul><p>Package admission: {safe(str(evidence.get('reason') or 'Unavailable').replace('_', ' '))}</p></details></section>{render_source_coverage(model.get('source_coverage') or {})}<details class="card timeline-evidence"><summary>Source provenance and branch limitations</summary>{"".join("<p>" + safe(x) + "</p>" for x in model["limitations"])}<pre>{safe(chr(10).join(technical))}</pre></details></section>'''
+        + f'''<section class="trade-timeline"><a class="back" href="{href(return_url)}">← {back_label}</a><h2>Original completed trade</h2><p><b>{safe(model["league_name"])} · {safe(model["season"])} · {safe(trade_date)}</b></p><section><h3>Assets sent and received</h3><p>{safe(' ↔ '.join(p['name'] for p in model['participants']))}</p><div class="timeline-sides">{participants}</div>{'<h4>FAAB consideration</h4><ul>' + ''.join(cash) + '</ul>' if cash else ''}<details><summary>Historical manager context</summary><p>Managers are season observations; exact trade-time takeover timing is not established.</p></details></section><h3>Subsequent events & confirmed current state</h3><p>Current roster observations and last transfers are separate. As-of dates describe DTOS Sleeper retrieval/sync observations, not acquisition timestamps; missing intervals do not establish uninterrupted ownership.</p>{"".join(branches)}{production}<section class="card"><h3>At the time: Market evidence</h3><p>{price_text}</p><p>{evidence.get('valued_assets', 0)} / {evidence.get('total_assets', 0)} assets have admitted compatible pre-trade quotes. Retained raw observations do not establish comparable package coverage.</p><p>Trade reference date: {safe(trade_date)}. Production, present Market value and later team outcomes are separate. Retained FOIS grades remain NOT REVALIDATED.</p><details class="timeline-evidence"><summary>Prices, dates and limitations</summary><ul>{"".join(quotes)}</ul><p>Package admission: {safe(str(evidence.get('reason') or 'Unavailable').replace('_', ' '))}</p></details></section>{render_source_coverage(model.get('source_coverage') or {})}<details class="card timeline-evidence"><summary>Source provenance and branch limitations</summary>{"".join("<p>" + safe(x) + "</p>" for x in model["limitations"])}<pre>{safe(chr(10).join(technical))}</pre></details></section>'''
     )
 
 

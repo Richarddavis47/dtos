@@ -1,3 +1,12 @@
+## v1.21.40 · build 2140 — Historical Source Delivery and Ownership Freshness
+
+- Serve historical-production JavaScript through the released router asset contract; remove the fixture-only static mount. Add bounded requests, visible errors, keyboard retry and obsolete-response protection.
+- Carry league-scoped Sleeper retrieval/sync observations from published state into ownership views. Refresh warm timing without new history writes or index rebuilds.
+- Withhold malformed/conflicting optional bracket outcome identities at canonical admission and retained reads; preserve independent season content and source limitations.
+- Preserve transaction bucket Week 0 in filters and labels. Separate Market source confidence, comparison eligibility, quote clocks and legacy attachment references.
+- Link supported FOIS activity references to existing completed-trade dossiers only for the matching league and participating franchise; retain unavailable navigation honestly.
+- Preserve exact conversions, directed FAAB, partial production, historical pricing gates and retained FOIS grades. No new store, backfill, scoring/pricing model or Sleeper mutation.
+
 ## v1.21.39 · build 2139 — Historical Trade Source Integrity and Readable Insights
 
 - Separate current pick ledger ownership from historical holders; preserve consumed picks, exact conversions and source-scoped observation dates.
