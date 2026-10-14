@@ -129,7 +129,7 @@ class CommissionerDeskTests(unittest.TestCase):
         rendered = commissioner_desk(self.build())
         for label in (
             "Commissioner Desk", "Active League", "Active Front Office", "What changed?", "What matters?",
-            "What should I do?", "Your Front Office", "League Intelligence", "League Snapshot",
+            "What should I do?", "Selected Franchise", "League Intelligence", "League Snapshot",
             "Detailed Evidence",
         ):
             self.assertIn(label, rendered)

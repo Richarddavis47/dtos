@@ -205,7 +205,9 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                                                     "elements => elements.filter(e => e.scrollWidth > e.clientWidth).map(e => e.textContent)"
                                                 ), [], "Player values/unavailable states must fit their cards without truncation")
                                             if path.startswith("/trades/"):
-                                                page.locator("#trade-sent-board input[type=search]").wait_for(state="visible")
+                                                page.locator("#trade-sent-board input[type=search]").wait_for(state="attached")
+                                                if path == '/trades/trade-for' and viewport['width'] < 760:
+                                                    self.assertTrue(page.locator('#trade-received-board').is_visible())
                                             self.audit_page(page, path, viewport)
                                             accessibility = page.evaluate(A11Y_SCRIPT)
                                             for key in ("buttons_without_names", "links_without_names", "images_without_alt", "inputs_without_labels"):

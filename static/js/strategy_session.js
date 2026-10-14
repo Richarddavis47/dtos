@@ -48,7 +48,7 @@
     while (keys.length >= 64 && !keys.includes(key)) sessionStorage.removeItem(keys.shift());
     const saved = JSON.parse(sessionStorage.getItem(key) || '{}');
     root.querySelectorAll('details[id]').forEach(detail => {
-      if (Object.hasOwn(saved, detail.id)) detail.open = saved[detail.id];
+      if (detail.id !== 'my-team-roster' && Object.hasOwn(saved, detail.id)) detail.open = saved[detail.id];
       detail.addEventListener('toggle', () => {
         const state = {}; root.querySelectorAll('details[id]').forEach(d => { state[d.id] = d.open; });
         sessionStorage.setItem(key, JSON.stringify(state));

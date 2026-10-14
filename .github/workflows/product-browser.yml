@@ -75,3 +75,20 @@ jobs:
         run: python -m unittest tests.test_trade_timeline tests.test_historical_faab_conflicts tests.test_historical_tracker_phase2 tests.test_historical_tracker_phase2_browser tests.test_history_final_source tests.test_history_final_source_browser tests.test_playoff_participant_integrity tests.test_playoff_participant_browser tests.test_championship_evidence_consistency tests.test_championship_evidence_browser tests.test_trade_timeline_browser.TradeTimelineBrowserTests tests.test_historical_trade_time tests.test_fois_evidence_integrity
       - name: Real prior quote publisher and current reader
         run: python -m tools.validation.trade_quote_cross_version
+
+  beginner-navigation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-validation.txt
+      - name: Install validation-only browser dependencies
+        run: |
+          python -m pip install -r requirements-validation.txt
+          python -m playwright install --with-deps chromium
+      - name: Market pagination, visible roster and scoped fresh-start journeys
+        run: python -m unittest tests.test_beginner_market tests.test_beginner_browser

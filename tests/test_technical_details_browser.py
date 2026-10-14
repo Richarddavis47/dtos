@@ -100,6 +100,12 @@ class TechnicalDetailsBrowserTests(unittest.TestCase):
                         self.assertEqual(response.status_code, 200)
                         pages[path] = response.text
                 def inspect(page, width):
+                    # The outer evidence sections are now deliberate disclosure,
+                    # not visible primary content. Exercise their real controls.
+                    for label in ('Valuation and source evidence', 'Valuation, fit and source evidence', 'Observed trends and comparison details'):
+                        control = page.get_by_text(label, exact=True)
+                        if control.count():
+                            control.click()
                     details = page.locator('.technical-details')
                     self.assertGreater(details.count(), 0)
                     self.assertEqual(details.evaluate_all('rows=>rows.every(el=>!el.open)'), True)

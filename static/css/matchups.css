@@ -21,3 +21,14 @@
 .standing-position{display:block;font-size:.7rem;color:var(--accent-primary,#39d98a)}
 .standings-panel summary:focus-visible{outline:3px solid var(--accent-primary,#39d98a);outline-offset:2px}
 @media(min-width:375px){.standings-team .matchup-avatar{display:block}}
+
+/* One readable row per franchise; provenance is shared and expandable. */
+.compact-standings th,.compact-standings td{font-size:14px;padding:8px 3px;vertical-align:middle}.compact-standings th:first-child,.compact-standings td:first-child{width:46%}.standing-rank{display:inline;font-size:14px;margin-right:4px}.standings-team a{display:inline;line-height:1.5}.standings-team>div{min-height:44px;align-content:center}.standings-team .matchup-avatar{display:none}.standings-team .ds-you{font-size:12px;padding:1px 4px;margin-left:4px}.standing-inline{display:inline;white-space:nowrap;margin-left:4px}.standing-inline a{display:inline-flex;min-height:44px;min-width:32px;align-items:center;justify-content:center}.compact-standings tr[data-roster-id]{height:62px}.standings-panel #standings-evidence{margin-top:12px}.standings-panel #standings-evidence>summary{min-height:44px;display:flex;align-items:center}
+
+.standings-panel summary:focus{outline:3px solid var(--accent-primary,#39d98a);outline-offset:2px}
+
+@media(max-width:650px){.compact-standings thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.compact-standings tr[data-roster-id]{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:auto;min-height:62px;border-bottom:1px solid var(--border)}.compact-standings tr[data-roster-id]>td:first-child{grid-column:1/-1;width:auto;padding-bottom:0}.compact-standings tr[data-roster-id]>td:not(:first-child){white-space:nowrap;text-align:left;padding-top:0}.compact-standings td[data-label]::before{content:attr(data-label) " ";color:var(--muted);font-size:14px}.standing-inline a{min-width:32px}.standings-team>div{width:100%}.playoff-boundary td{font-size:14px;line-height:1.4}}
+
+.standings-team a[href^="/teams/"]{display:inline-flex;min-height:44px;max-width:100%;align-items:center}
+@media(max-width:650px){.compact-standings tr[data-roster-id]>td:not(:first-child){white-space:normal}.compact-standings td[data-label]::before{display:block}}
+@media(max-width:650px){.compact-standings,.compact-standings tbody{display:block}.compact-standings tr[data-roster-id]>td{display:block;min-width:0;width:auto;max-width:100%}.compact-standings .playoff-boundary{display:block}.compact-standings .playoff-boundary td{display:block;width:auto}}

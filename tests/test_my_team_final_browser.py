@@ -97,7 +97,7 @@ class MyTeamFinalBrowserTests(journeys.ProductBrowserJourneyTests):
                     self.assertEqual(page.locator('#trade-strategy').input_value(), new)
                     second.reload(wait_until='domcontentloaded')
                     self.assertEqual(second.locator('#my-team-strategy').input_value(), new)
-                    key = page.evaluate("Object.keys(sessionStorage).find(k=>k.startsWith('dtos-trade-workspace:'))")
+                    key = "dtos-trade-workspace:" + page.evaluate("fetch('/api/trades/workspace').then(r=>r.json()).then(w=>w.workspace_context.binding)")
                     saved = json.loads(page.evaluate('(k)=>sessionStorage.getItem(k)', key))
                     self.assertEqual(saved['strategy'], new)
                     self.assertEqual(saved['protectedAssets'], [])

@@ -89,6 +89,8 @@ class ChampionshipEvidenceBrowserTests(unittest.TestCase):
                         if path != '/history/2026':
                             self.assertEqual(trophies.count() > 0, supported, path)
                             if supported:
+                                if not trophies.first.is_visible():
+                                    page.locator('#standings-evidence > summary').click()
                                 summary = trophies.first.locator(':scope > summary')
                                 summary.focus()
                                 self.assertNotEqual(summary.evaluate('(e)=>getComputedStyle(e).outlineStyle'), 'none')

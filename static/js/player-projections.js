@@ -4,6 +4,12 @@
   window.dtosPlayerWeekNavigation = true;
   let pending;
   async function showWeek(root, query) {
+    // Week navigation changes the projection period, not the dossier's
+    // validated origin. The server rechecks league scope on a full reload.
+    const origin = new URLSearchParams(location.search);
+    for (const key of ['from_market', 'market_league', 'from_trade', 'from_team', 'from_section', 'front_office']) {
+      if (!query.has(key) && origin.has(key)) query.set(key, origin.get(key));
+    }
     if (pending) pending.abort();
     pending = new AbortController();
     const controller = pending;

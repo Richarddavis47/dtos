@@ -30,8 +30,9 @@ def create_settings_router(
         await ensure_fresh()
         data = require_data()
         branch, commit = repository_metadata()
+        scoring_labels = {"pass_yd": "Passing yard", "pass_td": "Passing touchdown", "pass_int": "Interception thrown", "rush_yd": "Rushing yard", "rush_td": "Rushing touchdown", "rec": "Reception", "rec_yd": "Receiving yard", "rec_td": "Receiving touchdown", "bonus_rec_te": "Additional points per TE reception", "fum_lost": "Fumble lost"}
         scoring_rows = "".join(
-            f"<tr><td>{escape(str(key))}</td><td>{escape(str(value))}</td></tr>"
+            f"<tr><td>{escape(scoring_labels.get(key, str(key).replace("_", " ").title()))}<details><summary>Source key</summary><code>{escape(str(key))}</code></details></td><td>{escape(str(value))}</td></tr>"
             for key, value in sorted(data["scoring_settings"].items())
         )
         setting_rows = "".join(

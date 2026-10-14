@@ -166,7 +166,7 @@ class UXFoundationTests(unittest.TestCase):
         }):
             html = self._client().get("/?front_office=1").text
         headings = (
-            "Weekly Recap", "Explore", "Rankings", "This Week",
+            "Weekly Report", "Explore", "Rankings", "Matchups this week",
             "Market Movers", "League Activity", "My Assets",
         )
         positions = [html.index(heading) for heading in headings]
@@ -215,7 +215,8 @@ class UXFoundationTests(unittest.TestCase):
         data = _data(preseason=True)
         with patch("routes.home.build_team_directory", return_value={1: {"rank": 1}, 2: {"rank": 2}}):
             html = self._client(data).get("/?front_office=1").text
-        self.assertIn("Preseason Briefing", html)
+        self.assertIn("Weekly Report", html)
+        self.assertIn("Unavailable", html)
         self.assertIn("Canonical team assessment", html)
         self.assertNotIn("0-0-0", html)
         self.assertNotIn("0.00", html)
@@ -234,7 +235,8 @@ class UXFoundationTests(unittest.TestCase):
         self.assertTrue(league_is_preseason(data))
         with patch("routes.home.build_team_directory", return_value={1: {"rank": 1}, 2: {"rank": 2}}):
             html = self._client(data).get("/?front_office=1").text
-        self.assertIn("Preseason Briefing", html)
+        self.assertIn("Weekly Report", html)
+        self.assertIn("Unavailable", html)
         self.assertNotIn("0-0-0", html)
 
     def test_legitimate_week_one_result_is_not_preseason(self) -> None:

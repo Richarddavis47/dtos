@@ -4,11 +4,12 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 from html import escape
+from pathlib import Path
 from typing import Any, Awaitable, Callable
 from urllib.parse import parse_qsl, quote, urlencode
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from src.ui.intelligence_presentation import available, human_status, technical_details
 
 from components.asset_intelligence import player_dossier
@@ -230,6 +231,12 @@ def create_transactions_router(
     """Create the Transactions Center router using shared app dependencies."""
     router = APIRouter()
 
+    @router.get("/static/js/player-projections.js", include_in_schema=False)
+    async def player_projection_script() -> Response:
+        source = Path(__file__).resolve().parents[1] / "static/js/player-projections.js"
+        return Response(source.read_text(encoding="utf-8"), media_type="text/javascript", headers={"Cache-Control": "no-cache"})
+
+
     @router.get("/transactions", response_class=HTMLResponse)
     async def transactions_page(
         team: str = "",
@@ -327,7 +334,7 @@ def create_transactions_router(
         body = f"""
 {TRANSACTIONS_CSS}
 <section class="tx-hero">
-  <div><h2>Transactions Center</h2><p class="muted">Track every roster move, asset exchange, and front-office decision from the current league week.</p></div>
+  <div><h2>Transactions Center</h2><p>Activity counters below describe the current cached activity window. Historical Archive results have their own scope and counts.</p><p class="muted">Track every roster move, asset exchange, and front-office decision from the current league week.</p></div>
   <div class="tx-actions">
     <form method="post" action="/transactions/refresh{f'?{escape(refresh_query)}' if refresh_query else ''}"><button class="tx-refresh" type="submit">Refresh Transactions</button></form>
     <div class="tx-refresh-meta">Last successful refresh<br><b>{escape(_format_refresh_time(state.get('transactions_last_sync')))}</b></div>
@@ -399,7 +406,9 @@ def create_transactions_router(
                           matchup: str | None = Query(default=None, max_length=80),
                           from_team: int | None = Query(default=None, ge=1),
                           from_section: str = Query(default='full-roster', max_length=40),
-                          from_trade: str | None = Query(default=None, max_length=100)) -> HTMLResponse:
+                          from_trade: str | None = Query(default=None, max_length=100),
+                          from_market: str | None = Query(default=None, max_length=1600),
+                          market_league: str | None = Query(default=None, max_length=100)) -> HTMLResponse:
         await ensure_fresh()
         data = require_data()
         player = (data.get("players") or {}).get(player_id)
@@ -501,11 +510,14 @@ def create_transactions_router(
                        if from_team is not None and any(t.get('roster_id') == from_team for t in data.get('teams') or []) else '')
         if week is not None and matchup and (matchup.isdecimal() or (matchup.startswith('unassigned-') and matchup[11:].isdecimal())):
             matchup_return = f'<link rel="stylesheet" href="/static/css/matchups.css"><a class="back matchup-return" href="/matchups/{escape(matchup)}?week={week}">← Back to Week {week} matchup</a>'
+        from services.market_navigation import market_return
+        market_origin = market_return(from_market, market_league, (data.get("league") or {}).get("league_id"))
+        market_back = f'<a class="back" href="{escape(market_origin)}">← Back to Market results</a>' if market_origin else ''
         body = f"""
 {TRANSACTIONS_CSS}
 {trade_return}
 {matchup_return}
-{team_return or '<a class="back" href="/transactions">← Back to Transactions Center</a>'}
+{team_return or market_back or '<a class="back" href="/transactions">← Back to Transactions Center</a>'}
 {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
 <p class="player-reported-status">Sleeper reported status: {escape(str(player.get("injury_status") or player.get("status") or "Unavailable"))}</p>
 {profile_explanation}

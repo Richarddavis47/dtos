@@ -61,7 +61,7 @@ class SharedPhoneDesignBrowserTests(journey.ProductBrowserJourneyTests):
                 page.locator(".ds-position").first.evaluate(
                     "e=>getComputedStyle(e).color"
                 ),
-                "rgb(182, 194, 203)",
+                {"QB":"rgb(255, 208, 204)", "RB":"rgb(182, 242, 231)", "WR":"rgb(206, 227, 255)", "TE":"rgb(255, 236, 175)"}[page.locator(".ds-position").first.get_attribute("data-position")],
             )
         if path == "/league":
             # Complete source records now support explicitly statistical placements.
@@ -69,11 +69,10 @@ class SharedPhoneDesignBrowserTests(journey.ProductBrowserJourneyTests):
                 page.locator(".compact-standings .standing-rank").all_text_contents(),
                 ["#1", "#2", "#3"],
             )
-            badges = page.locator(".compact-standings [data-badge^=standing-]")
-            self.assertEqual(badges.count(), 3)
-            for badge in badges.all():
-                self.assertIn("DTOS-organized standings", badge.locator("p").text_content())
-                self.assertNotIn("Official Sleeper league standings", badge.locator("p").text_content())
+            self.assertEqual(page.locator(".standings-explanations").count(), 0)
+            self.assertEqual(page.locator(".standing-inline").all_text_contents(), ["🥇", "🥈", "🥉"])
+            page.locator("#standings-evidence > summary").click()
+            self.assertIn("DTOS-organized", page.locator("#standings-evidence").inner_text())
             # Absent championship/source-rank evidence still cannot be manufactured.
             self.assertEqual(page.locator("[data-badge=champion]").count(), 0)
             self.assertIn("not Sleeper-supplied playoff seeds", page.locator(".standings-panel").inner_text())

@@ -9,11 +9,11 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
     title = titles[workflow]
     calculator = workflow == 'calculator'
     market_editor = workflow in ('create', 'calculator')
-    strategy_open = '<details><summary>Strategy for advanced analysis</summary>' if calculator else ''
-    strategy_close = '</details>' if calculator else ''
+    strategy_open = '<details class="tw-strategy-detail"><summary>Strategy for advanced analysis</summary>' if calculator else '<details class="tw-strategy-detail" open><summary>Strategy for analysis</summary>'
+    strategy_close = '</details>'
     market_panel = '<section id="trade-balance" class="ti-market-balance" aria-live="polite" tabindex="-1"></section>'
     balance_controls = '<section id="trade-balancing" aria-label="Options to balance this trade"><h3>Options to balance this trade</h3><button id="trade-balance-offer" type="button" disabled aria-describedby="calculator-balance-status">Balance offer · preview options</button><p id="calculator-balance-status" class="tw-balance-status" role="status" aria-live="polite" aria-atomic="true"></p></section>'
-    calculator_panel = (f'<section class="tw-calculator" aria-label="Market calculator">{market_panel}{balance_controls}<div class="ti-actions"><button id="trade-run" type="button" disabled>{"Advanced DTOS analysis" if calculator else "Evaluate Trade"}</button><button id="calculator-protect" type="button">Protect assets</button></div><div class="tw-packages"><section><h4>Side A · You send</h4><div id="calculator-sent"></div></section><section><h4>Side B · You receive</h4><div id="calculator-received"></div></section></div><p class="muted">Use the searchable owned-asset lists below to add players and exact picks. Market totals update immediately.</p></section>' if market_editor else '')
+    calculator_panel = (f'<section class="tw-calculator" aria-label="Market calculator">{market_panel}{balance_controls}<div class="ti-actions"><button id="trade-run" type="button" disabled>{"Advanced DTOS analysis" if calculator else "Evaluate Trade"}</button><button id="calculator-protect" type="button">Protect assets</button></div><div class="tw-packages"><section><h4>Side A · You send</h4><div id="calculator-sent"></div></section><section><h4>Side B · You receive</h4><div id="calculator-received"></div></section></div><p class="muted">Use the searchable owned-asset lists above to add players and exact picks. Market totals update immediately.</p></section>' if market_editor else '')
     market_detail = '' if market_editor else f'<details class="tw-market-detail"><summary>Market Balance · acquisition-price evidence</summary>{market_panel}</details>'
     calculator_link = '' if calculator else f'<a class="ti-action" href="/trades/calculator?front_office={active}">Open this workspace in Calculator</a>'
     protect_control = '<button id="calculator-lock" type="button">Do not trade selected exact asset</button>' if market_editor else ''
@@ -28,7 +28,6 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
     compact = workflow in ('recommended', 'calculator', 'create')
     intro = ('Find credible trades across eligible teams. Your current offer and exact protections stay intact.' if workflow == 'recommended' else 'Compare canonical Market totals, then preview balancing options.' if market_editor else 'Shop your outgoing asset across all eligible teams. Choosing a specific partner is optional.' if workflow == 'shop' else 'Choose an opponent-owned target. DTOS finds supported acquisition paths; refine or edit afterward.')
     heading = f'<div class="tw-heading"><h2>{escape(title)}</h2><a href="/trades?front_office={active}">All Trade Workflows</a></div><p>{intro}</p>'
-    jump = '<a class="ds-action" href="#trade-balance">Market totals &amp; Balance</a>' if market_editor else ''
     discovery = ('<button id="trade-find" type="button" disabled>Discover Recommended Trades</button>' if workflow == 'recommended' else '<button id="trade-find" type="button" disabled>Find Bilateral Options</button><p id="recommendation-status" class="ds-inline-feedback" role="status" aria-live="polite" aria-atomic="true">Select an asset to start a supported search.</p>' if workflow in ('shop', 'trade-for') else '')
     adjustments = "".join(
         f'<button type="button" data-adjust="{escape(label.lower(), quote=True)}">{label}</button>'
@@ -43,17 +42,20 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
     return f'''<link rel="stylesheet" href="/static/css/trade_workspace.css">
 {'' if compact else '<section class="card ti-hero">' + heading + '</section>'}
 <section id="trade-builder" class="card tw-workspace" data-trade-workflow="{workflow}" data-front-office="{active}" data-league="{escape(league, quote=True)}" data-preload-asset="{escape(str(asset_id or ''), quote=True)}" data-owner-roster="{int(owner_roster_id or 0)}">
-{heading if compact else ''}{jump}{discovery}
-{recommended_controls}
+{heading if compact else ''}
 <div id="trade-tray" class="tw-tray" hidden><span id="trade-tray-text"></span><button id="trade-tray-view" type="button">View Trade</button></div>
+{discovery if workflow == "recommended" else ""}
+<button id="trade-start-new" type="button">Start New Trade</button><button id="trade-clear-package" type="button" hidden>Clear package · keep objective and protections</button>
+{recommended_controls}
 <label for="trade-partner">Counterparty</label><select id="trade-partner"><option value="">{partner_placeholder}</option></select>{partner_help}
-{strategy_open}<label for="trade-strategy">Your strategy</label><select id="trade-strategy"><option value="">Use supported competitive window</option><option value="WIN NOW">WIN NOW</option><option value="RETOOL">RETOOL</option><option value="REBUILD">REBUILD</option></select>{strategy_close}
+
 <p id="trade-context" class="muted">Loading current league assets…</p>
 <section id="trade-target" class="tw-target" hidden aria-label="Selected trade target"></section>
-{shop_controls}
-{calculator_panel}
+
 <div id="trade-board"><div class="tw-side-tabs" role="group" aria-label="Asset side"><button type="button" data-side="sent" aria-pressed="true">My assets</button><button type="button" data-side="received" aria-pressed="false">Their assets</button></div>
 <div class="tw-boards"><section id="trade-sent-board"></section><section id="trade-received-board"></section></div></div>
+{strategy_open}<label for="trade-strategy">Your strategy</label><select id="trade-strategy"><option value="">Use supported competitive window</option><option value="WIN NOW">WIN NOW</option><option value="RETOOL">RETOOL</option><option value="REBUILD">REBUILD</option></select>{strategy_close}
+{shop_controls}{discovery if workflow != "recommended" else ""}{calculator_panel}
 <section id="trade-review" tabindex="-1" hidden><h3>Your proposal</h3><div class="tw-packages"><section><h4>You send</h4><div id="trade-sent-chips"></div></section><section><h4>You receive</h4><div id="trade-received-chips"></div></section></div></section>
 <div class="ti-actions"><button id="trade-view" type="button">View Trade</button>{'' if market_editor else '<button id="trade-run" type="button">Evaluate Trade</button>'}<button id="trade-edit" type="button">Edit Trade</button><button id="trade-adjust" type="button">Adjust Offer / protect assets</button>{'' if workflow in ('recommended', 'shop', 'trade-for') else '<button id="trade-find" type="button" hidden>Find Bilateral Options</button>'}{calculator_link}</div>
 <section id="trade-assist" class="tw-protection-controls" hidden><label for="trade-instruction">How should DTOS adjust it?</label><input id="trade-instruction" maxlength="300" placeholder="Make it cheaper, or name an asset to protect"><label for="trade-constraint-asset">Exact asset to keep or replace</label><select id="trade-constraint-asset"><option value="">Choose a specific owned asset</option></select>{protect_control}<button id="trade-release-lock" type="button">Remove selected adjustment lock</button><p>Keep and replace controls apply to this exact identity. Alternatives are previews; your proposal changes only when you adopt one.</p><details><summary>More adjustment options</summary><div class="ti-actions">{adjustments}</div></details><button id="trade-apply-adjust" type="button">Preview revised offers</button><button id="trade-alternatives" type="button">Preview alternatives</button></section>
