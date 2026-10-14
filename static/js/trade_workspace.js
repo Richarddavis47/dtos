@@ -133,7 +133,13 @@
   }
   function identity(a, insideAction = false) {
     const box = node(insideAction ? 'span' : 'div');
-    if (a.kind === 'player' && a.headshot_url) { const image = node('img'); image.src = a.headshot_url; image.alt = ''; image.loading = 'lazy'; image.onerror = () => image.remove(); box.append(image); }
+    if (a.kind === 'player' && a.headshot_url) {
+      const image = node('img'); image.src = a.headshot_url; image.alt = ''; image.loading = 'lazy';
+      // Keep the reserved portrait geometry if the optional source fails.
+      // Removing it changes the grid after focus/scroll and can hide controls.
+      image.onerror = () => { image.onerror = null; image.style.visibility = 'hidden'; };
+      box.append(image);
+    }
     const position = node('span', a.position, 'ds-position'); position.dataset.position = a.position;
     box.append(node('b', label(a)), ...(a.kind === 'player' && ['QB','RB','WR','TE'].includes(a.position) ? [position] : []), node('small', a.kind === 'pick' ? [a.season, 'Round ' + a.round, 'Original: ' + label(a)].join(' · ') : [['QB','RB','WR','TE'].includes(a.position) ? null : a.position, a.nfl_team, a.positional_rank].filter(Boolean).join(' · ')));
     const protection = lockDetail(a.asset_id);
