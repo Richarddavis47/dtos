@@ -178,7 +178,7 @@ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=Non
         participants += '<article class="card"><h4>Unresolved original consideration</h4><ul>' + unresolved + '</ul></article>'
     production_url = f"/trades/history/{quote(dossier['transaction_id'], safe='')}/production?generation={quote(model.get('generation') or '', safe='')}"
     production = f'''<details class="card" data-trade="{href(dossier['transaction_id'])}" data-production-endpoint="{href(production_url)}" data-league="{href(model['league_id'])}" data-generation="{href(model.get('generation') or '')}"><summary>Supported production · recipient roster weeks and interval limits</summary><div data-production-content aria-live="polite">Open to retrieve existing scoring evidence. Complete holding-period benefit may remain unavailable.</div></details><script defer src="/static/js/history-production.js"></script>'''
-    back_label = 'Back to original trade timeline' if return_url.startswith('/trades/history/') else 'Back to transaction history'
+    back_label = 'Back to original trade timeline' if return_url.startswith('/trades/history/') else 'Back to Home' if return_url == '/' else 'Back to transaction history'
     try:
         trade_date = datetime.fromisoformat(model['occurred_at'].replace('Z', '+00:00')).strftime('%b %d, %Y · %H:%M UTC')
     except (ValueError, TypeError, AttributeError):

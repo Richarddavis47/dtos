@@ -229,7 +229,7 @@ def create_historical_assets_router(
         return JSONResponse(jsonable_encoder(graph().trade_time_coverage()))
 
     @router.get("/trades/history/{transaction_id}", response_class=HTMLResponse)
-    async def historical_trade_page(transaction_id: str, from_trade: str | None = Query(default=None, max_length=100)) -> HTMLResponse:
+    async def historical_trade_page(transaction_id: str, from_trade: str | None = Query(default=None, max_length=100), from_home: bool = Query(default=False)) -> HTMLResponse:
         dossier = graph().trade_dossier(transaction_id)
         if dossier is None:
             raise HTTPException(404, "Historical trade not found")
@@ -238,7 +238,7 @@ def create_historical_assets_router(
         if model is None:
             raise HTTPException(404, 'Completed trade evidence unavailable')
         origin = validated_trade_origin(graph(), from_trade)
-        return_url = f"/trades/history/{origin['transaction_id']}" if origin and origin['transaction_id'] != dossier['transaction_id'] else '/transactions'
+        return_url = f"/trades/history/{origin['transaction_id']}" if origin and origin['transaction_id'] != dossier['transaction_id'] else '/' if from_home and str(dossier['source']['source_league_id']) == str(selected_league()) else '/transactions'
         return page('Historical Trade Timeline', render_timeline(model, dossier, return_url=return_url, origin_id=origin['transaction_id'] if origin else None))
 
     @router.get('/trades/history/{transaction_id}/production', response_class=HTMLResponse)

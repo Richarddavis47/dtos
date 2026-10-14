@@ -1,3 +1,11 @@
+## v1.21.45 / build 2145 — Home League Trade News
+
+- Compact completed league trades near Home top, with actual player headshots, exact received picks/FAAB and original-trade return.
+- Supported rolling 168-hour status-update eligibility; six-card cap, complete compatible current-Market ranking and qualified unknown-size placement.
+- Current-value totals and accessible balance bars stay separate from historical grades; gains/costs and source limitations are available on demand.
+- Reuses prepared canonical facts and bounded temporary caches; no new permanent store, provider backfill, pricing/projection model or FOIS regeneration.
+- Scope and independent acceptance: [Home Trade News handoff](docs/HOME_TRADE_NEWS_V1_21_45.md).
+
 ## v1.21.44 · build 2144 — Beginner Navigation Final Corrections
 
 - Carry the existing validated, league-scoped Market return context into exact-pick dossiers; preserve search, filters, sort, page and selected asset without retaining navigation history.
