@@ -1,3 +1,12 @@
+## v1.21.44 · build 2144 — Beginner Navigation Final Corrections
+
+- Carry the existing validated, league-scoped Market return context into exact-pick dossiers; preserve search, filters, sort, page and selected asset without retaining navigation history.
+- Open Home's franchise selector at the existing authorized read-only Team HQ. Keep authenticated Home, selected strategy and owner-only Trade actions scoped to the controlled franchise.
+- Intersect recognized free-agent/Taxi search intent with structured availability filters. Contradictory conditions return an honest empty set with accurate counts, without changing prices or ownership.
+- Format unavailable and non-finite Commissioner evidence honestly while preserving genuine zero. Keep the My Team trophy beside the identity and the Trade guide beside its heading without smaller text or controls.
+- Extend actual authenticated Chromium acceptance to multi-asset/acquired-pick proposals, real evaluation and Balance/preview, pending-response cleanup, objective-preserving Clear Package, reload/history and separate league drafts.
+- Preserve Market/projection/Trade/history/FOIS admission contracts and bounded existing session state. No new permanent storage, pricing/projection model, Sleeper write, historical migration or grade regeneration. Independent Scout production acceptance remains separate from controlled browser evidence.
+
 ## v1.21.43 · build 2143 — Beginner Experience and Navigation
 
 - Unify Market search, exact player/pick terms, current ownership filters, sorting, counts and pagination. Next advances the actual result set; Browse All clears search/filter scope.

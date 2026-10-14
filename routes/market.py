@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
 
 from app_metadata import BUILD_NUMBER, VERSION
-from src.core.asset_market import AssetMarketCache, MarketWarmingError, asset_market_cache
+from src.core.asset_market import AssetMarketCache, MarketWarmingError, asset_market_cache, availability_conditions
 from src.core.intelligence_memory import intelligence_checkpoint_store
 from src.core.market_trends import MarketTrendService
 from src.core.history_context import canonical_history_store
@@ -222,7 +222,10 @@ def create_market_router(
     def availability_ids(index, availability, q=""):
         # Count and page use the same current ownership as labels/actions,
         # including during a bounded last-valid Market publication fallback.
-        kind = availability or ("day_traders_free_agent" if re.search(r"\bfree[ -]+agents?\b", q, re.I) else "taxi" if re.search(r"\btaxi\b", q, re.I) else "")
+        conditions = availability_conditions(q, availability)
+        if len(set(conditions)) > 1:
+            return ()
+        kind = next(iter(conditions), "")
         if kind not in {"rostered", "taxi", "day_traders_free_agent", "ownership_unavailable"}:
             return None
         rows = []
@@ -499,7 +502,7 @@ def create_market_router(
                 trend_html += explanation_panel(market_explanation(detail, trend, league_id=selected_league))
                 ownership_html = player_actions_html(ownership.resolve(str(asset["asset_id"]).split(":", 1)[1], front_office), str(asset["asset_id"]).split(":", 1)[1], front_office) if str(asset["asset_id"]).startswith("player:") else ""
                 dossier_url = asset["canonical_url"]
-                if dossier_url.startswith("/players/"):
+                if dossier_url.startswith(("/players/", "/picks/")):
                     origin = "/market?" + _market_query(q=q, position=position, availability=availability, sort=sort, direction=direction, front_office=front_office, selected=selected, offset=offset, limit=limit)
                     dossier_url += "?" + urlencode({"from_market": origin, "market_league": selected_league, **({"front_office": front_office} if front_office is not None else {})})
                 expanded = f'''<section class="card" id="selected-asset" tabindex="-1"><p class="eyebrow">Expanded Asset</p><h2>{escape(asset["display_name"])}</h2><p>{escape(str(asset.get("position") or asset["asset_type"]))} · {escape(str(asset.get("nfl_team") or "No NFL team"))}</p>{ownership_html}<p><b>Canonical Market:</b> {escape(available(values.get("market_value"), reason="Unavailable"))}</p>{forward_html}<details><summary>Valuation and source evidence</summary>{value_html}{market_fact_html(asset.get("market_fact"))}<p><b>DTOS view:</b> {escape(recommendation["primary_reason"])}</p></details><p><a href="{escape(dossier_url)}">Open canonical dossier</a> · <a href="{trade_href}">Trade Intelligence</a></p><details><summary>Why?</summary><p>Decision confidence: {escape(available(recommendation.get("confidence"), reason="Unavailable"))}</p><p>Historical availability: {escape(asset["historical_availability"])}</p><p>Missing evidence: {escape(", ".join(recommendation["missing_evidence"]) or "None reported")}</p></details><details class="technical-details"><summary>Technical Details</summary><p>Asset: <code>{escape(asset["asset_id"])}</code></p><p>Brain snapshot: <code>{escape(recommendation["brain_snapshot_id"])}</code></p><p>Market generation: <code>{escape(detail["market_generation"])}</code></p><p>Valuation generation: <code>{escape(str(detail.get("valuation_generation") or "Unavailable"))}</code></p><p>Historical dataset: <code>{escape(detail["historical_dataset_version"])}</code></p><p>Historical evidence records: {len(history.get("events") or history.get("ownership_intervals") or [])}</p></details></section><details><summary>Observed trends and comparison details</summary>{trend_html}</details>'''

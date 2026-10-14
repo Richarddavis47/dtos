@@ -46,7 +46,10 @@ def human_status(value: Any, *, fallback: str = "Not yet available") -> str:
 
 
 def available(value: Any, *, reason: str = "Not yet available") -> str:
-    return reason if value is None or value == "" else str(value)
+    import math
+    if value is None or value == "" or (isinstance(value, float) and not math.isfinite(value)):
+        return reason
+    return reason if str(value).casefold() in {"none", "null", "nan"} else str(value)
 
 
 def numeric_evidence(value: Any, *, reason: str = "Not yet available") -> str:

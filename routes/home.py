@@ -48,7 +48,10 @@ def _team_selector(data: dict[str, Any], selected: dict[str, Any] | None) -> str
         f'<option value="{int(team.get("roster_id") or 0)}" {"selected" if selected is team else ""}>{escape(str(team.get("team_name") or team.get("owner") or "Team"))}</option>'
         for team in data.get("teams") or []
     )
-    return f'<details class="ds-home-detail"><summary>View another franchise</summary><form method="get" action="/" class="card"><label for="front-office">Selected franchise</label><select id="front-office" name="front_office">{options}</select><button class="btn" type="submit">View franchise</button></form></details>'
+    if not options:
+        return '<p class="muted">Franchise evaluation is unavailable until league rosters are supported.</p>'
+    initial = int((selected or (data.get("teams") or [{}])[0]).get("roster_id") or 0)
+    return f'''<details class="ds-home-detail"><summary>View another franchise</summary><form method="get" action="/teams/{initial}" class="card" onsubmit="this.action='/teams/'+this.elements.roster_id.value"><label for="front-office">Selected franchise</label><select id="front-office" name="roster_id">{options}</select><button class="btn" type="submit">View franchise</button></form><p class="muted">Opens a read-only team evaluation. Your Home and trade workspace stay with your controlled franchise.</p><noscript><a href="/league">Open League to choose a franchise</a></noscript></details>'''
 
 
 def create_home_router(

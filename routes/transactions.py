@@ -515,9 +515,9 @@ def create_transactions_router(
         market_back = f'<a class="back" href="{escape(market_origin)}">← Back to Market results</a>' if market_origin else ''
         body = f"""
 {TRANSACTIONS_CSS}
-{trade_return}
+{'' if market_back else trade_return}
 {matchup_return}
-{team_return or market_back or '<a class="back" href="/transactions">← Back to Transactions Center</a>'}
+{market_back or team_return or '<a class="back" href="/transactions">← Back to Transactions Center</a>'}
 {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
 <p class="player-reported-status">Sleeper reported status: {escape(str(player.get("injury_status") or player.get("status") or "Unavailable"))}</p>
 {profile_explanation}
