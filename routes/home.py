@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse
 from services.team_headquarters import build_team_directory
 from services.transactions import normalize_transactions
 from services.home_trade_news import recent_candidates, news_identity, build_news, capture_news_data
+from src.ui.home_trade_opportunities import section as opportunity_section, CSS as OPPORTUNITY_CSS
 from src.ui.home_trade_news import render_news, NEWS_CSS
 from services.matchup_season import current_matchup_groups
 from services.standings import standings_order
@@ -109,6 +110,7 @@ def create_home_router(
         news_key = (news_identity(news_data, candidates, now), viewer, tuple(limitations))
         news = trade_news_render_cache.get_or_build(news_key, str(retained_generation),
             lambda: json.dumps(build_news(news_data, candidates, limitations, now=now)).encode()).decode()
+        body = body.replace('<!--home-opportunities-->', '<style>' + OPPORTUNITY_CSS + '</style>' + opportunity_section(int(rid or 0)))
         body = body.replace('<!--home-trade-news-->', '<style>' + NEWS_CSS + '</style>' + render_news(json.loads(news), viewer=viewer))
         return page("Home", body.replace('<!--home-attention-->', attention))
 
@@ -166,7 +168,7 @@ def create_home_router(
         facts = weekly_facts(data, report_week)
         report_state = {"completed": "Final", "in_progress": "In progress", "preview": "Preview"}.get(facts["state"], "Unavailable")
         body = (
-            header + '<!--home-trade-news-->' + _section('Standings', 'Official records and scoring · not DTOS power rankings', render_standings(data, champion=champion)) + '<!--home-attention-->'
+            header + '<!--home-trade-news--><!--home-opportunities-->' + _section('Standings', 'Official records and scoring · not DTOS power rankings', render_standings(data, champion=champion)) + '<!--home-attention-->'
             + _section("Weekly Report", report_state + " · current week evidence", f'<div class="card ux-recap"><a href="/reports/weekly?week={report_week}">Open Week {report_week} report · {report_state} →</a></div>')
             + _section("Explore", "Useful destinations—not personalized Attention recommendations", action_html)
             + '<details class="ds-home-detail"><summary>DTOS team assessment · not official standings</summary>' + _section("Team Assessment Rankings", "Canonical team assessment · not standings or FOIS GM rankings", rank_html) + '</details>'

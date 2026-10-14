@@ -378,7 +378,7 @@
     const context = {schema: 1, evaluation: boundedEvidence(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]]))),
       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
       opportunity: boundedEvidence(row.opportunity || null),
-      identity: {package: packageIdentity(row.proposal || selected), strategy: el('trade-strategy').value,
+      identity: {package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
         workflow: row.workflow || session.originWorkflow, binding: workspace.workspace_context.binding,
         ownership: workspace.workspace_context.ownership_generation, market: workspace.calculator_generation,
         captured_at: new Date().toISOString(), counterparty: team(row.proposal?.partner_roster_id || partner())?.team_name || null}};
@@ -1018,6 +1018,21 @@
     if (flow === 'recommended') searchStatus('Ready to discover supported opportunities.', 'ready');
     if (session.currentAssessment && !entryBlocked) showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment);
     if (session.previewProposal && !entryBlocked) previewOffer({proposal: session.previewProposal});
+    const homeOffer = new URL(location.href).searchParams.get('home_offer');
+    if (homeOffer && !entryBlocked && !departed && (!['reload', 'back_forward'].includes(performance.getEntriesByType('navigation')[0]?.type) || (!session.adoptedProposal && !session.previewProposal && history.state?.dtosHomeOffer !== homeOffer))) {
+      const navigationRevision = revision;
+      const requestedStrategy = el('trade-strategy').value;
+      const query = new URLSearchParams({front_office: active, offer: homeOffer,
+        protected: JSON.stringify(session.protectedAssets), excluded: JSON.stringify(session.excludedAssets)});
+      fetch('/api/trades/home-opportunities?' + query, {credentials: 'same-origin'}).then(async response => {
+        if (!response.ok) throw new Error('This Home idea expired or its evidence, strategy or protections changed. Your draft is unchanged. Find current ideas on Home.');
+        const row = await response.json();
+        reconcileStrategy();
+        if (departed || revision !== navigationRevision || requestedStrategy !== el('trade-strategy').value) return;
+        try { history.replaceState({...history.state, dtosHomeOffer: homeOffer}, ''); } catch (_) { /* Navigation state may be unavailable. */ }
+        previewOffer(row);
+      }).catch(error => { if (!departed && revision === navigationRevision) message(error.message, true); });
+    }
     if (startTargetSearch && !entryBlocked && !departed) run('generate');
   }).catch(error => message(error.message, true));
 })();

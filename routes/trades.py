@@ -8,7 +8,7 @@ import logging
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
@@ -19,11 +19,15 @@ from src.core.request_execution import run_manager_read
 from src.platform.account_context import current_account
 from services.trade_workspace_context import workspace_context, authorize_workspace
 from services.trade_intelligence import TradeInputError
+from services import home_trade_opportunities as home_ideas
+from services.strategy_session import selected_strategy, COOKIE
+from src.ui.home_trade_opportunities import cards as opportunity_cards
 from services.trade_calculator import calculate_trade_market, balance_trade_market, market_generation
 
 _STATIC_ROOT = Path(__file__).resolve().parents[1] / "static"
 _WORKSPACE_JS = (_STATIC_ROOT / "js" / "trade_workspace.js").read_text(encoding="utf-8")
 _WORKSPACE_CSS = (_STATIC_ROOT / "css" / "trade_workspace.css").read_text(encoding="utf-8")
+_OPPORTUNITIES_JS = (_STATIC_ROOT / "js" / "home-opportunities.js").read_text(encoding="utf-8")
 _STRATEGY_JS = (_STATIC_ROOT / "js" / "strategy_session.js").read_text(encoding="utf-8")
 
 
@@ -58,6 +62,47 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     @router.get("/static/css/trade_workspace.css", include_in_schema=False)
     async def workspace_styles() -> Response:
         return Response(_WORKSPACE_CSS, media_type="text/css", headers={"Cache-Control": "no-cache"})
+
+    @router.get("/static/js/home-opportunities.js", include_in_schema=False)
+    async def opportunity_script() -> Response:
+        return Response(_OPPORTUNITIES_JS, media_type="text/javascript", headers={"Cache-Control": "no-cache"})
+
+    @router.get("/api/trades/home-opportunities", response_class=JSONResponse)
+    async def home_opportunities(request: Request, front_office: int | None = None,
+                                 protected: str = "[]", excluded: str = "[]", offer: str = "") -> JSONResponse:
+        import json
+        await ensure_fresh()
+        data = require_data()
+        account = current_account()
+        rid = account.membership.roster_id if account and account.membership else front_office
+        if not rid or (front_office is not None and front_office != rid):
+            raise HTTPException(422, "unauthorized_franchise")
+        context = workspace_context(data, rid)
+        try:
+            authorize_workspace(data, {'active_roster_id': rid, 'workspace_context': context})
+        except ValueError as exc:
+            raise _trade_failure(exc) from exc
+        try:
+            if len(protected) + len(excluded) > 8192:
+                raise ValueError('invalid_exact_protections')
+            locks, omissions = home_ideas.constraints(json.loads(protected), json.loads(excluded))
+        except (ValueError, TypeError) as exc:
+            raise HTTPException(422, "invalid_exact_protections") from exc
+        strategy = selected_strategy(request.cookies.get(COOKIE), context['league_id'], rid)
+        try:
+            key = await run_manager_read(lambda: home_ideas.cache_key(data, rid, strategy, locks, omissions))
+        except Exception as exc:
+            raise _trade_failure(exc) from exc
+        result = home_ideas.read(key)
+        if offer:
+            row = next((r for r in result['rows'] if r['home_offer'] == offer), None)
+            if row is None:
+                raise HTTPException(410, "This idea expired or its source, strategy or protections changed. Your draft is unchanged. Find current ideas again.")
+            return JSONResponse(row, headers={"Cache-Control": "no-store"})
+        return JSONResponse({'workspace_context': context, 'csrf_token': account.csrf_token if account else '',
+            'strategy': strategy, 'source_identity': key[1] if key else None, 'count': len(result['rows']),
+            'state': result['state'], 'reason': result.get('reason'), 'html': opportunity_cards(result['rows'], rid),
+            'retained': bool(result.get('source_identity'))}, headers={"Cache-Control": "no-store"})
 
     async def view(front_office: int | None) -> dict[str, Any]:
         try:
@@ -236,9 +281,31 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
-            result = await run_manager_read(
-                lambda: generate_trade_workflow(require_data(), payload),
-            )
+            data = require_data()
+            def discover():
+                if str(payload.get('workflow') or 'recommended') != 'recommended':
+                    return generate_trade_workflow(data, payload)
+                from src.core.valuation.normalization import capture_market_publication
+                market, coherent = capture_market_publication(data.get('market_data') or {})
+                if not coherent:
+                    raise TradeInputError('canonical_evidence_changed', 'Market publication changed. Try again.')
+                prepared_data = {**data, 'market_data': market}
+                key = home_ideas.cache_key(prepared_data, int(payload.get('active_roster_id') or 0), payload.get('strategy'),
+                    payload.get('protected_assets') or [], payload.get('excluded_assets') or [])
+                if payload.get('home_source_identity') and (key is None or payload['home_source_identity'] != key[1]):
+                    raise TradeInputError('canonical_evidence_changed', 'Prepared evidence changed. Refresh Home and try again.')
+                result = generate_trade_workflow(prepared_data, payload)
+                if home_ideas.cache_key(data, int(payload.get('active_roster_id') or 0), payload.get('strategy'),
+                    payload.get('protected_assets') or [], payload.get('excluded_assets') or []) != key:
+                    raise TradeInputError('canonical_evidence_changed', 'Prepared evidence changed. Try the same search again.')
+                home_ideas.publish(key, result, payload)
+                return result
+            def bounded_discover():
+                if payload.get('home_source_identity'):
+                    with home_ideas.search_slot(payload['workspace_context']['binding']):
+                        return discover()
+                return discover()
+            result = await run_manager_read(bounded_discover)
         except Exception as exc:
             raise _trade_failure(exc) from exc
         return JSONResponse(jsonable_encoder(result))

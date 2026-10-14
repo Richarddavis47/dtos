@@ -1353,7 +1353,7 @@ def _generate_recommended(data, payload):
     if _trade_search_boundary(data) != boundary:
         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
     return {'workflow': 'recommended', 'count': len(results), 'results': results,
-            'exploratory_results': funnel.explore(assets, excluded_families=excluded_families) if not results else [],
+            'exploratory_results': funnel.explore(assets, excluded_families=excluded_families),
             'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results), 'near_misses': funnel.near(),
             'quiet_state': None if results else 'Canonical projection evidence is unavailable for this league.' if not projection_available
                 else 'Required trade evidence is unavailable; review the evaluated near misses.' if result_state(funnel, results) == 'MISSING REQUIRED EVIDENCE'
