@@ -88,7 +88,7 @@ def render_news(model, *, viewer=None):
                         nfl_team=asset.get("nfl_team")
                         if asset.get("nfl_team") != "FA"
                         else None,
-                        context=(str(asset["value"]) + " pts")
+                        context=str(asset["value"])
                         if asset["value"] is not None
                         else "Unpriced",
                     )
@@ -170,16 +170,23 @@ def render_news(model, *, viewer=None):
         material = card["price_qualifications"]
         brief = []
         if any("Retained fallback" in q for q in material):
-            brief.append("Retained fallback prices")
+            brief.append("Retained fallback")
         freshness = [q for q in material if q.startswith("Source freshness:")]
         if freshness:
-            brief.append(" / ".join(dict.fromkeys(freshness)))
+            brief.append(
+                " / ".join(
+                    dict.fromkeys(
+                        q.removeprefix("Source freshness: ").replace(
+                            "unknown", "source time unknown"
+                        )
+                        for q in freshness
+                    )
+                )
+            )
         if not brief and material:
             brief.append("Qualified source evidence")
         qualifications = (
-            '<p class="news-qualification">'
-            + _safe(" · ".join(brief))
-            + " · see pricing details.</p>"
+            '<p class="news-qualification">' + _safe(" · ".join(brief)) + "</p>"
             if brief
             else ""
         )
@@ -342,7 +349,7 @@ def render_news(model, *, viewer=None):
             + "".join(_evaluation(s) for s in card["sides"])
             + '<p>Market advantage, strategic fit, production while held and later outcomes are separate. Open the original trade for admitted historical evidence; retained FOIS grades remain NOT REVALIDATED.</p></details><div class="news-footer"><a class="ds-action" href="'
             + escape(trade_url, quote=True)
-            + '">Open original trade →</a><details class="news-evidence"><summary>Source &amp; pricing</summary><p>'
+            + '">Original trade →</a><details class="news-evidence"><summary>Source &amp; pricing</summary><p>'
             + _safe(card["source"])
             + "</p><p>"
             + _safe(model.get("league_name", "Selected league"))

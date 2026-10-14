@@ -18,12 +18,12 @@ Same captured Boston and eleven-item transaction, authenticated isolated actual 
 
 | Viewport | Eleven-item card, before → after | Boston, before → after | Primary actions, before → after (page Y) |
 | --- | --- | --- | --- |
-| 320×568 | 1,279 → 623 px | 684 → 581 px | 2,674 → 399 px |
-| 375×667 | 1,022 → 571 px | 630 → 546 px | 2,345 → 381 px |
-| 390×682 | 1,022 → 550 px | 630 → 546 px | 2,345 → 381 px |
+| 320×568 | 1,279 → 623 px | 684 → 547 px | 2,674 → 399 px |
+| 375×667 | 1,022 → 558 px | 630 → 515 px | 2,345 → 381 px |
+| 390×682 | 1,022 → 537 px | 630 → 515 px | 2,345 → 381 px |
 | 1280×900 | 749 → 462 px | 517 → 458 px | 2,004 → 501 px |
 
-The eleven items are verified after pointer expansion at every width; keyboard collapse and independent Evaluation/Source activation, hit targets and document containment are checked. Tall 390×844 and short 390×432 are included. Small headshots use the existing image renderer; portrait fixtures test layout/fallback, not real face-image accuracy. No physical iPhone/Safari claim.
+The eleven items are verified after pointer expansion at every width; keyboard collapse and independent Evaluation/Source activation, hit targets and document containment are checked. Tall 390×844 and short 390×432 are included. Three additional sans-serif families are exercised at 320px with the same 600px Boston height guard; labels were shortened after CI exposed wider-font wrapping. Complete qualifications remain expanded. Small headshots use the existing image renderer; portrait fixtures test layout/fallback, not real face-image accuracy. No physical iPhone/Safari claim.
 
 ## Preserved contracts
 

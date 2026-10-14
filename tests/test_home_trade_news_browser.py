@@ -207,7 +207,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
                         path=f".validation/home-trade-news/home-{width}-{height}.png",
                         full_page=True,
                     )
-                    link = card.get_by_role("link", name="Open original trade →")
+                    link = card.get_by_role("link", name="Original trade →")
                     link.scroll_into_view_if_needed()
                     link.click()
                     self.assertIn("Historical Trade Timeline", page.title())
@@ -474,6 +474,16 @@ class TradeNewsBrowserTests(unittest.TestCase):
                         large.bounding_box()["height"], 650 if width == 320 else 600
                     )
                     self.assertLess(boston.bounding_box()["height"], 600)
+                    if width == 320:
+                        for family in ("Arial", "DejaVu Sans", "Noto Sans"):
+                            page.locator("body").evaluate(
+                                "(e,f)=>e.style.fontFamily=f", family
+                            )
+                            self.assertLess(
+                                boston.bounding_box()["height"], 600, family
+                            )
+                            self.assertLess(large.bounding_box()["height"], 650, family)
+                        page.locator("body").evaluate("e=>e.style.fontFamily='' ")
                     metrics.append(
                         {
                             "width": width,
