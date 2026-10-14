@@ -18,6 +18,8 @@ from services.fois import fois_service
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.ui.intelligence_presentation import event_label, human_status, technical_details
 from services.asset_intelligence import contextual_player_url, validated_trade_origin
+from services.market_navigation import market_return
+from src.platform.account_context import current_account
 
 
 RequireData = Callable[[], dict[str, Any]]
@@ -127,7 +129,9 @@ def create_historical_assets_router(
     @router.get("/picks/{pick_id}", response_class=HTMLResponse)
     async def pick_page(pick_id: str, front_office: int | None = None,
                         from_team: int | None = Query(default=None, ge=1),
-                        from_trade: str | None = Query(default=None, max_length=100)) -> HTMLResponse:
+                        from_trade: str | None = Query(default=None, max_length=100),
+                        from_market: str | None = Query(default=None, max_length=1600),
+                        market_league: str | None = Query(default=None, max_length=100)) -> HTMLResponse:
         dossier = graph().pick_dossier(pick_id)
         if dossier is None:
             raise HTTPException(404, "Pick not found")
@@ -170,7 +174,8 @@ def create_historical_assets_router(
                       else franchise_names.get(raw_owner, 'Current ownership unavailable'))
         original_identity = str(dossier.get('original_franchise_id') or '')
         original_name = franchise_names.get(original_identity, 'Original franchise name unavailable')
-        active_id = int(front_office or 0)
+        account = current_account()
+        active_id = int(account.membership.roster_id or 0) if account and account.membership else int(front_office or 0)
         original_id = original_identity.removeprefix(f'{selected_league()}:franchise:')
         current_pick = next(
             (
@@ -202,12 +207,14 @@ def create_historical_assets_router(
         endpoint = dossier.get('selected_player_observation') or {}
         endpoint_note = ('<p>Drafted player current observed owner: ' + escape(endpoint.get('current_observed_owner_name') or 'Unavailable')
                          + ' · as of ' + escape(str(endpoint.get('as_of') or 'date unavailable')) + ' · DTOS Sleeper retrieval/sync observation. This does not establish uninterrupted ownership.</p>') if dossier.get('selected_player_id') else ''
-        body = f'''<section class="pick-dossier"><a class="back" href="/picks">← Back to Draft Capital</a><h2>{escape(pick_title)}</h2>{history_explanation}
+        body = f'''<section class="pick-dossier"><h2>{escape(pick_title)}</h2>{history_explanation}
 <div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(owner_name)}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article><article class="metric"><b>{escape(original_name)}</b><span>Original franchise</span></article></div>
 {observation_note}{transition_note}{last_note}<div class="card"><h3>Pick Conversion</h3><p>{selected}</p>{endpoint_note}<p>{trade_action}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
 <div class="card"><h3>Ownership Chain</h3><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Pick ownership history"><table class="pick-history-table"><caption>Verified ownership events for this exact pick</caption><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div></div>{details}</section>'''
         trade_return = f'<a class="back" href="/trades/history/{quote(origin["transaction_id"], safe="")}">← Back to original trade timeline</a>' if origin else ''
-        return page(f"{pick_title} — Pick Dossier", trade_return + team_return + body)
+        market_origin = market_return(from_market, market_league, selected_league())
+        market_back = f'<a class="back" href="{escape(market_origin)}">← Back to Market results</a>' if market_origin else ''
+        return page(f"{pick_title} — Pick Dossier", (market_back or trade_return or team_return or '<a class="back" href="/picks">← Back to Draft Capital</a>') + body)
 
     @router.get("/api/trades/history/{transaction_id}")
     async def historical_trade_api(transaction_id: str) -> JSONResponse:

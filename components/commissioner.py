@@ -7,7 +7,7 @@ from urllib.parse import quote
 
 from models.commissioner import RecommendationPriority
 from src.ui import recommendation_panel as shared_recommendation_panel
-from src.ui.intelligence_presentation import exact_rank
+from src.ui.intelligence_presentation import exact_rank, available
 
 COMMISSIONER_DESK_CSS = """
 <style>
@@ -117,9 +117,10 @@ def unified_recommendation_panel(view: dict[str, Any]) -> str:
 
 def league_intelligence(view: dict[str, Any]) -> str:
     intelligence = view["league_intelligence"]
+    concentration = available(intelligence["draft_concentration"], reason="")
     values = (
-        ("Average Roster Age", intelligence["average_roster_age"] if intelligence["average_roster_age"] is not None else "Unavailable"),
-        ("Draft Capital Concentration", f'{intelligence["draft_concentration"]}%' if intelligence["draft_concentration"] is not None else "Unavailable"),
+        ("Average Roster Age", intelligence["average_roster_age"]),
+        ("Draft Capital Concentration", concentration + '%' if concentration else None),
         ("Average Team Grade", intelligence["average_team_grade"]), ("League Strength", intelligence["league_strength"]),
         ("League Parity", intelligence["league_parity"]), ("Contenders", intelligence["contenders"]),
         ("Rebuilders", intelligence["rebuilders"]), ("Strongest Position Group", intelligence["strongest_position"]),
@@ -129,7 +130,7 @@ def league_intelligence(view: dict[str, Any]) -> str:
         ("Oldest Team", intelligence["oldest_team"]), ("Youngest Team", intelligence["youngest_team"]),
         ("Trending Up", intelligence["trending_up"]), ("Trending Down", intelligence["trending_down"]),
     )
-    cards = "".join(f'<article class="cd-card cd-intel"><span>{escape(label)}</span><b>{escape(str(value))}</b></article>' for label, value in values)
+    cards = "".join(f'<article class="cd-card cd-intel"><span>{escape(label)}</span><b>{escape(available(value, reason="Unavailable — insufficient supported evidence."))}</b></article>' for label, value in values)
     return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Intelligence</h2><p>Current structure and activity, with historical limits disclosed</p></div></div><div class="cd-intelligence">{cards}</div></section>'
 
 

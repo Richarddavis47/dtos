@@ -48,3 +48,6 @@ body:has(#trade-builder) .ds-header-side{display:none}body:has(#trade-builder) .
 
 /* Keep proposal review transitions from re-anchoring a pointer or keyboard action. */
 .tw-workspace{overflow-anchor:none}
+
+/* Keep the existing guide beside the title; opened evidence remains full-width. */
+body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}body:has(#trade-builder) .ds-page-guide:not([open]){margin-left:auto}body:has(#trade-builder) .ds-page-guide[open]{width:100%}

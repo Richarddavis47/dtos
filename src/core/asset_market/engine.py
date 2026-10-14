@@ -42,6 +42,16 @@ from src.core.asset_market.resource_diagnostics import resource_diagnostics
 from src.platform.lifecycle import lifecycle_coordinator, memory_snapshot
 
 MARKET_SCHEMA_VERSION = "1.0"
+
+
+def availability_conditions(query: str, explicit: str | None = None) -> tuple[str, ...]:
+    """Recognized availability terms are AND constraints, never overrides."""
+    conditions = [explicit] if explicit else []
+    for pattern, value in ((r"\bfree[ -]+agents?\b", "day_traders_free_agent"),
+                           (r"\btaxi\b", "taxi")):
+        if re.search(pattern, query, re.I):
+            conditions.append(value)
+    return tuple(conditions)
 SORT_FIELDS = {
     "market": "market_value",
     "intrinsic": "intrinsic_dtos_value",
@@ -336,6 +346,8 @@ class AssetMarket:
         column = columns[layer]
         where: list[str] = []
         parameters: list[Any] = []
+        if len(set(availability_conditions(q, availability))) > 1:
+            where.append("0=1")
         for value, expression in (
             (asset_type, "asset_type=?"), (position, "position=?"),
             (availability, "availability=?"), (owner, "owner_id=?"),
