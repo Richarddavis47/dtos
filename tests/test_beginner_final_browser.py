@@ -338,6 +338,13 @@ class FinalResetBrowserTests(unittest.TestCase):
                         page.locator("#trade-strategy").input_value(), "REBUILD"
                     )
                     page.reload()
+                    # Wait for the actual workspace publication, not the static
+                    # tab shell: reload initialization restores the retained
+                    # incoming objective and selects the outgoing board. A click
+                    # before that publication would be superseded by initialization.
+                    page.locator(
+                        "#trade-sent-board button[data-asset-id]"
+                    ).first.wait_for(state="attached")
                     if width < 760:
                         page.locator("[data-side=received]").click()
                     page.locator("#trade-received-board input[type=search]").wait_for()
