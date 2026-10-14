@@ -45,3 +45,6 @@
 body:has(#trade-builder) .ds-header-side{display:none}body:has(#trade-builder) .ds-page-header{margin:8px 0;padding-bottom:8px;gap:4px}body:has(#trade-builder) .ds-page-header h1{font-size:22px}.tw-heading h2{font-size:22px}.tw-workspace>p{font-size:14px}.tw-workspace{padding:14px}.tw-workspace select{margin:4px 0 8px}
 
 .tw-workspace[data-trade-workflow=recommended] .tw-tray{padding:8px;margin:8px 0;font-size:14px}
+
+/* Keep proposal review transitions from re-anchoring a pointer or keyboard action. */
+.tw-workspace{overflow-anchor:none}

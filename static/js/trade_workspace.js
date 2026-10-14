@@ -319,7 +319,13 @@
     }
     el('trade-balance-offer').disabled = busy || !complete || ownershipInvalid || difference === 0n;
   }
-  function review() { el('trade-review').hidden = false; el('trade-board').hidden = true; el('trade-review').focus(); }
+  function review() {
+    el('trade-review').hidden = false;
+    el('trade-board').hidden = true;
+    // Focus must not schedule a second scroll after the board collapses.
+    el('trade-review').focus({preventScroll: true});
+    el('trade-review').scrollIntoView({block: 'start', behavior: 'instant'});
+  }
   function edit() { if (flow === 'trade_for' && selected.received.length) { side = 'sent'; paint(); } el('trade-board').hidden = false; el('trade-review').hidden = true; el('trade-assist').hidden = true; el('trade-partner').focus(); }
   async function post(path, requestPayload, signal) {
     const response = await fetch('/api/trades/' + path, {signal, method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': workspace.csrf_token}, body: JSON.stringify(requestPayload)});
