@@ -166,10 +166,14 @@ class UXFoundationTests(unittest.TestCase):
         }):
             html = self._client().get("/?front_office=1").text
         headings = (
-            "Weekly Report", "Explore", "Rankings", "Matchups this week",
+            "Weekly Report", "Explore", "Team Assessment Rankings", "Matchups this week",
             "Market Movers", "League Activity", "My Assets",
         )
-        positions = [html.index(heading) for heading in headings]
+        # Compare section headings, not an earlier action containing the word
+        # Explore. Existing section ordering remains an explicit contract.
+        positions = [html.index(f"<h2>{heading}</h2>") for heading in headings]
+        self.assertLess(html.index('Open My Team'), html.index('<h2>Trade Opportunities</h2>'))
+        self.assertLess(html.index('<h2>Trade Opportunities</h2>'), html.index('<h2>Standings</h2>'))
         self.assertEqual(positions, sorted(positions))
         self.assertIn("North Stars", html)
         self.assertIn('aria-label="Home Attention"', html)

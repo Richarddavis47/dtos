@@ -1,3 +1,11 @@
+## v1.21.47 / build 2147 — Home Trade Opportunities
+
+- Add compact hypothetical opportunities after completed League Trade News, with qualified Recommendations separate from editable Trade Ideas and original evaluation labels intact.
+- Reuse completed canonical Recommended discovery and explicit Find Trade Ideas; Home never starts a full synchronous search. Up to four distinct supported families, two initially visible, no fabricated padding.
+- Scope a disposable 24-entry/2 MiB/15-minute cache to authority, league/franchise, strategy, exact protections and semantic source generations. Reject intervening Market/ownership/projection changes and obsolete pending responses.
+- Explore/Edit opens existing preview/Keep Original/explicit Adopt; preserves draft, exact picks, strategy and protections until adoption. No pricing/projection model, permanent recommendation store, provider loop or historical regeneration.
+- Independent acceptance: [Home opportunities handoff](docs/HOME_OPPORTUNITIES_V1_21_47.md).
+
 ## v1.21.46 / build 2146 — Compact Trade News & Coherent Market
 
 - Show the controlled franchise, record, standing and My Team/Trade actions before Home Trade News. Large packages use a compact preview and an independent Complete Assets disclosure preserving every original player, exact pick and FAAB transfer.
