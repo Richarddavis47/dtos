@@ -17,6 +17,9 @@ from tests import test_trade_workspace_batch1 as boundary
 
 
 class BeginnerBrowserTests(unittest.TestCase):
+    def setUp(self):
+        Path('.validation/beginner-navigation').mkdir(parents=True, exist_ok=True)
+
     def test_visible_roster_picker_full_reset_and_two_league_intent(self):
         import dtos_app
         f = boundary.AuthenticatedTradeBoundaryTests()
