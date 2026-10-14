@@ -91,4 +91,4 @@ jobs:
           python -m pip install -r requirements-validation.txt
           python -m playwright install --with-deps chromium
       - name: Market pagination, visible roster and scoped fresh-start journeys
-        run: python -m unittest tests.test_beginner_market tests.test_beginner_browser tests.test_beginner_final tests.test_beginner_final_browser tests.test_home_trade_news tests.test_home_trade_news_browser
+        run: python -m unittest tests.test_beginner_market tests.test_beginner_browser tests.test_beginner_final tests.test_beginner_final_browser tests.test_home_trade_news tests.test_home_news_corrections tests.test_home_trade_news_browser

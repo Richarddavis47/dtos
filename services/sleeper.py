@@ -479,6 +479,11 @@ async def _sync_sleeper(
                 "valuation_intelligence": previous_data.get("valuation_intelligence") or {},
                 "brain_semantic_metrics": previous_data.get("brain_semantic_metrics") or {},
             }
+            # Finish provider normalization before exposing the replacement league
+            # publication. Readers may keep the prior coherent snapshot while
+            # this bounded preparation runs; no partially normalized table leaks.
+            from src.core.valuation.normalization import prepare_market_normalization
+            await asyncio.to_thread(prepare_market_normalization, market_data)
             state["data"] = {
                 "league": league,
                 "scoring_settings": league.get("scoring_settings") or {},
@@ -522,8 +527,6 @@ async def _sync_sleeper(
                                     observed_at=synced_at)
 
             canonical_history_store.update_current(league_id, state["data"])
-            from src.core.valuation.normalization import prepare_market_normalization
-            await asyncio.to_thread(prepare_market_normalization, state["data"]["market_data"])
             from src.core.valuation.ranking import prepare_global_player_ranks
             state["data"]["global_player_ranks"] = await asyncio.to_thread(prepare_global_player_ranks, state["data"])
             state["data"]["relevant_player_universe"] = await asyncio.to_thread(

@@ -1,3 +1,11 @@
+## v1.21.46 / build 2146 — Compact Trade News & Coherent Market
+
+- Show the controlled franchise, record, standing and My Team/Trade actions before Home Trade News. Large packages use a compact preview and an independent Complete Assets disclosure preserving every original player, exact pick and FAAB transfer.
+- Prepare canonical normalization off the published rows and commit complete replacement tables. Home captures one detached, checked Market publication for valuation, comparison, ranking and cache identity; changing or incompatible evidence cannot certify a mixed total or bar.
+- Carry canonical freshness, fallback, provider/context, source clocks and normalization qualifications into concise card indicators and expanded pricing details. Current values remain separate from historical trade-date grades.
+- Preserve rolling 168-hour eligibility, six-card admission, original-trade return, league isolation, existing intelligence and lean storage. No new store, pricing model, provider polling, backfill or FOIS regeneration.
+- Independent acceptance: [Home News correction handoff](docs/HOME_NEWS_CORRECTIONS_V1_21_46.md).
+
 ## v1.21.45 / build 2145 — Home League Trade News
 
 - Compact completed league trades near Home top, with actual player headshots, exact received picks/FAAB and original-trade return.

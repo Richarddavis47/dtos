@@ -169,6 +169,10 @@ class HomeTradeNewsTests(unittest.TestCase):
         )
         self.assertIsNone(card["combined_total"])
         self.assertEqual(len(card["sides"]), 3)
+        rendered = render_news(model(data, now))
+        self.assertIn("Complete Assets · 9 items", rendered)
+        self.assertEqual(rendered.count('data-news-asset="faab:3:6:100.0"'), 1)
+        self.assertNotIn('class="news-bar"', rendered)
 
     def test_completion_only_supported_clock_and_168_hour_boundary(self):
         cases = [
