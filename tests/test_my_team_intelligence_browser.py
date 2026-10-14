@@ -114,7 +114,8 @@ class MyTeamIntelligenceBrowserTests(journeys.ProductBrowserJourneyTests):
             self.assertEqual(page.locator('#trade-strategy').input_value(), goal)
             # Temporary packages from the other league are not retained.
             storage = page.evaluate("Object.keys(sessionStorage).filter(k => k.startsWith('dtos-trade-workspace:'))")
-            self.assertEqual(len(storage), 1)
+            self.assertLessEqual(len(storage), 12)
+            self.assertIn("dtos-trade-workspace:" + binding["binding"], storage)
             self.assertEqual(urlsplit(page.url).path, path)
 
 

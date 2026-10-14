@@ -132,7 +132,7 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                                     1 if index == 0 else 0,
                                 )
                                 self.assertIn(
-                                    "Standings ranked by Sleeper record, then Points For",
+                                    "Sleeper records and points · DTOS-organized order",
                                     page.locator(".standings-panel").inner_text(),
                                 )
                                 for team in active["data"]["teams"]:
@@ -147,7 +147,7 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                                         self.assertIn(
                                             f"{team[key]:.2f}", row.inner_text()
                                         )
-                                    link = row.locator("a")
+                                    link = row.locator('a[href^="/teams/"]')
                                     link.scroll_into_view_if_needed()
                                     self.hit(link)
                                     link.focus()
@@ -157,7 +157,11 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                                         ),
                                         "none",
                                     )
-                                trophy = table.locator(
+                                panel = page.locator('.standings-panel')
+                                evidence = page.get_by_text('Standings and playoff evidence', exact=True)
+                                evidence.focus()
+                                evidence.press('Enter')
+                                trophy = panel.locator(
                                     '[data-badge="champion"] summary'
                                 )
                                 self.assertEqual(trophy.count(), 1 if index == 0 else 0)
@@ -191,7 +195,8 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                                 disclosure.scroll_into_view_if_needed()
                                 self.hit(disclosure)
                                 disclosure.focus()
-                                disclosure.press("Enter")
+                                if not disclosure.evaluate("e=>e.parentElement.open"):
+                                    disclosure.press("Enter")
                                 self.assertTrue(
                                     disclosure.evaluate("e=>e.parentElement.open")
                                 )
@@ -199,7 +204,7 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                                     "completed Week 3 to Week 4",
                                     disclosure.locator("..").inner_text(),
                                 )
-                                streak = table.locator(
+                                streak = panel.locator(
                                     '[data-badge="streak"] summary'
                                 ).first
                                 streak.scroll_into_view_if_needed()
@@ -224,7 +229,7 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                                 self.assertTrue(
                                     cells.evaluate_all(
                                         "(cells)=>cells.every(e=>e.scrollWidth<=e.clientWidth+1)"
-                                    )
+                                    ), cells.evaluate_all("es=>es.map(e=>({text:e.textContent,width:e.clientWidth,scroll:e.scrollWidth,box:e.getBoundingClientRect().toJSON()}))")
                                 )
             finally:
                 browser.close()
@@ -233,9 +238,10 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
         box = element.bounding_box()
         self.assertIsNotNone(box)
         point = {"x": box["x"] + box["width"] / 2, "y": box["y"] + box["height"] / 2}
-        self.assertTrue(
-            element.evaluate(
-                "(e,p)=>e===document.elementFromPoint(p.x,p.y)||e.contains(document.elementFromPoint(p.x,p.y))",
-                point,
-            )
-        )
+        hit = element.evaluate("(e,p)=>e===document.elementFromPoint(p.x,p.y)||e.contains(document.elementFromPoint(p.x,p.y))", point)
+        info = element.evaluate("(e,p)=>({name:e.textContent,box:e.getBoundingClientRect().toJSON(),point:p,hit:document.elementFromPoint(p.x,p.y)?.outerHTML.slice(0,300),viewport:innerHeight})",point)
+        if not hit:
+            from pathlib import Path
+            import json
+            Path('.validation/beginner-navigation/standings-hit.json').write_text(json.dumps(info,indent=2))
+        self.assertTrue(hit, info)

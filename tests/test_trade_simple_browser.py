@@ -211,7 +211,7 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
                         done()
                         balance = perf_counter() - start
                         original = page.evaluate(
-                            'JSON.parse(sessionStorage.getItem(Object.keys(sessionStorage).find(k=>k.startsWith("dtos-trade-workspace:")))).currentProposal'
+                            'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
                         )
                         start = perf_counter()
                         page.get_by_role(
@@ -220,7 +220,7 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
                         preview_time = perf_counter() - start
                         self.assertEqual(
                             page.evaluate(
-                                'JSON.parse(sessionStorage.getItem(Object.keys(sessionStorage).find(k=>k.startsWith("dtos-trade-workspace:")))).currentProposal'
+                                'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
                             ),
                             original,
                         )
@@ -232,7 +232,7 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
                         click('#trade-result button:text-is("Adopt alternative")')
                         adoption_time = perf_counter() - start
                         adopted = page.evaluate(
-                            'JSON.parse(sessionStorage.getItem(Object.keys(sessionStorage).find(k=>k.startsWith("dtos-trade-workspace:")))).currentProposal'
+                            'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
                         )
                         self.assertNotEqual(adopted, original)
                         build_scrolls = page.evaluate("window.__tradeAuditScrolls")
@@ -240,7 +240,7 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
                         page.locator("#calculator-verdict").wait_for()
                         self.assertEqual(
                             page.evaluate(
-                                'JSON.parse(sessionStorage.getItem(Object.keys(sessionStorage).find(k=>k.startsWith("dtos-trade-workspace:")))).currentProposal'
+                                'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
                             ),
                             adopted,
                         )
@@ -292,7 +292,7 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
                             # real authenticated route transport and reload.
                             costly = page.locator('.tw-offer').filter(has_text='Exploratory only').first
                             costly.get_by_role('button', name='Open editable offer:', exact=False).click()
-                            context_before = page.evaluate('JSON.parse(sessionStorage.getItem(Object.keys(sessionStorage).find(k=>k.startsWith("dtos-trade-workspace:")))).previewProposal.preview_context')
+                            context_before = page.evaluate('async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).previewProposal.preview_context')
                             self.assertEqual(context_before['evaluation']['recommendation'], 'NOT WORTH IT')
                             page.reload()
                             page.get_by_role('button', name='Adopt alternative', exact=True).wait_for()

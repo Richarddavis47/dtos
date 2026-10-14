@@ -1,3 +1,14 @@
+## v1.21.43 · build 2143 — Beginner Experience and Navigation
+
+- Unify Market search, exact player/pick terms, current ownership filters, sorting, counts and pagination. Next advances the actual result set; Browse All clears search/filter scope.
+- Open Home’s asset links at the authenticated franchise’s full roster. Show My Team players first, preserve roster/depth/pick facts, and keep the useful shortcuts with advanced evidence on demand.
+- Put Trade partner/target and compact asset selection before empty analysis. Keep canonical prices, exact protections and all evaluation/Preview/Keep Original/Adopt behavior; load picker source detail on request.
+- Add explicit Start New Trade cleanup for the current draft/objective/temporary protections, preserving selected strategy and other league drafts in bounded session state. Distinguish package-only cleanup that retains a Shop/Trade For objective.
+- Compact shared standings into one readable franchise row, retain source facts, ranking/cutoff/tie honesty, and expose canonical champion/streak/movement provenance through shared evidence.
+- Link Home to the real Weekly Report, qualify its period state, preserve Market search returns from player dossiers, and serve the existing dossier week-navigation script through the actual application router.
+- Clarify selected-franchise, unavailable percentile, scoring-key and historical-scope labels. Use QB red/RB teal/WR blue/TE yellow chips with readable position letters.
+- No valuation, projection, scoring, discovery, historical-grade or lineage engine changes; no new permanent store, provider backfill, infrastructure or Sleeper mutation. Trade News and Home Trade Ideas are deferred to a separately scoped release.
+
 ## v1.21.42 · build 2142 — Championship Evidence Consistency
 
 - Home, League and My Team trophies now consume the same admitted canonical historical playoff result as season history, rather than deriving a champion from raw bracket rows.

@@ -323,7 +323,8 @@ class AssetMarket:
         owner: int | None = None, minimum: float | None = None,
         maximum: float | None = None, age_min: float | None = None,
         age_max: float | None = None, year: int | None = None,
-        round_number: int | None = None,
+        round_number: int | None = None, q: str = "",
+        availability_asset_ids: tuple[str, ...] | None = None,
     ) -> dict[str, Any]:
         layer = SORT_FIELDS.get(sort, "market_value")
         columns = {
@@ -340,7 +341,7 @@ class AssetMarket:
             (availability, "availability=?"), (owner, "owner_id=?"),
             (year, "year=?"), (round_number, "round_number=?"),
         ):
-            if value is not None:
+            if value is not None and not (expression == "availability=?" and availability_asset_ids is not None):
                 where.append(expression)
                 parameters.append(value)
         for value, expression in (
@@ -350,6 +351,53 @@ class AssetMarket:
             if value is not None:
                 where.append(expression)
                 parameters.append(value)
+        if availability_asset_ids is not None:
+            where.append("asset_id IN (" + ",".join("?" for _ in availability_asset_ids) + ")" if availability_asset_ids else "0=1")
+            parameters.extend(availability_asset_ids)
+        # Text and structured terms constrain the same indexed result set as
+        # the explicit filters. Count, ordering and offset therefore agree.
+        text = q.strip().casefold().replace("-", " ")
+        if text:
+            exact_id = q.strip().replace("DTOS-P-", "player:")
+            if exact_id.isdecimal():
+                exact_id = "player:" + exact_id
+            exact = None if q.strip().isdecimal() and (position == "PICK" or asset_type == "pick") else self._read_model.canonical(exact_id)
+            if exact is not None:
+                where.append("(asset_id=? OR asset_id=?)")
+                parameters.extend((exact_id, exact_id))
+            else:
+                year_term = re.search(r"\b(20\d{2})\b", text)
+                round_term = re.search(r"\b(?:round\s*|r)([0-9]{1,2})\b|\b([0-9]{1,2})(?:st|nd|rd|th)\b", text)
+                if year_term or round_term or re.search(r"\b(picks?|draft)\b", text):
+                    where.append("asset_type='pick'")
+                if year_term:
+                    where.append("year=?")
+                    parameters.append(int(year_term.group(1)))
+                    text = text[:year_term.start()] + " " + text[year_term.end():]
+                round_term = re.search(r"\b(?:round\s*|r)([0-9]{1,2})\b|\b([0-9]{1,2})(?:st|nd|rd|th)\b", text)
+                if round_term:
+                    where.append("round_number=?")
+                    parameters.append(int(round_term.group(1) or round_term.group(2)))
+                    text = text[:round_term.start()] + " " + text[round_term.end():]
+                for phrase, expression, value in (
+                    (r"free[ ]+agents?", "availability=?", "day_traders_free_agent"),
+                    (r"taxi", "availability=?", "taxi"),
+                    (r"rookies?", "rookie=?", 1),
+                    (r"qb|quarterbacks?", "position=?", "QB"),
+                    (r"rb|running[ ]+backs?", "position=?", "RB"),
+                    (r"wr|wide[ ]+receivers?", "position=?", "WR"),
+                    (r"te|tight[ ]+ends?", "position=?", "TE"),
+                ):
+                    pattern = r"\b(?:" + phrase + r")\b"
+                    if re.search(pattern, text):
+                        if expression != "availability=?" or availability_asset_ids is None:
+                            where.append(expression)
+                            parameters.append(value)
+                        text = re.sub(pattern, " ", text)
+                text = re.sub(r"\b(?:picks?|draft)\b", " ", text)
+                for token in text.split():
+                    where.append("search_text LIKE ?")
+                    parameters.append("%" + token + "%")
         total, page = self._read_model.query(
             where, parameters, column, direction, limit, offset,
         )
@@ -364,7 +412,7 @@ class AssetMarket:
             "tie_breaker": "canonical_asset_id", "assets": page,
         }
 
-    def search(self, query: str, limit: int = 50) -> dict[str, Any]:
+    def search(self, query: str, limit: int = 50, *, offset: int = 0, **filters: Any) -> dict[str, Any]:
         needle = query.strip().casefold()
         normalized = needle.replace("-", " ")
         wants_free_agent = "free agent" in normalized
@@ -403,7 +451,32 @@ class AssetMarket:
         if position:
             clauses.append("position=?")
             parameters.append(position)
-        rows = self._read_model.search(tokens, clauses, parameters, limit)
+        directory = self.directory(q=query, offset=offset, limit=limit, **filters)
+        rows = directory["assets"]
+        dataset_version = self.store.dataset_version(self.league_id)
+        filtered = any(value is not None for key, value in filters.items() if key not in {"sort", "direction"})
+        team_matches = []
+        if needle and not filtered:
+            for team in self.data.get("teams") or []:
+                label = str(team.get("team_name") or team.get("owner") or "")
+                if needle not in label.casefold() and needle not in str(team.get("owner") or "").casefold():
+                    continue
+                rid = int(team.get("roster_id") or 0)
+                team_matches.append({"asset_id": f"{self.league_id}:franchise:{rid}", "asset_type": "team", "display_name": label,
+                    "owner": {"roster_id": rid, "owner": team.get("owner")}, "resolution_status": "resolved",
+                    "market_value": None, "contender_value": None, "rebuilder_value": None, "confidence": 100,
+                    "canonical_url": f"/teams/{rid}", "historical_availability": "available"})
+        if directory["total"] or team_matches or not needle or filtered:
+            compact = [{**row, "resolution_status": "resolved", **{
+                key: row["values"].get(key) for key in
+                ("market_value", "contender_value", "rebuilder_value")
+            }} for row in rows]
+            start = max(0, offset - directory["total"])
+            compact += [dict(row, result_position=max(offset, directory["total"]) + index + 1)
+                        for index, row in enumerate(team_matches[start:start + limit - len(compact)])]
+            total = directory["total"] + len(team_matches)
+            return {**directory, **self.identity(dataset_version=dataset_version), "total": total,
+                    "query": query, "count": total, "assets": compact, "results": compact}
         historical_resolution = bool(
             needle and tokens and not rows
             and not any((
@@ -496,11 +569,13 @@ class AssetMarket:
         } for row in rows]
         combined = sorted([*compact, *extras], key=lambda row: (
             str(row.get("display_name") or "").casefold(), str(row["asset_id"]),
-        ))[:limit]
-        dataset_version = self.store.dataset_version(self.league_id)
+        ))
+        total = len(combined)
+        combined = [dict(row, result_position=offset + index + 1)
+                    for index, row in enumerate(combined[offset:offset + limit])]
         return {
             **self.identity(dataset_version=dataset_version), "query": query,
-            "count": len(combined), "results": combined,
+            "count": total, "total": total, "offset": offset, "limit": limit, "results": combined,
         }
 
     def detail(self, asset_id: str, front_office: int | None = None) -> dict[str, Any] | None:

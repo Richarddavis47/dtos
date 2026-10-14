@@ -237,7 +237,8 @@ class ExplicitNavigationBrowserTests(unittest.TestCase):
             page.evaluate('dispatchEvent(new PageTransitionEvent("pagehide", {persisted: true}))')
             page.evaluate('sessionStorage.removeItem("dtos-trade-workspace:scout-session")')
             page.evaluate('dispatchEvent(new PageTransitionEvent("pageshow", {persisted: true}))')
-            self.assertEqual(self.state(page), current)
+            actual = self.state(page)
+            self.assertEqual({k:v for k,v in actual.items() if k != "savedAt"}, {k:v for k,v in current.items() if k != "savedAt"})
 
     def test_late_workspace_load_in_departed_document_cannot_persist_over_newer_intent(self):
         pending = []

@@ -192,10 +192,10 @@ class TeamHeadquartersRequestSchedulingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(lightweight.status_code, 200)
         self.assertLess(lightweight_ms, 100)
         self.assertEqual(team_response.status_code, 200)
-        self.assertIn("<h2>Team 1</h2>", team_response.text)
+        self.assertIn("<h1>Team 1</h1>", team_response.text)
         self.assertIn('data-dtos-component="recommendation"', team_response.text)
         self.assertIn('submitted starters</summary>', team_response.text)
-        self.assertIn('Full Roster · position rooms and current lineup designation</summary>', team_response.text)
+        self.assertIn('Full Roster</summary>', team_response.text)
 
     async def test_team_hq_worker_failure_propagates(self) -> None:
         app = await self._application(fixture_data())

@@ -36,6 +36,7 @@ class DossierStatusBrowserTests(unittest.TestCase):
         measurements = []
         helper = technical.TechnicalDetailsBrowserTests()
         def inspect(page, width):
+            page.get_by_text("Valuation, fit and source evidence", exact=True).click()
             cards = page.locator('article.ai-value')
             self.assertEqual(cards.count(), 4)
             statuses = cards.locator(':scope > b').filter(has_text='Unavailable')

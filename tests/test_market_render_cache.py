@@ -73,7 +73,7 @@ class _Market:
         self.directory_calls += 1
         return {"total": len(self.assets), "assets": self.assets, "variant": kwargs}
 
-    def search(self, _q, _limit):
+    def search(self, _q, _limit, **_filters):
         self.directory_calls += 1
         return {"count": 0, "results": []}
 

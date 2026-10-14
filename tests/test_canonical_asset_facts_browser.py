@@ -44,7 +44,8 @@ class CanonicalAssetFactsBrowserTests(unittest.TestCase):
                             with self.subTest(width=width, player=pid):
                                 page.goto('https://dtos.test/players/' + pid)
                                 self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
-                                market = page.locator('.ai-values .ai-value').nth(2)
+                                page.get_by_text('Valuation, fit and source evidence', exact=True).click()
+                                market = page.locator('.ai-values .ai-value').first
                                 self.assertTrue(market.is_visible())
                                 if pid == 'missing':
                                     self.assertIn('Unavailable', market.inner_text())
