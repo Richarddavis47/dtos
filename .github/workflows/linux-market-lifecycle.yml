@@ -26,12 +26,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build production-equivalent image
-        # Official Python mirror; this amd64 digest is identical to Docker Hub's
-        # python:3.12.10-slim-bookworm, without its shared-runner pull-rate limit.
-        run: >-
-          docker build --file tools/validation/Dockerfile.market-cgroup
-          --build-arg PYTHON_BASE_IMAGE=public.ecr.aws/docker/library/python@sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4
-          --tag dtos-market-cgroup:validation .
+        # Both official registries serve this same immutable amd64 image.
+        # A registry outage cannot change the image or waive a lifecycle gate.
+        run: |
+          pinned_digest=sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4
+          base_image=public.ecr.aws/docker/library/python@$pinned_digest
+          if ! docker pull "$base_image"; then
+            base_image=docker.io/library/python@$pinned_digest
+            docker pull "$base_image"
+          fi
+          docker build --file tools/validation/Dockerfile.market-cgroup \
+            --build-arg PYTHON_BASE_IMAGE="$base_image" \
+            --tag dtos-market-cgroup:validation .
       - name: Guarded recovery lifecycle on Linux
         if: matrix.scenario == 'ordinary'
         run: |
