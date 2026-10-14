@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from bisect import bisect_left, bisect_right
+from copy import deepcopy
+from threading import RLock
 from dataclasses import replace
 from datetime import datetime, timezone
 import hashlib
@@ -99,6 +101,40 @@ def normalize_internal(value: float) -> int:
     return max(0, min(CANONICAL_MAX, round(float(value) * 10)))
 
 
+# Shared preparation/read lock; no league state, durable copies or polling.
+_market_publication_lock = RLock()
+
+
+def _market_identity(value):
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, default=str, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def capture_market_publication(market_data: dict[str, Any]) -> tuple[dict, bool]:
+    """Detach one stable publication for a whole package/cache read.
+
+    Normal preparation replaces complete tables under this lock. The two bounded
+    attempts also detect legacy callers editing raw dictionaries outside it.
+    A changed read may retain qualified individual observations, never totals.
+    """
+    snapshot = {}
+    for _ in range(2):
+        with _market_publication_lock:
+            try:
+                before = _market_identity(market_data)
+                snapshot = deepcopy(market_data)
+                if (
+                    before
+                    == _market_identity(snapshot)
+                    == _market_identity(market_data)
+                ):
+                    return snapshot, True
+            except RuntimeError:
+                continue
+    return snapshot, False
+
+
 def prepare_market_normalization(market_data: dict[str, Any]) -> None:
     """Pin comparison values before league relevance discards provider rows.
 
@@ -106,6 +142,23 @@ def prepare_market_normalization(market_data: dict[str, Any]) -> None:
     identity, not a second population array. No provider or durable store reads.
     Freshness/confidence are still evaluated at consumption time.
     """
+    # Work off a detached publication. Failure leaves every previous reference
+    # intact, including cached-fallback tables shared with another league.
+    prepared, coherent = capture_market_publication(market_data)
+    if not coherent:
+        raise ValueError("Market source changed during normalization preparation")
+    identity = _market_identity(prepared)
+    _prepare_market_normalization(prepared)
+    with _market_publication_lock:
+        if _market_identity(market_data) != identity:
+            raise ValueError("Market source changed before normalization publication")
+        market_data.update(
+            providers=prepared.get("providers", {}),
+            pick_quotes=prepared.get("pick_quotes", {}),
+        )
+
+
+def _prepare_market_normalization(market_data: dict[str, Any]) -> None:
     for provider, rows in (market_data.get("providers") or {}).items():
         if provider not in {"FantasyCalc", "DynastyProcess"} or not isinstance(rows, dict):
             continue

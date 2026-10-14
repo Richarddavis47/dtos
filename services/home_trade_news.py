@@ -14,7 +14,7 @@ from services.transactions import normalize_transactions
 from src.core.history_context.timestamps import canonical_utc_timestamp
 from src.core.valuation.calibration import cached_market_facts
 from src.core.data_platform.pick_quotes import canonical_pick_market, select_pick_quote
-from src.core.valuation.normalization import _freshness
+from src.core.valuation.normalization import _freshness, capture_market_publication
 from src.core.valuation.source_time import market_times
 from src.core.valuation.config import NORMALIZATION_VERSION
 from src.core.intelligence.pick_context import assess_pick_range
@@ -172,6 +172,7 @@ def news_identity(data, candidates, now):
     ]
     return _digest(
         [
+            data.get("_news_market_coherent", True),
             freshness,
             quote_admission,
             (data.get("league") or {}),
@@ -198,18 +199,64 @@ def _comparison_references(market):
         }
         refs[provider] = (
             next(iter(found))
-            if len(found) == 1
-            and all(all(bool(part) for part in ref) for ref in found)
+            if len(found) == 1 and all(all(bool(part) for part in ref) for ref in found)
             else None
         )
     return refs
 
 
+def capture_news_data(data):
+    """Use the same detached canonical publication for the cache key and model."""
+    market, coherent = capture_market_publication(data.get("market_data") or {})
+    return {
+        **data,
+        "market_data": market,
+        "_news_market_coherent": coherent and data.get("_news_market_coherent", True),
+    }
+
+
+def _qualifications(evidence, market, kind):
+    """Carry canonical facts and provider fallback status; no new confidence."""
+    if kind == "player":
+        qualifiers = []
+        if evidence.get("fallback"):
+            qualifiers.append("Retained fallback · live provider refresh unavailable")
+        freshness = evidence.get("freshness")
+        if freshness not in {None, "fresh", "unavailable"}:
+            qualifiers.append("Source freshness: " + str(freshness))
+        if evidence.get("warning"):
+            qualifiers.append(str(evidence["warning"]))
+        if evidence.get("unavailability_reason"):
+            qualifiers.append(str(evidence["unavailability_reason"]))
+        for provider in evidence.get("evidence_coverage") or []:
+            status = (market.get("provider_status") or {}).get(provider) or {}
+            if status.get("reason"):
+                qualifiers.append(str(status["reason"]))
+        return qualifiers
+    quote = evidence.get("quote") or {}
+    status = (market.get("provider_status") or {}).get(quote.get("provider")) or {}
+    qualifiers = []
+    if (
+        quote.get("retrieval_mode") == "cached_fallback"
+        or status.get("refresh_result") == "cached_fallback"
+    ):
+        qualifiers.append("Retained fallback · live provider refresh unavailable")
+    if quote and not quote.get("source_updated_at"):
+        qualifiers.append("Source update time unavailable · retrieval observation only")
+    if evidence.get("reason"):
+        qualifiers.append(str(evidence["reason"]))
+    if status.get("reason"):
+        qualifiers.append(str(status["reason"]))
+    return qualifiers
+
+
 def build_news(data: dict[str, Any], candidates, limitations, *, now=None):
     """Batch canonical values once; no current ownership assumption about actors."""
+    data = capture_news_data(data)
     now = now or datetime.now(timezone.utc)
     league = str((data.get("league") or {}).get("league_id") or "")
     market = data.get("market_data") or {}
+    coherent = data["_news_market_coherent"]
     snapshot = _digest([league, market])
     player_ids = {
         str(pid)
@@ -268,6 +315,25 @@ def build_news(data: dict[str, Any], candidates, limitations, *, now=None):
                     asset["label"] = "Player name unavailable"
                 fact = facts[asset["player_id"]]
                 value, evidence = fact.value, fact.to_dict()
+                evidence["comparison_context"] = [
+                    {
+                        "provider": name,
+                        "format": row.get("format"),
+                        "format_details": row.get("format_details"),
+                        "normalization_reference": row.get("normalization_reference"),
+                        "retrieval_mode": row.get("retrieval_mode")
+                        or ((market.get("provider_status") or {}).get(name) or {}).get(
+                            "refresh_result"
+                        ),
+                    }
+                    for name in fact.evidence_coverage
+                    for row in [
+                        (market.get("providers") or {})
+                        .get(name, {})
+                        .get(asset["player_id"])
+                        or {}
+                    ]
+                ]
                 compatible = value is not None and bool(fact.evidence_coverage)
                 for provider in fact.evidence_coverage:
                     row = (market.get("providers") or {}).get(provider, {}).get(
@@ -343,8 +409,9 @@ def build_news(data: dict[str, Any], candidates, limitations, *, now=None):
                     **asset,
                     "identity": identity,
                     "value": value,
-                    "comparable": bool(compatible),
+                    "comparable": bool(compatible) and coherent,
                     "evidence": evidence,
+                    "qualifications": _qualifications(evidence, market, asset["kind"]),
                 }
             )
         cash_seen = set()
@@ -398,8 +465,11 @@ def build_news(data: dict[str, Any], candidates, limitations, *, now=None):
         for side in sides:
             selected = [a for a in side["received"] if a["kind"] != "faab"]
             side["known_count"] = sum(a["value"] is not None for a in selected)
-            side["known_total"] = sum(
-                a["value"] for a in selected if a["value"] is not None
+            side["known_total"] = (
+                sum(a["value"] for a in selected if a["value"] is not None)
+                if coherent
+                and all(a["comparable"] for a in selected if a["value"] is not None)
+                else None
             )
             side["total"] = side["known_total"] if complete else None
         cards.append(
@@ -409,9 +479,17 @@ def build_news(data: dict[str, Any], candidates, limitations, *, now=None):
                 "season": (data.get("league") or {}).get("season"),
                 **{k: v for k, v in item.items() if k != "raw"},
                 "sides": sides,
+                "asset_count": len(assets),
+                "price_qualifications": list(
+                    dict.fromkeys(
+                        q for a in assets for q in a.get("qualifications", [])
+                    )
+                ),
                 "complete": complete,
                 "combined_total": sum(a["value"] for a in priced) if complete else None,
-                "pricing_state": "Comparable current values"
+                "pricing_state": "Publication changed during read · comparison unavailable"
+                if not coherent
+                else "Comparable current values"
                 if complete
                 else "Size unknown · incomplete or incompatible pricing",
                 "has_faab": bool(cash_seen),
