@@ -79,7 +79,7 @@ def source_identity(data):
             ),
             _semantic(market),
             projection,
-            "bilateral_trade_v3/home_projection_v1",
+            "bilateral_trade_v3/home_projection_v1/legal-roster-diagnostics-v1",
         )
     )
 

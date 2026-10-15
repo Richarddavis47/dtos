@@ -1,3 +1,11 @@
+## v1.21.49 / build 2149 — Dynamic Roster Needs and Replacement Evidence
+
+- Replace fixed QB/RB/WR/TE count-based depth grades with shared league/week/scoring-scoped legal-lineup diagnostics. Separate starter improvement, resilience, current-week strength, conditional expendability and uncertain evidence.
+- Verify remove-one effects against a newly optimized disjoint reserve lineup; require observed recipient benefit before labeling conditional expendable depth. Peer references are context, not assumed available offers. No universal surplus or count-only pick surplus.
+- Reuse canonical Sleeper projections, legal-lineup memo and existing package/horizon/capacity gates. Add actual pre/post package roster evidence, supported need tie-breaks and consistent My Team/Team HQ/League/Trade/Home explanations. Explicit strategy changes interpretation, never prices or source projections.
+- Bound disposable diagnostic results to 12 entries / 2 MiB / 180 seconds with semantic roster/status/projection/scoring identity; no retrieval-clock churn, new permanent store, provider backfill, projection model or FOIS regeneration.
+- Current-week diagnostic limitations and unavailable future/long-term evidence remain explicit. Independent acceptance: [diagnostic audit and handoff](docs/DYNAMIC_NEEDS_AUDIT.md).
+
 ## v1.21.48 / build 2148 — Trade Opportunity Assessment Integrity
 
 - Separate explicit package adoption from assessment validation. Retain exact assets, original strategy/source evidence, benefits and drawbacks with NOT REVALIDATED qualification and Reevaluate Trade; prior positive/legality claims are labeled previous evidence.

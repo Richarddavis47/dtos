@@ -29,3 +29,4 @@ class TeamDecision:
     position_evaluations: dict[str, Evaluation]
     competitive_window: CompetitiveWindowContract | None
     recommendations: tuple[Recommendation, ...]
+    diagnostics: dict[str, Any] | None = None

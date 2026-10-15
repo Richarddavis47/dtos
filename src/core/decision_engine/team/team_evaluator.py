@@ -87,6 +87,8 @@ def evaluate_team(data: dict[str, Any], roster_id: int, context: DecisionContext
     profile = build_team_profile(data, roster_id, context)
     current = evaluate_current_outlook(profile)
     future = evaluate_future_outlook(profile)
-    depth, positions = evaluate_depth(profile)
+    from src.core.intelligence.roster_diagnostics import team_diagnostics
+    diagnostics = team_diagnostics(data, roster_id, strategy=context.team_strategy)
+    depth, positions = evaluate_depth(profile, diagnostics)
     assets = _asset_health(profile)
-    return TeamDecision(profile, current, future, depth, assets, positions, None, ())
+    return TeamDecision(profile, current, future, depth, assets, positions, None, (), diagnostics)

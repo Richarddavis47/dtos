@@ -96,6 +96,13 @@ def rank_returns(rows, assets, pref):
             key = (base, age is None, age if age is not None else 0, descending(evidence['capital_assessment'].get('net_market_value')), impact)
         else:
             key = (base, impact, depth_order)
+        diagnostic = ((row['evaluation'].get('dimensions') or {}).get('roster_diagnostics') or {}).get('sides') or {}
+        buyer = diagnostic.get('partner') or {}
+        supported_need = bool(buyer.get('coverage') == 'supported current week' and buyer.get('need_positions_received')
+            and buyer.get('pre_optimal_points') is not None and buyer.get('post_optimal_points') is not None
+            and buyer['post_optimal_points'] >= buyer['pre_optimal_points'])
+        # A tie-break among already evaluated offers, never an uncertainty veto.
+        key = (*key, not supported_need)
         decorated.append((key, row['evaluation']['provenance']['evaluation_id'], row, evidence))
     decorated.sort(key=lambda item: (item[0], item[1]))
     return [(row, evidence) for _, _, row, evidence in decorated]

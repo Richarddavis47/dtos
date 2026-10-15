@@ -70,6 +70,14 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
             key = add(f'recommendation.{code}', 'Accepted recommendation reason', REASONS[code], kind=K.INTERPRETATION)
             why.append(reason(code, key))
     dims = result.get('dimensions') or {}
+    diagnostic = dims.get('roster_diagnostics') or {}
+    for side, row in diagnostic.get('sides', {}).items():
+        key = add('diagnostics.' + side, ('Your' if side == 'active' else 'Their') + ' package roster context', row['summary'])
+        advanced.append(Statement('ROSTER_DIAGNOSTICS', row['summary'] + ' ' + diagnostic['meaning'], (key,)))
+        for position, facts in row['positions'].items():
+            text = facts['pre']['interpretation'] + ' Availability-qualified post-package starter/reserve counts: ' + str(len(facts['post_starters'])) + '/' + str(len(facts['post_disjoint_reserves'])) + '.'
+            item_key = add('diagnostics.' + side + '.' + position, position + ' replacement context', text)
+            advanced.append(Statement('POSITION_CONTEXT', text, (item_key,)))
     fairness = dims.get('value_fairness') or {}
     add('market', 'Market fairness · acquisition prices, not intrinsic worth', fairness.get('assessment'))
     if fairness.get('explanation'):

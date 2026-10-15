@@ -81,13 +81,6 @@ def _team_players(team: dict[str, Any], assets_by_id: dict[str, dict[str, Any]])
     return [{**assets_by_id.get(str(p.get("id") or p.get("player_id")), {}), **p} for p in team.get("players") or ()]
 
 
-def _required_positions(positions: tuple[str, ...]) -> dict[str, int]:
-    required = {position: positions.count(position) for position in {"QB", "RB", "WR", "TE"}}
-    if "SUPER_FLEX" in positions:
-        required["QB"] += 1
-    return required
-
-
 def _strategic_reasons(
     *,
     incoming: tuple[TradeAsset, ...],
@@ -103,17 +96,6 @@ def _strategic_reasons(
         reasons.append(f"Optimal Legal Lineup improves by {lineup_delta:.2f} projected points.")
     if incoming_value >= outgoing_value * 1.05:
         reasons.append(f"Receives {incoming_value - outgoing_value:.0f} more neutral market value.")
-    required = _required_positions(positions)
-    counts = {
-        position: sum(str(player.get("position") or "") == position for player in team_players)
-        for position in required
-    }
-    incoming_positions = {asset.position for asset in incoming if asset.kind == "player"}
-    for position in sorted(incoming_positions):
-        added = sum(asset.kind == 'player' and asset.position == position for asset in incoming)
-        removed = sum(asset.kind == 'player' and asset.position == position for asset in outgoing)
-        if position and added > removed and counts.get(position, 0) <= required.get(position, 0):
-            reasons.append(f"Adds needed {position} depth at or below the configured starting requirement.")
     incoming_picks = sum(asset.trade_value for asset in incoming if asset.kind == "pick")
     outgoing_picks = sum(asset.trade_value for asset in outgoing if asset.kind == "pick")
     if incoming_picks > outgoing_picks and incoming_picks >= 250:

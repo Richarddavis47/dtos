@@ -38,8 +38,11 @@ class TrustWordingTests(unittest.TestCase):
 
     def test_specific_supported_need_identifies_both_teams(self):
         decision = self.first.decision
-        evaluation = next(iter(decision.position_evaluations.values()))
-        first = replace(self.first, decision=replace(decision, position_evaluations={'WR': replace(evaluation, score=30)}))
+        # Isolate wording over an admitted dynamic need, not a legacy count grade.
+        first = replace(self.first, decision=replace(decision, diagnostics={
+            'coverage': 'supported current week',
+            'positions': {'WR': {'objective_need': True, 'surplus_assets': []}},
+        }))
         second = self.second
         # Isolate wording over an admitted surplus; player count cannot supply it.
         def admitted_surplus(decision):

@@ -17,7 +17,7 @@ class TeamNeed:
 class TeamSurplus:
     roster_id: int
     category: str
-    score: int
+    score: int | None
     tradable_assets: tuple[str, ...]
     reasoning: tuple[str, ...]
 
@@ -55,7 +55,7 @@ class PositionEconomy:
     state: str
     supply: int
     demand: int
-    premium: int
+    premium: int | None
     explanation: str
 
 

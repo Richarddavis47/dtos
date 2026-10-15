@@ -179,7 +179,8 @@ WORKFLOWS = (
 
 
 def _context(decision) -> AssetContext:
-    needs = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score < 55)
+    needs = tuple(position for position, row in ((decision.diagnostics or {}).get('positions') or {}).items()
+                  if row.get('objective_need'))
     return AssetContext(
         decision.profile.league_id, decision.profile.roster_id, decision.profile.league_settings,
         decision.competitive_window.classification.value, decision.profile.strategy, needs,
@@ -274,6 +275,16 @@ def evaluate_trade_request(
                 data, (assets[item] for item in (*sent_ids, *received_ids)),
             ),
         )
+        from src.core.intelligence.roster_diagnostics import package_diagnostics
+        diagnostic = package_diagnostics(data, proposal, projections.snapshot(), horizon_impact,
+            {str(active_id): payload.get('strategy') or workspace.get('requested_strategy') or teams[active_id].get('strategy'),
+             str(partner_id): teams[partner_id].get('strategy')})
+        evaluation.setdefault('dimensions', {})['roster_diagnostics'] = diagnostic
+        active_diagnostic = diagnostic['sides']['active']
+        partner_diagnostic = diagnostic['sides']['partner']
+        if active_diagnostic['coverage'] == 'supported current week' and active_diagnostic['need_positions_received']:
+            evaluation['why_you_would_do_it'] = (evaluation.get('why_you_would_do_it') or '') + ' Addresses supported ' + ', '.join(active_diagnostic['need_positions_received']) + ' lineup/depth context; package effects remain separate.'
+        evaluation['counterparty_summary'] = (evaluation.get('counterparty_summary') or '') + ' ' + partner_diagnostic['summary']
     except Exception as exc:
         # Once input/ownership checks passed, an evaluator exception is not a
         # stale proposal and must not expose internal exception text to users.

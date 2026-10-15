@@ -1,7 +1,6 @@
 """League-wide opportunity synthesis over existing DTOS intelligence outputs."""
 from __future__ import annotations
 
-from statistics import mean
 from typing import Any
 
 from src.core.league_intelligence.models import (
@@ -19,25 +18,12 @@ def _direction(decision: Any, card: Any) -> TeamDirection:
         (f"Optimal projected lineup relative strength: {current}.", f"Long-term utility: {future}.", *card.explanation))
 
 
-def _need(roster_id: int, position: str, room_score: int, cards: list[Any], direction: TeamDirection) -> TeamNeed:
-    if room_score is None:
-        return TeamNeed(roster_id, position, 'Unavailable', None, ('No supported position-room aggregate; do not infer need from Market price.',))
-    starter_quality = max((card.contender_value for card in cards), default=0)
-    future_quality = max((card.rebuilder_value for card in cards), default=0)
-    replacement = max((card.weekly_floor for card in cards), default=0)
-    urgency = round((100 - room_score) * .45 + (100 - starter_quality) * .30 + (100 - replacement) * .15 + (10 if direction.label in {"Elite Contender", "Contender"} else (100 - future_quality) * .10))
-    priority = "Critical" if urgency >= 72 else "High" if urgency >= 58 else "Medium" if urgency >= 43 else "Low"
-    return TeamNeed(roster_id, position, priority, max(0, min(100, urgency)), (f"Quality-first {position} room score is {room_score}/100.", f"Best contender value is {starter_quality}/100; best future value is {future_quality}/100.", f"Direction is {direction.label}; player count is considered only inside the separate depth input."))
-
-
-def _surplus(roster_id: int, position: str, room_score: int, cards: list[Any], need: TeamNeed) -> TeamSurplus | None:
-    if room_score is None:
-        return None
-    tradable = [card for card in cards if card.trade_liquidity >= 55 and card.tier not in {"Elite Franchise Player"}]
-    score = round(room_score * .55 + mean((card.trade_liquidity for card in tradable)) * .30 + min(len(tradable), 3) * 5) if tradable else 0
-    if score < 62 or need.priority in {"Critical", "High"}:
-        return None
-    return TeamSurplus(roster_id, position, min(100, score), tuple(card.player_id for card in sorted(tradable, key=lambda item: (-item.trade_liquidity, item.player_id))[:4]), (f"{position} room quality is {room_score}/100.", f"{len(tradable)} liquid non-franchise assets are present.", "Multiple players alone do not create a surplus."))
+def _need(roster_id, position, facts):
+    priority = ('Unavailable' if not facts or facts['coverage'] != 'supported current week' else
+                'Low' if facts['classification'] == 'Current production gap' else
+                'High' if facts['starter_need'] else 'Medium' if facts['resilience_need'] or facts.get('quality_depth_need') else 'Low')
+    return TeamNeed(roster_id, position, priority, None,
+                    (facts['interpretation'],) if facts else ('Compatible legal-lineup evidence unavailable.',))
 
 
 def _availability(player_id: str, roster_id: int, card: Any, direction: TeamDirection, surplus_positions: set[str], position: str) -> AssetAvailability:
@@ -65,13 +51,13 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
     surpluses: dict[int, tuple[TeamSurplus, ...]] = {}
     availability: dict[str, AssetAvailability] = {}
     for roster_id, rooms in roster.league_rooms.items():
-        cards_by_position = {position: [card for card in roster.league_players[roster_id].values() if intelligence.decisions[roster_id].profile.position_rooms.get(position) and card.player_id in {str(player.get("id") or player.get("player_id")) for player in intelligence.decisions[roster_id].profile.players if player.get("position") == position}] for position in POSITIONS}
-        team_needs = tuple(sorted((_need(roster_id, position, rooms[position], cards_by_position[position], directions[roster_id]) for position in POSITIONS), key=lambda item: (item.score is None, -item.score if item.score is not None else 0, item.position)))
+        facts = (intelligence.decisions[roster_id].diagnostics or {}).get('positions') or {}
+        team_needs = tuple(sorted((_need(roster_id, position, facts.get(position)) for position in POSITIONS), key=lambda item: ({'High': 0, 'Medium': 1, 'Low': 2, 'Unavailable': 3}[item.priority], item.position)))
         needs[roster_id] = team_needs
-        team_surpluses = tuple(item for position in POSITIONS if (item := _surplus(roster_id, position, rooms[position], cards_by_position[position], next(need for need in team_needs if need.position == position))) is not None)
-        average_picks = mean(decision.profile.draft_pick_count for decision in intelligence.decisions.values())
-        if intelligence.decisions[roster_id].profile.draft_pick_count >= average_picks + 2:
-            team_surpluses += (TeamSurplus(roster_id, "Future Picks", 70, (), (f"Owns {intelligence.decisions[roster_id].profile.draft_pick_count} picks versus league average {average_picks:.1f}.",)),)
+        team_surpluses = tuple(TeamSurplus(roster_id, pos, None,
+            tuple(asset['player_id'] for asset in row['surplus_assets']),
+            (row['interpretation'], 'Current-week conditional depth only; Market and long-term capital remain separate.'))
+            for pos, row in facts.items() if row['surplus_assets'])
         surpluses[roster_id] = team_surpluses
         surplus_positions = {item.category for item in team_surpluses}
         position_by_player = {str(player.get("id") or player.get("player_id")): str(player.get("position") or "") for player in intelligence.decisions[roster_id].profile.players}
@@ -100,9 +86,10 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
         market_map[position] = {"buyers": buyers, "sellers": sellers}
         supply = len(sellers)
         demand = len(buyers)
-        premium = max(-50, min(50, (demand - supply) * 12))
-        state = "Elite Scarcity" if demand >= supply + 3 else "Scarce" if demand > supply else "Oversupplied" if supply > demand + 1 else "Balanced"
-        economy[position] = PositionEconomy(position, state, supply, demand, premium, f"{demand} quality-based buyers and {supply} evidence-supported sellers; premium {premium:+d}.")
+        known = sum(item.priority != 'Unavailable' for rows in needs.values() for item in rows if item.position == position)
+        state = 'Unavailable' if not known else 'Observed demand exceeds expendable supply' if demand > supply else 'Observed expendable supply exceeds demand' if supply > demand else 'No observed imbalance'
+        economy[position] = PositionEconomy(position, state, supply, demand, None,
+            f'{demand} supported starter-need contexts and {supply} conditional depth suppliers across {known} supported rosters; availability is not willingness and no Market premium is inferred.')
     rebuild_ids = tuple(sorted(roster_id for roster_id, item in directions.items() if item.label in {"Rebuilding", "Full Rebuild"}))
     contender_ids = tuple(sorted(roster_id for roster_id, item in directions.items() if item.label in {"Elite Contender", "Contender"}))
     pick_sellers = tuple(sorted(roster_id for roster_id, rows in surpluses.items() if "Future Picks" in {item.category for item in rows} and roster_id in contender_ids))
@@ -118,11 +105,11 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
 
     team_reports = {}
     for roster_id, direction in directions.items():
-        strengths = tuple(item.category for item in surpluses[roster_id]) or ("No evidence-supported surplus",)
+        strengths = tuple(pos for pos, facts in ((intelligence.decisions[roster_id].diagnostics or {}).get('positions') or {}).items() if facts['strength']) or ("No evidence-supported positional strength",)
         weaknesses = tuple(f"{item.priority} {item.position}" for item in needs[roster_id] if item.priority in {"Critical", "High"}) or ("No critical need",)
         likely = f"Acquire {needs[roster_id][0].position} help" if needs[roster_id][0].priority != "Low" else "Monitor market inefficiencies"
         flexibility = "High" if len(surpluses[roster_id]) >= 2 else "Medium" if surpluses[roster_id] else "Low"
-        team_reports[roster_id] = TeamReport(roster_id, direction, strengths, weaknesses, likely, flexibility, directions[roster_id].label, (*direction.reasoning, f"Top need is {needs[roster_id][0].position} ({needs[roster_id][0].score}/100)."))
+        team_reports[roster_id] = TeamReport(roster_id, direction, strengths, weaknesses, likely, flexibility, directions[roster_id].label, (*direction.reasoning, f"First positional context: {needs[roster_id][0].position} ({needs[roster_id][0].priority}); no synthetic need score."))
 
     active_id = intelligence.context.active_roster_id
     active_needs = {item.position: item for item in needs[active_id]}
@@ -138,7 +125,9 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
         if card.dynasty_value is None or card.trade_liquidity is None:
             continue
         need = active_needs.get(position_by_id.get(player_id, ""))
-        fit = need.score if need else 20
+        if need is None or need.score is None:
+            continue  # No invented scalar for the legacy numerical opportunity formula.
+        fit = need.score
         partner = partner_scores.get(available.roster_id, 40)
         market_gap = card.dynasty_value - (card.market_value if card.market_value is not None else card.dynasty_value)
         gap_signal = max(0, min(100, 50 + market_gap))

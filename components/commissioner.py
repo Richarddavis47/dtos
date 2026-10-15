@@ -147,7 +147,7 @@ def league_opportunity_dashboard(view: dict[str, Any]) -> str:
         f'<div class="cd-mini-row"><b>{escape(item.player_name)} · {item.score}/100</b><span>{escape(team_names.get(item.owner_roster_id, "Unassigned Franchise"))} · {escape(item.availability)}</span></div>'
         for item in report.opportunities[:7]
     ) or '<p class="muted">No evidence-supported player opportunity is available.</p>'
-    economy = "".join(f'<div class="cd-mini-row"><b>{escape(position)} · {escape(item.state)}</b><span>{item.demand} buyers / {item.supply} sellers · {item.premium:+d} premium</span></div>' for position, item in report.economy.items())
+    economy = "".join(f'<div class="cd-mini-row"><b>{escape(position)} · {escape(item.state)}</b><span>{item.demand} supported need contexts / {item.supply} conditional depth suppliers · no price premium inferred</span></div>' for position, item in report.economy.items())
     return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Opportunity Dashboard</h2><p>League-aware needs, availability, compatibility, and market inefficiencies</p></div><span class="cd-chip">Explainable synthesis</span></div><div class="cd-intelligence">{cards}</div><div class="cd-snapshots"><details class="cd-snapshot" open><summary>Best Trade Partners</summary><div class="cd-snapshot-body">{partner_rows}</div></details><details class="cd-snapshot"><summary>Top Player Opportunities</summary><div class="cd-snapshot-body">{opportunities}</div></details><details class="cd-snapshot"><summary>League Economy</summary><div class="cd-snapshot-body">{economy}</div></details></div></section>'
 
 

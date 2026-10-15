@@ -101,6 +101,12 @@ def build_roster_evidence(context: Any) -> RosterEvidence:
             'availability': 'complete' if reserves and len(known) == len(reserves) else 'partial' if known else 'unavailable',
             'surplus': None,
         }
+    from .roster_diagnostics import team_diagnostics
+    diagnostic = team_diagnostics(data, roster_id, snapshot,
+        strategy=(getattr(context, 'user_preferences', {}) or {}).get('strategy')) if data.get('teams') else None
+    if diagnostic:
+        for position, row in positions.items():
+            row['diagnostic'] = diagnostic['positions'].get(position)
     return RosterEvidence(context.league_id, roster_id, context.evidence_generation,
         snapshot.get('projection_snapshot_id') or snapshot.get('generation'), week,
         actual, actual_total,
