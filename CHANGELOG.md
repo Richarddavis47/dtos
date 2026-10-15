@@ -1,3 +1,11 @@
+## v1.21.52 / build 2152 — Readable source evidence
+
+- Keep source freshness, retained-refresh warnings and observation ranges concise above named replacement scenarios.
+- Preserve every original source timestamp and canonical publication identity in closed Detailed source provenance disclosures on Team HQ/My Team and Trade.
+- Add 238/200-observation canonical publisher, actual HTTP and responsive Chromium coverage. No numerical, eligibility, freshness-boundary or storage-policy changes.
+- Correct product-browser CI wall-clock budgeting: 15-minute job, 12-minute bounded test step, unchanged test command and assertions.
+- Run prepared Home evidence/rendering through the existing manager-read worker boundary, keeping liveness responsive during concurrent reads and cache waits while preserving account/league scope.
+
 ## v1.21.51 / build 2151 — Post-Trade Eligibility and Source Aging Integrity
 
 - Re-admit complete proposed rosters through shared canonical availability. Preserve separate PRE/POST identities and status evidence; incoming uncertainty qualifies conditional lineup impact without changing player projections, prices or ownership.

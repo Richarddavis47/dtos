@@ -72,6 +72,7 @@ _cold_phase_active: dict[str, Any] = {}
 _cold_started = time.perf_counter()
 _historical_resolution_task: asyncio.Task[Any] | None = None
 _request_provider_calls: dict[str, int] = {}
+_home_profile_count = 0
 _original_sleeper_get = sleeper_service.sleeper_get
 
 
@@ -240,6 +241,8 @@ def _timed(name: str, function: Callable[..., Any]) -> Callable[..., Any]:
             if name in {"request_marker", "market_get", "lifecycle_lock"}:
                 _trace(f"{name}_return")
             if profile is not None:
+                if name.startswith("home_"):
+                    profile[f"{name}_thread"] = threading.current_thread().name
                 profile[f"{name}_calls"] = int(profile.get(f"{name}_calls", 0)) + 1
                 profile[f"{name}_ms"] = round(
                     float(profile.get(f"{name}_ms", 0.0))
@@ -247,6 +250,18 @@ def _timed(name: str, function: Callable[..., Any]) -> Callable[..., Any]:
                     3,
                 )
     return wrapped
+
+
+if os.getenv("DTOS_VALIDATION_HOME_PROFILE") == "1":
+    import routes.home as _home_routes
+
+    for _home_stage in (
+        "build_team_directory", "capture_news_data", "news_identity",
+        "attention_state", "pick_changes", "render_news", "defending_champion",
+    ):
+        setattr(_home_routes, _home_stage, _timed(
+            "home_" + _home_stage, getattr(_home_routes, _home_stage),
+        ))
 
 
 def _counted(name: str, function: Callable[..., Any]) -> Callable[..., Any]:
@@ -572,6 +587,7 @@ LifecycleCoordinator.market_build_allowed = _timed(
 
 @app.middleware("http")
 async def validation_profile(request: Request, call_next):
+    global _home_profile_count
     trace_id = request.headers.get("X-DTOS-Trace-ID")
     trace_token = _trace_context.set(trace_id)
     _trace("validation_middleware_entry")
@@ -629,6 +645,17 @@ async def validation_profile(request: Request, call_next):
     ).decode()
     response.headers["X-DTOS-Validation-Profile"] = encoded
     response.headers["X-DTOS-Trace-ID"] = trace_id or ""
+    if os.getenv("DTOS_VALIDATION_HOME_PROFILE") == "1" and request.url.path == "/":
+        evidence = json.dumps({"event": "home_read_profile", "stages": {
+            key: value for key, value in profile.items() if key.startswith("home_")
+        }})
+        if _home_profile_count < 64:
+            target = os.path.join(os.path.dirname(os.getenv(
+                "DTOS_BENCHMARK_OUTPUT", "/output/summary.json",
+            )), "home-stages.jsonl")
+            with open(target, "a", encoding="utf-8") as handle:
+                handle.write(evidence + "\n")
+            _home_profile_count += 1
     _trace("validation_middleware_return", status=response.status_code)
     _trace_context.reset(trace_token)
     return response

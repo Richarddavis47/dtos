@@ -25,6 +25,7 @@ from services.attention_changes import pick_changes
 from src.ui.home_attention import attention_panel
 from src.ui.standings import render_standings
 from src.platform.league_context import current_league_context
+from src.core.request_execution import run_manager_read
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -71,6 +72,12 @@ def create_home_router(
     @router.get("/", response_class=HTMLResponse)
     async def home(front_office: int | None = Query(None)) -> HTMLResponse:
         await ensure_fresh()
+        # Prepared evidence still performs synchronous reads, fingerprints and
+        # single-flight cache waits. Keep those off the HTTP event loop while
+        # propagating the authenticated account/league context to the worker.
+        return await run_manager_read(lambda: render_home(front_office))
+
+    def render_home(front_office: int | None) -> HTMLResponse:
         data = require_data()
         retained_generation = (
             generation_provider() if generation_provider is not None

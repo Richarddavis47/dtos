@@ -3,7 +3,7 @@
 from html import escape
 
 
-def evidence_html(diagnostic, players):
+def evidence_html(diagnostic, players, source_identity=None):
     names = {
         str(p.get("id") or p.get("player_id")): str(
             p.get("name") or p.get("full_name") or "Player name unavailable"
@@ -66,16 +66,14 @@ def evidence_html(diagnostic, players):
         for e in exclusions
     )
     warnings = " ".join((diagnostic.get("evidence") or {}).get("limitations") or [])
-    clocks = (diagnostic.get("evidence") or {}).get("source_observations") or []
+    from src.ui.source_provenance import source_presentation
+
+    source_summary, provenance = source_presentation(
+        diagnostic.get("evidence") or {}, source_identity
+    )
     return (
         (f"<p>{escape(warnings)}</p>" if warnings else "")
-        + (
-            "<p>Projection source observation: "
-            + escape(", ".join(clocks))
-            + ". Fresh before 1 hour; Aging from 1 hour; Stale from 6 hours. Retrieval or refresh attempts do not reset source age.</p>"
-            if clocks
-            else ""
-        )
+        + source_summary
         + (
             "<ul>" + visible + "</ul>"
             if visible
@@ -83,4 +81,5 @@ def evidence_html(diagnostic, players):
         )
         + rest
         + ("<p>Availability</p><ul>" + status + "</ul>" if status else "")
+        + provenance
     )
