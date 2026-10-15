@@ -269,9 +269,21 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
-            result = await run_manager_read(
-                lambda: evaluate_trade_request(require_data(), payload),
-            )
+            def assess():
+                # A successful HTTP response alone does not establish assessment
+                # freshness. Bind it to the same semantic canonical publication
+                # contract used by generated offers, not an evaluation ID/clock.
+                data = require_data()
+                before = home_ideas.source_identity(data)
+                if not before:
+                    raise TradeInputError('canonical_evidence_changed', 'Canonical evidence is changing. Try again.')
+                result = evaluate_trade_request(data, payload)
+                if home_ideas.source_identity(require_data()) != before:
+                    raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during evaluation. Try again.')
+                if isinstance(result.get('evaluation'), dict):
+                    result['assessment_source_identity'] = before
+                return result
+            result = await run_manager_read(assess)
         except Exception as exc:
             raise _trade_failure(exc) from exc
         return JSONResponse(jsonable_encoder(result))

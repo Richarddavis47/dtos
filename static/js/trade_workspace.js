@@ -79,7 +79,7 @@
   const setPartner = id => { selected.partner = Number(id); el('trade-partner').value = flow === 'shop' ? (session.shopSearchPartner ? String(session.shopSearchPartner) : '') : Number(id) ? String(id) : ''; };
   const storageKey = () => 'dtos-trade-workspace:' + workspace.workspace_context.binding;
   const node = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
-  function message(text, error = false) { const box = el('trade-result'); delete box.dataset.assessment; box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
+  function message(text, error = false) { const box = el('trade-result'); delete box.dataset.assessment; delete box.dataset.assessmentFreshness; box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
   function payload() { reconcileStrategy(); return {workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...session.protectedAssets], excluded_assets: [...session.excludedAssets], asset_id: flow === 'shop' ? session.requiredOutgoingAsset || selected.sent[0] : session.requiredIncomingAsset || selected.received[0], workspace_context: workspace.workspace_context}; }
   function persist(updateHistory = true, draftSession = session) {
     if (departed) return;
@@ -348,7 +348,8 @@
         const error = new Error('Market or projection evidence refreshed during this search. Your proposal and exact protections are unchanged. Try again when the refresh settles.');
         error.code = code; throw error;
       }
-      throw new Error(d?.message || (typeof d === 'string' ? d : "DTOS couldn't complete this evaluation. Your proposal is still intact."));
+      const error = new Error(d?.message || (typeof d === 'string' ? d : "DTOS couldn't complete this evaluation. Your proposal is still intact."));
+      error.code = code; throw error;
     }
     return body;
   }
@@ -379,6 +380,7 @@
       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
       opportunity: boundedEvidence(row.opportunity || null),
       identity: {package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
+        source: row.home_source_identity || row.assessment_source_identity || null,
         workflow: row.workflow || session.originWorkflow, binding: workspace.workspace_context.binding,
         ownership: workspace.workspace_context.ownership_generation, market: workspace.calculator_generation,
         captured_at: new Date().toISOString(), counterparty: team(row.proposal?.partner_roster_id || partner())?.team_name || null}};
@@ -445,10 +447,10 @@
   }
   function staleAssessment(reason) {
     if (!session.currentAssessment) return;
+    const retained = Boolean(el('trade-evaluation-retained'));
     session.currentAssessment.restored = true; session.currentAssessment.stale_reason = reason;
-    const out = el('trade-evaluation-retained') || el('trade-result');
-    if (!out.querySelector('[data-assessment-stale]')) { const notice = node('p', contextQualification(session.currentAssessment), 'tw-drawback'); notice.dataset.assessmentStale = 'true'; out.prepend(notice); }
-    reevaluateAction(out);
+    showEvaluation(session.currentAssessment.evaluation, session.currentAssessment.opportunity, session.currentAssessment);
+    if (retained) retainAssessment();
     persist();
   }
   function showEvaluation(e, opportunity = null, context = null) {
@@ -456,19 +458,31 @@
     const marketDetail = root.querySelector('.tw-market-detail'); if (marketDetail) root.append(marketDetail);
     out.dataset.assessment = 'true';
     contextNotice(out, context, selected);
+    const retained = Boolean(contextQualification(context));
+    out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
+    if (retained) out.append(node('h4', 'Previous assessment explanation · NOT REVALIDATED'));
     if (e.explanation_html) {
       // Same-origin server renderer escapes all evidence text. No client-side
       // recommendation/scoring or reason-code interpretation is performed.
       const document = new DOMParser().parseFromString(e.explanation_html, 'text/html');
+      if (retained) {
+        const explanation = document.querySelector('.dtos-explanation');
+        if (explanation) {
+          explanation.dataset.assessmentFreshness = 'retained';
+          explanation.setAttribute('aria-label', 'Previous assessment explanation · not current');
+          const conclusion = explanation.querySelector(':scope > p');
+          if (conclusion) { conclusion.dataset.retainedConclusion = 'true'; conclusion.setAttribute('aria-label', 'Retained prior assessment: ' + conclusion.textContent + ' · not revalidated'); }
+        }
+      }
       out.append(...document.body.childNodes);
       const balanceLink = node('a', 'Options to balance this trade', 'ds-action'); balanceLink.href = '#trade-balancing';
       out.querySelector('.dtos-explanation > p')?.after(balanceLink);
-      if (e.legality?.execution_status) out.append(node('p', e.legality.execution_status));
+      if (e.legality?.execution_status && !retained) out.append(node('p', e.legality.execution_status));
     } else {
-    out.append(node('h3', e.recommendation || 'Assessment unavailable'), node('p', e.dominant_reason));
+    out.append(node('h3', retained ? 'Retained assessment: ' + (e.recommendation || 'Unavailable') + ' · NOT REVALIDATED' : e.recommendation || 'Assessment unavailable'), node('p', retained ? 'Previous assessment reasoning (not current): ' + (e.dominant_reason || 'Unavailable') : e.dominant_reason));
     if (e.major_drawback || e.major_risks?.length) out.append(node('p', 'Major drawback: ' + (e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
     else if (context?.restored) out.append(node('p', 'Major drawback unavailable in retained context. Reevaluate for supported costs.', 'tw-drawback'));
-    if (e.legality?.execution_status) out.append(node('p', e.legality.execution_status));
+    if (e.legality?.execution_status && !retained) out.append(node('p', e.legality.execution_status));
     if (e.recommendation_trace) {
       const trace = node('details'); trace.append(node('summary', 'Recommendation evidence'));
       for (const reason of e.recommendation_trace.rule_reasons || []) trace.append(node('p', reason.replaceAll('_', ' ')));
@@ -510,6 +524,10 @@
       }
     }
     }
+    if (retained) {
+      out.append(node('p', 'Current ownership and execution eligibility are not established by this retained assessment.', 'tw-drawback'));
+      if (e.legality?.execution_status) { const detail = node('details'); detail.append(node('summary', 'Previous execution evidence · not current'), node('p', 'Previous execution assessment (not current): ' + e.legality.execution_status)); out.append(detail); }
+    }
     if (opportunity) {
       out.append(node('h4', 'Why now · supported context'));
       for (const c of opportunity.why_now?.catalysts || []) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(c.delta)}`), node('small', c.limitation));
@@ -532,7 +550,8 @@
     // Focusing a tall container alone can reveal its bottom rather than verdict.
     const result = el('trade-result');
     result.focus({preventScroll: true});
-    result.scrollIntoView({block: 'start', behavior: 'instant'});
+    const verdict = result.querySelector(':scope > .dtos-explanation > p');
+    (verdict || result).scrollIntoView({block: verdict ? 'center' : 'start', behavior: 'instant'});
   }
   const newRecommendedObjective = row => (row.workflow || row.proposal.preview_origin_workflow) === 'recommended' && session.originWorkflow !== 'recommended';
   function offerConflict(row) {
@@ -551,7 +570,7 @@
     if (newRecommendedObjective(row)) { session.requiredOutgoingAsset = null; session.requiredIncomingAsset = null; session.originWorkflow = 'recommended'; }
     setPartner(row.proposal.partner_roster_id); selected.sent = [...row.proposal.assets_sent]; selected.received = [...row.proposal.assets_received];
     session.adoptedProposal = {...selected, sent: [...selected.sent], received: [...selected.received]};
-    const context = assessmentContext(row);
+    const context = {...assessmentContext(row), stale_reason: 'Package adopted for editing; its assessment has not been revalidated'};
     changed(); session.currentAssessment = context; persist(); review(); showEvaluation(row.evaluation || context.evaluation || {}, row.opportunity || context.opportunity, context); focusResult();
   }
   function previewOffer(row) {
@@ -775,11 +794,31 @@
       }
       if (path === 'balance') balanceStatus(body.results?.length ? 'Balancing options ready. Preview before adopting.' : 'No balancing options returned. Your offer is unchanged.', started, startedRun);
       if (path === 'generate') searchStatus(body.results?.length ? 'Trade options ready. Review before adopting.' : body.exploratory_results?.length ? 'No recommended options. Supported alternatives are available below.' : 'No credible options found in this search. Review the search details below.', 'complete', started, startedRun);
-      if (path === 'evaluate') { session.currentAssessment = assessmentContext({evaluation: body.evaluation}); persist(); review(); showEvaluation(body.evaluation, null, session.currentAssessment); el('trade-result').after(el('trade-balancing')); } else offers(body, path === 'balance');
+      if (path === 'evaluate') {
+        const context = assessmentContext({...body, evaluation: body.evaluation});
+        if (!body.assessment_source_identity || !body.evaluation?.recommendation || body.evaluation.legal !== true || body.evaluation.market_evidence?.availability !== 'full') {
+          if (session.currentAssessment) {
+            // Incomplete new evidence is not replacement validation of the
+            // adopted assessment. Preserve its original source and meaning.
+            staleAssessment('Reevaluation did not establish a current compatible complete assessment');
+            showEvaluation(session.currentAssessment.evaluation, session.currentAssessment.opportunity, session.currentAssessment);
+            const detail = node('details'); detail.append(node('summary', 'Latest incomplete evaluation · limitations'));
+            detail.append(node('pre', JSON.stringify(boundedEvidence({market_evidence: body.evaluation.market_evidence, legality: body.evaluation.legality, major_limitations: body.evaluation.major_limitations, provenance: body.evaluation.provenance}), null, 2)));
+            el('trade-result').append(detail); return;
+          }
+          context.restored = true; context.stale_reason = 'Current compatible complete assessment unavailable';
+        }
+        session.currentAssessment = context; persist(); review(); showEvaluation(body.evaluation, null, context); el('trade-result').after(el('trade-balancing'));
+      } else offers(body, path === 'balance');
     } catch (error) { if (started === revision) {
       const feedback = timedOut ? (path === 'balance' ? 'Balancing' : 'Search') + ' timed out. Your offer is unchanged. Try again.' : path === 'balance' && error instanceof TypeError ? 'Balancing could not connect. Your offer is unchanged. Try again.' : error.message;
       if (path === 'balance') balanceStatus(feedback, started, startedRun);
       if (path === 'generate') searchStatus(feedback, 'error', started, startedRun);
+      if (path === 'evaluate' && session.currentAssessment) {
+        staleAssessment(error.code === 'ownership_changed' ? 'Current ownership blocker: ' + feedback : 'Reevaluation failed or incomplete: ' + feedback);
+        showEvaluation(session.currentAssessment.evaluation, session.currentAssessment.opportunity, session.currentAssessment);
+        return;
+      }
       message(feedback, true);
       if (path === 'balance' && error.code === 'canonical_evidence_changed') {
         message('Market evidence changed. Your offer and exact protections are intact. Reload Market facts before balancing.', true);

@@ -1,3 +1,12 @@
+## v1.21.48 / build 2148 — Trade Opportunity Assessment Integrity
+
+- Separate explicit package adoption from assessment validation. Retain exact assets, original strategy/source evidence, benefits and drawbacks with NOT REVALIDATED qualification and Reevaluate Trade; prior positive/legality claims are labeled previous evidence.
+- Bind successful HTTP evaluations to stable semantic canonical source identity. Ownership failures and incomplete/failed reevaluations preserve the package and qualified prior assessment; newer strategy intent rejects obsolete responses.
+- Prefer package-specific Home reasons, keep drawbacks and unfavorable labels, and move generic methodology into optional evidence.
+- Stop repeated Home focus/visibility/history events safely after context invalidation; clear old cards and provide working Reload Home.
+- Preserve shared evaluator, pricing/projections, exact locks, preview/Keep Original/Adopt, bounded cache, historical intelligence and FOIS retained grades. No new store or provider work.
+- Independent acceptance: [Integrity correction handoff](docs/HOME_OPPORTUNITY_INTEGRITY_V1_21_48.md).
+
 ## v1.21.47 / build 2147 — Home Trade Opportunities
 
 - Add compact hypothetical opportunities after completed League Trade News, with qualified Recommendations separate from editable Trade Ideas and original evaluation labels intact.

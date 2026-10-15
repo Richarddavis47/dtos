@@ -51,7 +51,16 @@ class AssessmentContextBrowserTests(unittest.TestCase):
                             },
                         )
                         if route.request.url.endswith("/evaluate"):
-                            return route.fulfill(json={"evaluation": row["evaluation"]})
+                            return route.fulfill(
+                                json={
+                                    "evaluation": {
+                                        **row["evaluation"],
+                                        "legal": True,
+                                        "market_evidence": {"availability": "full"},
+                                    },
+                                    "assessment_source_identity": "compatible-fixture-source",
+                                }
+                            )
                         route.fulfill(
                             json={
                                 "exploratory_results": [row]
@@ -105,7 +114,8 @@ class AssessmentContextBrowserTests(unittest.TestCase):
                         if old != new:
                             self.assertIn("not revalidated", text)
                         else:
-                            self.assertNotIn("not revalidated", text)
+                            self.assertIn("not revalidated", text)
+                            self.assertNotIn("evidence changed", text)
                         self.assertIn(old + " original reasoning.", text)
                         self.assertIn("This spends depth.", text)
                         self.assertEqual(

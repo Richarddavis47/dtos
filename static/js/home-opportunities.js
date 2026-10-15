@@ -5,7 +5,8 @@
   if (!root) return;
   const status = document.getElementById('home-opportunity-status'), cards = document.getElementById('home-opportunity-cards');
   const find = document.getElementById('home-find-ideas'), rid = Number(root.dataset.frontOffice);
-  let context, metadata, displayedIdentity, revision = 0, request, departed = false;
+  const reload = document.getElementById('home-reload-opportunities');
+  let context, metadata, displayedIdentity, revision = 0, request, departed = false, invalidated = false;
   const locks = () => {
     try { const saved = JSON.parse(sessionStorage.getItem('dtos-trade-workspace:' + context.binding) || '{}');
       return {protected_assets: saved.protectedAssets || [], excluded_assets: saved.excludedAssets || []};
@@ -15,7 +16,7 @@
   const query = () => { const c = context ? locks() : {protected_assets: [], excluded_assets: []};
     return new URLSearchParams({front_office: rid, protected: JSON.stringify(c.protected_assets), excluded: JSON.stringify(c.excluded_assets)}); };
   async function load() {
-    if (departed) return;
+    if (departed || invalidated) return;
     const run = ++revision; request?.abort(); request = new AbortController(); find.disabled = false;
     if (displayedIdentity && displayedIdentity !== identity()) cards.replaceChildren();
     const before = context && identity();
@@ -26,6 +27,7 @@
       if (run !== revision || departed || (before && before !== identity())) return;
       if (body.workspace_context.roster_id !== rid || (context && body.workspace_context.binding !== context.binding)) {
         cards.replaceChildren(); find.disabled = true; metadata = null;
+        invalidated = true; displayedIdentity = null; reload.hidden = false;
         status.textContent = 'Your active league or franchise changed. Reload Home to see its opportunities.';
         root.dataset.state = 'context_changed'; return;
       }
@@ -39,6 +41,7 @@
     } catch (error) { if (run === revision && !departed && error.name !== 'AbortError') status.textContent = error.message; }
   }
   find.onclick = async () => {
+    if (invalidated) return;
     if (!context || !metadata?.source_identity) return load();
     const run = ++revision, before = identity(), frozen = {...locks()};
     request?.abort(); request = new AbortController(); find.disabled = true;
@@ -54,11 +57,12 @@
       if (run !== revision || departed || before !== identity()) return;
       await load();
     } catch (error) { if (run === revision && !departed) status.textContent = error.name === 'AbortError' ? 'Search interrupted or timed out. Try again; your draft is intact.' : error.message; }
-    finally { clearTimeout(timeout); if (run === revision) find.disabled = false; }
+    finally { clearTimeout(timeout); if (run === revision && !invalidated) find.disabled = false; }
   };
+  reload.onclick = () => location.reload();
   addEventListener('pagehide', () => { departed = true; revision++; request?.abort(); });
   addEventListener('pageshow', () => { if (departed) { departed = false; load(); } });
-  addEventListener('focus', () => { if (context && !find.disabled) load(); else if (context && metadata.strategy !== window.dtosStrategy.get(context)) load(); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && context) load(); });
+  addEventListener('focus', () => { if (!invalidated && context && (!find.disabled || metadata?.strategy !== window.dtosStrategy.get(context))) load(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && context && !invalidated) load(); });
   load();
 })();

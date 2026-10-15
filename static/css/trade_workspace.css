@@ -51,3 +51,4 @@ body:has(#trade-builder) .ds-header-side{display:none}body:has(#trade-builder) .
 
 /* Keep the existing guide beside the title; opened evidence remains full-width. */
 body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}body:has(#trade-builder) .ds-page-guide:not([open]){margin-left:auto}body:has(#trade-builder) .ds-page-guide[open]{width:100%}
+.dtos-explanation [data-retained-conclusion]::after { content: " · NOT REVALIDATED"; color: #f0bd73; font-weight: 600; }
