@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 
 
 def section(roster_id):
-    return f'''<section class="ux-section" id="home-opportunities" data-front-office="{roster_id}"><div class="ux-section-head"><h2>Trade Opportunities</h2><p>Hypothetical offers · explore before adopting</p></div><p id="home-opportunity-status" role="status">No search runs automatically on Home.</p><div id="home-opportunity-cards"></div><div class="ux-feature-actions"><button type="button" class="btn" id="home-find-ideas">Find Trade Ideas</button><a class="ds-action" href="/trades/recommended?front_office={roster_id}">Explore more trades →</a></div></section><script src="/static/js/strategy_session.js"></script><script src="/static/js/home-opportunities.js"></script>'''
+    return f'''<section class="ux-section" id="home-opportunities" data-front-office="{roster_id}"><div class="ux-section-head"><h2>Trade Opportunities</h2><p>Hypothetical offers · explore before adopting</p></div><p id="home-opportunity-status" role="status">No search runs automatically on Home.</p><div id="home-opportunity-cards"></div><div class="ux-feature-actions"><button type="button" class="btn" id="home-find-ideas">Find Trade Ideas</button><button type="button" class="btn" id="home-reload-opportunities" hidden>Reload Home</button><a class="ds-action" href="/trades/recommended?front_office={roster_id}">Explore more trades →</a></div></section><script src="/static/js/strategy_session.js"></script><script src="/static/js/home-opportunities.js"></script>'''
 
 
 def _brief(text):
@@ -37,11 +37,9 @@ def cards(rows, roster_id):
             if row.get("exploration")
             else "RECOMMENDED TRADE"
         )
-        reason = (
-            e.get("dominant_reason")
-            or e.get("why_you_would_do_it")
-            or "Review supported roster fit in Trade."
-        )
+        reason = e.get("why_you_would_do_it") or "No supported positive strategic case is available; explore only to review or edit the package."
+        if e.get("recommendation") in {"REJECT", "NOT WORTH IT"}:
+            reason = "Not endorsed. " + reason
         drawback = (
             e.get("major_drawback")
             or "; ".join(e.get("major_risks") or e.get("major_limitations") or [])
@@ -51,7 +49,7 @@ def cards(rows, roster_id):
             {"front_office": roster_id, "home_offer": row["home_offer"]}
         )
         output.append(
-            f'''<article class="home-opportunity"><p class="identity-kicker">{escape(kind)}</p><h3>{escape(str(p.get("partner_team_name") or "Counterparty"))}</h3><p><b>You send:</b> {assets("send")}</p><p><b>You receive:</b> {assets("receive")}</p><p>{escape(market)}</p><p><b>{escape(str(e.get("recommendation") or "Assessment unavailable"))}</b></p><p><b>Why consider:</b> {escape(_brief(reason))}</p><p><b>Drawback:</b> {escape(_brief(drawback))}</p><a class="ds-action" href="{escape(url, quote=True)}">Explore / Edit · preview →</a></article>'''
+            f'''<article class="home-opportunity"><p class="identity-kicker">{escape(kind)}</p><h3>{escape(str(p.get("partner_team_name") or "Counterparty"))}</h3><p><b>You send:</b> {assets("send")}</p><p><b>You receive:</b> {assets("receive")}</p><p>{escape(market)}</p><p><b>{escape(str(e.get("recommendation") or "Assessment unavailable"))}</b></p><p><b>Why consider:</b> {escape(_brief(reason))}</p><p><b>Drawback:</b> {escape(_brief(drawback))}</p><details><summary>Assessment evidence</summary><p>{escape(str(e.get("dominant_reason") or "Methodology details unavailable."))}</p></details><a class="ds-action" href="{escape(url, quote=True)}">Explore / Edit · preview →</a></article>'''
         )
     return "".join(output[:2]) + (
         '<details class="ds-home-detail"><summary>Show more opportunities</summary>'

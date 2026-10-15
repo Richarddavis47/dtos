@@ -40,7 +40,8 @@ class ProjectionFreshnessBrowserTests(unittest.TestCase):
         row = self.source.assess(['b'], ['d']) if self.other_offer else self.source.assess()
         row.update(exploration=True, search_result_type='SUPPORTED FIXTURE ALTERNATIVE', workflow='trade_for')
         if route.request.url.endswith('/evaluate'):
-            route.fulfill(json={'evaluation': row['evaluation']})
+            from services.home_trade_opportunities import source_identity
+            route.fulfill(json={'evaluation': row['evaluation'], 'assessment_source_identity': source_identity(self.source.data)})
         elif route.request.url.endswith('/balance'):
             self.pending.append((route, row))
         else:
