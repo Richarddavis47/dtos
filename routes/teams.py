@@ -235,7 +235,7 @@ def _positional_depth(view):
         names = {str(p.get('id') or p.get('player_id')): str(p.get('name') or p.get('full_name') or p.get('id')) for p in view['team'].get('players') or []}
         expendable = ', '.join(names.get(p['player_id'], 'Player identity unavailable') for p in candidates)
         from src.ui.roster_diagnostic_evidence import evidence_html
-        details = evidence_html(diagnostic, view['team'].get('players') or [])
+        details = evidence_html(diagnostic, view['team'].get('players') or [], {key: (view.get('projection_snapshot') or {}).get(key) for key in ('league_id', 'season', 'week', 'projection_snapshot_id', 'scoring_profile_id', 'horizon_snapshot_ids')})
         rows.append(f'<article class="thq-kpi"><h3>{position}</h3><p>{escape(explanation)}</p><p><strong>{escape(qualification)}</strong></p><p>{facts["starting_count"]} players in {escape(facts["lineup_basis"])} · {points} Sleeper-projected points</p><small>{facts["required_slots"]} required slots · {facts["eligible_flex_slots"]} eligible flex slots</small><p>Reserve projection coverage: <b>{facts["reserve_covered"]}/{facts["reserve_expected"]}</b> · {escape(facts["availability"])}. Best supported reserve: {backup} points.</p>{"<p>Conditional expendable depth: " + escape(expendable) + "</p>" if expendable else ""}<details><summary>Lineup eligibility and surplus</summary><p>Current-week evidence; not a sale recommendation or long-term value grade. Scenarios must not be summed.</p>{details}</details></article>')
     return '<div class="thq-cards">' + ''.join(rows) + '</div>'
 

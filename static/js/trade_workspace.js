@@ -533,8 +533,14 @@
         detail.append(node('p', diagnostic.summary || 'Package evidence unavailable.'));
         for (const player of diagnostic.post_lineup_assignments || []) if (player.slot === 'SUPER_FLEX') detail.append(node('p', (retained ? 'Previous post-trade scenario (not current): ' : 'Post-trade conditional lineup: ') + player.name + ' occupies Superflex; this player is counted once.'));
         for (const [phase, evidence, eligibility] of [['Before', diagnostic.pre_evidence, diagnostic.pre_eligibility], ['After', diagnostic.post_evidence, diagnostic.post_eligibility]]) {
-          if (evidence) detail.append(node('p', (retained ? 'Previous ' + phase.toLowerCase() + ' evidence (not current)' : phase) + ': ' + (evidence.conclusion_state || 'unavailable') + ' · Projection evidence ' + (evidence.projection_freshness || ['Unavailable']).join(', ')), node('p', 'Source observation: ' + (evidence.source_observations || ['Unavailable']).join(', ')));
+          let provenance;
+          if (evidence) {
+            detail.append(node('p', (retained ? 'Previous ' + phase.toLowerCase() + ' evidence (not current)' : phase) + ': ' + (evidence.conclusion_state || 'unavailable') + ' · Projection evidence ' + (evidence.projection_freshness || ['Unavailable']).join(', ')));
+            provenance = sourceProvenance(evidence, e.provenance);
+            detail.append(provenance.summary);
+          }
           for (const player of eligibility || []) if (player.excluded || player.status !== 'active') detail.append(node('p', phase + ' · ' + player.name + ': ' + player.status + (player.excluded ? ' — excluded from usable cover.' : ' — availability uncertain.')));
+          if (provenance) detail.append(provenance.detail);
         }
         out.append(detail);
       }
@@ -560,6 +566,28 @@
         node('pre', JSON.stringify({identity: context.identity, provenance: e.provenance || null}, null, 2)));
       out.append(detail);
     }
+  }
+  function sourceProvenance(evidence, identity) {
+    // Presentation only: canonical qualification remains authoritative.
+    const original = [...new Set((evidence.source_observations || []).map(String))];
+    const valid = original.map(t => /(?:Z|[+-]\d{2}:\d{2})$/.test(t) ? Date.parse(t) : NaN).filter(t => Number.isFinite(t) && t <= Date.now()).sort((a,b) => a-b);
+    const label = t => new Date(t).toISOString().replace('T', ' ').slice(0,16) + ' UTC';
+    const parts = ['Projection source observation: ' + (evidence.projection_freshness || ['Unavailable']).join(', '), valid.length + ' distinct source observations'];
+    if (valid.length) parts.push(valid.length === 1 ? 'Observed ' + label(valid[0]) : 'Earliest ' + label(valid[0]) + '; latest ' + label(valid[valid.length-1]));
+    if (valid.length !== original.length || !original.length) parts.push('Unknown, invalid or future source clocks; provenance is incomplete');
+    if (evidence.refresh?.retained_publication) parts.push('Using retained projection evidence; latest refresh did not complete');
+    if (evidence.conclusion_state !== 'current') parts.push('Numerical conclusions are ' + (evidence.conclusion_state || 'unavailable'));
+    const summary = node('p', parts.join(' · ') + '.', 'diagnostic-source-summary');
+    const detail = node('details', '', 'diagnostic-source-provenance');
+    detail.append(node('summary', 'Detailed source provenance'), node('p', 'Original source observations; retrieval and refresh attempts do not reset source age. Fresh before 1 hour; Aging from 1 hour; Stale from 6 hours.'));
+    const scroll = node('div'); scroll.style.cssText = 'max-height:24rem;overflow:auto;overflow-wrap:anywhere'; scroll.tabIndex = 0; scroll.setAttribute('role','region'); scroll.setAttribute('aria-label','Complete source observations');
+    const list = node('ul'); for (const stamp of original) list.append(node('li',stamp));
+    scroll.append(original.length ? list : node('p','Source observation times unavailable.')); detail.append(scroll);
+    const technical = node('details'); technical.append(node('summary','Source identity and qualifications'));
+    const {source_observations, ...qualification} = evidence;
+    const facts = node('pre', JSON.stringify({source_identity: identity || 'Unavailable', ...qualification}, null, 2)); facts.style.cssText = 'max-height:24rem;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere';
+    technical.append(facts); detail.append(technical);
+    return {summary, detail};
   }
   function focusResult() {
     // Focusing a tall container alone can reveal its bottom rather than verdict.
