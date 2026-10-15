@@ -284,6 +284,12 @@ def evaluate_trade_request(
         partner_diagnostic = diagnostic['sides']['partner']
         if active_diagnostic['coverage'] == 'supported current week' and active_diagnostic['need_positions_received']:
             evaluation['why_you_would_do_it'] = (evaluation.get('why_you_would_do_it') or '') + ' Addresses supported ' + ', '.join(active_diagnostic['need_positions_received']) + ' lineup/depth context; package effects remain separate.'
+        qualifications = active_diagnostic.get('evidence', {}).get('limitations') or []
+        if qualifications:
+            evidence = active_diagnostic['evidence']
+            state = evidence.get('conclusion_state', 'unavailable')
+            freshness = ', '.join(evidence.get('projection_freshness') or [])
+            evaluation['why_you_would_do_it'] = (evaluation.get('why_you_would_do_it') or '') + f' Diagnostics {state}' + (f' · {freshness}' if freshness else '') + '.'
         evaluation['counterparty_summary'] = (evaluation.get('counterparty_summary') or '') + ' ' + partner_diagnostic['summary']
     except Exception as exc:
         # Once input/ownership checks passed, an evaluator exception is not a

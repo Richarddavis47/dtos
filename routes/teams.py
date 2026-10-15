@@ -103,7 +103,7 @@ TEAM_HQ_CSS = """
  .thq-event{grid-template-columns:1fr auto}.thq-event-assets{grid-column:1/-1}
  .thq-kpi b{font-size:21px}
 }
-@media(max-width:460px){.thq-starters,.thq-grades{grid-template-columns:1fr}.thq-intel{grid-template-columns:1fr}}
+@media(max-width:460px){.thq-starters,.thq-grades{grid-template-columns:1fr}.thq-intel{grid-template-columns:1fr}#positional-depth .thq-cards{grid-template-columns:1fr}}
 </style>
 """
 
@@ -224,13 +224,19 @@ def _positional_depth(view):
         backup = _points(facts['best_reserve_points'])
         diagnostic = facts.get('diagnostic') or {}
         explanation = diagnostic.get('interpretation') or 'Surplus not established: player quantity and bench placement alone do not prove expendability.'
+        evidence = diagnostic.get('evidence') or {}
+        for limitation in evidence.get('limitations') or []:
+            explanation = explanation.replace(limitation, '').strip()
+        qualification = ' · '.join(evidence.get('projection_freshness') or [])
+        qualification = (evidence.get('conclusion_state') or 'unavailable').title() + (' · ' + qualification if qualification else '')
         candidates = diagnostic.get('surplus_assets') or []
         if not candidates and 'Surplus not established' not in explanation:
             explanation += ' Surplus not established: current evidence does not identify an expendable asset.'
         names = {str(p.get('id') or p.get('player_id')): str(p.get('name') or p.get('full_name') or p.get('id')) for p in view['team'].get('players') or []}
         expendable = ', '.join(names.get(p['player_id'], 'Player identity unavailable') for p in candidates)
-        details = escape(str({'remove_one': diagnostic.get('remove_one'), 'league_reference': diagnostic.get('reference'), 'add_one_gain': diagnostic.get('add_one_gain')}))
-        rows.append(f'<article class="thq-kpi"><h3>{position}</h3><p>{escape(explanation)}</p><p>{facts["starting_count"]} players in {escape(facts["lineup_basis"])} · {points} Sleeper-projected points</p><small>{facts["required_slots"]} required slots · {facts["eligible_flex_slots"]} eligible flex slots</small><p>Reserve projection coverage: <b>{facts["reserve_covered"]}/{facts["reserve_expected"]}</b> · {escape(facts["availability"])}. Best supported reserve: {backup} points.</p>{"<p>Conditional expendable depth: " + escape(expendable) + "</p>" if expendable else ""}<details><summary>Lineup eligibility and surplus</summary><p>Current-week evidence; not a sale recommendation or long-term value grade. Scenarios must not be summed.</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere">{details}</pre></details></article>')
+        from src.ui.roster_diagnostic_evidence import evidence_html
+        details = evidence_html(diagnostic, view['team'].get('players') or [])
+        rows.append(f'<article class="thq-kpi"><h3>{position}</h3><p>{escape(explanation)}</p><p><strong>{escape(qualification)}</strong></p><p>{facts["starting_count"]} players in {escape(facts["lineup_basis"])} · {points} Sleeper-projected points</p><small>{facts["required_slots"]} required slots · {facts["eligible_flex_slots"]} eligible flex slots</small><p>Reserve projection coverage: <b>{facts["reserve_covered"]}/{facts["reserve_expected"]}</b> · {escape(facts["availability"])}. Best supported reserve: {backup} points.</p>{"<p>Conditional expendable depth: " + escape(expendable) + "</p>" if expendable else ""}<details><summary>Lineup eligibility and surplus</summary><p>Current-week evidence; not a sale recommendation or long-term value grade. Scenarios must not be summed.</p>{details}</details></article>')
     return '<div class="thq-cards">' + ''.join(rows) + '</div>'
 
 

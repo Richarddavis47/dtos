@@ -112,6 +112,10 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
     constraints = tuple(pos for pos, row in facts.items() if row.get('objective_need')) or ('No supported positional need established.',)
     window = decision.competitive_window
     summary = f"{profile.team_name} is currently classified as {window.classification.value} with a {', '.join(philosophies).lower()} approach. {style}. This profile describes cached fantasy-football actions only."
+    from src.core.intelligence.roster_diagnostics import diagnostic_qualification
+    qualification = diagnostic_qualification(decision.diagnostics)
+    if qualification:
+        summary += ' ' + qualification
     shared = (data.get("front_office_evidence") or {}).get(str(profile.roster_id))
     return FrontOfficeReport(profile.roster_id, profile.owner_name, profile.team_name, summary, window, tuple(philosophies), style, activity, tuple(preferences), strengths, constraints, confidence, evidence, decision, shared)
 
@@ -150,6 +154,11 @@ def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: Front
     else:
         opening = "No specific need-based negotiation angle is established. Current roster-need evidence is unavailable or incomplete; history supports no specific need-based inference."
     conflicts = tuple(sorted(_needs(first.decision) & _needs(second.decision)))
+    from src.core.intelligence.roster_diagnostics import diagnostic_qualification
+    qualifications = sorted({notice for report in (first, second)
+                             if (notice := diagnostic_qualification(report.decision.diagnostics))})
+    if qualifications:
+        opening += ' ' + ' '.join(qualifications)
     themes = tuple((["Roster Balance"] if shared else ["Value Discovery"]) + (["Established Trade Channel"] if bilateral else []))
     evidence = (
         Evidence("Complementary position needs", ", ".join(shared) or ("None" if needs_available else "Unavailable"), len(shared) * 15, "Decision Engine needs are compared with the other roster's observable depth surplus; this is current roster context, not a historical preference.", "Decision Engine", bool(shared) or needs_available),

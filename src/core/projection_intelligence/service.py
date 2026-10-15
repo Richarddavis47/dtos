@@ -28,6 +28,25 @@ PROJECTION_CONTRACT_VERSION = "2"
 PROJECTION_SEMANTIC_POLICY_VERSION = "7"
 PROVIDER_CACHE_SEASONS = 6
 
+# One availability vocabulary for canonical publication and derived diagnostics.
+UNAVAILABLE_PLAYER_STATUSES = frozenset({"out", "ir", "pup", "suspended", "inactive", "retired"})
+
+
+def player_availability(player: dict[str, Any], evidence: dict[str, Any] | None) -> str:
+    aliases = {"o": "out", "q": "questionable", "d": "doubtful", "sus": "suspended"}
+    states = [str(player.get(key) or "").strip().casefold() for key in ("injury_status", "status")]
+    states = [aliases.get(state, state) for state in states]
+    status = next((state for state in states if state in UNAVAILABLE_PLAYER_STATUSES), None) or next((state for state in states if state not in {"", "unknown", "none"}), "unknown")
+    if status in UNAVAILABLE_PLAYER_STATUSES or status in {"questionable", "doubtful", "active"}:
+        return status
+    if status not in {"unknown", "none", ""}:
+        return status
+    if not str(player.get("team") or player.get("nfl_team") or "").strip():
+        return "unsigned"
+    if evidence is None:
+        return "unavailable"
+    return "unknown" if status in {"", "none"} else status
+
 
 def snapshot_compatibility(snapshot: Any) -> tuple[str, str]:
     """Classify persisted metadata against the running projection contract."""
@@ -701,18 +720,7 @@ class ProjectionService:
 
     @staticmethod
     def _availability(player: dict[str, Any], evidence: dict[str, Any] | None) -> str:
-        status = str(
-            player.get("injury_status") or player.get("status") or "unknown"
-        ).strip().casefold()
-        if status in {"out", "ir", "pup", "suspended", "inactive", "retired"}:
-            return status
-        if status in {"questionable", "doubtful", "active"}:
-            return status
-        if not str(player.get("team") or player.get("nfl_team") or "").strip():
-            return "unsigned"
-        if evidence is None:
-            return "unavailable"
-        return "unknown" if status in {"", "none"} else status
+        return player_availability(player, evidence)
 
     @classmethod
     def _canonical_projection(

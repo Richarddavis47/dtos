@@ -33,6 +33,11 @@ def evaluate_horizon_impact(data, proposal, service):
     prepared = compatible_profile(data, snapshot)
     if prepared is None:
         return {'availability': 'unavailable', 'reason_codes': ['COMPATIBLE_TEAM_STRENGTH_UNAVAILABLE']}
+    from src.core.intelligence.roster_diagnostics import _bounded, _qualification
+    slots = tuple(str(slot).upper() for slot in data['league']['roster_positions'])
+    pools = {str(team['roster_id']): team.get('players') or [] for team in data.get('teams') or []}
+    if not _bounded(slots, pools) or not _qualification(data, snapshot, slots)['calculation_supported']:
+        return {'availability': 'unavailable', 'reason_codes': ['SUPPORTED_BOUNDED_LINEUP_EVIDENCE_UNAVAILABLE']}
     rosters = {str(row['roster_id']): row for row in canonical_rosters(data)}
     active, partner = str(proposal.active_roster_id), str(proposal.partner_roster_id)
     if active == partner or active not in rosters or partner not in rosters:

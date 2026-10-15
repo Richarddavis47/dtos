@@ -1,3 +1,12 @@
+## v1.21.50 / build 2150 — Roster Diagnostic Evidence and Eligibility Integrity
+
+- Reuse canonical player availability to exclude Inactive, Retired and Out from usable replacement coverage while preserving roster identity. Keep questionable, unknown and unsupported status evidence qualified.
+- Require compatible, supported scoring and lineup evidence for numeric diagnostics. Genuine zero remains valid; missing scoring, malformed weights, unsupported slots and mixed projection generations withhold dependent conclusions.
+- Carry stale/retained projection qualifications through shared team and package evidence, with provisional conclusions and semantic cache invalidation rather than retrieval-clock churn.
+- Apply the existing 14-starter/2,048-player diagnostic expansion guard before package and horizon reconstruction; preserve independent trade editing and evidence.
+- Replace primary solver dictionaries with named, rounded removal scenarios and readable availability exclusions; use full-width phone evidence cards. No new permanent storage, player projections, Market formula or FOIS regeneration.
+- Source controls and independent acceptance: [diagnostic corrections](docs/ROSTER_DIAGNOSTIC_ADMISSION.md).
+
 ## v1.21.49 / build 2149 — Dynamic Roster Needs and Replacement Evidence
 
 - Replace fixed QB/RB/WR/TE count-based depth grades with shared league/week/scoring-scoped legal-lineup diagnostics. Separate starter improvement, resilience, current-week strength, conditional expendability and uncertain evidence.
