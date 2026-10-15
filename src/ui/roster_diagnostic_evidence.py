@@ -25,7 +25,9 @@ def evidence_html(diagnostic, players):
     for pid, scenario in ordered:
         loss = scenario.get("lineup_loss")
         impact = (
-            f"{loss:.2f} projected points" if loss is not None else "unavailable impact"
+            f"{0 if round(loss, 2) == 0 else loss:.2f} projected points"
+            if loss is not None
+            else "unavailable impact"
         )
         replacements = scenario.get("replacement_names") or []
         change = (
@@ -64,8 +66,16 @@ def evidence_html(diagnostic, players):
         for e in exclusions
     )
     warnings = " ".join((diagnostic.get("evidence") or {}).get("limitations") or [])
+    clocks = (diagnostic.get("evidence") or {}).get("source_observations") or []
     return (
         (f"<p>{escape(warnings)}</p>" if warnings else "")
+        + (
+            "<p>Projection source observation: "
+            + escape(", ".join(clocks))
+            + ". Fresh before 1 hour; Aging from 1 hour; Stale from 6 hours. Retrieval or refresh attempts do not reset source age.</p>"
+            if clocks
+            else ""
+        )
         + (
             "<ul>" + visible + "</ul>"
             if visible

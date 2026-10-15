@@ -110,6 +110,7 @@ class DiagnosticAdmissionTests(unittest.TestCase):
         self.control()
         for row in self.snapshot["players"].values():
             row["source_freshness"] = "Fresh"
+            row["source_timestamp"] = datetime.now(timezone.utc).isoformat()
         fresh = diagnostics.team_diagnostics(self.data, 1, self.snapshot)
         self.assertFalse(fresh["evidence"]["retained"])
         self.snapshot["generated_at"] = datetime.now(timezone.utc).isoformat()
@@ -119,6 +120,8 @@ class DiagnosticAdmissionTests(unittest.TestCase):
         )
         for state in ("Stale", "Retained", "Fallback", "Unavailable"):
             self.snapshot["players"]["c"]["source_freshness"] = state
+            if state == "Unavailable":
+                self.snapshot["players"]["c"]["source_timestamp"] = None
             row = diagnostics.team_diagnostics(self.data, 1, self.snapshot)
             self.assertTrue(row["evidence"]["retained"])
             self.assertIn(state, row["positions"]["QB"]["reason"])
