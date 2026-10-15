@@ -217,8 +217,8 @@ def freshness_state(timestamp: str | None, *, now: datetime | None = None) -> st
         return "Unavailable"
     if age < timedelta(0):
         return "Unavailable"
-    if age <= timedelta(hours=1):
+    if age < timedelta(hours=1):
         return "Fresh"
-    if age <= timedelta(hours=6):
+    if age < timedelta(hours=6):
         return "Aging"
     return "Stale"

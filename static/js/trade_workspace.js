@@ -524,6 +524,21 @@
       }
     }
     }
+    for (const [which, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
+      const diagnostic = e.dimensions?.roster_diagnostics?.sides?.[which];
+      if (diagnostic) {
+        const detail = node('details');
+        detail.append(node('summary', (retained ? 'Previous ' : '') + title + ' roster evidence · ' + (retained ? 'NOT REVALIDATED' : diagnostic.numeric_impact_state || diagnostic.evidence?.conclusion_state || 'unavailable')));
+        if (retained) detail.append(node('p', 'Previous package evidence is retained, not revalidated against current sources or availability.'));
+        detail.append(node('p', diagnostic.summary || 'Package evidence unavailable.'));
+        for (const player of diagnostic.post_lineup_assignments || []) if (player.slot === 'SUPER_FLEX') detail.append(node('p', (retained ? 'Previous post-trade scenario (not current): ' : 'Post-trade conditional lineup: ') + player.name + ' occupies Superflex; this player is counted once.'));
+        for (const [phase, evidence, eligibility] of [['Before', diagnostic.pre_evidence, diagnostic.pre_eligibility], ['After', diagnostic.post_evidence, diagnostic.post_eligibility]]) {
+          if (evidence) detail.append(node('p', (retained ? 'Previous ' + phase.toLowerCase() + ' evidence (not current)' : phase) + ': ' + (evidence.conclusion_state || 'unavailable') + ' · Projection evidence ' + (evidence.projection_freshness || ['Unavailable']).join(', ')), node('p', 'Source observation: ' + (evidence.source_observations || ['Unavailable']).join(', ')));
+          for (const player of eligibility || []) if (player.excluded || player.status !== 'active') detail.append(node('p', phase + ' · ' + player.name + ': ' + player.status + (player.excluded ? ' — excluded from usable cover.' : ' — availability uncertain.')));
+        }
+        out.append(detail);
+      }
+    }
     if (retained) {
       out.append(node('p', 'Current ownership and execution eligibility are not established by this retained assessment.', 'tw-drawback'));
       if (e.legality?.execution_status) { const detail = node('details'); detail.append(node('summary', 'Previous execution evidence · not current'), node('p', 'Previous execution assessment (not current): ' + e.legality.execution_status)); out.append(detail); }

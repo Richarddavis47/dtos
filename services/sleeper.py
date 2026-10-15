@@ -281,6 +281,7 @@ async def _sync_sleeper(
                     except Exception as exc:
                         projections.fail_external_refresh(
                             exc, transport_details=SLEEPER_PROJECTION_CLIENT.last_transport,
+                            league_id=str(league_id),
                         )
                         logger.warning("Optional Sleeper projection refresh failed: %s", type(exc).__name__)
 

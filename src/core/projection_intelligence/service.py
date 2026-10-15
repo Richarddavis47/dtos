@@ -183,6 +183,7 @@ class ProjectionService:
         self._last_error_type: str | None = None
         self._last_error_message: str | None = None
         self._last_error_at: str | None = None
+        self._failed_refresh_publication: tuple[str, str] | None = None
         self._last_success_at: str | None = None
         self._normalization: dict[str, Any] = {}
         self._generations = 0
@@ -529,6 +530,7 @@ class ProjectionService:
                 data['projection_intelligence'] = published
                 self._normalization = normalization
                 self._generation_state = 'ready'
+                self._last_error_type = self._last_error_message = self._last_error_at = None
                 self._refreshing = False
                 self._last_success_at = observed
                 self._external_last_success = observed
@@ -540,7 +542,7 @@ class ProjectionService:
                 self._compatibility, self._compatibility_reason = snapshot_compatibility(published)
             return published
         except Exception as exc:
-            self.fail_external_refresh(exc)
+            self.fail_external_refresh(exc, league_id=league_id)
             with self._lock:
                 self._generation_state = 'stale' if self._snapshot else 'failed'
             raise
@@ -566,6 +568,7 @@ class ProjectionService:
 
     def fail_external_refresh(
         self, exc: Exception, *, transport_details: dict[str, Any] | None = None,
+        league_id: str | None = None,
     ) -> None:
         with self._lock:
             self._refreshing = False
@@ -577,6 +580,12 @@ class ProjectionService:
                 else "Sleeper projection synchronization failed."
             )
             self._last_error_at = _now()
+            head = self._snapshot or {}
+            self._failed_refresh_publication = (
+                (str(head.get("league_id")), str(head.get("projection_snapshot_id")))
+                if head and (league_id is None or str(head.get("league_id")) == str(league_id))
+                else None
+            )
             if transport_details is not None:
                 self._external_transport = dict(transport_details)
 
@@ -636,7 +645,7 @@ class ProjectionService:
             )
             return changed
         except Exception as exc:
-            self.fail_external_refresh(exc)
+            self.fail_external_refresh(exc, league_id=league_id)
             raise
 
     @staticmethod
@@ -806,6 +815,11 @@ class ProjectionService:
                     else "Projection generation failed while processing canonical player data."
                 )
                 self._last_error_at = _now()
+                head = self._snapshot or {}
+                self._failed_refresh_publication = (
+                    (str(head.get("league_id")), str(head.get("projection_snapshot_id")))
+                    if str(head.get("league_id")) == str(league_id) else None
+                )
             raise
         with self._lock:
             self._snapshot = snapshot
@@ -923,6 +937,26 @@ class ProjectionService:
     def snapshot(self) -> dict[str, Any] | None:
         with self._lock:
             return self._snapshot
+
+    def refresh_evidence(self, snapshot: dict[str, Any]) -> dict[str, Any]:
+        """Ephemeral refresh provenance for this exact retained publication only.
+
+        Failure time is never a replacement for the original source clock.
+        A pinned older/foreign publication must not inherit another head's error.
+        """
+        with self._lock:
+            head = self._snapshot or {}
+            if not self._last_error_at or not snapshot or self._failed_refresh_publication != (str(snapshot.get("league_id")), str(snapshot.get("projection_snapshot_id"))) or any(
+                snapshot.get(key) != head.get(key)
+                for key in ("league_id", "projection_snapshot_id")
+            ):
+                return {}
+            return {
+                "retained_publication": True,
+                "last_attempt_at": self._external_last_attempt,
+                "failed_at": self._last_error_at,
+                "failure_type": self._last_error_type,
+            }
 
     def player(self, player_id: str) -> dict[str, Any] | None:
         snapshot = self.snapshot()

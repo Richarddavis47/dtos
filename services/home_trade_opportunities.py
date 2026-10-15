@@ -58,6 +58,17 @@ def source_identity(data):
     projection = canonical_projection_identity(
         _trade_projection_service(data).snapshot(), league_id
     )
+    # Expire retained diagnostic explanations at source-age/refresh boundaries
+    # without discovery or any legal-lineup computation on a Home read.
+    from src.core.intelligence.roster_diagnostics import _qualification
+
+    reader = _trade_projection_service(data)
+    diagnostic_evidence = _qualification(
+        data,
+        reader.snapshot(),
+        tuple((data.get("league") or {}).get("roster_positions") or ()),
+        projection_reader=reader,
+    )
     return _digest(
         (
             _semantic(
@@ -79,6 +90,13 @@ def source_identity(data):
             ),
             _semantic(market),
             projection,
+            {
+                "projection_freshness": diagnostic_evidence["projection_freshness"],
+                "conclusion_state": diagnostic_evidence["conclusion_state"],
+                "retained_publication": bool(
+                    diagnostic_evidence["refresh"].get("retained_publication")
+                ),
+            },
             "bilateral_trade_v3/home_projection_v1/legal-roster-diagnostics-v1",
         )
     )

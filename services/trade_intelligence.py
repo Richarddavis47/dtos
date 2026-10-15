@@ -278,7 +278,7 @@ def evaluate_trade_request(
         from src.core.intelligence.roster_diagnostics import package_diagnostics
         diagnostic = package_diagnostics(data, proposal, projections.snapshot(), horizon_impact,
             {str(active_id): payload.get('strategy') or workspace.get('requested_strategy') or teams[active_id].get('strategy'),
-             str(partner_id): teams[partner_id].get('strategy')})
+             str(partner_id): teams[partner_id].get('strategy')}, projection_reader=projections)
         evaluation.setdefault('dimensions', {})['roster_diagnostics'] = diagnostic
         active_diagnostic = diagnostic['sides']['active']
         partner_diagnostic = diagnostic['sides']['partner']

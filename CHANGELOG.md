@@ -1,3 +1,11 @@
+## v1.21.51 / build 2151 — Post-Trade Eligibility and Source Aging Integrity
+
+- Re-admit complete proposed rosters through shared canonical availability. Preserve separate PRE/POST identities and status evidence; incoming uncertainty qualifies conditional lineup impact without changing player projections, prices or ownership.
+- Age diagnostics at read time from original source observations: Aging from exactly one hour, Stale from exactly six hours. Requalify cached numerical results cheaply; expire higher-level explanations and Home opportunities at evidence boundaries.
+- Expose scoped failed-refresh retention separately from source age. Keep valid numbers and clocks, clear failure provenance on successful publication, and reject foreign-publication contamination.
+- Present before/after Trade evidence, readable source-clock details and display zero without a negative sign. Preserve existing legal solver/resource guards, bounded caches and no permanent diagnostic store.
+- Acceptance contract: [source aging and post-trade evidence](docs/ROSTER_DIAGNOSTIC_SOURCE_AGING.md).
+
 ## v1.21.50 / build 2150 — Roster Diagnostic Evidence and Eligibility Integrity
 
 - Reuse canonical player availability to exclude Inactive, Retired and Out from usable replacement coverage while preserving roster identity. Keep questionable, unknown and unsupported status evidence qualified.
