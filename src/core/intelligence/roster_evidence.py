@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from math import isfinite
 from typing import Any
 
-from src.core.trade_intelligence.lineup import BENCH_SLOTS, FLEX_ELIGIBILITY, optimal_legal_lineup
+from src.core.trade_intelligence.lineup import BENCH_SLOTS, FLEX_ELIGIBILITY, OptimalLineup, optimal_legal_lineup
 
 
 @dataclass(frozen=True)
@@ -56,9 +56,14 @@ def build_roster_evidence(context: Any) -> RosterEvidence:
     if incompatible:
         week = None
     rows = snapshot.get('players') or {}
+    from .roster_diagnostics import team_diagnostics, diagnostic_inputs, _bounded
+    diagnostic = team_diagnostics(data, roster_id, snapshot,
+        strategy=(getattr(context, 'user_preferences', {}) or {}).get('strategy')) if data.get('teams') else None
+    supported_diagnostic = not diagnostic or diagnostic.get('evidence', {}).get('calculation_supported', False)
+    excluded = set((diagnostic or {}).get('excluded_player_ids') or [])
     points = {
         key: _points(rows.get(key, {}).get('weekly_projected_points'))
-        if week is not None and rows.get(key, {}).get('week') == week else None
+        if supported_diagnostic and week is not None and rows.get(key, {}).get('week') == week else None
         for key in identifiers
     }
     actual = tuple(key for key, player in zip(identifiers, players)
@@ -68,13 +73,15 @@ def build_roster_evidence(context: Any) -> RosterEvidence:
     slots = tuple(str(slot).upper() for slot in context.settings.get('roster_positions') or ())
     slot_count = sum(slot not in BENCH_SLOTS for slot in slots)
     eligible = tuple((key, player) for key, player in zip(identifiers, players)
-                     if str(player.get('roster_slot') or '').upper() not in {'IR', 'TAXI', 'RESERVE'})
+                     if key not in excluded and str(player.get('roster_slot') or '').upper() not in {'IR', 'TAXI', 'RESERVE'})
+    bounded = _bounded(slots, diagnostic_inputs(data, snapshot)[4]) if diagnostic else True
     candidate = optimal_legal_lineup((
         {'id': key, 'position': player.get('position'), 'name': player.get('name'),
          'projected_points': points[key]} for key, player in eligible
-    ), slots)
+    ), slots) if supported_diagnostic and bounded else OptimalLineup((), None, False, 'Detailed lineup diagnostics unavailable.')
     complete = candidate.available and len(candidate.entries) == slot_count
     limitations = []
+    limitations.extend((diagnostic or {}).get('limitations') or [])
     if incompatible:
         limitations.append('Published projections do not match the current league week, season or scoring context; reevaluation awaits compatible Sleeper evidence.')
     if any(points[key] is None for key, _ in eligible):
@@ -101,9 +108,6 @@ def build_roster_evidence(context: Any) -> RosterEvidence:
             'availability': 'complete' if reserves and len(known) == len(reserves) else 'partial' if known else 'unavailable',
             'surplus': None,
         }
-    from .roster_diagnostics import team_diagnostics
-    diagnostic = team_diagnostics(data, roster_id, snapshot,
-        strategy=(getattr(context, 'user_preferences', {}) or {}).get('strategy')) if data.get('teams') else None
     if diagnostic:
         for position, row in positions.items():
             row['diagnostic'] = diagnostic['positions'].get(position)

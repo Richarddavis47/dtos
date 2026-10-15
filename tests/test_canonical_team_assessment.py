@@ -20,11 +20,16 @@ from tests.test_trade_intelligence import fixture_data
 class CanonicalTeamAssessmentTests(TestCase):
     def setUp(self):
         self.data = fixture_data()
+        # Supported preseason forecasts need an explicit league-scoring context.
+        # Missing-scoring admission has separate actual-publisher regressions.
+        scoring = {"pass_yd": .04, "rush_yd": .1, "rec_yd": .1, "rec": 1}
+        self.data["league"]["scoring_settings"] = scoring
         self.data["week"] = 0  # NFL preseason state; published forecast is week 1.
         for team in self.data["teams"]:
             team.update(wins=0, losses=0, ties=0, points_for=0, max_points=0)
         self.snapshot = {
             "league_id": "league-1", "week": 1,
+            "scoring_settings": scoring,
             "projection_snapshot_id": "projection-A", "generated_at": "2026-09-01T00:00:00Z",
             "players": {p["id"]: {"week": 1, "weekly_projected_points": 20,
                 "weekly_floor": 12, "weekly_ceiling": 28}

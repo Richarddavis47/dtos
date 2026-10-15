@@ -10,13 +10,31 @@ import json
 from math import isfinite
 from statistics import median
 
-from src.core.trade_intelligence.lineup import BENCH_SLOTS, _eligible
+from src.core.trade_intelligence.lineup import BENCH_SLOTS, FLEX_ELIGIBILITY, _eligible
 from src.core.trade_intelligence.lineup_memo import LineupStore, SearchLineupMemo
 from src.core.trade_intelligence.capital_assessment import resolve_strategy
 
 POSITIONS = ("QB", "RB", "WR", "TE")
-METHOD = "legal-roster-diagnostics-v1"
+METHOD = "legal-roster-diagnostics-v2"
 diagnostic_store = LineupStore(max_entries=12, max_bytes=2_097_152, ttl=180)
+
+
+def diagnostic_qualification(diagnostic):
+    """Concise shared wording for consumers of admitted numerical scenarios."""
+    evidence = (diagnostic or {}).get("evidence") or {}
+    state = evidence.get("conclusion_state")
+    if state == "current" or not state:
+        return ""
+    freshness = ", ".join(evidence.get("projection_freshness") or [])
+    return (
+        (
+            "Provisional roster diagnostics"
+            if state == "provisional"
+            else "Roster diagnostics unavailable"
+        )
+        + (" · projection evidence " + freshness if freshness else "")
+        + ". Review source, scoring and availability limitations."
+    )
 
 
 def _number(value):
@@ -27,6 +45,89 @@ def _number(value):
         and isfinite(value)
         else None
     )
+
+
+def _bounded(slots, pools):
+    """Shared admission before any main or package solver expansion."""
+    return (
+        sum(map(len, pools.values())) <= 2048
+        and sum(slot not in BENCH_SLOTS for slot in slots) <= 14
+    )
+
+
+def _qualification(data, snapshot, slots):
+    from src.core.projection_intelligence.scoring import STAT_KEYS
+
+    league = data.get("league") or {}
+    scoring = data.get("scoring_settings")
+    if scoring is None:
+        scoring = league.get("scoring_settings")
+    valid = bool(
+        isinstance(scoring, dict)
+        and scoring
+        and any(k in STAT_KEYS for k in scoring)
+        and all(_number(v) is not None for v in scoring.values())
+    )
+    supported_slots = bool(slots) and all(
+        slot in BENCH_SLOTS or slot in POSITIONS or slot in FLEX_ELIGIBILITY
+        for slot in slots
+    )
+    rows = (snapshot or {}).get("players") or {}
+    states = sorted(
+        {
+            str(
+                row.get("source_freshness")
+                or row.get("sleeper_freshness")
+                or "Unavailable"
+            )
+            for row in rows.values()
+        }
+    )
+    leaf = ((snapshot or {}).get("horizon_snapshot_ids") or {}).get(
+        str((snapshot or {}).get("week"))
+    ) or (snapshot or {}).get("projection_snapshot_id")
+    mixed = (
+        any(
+            row.get("projection_snapshot_id") not in (None, leaf)
+            or row.get("scoring_profile_id")
+            not in (None, snapshot.get("scoring_profile_id"))
+            for row in rows.values()
+        )
+        if snapshot
+        else False
+    )
+    limitations = []
+    if not valid:
+        limitations.append(
+            "Unavailable — insufficient supported scoring evidence; missing scoring is not zero."
+        )
+    if not supported_slots:
+        limitations.append(
+            "Unsupported or missing starting-lineup slots; no numeric diagnostic conclusion."
+        )
+    if mixed:
+        limitations.append(
+            "Mixed projection generations; no compatible diagnostic conclusion."
+        )
+    retained = any(state != "Fresh" for state in states) or not states
+    if retained:
+        limitations.append(
+            "Projection evidence is "
+            + ", ".join(states or ["Unavailable"])
+            + "; retained numerical evidence is provisional, not freshly verified."
+        )
+    return {
+        "scoring": "supported" if valid else "unavailable / incomplete",
+        "calculation_supported": valid and supported_slots and not mixed,
+        "projection_freshness": states,
+        "retained": retained,
+        "conclusion_state": "unavailable"
+        if not valid or not supported_slots or mixed
+        else "provisional"
+        if retained
+        else "current",
+        "limitations": limitations,
+    }
 
 
 def projection_snapshot(data):
@@ -47,8 +148,14 @@ def diagnostic_inputs(data, snapshot):
     league = data.get("league") or {}
     league_id = str(league.get("league_id") or "")
     week = data.get("week") or 1
-    slots = tuple(data.get("roster_positions") or league.get("roster_positions") or ())
+    slots = tuple(
+        str(slot).upper()
+        for slot in (
+            data.get("roster_positions") or league.get("roster_positions") or ()
+        )
+    )
     scoring = data.get("scoring_settings") or league.get("scoring_settings")
+    qualification = _qualification(data, snapshot, slots)
     admitted = bool(
         snapshot
         and snapshot.get("projection_snapshot_id")
@@ -58,22 +165,31 @@ def diagnostic_inputs(data, snapshot):
             league.get("season") is None
             or str(snapshot.get("season")) == str(league["season"])
         )
-        and (scoring is None or snapshot.get("scoring_settings") == scoring)
+        and qualification["calculation_supported"]
+        and snapshot.get("scoring_settings") == scoring
     )
     rows = (snapshot or {}).get("players") or {}
-    pools, excluded, uncertain = {}, {}, {}
+    pools, excluded, uncertain, eligibility = {}, {}, {}, {}
+    database = data.get("players") or {}
+    if not isinstance(database, dict):
+        database = {
+            str(p.get("id") or p.get("player_id")): p
+            for p in database
+            if isinstance(p, dict)
+        }
     owned = set()
     for team in data.get("teams") or []:
         rid = str(team.get("roster_id"))
         if rid in pools:
             raise ValueError("Duplicate diagnostic franchise identity")
         pools[rid], excluded[rid], uncertain[rid] = [], [], []
+        eligibility[rid] = []
         for player in team.get("players") or []:
             pid = str(player.get("id") or player.get("player_id") or "")
             if not pid or pid in owned:
                 raise ValueError("Diagnostic player ownership must be unique")
             owned.add(pid)
-            details = (data.get("players") or {}).get(pid) or {}
+            details = database.get(pid) or {}
             source = {**details, **player}
             row = rows.get(pid) or {}
             points = (
@@ -84,23 +200,54 @@ def diagnostic_inputs(data, snapshot):
                 else None
             )
             slot = str(source.get("roster_slot") or "").upper()
-            status = str(
-                player.get("injury_status")
-                or details.get("injury_status")
-                or player.get("status")
-                or details.get("status")
-                or ""
-            ).upper()
+            from src.core.projection_intelligence.service import (
+                player_availability,
+                UNAVAILABLE_PLAYER_STATUSES,
+            )
+
+            status = player_availability(source, row)
+            # Canonical unknown/unsigned evidence may support numerical scenarios,
+            # never a verified availability claim. Unfamiliar statuses are withheld.
+            unknown_status = status not in UNAVAILABLE_PLAYER_STATUSES | {
+                "active",
+                "questionable",
+                "doubtful",
+                "unknown",
+                "unsigned",
+                "unavailable",
+            }
             unavailable = (
                 slot in {"IR", "TAXI", "RESERVE"}
                 or source.get("lineup_eligible") is False
                 or source.get("bye_week") == week
-                or status in {"OUT", "O", "IR", "PUP", "SUSPENDED", "SUS"}
+                or status in UNAVAILABLE_PLAYER_STATUSES
+                or unknown_status
+            )
+            reason = (
+                "Roster reserve/taxi is not active lineup cover"
+                if slot in {"IR", "TAXI", "RESERVE"}
+                else "Not lineup eligible"
+                if source.get("lineup_eligible") is False
+                else "Observed bye week"
+                if source.get("bye_week") == week
+                else "Unsupported availability status"
+                if unknown_status
+                else status.title()
+            )
+            eligibility[rid].append(
+                {
+                    "player_id": pid,
+                    "name": source.get("name") or source.get("full_name") or pid,
+                    "position": source.get("position") or row.get("position"),
+                    "status": status,
+                    "excluded": unavailable,
+                    "reason": reason,
+                }
             )
             if unavailable:
                 excluded[rid].append(pid)
                 continue
-            if status in {"QUESTIONABLE", "Q", "DOUBTFUL", "D"}:
+            if status in {"questionable", "doubtful"}:
                 uncertain[rid].append(pid)
             pools[rid].append(
                 {
@@ -110,7 +257,8 @@ def diagnostic_inputs(data, snapshot):
                     "projected_points": points,
                 }
             )
-    return league_id, week, slots, admitted, pools, excluded, uncertain
+    qualification["eligibility"] = eligibility
+    return league_id, week, slots, admitted, pools, excluded, uncertain, qualification
 
 
 def diagnostic_identity(data, snapshot):
@@ -151,14 +299,14 @@ def _delta(before, after):
 
 
 def _compute(inputs, snapshot, key):
-    lid, week, slots, admitted, pools, excluded, uncertain = inputs
-    if (
-        not admitted
-        or sum(map(len, pools.values())) > 2048
-        or sum(slot not in BENCH_SLOTS for slot in slots) > 14
-    ):
+    lid, week, slots, admitted, pools, excluded, uncertain, qualification = inputs
+    shared_evidence = {
+        key: value for key, value in qualification.items() if key != "eligibility"
+    }
+    if not admitted or not _bounded(slots, pools):
         reason = (
-            "Compatible league/week/scoring projection publication unavailable."
+            "Compatible league/week/scoring projection publication unavailable. "
+            + " ".join(qualification["limitations"])
             if not admitted
             else "Roster/lineup configuration exceeds bounded diagnostic expansion; no positional conclusion inferred."
         )
@@ -173,6 +321,17 @@ def _compute(inputs, snapshot, key):
                     "positions": {
                         pos: {
                             "classification": "Uncertain",
+                            "conclusion_state": "unavailable",
+                            "evidence": {
+                                **shared_evidence,
+                                "calculation_supported": False,
+                                "conclusion_state": "unavailable",
+                            },
+                            "eligibility": [
+                                e
+                                for e in qualification["eligibility"][rid]
+                                if e["position"] == pos
+                            ],
                             "starter_need": False,
                             "resilience_need": False,
                             "strength": False,
@@ -191,6 +350,13 @@ def _compute(inputs, snapshot, key):
                     "optimal_points": None,
                     "coverage": "partial / unavailable",
                     "limitations": [reason],
+                    "evidence": {
+                        **shared_evidence,
+                        "calculation_supported": False,
+                        "conclusion_state": "unavailable",
+                    },
+                    "excluded_player_ids": excluded[rid],
+                    "eligibility": qualification["eligibility"][rid],
                 }
                 for rid in pools
             },
@@ -229,6 +395,24 @@ def _compute(inputs, snapshot, key):
         base, reserve = optimal[rid], reserve_lineups[rid]
         missing = [p["id"] for p in pool if p["projected_points"] is None]
         complete = bool(admitted and slots and not missing and not uncertain[rid])
+        team_evidence = deepcopy(
+            {key: value for key, value in qualification.items() if key != "eligibility"}
+        )
+        team_evidence["projection_coverage"] = {
+            "supported": len(pool) - len(missing),
+            "eligible": len(pool),
+            "missing_player_ids": missing,
+        }
+        if any(
+            not e["excluded"] and e["status"] in {"unknown", "unsigned", "unavailable"}
+            for e in qualification["eligibility"][rid]
+        ):
+            team_evidence["conclusion_state"] = "provisional"
+            team_evidence["limitations"].append(
+                "Availability is unknown for some rostered players; numerical scenarios are provisional, not verified active cover."
+            )
+        if not complete:
+            team_evidence["conclusion_state"] = "unavailable"
         removals = {}
         primary_ids = {e.asset_id for e in base.entries}
         reserve_ids = {e.asset_id for e in reserve.entries}
@@ -242,6 +426,9 @@ def _compute(inputs, snapshot, key):
                 else reserve
             )
             removals[player["id"]] = {
+                "replacement_names": [
+                    p["name"] for p in remaining if p["id"] in after_ids - primary_ids
+                ],
                 "replacement_points": [
                     p["projected_points"]
                     for p in remaining
@@ -388,7 +575,12 @@ def _compute(inputs, snapshot, key):
                 reason += "Observed legal replacements project below the peer reserve reference; cross-position flex substitutions remain allowed."
             else:
                 reason += "Player count alone does not establish expendability; review removal effects and reserve assignments."
+            position_evidence = team_evidence
             positions[pos] = {
+                "evidence": position_evidence,
+                "eligibility": [
+                    e for e in qualification["eligibility"][rid] if e["position"] == pos
+                ],
                 "classification": classification,
                 "starter_need": bool(need),
                 "resilience_need": bool(resilience),
@@ -397,7 +589,15 @@ def _compute(inputs, snapshot, key):
                 "observed_replacement_points": actual_replacements,
                 "strength": bool(strength),
                 "surplus_assets": tradable,
-                "reason": reason,
+                "reason": reason
+                + (
+                    " " + " ".join(position_evidence["limitations"])
+                    if position_evidence["limitations"]
+                    else ""
+                ),
+                "conclusion_state": position_evidence["conclusion_state"]
+                if complete
+                else "unavailable",
                 "coverage": "supported current week"
                 if complete
                 else "partial / unavailable",
@@ -423,6 +623,8 @@ def _compute(inputs, snapshot, key):
                 "availability_context": "Observed roster reference, not an available trade or acceptance prediction.",
             }
         result["teams"][rid] = {
+            "evidence": team_evidence,
+            "eligibility": qualification["eligibility"][rid],
             "positions": positions,
             "optimal_points": base.projected_points,
             "optimal_ids": [e.asset_id for e in base.entries],
@@ -433,7 +635,8 @@ def _compute(inputs, snapshot, key):
             "coverage": "supported current week"
             if complete
             else "partial / unavailable",
-            "limitations": [
+            "limitations": qualification["limitations"]
+            + [
                 "Current-week diagnostic; future projections, byes and long-term quality are not inferred.",
                 "Removal/addition effects are separate scenarios and must not be summed.",
                 "Reserve support is a disjoint legal assignment, not an injury probability or guaranteed replacement.",
@@ -537,7 +740,9 @@ def team_diagnostics(data, roster_id, snapshot=None, *, strategy=None):
 def package_diagnostics(data, proposal, snapshot, impact, strategies):
     """All players move together; existing capacity/horizon gates stay authoritative."""
     baseline = diagnose_league(data, snapshot)
-    lid, week, slots, admitted, pools, _, _ = diagnostic_inputs(data, snapshot)
+    lid, week, slots, admitted, pools, _, _, qualification = diagnostic_inputs(
+        data, snapshot
+    )
     teams = {str(t.get("roster_id")): t for t in data.get("teams") or []}
     active, partner = str(proposal.active_roster_id), str(proposal.partner_roster_id)
     sent = {
@@ -560,7 +765,35 @@ def package_diagnostics(data, proposal, snapshot, impact, strategies):
         "week": week,
         "sides": {},
         "meaning": "Package-local current-week legal assignments; scenarios are not summed. Existing multi-week and forced-cut gates remain authoritative.",
+        "evidence": {
+            key: value for key, value in qualification.items() if key != "eligibility"
+        },
     }
+    if not admitted or not _bounded(slots, pools):
+        reason = (
+            " ".join(qualification["limitations"])
+            if not admitted
+            else "Roster/lineup configuration exceeds bounded diagnostic expansion; no positional conclusion inferred."
+        )
+        result["evidence"].update(
+            calculation_supported=False, conclusion_state="unavailable"
+        )
+        result["sides"] = {
+            label: {
+                "roster_id": rid,
+                "positions": {},
+                "pre_optimal_points": None,
+                "post_optimal_points": None,
+                "available_pre_optimal_points": None,
+                "available_post_optimal_points": None,
+                "coverage": "partial / unavailable",
+                "need_positions_received": [],
+                "summary": reason,
+                "evidence": result["evidence"],
+            }
+            for label, rid in (("active", active), ("partner", partner))
+        }
+        return result
     for label, rid, outgoing, incoming in (
         ("active", active, sent, received),
         ("partner", partner, received, sent),
@@ -610,6 +843,8 @@ def package_diagnostics(data, proposal, snapshot, impact, strategies):
             and canonical_post == post.projected_points
         )
         result["sides"][label] = {
+            "evidence": before["evidence"],
+            "eligibility": before["eligibility"],
             "roster_id": rid,
             "strategy": before["strategy"],
             "positions": positions,
@@ -640,7 +875,8 @@ def package_diagnostics(data, proposal, snapshot, impact, strategies):
                     .get("objective_need")
                 }
             ),
-            "summary": f"Package optimal lineup: {canonical_pre if canonical_pre is not None else 'unavailable'} → {canonical_post if canonical_post is not None else 'unavailable'} Sleeper-projected points. Replacement support is recalculated after all player movements."
+            "summary": f"Package optimal lineup: {canonical_pre if canonical_pre is not None else 'unavailable'} → {canonical_post if canonical_post is not None else 'unavailable'} Sleeper-projected points. Replacement support is recalculated after all player movements. "
+            + " ".join(qualification["limitations"])
             + (
                 " Availability-qualified depth differs or canonical comparison is unavailable; no complete diagnostic conclusion is claimed."
                 if not availability_matches

@@ -51,7 +51,12 @@ class ActiveRosterGradingTests(unittest.TestCase):
 
     def setUp(self):
         self.data = fixture_data()
+        # These are positive scored-lineup controls, not missing-scoring controls.
+        # Preserve all grading assertions with explicitly compatible context.
+        scoring = {"pass_yd": .04, "rush_yd": .1, "rec_yd": .1, "rec": 1}
+        self.data['league']['scoring_settings'] = scoring
         self.snapshot = {'league_id': 'league-1', 'week': 1, 'projection_snapshot_id': 'p1',
+            'scoring_settings': scoring,
             'players': {p['id']: {'week': 1, 'weekly_projected_points': 15}
                         for team in self.data['teams'] for p in team['players']}}
         self.patch = patch('src.core.projection_intelligence.projection_service.snapshot', side_effect=lambda: self.snapshot)

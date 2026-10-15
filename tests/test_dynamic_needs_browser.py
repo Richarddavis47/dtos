@@ -63,7 +63,8 @@ class DynamicNeedsBrowserTests(TestCase):
                         ).first
                         summary.focus()
                         page.keyboard.press("Enter")
-                        self.assertIn("remove_one", room.inner_text())
+                        self.assertIn("removing this player", room.inner_text())
+                        self.assertNotIn("remove_one", room.inner_text())
                         self.assertLessEqual(
                             page.evaluate("document.documentElement.scrollWidth"), width
                         )

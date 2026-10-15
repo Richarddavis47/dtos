@@ -105,11 +105,13 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
 
     team_reports = {}
     for roster_id, direction in directions.items():
+        from src.core.intelligence.roster_diagnostics import diagnostic_qualification
+        qualification = diagnostic_qualification(intelligence.decisions[roster_id].diagnostics)
         strengths = tuple(pos for pos, facts in ((intelligence.decisions[roster_id].diagnostics or {}).get('positions') or {}).items() if facts['strength']) or ("No evidence-supported positional strength",)
         weaknesses = tuple(f"{item.priority} {item.position}" for item in needs[roster_id] if item.priority in {"Critical", "High"}) or ("No critical need",)
         likely = f"Acquire {needs[roster_id][0].position} help" if needs[roster_id][0].priority != "Low" else "Monitor market inefficiencies"
         flexibility = "High" if len(surpluses[roster_id]) >= 2 else "Medium" if surpluses[roster_id] else "Low"
-        team_reports[roster_id] = TeamReport(roster_id, direction, strengths, weaknesses, likely, flexibility, directions[roster_id].label, (*direction.reasoning, f"First positional context: {needs[roster_id][0].position} ({needs[roster_id][0].priority}); no synthetic need score."))
+        team_reports[roster_id] = TeamReport(roster_id, direction, strengths, weaknesses, likely, flexibility, directions[roster_id].label, (*direction.reasoning, *([qualification] if qualification else []), f"First positional context: {needs[roster_id][0].position} ({needs[roster_id][0].priority}); no synthetic need score."))
 
     active_id = intelligence.context.active_roster_id
     active_needs = {item.position: item for item in needs[active_id]}
