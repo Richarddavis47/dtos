@@ -53,16 +53,17 @@ def build_recommendations(
                 {"engine": "trade-intelligence", "window": classification.value},
             )
         )
-    weakest_position, weakest = min(positions.items(), key=lambda item: (item[1].score, item[0]))
-    if weakest.score < 70:
+    supported_needs = [(pos, row) for pos, row in positions.items() if row.grade in {'Starter improvement', 'Resilience need', 'Quality/depth need'}]
+    weakest_position, weakest = supported_needs[0] if supported_needs else (None, None)
+    if weakest is not None:
         recommendations.append(
             Recommendation(
                 f"Review {weakest_position} depth options",
                 f"Audit internal, waiver, and trade options for {weakest_position} without assuming an available player is an upgrade.",
-                RecommendationPriority.HIGH if weakest.score < 50 else RecommendationPriority.MEDIUM,
+                RecommendationPriority.HIGH if weakest.grade == 'Starter improvement' else RecommendationPriority.MEDIUM,
                 calculate_confidence(weakest, depth, adjustment=5),
-                RecommendationCategory.WAIVER if weakest.score < 50 else RecommendationCategory.MONITOR,
-                build_reasoning(f"{weakest_position} is the lowest-rated core position room", weakest, depth),
+                RecommendationCategory.MONITOR,
+                build_reasoning(f"{weakest_position}: {weakest.summary}", weakest, depth),
                 supporting_metrics(weakest, depth),
                 {"engine": "player-intelligence", "position": weakest_position, "active_front_office_id": profile.active_front_office_id},
             )

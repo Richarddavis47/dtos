@@ -25,6 +25,17 @@ def roster_overview(data, intelligence, players):
         else:
             risk = f"{pos} backup projection coverage is complete, but a supported projection does not guarantee availability or make a player expendable."
     status_risks = []
+    diagnostic_rows = [(pos, facts.get('diagnostic') or {}) for pos, facts in positions.items()]
+    needs = sorted((row for _, row in diagnostic_rows if row.get('starter_need') or row.get('resilience_need') or row.get('quality_depth_need')),
+                   key=lambda row: not row.get('starter_need'))
+    strengths = [pos for pos, row in diagnostic_rows if row.get('strength')]
+    expendable = [pos for pos, row in diagnostic_rows if row.get('surplus_assets')]
+    if needs:
+        risk = needs[0]['interpretation']
+    if strengths:
+        strength = 'Supported current-week positional strength: ' + ', '.join(strengths) + '. Strength is not automatically expendable surplus.'
+    if expendable:
+        strength += ' Conditional expendable depth: ' + ', '.join(expendable) + '; review exact removal scenarios before trading.'
     for player in players:
         source = (data.get('players') or {}).get(str(player['id'])) or {}
         status = player.get('injury_status') or source.get('injury_status') or player.get('status') or source.get('status')

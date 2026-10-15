@@ -17,7 +17,8 @@ from src.core.trade_intelligence.evidence_context import build_trade_evidence_co
 
 
 def _asset_context(decision: TeamDecision) -> AssetContext:
-    needs = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score < 55)
+    needs = tuple(position for position, row in ((decision.diagnostics or {}).get('positions') or {}).items()
+                  if row.get('objective_need'))
     depths = {position: room.total_players for position, room in decision.profile.position_rooms.items()}
     return AssetContext(
         decision.profile.league_id,

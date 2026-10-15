@@ -107,8 +107,9 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
         Evidence("Future capital", str(pick_portfolio.score), 0,
             "Independent pick evidence; no player/pick scalar comparison.", "Asset Intelligence"),
     )
-    strengths = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score is not None and evaluation.score >= 70) or ("No supported position crossed the v1 strength threshold.",)
-    constraints = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score is not None and evaluation.score < 55) or ("No supported position crossed the v1 need threshold.",)
+    facts = (decision.diagnostics or {}).get('positions') or {}
+    strengths = tuple(pos for pos, row in facts.items() if row['strength']) or ('No supported positional strength established.',)
+    constraints = tuple(pos for pos, row in facts.items() if row.get('objective_need')) or ('No supported positional need established.',)
     window = decision.competitive_window
     summary = f"{profile.team_name} is currently classified as {window.classification.value} with a {', '.join(philosophies).lower()} approach. {style}. This profile describes cached fantasy-football actions only."
     shared = (data.get("front_office_evidence") or {}).get(str(profile.roster_id))
@@ -116,13 +117,13 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
 
 
 def _needs(decision: TeamDecision) -> set[str]:
-    return {position for position, evaluation in decision.position_evaluations.items() if evaluation.score is not None and evaluation.score < 55}
+    return {pos for pos, row in ((getattr(decision, 'diagnostics', None) or {}).get('positions') or {}).items()
+            if row.get('objective_need')}
 
 
 def _surpluses(decision: TeamDecision) -> set[str]:
-    # Holdings alone cannot establish expendability. No validated removal-cost
-    # assessment is published in this contract; compatibility must not invent it.
-    return set()
+    return {pos for pos, row in ((getattr(decision, 'diagnostics', None) or {}).get('positions') or {}).items()
+            if row['surplus_assets']}
 
 
 def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: FrontOfficeReport) -> CompatibilityReport:
@@ -135,8 +136,7 @@ def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: Front
     score = min(100, 40 + 15 * len(first_matches) + 15 * len(second_matches) + min(bilateral, 3) * 5)
     shared = tuple(sorted(first_matches | second_matches))
     needs_available = all(
-        report.decision.position_evaluations
-        and all(item.score is not None for item in report.decision.position_evaluations.values())
+        (report.decision.diagnostics or {}).get('coverage') == 'supported current week'
         for report in (first, second)
     )
     angles = []
@@ -148,7 +148,7 @@ def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: Front
     elif needs_available:
         opening = "No specific need-based negotiation angle is established. Review the offer's Market, roster and capital tradeoffs."
     else:
-        opening = "Current roster-need evidence is unavailable or incomplete; no specific need-based negotiation angle is established."
+        opening = "No specific need-based negotiation angle is established. Current roster-need evidence is unavailable or incomplete; history supports no specific need-based inference."
     conflicts = tuple(sorted(_needs(first.decision) & _needs(second.decision)))
     themes = tuple((["Roster Balance"] if shared else ["Value Discovery"]) + (["Established Trade Channel"] if bilateral else []))
     evidence = (

@@ -187,11 +187,18 @@ def rank_key(row):
         benefit = benefit[::-1]
     package = (dimensions.get('package_quality') or {}).get('active') or {}
     ratio = (e.get('values') or {}).get('ratio')
+    diagnostic = (dimensions.get('roster_diagnostics') or {}).get('sides') or {}
+    def contextual_fit(side):
+        row = diagnostic.get(side) or {}
+        return bool(row.get('coverage') == 'supported current week' and row.get('need_positions_received')
+                    and row.get('pre_optimal_points') is not None and row.get('post_optimal_points') is not None
+                    and row['post_optimal_points'] >= row['pre_optimal_points'])
     return ({'SMASH ACCEPT': 0, 'WORTH PURSUING': 1, 'FAIR / OPTIONAL': 2}.get(e.get('recommendation'), 3),
             *benefit,
             {'STRONG': 0, 'PLAUSIBLE': 1}.get((dimensions.get('counterparty_plausibility') or {}).get('assessment'), 2),
             {'HIGH': 0, 'MEDIUM': 1}.get((dimensions.get('confidence') or {}).get('assessment'), 2),
             package.get('assessment') == 'POOR', ratio is None, abs(1 - ratio) if ratio is not None else 0,
+            not contextual_fit('active'), not contextual_fit('partner'),
             (e.get('provenance') or {}).get('evaluation_id', str(row.get('proposal'))))
 
 

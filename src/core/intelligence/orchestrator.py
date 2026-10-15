@@ -42,7 +42,8 @@ def _decision_provider(context: IntelligenceContext) -> dict[int, Any]:
 
 def _asset_context(context: IntelligenceContext, decision: Any) -> AssetContext:
     depths = {position: room.total_players for position, room in decision.profile.position_rooms.items()}
-    needs = tuple(position for position, evaluation in decision.position_evaluations.items() if evaluation.score < 55)
+    needs = tuple(position for position, row in ((decision.diagnostics or {}).get('positions') or {}).items()
+                  if row.get('objective_need'))
     window = (
         decision.competitive_window.classification.value
         if decision.competitive_window is not None

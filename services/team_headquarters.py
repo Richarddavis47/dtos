@@ -11,12 +11,6 @@ from src.core.intelligence import intelligence_orchestrator
 from src.core.history_context.results import number
 
 CORE_POSITIONS = ("QB", "RB", "WR", "TE")
-POSITION_TARGETS = {
-    "QB": {"total": 3, "starters": 1},
-    "RB": {"total": 7, "starters": 2},
-    "WR": {"total": 9, "starters": 3},
-    "TE": {"total": 4, "starters": 1},
-}
 
 
 def build_team_directory(data: dict[str, Any], *, prepared_only: bool = False) -> dict[int, dict[str, Any]]:

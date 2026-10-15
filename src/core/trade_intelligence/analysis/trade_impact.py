@@ -33,7 +33,8 @@ def evaluate_trade_impact(proposal: TradeProposal, active: TeamDecision) -> Trad
     risk = round(_sum(sent, "risk") - _sum(received, "risk"))
     fit = round(_sum(received, "team_fit_value") - _sum(sent, "team_fit_value")) if all(a.team_fit_value is not None for a in (*sent, *received)) else None
     positions_in = {asset.position for asset in received if asset.position}
-    weak_positions = {position for position, evaluation in active.position_evaluations.items() if evaluation.score < 55}
+    weak_positions = {position for position, row in ((active.diagnostics or {}).get('positions') or {}).items()
+                      if row.get('objective_need')}
     depth = len(positions_in & weak_positions) * 8
     balance = depth - max(0, len(sent) - len(received)) * 3
     opportunity = max(0, -asset_value) if asset_value is not None else None
