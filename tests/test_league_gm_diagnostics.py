@@ -177,6 +177,17 @@ class LeagueObservationSourceTests(unittest.TestCase):
         provisional = {**need, 'coverage': 'provisional'}
         self.assertEqual(partner_context(report, 2, provisional, ['WR'])['soft_tie_break'], 0)
 
+    def test_same_verified_source_republication_does_not_invalidate_observations(self):
+        rows = [completed()]
+        self.publish(rows)
+        first = self.service.report(self.data)
+        identity = self.service.source_identity(self.data)
+        builds = self.service.builds
+        self.publish(rows)  # Actual canonical producer rewrites bytes/inode, same facts/checksum.
+        self.assertEqual(self.service.source_identity(self.data), identity)
+        self.assertEqual(self.service.report(self.data), first)
+        self.assertEqual(self.service.builds, builds)
+
     def test_prior_owner_history_cannot_promote_a_current_manager_partner(self):
         self.publish([completed(str(i)) for i in range(5)], owners=('old-a', 'old-b'))
         need = {'coverage': 'supported current week', 'need_positions_received': ['WR'],

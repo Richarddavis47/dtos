@@ -174,7 +174,9 @@ class LeagueGMObservations:
                 stat = cache.path(league, season).stat()
             except FileNotFoundError:
                 continue  # Atomic archive turnover; the post-build check rejects revision mixtures.
-            files.append((season, stat.st_ino, stat.st_size, stat.st_mtime_ns))
+            checksum = cache.prepared_checksum(league, season)
+            files.append((season, checksum) if checksum is not None else
+                         (season, 'unverified', stat.st_ino, stat.st_size, stat.st_mtime_ns))
         return _digest((METHOD, str(cache.root.resolve()), league, files,
                         (data.get('league') or {}).get('season'),
                         [(t.get('roster_id'), t.get('owner_id'), canonical_team_name(t)) for t in data.get('teams') or []],

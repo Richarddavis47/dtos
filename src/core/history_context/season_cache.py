@@ -243,6 +243,23 @@ class SleeperSeasonCache:
             result[season] = archive.checksum
         return result
 
+    def prepared_checksum(self, league_id: str, season: int) -> str | None:
+        """Return a verified publication identity without opening an archive.
+
+        A byte-identical source refresh may replace the cache file. Its verified
+        fact checksum, rather than the retrieval/write clock, remains canonical.
+        Unknown or externally replaced files require normal verified preparation.
+        """
+        path = self.path(league_id, season)
+        try:
+            stat = path.stat()
+        except FileNotFoundError:
+            return None
+        identity = (int(stat.st_dev), int(stat.st_ino), int(stat.st_size), int(stat.st_mtime_ns))
+        with self._checksum_lock:
+            cached = self._checksum_cache.get(path)
+            return cached[1] if cached is not None and cached[0] == identity else None
+
     async def get_or_rebuild(
         self, league_id: str, season: int,
         fetch_facts: Callable[[str, int], Awaitable[dict[str, Any] | None]],
