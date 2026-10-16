@@ -22,8 +22,10 @@ from src.platform.validation.progress import progress_from_environment
 
 FOIS_PROCESS_TIMEOUT_SECONDS = 60.0
 FOIS_IDLE_RETENTION_SECONDS = 60.0
+FOIS_WORKER_STOP_SECONDS = 2.0
 _EXECUTOR: concurrent.futures.ProcessPoolExecutor | None = None
 _EXECUTOR_LOCK = threading.RLock()
+_EXECUTOR_STOPPING = False
 _IN_FLIGHT = 0
 _LAST_USED = 0.0
 
@@ -45,6 +47,8 @@ def _worker_ready() -> dict[str, int]:
 def _executor() -> concurrent.futures.ProcessPoolExecutor:
     global _EXECUTOR
     with _EXECUTOR_LOCK:
+        if _EXECUTOR_STOPPING:
+            raise RuntimeError("FOIS compute worker is shutting down.")
         if _EXECUTOR is None:
             _EXECUTOR = concurrent.futures.ProcessPoolExecutor(
                 max_workers=1,
@@ -100,13 +104,39 @@ def warm_fois_executor_sync() -> dict[str, int]:
 
 
 def shutdown_fois_executor_sync() -> bool:
-    """Reap an idle compute worker before optional high-memory browser work."""
-    global _EXECUTOR
+    """Reap the cache, including abandoned scratch work during app shutdown.
+
+    Cancelling an asyncio waiter does not stop a running ProcessPool job.
+    Such work only writes its disposable working database; canonical publication
+    belongs to the still-live parent caller. Do not wait for an orphaned compute
+    flight to finish after its caller has gone away.
+    """
+    global _EXECUTOR, _EXECUTOR_STOPPING
     with _EXECUTOR_LOCK:
         executor, _EXECUTOR = _EXECUTOR, None
-    if executor is None:
-        return False
-    executor.shutdown(wait=True, cancel_futures=True)
+        if executor is None:
+            return False
+        _EXECUTOR_STOPPING = True
+        abandoned = bool(_IN_FLIGHT)
+        # ProcessPool has no public worker-stop API before Python 3.14. Keep
+        # this compatibility boundary local and use only this pool's handles.
+        workers = tuple((executor._processes or {}).values()) if abandoned else ()
+    try:
+        for worker in workers:
+            try:
+                worker.terminate()
+                worker.join(timeout=FOIS_WORKER_STOP_SECONDS)
+                if worker.is_alive():
+                    worker.kill()
+                    worker.join(timeout=FOIS_WORKER_STOP_SECONDS)
+            except ValueError:
+                # The pool manager can close an already-reaped handle first.
+                if not worker._closed:
+                    raise
+        executor.shutdown(wait=True, cancel_futures=True)
+    finally:
+        with _EXECUTOR_LOCK:
+            _EXECUTOR_STOPPING = False
     return True
 
 
@@ -312,6 +342,7 @@ async def generate_fois_isolated(
             input_bytes=input_bytes,
             duration_ms=round((perf_counter() - started) * 1000, 3),
         )
+        future = None
         try:
             try:
                 # Creating/recreating the pool or waiting for idle shutdown must
@@ -328,6 +359,10 @@ async def generate_fois_isolated(
             if result.get("status") != "complete" or int(result.get("records") or -1) < 0:
                 raise RuntimeError("FOIS compute process returned an invalid result contract.")
         except asyncio.CancelledError:
+            if future is not None and future.running():
+                # Stop the abandoned writer before TemporaryDirectory removes
+                # its scratch files. Published canonical evidence is untouched.
+                await shutdown_fois_executor()
             raise
 
         publication_started = perf_counter()

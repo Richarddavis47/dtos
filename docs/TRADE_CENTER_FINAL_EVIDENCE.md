@@ -59,17 +59,30 @@ and physical iPhone/Safari acceptance.
 
 ## Demonstrated validation infrastructure corrections
 
-The combined-read gate exposed a shutdown-ordering failure, not an OOM or liveness
-threshold breach: group-wide SIGTERM interrupted workers before the application
-could drain them, followed by the existing15-second forced-kill escalation. Real
-parent/worker controls reproduced three failures with group signalling and three
-passes with parent-first signalling. The validation harness now requests graceful
-shutdown from the application first; group-wide SIGKILL and the15-second bound
-remain unchanged. No production FOIS execution or grading formula changed.
+Lifecycle validation exposed two shutdown defects, not an OOM or liveness
+threshold breach. Group-wide SIGTERM interrupted workers before the application
+could drain them. Real parent/worker controls reproduced three failures with group
+signalling and three passes with parent-first signalling. The harness now requests
+graceful shutdown from the application first; group-wide escalation and the
+15-second bound remain unchanged.
 
 The complete local combined-read lifecycle then passed at124.935ms observed
 liveness, zero OOM counters, two restart cycles and three graceful completions.
-Local Python3.11 evidence is separate from required production-version GitHub CI.
+That pass did not resolve production-version CI: all three Python 3.12 scenarios
+still required forced termination after restart. Bounded parent/worker stack
+capture reproduced the remaining cause. Cancelling the maintenance waiter left
+its spawned FOIS computation running in disposable scratch storage, while
+`ProcessPoolExecutor.shutdown(wait=True, cancel_futures=True)` waited for that
+running job. Cancelling queued futures does not cancel a running process job.
+
+The existing executor shutdown now reaps abandoned work with bounded terminate /
+kill cleanup, rejects concurrent submissions during shutdown and joins the pool.
+A cancelled generation stops its writer before removing its scratch directory.
+Completed normal flights and canonical publication remain unchanged. Tests cover
+the real process pool, bounded shutdown, canonical/cache byte preservation,
+scratch cleanup and recovery through a subsequent real valid generation. No
+historical grades, formulas, canonical source data or published records change.
+Local evidence is separate from required production-version GitHub CI.
 The old browser journey now selects the current result heading explicitly because
 the complete closed prior disclosure legitimately has another heading; all prior
 assertions remain, with an added current-freshness assertion. No tests are removed.
