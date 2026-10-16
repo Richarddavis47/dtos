@@ -1,3 +1,11 @@
+## v1.21.59 / build 2159 — First-use recovery and evidence
+
+- Keep Sleeper connection and league-add failures actionable without guessing ownership or changing the active league. Finish league preparation before saving a new membership; preserve existing authentication and source admission.
+- Show connection/import progress, restore controls on browser history navigation, expose existing account recovery and keep readable form fields inside their phone cards.
+- Give browser Market warming a concise retry/Home/My Team page while preserving the existing API/JSON, background preparation and bounded cache contracts. No automatic polling or fabricated prices.
+- Disclose already-retained counterparty package explanations and absolute before/after lineup totals as previous, NOT REVALIDATED evidence. No recalculation, additional stored fields or assessment copies.
+- Preserve all Trade, Market, projection, legal-lineup, historical and FOIS contracts; no new permanent store or schema. Unchanged 500 ms liveness and 2 GiB resource gates. Responsive Chromium is separate from physical iPhone/Safari and Scout-independent acceptance.
+
 ## v1.21.58 / build 2158 — Complete retained evidence and canonical Market display
 
 - Expose complete already-saved prior assessment evidence inside the closed Previous assessment / NOT REVALIDATED disclosure. Preserve original counterparty, qualified lineup costs, risks, all supported limitations, strategy and source context; keep current incomplete results separate.

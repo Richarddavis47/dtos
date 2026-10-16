@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from typing import Any, Callable
 from urllib.parse import parse_qs
+from html import escape
 
 from starlette.background import BackgroundTask
-from starlette.responses import JSONResponse, Response
+from starlette.responses import HTMLResponse, JSONResponse, Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 MARKET_WARMING_DETAIL = (
@@ -13,6 +14,27 @@ MARKET_WARMING_DETAIL = (
 )
 MARKET_WARMING_PATHS = frozenset({"/market", "/api/market/assets"})
 MARKET_WARMING_METHODS = frozenset({"GET", "HEAD"})
+
+
+def warming_page(query: str = "", *, headers: dict[str, str] | None = None) -> HTMLResponse:
+    """Browser-only presentation; source admission and the JSON contract stay intact."""
+    from src.ui.theme import DESIGN_SYSTEM_CSS
+
+    href = '/market' + ('?' + query if query else '')
+    return HTMLResponse(
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<title>Market is preparing · DTOS</title><style>' + DESIGN_SYSTEM_CSS +
+        'main{max-width:640px;margin:auto;padding:24px 16px;box-sizing:border-box;overflow-wrap:anywhere}'
+        '.recovery-actions{display:flex;flex-wrap:wrap;gap:12px}.recovery-actions a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px}</style></head>'
+        '<body><main><h1>Market is preparing</h1><p>Current Market values are not ready yet. '
+        'You can keep using Home and My Team, then try again shortly.</p>'
+        '<p>No missing prices have been replaced with zero.</p><nav class="recovery-actions" aria-label="Market recovery">'
+        f'<a class="ds-action primary" href="{escape(href, quote=True)}">Try Market again</a>'
+        '<a class="ds-action" href="/">Home</a><a class="ds-action" href="/teams">My Team</a>'
+        '</nav></main></body></html>',
+        status_code=503, headers={**(headers or {}), 'Cache-Control': 'no-store'},
+    )
 
 
 class AssetMarketWarmingMiddleware:
@@ -63,6 +85,12 @@ class AssetMarketWarmingMiddleware:
         response: Response
         if scope["method"] == "HEAD":
             response = Response(status_code=503, headers=headers, background=background)
+        elif scope['path'] == '/market' and any(
+            key.lower() == b'accept' and b'text/html' in value.lower()
+            for key, value in scope.get('headers', ())
+        ):
+            response = warming_page(scope.get('query_string', b'').decode('latin-1'), headers=headers)
+            response.background = background
         else:
             response = JSONResponse(
                 status_code=503,

@@ -348,8 +348,12 @@ class AccountStore:
             ).fetchall()
         return [LeagueMembership(**{key: row[key] for key in LeagueMembership.__dataclass_fields__}) for row in rows]
 
-    def activate(self, account_id: str, league_id: str) -> LeagueMembership | None:
+    def activate(self, account_id: str, league_id: str, *, expected_account_revision: str | None = None) -> LeagueMembership | None:
         with self.transaction() as connection:
+            if expected_account_revision is not None:
+                account = connection.execute("SELECT updated_at FROM accounts WHERE account_id=?", (account_id,)).fetchone()
+                if account is None or account["updated_at"] != expected_account_revision:
+                    return None
             historical = connection.execute(
                 """SELECT 1 FROM account_league_series_seasons x
                 JOIN account_league_series s ON s.account_id=x.account_id AND s.series_id=x.series_id

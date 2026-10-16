@@ -367,7 +367,13 @@ def create_market_router(
         front_office: int | None = None, selected: str = "",
         offset: int = Query(0, ge=0), limit: int = Query(10, ge=10, le=100),
     ) -> HTMLResponse:
-        market = model()
+        try:
+            market = model()
+        except HTTPException as exc:
+            if exc.status_code != 503 or 'text/html' not in request.headers.get('accept', ''):
+                raise
+            from src.platform.market_warming import warming_page
+            return warming_page(request.url.query, headers=exc.headers)
         selected_state, selected_league, _cache = dependencies()
         data = selected_state.get("data") or {}
         ownership = PlayerOwnershipIndex(data)

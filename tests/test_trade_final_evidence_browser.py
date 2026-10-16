@@ -96,10 +96,16 @@ class TradeFinalEvidenceBrowserTests(unittest.TestCase):
                 text = detail.inner_text()
                 # These are facts from the actual saved canonical evaluator response.
                 self.assertIn(old["evaluation"]["why_they_would_do_it"], text)
+                self.assertIn(old["evaluation"]["counterparty_summary"], text)
                 for limitation in old["evaluation"]["major_limitations"]:
                     self.assertIn(limitation.replace("_", " "), text)
                 self.assertIn("-7.70", text)
                 self.assertIn("provisional", text.lower())
+                # Read the existing saved diagnostic; do not recalculate or save
+                # another assessment just to disclose its absolute lineup cost.
+                horizon = old["evaluation"]["dimensions"]["strategic_fit"]["partner"]["horizons"]["current_week"]
+                self.assertEqual((horizon["pre_total"], horizon["post_total"]), (27.7, 20))
+                self.assertIn("27.70 → 20.00", text)
                 self.assertIn("WIN NOW", text)
                 self.assertIn("945", text)
                 self.assertIn("929", text)
