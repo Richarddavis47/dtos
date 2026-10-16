@@ -32,3 +32,19 @@
 .standings-team a[href^="/teams/"]{display:inline-flex;min-height:44px;max-width:100%;align-items:center}
 @media(max-width:650px){.compact-standings tr[data-roster-id]>td:not(:first-child){white-space:normal}.compact-standings td[data-label]::before{display:block}}
 @media(max-width:650px){.compact-standings,.compact-standings tbody{display:block}.compact-standings tr[data-roster-id]>td{display:block;min-width:0;width:auto;max-width:100%}.compact-standings .playoff-boundary{display:block}.compact-standings .playoff-boundary td{display:block;width:auto}}
+
+/* Shared phone header; full-width identities and aligned record/PF/PA. */
+@media(max-width:650px){
+ .compact-standings thead{display:block;position:static;width:auto;height:auto;overflow:visible;clip-path:none}
+ .compact-standings thead tr,.compact-standings tr[data-roster-id]{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:4px}
+ .compact-standings th:first-child{grid-column:1/-1;width:auto;text-align:left;padding-bottom:0}
+ .compact-standings th:nth-child(2){grid-column:1;grid-row:2}
+ .compact-standings th:nth-child(3){grid-column:2;grid-row:2}.compact-standings th:nth-child(4){grid-column:3;grid-row:2}
+ .compact-standings tr[data-roster-id]>td:first-child{grid-column:1/-1;grid-row:1;width:auto;padding-bottom:0}
+ .compact-standings tr[data-roster-id]>td:nth-child(2){grid-column:1;grid-row:2;padding-top:0}
+ .compact-standings tr[data-roster-id]>td:nth-child(3){grid-column:2;grid-row:2}
+ .compact-standings tr[data-roster-id]>td:nth-child(4){grid-column:3;grid-row:2}
+ .compact-standings tr[data-roster-id]>td:not(:first-child),.compact-standings th:not(:first-child){text-align:left;font-variant-numeric:tabular-nums}
+ .compact-standings td[data-label]::before{display:none}
+ .compact-standings .standing-inline a{border-radius:8px;background:linear-gradient(145deg,#ffffff0b,#00000010);box-shadow:inset 0 1px 0 #ffffff12}
+}

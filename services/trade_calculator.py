@@ -154,15 +154,20 @@ def balance_trade_market(data, payload):
         if a.asset_id in excluded or lower == 0 and a.asset_id in protected:
             if a.trade_value is not None and a.asset_id not in sent + received and abs(a.trade_value - base['absolute_gap']) < base['absolute_gap']:
                 lock_blockers.add(a.asset_id)
-    candidates.sort(key=lambda c: c[:3])
+    requested_targets = set(received)
+    def target_kept(candidate):
+        return requested_targets.issubset(candidate[4][1])
+    candidates.sort(key=lambda c: (not target_kept(c), *c[:3]))
     # Reserve one shortlist slot for each available meaningful construction
     # type before arithmetic ties consume the limited expensive assessment.
     shortlist = []
-    for change in ('ADD_PLAYER', 'ADD_PICK', 'SWAP_ASSET', 'SWAP_PICK', 'REMOVE_ASSET', 'TWO_ASSET_ADDITION'):
-        row = next((c for c in candidates if c[3] == change), None)
-        if row is not None:
-            shortlist.append(row)
-    shortlist.extend(c for c in candidates if c not in shortlist)
+    for keep_target in (True, False):
+        group = [c for c in candidates if target_kept(c) == keep_target]
+        for change in ('ADD_PLAYER', 'ADD_PICK', 'SWAP_ASSET', 'SWAP_PICK', 'REMOVE_ASSET', 'TWO_ASSET_ADDITION'):
+            row = next((c for c in group if c[3] == change), None)
+            if row is not None:
+                shortlist.append(row)
+        shortlist.extend(c for c in group if c not in shortlist)
     if shortlist:
         # Only explicit balancing pays for the existing contextual assessment;
         # the initial calculator and editing stay pure Market arithmetic.
@@ -200,15 +205,20 @@ def balance_trade_market(data, payload):
         raise trade.TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during balancing. Reload and compare the current generation.')
     assessed.sort(key=lambda c: c[:5])
     chosen = []
-    for row in assessed:
+    preserving = [c for c in assessed if requested_targets.issubset(c[-1]['proposal']['assets_received'])]
+    for row in preserving:
         if len(chosen) < OPTION_LIMIT and (not any(c[3] == row[3] for c in chosen) or len(assessed) <= OPTION_LIMIT):
             chosen.append(row)
-    for row in assessed:
+    for row in preserving:
         if len(chosen) < OPTION_LIMIT and row not in chosen:
             chosen.append(row)
     result['results'] = [c[-1] for c in chosen]
+    result['other_trade_ideas'] = [c[-1] for c in assessed
+        if not requested_targets.issubset(c[-1]['proposal']['assets_received'])][:OPTION_LIMIT-len(chosen)]
+    result['requested_incoming_assets'] = sorted(requested_targets)
+    result['target_preserved'] = True
     result.update(count=len(chosen), state='BALANCING_OPTIONS' if chosen else 'NO_CREDIBLE_BALANCING_OPTION',
-                  quiet_state=None if chosen else 'No credible gap-reducing option within this bounded search. Review package quality, exact anchors and owned alternatives.')
+                  quiet_state=None if chosen else 'No supported target-preserving balancing option within this bounded search. Your requested incoming assets remain unchanged; review exact protections, package quality or separately explore other trade ideas.')
     if not chosen and lock_blockers:
         result.update(blocking_asset_ids=sorted(lock_blockers),
                       conflict_explanation='Exact protections or required anchors block nearby Market adjustments.',

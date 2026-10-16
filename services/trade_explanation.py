@@ -199,4 +199,77 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
         risk_end = rendered.index('</ul>', risk_start) + len('</ul>')
         risk = rendered[risk_start:risk_end]
         rendered = rendered[:risk_start] + rendered[risk_end:]
-    return rendered.replace('</p>', '</p>' + risk + summary, 1)
+    legacy = rendered.replace('</p>', '</p>' + risk + summary, 1)
+    decision = result.get('decision_context')
+    if not decision:
+        return legacy
+    # Preserve the complete established explanation behind depth-on-demand.
+    # The verdict and all material costs/qualifications stay in the primary flow.
+    split = legacy.index('</p>') + len('</p>')
+    primary = _decision_primary(result, decision)
+    return (legacy[:split] + primary
+            + '<details class="tw-evaluation-detail"><summary>Full team, weekly and evaluator evidence</summary>'
+            + legacy[split:-len('</section>')] + '</details></section>')
+
+
+def _decision_primary(result, decision):
+    def paragraph(text, css=''):
+        return '<p' + (f' class="{css}"' if css else '') + '>' + escape(str(text)) + '</p>' if text else ''
+    market = result.get('market_evidence') or {}
+    sent, received = (market.get('sent') or {}).get('total'), (market.get('received') or {}).get('total')
+    full = market.get('availability') == 'full' and sent is not None and received is not None
+    market_html = '<section class="tw-decision-market" aria-label="Current Market comparison"><h4>Current Market</h4>'
+    def shown_side(name):
+        side = market.get(name) or {}
+        if full:
+            return str(side['total'])
+        subtotal = side.get('known_subtotal')
+        return 'Incomplete · known ' + str(subtotal) if subtotal is not None else 'Unavailable'
+    market_html += '<div class="tw-market-caption"><span>You send <b>' + escape(shown_side('sent')) + '</b></span><span>You receive <b>' + escape(shown_side('received')) + '</b></span></div>'
+    if full:
+        gap = market.get('difference')
+        sentence = ('Current Market totals are equal.' if gap == 0 else
+                    f'You receive {abs(gap):g} more current Market value.' if gap is not None and gap > 0 else
+                    f'Your counterparty receives {abs(gap):g} more current Market value.' if gap is not None else 'Current Market difference unavailable.')
+        share = sent / (sent+received) * 100 if sent+received > 0 else 50
+        left, right = ('advantage', 'disadvantage') if sent > received else ('neutral','neutral') if sent == received else ('disadvantage','advantage')
+        market_html += ('<div class="tw-market-bar" role="img" aria-label="' + escape(sentence, quote=True) + '">'
+                        f'<span class="{left}" style="flex-basis:{share:.3f}%"></span><span class="{right}" style="flex-basis:{100-share:.3f}%"></span></div>'
+                        + paragraph(sentence))
+    else:
+        market_html += paragraph('Known individual prices remain available; no complete comparable package total or advantage is established.')
+    market_html += '<small>Current values, not trade-date grades. Market advantage is separate from strategy and lineup impact.</small></section>'
+    brief = '<section class="tw-decision" aria-label="Trade decision summary">' + market_html
+    brief += paragraph(decision.get('blocker'), 'tw-drawback')
+    brief += paragraph(decision['lineup']['explanation']) + paragraph(decision.get('summary'))
+    brief += paragraph('Main cost: ' + decision['main_cost'], 'tw-drawback')
+    if decision.get('limitation'):
+        brief += paragraph('Evidence limit: ' + decision['limitation'], 'tw-drawback')
+    if decision.get('conditional'):
+        brief += '<details><summary>Contender versus rebuild considerations · conditional</summary>' + ''.join(paragraph(t) for t in decision['conditional']) + '</details>'
+    brief += paragraph(decision['next_action'])
+    facts = result.get('player_facts') or {}
+    if facts:
+        brief += '<details class="tw-player-facts"><summary>Player production, projections and rank definitions</summary>'
+        for row in facts.values():
+            projection, production = row['projection'], row['production']
+            brief += '<section><h4>' + escape(row['name']) + '</h4>'
+            brief += paragraph(f"{row['position']} · {row.get('nfl_team') or 'NFL team unavailable'} · Age {row['age'] if row['age'] is not None else 'unavailable'} · {row['status']}")
+            brief += paragraph('Listed position eligibility: ' + ', '.join(row['eligible_positions']) + '. Availability and roster rules are assessed separately in the legal lineup.')
+            brief += paragraph(f"Market positional rank: {row['market_rank']['rank'] or 'Unavailable'} · {row['market_rank']['cohort']}.")
+            brief += paragraph(f"Current Market: {row['current_market'] if row['current_market'] is not None else 'Unavailable'}.")
+            brief += paragraph(f"Sleeper projection: {manager_points(projection['value'])} · Season {projection['season']} · Week {projection['week']} · {projection['freshness']}.")
+            if projection.get('retained_qualification') not in (None, 'Fresh', projection['freshness']):
+                brief += paragraph('Publication qualification: ' + projection['retained_qualification'])
+            if (projection.get('refresh_evidence') or {}).get('retained_publication'):
+                brief += paragraph('Using retained projection evidence; latest refresh did not complete.')
+            brief += paragraph(projection.get('reason') or projection.get('display_reason'))
+            brief += paragraph(f"Actual production: {manager_points(production['points_per_game'])} points/game · {production['sample_games'] if production['sample_games'] is not None else 'Unknown'} observed games · Season {production['season']} · Selected league scoring.")
+            brief += paragraph('Season fantasy-points rank / points-per-game rank: unavailable; no complete compatible cohort is prepared.')
+            brief += '<details><summary>Player fact sources and coverage</summary>'
+            brief += paragraph(f"Projection source observation: {projection.get('source_observed_at') or 'Unknown'}; source generation: {projection.get('generation') or 'Unavailable'}.")
+            brief += paragraph(projection.get('retained_qualification'))
+            brief += paragraph(f"Actual production source: {production.get('source') or 'Unavailable'}; league {production['league_id']}; generation {production.get('generation') or 'Unavailable'}; observation {production.get('observed_at') or 'Unknown'}.")
+            brief += ''.join(paragraph(t) for t in production['limitations']) + '</details></section>'
+        brief += '</details>'
+    return brief + '</section>'

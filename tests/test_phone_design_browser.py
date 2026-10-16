@@ -136,8 +136,11 @@ class FocusedPhoneInteractionTests(unittest.TestCase):
                     "Add 2028 Round 1", page.locator(".tw-adjustment").inner_text()
                 )
                 self.assertIn(
-                    "Side A · you send", page.locator(".tw-adjustment").inner_text()
+                    "your outgoing package", page.locator(".tw-adjustment").inner_text()
                 )
+                self.assertIn("You send:", page.locator(".tw-offer").inner_text())
+                self.assertIn("You receive:", page.locator(".tw-offer").inner_text())
+                self.assertIn("Current Market: You send", page.locator(".tw-offer").inner_text())
                 self.assertEqual(
                     page.locator("#trade-result").evaluate(
                         "e=>e.parentElement.id"

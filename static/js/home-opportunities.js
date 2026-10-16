@@ -9,6 +9,7 @@
   let context, metadata, displayedIdentity, revision = 0, request, departed = false, invalidated = false;
   const locks = () => {
     try { const saved = JSON.parse(sessionStorage.getItem('dtos-trade-workspace:' + context.binding) || '{}');
+      if (saved.endedAtHome) return {protected_assets: [], excluded_assets: []};
       return {protected_assets: saved.protectedAssets || [], excluded_assets: saved.excludedAssets || []};
     } catch (_) { return {protected_assets: [], excluded_assets: []}; }
   };
