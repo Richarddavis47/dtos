@@ -360,3 +360,27 @@ class TradeDecisionExperienceTests(unittest.TestCase):
         self.assertEqual(
             report["player_facts"]["a"]["projection"]["availability"], "available"
         )
+
+    def test_projection_fact_uses_canonical_source_display_without_screen_rounding(
+        self,
+    ):
+        from services.player_projection_view import player_projection_view
+        from src.ui.player_projections import player_projection_panel
+
+        for points in (16.635, 24.335, 0.0, 20.125):
+            with self.subTest(points=points):
+                self.f.points["a"] = points
+                self.f.publish()
+                source = player_projection_view(self.data, "a", self.f.reader)
+                before = copy.deepcopy(self.f.reader.snapshot())
+                report = self.evaluate(strategy="RETOOL")["evaluation"]
+                projection = report["player_facts"]["a"]["projection"]
+                self.assertEqual(projection["value"], points)
+                self.assertEqual(projection["display"], source["display"])
+                self.assertIn(source["display"], player_projection_panel(source))
+                self.assertTrue(
+                    "Sleeper projection: " + source["display"] + " ·"
+                    in report["explanation_html"],
+                    "Trade must use canonical source display " + source["display"],
+                )
+                self.assertEqual(self.f.reader.snapshot(), before)

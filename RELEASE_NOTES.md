@@ -1,3 +1,9 @@
+## v1.21.56 / build 2156 — Canonical projection display parity
+
+- Reuse the prepared canonical player/week projection display in Trade facts, matching the player dossier without a second screen-specific rounding policy.
+- Preserve raw Sleeper projections, legal-lineup calculations, recommendation labels, Market values and every v1.21.55 Trade workflow. Genuine zeros and unavailable evidence keep their supported source display.
+- Add actual-publisher/evaluator and authenticated route/Chromium controls for fractional and zero projections. This is a forward correction to immutable v1.21.55; no new model, store or infrastructure.
+
 ## v1.21.55 / build 2155 — Trade decision experience
 
 - Lead Trade evaluation with a concise roster-specific decision, current Market totals/bar, starter versus depth impact, main cost and material qualification. Keep complete evaluator, weekly, positional and source evidence available on demand.
