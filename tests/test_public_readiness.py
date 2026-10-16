@@ -6,6 +6,7 @@ import os
 import re
 from pathlib import Path
 import tempfile
+import asyncio
 import socket
 import threading
 import time
@@ -187,6 +188,37 @@ class PublicOnboardingTests(unittest.TestCase):
         response = self.client.post('/account/leagues/999/activate', data={'csrf_token': self.csrf})
         self.assertEqual(response.status_code, 403)
         self.runtime.get.assert_not_awaited()
+
+    def test_delayed_preparation_cannot_replace_newer_league_choice(self):
+        self.link()
+        for league in ('200', '100'):
+            self.assertEqual(self.client.post('/account/leagues/' + league, data={'csrf_token': self.csrf}, follow_redirects=False).status_code, 303)
+
+        async def journey():
+            entered, resume = asyncio.Event(), asyncio.Event()
+            async def prepare(league):
+                if league == '200':
+                    entered.set()
+                    await resume.wait()
+                return object()
+            self.runtime.get.side_effect = prepare
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=self.app), base_url='https://dtos.test', cookies=self.client.cookies) as client:
+                old = asyncio.create_task(client.post('/account/leagues/200/activate', data={'csrf_token': self.csrf}))
+                try:
+                    await asyncio.wait_for(entered.wait(), 3)
+                    # Explicitly choosing the original league is still newer
+                    # intent; comparing only its unchanged ID cannot protect it.
+                    newer = await client.post('/account/leagues/100/activate', data={'csrf_token': self.csrf})
+                    self.assertEqual(newer.status_code, 303)
+                    saved = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in Path(self.folder.name).iterdir() if p.is_file()}
+                finally:
+                    resume.set()
+                    previous = await old
+                self.assertEqual(previous.status_code, 409)
+                self.assertIn('newer', previous.text.lower())
+                self.assertEqual(self.store.context_for_session(self.token).active_league_id, '100')
+                self.assertEqual(saved, {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in Path(self.folder.name).iterdir() if p.is_file()})
+        asyncio.run(journey())
 
     @contextmanager
     def browser(self, width, height):

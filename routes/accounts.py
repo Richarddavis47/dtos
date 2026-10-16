@@ -97,6 +97,22 @@ def _recovery_page(codes: list[str]) -> HTMLResponse:
 def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> APIRouter:
     router = APIRouter(tags=["accounts"])
 
+    def activation_revision(context: Any) -> str:
+        # Existing semantic account revision, not a source/retrieval clock or
+        # another stored intent record. Even reselecting the same league updates it.
+        return str(service.store.account_by_username(context.username)["updated_at"])
+
+    def newer_choice(*, api: bool = False) -> Response:
+        message = "A newer league choice was kept. Return Home to use your current league."
+        if api:
+            return JSONResponse({"status": "league_context_changed", "message": message}, status_code=409)
+        return _shell("Newer league choice kept", f'<section class="card"><h2>Your league choice changed</h2><p>{message}</p><a class="btn" href="/">Home</a></section>', status_code=409)
+
+    def activation_failure(context: Any, revision: str, *, api: bool = False) -> Response:
+        if activation_revision(context) != revision:
+            return newer_choice(api=api)
+        return JSONResponse({"status": "unauthorized_league"}, status_code=403)
+
     async def prepare_activation(context: Any, league_id: str, *, api: bool = False) -> Response | None:
         # Existing current-series membership remains authoritative. Preparation
         # cannot hydrate a foreign/historical league or change the saved choice.
@@ -281,6 +297,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             return RedirectResponse("/account/sign-in", status_code=303)
         if not _csrf(service, request, values.get("csrf_token", "")):
             return JSONResponse({"status": "csrf_rejected"}, status_code=403)
+        revision = activation_revision(context)
         try:
             league = await service.league(values.get("league_id", ""))
             roster_id, franchise, status = await service.resolve_membership(league, context.sleeper_user_id)
@@ -297,7 +314,8 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             return _preparation_unavailable()
         service.store.upsert_membership(context.account_id, league, context.sleeper_user_id, roster_id, franchise, status)
         service.store.upsert_series(context.account_id, series_id=series.series_id, current_league=series.current_league, seasons=series.seasons, roster_id=roster_id, franchise_name=franchise)
-        service.store.activate(context.account_id, str(league["league_id"]))
+        if service.store.activate(context.account_id, str(league["league_id"]), expected_account_revision=revision) is None:
+            return activation_failure(context, revision)
         return RedirectResponse("/", status_code=303)
 
     @router.post("/account/leagues/{league_id}")
@@ -308,6 +326,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             return RedirectResponse("/account/sign-in", status_code=303)
         if not _csrf(service, request, values.get("csrf_token", "")):
             return JSONResponse({"status": "csrf_rejected"}, status_code=403)
+        revision = activation_revision(context)
         try:
             discovered = {item.current_league_id: item for item in await service.discover_series(context.sleeper_user_id)}
         except httpx.HTTPError:
@@ -329,7 +348,8 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             return _preparation_unavailable()
         service.store.upsert_membership(context.account_id, league, context.sleeper_user_id, roster_id, franchise, status)
         service.store.upsert_series(context.account_id, series_id=series.series_id, current_league=series.current_league, seasons=series.seasons, roster_id=roster_id, franchise_name=franchise)
-        service.store.activate(context.account_id, league_id)
+        if service.store.activate(context.account_id, league_id, expected_account_revision=revision) is None:
+            return activation_failure(context, revision)
         return RedirectResponse("/", status_code=303)
 
     @router.post("/account/leagues/{league_id}/activate")
@@ -338,12 +358,13 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
         values = await _form(request)
         if context is None or not _csrf(service, request, values.get("csrf_token", "")):
             return JSONResponse({"status": "csrf_rejected"}, status_code=403)
+        revision = activation_revision(context)
         failure = await prepare_activation(context, league_id)
         if failure is not None:
             return failure
-        membership = service.store.activate(context.account_id, league_id)
+        membership = service.store.activate(context.account_id, league_id, expected_account_revision=revision)
         if membership is None:
-            return JSONResponse({"status": "unauthorized_league"}, status_code=403)
+            return activation_failure(context, revision)
         return RedirectResponse("/", status_code=303)
 
     @router.get("/api/account")
@@ -392,12 +413,13 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             return JSONResponse({"status": "authentication_required"}, status_code=401)
         payload = await request.json()
         league_id = str(payload.get("league_id") or "")
+        revision = activation_revision(context)
         failure = await prepare_activation(context, league_id, api=True)
         if failure is not None:
             return failure
-        membership = service.store.activate(context.account_id, league_id)
+        membership = service.store.activate(context.account_id, league_id, expected_account_revision=revision)
         if membership is None:
-            return JSONResponse({"status": "unauthorized_league"}, status_code=403)
+            return activation_failure(context, revision, api=True)
         return JSONResponse({"status": "ready", "active_league": {
             "league_id": membership.league_id, "league_name": membership.league_name,
             "franchise_name": membership.franchise_name, "roster_id": membership.roster_id,
