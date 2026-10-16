@@ -5,6 +5,9 @@ import asyncio
 import concurrent.futures
 import copy
 import os
+import signal
+import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -72,6 +75,54 @@ def cache_input(root: Path, data: dict, name: str = "cache.json") -> Path:
 
 
 class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
+    async def test_cancelled_generation_stops_writer_before_removing_scratch(self):
+        from src.core.fois import process_execution as module
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            repository = FOISRepository(root / 'fois.sqlite3')
+            cache = cache_input(root, fixture())
+            canonical = repository.path.read_bytes()
+            cache_before = cache.read_bytes()
+            worker = (await warm_fois_executor())['pid']
+            original_submit = module._submit
+
+            def slow_compute(_function, *_arguments):
+                return original_submit(time.sleep, 30)
+
+            try:
+                with mock.patch.object(module, '_submit', side_effect=slow_compute):
+                    task = asyncio.create_task(generate_fois_isolated(
+                        fixture(), repository, cache_file=cache,
+                    ))
+                    deadline = time.monotonic() + 3
+                    while time.monotonic() < deadline:
+                        frame = task.get_coro().cr_frame
+                        future = frame.f_locals.get('future') if frame else None
+                        if future is not None and future.running():
+                            break
+                        await asyncio.sleep(0)
+                    else:
+                        self.fail('Controlled isolated compute did not start')
+                    started = time.monotonic()
+                    task.cancel()
+                    with self.assertRaises(asyncio.CancelledError):
+                        await asyncio.wait_for(task, timeout=3)
+                    self.assertLess(time.monotonic() - started, 3)
+                self.assertFalse(psutil.pid_exists(worker))
+                self.assertFalse(list(root.glob('.dtos-fois-compute-*')))
+                self.assertEqual(repository.path.read_bytes(), canonical)
+                self.assertEqual(cache.read_bytes(), cache_before)
+                self.assertEqual(module._IN_FLIGHT, 0)
+                # A later independent valid flight still uses the real engine.
+                scores, _, metrics = await generate_fois_isolated(
+                    fixture(), repository, cache_file=cache,
+                )
+                self.assertTrue(scores)
+                self.assertNotEqual(metrics['worker_pid'], worker)
+            finally:
+                await shutdown_fois_executor()
+
     def test_idle_retirement_preserves_full_warm_interval(self):
         from src.core.fois import process_execution as module
 
@@ -356,6 +407,46 @@ class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
             ]
             await service.generate(data)
             self.assertEqual(calls, 1)
+
+
+class AbandonedComputeShutdownTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == "posix", "Isolated process-group cleanup requires POSIX")
+    def test_running_optional_work_is_reaped_within_shutdown_bound(self):
+        script = '''
+import time
+import psutil
+from src.core.fois import process_execution as module
+worker = module.warm_fois_executor_sync()["pid"]
+future = module._submit(time.sleep, 30)
+queued = module._submit(time.sleep, 30)
+deadline = time.monotonic() + 2
+while not future.running() and time.monotonic() < deadline:
+    time.sleep(.01)
+assert future.running()
+started = time.monotonic()
+assert module.shutdown_fois_executor_sync()
+assert time.monotonic() - started < 3
+assert not psutil.pid_exists(worker)
+assert future.done()
+assert queued.done()
+assert module._EXECUTOR is None
+assert module._IN_FLIGHT == 0
+assert module.shutdown_fois_executor_sync() is False
+'''
+        process = subprocess.Popen(
+            [sys.executable, "-c", script], start_new_session=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+        try:
+            try:
+                stdout, stderr = process.communicate(timeout=7)
+            except subprocess.TimeoutExpired:
+                self.fail("Running abandoned compute prevented bounded server shutdown")
+            self.assertEqual(process.returncode, 0, stdout + stderr)
+        finally:
+            if process.poll() is None:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.communicate(timeout=5)
 
 
 if __name__ == "__main__":
