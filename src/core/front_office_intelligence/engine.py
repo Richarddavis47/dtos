@@ -101,8 +101,8 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
     period = f" from {str(first)[:10]} to {str(last)[:10]}" if first and last else "; observation period unavailable"
     scope = 'manager-attributed trades in retained evidence' if (data.get('front_office_evidence') or {}).get(str(profile.roster_id)) is not None else 'completed franchise trades in observed buckets'
     if scope.startswith('completed franchise'):
-        period = '; historical manager identity and precise observation period may be incomplete'
-    style = f"{activity.trades} {scope}{period}. Activity does not establish skill or selectivity."
+        period = '; observation period unavailable; historical manager attribution may be incomplete'
+    style = f"{activity.trades} observed completed trades ({scope}){period}. Activity does not establish skill or selectivity."
     confidence = min(90, 35 + min(known, 20) + min(activity.trades * 5, 25) + (10 if profile.draft_pick_count else 0))
     evidence = activity.evidence + tuple(item for pref in preferences for item in pref.evidence) + (
         Evidence("Negotiation style sample", str(activity.trades), activity.trades,

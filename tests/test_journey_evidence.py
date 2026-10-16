@@ -41,7 +41,8 @@ class JourneyEvidenceTests(unittest.TestCase):
 
     def test_adequate_relevant_trade_history_keeps_behavior_available(self):
         data = fixture_data()
-        data['transactions'] = [{'type': 'trade', 'roster_ids': [1, 2]} for _ in range(5)]
+        # Completed evidence requires a unique source identity and confirmed status.
+        data['transactions'] = [{'transaction_id': str(i), 'type': 'trade', 'status': 'complete', 'roster_ids': [1, 2]} for i in range(5)]
         report = build_league_model(data).reports[1]
         self.assertIn('5 observed completed trades', report.negotiation_style)
         self.assertIn('observation period unavailable', report.negotiation_style)
@@ -57,7 +58,7 @@ class JourneyEvidenceTests(unittest.TestCase):
     def test_sparse_trade_sample_does_not_establish_behavior(self):
         for count in (0, 1, 4):
             data = fixture_data()
-            data['transactions'] = [{'type': 'trade', 'roster_ids': [1, 2]} for _ in range(count)]
+            data['transactions'] = [{'transaction_id': str(i), 'type': 'trade', 'status': 'complete', 'roster_ids': [1, 2]} for i in range(count)]
             report = build_league_model(data).reports[1]
             self.assertIn(f'{count} observed completed trades', report.negotiation_style)
             self.assertIn('does not establish skill or selectivity', report.negotiation_style)

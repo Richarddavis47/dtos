@@ -24,7 +24,7 @@ class ExistingLeagueDiagnosticControls(unittest.TestCase):
     def test_pending_and_cancelled_are_not_completed_activity(self):
         result = self.analyze([{'transaction_id': str(i), 'type': 'trade',
                               'status': status, 'roster_ids': [1, 2]}
-                             for i, status in enumerate(('pending', 'cancelled', 'failed'))])
+                             for i, status in enumerate(('pending', 'cancelled', 'failed', None))])
         self.assertEqual(result.front_office_model.reports[1].activity.trades, 0)
         self.assertEqual(result.front_office_model.compatibility(1, 2).bilateral_trades, 0)
 
