@@ -441,14 +441,19 @@ class OpportunityIntegrityTests(unittest.TestCase):
                     self.f.data["market_data"] = {}
                     page.locator("#trade-run").click()
                     page.wait_for_function(
-                        "document.querySelector('#trade-result').dataset.assessmentFreshness==='retained'"
+                        "document.querySelector('#trade-result').dataset.assessmentState==='fresh_incomplete'"
                     )
                     self.assertIn(
-                        "not revalidated", page.locator("#trade-result").inner_text()
+                        "NOT REVALIDATED", page.locator("#trade-result").inner_text()
                     )
-                    retained = page.evaluate(
+                    latest = page.evaluate(
                         "JSON.parse(sessionStorage.getItem(Object.keys(sessionStorage).find(k=>k.startsWith('dtos-trade-workspace:')))).currentAssessment"
                     )
+                    self.assertEqual(latest["attempt_state"], "fresh_incomplete")
+                    self.assertNotIn("restored", latest)
+                    self.assertIn("Current evaluation completed", page.locator("#trade-result").inner_text())
+                    retained = latest["previous_assessment"]
+                    self.assertTrue(retained["restored"])
                     self.assertEqual(
                         retained["identity"]["source"], previous["identity"]["source"]
                     )
@@ -467,7 +472,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                             previous["evaluation"].get(key),
                         )
                     self.assertIn(
-                        "Latest incomplete evaluation",
+                        "Current evaluation completed · incomplete evidence",
                         page.locator("#trade-result").inner_text(),
                     )
                     self.f.data["market_data"] = saved

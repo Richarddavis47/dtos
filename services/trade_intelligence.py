@@ -315,8 +315,9 @@ def evaluate_trade_request(
     }
     evaluation["provenance"]["evaluation_id"] = sha256(json.dumps(identity_input, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:24]
     evaluation["provenance"]["inputs"] = identity_input
-    from services.trade_decision import decision_context, selected_player_facts
+    from services.trade_decision import assessment_state, decision_context, selected_player_facts
     evaluation['decision_context'] = decision_context(evaluation, incoming=proposal.assets_received, outgoing=proposal.assets_sent)
+    evaluation['assessment_state'] = assessment_state(evaluation)
     player_facts = selected_player_facts(data, (*proposal.assets_sent, *proposal.assets_received), projections,
         scoring_supported=active_diagnostic.get('evidence', {}).get('scoring') == 'supported')
     evaluation['player_facts'] = player_facts

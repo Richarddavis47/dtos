@@ -31,7 +31,11 @@ class CalculatorBrowserTests(unittest.TestCase):
             'suggested': {'sent': {'total': 600}, 'received': {'total': 600}, 'absolute_gap': 0},
             'reason': 'Narrower owned exact-pick gap.', 'meaning': 'Market adjustment, not a guaranteed better trade.', 'strategic_caution': True}
         if route.request.url.endswith('/evaluate'):
-            return route.fulfill(json={'evaluation': offered['evaluation']})
+            # This controlled response explicitly represents a current complete
+            # attempt; label presence alone must not certify client freshness.
+            evaluation = {**offered['evaluation'], 'assessment_state': {
+                'state': 'fresh_complete', 'attempt': 'completed', 'recommendation_supported': True}}
+            return route.fulfill(json={'evaluation': evaluation, 'assessment_source_identity': {'fixture': 'canonical-fixture'}})
         route.fulfill(json={'results': [offered], 'count': 1})
 
     def test_phone_verdict_controls_owned_selection_and_no_provider_requests(self):
@@ -78,6 +82,10 @@ class CalculatorBrowserTests(unittest.TestCase):
             page.click('#trade-balance-offer')
             page.get_by_role('button', name='Preview adjustment', exact=True).click()
             self.assertEqual(self.state(page)['currentProposal'], original)
+            comparison = page.get_by_text('Compare with original proposal', exact=True)
+            self.assertIsNone(comparison.locator('..').get_attribute('open'))
+            self.assertIn('Current Market: You send 600 / You receive 600', page.locator('.tw-balance-offer').inner_text())
+            comparison.click()
             self.assertIn('Original Market: 400 sent / 600 received · Gap 200', page.locator('#trade-result').inner_text())
             self.assertIn('Major drawback', page.locator('#trade-result').inner_text())
             page.get_by_role('button', name='Keep original', exact=True).click()
@@ -85,6 +93,9 @@ class CalculatorBrowserTests(unittest.TestCase):
             page.get_by_role('button', name='Preview adjustment', exact=True).click()
             page.reload()
             page.get_by_role('button', name='Adopt alternative', exact=True).wait_for()
+            comparison = page.get_by_text('Compare with original proposal', exact=True)
+            self.assertIsNone(comparison.locator('..').get_attribute('open'))
+            comparison.click()
             self.assertIn('Suggested Market: 600 sent / 600 received · Gap 0', page.locator('#trade-result').inner_text())
             page.get_by_role('button', name='Adopt alternative', exact=True).click()
             adopted = self.state(page)['currentProposal']
@@ -94,6 +105,7 @@ class CalculatorBrowserTests(unittest.TestCase):
             self.assertEqual(self.state(page)['currentProposal'], adopted)
             page.click('#trade-run')
             page.locator('#trade-result').get_by_text('WORTH PURSUING', exact=False).wait_for()
+            self.assertEqual(page.locator('#trade-result').get_attribute('data-assessment-state'), 'fresh_complete')
             self.assertEqual(requests[-1][0], 'evaluate')
             self.assertEqual(requests[-1][1]['assets_sent'], adopted['sent'])
             self.assertEqual(requests[-1][1]['workflow'], 'create')
