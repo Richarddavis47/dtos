@@ -7,7 +7,7 @@ from urllib.parse import quote
 
 from models.commissioner import RecommendationPriority
 from src.ui import recommendation_panel as shared_recommendation_panel
-from src.ui.intelligence_presentation import exact_rank, available
+from src.ui.intelligence_presentation import exact_rank, available, percentile_label, manager_points
 
 COMMISSIONER_DESK_CSS = """
 <style>
@@ -91,10 +91,19 @@ def front_office_summary(view: dict[str, Any]) -> str:
     future = summary["future_outlook"]
     depth = summary["depth"]
     assets = summary["asset_health"]
+    evidence = summary.get('lineup_evidence')
+    points = getattr(evidence, 'optimal_lineup_projection', None)
+    week = getattr(evidence, 'projection_week', None)
+    context = f"{view['active_league'].name} · Week {week}" if week is not None else f"{view['active_league'].name} · Projection week unavailable"
+    reasons = ''.join(f'<li>{escape(reason)}</li>' for reason in current.reasons)
+    limitations = ''.join(f'<li>{escape(reason)}</li>' for reason in getattr(evidence, 'limitations', ()))
+    coverage = f"Roster projection coverage {evidence.projection_covered}/{evidence.roster_count}." if evidence is not None else 'Projection coverage unavailable.'
+    lineup_grade = f'{escape(current.grade)} · lineup-relative grade' if current.percentile is not None else 'Lineup-relative grade unavailable'
+    comparison = f'{current.league_size} of {len(view["front_offices"])} franchises with supported comparable lineup evidence'
     return f"""
 <section class="cd-section"><div class="cd-section-head"><div><h2>Selected Franchise</h2><p>{escape(office.owner_name)} · {escape(office.team_name)}</p></div><a class="cd-chip" href="/teams/{office.roster_id}">Open Team Headquarters</a></div>
-<div class="cd-office"><article class="cd-card cd-office-main"><span class="cd-kicker">Current Contending Grade</span><div class="cd-grade">{escape(current.grade)} · {current.score if current.score is not None else "Score unavailable"}</div><p>{exact_rank(current.rank, current.league_size)} · {str(current.percentile) + "th percentile" if current.percentile is not None else "Percentile unavailable"} · {summary['confidence']}% confidence</p><p class="ds-grade-context">Meaning: league-relative championship readiness based on current evidence.</p><span class="cd-status">{escape(summary['competitive_window'])}</span><details><summary>Show Window Reasoning</summary><p>{escape(summary['window_explanation'])}</p></details></article>
-<article class="cd-card cd-metric"><span>Future Outlook</span><b>{escape(future.grade)} · {future.score if future.score is not None else "Score unavailable"}</b><p>{exact_rank(future.rank)} · {str(future.percentile) + "th percentile" if future.percentile is not None else "Percentile unavailable"} · {summary['confidence']}% confidence</p><p class="ds-grade-context">Meaning: sustainable value beyond the current season.</p></article><article class="cd-card cd-metric"><span>Record</span><b>{escape(summary['record'])}</b><p>Current Sleeper record</p></article><article class="cd-card cd-metric"><span>Power Ranking</span><b>{exact_rank(summary['power_ranking'])}</b><p>League-relative projected order</p></article><article class="cd-card cd-metric"><span>Depth Analysis</span><b>{escape(depth.grade)} · {depth.score if depth.score is not None else "Score unavailable"}</b><p>{summary['confidence']}% confidence · core position coverage</p></article><article class="cd-card cd-metric"><span>Asset Health</span><b>{escape(assets.grade)} · {assets.score if assets.score is not None else "Score unavailable"}</b><p>{summary['confidence']}% confidence · draft capital, flexibility, and balance</p></article></div></section>
+<div class="cd-office"><article class="cd-card cd-office-main"><span class="cd-kicker">Optimal Projected Lineup</span><div class="cd-grade">{manager_points(points)} projected points</div><p>{escape(context)}</p><p>{exact_rank(current.rank, current.league_size)} · {percentile_label(current.percentile)}</p><p>{lineup_grade}</p><p>{comparison}. {coverage}</p><p class="ds-grade-context">Optimal legal-lineup projection compared within this scoring league; not a championship or competitive-window grade.</p><details><summary>Show Lineup Evidence</summary><ul>{reasons}{limitations}</ul></details><p><b>Competitive Window</b></p><span class="cd-status">{escape(summary['competitive_window'])}</span><details><summary>Show Window Reasoning</summary><p>{escape(summary['window_explanation'])}</p></details></article>
+<article class="cd-card cd-metric"><span>Future Outlook</span><b>{escape(future.grade)} · {future.score if future.score is not None else "Score unavailable"}</b><p>{exact_rank(future.rank)} · {percentile_label(future.percentile)}</p><p class="ds-grade-context">Meaning: sustainable value beyond the current season.</p></article><article class="cd-card cd-metric"><span>Record</span><b>{escape(summary['record'])}</b><p>Current Sleeper record</p></article><article class="cd-card cd-metric"><span>Power Ranking</span><b>{exact_rank(summary['power_ranking'])}</b><p>League-relative projected order</p></article><article class="cd-card cd-metric"><span>Depth Analysis</span><b>{escape(depth.grade)} · {depth.score if depth.score is not None else "Score unavailable"}</b><p>Core position coverage; confidence unavailable for this dimension</p></article><article class="cd-card cd-metric"><span>Asset Health</span><b>{escape(assets.grade)} · {assets.score if assets.score is not None else "Score unavailable"}</b><p>Draft capital, flexibility, and balance; confidence unavailable for this dimension</p></article></div></section>
 """
 
 

@@ -146,6 +146,14 @@ def matchup_score_hierarchy(
     return tuple(rows)
 
 
+def percentile_label(value: int | None) -> str:
+    """Ordinal display only; preserve the existing percentile calculation."""
+    if value is None:
+        return 'Percentile unavailable'
+    suffix = 'th' if 10 <= value % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(value % 10, 'th')
+    return f'{value}{suffix} percentile'
+
+
 def exact_rank(value: Any, total: Any = None) -> str:
     def ordinal(raw: Any) -> int | None:
         if isinstance(raw, bool):

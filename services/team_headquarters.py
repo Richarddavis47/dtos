@@ -139,7 +139,7 @@ def generate_front_office_summary(
             "Overall Assessment": f"League-relative Overall Grade is {team_card.overall.grade} ({team_card.overall.score}/100), ranked #{team_card.overall.rank} of {team_card.overall.league_size}. Current Window: {team_card.current_window.value}. {age_note}",
             "Current Strengths": team_card.explanation[0],
             "Current Weaknesses": team_card.explanation[1],
-            "Short-Term Outlook": f"Current Championship Outlook uses the league-relative Current Contending Grade: {team_card.current_contending.grade} ({team_card.current_strength}/100), #{team_card.current_contending.rank} in the league, evaluated independently from future assets. " + " ".join(team_card.current_contending.reasons),
+            "Short-Term Outlook": f"Optimal projected lineup has lineup-relative grade {team_card.starting_lineup.grade}, ranked #{team_card.starting_lineup.rank} among supported league lineups; this is not a championship assessment. " + " ".join(team_card.starting_lineup.reasons),
             "Long-Term Outlook": f"Future Outlook Grade is {team_card.future_outlook.grade} ({team_card.future_strength}/100), #{team_card.future_outlook.rank} in the league and remains an independently calculated future horizon. " + " ".join(team_card.future_outlook.reasons),
         }
     return {

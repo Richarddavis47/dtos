@@ -296,7 +296,8 @@ def build_commissioner_desk(
     team_card = intelligence.roster.team_intelligence[selected_front_office.roster_id]
     since_time = _parse_since(since)
     summary = {
-        "current_outlook": team_card.current_contending,
+        "current_outlook": team_card.starting_lineup,
+        "lineup_evidence": intelligence.roster.assessment.roster_evidence,
         "confidence": team_card.confidence,
         "future_outlook": team_card.future_outlook,
         "depth": decision.depth,
