@@ -94,12 +94,15 @@ def front_office_summary(view: dict[str, Any]) -> str:
     evidence = summary.get('lineup_evidence')
     points = getattr(evidence, 'optimal_lineup_projection', None)
     week = getattr(evidence, 'projection_week', None)
-    context = f"{view['active_league'].name} · Week {week}" if week is not None else f"{view['active_league'].name} · Projection week unavailable"
-    reasons = ''.join(f'<li>{escape(reason)}</li>' for reason in current.reasons)
+    league_name = getattr(view.get('active_league'), 'name', None) or 'Scoring league unavailable'
+    context = f"{league_name} · Week {week}" if week is not None else f"{league_name} · Projection week unavailable"
+    reasons = ''.join(f'<li>{escape(reason)}</li>' for reason in (getattr(current, 'reasons', ()) or ('Additional lineup evidence unavailable.',)))
     limitations = ''.join(f'<li>{escape(reason)}</li>' for reason in getattr(evidence, 'limitations', ()))
     coverage = f"Roster projection coverage {evidence.projection_covered}/{evidence.roster_count}." if evidence is not None else 'Projection coverage unavailable.'
     lineup_grade = f'{escape(current.grade)} · lineup-relative grade' if current.percentile is not None else 'Lineup-relative grade unavailable'
-    comparison = f'{current.league_size} of {len(view["front_offices"])} franchises with supported comparable lineup evidence'
+    offices = view.get('front_offices')
+    comparison = (f'{current.league_size} of {len(offices)} franchises with supported comparable lineup evidence'
+                  if offices and current.percentile is not None else 'Comparison population unavailable; insufficient comparable evidence')
     return f"""
 <section class="cd-section"><div class="cd-section-head"><div><h2>Selected Franchise</h2><p>{escape(office.owner_name)} · {escape(office.team_name)}</p></div><a class="cd-chip" href="/teams/{office.roster_id}">Open Team Headquarters</a></div>
 <div class="cd-office"><article class="cd-card cd-office-main"><span class="cd-kicker">Optimal Projected Lineup</span><div class="cd-grade">{manager_points(points)} projected points</div><p>{escape(context)}</p><p>{exact_rank(current.rank, current.league_size)} · {percentile_label(current.percentile)}</p><p>{lineup_grade}</p><p>{comparison}. {coverage}</p><p class="ds-grade-context">Optimal legal-lineup projection compared within this scoring league; not a championship or competitive-window grade.</p><details><summary>Show Lineup Evidence</summary><ul>{reasons}{limitations}</ul></details><p><b>Competitive Window</b></p><span class="cd-status">{escape(summary['competitive_window'])}</span><details><summary>Show Window Reasoning</summary><p>{escape(summary['window_explanation'])}</p></details></article>

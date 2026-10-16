@@ -29,6 +29,10 @@ class RankPresentationTests(unittest.TestCase):
                 record='0–0', power_ranking=None)})
         self.assertEqual(html.count('Not ranked — insufficient evidence'), 3)
         self.assertNotIn('#None', html)
+        self.assertIn('Scoring league unavailable', html)
+        self.assertIn('Comparison population unavailable', html)
+        self.assertIn('Projection coverage unavailable', html)
+        self.assertNotIn('0% confidence', html)
 
     def test_missing_position_and_universe_are_not_numbers(self):
         html = _scoped_rank_summary({'global_market': {'overall': {'rank': 15}}})
