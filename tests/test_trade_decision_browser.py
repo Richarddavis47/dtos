@@ -216,3 +216,58 @@ class TradeDecisionBrowserTests(unittest.TestCase):
                 self.fixture.proposal(page), {"sent": [], "received": [], "partner": 0}
             )
             self.assertEqual(page.locator("#trade-strategy").input_value(), "REBUILD")
+
+    def test_explicit_generated_offer_after_home_imports_new_assets_not_ended_constraints(
+        self,
+    ):
+        from html import escape
+
+        for destination in ("create", "calculator"):
+            data = self.fixture.workspace()
+            data["active_front_office"] = 1
+            with (
+                self.subTest(destination=destination),
+                self.fixture.page(workspace=data) as (page, _),
+            ):
+                self.home(page)
+                self.populated(page)
+                page.click("#trade-adjust")
+                page.select_option("#trade-constraint-asset", "player:a")
+                page.fill("#trade-instruction", "keep this player")
+                page.goto("https://dtos.test/")
+                proposal = self.fixture.offer(["player:b"], ["player:y"])["proposal"]
+                body = (
+                    '<button data-trade-proposal="'
+                    + escape(json.dumps(proposal), quote=True)
+                    + '" data-trade-destination="'
+                    + destination
+                    + '">Edit Trade</button>'
+                    + '<script src="/static/js/trade_workspace.js" defer></script>'
+                )
+                page.route(
+                    "https://dtos.test/generated-offer",
+                    lambda r: r.fulfill(content_type="text/html", body=body),
+                )
+                page.goto("https://dtos.test/generated-offer")
+                page.get_by_role("button", name="Edit Trade", exact=True).click()
+                page.locator("#trade-context").get_by_text(
+                    "Active league", exact=False
+                ).wait_for()
+                expected = {
+                    "sent": ["player:b"],
+                    "received": ["player:y"],
+                    "partner": 2,
+                }
+                self.assertEqual(self.fixture.proposal(page), expected)
+                saved = page.evaluate(
+                    "JSON.parse(sessionStorage.getItem('dtos-trade-workspace:scout-session'))"
+                )
+                self.assertEqual(saved["adjustmentConstraints"], {})
+                self.assertEqual(
+                    page.locator("#trade-strategy").input_value(), "RETOOL"
+                )
+                page.reload()
+                page.locator("#trade-context").get_by_text(
+                    "Active league", exact=False
+                ).wait_for()
+                self.assertEqual(self.fixture.proposal(page), expected)

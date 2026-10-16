@@ -46,8 +46,13 @@
         if (!Array.isArray(ids) || ids.some(id => !assets.some(a => a.asset_id === id))) throw new Error('Ownership changed');
       }
       const key = 'dtos-trade-workspace:' + w.workspace_context.binding;
-      const saved = JSON.parse(sessionStorage.getItem(key) || 'null') || {};
-      sessionStorage.setItem(key, JSON.stringify({...saved, schema: 2, tabOwner: tradeTabOwner(),
+      const retained = JSON.parse(sessionStorage.getItem(key) || 'null');
+      const owner = tradeTabOwner();
+      // A new explicit offer supersedes an ended or other-tab draft; its old
+      // objective and proposal-specific constraints must not follow the import.
+      const saved = retained && !retained.endedAtHome && (!retained.tabOwner || retained.tabOwner === owner) ? retained : {};
+      sessionStorage.setItem(key, JSON.stringify({...saved, schema: 2, tabOwner: owner, endedAtHome: false,
+        resetGeneration: String(Date.now()) + ':' + Math.random().toString(36).slice(2),
         currentProposal: {partner: proposal.partner_roster_id, sent: proposal.assets_sent, received: proposal.assets_received},
         originalProposal: null, previewProposal: null, adoptedProposal: null, currentAssessment: null,
         originWorkflow: destination === 'calculator' && (proposal.assets_sent.includes(saved.requiredOutgoingAsset) || proposal.assets_received.includes(saved.requiredIncomingAsset)) ? saved.originWorkflow : 'create',
