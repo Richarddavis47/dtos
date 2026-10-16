@@ -757,6 +757,13 @@
     const shown = balance.display?.suggested || {};
     const sideValue = side => !compatible ? 'Unavailable · publication context not established' : m[side]?.total != null ? shown[side] || displayMarket(m[side].total) : m[side]?.known_subtotal != null ? 'Incomplete · known subtotal ' + displayMarket(m[side].known_subtotal) : 'Unavailable';
     card.append(node('p', `Current Market: You send ${sideValue('sent')} / You receive ${sideValue('received')}. Difference: ${full ? shown.gap || displayMarket(m.absolute_gap) : 'Unavailable · incomplete comparison'}.`, 'tw-offer-market'));
+    const original = preview ? session.originalProposal || selected : selected;
+    const changes = (before, after, side) => {
+      const names = ids => ids.slice(0, 2).map(id => label(asset(id) || {label:id})).join(' + ') + (ids.length > 2 ? ' + ' + (ids.length - 2) + ' more' : '');
+      const added = after.filter(id => !before.includes(id)), removed = before.filter(id => !after.includes(id));
+      return [added.length ? 'Add ' + names(added) + ' to ' + side : '', removed.length ? 'Remove ' + names(removed) + ' from ' + side : ''].filter(Boolean).join('; ');
+    };
+    card.append(node('p', [changes(original.sent, row.proposal.assets_sent, 'your outgoing package'), changes(original.received, row.proposal.assets_received, 'the assets you receive')].filter(Boolean).join('; '), 'tw-adjustment'));
     const retained = Boolean(contextQualification(context, row.proposal)), decision = e.decision_context || {};
     if (context.exploration) card.append(node('p', 'Exploratory only · not a qualified bilateral recommendation', 'tw-drawback'));
     card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : 'Separate DTOS assessment: ') + (e.recommendation || 'Unavailable')));

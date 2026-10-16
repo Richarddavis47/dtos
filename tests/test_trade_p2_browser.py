@@ -72,16 +72,33 @@ class TradeP2BrowserTests(unittest.TestCase):
                 paragraphs = card.locator(":scope > p").all_text_contents()
                 box = card.bounding_box()
                 self.geometry.append({"case": "balance", "width": width,
-                                      "height": box["height"], "primary_paragraphs": paragraphs})
+                                      "height": box["height"], "primary_paragraphs": paragraphs,
+                                      "complete_offer_offset": card.locator(".tw-offer-package").first.bounding_box()["y"] - box["y"],
+                                      "market_offset": card.locator(".tw-offer-market").bounding_box()["y"] - box["y"],
+                                      "explanation_offset": card.get_by_text("Why consider:", exact=False).bounding_box()["y"] - box["y"]})
                 send = next(i for i, text in enumerate(paragraphs) if text.startswith("You send:"))
                 reason = next(i for i, text in enumerate(paragraphs) if text.startswith("Why"))
                 market = next(i for i, text in enumerate(paragraphs) if text.startswith("Current Market:"))
                 self.assertLess(send, reason)
                 self.assertLess(market, reason)
+                self.assertIn("Add", card.locator(".tw-adjustment").inner_text())
+                self.assertGreater(card.locator(".tw-adjustment").bounding_box()["y"], card.locator(".tw-offer-market").bounding_box()["y"])
                 self.assertLessEqual(max(map(len, paragraphs)), 400)
                 self.assertIsNone(re.search(r"\d+\.\d{5,}", " ".join(paragraphs)))
                 self.assertIn("Josh Allen", " ".join(paragraphs))
                 self.assertIn("Major drawback:", " ".join(paragraphs))
+                detail = card.locator(":scope > details").first
+                self.assertIsNone(detail.get_attribute("open"))
+                summary = detail.locator(":scope > summary")
+                summary.focus()
+                page.keyboard.press("Enter")
+                self.assertIsNotNone(detail.get_attribute("open"))
+                self.assertTrue(summary.evaluate("e=>e===document.activeElement"))
+                page.keyboard.press("Enter")
+                self.assertIsNone(detail.get_attribute("open"))
+                preview = card.get_by_role("button", name="Preview adjustment", exact=True)
+                preview.scroll_into_view_if_needed()
+                self.assertTrue(preview.evaluate("e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}"))
                 self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), width)
 
     def test_first_incomplete_http_evaluation_is_current_attempt_not_retained(self):
