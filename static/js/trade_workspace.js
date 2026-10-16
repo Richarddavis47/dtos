@@ -270,7 +270,7 @@
     const totals = which => { const rows = selected[which].map(asset); return rows.length && rows.every(a => a && a.trade_value != null) ? rows.reduce((sum, a) => sum + a.trade_value, 0) : null; };
     const sent = totals('sent'), received = totals('received'), balance = el('trade-balance'); balance.replaceChildren(node('h3', 'Market Balance'), node('p', `You send: ${sent ?? 'Unavailable'} · You receive: ${received ?? 'Unavailable'}`), node('small', 'Neutral market relationship only — not the Trade Intelligence recommendation.'));
     paintCalculator();
-    el('trade-context').textContent = `${flow === 'shop' ? 'Shop search: ' + (team(session.shopSearchPartner)?.team_name || 'All eligible teams') + ' · Current offer: ' : ''}${team(active)?.team_name || 'Your franchise'} → ${team(partner())?.team_name || (flow === 'shop' ? 'All eligible teams' : 'Choose partner')} · Active league ${workspace.manager_context.league_id}`;
+    el('trade-context').textContent = flow === 'shop' ? `Active league ${workspace.manager_context.league_id} · Shop search: ${team(session.shopSearchPartner)?.team_name || 'All eligible teams'}` : `${team(active)?.team_name || 'Your franchise'} → ${team(partner())?.team_name || 'Choose partner'} · Active league ${workspace.manager_context.league_id}`;
     for (const id of ['shop-preference','shop-protected']) if (el(id)) el(id).disabled = busy;
     if (el('shop-position')) el('shop-position').disabled = busy || el('shop-preference').value !== 'position_need';
     el('trade-run').disabled = busy || !selected.sent.length || !selected.received.length;
@@ -477,6 +477,7 @@
   function staleAssessment(reason) {
     if (!session.currentAssessment) return;
     const retained = Boolean(el('trade-evaluation-retained'));
+    session.currentAssessment.latestPartial = false;
     session.currentAssessment.restored = true; session.currentAssessment.stale_reason = reason;
     showEvaluation(session.currentAssessment.evaluation, session.currentAssessment.opportunity, session.currentAssessment);
     if (retained) retainAssessment();
@@ -794,6 +795,7 @@
           node('p', row.conflict_explanation || row.blocker_type + ': ' + (row.blockers || []).join(', ').replaceAll('_', ' ')));
         for (const id of row.blocking_asset_ids || []) detail.append(node('p', 'Blocking asset: ' + label(asset(id) || {label: id}) + ' · ' + id));
         if (row.smallest_optional_relaxation) detail.append(node('p', (row.blocker_type === 'MISSING REQUIRED EVIDENCE' ? 'Evidence limit: ' : 'Optional change: ') + row.smallest_optional_relaxation));
+        if (row.evaluation?.decision_context?.strategy?.selection_required) strategyAction(detail);
         if (row.blocker_type === 'MISSING REQUIRED EVIDENCE') {
           const market = node('a', 'Review current Market evidence'); market.href = '/market';
           detail.append(market);
@@ -1046,7 +1048,7 @@
   }
   addEventListener('focus', reconcileStrategy);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) reconcileStrategy(); });
-  el('trade-strategy').onchange = () => { writeStrategyIntent(); el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; if (workspace) paint(); excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; persist(); };
+  el('trade-strategy').onchange = () => { writeStrategyIntent(); el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; if (workspace) paint(); excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; if (flow === 'shop') searchStatus('Not started for this strategy. Find Shop returns to search again; missing projection coverage may still limit results.', 'not_started'); persist(); };
   // A document restored from browser history must not accept a response from
   // work started before leaving it. Normal navigation loads fresh server context.
   addEventListener('pagehide', () => {

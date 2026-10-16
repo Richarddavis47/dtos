@@ -10,9 +10,11 @@ def decision_context(result, *, incoming=(), outgoing=()):
     strategy = (dimensions.get("strategic_fit") or {}).get("active") or {}
     intent = strategy.get("manager_strategy") or {}
     capital = strategy.get("future_capital") or {}
-    needs_strategy = bool(
-        capital.get("sent") or capital.get("received")
-    ) and not intent.get("strategy")
+    needs_strategy = (
+        bool(capital.get("sent") or capital.get("received"))
+        and not intent.get("strategy")
+        and result.get("recommendation") is None
+    )
     diagnostic = ((dimensions.get("roster_diagnostics") or {}).get("sides") or {}).get(
         "active"
     ) or {}
@@ -138,7 +140,7 @@ def decision_context(result, *, incoming=(), outgoing=()):
     }
 
 
-def selected_player_facts(data, assets, projections):
+def selected_player_facts(data, assets, projections, *, scoring_supported=None):
     """Only selected assets; one pinned prepared week, no provider or SQL calls."""
     from services.player_projection_view import player_projection_views
     from src.core.player_value_projection.canonical_production import (
@@ -151,14 +153,19 @@ def selected_player_facts(data, assets, projections):
     league = data.get("league") or {}
     league_id = str(league.get("league_id") or "")
     scoring = data.get("scoring_settings") or league.get("scoring_settings") or {}
-    valid_scoring = (
-        isinstance(scoring, dict)
-        and scoring
-        and all(
-            isinstance(v, (int, float)) and not isinstance(v, bool) and isfinite(v)
-            for v in scoring.values()
+    if scoring_supported is None:
+        from src.core.intelligence.roster_diagnostics import _qualification
+
+        scoring_supported = (
+            _qualification(
+                data,
+                projections.snapshot(),
+                tuple(league.get("roster_positions") or ()),
+                projection_reader=projections,
+            )["scoring"]
+            == "supported"
         )
-    )
+    valid_scoring = scoring_supported is True
     fingerprint = (
         sha256(
             json.dumps(
@@ -194,6 +201,13 @@ def selected_player_facts(data, assets, projections):
         pid = asset.asset_id
         player = (data.get("players") or {}).get(pid) or {}
         projection = dict(views[pid])
+        if not valid_scoring:
+            projection.update(
+                value=None,
+                display="Unavailable",
+                availability="unavailable",
+                reason="Insufficient supported scoring evidence; missing or unsupported scoring is not zero.",
+            )
         source = ((snapshot or {}).get("players") or {}).get(pid) or {}
         projection.update(
             source_observed_at=source.get("source_timestamp"),

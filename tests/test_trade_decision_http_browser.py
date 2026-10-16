@@ -186,7 +186,10 @@ class DecisionHTTPBrowserTests(unittest.TestCase):
                     "button", name="Choose analysis strategy", exact=True
                 )
                 choose.wait_for()
-                self.assertIn('Latest partial evaluation',page.locator('#trade-result').inner_text())
+                self.assertIn(
+                    "Latest partial evaluation",
+                    page.locator("#trade-result").inner_text(),
+                )
                 report = self.responses[-1]["evaluation"]
                 self.assertIsNone(report["recommendation"])
                 self.assertEqual(report["market_evidence"]["sent"]["total"], 945)
@@ -310,4 +313,60 @@ class DecisionHTTPBrowserTests(unittest.TestCase):
             self.assertEqual(page.locator("#trade-strategy").input_value(), "WIN NOW")
             self.assertTrue(
                 all(path.startswith("/api/trades/") for path, _ in self.requests)
+            )
+
+    def test_shop_target_action_status_and_results_precede_optional_controls(self):
+        geometry = []
+        for width, height in [
+            (320, 432),
+            (375, 667),
+            (390, 682),
+            (390, 844),
+            (1280, 900),
+        ]:
+            with self.subTest(width=width), self.browser(width, height) as page:
+                self.ready(page, "/trades/shop?front_office=1&asset_id=a")
+                page.locator(
+                    "#recommendation-status[data-search-state=complete]"
+                ).wait_for()
+                self.assertEqual(page.evaluate("scrollY"), 0)
+                row = {"width": width, "height": height}
+                for key, selector in [
+                    ("target_y", "#trade-target"),
+                    ("find_y", "#trade-find"),
+                    ("status_y", "#recommendation-status"),
+                    ("results_y", "#trade-result"),
+                    ("partner_y", "#trade-partner"),
+                    ("board_y", "#trade-board"),
+                ]:
+                    row[key] = round(page.locator(selector).bounding_box()["y"], 2)
+                self.assertLess(row["target_y"], row["find_y"])
+                self.assertLess(row["find_y"], row["status_y"])
+                self.assertLess(row["results_y"], row["partner_y"])
+                self.assertLess(row["partner_y"], row["board_y"])
+                find = page.locator("#trade-find")
+                find.scroll_into_view_if_needed()
+                self.assertTrue(
+                    find.evaluate(
+                        "e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}"
+                    )
+                )
+                find.focus()
+                self.assertTrue(find.evaluate("e=>e===document.activeElement"))
+                self.assertLessEqual(
+                    page.evaluate("document.documentElement.scrollWidth"), width
+                )
+                geometry.append(row)
+                before = len(self.requests)
+                page.select_option("#trade-strategy", "REBUILD")
+                self.assertIn(
+                    "Not started for this strategy",
+                    page.locator("#recommendation-status").inner_text(),
+                )
+                self.assertTrue(page.locator("#trade-result").is_hidden())
+                self.assertEqual(len(self.requests), before)
+        target = os.environ.get("DTOS_DECISION_BROWSER_EVIDENCE")
+        if target:
+            Path(target).with_name("shop-priority-after-geometry.json").write_text(
+                json.dumps(geometry, indent=2)
             )

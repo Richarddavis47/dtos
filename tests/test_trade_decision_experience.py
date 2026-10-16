@@ -318,3 +318,45 @@ class TradeDecisionExperienceTests(unittest.TestCase):
         report = self.evaluate(strategy="WIN NOW")["evaluation"]
         self.assertIn("Incoming availability", report["decision_context"]["limitation"])
         self.assertIn("Questionable", report["explanation_html"])
+
+    def test_independent_parity_and_severe_loss_do_not_require_a_strategy_to_get_a_verdict(
+        self,
+    ):
+        for team in self.data["teams"]:
+            team.pop("strategy", None)
+        report = self.evaluate(
+            assets_sent=["2028-R1-3"], assets_received=["2028-R1-4"]
+        )["evaluation"]
+        self.assertEqual(report["recommendation"], "FAIR / OPTIONAL")
+        self.assertFalse(report["decision_context"]["strategy"]["selection_required"])
+        self.assertIsNone(report["decision_context"]["blocker"])
+        self.f.prices(a=900, c=100)
+        report = self.evaluate()["evaluation"]
+        self.assertEqual(report["recommendation"], "REJECT")
+        self.assertFalse(report["decision_context"]["strategy"]["selection_required"])
+
+    def test_unsupported_scoring_does_not_publish_zero_as_a_supported_player_fact(self):
+        self.data["league"]["scoring_settings"] = {"unsupported_scoring_key": 1}
+        self.f.publish()
+        report = self.evaluate(strategy="RETOOL")["evaluation"]
+        self.assertEqual(
+            report["dimensions"]["roster_diagnostics"]["sides"]["active"]["evidence"][
+                "scoring"
+            ],
+            "unavailable / incomplete",
+        )
+        self.assertIsNone(report["player_facts"]["a"]["projection"]["value"])
+        self.assertEqual(
+            report["player_facts"]["a"]["projection"]["availability"], "unavailable"
+        )
+        self.assertIsNone(report["player_facts"]["a"]["production"]["points_per_game"])
+        self.assertEqual(
+            self.f.reader.week_snapshot(2)["players"]["a"]["canonical_projection"], 0
+        )
+        self.data["league"]["scoring_settings"] = {"pass_yd": 0}
+        self.f.publish()
+        report = self.evaluate(strategy="RETOOL")["evaluation"]
+        self.assertEqual(report["player_facts"]["a"]["projection"]["value"], 0)
+        self.assertEqual(
+            report["player_facts"]["a"]["projection"]["availability"], "available"
+        )

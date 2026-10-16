@@ -317,7 +317,8 @@ def evaluate_trade_request(
     evaluation["provenance"]["inputs"] = identity_input
     from services.trade_decision import decision_context, selected_player_facts
     evaluation['decision_context'] = decision_context(evaluation, incoming=proposal.assets_received, outgoing=proposal.assets_sent)
-    player_facts = selected_player_facts(data, (*proposal.assets_sent, *proposal.assets_received), projections)
+    player_facts = selected_player_facts(data, (*proposal.assets_sent, *proposal.assets_received), projections,
+        scoring_supported=active_diagnostic.get('evidence', {}).get('scoring') == 'supported')
     evaluation['player_facts'] = player_facts
     from services.trade_explanation import render_trade_explanation
     evaluation['explanation_html'] = render_trade_explanation(evaluation, league_id=identity_input['league_id'])
