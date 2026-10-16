@@ -264,6 +264,8 @@ def evaluate_trade_request(
         if str(payload.get('workflow') or 'create') in {'create', 'trade_for', 'shop', 'recommended', 'adjust', 'create_alternative'}:
             from src.core.intelligence import evaluate_horizon_impact
             horizon_impact = evaluate_horizon_impact(data, proposal, projections)
+        prepared_context = evidence_context or build_trade_evidence_context(
+            data, (assets[item] for item in (*sent_ids, *received_ids)))
         evaluation = evaluate_bilateral(
             proposal, active_team=teams[active_id], partner_team=teams[partner_id], league=data.get("league") or {},
             player_database=data.get("players") or {}, ownership=ownership,
@@ -271,9 +273,7 @@ def evaluate_trade_request(
             team_windows=workspace.get('competitive_windows'),
             manager_strategies={str(active_id): payload.get('strategy') or workspace.get('requested_strategy') or teams[active_id].get('strategy'),
                                 str(partner_id): teams[partner_id].get('strategy')},
-            evidence_context=evidence_context or build_trade_evidence_context(
-                data, (assets[item] for item in (*sent_ids, *received_ids)),
-            ),
+            evidence_context=prepared_context,
         )
         from src.core.intelligence.roster_diagnostics import package_diagnostics
         diagnostic = package_diagnostics(data, proposal, projections.snapshot(), horizon_impact,
@@ -282,6 +282,11 @@ def evaluate_trade_request(
         evaluation.setdefault('dimensions', {})['roster_diagnostics'] = diagnostic
         active_diagnostic = diagnostic['sides']['active']
         partner_diagnostic = diagnostic['sides']['partner']
+        from src.core.gm_behavioral_intelligence.diagnostics import partner_context
+        partner_history = partner_context(prepared_context.league_observations, partner_id,
+            partner_diagnostic, (asset.position for asset in proposal.assets_sent if asset.position))
+        evaluation['dimensions']['league_partner_context'] = partner_history
+        evaluation['why_this_partner'] = partner_history.get('short_summary') or partner_history['summary']
         if active_diagnostic['coverage'] == 'supported current week' and active_diagnostic['need_positions_received']:
             evaluation['why_you_would_do_it'] = (evaluation.get('why_you_would_do_it') or '') + ' Addresses supported ' + ', '.join(active_diagnostic['need_positions_received']) + ' lineup/depth context; package effects remain separate.'
         qualifications = active_diagnostic.get('evidence', {}).get('limitations') or []
@@ -1231,6 +1236,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             row["evaluation"]["values"]["ratio"] < 1,
             -int(row["evaluation"]["dimensions"]["historical_counterparty_evidence"]["score"]),
             abs(1 - row["evaluation"]["values"]["ratio"]),
+            -int(row['evaluation']['dimensions'].get('league_partner_context', {}).get('soft_tie_break') or 0),
             row["evaluation"]["provenance"]["evaluation_id"],
         ))
     limit = 5 if workflow in {"shop", "recommended"} else 3

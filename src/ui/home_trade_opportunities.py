@@ -48,8 +48,9 @@ def cards(rows, roster_id):
         url = "/trades/create?" + urlencode(
             {"front_office": roster_id, "home_offer": row["home_offer"]}
         )
+        partner = ('<p><b>Why this partner:</b> ' + escape(_brief(e["why_this_partner"])) + '</p>') if e.get("why_this_partner") else ""
         output.append(
-            f'''<article class="home-opportunity"><p class="identity-kicker">{escape(kind)}</p><h3>{escape(str(p.get("partner_team_name") or "Counterparty"))}</h3><p><b>You send:</b> {assets("send")}</p><p><b>You receive:</b> {assets("receive")}</p><p>{escape(market)}</p><p><b>{escape(str(e.get("recommendation") or "Assessment unavailable"))}</b></p><p><b>Why consider:</b> {escape(_brief(reason))}</p><p><b>Drawback:</b> {escape(_brief(drawback))}</p><details><summary>Assessment evidence</summary><p>{escape(str(e.get("dominant_reason") or "Methodology details unavailable."))}</p></details><a class="ds-action" href="{escape(url, quote=True)}">Explore / Edit · preview →</a></article>'''
+            f'''<article class="home-opportunity"><p class="identity-kicker">{escape(kind)}</p><h3>{escape(str(p.get("partner_team_name") or "Counterparty"))}</h3><p><b>You send:</b> {assets("send")}</p><p><b>You receive:</b> {assets("receive")}</p><p>{escape(market)}</p><p><b>{escape(str(e.get("recommendation") or "Assessment unavailable"))}</b></p><p><b>Why consider:</b> {escape(_brief(reason))}</p><p><b>Drawback:</b> {escape(_brief(drawback))}</p>{partner}<details><summary>Assessment evidence</summary><p>{escape(str(e.get("dominant_reason") or "Methodology details unavailable."))}</p></details><a class="ds-action" href="{escape(url, quote=True)}">Explore / Edit · preview →</a></article>'''
         )
     return "".join(output[:2]) + (
         '<details class="ds-home-detail"><summary>Show more opportunities</summary>'

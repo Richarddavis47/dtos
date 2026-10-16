@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import json
 from typing import Any, Awaitable, Callable, Hashable
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
 
 from services.team_headquarters import build_team_directory
@@ -187,8 +187,11 @@ def create_home_router(
         return body
 
     @router.get("/league", response_class=HTMLResponse)
-    async def league() -> HTMLResponse:
+    async def league(request: Request) -> HTMLResponse:
         await ensure_fresh()
+        return await run_manager_read(lambda: render_league(request))
+
+    def render_league(request: Request) -> HTMLResponse:
         data = require_data()
         teams = data.get("teams") or []
         preseason = league_is_preseason(data)
@@ -199,6 +202,17 @@ def create_home_router(
             ordered = sorted(teams, key=lambda t: directory.get(int(t['roster_id']), {}).get('rank') or 999)
             rows = ''.join(f'<li><a href="/teams/{int(t["roster_id"])}">{escape(str(t.get("team_name") or "Franchise"))}</a> · DTOS assessment rank {escape(str(directory.get(int(t["roster_id"]), {}).get("rank") or "Unavailable"))}</li>' for t in ordered)
             preseason_analysis = '<details><summary>Preseason Rankings · DTOS assessment, not official standings</summary><ul>' + rows + '</ul></details>'
+        from src.core.intelligence.orchestrator import intelligence_orchestrator
+        from src.ui.league_gm_diagnostics import league_observations
+        account = current_account()
+        active_id = int(account.membership.roster_id) if account and account.membership else int(teams[0]['roster_id']) if teams else 0
+        observations_html = ''
+        if active_id:
+            from services.strategy_session import COOKIE, selected_strategy
+            strategy = selected_strategy(request.cookies.get(COOKIE), str((data.get('league') or {}).get('league_id') or ''), active_id)
+            intelligence = intelligence_orchestrator.analyze(data, active_id,
+                user_preferences={'strategy': strategy}, include_trade_opportunities=False)
+            observations_html = league_observations(intelligence, data, active_id)
         destinations = (
             ("Weekly Report", "Prepared league recap and supported changes", "/reports/weekly"),
             ("Matchups", "Weekly competition and starter evidence", "/matchups"),
@@ -210,7 +224,7 @@ def create_home_router(
         links = '<div class="grid">' + "".join(f'<a class="card" href="{href}"><h3>{title}</h3><p class="muted">{description}</p></a>' for title, description, href in destinations) + "</div>"
         body = (
             _section("Preseason League Briefing" if preseason else "League Recap", "A league-wide view, separate from your personal front office", f'<div class="card ux-recap"><p>{escape("Regular-season games have not started. Review roster direction, recent activity, market movement, and Week 1 preparation." if preseason else f"{len(teams)} franchises · Week {data.get('week') or '—'} · Season {(data.get('league') or {}).get('season') or '—'}")}</p></div>')
-            + _section("Standings", "League-specific Sleeper records and scoring", visual_standings) + preseason_analysis
+            + observations_html + _section("Standings", "League-specific Sleeper records and scoring", visual_standings) + preseason_analysis
             + _section("League Intelligence", "Competition, management, activity, and history", links)
         )
         return page("League", body)

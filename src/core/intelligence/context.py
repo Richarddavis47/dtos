@@ -67,7 +67,9 @@ def build_context(data: dict[str, Any], roster_id: int, user_preferences: dict[s
         (data.get("market_data") or {}).get("generation")
         or (data.get("market_data") or {}).get("generated_at") or ""
     )
-    snapshot_key = f"{league_id}:{len(teams)}:{len(transactions)}:{players_updated}:{data.get('week', '')}:{front_office_generation}:{behavior_generation}:{market_generation}"
+    from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations
+    observation_generation = league_gm_observations.source_identity(data)
+    snapshot_key = f"{league_id}:{len(teams)}:{len(transactions)}:{players_updated}:{data.get('week', '')}:{front_office_generation}:{behavior_generation}:{market_generation}:{observation_generation}"
     brain_generation = str((data.get("valuation_intelligence") or {}).get("semantic_generation") or "pending")
     production_generation = str((data.get("canonical_player_production") or {}).get("generation") or "unprepared")
     from .team_strength import compatible_profile

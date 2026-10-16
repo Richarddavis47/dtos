@@ -45,6 +45,8 @@ def _availability(player_id: str, roster_id: int, card: Any, direction: TeamDire
 
 
 def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
+    from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations, MINIMUM_TENDENCY
+    observations = league_gm_observations.report(intelligence.context.cached_data)
     roster = intelligence.roster
     directions = {roster_id: _direction(decision, roster.team_intelligence[roster_id]) for roster_id, decision in intelligence.decisions.items()}
     needs: dict[int, tuple[TeamNeed, ...]] = {}
@@ -99,9 +101,11 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
 
     gm_profiles = {}
     for roster_id, report in intelligence.front_office_model.reports.items():
-        preferences = {item.label for item in report.asset_preferences}
-        preferred = tuple(sorted(position for position in POSITIONS if position in report.strengths))
-        gm_profiles[roster_id] = GMProfile(roster_id, report.activity.level, report.negotiation_style, "High" if "Pick collector" in preferences else "Neutral / unavailable", "Observed" if "Values veterans" in preferences else "Unestablished", "Observed" if "Values youth" in preferences else "Unestablished", "Aggressive" if report.activity.trades >= 5 else "Selective", "Unestablished", "Unavailable without offer events", "Unavailable without counteroffer events", "Neutral — DTOS does not judge managers", "Unestablished", preferred, report.confidence, tuple(f"{item.factor}: {item.observed_value}" for item in report.evidence))
+        manager = (observations.get('teams', {}).get(str(roster_id), {}).get('manager') or {})
+        preferred = tuple(sorted(position for position, count in (manager.get('acquired_positions') or {}).items() if count >= MINIMUM_TENDENCY))
+        pick_preference = 'Observed acquisitions; season-attributed, not willingness' if (manager.get('acquired_kinds') or {}).get('pick', 0) >= MINIMUM_TENDENCY else 'Unestablished'
+
+        gm_profiles[roster_id] = GMProfile(roster_id, report.activity.level, report.negotiation_style, pick_preference, "Unestablished", "Unestablished", "Unestablished", "Unestablished", "Unavailable without offer events", "Unavailable without counteroffer events", "Neutral — DTOS does not judge managers", "Unestablished", preferred, report.confidence, tuple(f"{item.factor}: {item.observed_value}" for item in report.evidence))
 
     team_reports = {}
     for roster_id, direction in directions.items():
@@ -172,4 +176,4 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
         "Highest Opportunity Score": f"{opportunities[0].player_name} ({opportunities[0].score})" if opportunities else "Unavailable",
         "League Market Summary": ", ".join(f"{position} {item.state}" for position, item in economy.items()),
     }
-    return LeagueIntelligenceReport(active_id, needs, surpluses, directions, compatibilities, market_map, availability, economy, gm_profiles, team_reports, tuple(opportunities[:25]), tuple(trade_recommendations), dashboard, ("Availability and acceptance are evidence-based estimates, not guarantees.", "Championship direction impact is qualitative; no probability model is implemented.", "Response-rate and counteroffer frequency remain unavailable without offer-event history."))
+    return LeagueIntelligenceReport(active_id, needs, surpluses, directions, compatibilities, market_map, availability, economy, gm_profiles, team_reports, tuple(opportunities[:25]), tuple(trade_recommendations), dashboard, ("Availability and acceptance are evidence-based estimates, not guarantees.", "Championship direction impact is qualitative; no probability model is implemented.", "Response-rate and counteroffer frequency remain unavailable without offer-event history."), observations)

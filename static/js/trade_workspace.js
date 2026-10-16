@@ -524,6 +524,21 @@
       }
     }
     }
+    const partnerHistory = e.dimensions?.league_partner_context;
+    if (partnerHistory) {
+      const detail = node('details');
+      detail.append(node('summary', (retained ? 'Previous partner context · NOT REVALIDATED' : 'Why this partner?')),
+        node('p', partnerHistory.summary || 'No partner preference established.'),
+        node('p', partnerHistory.attribution || 'Historical manager attribution unavailable.'));
+      if (retained) detail.append(node('p', 'This retained context is not revalidated against current roster needs or sources.'));
+      for (const ref of partnerHistory.references || []) {
+        if (/^\/trades\/history\/TRADE-[a-zA-Z0-9_-]+$/.test(ref.url || '')) {
+          const link = node('a', `Original trade · ${ref.season || 'season unavailable'} · ${ref.transaction_id}`, 'ds-action');
+          link.href = ref.url; const item = node('p'); item.append(link); detail.append(item);
+        }
+      }
+      out.append(detail);
+    }
     for (const [which, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
       const diagnostic = e.dimensions?.roster_diagnostics?.sides?.[which];
       if (diagnostic) {

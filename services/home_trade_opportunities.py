@@ -47,6 +47,7 @@ def _semantic(value):
 
 
 def source_identity(data):
+    from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations
     from services.trade_intelligence import _trade_projection_service
     from src.core.projection_intelligence.service import canonical_projection_identity
     from src.core.valuation.normalization import capture_market_publication
@@ -90,6 +91,7 @@ def source_identity(data):
             ),
             _semantic(market),
             projection,
+            league_gm_observations.source_identity(data),
             {
                 "projection_freshness": diagnostic_evidence["projection_freshness"],
                 "conclusion_state": diagnostic_evidence["conclusion_state"],
