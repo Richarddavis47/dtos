@@ -68,6 +68,18 @@ def _app(cache: _Cache, *, build_allowed=lambda: True) -> FastAPI:
 
 
 class MarketWarmingMiddlewareTests(unittest.TestCase):
+    def test_browser_navigation_gets_human_recovery_and_preserves_api_contract(self) -> None:
+        client = TestClient(_app(_Cache()))
+        response = client.get('/market?q=quarterback', headers={'Accept': 'text/html'})
+        self.assertEqual(response.status_code, 503)
+        self.assertIn('text/html', response.headers['content-type'])
+        self.assertIn('Market is preparing', response.text)
+        self.assertIn('href="/market?q=quarterback"', response.text)
+        self.assertIn('Home', response.text)
+        self.assertEqual(response.headers['retry-after'], '5')
+        response = client.get('/api/market/assets', headers={'Accept': 'text/html'})
+        self.assertEqual(response.json(), {'detail': MARKET_WARMING_DETAIL})
+
     def test_worker_is_scheduled_only_after_response_body_is_sent(self) -> None:
         cache = _Cache()
         app = _app(cache)

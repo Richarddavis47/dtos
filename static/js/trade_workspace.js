@@ -593,6 +593,7 @@
       trace.append(node('small', e.recommendation_trace.scope)); out.append(trace);
     }
     for (const [title, value] of [['Why you may do it', e.why_you_would_do_it], ['Why they may do it', e.why_they_would_do_it]]) if (value) out.append(node('h4', title), node('p', value));
+    if (retained && e.counterparty_summary) out.append(node('h4', 'Previous counterparty package explanation · NOT REVALIDATED'), node('p', e.counterparty_summary));
     for (const [key, dim] of Object.entries(e.dimensions || {})) if (dim && dim.assessment) {
       const detail = node('details'); detail.append(node('summary', (dim.label || key.replaceAll('_', ' ')) + ': ' + dim.assessment));
       if (dim.explanation) detail.append(node('p', dim.explanation));
@@ -624,6 +625,8 @@
         const label = {current_week: 'Current week', next_n: 'Next-N', rest_of_regular_season: 'Rest of regular season', playoff_window: 'Playoff window'}[key] || key;
         out.append(node('p', `${title} · ${label}: ${displayPoints(horizon.delta)}`),
           node('small', `Supported weeks: before ${horizon.pre_supported_weeks?.length || 0}/${horizon.weeks_requested?.length || 0}; after ${horizon.post_supported_weeks?.length || 0}/${horizon.weeks_requested?.length || 0}. Optimal before versus optimal after.`));
+        if (retained && horizon.pre_total != null && horizon.post_total != null)
+          out.append(node('p', `Previous ${title.toLowerCase()} · ${label}: ${displayPoints(horizon.pre_total).replace(/^\+/, '')} → ${displayPoints(horizon.post_total).replace(/^\+/, '')} Sleeper-projected legal-lineup points. Earlier evidence, not current or revalidated.`));
         if (horizon.delta == null && horizon.supported_week_delta_subtotal != null)
           out.append(node('small', `Comparable-week change subtotal: ${displayPoints(horizon.supported_week_delta_subtotal)} across ${horizon.comparable_weeks?.length || 0} weeks. Not a complete horizon projection.`));
       }
