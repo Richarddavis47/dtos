@@ -191,10 +191,17 @@ class BeginnerBrowserTests(unittest.TestCase):
                 back.click()
                 self.assertEqual(page.locator('.market-asset').count(), 1)
                 page.get_by_role('link', name='Browse all assets', exact=True).click()
+                # A URL commit can precede the new document/DevTools target
+                # becoming active. Exercise history only from a settled Market.
+                page.wait_for_load_state('load')
+                self.assertEqual(page.get_by_label('Player or pick', exact=True).input_value(), '')
+                self.assertFalse(page.is_closed())
                 self.assertNotIn('q=', page.url)
                 page.go_back()
                 self.assertIn('q=Denzel', page.url)
+                self.assertEqual(page.get_by_label('Player or pick', exact=True).input_value(), 'Denzel Boston')
                 page.go_forward()
+                self.assertEqual(page.get_by_label('Player or pick', exact=True).input_value(), '')
                 page.reload()
                 page.get_by_label('Player or pick', exact=True).fill('2029 Round 2')
                 page.get_by_label('Position', exact=True).select_option('PICK')

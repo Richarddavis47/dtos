@@ -200,6 +200,15 @@ def balance_trade_market(data, payload):
         assessment = evaluation.get('dimensions', {}).get('counterparty_plausibility', {}).get('assessment')
         caution = evaluation.get('recommendation') not in ('WORTH PURSUING', 'FAIR / OPTIONAL') or assessment not in ('STRONG', 'PLAUSIBLE')
         row['balance_adjustment']['strategic_caution'] = caution
+        # Source-owned display over completed arithmetic, not a new valuation or
+        # a second rounding pass over individual Sleeper projections.
+        from src.ui.intelligence_presentation import manager_points
+        row['balance_adjustment']['display'] = {
+            name: {'sent': manager_points(comparison['sent']['total']),
+                   'received': manager_points(comparison['received']['total']),
+                   'gap': manager_points(comparison['absolute_gap'])}
+            for name, comparison in (('original', base), ('suggested', market))
+        }
         assessed.append((caution, gap, changes, change, key, row))
     if trade._trade_search_boundary(data) != boundary:
         raise trade.TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during balancing. Reload and compare the current generation.')

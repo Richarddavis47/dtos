@@ -187,9 +187,11 @@ class DecisionHTTPBrowserTests(unittest.TestCase):
                 )
                 choose.wait_for()
                 self.assertIn(
-                    "Latest partial evaluation",
+                    "Current evaluation completed · incomplete evidence",
                     page.locator("#trade-result").inner_text(),
                 )
+                self.assertEqual(page.locator("#trade-result").get_attribute("data-assessment-state"), "fresh_incomplete")
+                self.assertNotIn("Previous assessment", page.locator("#trade-result").inner_text())
                 report = self.responses[-1]["evaluation"]
                 self.assertIsNone(report["recommendation"])
                 self.assertEqual(report["market_evidence"]["sent"]["total"], 945)

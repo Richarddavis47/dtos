@@ -1,3 +1,10 @@
+## v1.21.57 / build 2157 — Trade assessment and phone integrity
+
+- Keep selected player names, positions/teams, exact picks and controls readable on narrow phones; place supporting Market/protection disclosures below the full-width identity.
+- Put complete Balance packages and coherent current Market totals before concise supported reasoning and the main drawback. Keep full evaluator/counterparty evidence on demand; format derived totals without changing arithmetic or canonical Sleeper displays.
+- Separate current complete/incomplete evaluation attempts from genuine retained assessments. Preserve one prior assessment, clearly not revalidated, when a new attempt is incomplete; successful compatible reevaluation restores current status. Preserve failure/reset/newer-intent safety.
+- Preserve target-first Balance, exact protections, Preview/Keep Original/explicit Adopt, Home draft boundaries, canonical pricing/projections, legal lineups, source qualifications and retained FOIS grades. No new permanent store or model; unchanged 500 ms / 2 GiB gates.
+
 ## v1.21.56 / build 2156 — Canonical projection display parity
 
 - Reuse the prepared canonical player/week projection display in Trade facts, matching the player dossier without a second screen-specific rounding policy.

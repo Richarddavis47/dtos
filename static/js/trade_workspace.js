@@ -32,6 +32,11 @@
     const displayed = value.toFixed(2);
     return displayed === '-0.00' ? '0.00' : displayed;
   }
+  // Derived Market totals only. Individual projections use the canonical
+  // player/week display supplied by the server, never this formatter.
+  function displayMarket(value) {
+    return displayPoints(value).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+  }
   document.querySelectorAll('[data-trade-proposal]').forEach(button => button.onclick = async () => {
     button.disabled = true;
     try {
@@ -111,7 +116,8 @@
   const setPartner = id => { selected.partner = Number(id); el('trade-partner').value = flow === 'shop' ? (session.shopSearchPartner ? String(session.shopSearchPartner) : '') : Number(id) ? String(id) : ''; };
   const storageKey = () => 'dtos-trade-workspace:' + workspace.workspace_context.binding;
   const node = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
-  function message(text, error = false) { const box = el('trade-result'); delete box.dataset.assessment; delete box.dataset.assessmentFreshness; box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
+  el('trade-result').dataset.assessmentState = 'not_evaluated';
+  function message(text, error = false) { const box = el('trade-result'); delete box.dataset.assessment; delete box.dataset.assessmentFreshness; box.dataset.assessmentState = 'not_evaluated'; box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
   function payload() { reconcileStrategy(); return {workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...session.protectedAssets], excluded_assets: [...session.excludedAssets], asset_id: flow === 'shop' ? session.requiredOutgoingAsset || selected.sent[0] : session.requiredIncomingAsset || selected.received[0], workspace_context: workspace.workspace_context}; }
   function persist(updateHistory = true, draftSession = session) {
     if (departed) return;
@@ -149,7 +155,7 @@
   }
   function syncLocks() { if (el('shop-protected')) for (const option of el('shop-protected').options) option.selected = session.protectedAssets.includes(option.value); }
   function addLock(kind, id) { if (!session[kind].includes(id)) session[kind].push(id); syncLocks(); persist(); }
-  function changed() { el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); const focusId = document.activeElement?.dataset.assetId; revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; el('trade-result').hidden = true; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
+  function changed() { el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); const focusId = document.activeElement?.dataset.assetId; revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; el('trade-result').hidden = true; el('trade-result').dataset.assessmentState = 'not_evaluated'; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
   function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); if ((flow === 'shop' && which === 'sent' && selected.sent.length === 1) || (flow === 'trade_for' && which === 'received' && selected.received.length === 1)) run('generate'); }
   function lockDetail(id) {
     const meanings = [];
@@ -349,7 +355,9 @@
       for (const id of selected[which]) {
         const a = asset(id), row = node('div', null, 'tw-calculator-asset');
         const owner = workspace.teams.find(t => t.assets.some(item => item.asset_id === id));
-        row.append(node('span', `${a ? label(a) : 'Ownership unavailable'} · ${a?.kind === 'pick' ? 'Pick' : 'Player'} · ${owner?.team_name || 'Owner unavailable'} · ${a?.trade_value ?? 'Market unavailable'}`));
+        const identity = node('span', null, 'tw-calculator-identity');
+        identity.append(node('b', a ? label(a) : 'Ownership unavailable'), node('small', [a?.kind === 'pick' ? 'Pick' : a?.position || 'Position unavailable', a?.nfl_team, owner?.team_name || 'Owner unavailable', a?.trade_value ?? 'Market unavailable'].filter(value => value != null && value !== '').join(' · ')));
+        row.append(identity);
         const remove = node('button', 'Remove'); remove.type = 'button'; remove.disabled = busy; remove.setAttribute('aria-label', 'Remove ' + (a ? label(a) : id) + ' from calculator'); remove.onclick = () => toggle(which, id); row.append(remove); const protection = lockDetail(id); if (protection) row.append(protection); list.append(row);
         const evidence = marketEvidence(a); if (evidence) list.append(evidence);
         if (which === 'received' && a) {
@@ -399,9 +407,11 @@
       .slice(0, 64).map(([key, v]) => [key.slice(0, 80), boundedEvidence(v, depth + 1, budget)]));
   }
   const packageIdentity = p => JSON.stringify([Number(p.partner_roster_id ?? p.partner), [...(p.assets_sent || p.sent || [])].sort(), [...(p.assets_received || p.received || [])].sort()]);
-  function restoreContext(value) {
+  function restoreContext(value, includePrevious = true) {
     return {schema: 1, identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
       search_result_type: boundedEvidence(value.search_result_type), stale_reason: boundedEvidence(value.stale_reason), restored: true,
+      attempt_state: value.attempt_state || value.evaluation?.assessment_state?.state || 'fresh_incomplete',
+      previous_assessment: includePrevious && value.previous_assessment ? restoreContext(value.previous_assessment, false) : null,
       evaluation: boundedEvidence(value.evaluation || {}), opportunity: boundedEvidence(value.opportunity)};
   }
   const assessedOfferContexts = new WeakMap();
@@ -409,7 +419,7 @@
     if (assessedOfferContexts.has(row)) return assessedOfferContexts.get(row);
     if (row.proposal?.preview_context) return row.proposal.preview_context;
     const e = row.evaluation || row.proposal?.preview_assessment || {};
-    const keys = ['recommendation', 'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'why_they_would_do_it', 'counterparty_summary', 'provenance', 'major_risks', 'major_limitations', 'recommendation_trace', 'legality', 'decision_context', 'market_evidence', 'dimensions'];
+    const keys = ['recommendation', 'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'why_they_would_do_it', 'counterparty_summary', 'provenance', 'major_risks', 'major_limitations', 'recommendation_trace', 'legality', 'decision_context', 'market_evidence', 'dimensions', 'assessment_state'];
     const context = {schema: 1, evaluation: boundedEvidence(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]]))),
       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
       opportunity: boundedEvidence(row.opportunity || null),
@@ -436,7 +446,7 @@
     if (identity.market !== workspace.calculator_generation) reasons.push('Market evidence changed');
     const inputs = context.evaluation?.provenance?.inputs || {};
     for (const key of sourceKeys) if (Object.hasOwn(latestEvidence, key) && Object.hasOwn(inputs, key) && inputs[key] !== latestEvidence[key]) reasons.push(key.replace('_generation', '') + ' evidence changed');
-    if (workspace.projection_evidence && !Object.hasOwn(inputs, 'projection_generation')) reasons.push('projection identity unavailable in retained context');
+    if (context.restored && workspace.projection_evidence && !Object.hasOwn(inputs, 'projection_generation')) reasons.push('projection identity unavailable in retained context');
     if (context.stale_reason) reasons.push(context.stale_reason);
     return context.restored || reasons.length ? 'Retained assessment context · not revalidated. ' + (reasons.length ? reasons.join('; ') + '. ' : '') + 'Reevaluate to establish a current assessment; prior benefits and drawbacks are retained.' : '';
   }
@@ -445,7 +455,7 @@
     if (context?.identity?.ownership && context.identity.ownership !== workspace.workspace_context.ownership_generation) out.append(node('p', 'Ownership has changed. Your proposal is retained for review; evaluation will identify any assets that moved.', 'tw-drawback'));
     if (context?.identity) { const summary = node('p', 'Assessment strategy: ' + (context.identity.strategy || 'Use supported competitive window') + ' · Current selected strategy: ' + (el('trade-strategy').value || 'Use supported competitive window')); summary.dataset.assessmentStrategy = context.identity.strategy || ''; out.append(summary); }
     const qualification = contextQualification(context, proposal);
-    if (qualification) { out.append(node('p', context?.latestPartial ? 'Latest supported partial findings. A complete current recommendation has not been established; review the named limitation and reevaluate.' : qualification, 'tw-drawback')); reevaluateAction(out); }
+    if (qualification) { out.append(node('p', qualification, 'tw-drawback')); reevaluateAction(out); }
   }
   function reevaluateAction(out) {
     if (out.querySelector('[data-reevaluate]')) return;
@@ -482,7 +492,6 @@
   function staleAssessment(reason) {
     if (!session.currentAssessment) return;
     const retained = Boolean(el('trade-evaluation-retained'));
-    session.currentAssessment.latestPartial = false;
     session.currentAssessment.restored = true; session.currentAssessment.stale_reason = reason;
     showEvaluation(session.currentAssessment.evaluation, session.currentAssessment.opportunity, session.currentAssessment);
     if (retained) retainAssessment();
@@ -495,16 +504,36 @@
     contextNotice(out, context, selected);
     const retained = Boolean(contextQualification(context));
     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
-    if (retained) out.append(node('h4', context?.latestPartial ? 'Latest partial evaluation · recommendation unavailable' : 'Previous assessment explanation · NOT REVALIDATED'));
+    const attemptState = context?.attempt_state || e.assessment_state?.state || 'fresh_incomplete';
+    out.dataset.assessmentState = retained ? 'retained' : attemptState;
+    const incomplete = !retained && attemptState === 'fresh_incomplete';
+    if (incomplete) {
+      out.append(node('p', 'Current evaluation completed · incomplete evidence. ' + (e.assessment_state?.limitation || e.decision_context?.blocker || e.decision_context?.limitation || 'A complete supported recommendation is unavailable; review the evidence and reevaluate.'), 'tw-assessment-status'));
+      reevaluateAction(out);
+    }
+    if (retained) out.append(node('h4', 'Previous assessment explanation · NOT REVALIDATED'));
+    if (context?.previous_assessment) {
+      const prior = context.previous_assessment, detail = node('details');
+      detail.append(node('summary', 'Previous assessment · NOT REVALIDATED'));
+      detail.append(node('p', 'Previous conclusion: ' + (prior.evaluation?.recommendation || 'Incomplete evaluation') + ' · NOT REVALIDATED'));
+      detail.append(node('p', prior.evaluation?.why_you_would_do_it || prior.evaluation?.dominant_reason || 'Previous supported reasoning unavailable.'));
+      detail.append(node('p', 'Previous drawback: ' + (prior.evaluation?.major_drawback || 'Unavailable')));
+      detail.append(node('p', contextQualification(prior) || 'Previous assessment retained, not revalidated.'));
+      out.append(detail);
+    }
     if (e.explanation_html) {
       // Same-origin server renderer escapes all evidence text. No client-side
       // recommendation/scoring or reason-code interpretation is performed.
       const document = new DOMParser().parseFromString(e.explanation_html, 'text/html');
+      if (incomplete && e.recommendation && e.assessment_state?.recommendation_supported !== true) {
+        const conclusion = document.querySelector('.dtos-explanation > p');
+        if (conclusion) conclusion.textContent = 'Recommendation unavailable · current evaluation is incomplete.';
+      }
       if (retained) {
         const explanation = document.querySelector('.dtos-explanation');
         if (explanation) {
           explanation.dataset.assessmentFreshness = 'retained';
-          explanation.setAttribute('aria-label', context?.latestPartial ? 'Latest partial findings · no validated recommendation' : 'Previous assessment explanation · not current');
+          explanation.setAttribute('aria-label', 'Previous assessment explanation · not current');
           const conclusion = explanation.querySelector(':scope > p');
           if (conclusion) { conclusion.dataset.retainedConclusion = 'true'; conclusion.setAttribute('aria-label', 'Retained prior assessment: ' + conclusion.textContent + ' · not revalidated'); }
         }
@@ -513,9 +542,9 @@
       if (e.decision_context?.strategy?.selection_required) strategyAction(out);
       const balanceLink = node('a', 'Options to balance this trade', 'ds-action'); balanceLink.href = '#trade-balancing';
       out.querySelector('.dtos-explanation > p')?.after(balanceLink);
-      if (e.legality?.execution_status && !retained) out.append(node('p', e.legality.execution_status));
+      if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
     } else {
-    out.append(node('h3', retained ? 'Retained assessment: ' + (e.recommendation || 'Unavailable') + ' · NOT REVALIDATED' : e.recommendation || 'Assessment unavailable'), node('p', retained ? 'Previous assessment reasoning (not current): ' + (e.dominant_reason || 'Unavailable') : e.dominant_reason));
+    out.append(node('h3', retained ? 'Retained assessment: ' + (e.recommendation || 'Unavailable') + ' · NOT REVALIDATED' : incomplete && e.assessment_state?.recommendation_supported !== true ? 'Recommendation unavailable' : e.recommendation || 'Assessment unavailable'), node('p', retained ? 'Previous assessment reasoning (not current): ' + (e.dominant_reason || 'Unavailable') : e.dominant_reason));
     if (e.decision_context) {
       const brief = node('section', null, 'tw-decision');
       if (retained) brief.append(node('p', 'Previous decision context · NOT REVALIDATED. Numbers and conclusions below describe the original assessment.'));
@@ -525,7 +554,7 @@
     }
     if (e.major_drawback || e.major_risks?.length) out.append(node('p', 'Major drawback: ' + (e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
     else if (context?.restored) out.append(node('p', 'Major drawback unavailable in retained context. Reevaluate for supported costs.', 'tw-drawback'));
-    if (e.legality?.execution_status && !retained) out.append(node('p', e.legality.execution_status));
+    if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
     if (e.recommendation_trace) {
       const trace = node('details'); trace.append(node('summary', 'Recommendation evidence'));
       for (const reason of e.recommendation_trace.rule_reasons || []) trace.append(node('p', reason.replaceAll('_', ' ')));
@@ -695,20 +724,68 @@
     const out = el('trade-result'); out.hidden = false; out.replaceChildren(node('h3', 'Alternative preview'));
     delete out.dataset.assessment;
     const names = ids => ids.map(id => label(asset(id) || {label: id})).join(' + ') || 'None';
-    out.append(node('p', 'Original: ' + names(original.sent) + ' → ' + names(original.received)),
+    const comparison = adjustment ? node('details') : out;
+    if (adjustment) comparison.append(node('summary', 'Compare with original proposal'));
+    comparison.append(node('p', 'Original: ' + names(original.sent) + ' → ' + names(original.received)),
       node('p', 'Alternative: ' + names(row.proposal.assets_sent) + ' → ' + names(row.proposal.assets_received)));
     const cost = ids => ids.every(id => asset(id)?.trade_value != null) ? ids.reduce((sum, id) => sum + asset(id).trade_value, 0) : null;
     const oldCost = cost(original.sent), newCost = cost(row.proposal.assets_sent);
-    if (original.sent.length && oldCost != null && newCost != null) out.append(node('p', 'Outgoing Market cost: ' + oldCost + ' → ' + newCost));
+    if (original.sent.length && oldCost != null && newCost != null) comparison.append(node('p', 'Outgoing Market cost: ' + displayMarket(oldCost) + ' → ' + displayMarket(newCost)));
     if (adjustment) {
-      for (const [heading, m] of [['Original', adjustment.original], ['Suggested', adjustment.suggested]]) out.append(node('p', `${heading} Market: ${m.sent.total} sent / ${m.received.total} received · Gap ${m.absolute_gap}`));
-      out.append(node('p', adjustment.reason), node('small', adjustment.meaning));
+      for (const [heading, m] of [['Original', adjustment.original], ['Suggested', adjustment.suggested]]) comparison.append(node('p', `${heading} Market: ${displayMarket(m.sent.total)} sent / ${displayMarket(m.received.total)} received · Gap ${displayMarket(m.absolute_gap)}`));
+      comparison.append(node('p', adjustment.reason), node('small', adjustment.meaning));
     }
     out.append(offerCard(row, true));
+    if (adjustment) out.append(comparison);
     contextNotice(out, context, row.proposal);
     const adopt = node('button', 'Adopt alternative'); adopt.type = 'button'; adopt.onclick = () => openOffer(row);
     const keep = node('button', 'Keep original'); keep.type = 'button'; keep.disabled = busy; keep.onclick = () => { session.previewProposal = null; persist(); if (lastOffers) offers(lastOffers, lastOffersIsBalance); else if (session.currentAssessment) showEvaluation(session.currentAssessment.evaluation, session.currentAssessment.opportunity, session.currentAssessment); else message('Original proposal kept.'); };
     out.append(adopt, keep); focusResult();
+  }
+  function balanceOfferCard(row, preview, context) {
+    const e = row.evaluation || row.proposal.preview_assessment || {}, balance = row.balance_adjustment || row.proposal.preview_balance_adjustment;
+    const card = node('article', null, 'tw-offer tw-balance-offer');
+    card.append(node('h3', 'Market adjustment · preview'));
+    const packageLabel = (ids, presented) => ids.map(id => {
+      const a = asset(id), source = presented?.find(item => item.asset_id === id);
+      return [a ? label(a) : source?.label || id, a?.kind === 'player' ? a.position : null, a?.kind === 'player' ? a.nfl_team : null].filter(Boolean).join(' · ');
+    }).join(' + ');
+    card.append(node('p', 'You send: ' + packageLabel(row.proposal.assets_sent, row.proposal_presentation?.send), 'tw-offer-package'),
+      node('p', 'You receive: ' + packageLabel(row.proposal.assets_received, row.proposal_presentation?.receive), 'tw-offer-package'));
+    const m = balance.suggested || {}, compatible = Boolean(balance.market_generation) && balance.market_generation === workspace.calculator_generation;
+    const full = compatible && [m.sent?.total, m.received?.total, m.absolute_gap].every(value => typeof value === 'number' && Number.isFinite(value)) && m.availability !== 'partial' && m.availability !== 'unavailable';
+    const shown = balance.display?.suggested || {};
+    const sideValue = side => !compatible ? 'Unavailable · publication context not established' : m[side]?.total != null ? shown[side] || displayMarket(m[side].total) : m[side]?.known_subtotal != null ? 'Incomplete · known subtotal ' + displayMarket(m[side].known_subtotal) : 'Unavailable';
+    card.append(node('p', `Current Market: You send ${sideValue('sent')} / You receive ${sideValue('received')}. Difference: ${full ? shown.gap || displayMarket(m.absolute_gap) : 'Unavailable · incomplete comparison'}.`, 'tw-offer-market'));
+    const original = preview ? session.originalProposal || selected : selected;
+    const changes = (before, after, side) => {
+      const names = ids => ids.slice(0, 2).map(id => label(asset(id) || {label:id})).join(' + ') + (ids.length > 2 ? ' + ' + (ids.length - 2) + ' more' : '');
+      const added = after.filter(id => !before.includes(id)), removed = before.filter(id => !after.includes(id));
+      return [added.length ? 'Add ' + names(added) + ' to ' + side : '', removed.length ? 'Remove ' + names(removed) + ' from ' + side : ''].filter(Boolean).join('; ');
+    };
+    card.append(node('p', [changes(original.sent, row.proposal.assets_sent, 'your outgoing package'), changes(original.received, row.proposal.assets_received, 'the assets you receive')].filter(Boolean).join('; '), 'tw-adjustment'));
+    const retained = Boolean(contextQualification(context, row.proposal)), decision = e.decision_context || {};
+    if (context.exploration) card.append(node('p', 'Exploratory only · not a qualified bilateral recommendation', 'tw-drawback'));
+    card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : 'Separate DTOS assessment: ') + (e.recommendation || 'Unavailable')));
+    const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
+    const reason = unfavorable ? 'Closer current Market terms do not make this a recommended trade.' : decision.lineup?.explanation || e.why_you_would_do_it || 'Market balance is separate from strategic fit; no supported positive roster case is established.';
+    card.append(node('p', 'Why consider: ' + reason),
+      node('p', 'Major drawback: ' + (decision.main_cost || e.major_drawback || 'A supported main cost is unavailable; reevaluate before deciding.'), 'tw-drawback'));
+    if (decision.limitation) card.append(node('p', 'Evidence limit: ' + decision.limitation, 'tw-drawback'));
+    if (retained) card.append(node('p', 'Prior benefits and drawbacks are not current conclusions. Reevaluate after adoption.', 'tw-drawback'));
+    for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
+    if (!preview) {
+      const button = node('button', 'Preview adjustment', 'tw-next-action primary'); button.type = 'button'; button.onclick = () => previewOffer(row); card.append(button);
+    }
+    const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
+    detail.append(node('p', balance.reason), node('p', balance.meaning), node('p', 'Counterparty: ' + (e.counterparty_summary || e.why_they_would_do_it || 'Supported partner context unavailable.')));
+    if (e.explanation_html) {
+      const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html'); detail.append(...parsed.body.childNodes);
+    } else {
+      for (const text of [e.why_you_would_do_it, e.dominant_reason, ...(e.major_risks || []), ...(e.major_limitations || [])]) if (text) detail.append(node('p', text));
+    }
+    card.append(detail, node('small', 'Current values, not trade-date grades. Preview before adopting.'));
+    return card;
   }
   function offerCard(row, preview = false) {
     const context = assessmentContext(row);
@@ -716,18 +793,13 @@
     const card = node('article', null, 'tw-offer');
     const e = row.evaluation || row.proposal.preview_assessment || {};
     const balance = row.balance_adjustment || row.proposal.preview_balance_adjustment;
+    if (balance) return balanceOfferCard(row, preview, context);
     if (row.exploration) card.append(node('p', 'Exploratory only · ' + row.search_result_type + ' · not a qualified bilateral recommendation', 'tw-drawback'));
     if (row.exploration) {
       const counterpart = e.dimensions?.counterparty_plausibility;
       if (counterpart) card.append(node('p', 'Counterparty support: ' + counterpart.assessment + ' · ' + (counterpart.reason_codes || []).map(code => code.replaceAll('_', ' ')).join('; ')));
     }
-    card.append(node('h3', balance ? 'Market adjustment · preview' : e.recommendation || 'Recommendation unavailable'));
-    if (balance) {
-      const before = preview ? session.originalProposal || selected : selected;
-      const describe = (oldIds, newIds, side) => { const added = newIds.filter(id => !oldIds.includes(id)), removed = oldIds.filter(id => !newIds.includes(id)); return [added.length ? 'Add ' + added.map(id => label(asset(id) || {label:id})).join(' + ') + ' to ' + side : '', removed.length ? 'Remove ' + removed.map(id => label(asset(id) || {label:id})).join(' + ') + ' from ' + side : ''].filter(Boolean).join('; '); };
-      card.append(node('p', [describe(before.sent, row.proposal.assets_sent, 'your outgoing package'), describe(before.received, row.proposal.assets_received, 'the assets you receive')].filter(Boolean).join('; '), 'tw-adjustment'));
-    }
-    if (balance) card.append(node('p', balance.change.replaceAll('_', ' ') + ` · Gap ${balance.original.absolute_gap} → ${balance.suggested.absolute_gap}`), node('p', 'Separate DTOS assessment: ' + (e.recommendation || 'Unavailable')), node('small', balance.strategic_caution ? 'Market balance improves; roster, strategy or counterparty evidence raises a caution. Review the major drawback.' : balance.meaning));
+    card.append(node('h3', e.recommendation || 'Recommendation unavailable'));
     if (row.repair_type) card.append(node('p', row.repair_type));
     if (row.adjustment_evidence?.concept === 'strictly_lower_canonical_outgoing_market_cost') {
       const cost = row.adjustment_evidence;
@@ -740,7 +812,6 @@
       node('p', 'Major drawback: ' + (e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ') || e.major_limitations?.join('; ').replaceAll('_', ' ') || (row.proposal.preview_context?.restored ? 'Unavailable in retained context. Reevaluate for supported costs.' : 'No material drawback identified in available evidence.')), 'tw-drawback'),
       node('p', 'Counterparty: ' + (e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.')));
     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
-    if (balance) card.append(node('p', `Current Market: You send ${balance.suggested.sent?.total ?? 'Incomplete'} / You receive ${balance.suggested.received?.total ?? 'Incomplete'}. Difference: ${balance.suggested.absolute_gap ?? 'Unavailable'}.`));
     const intent = e.dimensions?.strategic_fit?.active?.manager_strategy?.strategy;
     if (intent) card.append(node('p', 'Strategy: ' + intent));
     const history = e.dimensions?.counterparty_plausibility?.manager_history?.disclosure;
@@ -752,7 +823,7 @@
       if (e.provenance?.evaluation_id) detail.append(node('small', 'Original assessment: ' + e.provenance.evaluation_id));
       if (detail.childElementCount > 1) card.append(detail);
     }
-    if (!preview) { const b = node('button', balance ? 'Preview adjustment' : 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
+    if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
     if (e.explanation_html) {
       const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
       const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html');
@@ -886,6 +957,7 @@
     if (path === 'generate') searchStatus('Searching supported trades… Your offer stays intact.', 'loading', started, startedRun);
     paint();
     message(path === 'balance' ? 'Checking owned, lock-respecting Market adjustments… Your original stays intact.' : path === 'generate' ? 'Searching supported bilateral options… Your proposal stays intact.' : path === 'assist' ? 'Checking revised offers… Your original proposal stays intact.' : 'Evaluating your proposal…');
+    if (path === 'evaluate') el('trade-result').dataset.assessmentState = 'evaluating';
     try {
       let body;
       try { body = await post(path, requestPayload, controller?.signal); } catch (error) {
@@ -909,20 +981,11 @@
       if (path === 'generate') searchStatus(body.results?.length ? 'Trade options ready. Review before adopting.' : body.exploratory_results?.length ? 'No recommended options. Supported alternatives are available below.' : 'No credible options found in this search. Review the search details below.', 'complete', started, startedRun);
       if (path === 'evaluate') {
         const context = assessmentContext({...body, evaluation: body.evaluation});
-        if (!body.assessment_source_identity || !body.evaluation?.recommendation || body.evaluation.legal !== true || body.evaluation.market_evidence?.availability !== 'full') {
-          if (session.currentAssessment) {
-            // Incomplete new evidence is not replacement validation of the
-            // adopted assessment. Preserve its original source and meaning.
-            staleAssessment('Reevaluation did not establish a current compatible complete assessment');
-            showEvaluation(session.currentAssessment.evaluation, session.currentAssessment.opportunity, session.currentAssessment);
-            const detail = node('details'); detail.append(node('summary', 'Latest incomplete evaluation · limitations'));
-            detail.append(node('pre', JSON.stringify(boundedEvidence({market_evidence: body.evaluation.market_evidence, legality: body.evaluation.legality, major_limitations: body.evaluation.major_limitations, provenance: body.evaluation.provenance}), null, 2)));
-            el('trade-result').append(detail);
-            if (body.evaluation.decision_context?.blocker) el('trade-result').prepend(node('p', 'Latest evaluation: ' + body.evaluation.decision_context.blocker, 'tw-drawback'));
-            if (body.evaluation.decision_context?.strategy?.selection_required) strategyAction(el('trade-result'));
-            return;
-          }
-          context.restored = true; context.latestPartial = true; context.stale_reason = 'Current compatible complete assessment unavailable';
+        context.attempt_state = body.assessment_source_identity ? body.evaluation?.assessment_state?.state || 'fresh_incomplete' : 'fresh_incomplete';
+        if (context.attempt_state === 'fresh_incomplete' && session.currentAssessment) {
+          // The new attempt owns current supported findings. Keep at most one
+          // genuine previous assessment, separately qualified and never current.
+          context.previous_assessment = restoreContext(session.currentAssessment.previous_assessment || session.currentAssessment, false);
         }
         session.currentAssessment = context; persist(); review(); showEvaluation(body.evaluation, null, context); el('trade-result').after(el('trade-balancing'));
       } else offers(body, path === 'balance');
@@ -936,6 +999,7 @@
         return;
       }
       message(feedback, true);
+      if (path === 'evaluate') { el('trade-result').dataset.assessmentState = 'failed'; reevaluateAction(el('trade-result')); }
       if (path === 'balance' && error.code === 'canonical_evidence_changed') {
         message('Market evidence changed. Your offer and exact protections are intact. Reload Market facts before balancing.', true);
         const reload = node('button', 'Reload Market facts'); reload.type = 'button'; reload.onclick = () => location.reload();

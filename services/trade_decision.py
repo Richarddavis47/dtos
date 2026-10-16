@@ -5,6 +5,26 @@ import json
 from math import isfinite
 
 
+def assessment_state(result):
+    """Completeness of this completed attempt, independently of its freshness.
+
+    HTTP/source admission establishes compatibility. Missing conclusions do not
+    turn a new attempt into an older assessment, or invent a verdict.
+    """
+    decision = result.get("decision_context") or {}
+    market_supported = (result.get("market_evidence") or {}).get("availability") == "full"
+    conclusion_supported = result.get("recommendation_availability") == "bounded"
+    complete = market_supported and conclusion_supported and isinstance(result.get("legal"), bool)
+    return {
+        "state": "fresh_complete" if complete else "fresh_incomplete",
+        "attempt": "completed",
+        "market_supported": market_supported,
+        "recommendation_supported": conclusion_supported,
+        "limitation": None if complete else decision.get("blocker") or decision.get("limitation")
+        or "This evaluation could not establish a complete supported recommendation. Inspect the available evidence and reevaluate.",
+    }
+
+
 def decision_context(result, *, incoming=(), outgoing=()):
     dimensions = result.get("dimensions") or {}
     strategy = (dimensions.get("strategic_fit") or {}).get("active") or {}
