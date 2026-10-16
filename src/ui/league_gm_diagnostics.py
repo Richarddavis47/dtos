@@ -1,6 +1,8 @@
 """Progressive, source-qualified league/franchise observations."""
 from html import escape
 
+from src.core.gm_behavioral_intelligence.diagnostics import supported_asset_count
+
 
 CSS = '''<style>.gm-observations{overflow-wrap:anywhere}.gm-observations p{line-height:1.55}.gm-observations summary{cursor:pointer;min-height:44px;display:flex;align-items:center}.gm-observations .gm-row{border-top:1px solid var(--border);padding:10px 0}.gm-observations a{display:inline-flex;align-items:center;min-height:44px}.gm-observations ul{padding-left:20px}.gm-observations h3{margin-bottom:8px}</style>'''
 
@@ -14,10 +16,20 @@ def _evidence(report, row=None):
     if row:
         content += '<p>' + _text(row['attribution']) + '</p>'
         facts = row['franchise']
-        content += '<p>Original consideration observed: ' + _text(
-            f"received {facts['incoming'].get('player', 0)} players / {facts['incoming'].get('pick', 0)} exact picks; "
-            f"moved {facts['outgoing'].get('player', 0)} players / {facts['outgoing'].get('pick', 0)} exact picks. "
-            f"Directed FAAB received {facts['incoming'].get('faab', 0)}, moved {facts['outgoing'].get('faab', 0)} transfers; not Market-priced assets.") + '</p>'
+        if facts.get('composition_unavailable_trades') == facts['trades'] and facts['trades']:
+            content += '<p>Consideration unavailable. Player, exact-pick and FAAB totals are not established.</p>'
+        elif not facts['trades']:
+            content += '<p>No supported completed-trade consideration observed.</p>'
+        else:
+            def count(direction, kind):
+                value = supported_asset_count(facts, direction, kind)
+                return value if value is not None else 'Unavailable'
+            content += '<p>Original consideration observed: ' + _text(
+                f"players received: {count('incoming', 'player')}; moved: {count('outgoing', 'player')}. "
+                f"Exact picks received: {count('incoming', 'pick')}; moved: {count('outgoing', 'pick')}. "
+                f"Directed FAAB transfers received: {count('incoming', 'faab')}; moved: {count('outgoing', 'faab')}; not Market-priced assets.") + '</p>'
+            if facts['incomplete_composition']:
+                content += '<p>Asset counts cover supported transfers only; incomplete consideration cannot establish a zero.</p>'
         styles = ', '.join(f'{key}: {count} deals' for key, count in facts['package_style'].items())
         content += '<p>Package asset-count shape: ' + _text(styles or 'Unavailable') + '. Asset count alone does not establish quality or intent.</p>'
         partners = ', '.join(f"{report['teams'].get(rid, {}).get('name', 'Franchise ' + rid)}: {count}" for rid, count in facts['counterparties'].items())
@@ -48,7 +60,19 @@ def league_observations(intelligence, data, active_id):
     count = report['trade_count']
     observed = report['coverage']['state'].replace('_', ' ')
     body = CSS + f'<section id="league-observations" class="gm-observations"><h2>League identity</h2><p><b>Observed facts · {_text(observed)}</b></p>'
-    body += '<p>' + _text(f"{count} completed trades observed; {report['pick_trades']} with supported exact-pick transfers and {report['faab_trades']} with supported FAAB transfers.") + '</p>'
+    composition = []
+    for kind, key, label in (('pick', 'pick_trades', 'exact-pick'), ('faab', 'faab_trades', 'FAAB')):
+        number = report[key]
+        covered = report.get('category_supported_trades', {}).get(kind, 0)
+        if covered == count:
+            composition.append(f'{number} with supported {label} transfers')
+        elif number:
+            composition.append(f'at least {number} with supported {label} transfers')
+        else:
+            composition.append(f'{label} activity unavailable from incomplete consideration')
+    body += '<p>' + _text(f"{count} completed trades observed" + ('; ' + '; '.join(composition) if count else '') + '.') + '</p>'
+    if report.get('composition_unavailable_trades'):
+        body += '<p class="muted">Consideration unavailable in ' + _text(report['composition_unavailable_trades']) + ' observed completed trades.</p>'
     if report['composition_supported_trades'] < count:
         body += '<p class="muted">Original consideration is incomplete in ' + _text(count - report['composition_supported_trades']) + ' observed trades; asset counts cover supported transfers only.</p>'
     body += '<p class="muted">' + _text(report['coverage']['explanation']) + '</p>'

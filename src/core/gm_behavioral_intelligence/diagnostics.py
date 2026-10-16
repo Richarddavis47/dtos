@@ -20,7 +20,7 @@ from src.core.history_context.coverage import periods
 from src.core.history_context.timestamps import canonical_utc_timestamp
 from src.core.team_identity import canonical_team_name
 
-METHOD = 'league-gm-observations-1'
+METHOD = 'league-gm-observations-2'
 MAX_ROWS = 10_000
 MAX_SEASONS = 20
 MAX_ENTRIES = 4
@@ -39,7 +39,14 @@ def _rid(value):
 
 
 def _transaction(row):
-    return {key: row[key] for key in FIELDS if key in row} if isinstance(row, dict) else {}
+    result = {key: row[key] for key in FIELDS if key in row} if isinstance(row, dict) else {}
+    participants = result.get('roster_ids')
+    if isinstance(participants, list):
+        normalized = [_rid(rid) for rid in participants]
+        if None not in normalized and len(set(normalized)) == len(normalized):
+            # Enumeration is unordered; directed consideration remains untouched.
+            result['roster_ids'] = sorted(normalized, key=int)
+    return result
 
 
 def _current_rows(data):
@@ -61,38 +68,49 @@ def _clock(raw, now):
     return None  # Creation alone never establishes when a trade completed.
 
 
-def _movements(raw):
+def _movement_evidence(raw):
     """Original directed consideration; repeated legs collapse, conflicts qualify."""
     raw_participants = raw.get('roster_ids')
     if not isinstance(raw_participants, list):
-        return (), (), False
+        return (), (), False, {}
     participants = [_rid(r) for r in raw_participants]
     if len(participants) < 2 or None in participants or len(set(participants)) != len(participants):
-        return (), (), False
+        return (), (), False, {}
     participants = tuple(sorted(participants, key=int))
-    adds, drops = raw.get('adds') or {}, raw.get('drops') or {}
-    if not isinstance(adds, dict) or not isinstance(drops, dict):
-        return participants, (), False
-    candidates, complete = [], True
+    categories = dict.fromkeys(('player', 'pick', 'faab'), True)
+    adds, drops = raw.get('adds'), raw.get('drops')
+    if adds is not None and not isinstance(adds, dict):
+        categories['player'] = False
+        adds = {}
+    if drops is not None and not isinstance(drops, dict):
+        categories['player'] = False
+        drops = {}
+    adds, drops = adds or {}, drops or {}
+    candidates = []
     for pid in sorted(set(adds) | set(drops), key=str):
-        candidates.append(('player', str(pid), _rid(drops.get(pid)), _rid(adds.get(pid)), None))
-    picks = raw.get('draft_picks') or []
-    budgets = raw.get('waiver_budget') or []
-    if not isinstance(picks, list) or not isinstance(budgets, list):
-        return participants, (), False
+        identity = str(pid) if pid is not None and not isinstance(pid, bool) else ''
+        candidates.append(('player', identity, _rid(drops.get(pid)), _rid(adds.get(pid)), None))
+    picks, budgets = raw.get('draft_picks'), raw.get('waiver_budget')
+    if picks is not None and not isinstance(picks, list):
+        categories['pick'] = False
+        picks = []
+    if budgets is not None and not isinstance(budgets, list):
+        categories['faab'] = False
+        budgets = []
+    picks, budgets = picks or [], budgets or []
     for pick in picks:
         if not isinstance(pick, dict):
-            complete = False
+            categories['pick'] = False
             continue
         identity = future_pick_id(pick, 0)
         candidates.append(('pick', identity, _rid(pick.get('previous_owner_id')), _rid(pick.get('owner_id')), None))
     for budget in budgets:
         if not isinstance(budget, dict):
-            complete = False
+            categories['faab'] = False
             continue
         amount = budget.get('amount')
         if isinstance(amount, bool) or not isinstance(amount, (int, float)) or not 0 <= amount < float('inf'):
-            complete = False
+            categories['faab'] = False
             continue
         sender, receiver = _rid(budget.get('sender')), _rid(budget.get('receiver'))
         candidates.append(('faab', f'FAAB:{sender}:{receiver}:{amount}', sender, receiver, amount))
@@ -100,27 +118,41 @@ def _movements(raw):
     for item in candidates:
         kind, identity, sender, receiver, amount = item
         if not identity or sender not in participants or receiver not in participants or sender == receiver:
-            complete = False
+            categories[kind] = False
             continue
         key = (kind, identity)
         if key in by_id and by_id[key] != item:
             conflicts.add(key)
-            complete = False
+            categories[kind] = False
         by_id[key] = item
-    return participants, tuple(v for k, v in by_id.items() if k not in conflicts), complete
+    movements = tuple(v for k, v in by_id.items() if k not in conflicts)
+    if not movements:
+        # Missing/empty consideration is not evidence of a no-asset trade.
+        categories = dict.fromkeys(categories, False)
+    return participants, movements, bool(movements) and all(categories.values()), categories
+
+
+def _movements(raw):
+    """Compatibility view over the single directed-consideration admission path."""
+    return _movement_evidence(raw)[:3]
 
 
 def _counts():
     return {'trades': 0, 'incoming': Counter(), 'outgoing': Counter(),
             'incomplete_composition': 0,
+            'composition_supported_trades': 0, 'composition_partial_trades': 0,
+            'composition_unavailable_trades': 0, 'category_supported_trades': Counter(),
             'acquired_positions': Counter(), 'moved_positions': Counter(),
             'acquired_kinds': Counter(), 'moved_kinds': Counter(),
             'package_style': Counter(), 'counterparties': Counter(), 'references': []}
 
 
-def _add_side(counts, rid, participants, movements, positions, reference, complete):
+def _add_side(counts, rid, participants, movements, positions, reference, complete, categories):
     counts['trades'] += 1
     counts['incomplete_composition'] += int(not complete)
+    state = 'supported' if complete else 'partial' if movements else 'unavailable'
+    counts[f'composition_{state}_trades'] += 1
+    counts['category_supported_trades'].update(kind for kind, supported in categories.items() if supported)
     counts['counterparties'].update(other for other in participants if other != rid)
     received, sent = [], []
     acquired, moved = set(), set()
@@ -234,6 +266,9 @@ class LeagueGMObservations:
                 facts = cache.sections(league, season, ('league', 'rosters', 'transactions'))
             except (OSError, ValueError, TypeError):
                 limitations.append(f'{season}: retained source unavailable; not an observed zero.')
+                coverage.append({'season': season, 'source_league_id': None,
+                    'source_state': 'unavailable',
+                    **periods({'league': {'season': str(season), 'status': 'complete'}, 'transactions': None}, 'transactions')})
                 continue
             if not facts:
                 continue
@@ -254,7 +289,7 @@ class LeagueGMObservations:
         current_buckets = data.get('season_transactions')
         if current_season is not None:
             current_coverage = periods({'league': data.get('league') or {}, 'transactions': current_buckets}, 'transactions')
-            if str(current_season) not in {str(x['season']) for x in coverage}:
+            if not any(str(x['season']) == str(current_season) and x.get('source_state') != 'unavailable' for x in coverage):
                 coverage.append({'season': current_season, 'source_league_id': league, **current_coverage})
         if len(raw_rows) > MAX_ROWS:
             limitations.append('Transaction observation limit reached; counts describe a bounded subset.')
@@ -281,10 +316,12 @@ class LeagueGMObservations:
         positions = {str(pid): str(row.get('position') or '') for pid, row in (data.get('players') or {}).items() if isinstance(row, dict)}
         events, season_counts, edges, timed = [], Counter(), Counter(), []
         composition, unknown_clocks, pick_deals, faab_deals, faab_legs, asset_total = 0, 0, 0, 0, 0, 0
+        composition_partial = composition_unavailable = 0
+        category_supported = Counter()
         for key, (season, source_league, raw) in sorted(unique.items()):
             if key in conflicts or str(raw.get('status') or '').casefold() not in {'complete', 'completed'}:
                 continue
-            participants, movements, complete = _movements(raw)
+            participants, movements, complete, categories = _movement_evidence(raw)
             if not participants:
                 limitations.append('A completed row has unsupported participants; it is withheld.')
                 continue
@@ -295,10 +332,13 @@ class LeagueGMObservations:
                 timed.append(clock)
             else:
                 unknown_clocks += 1
-            events.append((key, season, participants, movements, complete, clock))
+            events.append((key, season, participants, movements, complete, clock, categories))
             season_counts[str(season) if season is not None else 'unknown'] += 1
             edges.update(combinations(participants, 2))
             composition += int(complete)
+            composition_partial += int(bool(movements) and not complete)
+            composition_unavailable += int(not movements)
+            category_supported.update(kind for kind, supported in categories.items() if supported)
             asset_total += sum(kind != 'faab' for kind, *_ in movements)
             pick_deals += int(any(kind == 'pick' for kind, *_ in movements))
             faab_deals += int(any(kind == 'faab' for kind, *_ in movements))
@@ -307,16 +347,20 @@ class LeagueGMObservations:
                 if rid not in teams:
                     continue
                 row = teams[rid]
-                _add_side(row['franchise'], rid, participants, movements, positions, reference, complete)
+                _add_side(row['franchise'], rid, participants, movements, positions, reference, complete, categories)
                 # Current-season ownership snapshots do not prove past tenure.
                 owner = identities.get((str(season), rid)) if str(season) != str(current_season) else None
                 if belongs_to_manager({'owner_id': owner}, row['current_owner_id'], {}):
-                    _add_side(row['manager'], rid, participants, movements, positions, reference, complete)
+                    _add_side(row['manager'], rid, participants, movements, positions, reference, complete, categories)
         acquired = sum(len(r['acquired']) for r in coverage)
         complete_coverage = bool(coverage) and all(r['complete_acquisition'] for r in coverage) and not limitations
         state = ('observed' if events else 'observed_zero') if complete_coverage else 'partial' if events or acquired else 'unavailable'
         note = ('All expected transaction buckets in the listed observed seasons are acquired.' if complete_coverage
                 else 'History is partial or unavailable; low counts do not prove low trading activity.')
+        unavailable_seasons = sum(row.get('source_state') == 'unavailable' for row in coverage)
+        if unavailable_seasons:
+            suffix = '' if unavailable_seasons == 1 else 's'
+            note += f' {unavailable_seasons} retained season source{suffix} unavailable; independently valid evidence remains included.'
         for rid, row in teams.items():
             row['franchise'], row['manager'] = _plain(row['franchise']), _plain(row['manager'])
             row['attribution'] = 'Manager counts cover this franchise only and use unique historical season-owner evidence, not current ownership. Exact intra-season takeover timing is unestablished; behavior at another franchise is not inferred.'
@@ -335,6 +379,9 @@ class LeagueGMObservations:
                 'season_counts': dict(sorted(season_counts.items())), 'completed_with_supported_clock': len(timed),
                 'first_supported_completion': min(timed) if timed else None, 'latest_supported_completion': max(timed) if timed else None,
                 'composition_supported_trades': composition, 'pick_trades': pick_deals, 'faab_trades': faab_deals,
+                'composition_partial_trades': composition_partial,
+                'composition_unavailable_trades': composition_unavailable,
+                'category_supported_trades': dict(category_supported),
                 'directed_faab_transfers': faab_legs, 'unique_transferred_player_pick_assets': asset_total,
                 'counterparty_pairs': [{'rosters': list(k), 'trades': n} for k, n in sorted(edges.items())],
                 'limitations': list(dict.fromkeys(limitations))}
@@ -342,15 +389,29 @@ class LeagueGMObservations:
         return core
 
 
+def supported_asset_count(facts, direction, kind):
+    """Known transfers are lower bounds; absent coverage cannot establish zero."""
+    count = facts[direction].get(kind, 0)
+    covered = facts.get('category_supported_trades', {}).get(kind, 0)
+    return count if count or covered == facts['trades'] else None
+
+
 def describe_team(row):
     facts = row['franchise']
     count = facts['trades']
-    picks_in, picks_out = facts['incoming'].get('pick', 0), facts['outgoing'].get('pick', 0)
+    picks_in = supported_asset_count(facts, 'incoming', 'pick')
+    picks_out = supported_asset_count(facts, 'outgoing', 'pick')
     if not count:
         return 'No completed franchise trades observed; available history does not establish a manager preference.'
-    partial = (f"Original consideration is incomplete in {facts['incomplete_composition']} deals; asset counts are supported subsets. "
-               if facts['incomplete_composition'] else '')
-    return (f"This franchise completed {count} observed trade{'s' if count != 1 else ''}, acquiring {picks_in} supported exact picks and moving {picks_out}. "
+    if facts.get('composition_unavailable_trades') == count:
+        assets = 'Consideration unavailable; player, exact-pick and FAAB totals are not established. '
+        partial = ''
+    else:
+        assets = (f"Supported exact picks acquired: {picks_in if picks_in is not None else 'Unavailable'}; "
+                  f"moved: {picks_out if picks_out is not None else 'Unavailable'}. ")
+        partial = (f"Original consideration is incomplete in {facts['incomplete_composition']} deals; asset counts are supported subsets. "
+                   if facts['incomplete_composition'] else '')
+    return (f"This franchise completed {count} observed trade{'s' if count != 1 else ''}. " + assets
             + partial
             + (f"{row['manager']['trades']} deals have season-observed attribution to the current manager; exact takeover timing is unknown."
                if row['manager']['trades'] else 'Available history does not attribute these decisions to the current manager.'))
@@ -378,14 +439,24 @@ def partner_context(report, roster_id, diagnostic=None, received_positions=()):
         text = 'The current package addresses supported ' + ', '.join(sorted(needs)) + ' needs, but history does not establish a matching current-manager preference. '
     else:
         text = row['summary'] + ' Current package incentives remain separate from past behavior. '
+    if needs and facts['incomplete_composition']:
+        if facts.get('composition_unavailable_trades'):
+            text += f"Consideration unavailable in {facts['composition_unavailable_trades']} observed franchise trades. "
+        if facts.get('composition_partial_trades'):
+            text += f"Original consideration is partial in {facts['composition_partial_trades']} observed franchise trades; asset counts are supported subsets. "
     text += (report or {}).get('coverage', {}).get('explanation', '')
     short = (f"Supported {', '.join(matches)} need matches season-attributed current-manager acquisitions. " if matches else
              f"{facts['trades']} completed franchise trades observed; no supported history/need match established. ")
     short += 'Manager preference unestablished. ' if row['manager']['trades'] < MINIMUM_TENDENCY else 'Manager attribution is season-level only. '
+    if facts['incomplete_composition']:
+        short += 'Consideration unavailable. ' if facts.get('composition_unavailable_trades') == facts['trades'] else 'Consideration incomplete. '
     short += 'History ' + (report or {}).get('coverage', {}).get('state', 'unavailable').replace('_', ' ') + '.'
     return {'summary': text, 'short_summary': short, 'soft_tie_break': int(bool(matches)), 'references': facts['references'],
             'coverage': (report or {}).get('coverage', {}).get('state', 'unavailable'),
             'franchise_sample': facts['trades'], 'manager_sample': row['manager']['trades'],
+            'consideration_coverage': {key: facts[key] for key in (
+                'composition_supported_trades', 'composition_partial_trades',
+                'composition_unavailable_trades', 'category_supported_trades')},
             'attribution': row['attribution'], 'source_identity': report['semantic_identity']}
 
 

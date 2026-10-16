@@ -7,6 +7,7 @@ import json
 import os
 import tempfile
 import threading
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Awaitable, Callable
@@ -20,6 +21,10 @@ class CachedSeason:
     completeness: dict[str, str]
     facts: dict[str, Any]
     checksum: str
+
+
+class SeasonSourceUnavailable(ValueError):
+    """Retained evidence could not be decoded; the source is not an empty season."""
 
 
 class SleeperSeasonCache:
@@ -147,7 +152,14 @@ class SleeperSeasonCache:
             before = path.stat()
         except FileNotFoundError:
             return None
-        payload = json.loads(gzip.decompress(path.read_bytes()))
+        try:
+            payload = json.loads(gzip.decompress(path.read_bytes()))
+        except (EOFError, gzip.BadGzipFile, zlib.error) as exc:
+            # Do not repair, replace, delete or cache an unreadable publication.
+            # Existing retained-source consumers handle a qualified ValueError.
+            raise SeasonSourceUnavailable(
+                'Sleeper retained season archive is unreadable; original source preserved.'
+            ) from exc
         candidate = self.normalize(league_id, season, payload["facts"])
         if candidate.checksum != payload.get("checksum"):
             raise ValueError("Sleeper completed-season cache checksum mismatch.")

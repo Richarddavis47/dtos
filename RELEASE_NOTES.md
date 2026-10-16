@@ -1,3 +1,12 @@
+## v1.21.54 / build 2154 — Historical evidence integrity
+
+- Qualify truncated or invalid retained gzip seasons without breaking League or own/opponent Team HQ. Continue valid independent evidence, preserve corrupt originals and recover after an explicit valid publication.
+- Separate completed decisions from supported, partial and unavailable consideration. Missing player/pick/FAAB evidence does not become zero-asset behavior; legitimate category zeros and directed transfers remain supported.
+- Deduplicate reordered participant sets while retaining exact source/transaction identity and rejecting genuine player, pick, FAAB, participant or version conflicts.
+- Share coverage and consideration qualifications across League, HQ, Trade and prepared Home partner context. Preserve manager-tenure boundaries, soft historical context, canonical prices/projections, legal lineups, protections and retained FOIS grades.
+- No permanent source store, automatic archive repair, historical regeneration or provider loop. Unchanged 2 GiB and 500 ms release gates.
+- Contract and coverage: [League/GM historical evidence integrity](docs/LEAGUE_GM_EVIDENCE_INTEGRITY.md). Controlled rendered Chromium is distinct from Scout-independent production and physical-device acceptance.
+
 ## v1.21.53 / build 2153 — League and franchise trade context
 
 - Extend shared GM Behavioral Intelligence with bounded completed-trade observations: league activity, original directed assets, exact picks, package shape and repeat counterparties. Distinguish observed zero from partial/unavailable history and unsupported completion clocks.
