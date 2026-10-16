@@ -124,9 +124,9 @@ class SleeperSeasonCache:
             )
             with self._checksum_lock:
                 self._checksum_cache[path] = (identity, season.checksum)
-                self._section_cache[(path, "transactions")] = (
-                    identity, season.facts.get("transactions") or {},
-                )
+                for name in ('league', 'rosters', 'transactions'):
+                    value = (season.facts.get(name) or {}) if name == 'transactions' else season.facts.get(name)
+                    self._section_cache[(path, name)] = (identity, value)
         finally:
             if temporary:
                 Path(temporary).unlink(missing_ok=True)
@@ -143,21 +143,25 @@ class SleeperSeasonCache:
 
     def read(self, league_id: str, season: int) -> CachedSeason | None:
         path = self.path(league_id, season)
-        if not path.exists():
+        try:
+            before = path.stat()
+        except FileNotFoundError:
             return None
         payload = json.loads(gzip.decompress(path.read_bytes()))
         candidate = self.normalize(league_id, season, payload["facts"])
         if candidate.checksum != payload.get("checksum"):
             raise ValueError("Sleeper completed-season cache checksum mismatch.")
         stat = path.stat()
+        if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) != (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns):
+            raise ValueError('Sleeper completed-season publication changed during read')
         identity = (
             int(stat.st_dev), int(stat.st_ino), int(stat.st_size),
             int(stat.st_mtime_ns),
         )
         with self._checksum_lock:
-            self._section_cache[(path, "transactions")] = (
-                identity, candidate.facts.get("transactions") or {},
-            )
+            for name in ('league', 'rosters', 'transactions'):
+                value = (candidate.facts.get(name) or {}) if name == 'transactions' else candidate.facts.get(name)
+                self._section_cache[(path, name)] = (identity, value)
         return candidate
 
     def section(self, league_id: str, season: int, name: str) -> Any:
@@ -183,6 +187,35 @@ class SleeperSeasonCache:
         with self._checksum_lock:
             self._section_cache[key] = (identity, value)
         return value
+
+    def sections(self, league_id: str, season: int, names: tuple[str, ...]) -> dict[str, Any]:
+        """Pin several compact sections with one verified cold decode.
+
+        Reuse the existing file-identity cache; do not retain full matchup facts
+        merely to summarize transactions and season-observed ownership.
+        """
+        path = self.path(league_id, season)
+        try:
+            stat = path.stat()
+        except FileNotFoundError:
+            return {}
+        identity = (int(stat.st_dev), int(stat.st_ino), int(stat.st_size), int(stat.st_mtime_ns))
+        with self._checksum_lock:
+            cached = {name: self._section_cache.get((path, name)) for name in names}
+            if all(row is not None and row[0] == identity for row in cached.values()):
+                return {name: row[1] for name, row in cached.items()}
+        archive = self.read(league_id, season)
+        if archive is None:
+            return {}
+        values = {name: archive.facts.get(name) for name in names}
+        # A concurrent writer must not pin an old section to a new file identity.
+        after = path.stat()
+        if identity != (int(after.st_dev), int(after.st_ino), int(after.st_size), int(after.st_mtime_ns)):
+            raise ValueError('Sleeper season source changed during section preparation')
+        with self._checksum_lock:
+            for name, value in values.items():
+                self._section_cache[(path, name)] = (identity, value)
+        return values
 
     def checksum_index(self, league_id: str) -> dict[int, str]:
         """Return verified archive identities without repeatedly decoding archives."""

@@ -199,6 +199,7 @@ def rank_key(row):
             {'HIGH': 0, 'MEDIUM': 1}.get((dimensions.get('confidence') or {}).get('assessment'), 2),
             package.get('assessment') == 'POOR', ratio is None, abs(1 - ratio) if ratio is not None else 0,
             not contextual_fit('active'), not contextual_fit('partner'),
+            -int((dimensions.get('league_partner_context') or {}).get('soft_tie_break') or 0),
             (e.get('provenance') or {}).get('evaluation_id', str(row.get('proposal'))))
 
 

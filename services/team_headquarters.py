@@ -222,6 +222,7 @@ def build_team_headquarters(
         "summary": generate_front_office_summary(snapshot, grades, decision, team_intelligence),
         "decision": decision,
         "front_office_intelligence": organization,
+        "league_observations": intelligence.league.observed_behavior,
         "unified_recommendation": intelligence.recommendation,
         "brain": intelligence.brain,
         "assessment": intelligence.team_assessment,

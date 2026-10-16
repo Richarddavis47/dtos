@@ -29,6 +29,7 @@ class TradeEvidenceContext:
     preparation_duration_ms: float = 0.0
     schema_version: str = TRADE_HISTORY_SCHEMA_VERSION
     method_version: str = TRADE_HISTORY_METHOD_VERSION
+    league_observations: dict[str, Any] | None = None
 
 
 def _market_generation(data: dict[str, Any]) -> str:
@@ -39,7 +40,7 @@ def _market_generation(data: dict[str, Any]) -> str:
 def build_trade_evidence_context(
     data: dict[str, Any], assets: Iterable[Any] = (),
 ) -> TradeEvidenceContext:
-    """Read each already-derived evidence product once; never scan raw history."""
+    """Read derived products once; prepare bounded league observations per search."""
     # Importing the public Intelligence package at module initialization also
     # imports Trade Intelligence. Resolve helpers after both APIs are initialized.
     from src.core.intelligence.league_scope import scoped_evidence, scoped_market_trends
@@ -78,12 +79,15 @@ def build_trade_evidence_context(
     front_office = scoped_evidence(
         data, "front_office_evidence", expected_league_id=league_id,
     )
+    from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations
+    observations = league_gm_observations.report(data)
     return TradeEvidenceContext(
         league_id=league_id,
         behavior_by_roster=behavior.rows,
         front_office_by_roster=front_office.rows,
         trends_by_asset=trends,
         generation=_market_generation(data),
+        league_observations=observations,
         wrong_league_evidence_rejected=(
             behavior.rejected + front_office.rejected + trend_rejections
         ),
@@ -185,6 +189,14 @@ def assess_historical_fit(
     if not reasons:
         reasons.append("Canonical manager-history and market-timing evidence is unavailable or too limited to influence this proposal.")
         reason_codes.append("INSUFFICIENT_HISTORY")
+    from src.core.gm_behavioral_intelligence.diagnostics import partner_context
+    observations = context.league_observations
+    if observations and str(observations.get('league_id') or '') == context.league_id:
+        observed_partner = partner_context(observations, partner_roster_id)
+        reasons.append(observed_partner.get('short_summary') or observed_partner['summary'])
+        reason_codes.append('FRANCHISE_OBSERVATIONS_NOT_ACCEPTANCE')
+    else:
+        observed_partner = None
     return {
         "assessment": assessment, "confidence": confidence, "score": score,
         "reasons": reasons[:4], "evidence_references": sorted(set(references))[:12],
@@ -197,4 +209,5 @@ def assess_historical_fit(
         "process_distribution": dict(profile.get("process_distribution") or {}),
         "outcome_distribution": dict(profile.get("outcome_distribution") or {}),
         "liquidity_supported": liquid,
+        "league_partner_observations": observed_partner,
     }

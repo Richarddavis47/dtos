@@ -102,7 +102,8 @@ def rank_returns(rows, assets, pref):
             and buyer.get('pre_optimal_points') is not None and buyer.get('post_optimal_points') is not None
             and buyer['post_optimal_points'] >= buyer['pre_optimal_points'])
         # A tie-break among already evaluated offers, never an uncertainty veto.
-        key = (*key, not supported_need)
+        history = (row['evaluation'].get('dimensions') or {}).get('league_partner_context') or {}
+        key = (*key, not supported_need, -int(history.get('soft_tie_break') or 0))
         decorated.append((key, row['evaluation']['provenance']['evaluation_id'], row, evidence))
     decorated.sort(key=lambda item: (item[0], item[1]))
     return [(row, evidence) for _, _, row, evidence in decorated]

@@ -36,8 +36,10 @@ def _roster_ids(item: dict[str, Any]) -> set[int]:
 def _activity(data: dict[str, Any], roster_id: int, pick_count: int) -> ActivityProfile:
     counts = {"trade": 0, "waiver": 0, "free_agent": 0, "drop": 0}
     shared = (data.get("front_office_evidence") or {}).get(str(roster_id))
-    if shared is not None:
-        counts["trade"] = int(shared.get("transaction_count") or 0)
+    from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations
+    observed = data.get('_league_gm_observations') or league_gm_observations.report(data)
+    counts['trade'] = (int(shared.get('transaction_count') or 0) if shared is not None else
+        int(((observed.get('teams') or {}).get(str(roster_id), {}).get('franchise') or {}).get('trades') or 0))
     transactions = (
         list(data.get("transactions") or ())
         if shared is not None else _canonical_transactions(data)
@@ -46,14 +48,15 @@ def _activity(data: dict[str, Any], roster_id: int, pick_count: int) -> Activity
         if roster_id not in _roster_ids(item):
             continue
         kind = str(item.get("type") or "").lower()
-        if kind in counts and not (kind == "trade" and shared is not None):
+        if kind in counts and kind != 'trade':
             counts[kind] += 1
         if isinstance(item.get("drops"), dict) and roster_id in _roster_ids({"roster_ids": item["drops"].values()}):
             counts["drop"] += 1
     total = sum(counts.values())
-    level = f"{counts['trade']} observed completed trades; observation period not established"
+    scope = 'manager-attributed trades in retained canonical evidence' if shared is not None else 'completed franchise trades in observed source buckets'
+    level = f"{counts['trade']} {scope}; observation period not established"
     evidence = (
-        Evidence("Completed trades", str(counts["trade"]), counts["trade"], "Counts cached transactions involving this roster.", "Sleeper cached transactions"),
+        Evidence("Observed completed trades", str(counts["trade"]), counts["trade"], scope + '. ' + observed['coverage']['explanation'] + ' Franchise activity is not automatically current-manager behavior.', "Sleeper completed transactions"),
         Evidence("Roster transactions", str(total - counts["trade"]), total - counts["trade"], "Counts cached waiver, add, and drop actions involving this roster.", "Sleeper cached transactions"),
         Evidence("Draft assets owned", str(pick_count), pick_count, "Current owned picks provide observable draft-strategy context.", "Sleeper cached pick ledger"),
     )
@@ -92,10 +95,14 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
         preferences.append(AssetPreference("Draft-capital holdings", "Current holdings", (Evidence("Draft assets owned", str(profile.draft_pick_count), profile.draft_pick_count, "Owned picks describe current capital, not an observed acquisition preference.", "Sleeper cached pick ledger"),)))
     if not preferences:
         preferences.append(AssetPreference("No strong preference established", "Neutral", (Evidence("Preference sample", "Insufficient differentiating evidence", 0, "DTOS does not assign an asset preference without an observable threshold.", "Cached roster and transaction history", False),)))
-    shared_behavior = (data.get("gm_behavioral_intelligence") or {}).get(str(profile.roster_id)) or {}
+    from src.core.intelligence.league_scope import scoped_evidence
+    shared_behavior = scoped_evidence(data, 'gm_behavioral_intelligence', expected_league_id=profile.league_id).rows.get(str(profile.roster_id)) or {}
     first, last = shared_behavior.get("first_observed_at"), shared_behavior.get("last_observed_at")
     period = f" from {str(first)[:10]} to {str(last)[:10]}" if first and last else "; observation period unavailable"
-    style = f"{activity.trades} observed completed trades{period}. Activity does not establish skill or selectivity."
+    scope = 'manager-attributed trades in retained evidence' if (data.get('front_office_evidence') or {}).get(str(profile.roster_id)) is not None else 'completed franchise trades in observed buckets'
+    if scope.startswith('completed franchise'):
+        period = '; historical manager identity and precise observation period may be incomplete'
+    style = f"{activity.trades} {scope}{period}. Activity does not establish skill or selectivity."
     confidence = min(90, 35 + min(known, 20) + min(activity.trades * 5, 25) + (10 if profile.draft_pick_count else 0))
     evidence = activity.evidence + tuple(item for pref in preferences for item in pref.evidence) + (
         Evidence("Negotiation style sample", str(activity.trades), activity.trades,
@@ -133,10 +140,11 @@ def _surpluses(decision: TeamDecision) -> set[str]:
 def _compatibility(data: dict[str, Any], first: FrontOfficeReport, second: FrontOfficeReport) -> CompatibilityReport:
     first_matches = _needs(first.decision) & _surpluses(second.decision)
     second_matches = _needs(second.decision) & _surpluses(first.decision)
-    if first.front_office_evidence is not None:
-        bilateral = int((first.front_office_evidence.get("partner_counts") or {}).get(str(second.roster_id)) or 0)
-    else:
-        bilateral = sum(str(item.get("type") or "").lower() == "trade" and {first.roster_id, second.roster_id}.issubset(_roster_ids(item)) for item in _canonical_transactions(data))
+    from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations
+    observed = data.get('_league_gm_observations') or league_gm_observations.report(data)
+    bilateral = (int((first.front_office_evidence.get('partner_counts') or {}).get(str(second.roster_id)) or 0)
+        if first.front_office_evidence is not None else
+        int((((observed.get('teams') or {}).get(str(first.roster_id), {}).get('franchise') or {}).get('counterparties') or {}).get(str(second.roster_id)) or 0))
     score = min(100, 40 + 15 * len(first_matches) + 15 * len(second_matches) + min(bilateral, 3) * 5)
     shared = tuple(sorted(first_matches | second_matches))
     needs_available = all(
@@ -203,6 +211,9 @@ def build_league_model(data: dict[str, Any], decisions: dict[int, TeamDecision] 
         return intelligence_orchestrator.analyze(data, first_roster, include_trade_opportunities=False).front_office_model
     if any(str(decision.profile.league_id) != league_id for decision in decisions.values()):
         raise ValueError("Decision Engine output belongs to a different league.")
+    from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations
+    if '_league_gm_observations' not in data:
+        data = {**data, '_league_gm_observations': league_gm_observations.report(data)}
     reports = {roster_id: _profile(decision, data) for roster_id, decision in decisions.items()}
     compatibilities = {}
     relationships = []

@@ -131,3 +131,4 @@ class LeagueIntelligenceReport:
     trade_recommendations: tuple[LeagueTradeRecommendation, ...]
     dashboard: dict[str, str]
     limitations: tuple[str, ...]
+    observed_behavior: dict | None = None
