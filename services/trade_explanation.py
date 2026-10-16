@@ -258,7 +258,7 @@ def _decision_primary(result, decision):
             brief += paragraph('Listed position eligibility: ' + ', '.join(row['eligible_positions']) + '. Availability and roster rules are assessed separately in the legal lineup.')
             brief += paragraph(f"Market positional rank: {row['market_rank']['rank'] or 'Unavailable'} · {row['market_rank']['cohort']}.")
             brief += paragraph(f"Current Market: {row['current_market'] if row['current_market'] is not None else 'Unavailable'}.")
-            brief += paragraph(f"Sleeper projection: {manager_points(projection['value'])} · Season {projection['season']} · Week {projection['week']} · {projection['freshness']}.")
+            brief += paragraph(f"Sleeper projection: {projection.get('display') or 'Unavailable'} · Season {projection['season']} · Week {projection['week']} · {projection['freshness']}.")
             if projection.get('retained_qualification') not in (None, 'Fresh', projection['freshness']):
                 brief += paragraph('Publication qualification: ' + projection['retained_qualification'])
             if (projection.get('refresh_evidence') or {}).get('retained_publication'):

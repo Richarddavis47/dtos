@@ -370,3 +370,57 @@ class DecisionHTTPBrowserTests(unittest.TestCase):
             Path(target).with_name("shop-priority-after-geometry.json").write_text(
                 json.dumps(geometry, indent=2)
             )
+
+    def test_trade_and_canonical_player_route_share_source_display_precision(self):
+        import dtos_app
+        from routes.transactions import create_transactions_router
+
+        self.f.points.update(a=20.125, c=24.335)
+        self.f.publish()
+        from fastapi.staticfiles import StaticFiles
+
+        self.auth.client.app.mount(
+            "/static",
+            StaticFiles(directory=str(Path(__file__).resolve().parents[1] / "static")),
+            name="projection-parity-static",
+        )
+        self.auth.client.app.include_router(
+            create_transactions_router(
+                ensure_fresh=AsyncMock(),
+                refresh_transactions=AsyncMock(),
+                require_data=lambda: self.data,
+                state={},
+                page=dtos_app.page,
+            )
+        )
+        with (
+            patch("routes.transactions.projection_service", self.f.reader),
+            self.browser() as page,
+        ):
+            response = page.goto(
+                "https://dtos.test/players/a/projections?front_office=1&week=2"
+            )
+            self.assertEqual(response.status, 200)
+            canonical = page.locator(
+                '#player-weekly-projections [data-projection-week="2"]'
+            )
+            source_display = canonical.inner_text()
+            self.assertEqual(
+                canonical.get_attribute("data-projection-availability"), "available"
+            )
+            self.ready(page)
+            page.select_option("#trade-partner", "2")
+            self.select(page, "sent", "a")
+            self.select(page, "received", "c")
+            page.get_by_role("button", name="Evaluate Trade", exact=True).click()
+            page.locator(".tw-player-facts > summary").click()
+            self.assertIn(
+                "Sleeper projection: " + source_display + " ·",
+                page.locator(".tw-player-facts").inner_text(),
+            )
+            facts = self.responses[-1]["evaluation"]["player_facts"]["a"]["projection"]
+            self.assertEqual(facts["value"], 20.125)
+            self.assertEqual(facts["display"], source_display)
+            self.assertLessEqual(
+                page.evaluate("document.documentElement.scrollWidth"), 390
+            )
