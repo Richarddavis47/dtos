@@ -355,6 +355,7 @@ def partner_context(report, roster_id, diagnostic=None, received_positions=()):
         return {'summary': 'History does not establish a partner preference; current offer quality remains separate.',
                 'soft_tie_break': 0, 'references': [], 'coverage': 'unavailable'}
     facts = row['franchise']
+    manager = row['manager']
     diagnostic = diagnostic or {}
     supported = (diagnostic.get('coverage') == 'supported current week'
         and diagnostic.get('numeric_impact_state') == 'supported'
@@ -362,16 +363,16 @@ def partner_context(report, roster_id, diagnostic=None, received_positions=()):
         and diagnostic.get('post_optimal_points') is not None
         and diagnostic['post_optimal_points'] >= diagnostic['pre_optimal_points'])
     needs = set((diagnostic or {}).get('need_positions_received') or []) if supported else set()
-    matches = sorted(pos for pos in set(received_positions) & needs if facts['acquired_positions'].get(pos, 0) >= MINIMUM_TENDENCY)
+    matches = sorted(pos for pos in set(received_positions) & needs if manager['acquired_positions'].get(pos, 0) >= MINIMUM_TENDENCY)
     if matches:
         text = 'The current package addresses supported ' + ', '.join(matches) + ' needs. '
-        text += 'This franchise previously acquired players currently classified at those positions in ' + ', '.join(str(facts['acquired_positions'][pos]) for pos in matches) + ' observed deals. '
+        text += 'Season-observed ownership attributes acquisitions at those positions to the current manager in ' + ', '.join(str(manager['acquired_positions'][pos]) for pos in matches) + ' deals at this franchise; exact intra-season tenure remains unestablished. '
     elif needs:
-        text = 'The current package addresses supported ' + ', '.join(sorted(needs)) + ' needs, but history does not establish a matching preference. '
+        text = 'The current package addresses supported ' + ', '.join(sorted(needs)) + ' needs, but history does not establish a matching current-manager preference. '
     else:
         text = row['summary'] + ' Current package incentives remain separate from past behavior. '
     text += (report or {}).get('coverage', {}).get('explanation', '')
-    short = (f"Supported {', '.join(matches)} need matches this franchise's observed acquisitions. " if matches else
+    short = (f"Supported {', '.join(matches)} need matches season-attributed current-manager acquisitions. " if matches else
              f"{facts['trades']} completed franchise trades observed; no supported history/need match established. ")
     short += 'Manager preference unestablished. ' if row['manager']['trades'] < MINIMUM_TENDENCY else 'Manager attribution is season-level only. '
     short += 'History ' + (report or {}).get('coverage', {}).get('state', 'unavailable').replace('_', ' ') + '.'

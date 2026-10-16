@@ -168,13 +168,23 @@ class LeagueObservationSourceTests(unittest.TestCase):
         report = self.service.report(self.data)
         context = partner_context(report, 2, need, ['WR'])
         self.assertEqual(context['soft_tie_break'], 0)
-        self.assertIn('does not establish a matching preference', context['summary'])
+        self.assertIn('does not establish a matching current-manager preference', context['summary'])
         self.data['transactions'] += [completed(str(i)) for i in range(4)]
+        self.publish([completed('attributed-' + str(i)) for i in range(5)], owners=('now-a', 'now-b'))
         report = self.service.report(self.data)
         self.assertEqual(partner_context(report, 2, need, ['WR'])['soft_tie_break'], 1)
         self.assertEqual(partner_context(report, 2, need, ['RB'])['soft_tie_break'], 0)
         provisional = {**need, 'coverage': 'provisional'}
         self.assertEqual(partner_context(report, 2, provisional, ['WR'])['soft_tie_break'], 0)
+
+    def test_prior_owner_history_cannot_promote_a_current_manager_partner(self):
+        self.publish([completed(str(i)) for i in range(5)], owners=('old-a', 'old-b'))
+        need = {'coverage': 'supported current week', 'need_positions_received': ['WR'],
+                'numeric_impact_state': 'supported', 'pre_optimal_points': 10, 'post_optimal_points': 12}
+        result = partner_context(self.service.report(self.data), 2, need, ['WR'])
+        self.assertEqual(result['manager_sample'], 0)
+        self.assertEqual(result['soft_tie_break'], 0)
+        self.assertIn('does not establish a matching', result['summary'])
 
     def test_retrieval_only_revision_is_stable_and_real_revision_invalidates(self):
         self.data['transactions'] = [completed()]
