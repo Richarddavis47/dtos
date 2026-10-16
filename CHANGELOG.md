@@ -1,7 +1,7 @@
 ## v1.21.58 / build 2158 — Complete retained evidence and canonical Market display
 
 - Expose complete already-saved prior assessment evidence inside the closed Previous assessment / NOT REVALIDATED disclosure. Preserve original counterparty, qualified lineup costs, risks, all supported limitations, strategy and source context; keep current incomplete results separate.
-- Reuse canonical adjustment display strings in Balance and Preview Compare. Match the existing decimal half-even display contract in editable Market/Calculator fallback labels without changing arithmetic, projections, prices, generations or target intent.
+- Reuse canonical adjustment display strings in Balance and Preview Compare. Match the existing decimal half-even display contract in editable Market/Calculator labels and the evaluated Trade Market panel without changing arithmetic, projections, prices, generations or target intent.
 - Preserve bounded existing draft/prior state and all Preview/Keep/Adopt, reevaluation, reset, navigation, exact-protection and isolation contracts. No new persistence, schema, archive, snapshot or provider work; unchanged 500 ms / 2 GiB gates.
 
 ## v1.21.57 / build 2157 — Trade assessment and phone integrity

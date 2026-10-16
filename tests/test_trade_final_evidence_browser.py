@@ -11,6 +11,7 @@ from time import perf_counter
 from tests import test_trade_decision_http_browser as decision
 from tests import test_trade_calculator_browser as calculator
 from src.ui.intelligence_presentation import manager_points
+from services.trade_explanation import _decision_primary
 
 
 class TradeFinalEvidenceBrowserTests(unittest.TestCase):
@@ -195,6 +196,28 @@ class TradeMarketDisplayBrowserTests(unittest.TestCase):
         self.f = calculator.CalculatorBrowserTests()
         self.f.setUp()
 
+    def test_completed_market_panel_matches_canonical_strings_without_changing_evidence(self):
+        decision = {'lineup': {'explanation': 'Controlled display context.'},
+                    'summary': 'Market is separate from strategic fit.', 'main_cost': 'Fixture cost.', 'limitation': None,
+                    'next_action': 'Review this controlled fixture.'}
+        for sent, received in [(620.125, 600), (600, 620.125), (620.135, 600), (0, 0), (-0.0, 0)]:
+            market = {'availability': 'full', 'sent': {'total': sent}, 'received': {'total': received},
+                      'difference': float(Decimal(str(received)) - Decimal(str(sent)))}
+            original = json.dumps(market, sort_keys=True)
+            html = _decision_primary({'market_evidence': market}, decision)
+            self.assertIn('You send <b>' + manager_points(sent) + '</b>', html)
+            self.assertIn('You receive <b>' + manager_points(received) + '</b>', html)
+            if sent != received:
+                gap = abs(market['difference'])
+                self.assertIn(manager_points(gap) + ' more current Market value', html)
+                self.assertIn('Your counterparty receives' if sent > received else 'You receive', html)
+            self.assertEqual(json.dumps(market, sort_keys=True), original)
+        market = {'availability': 'partial', 'sent': {'total': None, 'known_subtotal': 0}, 'received': {'total': 620.125, 'known_subtotal': 620.125}, 'difference': None}
+        html = _decision_primary({'market_evidence': market}, decision)
+        self.assertIn('Incomplete · known 0', html)
+        self.assertIn('Incomplete · known 620.12', html)
+        self.assertNotIn('more current Market value', html)
+
     def test_fractional_balance_preview_and_workspace_use_same_canonical_display(self):
         # Controlled compatible canonical DTO values; not production prices.
         for price, width, height in [(620.125, 320, 432), (620.125, 375, 667), (620.125, 390, 844),
@@ -283,6 +306,7 @@ class TradeMarketDisplayBrowserTests(unittest.TestCase):
                     compare.locator(':scope > summary').click()
                     self.assertIn('Incomplete · known subtotal 0', compare.inner_text())
                     self.assertIn('Gap Unavailable', compare.inner_text())
+                    self.assertIn('Outgoing Market cost: 400 → Incomplete · known subtotal 0', compare.inner_text())
                 else:
                     self.assertIn('Market evidence updated', page.locator('#trade-result').inner_text())
                 self.assertEqual(self.f.state(page)['currentProposal'], original)

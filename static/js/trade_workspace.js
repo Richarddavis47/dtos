@@ -763,7 +763,7 @@
       node('p', 'Alternative: ' + names(row.proposal.assets_sent) + ' → ' + names(row.proposal.assets_received)));
     const cost = ids => ids.every(id => asset(id)?.trade_value != null) ? ids.reduce((sum, id) => sum + asset(id).trade_value, 0) : null;
     const oldCost = cost(original.sent), newCost = cost(row.proposal.assets_sent);
-    if (original.sent.length && oldCost != null && newCost != null) comparison.append(node('p', 'Outgoing Market cost: ' + (adjustment?.display?.original?.sent ?? displayMarket(oldCost)) + ' → ' + (adjustment?.display?.suggested?.sent ?? displayMarket(newCost))));
+    if (original.sent.length && (adjustment || oldCost != null && newCost != null)) comparison.append(node('p', 'Outgoing Market cost: ' + (adjustment ? balanceMarketDisplay(adjustment, 'original').sent : displayMarket(oldCost)) + ' → ' + (adjustment ? balanceMarketDisplay(adjustment, 'suggested').sent : displayMarket(newCost))));
     if (adjustment) {
       for (const [heading, name] of [['Original', 'original'], ['Suggested', 'suggested']]) {
         const shown = balanceMarketDisplay(adjustment, name);

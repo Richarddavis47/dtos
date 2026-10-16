@@ -222,15 +222,15 @@ def _decision_primary(result, decision):
     def shown_side(name):
         side = market.get(name) or {}
         if full:
-            return str(side['total'])
+            return manager_points(side['total'])
         subtotal = side.get('known_subtotal')
-        return 'Incomplete · known ' + str(subtotal) if subtotal is not None else 'Unavailable'
+        return 'Incomplete · known ' + manager_points(subtotal) if subtotal is not None else 'Unavailable'
     market_html += '<div class="tw-market-caption"><span>You send <b>' + escape(shown_side('sent')) + '</b></span><span>You receive <b>' + escape(shown_side('received')) + '</b></span></div>'
     if full:
         gap = market.get('difference')
         sentence = ('Current Market totals are equal.' if gap == 0 else
-                    f'You receive {abs(gap):g} more current Market value.' if gap is not None and gap > 0 else
-                    f'Your counterparty receives {abs(gap):g} more current Market value.' if gap is not None else 'Current Market difference unavailable.')
+                    f'You receive {manager_points(abs(gap))} more current Market value.' if gap is not None and gap > 0 else
+                    f'Your counterparty receives {manager_points(abs(gap))} more current Market value.' if gap is not None else 'Current Market difference unavailable.')
         share = sent / (sent+received) * 100 if sent+received > 0 else 50
         left, right = ('advantage', 'disadvantage') if sent > received else ('neutral','neutral') if sent == received else ('disadvantage','advantage')
         market_html += ('<div class="tw-market-bar" role="img" aria-label="' + escape(sentence, quote=True) + '">'

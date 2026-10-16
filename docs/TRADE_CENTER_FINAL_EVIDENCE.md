@@ -35,7 +35,8 @@ incompatible comparisons withhold a definitive gap.
 
 Where an existing editable workspace has no prepared display string, exact decimal
 units are formatted with canonical `manager_points` half-even semantics. The same
-fallback serves selected Market values and Calculator package totals. Arithmetic,
+fallback serves selected Market values and Calculator package totals. The evaluated Trade Market panel also uses the same
+canonical server formatter for totals, known subtotals and the difference. Arithmetic,
 underlying precision, direction, generation admission and Balance target ranking
 are unchanged. Zero stays supported; negative display zero is normalized.
 Individual Sleeper projections still use their supplied canonical display value.
