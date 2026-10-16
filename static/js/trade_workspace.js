@@ -626,7 +626,7 @@
         out.append(node('p', `${title} · ${label}: ${displayPoints(horizon.delta)}`),
           node('small', `Supported weeks: before ${horizon.pre_supported_weeks?.length || 0}/${horizon.weeks_requested?.length || 0}; after ${horizon.post_supported_weeks?.length || 0}/${horizon.weeks_requested?.length || 0}. Optimal before versus optimal after.`));
         if (retained && horizon.pre_total != null && horizon.post_total != null)
-          out.append(node('p', `Previous ${title.toLowerCase()} · ${label}: ${displayPoints(horizon.pre_total).replace(/^\+/, '')} → ${displayPoints(horizon.post_total).replace(/^\+/, '')} Sleeper-projected legal-lineup points. Earlier evidence, not current or revalidated.`));
+          out.append(node('p', `${title} at the previous assessment · ${label}: ${displayPoints(horizon.pre_total)} → ${displayPoints(horizon.post_total)} Sleeper-projected legal-lineup points. Earlier evidence, not current or revalidated.`));
         if (horizon.delta == null && horizon.supported_week_delta_subtotal != null)
           out.append(node('small', `Comparable-week change subtotal: ${displayPoints(horizon.supported_week_delta_subtotal)} across ${horizon.comparable_weeks?.length || 0} weeks. Not a complete horizon projection.`));
       }

@@ -124,6 +124,9 @@ class PublicOnboardingTests(unittest.TestCase):
     def test_sign_in_has_recovery_route_without_changing_authentication(self):
         response = self.client.get("/account/sign-in")
         self.assertIn('href="/account/recover"', response.text)
+        response = self.client.post("/account/sign-in", data={"username": "new-manager", "password": "wrong"})
+        self.assertIn("Check your details", response.text)
+        self.assertIn('href="/account/recover"', response.text)
 
     def test_browser_sign_in_limit_has_readable_wait_and_preserves_json_limit(self):
         for _ in range(5):
@@ -136,10 +139,6 @@ class PublicOnboardingTests(unittest.TestCase):
         self.assertIn('href="/account/sign-in"', response.text)
         response = self.client.post('/account/sign-in', data={'username': 'missing', 'password': 'wrong'})
         self.assertEqual(response.json(), {'status': 'rate_limited'})
-
-        response = self.client.post("/account/sign-in", data={"username": "new-manager", "password": "wrong"})
-        self.assertIn("Check your details", response.text)
-        self.assertIn('href="/account/recover"', response.text)
 
     def test_empty_discovery_and_unmapped_league_are_not_import_success(self):
         self.link()
