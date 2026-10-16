@@ -34,8 +34,26 @@
   }
   // Derived Market totals only. Individual projections use the canonical
   // player/week display supplied by the server, never this formatter.
+  function marketParts(value) {
+    const [digits, exponent = '0'] = String(value).toLowerCase().split('e');
+    return {integer: BigInt(digits.replace('.', '')), scale: (digits.split('.')[1] || '').length - Number(exponent)};
+  }
+  function displayMarketUnits(integer, scale) {
+    // Match canonical manager_points (decimal half-even) when a prepared display
+    // is absent. Keep exact arithmetic; never round individual projections.
+    const negative = integer < 0n, magnitude = negative ? -integer : integer;
+    let cents;
+    if (scale > 2) {
+      const divisor = 10n ** BigInt(scale - 2), quotient = magnitude / divisor, remainder = magnitude % divisor;
+      cents = quotient + (remainder * 2n > divisor || remainder * 2n === divisor && quotient % 2n === 1n ? 1n : 0n);
+    } else cents = magnitude * 10n ** BigInt(2 - scale);
+    const fraction = String(cents % 100n).padStart(2, '0').replace(/0+$/, '');
+    return (negative && cents ? '-' : '') + String(cents / 100n) + (fraction ? '.' + fraction : '');
+  }
   function displayMarket(value) {
-    return displayPoints(value).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+    if (typeof value !== 'number' || !Number.isFinite(value)) return 'Unavailable';
+    const parts = marketParts(value);
+    return displayMarketUnits(parts.integer, parts.scale);
   }
   document.querySelectorAll('[data-trade-proposal]').forEach(button => button.onclick = async () => {
     button.disabled = true;
@@ -192,7 +210,7 @@
   }
   function assetRow(a, which, review = false) {
     const row = node('div', null, 'tw-asset'), button = node('button'); button.type = 'button'; button.append(identity(a, true));
-    button.append(node('strong', a.trade_value == null ? 'Unavailable' : String(a.trade_value)));
+    button.append(node('strong', displayMarket(a.trade_value)));
     button.dataset.assetId = a.asset_id; button.setAttribute('aria-label', (selected[which].includes(a.asset_id) ? 'Remove ' : 'Add ') + label(a) + (which === 'sent' ? ' — you send' : ' — you receive'));
     button.disabled = busy; button.setAttribute('aria-pressed', String(selected[which].includes(a.asset_id))); button.onclick = () => toggle(which, a.asset_id); row.append(button);
     let dossier = null;
@@ -305,16 +323,12 @@
     // Exact decimal arithmetic over the prepared canonical numbers, never
     // provider normalization, a fairness probability or strategic repricing.
     const rows = ['sent', 'received'].map(which => selected[which].map(asset));
-    const parts = a => {
-      const [digits, exponent = '0'] = String(a.trade_value).toLowerCase().split('e');
-      const fraction = (digits.split('.')[1] || '').length;
-      return {integer: BigInt(digits.replace('.', '')), scale: fraction - Number(exponent)};
-    };
+    const parts = a => marketParts(a.trade_value);
     const known = rows.flat().filter(a => a && typeof a.trade_value === 'number' && Number.isFinite(a.trade_value));
     const scale = Math.max(0, ...known.map(a => parts(a).scale));
     const units = a => { const p = parts(a); return p.integer * 10n ** BigInt(scale - p.scale); };
     const totals = rows.map(r => r.reduce((sum, a) => sum + (known.includes(a) ? units(a) : 0n), 0n));
-    const shown = n => String(Number(n) / 10 ** scale);
+    const shown = n => displayMarketUnits(n, scale);
     const complete = rows.every(r => r.length && r.every(a => known.includes(a)));
     const ownershipInvalid = ['sent', 'received'].some(which => selected[which].some(id => !team(which === 'sent' ? active : partner())?.assets.some(a => a.asset_id === id)));
     const box = el('trade-balance'); box.replaceChildren(node('h3', 'Canonical Market comparison'));
@@ -356,7 +370,7 @@
         const a = asset(id), row = node('div', null, 'tw-calculator-asset');
         const owner = workspace.teams.find(t => t.assets.some(item => item.asset_id === id));
         const identity = node('span', null, 'tw-calculator-identity');
-        identity.append(node('b', a ? label(a) : 'Ownership unavailable'), node('small', [a?.kind === 'pick' ? 'Pick' : a?.position || 'Position unavailable', a?.nfl_team, owner?.team_name || 'Owner unavailable', a?.trade_value ?? 'Market unavailable'].filter(value => value != null && value !== '').join(' · ')));
+        identity.append(node('b', a ? label(a) : 'Ownership unavailable'), node('small', [a?.kind === 'pick' ? 'Pick' : a?.position || 'Position unavailable', a?.nfl_team, owner?.team_name || 'Owner unavailable', a?.trade_value != null ? displayMarket(a.trade_value) : 'Market unavailable'].filter(value => value != null && value !== '').join(' · ')));
         row.append(identity);
         const remove = node('button', 'Remove'); remove.type = 'button'; remove.disabled = busy; remove.setAttribute('aria-label', 'Remove ' + (a ? label(a) : id) + ' from calculator'); remove.onclick = () => toggle(which, id); row.append(remove); const protection = lockDetail(id); if (protection) row.append(protection); list.append(row);
         const evidence = marketEvidence(a); if (evidence) list.append(evidence);
@@ -497,12 +511,24 @@
     if (retained) retainAssessment();
     persist();
   }
-  function showEvaluation(e, opportunity = null, context = null) {
-    const out = el('trade-result'); el('trade-evaluation-retained')?.remove(); root.append(out); root.append(el('trade-balancing')); out.hidden = false; out.className = ''; out.replaceChildren();
-    const marketDetail = root.querySelector('.tw-market-detail'); if (marketDetail) root.append(marketDetail);
+  function showEvaluation(e, opportunity = null, context = null, previousContainer = null) {
+    const out = previousContainer || el('trade-result');
+    if (!previousContainer) {
+      el('trade-evaluation-retained')?.remove(); root.append(out); root.append(el('trade-balancing')); out.hidden = false; out.className = ''; out.replaceChildren();
+      const marketDetail = root.querySelector('.tw-market-detail'); if (marketDetail) root.append(marketDetail);
+      contextNotice(out, context, selected);
+    } else {
+      out.setAttribute('aria-label', 'Previous assessment · NOT REVALIDATED · not current');
+      out.append(node('p', 'These details reflect the earlier evaluation, not current conclusions. Its Market, lineup, counterparty and execution evidence have not been revalidated.', 'tw-drawback'));
+      out.append(node('p', 'Earlier analysis strategy: ' + (context?.identity?.strategy || 'Use supported competitive window') + ' · Counterparty at assessment: ' + (context?.identity?.counterparty || 'Unavailable')));
+      try {
+        const [, sent, received] = JSON.parse(context?.identity?.package || 'null');
+        const names = ids => ids.map(id => asset(id) ? label(asset(id)) : id + ' (saved exact identity; display name unavailable)').join(' + ') || 'None';
+        if (Array.isArray(sent) && Array.isArray(received)) out.append(node('p', 'Earlier you send: ' + names(sent)), node('p', 'Earlier you receive: ' + names(received)));
+      } catch (_) { out.append(node('p', 'Earlier exact package identities unavailable in retained context.')); }
+    }
     out.dataset.assessment = 'true';
-    contextNotice(out, context, selected);
-    const retained = Boolean(contextQualification(context));
+    const retained = Boolean(previousContainer || contextQualification(context));
     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
     const attemptState = context?.attempt_state || e.assessment_state?.state || 'fresh_incomplete';
     out.dataset.assessmentState = retained ? 'retained' : attemptState;
@@ -512,13 +538,12 @@
       reevaluateAction(out);
     }
     if (retained) out.append(node('h4', 'Previous assessment explanation · NOT REVALIDATED'));
-    if (context?.previous_assessment) {
+    if (!previousContainer && context?.previous_assessment) {
       const prior = context.previous_assessment, detail = node('details');
       detail.append(node('summary', 'Previous assessment · NOT REVALIDATED'));
-      detail.append(node('p', 'Previous conclusion: ' + (prior.evaluation?.recommendation || 'Incomplete evaluation') + ' · NOT REVALIDATED'));
-      detail.append(node('p', prior.evaluation?.why_you_would_do_it || prior.evaluation?.dominant_reason || 'Previous supported reasoning unavailable.'));
-      detail.append(node('p', 'Previous drawback: ' + (prior.evaluation?.major_drawback || 'Unavailable')));
-      detail.append(node('p', contextQualification(prior) || 'Previous assessment retained, not revalidated.'));
+      // Render the already-bounded saved fields; no re-evaluation, new copy or
+      // persistence. Embedded rendering cannot move the current result/actions.
+      showEvaluation(prior.evaluation || {}, prior.opportunity, prior, detail);
       out.append(detail);
     }
     if (e.explanation_html) {
@@ -539,21 +564,28 @@
         }
       }
       out.append(...document.body.childNodes);
-      if (e.decision_context?.strategy?.selection_required) strategyAction(out);
+      if (!previousContainer && e.decision_context?.strategy?.selection_required) strategyAction(out);
       const balanceLink = node('a', 'Options to balance this trade', 'ds-action'); balanceLink.href = '#trade-balancing';
-      out.querySelector('.dtos-explanation > p')?.after(balanceLink);
+      if (!previousContainer) out.querySelector('.dtos-explanation > p')?.after(balanceLink);
       if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
     } else {
     out.append(node('h3', retained ? 'Retained assessment: ' + (e.recommendation || 'Unavailable') + ' · NOT REVALIDATED' : incomplete && e.assessment_state?.recommendation_supported !== true ? 'Recommendation unavailable' : e.recommendation || 'Assessment unavailable'), node('p', retained ? 'Previous assessment reasoning (not current): ' + (e.dominant_reason || 'Unavailable') : e.dominant_reason));
+    if (previousContainer && e.market_evidence) {
+      const m = e.market_evidence, side = name => m[name]?.total != null ? displayMarket(m[name].total) : m[name]?.known_subtotal != null ? 'Incomplete · known subtotal ' + displayMarket(m[name].known_subtotal) : 'Unavailable';
+      out.append(node('h4', 'Market evidence at the previous assessment'),
+        node('p', `You send ${side('sent')} / You receive ${side('received')}. Difference: ${m.availability === 'full' && m.difference != null ? displayMarket(Math.abs(m.difference)) : 'Unavailable · incomplete comparison'}.`),
+        node('small', 'Retained displayed values, not new quotes or trade-date grades.'));
+    }
     if (e.decision_context) {
       const brief = node('section', null, 'tw-decision');
       if (retained) brief.append(node('p', 'Previous decision context · NOT REVALIDATED. Numbers and conclusions below describe the original assessment.'));
       for (const text of [e.decision_context.blocker, e.decision_context.lineup?.explanation, e.decision_context.summary, e.decision_context.main_cost, e.decision_context.limitation]) if (text) brief.append(node('p', text));
       out.append(brief);
-      if (e.decision_context.strategy?.selection_required) strategyAction(out);
+      if (!previousContainer && e.decision_context.strategy?.selection_required) strategyAction(out);
     }
     if (e.major_drawback || e.major_risks?.length) out.append(node('p', 'Major drawback: ' + (e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
     else if (context?.restored) out.append(node('p', 'Major drawback unavailable in retained context. Reevaluate for supported costs.', 'tw-drawback'));
+    if (previousContainer) for (const risk of e.major_risks || []) if (risk !== e.major_drawback) out.append(node('p', 'Previous risk: ' + risk.replaceAll('_', ' '), 'tw-drawback'));
     if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
     if (e.recommendation_trace) {
       const trace = node('details'); trace.append(node('summary', 'Recommendation evidence'));
@@ -578,8 +610,8 @@
       const impact = e.lineup_impact?.[which], quality = e.dimensions?.package_quality?.[which];
       if (quality) out.append(node('p', title + ' package: ' + quality.assessment), node('small', quality.explanation));
       if (impact) out.append(node('p', title + ' projected lineup change: ' + displayPoints(impact.delta)), node('small', impact.delta == null ? impact.post?.reason || impact.pre?.reason || 'Canonical projection evidence is incomplete.' : 'Optimal legal lineup, before versus after.'));
-      const horizons = e.multi_horizon_impact?.sides?.[which]?.horizons || {};
       const strategy = e.dimensions?.strategic_fit?.[which];
+      const horizons = e.multi_horizon_impact?.sides?.[which]?.horizons || strategy?.horizons || {};
       if (strategy) {
         const detail = node('details'); detail.append(node('summary', title + ' strategic evidence'));
         for (const reason of strategy.reason_codes || []) detail.append(node('p', reason.replaceAll('_', ' ')));
@@ -588,11 +620,12 @@
         out.append(detail);
       }
       for (const [key, horizon] of Object.entries(horizons)) {
+        if (!horizon || typeof horizon !== 'object') continue;
         const label = {current_week: 'Current week', next_n: 'Next-N', rest_of_regular_season: 'Rest of regular season', playoff_window: 'Playoff window'}[key] || key;
         out.append(node('p', `${title} · ${label}: ${displayPoints(horizon.delta)}`),
-          node('small', `Supported weeks: before ${horizon.pre_supported_weeks.length}/${horizon.weeks_requested?.length || 0}; after ${horizon.post_supported_weeks.length}/${horizon.weeks_requested?.length || 0}. Optimal before versus optimal after.`));
+          node('small', `Supported weeks: before ${horizon.pre_supported_weeks?.length || 0}/${horizon.weeks_requested?.length || 0}; after ${horizon.post_supported_weeks?.length || 0}/${horizon.weeks_requested?.length || 0}. Optimal before versus optimal after.`));
         if (horizon.delta == null && horizon.supported_week_delta_subtotal != null)
-          out.append(node('small', `Comparable-week change subtotal: ${displayPoints(horizon.supported_week_delta_subtotal)} across ${horizon.comparable_weeks.length} weeks. Not a complete horizon projection.`));
+          out.append(node('small', `Comparable-week change subtotal: ${displayPoints(horizon.supported_week_delta_subtotal)} across ${horizon.comparable_weeks?.length || 0} weeks. Not a complete horizon projection.`));
       }
     }
     }
@@ -730,9 +763,12 @@
       node('p', 'Alternative: ' + names(row.proposal.assets_sent) + ' → ' + names(row.proposal.assets_received)));
     const cost = ids => ids.every(id => asset(id)?.trade_value != null) ? ids.reduce((sum, id) => sum + asset(id).trade_value, 0) : null;
     const oldCost = cost(original.sent), newCost = cost(row.proposal.assets_sent);
-    if (original.sent.length && oldCost != null && newCost != null) comparison.append(node('p', 'Outgoing Market cost: ' + displayMarket(oldCost) + ' → ' + displayMarket(newCost)));
+    if (original.sent.length && oldCost != null && newCost != null) comparison.append(node('p', 'Outgoing Market cost: ' + (adjustment?.display?.original?.sent ?? displayMarket(oldCost)) + ' → ' + (adjustment?.display?.suggested?.sent ?? displayMarket(newCost))));
     if (adjustment) {
-      for (const [heading, m] of [['Original', adjustment.original], ['Suggested', adjustment.suggested]]) comparison.append(node('p', `${heading} Market: ${displayMarket(m.sent.total)} sent / ${displayMarket(m.received.total)} received · Gap ${displayMarket(m.absolute_gap)}`));
+      for (const [heading, name] of [['Original', 'original'], ['Suggested', 'suggested']]) {
+        const shown = balanceMarketDisplay(adjustment, name);
+        comparison.append(node('p', `${heading} Market: ${shown.sent} sent / ${shown.received} received · Gap ${shown.gap}`));
+      }
       comparison.append(node('p', adjustment.reason), node('small', adjustment.meaning));
     }
     out.append(offerCard(row, true));
@@ -741,6 +777,13 @@
     const adopt = node('button', 'Adopt alternative'); adopt.type = 'button'; adopt.onclick = () => openOffer(row);
     const keep = node('button', 'Keep original'); keep.type = 'button'; keep.disabled = busy; keep.onclick = () => { session.previewProposal = null; persist(); if (lastOffers) offers(lastOffers, lastOffersIsBalance); else if (session.currentAssessment) showEvaluation(session.currentAssessment.evaluation, session.currentAssessment.opportunity, session.currentAssessment); else message('Original proposal kept.'); };
     out.append(adopt, keep); focusResult();
+  }
+  function balanceMarketDisplay(balance, name) {
+    const m = balance[name] || {}, compatible = Boolean(balance.market_generation) && balance.market_generation === workspace.calculator_generation;
+    const full = compatible && [m.sent?.total, m.received?.total, m.absolute_gap].every(value => typeof value === 'number' && Number.isFinite(value)) && m.availability !== 'partial' && m.availability !== 'unavailable';
+    const shown = balance.display?.[name] || {};
+    const side = name => !compatible ? 'Unavailable · publication context not established' : m[name]?.total != null ? shown[name] ?? displayMarket(m[name].total) : m[name]?.known_subtotal != null ? 'Incomplete · known subtotal ' + displayMarket(m[name].known_subtotal) : 'Unavailable';
+    return {sent: side('sent'), received: side('received'), gap: full ? shown.gap ?? displayMarket(m.absolute_gap) : 'Unavailable · incomplete comparison'};
   }
   function balanceOfferCard(row, preview, context) {
     const e = row.evaluation || row.proposal.preview_assessment || {}, balance = row.balance_adjustment || row.proposal.preview_balance_adjustment;
@@ -752,11 +795,8 @@
     }).join(' + ');
     card.append(node('p', 'You send: ' + packageLabel(row.proposal.assets_sent, row.proposal_presentation?.send), 'tw-offer-package'),
       node('p', 'You receive: ' + packageLabel(row.proposal.assets_received, row.proposal_presentation?.receive), 'tw-offer-package'));
-    const m = balance.suggested || {}, compatible = Boolean(balance.market_generation) && balance.market_generation === workspace.calculator_generation;
-    const full = compatible && [m.sent?.total, m.received?.total, m.absolute_gap].every(value => typeof value === 'number' && Number.isFinite(value)) && m.availability !== 'partial' && m.availability !== 'unavailable';
-    const shown = balance.display?.suggested || {};
-    const sideValue = side => !compatible ? 'Unavailable · publication context not established' : m[side]?.total != null ? shown[side] || displayMarket(m[side].total) : m[side]?.known_subtotal != null ? 'Incomplete · known subtotal ' + displayMarket(m[side].known_subtotal) : 'Unavailable';
-    card.append(node('p', `Current Market: You send ${sideValue('sent')} / You receive ${sideValue('received')}. Difference: ${full ? shown.gap || displayMarket(m.absolute_gap) : 'Unavailable · incomplete comparison'}.`, 'tw-offer-market'));
+    const shown = balanceMarketDisplay(balance, 'suggested');
+    card.append(node('p', `Current Market: You send ${shown.sent} / You receive ${shown.received}. Difference: ${shown.gap}.`, 'tw-offer-market'));
     const original = preview ? session.originalProposal || selected : selected;
     const changes = (before, after, side) => {
       const names = ids => ids.slice(0, 2).map(id => label(asset(id) || {label:id})).join(' + ') + (ids.length > 2 ? ' + ' + (ids.length - 2) + ' more' : '');
