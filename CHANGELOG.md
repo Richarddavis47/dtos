@@ -1,3 +1,14 @@
+## v1.21.55 / build 2155 — Trade decision experience
+
+- Lead Trade evaluation with a concise roster-specific decision, current Market totals/bar, starter versus depth impact, main cost and material qualification. Keep complete evaluator, weekly, positional and source evidence available on demand.
+- Name unresolved competitive direction precisely for future-capital trades. Offer explicit WIN NOW / RETOOL / REBUILD selection and separate conditional considerations without changing recommendation standards, canonical prices or legal lineups.
+- Bring selected-player Sleeper projections and prepared actual production into Trade with scoring, season/week, sample, freshness and source generation. Label Market ranks accurately; do not invent season or points-per-game ranks.
+- Put Shop target, scope, search action/status and results before manual asset inventory. Clarify automatic versus explicit search and preserve honest empty/error recovery without completion scroll jumps.
+- Prioritize target-preserving Balance options; separate any changed-target ideas and show complete packages/totals. Preview, Keep Original and explicit Adopt remain required.
+- Apply the revised navigation contract: Home ends this tab's proposal; internal steps, supporting returns and active reload preserve work. Keep strategy independent, separate cloned opener-tab drafts, and prevent history/late-response resurrection.
+- Use shared phone standings headers and aligned statistics without changing order, cutoff or badge meanings. Preserve readable names, source limitations, exact protections and retained FOIS grades.
+- No new permanent store, provider loop, valuation/projection model or historical regeneration. Unchanged 500 ms liveness and 2 GiB gates. Contract: [Trade decision experience](docs/TRADE_DECISION_EXPERIENCE.md).
+
 ## v1.21.54 / build 2154 — Historical evidence integrity
 
 - Qualify truncated or invalid retained gzip seasons without breaking League or own/opponent Team HQ. Continue valid independent evidence, preserve corrupt originals and recover after an explicit valid publication.

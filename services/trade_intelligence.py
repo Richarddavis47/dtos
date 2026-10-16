@@ -315,6 +315,10 @@ def evaluate_trade_request(
     }
     evaluation["provenance"]["evaluation_id"] = sha256(json.dumps(identity_input, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:24]
     evaluation["provenance"]["inputs"] = identity_input
+    from services.trade_decision import decision_context, selected_player_facts
+    evaluation['decision_context'] = decision_context(evaluation, incoming=proposal.assets_received, outgoing=proposal.assets_sent)
+    player_facts = selected_player_facts(data, (*proposal.assets_sent, *proposal.assets_received), projections)
+    evaluation['player_facts'] = player_facts
     from services.trade_explanation import render_trade_explanation
     evaluation['explanation_html'] = render_trade_explanation(evaluation, league_id=identity_input['league_id'])
     evaluation["actions"] = ["EDIT TRADE", "ADJUST OFFER"]
@@ -329,6 +333,7 @@ def evaluate_trade_request(
             "year": item.season, "round": item.round,
             "original_franchise": item.original_roster_id, "current_owner": item.current_owner_id,
             "exact_slot": item.exact_slot,
+            "player_facts": player_facts.get(item.asset_id),
             "range_confidence": item.projected_range_confidence,
             "headshot_url": (
                 f"https://sleepercdn.com/content/nfl/players/{player_id}.jpg"

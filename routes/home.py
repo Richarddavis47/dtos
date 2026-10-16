@@ -119,6 +119,10 @@ def create_home_router(
             lambda: json.dumps(build_news(news_data, candidates, limitations, now=now)).encode()).decode()
         body = body.replace('<!--home-opportunities-->', '<style>' + OPPORTUNITY_CSS + '</style>' + opportunity_section(int(rid or 0)))
         body = body.replace('<!--home-trade-news-->', '<style>' + NEWS_CSS + '</style>' + render_news(json.loads(news), viewer=viewer))
+        if rid:
+            from services.trade_workspace_context import workspace_context
+            context = escape(json.dumps(workspace_context(data, int(rid))), quote=True)
+            body += f'<div id="trade-home-boundary" hidden data-workspace-context="{context}"></div><script src="/static/js/trade_workspace.js" defer></script>'
         return page("Home", body.replace('<!--home-attention-->', attention))
 
     def _home_body(data: dict[str, Any], front_office: int | None, directory: dict, champion=None) -> str:

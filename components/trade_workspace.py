@@ -25,7 +25,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <p class="muted">Preferences order supported returns; they do not change the trade assessment. Age is not a longevity forecast. Custom uses the protected assets selected here.</p></section></details>''' if workflow == 'shop' else ''
     partner_placeholder = 'All eligible teams' if workflow == 'shop' else 'Choose a trade partner'
     partner_help = '<p id="shop-partner-help" class="muted">Choosing a partner is optional. With All eligible teams, Shop searches eligible counterparties while keeping your outgoing asset.</p>' if workflow == 'shop' else ''
-    compact = workflow in ('recommended', 'calculator', 'create')
+    compact = workflow in ('recommended', 'calculator', 'create', 'shop')
     intro = ('Find credible trades across eligible teams. Your current offer and exact protections stay intact.' if workflow == 'recommended' else 'Compare canonical Market totals, then preview balancing options.' if market_editor else 'Shop your outgoing asset across all eligible teams. Choosing a specific partner is optional.' if workflow == 'shop' else 'Choose an opponent-owned target. DTOS finds supported acquisition paths; refine or edit afterward.')
     heading = f'<div class="tw-heading"><h2>{escape(title)}</h2><a href="/trades?front_office={active}">All Trade Workflows</a></div><p>{intro}</p>'
     discovery = ('<button id="trade-find" type="button" disabled>Discover Recommended Trades</button>' if workflow == 'recommended' else '<button id="trade-find" type="button" disabled>Find Bilateral Options</button><p id="recommendation-status" class="ds-inline-feedback" role="status" aria-live="polite" aria-atomic="true">Select an asset to start a supported search.</p>' if workflow in ('shop', 'trade-for') else '')
@@ -51,15 +51,16 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 
 <p id="trade-context" class="muted">Loading current league assets…</p>
 <section id="trade-target" class="tw-target" hidden aria-label="Selected trade target"></section>
+{discovery + '<section id="trade-result" role="status" aria-live="polite" tabindex="-1" hidden></section>' if workflow == 'shop' else ''}
 
 <div id="trade-board"><div class="tw-side-tabs" role="group" aria-label="Asset side"><button type="button" data-side="sent" aria-pressed="true">My assets</button><button type="button" data-side="received" aria-pressed="false">Their assets</button></div>
 <div class="tw-boards"><section id="trade-sent-board"></section><section id="trade-received-board"></section></div></div>
 {strategy_open}<label for="trade-strategy">Your strategy</label><select id="trade-strategy"><option value="">Use supported competitive window</option><option value="WIN NOW">WIN NOW</option><option value="RETOOL">RETOOL</option><option value="REBUILD">REBUILD</option></select>{strategy_close}
-{shop_controls}{discovery if workflow != "recommended" else ""}{calculator_panel}
+{shop_controls}{discovery if workflow not in ('recommended', 'shop') else ""}{calculator_panel}
 <section id="trade-review" tabindex="-1" hidden><h3>Your proposal</h3><div class="tw-packages"><section><h4>You send</h4><div id="trade-sent-chips"></div></section><section><h4>You receive</h4><div id="trade-received-chips"></div></section></div></section>
 <div class="ti-actions"><button id="trade-view" type="button">View Trade</button>{'' if market_editor else '<button id="trade-run" type="button">Evaluate Trade</button>'}<button id="trade-edit" type="button">Edit Trade</button><button id="trade-adjust" type="button">Adjust Offer / protect assets</button>{'' if workflow in ('recommended', 'shop', 'trade-for') else '<button id="trade-find" type="button" hidden>Find Bilateral Options</button>'}{calculator_link}</div>
 <section id="trade-assist" class="tw-protection-controls" hidden><label for="trade-instruction">How should DTOS adjust it?</label><input id="trade-instruction" maxlength="300" placeholder="Make it cheaper, or name an asset to protect"><label for="trade-constraint-asset">Exact asset to keep or replace</label><select id="trade-constraint-asset"><option value="">Choose a specific owned asset</option></select>{protect_control}<button id="trade-release-lock" type="button">Remove selected adjustment lock</button><p>Keep and replace controls apply to this exact identity. Alternatives are previews; your proposal changes only when you adopt one.</p><details><summary>More adjustment options</summary><div class="ti-actions">{adjustments}</div></details><button id="trade-apply-adjust" type="button">Preview revised offers</button><button id="trade-alternatives" type="button">Preview alternatives</button></section>
 <button id="trade-build-own" type="button" {'hidden' if workflow == 'create' else ''}>Build My Own</button>
-<section id="trade-result" role="status" aria-live="polite" tabindex="-1" hidden></section>
+{'' if workflow == 'shop' else '<section id="trade-result" role="status" aria-live="polite" tabindex="-1" hidden></section>'}
 {market_detail}{balance_controls if not market_editor else ""}
 <p class="muted">Ownership is revalidated before evaluation. Market Balance is neutral market evidence, not the recommendation. DTOS evaluates proposals; it does not send trades to Sleeper.</p></section><script src="/static/js/strategy_session.js" defer></script><script src="/static/js/trade_workspace.js" defer></script>'''

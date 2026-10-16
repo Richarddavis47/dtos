@@ -88,6 +88,8 @@ def assess_capital(strategy, package, market, *, outgoing_total, incoming_total)
     if mean == 0 and not horizon_losses and not horizon_gains and net == 0 and incoming_total == outgoing_total and not depth_loss:
         return decision('FAIR / OPTIONAL', 'CAPITAL_AND_LINEUP_PARITY', 'Supported Market, production and draft capital are balanced.')
     if intent is None:
+        fit['unresolved_inputs'] = ['analysis_strategy']
+        fit['explanation'] = 'Your analysis strategy is unresolved. Choose WIN NOW, RETOOL or REBUILD to assess this future-capital trade-off; supported Market and legal-lineup findings remain available.'
         return fit
     if intent == 'REBUILD' and assessment['meaningful_gain'] and ratio is not None and ratio >= .80:
         weekly_losses = any(row.get('delta') is not None and row['delta'] < 0

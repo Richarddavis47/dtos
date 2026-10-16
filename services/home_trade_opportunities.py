@@ -92,6 +92,8 @@ def source_identity(data):
             _semantic(market),
             projection,
             league_gm_observations.source_identity(data),
+            {key:(data.get('canonical_player_production') or {}).get(key)
+             for key in ('league_id','season','scoring_fingerprint','generation')},
             {
                 "projection_freshness": diagnostic_evidence["projection_freshness"],
                 "conclusion_state": diagnostic_evidence["conclusion_state"],
