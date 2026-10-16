@@ -69,9 +69,15 @@ class TradeUXTests(unittest.TestCase):
                             elif flow == 'create':
                                 body.update(requested_mode='MAKE_THIS_TRADE_WORK',
                                             returned_modes=['MAKE_THIS_TRADE_WORK'], target_preserved=True)
+                            focus_before = page.evaluate('document.activeElement.id')
+                            scroll_before = page.evaluate('scrollY')
                             pending.pop().fulfill(json=body)
                             page.locator('#trade-builder[aria-busy="false"]').wait_for()
-                            self.assertEqual(page.evaluate('document.activeElement.id'), 'trade-result')
+                            if flow == 'shop':
+                                self.assertEqual(page.evaluate('document.activeElement.id'), focus_before)
+                                self.assertEqual(page.evaluate('scrollY'), scroll_before)
+                            else:
+                                self.assertEqual(page.evaluate('document.activeElement.id'), 'trade-result')
                             card = page.locator('.tw-offer')
                             self.assertEqual(card.locator('h3').first.inner_text(), offer['evaluation']['recommendation'] or 'Recommendation unavailable')
                             summary = card.locator('summary').filter(has_text='Why this offer · evidence and risks')
@@ -79,19 +85,30 @@ class TradeUXTests(unittest.TestCase):
                             summary.focus()
                             page.keyboard.press('Enter')
                             self.assertTrue(summary.evaluate('(e) => e.parentElement.open'))
-                            compact_text = card.locator('.dtos-explanation').inner_text()
+                            compact_text = card.locator('.dtos-explanation').text_content()
                             original_count = page.locator('#trade-sent-chips .tw-asset').count()
                             card.get_by_role('button', name='Open editable offer:', exact=False).click()
                             self.assertEqual(page.locator('#trade-sent-chips .tw-asset').count(), original_count)
                             page.get_by_role('button', name='Adopt alternative', exact=True).click()
-                            # Workspace adds its existing Balance navigation next
-                            # to the verdict; the actual assessment stays identical.
-                            self.assertEqual(page.locator('#trade-result .dtos-explanation').inner_text(), compact_text.replace('\nTrade-off / risk', '\nOptions to balance this trade\nTrade-off / risk', 1))
+                            # All evaluator evidence, including closed details, stays
+                            # identical. Ignore only the workspace's navigation link.
+                            assessment = page.locator('#trade-result .dtos-explanation')
+                            balance = assessment.locator(':scope > a[href="#trade-balancing"]')
+                            self.assertEqual(balance.count(), 1)
+                            self.assertTrue(balance.is_visible())
+                            complete_text = assessment.evaluate("e=>{const copy=e.cloneNode(true);copy.querySelector('a[href=\"#trade-balancing\"]').remove();return copy.textContent;}")
+                            self.assertEqual(complete_text, compact_text)
                             self.assertEqual(page.locator('#trade-review button[data-asset-id="1-QB-0"]').count(), 1)
                             self.assertEqual(page.locator('#trade-review button[data-asset-id="2-QB-0"]').count(), 1)
                             self.assertEqual(page.evaluate('document.activeElement.id'), 'trade-result')
                             weekly = page.locator('#trade-result summary').filter(has_text='Weekly optimal-lineup detail')
                             if weekly.count():
+                                full = assessment.get_by_text('Full team, weekly and evaluator evidence', exact=True)
+                                self.assertFalse(full.evaluate('(e) => e.parentElement.open'))
+                                self.assertGreaterEqual(full.bounding_box()['height'], 44)
+                                full.focus()
+                                page.keyboard.press('Enter')
+                                self.assertTrue(full.evaluate('(e) => e.parentElement.open'))
                                 support = page.locator('#trade-result summary').filter(has_text='Supporting evidence and limitations')
                                 support.focus()
                                 page.keyboard.press('Enter')
