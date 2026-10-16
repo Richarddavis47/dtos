@@ -28,7 +28,7 @@ def warming_page(query: str = "", *, headers: dict[str, str] | None = None) -> H
         'main{max-width:640px;margin:auto;padding:24px 16px;box-sizing:border-box;overflow-wrap:anywhere}'
         '.recovery-actions{display:flex;flex-wrap:wrap;gap:12px}.recovery-actions a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px}</style></head>'
         '<body><main><h1>Market is preparing</h1><p>Current Market values are not ready yet. '
-        'DTOS is preparing them safely in the background. You can keep using Home and My Team, then try again shortly.</p>'
+        'You can keep using Home and My Team, then try again shortly.</p>'
         '<p>No missing prices have been replaced with zero.</p><nav class="recovery-actions" aria-label="Market recovery">'
         f'<a class="ds-action primary" href="{escape(href, quote=True)}">Try Market again</a>'
         '<a class="ds-action" href="/">Home</a><a class="ds-action" href="/teams">My Team</a>'

@@ -77,6 +77,9 @@ class MarketWarmingMiddlewareTests(unittest.TestCase):
         self.assertIn('href="/market?q=quarterback"', response.text)
         self.assertIn('Home', response.text)
         self.assertEqual(response.headers['retry-after'], '5')
+        deferred = TestClient(_app(_Cache(), build_allowed=lambda: False)).get('/market', headers={'Accept': 'text/html'})
+        self.assertEqual(deferred.status_code, 503)
+        self.assertNotIn('in the background', deferred.text)
         response = client.get('/api/market/assets', headers={'Accept': 'text/html'})
         self.assertEqual(response.json(), {'detail': MARKET_WARMING_DETAIL})
 
