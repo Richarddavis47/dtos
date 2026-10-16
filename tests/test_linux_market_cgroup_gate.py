@@ -4,6 +4,9 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import signal
+import subprocess
+import selectors
 import sys
 import tempfile
 import unittest
@@ -11,6 +14,7 @@ from collections import deque
 from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
+
 
 from tools.validation.generate_sanitized_market_fixture import (
     HISTORICAL_COUNT,
@@ -1227,6 +1231,65 @@ class RestartReuseValidationTests(unittest.TestCase):
                 json.dumps(before).encode(), json.dumps(stale).encode(),
                 old_market_generation="old", new_market_generation="new",
             )
+
+
+@unittest.skipUnless(hasattr(os, 'killpg'), 'Linux process-group lifecycle contract')
+class GracefulWorkerShutdownTests(unittest.TestCase):
+    def test_parent_shutdown_drains_active_worker_before_group_cleanup(self):
+        """Exercise real parent/worker processes, not mocked signal calls."""
+        from tools.validation.linux_market_cgroup_gate import _stop_server
+
+        child = '''
+import signal,sys
+from pathlib import Path
+marker=Path(sys.argv[1])
+def interrupted(*_args):
+ marker.write_text('worker terminated before drain')
+ raise SystemExit(23)
+signal.signal(signal.SIGTERM,interrupted)
+print('ready',flush=True)
+if sys.stdin.readline()=='finish\\n':
+ marker.write_text('worker drained')
+'''
+        parent = '''
+import signal,subprocess,sys,time
+stopping=False
+def stop(*_args):
+ global stopping
+ stopping=True
+signal.signal(signal.SIGTERM,stop)
+worker=subprocess.Popen([sys.executable,'-c',sys.argv[1],sys.argv[2]],stdin=subprocess.PIPE,stdout=subprocess.PIPE,text=True)
+assert worker.stdout.readline().strip()=='ready'
+print(worker.pid,flush=True)
+while not stopping:time.sleep(.01)
+try:
+ worker.stdin.write('finish\\n');worker.stdin.flush()
+except BrokenPipeError:pass
+result=worker.wait()
+if result!=0:
+ # Interrupted workers cannot satisfy the application's orderly-drain contract.
+ while True:time.sleep(.01)
+'''
+        for repeat in range(3):
+            with self.subTest(repeat=repeat), tempfile.TemporaryDirectory() as folder:
+                marker = Path(folder)/'worker-status'
+                process = subprocess.Popen([sys.executable, '-c', parent, child, str(marker)],
+                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                           text=True, start_new_session=True)
+                try:
+                    with selectors.DefaultSelector() as ready:
+                        ready.register(process.stdout, selectors.EVENT_READ)
+                        self.assertTrue(ready.select(timeout=10), 'Fixture parent failed to start')
+                        self.assertTrue(process.stdout.readline().strip().isdigit())
+                    _stop_server(process)
+                    self.assertEqual(process.returncode, 0)
+                    self.assertEqual(marker.read_text(), 'worker drained')
+                finally:
+                    if process.poll() is None:
+                        os.killpg(process.pid, signal.SIGKILL)
+                        process.wait(timeout=5)
+                    process.stdout.close()
+                    process.stderr.close()
 
 
 if __name__ == "__main__":

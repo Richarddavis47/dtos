@@ -3,6 +3,7 @@
 - Expose complete already-saved prior assessment evidence inside the closed Previous assessment / NOT REVALIDATED disclosure. Preserve original counterparty, qualified lineup costs, risks, all supported limitations, strategy and source context; keep current incomplete results separate.
 - Reuse canonical adjustment display strings in Balance and Preview Compare. Match the existing decimal half-even display contract in editable Market/Calculator labels and the evaluated Trade Market panel without changing arithmetic, projections, prices, generations or target intent.
 - Preserve bounded existing draft/prior state and all Preview/Keep/Adopt, reevaluation, reset, navigation, exact-protection and isolation contracts. No new persistence, schema, archive, snapshot or provider work; unchanged 500 ms / 2 GiB gates.
+- Correct validation-only graceful shutdown ordering so the application drains its workers before process-group escalation; retain the existing 15-second bound. Scope the legacy rendered test to the current result while preserving all prior assertions.
 
 ## v1.21.57 / build 2157 — Trade assessment and phone integrity
 

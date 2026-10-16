@@ -56,3 +56,20 @@ history/reload, reset, source-change and league/account isolation contracts.
 Release acceptance retains all ten canonical gates, required CI, 500ms liveness
 and 2GiB limits. Author-run responsive Chromium is separate from Scout-independent
 and physical iPhone/Safari acceptance.
+
+## Demonstrated validation infrastructure corrections
+
+The combined-read gate exposed a shutdown-ordering failure, not an OOM or liveness
+threshold breach: group-wide SIGTERM interrupted workers before the application
+could drain them, followed by the existing15-second forced-kill escalation. Real
+parent/worker controls reproduced three failures with group signalling and three
+passes with parent-first signalling. The validation harness now requests graceful
+shutdown from the application first; group-wide SIGKILL and the15-second bound
+remain unchanged. No production FOIS execution or grading formula changed.
+
+The complete local combined-read lifecycle then passed at124.935ms observed
+liveness, zero OOM counters, two restart cycles and three graceful completions.
+Local Python3.11 evidence is separate from required production-version GitHub CI.
+The old browser journey now selects the current result heading explicitly because
+the complete closed prior disclosure legitimately has another heading; all prior
+assertions remain, with an added current-freshness assertion. No tests are removed.

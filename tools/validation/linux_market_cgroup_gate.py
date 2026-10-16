@@ -957,7 +957,10 @@ def _start_server(
 def _stop_server(process: subprocess.Popen) -> None:
     if process.poll() is not None:
         return
-    os.killpg(process.pid, signal.SIGTERM)
+    # Match the service's graceful shutdown: let the application drain/reap its
+    # workers before group-wide escalation. Signalling every worker first can
+    # break an active pool while the parent's lifespan is waiting for cleanup.
+    process.send_signal(signal.SIGTERM)
     try:
         process.wait(timeout=15)
     except subprocess.TimeoutExpired:

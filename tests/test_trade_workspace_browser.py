@@ -88,7 +88,11 @@ class TradeWorkspaceBrowserTests(unittest.TestCase):
                         page.reload()
                         page.locator('#trade-tray:not([hidden])').wait_for()
                         page.get_by_role("button", name="Evaluate Trade", exact=True).click()
-                        page.locator("#trade-result h3").wait_for()
+                        # Prior evidence now contains its own heading inside a
+                        # closed disclosure. Wait for the current HTTP result,
+                        # never an earlier retained heading.
+                        page.locator("#trade-result > .dtos-explanation > h3").wait_for()
+                        self.assertEqual(page.locator('#trade-result').get_attribute('data-assessment-freshness'), 'current')
                         self.assertNotIn("failed", page.locator("#trade-result").inner_text().lower())
                         page.get_by_role("button", name="Edit Trade", exact=True).click()
                         self.assertIn("4 assets", page.locator("#trade-tray-text").inner_text())
