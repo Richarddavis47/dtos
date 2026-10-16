@@ -112,6 +112,7 @@ def _movements(raw):
 
 def _counts():
     return {'trades': 0, 'incoming': Counter(), 'outgoing': Counter(),
+            'incomplete_composition': 0,
             'acquired_positions': Counter(), 'moved_positions': Counter(),
             'acquired_kinds': Counter(), 'moved_kinds': Counter(),
             'package_style': Counter(), 'counterparties': Counter(), 'references': []}
@@ -119,6 +120,7 @@ def _counts():
 
 def _add_side(counts, rid, participants, movements, positions, reference, complete):
     counts['trades'] += 1
+    counts['incomplete_composition'] += int(not complete)
     counts['counterparties'].update(other for other in participants if other != rid)
     received, sent = [], []
     acquired, moved = set(), set()
@@ -346,7 +348,10 @@ def describe_team(row):
     picks_in, picks_out = facts['incoming'].get('pick', 0), facts['outgoing'].get('pick', 0)
     if not count:
         return 'No completed franchise trades observed; available history does not establish a manager preference.'
-    return (f"This franchise completed {count} observed trade{'s' if count != 1 else ''}, acquiring {picks_in} exact picks and moving {picks_out}. "
+    partial = (f"Original consideration is incomplete in {facts['incomplete_composition']} deals; asset counts are supported subsets. "
+               if facts['incomplete_composition'] else '')
+    return (f"This franchise completed {count} observed trade{'s' if count != 1 else ''}, acquiring {picks_in} supported exact picks and moving {picks_out}. "
+            + partial
             + (f"{row['manager']['trades']} deals have season-observed attribution to the current manager; exact takeover timing is unknown."
                if row['manager']['trades'] else 'Available history does not attribute these decisions to the current manager.'))
 
@@ -368,7 +373,7 @@ def partner_context(report, roster_id, diagnostic=None, received_positions=()):
     matches = sorted(pos for pos in set(received_positions) & needs if manager['acquired_positions'].get(pos, 0) >= MINIMUM_TENDENCY)
     if matches:
         text = 'The current package addresses supported ' + ', '.join(matches) + ' needs. '
-        text += 'Season-observed ownership attributes acquisitions at those positions to the current manager in ' + ', '.join(str(manager['acquired_positions'][pos]) for pos in matches) + ' deals at this franchise; exact intra-season tenure remains unestablished. '
+        text += 'Season-observed ownership attributes acquisitions of players currently classified at those positions to the current manager in ' + ', '.join(str(manager['acquired_positions'][pos]) for pos in matches) + ' deals at this franchise; exact intra-season tenure remains unestablished. '
     elif needs:
         text = 'The current package addresses supported ' + ', '.join(sorted(needs)) + ' needs, but history does not establish a matching current-manager preference. '
     else:

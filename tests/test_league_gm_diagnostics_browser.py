@@ -87,6 +87,10 @@ class LeagueGMDiagnosticBrowserTests(unittest.TestCase):
                                             partner_control.wait_for()
                                             partner_control.click()
                                             self.assertIn('franchise', partner_control.locator('..').inner_text().lower())
+                                            source_links = partner_control.locator('..').locator('a[href^="/trades/history/"]')
+                                            self.assertGreater(source_links.count(), 0)
+                                            for source_link in source_links.all():
+                                                self.assertGreaterEqual(source_link.bounding_box()['height'], 44)
                                             self.assertIn('franchise', page.locator('main').inner_text().lower())
                                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                                         self.assertEqual(errors, [])

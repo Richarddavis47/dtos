@@ -135,6 +135,7 @@ class LeagueObservationSourceTests(unittest.TestCase):
         self.assertEqual(result['composition_supported_trades'], 0)
         self.assertEqual(result['pick_trades'], 0)
         self.assertEqual(result['teams']['1']['franchise']['package_style'], {})
+        self.assertIn('incomplete', result['teams']['1']['summary'])
 
     def test_package_shape_counts_deals_not_assets(self):
         self.data['players']['r'] = {'position': 'WR'}
@@ -366,6 +367,14 @@ class LeagueDiagnosticHTTPTests(unittest.TestCase):
             self.assertIn('Why this partner:', output)
             self.assertIn('Drawback:', output)
             self.assertIn('Why this partner?', self.client.get('/static/js/trade_workspace.js').text)
+
+    def test_league_report_respects_authenticated_selected_strategy(self):
+        from src.core.intelligence.orchestrator import intelligence_orchestrator
+        with patch.object(intelligence_orchestrator, 'analyze', wraps=intelligence_orchestrator.analyze) as analyze:
+            response = self.client.get('/league')
+        self.assertEqual(response.status_code, 200)
+        preferences = analyze.call_args.kwargs.get('user_preferences') or (analyze.call_args.args[2] if len(analyze.call_args.args) > 2 else {})
+        self.assertEqual(preferences.get('strategy'), 'REBUILD')
 
     def test_no_history_is_neutral_and_home_does_not_discover_or_read_archives(self):
         self.data['transactions'] = []

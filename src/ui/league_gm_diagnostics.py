@@ -48,7 +48,9 @@ def league_observations(intelligence, data, active_id):
     count = report['trade_count']
     observed = report['coverage']['state'].replace('_', ' ')
     body = CSS + f'<section id="league-observations" class="gm-observations"><h2>League identity</h2><p><b>Observed facts · {_text(observed)}</b></p>'
-    body += '<p>' + _text(f"{count} completed trades observed; {report['pick_trades']} involved exact picks and {report['faab_trades']} involved FAAB.") + '</p>'
+    body += '<p>' + _text(f"{count} completed trades observed; {report['pick_trades']} with supported exact-pick transfers and {report['faab_trades']} with supported FAAB transfers.") + '</p>'
+    if report['composition_supported_trades'] < count:
+        body += '<p class="muted">Original consideration is incomplete in ' + _text(count - report['composition_supported_trades']) + ' observed trades; asset counts cover supported transfers only.</p>'
     body += '<p class="muted">' + _text(report['coverage']['explanation']) + '</p>'
     seasons = ', '.join(f'{year}: {number} completed trades' for year, number in report['season_counts'].items())
     body += '<p>' + _text(seasons or 'No completed events observed in available evidence.') + '</p>'

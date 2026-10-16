@@ -533,8 +533,8 @@
       if (retained) detail.append(node('p', 'This retained context is not revalidated against current roster needs or sources.'));
       for (const ref of partnerHistory.references || []) {
         if (/^\/trades\/history\/TRADE-[a-zA-Z0-9_-]+$/.test(ref.url || '')) {
-          const link = node('a', `Original trade · ${ref.season || 'season unavailable'} · ${ref.transaction_id}`);
-          link.href = ref.url; detail.append(link);
+          const link = node('a', `Original trade · ${ref.season || 'season unavailable'} · ${ref.transaction_id}`, 'ds-action');
+          link.href = ref.url; const item = node('p'); item.append(link); detail.append(item);
         }
       }
       out.append(detail);
