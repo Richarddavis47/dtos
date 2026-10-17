@@ -48,8 +48,15 @@ class CanonicalHistoryStore:
 
     def update_current(self, league_id: str, data: dict[str, Any]) -> None:
         """Replace bounded operational state; no historical snapshots are appended."""
+        from src.core.data_platform.normalization.birth_dates import birth_date_metadata
         identities = {}
         for player_id, player in (data.get("normalized_players") or {}).items():
+            raw = (data.get('players') or {}).get(str(player_id)) or {}
+            raw_birth = birth_date_metadata(raw) if str(raw.get('player_id', player_id)) == str(player_id) else {}
+            birth = birth_date_metadata(player, raw_birth)
+            sleeper_id = (player.get('provider_ids') or {}).get('Sleeper', str(player_id))
+            if str(sleeper_id) != str(player_id) or str(player.get('dtos_id', player_id)) != str(player_id):
+                birth = {'birth_date_status': 'identity_mismatch'}
             identities[str(player_id)] = {
                 "dtos_player_id": str(player_id), "provider": "Sleeper",
                 "provider_player_id": str(player_id),
@@ -58,19 +65,44 @@ class CanonicalHistoryStore:
                     "position": player.get("position"),
                     "team": player.get("team"),
                     "provider_ids": player.get("provider_ids") or {},
+                    **birth,
                 },
             }
         key = str(league_id)
-        semantic = _digest({
+        semantic_inputs = {
             "league": data.get("league") or {}, "teams": data.get("teams") or [],
+            'scoring_settings': data.get('scoring_settings'), 'roster_positions': data.get('roster_positions'),
             "players": identities, "projections": data.get("projection_intelligence") or {},
             "valuation": data.get("valuation_intelligence") or {},
             "market": data.get("market_data") or {},
             "transactions": data.get("transactions") or [], "season_transactions": data.get("season_transactions") or {}, "drafts": data.get("drafts") or [],
             "draft_picks": data.get("draft_picks") or [], "traded_picks": data.get("traded_picks") or [],
             "pick_ledger": data.get("pick_ledger"),
-        })
+            "season_matchups": {k: v for k, v in (data.get('season_matchups') or {}).items()
+                                if k != 'observed_at'},
+        }
         with self._lock:
+            # Merge against the actual latest identity while holding the existing
+            # store lock; concurrent league publications cannot erase a date.
+            for player_id, identity in identities.items():
+                metadata = identity['metadata']
+                if metadata.get('birth_date_status') != 'identity_mismatch':
+                    previous = (self._identities.get(player_id) or {}).get('metadata') or {}
+                    birth = birth_date_metadata(metadata, previous)
+                    for field in tuple(metadata):
+                        if field.startswith('birth_date') or field == 'birthdate':
+                            metadata.pop(field)
+                    metadata.update(birth)
+                # The existing normalized identity is already part of ordinary
+                # league-cache publication. Keep its bounded evidence there so
+                # an omitted provider field cannot erase the date on restart.
+                player = (data.get('normalized_players') or {})[player_id]
+                old_metadata = player.get('metadata') or {}
+                player['metadata'] = {
+                    **{k: v for k, v in old_metadata.items() if not k.startswith('birth_date') and k != 'birthdate'},
+                    **{k: v for k, v in metadata.items() if k.startswith('birth_date')},
+                }
+            semantic = _digest(semantic_inputs)
             self._current[key] = data
             self._identities.update(identities)
             if self._current_digests.get(key) != semantic:
@@ -191,10 +223,22 @@ class CanonicalHistoryStore:
         from .recovery import HistoricalCheckpoints
         seasons = []
         selected = [season] if season is not None else sorted(self._cache_index(league_id), reverse=True)
+        with self._lock:
+            current = self._current.get(str(league_id)) or {}
+        current_season = (current.get('league') or {}).get('season')
+        if season is None and str(current_season).isdigit() and int(current_season) not in selected:
+            selected.insert(0, int(current_season))
         for year in selected:
             cached = sleeper_season_cache.read(league_id, year)
-            if cached:
-                seasons.append(season_coverage(cached.facts, year))
+            weeks, context = self._current_matchup_source(current, league_id, year)
+            if cached or weeks:
+                facts = dict(cached.facts) if cached else {'league': current.get('league') or {}}
+                if weeks:
+                    facts['matchups'] = {**(facts.get('matchups') or {}), **weeks}
+                coverage = season_coverage(facts, year)
+                if weeks:
+                    coverage['active_matchup_source'] = context
+                seasons.append(coverage)
             else:
                 checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, year)
                 seasons.append({"season": year, "source_league_id": (checkpoint or {}).get('source_league_id'),
@@ -206,11 +250,15 @@ class CanonicalHistoryStore:
     def historical_availability(self, league_id: str, season: int) -> dict[str, Any]:
         from .recovery import HistoricalCheckpoints
         cached = sleeper_season_cache.read(league_id, season)
+        with self._lock:
+            current = self._current.get(str(league_id)) or {}
+        weeks, _ = self._current_matchup_source(current, league_id, season)
+        active_families = {'player_week', 'matchup'} if weeks else set()
         if cached is not None:
-            return {'state': 'cached', 'covered_families': sorted(self._supported_families(cached))}
+            return {'state': 'cached', 'covered_families': sorted(self._supported_families(cached) | active_families)}
         checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
-        return {'state': 'partial' if checkpoint else 'unavailable',
-                'covered_families': checkpoint['families'] if checkpoint else [],
+        return {'state': 'partial' if checkpoint or weeks else 'unavailable',
+                'covered_families': sorted(set(checkpoint['families'] if checkpoint else []) | active_families),
                 'reason': 'compact_canonical_checkpoint' if checkpoint else 'historical_recovery_required'}
 
     def recovered_season_source(self, league_id: str, season: int):
@@ -395,7 +443,7 @@ class CanonicalHistoryStore:
             "timestamp_provenance": timestamp_provenance,
         }
 
-    def _source_player_week_rows(self, league_id, season, week, row, player_filter=None):
+    def _source_player_week_rows(self, league_id, season, week, row, player_filter=None, *, context=None):
         """Shared nullable membership/scoring admission without full-season projection."""
         if not str(row.get("roster_id")).isdigit():
             return []
@@ -410,18 +458,64 @@ class CanonicalHistoryStore:
         starters = set(map(str, raw_starters)) if known_roles else set()
         roster_id = int(row.get("roster_id") or 0)
         for player_id in sorted(membership - {"0", "", "None"}):
-            score = points.get(player_id)
+            from .results import number
+            score = number(points.get(player_id))
+            source_score = score
+            if context is not None and not context.get('scoring_settings'):
+                score = None
             rows.append(self._record(
                 league_id, season, "player_week",
                 f"{week}:{roster_id}:{player_id}",
                 {"fantasy_points": score, "points": score,
                  "starter": str(player_id) in starters if known_roles else None,
                  "lineup_role_source": "Sleeper explicit starters" if known_roles else "unavailable",
-                 "roster_id": roster_id},
+                 "roster_id": roster_id,
+                 **({'source_fantasy_points': source_score, **context} if context is not None else {})},
                 week=week, player_id=str(player_id),
                 franchise_id=f"{league_id}:franchise:{roster_id}",
             ))
         return rows
+
+    @staticmethod
+    def _retained_matchups(facts):
+        league = facts.get('league') or {}
+        last = (league.get('settings') or {}).get('last_scored_leg')
+        return {week: rows for week, rows in readable_buckets(facts, 'matchups').items()
+                if league.get('status') == 'complete' or type(last) is not int or int(week) <= last}
+
+    @staticmethod
+    def _current_matchup_source(data, league_id, season):
+        """Read the existing prepared source; future placeholders are not actuals."""
+        from services.matchup_season import METHOD
+        from src.core.intelligence.season_calendar import season_calendar
+        league, prepared = data.get('league') or {}, data.get('season_matchups') or {}
+        if (str(league.get('league_id')) != str(league_id)
+                or str(league.get('season')) != str(season)
+                or prepared.get('league_id') != str(league_id)
+                or prepared.get('season') != str(season)
+                or prepared.get('methodology') != METHOD
+                or prepared.get('calendar_reference') != season_calendar(league)['reference']):
+            return {}, {}
+        last = (league.get('settings') or {}).get('last_scored_leg')
+        completed = 18 if league.get('status') == 'complete' else last if type(last) is int else 0
+        weeks = {str(week): value['rows'] for week, value in (prepared.get('weeks') or {}).items()
+                 if str(week).isdigit() and 1 <= int(week) <= min(completed, 18)
+                 and isinstance(value, dict) and value.get('availability') == 'available'
+                 and isinstance(value.get('rows'), list)}
+        from .results import number
+        scoring = league.get('scoring_settings') or {}
+        scoring = scoring if isinstance(scoring, dict) and all(number(v) is not None for v in scoring.values()) else {}
+        if data.get('scoring_settings') is not None and data['scoring_settings'] != scoring:
+            scoring = {}
+        if data.get('roster_positions') is not None and data['roster_positions'] != league.get('roster_positions'):
+            scoring = {}
+        context = {'source_league_id': str(league_id),
+                   'scoring_settings': scoring,
+                   'scoring_context_availability': 'supported' if scoring else 'unavailable_or_incompatible',
+                   'roster_positions': league.get('roster_positions') or [],
+                   'evidence_kind': 'completed_week_actual',
+                   'source_generation': prepared.get('semantic_generation')}
+        return weeks, context
 
     def _season_records(self, league_id: str, season: int, families: set[str] | None = None, player_filter: str | None = None) -> list[dict[str, Any]]:
         from .results import matchup_result, standing_points
@@ -500,7 +594,7 @@ class CanonicalHistoryStore:
                 "points_against": standing_points(settings, "fpts_against"),
                 "rank": settings.get("rank"),
             }, franchise_id=franchise))
-        for week_key, matchups in readable_buckets(facts, "matchups").items():
+        for week_key, matchups in self._retained_matchups(facts).items():
             week = int(week_key)
             grouped: dict[int, list[dict[str, Any]]] = defaultdict(list)
             for row in matchups or []:
@@ -606,7 +700,7 @@ class CanonicalHistoryStore:
                     time.sleep(0)
         return rows
 
-    def _current_records(self, league_id: str, season: int) -> list[dict[str, Any]]:
+    def _current_records(self, league_id: str, season: int, families=None) -> list[dict[str, Any]]:
         """Project bounded active state through the same canonical record shape."""
         with self._lock:
             data = self._current.get(str(league_id))
@@ -627,6 +721,29 @@ class CanonicalHistoryStore:
             "scoring_settings": data.get("scoring_settings") or league.get("scoring_settings") or {},
             "roster_positions": data.get("roster_positions") or league.get("roster_positions") or [],
         })]
+        if families is None or set(families) & {'player_week', 'matchup'}:
+            from .results import matchup_result
+            weeks, context = self._current_matchup_source(data, league_id, season)
+            for week, sides in weeks.items():
+                source = {**context, 'source_endpoint': f'/league/{league_id}/matchups/{week}'}
+                groups = defaultdict(list)
+                for side in sides:
+                    if not isinstance(side, dict):
+                        continue
+                    if str(side.get('matchup_id')).isdigit():
+                        groups[str(side['matchup_id'])].append(side)
+                    if families is None or 'player_week' in families:
+                        records = self._source_player_week_rows(league_id, season, int(week), side, context=source)
+                        for record in records:
+                            record['observed_at'] = (data.get('season_matchups') or {}).get('observed_at')
+                            record['calculation_method'] = 'sleeper_prepared_season_matchups'
+                        rows.extend(records)
+                if families is None or 'matchup' in families:
+                    for matchup_id, group in groups.items():
+                        rows.append(self._record(league_id, season, 'matchup', f'{week}:{matchup_id}', {
+                            **source, 'matchup_id': int(matchup_id),
+                            **matchup_result(group, playoff_week=(league.get('settings') or {}).get('playoff_week_start'), week=int(week)),
+                        }, week=int(week)))
         for team in data.get("teams") or ():
             roster_id = int(team.get("roster_id") or 0)
             franchise = f"{league_id}:franchise:{roster_id}"
@@ -733,6 +850,8 @@ class CanonicalHistoryStore:
                 seasons.insert(0, current_season)
         from .recovery import HistoricalCheckpoints, HistoricalRecoveryUnavailable
         coverage = {}
+        with self._lock:
+            current = self._current.get(str(league_id)) or {}
         for selected in seasons:
             cached = sleeper_season_cache.read(league_id, selected)
             if cached is not None:
@@ -741,6 +860,9 @@ class CanonicalHistoryStore:
                 checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, selected)
                 if checkpoint:
                     coverage[selected] = set(checkpoint['families'])
+            weeks, _ = self._current_matchup_source(current, league_id, selected)
+            if weeks and selected in coverage:
+                coverage[selected].update(('player_week', 'matchup'))
             if not allow_partial and selected in coverage and entity_type is not None and entity_type not in coverage[selected]:
                 raise HistoricalRecoveryUnavailable('Requested historical family requires source recovery; coverage is partial')
         if entity_type in {"trade", "transaction"}:
@@ -756,7 +878,7 @@ class CanonicalHistoryStore:
         rows = [row for row in rows if row['season'] not in coverage
                 or row['entity_type'] in coverage[row['season']]]
         for selected in seasons:
-            rows.extend(self._current_records(league_id, selected))
+            rows.extend(self._current_records(league_id, selected, _families or ({entity_type} if entity_type else None)))
         from .playoffs import admitted_bracket_row, admitted_playoff_result
         rows = [{**row, 'payload': admitted_bracket_row(row['payload'])} if row['entity_type'] == 'playoff_bracket'
                 else {**row, 'payload': admitted_playoff_result(row['payload'])} if row['entity_type'] == 'playoff_result'
@@ -831,10 +953,12 @@ class CanonicalHistoryStore:
         cached = sleeper_season_cache.read(league_id, season)
         if cached is not None:
             rows = reconcile_player_weeks([
-                record for week, matchups in readable_buckets(cached.facts, 'matchups').items()
+                record for week, matchups in self._retained_matchups(cached.facts).items()
                 for matchup in matchups
                 for record in self._source_player_week_rows(league_id, season, int(week), matchup)
             ])
+            rows = reconcile_player_weeks(rows + [row for row in self._current_records(league_id, season, {'player_week'})
+                                                  if row['entity_type'] == 'player_week'])
             count = len(rows)
         else:
             count, rows = self.optional_records(league_id, 'player_week', season=season, limit=100_000)

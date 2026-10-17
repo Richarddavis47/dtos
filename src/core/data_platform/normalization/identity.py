@@ -32,6 +32,7 @@ class PlayerIdentityResolver:
             self.register(str(key), row)
 
     def register(self, key: str, row: dict[str, Any]) -> NormalizedPlayer:
+        from src.core.data_platform.normalization.birth_dates import birth_date_metadata
         metadata_payload = row.get("metadata") or {}
         metadata = {str(name): str(value) for name, value in metadata_payload.items() if value is not None} if isinstance(metadata_payload, dict) else {}
         dtos_id = str(row.get("player_id") or key).strip()
@@ -40,8 +41,13 @@ class PlayerIdentityResolver:
                         if row.get(field) is not None and str(row[field]).strip().casefold() not in {"", "na", "nan", "none", "null"}}
         provider_ids.setdefault("Sleeper", dtos_id)
         aliases = tuple(sorted({name, str(row.get("search_full_name") or ""), metadata.get("previous_name", "")} - {""}))
-        player = NormalizedPlayer(dtos_id, name, normalize_position(row.get("position")), normalize_team(row.get("team")), _float(row.get("age")), _integer(row.get("years_exp")), str(row.get("status") or "Unknown"), provider_ids, aliases, metadata)
         previous = self._players.get(dtos_id)
+        birth = birth_date_metadata(row, previous.metadata if previous else None)
+        metadata = {key: value for key, value in metadata.items() if not key.startswith('birth_date') and key != 'birthdate'}
+        metadata.update(birth)
+        player = NormalizedPlayer(dtos_id, name, normalize_position(row.get('position')), normalize_team(row.get('team')),
+                                  _float(row.get('age')), _integer(row.get('years_exp')),
+                                  str(row.get('status') or 'Unknown'), provider_ids, aliases, metadata)
         if previous is not None:
             for provider, provider_id in previous.provider_ids.items():
                 self._aliases.get((provider.casefold(), provider_id.casefold()), set()).discard(dtos_id)
