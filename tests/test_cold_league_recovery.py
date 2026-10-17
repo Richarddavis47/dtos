@@ -139,6 +139,28 @@ class ColdLeagueRecoveryTests(unittest.TestCase):
         self.assertNotIn("FOIS canonical", response.text)
         self.assertEqual(snapshot(self.store), before)
 
+    def test_browser_retry_keeps_decoded_path_on_the_same_origin(self):
+        response = self.client.get("/%5Cforeign.example", headers={"Accept": "text/html"})
+        self.assertEqual(response.status_code, 503)
+        self.assertIn('href="/%5Cforeign.example?', response.text)
+        self.assertNotIn('href="/\\foreign.example"', response.text)
+        with onboarding.PublicOnboardingTests.browser(self, 390, 844) as page:
+            foreign = []
+
+            def only_local(route):
+                if route.request.url.startswith(self.origin + "/"):
+                    route.continue_()
+                else:
+                    foreign.append(route.request.url)
+                    route.abort()
+
+            page.route("**/*", only_local)
+            self.assertEqual(page.goto(self.origin + "/%5Cforeign.example", wait_until="networkidle").status, 503)
+            with page.expect_navigation(wait_until="networkidle"):
+                page.get_by_role("link", name="Try this page again", exact=True).click()
+            self.assertTrue(page.url.startswith(self.origin + "/%5Cforeign.example"))
+            self.assertEqual(foreign, [])
+
     def test_account_health_static_and_unauthorized_requests_need_no_hydration(self):
         for path in ("/account", "/api/account", "/account/sign-in", "/health/live", "/static/js/trade_workspace.js"):
             with self.subTest(path=path):

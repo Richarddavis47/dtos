@@ -5,7 +5,7 @@ from collections.abc import Iterator, MutableMapping
 from contextvars import ContextVar
 from html import escape
 from typing import Any
-from urllib.parse import parse_qs, parse_qsl, urlencode
+from urllib.parse import parse_qs, parse_qsl, quote, urlencode
 
 from starlette.responses import HTMLResponse, JSONResponse
 from src.platform.inspection_security import operations_path
@@ -85,7 +85,7 @@ def _unavailable_response(scope: dict[str, Any], *, status: int, reason: str):
 
     account = current_account()
     league = account.membership.league_name if account and account.membership else "Selected league"
-    retry = path if path.startswith("/") and not path.startswith("//") else "/"
+    retry = quote(path, safe="/") if path.startswith("/") and not path.startswith("//") else "/"
     query = urlencode(parse_qsl(scope.get("query_string", b"").decode("latin-1"), keep_blank_values=True))
     if query:
         retry += "?" + query

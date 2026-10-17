@@ -10,7 +10,7 @@ Require nonempty supported data after the existing source sync and before restor
 
 Account/control, exact liveness/readiness and static routes do not consume canonical league facts. Keep their existing outer authentication, session, CSRF and account-revision checks; account actions still explicitly prepare their intended authorized league before committing user intent. Consumer routes retain their existing account/league admission. No source, valuation or account-authority policy is relaxed.
 
-For browser navigation, show a compact source-unavailable page with the saved league name, preserved-account explanation, same-origin retry, Your account and Choose a connected league actions. API/default JSON status/reason semantics remain, with no-store responses. No automatic retry or background work is added.
+For browser navigation, show a compact source-unavailable page with the saved league name, preserved-account explanation, same-origin retry, Your account and Choose a connected league actions. API/default JSON status/reason semantics remain, with no-store responses. No automatic retry or background work is added. Encode the decoded request path when constructing the retry URL, so encoded backslash/delimiter controls remain on the same origin.
 
 An actual discovery-outage control also showed that Your leagues hid existing authorized connections behind another source-failure page. When discovery fails and active saved connections exist, render only those existing records, explicitly marked saved/not refreshed, without fabricated team counts. Their activation still runs existing preparation and authorization. With no saved connection, preserve the existing503 guidance. No membership or preference is created or modified by fallback rendering.
 
