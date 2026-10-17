@@ -284,7 +284,7 @@ def _load_results_history(
                     item for item in side.process.dimensions
                     if item.name == "competitive_window_fit"
                 ), None)
-                if window_dimension is not None:
+                if window_dimension is not None and window_dimension.evidence_available:
                     marker = "was "
                     text = window_dimension.explanation
                     if marker in text:
@@ -336,6 +336,11 @@ def _load_results_history(
                 "season_phase": phase,
             })
     _, draft_picks = store.records(league_id, "draft_pick", limit=100_000)
+    from src.core.historical_intelligence.price_admission import checkpoint_reason
+    def price_context(checkpoint):
+        return (checkpoint.provider, checkpoint.market_context_id, checkpoint.normalization_version,
+                checkpoint.value_concept, checkpoint.comparison_identity)
+
     def decision_market_references(asset_ids, occurred_at, *, details=False):
         # Only reference existing canonical evidence. No provider requests,
         # payload copies, current-value fallback, or synthesized timestamps.
@@ -349,7 +354,7 @@ def _load_results_history(
         references = []
         for asset_id in sorted(set(str(value) for value in asset_ids if value)):
             checkpoint = history_intelligence.nearest_market_checkpoint(asset_id, str(occurred_at))
-            if checkpoint is None:
+            if checkpoint is None or checkpoint_reason(checkpoint, occurred_at):
                 continue
             try:
                 observed = datetime.fromisoformat(checkpoint.occurred_at.replace("Z", "+00:00"))
@@ -360,7 +365,7 @@ def _load_results_history(
             references.append({'asset_id': asset_id, 'reference': checkpoint.checkpoint_id,
                                'observed_at': checkpoint.occurred_at,
                                'value': checkpoint.normalized_value,
-                               'context': (checkpoint.market_context_id, checkpoint.normalization_version)}
+                               'context': price_context(checkpoint)}
                               if details else checkpoint.checkpoint_id)
         return tuple(references)
 
@@ -438,7 +443,8 @@ def _load_results_history(
                         continue
                     later = history_intelligence.nearest_market_checkpoint(
                         baseline['asset_id'], decision['occurred_at'], direction=CheckpointDirection.AFTER)
-                    if later is None or (later.market_context_id, later.normalization_version) != baseline['context']:
+                    if (later is None or checkpoint_reason(later, later.occurred_at)
+                            or price_context(later) != baseline['context']):
                         continue
                     later_at = datetime.fromisoformat(later.occurred_at.replace('Z', '+00:00'))
                     decision_at = datetime.fromisoformat(decision['occurred_at'].replace('Z', '+00:00'))

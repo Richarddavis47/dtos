@@ -99,6 +99,9 @@ class HistoricalTransactionIntelligenceService:
                 0, 0, 0, (),
             )
         old, new = _asset_map(before), _asset_map(after)
+        reconstruction_complete = all(
+            state.coverage.get('ownership') and state.coverage['ownership'].availability is ReconstructionAvailability.COMPLETE
+            for state in (before, after))
         outgoing = tuple(old[key] for key in sorted(old.keys() - new.keys()))
         incoming = tuple(new[key] for key in sorted(new.keys() - old.keys()))
         all_assets = (*outgoing, *incoming)
@@ -143,7 +146,8 @@ class HistoricalTransactionIntelligenceService:
         dimensions.append(HistoricalDecisionDimension(
             "lineup_impact", "improved" if lineup_delta and lineup_delta > 0 else "declined" if lineup_delta and lineup_delta < 0 else "neutral_or_unknown",
             (f"Historically supported optimal-lineup delta was {lineup_delta:.2f}, using common Week {before.lineup.evidence_week}."
-             + (" An earlier complete common week was selected; newer observations did not support both rosters." if earlier else ""))
+             + (" An earlier complete common week was selected; newer observations did not support both rosters." if earlier else "")
+             + (" Roster membership is provisional because historical reconstruction coverage is incomplete; this conditional calculation does not establish a verified historical lineup improvement." if not reconstruction_complete else ""))
             if lineup_available else f"Historical lineup comparison unavailable: {lineup_reason}; no numeric lineup delta was fabricated. Evidence limits: {', '.join(sorted(set(before.lineup.reason_codes + after.lineup.reason_codes))) or lineup_reason}.",
             lineup_available,
             evidence_week=before.lineup.evidence_week if lineup_available else None,
@@ -180,13 +184,17 @@ class HistoricalTransactionIntelligenceService:
             scarcity_available,
         ))
         dimensions.append(HistoricalDecisionDimension(
-            "risk", "partially_observed" if missing or not comparable or not lineup_available else "observed",
-            "Risk confidence reflects historical market, lineup, age, and pick uncertainty coverage; no later injury is used.",
+            "risk", "partially_observed" if missing or not comparable or not lineup_available or not reconstruction_complete else "observed",
+            "Risk confidence reflects historical market, lineup, age, and pick uncertainty coverage; no later injury is used."
+            + (' Historical Market observations are older than seven days; this is qualified older evidence, not a decision-time price.'
+               if any('historical_market_older_than_seven_days' in state.warnings for state in (before, after)) else ''),
         ))
         confidence_score = min(before.confidence, after.confidence, round(coverage * 100))
+        if not reconstruction_complete:
+            confidence_score = min(confidence_score, 40)
         if not comparable:
             confidence_score = 0
-        if not comparable:
+        if not comparable or not reconstruction_complete:
             classification = ProcessClassification.INSUFFICIENT
         elif ratio >= .8 and (fit == "aligned" or (lineup_delta is not None and lineup_delta >= 0)):
             classification = ProcessClassification.SOUND if ratio <= 1.25 else ProcessClassification.STRONG
@@ -197,6 +205,8 @@ class HistoricalTransactionIntelligenceService:
         else:
             classification = ProcessClassification.POOR
         explanations = [f"{row.name}: {row.assessment}." for row in dimensions]
+        if not reconstruction_complete:
+            explanations.append('Historical reconstruction is partial: acquisition/disposal coverage or roster anchors are incomplete; observed trade facts remain available.')
         if missing:
             explanations.append("Partial evidence reduced confidence; unavailable values were not replaced with current values.")
         return HistoricalProcessEvaluation(

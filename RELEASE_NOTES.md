@@ -1,3 +1,9 @@
+## v1.21.66 / build 2166 — Historical evidence integrity
+
+- Admit historical franchise-state prices only with supported canonical Market units, source/comparison identity, normalization/method and decision-eligible clocks. Withhold mixed currencies and unsupported totals/window labels; preserve compatible observations and genuine zero. Older-than-seven-day quotes remain numeric, qualified evidence.
+- Separate transaction-period acquisition, dated roster anchors and event-order coverage. Missing periods/records or uncertain anchors qualify reconstructed ownership, cap confidence and withhold unsupported competitive windows and process grades. Preserve observed trades, exact picks and owner identities.
+- Apply the shared price boundary to preparation-time FOIS decision context and propagate reconstruction limitations. Retained historical FOIS grades remain RETAINED / NOT REVALIDATED; no regeneration, source rewrite, schema, archive or paid infrastructure. Market/Trade/Sleeper/lineup rules and 2 GiB/500 ms gates are unchanged.
+
 ## v1.21.65 / build 2165 — Missing-price decision clarity
 
 - Keep the canonical assessment vocabulary while placing a separate conditional-exploration / not-an-endorsement qualification beside a favorable but ineligible missing-price assessment.

@@ -21,10 +21,12 @@ class DecisionContextTests(unittest.TestCase):
             def reconstruct(self,league,franchise,boundary):
                 self.boundary=boundary
                 return SimpleNamespace(state_id='state',availability=SimpleNamespace(value='partial'),
-                    coverage={'ownership':SimpleNamespace(availability=SimpleNamespace(value='partial'),reason_codes=('uncertain',))},
+                    coverage={'ownership':SimpleNamespace(availability=SimpleNamespace(value='partial'),confidence=40,reason_codes=('uncertain',))},
                     players=(),draft_picks=(),history_generation='g')
         states=States()
         result=roster_context(states,'L','1',dict(season=2024,owner_id='gm',draft_start_at='2024-08-01T00:00:00Z'))
         self.assertEqual(result['precision'],'pre_draft_anchor_not_exact_selection')
         self.assertEqual(states.boundary.mode.value,'before')
         self.assertEqual(result['ownership_availability'],'partial')
+        self.assertEqual(result['coverage']['ownership']['confidence'],40)
+        self.assertEqual(result['coverage']['ownership']['reasons'],('uncertain',))

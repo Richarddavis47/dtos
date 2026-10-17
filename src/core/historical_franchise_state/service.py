@@ -25,6 +25,10 @@ from .models import (
     HISTORICAL_FRANCHISE_STATE_METHOD_VERSION,
 )
 from src.core.history_context.results import number
+from src.core.historical_intelligence.market_comparison import comparison_reason
+from src.core.historical_intelligence.price_admission import checkpoint_reason, instant, quote_time
+from src.core.intelligence_memory.confidence import temporal_confidence
+from src.core.valuation.config import CANONICAL_MAX
 from src.core.trade_intelligence.lineup import (
     BENCH_SLOTS, FLEX_ELIGIBILITY, optimal_legal_lineup,
 )
@@ -60,6 +64,7 @@ class HistoricalFranchiseStateService:
             tuple[tuple[str, int], str, str, int, str | None, int | None, str | None, str],
             HistoricalFranchiseState,
         ] = {}
+        self._source_coverage_cache: dict[tuple, dict] = {}
 
     @staticmethod
     def _event_order(event: HistoricalEvent) -> tuple[str, int, str]:
@@ -140,7 +145,10 @@ class HistoricalFranchiseStateService:
                 self._metrics["cache_hits"] += 1
                 return list(cached)
         self._metrics["source_record_queries"] += 1
-        _count, rows = self.history.store.records(
+        # Optional historical families may be unacquired. Preserve independently
+        # readable facts and qualify each dimension instead of aborting the state.
+        reader = getattr(self.history.store, 'optional_records', self.history.store.records)
+        _count, rows = reader(
             league_id, entity, season=season, limit=10_000,
         )
         frozen = tuple(rows)
@@ -281,15 +289,25 @@ class HistoricalFranchiseStateService:
                     age = round((as_of - born).days / 365.2425, 2)
                 except (TypeError, ValueError):
                     age = None
-            value = float(checkpoint.normalized_value) if checkpoint else None
+            reason = checkpoint_reason(checkpoint, occurred_at) if checkpoint else 'historical_market_unavailable'
+            if checkpoint and checkpoint.asset_id not in {player_id, f'player:{player_id}'}:
+                reason = 'historical_market_asset_identity_incompatible'
+            value = float(checkpoint.normalized_value) if checkpoint and not reason else None
+            confidence = None
+            reasons = (reason,) if reason else ()
+            if value is not None:
+                temporal, age_reason = temporal_confidence(quote_time(checkpoint).isoformat(), occurred_at)
+                confidence = min(checkpoint.confidence, temporal)
+                if age_reason == 'older_than_seven_days':
+                    reasons = ('historical_market_older_than_seven_days',)
             if value is not None:
                 known += value
             assets.append(HistoricalAssetState(
                 asset_id=player_id, asset_type="pick" if player_id.startswith("PICK-") else "player", position=position,
                 market_value=value,
                 market_checkpoint_id=checkpoint.checkpoint_id if checkpoint else None,
-                market_observed_at=checkpoint.occurred_at if checkpoint else None,
-                market_confidence=checkpoint.confidence if checkpoint else None,
+                market_observed_at=quote_time(checkpoint).isoformat() if checkpoint and quote_time(checkpoint) else None,
+                market_confidence=confidence,
                 season_to_date_points=(production or {}).get(player_id),
                 age_as_of=age,
                 market_provider=checkpoint.provider if checkpoint else None,
@@ -297,7 +315,15 @@ class HistoricalFranchiseStateService:
                 market_normalization_version=checkpoint.normalization_version if checkpoint else None,
                 market_value_concept=checkpoint.value_concept if checkpoint else None,
                 market_comparison_identity=checkpoint.comparison_identity if checkpoint else (),
+                market_reason_codes=reasons,
             ))
+        priced = [row for row in assets if row.market_value is not None]
+        if priced and (reason := comparison_reason(priced, boundary=occurred_at)):
+            # Never aggregate incompatible currencies, even in a partial total.
+            assets = [replace(row, market_value=None, market_confidence=None,
+                              market_reason_codes=(*row.market_reason_codes, reason))
+                      if row.market_value is not None else row for row in assets]
+            known = 0.0
         return assets, known, sum(row.market_value is not None for row in assets)
 
     def _lineup_and_production(
@@ -371,6 +397,62 @@ class HistoricalFranchiseStateService:
     def _coverage(availability: ReconstructionAvailability, confidence: int, *reasons: str) -> EvidenceCoverage:
         return EvidenceCoverage(availability, confidence, tuple(reasons))
 
+    def _reconstruction_coverage(self, league_id, franchise_id, boundary, positions):
+        """Acquired periods, anchor time and event order are independent facts."""
+        key = (self.history.cache_identity(league_id), league_id, boundary.season)
+        with self._lock:
+            source = self._source_coverage_cache.get(key)
+        if source is None:
+            reader = getattr(self.history.store, 'source_coverage', None)
+            source = reader(league_id, season=boundary.season) if reader else {}
+            with self._lock:
+                if len(self._source_coverage_cache) >= 128:
+                    self._source_coverage_cache.clear()
+                self._source_coverage_cache[key] = source
+        season = next((row for row in source.get('seasons', ())
+                       if row.get('season') == boundary.season), {})
+        periods = season.get('transactions') or {}
+        periods_complete = periods.get('complete_acquisition') is True
+        incomplete_moves = any(
+            event.event_type in {HistoricalEventType.TRADE, HistoricalEventType.WAIVER_ACQUISITION,
+                                 HistoricalEventType.FREE_AGENT_ACQUISITION, HistoricalEventType.DROP,
+                                 HistoricalEventType.PLAYER_EVENT, HistoricalEventType.PICK_TRADE}
+            and event.attributes.get('status') in (None, 'complete')
+            and (not any(event.attributes.get(field) is not None for field in ('adds', 'drops', 'draft_picks', 'waiver_budget'))
+                 or any(event.attributes.get(field) is not None and not isinstance(event.attributes[field], Mapping)
+                        for field in ('adds', 'drops'))
+                 or (event.event_type is HistoricalEventType.TRADE
+                     and set(event.attributes.get('adds') or {}) != set(event.attributes.get('drops') or {})))
+            for event, _ in positions)
+        periods_complete = periods_complete and not incomplete_moves
+        transactions = self._coverage(
+            ReconstructionAvailability.COMPLETE if periods_complete else ReconstructionAvailability.PARTIAL,
+            100 if periods_complete else 40,
+            'observed_transaction_periods' if periods_complete else 'incomplete_acquisition_disposal_records' if incomplete_moves else 'transaction_period_coverage_unavailable_or_incomplete')
+        snapshots = [row for row in self._records(league_id, boundary.season, 'roster_snapshot')
+                     if row.get('franchise_id') == franchise_id]
+        anchor_time = instant(snapshots[0].get('occurred_at')) if len(snapshots) == 1 else None
+        boundary_time = instant(boundary.occurred_at)
+        anchor_valid = bool(anchor_time and boundary_time and anchor_time >= boundary_time
+                            and isinstance(snapshots[0].get('payload', {}).get('players'), list)
+                            and all(instant(event.occurred_at) and instant(event.occurred_at) <= anchor_time
+                                    for event, _ in positions
+                                    if event.attributes.get('status') == 'complete'
+                                    and (event.attributes.get('adds') or event.attributes.get('drops'))))
+        anchor = self._coverage(
+            ReconstructionAvailability.COMPLETE if anchor_valid else ReconstructionAvailability.PARTIAL if snapshots else ReconstructionAvailability.UNAVAILABLE,
+            95 if anchor_valid else 40 if snapshots else 0,
+            'supported_roster_anchor_time' if anchor_valid else 'roster_anchor_time_or_identity_unavailable')
+        unresolved = any(before is None and event.attributes.get('status') in (None, 'complete')
+                         and (event.attributes.get('adds') or event.attributes.get('drops') or event.attributes.get('draft_picks')
+                              or event.event_type is HistoricalEventType.ROOKIE_DRAFT_SELECTION)
+                         for event, before in positions)
+        event_order = self._coverage(
+            ReconstructionAvailability.PARTIAL if unresolved or not periods_complete else ReconstructionAvailability.COMPLETE,
+            40 if unresolved or not periods_complete else 100,
+            'ownership_event_order_unresolved' if unresolved else 'order_of_observed_events_only' if not periods_complete else 'observed_event_order')
+        return {'transactions': transactions, 'roster_anchor': anchor, 'event_order': event_order}
+
     def reconstruct(
         self, league_id: str, franchise_id: str, boundary: HistoricalBoundary,
         *, include_trace: bool = False,
@@ -379,8 +461,12 @@ class HistoricalFranchiseStateService:
         franchise_id = _franchise_id(league_id, franchise_id)
         cache_generation = self.history.cache_identity(league_id)
         history_generation = cache_generation[0]
+        reader = self.history.checkpoint_reader
+        market_publication = getattr(reader, 'generation', None)
+        if market_publication is None and callable(getattr(reader, 'observation_generation', None)):
+            market_publication = reader.observation_generation()
         cache_key = (
-            cache_generation, league_id, franchise_id, int(boundary.season),
+            (cache_generation, market_publication), league_id, franchise_id, int(boundary.season),
             boundary.occurred_at, boundary.week, boundary.event_id,
             boundary.mode.value,
         )
@@ -460,11 +546,21 @@ class HistoricalFranchiseStateService:
         ownership_available = bool(final_rosters.get(franchise_id))
         settings_available = bool(settings or scoring or roster_positions)
         market_available = known_count > 0
+        reconstruction = self._reconstruction_coverage(
+            league_id, franchise_id, replace(boundary, occurred_at=effective_time), positions)
+        ownership_complete = all(item.availability is ReconstructionAvailability.COMPLETE
+                                 for item in reconstruction.values())
+        pick_rows = self._records(league_id, boundary.season, 'pick_snapshot')
+        picks_complete = bool(pick_rows and ownership_complete and instant(effective_time)
+                              and all(instant(row.get('occurred_at'))
+                                      and instant(row['occurred_at']) >= instant(effective_time) for row in pick_rows))
+        market_reasons = tuple(sorted({reason for asset in assets for reason in asset.market_reason_codes}))
+        stale_market = 'historical_market_older_than_seven_days' in market_reasons
         coverage = {
             CoverageDimension.SETTINGS.value: self._coverage(ReconstructionAvailability.COMPLETE if settings_available else ReconstructionAvailability.UNAVAILABLE, 100 if settings_available else 0, "historical_season_contract" if settings_available else "missing_historical_settings"),
-            CoverageDimension.OWNERSHIP.value: self._coverage(ReconstructionAvailability.COMPLETE if ownership_available else ReconstructionAvailability.UNAVAILABLE, 95 if ownership_available else 0, "reverse_event_reconstruction" if ownership_available else "missing_roster_snapshot"),
-            CoverageDimension.PICKS.value: self._coverage(ReconstructionAvailability.COMPLETE if picks else ReconstructionAvailability.PARTIAL, 85 if picks else 35, "provider_pick_snapshot" if picks else "pick_snapshot_unavailable"),
-            CoverageDimension.MARKET.value: self._coverage(ReconstructionAvailability.COMPLETE if market_ratio == 1 else ReconstructionAvailability.PARTIAL if market_available else ReconstructionAvailability.UNAVAILABLE, round(market_ratio * 100), "at_or_before_global_checkpoint" if market_available else "historical_market_unavailable"),
+            CoverageDimension.OWNERSHIP.value: self._coverage(ReconstructionAvailability.COMPLETE if ownership_available and ownership_complete else ReconstructionAvailability.PARTIAL if ownership_available else ReconstructionAvailability.UNAVAILABLE, 95 if ownership_available and ownership_complete else 40 if ownership_available else 0, "reverse_event_reconstruction" if ownership_complete else "incomplete_acquisition_disposal_history"),
+            CoverageDimension.PICKS.value: self._coverage(ReconstructionAvailability.COMPLETE if picks_complete else ReconstructionAvailability.PARTIAL, 85 if picks_complete else 40 if picks else 35, "provider_pick_snapshot" if picks_complete else "pick_snapshot_anchor_or_history_incomplete"),
+            CoverageDimension.MARKET.value: self._coverage(ReconstructionAvailability.COMPLETE if market_ratio == 1 and not stale_market else ReconstructionAvailability.PARTIAL if market_available else ReconstructionAvailability.UNAVAILABLE, min(round(market_ratio * 100), min((asset.market_confidence or 0 for asset in assets if asset.market_value is not None), default=0)), *(market_reasons or ("compatible_at_or_before_global_checkpoint" if market_available else "historical_market_unavailable",))),
             CoverageDimension.LINEUP.value: self._coverage(ReconstructionAvailability.COMPLETE if lineup.optimal_points is not None else ReconstructionAvailability.UNAVAILABLE, 90 if lineup.optimal_points is not None else 0, *(lineup.reason_codes or ("historical_week_lineup" if lineup.optimal_points is not None else "historical_lineup_unavailable",))),
             CoverageDimension.PRODUCTION.value: self._coverage(ReconstructionAvailability.COMPLETE if production else ReconstructionAvailability.UNAVAILABLE, 90 if production else 0, "season_to_date_actuals" if production else "historical_production_unavailable"),
             CoverageDimension.STANDINGS.value: self._coverage(ReconstructionAvailability.COMPLETE if record.games_observed else ReconstructionAvailability.PARTIAL, 90 if record.games_observed else 25, "matchups_through_boundary"),
@@ -474,6 +570,11 @@ class HistoricalFranchiseStateService:
                 "birthdate_as_of_boundary" if age_count else "birthdate_evidence_unavailable",
             ),
         }
+        coverage.update(reconstruction)
+        warnings.extend(reason for item in reconstruction.values()
+                        if item.availability is not ReconstructionAvailability.COMPLETE
+                        for reason in item.reason_codes)
+        warnings.extend(market_reasons)
         if unresolved:
             coverage[CoverageDimension.OWNERSHIP.value] = self._coverage(
                 ReconstructionAvailability.PARTIAL, 40, 'ownership_event_order_unresolved')
@@ -484,20 +585,25 @@ class HistoricalFranchiseStateService:
                 and 'pick_ownership_event_order_unresolved' not in warnings):
             coverage[CoverageDimension.PICKS.value] = self._coverage(
                 ReconstructionAvailability.PARTIAL, 40, 'draft_original_pick_identity_unavailable')
+        ownership_complete = coverage[CoverageDimension.OWNERSHIP.value].availability is ReconstructionAvailability.COMPLETE
         numeric_confidence = round(mean(row.confidence for row in coverage.values()))
-        current_strength = min(100, round((known_value / max(1, len(assets))) / 100)) if market_available else 0
-        future_strength = min(100, round((known_value + len(selected_picks) * 1000) / max(1, len(assets) + len(selected_picks)) / 100)) if market_available else 0
-        if ownership_available and market_available:
+        # The classifier consumes a 0–100 index, not provider-native currency.
+        current_strength = min(100, round(known_value / max(1, len(assets)) / CANONICAL_MAX * 100)) if market_available else 0
+        window_prices_supported = comparison_reason((*assets, *selected_picks), boundary=effective_time) is None
+        future_strength = min(100, round((known_value + sum(p.market_value for p in selected_picks if p.market_value is not None)) / max(1, len(assets) + len(selected_picks)) / CANONICAL_MAX * 100)) if market_available else 0
+        if (ownership_available and ownership_complete and market_ratio == 1 and not stale_market
+                and window_prices_supported and coverage[CoverageDimension.MARKET.value].confidence > 0):
             window = build_competitive_window(
                 current_strength=current_strength, overall_strength=current_strength,
                 future_strength=future_strength, depth=min(100, len(assets) * 5),
                 youth=50, draft_capital=min(100, len(selected_picks) * 12), risk=50,
-                confidence=min(numeric_confidence, round(market_ratio * 100)),
+                confidence=min(numeric_confidence, coverage[CoverageDimension.MARKET.value].confidence,
+                               coverage[CoverageDimension.PICKS.value].confidence),
             )
             window_state = HistoricalWindowState(
                 window.classification.value, window.confidence,
                 window.championship_score, window.playoff_score, window.rebuild_score,
-                window.reasons,
+                (*window.reasons, 'Historical window remains provisional: compatible Market evidence does not establish all historical competitive inputs.'),
             )
             coverage[CoverageDimension.COMPETITIVE_WINDOW.value] = self._coverage(ReconstructionAvailability.PARTIAL, window.confidence, "shared_competitive_window_partial_historical_inputs")
         else:
@@ -519,12 +625,12 @@ class HistoricalFranchiseStateService:
         result = HistoricalFranchiseState(
             state_id, league_id, franchise_id, boundary, history_generation,
             market_generation, availability,
-            round(mean(row.confidence for row in coverage.values())),
+            min(round(mean(row.confidence for row in coverage.values())), coverage['ownership'].confidence),
             settings, scoring, roster_positions, tuple(assets), selected_picks,
             lineup, record, window_state,
             known_value if market_ratio == 1 and assets else None,
             known_value, market_ratio, dict(position_counts), coverage,
-            tuple(warnings), tuple(sorted(set(settings_refs + lineup.source_references))), len(events) - len(later), tuple(trace),
+            tuple(sorted(set(warnings))), tuple(sorted(set(settings_refs + lineup.source_references))), sum(before is True for _, before in positions), tuple(trace),
         )
         if not include_trace:
             with self._lock:
@@ -601,7 +707,7 @@ class HistoricalFranchiseStateService:
             )
             aligned.append(replace(state, lineup=lineup, coverage=coverage,
                 availability=ReconstructionAvailability.PARTIAL if state.availability is ReconstructionAvailability.COMPLETE and lineup.optimal_points is None else state.availability,
-                confidence=round(mean(item.confidence for item in coverage.values())),
+                confidence=min(round(mean(item.confidence for item in coverage.values())), coverage['ownership'].confidence),
                 state_id=semantic_identity("historical-common-week-state", state.state_id, selected, HISTORICAL_FRANCHISE_STATE_METHOD_VERSION),
                 evidence_references=tuple(sorted((set(state.evidence_references) - set(state.lineup.source_references)) | set(lineup.source_references)))))
         return tuple(aligned)

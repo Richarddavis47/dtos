@@ -1234,8 +1234,9 @@ class HistoricalAssetGraph:
             "orphaned_events": event_statistics["orphaned_events"],
             "latest_successful_import": (latest or {}).get("completed_at"),
             "source_hashes_available": True,
-            "status": "complete" if seasons and event_statistics["duplicate_event_ids"] == 0 else "incomplete",
-            "status_scope": "Structural integrity only; not comprehensive source acquisition",
+            "structural_status": "complete" if seasons and event_statistics["duplicate_event_ids"] == 0 else "incomplete",
+            "status": "complete" if seasons and event_statistics["duplicate_event_ids"] == 0 and acquisition_complete else "incomplete",
+            "status_scope": "Observed structural integrity and supported transaction-period acquisition; not proof of every historical ownership transition",
             "source_acquisition_status": 'complete_supported_transaction_scope' if acquisition_complete else 'partial_or_unavailable',
             "source_coverage": source_coverage,
         }

@@ -1,7 +1,8 @@
 """Exercise decision coverage through the active history adapter."""
 import unittest
 from unittest.mock import patch
-from types import SimpleNamespace
+from dataclasses import replace
+from tests.historical_market_fixture import canonical_quote
 
 from src.core.fois.history import load_results_history
 from src.core.fois.facts import DraftFact, WaiverFact
@@ -34,10 +35,9 @@ class DecisionAdapterTests(unittest.TestCase):
 
         class Reader:
             def global_market_checkpoints(self, *, asset_id, limit):
-                return [SimpleNamespace(checkpoint_id='old', occurred_at='2024-07-01T00:00:00+00:00',
-                                        normalized_value=500, market_context_id='fixture', normalization_version='v1'),
-                        SimpleNamespace(checkpoint_id='future', occurred_at='2025-07-01T00:00:00+00:00',
-                                        normalized_value=900, market_context_id='fixture', normalization_version='v1')]
+                return [replace(canonical_quote(asset_id, 500, occurred_at='2024-07-01T00:00:00+00:00'), checkpoint_id='old'),
+                        replace(canonical_quote(asset_id, 900, occurred_at='2025-07-01T00:00:00+00:00'), checkpoint_id='future')]
+
 
         with patch('src.core.intelligence_memory.intelligence_checkpoint_store.checkpoints', return_value=()), \
              patch('src.core.historical_intelligence.HistoricalIntelligenceService.events_for_league', return_value=()):

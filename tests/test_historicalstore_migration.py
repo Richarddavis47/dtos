@@ -303,7 +303,9 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
                 coverage = HistoricalAssetGraph(
                     store, "L", {"players": {"p1": {}}},
                 ).coverage()
-            self.assertEqual(coverage["status"], "complete")
+            self.assertEqual(coverage["structural_status"], "complete")
+            self.assertEqual(coverage["status"], "incomplete")
+            self.assertEqual(coverage["source_acquisition_status"], "partial_or_unavailable")
             self.assertEqual(coverage["seasons"], [2025])
             self.assertEqual(coverage["counts_by_season"]["2025"]["player_week"], 1)
             self.assertEqual(coverage["resolved_identity_count"], 1)
@@ -336,8 +338,26 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
             ):
                 response = TestClient(app).get("/api/history/coverage")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.json()["status"], "complete")
+            self.assertEqual(response.json()["structural_status"], "complete")
+            self.assertEqual(response.json()["status"], "incomplete")
+            self.assertEqual(response.json()["source_acquisition_status"], "partial_or_unavailable")
             self.assertFalse(response.json()["provider_memory_contract"]["historical_memory_fallback"])
+
+    def test_acquired_empty_transaction_periods_support_complete_observed_coverage(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            cache = SleeperSeasonCache(Path(directory))
+            cache.write(cache.normalize('L', 2025, {
+                'league': {'league_id': 'L', 'status': 'complete'},
+                'users': [], 'rosters': [], 'matchups': {},
+                'transactions': {str(week): [] for week in range(19)},
+            }))
+            store = CanonicalHistoryStore()
+            with patch('src.core.history_context.store.sleeper_season_cache', cache):
+                coverage = HistoricalAssetGraph(store, 'L', {'players': {}}).coverage()
+            self.assertEqual(coverage['structural_status'], 'complete')
+            self.assertEqual(coverage['status'], 'complete')
+            self.assertEqual(coverage['source_acquisition_status'], 'complete_supported_transaction_scope')
+            self.assertTrue(coverage['source_coverage']['seasons'][0]['transactions']['complete_acquisition'])
 
     def test_asset_event_records_translate_canonical_player_and_pick_identities(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
