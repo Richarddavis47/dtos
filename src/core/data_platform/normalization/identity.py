@@ -44,7 +44,8 @@ class PlayerIdentityResolver:
         previous = self._players.get(dtos_id)
         birth = birth_date_metadata(row, previous.metadata if previous else None)
         metadata = {key: value for key, value in metadata.items() if not key.startswith('birth_date') and key != 'birthdate'}
-        metadata.update(birth)
+        if birth['birth_date_status'] != 'missing':
+            metadata.update(birth)
         player = NormalizedPlayer(dtos_id, name, normalize_position(row.get('position')), normalize_team(row.get('team')),
                                   _float(row.get('age')), _integer(row.get('years_exp')),
                                   str(row.get('status') or 'Unknown'), provider_ids, aliases, metadata)

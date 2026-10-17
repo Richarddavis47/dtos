@@ -100,7 +100,8 @@ class CanonicalHistoryStore:
                 old_metadata = player.get('metadata') or {}
                 player['metadata'] = {
                     **{k: v for k, v in old_metadata.items() if not k.startswith('birth_date') and k != 'birthdate'},
-                    **{k: v for k, v in metadata.items() if k.startswith('birth_date')},
+                    **{k: v for k, v in metadata.items() if k.startswith('birth_date')
+                       and metadata.get('birth_date_status') != 'missing'},
                 }
             semantic = _digest(semantic_inputs)
             self._current[key] = data
