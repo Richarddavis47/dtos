@@ -102,8 +102,9 @@ class UnmatchedImportRecoveryTests(unittest.TestCase):
     def test_native_browser_both_forms_recovery_links_keyboard_and_phones(self):
         self.initial()
         before = snapshot(self.store)
-        files = lambda: {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
-                         for p in Path(self.folder.name).iterdir() if p.is_file()}
+        def files():
+            return {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                    for p in Path(self.folder.name).iterdir() if p.is_file()}
         hashes = files()
         rows = []
         for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
