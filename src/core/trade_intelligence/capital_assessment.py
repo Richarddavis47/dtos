@@ -1,6 +1,9 @@
 """Observable capital and explicit strategy rules; never an asset-price modifier."""
 from decimal import Decimal
 
+# Existing capital and counterparty safety policy, shared by player-only offers.
+SEVERE_MARKET_LOSS_RATIO = .50
+
 
 def pick_identity_errors(asset):
     if asset.kind != 'pick':
@@ -69,7 +72,7 @@ def assess_capital(strategy, package, market, *, outgoing_total, incoming_total)
            'explanation': 'Required capital, Market, legal-lineup or strategy evidence is unavailable.',
            'market_return_ratio': ratio,
            'policy': {'rebuild_min_return_ratio': .80, 'win_now_min_return_ratio': .65,
-                      'retool_min_return_ratio': .85, 'severe_market_loss_ratio': .50}}
+                      'retool_min_return_ratio': .85, 'severe_market_loss_ratio': SEVERE_MARKET_LOSS_RATIO}}
     if (not full or market['availability'] != 'full' or not strategy['projection_coverage_complete']
             or production['mean_weekly_delta'] is None
             or (strategy.get('roster_capacity') or {}).get('additional_spots_to_resolve')):
@@ -77,7 +80,7 @@ def assess_capital(strategy, package, market, *, outgoing_total, incoming_total)
     def decision(label, code, explanation):
         fit.update(recommendation=label, reason_code=code, explanation=explanation)
         return fit
-    if ratio is not None and ratio < .50:
+    if ratio is not None and ratio < SEVERE_MARKET_LOSS_RATIO:
         return decision('REJECT', 'SEVERE_MARKET_LOSS', 'The return loses more than half the canonical Market value; a weak positive signal does not compensate for this cost.')
     if package['assessment'] == 'POOR':
         return decision('NOT WORTH IT', 'POOR_STRATEGIC_PACKAGE', 'Supported package quality is poor; draft capital does not erase the lineup and roster costs.')

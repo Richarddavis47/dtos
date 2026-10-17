@@ -19,6 +19,8 @@ REASONS = {
     'SUPPORTED_HORIZON_BENEFIT_WITHOUT_DEPTH_OR_CAPACITY_LOSS': 'Supported horizons improve without an identified depth or capacity loss.',
     'PURSUIT_ONLY_MARKET_TERMS_UNRESOLVED': 'This is a pursuit recommendation; acquisition-price terms remain unresolved.',
     'MARKET_PREMIUM_FOR_SUPPORTED_LINEUP_BENEFIT': 'The supported lineup benefit requires paying a Market premium.',
+    'SEVERE_MARKET_LOSS': 'The return loses more than half the supported Market value, exceeding the existing severe-loss policy.',
+    'MARKET_COST_WITHOUT_MATERIAL_BENEFIT': 'The Market cost is not justified by a material supported lineup or qualifying depth benefit.',
     'SUPPORTED_MARKET_LINEUP_AND_DEPTH_PARITY': 'Supported Market, lineup and depth evidence is broadly balanced.',
     'MATERIAL_TRADEOFF_UNRESOLVED': 'A material trade-off remains unresolved.',
     'PARTIAL_MARKET_EVIDENCE': 'Some assets lack supported acquisition prices; Market comparison is partial.',
