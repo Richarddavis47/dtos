@@ -188,6 +188,20 @@ class EndorsementIntegrityTests(unittest.TestCase):
         self.assertEqual(self.data, before)
         self.assertEqual(self.publisher.reader.snapshot(), snapshot)
 
+    def test_policy_generation_invalidates_old_assessment_without_changing_facts(self):
+        from services.home_trade_opportunities import source_identity
+        from src.core.intelligence import TRADE_EVALUATION_POLICY_VERSION
+        before = deepcopy(self.data)
+        with patch('src.core.intelligence.TRADE_EVALUATION_POLICY_VERSION',
+                   'scoped-trade-effects-v4-discovery'):
+            old = source_identity(self.data)
+        current = source_identity(self.data)
+        self.assertNotEqual(old, current)
+        self.assertEqual(current, source_identity(self.data))
+        self.assertEqual(self.evaluate()['provenance']['strategy_methodology'],
+                         TRADE_EVALUATION_POLICY_VERSION)
+        self.assertEqual(self.data, before)
+
     def test_all_discovery_and_adjust_results_agree_with_manual_evaluator(self):
         for workflow, target in (('trade_for', '2w'), ('shop', '1q'), ('recommended', None)):
             with self.subTest(workflow=workflow):

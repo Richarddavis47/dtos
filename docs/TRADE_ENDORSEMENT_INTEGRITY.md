@@ -35,6 +35,10 @@ that shared judgment, carrying the defect into suggestions.
   the existing canonical Contender window resolving to WIN NOW, not a new alias.
 - Give the new rejection reasons readable explanations; materiality also governs
   the existing best-for competitive-window description. No UI redesign.
+- Include the shared evaluation policy version in assessment/Home reuse identity.
+  Existing old assessments become retained through the established compatibility
+  contract; an unchanged price/projection publication cannot validate an old
+  favorable endorsement under the corrected policy. No saved payload is rewritten.
 
 Trade For, Shop Asset, Recommended, Builder and Adjust all consume the same
 `evaluate_trade_request -> evaluate_bilateral -> reconcile_result` conclusion.

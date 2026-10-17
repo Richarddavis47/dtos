@@ -11,6 +11,7 @@ from src.core.asset_intelligence import AssetContext
 from src.core.front_office_intelligence import build_league_model
 from src.core.trade_intelligence.bilateral import evaluate_bilateral
 from src.core.trade_intelligence.capital_assessment import (
+    TRADE_EVALUATION_POLICY_VERSION,
     pick_identity_errors as trade_pick_identity_errors,
     resolve_strategy as resolve_trade_strategy,
 )
@@ -31,4 +32,4 @@ def evaluate_horizon_impact(data, proposal, service):
     return evaluate(data, proposal, service)
 
 
-__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "SearchLineupMemo", "TradeAsset", "TradeEvidenceContext", "TradeProposal", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "apply_positional_ranks", "build_asset_pool", "build_context", "build_league_model", "build_trade_evidence_context", "calculate_confidence", "evaluate_bilateral", "evaluate_horizon_impact", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry", "lineup_slot_eligible", "resolve_trade_strategy", "trade_market_balance", "trade_pick_identity_errors"]
+__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "SearchLineupMemo", "TradeAsset", "TradeEvidenceContext", "TradeProposal", "TRADE_EVALUATION_POLICY_VERSION", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "apply_positional_ranks", "build_asset_pool", "build_context", "build_league_model", "build_trade_evidence_context", "calculate_confidence", "evaluate_bilateral", "evaluate_horizon_impact", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry", "lineup_slot_eligible", "resolve_trade_strategy", "trade_market_balance", "trade_pick_identity_errors"]

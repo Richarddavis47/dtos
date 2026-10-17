@@ -1,6 +1,7 @@
 """Bilateral observable strategic effects; no blended utility score."""
 from .capital_assessment import (
-    SEVERE_MARKET_LOSS_RATIO, assess_capital, production_evidence, resolve_strategy,
+    SEVERE_MARKET_LOSS_RATIO, TRADE_EVALUATION_POLICY_VERSION,
+    assess_capital, production_evidence, resolve_strategy,
 )
 
 
@@ -313,5 +314,5 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
     if plausible['manager_history']['disclosure']:
         result['counterparty_summary'] += ' ' + plausible['manager_history']['disclosure'] + '.'
     result['perspectives'] = {'for_your_team': recommendation or 'UNAVAILABLE', 'bilateral_reality': plausible['assessment']}
-    result.setdefault('provenance', {})['strategy_methodology'] = 'scoped-trade-effects-v4-discovery'
+    result.setdefault('provenance', {})['strategy_methodology'] = TRADE_EVALUATION_POLICY_VERSION
     return result
