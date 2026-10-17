@@ -1,3 +1,9 @@
+## v1.21.62 / build 2162 — Franchise import recovery
+
+- Give manual and discovered unmatched-franchise imports the same clearly labeled Your leagues and Review Sleeper identity recovery actions, using existing authenticated destinations.
+- Explain that no ownership was guessed and saved leagues/selection remain unchanged. Preserve authorization, CSRF, atomic import commits and source-supported successful retries.
+- Add actual account-store/HTTP and authenticated native-browser coverage for both submitted forms, recovery navigation, discovery failure, session expiration, CSRF rejection, safe retry and phone/keyboard controls. No schema, saved state, cache, source or intelligence changes; unchanged 2 GiB/500 ms gates. Scout-independent, physical iPhone/Safari and unfamiliar-user acceptance remain separate.
+
 ## v1.21.61 / build 2161 — League source recovery
 
 - Stop cold selected-league preparation before intelligence work when Sleeper sync has no retained supported facts. Return a bounded unavailable response instead of an empty-input500; retain valid existing facts and ordinary retry behavior.
