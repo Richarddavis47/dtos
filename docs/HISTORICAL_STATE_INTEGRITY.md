@@ -11,7 +11,10 @@ Neither proves an admissible historical valuation or a complete decision roster.
 0–1000 external Market index, supported source/provider membership, nonempty
 source/context identity, known normalization and comparison methodology, supported
 format semantics, finite in-range numbers and timezone-aware decision-eligible
-observation/knowledge clocks. It does not normalize raw provider currency or use
+observation/knowledge/publication clocks. Underlying provider rows must agree
+with canonical provider membership, normalization and numeric units; enclosing
+metadata cannot confer compatibility on native or future evidence. It does not
+normalize raw provider currency or use
 current Market. Legacy opaque methods remain preserved but unavailable for this
 calculation. Genuine zero is admitted. Incompatible contexts cannot be summed.
 Older-than-seven-day quotes remain numeric with the established temporal-confidence

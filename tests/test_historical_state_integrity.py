@@ -90,6 +90,7 @@ class HistoricalStateIntegrityTests(unittest.TestCase):
 
     def test_later_knowledge_clock_does_not_refresh_an_old_quote(self):
         providers = ({'observed_at': '2025-09-01T00:00:00Z', 'source_identity': 'source',
+                      'provider': 'DynastyProcess', 'normalization_version': '1.1', 'normalized_value': 500,
                       'metadata': {'known_at': '2025-09-30T12:00:00Z'}},)
         _, state = self.state(quotes=[canonical_quote(p, provider_observations=providers)
                                      for p in ('player-new', 'player-stay')])
@@ -97,6 +98,16 @@ class HistoricalStateIntegrityTests(unittest.TestCase):
         self.assertEqual(state.coverage['market'].availability.value, 'partial')
         self.assertLessEqual(state.coverage['market'].confidence, 35)
         self.assertIsNone(state.competitive_window.classification)
+
+    def test_incompatible_provider_row_cannot_borrow_outer_canonical_identity(self):
+        for metadata, version in (({}, 'native-10000'), ({'source_updated_at': '2025-10-02T00:00:00Z'}, '1.1')):
+            providers = ({'provider': 'DynastyProcess', 'observed_at': '2025-09-30T00:00:00Z',
+                          'source_identity': 'source', 'normalization_version': version,
+                          'normalized_value': 100, 'metadata': metadata},)
+            _, state = self.state(quotes=[canonical_quote('player-new', 100, provider_observations=providers),
+                                         canonical_quote('player-stay')])
+            self.assertIsNone(state.roster_market_value)
+            self.assertIsNone(state.competitive_window.classification)
 
     def test_missing_dart_fannin_trade_is_not_complete_acquisition_history(self):
         store = CoveredStore()

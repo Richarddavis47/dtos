@@ -63,9 +63,21 @@ def checkpoint_reason(row, boundary):
         if not isinstance(provider, Mapping) or not isinstance(provider.get('metadata') or {}, Mapping):
             return 'historical_market_provider_clock_not_decision_eligible'
         metadata = provider.get('metadata') or {}
+        component = provider.get('normalized_value')
+        if (provider.get('provider') not in providers
+                or provider.get('normalization_version') != row.normalization_version
+                or not isinstance(component, (int, float)) or isinstance(component, bool)
+                or not isfinite(component) or not CANONICAL_MIN <= component <= CANONICAL_MAX
+                or metadata.get('matching') == 'generic_pick_round_average'):
+            return 'historical_market_provider_units_or_identity_incompatible'
         quote = instant(provider.get('observed_at'))
         knowledge = instant(metadata.get('source_knowledge_at') or metadata.get('known_at') or provider.get('observed_at'))
         if (not known(provider.get('source_identity')) or not quote or not knowledge
                 or max(quote, knowledge) > min(decision, observed)):
             return 'historical_market_provider_clock_not_decision_eligible'
+        for name in ('source_updated_at', 'published_at'):
+            if metadata.get(name) is not None:
+                published = instant(metadata[name])
+                if not published or published > min(decision, observed):
+                    return 'historical_market_provider_clock_not_decision_eligible'
     return None
