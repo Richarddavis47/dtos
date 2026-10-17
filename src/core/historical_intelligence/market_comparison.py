@@ -14,6 +14,10 @@ def comparison_reason(assets: Iterable[object], *, boundary: str | None = None) 
     for row in rows:
         value = getattr(row, "market_value", None)
         if not isinstance(value, (int, float)) or isinstance(value, bool) or not isfinite(value) or value < 0:
+            reasons = tuple(reason for reason in getattr(row, 'market_reason_codes', ())
+                            if reason != 'historical_market_older_than_seven_days')
+            if reasons and reasons[0] != 'historical_market_unavailable':
+                return reasons[0]
             return "historical_market_package_incomplete"
         identity = tuple(getattr(row, name, None) for name in (
             "market_provider", "market_context_id", "market_normalization_version", "market_value_concept",

@@ -15,7 +15,7 @@ from src.core.fois.facts import FOISFacts
 from src.core.fois.repository import FOISRepository
 from src.core.fois.service import FOISService
 from src.core.historical_franchise_state import HistoricalFranchiseStateService, HistoricalBoundary
-from src.core.historical_intelligence import HistoricalIntelligenceService, GlobalMarketCheckpoint
+from src.core.historical_intelligence import HistoricalIntelligenceService
 from src.core.historical_transaction_intelligence import HistoricalTransactionIntelligenceService
 from src.core.intelligence_memory.store import IntelligenceCheckpointStore
 from src.core.intelligence_memory.models import ExactPickLineage, PickLineage
@@ -24,6 +24,7 @@ from src.core.trade_intelligence.evidence_context import build_trade_evidence_co
 from src.core.trade_intelligence.models import TradeAsset
 from src.core.fois.cycles import CompetitiveCycleAnalyzer
 from tests.test_historical_franchise_state import FixtureStore
+from tests.historical_market_fixture import canonical_quote
 from tests.test_gm_behavioral_intelligence_v1126 import trade, profile, dimension
 from tests.test_fois_results import season
 
@@ -47,12 +48,7 @@ class IdentityStore(FixtureStore):
 
 
 def quote(asset, value=500, **overrides):
-    values = dict(asset_id=asset, occurred_at='2025-09-20T00:00:00Z', provider='canonical',
-        normalized_value=value, confidence=90, classification='event_relevant', reason_codes=('trade',),
-        market_context_id='league-scoring-a', normalization_version='canonical-1000-v1',
-        value_concept='canonical_market', comparison_identity=('normalized-market', '0-1000', 'test-format', 'test-method', 'canonical'))
-    values.update(overrides)
-    return GlobalMarketCheckpoint.create(**values)
+    return canonical_quote(asset, value, occurred_at=overrides.pop('occurred_at', '2025-09-20T00:00:00Z'), **overrides)
 
 
 def historical_probe(data):

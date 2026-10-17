@@ -20,6 +20,9 @@ def roster_context(states, league_id, roster_id, decision):
             'ownership_availability': ownership.availability.value,
             'player_count': len(state.players), 'pick_count': len(state.draft_picks),
             'history_generation': state.history_generation,
+            'coverage': {name: {'availability': item.availability.value,
+                                'confidence': item.confidence, 'reasons': item.reason_codes}
+                         for name, item in state.coverage.items()},
             'reasons': tuple(ownership.reason_codes)}
 
 

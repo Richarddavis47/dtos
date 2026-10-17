@@ -116,16 +116,21 @@ def source_case(index: int, *, slots=('WR',), missing_positions=False,
 
 
 def add_quote(store, asset, *, value=500, timestamp='2025-09-30T00:00:00+00:00',
-              version='verified-1000-v1', provider='DynastyProcess', concept='external_market_normalized_index',
+              version='1.1', provider='DynastyProcess', concept='external_market_normalized_index',
               scale='0-1000', context='verification-scoring', suffix=''):
     from src.core.intelligence_memory.models import (
         IntelligenceCheckpoint, SourceObservation, CheckpointTrigger, ProvenanceType, EvidenceCompleteness,
     )
+    from src.core.valuation.consensus import MARKET_SELECTION_VERSION
+    from src.core.valuation.observation_identity import OBSERVATION_IDENTITY_VERSION
     identity = f'{asset}:{timestamp}:{version}:{suffix}'
     row = SourceObservation(provider, value, timestamp, 'controlled-source', 0,
                             version, value, {'comparison_semantics': {
                                 'value_concept': concept, 'value_scale': scale,
-                                'format_key': 'controlled-superflex-ppr', 'methodology': 'controlled-v1'}})
+                                'format_key': json.dumps([{'provider': provider, 'format': 'dynasty_2qb',
+                                    'details': None, 'source_scale': '0-10000', 'normalization': version}],
+                                    sort_keys=True, separators=(',', ':')),
+                                'methodology': MARKET_SELECTION_VERSION + ':' + OBSERVATION_IDENTITY_VERSION}})
     store.put_sparse(IntelligenceCheckpoint(identity, f'player:{asset}', 'player', timestamp, 2025,
         CheckpointTrigger.SEASON_START, ProvenanceType.LIVE_CAPTURED, market_value=value,
         confidence=90, evidence_completeness=EvidenceCompleteness.COMPLETE,

@@ -15,25 +15,20 @@ from src.core.historical_transaction_intelligence import (
     ProcessClassification,
 )
 from tests.test_historical_franchise_state import FixtureStore
+from tests.historical_market_fixture import canonical_quote
 
 
 def checkpoint(asset: str, when: str, value: float) -> GlobalMarketCheckpoint:
-    return GlobalMarketCheckpoint.create(
-        asset_id=asset, occurred_at=when, provider="market",
-        normalized_value=value, confidence=90, classification="event_relevant",
-        reason_codes=("trade",), market_context_id="test-context",
-        normalization_version="test-normalized-v1", value_concept="canonical_market",
-        comparison_identity=("normalized-market", "0-1000", "test-format", "test-method", "canonical"),
-    )
+    return canonical_quote(asset, value, occurred_at=when)
 
 
 class HistoricalTransactionIntelligenceTests(unittest.TestCase):
     def setUp(self) -> None:
         self.store = FixtureStore()
         self.history = HistoricalIntelligenceService(self.store, (
-            checkpoint("player-old", "2025-09-20T00:00:00Z", 5000),
-            checkpoint("player-new", "2025-09-20T00:00:00Z", 6000),
-            checkpoint("player-stay", "2025-09-20T00:00:00Z", 2000),
+            checkpoint("player-old", "2025-09-20T00:00:00Z", 500),
+            checkpoint("player-new", "2025-09-20T00:00:00Z", 600),
+            checkpoint("player-stay", "2025-09-20T00:00:00Z", 200),
         ))
         self.states = HistoricalFranchiseStateService(self.history)
         self.service = HistoricalTransactionIntelligenceService(self.history, self.states)
@@ -104,10 +99,10 @@ class HistoricalTransactionIntelligenceTests(unittest.TestCase):
     def test_future_market_evidence_cannot_change_process(self) -> None:
         first = self.evaluate()
         future_history = HistoricalIntelligenceService(self.store, (
-            checkpoint("player-old", "2025-09-20T00:00:00Z", 5000),
-            checkpoint("player-new", "2025-09-20T00:00:00Z", 6000),
+            checkpoint("player-old", "2025-09-20T00:00:00Z", 500),
+            checkpoint("player-new", "2025-09-20T00:00:00Z", 600),
             checkpoint("player-new", "2025-11-20T00:00:00Z", 50),
-            checkpoint("player-stay", "2025-09-20T00:00:00Z", 2000),
+            checkpoint("player-stay", "2025-09-20T00:00:00Z", 200),
         ))
         future = HistoricalTransactionIntelligenceService(
             future_history, HistoricalFranchiseStateService(future_history),
@@ -176,8 +171,8 @@ class HistoricalTransactionIntelligenceTests(unittest.TestCase):
         combined = FixtureStore()
         combined.rows.extend(league_b.rows)
         history = HistoricalIntelligenceService(combined, (
-            checkpoint("player-old", "2025-09-20T00:00:00Z", 5000),
-            checkpoint("player-new", "2025-09-20T00:00:00Z", 6000),
+            checkpoint("player-old", "2025-09-20T00:00:00Z", 500),
+            checkpoint("player-new", "2025-09-20T00:00:00Z", 600),
         ))
         service = HistoricalTransactionIntelligenceService(history, HistoricalFranchiseStateService(history))
         a = service.evaluate_backlog("league-a", as_of=self.as_of)[0][0]
@@ -197,7 +192,7 @@ class HistoricalTransactionIntelligenceTests(unittest.TestCase):
 
     def test_current_bilateral_engine_is_not_called_or_modified(self) -> None:
         result = self.evaluate()
-        self.assertEqual(result.method_version, "historical-trade-process-outcome-4")
+        self.assertEqual(result.method_version, "historical-trade-process-outcome-5")
         self.assertNotIn("SMASH ACCEPT", str(result.private_contract()))
 
 

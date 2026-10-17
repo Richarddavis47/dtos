@@ -7,7 +7,7 @@ from typing import Any, Mapping
 
 
 HISTORICAL_TRANSACTION_SCHEMA_VERSION = "historical-transaction-intelligence-1"
-HISTORICAL_TRANSACTION_METHOD_VERSION = "historical-trade-process-outcome-4"
+HISTORICAL_TRANSACTION_METHOD_VERSION = "historical-trade-process-outcome-5"
 
 
 class ProcessClassification(StrEnum):

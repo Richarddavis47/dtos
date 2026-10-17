@@ -157,7 +157,8 @@ class HistoricalWeekAdmissionTests(unittest.TestCase):
             scout = report['cases'][0]
             self.assertEqual(scout['weeks'], [3, 3])
             self.assertEqual(scout['points'], [10, 5])
-            self.assertEqual(scout['classification'], 'defensible_optional')
+            self.assertEqual(scout['classification'], 'insufficient_evidence')
+            self.assertEqual(scout['confidence'], 'low')
             self.assertTrue(scout['market_comparable'])
             self.assertTrue(report['worker_reaped'])
             self.assertTrue(report['prior_contract_assessments_unchanged_full_and_spawn'])

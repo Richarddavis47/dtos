@@ -11,9 +11,10 @@ from src.core.historical_franchise_state import (
     ReconstructionAvailability,
 )
 from src.core.historical_intelligence import (
-    GlobalMarketCheckpoint, HistoricalIntelligenceService, HistoricalEventType,
+    HistoricalIntelligenceService, HistoricalEventType,
 )
 from src.core.history_context.store import CanonicalHistoryStore
+from tests.historical_market_fixture import canonical_quote
 
 
 class FixtureStore:
@@ -22,6 +23,9 @@ class FixtureStore:
         self.generation = "history-generation-1"
         self.queries: list[tuple[str, str | None, int | None]] = []
         self.rows = self._rows(league)
+        for row in self.rows:
+            if row["entity_type"] == "roster_snapshot":
+                row["occurred_at"] = "2025-12-31T00:00:00Z"
 
     @staticmethod
     def _row(league: str, entity: str, source: str, payload: dict[str, Any], **extra: Any) -> dict[str, Any]:
@@ -86,6 +90,10 @@ class FixtureStore:
         rows = [row for row in self.rows if row["league_id"] == league_id and (entity_type is None or row["entity_type"] == entity_type)]
         return len(rows), rows
 
+    def source_coverage(self, league_id, *, season=None):
+        return {"league_id": league_id, "seasons": [{"season": season or 2025,
+            "transactions": {"complete_acquisition": True, "acquired": list(range(19))}}]}
+
     def dataset_version(self, league_id: str) -> str:
         return f"{self.generation}:{league_id}"
 
@@ -146,10 +154,10 @@ class HistoricalFranchiseStateTests(unittest.TestCase):
     def setUp(self) -> None:
         self.store = FixtureStore()
         checkpoints = (
-            GlobalMarketCheckpoint.create(asset_id="player-old", occurred_at="2025-09-20T00:00:00Z", provider="market", normalized_value=5000, confidence=90, classification="event_relevant", reason_codes=("trade",)),
-            GlobalMarketCheckpoint.create(asset_id="player-new", occurred_at="2025-09-20T00:00:00Z", provider="market", normalized_value=6000, confidence=90, classification="event_relevant", reason_codes=("trade",)),
-            GlobalMarketCheckpoint.create(asset_id="player-new", occurred_at="2025-10-10T00:00:00Z", provider="market", normalized_value=9000, confidence=95, classification="future", reason_codes=("material",)),
-            GlobalMarketCheckpoint.create(asset_id="player-stay", occurred_at="2025-09-20T00:00:00Z", provider="market", normalized_value=2000, confidence=80, classification="event_relevant", reason_codes=("trade",)),
+            canonical_quote("player-old", 500, occurred_at="2025-09-20T00:00:00Z"),
+            canonical_quote("player-new", 600, occurred_at="2025-09-20T00:00:00Z"),
+            canonical_quote("player-new", 900, occurred_at="2025-10-10T00:00:00Z"),
+            canonical_quote("player-stay", 200, occurred_at="2025-09-20T00:00:00Z"),
         )
         history = HistoricalIntelligenceService(self.store, checkpoints)
         self.service = HistoricalFranchiseStateService(history)
@@ -168,8 +176,8 @@ class HistoricalFranchiseStateTests(unittest.TestCase):
     def test_no_hindsight_market_lookup_uses_only_at_or_before(self) -> None:
         _before, after = self.service.around_event("league-a", "1", self.event.event_id)
         player = next(row for row in after.players if row.asset_id == "player-new")
-        self.assertEqual(player.market_value, 6000)
-        self.assertEqual(player.market_observed_at, "2025-09-20T00:00:00Z")
+        self.assertEqual(player.market_value, 600)
+        self.assertEqual(player.market_observed_at, "2025-09-20T00:00:00+00:00")
 
     def test_record_excludes_future_matchup(self) -> None:
         state = self.service.reconstruct("league-a", "1", HistoricalBoundary(

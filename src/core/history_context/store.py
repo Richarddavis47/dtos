@@ -186,17 +186,18 @@ class CanonicalHistoryStore:
             families.add('playoff_result')
         return families
 
-    def source_coverage(self, league_id: str) -> dict[str, Any]:
+    def source_coverage(self, league_id: str, *, season: int | None = None) -> dict[str, Any]:
         """Bounded retained acquisition facts, without provider access or writes."""
         from .recovery import HistoricalCheckpoints
         seasons = []
-        for season in sorted(self._cache_index(league_id), reverse=True):
-            cached = sleeper_season_cache.read(league_id, season)
+        selected = [season] if season is not None else sorted(self._cache_index(league_id), reverse=True)
+        for year in selected:
+            cached = sleeper_season_cache.read(league_id, year)
             if cached:
-                seasons.append(season_coverage(cached.facts, season))
+                seasons.append(season_coverage(cached.facts, year))
             else:
-                checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
-                seasons.append({"season": season, "source_league_id": (checkpoint or {}).get('source_league_id'),
+                checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, year)
+                seasons.append({"season": year, "source_league_id": (checkpoint or {}).get('source_league_id'),
                                 "state": "compact_checkpoint", "acquisition_periods": "unavailable",
                                 "families": (checkpoint or {}).get('families', [])})
         return {"league_id": league_id, "seasons": seasons, "provider_requests": 0,

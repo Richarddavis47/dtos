@@ -122,13 +122,19 @@ def run(root, observe=False):
             dimension = next(d for d in process.dimensions if d.name == 'lineup_impact')
             points = (before.lineup.optimal_points, after.lineup.optimal_points)
             weeks = (before.lineup.evidence_week, after.lineup.evidence_week)
-            expected_class = 'sound_process' if name in ('latest_complete', 'supported_zero') else 'defensible_optional'
+            # These deliberately sparse sources have neither acquired every
+            # transaction period nor supplied a dated roster anchor. Supported
+            # common-week arithmetic survives, but cannot certify full Process.
+            expected_class = 'insufficient_evidence'
             good = (weeks == (expected_week, expected_week) and points == expected_points
                     and dimension.evidence_available == (expected_week is not None)
                     and process.classification.value == expected_class and process.market_comparable
                     and process.known_incoming_value == process.known_outgoing_value == 500)
             if not observe:
                 assert good, (name, weeks, points, asdict(process))
+                assert before.coverage['ownership'].availability.value == 'partial'
+                assert after.coverage['ownership'].availability.value == 'partial'
+                assert process.confidence.value == 'low'
                 assert dimension.evidence_week == expected_week
                 assert dimension.evidence_reason == (None if expected_week else 'no_common_supported_historical_week')
                 if expected_week:
