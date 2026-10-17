@@ -278,6 +278,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             return RedirectResponse("/account/sign-in", status_code=303)
         if not context.sleeper_user_id:
             return RedirectResponse("/account/sleeper", status_code=303)
+        saved_notice = ""
         if context.sleeper_link_state == "inspection_fixture" and context.membership is not None:
             discovered = [{
                 "league_id": context.membership.league_id,
@@ -287,12 +288,17 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             }]
             memberships = {context.membership.league_id: context.membership}
         else:
+            memberships = {item.league_id: item for item in service.store.memberships(context.account_id)}
             try:
                 discovered_series = await service.discover_series(context.sleeper_user_id)
                 discovered = [item.public() for item in discovered_series]
             except httpx.HTTPError:
-                return _source_unavailable()
-            memberships = {item.league_id: item for item in service.store.memberships(context.account_id)}
+                discovered = [{"league_id": item.league_id, "name": item.league_name,
+                               "season": item.season, "saved_connection": True}
+                              for item in memberships.values() if item.status == "active"]
+                if not discovered:
+                    return _source_unavailable()
+                saved_notice = '<p role="status">Saved connected leagues · Sleeper discovery is unavailable. You can retry discovery or select an existing connection; preparation is still checked.</p><p><a href="/account/leagues">Retry league discovery</a></p>'
         cards = []
         for league in discovered:
             league_id = str(league.get("league_id"))
@@ -302,8 +308,9 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             action = f"/account/leagues/{league_id}/activate" if connected else f"/account/leagues/{league_id}"
             history = league.get("historical_seasons") or []
             years = ", ".join(str(row.get("season")) for row in history if row.get("season"))
-            cards.append(f'<article class="card"><h2>{escape(str(league.get("name") or "Sleeper league"))}</h2><p>Current season: {escape(str(league.get("season") or "Unknown"))} · {int(league.get("total_rosters") or 0)} teams</p>{f"<p>History: {escape(years)}</p>" if years else ""}<p>{"Your team: <b>" + escape(membership.franchise_name or "Mapped franchise") + "</b>" if membership else "DTOS will map the franchise associated with your resolved Sleeper identity."}</p><form method="post" action="{escape(action)}"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">{state}</button></form></article>')
-        return _shell("Your leagues", f'<p class="muted">Current NFL dynasty leagues are shown first.</p>{"".join(cards) or "<section class=\"card\"><h2>No eligible leagues found</h2><p>Check the linked Sleeper username or try again later.</p></section>"}<section class="card"><h2>Add another league</h2><p>Enter a Sleeper league ID. DTOS will add it only if your resolved identity maps to exactly one franchise.</p><form class="grid" method="post" action="/account/leagues/import"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper league ID<input name="league_id" inputmode="numeric" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="import-league" type="submit">Add to DTOS</button></form></section>', purpose="Choose an authorized league series or add another verified membership.")
+            coverage = "Saved connection · discovery not refreshed" if league.get("saved_connection") else f"Current season: {escape(str(league.get('season') or 'Unknown'))} · {int(league.get('total_rosters') or 0)} teams"
+            cards.append(f'<article class="card"><h2>{escape(str(league.get("name") or "Sleeper league"))}</h2><p>{coverage}</p>{f"<p>History: {escape(years)}</p>" if years else ""}<p>{"Your team: <b>" + escape(membership.franchise_name or "Mapped franchise") + "</b>" if membership else "DTOS will map the franchise associated with your resolved Sleeper identity."}</p><form method="post" action="{escape(action)}"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">{state}</button></form></article>')
+        return _shell("Your leagues", f'{saved_notice}<p class="muted">Current NFL dynasty leagues are shown first.</p>{"".join(cards) or "<section class=\"card\"><h2>No eligible leagues found</h2><p>Check the linked Sleeper username or try again later.</p></section>"}<section class="card"><h2>Add another league</h2><p>Enter a Sleeper league ID. DTOS will add it only if your resolved identity maps to exactly one franchise.</p><form class="grid" method="post" action="/account/leagues/import"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper league ID<input name="league_id" inputmode="numeric" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="import-league" type="submit">Add to DTOS</button></form></section>', purpose="Choose an authorized league series or add another verified membership.")
 
     @router.post("/account/leagues/import")
     async def import_league(request: Request) -> Response:

@@ -71,7 +71,7 @@ from src.core.asset_market.resource_diagnostics import (
     disk_health, resource_diagnostics, runtime_component_sizes,
 )
 from src.core.league_runtime import (
-    CanonicalLeagueContext, LeagueRuntime, LeagueRuntimeManager, RuntimeState,
+    CanonicalLeagueContext, LeagueRuntime, LeagueRuntimeError, LeagueRuntimeManager, RuntimeState,
 )
 from src.core.accounts import AccountService, AccountStore
 from src.core.brain import BrainService
@@ -166,6 +166,12 @@ async def _hydrate_league_runtime(
         projections=projections,
     )
     data = runtime.state.get("data") or {}
+    if not data:
+        # Sync retains valid facts on failure. A cold failure has no canonical
+        # input to restore, score or publish; leave it retryable instead.
+        raise LeagueRuntimeError(
+            "Supported league facts are unavailable. Try again or choose another connected league."
+        )
     runtime.apply_data(data)
     projections = ProjectionService(
         league_id=runtime.league_id,
