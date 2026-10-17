@@ -49,7 +49,15 @@ def decision_context(result, *, incoming=(), outgoing=()):
             "Resolve the stated ownership, identity or roster blocker before pursuing this offer."
         )
     market = result.get("market_evidence") or {}
-    if market.get("availability") != "full":
+    market_incomplete = market.get("availability") != "full"
+    qualification = (
+        "Conditional exploration · not an endorsement. Required Market pricing is missing or incompatible."
+        if market_incomplete
+        and result.get("generated_trade_eligible") is not True
+        and result.get("recommendation") in ("SMASH ACCEPT", "WORTH PURSUING")
+        else None
+    )
+    if market_incomplete:
         blockers.append(
             "Some current Market prices are unavailable or incompatible; package comparison is incomplete."
         )
@@ -85,6 +93,13 @@ def decision_context(result, *, incoming=(), outgoing=()):
         result.get("major_drawback")
         or "The available assessment does not establish a main cost; inspect evidence before deciding."
     )
+    if market_incomplete:
+        known_cost = cost.removeprefix(
+            "No material downside identified in supported evidence; projections remain conditional."
+        ).strip()
+        cost = "Market cost cannot be fully assessed because required pricing is missing or incompatible."
+        if known_cost:
+            cost += " " + known_cost
     gained = [asset for asset in incoming if asset.kind == "player"]
     lost = [asset for asset in outgoing if asset.kind == "player"]
     if len(gained) == len(lost) == 1:
@@ -142,8 +157,10 @@ def decision_context(result, *, incoming=(), outgoing=()):
     )
     return {
         "verdict": result.get("recommendation"),
+        "qualification": qualification,
         "summary": context,
-        "blocker": " ".join(blockers) if not result.get("recommendation") else None,
+        "blocker": " ".join(blockers)
+        if not result.get("recommendation") or market_incomplete else None,
         "strategy": {
             "resolved": resolved,
             "source": intent.get("source") or "unavailable",
@@ -156,6 +173,8 @@ def decision_context(result, *, incoming=(), outgoing=()):
         "conditional": conditional,
         "next_action": "Choose strategy and reevaluate"
         if needs_strategy
+        else "Restore current Market pricing and reevaluate; supported lineup findings remain available."
+        if market_incomplete
         else "Inspect the main drawback, edit or reevaluate this trade.",
     }
 

@@ -170,9 +170,13 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
         row = reason(code, key)
         if row:
             risks.append(row)
-    if result.get('major_drawback'):
-        key = add('major_drawback', 'Canonical major drawback', result['major_drawback'], kind=K.INTERPRETATION)
-        risks.insert(0, Statement('CANONICAL_MAJOR_DRAWBACK', result['major_drawback'], (key,)))
+    drawback = result.get('major_drawback')
+    if market_state != 'full':
+        from services.trade_decision import decision_context
+        drawback = (result.get('decision_context') or decision_context(result))['main_cost']
+    if drawback:
+        key = add('major_drawback', 'Qualified main drawback' if market_state != 'full' else 'Canonical major drawback', drawback, kind=K.INTERPRETATION)
+        risks.insert(0, Statement('CANONICAL_MAJOR_DRAWBACK', drawback, (key,)))
     return Explanation('DTOS trade assessment', league_id, (ctx,), tuple(evidence), conclusion,
                        tuple(why[:3]), tuple(risks[:3]), confidence_rows, tuple(limits), tuple(advanced))
 
@@ -183,6 +187,14 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
     view = trade_explanation(result, league_id=league_id)
     weekly = tuple(item.key for item in view.evidence if item.key.startswith('weekly.'))
     rendered = explanation_panel(view, evidence_groups=(('Weekly optimal-lineup detail', weekly),) if weekly else ())
+    decision = result.get('decision_context')
+    presentation = decision
+    if not presentation and (result.get('market_evidence') or {}).get('availability') != 'full':
+        from services.trade_decision import decision_context
+        presentation = decision_context(result)
+    if presentation and presentation.get('qualification'):
+        qualifier = '<span class="tw-verdict-qualification">' + escape(presentation['qualification']) + '</span>'
+        rendered = rendered.replace('</p>', qualifier + '</p>', 1)
     # Reuse completed canonical conclusions; no new bilateral scoring or inferred benefit.
     teams = []
     dims = result.get('dimensions') or {}
@@ -202,7 +214,6 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
         risk = rendered[risk_start:risk_end]
         rendered = rendered[:risk_start] + rendered[risk_end:]
     legacy = rendered.replace('</p>', '</p>' + risk + summary, 1)
-    decision = result.get('decision_context')
     if not decision:
         return legacy
     # Preserve the complete established explanation behind depth-on-demand.

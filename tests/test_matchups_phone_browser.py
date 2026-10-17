@@ -7,7 +7,7 @@ from unittest.mock import patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from fastapi.staticfiles import StaticFiles
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
 
 from routes.home import create_home_router
 from routes.matchups import create_matchups_router
@@ -65,7 +65,10 @@ class MatchupsPhoneBrowserTests(unittest.TestCase):
                         first.press('Enter')
                         self.assertTrue(page.url.endswith('/matchups/2?week=2'))
                         for section in ('lineup','bench','reserve','taxi'):
-                            self.assertTrue(page.locator('[data-roster-section="'+section+'"]').is_visible())
+                            # Navigation commits the URL before the new DOM may
+                            # settle. Keep the same visibility requirement with
+                            # Playwright's bounded assertion, not a snapshot read.
+                            expect(page.locator('[data-roster-section="'+section+'"]')).to_be_visible()
                         bench=page.get_by_role('link',name='Open Opponent bench identity 2 player dossier',exact=True)
                         self.hit(page,bench)
                         bench.click()

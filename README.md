@@ -4,7 +4,7 @@ DTOS is a FastAPI-based fantasy football Front Office Operating System. It turns
 
 ## Current release
 
-DTOS v1.21.64 / build 2164 corrects recommendation promotion for severe Market losses and immaterial lineup gains while preserving supported intentional overpays. See [Trade Recommendation Integrity](docs/TRADE_ENDORSEMENT_INTEGRITY.md).
+DTOS v1.21.65 / build 2165 visibly qualifies favorable but ineligible missing-price assessments as conditional exploration, preserves supported lineup findings, and states the unknown Market cost. See [Missing-price decision presentation](docs/TRADE_MISSING_MARKET_PRESENTATION.md).
 
 DTOS v1.8.8 validates completed player-week checkpoints against compact season-scoped identity dependencies, so unrelated current-player changes cannot invalidate immutable historical evidence. Legacy checkpoints migrate through evidence verification with durable, idempotent audits. See the [Historical Asset Graph](docs/HISTORICAL_ASSET_GRAPH.md) and [canonical Brain integration](docs/BRAIN_ARCHITECTURE.md).
 
