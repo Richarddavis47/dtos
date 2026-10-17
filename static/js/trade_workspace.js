@@ -520,7 +520,8 @@
         decision.qualification ||= 'Conditional exploration · not an endorsement. Required Market pricing is missing or incompatible.';
       const unknownCost = 'Market cost cannot be fully assessed because required pricing is missing or incompatible.';
       const cost = decision.main_cost || e.major_drawback || '';
-      if (!cost.includes(unknownCost)) decision.main_cost = unknownCost + (cost && !cost.startsWith('No material downside identified') ? ' ' + cost : '');
+      const knownCost = cost.replace(/^No material downside identified in supported evidence; projections remain conditional\.\s*/, '');
+      if (!cost.includes(unknownCost)) decision.main_cost = unknownCost + (knownCost ? ' ' + knownCost : '');
     }
     return decision;
   }

@@ -216,9 +216,11 @@ class MissingMarketPresentationTests(unittest.TestCase):
               const saved=JSON.parse(sessionStorage.getItem(key));
               const e=saved.currentAssessment.evaluation;
               delete e.decision_context.qualification;
-              e.decision_context.main_cost=e.major_drawback;
+              e.decision_context.main_cost=e.major_drawback+' Earlier supported age trade-off remains a cost.';
               e.decision_context.blocker=null;
               sessionStorage.setItem(key,JSON.stringify(saved));
+              // Reload deliberately prefers the matching history-entry draft.
+              history.replaceState({...history.state,dtosTrade:{...history.state.dtosTrade,draft:saved}},'');
             }''')
             posts = len(harness.requests)
             page.reload()
@@ -226,6 +228,7 @@ class MissingMarketPresentationTests(unittest.TestCase):
             text = page.locator('#trade-result').inner_text()
             self.assertIn('not an endorsement', text)
             self.assertIn('Market cost cannot be fully assessed', text)
+            self.assertIn('Earlier supported age trade-off remains a cost.', text)
             self.assertNotIn('No material downside identified', text)
             self.assertEqual(len(harness.requests), posts)
 

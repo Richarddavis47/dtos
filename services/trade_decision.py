@@ -94,7 +94,9 @@ def decision_context(result, *, incoming=(), outgoing=()):
         or "The available assessment does not establish a main cost; inspect evidence before deciding."
     )
     if market_incomplete:
-        known_cost = "" if cost.startswith("No material downside identified") else cost
+        known_cost = cost.removeprefix(
+            "No material downside identified in supported evidence; projections remain conditional."
+        ).strip()
         cost = "Market cost cannot be fully assessed because required pricing is missing or incompatible."
         if known_cost:
             cost += " " + known_cost
