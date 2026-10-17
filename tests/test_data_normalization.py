@@ -65,6 +65,9 @@ class NormalizationTests(unittest.TestCase):
             ("null", {"player_id": "null", "full_name": "Null Metadata", "metadata": None}, {}),
             ("empty", {"player_id": "empty", "full_name": "Empty Metadata", "metadata": {}}, {}),
             ("missing", {"player_id": "missing", "full_name": "Missing Metadata"}, {}),
+            ("invalid_text", {"player_id": "invalid_text", "metadata": "unsupported"}, {}),
+            ("invalid_sequence", {"player_id": "invalid_sequence", "metadata": ["unsupported"]}, {}),
+            ("invalid_number", {"player_id": "invalid_number", "metadata": 12}, {}),
             ("valid", {"player_id": "valid", "full_name": "Current Name", "metadata": {"previous_name": "Former Name", "number": 12, "ignored": None}}, {"previous_name": "Former Name", "number": "12"}),
         )
         resolver = PlayerIdentityResolver()

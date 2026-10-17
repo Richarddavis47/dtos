@@ -7,7 +7,8 @@ def birth_date_metadata(player: dict, previous: dict | None = None) -> dict[str,
     dates = set()
     invalid = False
     retained_conflict = False
-    for evidence in (previous or {}, player.get('metadata') or {}, player):
+    nested = player.get('metadata')
+    for evidence in (previous or {}, nested if isinstance(nested, dict) else {}, player):
         invalid |= evidence.get('birth_date_status') == 'invalid'
         retained_conflict |= evidence.get('birth_date_status') == 'conflicting'
         for key in ('birth_date', 'birthdate', 'birth_date_candidates'):
