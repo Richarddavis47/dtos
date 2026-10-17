@@ -1,3 +1,9 @@
+## v1.21.65 / build 2165 — Missing-price decision clarity
+
+- Keep the canonical assessment vocabulary while placing a separate conditional-exploration / not-an-endorsement qualification beside a favorable but ineligible missing-price assessment.
+- State that Market cost cannot be fully assessed; preserve known lineup gains, strategy, reserve costs and source qualifications in primary and disclosed evidence. Keep missing-price discovery guards and eligibility unchanged.
+- Align server, fallback, offer, Balance/Preview and older bounded saved-field presentation. Add actual source/HTTP and responsive-browser controls without new storage, dependencies, calculation changes or recommendation recalibration. Scout-independent and physical-device/human acceptance remain separate.
+
 ## v1.21.64 / build 2164 — Recommendation integrity
 
 - Apply the existing severe-Market-loss safeguard to player-only evaluations; a trivial positive lineup change cannot rescue a 995-to-75 return. Require existing material weekly production evidence before positive-horizon endorsement.

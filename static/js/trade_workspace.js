@@ -511,7 +511,21 @@
     if (retained) retainAssessment();
     persist();
   }
+  function decisionPresentation(e) {
+    const decision = {...(e.decision_context || {})};
+    // Presentation admission for older bounded saved fields, not re-evaluation.
+    // Prefer the server qualification; preserve the canonical label/eligibility.
+    if (['partial', 'unavailable'].includes(e.market_evidence?.availability)) {
+      if (e.generated_trade_eligible !== true && ['SMASH ACCEPT', 'WORTH PURSUING'].includes(e.recommendation))
+        decision.qualification ||= 'Conditional exploration · not an endorsement. Required Market pricing is missing or incompatible.';
+      const unknownCost = 'Market cost cannot be fully assessed because required pricing is missing or incompatible.';
+      const cost = decision.main_cost || e.major_drawback || '';
+      if (!cost.includes(unknownCost)) decision.main_cost = unknownCost + (cost && !cost.startsWith('No material downside identified') ? ' ' + cost : '');
+    }
+    return decision;
+  }
   function showEvaluation(e, opportunity = null, context = null, previousContainer = null) {
+    const decision = decisionPresentation(e);
     const out = previousContainer || el('trade-result');
     if (!previousContainer) {
       el('trade-evaluation-retained')?.remove(); root.append(out); root.append(el('trade-balancing')); out.hidden = false; out.className = ''; out.replaceChildren();
@@ -576,14 +590,15 @@
         node('p', `You send ${side('sent')} / You receive ${side('received')}. Difference: ${m.availability === 'full' && m.difference != null ? displayMarket(Math.abs(m.difference)) : 'Unavailable · incomplete comparison'}.`),
         node('small', 'Retained displayed values, not new quotes or trade-date grades.'));
     }
+    if (decision.qualification) out.append(node('p', decision.qualification, 'tw-verdict-qualification'));
     if (e.decision_context) {
       const brief = node('section', null, 'tw-decision');
       if (retained) brief.append(node('p', 'Previous decision context · NOT REVALIDATED. Numbers and conclusions below describe the original assessment.'));
-      for (const text of [e.decision_context.blocker, e.decision_context.lineup?.explanation, e.decision_context.summary, e.decision_context.main_cost, e.decision_context.limitation]) if (text) brief.append(node('p', text));
+      for (const text of [decision.blocker, decision.lineup?.explanation, decision.summary, decision.main_cost, decision.limitation]) if (text) brief.append(node('p', text));
       out.append(brief);
       if (!previousContainer && e.decision_context.strategy?.selection_required) strategyAction(out);
     }
-    if (e.major_drawback || e.major_risks?.length) out.append(node('p', 'Major drawback: ' + (e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
+    if (decision.main_cost || e.major_drawback || e.major_risks?.length) out.append(node('p', 'Major drawback: ' + (decision.main_cost || e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
     else if (context?.restored) out.append(node('p', 'Major drawback unavailable in retained context. Reevaluate for supported costs.', 'tw-drawback'));
     if (previousContainer) for (const risk of e.major_risks || []) if (risk !== e.major_drawback) out.append(node('p', 'Previous risk: ' + risk.replaceAll('_', ' '), 'tw-drawback'));
     if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
@@ -807,9 +822,10 @@
       return [added.length ? 'Add ' + names(added) + ' to ' + side : '', removed.length ? 'Remove ' + names(removed) + ' from ' + side : ''].filter(Boolean).join('; ');
     };
     card.append(node('p', [changes(original.sent, row.proposal.assets_sent, 'your outgoing package'), changes(original.received, row.proposal.assets_received, 'the assets you receive')].filter(Boolean).join('; '), 'tw-adjustment'));
-    const retained = Boolean(contextQualification(context, row.proposal)), decision = e.decision_context || {};
+    const retained = Boolean(contextQualification(context, row.proposal)), decision = decisionPresentation(e);
     if (context.exploration) card.append(node('p', 'Exploratory only · not a qualified bilateral recommendation', 'tw-drawback'));
     card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : 'Separate DTOS assessment: ') + (e.recommendation || 'Unavailable')));
+    if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
     const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
     const reason = unfavorable ? 'Closer current Market terms do not make this a recommended trade.' : decision.lineup?.explanation || e.why_you_would_do_it || 'Market balance is separate from strategic fit; no supported positive roster case is established.';
     card.append(node('p', 'Why consider: ' + reason),
@@ -843,6 +859,8 @@
       if (counterpart) card.append(node('p', 'Counterparty support: ' + counterpart.assessment + ' · ' + (counterpart.reason_codes || []).map(code => code.replaceAll('_', ' ')).join('; ')));
     }
     card.append(node('h3', e.recommendation || 'Recommendation unavailable'));
+    const decision = decisionPresentation(e);
+    if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
     if (row.repair_type) card.append(node('p', row.repair_type));
     if (row.adjustment_evidence?.concept === 'strictly_lower_canonical_outgoing_market_cost') {
       const cost = row.adjustment_evidence;
@@ -852,7 +870,7 @@
     const receivedRows = row.proposal_presentation?.receive || row.proposal.assets_received.map(id => ({label: label(asset(id) || {label:id})}));
     card.append(node('p', 'You send: ' + sentRows.map(a => a.label).join(' + ')), node('p', 'You receive: ' + receivedRows.map(a => a.label).join(' + ')),
       node('p', 'Why this helps me: ' + (e.why_you_would_do_it || e.dominant_reason || 'Review the supported evidence.')),
-      node('p', 'Major drawback: ' + (e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ') || e.major_limitations?.join('; ').replaceAll('_', ' ') || (row.proposal.preview_context?.restored ? 'Unavailable in retained context. Reevaluate for supported costs.' : 'No material drawback identified in available evidence.')), 'tw-drawback'),
+      node('p', 'Major drawback: ' + (decision.main_cost || e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ') || e.major_limitations?.join('; ').replaceAll('_', ' ') || (row.proposal.preview_context?.restored ? 'Unavailable in retained context. Reevaluate for supported costs.' : 'No material drawback identified in available evidence.')), 'tw-drawback'),
       node('p', 'Counterparty: ' + (e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.')));
     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
     const intent = e.dimensions?.strategic_fit?.active?.manager_strategy?.strategy;
