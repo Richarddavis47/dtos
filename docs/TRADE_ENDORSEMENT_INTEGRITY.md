@@ -65,3 +65,12 @@ Scout must independently repeat the source/HTTP negative case, verify no
 favorable discovery publication, and review positive overpay and complementary
 trades. Author-run fixtures and responsive Chromium are not independent Scout,
 physical iPhone/Safari, human screen-reader or unfamiliar-user acceptance.
+
+The first hosted product-browser attempt reached the added phone controls with
+continuing successful progress before its 12-minute test-step timeout. The
+original suite block took about 727 seconds, compared with the preceding
+release's 455-second completion. Logs establish a progressing execution rather
+than a completed suite hanging in cleanup; runner-level slowdown attribution is
+not established. Keep all tests and assertions, expose individual test names,
+and bound the step at 14 minutes within a 16-minute job, including setup/cleanup.
+That failed attempt remains evidence and is never counted as a pass.
