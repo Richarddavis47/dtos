@@ -194,6 +194,7 @@ class HistoricalPlayerEvidenceTests(unittest.TestCase):
     def test_missing_invalid_conflicting_and_identity_mismatched_birth_dates(self):
         service = HistoricalFranchiseStateService(HistoricalIntelligenceService(self.store))
         cases = ({}, {'birth_date': 'invalid'},
+                 {'birth_date': '2000-01-01,unsupported'},
                  {'birth_date': '2000-01-01', 'birthdate': '2001-01-01'},
                  {'birth_date': '2000-01-01', 'provider_ids': {'Sleeper': 'another-player'}})
         for index, fields in enumerate(cases):

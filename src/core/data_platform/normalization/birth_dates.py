@@ -12,7 +12,8 @@ def birth_date_metadata(player: dict, previous: dict | None = None) -> dict[str,
         invalid |= evidence.get('birth_date_status') == 'invalid'
         retained_conflict |= evidence.get('birth_date_status') == 'conflicting'
         for key in ('birth_date', 'birthdate', 'birth_date_candidates'):
-            for value in str(evidence.get(key) or '').split(','):
+            raw = str(evidence.get(key) or '')
+            for value in raw.split(',') if key == 'birth_date_candidates' else (raw,):
                 if not value:
                     continue
                 try:
