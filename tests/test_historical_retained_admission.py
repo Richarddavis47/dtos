@@ -241,6 +241,38 @@ class HistoricalRetainedAdmissionTests(unittest.TestCase):
                                     for row in admitted if row['entity_type'] == 'player_week'))
         self.assertEqual(facts['league']['league_id'], evidence.DAY)
 
+    def test_recovered_weekly_source_cannot_bypass_checkpoint_admission(self):
+        data, source = evidence.active_source()
+        facts = self.retained(data, source)
+        original = self.store._season_records(evidence.DAY, 2026)
+        checksum = self.cache.read(evidence.DAY, 2026).checksum
+        self.cache.delete(evidence.DAY, 2026)
+        for season, case in ((2023, 'unverified_completion'), (2024, 'missing_scoring'), (2025, 'supported')):
+            rows = deepcopy(original)
+            for row in rows:
+                row['season'] = season
+                row['record_key'] = row['record_key'].replace(':2026:', f':{season}:')
+                if row['entity_type'] == 'league_season':
+                    row['payload']['sleeper_season'] = str(season)
+                    if case == 'unverified_completion':
+                        row['payload']['settings'].pop('last_scored_leg')
+                    elif case == 'missing_scoring':
+                        row['payload']['scoring_settings'] = {}
+            HistoricalCheckpoints(self.cache.root).preserve(league=evidence.DAY, season=season,
+                source_league=evidence.DAY, source_checksum=checksum, records=rows,
+                families={'league_season', 'franchise_identity', 'roster_snapshot', 'matchup', 'player_week'})
+            recovered = self.store.recovered_season_source(evidence.DAY, season)
+            self.assertIsNotNone(recovered)
+            if case == 'unverified_completion':
+                self.assertEqual(recovered.facts['matchups'], {})
+            else:
+                scores = [v for side in recovered.facts['matchups']['5'] for v in side['players_points'].values()]
+                if case == 'missing_scoring':
+                    self.assertTrue(all(v is None for v in scores))
+                else:
+                    self.assertTrue(any(v > 0 for v in scores))
+        self.assertEqual(facts['league']['league_id'], evidence.DAY)
+
     def test_source_replacement_recovers_warm_cache_without_read_writes(self):
         data, source = self.fixture.publish()
         self.retained(data, source, future=True)

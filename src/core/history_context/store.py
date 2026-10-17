@@ -290,7 +290,8 @@ class CanonicalHistoryStore:
         checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
         if checkpoint is None:
             return None
-        families, rows = set(checkpoint['families']), checkpoint['records']
+        families = set(checkpoint['families'])
+        rows = self._admit_checkpoint_rows(league_id, season, checkpoint)
         required = {'league_season', 'franchise_identity', 'roster_snapshot', 'matchup', 'player_week'}
         if not required <= families:
             return None
