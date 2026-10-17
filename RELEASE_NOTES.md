@@ -1,3 +1,9 @@
+## v1.21.68 / build 2168 — Historical evidence admission and identity integrity
+
+- Close retained-source bypasses for unverified future weeks and missing/incompatible league scoring. Career totals, leaderboards and historical production consume qualified facts through the same boundary; supported completed Day Traders/Arkham evidence and genuine zero remain usable.
+- Keep accepted birth-date conflicts intact when a provider identity update is rejected. Later single-date refreshes and cache reload cannot restore unjustified age certainty. Historical ages continue to use the decision date.
+- Requalify existing compact checkpoints without rewriting source files. No new storage, schema, paid infrastructure, Market/Trade/projection policy change or retained FOIS regeneration. Grades remain RETAINED / NOT REVALIDATED; the integration batch stays open until Scout independently accepts the release.
+
 ## v1.21.67 / build 2167 — Historical player-week and age integration
 
 - Project existing prepared Sleeper completed-week observations into canonical historical player/week and matchup records. Preserve league-specific scores, explicit starter roles, source identity, missing-versus-zero semantics and bounded read behavior. Future placeholders remain excluded; decision-time consumers retain their stricter completed-week cutoff.

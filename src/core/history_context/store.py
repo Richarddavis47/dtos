@@ -86,8 +86,25 @@ class CanonicalHistoryStore:
             # store lock; concurrent league publications cannot erase a date.
             for player_id, identity in identities.items():
                 metadata = identity['metadata']
-                if metadata.get('birth_date_status') != 'identity_mismatch':
-                    previous = (self._identities.get(player_id) or {}).get('metadata') or {}
+                previous_identity = self._identities.get(player_id)
+                if metadata.get('birth_date_status') == 'identity_mismatch' and previous_identity:
+                    # Rejected provenance cannot replace a previously accepted
+                    # identity or erase its unresolved birth-date candidates.
+                    identity = {**previous_identity, 'metadata': {
+                        **previous_identity['metadata'],
+                        'birth_date_update_status': 'identity_mismatch',
+                    }}
+                    identities[player_id] = identity
+                    metadata = identity['metadata']
+                    player = data['normalized_players'][player_id]
+                    for field in tuple(player):
+                        if field.startswith('birth_date') or field == 'birthdate':
+                            player.pop(field)
+                    player.update(dtos_id=player_id, name=identity['display_name'],
+                                  position=metadata.get('position'), team=metadata.get('team'),
+                                  provider_ids=metadata.get('provider_ids') or {'Sleeper': player_id})
+                elif metadata.get('birth_date_status') != 'identity_mismatch':
+                    previous = (previous_identity or {}).get('metadata') or {}
                     birth = birth_date_metadata(metadata, previous)
                     for field in tuple(metadata):
                         if field.startswith('birth_date') or field == 'birthdate':
@@ -478,14 +495,51 @@ class CanonicalHistoryStore:
         return rows
 
     @staticmethod
-    def _retained_matchups(facts):
-        league = facts.get('league') or {}
-        last = (league.get('settings') or {}).get('last_scored_leg')
+    def _completed_week_limit(league):
+        """Completion is a provider fact, never inferred from the calendar."""
+        if league.get('status') == 'complete':
+            return 18
+        last = mapping(league.get('settings')).get('last_scored_leg')
+        return last if type(last) is int and 0 <= last <= 18 else 0
+
+    @classmethod
+    def _retained_matchups(cls, facts):
+        completed = cls._completed_week_limit(facts.get('league') or {})
         return {week: rows for week, rows in readable_buckets(facts, 'matchups').items()
-                if league.get('status') == 'complete' or type(last) is not int or int(week) <= last}
+                if 1 <= int(week) <= completed}
 
     @staticmethod
-    def _current_matchup_source(data, league_id, season):
+    def _scoring_context(league, operational=None):
+        from .results import number
+        scoring = league.get('scoring_settings') or {}
+        scoring = scoring if isinstance(scoring, dict) and all(number(v) is not None for v in scoring.values()) else {}
+        if operational is not None:
+            if operational.get('scoring_settings') is not None and operational['scoring_settings'] != scoring:
+                return {}
+            if operational.get('roster_positions') is not None and operational['roster_positions'] != league.get('roster_positions'):
+                return {}
+        return scoring
+
+    def _retained_scoring_context(self, league_id, season, league, source_generation):
+        scoring = self._scoring_context(league)
+        if not league.get('league_id') or str(league.get('season')) != str(season):
+            scoring = {}
+        with self._lock:
+            current = self._current.get(str(league_id)) or {}
+        active = current.get('league') or {}
+        if str(active.get('season')) == str(season) and (
+                str(active.get('league_id')) != str(league.get('league_id'))
+                or self._scoring_context(active, current) != scoring
+                or active.get('roster_positions') != league.get('roster_positions')):
+            scoring = {}
+        return {'source_league_id': league.get('league_id'),
+                'scoring_settings': scoring,
+                'scoring_context_availability': 'supported' if scoring else 'unavailable_or_incompatible',
+                'roster_positions': league.get('roster_positions') or [],
+                'evidence_kind': 'completed_week_actual', 'source_generation': source_generation}
+
+    @classmethod
+    def _current_matchup_source(cls, data, league_id, season):
         """Read the existing prepared source; future placeholders are not actuals."""
         from services.matchup_season import METHOD
         from src.core.intelligence.season_calendar import season_calendar
@@ -497,19 +551,12 @@ class CanonicalHistoryStore:
                 or prepared.get('methodology') != METHOD
                 or prepared.get('calendar_reference') != season_calendar(league)['reference']):
             return {}, {}
-        last = (league.get('settings') or {}).get('last_scored_leg')
-        completed = 18 if league.get('status') == 'complete' else last if type(last) is int else 0
+        completed = cls._completed_week_limit(league)
         weeks = {str(week): value['rows'] for week, value in (prepared.get('weeks') or {}).items()
                  if str(week).isdigit() and 1 <= int(week) <= min(completed, 18)
                  and isinstance(value, dict) and value.get('availability') == 'available'
                  and isinstance(value.get('rows'), list)}
-        from .results import number
-        scoring = league.get('scoring_settings') or {}
-        scoring = scoring if isinstance(scoring, dict) and all(number(v) is not None for v in scoring.values()) else {}
-        if data.get('scoring_settings') is not None and data['scoring_settings'] != scoring:
-            scoring = {}
-        if data.get('roster_positions') is not None and data['roster_positions'] != league.get('roster_positions'):
-            scoring = {}
+        scoring = cls._scoring_context(league, data)
         context = {'source_league_id': str(league_id),
                    'scoring_settings': scoring,
                    'scoring_context_availability': 'supported' if scoring else 'unavailable_or_incompatible',
@@ -520,11 +567,12 @@ class CanonicalHistoryStore:
 
     def _season_records(self, league_id: str, season: int, families: set[str] | None = None, player_filter: str | None = None) -> list[dict[str, Any]]:
         from .results import matchup_result, standing_points
-        facts = self._facts(league_id, season)
+        cached = sleeper_season_cache.read(league_id, season)
+        facts = cached.facts if cached else None
         if not facts:
             from .recovery import HistoricalCheckpoints
             checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
-            rows = checkpoint['records'] if checkpoint else []
+            rows = self._admit_checkpoint_rows(league_id, season, checkpoint) if checkpoint else []
             # Earlier compact evidence cannot establish whether a false role
             # came from explicit bench membership or missing starters. Qualify
             # the read; never rewrite the retained checkpoint.
@@ -547,6 +595,7 @@ class CanonicalHistoryStore:
             if not families & {'playoff_result', 'playoff_bracket'}:
                 facts['winners_bracket'] = facts['losers_bracket'] = []
         league = mapping(facts.get("league"))
+        context = self._retained_scoring_context(league_id, season, league, cached.checksum)
         rows = [self._record(league_id, season, "league_season", league_id, {
             "sleeper_season_league_id": league.get("league_id"),
             "sleeper_season": league.get("season"),
@@ -605,7 +654,8 @@ class CanonicalHistoryStore:
                 # fabricated game against another unpaired franchise.
                 if str(row.get("matchup_id")).isdigit():
                     grouped[int(row["matchup_id"])].append(row)
-                rows.extend(self._source_player_week_rows(league_id, season, week, row, player_filter))
+                source = {**context, 'source_endpoint': f"/league/{league.get('league_id')}/matchups/{week}"}
+                rows.extend(self._source_player_week_rows(league_id, season, week, row, player_filter, context=source))
             for matchup_id, sides in grouped.items():
                 rows.append(self._record(league_id, season, "matchup", f"{week}:{matchup_id}", {
                     "matchup_id": matchup_id,
@@ -662,6 +712,38 @@ class CanonicalHistoryStore:
                 league_id, season, "playoff_result", "final", playoff_facts(winners),
             ))
         return rows
+
+    def _admit_checkpoint_rows(self, league_id, season, checkpoint):
+        """Requalify existing compact evidence without rewriting its source."""
+        rows = checkpoint['records']
+        source = next((r['payload'] for r in rows if r['entity_type'] == 'league_season'), {})
+        league = {**source, 'league_id': source.get('sleeper_season_league_id'),
+                  'season': source.get('sleeper_season')}
+        context = self._retained_scoring_context(league_id, season, league, checkpoint['source_checksum'])
+        completed = self._completed_week_limit(league)
+        admitted = []
+        for row in rows:
+            if row['entity_type'] not in {'player_week', 'matchup'}:
+                admitted.append(row)
+                continue
+            if type(row.get('week')) is not int or not 1 <= row['week'] <= completed:
+                continue
+            if row['entity_type'] == 'player_week':
+                from .results import number
+                payload = row['payload']
+                score = number(payload.get('fantasy_points', payload.get('points')))
+                supported = (bool(context['scoring_settings'])
+                    and payload.get('scoring_context_availability') != 'unavailable_or_incompatible'
+                    and all(field not in payload or payload[field] == context[field]
+                            for field in ('scoring_settings', 'source_league_id', 'source_generation', 'roster_positions')))
+                payload = {**payload, **context,
+                           'source_fantasy_points': payload.get('source_fantasy_points', score),
+                           'fantasy_points': score if supported else None, 'points': score if supported else None}
+                if not supported:
+                    payload['scoring_context_availability'] = 'unavailable_or_incompatible'
+                row = {**row, 'payload': payload}
+            admitted.append(row)
+        return admitted
 
     def _transaction_records(
         self, league_id: str, season: int, entity_type: str,
@@ -953,10 +1035,12 @@ class CanonicalHistoryStore:
         totals: dict[str, float] = defaultdict(float)
         cached = sleeper_season_cache.read(league_id, season)
         if cached is not None:
+            context = self._retained_scoring_context(league_id, season, cached.facts.get('league') or {}, cached.checksum)
             rows = reconcile_player_weeks([
                 record for week, matchups in self._retained_matchups(cached.facts).items()
                 for matchup in matchups
-                for record in self._source_player_week_rows(league_id, season, int(week), matchup)
+                for record in self._source_player_week_rows(league_id, season, int(week), matchup,
+                    context={**context, 'source_endpoint': f"/league/{context['source_league_id']}/matchups/{week}"})
             ])
             rows = reconcile_player_weeks(rows + [row for row in self._current_records(league_id, season, {'player_week'})
                                                   if row['entity_type'] == 'player_week'])
