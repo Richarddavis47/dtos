@@ -1,3 +1,11 @@
+## v1.21.61 / build 2161 — League source recovery
+
+- Stop cold selected-league preparation before intelligence work when Sleeper sync has no retained supported facts. Return a bounded unavailable response instead of an empty-input500; retain valid existing facts and ordinary retry behavior.
+- Keep account recovery, lightweight health/readiness and static assets independent of league hydration while preserving existing authentication, CSRF, preparation, revision and activation checks.
+- Give browser source failures same-origin retry and account/league recovery actions. Preserve structured API failures. Show existing saved connections with explicit not-refreshed qualification when discovery is unavailable; do not fabricate current source facts or write account records.
+- Drain an in-flight FOIS scratch-database preparation thread before cancellation removes its temporary directory. Preserve cancellation, published evidence and the unchanged graceful-shutdown/resource gates; add deterministic barrier regression coverage to lifecycle CI.
+- Preserve all Trade, Market, exact Sleeper projection, legal-lineup, prior-assessment, historical and FOIS contracts. No new persistent store/schema/cache or infrastructure. Unchanged2GiB/500ms gates; physical Safari and unfamiliar-human acceptance remain separate.
+
 ## v1.21.60 / build 2160 — Atomic imports and truthful lineup evidence
 
 - Commit prepared league imports atomically: recheck the existing account revision, account/Sleeper identity and live session, then save membership, series/season references and active selection in the same existing SQLite transaction. A stale operation returns conflict without account-state changes. Provider preparation remains outside the write lock.

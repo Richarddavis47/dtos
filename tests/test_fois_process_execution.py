@@ -9,6 +9,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 from unittest import mock
@@ -122,6 +123,52 @@ class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
                 self.assertNotEqual(metrics['worker_pid'], worker)
             finally:
                 await shutdown_fois_executor()
+
+    async def test_cancel_during_scratch_preparation_drains_writer_before_cleanup(self):
+        from src.core.fois import process_execution as module
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            repository = FOISRepository(root / "fois.sqlite3")
+            cache = cache_input(root, fixture())
+            canonical = repository.path.read_bytes()
+            entered, release, finished = threading.Event(), threading.Event(), threading.Event()
+            original = module._prepare_working_database
+            writer_errors = []
+
+            def controlled_prepare(*arguments):
+                entered.set()
+                try:
+                    if not release.wait(timeout=3):
+                        raise AssertionError("Preparation barrier was not released")
+                    original(*arguments)
+                except Exception as exc:
+                    writer_errors.append(exc)
+                    raise
+                finally:
+                    finished.set()
+
+            with mock.patch.object(module, "_prepare_working_database", side_effect=controlled_prepare), mock.patch.object(module, "_submit") as submit:
+                task = asyncio.create_task(generate_fois_isolated(fixture(), repository, cache_file=cache))
+                try:
+                    self.assertTrue(await asyncio.to_thread(entered.wait, 3))
+                    task.cancel()
+                    # Deliver the cancellation deterministically while the writer
+                    # remains held by the barrier, rather than a timing sleep.
+                    checkpoint = asyncio.get_running_loop().create_future()
+                    asyncio.get_running_loop().call_soon(checkpoint.set_result, None)
+                    await checkpoint
+                    cleaned_before_writer = task.done()
+                finally:
+                    release.set()
+                    self.assertTrue(await asyncio.to_thread(finished.wait, 3))
+                    with self.assertRaises(asyncio.CancelledError):
+                        await asyncio.wait_for(task, timeout=3)
+                self.assertFalse(cleaned_before_writer, "Cancelled caller removed scratch while its writer was running")
+                self.assertEqual(writer_errors, [])
+                submit.assert_not_called()
+            self.assertFalse(list(root.glob(".dtos-fois-compute-*")))
+            self.assertEqual(repository.path.read_bytes(), canonical)
 
     def test_idle_retirement_preserves_full_warm_interval(self):
         from src.core.fois import process_execution as module
