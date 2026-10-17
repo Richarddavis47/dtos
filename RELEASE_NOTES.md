@@ -1,3 +1,10 @@
+## v1.21.63 / build 2163 — Cancellation cleanup
+
+- Keep every cancellation-drain wait shielded while the existing scratch-preparation thread is active. Repeated cancellation cannot make cleanup race that thread or recreate an orphan directory; propagate cancellation after completion and never submit/publish abandoned work.
+- Preserve normal preparation failures and successful computation/publication. Add deterministic real-storage controls for repeated cancellation, preparation failure, thirty mixed operations without temporary growth, graceful POSIX interruption and the documented hard-kill limitation.
+- Extend the existing Linux recovery/lifecycle gate with these controls. No new persistent store, schema, janitor, source archive, paid infrastructure, calculation or account/Trade changes; unchanged 2 GiB / 500 ms gates. SIGKILL/power loss cannot execute application cleanup and may leave scratch; no unsafe sweeping of active copies is introduced.
+- Independent Scout review, physical iPhone/Safari, screen-reader and unfamiliar-user acceptance remain separate. Author-operated automated evidence does not establish unconditional public readiness.
+
 ## v1.21.62 / build 2162 — Franchise import recovery
 
 - Give manual and discovered unmatched-franchise imports the same clearly labeled Your leagues and Review Sleeper identity recovery actions, using existing authenticated destinations.
