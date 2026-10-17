@@ -282,6 +282,8 @@ class TradeTimelineTests(unittest.TestCase):
     def test_partial_started_scoring_zero_and_duplicates(self):
         graph = self.load()
         facts = copy.deepcopy(self.sources[0])
+        # This control supplies genuine completed zeros, not future placeholders.
+        facts['league']['settings']['last_scored_leg'] = 18
         facts["matchups"] = {
             str(w): [
                 {

@@ -43,6 +43,7 @@ class PlayoffParticipantBrowserTests(unittest.TestCase):
     def test_production_disclosure_numeric_week_order_and_keyboard_reopen(self):
         fixture = self.browser_fixture.fixture
         facts = copy.deepcopy(fixture.fixture.sources[0])
+        facts['league']['settings']['last_scored_leg'] = 11
         facts['matchups'] = {str(week): [{'roster_id': 4, 'players': ['13346'],
             'starters': ['13346'] if week == 1 else [], 'players_points': {'13346': points}}]
             for week, points in [(1, 10), (10, 0), (2, 20), (11, None)]}

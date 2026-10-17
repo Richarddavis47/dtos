@@ -177,6 +177,7 @@ class PlayoffParticipantIntegrityTests(unittest.TestCase):
 
     def test_numeric_production_order_keeps_scores_roles_and_intervals_unchanged(self):
         facts = copy.deepcopy(self.fixture.fixture.sources[0])
+        facts['league']['settings']['last_scored_leg'] = 11
         facts['matchups'] = {str(week): [{'roster_id': 4, 'players': ['13346'],
             'starters': ['13346'] if week == 1 else [], 'players_points': {'13346': value}}]
             for week, value in [(1, 10), (10, 0), (2, 20), (11, None)]}
