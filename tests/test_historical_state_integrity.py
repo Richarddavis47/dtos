@@ -109,6 +109,13 @@ class HistoricalStateIntegrityTests(unittest.TestCase):
             self.assertIsNone(state.roster_market_value)
             self.assertIsNone(state.competitive_window.classification)
 
+    def test_zero_confidence_prices_do_not_establish_a_window(self):
+        _, state = self.state(quotes=[canonical_quote(p, confidence=0)
+                                     for p in ('player-new', 'player-stay', 'PICK-2027-R1-ORIG2')])
+        self.assertEqual(state.roster_market_value, 1000)
+        self.assertEqual(state.coverage['market'].confidence, 0)
+        self.assertIsNone(state.competitive_window.classification)
+
     def test_missing_dart_fannin_trade_is_not_complete_acquisition_history(self):
         store = CoveredStore()
         store.complete_periods = False

@@ -591,12 +591,14 @@ class HistoricalFranchiseStateService:
         current_strength = min(100, round(known_value / max(1, len(assets)) / CANONICAL_MAX * 100)) if market_available else 0
         window_prices_supported = comparison_reason((*assets, *selected_picks), boundary=effective_time) is None
         future_strength = min(100, round((known_value + sum(p.market_value for p in selected_picks if p.market_value is not None)) / max(1, len(assets) + len(selected_picks)) / CANONICAL_MAX * 100)) if market_available else 0
-        if ownership_available and ownership_complete and market_ratio == 1 and not stale_market and window_prices_supported:
+        if (ownership_available and ownership_complete and market_ratio == 1 and not stale_market
+                and window_prices_supported and coverage[CoverageDimension.MARKET.value].confidence > 0):
             window = build_competitive_window(
                 current_strength=current_strength, overall_strength=current_strength,
                 future_strength=future_strength, depth=min(100, len(assets) * 5),
                 youth=50, draft_capital=min(100, len(selected_picks) * 12), risk=50,
-                confidence=min(numeric_confidence, round(market_ratio * 100)),
+                confidence=min(numeric_confidence, coverage[CoverageDimension.MARKET.value].confidence,
+                               coverage[CoverageDimension.PICKS.value].confidence),
             )
             window_state = HistoricalWindowState(
                 window.classification.value, window.confidence,

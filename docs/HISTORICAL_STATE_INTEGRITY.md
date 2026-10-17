@@ -19,7 +19,9 @@ current Market. Legacy opaque methods remain preserved but unavailable for this
 calculation. Genuine zero is admitted. Incompatible contexts cannot be summed.
 Older-than-seven-day quotes remain numeric with the established temporal-confidence
 qualification; they cannot establish a historical competitive-window label.
-Missing pick prices are no longer replaced by an assumed 1,000-unit value.
+Zero-confidence prices cannot establish a window, and a window cannot borrow
+higher confidence from unrelated coverage dimensions. Missing pick prices are no
+longer replaced by an assumed 1,000-unit value.
 Admitted 0–1000 prices are mapped explicitly to the existing classifier's 0–100
 input scale, rather than inheriting a provider-native 10,000-unit divisor.
 
