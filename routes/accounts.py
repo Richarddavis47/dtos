@@ -48,6 +48,10 @@ def _preparation_unavailable() -> HTMLResponse:
     return _shell("League preparation unavailable", '<section class="card"><h2>League preparation did not finish.</h2><p>Your saved account and active league are unchanged. Return to your leagues and try again shortly.</p><a class="btn" href="/account/leagues">Your leagues</a></section>', status_code=503)
 
 
+def _unmatched_franchise() -> HTMLResponse:
+    return _shell("Review team mapping", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership. Your saved leagues and active league are unchanged.</p><p>Return to your connected leagues, or review the linked Sleeper identity. You can retry the import after the identity or Sleeper league membership is corrected.</p><div class="grid"><a class="btn" href="/account/leagues">Your leagues</a><a class="btn" href="/account/sleeper">Review Sleeper identity</a></div></section>')
+
+
 def _rate_limited(request: Request, seconds: int, destination: str) -> Response:
     if 'text/html' not in request.headers.get('accept', ''):
         return JSONResponse({"status": "rate_limited"}, status_code=429, headers={"Retry-After": str(seconds)})
@@ -329,7 +333,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
         except ValueError:
             return _shell("League unavailable", '<section class="card"><h1>We could not add that league.</h1><p>Confirm the Sleeper league ID and try again.</p><a class="btn" href="/account/leagues">Your leagues</a></section>')
         if status != "active" or roster_id is None:
-            return _shell("Review team mapping", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership.</p></section>')
+            return _unmatched_franchise()
         try:
             series = await service.complete_series(league)
             await runtime_manager.get(str(league["league_id"]))
@@ -363,7 +367,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
         except httpx.HTTPError:
             return _source_unavailable()
         if status != "active" or roster_id is None:
-            return _shell("Review team mapping", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership. Review the linked Sleeper identity or try again after Sleeper updates the league.</p></section>')
+            return _unmatched_franchise()
         try:
             await runtime_manager.get(league_id)
         except (httpx.HTTPError, LeagueRuntimeError):
