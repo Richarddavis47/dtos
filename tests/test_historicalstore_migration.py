@@ -88,7 +88,8 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             cache = SleeperSeasonCache(Path(directory))
             facts = {
-                "league": {"league_id": "historic", "name": "League"},
+                "league": {"league_id": "historic", "name": "League", "season": "2025",
+                           "status": "complete", "scoring_settings": {"rec": 1}},
                 "users": [], "rosters": [],
                 "matchups": {"1": [{
                     "matchup_id": 1, "roster_id": 1, "points": 20,
@@ -168,7 +169,8 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             cache = SleeperSeasonCache(Path(directory))
             facts = {
-                "league": {"league_id": "historic", "name": "League"},
+                "league": {"league_id": "historic", "name": "League", "season": "2025",
+                           "status": "complete", "scoring_settings": {"rec": 1}},
                 "users": [], "rosters": [],
                 "matchups": {"1": [{
                     "matchup_id": 1, "roster_id": 1, "points": 20,
@@ -195,7 +197,8 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             cache = SleeperSeasonCache(Path(directory))
             facts = {
-                "league": {"league_id": "historic", "name": "League"},
+                "league": {"league_id": "historic", "name": "League", "season": "2025",
+                           "status": "complete", "scoring_settings": {"rec": 1}},
                 "users": [], "rosters": [],
                 "matchups": {"1": [{
                     "matchup_id": 1, "roster_id": 1, "points": 30,
@@ -286,7 +289,8 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             cache = SleeperSeasonCache(Path(directory))
             facts = {
-                "league": {"league_id": "L", "name": "League"},
+                "league": {"league_id": "L", "name": "League", "season": "2025",
+                           "status": "complete", "scoring_settings": {"rec": 1}},
                 "users": [], "rosters": [],
                 "matchups": {"1": [{
                     "matchup_id": 1, "roster_id": 1, "points": 20,
@@ -462,7 +466,8 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
             cache = SleeperSeasonCache(Path(directory))
             for season in (2024, 2025):
                 cache.write(cache.normalize("L", season, {
-                    "league": {"league_id": "L"},
+                    "league": {"league_id": "L", "season": str(season),
+                               "status": "complete", "scoring_settings": {"rec": 1}},
                     "matchups": {"1": [{
                         "matchup_id": 1, "roster_id": 1, "points": 1,
                         "players_points": {"retired-7": 1}, "starters": ["retired-7"],
@@ -482,7 +487,8 @@ class HistoricalStoreMigrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             cache = SleeperSeasonCache(Path(directory))
             cache.write(cache.normalize("L", 2025, {
-                "league": {"league_id": "L"},
+                "league": {"league_id": "L", "season": "2025",
+                           "status": "complete", "scoring_settings": {"rec": 1}},
                 "matchups": {
                     "1": [{
                         "matchup_id": 1, "roster_id": 1, "points": 30,

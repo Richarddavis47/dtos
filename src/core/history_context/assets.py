@@ -103,7 +103,12 @@ def reconcile_player_weeks(rows: list[dict]) -> list[dict]:
                                              str(v.get("franchise_id") or ""),
                                              json.dumps(v, sort_keys=True, default=str))))
         payload = dict(row["payload"])
-        score = next(iter(known)) if len(known) == 1 and not conflict else None
+        unqualified = any(v['payload'].get('scoring_context_availability') == 'unavailable_or_incompatible'
+                          for v in values)
+        score = next(iter(known)) if len(known) == 1 and not conflict and not unqualified else None
+        if unqualified:
+            payload['scoring_context_availability'] = 'unavailable_or_incompatible'
+            payload['scoring_settings'] = {}
         roles = {v["payload"].get("starter") for v in values
                  if isinstance(v["payload"].get("starter"), bool)}
         role_conflict = len(roles) > 1 or any(v["payload"].get("lineup_role_conflict") for v in values)

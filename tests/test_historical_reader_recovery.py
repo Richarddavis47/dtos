@@ -189,6 +189,7 @@ class HistoricalReaderRecoveryTests(unittest.TestCase):
 
     def test_complete_family_inventory_survives_whole_season_eviction(self):
         facts = deepcopy(self.facts)
+        facts['league']['scoring_settings'] = {'rec': 1}
         facts.update({
             'users': [{'user_id': 'old-owner', 'display_name': 'Old GM'}],
             'matchups': {'1': [

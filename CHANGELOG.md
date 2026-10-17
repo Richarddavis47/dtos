@@ -1,3 +1,10 @@
+## v1.21.68 / build 2168 — Historical evidence admission and identity integrity
+
+- Apply strict provider-confirmed completion to active and retained matchup/player-week sources, including compact reader checkpoints. Missing, malformed, noninteger and out-of-range markers cannot admit future actuals into career totals or leaderboards.
+- Qualify retained numeric production against source league/season/scoring and compatible same-season operational context. Preserve raw observations, genuine zero, starter roles and independently supported historical rules; keep unavailable scoring unavailable through reconciliation and downstream evaluation.
+- Preserve accepted birth-date conflict evidence across rejected identity updates, later single-date refreshes and existing-cache reload. Reject raw dates from mismatched identities; ordinary refresh cannot resolve a known conflict.
+- No new schema, archive, permanent store, provider requests, FOIS regeneration or unrelated product changes. Preserve 2 GiB/500 ms gates. Historical integration remains open pending independent Scout acceptance; controlled source/HTTP and responsive Chromium evidence are not physical-device or human acceptance.
+
 ## v1.21.67 / build 2167 — Historical player-week and age integration
 
 - Project existing prepared Sleeper completed-week observations into canonical historical player/week and matchup records. Preserve league-specific scores, explicit starter roles, source identity, missing-versus-zero semantics and bounded read behavior. Future placeholders remain excluded; decision-time consumers retain their stricter completed-week cutoff.

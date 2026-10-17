@@ -39,6 +39,10 @@ class Batch2HistoryReconciliationTests(unittest.TestCase):
 
     def records(self, facts):
         store = CanonicalHistoryStore()
+        # These controls test result/asset normalization after admission.
+        # Declare their intended supported completed-season source explicitly.
+        facts = {**facts, 'league': {'league_id': 'league-a', 'season': '2025',
+            'status': 'complete', 'scoring_settings': {'rec': 1}, **facts.get('league', {})}}
         with patch.object(store, "_facts", return_value=facts):
             return store._season_records("league-a", 2025)
 
