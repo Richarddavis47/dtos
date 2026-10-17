@@ -28,6 +28,22 @@ jobs:
         run: python -m pip install -r requirements-validation.txt
       - name: Platform ownership and validation tooling contracts
         run: python -m unittest tests.test_cloud_tooling tests.test_server_lifecycle tests.test_process_check tests.test_validation_progress tests.test_market_warming_validation
+      - name: Scratch preparation cancellation controls
+        env:
+          DTOS_CACHE_FILE: ${{ runner.temp }}/preparation-cache.json
+          DTOS_DATA_WAREHOUSE_FILE: ${{ runner.temp }}/preparation-warehouse.json
+          DTOS_HISTORY_DB_FILE: ${{ runner.temp }}/preparation-history.sqlite3
+          DTOS_PROJECTION_DB_FILE: ${{ runner.temp }}/preparation-projections.sqlite3
+          DTOS_INTELLIGENCE_CHECKPOINT_FILE: ${{ runner.temp }}/preparation-checkpoint.sqlite3
+          DTOS_METADATA_DB_FILE: ${{ runner.temp }}/preparation-metadata.sqlite3
+          DTOS_ACCOUNT_DB_FILE: ${{ runner.temp }}/preparation-accounts.sqlite3
+          DTOS_GLOBAL_EVIDENCE_FILE: ${{ runner.temp }}/preparation-global.sqlite3
+          DTOS_FOIS_DB_FILE: ${{ runner.temp }}/preparation-fois.sqlite3
+          DTOS_SLEEPER_SEASON_CACHE_ROOT: ${{ runner.temp }}/preparation-seasons
+          DTOS_HISTORY_STORAGE_ROOT: ${{ runner.temp }}/preparation-history-root
+          DTOS_DURABLE_HISTORY_REQUIRED: 'false'
+          SLEEPER_BASE_URL: http://127.0.0.1:9/v1
+        run: python -m unittest tests.test_fois_preparation_cleanup
       - name: Authoritative repository lint gate
         run: python -m ruff check .
       - name: Tooling compilation and whitespace

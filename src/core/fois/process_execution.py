@@ -329,7 +329,16 @@ async def generate_fois_isolated(
             # bounded scratch copy before removing its directory, and preserve
             # cancellation so abandoned maintenance cannot resume publication.
             try:
-                await preparation
+                while not preparation.done():
+                    try:
+                        # Every wait must stay shielded: a second cancellation
+                        # can otherwise cancel the task while its thread keeps
+                        # writing, allowing cleanup to race/recreate scratch.
+                        await asyncio.shield(preparation)
+                    except asyncio.CancelledError:
+                        continue
+                # Observe any preparation error, even when cancellation wins.
+                preparation.result()
             finally:
                 raise cancellation
         source_file = cache_file or _league_cache_file(league_id)
