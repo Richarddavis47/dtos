@@ -188,11 +188,12 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
     weekly = tuple(item.key for item in view.evidence if item.key.startswith('weekly.'))
     rendered = explanation_panel(view, evidence_groups=(('Weekly optimal-lineup detail', weekly),) if weekly else ())
     decision = result.get('decision_context')
-    if not decision and (result.get('market_evidence') or {}).get('availability') != 'full':
+    presentation = decision
+    if not presentation and (result.get('market_evidence') or {}).get('availability') != 'full':
         from services.trade_decision import decision_context
-        decision = decision_context(result)
-    if decision and decision.get('qualification'):
-        qualifier = '<span class="tw-verdict-qualification">' + escape(decision['qualification']) + '</span>'
+        presentation = decision_context(result)
+    if presentation and presentation.get('qualification'):
+        qualifier = '<span class="tw-verdict-qualification">' + escape(presentation['qualification']) + '</span>'
         rendered = rendered.replace('</p>', qualifier + '</p>', 1)
     # Reuse completed canonical conclusions; no new bilateral scoring or inferred benefit.
     teams = []

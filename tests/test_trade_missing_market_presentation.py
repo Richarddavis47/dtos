@@ -102,6 +102,7 @@ class MissingMarketPresentationTests(unittest.TestCase):
         self.assertIn('not an endorsement', html)
         self.assertIn('Market cost cannot be fully assessed', html)
         self.assertNotIn('No material downside identified', html)
+        self.assertNotIn('<details class="tw-evaluation-detail">', html)
         self.assertEqual(e, before)
 
     def test_missing_price_preserves_independently_supported_reserve_cost(self):
