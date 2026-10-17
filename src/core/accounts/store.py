@@ -257,49 +257,83 @@ class AccountStore:
             )
 
     def upsert_membership(self, account_id: str, league: dict[str, Any], sleeper_user_id: str, roster_id: int | None, franchise_name: str | None, status: str) -> None:
-        timestamp = _now()
-        league_id = str(league.get("league_id") or "")
         with self.transaction() as connection:
-            connection.execute(
-                """INSERT INTO account_league_memberships(account_id,league_id,sleeper_user_id,roster_id,status,mapping_source,league_name,franchise_name,season,created_at,last_verified_at)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(account_id,league_id) DO UPDATE SET sleeper_user_id=excluded.sleeper_user_id,
-                roster_id=excluded.roster_id,status=excluded.status,mapping_source=excluded.mapping_source,league_name=excluded.league_name,
-                franchise_name=excluded.franchise_name,season=excluded.season,last_verified_at=excluded.last_verified_at""",
-                (account_id, league_id, sleeper_user_id, roster_id, status, "sleeper_roster_association", league.get("name"), franchise_name, int(league.get("season") or 0) or None, timestamp, timestamp),
-            )
+            self._write_membership(connection, account_id, league, sleeper_user_id, roster_id, franchise_name, status, _now())
 
-    def upsert_series(
-        self, account_id: str, *, series_id: str, current_league: dict[str, Any],
-        seasons: tuple[dict[str, Any], ...], roster_id: int | None,
-        franchise_name: str | None,
-    ) -> None:
+    @staticmethod
+    def _write_membership(connection, account_id, league, sleeper_user_id, roster_id, franchise_name, status, timestamp):
+        league_id = str(league.get("league_id") or "")
+        connection.execute(
+            """INSERT INTO account_league_memberships(account_id,league_id,sleeper_user_id,roster_id,status,mapping_source,league_name,franchise_name,season,created_at,last_verified_at)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(account_id,league_id) DO UPDATE SET sleeper_user_id=excluded.sleeper_user_id,
+            roster_id=excluded.roster_id,status=excluded.status,mapping_source=excluded.mapping_source,league_name=excluded.league_name,
+            franchise_name=excluded.franchise_name,season=excluded.season,last_verified_at=excluded.last_verified_at""",
+            (account_id, league_id, sleeper_user_id, roster_id, status, "sleeper_roster_association", league.get("name"), franchise_name, int(league.get("season") or 0) or None, timestamp, timestamp),
+        )
+
+    def upsert_series(self, account_id: str, *, series_id: str, current_league: dict[str, Any],
+                      seasons: tuple[dict[str, Any], ...], roster_id: int | None,
+                      franchise_name: str | None) -> None:
         """Persist a series and its season identities without loading runtimes."""
-        timestamp = _now()
+        with self.transaction() as connection:
+            self._write_series(connection, account_id, series_id, current_league, seasons, roster_id, franchise_name, _now())
+
+    @staticmethod
+    def _write_series(connection, account_id, series_id, current_league, seasons, roster_id, franchise_name, timestamp):
         current_id = str(current_league.get("league_id") or "")
         current_season = int(current_league.get("season") or 0) or None
-        with self.transaction() as connection:
+        connection.execute(
+            """INSERT INTO account_league_series(account_id,series_id,current_league_id,league_name,current_season,created_at,updated_at)
+            VALUES(?,?,?,?,?,?,?) ON CONFLICT(account_id,series_id) DO UPDATE SET
+            current_league_id=excluded.current_league_id,league_name=excluded.league_name,
+            current_season=excluded.current_season,updated_at=excluded.updated_at""",
+            (account_id, series_id, current_id, current_league.get("name"), current_season, timestamp, timestamp),
+        )
+        for row in seasons:
+            league_id = str(row.get("league_id") or "")
+            if not league_id:
+                continue
+            season = int(row.get("season") or 0) or None
+            is_current = league_id == current_id
             connection.execute(
-                """INSERT INTO account_league_series(account_id,series_id,current_league_id,league_name,current_season,created_at,updated_at)
-                VALUES(?,?,?,?,?,?,?) ON CONFLICT(account_id,series_id) DO UPDATE SET
-                current_league_id=excluded.current_league_id,league_name=excluded.league_name,
-                current_season=excluded.current_season,updated_at=excluded.updated_at""",
-                (account_id, series_id, current_id, current_league.get("name"), current_season, timestamp, timestamp),
+                """INSERT INTO account_league_series_seasons(account_id,series_id,league_id,season,previous_league_id,roster_id,franchise_name,created_at,last_verified_at)
+                VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(account_id,league_id) DO UPDATE SET
+                series_id=excluded.series_id,season=excluded.season,previous_league_id=excluded.previous_league_id,
+                roster_id=CASE WHEN excluded.roster_id IS NOT NULL THEN excluded.roster_id ELSE account_league_series_seasons.roster_id END,
+                franchise_name=CASE WHEN excluded.franchise_name IS NOT NULL THEN excluded.franchise_name ELSE account_league_series_seasons.franchise_name END,
+                last_verified_at=excluded.last_verified_at""",
+                (account_id, series_id, league_id, season, row.get("previous_league_id"), roster_id if is_current else None, franchise_name if is_current else None, timestamp, timestamp),
             )
-            for row in seasons:
-                league_id = str(row.get("league_id") or "")
-                if not league_id:
-                    continue
-                season = int(row.get("season") or 0) or None
-                is_current = league_id == current_id
-                connection.execute(
-                    """INSERT INTO account_league_series_seasons(account_id,series_id,league_id,season,previous_league_id,roster_id,franchise_name,created_at,last_verified_at)
-                    VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(account_id,league_id) DO UPDATE SET
-                    series_id=excluded.series_id,season=excluded.season,previous_league_id=excluded.previous_league_id,
-                    roster_id=CASE WHEN excluded.roster_id IS NOT NULL THEN excluded.roster_id ELSE account_league_series_seasons.roster_id END,
-                    franchise_name=CASE WHEN excluded.franchise_name IS NOT NULL THEN excluded.franchise_name ELSE account_league_series_seasons.franchise_name END,
-                    last_verified_at=excluded.last_verified_at""",
-                    (account_id, series_id, league_id, season, row.get("previous_league_id"), roster_id if is_current else None, franchise_name if is_current else None, timestamp, timestamp),
-                )
+
+    def commit_import(self, account_id: str, *, session_token: str, expected_account_revision: str,
+                      sleeper_user_id: str, league: dict[str, Any], series_id: str,
+                      seasons: tuple[dict[str, Any], ...], roster_id: int,
+                      franchise_name: str | None) -> bool:
+        """Commit prepared intent once, after rechecking authority and revision.
+
+        No provider calls or runtime preparation occur under this write lock.
+        Rejection precedes every mutation; later SQL failures roll back all rows.
+        """
+        league_id = str(league.get('league_id') or '')
+        if not league_id or not series_id or roster_id is None:
+            return False
+        with self.transaction() as connection:
+            timestamp = _now()
+            authorized = connection.execute(
+                """SELECT a.updated_at FROM accounts a JOIN account_sessions s USING(account_id)
+                JOIN sleeper_identities i USING(account_id)
+                WHERE a.account_id=? AND a.status='active' AND a.updated_at=?
+                AND s.session_digest=? AND s.revoked_at IS NULL AND s.expires_at>?
+                AND i.sleeper_user_id=?""",
+                (account_id, expected_account_revision, _token_digest(session_token), timestamp, sleeper_user_id),
+            ).fetchone()
+            if authorized is None:
+                return False
+            self._write_membership(connection, account_id, league, sleeper_user_id, roster_id, franchise_name, 'active', timestamp)
+            self._write_series(connection, account_id, series_id, league, seasons, roster_id, franchise_name, timestamp)
+            connection.execute('UPDATE accounts SET active_league_id=?,updated_at=? WHERE account_id=?',
+                               (league_id, timestamp, account_id))
+        return True
 
     def series(self, account_id: str) -> list[dict[str, Any]]:
         with closing(self.connect()) as connection:

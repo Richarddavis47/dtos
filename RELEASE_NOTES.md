@@ -1,3 +1,10 @@
+## v1.21.60 / build 2160 — Atomic imports and truthful lineup evidence
+
+- Commit prepared league imports atomically: recheck the existing account revision, account/Sleeper identity and live session, then save membership, series/season references and active selection in the same existing SQLite transaction. A stale operation returns conflict without account-state changes. Provider preparation remains outside the write lock.
+- Preserve source-supported imports and retries; roll back all account rows on a failed commit. Keep existing authentication/CSRF, no-membership guidance, loading feedback and activation protections; expose Your leagues from the conflict page for a deliberate retry.
+- Label Commissioner’s existing metric Optimal Projected Lineup. Show supported projected points, scoring league/week, comparison population, lineup-relative grade and evidence coverage/limitations. Keep Competitive Window separate; remove borrowed card-confidence percentages and format percentile ordinals correctly.
+- Reuse existing source/assessment evidence and SQL writers. No schema, tables, import-attempt history, duplicate sources or new permanent cache. Preserve Market, Sleeper projections, legal-lineup math, recommendations, Trade, historical/FOIS contracts and unchanged 500 ms / 2 GiB gates.
+
 ## v1.21.59 / build 2159 — First-use recovery and evidence
 
 - Keep Sleeper connection and league-add failures actionable without guessing ownership or changing the active league. Finish league preparation before saving a new membership; preserve existing authentication and source admission.

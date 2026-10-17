@@ -106,12 +106,28 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
         message = "A newer league choice was kept. Return Home to use your current league."
         if api:
             return JSONResponse({"status": "league_context_changed", "message": message}, status_code=409)
-        return _shell("Newer league choice kept", f'<section class="card"><h2>Your league choice changed</h2><p>{message}</p><a class="btn" href="/">Home</a></section>', status_code=409)
+        return _shell("Newer league choice kept", f'<section class="card"><h2>Your league choice changed</h2><p>{message}</p><a class="btn" href="/">Home</a><p><a href="/account/leagues">Your leagues · retry import</a></p></section>', status_code=409)
 
     def activation_failure(context: Any, revision: str, *, api: bool = False) -> Response:
         if activation_revision(context) != revision:
             return newer_choice(api=api)
         return JSONResponse({"status": "unauthorized_league"}, status_code=403)
+
+    def commit_prepared_import(context: Any, request: Request, revision: str, series: Any,
+                               roster_id: int, franchise: str | None) -> Response | None:
+        try:
+            committed = service.store.commit_import(
+                context.account_id, session_token=request.cookies.get(SESSION_COOKIE, ''),
+                expected_account_revision=revision, sleeper_user_id=context.sleeper_user_id,
+                league=series.current_league, series_id=series.series_id,
+                seasons=series.seasons, roster_id=roster_id, franchise_name=franchise)
+        except sqlite3.Error:
+            return _shell('League import did not finish', '<section class="card"><h2>League import did not finish.</h2><p>Your saved account and active league are unchanged. Return to your leagues and try again.</p><a class="btn" href="/account/leagues">Your leagues</a></section>', status_code=503)
+        if committed:
+            return None
+        if service.store.context_for_session(request.cookies.get(SESSION_COOKIE, '')) is None:
+            return RedirectResponse('/account/sign-in', status_code=303)
+        return activation_failure(context, revision)
 
     async def prepare_activation(context: Any, league_id: str, *, api: bool = False) -> Response | None:
         # Existing current-series membership remains authoritative. Preparation
@@ -307,15 +323,14 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             return _shell("League unavailable", '<section class="card"><h1>We could not add that league.</h1><p>Confirm the Sleeper league ID and try again.</p><a class="btn" href="/account/leagues">Your leagues</a></section>')
         if status != "active" or roster_id is None:
             return _shell("Review team mapping", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership.</p></section>')
-        series = await service.complete_series(league)
         try:
+            series = await service.complete_series(league)
             await runtime_manager.get(str(league["league_id"]))
         except (httpx.HTTPError, LeagueRuntimeError):
             return _preparation_unavailable()
-        service.store.upsert_membership(context.account_id, league, context.sleeper_user_id, roster_id, franchise, status)
-        service.store.upsert_series(context.account_id, series_id=series.series_id, current_league=series.current_league, seasons=series.seasons, roster_id=roster_id, franchise_name=franchise)
-        if service.store.activate(context.account_id, str(league["league_id"]), expected_account_revision=revision) is None:
-            return activation_failure(context, revision)
+        failure = commit_prepared_import(context, request, revision, series, roster_id, franchise)
+        if failure is not None:
+            return failure
         return RedirectResponse("/", status_code=303)
 
     @router.post("/account/leagues/{league_id}")
@@ -340,16 +355,15 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             roster_id, franchise, status = await service.resolve_membership(league, context.sleeper_user_id)
         except httpx.HTTPError:
             return _source_unavailable()
-        if status != "active":
+        if status != "active" or roster_id is None:
             return _shell("Review team mapping", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership. Review the linked Sleeper identity or try again after Sleeper updates the league.</p></section>')
         try:
             await runtime_manager.get(league_id)
         except (httpx.HTTPError, LeagueRuntimeError):
             return _preparation_unavailable()
-        service.store.upsert_membership(context.account_id, league, context.sleeper_user_id, roster_id, franchise, status)
-        service.store.upsert_series(context.account_id, series_id=series.series_id, current_league=series.current_league, seasons=series.seasons, roster_id=roster_id, franchise_name=franchise)
-        if service.store.activate(context.account_id, league_id, expected_account_revision=revision) is None:
-            return activation_failure(context, revision)
+        failure = commit_prepared_import(context, request, revision, series, roster_id, franchise)
+        if failure is not None:
+            return failure
         return RedirectResponse("/", status_code=303)
 
     @router.post("/account/leagues/{league_id}/activate")
