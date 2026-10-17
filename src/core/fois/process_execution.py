@@ -172,18 +172,24 @@ def compact_fois_input(data: dict[str, Any]) -> dict[str, Any]:
     }
     compact = {
         name: data[name]
-        for name in ("league", "league_settings", "teams", "brain_semantic_metrics")
+        for name in ("league", "league_settings", "scoring_settings", "roster_positions", "teams", "brain_semantic_metrics", "season_matchups")
         if name in data
     }
     # The history store resolves eligibility from normalized identities, not
     # current team rows. Keep the minimal complete global identity projection:
     # historical players may no longer appear on any current league roster.
-    compact["normalized_players"] = {
-        str(player_id): {key: row[key] for key in
-                        ("name", "position", "team", "provider_ids", "birthdate", "birth_date") if key in row}
-        for player_id, row in (data.get("normalized_players") or {}).items()
-        if isinstance(row, dict)
-    }
+    from src.core.data_platform.normalization.birth_dates import birth_date_metadata
+    compact['normalized_players'] = {}
+    for player_id, row in (data.get('normalized_players') or {}).items():
+        if not isinstance(row, dict):
+            continue
+        raw = (data.get('players') or {}).get(str(player_id)) or {}
+        metadata = birth_date_metadata(row, birth_date_metadata(raw)
+                                       if str(raw.get('player_id', player_id)) == str(player_id) else {})
+        compact['normalized_players'][str(player_id)] = {
+            **{key: row[key] for key in ('dtos_id', 'name', 'position', 'team', 'provider_ids', 'birthdate', 'birth_date') if key in row},
+            'metadata': metadata,
+        }
     if report:
         compact["valuation_intelligence"] = compact_report
     if "fois_history" in data:

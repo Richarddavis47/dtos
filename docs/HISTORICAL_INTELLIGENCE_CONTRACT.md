@@ -83,3 +83,41 @@ rewriting the original decision-time event.
 Existing consumers remain unchanged in Step 1 unless a later release explicitly
 migrates them. This avoids changing current intelligence recommendations merely
 because the foundation now exists.
+
+## v1.21.67 — Active player-week and historical age admission
+
+The canonical adapter reuses `season_matchups`, already prepared during normal
+Sleeper synchronization. League, season, calendar and methodology identities
+must match; only source-confirmed completed periods (`last_scored_leg`, or a
+completed league season) enter the active actuals family. Individual scores are
+Sleeper's league-scored actuals, not projections or recomputed raw NFL stats.
+Rows retain endpoint, generation, observation time, league scoring, lineup rules,
+player, franchise and explicit starter/bench/unknown roles. A bench observation
+is not an official starting-lineup contribution. Missing scoring/identity or a
+conflicting score is not replaced by zero. Retained current-season placeholders
+also respect the source's explicit completed-week boundary.
+
+Historical decision consumers still exclude the decision's ongoing week and
+later weeks. A boundary without a supported week cannot admit weekly production.
+A known Week 5 result can support that observed sample without establishing full
+Weeks 1–5 coverage. Transaction/anchor/order and canonical historical price
+qualifications introduced in v1.21.66 remain independent and required.
+
+Birth dates are retained as bounded metadata on the existing canonical player
+identity and normal league-cache publication, not a separate history record.
+At most two distinct date candidates suffice to preserve a conflict; omission
+cannot erase supported evidence or resolve conflicting dates. Exact Sleeper and
+supported provider-ID joins remain authoritative; names and current ages are
+never evidence joins or substitutes. Date-only and ISO datetime birth evidence
+are normalized to a calendar date, then age is calculated relative to the
+actual decision date. Missing, invalid, conflicting, identity-incompatible and
+post-decision birth dates yield unavailable age with reason codes.
+
+Existing compact isolated-process input retains the same prepared matchups and
+minimal birth-date metadata, not a new source copy. Player history/career,
+season leaders, historical franchise production/lineups/age and historical
+transaction context can consume these facts. Existing FOIS preparation can
+receive them, but retained grades are not regenerated, migrated or revalidated.
+No Market-trend wiring or reserve-quality work is included. Reads neither fetch
+providers nor append source files, and irrelevant identity/trade queries do not
+materialize weekly rows. Existing cache limits and resource gates are retained.

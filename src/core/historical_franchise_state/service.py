@@ -25,6 +25,7 @@ from .models import (
     HISTORICAL_FRANCHISE_STATE_METHOD_VERSION,
 )
 from src.core.history_context.results import number
+from src.core.data_platform.normalization.birth_dates import historical_age
 from src.core.historical_intelligence.market_comparison import comparison_reason
 from src.core.historical_intelligence.price_admission import checkpoint_reason, instant, quote_time
 from src.core.intelligence_memory.confidence import temporal_confidence
@@ -280,15 +281,7 @@ class HistoricalFranchiseStateService:
             identity = (self.history.store.identity_for_provider_id(player_id) or {}) if not player_id.startswith("PICK-") else {}
             metadata = identity.get("metadata") or {}
             position = metadata.get("position")
-            age = None
-            birthdate = metadata.get("birthdate") or metadata.get("birth_date")
-            if birthdate and occurred_at:
-                try:
-                    born = datetime.fromisoformat(str(birthdate).replace("Z", "+00:00"))
-                    as_of = datetime.fromisoformat(occurred_at.replace("Z", "+00:00"))
-                    age = round((as_of - born).days / 365.2425, 2)
-                except (TypeError, ValueError):
-                    age = None
+            age, birthdate, age_reasons = historical_age(metadata, occurred_at)
             reason = checkpoint_reason(checkpoint, occurred_at) if checkpoint else 'historical_market_unavailable'
             if checkpoint and checkpoint.asset_id not in {player_id, f'player:{player_id}'}:
                 reason = 'historical_market_asset_identity_incompatible'
@@ -310,6 +303,8 @@ class HistoricalFranchiseStateService:
                 market_confidence=confidence,
                 season_to_date_points=(production or {}).get(player_id),
                 age_as_of=age,
+                birth_date=birthdate, age_source=metadata.get('birth_date_source') if age is not None else None,
+                age_reason_codes=age_reasons,
                 market_provider=checkpoint.provider if checkpoint else None,
                 market_context_id=checkpoint.market_context_id if checkpoint else None,
                 market_normalization_version=checkpoint.normalization_version if checkpoint else None,
@@ -392,6 +387,22 @@ class HistoricalFranchiseStateService:
             reason_codes=() if result.available else ("incomplete_legal_historical_lineup",),
             source_references=references,
         ), dict(production)
+
+    def _production_coverage(self, league_id, boundary, player_ids):
+        """An observed week is not proof of a complete season-to-date sample."""
+        expected = {(week, player_id) for week in range(1, min(boundary.week or 0, 18) + 1)
+                    if self._completed_week_at_boundary(week, boundary) for player_id in player_ids}
+        rows = [row for row in self._records(league_id, boundary.season, 'player_week')
+                if (row.get('week'), row.get('player_id')) in expected
+                and number((row.get('payload') or {}).get('points')) is not None]
+        observed = {(row['week'], row['player_id']) for row in rows}
+        complete = bool(expected) and observed == expected
+        return EvidenceCoverage(
+            ReconstructionAvailability.COMPLETE if complete else ReconstructionAvailability.PARTIAL if observed else ReconstructionAvailability.UNAVAILABLE,
+            90 if complete else 40 if observed else 0,
+            ('season_to_date_actuals' if complete else 'incomplete_historical_player_week_coverage' if observed else 'historical_production_unavailable',),
+            tuple(sorted({row['record_key'] for row in rows})),
+        )
 
     @staticmethod
     def _coverage(availability: ReconstructionAvailability, confidence: int, *reasons: str) -> EvidenceCoverage:
@@ -562,12 +573,13 @@ class HistoricalFranchiseStateService:
             CoverageDimension.PICKS.value: self._coverage(ReconstructionAvailability.COMPLETE if picks_complete else ReconstructionAvailability.PARTIAL, 85 if picks_complete else 40 if picks else 35, "provider_pick_snapshot" if picks_complete else "pick_snapshot_anchor_or_history_incomplete"),
             CoverageDimension.MARKET.value: self._coverage(ReconstructionAvailability.COMPLETE if market_ratio == 1 and not stale_market else ReconstructionAvailability.PARTIAL if market_available else ReconstructionAvailability.UNAVAILABLE, min(round(market_ratio * 100), min((asset.market_confidence or 0 for asset in assets if asset.market_value is not None), default=0)), *(market_reasons or ("compatible_at_or_before_global_checkpoint" if market_available else "historical_market_unavailable",))),
             CoverageDimension.LINEUP.value: self._coverage(ReconstructionAvailability.COMPLETE if lineup.optimal_points is not None else ReconstructionAvailability.UNAVAILABLE, 90 if lineup.optimal_points is not None else 0, *(lineup.reason_codes or ("historical_week_lineup" if lineup.optimal_points is not None else "historical_lineup_unavailable",))),
-            CoverageDimension.PRODUCTION.value: self._coverage(ReconstructionAvailability.COMPLETE if production else ReconstructionAvailability.UNAVAILABLE, 90 if production else 0, "season_to_date_actuals" if production else "historical_production_unavailable"),
+            CoverageDimension.PRODUCTION.value: self._production_coverage(league_id, evidence_boundary, players),
             CoverageDimension.STANDINGS.value: self._coverage(ReconstructionAvailability.COMPLETE if record.games_observed else ReconstructionAvailability.PARTIAL, 90 if record.games_observed else 25, "matchups_through_boundary"),
             CoverageDimension.AGE.value: self._coverage(
                 ReconstructionAvailability.COMPLETE if age_ratio == 1 else ReconstructionAvailability.PARTIAL if age_count else ReconstructionAvailability.UNAVAILABLE,
                 round(age_ratio * 100),
-                "birthdate_as_of_boundary" if age_count else "birthdate_evidence_unavailable",
+                *(tuple(sorted({reason for asset in assets for reason in asset.age_reason_codes}))
+                  or ("birthdate_as_of_boundary" if age_count else "birthdate_evidence_unavailable",)),
             ),
         }
         coverage.update(reconstruction)

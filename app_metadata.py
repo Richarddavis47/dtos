@@ -7,8 +7,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.21.66"
-BUILD_NUMBER = 2166
+VERSION = "1.21.67"
+BUILD_NUMBER = 2167
 RELEASE_CODENAME = "Historical Evidence Integrity"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 

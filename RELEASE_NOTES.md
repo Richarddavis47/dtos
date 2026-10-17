@@ -1,3 +1,10 @@
+## v1.21.67 / build 2167 — Historical player-week and age integration
+
+- Project existing prepared Sleeper completed-week observations into canonical historical player/week and matchup records. Preserve league-specific scores, explicit starter roles, source identity, missing-versus-zero semantics and bounded read behavior. Future placeholders remain excluded; decision-time consumers retain their stricter completed-week cutoff.
+- Preserve supported birth dates through normalization, canonical updates, ordinary existing-cache publication/reload and compact process handoff. Compute age at the decision date, qualify missing/invalid/conflicting or mismatched identities, and never substitute current age.
+- Carry prepared observations through the existing isolated-worker handoff and qualify incomplete season-to-date coverage. Reuse historical player, franchise-state and transaction consumers without a warehouse, schema, additional provider requests or new valuation/lineup model. Retained FOIS grades remain RETAINED / NOT REVALIDATED; no production regeneration or historical migration.
+- Captured read-only Day Traders/Arkham Week 5 fixtures reproduce 285/273 supported player entries. Author-run source/HTTP, real-spawn and responsive Chromium controls are separate from Scout's independent acceptance and physical iPhone/Safari or human testing. Preserve the 2 GiB and 500 ms release gates.
+
 ## v1.21.66 / build 2166 — Historical evidence integrity
 
 - Admit historical franchise-state prices only with supported canonical Market units, source/comparison identity, normalization/method and decision-eligible clocks. Withhold mixed currencies and unsupported totals/window labels; preserve compatible observations and genuine zero. Older-than-seven-day quotes remain numeric, qualified evidence.
