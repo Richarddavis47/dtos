@@ -319,9 +319,19 @@ async def generate_fois_isolated(
     ) as directory:
         temporary = Path(directory)
         working_database = temporary / "fois.sqlite3"
-        await asyncio.to_thread(
+        preparation = asyncio.create_task(asyncio.to_thread(
             _prepare_working_database, repository.path, working_database, league_id,
-        )
+        ))
+        try:
+            await asyncio.shield(preparation)
+        except asyncio.CancelledError as cancellation:
+            # Cancelling a waiter cannot cancel its SQLite thread. Drain this
+            # bounded scratch copy before removing its directory, and preserve
+            # cancellation so abandoned maintenance cannot resume publication.
+            try:
+                await preparation
+            finally:
+                raise cancellation
         source_file = cache_file or _league_cache_file(league_id)
         if not source_file.is_file():
             raise RuntimeError("FOIS canonical cache input is unavailable.")

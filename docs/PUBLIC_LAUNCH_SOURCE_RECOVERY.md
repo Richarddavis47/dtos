@@ -21,3 +21,9 @@ Actual producer→runtime→normal-account middleware→Home/API tests cover404,
 Existing atomic imports, exact picks, Trade/Balance/Preview/Adopt/reset, original prior-assessment totals/reasoning, Market/projection parity, legal lineups, Dynamic Needs/GM/history and retained FOIS contracts are unchanged. No new schema, permanent data, archive, cache or paid service. Existing2GiB/500ms requirements and all release gates remain mandatory.
 
 Automated Chromium/WebKit results are author-operated. Physical iPhone/Safari and genuine unfamiliar-user comprehension remain separate, unperformed acceptance items unless independently supplied.
+
+## Lifecycle correction discovered during release validation
+
+The first ordinary hosted lifecycle failed at server shutdown: the existing15-second graceful bound escalated to SIGKILL. Original artifacts show zero OOM counters and a1.343GB effective memory peak. The log identifies cancellation at the scratch-database preparation thread followed by directory-not-empty cleanup; a deterministic barrier control confirms that cancellation previously removed the directory before its writer stopped.
+
+Shield and drain that existing bounded scratch preparation before cleanup, then propagate cancellation. No new worker, timeout increase, published-score recalculation or storage contract. Existing spawned-compute cancellation/reaping and score-equivalence controls remain. The full FOIS process regression module now runs in ordinary lifecycle CI. Superseded validation evidence remains preserved; all canonical and hosted gates must pass again on the corrected commit.
