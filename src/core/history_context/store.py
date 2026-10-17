@@ -568,8 +568,7 @@ class CanonicalHistoryStore:
 
     def _season_records(self, league_id: str, season: int, families: set[str] | None = None, player_filter: str | None = None) -> list[dict[str, Any]]:
         from .results import matchup_result, standing_points
-        cached = sleeper_season_cache.read(league_id, season)
-        facts = cached.facts if cached else None
+        facts = self._facts(league_id, season)
         if not facts:
             from .recovery import HistoricalCheckpoints
             checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
@@ -596,7 +595,8 @@ class CanonicalHistoryStore:
             if not families & {'playoff_result', 'playoff_bracket'}:
                 facts['winners_bracket'] = facts['losers_bracket'] = []
         league = mapping(facts.get("league"))
-        context = self._retained_scoring_context(league_id, season, league, cached.checksum)
+        source_generation = sleeper_season_cache.checksum_index(league_id).get(season)
+        context = self._retained_scoring_context(league_id, season, league, source_generation or _digest(facts))
         rows = [self._record(league_id, season, "league_season", league_id, {
             "sleeper_season_league_id": league.get("league_id"),
             "sleeper_season": league.get("season"),
