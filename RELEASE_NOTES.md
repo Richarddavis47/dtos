@@ -1,3 +1,9 @@
+## v1.21.64 / build 2164 — Recommendation integrity
+
+- Apply the existing severe-Market-loss safeguard to player-only evaluations; a trivial positive lineup change cannot rescue a 995-to-75 return. Require existing material weekly production evidence before positive-horizon endorsement.
+- Preserve meaningful intentional overpays, complementary bilateral exchanges, strategy-specific capital policy, exact canonical Market/Sleeper evidence and legal lineup calculations. Keep legality, user-side judgment, counterparty plausibility and generated eligibility separate.
+- Add actual publisher/evaluator/authenticated HTTP and released-client regression controls across strategies, Trade For, Shop, Recommended and Adjust. No new storage, source writes, FOIS regeneration or unrelated UI/history changes. Independent Scout and physical-device/human acceptance remain separate.
+
 ## v1.21.63 / build 2163 — Cancellation cleanup
 
 - Keep every cancellation-drain wait shielded while the existing scratch-preparation thread is active. Repeated cancellation cannot make cleanup race that thread or recreate an orphan directory; propagate cancellation after completion and never submit/publish abandoned work.

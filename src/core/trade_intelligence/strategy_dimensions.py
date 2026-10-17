@@ -1,5 +1,8 @@
 """Bilateral observable strategic effects; no blended utility score."""
-from .capital_assessment import assess_capital, production_evidence, resolve_strategy
+from .capital_assessment import (
+    SEVERE_MARKET_LOSS_RATIO, TRADE_EVALUATION_POLICY_VERSION,
+    assess_capital, production_evidence, resolve_strategy,
+)
 
 
 def strategic_profile(incoming, outgoing, impact, package):
@@ -55,7 +58,7 @@ def plausibility(strategy, package, market_return, historical):
     material_gain = strategy['production_evidence']['material_gain']
     material_loss = strategy['production_evidence']['material_loss']
     ratio = strategy.get('market_return_ratio')
-    if ratio is not None and ratio < .50:
+    if ratio is not None and ratio < SEVERE_MARKET_LOSS_RATIO:
         state, reasons = 'LOW', ['COUNTERPARTY_SEVERE_MARKET_LOSS']
     elif capital_fit:
         recommendation = capital_fit['recommendation']
@@ -110,7 +113,7 @@ def plausibility(strategy, package, market_return, historical):
             'reason_codes': reasons, 'historical_context': historical,
             'history_role': 'supporting context only; never a deterministic veto',
             'acceptance_probability': None, 'explanation': explanation,
-            'policy': {'severe_market_loss_ratio': .50, 'unknown_direction_production_min_return_ratio': .80,
+            'policy': {'severe_market_loss_ratio': SEVERE_MARKET_LOSS_RATIO, 'unknown_direction_production_min_return_ratio': .80,
                        'unknown_direction_capital_min_return_ratio': .85, 'requires_complete_projection_and_capital': True},
             'manager_history': manager_history_evidence(historical),
             'manager_strategy': strategy.get('manager_strategy')}
@@ -177,6 +180,7 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
     depth_gain = any(d > 0 for d in active['reserve_slot_changes'].values())
     capital_changed = bool(active['future_capital']['received'] or active['future_capital']['sent'])
     complete = active['projection_coverage_complete']
+    material_gain = active['production_evidence']['material_gain']
     trace = []
     recommendation = None
     if not result['legal']:
@@ -190,13 +194,20 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
         fit = active['capital_strategy_fit']
         recommendation = fit['recommendation']
         trace.append(fit['reason_code'])
+    elif (complete and market['availability'] == 'full'
+          and active.get('market_return_ratio') is not None
+          and active['market_return_ratio'] < SEVERE_MARKET_LOSS_RATIO):
+        # Player-only offers must not bypass the accepted capital/counterparty
+        # severe-loss guard merely because their lineup delta is positive.
+        recommendation = 'REJECT'
+        trace.append('SEVERE_MARKET_LOSS')
     elif packages['active']['assessment'] == 'POOR' and losses and not gains and not depth_gain:
         recommendation = 'NOT WORTH IT'
         trace.append('LINEUP_AND_PACKAGE_COST_WITHOUT_DEPTH_BENEFIT')
     elif losses and not gains and not depth_gain and difference is not None and difference <= 0:
         recommendation = 'REJECT' if difference < 0 and complete else 'NOT WORTH IT'
         trace.append('SUPPORTED_LINEUP_COST_WITHOUT_MARKET_OR_DEPTH_COMPENSATION')
-    elif gains and not losses and not depth_loss and complete:
+    elif gains and not losses and not depth_loss and complete and material_gain:
         recommendation = 'SMASH ACCEPT' if difference is not None and difference >= 0 else 'WORTH PURSUING'
         trace.append('SUPPORTED_HORIZON_BENEFIT_WITHOUT_DEPTH_OR_CAPACITY_LOSS')
         if difference is None:
@@ -214,6 +225,9 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
           and active['market_return_ratio'] >= .85):
         recommendation = 'FAIR / OPTIONAL'
         trace.append('SUPPORTED_DEPTH_GAIN_WITH_DISCLOSED_MARKET_COST')
+    elif complete and difference is not None and difference < 0 and not material_gain:
+        recommendation = 'NOT WORTH IT'
+        trace.append('MARKET_COST_WITHOUT_MATERIAL_BENEFIT')
     elif (complete and not gains and not losses and not depth_gain and not depth_loss
           and difference == 0 and packages['active']['assessment'] != 'POOR'):
         recommendation = 'FAIR / OPTIONAL'
@@ -276,7 +290,7 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
     for side, strategy in strategies.items():
         window = (strategy['competitive_window'] or {}).get('classification')
         deltas = [h['delta'] for h in strategy['horizons'].values() if h.get('delta') is not None]
-        supported_gain = any(d > 0 for d in deltas) and not any(d < 0 for d in deltas)
+        supported_gain = strategy['production_evidence']['material_gain'] and not any(d < 0 for d in deltas)
         best_for[side] = ('CONTENDING' if window in ('Elite Contender', 'Contender', 'Playoff Team') and supported_gain
                           else 'RETOOLING' if window == 'Re-tooling' and supported_gain
                           else 'NO CLEAR FIT')
@@ -300,5 +314,5 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
     if plausible['manager_history']['disclosure']:
         result['counterparty_summary'] += ' ' + plausible['manager_history']['disclosure'] + '.'
     result['perspectives'] = {'for_your_team': recommendation or 'UNAVAILABLE', 'bilateral_reality': plausible['assessment']}
-    result.setdefault('provenance', {})['strategy_methodology'] = 'scoped-trade-effects-v4-discovery'
+    result.setdefault('provenance', {})['strategy_methodology'] = TRADE_EVALUATION_POLICY_VERSION
     return result

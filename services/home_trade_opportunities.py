@@ -47,6 +47,7 @@ def _semantic(value):
 
 
 def source_identity(data):
+    from src.core.intelligence import TRADE_EVALUATION_POLICY_VERSION
     from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations
     from services.trade_intelligence import _trade_projection_service
     from src.core.projection_intelligence.service import canonical_projection_identity
@@ -102,6 +103,7 @@ def source_identity(data):
                 ),
             },
             "bilateral_trade_v3/home_projection_v1/legal-roster-diagnostics-v1",
+            TRADE_EVALUATION_POLICY_VERSION,
         )
     )
 
