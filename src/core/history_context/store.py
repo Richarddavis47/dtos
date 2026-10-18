@@ -418,10 +418,6 @@ class CanonicalHistoryStore:
         """Return the compact durable discovery manifest for progress surfaces."""
         return minimal_metadata_store.season_chain(league_id)
 
-    def _facts(self, league_id: str, season: int) -> dict[str, Any] | None:
-        cached = sleeper_season_cache.read(league_id, season)
-        return cached.facts if cached else None
-
     def ownership_observations(self, league_id: str) -> dict[str, Any]:
         """Background reconciliation over canonical records; no provider reads."""
         from .ownership import reconcile_ownership
@@ -568,7 +564,10 @@ class CanonicalHistoryStore:
 
     def _season_records(self, league_id: str, season: int, families: set[str] | None = None, player_filter: str | None = None) -> list[dict[str, Any]]:
         from .results import matchup_result, standing_points
-        facts = self._facts(league_id, season)
+        # Pin facts and provenance to one verified publication. A replacement
+        # after this read must not relabel these facts with a newer checksum.
+        cached = sleeper_season_cache.read(league_id, season)
+        facts = cached.facts if cached else None
         if not facts:
             from .recovery import HistoricalCheckpoints
             checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
@@ -595,8 +594,7 @@ class CanonicalHistoryStore:
             if not families & {'playoff_result', 'playoff_bracket'}:
                 facts['winners_bracket'] = facts['losers_bracket'] = []
         league = mapping(facts.get("league"))
-        source_generation = sleeper_season_cache.checksum_index(league_id).get(season)
-        context = self._retained_scoring_context(league_id, season, league, source_generation or _digest(facts))
+        context = self._retained_scoring_context(league_id, season, league, cached.checksum)
         rows = [self._record(league_id, season, "league_season", league_id, {
             "sleeper_season_league_id": league.get("league_id"),
             "sleeper_season": league.get("season"),

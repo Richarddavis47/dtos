@@ -25,6 +25,20 @@ from services.history import (
 PageRenderer = Callable[[str, str], HTMLResponse]
 
 
+def _player_season_card(season: str, summary: dict) -> str:
+    if summary.get('availability') == 'unavailable' or summary.get('season_total') is None:
+        production = '<p>Historical scoring unavailable for this season; no production total is inferred.</p>'
+    else:
+        def metric(name):
+            value = summary.get(name)
+            return escape(str(value)) if value is not None else 'Unavailable'
+        production = (
+            f'<p><b>{metric("season_total")}</b> points · {metric("points_per_game")} PPG</p>'
+            f'<p>Floor {metric("floor")} · Ceiling {metric("ceiling")} · Consistency {metric("consistency_score")}</p>'
+        )
+    return f'<article class="card"><h3>{escape(str(season))}</h3>{production}</article>'
+
+
 def create_history_router(
     *, league_id: str, page: PageRenderer,
     league_resolver: Callable[[], str] | None = None,
@@ -200,7 +214,7 @@ def create_history_router(
         return_link = (f'<a class="back" href="/trades/history/{quote(origin["transaction_id"], safe="")}">← Back to original trade timeline</a>' if origin else '')
         player_url = contextual_player_url(player_id, from_trade=origin['transaction_id'] if origin else None)
         seasons = "".join(
-            f'<article class="card"><h3>{escape(season)}</h3><p><b>{summary["season_total"]}</b> points · {summary["points_per_game"]} PPG</p><p>Floor {summary["floor"]} · Ceiling {summary["ceiling"]} · Consistency {summary["consistency_score"]}</p></article>'
+            _player_season_card(season, summary)
             for season, summary in career["seasons"].items()
         )
         return page(

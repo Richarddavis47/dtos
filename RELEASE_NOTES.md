@@ -1,3 +1,9 @@
+## v1.21.69 / build 2169 — Historical provenance and missing-data presentation
+
+- Retained historical facts carry the checksum of the same verified source snapshot, including during concurrent publication replacement. No second mutable generation read or invented checksum is used.
+- Historical player pages explain unavailable scoring without raw None metrics; supported zero remains numeric and unsupported individual metrics stay qualified.
+- Preserve v1.21.68 admission, birth-date conflicts, exact identities, historical pricing/reconstruction safeguards and canonical Trade/Market/Sleeper behavior. No new schema, archive, provider requests, paid infrastructure or retained FOIS regeneration. Independent Scout acceptance remains required.
+
 ## v1.21.68 / build 2168 — Historical evidence admission and identity integrity
 
 - Close retained-source bypasses for unverified future weeks and missing/incompatible league scoring. Career totals, leaderboards and historical production consume qualified facts through the same boundary; supported completed Day Traders/Arkham evidence and genuine zero remain usable.

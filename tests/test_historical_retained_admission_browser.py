@@ -32,12 +32,18 @@ class HistoricalRetainedAdmissionBrowserTests(unittest.TestCase):
             browser = launch_chromium(pw, headless=True, args=['--no-sandbox'])
             try:
                 for original, source in prepared:
-                    for case in ('supported', 'unverified_completion', 'missing_scoring'):
+                    for case in ('supported', 'unverified_completion', 'missing_scoring', 'zero_scoring'):
                         data = deepcopy(original)
+                        current_source = deepcopy(source)
                         league = data['league']['league_id']
                         if case == 'unverified_completion':
                             data['league']['settings']['last_scored_leg'] = '5'
-                        fixture.retained(data, source, future=True)
+                        if case == 'zero_scoring':
+                            data['season_matchups'] = {}
+                            for side in current_source['week5']:
+                                if '11563' in side['players_points']:
+                                    side['players_points']['11563'] = 0
+                        fixture.retained(data, current_source, future=case != 'zero_scoring')
                         if case == 'missing_scoring':
                             data['league']['scoring_settings'] = data['scoring_settings'] = {}
                         fixture.store.update_current(league, data)
@@ -63,10 +69,16 @@ class HistoricalRetainedAdmissionBrowserTests(unittest.TestCase):
                             text = main.inner_text()
                             self.assertIn('Bo Nix', text)
                             self.assertNotIn('999', text)
+                            self.assertNotIn('None', text)
                             if case == 'supported':
                                 self.assertIn(f'{expected} points', text)
+                            elif case == 'zero_scoring':
+                                self.assertIn('0.0 points · 0.0 PPG', text)
+                                self.assertIn('Consistency Unavailable', text)
                             else:
                                 self.assertNotIn(f'{expected} points', text)
+                            if case == 'missing_scoring':
+                                self.assertIn('Historical scoring unavailable for this season', text)
                             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                             action = main.get_by_role('link', name='Back to connected Player Dossier')
                             action.focus()

@@ -1,5 +1,22 @@
 # Canonical Historical Intelligence Contract
 
+## v1.21.69 — Single-publication provenance and unavailable scoring
+
+Retained record projection pins the facts and checksum from the same verified
+`CachedSeason` read. It never obtains a newer mutable checksum after capturing
+older facts, and never invents a publication identity from projected fragments.
+Publication replacement can yield the earlier or later verified snapshot, but
+cannot relabel an earlier score with the later publication checksum. No new
+lock, cache, archive or provider request is required.
+
+Player history renders unavailable season scoring as a concise explanation,
+not null-valued metrics. Genuine zero production remains numeric; an unavailable
+individual metric such as consistency at zero mean is labeled Unavailable.
+Player identity, season and dossier navigation remain available. All v1.21.68
+admission and identity-conflict rules continue to apply. Retained FOIS remains
+RETAINED / NOT REVALIDATED; the historical integration batch awaits independent
+Scout acceptance.
+
 ## v1.21.68 — Retained admission and rejected identity updates
 
 Active matchups, retained Sleeper caches and existing compact reader checkpoints
