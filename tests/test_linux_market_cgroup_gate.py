@@ -518,6 +518,14 @@ class RestartReuseValidationTests(unittest.TestCase):
                 for row in rows
             )
             self.assertEqual(events, HISTORICAL_COUNT)
+            from src.core.history_context.store import CanonicalHistoryStore
+            store = CanonicalHistoryStore()
+            with patch('src.core.history_context.store.sleeper_season_cache', cache):
+                admitted = [row for season in range(2021, 2026)
+                            for row in store.records(LEAGUE_ID, 'player_week', season=season, limit=None)[1]]
+            self.assertEqual(len(admitted), HISTORICAL_COUNT)
+            self.assertEqual(sum(r['payload']['fantasy_points'] is not None for r in admitted), HISTORICAL_COUNT)
+            self.assertTrue(any(r['payload']['fantasy_points'] == 0 for r in admitted))
 
     def setUp(self) -> None:
         self.payload = _published()

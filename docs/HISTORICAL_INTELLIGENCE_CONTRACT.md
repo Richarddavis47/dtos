@@ -1,5 +1,39 @@
 # Canonical Historical Intelligence Contract
 
+## v1.21.68 — Retained admission and rejected identity updates
+
+Active matchups, retained Sleeper caches and existing compact reader checkpoints
+share source-confirmed completion admission: an integer `last_scored_leg` from
+0–18, excluding booleans, or the provider's explicit completed-season status.
+Missing, malformed and out-of-range markers do not admit actuals; calendar
+position is not completion evidence. Rejected weeks never reach career totals,
+season leaders or historical production. Historical decision cutoffs remain
+independent and stricter than source completion.
+
+Retained numeric player scores require a supported source league/season and
+finite league-scoring settings. Same-season operational league, scoring and
+lineup context must agree when present; current-season rules never replace
+independently supported older-season rules. Unsupported numeric observations
+retain raw source scores and membership/roles but have unavailable admitted
+production, not zero. Reconciliation preserves that qualification, including
+when another copy contains a numeric score. Existing compact checkpoint reads
+reapply these rules without rewriting the retained source.
+
+An identity-mismatched update cannot replace an accepted identity or its birth
+date candidates. The existing normalized cache retains the accepted identity
+and unresolved conflict through restart; rejected raw dates are not republished
+under a corrected ID. A later single-date refresh does not resolve a known
+conflict. Ordinary refresh has no conflict-resolution authority. Legitimate
+resolution requires explicit reviewed source reconciliation that establishes
+the exact player/provider identity, authoritative corrective provenance and why
+each conflicting candidate is invalid or superseded. No such reconciliation,
+history rewrite or new resolution mechanism is performed by this release.
+
+Source replacement invalidates existing bounded read indexes. No cache limits,
+schema, archive, provider calls, valuation policy or legal-lineup rules change.
+Retained FOIS grades remain RETAINED / NOT REVALIDATED. Independent Scout
+acceptance of these controls is required before closing the integration batch.
+
 DTOS v1.12.0 establishes one read boundary above the existing Sleeper-backed
 `CanonicalHistoryStore`. It does not add a provider archive or a league-history
 database.

@@ -71,6 +71,7 @@ class HistoricalFaabConflictTests(unittest.TestCase):
 
     def test_same_generation_conflicts_both_orders_repeat_and_http(self):
         results = []
+        source_generations = []
         for scores in ([10, 20], [20, 10]):
             with self.subTest(scores=scores):
                 graph = self.scores(scores)
@@ -79,7 +80,14 @@ class HistoricalFaabConflictTests(unittest.TestCase):
                 self.assertIsNone(rows[0]["payload"]["fantasy_points"])
                 self.assertEqual(rows[0]["payload"]["scoring_conflict_reason"], "Conflicting numeric scores in the same source generation")
                 self.assertEqual(reconcile_player_weeks(rows), rows)
-                results.append(rows[0]['payload'])
+                payload = dict(rows[0]['payload'])
+                generation = payload.pop('source_generation')
+                # Reversing the raw archive creates a different publication.
+                # Preserve that exact identity while comparing all original
+                # order-independent score, role and conflict evidence.
+                self.assertEqual(generation, self.fixture.cache.read(fixtures.DAY, 2026).checksum)
+                source_generations.append(generation)
+                results.append(payload)
                 summary = graph.player_season_summaries("score")[0]
                 self.assertIsNone(summary["starter_points"])
                 self.assertIsNone(summary["last_scored_franchise_id"])
@@ -88,6 +96,7 @@ class HistoricalFaabConflictTests(unittest.TestCase):
                     self.assertEqual(result.status_code, 200)
                     self.assertIn("Conflicting numeric scores", result.text)
         self.assertEqual(results[0], results[1])
+        self.assertNotEqual(source_generations[0], source_generations[1])
 
     def test_faab_two_party_multiple_directions_zero_absent_and_identical(self):
         publish_faab(self.fixture)

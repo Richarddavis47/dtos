@@ -642,7 +642,8 @@ def _canonical_history_fixture(root: Path) -> None:
             "league": {
                 "league_id": LEAGUE_ID, "season": str(season),
                 "name": "Sanitized League", "total_rosters": 10,
-                "settings": {}, "scoring_settings": {}, "roster_positions": [],
+                "status": "complete", "settings": {},
+                "scoring_settings": {"rec": 1.0, "pass_td": 4.0}, "roster_positions": [],
             },
             "users": [
                 {"user_id": f"u{index}", "display_name": f"GM {index}"}
