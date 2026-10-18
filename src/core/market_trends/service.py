@@ -162,7 +162,6 @@ class MarketTrendService:
                 return cached.public(compact=compact)
         reasons = comparison_reasons(observations)
         by_time: dict[datetime, float] = {}
-        by_generation: dict[tuple[Any, ...], float] = {}
         for row in observations:
             stamp, value = _stamp(row["observed_at"]), float(row["value"])
             if not isfinite(value) or (stamp in by_time and by_time[stamp] != value):
@@ -173,11 +172,6 @@ class MarketTrendService:
                 reasons += ("CONFLICTING_SOURCE_GENERATION",)
             if source_ids and not all(source_ids.values()):
                 reasons += ("COMPARABLE_HISTORY_UNAVAILABLE",)
-            if source_ids and all(source_ids.values()):
-                key = tuple(sorted(source_ids.items()))
-                if key in by_generation and by_generation[key] != value:
-                    reasons += ("CONFLICTING_SOURCE_GENERATION",)
-                by_generation[key] = value
         reasons = tuple(dict.fromkeys(reasons))
         # A bare current number has no proven comparison identity. Keep it as
         # current evidence, but never silently append it to a historical series.
@@ -190,11 +184,6 @@ class MarketTrendService:
             and comparison_identity(current_semantics or {}) == comparison_identity(observations[-1])
             and not comparison_reasons([observations[-1], current_semantics or {}])
         )
-        current_sources = current_semantics.get("source_generations") or {}
-        if current_sources and all(current_sources.values()):
-            key = tuple(sorted(current_sources.items()))
-            if key in by_generation and by_generation[key] != current_value:
-                current_comparable = False
         historical_values = [] if reasons else [float(row["value"]) for row in observations]
         values = historical_values + ([float(current_value)] if current_comparable and not reasons else [])
         direction, magnitude, volatility = self._direction(values)

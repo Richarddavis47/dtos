@@ -75,6 +75,20 @@ class CurrentMarketHTTPTests(unittest.TestCase):
         result = next(row for row in trending['most_volatile'] if row['asset_id'] == 'player:1')
         self.assertEqual(result['market_trend']['magnitude'], 100)
 
+    def test_actual_store_ambiguous_provider_generations_cannot_become_movement(self):
+        from src.core.market_trends import MarketTrendService
+        data, _ = prepared(2400)
+        original = CheckpointPipeline._market_observations(data, 'player:1')[0]
+        stamp = '2026-08-01T12:00:00Z'
+        copies = (replace(original, observed_at=stamp, source_identity='generation-A'),
+                  replace(original, observed_at=stamp, source_identity='generation-B'))
+        self.memory.put_sparse(checkpoint('ambiguous-generations', 200, stamp),
+            market_context_id='fixture', provider_evidence=copies)
+        result = MarketTrendService(self.memory).trend_for_asset('player:1', None)
+        self.assertEqual(result['direction'], 'not_comparable')
+        self.assertIn('CONFLICTING_SOURCE_GENERATION', result['comparison_reasons'])
+        self.assertIsNone(result['magnitude'])
+
     def test_source_revision_refreshes_explicit_cache_without_rewriting_history(self):
         from src.core.market_trends import MarketTrendService
         service = MarketTrendService(self.memory)
@@ -238,8 +252,8 @@ class CurrentComparisonAdmissionTests(unittest.TestCase):
         result = service.trend_for_asset('player:1', 200, current_semantics=current,
                                          current_evidence_at='2026-01-03T00:00:00Z')
         self.assertEqual(result['magnitude'], 100)
-        rows[0]['source_generations'] = {'A': 'same'}
-        current['source_generations'] = {'A': 'same'}
+        rows[0]['market_context_id'] = 'historical-context'
+        current['market_context_id'] = 'incompatible-context'
         result = service.trend_for_asset('player:1', 200, current_semantics=current,
                                          current_evidence_at='2026-01-03T00:00:00Z')
         self.assertFalse(result['provenance']['current_endpoint_comparable'])
@@ -288,6 +302,40 @@ class CurrentComparisonAdmissionTests(unittest.TestCase):
         for row in rows[:2]:
             row['source_generations'] = {'A': 'same-generation'}
         rows[1]['value'] = 100
+        rows[1]['source_generation_conflict'] = True
         result = MarketTrendService(_Reader(rows)).trend_for_asset('player:1', None)
         self.assertIsNone(result['magnitude'])
         self.assertIn('CONFLICTING_SOURCE_GENERATION', result['comparison_reasons'])
+
+    def test_unchanged_normalization_population_is_not_an_immutable_player_quote(self):
+        from copy import deepcopy
+        from src.core.valuation.normalization import prepare_market_normalization
+        from src.core.valuation.universe import ValuationUniverse
+        from src.core.valuation_intelligence.engine import _score_asset
+        from src.core.market_trends import MarketTrendService
+        from src.core.market_trends.current import current_comparison
+        from tests.test_market_trends_step7 import _Reader
+        base, _ = prepared()
+        provider = base['market_data']['providers']['FantasyCalc']
+        provider['2'] = deepcopy(provider['1'])
+        provider['2']['value'] = 3000
+        points = []
+        for day, prices in ((1, (9000, 3000)), (2, (3000, 9000))):
+            data = deepcopy(base)
+            for index, value in enumerate(prices, 1):
+                quote = data['market_data']['providers']['FantasyCalc'][str(index)]
+                quote['value'] = value
+                quote['retrieved_at'] = f'2026-08-0{day}T12:00:00Z'
+            prepare_market_normalization(data['market_data'])
+            asset = ValuationUniverse(data, {'data': data}).by_id['player:1']
+            scored = _score_asset(asset, [], {}, None)
+            data['valuation_intelligence']['assets']['player:1'] = scored
+            price = scored['valuation_layers']['market_value']['value']
+            points.append((price, current_comparison(data, 'player:1', price)))
+        self.assertNotEqual(points[0][0], points[1][0])
+        self.assertEqual(points[0][1]['source_generations'], points[1][1]['source_generations'])
+        row = {**points[0][1], 'observation_id': 'earlier-player-quote', 'value': points[0][0], 'confidence': 80}
+        result = MarketTrendService(_Reader([row])).trend_for_asset('player:1', points[1][0],
+            current_semantics=points[1][1])
+        self.assertTrue(result['provenance']['current_endpoint_comparable'])
+        self.assertEqual(result['magnitude'], points[1][0] - points[0][0])

@@ -8,14 +8,14 @@ from unittest.mock import patch
 
 from playwright.sync_api import sync_playwright
 
-from tests.test_market_trend_current_integration import CurrentMarketHTTPTests
+from tests import test_market_trend_current_integration as fixtures
 from tools.validation.browser_runtime import launch_chromium
 
 
 class MarketTrendCurrentBrowserTests(unittest.TestCase):
     def test_dated_current_comparison_disclosure_and_phone_geometry(self):
         import dtos_app
-        fixture = CurrentMarketHTTPTests()
+        fixture = fixtures.CurrentMarketHTTPTests()
         fixture.page_renderer = dtos_app.page
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
