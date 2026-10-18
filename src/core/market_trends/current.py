@@ -29,8 +29,12 @@ def _time(value: Any) -> datetime | None:
 def current_comparison(data: dict[str, Any], asset_id: str, value: Any) -> dict[str, Any]:
     """Fail closed for bare prices, raw provider units and unbound identities."""
     asset = ((data.get("valuation_intelligence") or {}).get("assets") or {}).get(asset_id) or {}
+    if not isinstance(asset, dict):
+        return {}
     layer = ((asset.get("valuation_layers") or {}).get("market_value") or {})
     accepted = asset.get("market_observation_evidence") or {}
+    if not isinstance(layer, dict) or not isinstance(accepted, dict):
+        return {}
     if (asset.get("asset_id") != asset_id or not layer.get("generation") or isinstance(value, bool)
             or not isinstance(value, (int, float)) or not isfinite(value)
             or not 0 <= value <= 1000 or value != layer.get("value")
@@ -42,12 +46,23 @@ def current_comparison(data: dict[str, Any], asset_id: str, value: Any) -> dict[
     rows, clocks, providers, generations = [], [], [], {}
     now = datetime.now(timezone.utc)
     for observation in observations:
+        if not isinstance(observation, dict):
+            return {}
         metadata = observation.get("metadata") or {}
+        if not isinstance(metadata, dict):
+            return {}
         provider = observation.get("provider")
         generation = observation.get("source_identity")
         stamp = _time(observation.get("observed_at"))
-        if (not provider or provider in providers or not generation or stamp is None
+        if (not isinstance(provider, str) or not provider.strip() or provider in providers
+                or not isinstance(generation, str) or not generation.strip() or stamp is None
                 or stamp > now or not observation.get("normalization_version")):
+            return {}
+        for name in ("raw_value", "normalized_value"):
+            quote = observation.get(name)
+            if isinstance(quote, bool) or not isinstance(quote, (int, float)) or not isfinite(quote):
+                return {}
+        if not 0 <= observation["normalized_value"] <= 1000:
             return {}
         # A retained old quote cannot acquire a later effective source clock.
         for name in ("source_updated_at", "published_at"):
@@ -56,7 +71,7 @@ def current_comparison(data: dict[str, Any], asset_id: str, value: Any) -> dict[
                 if source_stamp is None or source_stamp > stamp:
                     return {}
         semantic = metadata.get("comparison_semantics") or {}
-        if (semantic.get("value_concept") != "external_market_normalized_index"
+        if (not isinstance(semantic, dict) or semantic.get("value_concept") != "external_market_normalized_index"
                 or semantic.get("value_scale") != "0-1000"
                 or semantic.get("methodology") != MARKET_SELECTION_VERSION + ":" + OBSERVATION_IDENTITY_VERSION):
             return {}

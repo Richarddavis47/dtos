@@ -31,8 +31,9 @@ def comparison_reasons(rows: list[dict[str, Any]]) -> tuple[str, ...]:
         return ()
     reasons = []
     methods = {row.get("model_version") for row in rows if row.get("model_version")}
-    explicit_methods = {(row.get("comparison_semantics") or {}).get("methodology")
-                        for row in rows}
+    explicit_methods = {semantic["methodology"] for row in rows
+                        for semantic in (row.get("comparison_semantics"),)
+                        if isinstance(semantic, dict) and isinstance(semantic.get("methodology"), str)}
     if len(methods) > 1 or len(explicit_methods - {None}) > 1:
         reasons.append("METHODOLOGY_VERSION_CHANGED")
     identities = [comparison_identity(row) for row in rows]

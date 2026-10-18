@@ -52,6 +52,16 @@ def _number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool) and isfinite(value)
 
 
+def _supported_value(row: dict[str, Any]) -> bool:
+    value = row.get("value")
+    if not _number(value):
+        return False
+    semantic = row.get("comparison_semantics")
+    # Honor the declared unit contract; never infer or convert native prices
+    # from their size. A 10000-valued row is not a 0-1000 index observation.
+    return not (isinstance(semantic, dict) and semantic.get("value_scale") == "0-1000") or 0 <= value <= 1000
+
+
 class MarketTrendService:
     """Produces deterministic derived intelligence; it never owns or writes history."""
 
@@ -100,7 +110,7 @@ class MarketTrendService:
         evidence: dict[str, Any] | None = None, current_evidence_at: str | None = None,
         current_semantics: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        current_semantics = current_semantics or {}
+        current_semantics = current_semantics if isinstance(current_semantics, dict) else {}
         current_evidence_at = current_evidence_at or current_semantics.get("observed_at")
         now = datetime.now(timezone.utc)
         explicit_boundary = as_of is not None
@@ -137,7 +147,7 @@ class MarketTrendService:
                                 _valid_temporal_observation({"observed_at": row["known_at"]})
                                 and _stamp(row["known_at"]) <= admission_boundary))
                             and row.get("asset_id", asset_id) == asset_id
-                            and _number(row.get("value"))]
+                            and _supported_value(row)]
         if explicit_boundary:
             boundary = query_boundary
         else:
@@ -176,7 +186,8 @@ class MarketTrendService:
         # A bare current number has no proven comparison identity. Keep it as
         # current evidence, but never silently append it to a historical series.
         current_comparable = bool(
-            observations and _number(current_value) and current_evidence_at
+            observations and _supported_value({"value": current_value,
+                "comparison_semantics": current_semantics.get("comparison_semantics")}) and current_evidence_at
             and _valid_temporal_observation({"observed_at": current_evidence_at})
             and _stamp(observations[-1]["observed_at"]) < _stamp(current_evidence_at) <= min(now, _stamp(boundary))
             and current_semantics.get("asset_id", asset_id) == asset_id

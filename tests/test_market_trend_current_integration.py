@@ -339,3 +339,49 @@ class CurrentComparisonAdmissionTests(unittest.TestCase):
             current_semantics=points[1][1])
         self.assertTrue(result['provenance']['current_endpoint_comparable'])
         self.assertEqual(result['magnitude'], points[1][0] - points[0][0])
+
+    def test_declared_canonical_units_cannot_admit_native_sized_price(self):
+        from src.core.market_trends import MarketTrendService
+        from tests.test_market_trends_step7 import _Reader, _row
+        rows = [_row('a', '2026-01-01T00:00:00Z', 100),
+                _row('b', '2026-02-01T00:00:00Z', 10000)]
+        for row in rows:
+            row['comparison_semantics'].update(value_concept='external_market_normalized_index', value_scale='0-1000')
+        result = MarketTrendService(_Reader(rows)).trend_for_asset('player:1', None)
+        self.assertIsNone(result['magnitude'])
+        self.assertEqual(result['checkpoint_count'], 1)
+        self.assertEqual(result['provenance']['excluded_evidence_count'], 1)
+        result = MarketTrendService(_Reader(rows[:1])).trend_for_asset('player:1', 10000,
+            current_semantics=rows[0], current_evidence_at='2026-03-01T00:00:00Z')
+        self.assertFalse(result['provenance']['current_endpoint_comparable'])
+        self.assertIsNone(result['magnitude'])
+
+    def test_malformed_comparison_semantics_stay_unavailable(self):
+        from src.core.market_trends import MarketTrendService
+        from src.core.market_trends.current import current_comparison
+        from tests.test_market_trends_step7 import _Reader, _row
+        from copy import deepcopy
+        for semantic in ('unsupported', [], {'methodology': ['unknown']}):
+            with self.subTest(semantic=semantic):
+                row = _row('a', '2026-01-01T00:00:00Z', 100)
+                row['comparison_semantics'] = semantic
+                result = MarketTrendService(_Reader([row])).trend_for_asset('player:1', None)
+                self.assertEqual(result['direction'], 'not_comparable')
+                self.assertIsNone(result['magnitude'])
+                data, _ = prepared(2400)
+                observation = data['valuation_intelligence']['assets']['player:1']['market_observation_evidence']['observations'][0]
+                observation['metadata']['comparison_semantics'] = deepcopy(semantic)
+                self.assertEqual(current_comparison(data, 'player:1', 200), {})
+
+    def test_supported_native_history_is_explicitly_not_canonical_units(self):
+        from src.core.market_trends import MarketTrendService
+        from tests.test_market_trends_step7 import _Reader, _row
+        rows = [_row('a', '2026-01-01T00:00:00Z', 100),
+                _row('b', '2026-02-01T00:00:00Z', 10000)]
+        for row in rows:
+            row['comparison_semantics'].update(value_concept='native_provider_quote', value_scale='native-provider-units')
+        result = MarketTrendService(_Reader(rows)).trend_for_asset('player:1', 200)
+        self.assertEqual(result['comparison_scope'], 'history_only')
+        self.assertEqual(result['comparison_units'], 'native-provider-units')
+        self.assertFalse(result['provenance']['current_endpoint_comparable'])
+        self.assertEqual(result['magnitude'], 9900)
