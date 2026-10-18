@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from src.core.history_context.store import CanonicalHistoryStore
+from src.core.history_context.season_cache import SleeperSeasonCache
 from src.core.historical_intelligence.service import HistoricalIntelligenceService
 
 
@@ -43,7 +44,8 @@ class Batch2HistoryReconciliationTests(unittest.TestCase):
         # Declare their intended supported completed-season source explicitly.
         facts = {**facts, 'league': {'league_id': 'league-a', 'season': '2025',
             'status': 'complete', 'scoring_settings': {'rec': 1}, **facts.get('league', {})}}
-        with patch.object(store, "_facts", return_value=facts):
+        snapshot = SleeperSeasonCache.normalize('league-a', 2025, facts)
+        with patch('src.core.history_context.store.sleeper_season_cache.read', return_value=snapshot):
             return store._season_records("league-a", 2025)
 
     def test_multiple_drafts_keep_selection_and_franchise_identity(self):

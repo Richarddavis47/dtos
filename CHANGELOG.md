@@ -1,3 +1,9 @@
+## v1.21.69 / build 2169 — Historical provenance and missing-data presentation
+
+- Pin retained facts and their exact source checksum to one verified CachedSeason publication. Concurrent replacement cannot label an earlier score with a later generation; preserve all active, retained and compact-recovery admission safeguards without a new lock or storage path.
+- Replace unavailable historical points/PPG/floor/ceiling/consistency output with readable unavailable evidence. Preserve genuine numeric zero, player identity, season and dossier navigation.
+- Add deterministic repeated A/B interleavings, real concurrent publication, actual HTTP and responsive two-league controls. No Market, Trade, projection, lineup, account or FOIS policy changes; retained grades remain RETAINED / NOT REVALIDATED and the integration batch remains open for Scout.
+
 ## v1.21.68 / build 2168 — Historical evidence admission and identity integrity
 
 - Apply strict provider-confirmed completion to active and retained matchup/player-week sources, including compact reader checkpoints. Missing, malformed, noninteger and out-of-range markers cannot admit future actuals into career totals or leaderboards.
