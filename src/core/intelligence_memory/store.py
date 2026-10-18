@@ -841,6 +841,7 @@ class IntelligenceCheckpointStore:
             if item is None:
                 provider_rows = json.loads(row["provider_evidence_json"] or "[]")
                 item = {
+                    "asset_id": key[0],
                     "observation_id": key[1], "observed_at": str(row["observed_at"]),
                     "value": float(row["canonical_value"]), "confidence": int(row["confidence"]),
                     "model_version": row["model_version"],
@@ -858,6 +859,13 @@ class IntelligenceCheckpointStore:
                         ) else None
                     ),
                     "providers": tuple(sorted({str(value.get("provider")) for value in provider_rows if value.get("provider")})),
+                    "source_generations": {str(value["provider"]): value.get("source_identity")
+                                           for value in provider_rows if value.get("provider")},
+                    "source_generation_conflict": any(
+                        len({value.get("source_identity") for value in provider_rows
+                             if value.get("provider") == provider}) > 1
+                        for provider in {value.get("provider") for value in provider_rows}
+                    ),
                     "reason_codes": set(), "related_asset_ids": set(),
                 }
                 observations[key] = item

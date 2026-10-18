@@ -72,6 +72,11 @@ def market_explanation(detail, trend, *, league_id):
     rows.append(row('trend', 'Observed Market trend', direction if comparable else None,
                     state=A.AVAILABLE if comparable else A.NO_COMPARABLE_EVIDENCE))
     rows.append(row('as_of', 'Trend observation boundary', trend.get('as_of'), 'as-of timestamp'))
+    for name, label in (('comparison_scope', 'Comparison scope'),
+                        ('comparison_start_at', 'Comparison starts'),
+                        ('comparison_end_at', 'Comparison ends')):
+        if trend.get(name) is not None:
+            rows.append(row(name, label, trend[name]))
     rows.append(row('confidence', 'Trend evidence confidence', trend.get('confidence'), 'evidence support'))
     for index, provider in enumerate(detail.get('providers') or []):
         if isinstance(provider, str):
@@ -83,6 +88,8 @@ def market_explanation(detail, trend, *, league_id):
                     rows.append(row(f'provider.{index}.{field}', label, provider[field], 'provider metadata', K.SOURCE))
     # Never promote generic rank or result-list position into a global rank.
     limits = []
+    if trend.get('current_qualification'):
+        limits.append(('CURRENT_COMPARISON_SCOPE', trend['current_qualification'], 'trend'))
     if rows[0][2] is None:
         limits.append(('MARKET_UNAVAILABLE', 'Current acquisition-price evidence is unavailable, not zero.', 'price'))
     if not comparable:
@@ -92,6 +99,7 @@ def market_explanation(detail, trend, *, league_id):
         'METHODOLOGY_VERSION_CHANGED': 'DTOS methodology changed. This boundary is not a player price surge or decline.',
         'COMPARABLE_HISTORY_UNAVAILABLE': 'Required comparison identity or history is unavailable; missing coverage is not stable performance.',
         'INCOMPATIBLE_OBSERVATION_BOUNDARY': 'Provider, format, scale or observation context is incompatible across this boundary; no numeric movement is claimed.',
+        'CONFLICTING_SOURCE_GENERATION': 'Conflicting prices share a source identity; numerical movement is unavailable.',
     }
     for code in dict.fromkeys(trend.get('comparison_reasons') or ()):
         if code in boundary_text:

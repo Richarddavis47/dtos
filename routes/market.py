@@ -4,7 +4,7 @@ from __future__ import annotations
 from src.ui.market_facts import market_fact_html
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime
 from html import escape
 from typing import Any, Callable
 from types import SimpleNamespace
@@ -18,7 +18,8 @@ from starlette.concurrency import run_in_threadpool
 from app_metadata import BUILD_NUMBER, VERSION
 from src.core.asset_market import AssetMarketCache, MarketWarmingError, asset_market_cache, availability_conditions
 from src.core.intelligence_memory import intelligence_checkpoint_store
-from src.core.market_trends import MarketTrendService
+from src.core.market_trends import MarketTrendService, TREND_METHOD_VERSION
+from src.core.market_trends.current import current_comparison
 from src.core.history_context import canonical_history_store
 from services.history import (
     history_progress_contracts,
@@ -78,10 +79,24 @@ def _trend_boundary_notice(trend: dict[str, Any]) -> str:
 def _trend_observation_summary(trend: dict[str, Any]) -> str:
     """Only comparable evidence gets numerical movement presentation."""
     count = trend.get('checkpoint_count', 0)
-    if trend.get('comparison_reasons') or trend.get('direction') not in ('rising', 'falling', 'stable', 'volatile'):
+    if (not trend.get('comparison_reasons') and trend.get('magnitude') is None
+            and trend.get('direction') in ('rising', 'falling', 'stable', 'volatile')
+            and trend.get('observed_low') is not None and trend.get('observed_high') is not None):
+        # Preserve the available range on older prepared summary DTOs without
+        # inventing an endpoint difference from that range.
+        return (f'{count} retained checkpoints · observed range '
+                f'{escape(available(trend["observed_low"]))}–{escape(available(trend["observed_high"]))}')
+    if trend.get('comparison_reasons') or trend.get('magnitude') is None:
         return f'{count} retained checkpoints · Numerical movement unavailable: comparable history is required.'
-    return (f'{count} meaningful checkpoints · {escape(str(trend["magnitude_band"]))} movement · '
-            f'observed range {escape(available(trend.get("observed_low")))}–{escape(available(trend.get("observed_high")))}')
+    scope = ('Historical to current publication' if trend.get('comparison_scope') == 'historical_to_current'
+             else 'Historical observations only')
+    magnitude = trend.get('magnitude')
+    units = 'Market points' if trend.get('comparison_units') == '0-1000' else str(trend.get('comparison_units') or 'observed units')
+    movement = f'{magnitude:+,.2f} {escape(units)}' if magnitude is not None else 'Movement unavailable'
+    return (f'{scope} · {movement} · {count} retained checkpoints. '
+            f'{escape(str(trend.get("comparison_start_at") or "Date unavailable"))} → '
+            f'{escape(str(trend.get("comparison_end_at") or "Date unavailable"))}. '
+            f'{escape(str(trend.get("current_qualification") or ""))}')
 
 
 def create_market_router(
@@ -92,37 +107,10 @@ def create_market_router(
     router = APIRouter(tags=["asset-market"])
     trend_service = MarketTrendService(intelligence_checkpoint_store)
 
-    def current_trend_boundaries(
-        market: Any, assets: list[dict[str, Any]],
-    ) -> dict[str, str]:
-        """Return bounded accepted-provider provenance for current market values."""
-        providers = (((market.data or {}).get("market_data") or {}).get("providers") or {})
-        statuses = (((market.data or {}).get("market_data") or {}).get("provider_status") or {})
-        result: dict[str, str] = {}
-        for asset in assets[:250]:
-            asset_id = str(asset.get("asset_id") or "")
-            if not asset_id.startswith("player:"):
-                continue
-            player_id = asset_id.removeprefix("player:")
-            candidates: list[tuple[datetime, str]] = []
-            for provider_name, provider_rows in providers.items():
-                row = (provider_rows or {}).get(player_id) if isinstance(provider_rows, dict) else None
-                if not isinstance(row, dict) or row.get("value") is None:
-                    continue
-                timestamp = row.get("updated_at") or (statuses.get(provider_name) or {}).get("last_refresh")
-                if timestamp:
-                    try:
-                        parsed = datetime.fromisoformat(
-                            str(timestamp).replace("Z", "+00:00")
-                        )
-                    except (TypeError, ValueError):
-                        continue
-                    if parsed.tzinfo is None:
-                        parsed = parsed.replace(tzinfo=timezone.utc)
-                    candidates.append((parsed, str(timestamp)))
-            if candidates:
-                result[asset_id] = max(candidates, key=lambda item: item[0])[1]
-        return result
+    def current_trend_evidence(market: Any, assets: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        return {str(asset["asset_id"]): current_comparison(
+            market.data, str(asset["asset_id"]), (asset.get("values") or {}).get("market_value"),
+        ) for asset in assets[:250]}
 
     def add_trends(
         market: Any, assets: list[dict[str, Any]], selected_league: str,
@@ -132,7 +120,7 @@ def create_market_router(
         summaries = trend_service.summaries(
             assets, league_id=selected_league, as_of=None,
             generation=market.semantic_generation,
-            current_boundaries=current_trend_boundaries(market, assets),
+            current_comparisons=current_trend_evidence(market, assets),
         )
         for asset in assets:
             asset["market_trend"] = summaries.get(str(asset.get("asset_id")))
@@ -294,9 +282,7 @@ def create_market_router(
             trend_service.trend_for_asset, str(asset["asset_id"]), current,
             league_id=selected_league, as_of=boundary,
             generation=market.semantic_generation,
-            current_evidence_at=current_trend_boundaries(market, [asset]).get(
-                str(asset["asset_id"])
-            ),
+            current_semantics=current_trend_evidence(market, [asset]).get(str(asset["asset_id"])),
         )
         result["historical_progress"] = history_progress_contracts(selected_league)
         return jsonable_encoder(result)
@@ -350,13 +336,13 @@ def create_market_router(
             key=lambda row: (row["market_trend"].get("magnitude") or 0, str(row["asset_id"])),
         )[:limit]
         return jsonable_encoder({
-            **market.identity(), "method_version": "sparse-event-market-trend-1",
+            **market.identity(), "method_version": TREND_METHOD_VERSION,
             "historical_source": "step_2_global_market_memory",
             "biggest_risers": risers, "biggest_fallers": fallers,
             "most_stable": [row for row in comparable if row["market_trend"]["direction"] == "stable"][:limit],
             "most_volatile": [row for row in comparable if row["market_trend"]["direction"] == "volatile"][:limit],
             "availability": "available" if comparable else "unavailable",
-            "unavailable_reason": None if comparable else "At least two legitimate Step 2 observations are required.",
+            "unavailable_reason": None if comparable else "At least two compatible dated prices are required; missing history is not unchanged value.",
             "provider_calls": 0, "raw_history_scans": 0,
         })
 
@@ -475,9 +461,7 @@ def create_market_router(
                     str(asset["asset_id"]), (asset.get("values") or {}).get("market_value"),
                     league_id=selected_league, as_of=None,
                     generation=market.semantic_generation,
-                    current_evidence_at=current_trend_boundaries(market, [asset]).get(
-                        str(asset["asset_id"])
-                    ),
+                    current_semantics=current_trend_evidence(market, [asset]).get(str(asset["asset_id"])),
                 )
                 history = detail.get("history") or {}
                 layers = detail.get("value_layers") or {}
@@ -498,7 +482,7 @@ def create_market_router(
                 )
                 trade_href = "/trades" if front_office is None else f"/trades?front_office={front_office}"
                 milestone_html = "".join(
-                    f'<li>{escape(name.replace("_", " ").title())}: {float(row["change"]):+,.0f}</li>'
+                    f'<li>{escape(name.replace("_", " ").title())}: {float(row["change"]):+,.2f} Market points since {escape(str(row["observed_at"]))}</li>'
                     for name, row in trend["milestones"].items()
                 )
                 trend_html = f'''<section class="card"><p class="eyebrow">Observed Market Trend</p><h3>{escape(str(trend["direction"]).replace("_", " ").upper())} · {escape(trend["confidence"].upper())} CONFIDENCE</h3><p>{_trend_observation_summary(trend)}</p>{f'<ul>{milestone_html}</ul>' if milestone_html else '<p class="muted">No supported milestone comparison is available yet.</p>'}<p class="muted">Sparse observed checkpoints; no daily values are inferred.</p></section>'''
