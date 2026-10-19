@@ -134,7 +134,7 @@ class LeagueContextMiddleware:
             or _path_league(str(scope.get("path") or ""), str(scope.get("method") or "GET"))
         )
         if not requested or str(requested) == self.default_league_id:
-            runtime = self.manager.resident(self.default_league_id)
+            runtime = await self.manager.acquire_request(self.default_league_id, hydrate=False)
         else:
             if not self.import_enabled and not trusted:
                 response = JSONResponse({
@@ -144,7 +144,7 @@ class LeagueContextMiddleware:
                 await response(scope, receive, send)
                 return
             try:
-                runtime = await self.manager.get(str(requested))
+                runtime = await self.manager.acquire_request(str(requested))
             except LeagueRuntimeNotFound as exc:
                 response = _unavailable_response(scope, status=422, reason=str(exc))
                 await response(scope, receive, send)
@@ -155,7 +155,6 @@ class LeagueContextMiddleware:
                 return
         context = runtime.canonical_context if runtime is not None else None
         if runtime is not None:
-            runtime.active_requests += 1
             runtime.touch()
         token = _CURRENT_CONTEXT.set(context)
         try:
@@ -163,4 +162,4 @@ class LeagueContextMiddleware:
         finally:
             _CURRENT_CONTEXT.reset(token)
             if runtime is not None:
-                runtime.active_requests = max(0, runtime.active_requests - 1)
+                await self.manager.release_request(runtime)

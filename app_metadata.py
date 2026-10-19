@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.21.72"
-BUILD_NUMBER = 2172
-RELEASE_CODENAME = "FOIS Navigation Isolation"
+VERSION = "1.21.73"
+BUILD_NUMBER = 2173
+RELEASE_CODENAME = "Navigation Resource Lifetimes"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

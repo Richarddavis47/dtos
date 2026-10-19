@@ -25,6 +25,7 @@ from src.core.projection_intelligence import projection_service
 from src.core.projection_intelligence.service import ProjectionService
 from src.core.projection_intelligence.sleeper_provider import SleeperProjectionClient
 from src.platform.lifecycle import lifecycle_coordinator
+from src.platform.sync_diagnostics import SyncDiagnostics
 from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence
 from services.history import player_history_evidence_batch
@@ -167,8 +168,10 @@ async def _sync_sleeper(
     projections: ProjectionService = projection_service,
 ) -> dict[str, Any]:
     """Fetch and normalize one explicitly identified Sleeper league state."""
+    diagnostics = SyncDiagnostics(league_id)
     runtime_lock = _LEAGUE_SYNC_LOCKS.setdefault(str(league_id), threading.Lock())
     with runtime_lock:
+        diagnostics.mark('league_lock_wait')
         if state["syncing"]:
             return state
         state["syncing"] = True
@@ -181,6 +184,7 @@ async def _sync_sleeper(
         try:
             lifecycle_context = lifecycle_coordinator.phase("sleeper_sync")
             lifecycle_context.__enter__()
+            diagnostics.mark('lifecycle_wait')
             timeout = httpx.Timeout(REQUEST_TIMEOUT)
             async with httpx.AsyncClient(
                 timeout=timeout, headers=request_headers()
@@ -285,6 +289,7 @@ async def _sync_sleeper(
                         )
                         logger.warning("Optional Sleeper projection refresh failed: %s", type(exc).__name__)
 
+            diagnostics.mark('source_acquisition')
             user_by_id = {str(u.get("user_id")): u for u in users}
             team_rows = []
             history_by_player = player_history_evidence_batch(
@@ -456,6 +461,7 @@ async def _sync_sleeper(
 
             resolver = PlayerIdentityResolver(players if isinstance(players, dict) else {})
             normalized_players = {player_id: asdict(player) for player_id in players if (player := resolver.resolve(player_id))} if isinstance(players, dict) else {}
+            diagnostics.mark('roster_identity')
             synced_at = utcnow().isoformat()
             for provider_name, records in (
                 ("Sleeper Players", len(players) if isinstance(players, dict) else 0),
@@ -485,6 +491,7 @@ async def _sync_sleeper(
             # this bounded preparation runs; no partially normalized table leaks.
             from src.core.valuation.normalization import prepare_market_normalization
             await asyncio.to_thread(prepare_market_normalization, market_data)
+            diagnostics.mark('market_normalization')
             state["data"] = {
                 "league": league,
                 "scoring_settings": league.get("scoring_settings") or {},
@@ -528,8 +535,10 @@ async def _sync_sleeper(
                                     observed_at=synced_at)
 
             canonical_history_store.update_current(league_id, state["data"])
+            diagnostics.mark('initial_history')
             from src.core.valuation.ranking import prepare_global_player_ranks
             state["data"]["global_player_ranks"] = await asyncio.to_thread(prepare_global_player_ranks, state["data"])
+            diagnostics.mark('global_ranks')
             state["data"]["relevant_player_universe"] = await asyncio.to_thread(
                 build_relevant_player_universe,
                 state["data"], canonical_history_store, league_id,
@@ -543,12 +552,14 @@ async def _sync_sleeper(
             global_ranks = state["data"]["global_player_ranks"]
             global_ranks["players"] = {key: row for key, row in global_ranks["players"].items()
                 if key.removeprefix("player:") in rank_members}
+            diagnostics.mark('relevance')
             try:
                 with lifecycle_coordinator.phase("provider_network") as phase:
                     await asyncio.to_thread(build_provider_network, state["data"], state)
                     phase["provider_count"] = len(
                         (state["data"].get("provider_network") or {}).get("providers") or []
                     )
+                diagnostics.mark('provider_network')
                 try:
                     if projection_payload is not None:
                         await asyncio.to_thread(
@@ -571,6 +582,7 @@ async def _sync_sleeper(
                     logger.exception(
                         "Projection generation failed; canonical intelligence will publish an explicit unavailable state"
                     )
+                diagnostics.mark('projections')
                 try:
                     from src.core.intelligence.team_strength import prepare_for_data
                     from src.core.intelligence.strength_history import record_strength_history
@@ -581,6 +593,7 @@ async def _sync_sleeper(
                 except Exception:
                     state['data'].pop('team_strength', None)
                     logger.exception('Team Strength preparation unavailable; projection evidence remains separate')
+                diagnostics.mark('team_strength')
                 with lifecycle_coordinator.phase("valuation_intelligence") as phase:
                     from services.player_evidence import prepare_player_production
                     production_evidence = await asyncio.to_thread(
@@ -592,12 +605,15 @@ async def _sync_sleeper(
                     phase["canonical_generation"] = (
                         state["data"].get("valuation_intelligence") or {}
                     ).get("generated_at")
+                diagnostics.mark('valuation')
                 await asyncio.to_thread(audit_market_calibration, state["data"], state, apply=True)
+                diagnostics.mark('calibration')
             except Exception:
                 logger.exception("Provider network or automated market calibration audit failed")
                 state["data"]["calibration_error"] = "Provider evidence evaluation failed; no model adjustment was applied."
             canonical_history_store.update_current(league_id, state["data"])
             minimal_metadata_store.record_sync_generation(league_id, synced_at)
+            diagnostics.mark('final_history')
             from src.core.intelligence_memory import checkpoint_pipeline
             try:
                 await asyncio.to_thread(
@@ -605,7 +621,9 @@ async def _sync_sleeper(
                 )
             except Exception:
                 logger.exception("Intelligence checkpoint ingestion failed")
+            diagnostics.mark('checkpoints')
             save_cache(state=state, league_id=league_id)
+            diagnostics.mark('cache_publication')
             intelligence_cache.invalidate("snapshot:")
             intelligence_cache.invalidate("crawl:")
             logger.info("Sleeper sync complete: %s teams", len(team_rows))
@@ -623,6 +641,7 @@ async def _sync_sleeper(
             state["syncing"] = False
             if "lifecycle_context" in locals():
                 lifecycle_context.__exit__(None, None, None)
+            diagnostics.finish(failed=bool(state.get('last_error')))
         return state
 
 
