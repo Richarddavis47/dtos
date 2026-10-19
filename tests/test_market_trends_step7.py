@@ -226,6 +226,9 @@ print(json.dumps(trend.public(compact=True), separators=(',', ':')))
                 "horizon", "confidence", "checkpoint_count", "as_of",
                 "schema_version", "method_version",
                 "comparison_reasons",
+                "comparison_scope", "comparison_start_at", "comparison_end_at",
+                "current_qualification",
+                "comparison_units",
             ),
         )
 

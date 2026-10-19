@@ -1,3 +1,9 @@
+## v1.21.70 / build 2170 — Qualified historical Market comparisons
+
+- Wire the current selected canonical Market observation into the existing historical trend evaluator. Compatible 100/120/200 evidence now reports +100; history-only comparisons remain explicit when current evidence is missing or incompatible.
+- Preserve asset, units, method, dates and source generations; exclude future/unsupported observations and contradictory generations. Report comparison scope/dates and v2 method metadata consistently, with a canonical history link from player dossiers.
+- Reuse existing prepared evidence and bounded caches without provider calls, new schema, archives, snapshots or FOIS regeneration. Preserve Market arithmetic, Trade recommendation policy, Sleeper projections and legal-lineup formulas. Independent Scout acceptance remains required.
+
 ## v1.21.69 / build 2169 — Historical provenance and missing-data presentation
 
 - Pin retained facts and their exact source checksum to one verified CachedSeason publication. Concurrent replacement cannot label an earlier score with a later generation; preserve all active, retained and compact-recovery admission safeguards without a new lock or storage path.

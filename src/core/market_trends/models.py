@@ -19,6 +19,11 @@ COMPACT_TREND_FIELDS = (
     "schema_version",
     "method_version",
     "comparison_reasons",
+    "comparison_scope",
+    "comparison_start_at",
+    "comparison_end_at",
+    "current_qualification",
+    "comparison_units",
 )
 
 
@@ -78,6 +83,11 @@ class MarketTrend:
     league_liquidity: LeagueLiquidity | None = None
     provenance: dict[str, Any] = field(default_factory=dict)
     comparison_reasons: tuple[str, ...] = ()
+    comparison_scope: str = "unavailable"
+    comparison_start_at: str | None = None
+    comparison_end_at: str | None = None
+    current_qualification: str | None = None
+    comparison_units: str | None = None
     schema_version: str = TREND_SCHEMA_VERSION
     method_version: str = TREND_METHOD_VERSION
 

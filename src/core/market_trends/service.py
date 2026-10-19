@@ -7,6 +7,8 @@ from statistics import mean, pstdev
 from threading import RLock
 from typing import Any
 from math import isfinite
+from hashlib import sha256
+import json
 import re
 
 from .compatibility import comparison_identity, comparison_reasons
@@ -44,6 +46,20 @@ def _valid_temporal_observation(row: dict[str, Any]) -> bool:
     except (TypeError, ValueError):
         return False
     return True
+
+
+def _number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and isfinite(value)
+
+
+def _supported_value(row: dict[str, Any]) -> bool:
+    value = row.get("value")
+    if not _number(value):
+        return False
+    semantic = row.get("comparison_semantics")
+    # Honor the declared unit contract; never infer or convert native prices
+    # from their size. A 10000-valued row is not a 0-1000 index observation.
+    return not (isinstance(semantic, dict) and semantic.get("value_scale") == "0-1000") or 0 <= value <= 1000
 
 
 class MarketTrendService:
@@ -94,24 +110,28 @@ class MarketTrendService:
         evidence: dict[str, Any] | None = None, current_evidence_at: str | None = None,
         current_semantics: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
+        current_semantics = current_semantics if isinstance(current_semantics, dict) else {}
+        current_evidence_at = current_evidence_at or current_semantics.get("observed_at")
+        now = datetime.now(timezone.utc)
         explicit_boundary = as_of is not None
         query_boundary = as_of or "9999-12-31T23:59:59+00:00"
         try:
             _stamp(query_boundary)
         except (AttributeError, TypeError, ValueError):
-            query_boundary = "9999-12-31T23:59:59+00:00"
+            query_boundary = _NO_EVIDENCE_BOUNDARY
+        revision = (self.reader.observation_generation()
+                    if explicit_boundary and evidence is None
+                    and hasattr(self.reader, "observation_generation") else None)
+        identity = (asset_id, current_value, league_id, generation, TREND_METHOD_VERSION,
+                    current_evidence_at, repr(current_semantics), revision, now.date().isoformat())
         if explicit_boundary:
-            cache_key = (
-                asset_id, current_value, league_id, query_boundary, generation,
-                TREND_METHOD_VERSION,
-                repr(current_semantics),
-            )
+            cache_key = (*identity, query_boundary)
             with self._lock:
                 cached = self._cache.get(cache_key)
-                if cached is not None:
+                if cached is not None and evidence is None:
                     self._cache.move_to_end(cache_key)
                     return cached.public(compact=compact)
-        source = evidence or self.reader.market_trend_evidence(
+        source = evidence if evidence is not None else self.reader.market_trend_evidence(
             asset_ids=(asset_id,), league_id=league_id, as_of=query_boundary,
         ).get(asset_id, {})
         raw_observations = list(source.get("observations") or ())
@@ -120,12 +140,14 @@ class MarketTrendService:
             key=lambda row: (_stamp(row["observed_at"]), str(row.get("observation_id") or "")),
         )
         invalid_temporal_count = len(raw_observations) - len(observations)
-        if explicit_boundary:
-            observations = [row for row in observations
-                            if _stamp(row["observed_at"]) <= _stamp(query_boundary)
+        admission_boundary = min(now, _stamp(query_boundary))
+        observations = [row for row in observations
+                            if _stamp(row["observed_at"]) <= admission_boundary
                             and (not row.get("known_at") or (
                                 _valid_temporal_observation({"observed_at": row["known_at"]})
-                                and _stamp(row["known_at"]) <= _stamp(query_boundary)))]
+                                and _stamp(row["known_at"]) <= admission_boundary))
+                            and row.get("asset_id", asset_id) == asset_id
+                            and _supported_value(row)]
         if explicit_boundary:
             boundary = query_boundary
         else:
@@ -135,15 +157,14 @@ class MarketTrendService:
             if current_evidence_at:
                 try:
                     _stamp(current_evidence_at)
-                    candidates.append(current_evidence_at)
+                    if _stamp(current_evidence_at) <= now:
+                        candidates.append(current_evidence_at)
                 except (AttributeError, TypeError, ValueError):
                     pass
             boundary = max(candidates, key=_stamp) if candidates else _NO_EVIDENCE_BOUNDARY
-        cache_key = (
-            asset_id, current_value, league_id, boundary, generation,
-            TREND_METHOD_VERSION,
-            repr(current_semantics),
-        )
+        fingerprint = sha256(json.dumps(source, sort_keys=True, default=str).encode()).hexdigest()
+        cache_key = ((*identity, boundary, fingerprint)
+                     if not explicit_boundary or evidence is not None else (*identity, boundary))
         with self._lock:
             cached = self._cache.get(cache_key)
             if cached is not None:
@@ -156,14 +177,20 @@ class MarketTrendService:
             if not isfinite(value) or (stamp in by_time and by_time[stamp] != value):
                 reasons += ("TIME_ORDER_UNAVAILABLE",)
             by_time[stamp] = value
+            source_ids = row.get("source_generations") or {}
+            if row.get("source_generation_conflict"):
+                reasons += ("CONFLICTING_SOURCE_GENERATION",)
+            if source_ids and not all(source_ids.values()):
+                reasons += ("COMPARABLE_HISTORY_UNAVAILABLE",)
         reasons = tuple(dict.fromkeys(reasons))
         # A bare current number has no proven comparison identity. Keep it as
         # current evidence, but never silently append it to a historical series.
         current_comparable = bool(
-            observations and current_value is not None and current_evidence_at
-            and isfinite(float(current_value))
+            observations and _supported_value({"value": current_value,
+                "comparison_semantics": current_semantics.get("comparison_semantics")}) and current_evidence_at
             and _valid_temporal_observation({"observed_at": current_evidence_at})
-            and _stamp(observations[-1]["observed_at"]) < _stamp(current_evidence_at) <= _stamp(boundary)
+            and _stamp(observations[-1]["observed_at"]) < _stamp(current_evidence_at) <= min(now, _stamp(boundary))
+            and current_semantics.get("asset_id", asset_id) == asset_id
             and comparison_identity(current_semantics or {}) is not None
             and comparison_identity(current_semantics or {}) == comparison_identity(observations[-1])
             and not comparison_reasons([observations[-1], current_semantics or {}])
@@ -175,7 +202,8 @@ class MarketTrendService:
             direction = TrendDirection.NOT_COMPARABLE
         latest_age = None
         if observations:
-            latest_age = max(0, (_stamp(boundary) - _stamp(observations[-1]["observed_at"])).days)
+            latest_age = max(0, ((_stamp(boundary) if explicit_boundary else now)
+                                 - _stamp(observations[-1]["observed_at"])).days)
         score, confidence, coverage = self._confidence(observations, latest_age)
         if reasons:
             score, confidence, coverage = 0, "unavailable", "not_comparable"
@@ -208,7 +236,7 @@ class MarketTrendService:
             "relationship": "coincided_with",
         } for row in observations if row.get("reason_codes"))
         trend = MarketTrend(
-            asset_id=asset_id, current_value=float(current_value) if current_value is not None else None,
+            asset_id=asset_id, current_value=float(current_value) if _number(current_value) else None,
             as_of=boundary, direction=direction, magnitude=magnitude, magnitude_band=band,
             horizon=(f"{max(0, (_stamp(boundary)-_stamp(observations[0]['observed_at'])).days)}_days" if observations else None),
             confidence=confidence, confidence_score=score, evidence_coverage=coverage,
@@ -219,12 +247,33 @@ class MarketTrendService:
             event_context=event_context, checkpoints=checkpoints,
             league_liquidity=league_liquidity,
             comparison_reasons=reasons,
+            comparison_scope=("historical_to_current" if current_comparable and not reasons
+                              else "history_only" if len(historical_values) >= 2 else "unavailable"),
+            comparison_start_at=observations[0]["observed_at"] if values else None,
+            comparison_units=((observations[0].get("comparison_semantics") or {}).get("value_scale")
+                              if values else None),
+            comparison_end_at=(current_evidence_at if current_comparable and not reasons
+                               else observations[-1]["observed_at"] if values else None),
+            current_qualification=(
+                ("Current published price compared at its recorded observation time. "
+                 + ("Retained/stale source evidence is not a fresh source observation."
+                    if current_semantics.get("freshness") == "stale" else
+                    "Source update time/freshness is not established."
+                    if current_semantics.get("freshness", "unknown") in {"unknown", "unavailable", "mixed"}
+                    else "Source freshness remains separately qualified."))
+                if current_comparable and not reasons else
+                "Current price is not a compatible later observation; any movement shown is history-only."
+                if _number(current_value) else
+                "Current pricing is unavailable; missing observations do not establish unchanged value."
+            ),
             provenance={
                 "source": "step_2_global_market_memory", "provider_calls": 0,
                 "raw_history_scans": 0, "sparse_observations": True,
                 "invalid_temporal_evidence_count": invalid_temporal_count,
                 "undated_observations_excluded_from_chronology": invalid_temporal_count,
                 "current_endpoint_comparable": current_comparable and not reasons,
+                "excluded_evidence_count": len(raw_observations) - len(observations),
+                "current_evidence": current_semantics,
             },
         )
         with self._lock:
@@ -238,6 +287,7 @@ class MarketTrendService:
         self, assets: list[dict[str, Any]], *, league_id: str | None,
         as_of: str | None, generation: str,
         current_boundaries: dict[str, str] | None = None,
+        current_comparisons: dict[str, dict[str, Any]] | None = None,
         compact: bool = True,
     ) -> dict[str, dict[str, Any]]:
         ids = tuple(str(row["asset_id"]) for row in assets[:250])
@@ -250,6 +300,7 @@ class MarketTrendService:
             league_id=league_id, as_of=as_of, generation=generation, compact=compact,
             evidence=evidence.get(asset_id),
             current_evidence_at=(current_boundaries or {}).get(asset_id),
+            current_semantics=(current_comparisons or {}).get(asset_id),
         ) for asset_id in ids}
 
     def clear(self) -> None:
