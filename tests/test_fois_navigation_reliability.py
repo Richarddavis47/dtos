@@ -151,7 +151,11 @@ class NavigationReliabilityTests(unittest.TestCase):
 
     def test_rendered_phone_home_failure_and_scoped_fois_navigation(self):
         rows = []
+        from fastapi.staticfiles import StaticFiles
         from tests import test_public_readiness as onboarding
+        # The released standings/phone styles must be served in this reduced
+        # authenticated app, just as in the production application.
+        self.f.app.mount('/static', StaticFiles(directory=Path(__file__).resolve().parents[1] / 'static'), name='static')
         # Hydrate once; every subsequent browser read must reuse the failed
         # optional status rather than starting another analytical flight.
         with patch.object(self.f.dtos, '_generate_fois_coordinated', new_callable=AsyncMock,
@@ -166,7 +170,7 @@ class NavigationReliabilityTests(unittest.TestCase):
                     self.assertEqual(page.goto(self.f.origin + '/', wait_until='networkidle').status, 200)
                     notice = page.get_by_role('status').filter(has_text='FOIS')
                     self.assertIn('temporarily unavailable', notice.inner_text())
-                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
+                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width, page.evaluate("Array.from(document.querySelectorAll('body *')).filter(e=>e.getBoundingClientRect().right>innerWidth+1).map(e=>({tag:e.tagName,cls:e.className,text:e.textContent.slice(0,100),right:e.getBoundingClientRect().right})).slice(0,15)"))
                     link = notice.get_by_role('link')
                     link.focus()
                     self.assertTrue(link.evaluate('e=>e===document.activeElement'))
@@ -175,7 +179,7 @@ class NavigationReliabilityTests(unittest.TestCase):
                         page.keyboard.press('Enter')
                     self.assertIn('unavailable', page.locator('body').inner_text())
                     self.assertNotIn('private diagnostic', page.locator('body').inner_text())
-                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
+                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width, page.evaluate("Array.from(document.querySelectorAll('body *')).filter(e=>e.getBoundingClientRect().right>innerWidth+1).map(e=>({tag:e.tagName,cls:e.className,text:e.textContent.slice(0,100),right:e.getBoundingClientRect().right})).slice(0,15)"))
                     self.assertEqual(page.goto(self.f.origin + '/account', wait_until='networkidle').status, 200)
                     rows.append({'width': width, 'height': height, 'home_notice': bounds,
                                  'home_account_fois_accessible': True, 'overflow': False})

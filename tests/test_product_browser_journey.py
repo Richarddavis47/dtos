@@ -106,6 +106,7 @@ class ProductBrowserJourneyTests(unittest.TestCase):
                 }]
                 runtime.canonical_context = SimpleNamespace(
                     runtime=runtime, league_id=league, data=data, state=state, market=_Cache(market),
+                    fois_state="unavailable",
                     projection=ProjectionService(Path(folder) / f"projection-{league}.sqlite3", league_id=league),
                 )
 
