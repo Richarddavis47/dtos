@@ -41,6 +41,8 @@ def strategic_profile(incoming, outgoing, impact, package):
     if not complete:
         reasons.append('PARTIAL_PROJECTION_EVIDENCE')
     return {'horizons': horizons, 'reserve_slot_changes': depth,
+            'reserve_quality_by_week': package['reserve_quality_by_week'],
+            'reserve_quality': package['reserve_quality'],
             'production_evidence': production_evidence(impact),
             'future_capital': {'received': gained, 'sent': lost, 'utility_delta': None},
             'competitive_window': None, 'longevity': None, 'liquidity': None,
@@ -57,6 +59,7 @@ def plausibility(strategy, package, market_return, historical):
     capital_fit = strategy.get('capital_strategy_fit')
     material_gain = strategy['production_evidence']['material_gain']
     material_loss = strategy['production_evidence']['material_loss']
+    reserve_loss = strategy['reserve_quality']['material_loss']
     ratio = strategy.get('market_return_ratio')
     if ratio is not None and ratio < SEVERE_MARKET_LOSS_RATIO:
         state, reasons = 'LOW', ['COUNTERPARTY_SEVERE_MARKET_LOSS']
@@ -89,10 +92,10 @@ def plausibility(strategy, package, market_return, historical):
         state, reasons = 'INSUFFICIENT EVIDENCE', ['COUNTERPARTY_PROJECTION_UNAVAILABLE']
     elif losses and not gains and market_return is not None and market_return <= 0 and not strategy['future_capital']['received']:
         state, reasons = 'LOW', ['COUNTERPARTY_LINEUP_LOSS_WITHOUT_SUPPORTED_COMPENSATION']
-    elif material_gain and not losses and market_return is not None and market_return >= 0 and strategy['projection_coverage_complete'] and not any(d < 0 for d in strategy['reserve_slot_changes'].values()):
+    elif material_gain and not losses and market_return is not None and market_return >= 0 and strategy['projection_coverage_complete'] and strategy['reserve_quality']['complete'] and not any(d < 0 for d in strategy['reserve_slot_changes'].values()) and not reserve_loss:
         state, reasons = 'STRONG', ['COUNTERPARTY_LINEUP_AND_MARKET_GAIN']
     elif (strategy['projection_coverage_complete'] and not losses and market_return is not None and market_return >= 0
-          and any(d >= 1 for d in strategy['reserve_slot_changes'].values())):
+          and not reserve_loss and strategy['reserve_quality']['material_gain']):
         state, reasons = 'PLAUSIBLE', ['COUNTERPARTY_SUPPORTED_DEPTH_GAIN']
     elif (material_gain and not material_loss) or (market_return is not None and market_return > 0 and not losses):
         state, reasons = 'PLAUSIBLE', ['SUPPORTED_COUNTERPARTY_BENEFIT']
@@ -107,7 +110,7 @@ def plausibility(strategy, package, market_return, historical):
     elif 'COUNTERPARTY_SUPPORTED_CAPITAL_TRADEOFF' in reasons:
         explanation = 'Meaningful priced future capital is gained at broadly balanced Market terms; current production and reserve costs remain disclosed, and manager strategy is unconfirmed.'
     elif 'COUNTERPARTY_SUPPORTED_DEPTH_GAIN' in reasons:
-        explanation = 'Supported roster coverage improves without a current-production loss; Market and capacity costs remain separate. This is not an acceptance prediction.'
+        explanation = 'Useful legal-replacement production improves without a current-production loss; Market and capacity costs remain separate. This is not an acceptance prediction.'
     from .confidence import manager_history_evidence
     return {'label': 'Counterparty Plausibility', 'assessment': state,
             'reason_codes': reasons, 'historical_context': historical,
@@ -135,6 +138,15 @@ def disclosed_costs(strategy, market_return):
         costs.append(f'Market overpay of {abs(market_return):.0f} units')
     if any(d < 0 for d in strategy['reserve_slot_changes'].values()):
         costs.append('Reserve coverage declines in supported weeks')
+    reserve = strategy['reserve_quality']
+    if reserve['material_loss']:
+        if reserve['mean_weekly_delta'] < 0:
+            costs.append(f'Useful legal-replacement production falls {abs(reserve["mean_weekly_delta"]):.2f} points per supported week')
+        else:
+            costs.append('Useful legal-replacement production declines in supported weeks '
+                         + ', '.join(map(str, reserve['loss_weeks'])) + '; other-week gains remain separate')
+    if not reserve['complete']:
+        costs.append('Reserve replacement production is unavailable for some requested weeks')
     if (strategy.get('roster_capacity') or {}).get('additional_spots_to_resolve'):
         costs.append('Roster capacity requires resolution')
     return costs
@@ -175,9 +187,10 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
     active = strategies['active']
     values = [row['delta'] for row in active['horizons'].values() if row.get('delta') is not None]
     gains, losses = any(d > 0 for d in values), any(d < 0 for d in values)
-    depth_loss = any(d < 0 for d in active['reserve_slot_changes'].values())
+    reserve_quality_loss = active['reserve_quality']['material_loss']
+    depth_loss = any(d < 0 for d in active['reserve_slot_changes'].values()) or reserve_quality_loss
     capacity = (active.get('roster_capacity') or {}).get('additional_spots_to_resolve', 0)
-    depth_gain = any(d > 0 for d in active['reserve_slot_changes'].values())
+    depth_gain = active['reserve_quality']['material_gain']
     capital_changed = bool(active['future_capital']['received'] or active['future_capital']['sent'])
     complete = active['projection_coverage_complete']
     material_gain = active['production_evidence']['material_gain']
@@ -207,7 +220,10 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
     elif losses and not gains and not depth_gain and difference is not None and difference <= 0:
         recommendation = 'REJECT' if difference < 0 and complete else 'NOT WORTH IT'
         trace.append('SUPPORTED_LINEUP_COST_WITHOUT_MARKET_OR_DEPTH_COMPENSATION')
-    elif gains and not losses and not depth_loss and complete and material_gain:
+    elif reserve_quality_loss and not material_gain and not depth_gain and difference is not None and difference <= 0:
+        recommendation = 'NOT WORTH IT'
+        trace.append('RESERVE_PRODUCTION_COST_WITHOUT_SUPPORTED_COMPENSATION')
+    elif gains and not losses and not depth_loss and complete and material_gain and active['reserve_quality']['complete']:
         recommendation = 'SMASH ACCEPT' if difference is not None and difference >= 0 else 'WORTH PURSUING'
         trace.append('SUPPORTED_HORIZON_BENEFIT_WITHOUT_DEPTH_OR_CAPACITY_LOSS')
         if difference is None:
@@ -228,7 +244,7 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
     elif complete and difference is not None and difference < 0 and not material_gain:
         recommendation = 'NOT WORTH IT'
         trace.append('MARKET_COST_WITHOUT_MATERIAL_BENEFIT')
-    elif (complete and not gains and not losses and not depth_gain and not depth_loss
+    elif (complete and active['reserve_quality']['complete'] and not gains and not losses and not depth_gain and not depth_loss
           and difference == 0 and packages['active']['assessment'] != 'POOR'):
         recommendation = 'FAIR / OPTIONAL'
         trace.append('SUPPORTED_MARKET_LINEUP_AND_DEPTH_PARITY')
@@ -260,6 +276,8 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
         'horizons': {name: {'delta': h.get('delta'), 'availability': h.get('availability')}
                      for name, h in active['horizons'].items()},
         'depth_by_week': active['reserve_slot_changes'],
+        'reserve_quality_by_week': active['reserve_quality_by_week'],
+        'reserve_quality': active['reserve_quality'],
         'package': packages['active']['assessment'], 'capacity_spots_to_resolve': capacity,
         'future_capital_changed': capital_changed,
         'manager_strategy': active['manager_strategy'],

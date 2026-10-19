@@ -632,6 +632,17 @@
       if (strategy) {
         const detail = node('details'); detail.append(node('summary', title + ' strategic evidence'));
         for (const reason of strategy.reason_codes || []) detail.append(node('p', reason.replaceAll('_', ' ')));
+        const reserves = quality?.reserve_quality_by_week || strategy.reserve_quality_by_week || {};
+        if (Object.keys(reserves).length) {
+          detail.append(node('p', retained ? 'Previous useful replacement production · NOT REVALIDATED' : 'Useful replacement production'));
+          for (const [week, row] of Object.entries(reserves)) {
+            const number = value => typeof value === 'number' && Number.isFinite(value) ? (Object.is(value, -0) ? 0 : value).toFixed(2) : 'unavailable';
+            detail.append(node('p', `Week ${week}: ${number(row.pre_points)} → ${number(row.post_points)} projected reserve points; change ${displayPoints(row.delta)}. Legal reserve slots: ${row.pre_slots ?? 'unavailable'} → ${row.post_slots ?? 'unavailable'}.`));
+            if (row.conclusion_state !== 'current') detail.append(node('small', row.delta == null ? 'Complete replacement-production comparison unavailable; missing evidence is not zero.' : 'Conditional replacement projection; availability and source evidence remain qualified.'));
+            for (const limitation of row.limitations || []) detail.append(node('small', limitation));
+          }
+          detail.append(node('small', 'One disjoint legal reserve assignment. This does not predict injuries, games played or a complete second starting lineup.'));
+        }
         if (strategy.roster_capacity) detail.append(node('p', `Additional configured roster spots to resolve: ${strategy.roster_capacity.additional_spots_to_resolve}. Cut cost is not assumed.`));
         if (strategy.unavailable_dimensions?.length) detail.append(node('small', 'Unavailable: ' + strategy.unavailable_dimensions.join(', ').replaceAll('_', ' ')));
         out.append(detail);

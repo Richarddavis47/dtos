@@ -56,6 +56,7 @@ def ranking_evidence(row, assets):
             'package_quality': package.get('assessment'),
             'horizons': {name: h.get('delta') for name, h in strategy.get('horizons', {}).items()},
             'depth_by_week': strategy.get('reserve_slot_changes') or {},
+            'reserve_quality': package.get('reserve_quality') or {},
             'package_reason_codes': package.get('reason_codes') or [],
             'lineup_loss_weeks': package.get('loss_weeks') or [],
             'contributing_positions': sorted({a.position for a in contributors if a.position}),
@@ -81,6 +82,12 @@ def rank_returns(rows, assets, pref):
         depth = evidence['depth_by_week']
         # Slot-weeks are coverage evidence, not a monetary or dynasty score.
         depth_order = descending(sum(depth.values()) if depth else None)
+        # Production is already computed by the shared legal-roster assessment.
+        # Preserve starter impact first; quality refines otherwise comparable
+        # returns instead of treating every supported reserve slot as equal.
+        reserve = evidence['reserve_quality']
+        reserve_mean = reserve.get('mean_weekly_delta') if reserve.get('complete') else None
+        reserve_order = (*descending(reserve_mean), bool(reserve.get('material_loss')))
         base = (quality, plausibility, confidence, len(evidence['lineup_loss_weeks']))
         name = pref['name']
         if name == 'position_need' and pref['position'] not in evidence['received_positions']:
@@ -88,14 +95,14 @@ def rank_returns(rows, assets, pref):
         if name == 'draft_capital' and not evidence['future_capital']:
             continue
         if name == 'win_now' or name == 'position_need':
-            key = (impact, depth_order, base)
+            key = (impact, reserve_order, depth_order, base)
         elif name == 'draft_capital':
-            key = (base, descending(evidence['capital_assessment'].get('net_market_value')), impact)
+            key = (base, descending(evidence['capital_assessment'].get('net_market_value')), impact, reserve_order, depth_order)
         elif name == 'youth_rebuild':
             age = evidence['contributor_mean_age']
-            key = (base, age is None, age if age is not None else 0, descending(evidence['capital_assessment'].get('net_market_value')), impact)
+            key = (base, age is None, age if age is not None else 0, descending(evidence['capital_assessment'].get('net_market_value')), impact, reserve_order, depth_order)
         else:
-            key = (base, impact, depth_order)
+            key = (base, impact, reserve_order, depth_order)
         diagnostic = ((row['evaluation'].get('dimensions') or {}).get('roster_diagnostics') or {}).get('sides') or {}
         buyer = diagnostic.get('partner') or {}
         supported_need = bool(buyer.get('coverage') == 'supported current week' and buyer.get('need_positions_received')

@@ -1,3 +1,9 @@
+## v1.21.71 / build 2171 — Useful reserve production in trade decisions
+
+- Carry existing disjoint legal-reserve production into bilateral package quality, strategy, costs, counterparty context, Shop ordering and Adjust evidence. Equal reserve counts no longer conceal material replacement-production losses.
+- Preserve supported starter consolidation with an explicit depth cost, keep missing projections unavailable and genuine zero supported, and qualify availability/freshness from original source clocks. Reuse existing My Team/HQ replacement scenarios without a new roster score or solver.
+- Preserve canonical Market/Sleeper values, lineup mathematics, severe-overpay and missing-price safeguards, exact assets, account isolation and retained FOIS boundaries. No new schema, warehouse, provider, paid service or author-triggered FOIS regeneration. Independent Scout acceptance remains required.
+
 ## v1.21.70 / build 2170 — Qualified historical Market comparisons
 
 - Wire the current selected canonical Market observation into the existing historical trend evaluator. Compatible 100/120/200 evidence now reports +100; history-only comparisons remain explicit when current evidence is missing or incompatible.
