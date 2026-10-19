@@ -20,6 +20,8 @@ An additional producer permutation control exposed an over-broad candidate check
 
 ## Consumer boundaries
 
+The retained observation query also compares actual instants across UTC offsets, then applies an exact Python timestamp boundary after SQLite's millisecond-resolution candidate selection. Deterministic HTTP/store controls preserve an observation before a fractional cutoff while excluding one a microsecond beyond it. This changes only the existing read path, without rewriting timestamps or adding persistence.
+
 The selected Market view shows magnitude and dates behind its existing disclosure, with shared explanation rows. Trending metadata reports `sparse-event-market-trend-2`. The player dossier links to that canonical comparison and keeps its independently labeled FantasyCalc raw-provider 30-day change separate. Raw-provider historical APIs are not relabeled canonical Market trends. Trade's existing history-only context remains qualified by the shared evaluator; no evaluator/recommendation, fairness, strategy, lineup or projection formula changes. Buy Low/Sell High valuation gaps remain distinct from demonstrated transaction outcomes; no optimal manager timing claim is introduced.
 
 ## Verification and storage

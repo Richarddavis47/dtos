@@ -75,6 +75,46 @@ class CurrentMarketHTTPTests(unittest.TestCase):
         result = next(row for row in trending['most_volatile'] if row['asset_id'] == 'player:1')
         self.assertEqual(result['market_trend']['magnitude'], 100)
 
+    def test_actual_http_as_of_uses_instants_not_timezone_text_order(self):
+        from datetime import datetime, timedelta, timezone
+        data, _ = prepared(1920)
+        now = datetime.now(timezone.utc)
+        stamp = (now - timedelta(minutes=10)).isoformat()
+        observations = tuple(replace(row, observed_at=stamp) for row in
+                             CheckpointPipeline._market_observations(data, 'player:1'))
+        self.memory.put_sparse(checkpoint('today-checkpoint', 160, stamp),
+            market_context_id='fixture', provider_evidence=observations)
+        # A later instant expressed in a negative UTC offset has an earlier
+        # wall-clock hour. It must not hide the valid earlier UTC checkpoint.
+        offset = timezone(timedelta(hours=-7))
+        boundary = (now + timedelta(hours=1)).astimezone(offset).isoformat()
+        response = self.client.get('/api/market/assets/player:1', params={'as_of': boundary})
+        self.assertEqual(response.status_code, 200)
+        result = response.json()['market_trend']
+        self.assertEqual(result['checkpoint_count'], 3)
+        self.assertEqual(result['magnitude'], 60)
+        self.assertEqual(result['comparison_scope'], 'history_only')
+
+    def test_actual_sparse_boundary_preserves_submillisecond_order(self):
+        from datetime import datetime, timedelta, timezone
+        base = (datetime.now(timezone.utc) - timedelta(minutes=20)).replace(microsecond=0)
+        for name, micros, raw, price in (('zero-fraction', 0, 1920, 160), ('after-boundary', 501, 3600, 300)):
+            data, _ = prepared(raw)
+            stamp = (base + timedelta(microseconds=micros)).isoformat()
+            observations = tuple(replace(row, observed_at=stamp) for row in
+                                 CheckpointPipeline._market_observations(data, 'player:1'))
+            self.memory.put_sparse(checkpoint(name, price, stamp),
+                market_context_id='fixture', provider_evidence=observations)
+        all_rows = self.memory.market_trend_evidence(asset_ids=('player:1',), league_id=None,
+            as_of='9999-12-31T23:59:59Z')['player:1']['observations']
+        self.assertEqual(len(all_rows), 4)
+        boundary = (base + timedelta(microseconds=500)).isoformat()
+        rows = self.memory.market_trend_evidence(asset_ids=('player:1',),
+            league_id=None, as_of=boundary)['player:1']['observations']
+        stamps = {row['observed_at'] for row in rows}
+        self.assertIn(base.isoformat().replace('+00:00', 'Z'), stamps)
+        self.assertNotIn((base + timedelta(microseconds=501)).isoformat().replace('+00:00', 'Z'), stamps)
+
     def test_actual_store_ambiguous_provider_generations_cannot_become_movement(self):
         from src.core.market_trends import MarketTrendService
         data, _ = prepared(2400)

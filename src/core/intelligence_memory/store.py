@@ -800,9 +800,23 @@ class IntelligenceCheckpointStore:
         if not canonical_ids:
             return {}
         try:
-            datetime.fromisoformat(as_of.replace("Z", "+00:00"))
+            boundary = datetime.fromisoformat(as_of.replace("Z", "+00:00"))
         except (AttributeError, TypeError, ValueError):
             as_of = "9999-12-31T23:59:59+00:00"
+            boundary = datetime.fromisoformat(as_of)
+        if boundary.tzinfo is None:
+            boundary = boundary.replace(tzinfo=timezone.utc)
+
+        def within_boundary(value: str) -> bool:
+            # SQLite dates select candidates across UTC offsets; Python keeps
+            # the exact sub-millisecond admission boundary after that read.
+            try:
+                stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except (AttributeError, TypeError, ValueError):
+                return False
+            if stamp.tzinfo is None:
+                stamp = stamp.replace(tzinfo=timezone.utc)
+            return stamp <= boundary
         placeholders = ",".join("?" for _ in canonical_ids)
         with self._connect() as connection:
             rows = connection.execute(
@@ -810,7 +824,7 @@ class IntelligenceCheckpointStore:
                 FROM global_market_observations o
                 LEFT JOIN market_observation_references r ON r.observation_id=o.observation_id
                 LEFT JOIN intelligence_checkpoints c ON c.checkpoint_id=r.checkpoint_id
-                WHERE o.asset_id IN ({placeholders}) AND o.observed_at<=?
+                WHERE o.asset_id IN ({placeholders}) AND julianday(o.observed_at)<=julianday(?)
                 ORDER BY o.asset_id,o.observed_at,o.created_at,o.observation_id""",
                 (*canonical_ids, as_of),
             ).fetchall()
@@ -821,7 +835,7 @@ class IntelligenceCheckpointStore:
                     FROM market_observation_references r
                     LEFT JOIN intelligence_checkpoints c ON c.checkpoint_id=r.checkpoint_id
                     WHERE r.asset_id IN ({placeholders}) AND r.league_id=?
-                      AND r.occurred_at<=? AND r.trigger_type IN ('trade_execution','waiver_add','drop')
+                      AND julianday(r.occurred_at)<=julianday(?) AND r.trigger_type IN ('trade_execution','waiver_add','drop')
                     ORDER BY r.asset_id,r.occurred_at,r.reference_id""",
                     (*canonical_ids, league_id, as_of),
                 ).fetchall()
@@ -836,6 +850,8 @@ class IntelligenceCheckpointStore:
             "regular_season_end", "fantasy_season_end",
         }
         for row in rows:
+            if not within_boundary(row["observed_at"]):
+                continue
             key = (str(row["asset_id"]), str(row["observation_id"]))
             item = observations.get(key)
             if item is None:
@@ -879,10 +895,8 @@ class IntelligenceCheckpointStore:
             item["reason_codes"] = tuple(sorted(item["reason_codes"]))
             item["related_asset_ids"] = tuple(sorted(item["related_asset_ids"]))
         for row in liquidity_rows:
-            grouped[str(row["asset_id"])]["liquidity_rows"].append(dict(row))
-        boundary = datetime.fromisoformat(as_of.replace("Z", "+00:00"))
-        if boundary.tzinfo is None:
-            boundary = boundary.replace(tzinfo=timezone.utc)
+            if within_boundary(row["occurred_at"]):
+                grouped[str(row["asset_id"])]["liquidity_rows"].append(dict(row))
         for asset_id, payload in grouped.items():
             activity = payload.pop("liquidity_rows")
             if not league_id:
