@@ -77,6 +77,21 @@ class ReserveQualityTests(unittest.TestCase):
             'strategy': 'WIN NOW', 'source': 'canonical_competitive_window'})
         self.assert_reserve_cost(e)
 
+    def test_partial_strategy_preserves_supported_cost_and_unknown_reserve_quality(self):
+        from src.core.trade_intelligence.strategy_dimensions import disclosed_costs
+        strategy = {'production_evidence': {'mean_weekly_delta': 2},
+            'horizons': {'current_week': {'delta': -3}, 'next_n': {'delta': 6}},
+            'future_capital': {}, 'reserve_slot_changes': {}}
+        for reserve in (None, {}, {'complete': False}):
+            with self.subTest(reserve=reserve):
+                evidence = dict(strategy)
+                if reserve is not None:
+                    evidence['reserve_quality'] = reserve
+                costs = disclosed_costs(evidence, 0)
+                self.assertIn('Supported production declines in current week', costs)
+                self.assertIn('Reserve replacement production is unavailable for some requested weeks', costs)
+                self.assertFalse(any('0.00' in cost for cost in costs))
+
     def test_authenticated_http_same_count_loss_is_disclosed(self):
         auth = boundary.AuthenticatedTradeBoundaryTests()
         auth.setUp()

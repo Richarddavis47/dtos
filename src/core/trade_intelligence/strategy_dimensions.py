@@ -138,14 +138,14 @@ def disclosed_costs(strategy, market_return):
         costs.append(f'Market overpay of {abs(market_return):.0f} units')
     if any(d < 0 for d in strategy['reserve_slot_changes'].values()):
         costs.append('Reserve coverage declines in supported weeks')
-    reserve = strategy['reserve_quality']
-    if reserve['material_loss']:
-        if reserve['mean_weekly_delta'] < 0:
+    reserve = strategy.get('reserve_quality') or {}
+    if reserve.get('material_loss'):
+        if reserve.get('mean_weekly_delta') is not None and reserve['mean_weekly_delta'] < 0:
             costs.append(f'Useful legal-replacement production falls {abs(reserve["mean_weekly_delta"]):.2f} points per supported week')
         else:
             costs.append('Useful legal-replacement production declines in supported weeks '
-                         + ', '.join(map(str, reserve['loss_weeks'])) + '; other-week gains remain separate')
-    if not reserve['complete']:
+                         + ', '.join(map(str, reserve.get('loss_weeks') or [])) + '; other-week gains remain separate')
+    if not reserve.get('complete'):
         costs.append('Reserve replacement production is unavailable for some requested weeks')
     if (strategy.get('roster_capacity') or {}).get('additional_spots_to_resolve'):
         costs.append('Roster capacity requires resolution')
