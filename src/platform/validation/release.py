@@ -77,7 +77,7 @@ def architecture_violations(root: Path) -> tuple[str, ...]:
 def default_steps() -> tuple[ValidationStep, ...]:
     python = sys.executable
     return (
-        ValidationStep("Committed whitespace", ("git", "show", "--check", "--oneline", "--no-patch", "HEAD")),
+        ValidationStep("Committed whitespace", ("git", "show", "--check", "--oneline", "HEAD")),
         ValidationStep("Working-tree whitespace", ("git", "diff", "--check")),
         ValidationStep("Staged whitespace", ("git", "diff", "--cached", "--check")),
         ValidationStep("Python compilation", (python, "-m", "compileall", "-q", ".")),

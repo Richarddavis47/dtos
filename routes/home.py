@@ -119,6 +119,17 @@ def create_home_router(
             lambda: json.dumps(build_news(news_data, candidates, limitations, now=now)).encode()).decode()
         body = body.replace('<!--home-opportunities-->', '<style>' + OPPORTUNITY_CSS + '</style>' + opportunity_section(int(rid or 0)))
         body = body.replace('<!--home-trade-news-->', '<style>' + NEWS_CSS + '</style>' + render_news(json.loads(news), viewer=viewer))
+        # Outside the body cache: optional analytics can fail or recover without
+        # changing roster/Market facts. No generation is triggered by this read.
+        if active is not None and active.fois_state in {'pending', 'unavailable', 'retained'}:
+            state = active.runtime.lifecycle.get('fois_generation')
+            wording = ('FOIS is temporarily unavailable.' if state == 'failed' else
+                       'FOIS is being prepared.' if active.fois_state == 'pending' else
+                       'Current FOIS is unavailable.')
+            retained = ' Previous grades are retained, not revalidated.' if active.fois_state == 'retained' else ''
+            body += ('<p class="muted" role="status" data-fois-availability="' + active.fois_state + '">'
+                     + wording + retained + ' Your roster, Market and Trade remain usable. '
+                     '<a href="/fois">Review FOIS status</a></p>')
         if rid:
             from services.trade_workspace_context import workspace_context
             context = escape(json.dumps(workspace_context(data, int(rid))), quote=True)

@@ -119,7 +119,22 @@ account_service = AccountService(account_store)
 async def _generate_fois_coordinated(data: dict[str, Any]) -> tuple[Any, ...]:
     """Run FOIS as one lifecycle-heavy flight without overlapping other phases."""
     async with intelligence_heavy_lock:
-        await asyncio.to_thread(lifecycle_coordinator.reserve_fois_generation)
+        reservation = asyncio.create_task(asyncio.to_thread(lifecycle_coordinator.reserve_fois_generation))
+        try:
+            await asyncio.shield(reservation)
+        except asyncio.CancelledError as cancellation:
+            # Cancelling a waiter cannot cancel a queued Condition acquisition.
+            # Drain it before releasing ownership, including repeated cancels.
+            try:
+                while not reservation.done():
+                    try:
+                        await asyncio.shield(reservation)
+                    except asyncio.CancelledError:
+                        continue
+                reservation.result()
+            finally:
+                lifecycle_coordinator.release_fois_generation()
+            raise cancellation
         try:
             return await fois_service.generate(data)
         finally:
@@ -142,7 +157,7 @@ def _publish_runtime_context(
         brain=brain,
         market=market,
         fois_state=(
-            "ready" if fois_service.repository.league(
+            "retained" if fois_service.repository.league(
                 runtime.league_id, FOIS_MODEL_VERSION,
             ) else "pending"
         ),
@@ -178,7 +193,6 @@ async def _hydrate_league_runtime(
         scoring_profile_id=runtime.scoring_profile,
     )
     projections.restore_into(data)
-    await _generate_fois_coordinated(data)
     if runtime.status in {RuntimeState.EVICTING, RuntimeState.CLOSED}:
         # An interval refresh may finish while close() awaits its writer. Do
         # not spawn a new history/Market flight outside close's task snapshot.
@@ -209,10 +223,8 @@ async def _hydrate_league_runtime(
                 active_context = runtime.canonical_context or context
                 active_context.history_state = str(result.get("status") or "partial")
                 await asyncio.to_thread(history_progress_contracts, runtime.league_id)
-                await _generate_fois_coordinated(runtime.state.get("data") or {})
-                active_context.fois_state = "ready"
                 try:
-                    await resolve_historical_trade_market(runtime=runtime)
+                    await resolve_historical_trade_market(runtime=runtime, regenerate_fois=False)
                 except asyncio.CancelledError:
                     raise
                 except Exception:
@@ -221,9 +233,14 @@ async def _hydrate_league_runtime(
                 raise
             except Exception:
                 (runtime.canonical_context or context).history_state = "unavailable"
+            from services.league_maintenance import ensure_fois_refresh
+            ensure_fois_refresh(runtime, _generate_fois_coordinated)
         task = asyncio.create_task(prepare_league_history(), name="dtos-league-history")
         runtime.background_tasks.add(task)
         task.add_done_callback(runtime.background_tasks.discard)
+    elif not history_active:
+        from services.league_maintenance import ensure_fois_refresh
+        ensure_fois_refresh(runtime, _generate_fois_coordinated)
     if runtime.league_id != str(LEAGUE_ID):
         from services.league_maintenance import ensure_periodic_refresh
         ensure_periodic_refresh(
@@ -234,6 +251,37 @@ async def _hydrate_league_runtime(
 
 async def _refresh_resident_league(runtime: LeagueRuntime) -> dict[str, Any]:
     return await _hydrate_league_runtime(runtime, prepare_history=False)
+
+
+async def _generate_resident_fois(data: dict[str, Any], *, runtime: LeagueRuntime | None = None):
+    """Track default startup/refresh and explicit requests through the same owner."""
+    runtime = runtime or league_runtime_manager.resident(str((data.get('league') or {}).get('league_id') or ''))
+    if runtime is None or runtime.canonical_context is None or runtime.state.get('data') is not data:
+        return await _generate_fois_coordinated(data)
+    from services.league_maintenance import ensure_fois_refresh
+    ensure_fois_refresh(runtime, _generate_fois_coordinated)
+    task = next((task for task in runtime.background_tasks if task.get_name() == 'dtos-league-fois' and not task.done()), None)
+    if task is None:
+        return None
+    await asyncio.shield(task)
+    if runtime.lifecycle.get('fois_generation') == 'failed':
+        raise RuntimeError('FOIS calculation is unavailable.')
+    if runtime.canonical_context.fois_state != 'ready':
+        return None
+    return fois_service.repository.league(runtime.league_id, FOIS_MODEL_VERSION)
+
+
+async def _request_fois_calculation(data: dict[str, Any]):
+    """Explicit calculation shares the existing lifecycle-owned compute flight."""
+    context = current_league_context()
+    if intelligence_heavy_lock.locked():
+        return None
+    if context is not None and any(
+        task.get_name() == 'dtos-league-fois' and not task.done()
+        for task in context.runtime.background_tasks
+    ):
+        return None
+    return await _generate_resident_fois(data, runtime=context.runtime if context else None)
 
 
 league_runtime_manager = LeagueRuntimeManager(
@@ -337,7 +385,7 @@ async def background_sync() -> None:
         if STATE.get("data"):
             runtime_metrics.mark_background("fois_generation", "running")
             try:
-                await _generate_fois_coordinated(STATE["data"])
+                await _generate_resident_fois(STATE["data"])
             except Exception:
                 runtime_metrics.mark_background("fois_generation", "failed")
         else:
@@ -373,7 +421,7 @@ async def refresh_global_evidence() -> None:
         delay = 30 if status == "deferred" else 6 * 60 * 60
 
 
-async def resolve_historical_trade_market(*, runtime: LeagueRuntime | None = None) -> None:
+async def resolve_historical_trade_market(*, runtime: LeagueRuntime | None = None, regenerate_fois: bool = True) -> None:
     """Run event-driven provider matching only after the first Market is stable."""
     market = runtime.market_context if runtime is not None else asset_market_cache
     state = runtime.state if runtime is not None else STATE
@@ -409,10 +457,10 @@ async def resolve_historical_trade_market(*, runtime: LeagueRuntime | None = Non
             await asyncio.gather(worker, return_exceptions=True)
             raise
     mark("complete" if result else "failed")
-    if result:
+    if result and regenerate_fois:
         runtime_metrics.mark_background("fois_generation", "running")
         try:
-            await _generate_fois_coordinated(state["data"])
+            await _generate_resident_fois(state["data"], runtime=runtime)
         except Exception:
             runtime_metrics.mark_background("fois_generation", "failed")
         else:
@@ -492,7 +540,7 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     )
     runtime_metrics.mark_background("fois_generation", "running")
     try:
-        await _generate_fois_coordinated(STATE["data"])
+        await _generate_resident_fois(STATE["data"])
     except Exception:
         # FOIS is an optional persisted intelligence projection. Its failure is
         # observable, but cannot hold canonical readiness or Asset Market idle.
@@ -888,6 +936,7 @@ app.include_router(
         service=fois_service,
         require_data=require_data,
         page=page,
+        generate=_request_fois_calculation,
     )
 )
 

@@ -91,6 +91,7 @@ class LifecycleCoordinator:
         self._market_critical = 0
         self._market_critical_reason: str | None = None
         self._fois_generation = 0
+        self._market_build_active = 0
 
     def begin_startup(self, reason: str) -> int:
         """Open a process startup fence before canonical work begins."""
@@ -153,6 +154,10 @@ class LifecycleCoordinator:
     def reserve_fois_generation(self) -> None:
         """Keep Market construction from overlapping FOIS generation."""
         with self._condition:
+            # Admission is symmetric: a running Market build must finish before
+            # FOIS starts, just as an active FOIS flight blocks a new build.
+            while self._market_build_active:
+                self._condition.wait()
             self._fois_generation += 1
 
     def release_fois_generation(self) -> None:
@@ -177,6 +182,8 @@ class LifecycleCoordinator:
             previous = self._phase
             self._phase = name
             self._owner = owner
+            if name == "asset_market_build":
+                self._market_build_active += 1
             started = _utcnow()
             before = memory_snapshot()
         outcome = "complete"
@@ -194,6 +201,8 @@ class LifecycleCoordinator:
                     "finished_at": _utcnow(), "memory_before": before,
                     "memory_after": after, "details": dict(details),
                 })
+                if name == "asset_market_build":
+                    self._market_build_active -= 1
                 self._phase = previous
                 self._owner = owner if previous is not None else None
                 self._condition.notify_all()

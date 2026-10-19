@@ -1,3 +1,9 @@
+## v1.21.72 / build 2172 — FOIS navigation isolation and owned-worker cleanup
+
+- Publish supported league context before optional FOIS preparation. Home/account/league browsing stays available during slow or failed FOIS work, with league-scoped pending/unavailable or retained/not-revalidated evidence; explicit computation reports pending or a qualified failure.
+- Use existing runtime-owned maintenance and one bounded compute slot. Remove duplicate hydration generations, serialize admission against an already-running Market build, and drain submission, shutdown and publication through repeated cancellation before scratch cleanup. Timed-out or broken workers are reaped before returning.
+- Preserve canonical sources, projections, legal lineups, reserve-quality and recommendation safeguards, account isolation and retained historical grades. No new schema, permanent archive, worker service, cache limit or infrastructure. Production OOM causation remains unresolved; bounded measurements do not establish complete production safety. Independent Scout verification is required.
+
 ## v1.21.71 / build 2171 — Useful reserve production in trade decisions
 
 - Carry existing disjoint legal-reserve production into bilateral package quality, strategy, costs, counterparty context, Shop ordering and Adjust evidence. Equal reserve counts no longer conceal material replacement-production losses.

@@ -185,7 +185,7 @@ class ColdLeagueRecoveryTests(unittest.TestCase):
         self.assertEqual(len(self.store.memberships(self.account)), 2)
 
     def test_source_recovery_can_prepare_same_selected_league(self):
-        with patch.object(self.dtos, "_generate_fois_coordinated", new_callable=AsyncMock, return_value=()) as fois, patch.object(self.dtos.AssetMarketCache, "reconcile"), patch.object(self.dtos, "start_background_backfill", new_callable=AsyncMock, return_value={"status": "unavailable"}), patch("services.league_maintenance.ensure_periodic_refresh"):
+        with patch.object(self.dtos, "_generate_fois_coordinated", new_callable=AsyncMock, return_value=()) as fois, patch.object(self.dtos.AssetMarketCache, "reconcile"), patch.object(self.dtos, "start_background_backfill", new_callable=AsyncMock, return_value={"status": "unavailable"}), patch.object(self.dtos, "history_progress_contracts"), patch.object(self.dtos, "resolve_historical_trade_market", new_callable=AsyncMock), patch("services.league_maintenance.ensure_periodic_refresh"):
             before = snapshot(self.store)
             self.assertEqual(self.client.get("/api/recovery-context").status_code, 503)
             fois.assert_not_called()
@@ -193,6 +193,11 @@ class ColdLeagueRecoveryTests(unittest.TestCase):
             response = self.client.get("/api/recovery-context")
             self.assertEqual(response.status_code, 200, response.text)
             self.assertEqual(response.json(), {"league_id": "200", "name": "Recovered league"})
+            async def finish():
+                runtime = self.manager.resident("200")
+                while runtime.background_tasks:
+                    await asyncio.gather(*tuple(runtime.background_tasks))
+            self.client.portal.call(finish)
             self.assertGreaterEqual(fois.await_count, 1)
             self.assertEqual(snapshot(self.store), before)
 
@@ -204,9 +209,16 @@ class ColdLeagueRecoveryTests(unittest.TestCase):
         state["data"] = data
         runtime = self.manager.attach_default("200", state, warm=False)
         with patch.object(self.dtos, "_generate_fois_coordinated", new_callable=AsyncMock, side_effect=RuntimeError("supported downstream reached")) as fois:
-            with self.assertRaisesRegex(RuntimeError, "supported downstream reached"):
-                asyncio.run(self.dtos._hydrate_league_runtime(runtime, prepare_history=False))
+            async def hydrate_and_finish():
+                result = await self.dtos._hydrate_league_runtime(runtime, prepare_history=False)
+                while runtime.background_tasks:
+                    await asyncio.gather(*tuple(runtime.background_tasks))
+                return result
+            with patch("services.league_maintenance.ensure_periodic_refresh"), patch.object(self.dtos.AssetMarketCache, "reconcile"), patch.object(self.dtos, "start_background_backfill", new_callable=AsyncMock, return_value={"status": "unavailable"}), patch.object(self.dtos, "history_progress_contracts"), patch.object(self.dtos, "resolve_historical_trade_market", new_callable=AsyncMock):
+                self.assertTrue(asyncio.run(hydrate_and_finish()))
             fois.assert_awaited_once()
+            self.assertEqual(runtime.lifecycle["fois_generation"], "failed")
+            self.assertEqual(runtime.canonical_context.fois_state, "unavailable")
         self.assertEqual(runtime.state["data"]["teams"], original)
 
     def test_unrelated_programming_errors_are_not_reclassified(self):

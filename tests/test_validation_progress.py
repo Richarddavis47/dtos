@@ -15,10 +15,34 @@ from src.platform.validation.progress import (
     ValidationProgress, cleanup_progress_temporary_files, read_progress,
 )
 from tools.validation.smoke_http import _request_group, _route_identity
-from src.platform.validation.release import startup_hygiene
+from src.platform.validation.release import startup_hygiene, default_steps
 
 
 class ValidationProgressTests(unittest.TestCase):
+    def test_committed_whitespace_gate_accepts_clean_and_rejects_bad_commit(self):
+        # Exercise the real gate, including Git versions that reject combining
+        # --check with --no-patch. A successful no-op is not whitespace proof.
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            def git(*args):
+                subprocess.run(['git', *args], cwd=root, check=True, capture_output=True)
+            git('init', '--quiet')
+            git('config', 'user.name', 'Disposable validation')
+            git('config', 'user.email', 'validation@example.invalid')
+            git('config', 'core.hooksPath', str(root / 'no-hooks'))
+            file = root / 'fixture.txt'
+            file.write_text('clean\n')
+            git('add', 'fixture.txt')
+            git('commit', '--quiet', '-m', 'clean fixture')
+            command = next(s.command for s in default_steps() if s.name == 'Committed whitespace')
+            self.assertEqual(subprocess.run(command, cwd=root, capture_output=True).returncode, 0)
+            file.write_text('bad trailing space \n')
+            git('add', 'fixture.txt')
+            git('commit', '--quiet', '-m', 'negative fixture')
+            result = subprocess.run(command, cwd=root, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('trailing whitespace', result.stdout)
+
     def test_atomic_progress_survives_new_writer_process_boundary(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "progress.json"
