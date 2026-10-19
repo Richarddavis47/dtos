@@ -1,3 +1,9 @@
+## v1.21.71 / build 2171 — Useful reserve production in trade decisions
+
+- Trade evaluation now distinguishes useful projected replacement strength from available reserve slots. A same-count 40→1 loss appears as a real depth cost rather than “No material downside.”
+- Meaningful starter upgrades and supported strategic premiums remain possible with disclosed depth costs. Shop and Adjust reuse the same qualified reserve evidence; complete prior/current trade evidence remains accessible through existing disclosures.
+- No new valuation or projection model, roster score, permanent archive, schema or infrastructure. Canonical sources, security, historical provenance and retained FOIS grades are preserved. Author-run acceptance is separate from independent Scout review and physical-device testing.
+
 ## v1.21.70 / build 2170 — Qualified historical Market comparisons
 
 - Wire the current selected canonical Market observation into the existing historical trend evaluator. Compatible 100/120/200 evidence now reports +100; history-only comparisons remain explicit when current evidence is missing or incompatible.

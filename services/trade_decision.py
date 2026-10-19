@@ -81,11 +81,9 @@ def decision_context(result, *, incoming=(), outgoing=()):
     elif delta < 0:
         lineup = f"{qualifier}current-week optimal legal-lineup cost: {abs(delta):.2f} projected points."
     else:
-        gain = any(
-            value > 0 for value in (strategy.get("reserve_slot_changes") or {}).values()
-        )
+        gain = (strategy.get("reserve_quality") or {}).get("material_gain") is True
         lineup = "Current-week optimal starters are unchanged" + (
-            "; supported reserve coverage improves in some weeks."
+            "; supported useful replacement production improves."
             if gain
             else "; do not treat added depth as a starter upgrade."
         )

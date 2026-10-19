@@ -421,20 +421,76 @@
       .slice(0, 64).map(([key, v]) => [key.slice(0, 80), boundedEvidence(v, depth + 1, budget)]));
   }
   const packageIdentity = p => JSON.stringify([Number(p.partner_roster_id ?? p.partner), [...(p.assets_sent || p.sent || [])].sort(), [...(p.assets_received || p.received || [])].sort()]);
+  function compactRetainedEvaluation(value) {
+    // Keep the existing 12k-character/512-node saved-context limits. Reserve
+    // evidence is shared by three live DTO views; retain it once, with repeated
+    // qualifications interned, so it cannot crowd out earlier decision facts.
+    if (!value || typeof value !== 'object') return value;
+    const withoutReserveCopies = row => {
+      if (!row || typeof row !== 'object') return row;
+      const {reserve_quality_by_week, reserve_quality, ...rest} = row;
+      return rest;
+    };
+    const compactPackage = row => {
+      if (!row || typeof row !== 'object' || !row.reserve_quality_by_week || row.reserve_quality_encoding === 'tuple-v1') return row;
+      const qualifications = [];
+      const weeks = Object.fromEntries(Object.entries(row.reserve_quality_by_week).map(([week, evidence]) => {
+        const refs = (evidence?.limitations || []).map(text => {
+          if (!qualifications.includes(text)) qualifications.push(text);
+          return qualifications.indexOf(text);
+        });
+        return [week, JSON.stringify([evidence?.pre_points, evidence?.post_points, evidence?.delta,
+          evidence?.pre_slots, evidence?.post_slots, evidence?.conclusion_state,
+          evidence?.projection_freshness, evidence?.material_weekly_threshold,
+          evidence?.material_gain, evidence?.material_loss, evidence?.availability, refs])];
+      }));
+      return {...row, reserve_quality_by_week: weeks, reserve_quality_encoding: 'tuple-v1', reserve_qualifications: qualifications};
+    };
+    const dims = value.dimensions || {}, strategies = dims.strategic_fit, packages = dims.package_quality;
+    const reserveEvidence = value.reserve_evidence || (packages ? Object.fromEntries(Object.entries(packages)
+      .filter(([, row]) => row?.reserve_quality_by_week).map(([key, row]) => {
+        const compact = compactPackage(row);
+        return [key, {reserve_quality_by_week: compact.reserve_quality_by_week,
+          reserve_quality_encoding: compact.reserve_quality_encoding, reserve_qualifications: compact.reserve_qualifications}];
+      })) : null);
+    const trace = withoutReserveCopies(value.recommendation_trace);
+    // Trace duplicates already-rendered strategy facts. Preserve its remaining
+    // structured metadata in bounded strings instead of spending another node
+    // per scalar before either team's earlier lineup evidence can be retained.
+    const compactTrace = !trace || trace.detail_encoding === 'entries-v1' ? trace : {
+      rule_reasons: trace.rule_reasons, scope: trace.scope, detail_encoding: 'entries-v1',
+      details: Object.entries(trace).filter(([key]) => !['rule_reasons', 'scope'].includes(key))
+        .map(entry => JSON.stringify(entry))};
+    return {reserve_evidence: reserveEvidence, ...value, recommendation_trace: compactTrace,
+      dimensions: {...dims,
+        strategic_fit: strategies ? {...strategies, active: withoutReserveCopies(strategies.active), partner: withoutReserveCopies(strategies.partner)} : strategies,
+        package_quality: packages ? Object.fromEntries(Object.entries(packages).map(([key, row]) => [key, withoutReserveCopies(row)])) : packages}};
+  }
+  function retainedReserveRow(row, quality) {
+    if (typeof row !== 'string' || quality?.reserve_quality_encoding !== 'tuple-v1') return row;
+    try {
+      const values = JSON.parse(row);
+      if (!Array.isArray(values) || values.length !== 12) return null;
+      return {pre_points: values[0], post_points: values[1], delta: values[2], pre_slots: values[3], post_slots: values[4],
+        conclusion_state: values[5], projection_freshness: values[6], material_weekly_threshold: values[7],
+        material_gain: values[8], material_loss: values[9], availability: values[10],
+        limitations: (values[11] || []).map(index => quality.reserve_qualifications?.[index]).filter(text => typeof text === 'string')};
+    } catch (_) { return null; }
+  }
   function restoreContext(value, includePrevious = true) {
     return {schema: 1, identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
       search_result_type: boundedEvidence(value.search_result_type), stale_reason: boundedEvidence(value.stale_reason), restored: true,
       attempt_state: value.attempt_state || value.evaluation?.assessment_state?.state || 'fresh_incomplete',
       previous_assessment: includePrevious && value.previous_assessment ? restoreContext(value.previous_assessment, false) : null,
-      evaluation: boundedEvidence(value.evaluation || {}), opportunity: boundedEvidence(value.opportunity)};
+      evaluation: boundedEvidence(compactRetainedEvaluation(value.evaluation || {})), opportunity: boundedEvidence(value.opportunity)};
   }
   const assessedOfferContexts = new WeakMap();
   function assessmentContext(row) {
     if (assessedOfferContexts.has(row)) return assessedOfferContexts.get(row);
     if (row.proposal?.preview_context) return row.proposal.preview_context;
     const e = row.evaluation || row.proposal?.preview_assessment || {};
-    const keys = ['recommendation', 'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'why_they_would_do_it', 'counterparty_summary', 'provenance', 'major_risks', 'major_limitations', 'recommendation_trace', 'legality', 'decision_context', 'market_evidence', 'dimensions', 'assessment_state'];
-    const context = {schema: 1, evaluation: boundedEvidence(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]]))),
+    const keys = ['recommendation', 'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'why_they_would_do_it', 'counterparty_summary', 'provenance', 'major_risks', 'major_limitations', 'recommendation_trace', 'legality', 'decision_context', 'market_evidence', 'dimensions', 'assessment_state', 'reserve_evidence'];
+    const context = {schema: 1, evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
       opportunity: boundedEvidence(row.opportunity || null),
       identity: {package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
@@ -625,6 +681,7 @@
     }
     for (const [which, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
       const impact = e.lineup_impact?.[which], quality = e.dimensions?.package_quality?.[which];
+      const reserveEvidence = e.reserve_evidence?.[which] || quality;
       if (quality) out.append(node('p', title + ' package: ' + quality.assessment), node('small', quality.explanation));
       if (impact) out.append(node('p', title + ' projected lineup change: ' + displayPoints(impact.delta)), node('small', impact.delta == null ? impact.post?.reason || impact.pre?.reason || 'Canonical projection evidence is incomplete.' : 'Optimal legal lineup, before versus after.'));
       const strategy = e.dimensions?.strategic_fit?.[which];
@@ -632,6 +689,19 @@
       if (strategy) {
         const detail = node('details'); detail.append(node('summary', title + ' strategic evidence'));
         for (const reason of strategy.reason_codes || []) detail.append(node('p', reason.replaceAll('_', ' ')));
+        const reserves = reserveEvidence?.reserve_quality_by_week || strategy.reserve_quality_by_week || {};
+        if (Object.keys(reserves).length) {
+          detail.append(node('p', retained ? 'Previous useful replacement production · NOT REVALIDATED' : 'Useful replacement production'));
+          for (const [week, savedRow] of Object.entries(reserves)) {
+            const row = retainedReserveRow(savedRow, reserveEvidence);
+            if (!row) { detail.append(node('p', `Week ${week}: retained reserve details are incomplete; reevaluate for current evidence.`)); continue; }
+            const number = value => typeof value === 'number' && Number.isFinite(value) ? (Object.is(value, -0) ? 0 : value).toFixed(2) : 'unavailable';
+            detail.append(node('p', `Week ${week}: ${number(row.pre_points)} → ${number(row.post_points)} projected reserve points; change ${displayPoints(row.delta)}. Legal reserve slots: ${row.pre_slots ?? 'unavailable'} → ${row.post_slots ?? 'unavailable'}.`));
+            if (row.conclusion_state !== 'current') detail.append(node('small', row.delta == null ? 'Complete replacement-production comparison unavailable; missing evidence is not zero.' : 'Conditional replacement projection; availability and source evidence remain qualified.'));
+            for (const limitation of row.limitations || []) detail.append(node('small', limitation));
+          }
+          detail.append(node('small', 'One disjoint legal reserve assignment. This does not predict injuries, games played or a complete second starting lineup.'));
+        }
         if (strategy.roster_capacity) detail.append(node('p', `Additional configured roster spots to resolve: ${strategy.roster_capacity.additional_spots_to_resolve}. Cut cost is not assumed.`));
         if (strategy.unavailable_dimensions?.length) detail.append(node('small', 'Unavailable: ' + strategy.unavailable_dimensions.join(', ').replaceAll('_', ' ')));
         out.append(detail);

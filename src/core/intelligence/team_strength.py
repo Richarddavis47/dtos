@@ -14,8 +14,10 @@ from typing import Any
 from time import perf_counter
 
 from src.core.trade_intelligence.lineup import optimal_legal_lineup
+from src.core.projection_intelligence.service import UNAVAILABLE_PLAYER_STATUSES
+from src.core.projection_intelligence.sleeper_provider import freshness_state
 
-METHOD_VERSION = 'weekly-optimal-horizons-v2'
+METHOD_VERSION = 'weekly-optimal-horizons-v3-reserve-quality'
 
 
 def _weeks(values: list[int] | tuple[int, ...]) -> tuple[int, ...]:
@@ -137,16 +139,51 @@ def prepare_team_strength(service: Any, *, league_id: str, season: int, current_
             optimization_started = perf_counter()
             lineup = solve(pool, roster_positions, week=week)
             selected = {entry.asset_id for entry in lineup.entries}
-            reserves = [player for player in pool if player['id'] not in selected]
+            reserves = [dict(player, lineup_eligible=player['lineup_eligible'] and
+                        str(rows.get(player['id'], {}).get('availability') or '').casefold()
+                        not in UNAVAILABLE_PLAYER_STATUSES)
+                        for player in pool if player['id'] not in selected]
             reserve_lineup = solve(reserves, roster_positions, week=week)
             optimization_seconds += perf_counter() - optimization_started
+            usable = [player for player in reserves if player['lineup_eligible']
+                      and player.get('bye_week') != week]
+            missing = sorted(set(lineup.missing_player_ids) | set(reserve_lineup.missing_player_ids))
+            unknown_positions = any(not player['position'] for player in usable)
+            unsupported_starters = any(str(rows.get(pid, {}).get('availability') or '').casefold()
+                                       in UNAVAILABLE_PLAYER_STATUSES for pid in selected)
+            supported = bool(snapshot and snapshot.get('scoring_profile_id') and lineup.available
+                             and not missing and not unknown_positions and not unsupported_starters)
+            source_states = sorted({freshness_state(rows.get(pid, {}).get('source_timestamp'))
+                                    for pid in ids if pid not in excluded})
+            uncertain = any(str(rows.get(pid, {}).get('availability') or '').casefold()
+                            not in {'active', *UNAVAILABLE_PLAYER_STATUSES}
+                            for pid in ids if pid not in excluded)
+            limitations = []
+            if not supported:
+                limitations.append('Complete compatible reserve projection or eligibility evidence is unavailable; known subtotals are not complete replacement strength.')
+            if uncertain:
+                limitations.append('Player availability is uncertain; usable replacement production is provisional.')
+            if any(state != 'Fresh' for state in source_states):
+                limitations.append('Projection source freshness is qualified; these are conditional projections, not guaranteed production.')
+            reserve_points = reserve_lineup.known_starters_subtotal
+            if supported and not usable:
+                reserve_points = 0.0  # Supported empty reserves, never missing production.
             weekly[week] = {'available': lineup.available, 'optimal': asdict(lineup),
                 'projection_snapshot_id': (snapshot or {}).get('projection_snapshot_id'),
                 'coverage': {'supported_slots': len(lineup.entries), 'unsupported_slots': list(lineup.unsupported_slots),
                              'missing_player_ids': list(lineup.missing_player_ids)},
                 'reserve_capacity': {'supported_slots': len(reserve_lineup.entries),
                     'unsupported_slots': list(reserve_lineup.unsupported_slots),
-                    'known_subtotal': reserve_lineup.known_starters_subtotal,
+                    'known_subtotal': reserve_points,
+                    'entries': [asdict(entry) for entry in reserve_lineup.entries],
+                    'candidate_count': len(usable), 'missing_player_ids': missing,
+                    'qualification': {'calculation_supported': supported,
+                        'conclusion_state': 'unavailable' if not supported else 'provisional' if limitations else 'current',
+                        'limitations': limitations, 'projection_freshness': source_states,
+                        'source_timestamps': sorted({rows.get(pid, {}).get('source_timestamp') or ''
+                                                     for pid in ids if pid not in excluded}),
+                        'projection_snapshot_id': (snapshot or {}).get('projection_snapshot_id'),
+                        'scoring_profile_id': (snapshot or {}).get('scoring_profile_id')},
                     'meaning': 'supported non-optimal roster coverage, not a future injury forecast'},
                 'source_confidence': {entry.asset_id: rows[entry.asset_id].get('projection_confidence') for entry in lineup.entries}}
             weekly[week]['known_bye_player_ids'] = sorted(pid for pid in ids if byes.get(pid) == week)

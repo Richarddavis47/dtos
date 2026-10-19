@@ -765,7 +765,28 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
             if any(revised_depth[w] < prior_depth[w] for w in revised_depth.keys() & prior_depth.keys()):
                 funnel.assessed(result, filtered=True, filter_reason='WIN_NOW_RESERVE_COVERAGE_REGRESSION')
                 continue
-            result['adjustment_evidence'] = {'concept': 'supported_near_term_gain_without_comparable_horizon_or_depth_regression',
+            def reserve_quality(row):
+                return (((row['evaluation'].get('dimensions') or {}).get('package_quality') or {}).get('active') or {}).get('reserve_quality') or {}
+            prior_quality, revised_quality = reserve_quality(original_result), reserve_quality(result)
+            quality_comparable = bool(prior_quality.get('complete') and revised_quality.get('complete')
+                and prior_quality.get('supported_weeks')
+                and set(prior_quality['supported_weeks']) == set(revised_quality.get('supported_weeks') or [])
+                and prior_quality.get('mean_weekly_delta') is not None
+                and revised_quality.get('mean_weekly_delta') is not None)
+            quality_regression = (bool(revised_quality.get('material_loss')
+                and revised_quality['mean_weekly_delta'] < prior_quality['mean_weekly_delta'])
+                if quality_comparable else None)
+            # A supported starter upgrade may justify a reserve cost. Keep the
+            # shared eligibility decision, disclose that cost, and prefer an
+            # otherwise equivalent option that preserves replacement strength.
+            result['adjustment_evidence'] = {'concept': (
+                'supported_near_term_gain_with_disclosed_reserve_quality_tradeoff' if quality_regression
+                else 'supported_near_term_gain_without_comparable_horizon_or_reserve_slot_regression'),
+                'reserve_quality_comparison': {
+                    'availability': 'supported' if quality_comparable else 'unavailable',
+                    'original_mean_weekly_delta': prior_quality.get('mean_weekly_delta'),
+                    'candidate_mean_weekly_delta': revised_quality.get('mean_weekly_delta'),
+                    'material_regression': quality_regression},
                 'unavailable_horizons': [name for name in ('rest_of_regular_season', 'playoff_window')
                                         if current.get(name, {}).get('availability') != 'complete'
                                         or original.get(name, {}).get('availability') != 'complete']}
@@ -796,7 +817,11 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
             distinct.setdefault(repair_family(row[3]['proposal'], by_id), row)
         candidates = list(distinct.values())
     else:
-        candidates.sort(key=lambda row: (row[0], row[2], row[3]["evaluation"]["provenance"]["evaluation_id"]))
+        def reserve_order(row):
+            comparison = (row[3].get('adjustment_evidence') or {}).get('reserve_quality_comparison') or {}
+            mean = comparison.get('candidate_mean_weekly_delta') if comparison.get('availability') == 'supported' else None
+            return (mean is None, bool(comparison.get('material_regression')), -mean if mean is not None else 0)
+        candidates.sort(key=lambda row: (row[0], row[2], reserve_order(row), row[3]["evaluation"]["provenance"]["evaluation_id"]))
     target_preserving = [row for row in candidates if not row[1]]
     closest_rows = candidates if younger_target_change else target_preserving
     closest = closest_rows[0][3] if closest_rows else None

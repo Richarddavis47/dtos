@@ -3,7 +3,7 @@ from decimal import Decimal
 
 # Existing capital and counterparty safety policy, shared by player-only offers.
 SEVERE_MARKET_LOSS_RATIO = .50
-TRADE_EVALUATION_POLICY_VERSION = 'scoped-trade-effects-v5-material-endorsement'
+TRADE_EVALUATION_POLICY_VERSION = 'scoped-trade-effects-v6-reserve-quality'
 
 
 def pick_identity_errors(asset):
@@ -88,8 +88,10 @@ def assess_capital(strategy, package, market, *, outgoing_total, incoming_total)
     mean = production['mean_weekly_delta']
     horizon_losses = any(h.get('delta') is not None and h['delta'] < 0 for h in strategy['horizons'].values())
     horizon_gains = any(h.get('delta') is not None and h['delta'] > 0 for h in strategy['horizons'].values())
-    depth_loss = any(d < 0 for d in strategy['reserve_slot_changes'].values())
-    if mean == 0 and not horizon_losses and not horizon_gains and net == 0 and incoming_total == outgoing_total and not depth_loss:
+    depth_loss = (any(d < 0 for d in strategy['reserve_slot_changes'].values())
+                  or strategy.get('reserve_quality', {}).get('material_loss', False))
+    reserve_complete = strategy.get('reserve_quality', {}).get('complete', False)
+    if mean == 0 and not horizon_losses and not horizon_gains and net == 0 and incoming_total == outgoing_total and not depth_loss and reserve_complete:
         return decision('FAIR / OPTIONAL', 'CAPITAL_AND_LINEUP_PARITY', 'Supported Market, production and draft capital are balanced.')
     if intent is None:
         fit['unresolved_inputs'] = ['analysis_strategy']
@@ -100,11 +102,11 @@ def assess_capital(strategy, package, market, *, outgoing_total, incoming_total)
                             for row in strategy['horizons'].values())
         cost = ('You give up current production' if mean < 0 else
                 'Production has supported losses in some horizons' if weekly_losses else 'Current production is preserved')
-        label = 'SMASH ACCEPT' if mean >= 0 and not horizon_losses and not depth_loss and incoming_total >= outgoing_total else 'WORTH PURSUING'
+        label = 'SMASH ACCEPT' if mean >= 0 and not horizon_losses and not depth_loss and reserve_complete and incoming_total >= outgoing_total else 'WORTH PURSUING'
         return decision(label, 'REBUILD_CAPITAL_FIT', f'Rebuild fit: {cost.lower()} while gaining meaningful priced future capital. Reserve coverage and pick-range uncertainty remain explicit.')
     if intent in ('WIN NOW', 'RETOOL') and production['material_gain'] and not horizon_losses and ratio is not None and ratio >= (.65 if intent == 'WIN NOW' else .85):
         cost = 'This costs future flexibility' if net < 0 else 'Future capital is preserved or increased'
-        label = 'SMASH ACCEPT' if net >= 0 and incoming_total >= outgoing_total and not depth_loss else 'WORTH PURSUING'
+        label = 'SMASH ACCEPT' if net >= 0 and incoming_total >= outgoing_total and not depth_loss and reserve_complete else 'WORTH PURSUING'
         return decision(label, 'WIN_NOW_PRODUCTION_FIT' if intent == 'WIN NOW' else 'RETOOL_PRODUCTION_FIT',
                         f'{"Win-now" if intent == "WIN NOW" else "Retool"} fit: {cost.lower()}, and materially improves the optimal legal lineup. Any reserve loss remains a disclosed cost.')
     if intent == 'RETOOL' and assessment['meaningful_gain'] and mean >= 0 and not horizon_losses and ratio is not None and ratio >= .85:

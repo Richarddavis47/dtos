@@ -42,6 +42,11 @@ REASONS = {
     'ROS_DOWNGRADE': 'The supported rest-of-regular-season optimal lineups lose projected points.',
     'PLAYOFF_WINDOW_DOWNGRADE': 'The supported playoff-window optimal lineups lose projected points; this is not a qualification forecast.',
     'DEPTH_LOSS': 'Supported reserve coverage declines.',
+    'RESERVE_PRODUCTION_LOSS': 'Useful legal-replacement production falls, even if reserve-slot counts stay the same.',
+    'RESERVE_PRODUCTION_GAIN': 'Useful legal-replacement production improves; this is depth, not a starter upgrade.',
+    'MIXED_WEEKLY_RESERVE_PRODUCTION': 'Replacement production improves in some supported weeks and declines in others; the changes do not establish a uniform gain.',
+    'RESERVE_PRODUCTION_COST_WITHOUT_SUPPORTED_COMPENSATION': 'Useful replacement production declines without a material supported starter gain or Market compensation.',
+    'RESERVE_QUALITY_UNAVAILABLE': 'Complete reserve-production evidence is unavailable; missing projections are not zero.',
     'LOW_COUNTERPARTY_PLAUSIBILITY': 'The accepted evidence gives the counterparty limited reason to consider this proposal; it does not predict their response.',
 }
 
@@ -132,6 +137,16 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
             add(f'weekly.{side}.{week}.delta', f'{label} · Week {week} · Optimal-lineup change', row.get('delta'), unit='fantasy points')
         for week, change in (strategy.get('reserve_slot_changes') or {}).items():
             add(f'{side}.depth.{week}', f'{label} · week {week} reserve coverage change', change, unit='supported reserve slots')
+        for week, row in (strategy.get('reserve_quality_by_week') or {}).items():
+            for field, title in (('pre_points', 'before trade'), ('post_points', 'after trade'), ('delta', 'change')):
+                add(f'{side}.reserve_quality.{week}.{field}', f'{label} · Week {week} · Legal reserve production {title}',
+                    row.get(field), unit='fantasy points',
+                    state=A.PARTIAL if row.get('conclusion_state') == 'provisional' else None)
+            for limitation in row.get('limitations') or []:
+                statement = Statement('RESERVE_PRODUCTION_QUALIFIED', f'{label} · Week {week}: {limitation}',
+                                      (f'{side}.reserve_quality.{week}.delta',))
+                if statement not in limits:
+                    limits.append(statement)
         for direction in ('received', 'sent'):
             for index, pick in enumerate((strategy.get('future_capital') or {}).get(direction) or []):
                 add(f'{side}.capital.{direction}.{index}', f'{label} future capital {direction}', pick.get('asset_id'), unit='pick identity')

@@ -15,8 +15,14 @@ def side(roster, delta):
                 ('current_week', 'next_n', 'rest_of_regular_season', 'playoff_window')}
     return {'roster_id': str(roster), 'horizons': horizons, 'weekly': {2: {
         'delta': delta,
-        'pre': {'reserve_capacity': {'supported_slots': 1}, 'optimal': {'entries': []}},
-        'post': {'reserve_capacity': {'supported_slots': 1}, 'optimal': {'entries': []}}}}}
+        'pre': {'reserve_capacity': {'supported_slots': 1, 'known_subtotal': 10,
+            'candidate_count': 1, 'missing_player_ids': [],
+            'qualification': {'calculation_supported': True, 'conclusion_state': 'provisional'}},
+            'optimal': {'entries': []}},
+        'post': {'reserve_capacity': {'supported_slots': 1, 'known_subtotal': 10,
+            'candidate_count': 1, 'missing_player_ids': [],
+            'qualification': {'calculation_supported': True, 'conclusion_state': 'provisional'}},
+            'optimal': {'entries': []}}}}}
 
 
 class TradeStrategyTests(unittest.TestCase):
@@ -118,6 +124,7 @@ class TradeStrategyTests(unittest.TestCase):
         incoming = tuple(asset(pid, 100, 2) for pid in ('b', 'c', 'd'))
         impact = side(1, -5)
         impact['weekly'][2]['post']['reserve_capacity']['supported_slots'] = 2
+        impact['weekly'][2]['post']['reserve_capacity']['known_subtotal'] = 20
         profile = package_profile(incoming, (asset('a', 300, 1),), impact)
         self.assertEqual(profile['assessment'], 'MIXED')
         self.assertNotIn('PACKAGE_STUFFING', profile['reason_codes'])
@@ -129,9 +136,11 @@ class TradeStrategyTests(unittest.TestCase):
         from src.core.trade_intelligence.strategy_dimensions import strategic_profile
         impact = side(1, 5)
         impact['weekly'][2]['post']['reserve_capacity']['supported_slots'] = 2
+        impact['weekly'][2]['post']['reserve_capacity']['known_subtotal'] = 20
         impact['weekly'][3] = deepcopy(impact['weekly'][2])
         impact['weekly'][3]['delta'] = -5
         impact['weekly'][3]['post']['reserve_capacity']['supported_slots'] = 0
+        impact['weekly'][3]['post']['reserve_capacity']['known_subtotal'] = 0
         incoming, outgoing = (asset('b', 100, 2),), (asset('a', 100, 1),)
         package = package_profile(incoming, outgoing, impact)
         strategy = strategic_profile(incoming, outgoing, impact, package)
