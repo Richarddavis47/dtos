@@ -17,7 +17,7 @@ from src.core.trade_intelligence.lineup import optimal_legal_lineup
 from src.core.projection_intelligence.service import UNAVAILABLE_PLAYER_STATUSES
 from src.core.projection_intelligence.sleeper_provider import freshness_state
 
-METHOD_VERSION = 'weekly-optimal-horizons-v2'
+METHOD_VERSION = 'weekly-optimal-horizons-v3-reserve-quality'
 
 
 def _weeks(values: list[int] | tuple[int, ...]) -> tuple[int, ...]:
