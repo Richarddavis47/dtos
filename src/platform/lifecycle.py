@@ -153,6 +153,10 @@ class LifecycleCoordinator:
     def reserve_fois_generation(self) -> None:
         """Keep Market construction from overlapping FOIS generation."""
         with self._condition:
+            # Admission is symmetric: a running Market build must finish before
+            # FOIS starts, just as an active FOIS flight blocks a new build.
+            while self._phase == "asset_market_build":
+                self._condition.wait()
             self._fois_generation += 1
 
     def release_fois_generation(self) -> None:

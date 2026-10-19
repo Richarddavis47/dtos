@@ -89,7 +89,7 @@ class ResidentMaintenanceTests(unittest.IsolatedAsyncioTestCase):
         runtime = LeagueRuntime("B", status=RuntimeState.WARM)
         data = {"league": {"league_id": "B", "scoring_settings": {"pass_td": 6}}}
         runtime.state["data"] = data
-        context = SimpleNamespace(history_state="complete", market=Mock())
+        context = SimpleNamespace(history_state="complete", fois_state="pending", market=Mock())
         runtime.canonical_context = context
         with patch.object(dtos_app, "sync_sleeper_league", new_callable=AsyncMock) as sync, patch.object(
             dtos_app, "ProjectionService", return_value=Mock(),
@@ -99,6 +99,8 @@ class ResidentMaintenanceTests(unittest.IsolatedAsyncioTestCase):
             dtos_app, "start_background_backfill",
         ) as history:
             await dtos_app._refresh_resident_league(runtime)
+            while runtime.background_tasks:
+                await asyncio.gather(*tuple(runtime.background_tasks))
         self.assertEqual(sync.call_args.args[:2], ("B", runtime.state))
         context.market.reconcile.assert_called_once_with(
             data, runtime.state, dtos_app.canonical_history_store, "B",
@@ -132,7 +134,7 @@ class ResidentMaintenanceTests(unittest.IsolatedAsyncioTestCase):
         import dtos_app
         runtime = LeagueRuntime("B", status=RuntimeState.WARM)
         runtime.state["data"] = {"league": {"league_id": "B"}}
-        context = SimpleNamespace(history_state="available", market=Mock())
+        context = SimpleNamespace(history_state="available", fois_state="pending", market=Mock())
         runtime.canonical_context = context
         with patch.object(dtos_app, "sync_sleeper_league", new_callable=AsyncMock), patch.object(
             dtos_app, "ProjectionService", return_value=Mock(),
@@ -145,9 +147,10 @@ class ResidentMaintenanceTests(unittest.IsolatedAsyncioTestCase):
             dtos_app, "resolve_historical_trade_market", new_callable=AsyncMock,
         ) as resolve:
             await dtos_app._hydrate_league_runtime(runtime)
-            await asyncio.gather(*tuple(runtime.background_tasks))
+            while runtime.background_tasks:
+                await asyncio.gather(*tuple(runtime.background_tasks))
         history.assert_awaited_once_with(None, league_id="B")
-        resolve.assert_awaited_once_with(runtime=runtime)
+        resolve.assert_awaited_once_with(runtime=runtime, regenerate_fois=False)
         self.assertEqual(context.history_state, "complete")
 
     async def test_finishing_refresh_during_eviction_cannot_spawn_new_work(self):

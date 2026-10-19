@@ -8,6 +8,7 @@ import multiprocessing
 import os
 import tempfile
 import threading
+from contextlib import contextmanager
 from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from time import perf_counter
@@ -28,6 +29,44 @@ _EXECUTOR_LOCK = threading.RLock()
 _EXECUTOR_STOPPING = False
 _IN_FLIGHT = 0
 _LAST_USED = 0.0
+_GENERATION_SLOT = threading.Lock()
+
+
+class FOISExecutionBusy(RuntimeError):
+    """The single bounded compute slot is already owned by another flight."""
+
+
+@contextmanager
+def _generation_slot():
+    # Admit before scratch copying. No queued copies or unrelated writers may
+    # overlap a timeout/cancellation that needs to retire this one worker.
+    if not _GENERATION_SLOT.acquire(blocking=False):
+        raise FOISExecutionBusy('FOIS computation is already in progress.')
+    try:
+        yield
+    finally:
+        _GENERATION_SLOT.release()
+
+
+async def _drain_owned(task):
+    """Finish an already-owned operation despite repeated waiter cancellation."""
+    while not task.done():
+        try:
+            await asyncio.shield(task)
+        except asyncio.CancelledError:
+            continue
+    return task.result()
+
+
+async def _stop_owned_worker():
+    task = asyncio.create_task(shutdown_fois_executor())
+    try:
+        await asyncio.shield(task)
+    except asyncio.CancelledError as cancellation:
+        try:
+            await _drain_owned(task)
+        finally:
+            raise cancellation
 
 
 def _worker_ready() -> dict[str, int]:
@@ -311,114 +350,134 @@ async def generate_fois_isolated(
     cache_file: Path | None = None,
 ) -> tuple[tuple[Any, ...], dict[str, object], dict[str, object]]:
     """Compute/persist FOIS in one spawned child, then reconcile in the parent."""
-    league_id = str((data.get("league") or {}).get("league_id") or "configured-league")
-    started = perf_counter()
-    progress = progress_from_environment()
-    record = progress.record if progress is not None else lambda *_args, **_kwargs: None
-    await asyncio.to_thread(
-        record, "fois_phase", phase="parent_input", status="started",
-        league_identity="configured",
-    )
-    repository.path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(
-        prefix=".dtos-fois-compute-", dir=repository.path.parent,
-    ) as directory:
-        temporary = Path(directory)
-        working_database = temporary / "fois.sqlite3"
-        preparation = asyncio.create_task(asyncio.to_thread(
-            _prepare_working_database, repository.path, working_database, league_id,
-        ))
-        try:
-            await asyncio.shield(preparation)
-        except asyncio.CancelledError as cancellation:
-            # Cancelling a waiter cannot cancel its SQLite thread. Drain this
-            # bounded scratch copy before removing its directory, and preserve
-            # cancellation so abandoned maintenance cannot resume publication.
+    with _generation_slot():
+        league_id = str((data.get("league") or {}).get("league_id") or "configured-league")
+        started = perf_counter()
+        progress = progress_from_environment()
+        record = progress.record if progress is not None else lambda *_args, **_kwargs: None
+        await asyncio.to_thread(
+            record, "fois_phase", phase="parent_input", status="started",
+            league_identity="configured",
+        )
+        repository.path.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(
+            prefix=".dtos-fois-compute-", dir=repository.path.parent,
+        ) as directory:
+            temporary = Path(directory)
+            working_database = temporary / "fois.sqlite3"
+            preparation = asyncio.create_task(asyncio.to_thread(
+                _prepare_working_database, repository.path, working_database, league_id,
+            ))
             try:
-                while not preparation.done():
+                await asyncio.shield(preparation)
+            except asyncio.CancelledError as cancellation:
+                # Cancelling a waiter cannot cancel its SQLite thread. Drain this
+                # bounded scratch copy before removing its directory, and preserve
+                # cancellation so abandoned maintenance cannot resume publication.
+                try:
+                    while not preparation.done():
+                        try:
+                            # Every wait must stay shielded: a second cancellation
+                            # can otherwise cancel the task while its thread keeps
+                            # writing, allowing cleanup to race/recreate scratch.
+                            await asyncio.shield(preparation)
+                        except asyncio.CancelledError:
+                            continue
+                    # Observe any preparation error, even when cancellation wins.
+                    preparation.result()
+                finally:
+                    raise cancellation
+            source_file = cache_file or _league_cache_file(league_id)
+            if not source_file.is_file():
+                raise RuntimeError("FOIS canonical cache input is unavailable.")
+            payload: dict[str, Any] = {
+                "input_contract": "canonical_cache_fois_v2",
+                "league_id": league_id,
+                "cache_file": str(source_file),
+                "fois_database": str(working_database),
+                "intelligence_checkpoint_file": str(INTELLIGENCE_CHECKPOINT_FILE),
+                "metadata_database_file": str(METADATA_DATABASE_FILE),
+                "sleeper_season_cache_root": str(SLEEPER_SEASON_CACHE_ROOT),
+            }
+            input_bytes = len(json.dumps(
+                payload, sort_keys=True, separators=(",", ":"), default=str,
+            ).encode("utf-8"))
+            await asyncio.to_thread(
+                record, "fois_phase", phase="parent_input", status="completed",
+                input_bytes=input_bytes,
+                duration_ms=round((perf_counter() - started) * 1000, 3),
+            )
+            future = None
+            try:
+                try:
+                    # Creating/recreating the pool or waiting for idle shutdown must
+                    # never hold the event loop that serves warming/read requests.
+                    submission = asyncio.create_task(asyncio.to_thread(_submit, _compute_fois_payload, payload))
                     try:
-                        # Every wait must stay shielded: a second cancellation
-                        # can otherwise cancel the task while its thread keeps
-                        # writing, allowing cleanup to race/recreate scratch.
-                        await asyncio.shield(preparation)
-                    except asyncio.CancelledError:
-                        continue
-                # Observe any preparation error, even when cancellation wins.
-                preparation.result()
-            finally:
-                raise cancellation
-        source_file = cache_file or _league_cache_file(league_id)
-        if not source_file.is_file():
-            raise RuntimeError("FOIS canonical cache input is unavailable.")
-        payload: dict[str, Any] = {
-            "input_contract": "canonical_cache_fois_v2",
-            "league_id": league_id,
-            "cache_file": str(source_file),
-            "fois_database": str(working_database),
-            "intelligence_checkpoint_file": str(INTELLIGENCE_CHECKPOINT_FILE),
-            "metadata_database_file": str(METADATA_DATABASE_FILE),
-            "sleeper_season_cache_root": str(SLEEPER_SEASON_CACHE_ROOT),
-        }
-        input_bytes = len(json.dumps(
-            payload, sort_keys=True, separators=(",", ":"), default=str,
-        ).encode("utf-8"))
-        await asyncio.to_thread(
-            record, "fois_phase", phase="parent_input", status="completed",
-            input_bytes=input_bytes,
-            duration_ms=round((perf_counter() - started) * 1000, 3),
-        )
-        future = None
-        try:
-            try:
-                # Creating/recreating the pool or waiting for idle shutdown must
-                # never hold the event loop that serves warming/read requests.
-                future = await asyncio.to_thread(_submit, _compute_fois_payload, payload)
-                result = await asyncio.wait_for(
-                    asyncio.wrap_future(future),
-                    timeout=timeout,
-                )
-            except asyncio.TimeoutError:
-                raise RuntimeError("FOIS compute process timed out.") from None
-            except BrokenProcessPool as exc:
-                raise RuntimeError("FOIS compute process failed.") from exc
-            if result.get("status") != "complete" or int(result.get("records") or -1) < 0:
-                raise RuntimeError("FOIS compute process returned an invalid result contract.")
-        except asyncio.CancelledError:
-            if future is not None and future.running():
-                # Stop the abandoned writer before TemporaryDirectory removes
-                # its scratch files. Published canonical evidence is untouched.
-                await shutdown_fois_executor()
-            raise
+                        future = await asyncio.shield(submission)
+                    except asyncio.CancelledError as cancellation:
+                        # Submission can start a child before its waiter obtains
+                        # the handle. Recover that owned handle before cleanup.
+                        try:
+                            future = await _drain_owned(submission)
+                        finally:
+                            raise cancellation
+                    result = await asyncio.wait_for(
+                        asyncio.wrap_future(future),
+                        timeout=timeout,
+                    )
+                except asyncio.TimeoutError:
+                    if future is not None and not future.done() and not future.cancel():
+                        await _stop_owned_worker()
+                    raise RuntimeError("FOIS compute process timed out.") from None
+                except BrokenProcessPool as exc:
+                    await _stop_owned_worker()
+                    raise RuntimeError("FOIS compute process failed.") from exc
+                if result.get("status") != "complete" or int(result.get("records") or -1) < 0:
+                    raise RuntimeError("FOIS compute process returned an invalid result contract.")
+            except asyncio.CancelledError:
+                if future is not None and not future.done() and not future.cancel():
+                    # Stop the abandoned writer before TemporaryDirectory removes
+                    # its scratch files. Published canonical evidence is untouched.
+                    await _stop_owned_worker()
+                raise
 
-        publication_started = perf_counter()
-        await asyncio.to_thread(
-            record, "fois_phase", phase="publication", status="started",
-        )
-        scores, canonical = await asyncio.to_thread(
-            _validate_and_publish, working_database, repository, league_id,
-            int(result["records"]),
-            str((result.get("history_metrics", {}).get("checkpoint_flight") or {}).get("generation") or ""),
-        )
-        await asyncio.to_thread(
-            record, "fois_phase", phase="publication", status="completed",
-            records=len(scores),
-            duration_ms=round((perf_counter() - publication_started) * 1000, 3),
-        )
-        metrics = {
-            "execution": "spawned_subprocess",
-            "process_model": "persistent_spawn_pool",
-            "input_contract": "canonical_cache_fois_v2",
-            "worker_pid": result["worker_pid"],
-            "input_bytes": input_bytes,
-            "output_bytes": len(json.dumps(result, sort_keys=True).encode("utf-8")),
-            "child_duration_ms": result.get("duration_ms"),
-            "child_peak_rss_bytes": result.get("peak_rss_bytes"),
-            "source_bytes": result.get("source_bytes"),
-            "compact_input_bytes": result.get("compact_input_bytes"),
-            "history_metrics": result.get("history_metrics") or {},
-            "parent_duration_ms": round((perf_counter() - started) * 1000, 3),
-            "exit_status": 0,
-            "reaped": False,
-            "prepared_evidence": result.get("prepared_evidence") or {},
-        }
-        return scores, canonical, metrics
+            publication_started = perf_counter()
+            await asyncio.to_thread(
+                record, "fois_phase", phase="publication", status="started",
+            )
+            publication = asyncio.create_task(asyncio.to_thread(
+                _validate_and_publish, working_database, repository, league_id,
+                int(result["records"]),
+                str((result.get("history_metrics", {}).get("checkpoint_flight") or {}).get("generation") or ""),
+            ))
+            try:
+                scores, canonical = await asyncio.shield(publication)
+            except asyncio.CancelledError as cancellation:
+                try:
+                    await _drain_owned(publication)
+                finally:
+                    raise cancellation
+            await asyncio.to_thread(
+                record, "fois_phase", phase="publication", status="completed",
+                records=len(scores),
+                duration_ms=round((perf_counter() - publication_started) * 1000, 3),
+            )
+            metrics = {
+                "execution": "spawned_subprocess",
+                "process_model": "persistent_spawn_pool",
+                "input_contract": "canonical_cache_fois_v2",
+                "worker_pid": result["worker_pid"],
+                "input_bytes": input_bytes,
+                "output_bytes": len(json.dumps(result, sort_keys=True).encode("utf-8")),
+                "child_duration_ms": result.get("duration_ms"),
+                "child_peak_rss_bytes": result.get("peak_rss_bytes"),
+                "source_bytes": result.get("source_bytes"),
+                "compact_input_bytes": result.get("compact_input_bytes"),
+                "history_metrics": result.get("history_metrics") or {},
+                "parent_duration_ms": round((perf_counter() - started) * 1000, 3),
+                "exit_status": 0,
+                "reaped": False,
+                "prepared_evidence": result.get("prepared_evidence") or {},
+            }
+            return scores, canonical, metrics

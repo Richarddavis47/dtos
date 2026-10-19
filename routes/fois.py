@@ -8,6 +8,7 @@ from typing import Any, Callable
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse
+from starlette.responses import JSONResponse
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.fois.configuration import DEFAULT_FOIS_CONFIGURATION
@@ -17,8 +18,44 @@ from src.core.fois.render_cache import FOISRenderCache
 from src.core.fois.service import FOISService, fois_enabled
 from src.ui.intelligence_presentation import exact_rank, human_status, technical_details
 from src.platform.account_context import current_account
+from src.platform.league_context import current_league_context
+from src.core.fois.process_execution import FOISExecutionBusy
 
 PageRenderer = Callable[[str, str], HTMLResponse]
+
+
+def _generation_status(service):
+    worker = service.status()
+    context = current_league_context()
+    if context is None:
+        return worker
+    status = context.runtime.lifecycle
+    return {'state': status.get('fois_generation', 'waiting'),
+            'evidence_state': context.fois_state, 'league_id': context.league_id,
+            'last_run': status.get('fois_last_run'), 'last_duration_ms': status.get('fois_duration_ms'),
+            'last_error': 'FOIS calculation is temporarily unavailable.' if status.get('fois_generation') == 'failed' else None,
+            'worker_state': worker.get('state'), 'enabled': worker.get('enabled'),
+            'model_version': worker.get('model_version')}
+
+
+def _evidence_state(score):
+    context = current_league_context()
+    if score is not None and context is not None and context.fois_state != 'ready':
+        return 'retained_not_revalidated'
+    return getattr(score, 'evidence_state', 'unavailable')
+
+
+def _availability_notice(service):
+    context = current_league_context()
+    if context is None or context.fois_state == 'ready':
+        return ''
+    status = _generation_status(service)
+    message = ('FOIS is temporarily unavailable.' if status['state'] == 'failed' else
+               'FOIS preparation is pending.' if context.fois_state == 'pending' else
+               'Current FOIS is unavailable.')
+    if context.fois_state == 'retained':
+        message += ' Previous grades are RETAINED / NOT REVALIDATED.'
+    return '<p role="status" class="muted" data-fois-availability="' + context.fois_state + '">' + message + ' Your league, roster, Market and Trade remain usable.</p>'
 
 
 def _metadata(score: Any | None = None) -> dict[str, Any]:
@@ -33,7 +70,7 @@ def _metadata(score: Any | None = None) -> dict[str, Any]:
         "generation_timestamp": getattr(score, "generated_at", None),
         "confidence": getattr(score, "confidence", 0.0),
         "completeness": getattr(score, "completeness", 0.0),
-        "evidence_state": getattr(score, "evidence_state", "unavailable"),
+        "evidence_state": _evidence_state(score),
     }
 
 
@@ -51,7 +88,7 @@ def _summary(score: Any) -> dict[str, Any]:
         "supported_weight": score.supported_weight,
         "evaluation_kind": score.evaluation_kind,
         "confidence_model_version": score.confidence_model_version,
-        "evidence_state": score.evidence_state,
+        "evidence_state": _evidence_state(score),
         "current_team_score": score.current_team_score,
         "management_momentum": score.management_momentum,
         "strongest_category": score.strongest_category,
@@ -69,6 +106,7 @@ def create_fois_router(
     service: FOISService,
     require_data: Callable[[], dict[str, Any]],
     page: PageRenderer | None = None,
+    generate: Callable | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["fois"])
     render_cache = FOISRenderCache()
@@ -90,14 +128,14 @@ def create_fois_router(
 
     @router.get("/api/fois")
     async def root() -> dict[str, Any]:
-        return {**_metadata(), "status": service.status(),
+        return {**_metadata(), "status": _generation_status(service),
                 "render_cache": render_cache.health(), "links": {
             "status": "/api/fois/status", "model": "/api/fois/model",
         }}
 
     @router.get("/api/fois/status")
     async def status() -> dict[str, Any]:
-        return {**_metadata(), **service.status(), "render_cache": render_cache.health()}
+        return {**_metadata(), **_generation_status(service), "render_cache": render_cache.health()}
 
     @router.get("/api/fois/model")
     async def model() -> dict[str, Any]:
@@ -106,13 +144,22 @@ def create_fois_router(
                 "metrics": jsonable_encoder([asdict(metric) for metric in DEFAULT_METRIC_REGISTRY])}
 
     @router.post("/api/fois/leagues/{league_id}/calculate")
-    async def calculate(league_id: str) -> dict[str, Any]:
+    async def calculate(league_id: str):
         require_enabled()
         data = require_data()
         actual_id = str((data.get("league") or {}).get("league_id") or league_id)
         if actual_id != league_id:
             raise HTTPException(404, "The requested league is not loaded.")
-        scores = await service.generate(data)
+        try:
+            scores = await (generate or service.generate)(data)
+        except FOISExecutionBusy:
+            scores = None
+        except Exception:
+            return JSONResponse({'league_id': league_id, 'generation_status': 'failed',
+                'detail': 'FOIS calculation is temporarily unavailable. Your league remains usable; previous evidence has not been revalidated.'}, status_code=503)
+        if scores is None:
+            return JSONResponse({'league_id': league_id, 'generation_status': 'pending',
+                'detail': 'FOIS preparation is pending or already running. Your league remains usable.'}, status_code=202)
         return {**_metadata(scores[0] if scores else None), "league_id": league_id,
                 "scores": jsonable_encoder(scores)}
 
@@ -163,8 +210,8 @@ def create_fois_router(
         return {
             **_metadata(),
             "league_id": league_id,
-            "generation_status": service.status().get("state"),
-            "generation_duration": service.status().get("last_duration_ms"),
+            "generation_status": _generation_status(service).get("state"),
+            "generation_duration": _generation_status(service).get("last_duration_ms"),
             **service.repository.canonical_health(league_id, FOIS_MODEL_VERSION),
         }
 
@@ -287,7 +334,7 @@ def create_fois_router(
         cards = "".join(
             f'<article class="card fois-leader" data-fois-current="true" data-fois-rank="{rank if score.overall_score is not None else "unavailable"}" data-fois-gm="{escape(score.gm_id or "")}">'
             f'<div class="fois-rank"><span>League overall FOIS rank</span><b>{exact_rank(rank if score.overall_score is not None else None)}</b></div>'
-            f'<div><p class="eyebrow">{"RETAINED · NOT REVALIDATED" if not score.evidence_revalidated else "CURRENT"} · {exact_rank(rank if score.overall_score is not None else None, sum(row.overall_score is not None for row in ranked_scores))}</p><h3><a href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}">{escape(score.gm_name or "GM")}</a></h3>'
+            f'<div><p class="eyebrow">{"RETAINED · NOT REVALIDATED" if not score.evidence_revalidated or _evidence_state(score) == "retained_not_revalidated" else "CURRENT"} · {exact_rank(rank if score.overall_score is not None else None, sum(row.overall_score is not None for row in ranked_scores))}</p><h3><a href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}">{escape(score.gm_name or "GM")}</a></h3>'
             f'<p class="muted">{escape(score.franchise_name or "Current franchise")}</p></div>'
             f'<div class="fois-score"><b>{score.overall_score if score.overall_score is not None else "—"}</b><span>{escape(score.overall_letter_grade or "Insufficient evidence")}</span></div>'
             f'<div class="fois-evidence"><b>{score.confidence:.0f}% confidence</b><span>{score.completeness:.0f}% evidence coverage · {score.supported_weight:.0f}% supported weight</span></div>'
@@ -296,7 +343,7 @@ def create_fois_router(
             f'<a class="ds-action" href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}" data-api-profile="/api/fois/leagues/{escape(score.league_id)}/gms/{escape(score.gm_id or "")}">Open Executive Profile</a></article>'
             for rank, score in enumerate(ranked_scores, 1)
         )
-        status = service.status()
+        status = _generation_status(service)
         if not selected_league_id:
             content = ('<section class="empty-state" data-dtos-component="empty-state">'
                        '<h2>No valid league is loaded</h2><p>Synchronize a league before opening Front Office Intelligence.</p></section>')
@@ -349,15 +396,16 @@ def create_fois_router(
             # Missing/warming data must not activate the single-persisted-league
             # fallback for a different authenticated membership.
             league_id = account.membership.league_id
-        status_value = service.status()
+        status_value = _generation_status(service)
         try:
             data = require_data()
         except HTTPException as exc:
             if exc.status_code != 503:
                 raise
             data = {}
-        generation = str(status_value.get("last_run") or "persisted-cold")
+        generation = str((status_value.get("last_run") or "persisted-cold", status_value.get('state'), status_value.get('evidence_state')))
         body = cached_fois_page(league_id, data, generation)
+        body = _availability_notice(service).encode() + body
         # Only league evidence is shared; account/session chrome is request-local.
         return page("Front Office Intelligence System", body.decode("utf-8")) if page else HTMLResponse(body)
 
@@ -442,7 +490,7 @@ def create_fois_router(
 <div class="summary-grid"><article class="metric"><b>{exact_rank(rank, sum(row.overall_score is not None for row in rankings))}</b><span>League overall FOIS rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not ranked"} {escape(score.overall_letter_grade or "")}</b><span>FOIS Score</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Confidence</span></article><article class="metric"><b>{score.completeness:.0f}%</b><span>Evidence Coverage</span></article><article class="metric"><b>{score.supported_weight:.0f}%</b><span>Supported Weight</span></article></div>
 <section class="card"><h3>Executive Summary</h3><p>{escape(score.executive_summary)}</p><p><b>Management momentum:</b> {escape(human_status(score.management_momentum))}</p><p class="muted">Completed seasons alone do not establish movement. A comparable historical momentum assessment is required.</p></section>{explanation_html}
 <div class="card-grid">{categories}</div><div class="grid"><section class="card" data-fois-strengths><h3>Top strengths</h3><p>{strengths_summary}</p>{'<ul>' + strengths + '</ul>' if strengths else ''}</section><section class="card"><h3>Improvement areas</h3><ul>{weaknesses}</ul></section></div><details class="card" data-fois-history-count="{len(history)}"><summary>GM History · {len(history)} earlier snapshot(s)</summary><ul>{historical_rows}</ul></details>{details}'''
-        body = ('<style>.fois-profile{min-width:0}.fois-profile .dtos-explanation li,.fois-profile .fois-behavior p,.fois-profile .fois-behavior code{overflow-wrap:anywhere;word-break:normal}.fois-behavior summary{min-height:44px;cursor:pointer}.fois-behavior summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}</style>'
+        body = (_availability_notice(service) + '<style>.fois-profile{min-width:0}.fois-profile .dtos-explanation li,.fois-profile .fois-behavior p,.fois-profile .fois-behavior code{overflow-wrap:anywhere;word-break:normal}.fois-behavior summary{min-height:44px;cursor:pointer}.fois-behavior summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}</style>'
                 + '<div class="fois-profile">' + preservation + body
                 + '<section class="card"><h3>Activity · completed trade evidence</h3>' + activity_html + '</section>'
                 + '<section class="card"><h3>Management behavior and evidence</h3>' + behavioral_html + '</section></div>')
