@@ -155,6 +155,17 @@ class LeagueRuntimeManager:
         return value
 
     async def get(self, league_id: str, *, hydrate: bool = True) -> LeagueRuntime:
+        return await self._get(league_id, hydrate=hydrate, request_lease=False)
+
+    async def acquire_request(self, league_id: str, *, hydrate: bool = True) -> LeagueRuntime:
+        """Reserve reader ownership before a hydration can become evictable.
+
+        The caller must release the returned runtime after the complete response.
+        A cancelled reader never owns/cancels the shared hydration writer.
+        """
+        return await self._get(league_id, hydrate=hydrate, request_lease=True)
+
+    async def _get(self, league_id: str, *, hydrate: bool, request_lease: bool) -> LeagueRuntime:
         key = self.validate_league_id(league_id)
         async with self._lock:
             runtime = self._runtimes.get(key)
@@ -162,6 +173,8 @@ class LeagueRuntimeManager:
                 runtime.touch()
                 self._runtimes.move_to_end(key)
                 if runtime.status is RuntimeState.WARM or not hydrate:
+                    if request_lease:
+                        runtime.active_requests += 1
                     with self._metrics_lock:
                         self.restore_hits += 1
                     return runtime
@@ -169,6 +182,8 @@ class LeagueRuntimeManager:
                 if runtime is None:
                     runtime = LeagueRuntime(key)
                     self._runtimes[key] = runtime
+                if request_lease:
+                    runtime.active_requests += 1
                 return runtime
             flight = self._flights.get(key)
             if flight is None or flight.done():
@@ -177,8 +192,57 @@ class LeagueRuntimeManager:
                     self._runtimes[key] = runtime
                 runtime.status = RuntimeState.HYDRATING
                 flight = asyncio.create_task(self._hydrate(runtime), name=f"league-runtime:{key}")
+                # A caller can leave while the manager-owned writer completes.
+                # Observe its exception without changing what remaining waiters
+                # receive, or treating a failed publication as successful.
+                flight.add_done_callback(lambda task: task.exception() if not task.cancelled() else None)
                 self._flights[key] = flight
-        return await flight
+            if request_lease:
+                runtime.active_requests += 1
+        try:
+            return await asyncio.shield(flight)
+        except asyncio.CancelledError:
+            if request_lease:
+                # Keep ownership until this shared writer finishes. Releasing
+                # an abandoned cold lease first would make its later warm
+                # publication permanently escape the request-release trim.
+                try:
+                    while not flight.done():
+                        try:
+                            await asyncio.shield(flight)
+                        except asyncio.CancelledError:
+                            continue
+                        except Exception:
+                            break
+                finally:
+                    await self.release_request(runtime)
+            raise
+        except BaseException:
+            if request_lease:
+                await self.release_request(runtime)
+            raise
+
+    async def release_request(self, runtime: LeagueRuntime) -> None:
+        """Return a reader lease and trim temporary active-request overflow.
+
+        No await separates the counter update from cleanup ownership. Drain the
+        existing close protocol even if this request is cancelled repeatedly;
+        otherwise an evicted runtime could leave a writer or large graph alive.
+        """
+        runtime.active_requests = max(0, runtime.active_requests - 1)
+        if sum(item.status is RuntimeState.WARM for item in self._runtimes.values()) <= self.max_warm:
+            return
+        cleanup = asyncio.create_task(self._evict_if_needed(), name="league-runtime-request-release")
+        try:
+            await asyncio.shield(cleanup)
+        except asyncio.CancelledError:
+            while not cleanup.done():
+                try:
+                    await asyncio.shield(cleanup)
+                except asyncio.CancelledError:
+                    continue
+            cleanup.result()
+            raise
 
     async def _hydrate(self, runtime: LeagueRuntime) -> LeagueRuntime:
         try:

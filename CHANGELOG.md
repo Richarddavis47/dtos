@@ -1,3 +1,9 @@
+## v1.21.73 / build 2173 — Navigation ownership and bounded sync diagnostics
+
+- Reserve request ownership before a cold runtime can become evictable. Release it after the response, trim temporary active-reader overflow back to the existing warm limit, and drain cancellation through the shared hydration/eviction writer. A cancelled waiter cannot cancel another reader's hydration.
+- Add one bounded numeric synchronization profile with source/processing/publication phase clocks and parent/child/cgroup samples. No source payloads, account names, new archive/schema, provider calls or historical FOIS regeneration. Add a disposable authenticated 2 GiB residency control for independent reproduction.
+- Preserve FOIS timeout isolation, source qualifications, accepted intelligence and unchanged memory/liveness limits. The original production OOM and 50-second cold request are not claimed resolved; diagnostic samples and controlled cache corrections do not establish complete production safety. Independent Scout verification remains required.
+
 ## v1.21.72 / build 2172 — FOIS navigation isolation and owned-worker cleanup
 
 - Publish supported league context before optional FOIS preparation. Home/account/league browsing stays available during slow or failed FOIS work, with league-scoped pending/unavailable or retained/not-revalidated evidence; explicit computation reports pending or a qualified failure.

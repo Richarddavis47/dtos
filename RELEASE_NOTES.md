@@ -1,3 +1,9 @@
+## v1.21.73 / build 2173 — Navigation ownership and bounded sync diagnostics
+
+- Keep a league runtime owned from cold admission through the complete response. Restore the existing warm-cache bound after overlapping reads; preserve active writers and shared hydration through repeated cancellation.
+- Emit one bounded numeric sync profile for source, processing and publication phases, including qualified process/cgroup samples. Provide an isolated authenticated 2 GiB residency reproduction without new permanent storage, source calls, projection/Market changes or FOIS revalidation.
+- Production OOM causation and the original 50-second cold-source delay remain open until measured in production. No universal cold-start or 2 GiB safety claim; independent Scout acceptance is required.
+
 ## v1.21.72 / build 2172 — FOIS navigation isolation and owned-worker cleanup
 
 - Publish supported league context before optional FOIS preparation. Home/account/league browsing stays available during slow or failed FOIS work, with league-scoped pending/unavailable or retained/not-revalidated evidence; explicit computation reports pending or a qualified failure.

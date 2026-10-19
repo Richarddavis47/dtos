@@ -68,6 +68,16 @@ jobs:
             --env SLEEPER_LEAGUE_ID=1804000000000000000 \
             dtos-market-cgroup:validation \
             sh -c 'python -m tools.validation.generate_sanitized_market_fixture && python -m tools.validation.linux_market_cgroup_gate'
+      - name: Authenticated navigation residency under 2 GiB
+        if: matrix.scenario == 'ordinary'
+        run: |
+          mkdir -p .validation/navigation-residency-fixture
+          docker run --rm --memory 2g --memory-swap 2g --cpus 2 \
+            --volume "$PWD/.validation/navigation-residency-fixture:/fixture" \
+            --volume "$PWD/.validation/linux-market-ordinary:/output" \
+            dtos-market-cgroup:validation \
+            python -m tools.validation.navigation_residency_probe \
+              --fixture-root /fixture --output /output/navigation-residency.json
       - name: Verify sanitized result
         if: always()
         run: |
@@ -81,5 +91,6 @@ jobs:
           path: |
             .validation/linux-market-${{ matrix.scenario }}/summary.json
             .validation/linux-market-${{ matrix.scenario }}/server.log
+            .validation/linux-market-${{ matrix.scenario }}/navigation-residency.json
           if-no-files-found: error
           retention-days: 14
