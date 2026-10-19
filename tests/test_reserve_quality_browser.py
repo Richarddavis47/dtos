@@ -153,6 +153,70 @@ class ReserveQualityBrowserTests(unittest.TestCase):
             self.assertIn('WORTH PURSUING', page.locator('#trade-result .dtos-explanation > p').first.inner_text())
             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 320)
 
+    def test_retained_assessment_preserves_original_partner_and_reserve_evidence(self):
+        # The original accepted actual evaluator fixture has a -7.70 partner
+        # starter cost and 27.70 -> 20.00 absolute points. New reserve detail
+        # must share the existing bounded assessment without displacing either.
+        with self.f.browser(320, 432) as page:
+            old = self.evaluate(page, sent=('a', '2029-R1-1'), received=('c',),
+                                strategy='WIN NOW')
+            horizon = old['dimensions']['strategic_fit']['partner']['horizons']['current_week']
+            self.assertEqual((horizon['pre_total'], horizon['post_total']), (27.7, 20))
+            self.assertEqual(horizon['delta'], -7.7)
+            self.f.data['market_data'] = {}
+            page.locator('#trade-run').click()
+            page.wait_for_function("document.querySelector('#trade-result').dataset.assessmentState==='fresh_incomplete'")
+            for navigation in ('initial', 'reload', 'back'):
+                if navigation == 'reload':
+                    page.reload(wait_until='load')
+                elif navigation == 'back':
+                    page.goto('https://dtos.test/trades?front_office=1', wait_until='load')
+                    page.go_back(wait_until='load')
+                page.wait_for_function("document.querySelector('#trade-context')?.textContent.includes('Active league')")
+                prior = page.locator('#trade-result > details').filter(has=page.get_by_text(
+                    'Previous assessment · NOT REVALIDATED', exact=True))
+                self.assertEqual(prior.count(), 1)
+                self.assertIsNone(prior.get_attribute('open'))
+                state = next(iter(self.f.state(page).values()))['currentAssessment']
+                saved_prior = state['previous_assessment']
+                saved = json.dumps(saved_prior, sort_keys=True)
+                self.assertLess(len(saved.encode()), 64000)
+                requests = len(self.f.measurements)
+                prior.locator(':scope > summary').focus()
+                page.keyboard.press('Enter')
+                text = prior.inner_text()
+                self.assertIn('-7.70', text)
+                self.assertIn('27.70 → 20.00', text)
+                self.assertIn(old['why_they_would_do_it'], text)
+                self.assertIn(old['counterparty_summary'], text)
+                self.assertIn('WIN NOW', text)
+                self.assertIn('2029 Round 1', text)
+                self.assertIn('not current', text.lower())
+                for limitation in old['major_limitations']:
+                    self.assertIn(limitation.replace('_', ' '), text)
+                for side, title in (('active', 'Your team'), ('partner', 'Their team')):
+                    detail = prior.get_by_text(title + ' strategic evidence', exact=True).locator('..')
+                    detail.locator(':scope > summary').click()
+                    reserve_text = detail.inner_text()
+                    self.assertIn('Previous useful replacement production · NOT REVALIDATED', reserve_text)
+                    weeks = old['dimensions']['package_quality'][side]['reserve_quality_by_week']
+                    for week, row in weeks.items():
+                        self.assertIn(f"Week {week}: {row['pre_points']:.2f} → {row['post_points']:.2f} projected reserve points", reserve_text)
+                        self.assertIn(f"change {row['delta']:.2f}", reserve_text)
+                    self.assertIn('Conditional replacement projection', reserve_text)
+                    self.assertIn('does not predict injuries', reserve_text)
+                self.assertEqual(json.dumps(next(iter(self.f.state(page).values()))[
+                    'currentAssessment']['previous_assessment'], sort_keys=True), saved)
+                self.assertEqual(len(self.f.measurements), requests)
+                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 320)
+                self.geometry.append({'case': 'retained-original-and-reserve-evidence',
+                    'navigation': navigation, 'viewport': [320, 432],
+                    'original_partner_change': -7.7, 'original_partner_points': [27.7, 20],
+                    'saved_prior_bytes': len(saved.encode()), 'saved_prior_unchanged': True,
+                    'expansion_requests': len(self.f.measurements) - requests,
+                    'original_and_new_evidence_accessible': True,
+                    'author_run_environment': 'isolated authenticated HTTP and responsive Chromium'})
+
 
 if __name__ == '__main__':
     unittest.main()
