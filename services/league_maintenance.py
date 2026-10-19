@@ -22,7 +22,7 @@ def ensure_fois_refresh(runtime: LeagueRuntime, generate: Callable[[dict[str, An
         generations = dict(runtime.source_generations)
         runtime.lifecycle['fois_generation'] = 'running'
         context = runtime.canonical_context
-        retained = context is not None and context.fois_state == 'retained'
+        retained = context is not None and context.fois_state in {'ready', 'retained'}
         if context is not None:
             context.fois_state = 'pending'
         try:

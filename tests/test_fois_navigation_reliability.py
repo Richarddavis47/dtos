@@ -212,6 +212,30 @@ class OptionalFlightTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(runtime.canonical_context.fois_state, 'retained')
         self.assertEqual(runtime.lifecycle['fois_generation'], 'failed')
 
+    async def test_default_startup_and_periodic_refresh_publish_scoped_success_and_failure(self):
+        import dtos_app
+        runtime = LeagueRuntime('200', status=RuntimeState.WARM)
+        data = {'league': {'league_id': '200'}}
+        runtime.state['data'] = data
+        runtime.canonical_context = SimpleNamespace(fois_state='retained')
+        scores = (SimpleNamespace(generated_at='2026-10-19T00:00:00Z'),)
+        service = SimpleNamespace(repository=SimpleNamespace(league=lambda *_: scores))
+        manager = SimpleNamespace(resident=lambda league: runtime if league == '200' else None)
+        with patch.object(dtos_app, 'league_runtime_manager', manager), patch.object(dtos_app, 'fois_service', service), \
+                patch.object(dtos_app, '_generate_fois_coordinated', new_callable=AsyncMock, return_value=scores) as generate:
+            self.assertEqual(await dtos_app._generate_resident_fois(data), scores)
+            self.assertEqual(runtime.canonical_context.fois_state, 'ready')
+            self.assertEqual(runtime.lifecycle['fois_generation'], 'complete')
+            # A failed refresh must retain the just-completed valid evidence.
+            generate.side_effect = RuntimeError('private failure')
+            with self.assertRaisesRegex(RuntimeError, 'temporarily|unavailable'):
+                await dtos_app._generate_resident_fois(data)
+            self.assertEqual(runtime.canonical_context.fois_state, 'retained')
+            self.assertEqual(runtime.lifecycle['fois_generation'], 'failed')
+            generate.side_effect = None
+            self.assertEqual(await dtos_app._generate_resident_fois(data), scores)
+            self.assertEqual(runtime.canonical_context.fois_state, 'ready')
+
     async def test_superseded_generation_cannot_claim_ready(self):
         runtime = LeagueRuntime('200', status=RuntimeState.WARM)
         runtime.state['data'] = {'league': {'league_id': '200'}}
@@ -241,9 +265,10 @@ class HeavyAdmissionTests(unittest.IsolatedAsyncioTestCase):
         entered, release = threading.Event(), threading.Event()
         def market():
             with coordinator.phase('asset_market_build'):
-                entered.set()
-                if not release.wait(5):
-                    raise AssertionError('Market barrier not released')
+                with coordinator.phase('historical_cache'):
+                    entered.set()
+                    if not release.wait(5):
+                        raise AssertionError('Market barrier not released')
         writer = asyncio.create_task(asyncio.to_thread(market))
         self.assertTrue(await asyncio.to_thread(entered.wait, 2))
         service = SimpleNamespace(generate=AsyncMock(return_value=()))

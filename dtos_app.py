@@ -253,16 +253,11 @@ async def _refresh_resident_league(runtime: LeagueRuntime) -> dict[str, Any]:
     return await _hydrate_league_runtime(runtime, prepare_history=False)
 
 
-async def _request_fois_calculation(data: dict[str, Any]):
-    """Explicit calculation shares the existing lifecycle-owned compute flight."""
-    context = current_league_context()
-    if intelligence_heavy_lock.locked():
-        return None
-    if context is None:
+async def _generate_resident_fois(data: dict[str, Any], *, runtime: LeagueRuntime | None = None):
+    """Track default startup/refresh and explicit requests through the same owner."""
+    runtime = runtime or league_runtime_manager.resident(str((data.get('league') or {}).get('league_id') or ''))
+    if runtime is None or runtime.canonical_context is None or runtime.state.get('data') is not data:
         return await _generate_fois_coordinated(data)
-    runtime = context.runtime
-    if any(task.get_name() == 'dtos-league-fois' and not task.done() for task in runtime.background_tasks):
-        return None
     from services.league_maintenance import ensure_fois_refresh
     ensure_fois_refresh(runtime, _generate_fois_coordinated)
     task = next((task for task in runtime.background_tasks if task.get_name() == 'dtos-league-fois' and not task.done()), None)
@@ -271,9 +266,22 @@ async def _request_fois_calculation(data: dict[str, Any]):
     await asyncio.shield(task)
     if runtime.lifecycle.get('fois_generation') == 'failed':
         raise RuntimeError('FOIS calculation is unavailable.')
-    if context.fois_state != 'ready':
+    if runtime.canonical_context.fois_state != 'ready':
         return None
     return fois_service.repository.league(runtime.league_id, FOIS_MODEL_VERSION)
+
+
+async def _request_fois_calculation(data: dict[str, Any]):
+    """Explicit calculation shares the existing lifecycle-owned compute flight."""
+    context = current_league_context()
+    if intelligence_heavy_lock.locked():
+        return None
+    if context is not None and any(
+        task.get_name() == 'dtos-league-fois' and not task.done()
+        for task in context.runtime.background_tasks
+    ):
+        return None
+    return await _generate_resident_fois(data, runtime=context.runtime if context else None)
 
 
 league_runtime_manager = LeagueRuntimeManager(
@@ -377,7 +385,7 @@ async def background_sync() -> None:
         if STATE.get("data"):
             runtime_metrics.mark_background("fois_generation", "running")
             try:
-                await _generate_fois_coordinated(STATE["data"])
+                await _generate_resident_fois(STATE["data"])
             except Exception:
                 runtime_metrics.mark_background("fois_generation", "failed")
         else:
@@ -452,7 +460,7 @@ async def resolve_historical_trade_market(*, runtime: LeagueRuntime | None = Non
     if result and regenerate_fois:
         runtime_metrics.mark_background("fois_generation", "running")
         try:
-            await _generate_fois_coordinated(state["data"])
+            await _generate_resident_fois(state["data"], runtime=runtime)
         except Exception:
             runtime_metrics.mark_background("fois_generation", "failed")
         else:
@@ -532,7 +540,7 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     )
     runtime_metrics.mark_background("fois_generation", "running")
     try:
-        await _generate_fois_coordinated(STATE["data"])
+        await _generate_resident_fois(STATE["data"])
     except Exception:
         # FOIS is an optional persisted intelligence projection. Its failure is
         # observable, but cannot hold canonical readiness or Asset Market idle.
