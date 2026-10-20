@@ -86,13 +86,18 @@ def _state(connection, identity, seen, *, verified_root=None):
         if not 1 <= delta['depth'] <= MAX_DELTA_DEPTH:
             raise ValueError('Invalid FOIS delta depth')
         base = _state(connection, delta['base'], seen | {identity})
-        state = state_delta.apply(base, delta['changes'])
-        if any(base.get(k) != state.get(k) for k in ('league_id', 'score_key', 'tenure_id', 'model_version')):
+        scope = ('league_id', 'score_key', 'tenure_id', 'model_version')
+        original_scope = tuple(base.get(k) for k in scope)
+        # Recursive decoding returns a fresh tree, never a cached/shared object.
+        # Mutate only that owned tree; still verify scope, bytes and hash below.
+        state = state_delta.apply(base, delta['changes'], _owned=True)
+        if original_scope != tuple(state.get(k) for k in scope):
             raise ValueError('FOIS delta scope mismatch')
         raw = canonical(state).encode()
     if len(raw) != row[2] or hashlib.sha256(FORMAT.encode() + b'\n' + raw).hexdigest() != identity:
         raise ValueError('Corrupt FOIS semantic state')
-    state = json.loads(raw)
+    if row[0] == FORMAT:
+        state = json.loads(raw)
     if str(state.get('league_id') or '') != row[3]:
         raise ValueError('FOIS state league mismatch')
     if verified_root is not None:

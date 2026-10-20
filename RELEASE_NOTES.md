@@ -1,5 +1,13 @@
 ## v1.21.76 / build 2176 — Chronological history and bounded FOIS reads
 
+## v1.21.77 / build 2177 — Verified retained-history efficiency
+
+- Apply retained deltas only to privately owned decoded trees, preserving every hash, byte-count, scope and dependency check while avoiding redundant deep copies and JSON reparsing.
+- Keep verified lightweight history summaries for HTML profiles. Full DTO validation still runs for every retained row; full-evidence APIs, provenance, grades and RETAINED / NOT REVALIDATED qualification are unchanged.
+- Preserve the per-read eight-root/8 MiB serialized memo, source generations, storage schemas and infrastructure. Disposable Python 3.14.3 / 2 GiB controls compare identical evidence, allocations, multi-league and concurrent publication behavior.
+- Historical production OOM, original cold Home gap and unmeasured production waiting remain open. Fixture improvements are not a universal production latency or capacity guarantee; independent Scout acceptance remains required.
+
+
 - Select historical Market observations by validated quote instants and source-knowledge cutoffs, preserving fractional precision, UTC-offset equivalence, exact identity and genuine zero. Stream candidates without unsafe text-ordered truncation; equal times use immutable observation IDs without rewriting retained evidence.
 - Reuse only identical, fully verified FOIS semantic roots within one timeline call, bounded to eight roots / 8 MiB of existing serialized bytes. Keep recursive validation, independently owned results, ordinary concurrent publication and all retained-grade qualifications. No grading, source, schema or persistent-cache change.
 - Split bounded profile diagnostics into retained SQL fetch, decode, current-score classification and rankings. Disposable profiling is author-run evidence, not proof that historical production OOM, cold delay, worker contention or sustained liveness is resolved. Independent Scout acceptance remains required.

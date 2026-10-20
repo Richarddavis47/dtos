@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from contextlib import contextmanager
-from dataclasses import asdict, replace
+from dataclasses import asdict, fields, replace
 from pathlib import Path
 from threading import RLock
 
@@ -21,6 +21,7 @@ from src.core.fois.models import (
     EvaluationKind,
     FOIS_MODEL_VERSION,
     FOIS_EVIDENCE_INTEGRITY_VERSION,
+    FOISHistorySummary,
     GMTenure,
     TakeoverSnapshot,
 )
@@ -324,6 +325,20 @@ class FOISRepository:
         self, league_id: str, gm_id: str,
         model_version: str = FOIS_MODEL_VERSION,
     ) -> tuple[FrontOfficeIntelligenceScore, ...]:
+        return self._timeline(league_id, gm_id, model_version, summarize=False)
+
+    def timeline_summary(
+        self, league_id: str, gm_id: str,
+        model_version: str = FOIS_MODEL_VERSION,
+    ) -> tuple[FOISHistorySummary, ...]:
+        """Verify every row; retain only the fields used by the HTML history list.
+
+        No evidence is pruned from storage or the full timeline API. DTO
+        validation and retained-grade qualification still run for every row.
+        """
+        return self._timeline(league_id, gm_id, model_version, summarize=True)
+
+    def _timeline(self, league_id, gm_id, model_version, *, summarize):
         with self._connection() as connection:
             with span('fois_history_fetch'):
                 rows = connection.execute(
@@ -335,7 +350,8 @@ class FOISRepository:
                 # Do not hold a long read transaction across bulk decoding:
                 # ordinary SQLite publication must remain able to commit.
                 decoder = state_storage.SnapshotDecoder(connection)
-                values = tuple(_score(decoder.decode(row["payload"])) for row in rows)
+                convert = _history_summary if summarize else _score
+                values = tuple(convert(decoder.decode(row["payload"])) for row in rows)
         with span('fois_history_current'):
             current = self.score_for_gm(league_id, gm_id, model_version) if values else None
         return tuple(
@@ -469,6 +485,12 @@ def _category(payload: dict) -> FrontOfficeCategoryScore:
             "weaknesses": tuple(payload.get("weaknesses") or ()),
         }
     )
+
+
+def _history_summary(payload: dict) -> FOISHistorySummary:
+    score = _score(payload)
+    return FOISHistorySummary(**{field.name: getattr(score, field.name)
+                                for field in fields(FOISHistorySummary)})
 
 
 def _score(payload: dict) -> FrontOfficeIntelligenceScore:

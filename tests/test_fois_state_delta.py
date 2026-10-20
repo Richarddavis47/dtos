@@ -13,6 +13,39 @@ from src.core.fois import state_storage as storage
 
 
 class FOISDeltaTests(unittest.TestCase):
+    def test_decode_owns_fresh_delta_base_and_avoids_redundant_copy(self):
+        from unittest.mock import patch
+        from src.core.fois import state_delta
+        encoded = storage.encode(self.db, {**self.base, 'process': 8}, base_payload=self.base)
+        with patch.object(state_delta, 'deepcopy', side_effect=AssertionError('owned decode must not copy')):
+            actual = storage.decode(self.db, encoded)
+        self.assertEqual(actual, {**self.base, 'process': 8})
+        actual['evidence'][0]['id'] = 'local mutation'
+        self.assertEqual(storage.decode(self.db, encoded)['evidence'][0]['id'], '0')
+        # General-purpose delta application still owns a separate return value.
+        original = copy.deepcopy(self.base)
+        result = state_delta.apply(self.base, [['set', ['process'], 9]])
+        result['evidence'][0]['id'] = 'separate mutation'
+        self.assertEqual(self.base, original)
+
+    def test_owned_reconstruction_still_checks_scope_before_hash(self):
+        encoded = storage.encode(self.db, {**self.base, 'process': 8}, base_payload=self.base)
+        identity = json.loads(encoded)['state_id']
+        row = self.db.execute('SELECT payload FROM fois_semantic_states WHERE state_id=?', (identity,)).fetchone()
+        delta = json.loads(zlib.decompress(row[0]))
+        delta['changes'].append(['set', ['league_id'], 'foreign'])
+        self.db.execute('UPDATE fois_semantic_states SET payload=? WHERE state_id=?',
+                        (zlib.compress(storage.canonical(delta).encode()), identity))
+        with self.assertRaisesRegex(ValueError, 'scope mismatch'):
+            storage.decode(self.db, encoded)
+
+    def test_general_delta_does_not_alias_operation_values(self):
+        from src.core.fois import state_delta
+        operations = [['set', ['nested'], {'player': ['original'], 'zero': 0}]]
+        actual = state_delta.apply({}, operations)
+        actual['nested']['player'].append('local')
+        self.assertEqual(operations[0][2]['player'], ['original'])
+
     def setUp(self):
         self.db = sqlite3.connect(':memory:')
         self.db.executescript(storage.SCHEMA)

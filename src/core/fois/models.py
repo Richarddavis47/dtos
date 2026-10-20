@@ -22,6 +22,26 @@ class EvaluationKind(str, Enum):
     INCOMPLETE_OBSOLETE_DERIVATION = "incomplete_obsolete_derivation"
 
 
+@dataclass(frozen=True, slots=True)
+class FOISHistorySummary:
+    """Ephemeral profile projection; full retained evidence stays in timeline()."""
+    score_key: str
+    league_id: str
+    gm_id: str | None
+    tenure_id: str | None
+    model_version: str
+    generated_at: str
+    brain_snapshot_id: str | None
+    overall_score: float | None
+    overall_letter_grade: str | None
+    evaluation_kind: str
+    evidence_integrity_version: str | None
+
+    @property
+    def evidence_revalidated(self) -> bool:
+        return self.evidence_integrity_version == FOIS_EVIDENCE_INTEGRITY_VERSION
+
+
 class MetricStatus(str, Enum):
     ACTIVE = "active"
     PROVISIONAL = "provisional"
