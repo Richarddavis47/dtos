@@ -1,3 +1,9 @@
+## v1.21.76 / build 2176 — Chronological history and bounded FOIS reads
+
+- Select historical Market observations by validated quote instants and source-knowledge cutoffs, preserving fractional precision, UTC-offset equivalence, exact identity and genuine zero. Stream candidates without unsafe text-ordered truncation; equal times use immutable observation IDs without rewriting retained evidence.
+- Reuse only identical, fully verified FOIS semantic roots within one timeline call, bounded to eight roots / 8 MiB of existing serialized bytes. Keep recursive validation, independently owned results, ordinary concurrent publication and all retained-grade qualifications. No grading, source, schema or persistent-cache change.
+- Split bounded profile diagnostics into retained SQL fetch, decode, current-score classification and rankings. Disposable profiling is author-run evidence, not proof that historical production OOM, cold delay, worker contention or sustained liveness is resolved. Independent Scout acceptance remains required.
+
 ## v1.21.75 / build 2175 — Qualified preparation and FOIS profile diagnostics
 
 - Use the same selected league/NFL season-week evidence for projection horizons and Team Strength. Preserve the original Sleeper calendar fields and reject incompatible league, scoring, week or generation inputs; pin one projection publication through preparation.

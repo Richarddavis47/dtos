@@ -36,7 +36,8 @@ NAMES = frozenset({
     'team_strength_prepare', 'checkpoint_prepare', 'fois_profile', 'fois_profile_context',
     'fois_profile_lookup', 'fois_profile_validation', 'fois_profile_history',
     'fois_profile_aggregation', 'fois_profile_render', 'fois_profile_activity',
-    'fois_profile_behavior',
+    'fois_profile_behavior', 'fois_profile_rankings', 'fois_history_fetch',
+    'fois_history_decode', 'fois_history_current',
 })
 _TRACE: ContextVar[Trace | None] = ContextVar('dtos_diagnostic_trace', default=None)
 _SPAN: ContextVar[int | None] = ContextVar('dtos_diagnostic_span', default=None)

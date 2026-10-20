@@ -10,6 +10,7 @@ from threading import RLock
 
 from src.core.fois import state_storage
 from src.platform.storage_gate import connect
+from src.platform.request_diagnostics import span
 
 from src.core.fois.models import (
     Directionality,
@@ -324,12 +325,19 @@ class FOISRepository:
         model_version: str = FOIS_MODEL_VERSION,
     ) -> tuple[FrontOfficeIntelligenceScore, ...]:
         with self._connection() as connection:
-            rows = connection.execute(
-                "SELECT payload FROM fois_snapshot_history WHERE league_id=? AND gm_id=? AND model_version=? ORDER BY generated_at,snapshot_id",
-                (league_id, gm_id, model_version),
-            ).fetchall()
-            values = tuple(_score(state_storage.decode(connection, row["payload"])) for row in rows)
-        current = self.score_for_gm(league_id, gm_id, model_version) if values else None
+            with span('fois_history_fetch'):
+                rows = connection.execute(
+                    "SELECT payload FROM fois_snapshot_history WHERE league_id=? AND gm_id=? AND model_version=? ORDER BY generated_at,snapshot_id",
+                    (league_id, gm_id, model_version),
+                ).fetchall()
+            with span('fois_history_decode'):
+                # Only content-verified roots are reused, within this call.
+                # Do not hold a long read transaction across bulk decoding:
+                # ordinary SQLite publication must remain able to commit.
+                decoder = state_storage.SnapshotDecoder(connection)
+                values = tuple(_score(decoder.decode(row["payload"])) for row in rows)
+        with span('fois_history_current'):
+            current = self.score_for_gm(league_id, gm_id, model_version) if values else None
         return tuple(
             replace(
                 value,

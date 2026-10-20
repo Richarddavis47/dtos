@@ -1020,22 +1020,32 @@ class IntelligenceCheckpointStore:
         """Read one legitimate pre-event state without creating an observation."""
         from src.core.historical_intelligence.market_comparison import observation_clocks
         from src.core.history_context.timestamps import canonical_utc_timestamp
+        from .timestamps import observation_time
         boundary = canonical_utc_timestamp(event_at)
         if not boundary:
             return None
+        selected = None
+        selected_key = None
         with self._connect() as connection:
+            # Textual ISO ordering (including a textual LIMIT) is not temporal
+            # ordering across precision/offset spellings. Stream the exact
+            # asset/context scope, retaining only the latest admitted state.
             rows = connection.execute("""SELECT * FROM global_market_observations
-                WHERE asset_id=? AND market_context_id=?
-                ORDER BY observed_at DESC,created_at DESC LIMIT 500""",
-                (asset_id, market_context_id)).fetchall()
-        admitted = []
-        for raw in rows:
-            row = self._decode_observation(raw)
-            clocks = observation_clocks(row, boundary)
-            if clocks:
-                admitted.append(replace(row, observed_at=clocks['quote_observed_at'],
-                                        retained_attachment_at=clocks['retained_attachment_at']))
-        return max(admitted, key=lambda r: r.observed_at) if admitted else None
+                WHERE asset_id=? AND market_context_id=?""",
+                (asset_id, market_context_id))
+            for raw in rows:
+                row = self._decode_observation(raw)
+                clocks = observation_clocks(row, boundary)
+                if not clocks:
+                    continue
+                # Equal quote instants use the immutable observation ID only.
+                # Retrieval/attachment time does not invent a newer quote.
+                key = (observation_time(clocks['quote_observed_at']), row.observation_id)
+                if selected_key is None or key > selected_key:
+                    selected_key = key
+                    selected = replace(row, observed_at=clocks['quote_observed_at'],
+                                       retained_attachment_at=clocks['retained_attachment_at'])
+        return selected
 
     def market_memory_health(self) -> dict[str, Any]:
         with self._connect() as connection:

@@ -194,7 +194,8 @@ class ProfileTraceTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         rows = [r.diagnostic for r in captured.records if hasattr(r, 'diagnostic')]
         for name in ('fois_profile', 'fois_profile_context', 'fois_profile_lookup',
-                     'fois_profile_validation', 'fois_profile_history', 'fois_profile_aggregation', 'fois_profile_render'):
+                     'fois_profile_validation', 'fois_profile_history', 'fois_profile_aggregation', 'fois_profile_render',
+                     'fois_history_fetch', 'fois_history_decode', 'fois_history_current', 'fois_profile_rankings'):
             self.assertTrue(any(r['name'] == name and r['boundary'] == 'finished' for r in rows), name)
         self.assertNotIn(score.gm_id, json.dumps(rows))
         self.assertTrue(all(r.request_id == 'profile-control' for r in captured.records))
