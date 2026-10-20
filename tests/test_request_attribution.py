@@ -26,7 +26,7 @@ from src.platform.account_context import AccountContextMiddleware
 from src.platform.memory_attribution import (
     ACTIVITY_LIMIT, PENDING_LIMIT, MemoryAttribution, capture_memory,
 )
-from src.platform.observability import BoundedRequestQueueHandler, RequestObservabilityMiddleware, install_observability
+from src.platform.observability import BoundedRequestQueueHandler, CorrelationFormatter, RequestObservabilityMiddleware, install_observability
 from src.platform.request_diagnostics import (
     MAX_EVENTS, MAX_PENDING, Trace, decode_json, request_trace, source_hooks, span,
 )
@@ -172,6 +172,15 @@ class TransferClockTests(unittest.IsolatedAsyncioTestCase):
 
 
 class BoundAndPrivacyTests(unittest.TestCase):
+    def test_text_log_mode_preserves_numeric_diagnostic_evidence(self):
+        record = logging.LogRecord('dtos.attribution', logging.INFO, '', 1, 'diagnostic_boundary', (), None)
+        record.request_id = 'known-trace'
+        record.diagnostic = {'duration_ms': 7.92, 'body_complete': True}
+        rendered = CorrelationFormatter('%(request_id)s %(message)s').format(record)
+        self.assertIn('known-trace', rendered)
+        self.assertIn('"duration_ms":7.92', rendered)
+        self.assertIn('"body_complete":true', rendered)
+
     def test_public_trace_header_does_not_bypass_account_authentication_or_log_cookie(self):
         with tempfile.TemporaryDirectory() as directory:
             app = FastAPI()

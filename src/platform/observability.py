@@ -77,7 +77,10 @@ class CorrelationFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         if not hasattr(record, "request_id"):
             record.request_id = request_id_context.get()
-        return super().format(record)
+        rendered = super().format(record)
+        if hasattr(record, 'diagnostic'):
+            rendered += ' ' + json.dumps(record.diagnostic, default=str, separators=(',', ':'))
+        return rendered
 
 
 def configure_logging() -> None:
