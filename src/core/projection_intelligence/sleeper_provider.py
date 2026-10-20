@@ -172,7 +172,8 @@ class SleeperProjectionClient:
                         "transport_version": TRANSPORT_VERSION,
                     }
                     self.last_transport = details
-                    return response.json(), len(response.content), details
+                    from src.platform.request_diagnostics import decode_json
+                    return decode_json(response), len(response.content), details
                 encountered = True
                 location = response.headers.get("location")
                 if not location:

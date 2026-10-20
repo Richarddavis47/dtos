@@ -11,6 +11,7 @@ from time import monotonic
 from typing import Any, Awaitable, Callable
 
 from .identity import scoring_profile_id
+from src.platform.request_diagnostics import diagnosed, activate_current_trace, scope_identity
 
 
 def _utcnow() -> str:
@@ -81,6 +82,7 @@ class LeagueRuntime:
         )
         self.touch()
 
+    @diagnosed('runtime_eviction', memory=True)
     async def close(self) -> None:
         self.status = RuntimeState.EVICTING
         tasks = tuple(self.background_tasks)
@@ -157,6 +159,7 @@ class LeagueRuntimeManager:
     async def get(self, league_id: str, *, hydrate: bool = True) -> LeagueRuntime:
         return await self._get(league_id, hydrate=hydrate, request_lease=False)
 
+    @diagnosed('runtime_acquire')
     async def acquire_request(self, league_id: str, *, hydrate: bool = True) -> LeagueRuntime:
         """Reserve reader ownership before a hydration can become evictable.
 
@@ -185,6 +188,7 @@ class LeagueRuntimeManager:
                 if request_lease:
                     runtime.active_requests += 1
                 return runtime
+            activate_current_trace()
             flight = self._flights.get(key)
             if flight is None or flight.done():
                 if runtime is None or runtime.status in {RuntimeState.FAILED, RuntimeState.CLOSED}:
@@ -326,6 +330,25 @@ class LeagueRuntimeManager:
     def resident_runtimes(self) -> tuple[LeagueRuntime, ...]:
         """Return a stable process-local snapshot for explicit diagnostics."""
         return tuple(self._runtimes.values())
+
+    def diagnostic_residency(self) -> dict[str, Any]:
+        """Cheap counts only; never hydrate, fingerprint full graphs or expose facts."""
+        runtimes = tuple(self._runtimes.values())
+        return {
+            'resident_count': len(runtimes), 'warm_limit': self.max_warm,
+            'hydrating_count': sum(row.status is RuntimeState.HYDRATING for row in runtimes),
+            'warm_count': sum(row.status is RuntimeState.WARM for row in runtimes),
+            'runtime_samples_truncated': len(runtimes) > 8,
+            'runtimes': [{
+                'scope': scope_identity(row.league_id), 'state': row.status.value,
+                'active_requests': row.active_requests, 'pinned': row.pinned,
+                'owns_state': row.owns_state, 'background_tasks': len(row.background_tasks),
+                'source_generation_count': len(row.source_generations),
+                'source_generation_identity': scope_identity(repr(sorted(row.source_generations.items()))),
+                'market_cache_owned': row.market_context is not None,
+                'projection_cache_owned': row.projection_context is not None,
+            } for row in runtimes[:8]],
+        }
 
     def attach_default(
         self, league_id: str, state: dict[str, Any], *, warm: bool = False,

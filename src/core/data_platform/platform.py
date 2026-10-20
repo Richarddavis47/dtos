@@ -179,7 +179,8 @@ class DataPlatform:
         """HTTP transport boundary used by approved live adapters such as Sleeper."""
         response = await client.get(url)
         response.raise_for_status()
-        return response.json()
+        from src.platform.request_diagnostics import decode_json
+        return decode_json(response)
 
     def _health_row(self, provider: DataProvider, status: ProviderStatus, refresh: str, success: str | None, failure: str | None, cache: str, freshness: str, latency: float, confidence: int, reason: str | None) -> ProviderHealth:
         schedule = self.scheduler.schedule(provider.metadata, refresh, in_season=True)

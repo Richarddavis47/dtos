@@ -11,6 +11,7 @@ from starlette.responses import JSONResponse, RedirectResponse
 
 from src.core.accounts import AccountContext, AccountService, LeagueMembership
 from src.platform.inspection_security import inspection_authorized, operations_path
+from src.platform.request_diagnostics import span
 
 SESSION_COOKIE = "dtos_session"
 _CURRENT_ACCOUNT: ContextVar[AccountContext | None] = ContextVar("dtos_account", default=None)
@@ -108,8 +109,9 @@ class AccountContextMiddleware:
             await self.app(scope, receive, send)
             return
         token = _cookies(scope).get(SESSION_COOKIE, "")
-        context = self.service.store.context_for_session(token) if token else None
-        inspection_context = self._inspection_context(scope)
+        with span('account_context'):
+            context = self.service.store.context_for_session(token) if token else None
+            inspection_context = self._inspection_context(scope)
         if context is None and inspection_context is not None:
             context = inspection_context
         inspection = inspection_context is not None

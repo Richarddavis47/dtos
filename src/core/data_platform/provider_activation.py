@@ -5,6 +5,7 @@ import csv
 import io
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from src.platform.request_diagnostics import diagnosed, decode_json, span
 
 
 FANTASYCALC_URL = "https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=2&numTeams=12&ppr=1"
@@ -80,6 +81,7 @@ def refresh_due(status: dict[str, Any] | None, *, hours: int = 24) -> bool:
     return _now() - refreshed.astimezone(timezone.utc) >= timedelta(hours=hours)
 
 
+@diagnosed('market_source_prepare')
 async def refresh_public_market(client: Any, cached: dict[str, Any] | None = None) -> dict[str, Any]:
     """Refresh approved public market sources while retaining disclosed fallback data."""
     previous = dict(cached or {})
@@ -95,7 +97,7 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
         try:
             response = await client.get(FANTASYCALC_URL)
             response.raise_for_status()
-            rows = response.json()
+            rows = decode_json(response)
             stamp = _now().isoformat()
             normalized: dict[str, dict[str, Any]] = {}
             retained_picks = []
@@ -147,7 +149,8 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
             ids_response = await client.get(DYNASTYPROCESS_IDS_URL)
             value_response.raise_for_status()
             ids_response.raise_for_status()
-            identities = market_identity_map(csv.DictReader(io.StringIO(ids_response.text)))
+            with span('market_identity_parse'):
+                identities = market_identity_map(csv.DictReader(io.StringIO(ids_response.text)))
             stamp = _now().isoformat()
             normalized = {}
             retained_picks = []

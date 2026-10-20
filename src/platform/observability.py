@@ -6,29 +6,49 @@ import atexit
 import json
 import logging
 import os
+import re
 from contextvars import ContextVar
 from logging.handlers import QueueHandler, QueueListener
-from queue import SimpleQueue
+from queue import Full, Queue
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from time import monotonic, perf_counter
 from typing import Any
 from uuid import uuid4
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
+from starlette.datastructures import Headers, MutableHeaders
 
 from config import LOG_FORMAT, LOG_LEVEL
 from src.platform.request_capacity import serving_request
 
 request_id_context: ContextVar[str] = ContextVar("dtos_request_id", default="system")
 
-_request_log_queue: SimpleQueue[logging.LogRecord] = SimpleQueue()
+_request_log_queue: Queue[logging.LogRecord] = Queue(maxsize=512)
 _request_log_listener: QueueListener | None = None
+
+
+class BoundedRequestQueueHandler(QueueHandler):
+    """A stalled sink drops bounded telemetry instead of blocking navigation."""
+
+    dropped = 0
+
+    def enqueue(self, record):
+        if hasattr(record, 'diagnostic'):
+            record.diagnostic = {**record.diagnostic, 'queue_dropped_record_count': self.dropped}
+        try:
+            self.queue.put_nowait(record)
+        except Full:
+            self.dropped += 1
 
 
 def _stop_request_log_listener() -> None:
     if _request_log_listener is not None:
-        _request_log_listener.stop()
+        try:
+            _request_log_listener.stop()
+        except Full:
+            # A full/stalled best-effort log sink cannot hold process shutdown.
+            pass
 
 
 class StructuredFormatter(logging.Formatter):
@@ -44,7 +64,7 @@ class StructuredFormatter(logging.Formatter):
             "message": record.getMessage(),
             "request_id": getattr(record, "request_id", request_id_context.get()),
         }
-        for key in ("event", "duration_ms", "provider", "cache", "status_code", "method", "path"):
+        for key in ("event", "duration_ms", "provider", "cache", "status_code", "method", "path", "diagnostic"):
             value = getattr(record, key, None)
             if value is not None:
                 payload[key] = value
@@ -81,8 +101,11 @@ def configure_logging() -> None:
         )
         _request_log_listener.start()
         atexit.register(_stop_request_log_listener)
-        request_logger.handlers[:] = [QueueHandler(_request_log_queue)]
+        request_logger.handlers[:] = [BoundedRequestQueueHandler(_request_log_queue)]
         request_logger.propagate = False
+        attribution_logger = logging.getLogger('dtos.attribution')
+        attribution_logger.handlers[:] = list(request_logger.handlers)
+        attribution_logger.propagate = False
 
 
 @dataclass
@@ -164,50 +187,77 @@ runtime_metrics = RuntimeMetrics()
 
 def install_observability(app: FastAPI) -> None:
     configure_logging()
-    logger = logging.getLogger("dtos.request")
+    app.add_middleware(RequestObservabilityMiddleware)
 
-    @app.middleware("http")
-    async def request_observability(request: Request, call_next):
+
+class RequestObservabilityMiddleware:
+    """Observe the final ASGI body handoff, rather than only response headers."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope.get('type') != 'http':
+            return await self.app(scope, receive, send)
+        from contextlib import nullcontext
+        from src.platform.request_diagnostics import request_trace, span
+
+        logger = logging.getLogger('dtos.request')
+        headers = Headers(scope=scope)
+        supplied = headers.get('X-Request-ID') or ''
+        # Never copy arbitrary client text or an oversized/private value to logs.
+        request_id = supplied if re.fullmatch(r'[A-Za-z0-9_.-]{1,96}', supplied) else uuid4().hex
+        path, method = scope.get('path', '/'), scope.get('method', 'GET')
         with serving_request():
-            request_id = request.headers.get("X-Request-ID") or uuid4().hex
             token = request_id_context.set(request_id)
             started = perf_counter()
             started_at = datetime.now(timezone.utc).isoformat()
             status_code = 500
-            trace_request = request.headers.get("X-DTOS-Diagnostics") == "1" or request.url.path in {
+            diagnostic_headers = headers.get('X-DTOS-Diagnostics') == '1'
+            trace_request = diagnostic_headers or path in {
                 "/", "/market", "/health/live", "/api/market/health",
             }
             if trace_request:
                 logger.info(
                     "request_accepted",
-                    extra={"event": "request_accepted", "method": request.method,
-                           "path": request.url.path, "request_id": request_id},
+                    extra={"event": "request_accepted", "method": method,
+                           "path": path, "request_id": request_id},
                 )
+            tracing = request_trace(request_id, enabled=diagnostic_headers) if not path.startswith(('/health', '/static/')) else nullcontext(None)
             try:
                 if trace_request:
                     logger.info(
                         "handler_scheduled",
-                        extra={"event": "handler_scheduled", "method": request.method,
-                               "path": request.url.path, "request_id": request_id},
+                        extra={"event": "handler_scheduled", "method": method,
+                               "path": path, "request_id": request_id},
                     )
-                response = await call_next(request)
-                status_code = response.status_code
-                response.headers["X-Request-ID"] = request_id
-                if request.headers.get("X-DTOS-Diagnostics") == "1":
-                    duration_ms = round((perf_counter() - started) * 1000, 3)
-                    response.headers["X-DTOS-Request-Start"] = started_at
-                    response.headers["X-DTOS-Route-Duration"] = str(duration_ms)
-                    response.headers["X-DTOS-Request-Duration"] = str(duration_ms)
-                    response.headers["X-DTOS-Process-Uptime"] = str(
-                        runtime_metrics.uptime_seconds()
-                    )
-                return response
+                with tracing as trace, span('request') as request_span:
+                    async def observe_send(message):
+                        nonlocal status_code
+                        if message.get('type') == 'http.response.start':
+                            status_code = message['status']
+                            output = MutableHeaders(scope=message)
+                            output['X-Request-ID'] = request_id
+                            if diagnostic_headers:
+                                duration = str(round((perf_counter() - started) * 1000, 3))
+                                output['X-DTOS-Request-Start'] = started_at
+                                output['X-DTOS-Route-Duration'] = duration
+                                output['X-DTOS-Request-Duration'] = duration
+                                output['X-DTOS-Process-Uptime'] = str(runtime_metrics.uptime_seconds())
+                            if request_span is not None:
+                                request_span.record('response_headers', status_code=status_code)
+                        await send(message)
+                        if message.get('type') == 'http.response.body' and not message.get('more_body', False) and request_span is not None:
+                            request_span.record('response_body_handoff', status_code=status_code)
+                    await self.app(scope, receive, observe_send)
+                    if request_span is not None:
+                        request_span.finish(dropped_diagnostic_events=trace.dropped)
             finally:
                 duration_ms = round((perf_counter() - started) * 1000, 3)
                 runtime_metrics.record(duration_ms, status_code)
                 logger.info(
                     "request_complete",
-                    extra={"event": "request_complete", "duration_ms": duration_ms, "status_code": status_code, "method": request.method, "path": request.url.path, "request_id": request_id},
+                    extra={"event": "request_complete", "duration_ms": duration_ms, "status_code": status_code, "method": method, "path": path, "request_id": request_id},
                 )
                 request_id_context.reset(token)
 

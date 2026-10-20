@@ -169,43 +169,49 @@ class LifecycleCoordinator:
     def phase(self, name: str) -> Iterator[dict[str, Any]]:
         if name not in HEAVY_PHASES:
             raise ValueError(f"Unsupported lifecycle phase: {name}")
-        owner = threading.get_ident()
-        with self._condition:
-            while (
-                (self._phase is not None and self._owner != owner)
-                or (
-                    self._fois_generation
-                    and name == "asset_market_build"
-                )
-            ):
-                self._condition.wait()
-            previous = self._phase
-            self._phase = name
-            self._owner = owner
-            if name == "asset_market_build":
-                self._market_build_active += 1
-            started = _utcnow()
-            before = memory_snapshot()
-        outcome = "complete"
-        details: dict[str, Any] = {}
-        try:
-            yield details
-        except BaseException:
-            outcome = "failed"
-            raise
-        finally:
-            after = memory_snapshot()
+        from src.platform.request_diagnostics import span
+        observed = name in {'historical_import', 'historical_market_resolution',
+                            'global_evidence_ingestion', 'asset_market_build'}
+        with span('lifecycle_phase', activate=observed, memory=observed) as clock:
+            owner = threading.get_ident()
             with self._condition:
-                self._history.append({
-                    "phase": name, "status": outcome, "started_at": started,
-                    "finished_at": _utcnow(), "memory_before": before,
-                    "memory_after": after, "details": dict(details),
-                })
+                while (
+                    (self._phase is not None and self._owner != owner)
+                    or (
+                        self._fois_generation
+                        and name == "asset_market_build"
+                    )
+                ):
+                    self._condition.wait()
+                previous = self._phase
+                self._phase = name
+                self._owner = owner
                 if name == "asset_market_build":
-                    self._market_build_active -= 1
-                self._phase = previous
-                self._owner = owner if previous is not None else None
-                self._condition.notify_all()
+                    self._market_build_active += 1
+                started = _utcnow()
+                before = memory_snapshot()
+            if clock is not None:
+                clock.record('phase_acquired', phase_name=name)
+            outcome = "complete"
+            details: dict[str, Any] = {}
+            try:
+                yield details
+            except BaseException:
+                outcome = "failed"
+                raise
+            finally:
+                after = memory_snapshot()
+                with self._condition:
+                    self._history.append({
+                        "phase": name, "status": outcome, "started_at": started,
+                        "finished_at": _utcnow(), "memory_before": before,
+                        "memory_after": after, "details": dict(details),
+                    })
+                    if name == "asset_market_build":
+                        self._market_build_active -= 1
+                    self._phase = previous
+                    self._owner = owner if previous is not None else None
+                    self._condition.notify_all()
 
     def market_build_allowed(self) -> bool:
         with self._condition:

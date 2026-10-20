@@ -20,6 +20,8 @@ from config import (
 )
 from src.core.fois.models import FOIS_MODEL_VERSION
 from src.platform.validation.progress import progress_from_environment
+from src.platform.request_diagnostics import diagnosed, span
+from src.platform.memory_attribution import memory_attribution
 
 FOIS_PROCESS_TIMEOUT_SECONDS = 60.0
 FOIS_IDLE_RETENTION_SECONDS = 60.0
@@ -96,11 +98,17 @@ def _executor() -> concurrent.futures.ProcessPoolExecutor:
         return _EXECUTOR
 
 
+@diagnosed('fois_submission')
 def _submit(function, *arguments):
     """Account for queued/running jobs atomically with idle retirement."""
     global _IN_FLIGHT, _LAST_USED
     with _EXECUTOR_LOCK:
-        future = _executor().submit(function, *arguments)
+        executor = _executor()
+        future = executor.submit(function, *arguments)
+        processes = getattr(executor, '_processes', None)
+        if isinstance(processes, dict):
+            for process in processes.values():
+                memory_attribution.register_fois_worker(getattr(process, 'pid', None))
         _IN_FLIGHT += 1
         _LAST_USED = perf_counter()
         future.add_done_callback(_finished)
@@ -125,7 +133,11 @@ def retire_idle_fois_executor_sync() -> bool:
     with _EXECUTOR_LOCK:
         if _EXECUTOR is None or _IN_FLIGHT or perf_counter() - _LAST_USED < FOIS_IDLE_RETENTION_SECONDS:
             return False
-        _EXECUTOR.shutdown(wait=True, cancel_futures=True)
+        processes = getattr(_EXECUTOR, '_processes', None)
+        pids = tuple(processes) if isinstance(processes, dict) else ()
+        with span('fois_worker_retirement', activate=True, memory=True):
+            _EXECUTOR.shutdown(wait=True, cancel_futures=True)
+            memory_attribution.unregister_fois_workers(pids)
         _EXECUTOR = None
         return True
 
@@ -135,6 +147,7 @@ async def warm_fois_executor() -> dict[str, int]:
     return await asyncio.to_thread(warm_fois_executor_sync)
 
 
+@diagnosed('fois_submission', activate=True, memory=True)
 def warm_fois_executor_sync() -> dict[str, int]:
     """Restore the bounded compute worker outside request-serving execution."""
     return _submit(_worker_ready).result(
@@ -157,6 +170,8 @@ def shutdown_fois_executor_sync() -> bool:
             return False
         _EXECUTOR_STOPPING = True
         abandoned = bool(_IN_FLIGHT)
+        processes = getattr(executor, '_processes', None)
+        pids = tuple(processes) if isinstance(processes, dict) else ()
         # ProcessPool has no public worker-stop API before Python 3.14. Keep
         # this compatibility boundary local and use only this pool's handles.
         workers = tuple((executor._processes or {}).values()) if abandoned else ()
@@ -173,6 +188,7 @@ def shutdown_fois_executor_sync() -> bool:
                 if not worker._closed:
                     raise
         executor.shutdown(wait=True, cancel_futures=True)
+        memory_attribution.unregister_fois_workers(pids)
     finally:
         with _EXECUTOR_LOCK:
             _EXECUTOR_STOPPING = False
@@ -312,12 +328,14 @@ def _read_published(repository: Any, league_id: str) -> tuple[tuple[Any, ...], d
     return scores, health
 
 
+@diagnosed('fois_copy')
 def _prepare_working_database(source: Path, target: Path, league_id: str) -> None:
     from src.core.fois.working_storage import prepare
 
     prepare(source, target, league_id)
 
 
+@diagnosed('fois_publication')
 def _validate_and_publish(
     working_path: Path, repository: Any, league_id: str, expected: int,
     checkpoint_generation: str,
@@ -350,7 +368,7 @@ async def generate_fois_isolated(
     cache_file: Path | None = None,
 ) -> tuple[tuple[Any, ...], dict[str, object], dict[str, object]]:
     """Compute/persist FOIS in one spawned child, then reconcile in the parent."""
-    with _generation_slot():
+    with span('fois_generation', activate=True, memory=True), _generation_slot():
         league_id = str((data.get("league") or {}).get("league_id") or "configured-league")
         started = perf_counter()
         progress = progress_from_environment()
