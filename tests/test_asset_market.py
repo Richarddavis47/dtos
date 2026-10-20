@@ -1325,7 +1325,9 @@ class AssetMarketTests(unittest.TestCase):
     def test_trending_http_handles_legacy_draft_identity_as_observed_at(self) -> None:
         malformed = "2026-draft-1319750580377251840-13"
         memory = IntelligenceCheckpointStore(Path(self.temp.name) / "intelligence.sqlite3")
-        memory.put_sparse(
+        # Model an already-retained legacy row. New sparse admission rejects
+        # identity labels as timestamps; the HTTP reader must still tolerate it.
+        memory.put(
             IntelligenceCheckpoint(
                 checkpoint_id="legacy-draft", asset_id="player:10213",
                 asset_type="player", timestamp=malformed, season=2026,
@@ -1335,7 +1337,6 @@ class AssetMarketTests(unittest.TestCase):
                 evidence_completeness=EvidenceCompleteness.COMPLETE,
                 model_version="1.12.7", related_event_id="1319750580377251840:13",
             ),
-            market_context_id="player:global",
         )
         app = FastAPI()
         with patch("routes.market.intelligence_checkpoint_store", memory):
