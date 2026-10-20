@@ -5,24 +5,61 @@ import json
 METHOD = 'sleeper-nfl-calendar-v1'
 
 
-def season_calendar(league: dict) -> dict:
+def selected_league_week(league: dict, nfl_state: dict | None) -> int:
+    """Select within the league season, retaining both source clocks unchanged."""
+    settings = league.get('settings') or {}
+    try:
+        league_season = int(league['season'])
+        global_season = int((nfl_state or {}).get('season'))
+        global_week = int((nfl_state or {}).get('week'))
+        league_week = int(settings.get('leg'))
+    except (KeyError, TypeError, ValueError):
+        raise ValueError('Sleeper league/NFL season-week identity is incomplete.') from None
+    season_type = str((nfl_state or {}).get('season_type') or '').casefold()
+    selected = global_week if global_season == league_season and season_type in {'regular', 'post'} else league_week
+    if not 1 <= selected <= 18:
+        raise ValueError('Sleeper selected league week is outside the supported NFL calendar.')
+    return selected
+
+
+def season_calendar(league: dict, *, nfl_state: dict | None = None) -> dict:
     settings = league.get('settings') or {}
     fields = ('leg', 'last_scored_leg', 'start_week', 'playoff_week_start',
               'playoff_teams', 'playoff_round_type', 'playoff_type')
     source = {key: settings.get(key) for key in fields}
     identity = {'league_id': str(league.get('league_id') or ''), 'season': league.get('season'),
                 'sport': league.get('sport'), 'status': league.get('status'), 'settings': source, 'method': METHOD}
+    current = source['leg']
+    if nfl_state is not None:
+        # Only projection horizons use the acquisition's NFL clock. Historical
+        # completion and standings keep the original league settings contract.
+        identity['nfl_clock'] = {key: nfl_state.get(key) for key in ('season', 'week', 'season_type')}
+        try:
+            selected = selected_league_week(league, nfl_state)
+            # A completed league leg can lag the NFL clock by one at rollover.
+            # An unfinished, missing or multi-week gap is not that evidence.
+            rollover = (league.get('status') == 'in_season'
+                        and type(source['leg']) is int
+                        and type(source['last_scored_leg']) is int
+                        and source['last_scored_leg'] == source['leg']
+                        and selected == source['leg'] + 1)
+            current = selected if selected == source['leg'] or rollover else None
+        except ValueError:
+            current = None
     reference = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
     result = {'league_id': identity['league_id'], 'season': identity['season'], 'reference': reference,
-              'source': 'Sleeper league settings', 'source_fields': source, 'methodology': METHOD,
+              'source': 'Sleeper league settings and NFL state' if nfl_state is not None else 'Sleeper league settings',
+              'source_fields': source, 'nfl_clock': identity.get('nfl_clock'), 'methodology': METHOD,
               'availability': 'unavailable', 'regular_season_weeks': None, 'playoff_rounds': None,
-              'current_week': source['leg'], 'reason': 'UNSUPPORTED_OR_INCOMPLETE_CALENDAR',
+              'current_week': current, 'reason': 'UNSUPPORTED_OR_INCOMPLETE_CALENDAR',
               'locked_bye_roster_ids': [], 'playoff_opponent': None}
     if league.get('sport') != 'nfl' or not identity['league_id']:
         return result
     if any(type(source[key]) is not int for key in fields):
         return result
-    start, current, completed = source['start_week'], source['leg'], source['last_scored_leg']
+    if type(current) is not int:
+        return result
+    start, completed = source['start_week'], source['last_scored_leg']
     first, teams, kind = source['playoff_week_start'], source['playoff_teams'], source['playoff_round_type']
     # Completed Sleeper seasons retain leg == last_scored_leg. This does not
     # authorize an in-season current week to be treated as final.

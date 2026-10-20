@@ -61,7 +61,7 @@ def prepare_team_strength(service: Any, *, league_id: str, season: int, current_
                           playoff_rounds: list[list[int]] | None,
                           calendar_reference: str | None, next_n: int = 3,
                           bye_evidence: dict | None = None, timings: dict | None = None,
-                          lineup_solver=None) -> dict:
+                          lineup_solver=None, projection_snapshot: dict | None = None) -> dict:
     """Pin one publication, score each team/week once, then compose horizons.
 
     ``rosters`` contain canonical IDs in players/starters/reserve/taxi. Actual
@@ -75,7 +75,7 @@ def prepare_team_strength(service: Any, *, league_id: str, season: int, current_
     started = perf_counter()
     optimization_seconds = 0.0
     solve = lineup_solver or optimal_legal_lineup
-    pinned = service.snapshot()
+    pinned = projection_snapshot if projection_snapshot is not None else service.snapshot()
     if (not pinned or str(pinned.get('league_id')) != str(league_id)
             or pinned.get('season') != season or pinned.get('week') != current_week
             or not pinned.get('horizon_generation')):
@@ -249,16 +249,17 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
     from .season_calendar import season_calendar
     league = data.get('league') or {}
     scoring = data.get('scoring_settings') or league.get('scoring_settings') or {}
-    if (service.snapshot() or {}).get('scoring_settings', {}) != scoring:
+    pinned = service.snapshot()
+    if (pinned or {}).get('scoring_settings', {}) != scoring:
         raise ValueError('Team strength requires projections prepared for the current scoring settings')
-    calendar = season_calendar(league)
+    calendar = season_calendar(league, nfl_state=data.get('nfl_state'))
     if calendar['current_week'] != data.get('week'):
         raise ValueError('Current fantasy week and projection preparation week disagree')
     if bye_evidence is None:
         from services.global_evidence import retained_global_evidence
         from src.core.data_platform.global_schedule import schedule_from_facts
         store = retained_global_evidence()
-        boundary = (service.snapshot() or {}).get('generated_at')
+        boundary = (pinned or {}).get('generated_at')
         if store is not None and boundary:
             facts = store.read('schedule', None, season=int(league['season']), as_of=boundary)
             teams = {player.get('team') or player.get('nfl_team') for team in data.get('teams') or [] for player in team.get('players') or []}
@@ -269,7 +270,7 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
             if player_weeks:
                 bye_evidence = {'season': int(league['season']), 'player_weeks': player_weeks,
                     'reference': hashlib.sha256(json.dumps(sorted(row['fingerprint'] for row in facts)).encode()).hexdigest()}
-    existing = compatible_profile(data, service.snapshot())
+    existing = compatible_profile(data, pinned)
     preparation_key = hashlib.sha256(json.dumps({
         'next_n': next_n, 'bye_evidence': bye_evidence,
     }, sort_keys=True).encode()).hexdigest()
@@ -278,7 +279,8 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
     profile = prepare_team_strength(service, league_id=str(league['league_id']), season=int(league['season']),
         current_week=data['week'], rosters=canonical_rosters(data), roster_positions=league.get('roster_positions') or [],
         regular_season_weeks=calendar['regular_season_weeks'], playoff_rounds=calendar['playoff_rounds'],
-        calendar_reference=calendar['reference'], next_n=next_n, bye_evidence=bye_evidence, timings=timings)
+        calendar_reference=calendar['reference'], next_n=next_n, bye_evidence=bye_evidence, timings=timings,
+        projection_snapshot=pinned)
     profile['calendar'] = calendar
     profile['preparation_key'] = preparation_key
     profile['scoring_reference'] = hashlib.sha256(json.dumps(scoring, sort_keys=True).encode()).hexdigest()
@@ -291,16 +293,20 @@ def compatible_profile(data: dict, projection: dict | None) -> dict | None:
     from .season_calendar import season_calendar
     profile = data.get('team_strength') or {}
     league = data.get('league') or {}
+    calendar = season_calendar(league, nfl_state=data.get('nfl_state'))
     if (not projection or profile.get('methodology_version') != METHOD_VERSION
             or profile.get('league_id') != str(league.get('league_id'))
             or str(profile.get('season')) != str(league.get('season'))
             or profile.get('projection_generation') != projection.get('horizon_generation')
             or profile.get('scoring_profile_id') != projection.get('scoring_profile_id')
             or str(projection.get('league_id')) != str(league.get('league_id'))
+            or str(projection.get('season')) != str(league.get('season'))
+            or projection.get('week') != data.get('week')
             or profile.get('scoring_reference') != hashlib.sha256(json.dumps(data.get('scoring_settings') or league.get('scoring_settings') or {}, sort_keys=True).encode()).hexdigest()
             or projection.get('scoring_settings', {}) != (data.get('scoring_settings') or league.get('scoring_settings') or {})
             or profile.get('current_week') != data.get('week')
-            or profile.get('calendar_reference') != season_calendar(league)['reference']
+            or calendar['current_week'] != data.get('week')
+            or profile.get('calendar_reference') != calendar['reference']
             or profile.get('roster_reference') != roster_reference(canonical_rosters(data), league.get('roster_positions') or [])):
         return None
     return profile

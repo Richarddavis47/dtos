@@ -1,3 +1,10 @@
+## v1.21.75 / build 2175 — Qualified preparation and FOIS profile diagnostics
+
+- Use the same selected league/NFL season-week evidence for projection horizons and Team Strength. Preserve the original Sleeper calendar fields and reject incompatible league, scoring, week or generation inputs; pin one projection publication through preparation.
+- Capture scheduled checkpoints at their actual timezone-aware observation time, keeping milestone labels in event identity. Reject unsupported timestamps individually and compare quote/knowledge cutoffs as typed UTC instants, including fractional seconds. Preserve genuine zero prices and existing retained records.
+- Extend bounded, payload-free profile tracing across context, retained lookup, history, activity/behavior, qualification and rendering. Add Team Strength/checkpoint/profile memory boundaries to the existing sampler without additional computation, archives, schemas, infrastructure or cache limits.
+- Preserve Home/FOIS failure isolation, cancellation cleanup, canonical intelligence, authorization and RETAINED / NOT REVALIDATED historical grades. Original production OOM, cold-delay attribution and sustained 2 GiB safety remain unproven; independent Scout acceptance is required.
+
 ## v1.21.74 / build 2174 — Request-correlated reliability diagnostics
 
 - Distinguish request/account/runtime admission, transport headers, HTTPX hook work, full body transfer, JSON parsing, projection/valuation preparation, cache publication and Home/body completion with bounded, payload-free correlated clocks.

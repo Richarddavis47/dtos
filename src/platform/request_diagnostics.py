@@ -33,6 +33,10 @@ NAMES = frozenset({
     'fois_copy', 'fois_submission', 'fois_publication', 'fois_coordination',
     'fois_worker_retirement', 'runtime_eviction',
     'lifecycle_phase', 'market_source_prepare', 'market_identity_parse',
+    'team_strength_prepare', 'checkpoint_prepare', 'fois_profile', 'fois_profile_context',
+    'fois_profile_lookup', 'fois_profile_validation', 'fois_profile_history',
+    'fois_profile_aggregation', 'fois_profile_render', 'fois_profile_activity',
+    'fois_profile_behavior',
 })
 _TRACE: ContextVar[Trace | None] = ContextVar('dtos_diagnostic_trace', default=None)
 _SPAN: ContextVar[int | None] = ContextVar('dtos_diagnostic_span', default=None)

@@ -16,6 +16,7 @@ from .relevance import (
     material_related_candidates, milestone_asset_ids, related_player_candidates,
 )
 from .service import IntelligenceMemoryService
+from .timestamps import CheckpointTimestampError, checkpoint_timestamp
 
 
 def _timestamp(value: Any, fallback: str) -> str:
@@ -231,6 +232,11 @@ class CheckpointPipeline:
 
     def _capture(self, trigger: CheckpointTrigger, **values: Any) -> None:
         self._counts["checkpoints_attempted"] += 1
+        try:
+            checkpoint_timestamp(values.get('timestamp'))
+        except CheckpointTimestampError:
+            self._record(trigger, 'invalid_timestamp_skips')
+            return
         event_id = str(values.get("event_id") or "")
         if event_id and self.service.store.event_exists(
             league_id=values.get("league_id"), event_id=event_id,
@@ -395,6 +401,10 @@ class CheckpointPipeline:
 
     def ingest_scheduled(self, data: dict[str, Any], *, observed_at: str) -> dict[str, Any]:
         context = self._context(data, provenance=ProvenanceType.LIVE_CAPTURED)
+        try:
+            observation_at = checkpoint_timestamp(observed_at)
+        except CheckpointTimestampError:
+            observation_at = None
         week = int(data.get("week") or 1)
         league = data.get("league") or {}
         playoff_week = int((league.get("settings") or {}).get("playoff_week_start") or 15)
@@ -428,7 +438,7 @@ class CheckpointPipeline:
                 self._capture(
                     trigger, asset_id=asset_id,
                     asset_type="future_pick" if asset_id.startswith("pick:") else "player",
-                    timestamp=f"{context['season']}-W{week:02d}",
+                    timestamp=observation_at,
                     event_id=f"global:{context['season']}:{week}:{trigger.value}:{asset_id}",
                     confidence=85 if values["market_value"] is not None else 40,
                     market_observations=self._market_observations(data, asset_id),
@@ -521,7 +531,7 @@ class CheckpointPipeline:
                 "related_players_rejected_immaterial", "provider_unavailable",
                 "global_observations_persisted", "global_observations_deduplicated",
                 "references_persisted", "events_replayed", "milestone_assets_excluded",
-                "undated_draft_events",
+                "undated_draft_events", "invalid_timestamp_skips",
             )},
             "by_trigger": {key: dict(value) for key, value in sorted(self._by_trigger.items())},
             "last_error": self._last_error,

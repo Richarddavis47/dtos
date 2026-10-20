@@ -88,7 +88,7 @@ class EventRelevantGlobalMarketMemoryTests(unittest.TestCase):
         return data
 
     def test_milestone_uses_relevant_universe_not_all_valuation_assets(self) -> None:
-        health = self.pipeline.ingest_scheduled(self.data, observed_at="ignored")
+        health = self.pipeline.ingest_scheduled(self.data, observed_at="2026-09-01T00:00:00+00:00")
         self.assertEqual(
             {row.asset_id for row in self.store.checkpoints()},
             {"player:1", "player:2"},

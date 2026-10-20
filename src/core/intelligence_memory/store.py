@@ -397,12 +397,13 @@ class IntelligenceCheckpointStore:
         )
         # The event reference keeps checkpoint.timestamp. The shared Market
         # observation retains the provider quote clock, not the attachment clock.
-        from src.core.history_context.timestamps import canonical_utc_timestamp
-        quote_times = [canonical_utc_timestamp(r.observed_at) for r in provider_evidence]
+        from .timestamps import observation_time
+        quote_times = [observation_time(r.observed_at) for r in provider_evidence]
         if quote_times and all(quote_times):
-            if max(quote_times) > canonical_utc_timestamp(checkpoint.timestamp):
+            boundary = observation_time(checkpoint.timestamp)
+            if boundary is None or max(quote_times) > boundary:
                 return None, MarketObservationDecision.UNAVAILABLE, False
-            checkpoint = replace(checkpoint, timestamp=max(quote_times))
+            checkpoint = replace(checkpoint, timestamp=max(quote_times).isoformat().replace('+00:00', 'Z'))
         fingerprint = semantic_fingerprint(
             asset_id=checkpoint.asset_id, asset_type=checkpoint.asset_type,
             market_context_id=market_context_id, canonical_value=canonical_value,
@@ -527,6 +528,10 @@ class IntelligenceCheckpointStore:
         unavailable_reason: str | None = None,
     ) -> tuple[IntelligenceCheckpoint, bool, MarketObservationDecision, bool, bool]:
         """Commit observation, compact checkpoint, and reference as one transaction."""
+        from .timestamps import checkpoint_timestamp
+        # Validate the instant without changing retained event identity. Exact
+        # historical-resolution keys already contain this timestamp spelling.
+        checkpoint_timestamp(checkpoint.timestamp)
         with self._lock, self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             existing = connection.execute(

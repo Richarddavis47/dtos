@@ -148,8 +148,8 @@ class RuntimeCheckpointPipelineTests(unittest.TestCase):
         self.assertEqual(selected_at, "2026-05-01T00:00:00+00:00")
 
     def test_scheduled_checkpoint_is_once_and_not_hardcoded_to_league(self) -> None:
-        self.pipeline.ingest_scheduled(self.data, observed_at="ignored")
-        self.pipeline.ingest_scheduled(self.data, observed_at="ignored")
+        self.pipeline.ingest_scheduled(self.data, observed_at="2026-09-01T00:00:00+00:00")
+        self.pipeline.ingest_scheduled(self.data, observed_at="2026-09-02T00:00:00+00:00")
         rows = self.store.checkpoints()
         self.assertEqual(len(rows), 1)
         self.assertIsNone(rows[0].league_id)

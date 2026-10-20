@@ -48,6 +48,30 @@ Existing diagnostic duration headers are generated at response headers and are
 not retroactively described as full-transfer durations. The liveness handler does
 not start a diagnostic trace, sample processes or hydrate intelligence.
 
+Executive profile reads activate the same bounded trace after account/runtime
+middleware, publishing its buffered prelude. `fois_profile_context` observes the
+existing context read; `fois_profile_lookup` includes retained SQL lookup and
+deserialization. `fois_profile_history` observes timeline/ranking reads;
+`fois_profile_activity` and `fois_profile_behavior` distinguish historical graph
+and reference work. `fois_profile_validation` observes existing retained-grade
+and runtime availability qualifications, not a new evaluation or revalidation.
+These spans are nested within `fois_profile_aggregation`; `fois_profile_render`
+observes final HTML/chrome construction. Request completion remains the ASGI
+handoff boundary. The route does not request FOIS computation or wait for a
+pending calculation; existing hydration/FOIS coordination spans identify any
+such work upstream. Nested durations must not be summed as sequential costs.
+
+`team_strength_prepare`, `checkpoint_prepare` and the overall profile span add
+memory boundary requests to the existing bounded sampler. They do not create a
+second sampler, perform synchronous process scans, raise cache limits or write
+diagnostic archives. A short successful sample cannot establish 2 GiB safety.
+
+Projection horizons retain their existing selected league/NFL week policy. Team
+Strength admits a different NFL current week only for an observed one-week
+rollover from a fully scored league leg. Unfinished/missing completion evidence,
+a reverse clock or a multi-week disagreement remains unavailable. Raw league
+calendar fields are never rewritten to make the guard pass.
+
 ## Memory and lifetimes
 
 One lazy daemon sampler observes existing cold hydration, synchronization, FOIS

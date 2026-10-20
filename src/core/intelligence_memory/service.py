@@ -13,6 +13,7 @@ from .models import (
 from .store import IntelligenceCheckpointStore
 from .market_memory import market_context_id
 from .triggers import material_teammate_impacts
+from .timestamps import checkpoint_timestamp
 
 
 @dataclass(frozen=True)
@@ -83,11 +84,13 @@ class IntelligenceMemoryService:
         market_observations: Iterable[SourceObservation] | None = None,
         knowledge_state: str | None = None,
     ) -> CheckpointCaptureResult:
+        checkpoint_timestamp(timestamp)
         observations = tuple(observations)
         provider_evidence = tuple(market_observations) if market_observations is not None else observations
         from types import SimpleNamespace
         from src.core.historical_intelligence.market_comparison import observation_clocks
-        if provider_evidence and any(row.observed_at for row in provider_evidence):
+        if provider_evidence and any(row.observed_at is not None or (row.metadata or {}).get('comparison_semantics')
+                                     for row in provider_evidence):
             clocks = observation_clocks(SimpleNamespace(provider_evidence=provider_evidence, observed_at=timestamp), timestamp)
             if clocks is None:
                 market_value = None

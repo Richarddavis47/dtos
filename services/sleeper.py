@@ -69,19 +69,8 @@ def utcnow() -> datetime:
 
 def selected_league_week(league: dict[str, Any], nfl_state: dict[str, Any] | None) -> int:
     """Resolve week within the selected league season, never another NFL season."""
-    settings = league.get("settings") or {}
-    try:
-        league_season = int(league["season"])
-        global_season = int((nfl_state or {}).get("season"))
-        global_week = int((nfl_state or {}).get("week"))
-        league_week = int(settings.get("leg"))
-    except (KeyError, TypeError, ValueError):
-        raise ValueError("Sleeper league/NFL season-week identity is incomplete.") from None
-    season_type = str((nfl_state or {}).get("season_type") or "").casefold()
-    selected = global_week if global_season == league_season and season_type in {"regular", "post"} else league_week
-    if not 1 <= selected <= 18:
-        raise ValueError("Sleeper selected league week is outside the supported NFL calendar.")
-    return selected
+    from src.core.intelligence.season_calendar import selected_league_week as select
+    return select(league, nfl_state)
 
 
 def league_cache_file(league_id: str) -> Path:
@@ -596,7 +585,8 @@ async def _sync_sleeper(
                     from src.core.intelligence.team_strength import prepare_for_data
                     from src.core.intelligence.strength_history import record_strength_history
                     from src.core.history_context.metadata import minimal_metadata_store
-                    strength = await asyncio.to_thread(prepare_for_data, projections, state['data'])
+                    with span('team_strength_prepare', memory=True):
+                        strength = await asyncio.to_thread(prepare_for_data, projections, state['data'])
                     await asyncio.to_thread(record_strength_history, minimal_metadata_store, strength,
                                             observed_at=utcnow().isoformat())
                 except Exception:
@@ -627,9 +617,10 @@ async def _sync_sleeper(
             diagnostics.mark('final_history')
             from src.core.intelligence_memory import checkpoint_pipeline
             try:
-                await asyncio.to_thread(
-                    checkpoint_pipeline.ingest_runtime, state["data"], observed_at=synced_at,
-                )
+                with span('checkpoint_prepare', memory=True):
+                    await asyncio.to_thread(
+                        checkpoint_pipeline.ingest_runtime, state["data"], observed_at=synced_at,
+                    )
             except Exception:
                 logger.exception("Intelligence checkpoint ingestion failed")
             diagnostics.mark('checkpoints')

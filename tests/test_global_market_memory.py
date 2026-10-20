@@ -257,10 +257,10 @@ class GlobalSparseMarketMemoryTests(unittest.TestCase):
                 },
             }}},
         }
-        pipeline.ingest_scheduled(base, observed_at="ignored")
+        pipeline.ingest_scheduled(base, observed_at="2026-09-01T00:00:00+00:00")
         pipeline.ingest_scheduled({
             **base, "league": {**base["league"], "league_id": "B"},
-        }, observed_at="ignored")
+        }, observed_at="2026-09-01T00:00:00+00:00")
         health = self.store.market_memory_health()
         self.assertEqual(health["observation_count"], 1)
         self.assertEqual(health["reference_count"], 1)
