@@ -40,7 +40,8 @@ def season_calendar(league: dict, *, nfl_state: dict | None = None) -> dict:
             current = None
     reference = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
     result = {'league_id': identity['league_id'], 'season': identity['season'], 'reference': reference,
-              'source': 'Sleeper league settings', 'source_fields': source, 'methodology': METHOD,
+              'source': 'Sleeper league settings and NFL state' if nfl_state is not None else 'Sleeper league settings',
+              'source_fields': source, 'nfl_clock': identity.get('nfl_clock'), 'methodology': METHOD,
               'availability': 'unavailable', 'regular_season_weeks': None, 'playoff_rounds': None,
               'current_week': current, 'reason': 'UNSUPPORTED_OR_INCOMPLETE_CALENDAR',
               'locked_bye_roster_ids': [], 'playoff_opponent': None}

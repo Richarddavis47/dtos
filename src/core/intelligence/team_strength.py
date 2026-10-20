@@ -299,6 +299,8 @@ def compatible_profile(data: dict, projection: dict | None) -> dict | None:
             or profile.get('projection_generation') != projection.get('horizon_generation')
             or profile.get('scoring_profile_id') != projection.get('scoring_profile_id')
             or str(projection.get('league_id')) != str(league.get('league_id'))
+            or str(projection.get('season')) != str(league.get('season'))
+            or projection.get('week') != data.get('week')
             or profile.get('scoring_reference') != hashlib.sha256(json.dumps(data.get('scoring_settings') or league.get('scoring_settings') or {}, sort_keys=True).encode()).hexdigest()
             or projection.get('scoring_settings', {}) != (data.get('scoring_settings') or league.get('scoring_settings') or {})
             or profile.get('current_week') != data.get('week')

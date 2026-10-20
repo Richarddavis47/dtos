@@ -82,6 +82,9 @@ class PreparationTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         prepare_for_data(service, changed)
             self.assertEqual(profile['projection_generation'], service.snapshot()['horizon_generation'])
+            for override in ({'week': 8}, {'season': 2027}, {'horizon_generation': None},
+                             {'scoring_profile_id': 'foreign'}):
+                self.assertIsNone(compatible_profile(data, {**service.snapshot(), **override}), override)
 
     def test_one_projection_publication_is_pinned_during_preparation(self):
         service, data = self.strength_source()
