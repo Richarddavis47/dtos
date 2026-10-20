@@ -81,6 +81,24 @@ class FOISPresentationTests(unittest.TestCase):
         self.assertIn('id="executive-profiles"', html)
         self.assertIn('href="/history"', html)
 
+    def test_profile_uses_verified_summary_but_timeline_api_keeps_full_evidence(self) -> None:
+        from dataclasses import replace
+        score = self._persist_profiles('active-league', 1)[0]
+        retained = replace(score, front_office_evidence={'exact_pick': '2029:1:original-franchise',
+                           'decision_date': '2025-09-01', 'zero': 0, 'missing': None})
+        self.repository.save(retained, 'summary-control')
+        with patch.object(self.repository, 'timeline', side_effect=AssertionError('HTML must not retain full history')):
+            response = self._client().get('/fois/gms/gm-0')
+        self.assertEqual(response.status_code, 200)
+        with patch.object(self.repository, 'timeline_summary', side_effect=AssertionError('API requires full history')):
+            response = self._client().get('/api/fois/leagues/active-league/gms/gm-0/timeline')
+        self.assertEqual(response.status_code, 200)
+        rows = response.json()['timeline']
+        # Both publications share the same generated_at; snapshot_id is the
+        # deterministic tie-break, not an assumption about insertion order.
+        self.assertCountEqual([row['front_office_evidence'] for row in rows],
+                              [score.front_office_evidence, retained.front_office_evidence])
+
     def test_cached_evidence_does_not_retain_account_or_session_chrome(self) -> None:
         self._persist_profiles("active-league", 1)
         account = {"name": "inspection", "session": "fixture-one"}

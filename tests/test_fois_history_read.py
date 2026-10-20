@@ -70,6 +70,59 @@ class FOISHistoryReadTests(unittest.TestCase):
         self.assertEqual(self.repository.timeline('B', 'gm'), ())
         self.assertEqual(self.repository.timeline('A', 'other'), ())
 
+    def test_summary_keeps_verified_identity_grades_and_dto_validation(self):
+        expected = self.repository.timeline('A', 'gm')
+        from src.core.fois.repository import _score
+        with patch('src.core.fois.repository._score', wraps=_score) as validate:
+            actual = self.repository.timeline_summary('A', 'gm')
+        self.assertEqual(validate.call_count, len(expected))
+        self.assertEqual(len(actual), len(expected))
+        fields = ('score_key', 'league_id', 'gm_id', 'tenure_id', 'model_version',
+                  'generated_at', 'brain_snapshot_id', 'overall_score',
+                  'overall_letter_grade', 'evaluation_kind', 'evidence_integrity_version')
+        for summary, full in zip(actual, expected):
+            for field in fields:
+                self.assertEqual(getattr(summary, field), getattr(full, field))
+            self.assertFalse(summary.evidence_revalidated)
+            self.assertFalse(hasattr(summary, 'front_office_evidence'))
+        self.assertEqual(self.repository.timeline_summary('B', 'gm'), ())
+
+    def test_summary_does_not_skip_corrupt_unrendered_evidence_or_dependencies(self):
+        with self.repository._connection() as db:
+            db.execute('UPDATE fois_semantic_states SET payload=? WHERE format=?',
+                       (b'corrupt', state_storage.FORMAT))
+            db.commit()
+        with self.assertRaises((ValueError, zlib.error)):
+            self.repository.timeline_summary('A', 'gm')
+
+    def test_summary_legacy_schema_validation_and_current_identity_match_full_history(self):
+        # Existing inline legacy rows must retain the full DTO validation path.
+        payload = asdict(self.base)
+        payload.pop('category_scores')
+        with self.repository._connection() as db:
+            db.execute('UPDATE fois_snapshot_history SET payload=? WHERE snapshot_id=?',
+                       (json.dumps(payload), '0-0'))
+            db.commit()
+        for method in (self.repository.timeline, self.repository.timeline_summary):
+            with self.assertRaises(KeyError):
+                method('A', 'gm')
+
+    def test_summary_matches_current_classification_and_does_not_retain_nested_evidence(self):
+        from src.core.fois.repository import _score
+        import weakref
+        references = []
+        def validate(payload):
+            value = _score(payload)
+            references.append(weakref.ref(value))
+            return value
+        self.repository.save(replace(self.base, evidence_integrity_version='fois-evidence-integrity-3'), 'current')
+        expected = self.repository.timeline('A', 'gm')
+        with patch('src.core.fois.repository._score', side_effect=validate):
+            actual = self.repository.timeline_summary('A', 'gm')
+        self.assertEqual([v.evaluation_kind for v in actual], [v.evaluation_kind for v in expected])
+        self.assertEqual(sum(v.evaluation_kind == 'current_canonical' for v in actual), 1)
+        self.assertTrue(all(reference() is None for reference in references))
+
     def test_memo_bound_and_oversize_fallback_preserve_exact_payloads(self):
         before = hashlib.sha256(self.repository.path.read_bytes()).hexdigest()
         with self.repository._connection() as db:

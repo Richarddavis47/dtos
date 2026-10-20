@@ -424,7 +424,7 @@ def create_fois_router(
             explanation_html = explanation_panel(fois_explanation(score, league_id=selected_league))
             with span('fois_profile_history'):
                 history = tuple(
-                    row for row in service.repository.timeline(selected_league, gm_id)
+                    row for row in service.repository.timeline_summary(selected_league, gm_id)
                     if row.evaluation_kind != "current_canonical"
                 )
                 with span('fois_profile_rankings'):

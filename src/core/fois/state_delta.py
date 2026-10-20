@@ -19,8 +19,10 @@ def changes(before, after, path=()):
     return [] if before == after else [['set', list(path), after]]
 
 
-def apply(before, operations):
-    result = deepcopy(before)
+def apply(before, operations, *, _owned=False):
+    # Only the retained decoder supplies fresh, unshared JSON trees. General
+    # callers retain the existing independent-copy contract.
+    result = before if _owned else deepcopy(before)
     for operation in operations:
         action, path = operation[:2]
         if action not in ('set', 'del') or not isinstance(path, list):
@@ -28,7 +30,7 @@ def apply(before, operations):
         if not path:
             if action != 'set':
                 raise ValueError('Cannot delete FOIS delta root')
-            result = deepcopy(operation[2])
+            result = operation[2] if _owned else deepcopy(operation[2])
             continue
         parent = result
         for key in path[:-1]:
@@ -36,5 +38,5 @@ def apply(before, operations):
         if action == 'del':
             del parent[path[-1]]
         else:
-            parent[path[-1]] = deepcopy(operation[2])
+            parent[path[-1]] = operation[2] if _owned else deepcopy(operation[2])
     return result
