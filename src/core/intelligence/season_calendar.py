@@ -35,7 +35,15 @@ def season_calendar(league: dict, *, nfl_state: dict | None = None) -> dict:
         # completion and standings keep the original league settings contract.
         identity['nfl_clock'] = {key: nfl_state.get(key) for key in ('season', 'week', 'season_type')}
         try:
-            current = selected_league_week(league, nfl_state)
+            selected = selected_league_week(league, nfl_state)
+            # A completed league leg can lag the NFL clock by one at rollover.
+            # An unfinished, missing or multi-week gap is not that evidence.
+            rollover = (league.get('status') == 'in_season'
+                        and type(source['leg']) is int
+                        and type(source['last_scored_leg']) is int
+                        and source['last_scored_leg'] == source['leg']
+                        and selected == source['leg'] + 1)
+            current = selected if selected == source['leg'] or rollover else None
         except ValueError:
             current = None
     reference = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()

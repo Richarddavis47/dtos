@@ -94,6 +94,19 @@ class PreparationTests(unittest.TestCase):
             profile = prepare_for_data(service, data)
         self.assertEqual(profile['projection_generation'], original['horizon_generation'])
 
+    def test_clock_disagreement_requires_supported_completed_leg_rollover(self):
+        service, data = self.strength_source()
+        with patch('services.global_evidence.retained_global_evidence', return_value=None):
+            prepare_for_data(service, data)
+            for fields in ({'last_scored_leg': 5}, {'last_scored_leg': None},
+                           {'last_scored_leg': '6'}, {'leg': 5, 'last_scored_leg': 5},
+                           {'leg': 8, 'last_scored_leg': 7}):
+                changed = deepcopy(data)
+                changed['league']['settings'].update(fields)
+                self.assertIsNone(compatible_profile(changed, service.snapshot()), fields)
+                with self.assertRaisesRegex(ValueError, 'week'):
+                    prepare_for_data(service, changed)
+
     def test_scheduled_real_market_zero_uses_observation_time_not_week_label(self):
         data, _ = prepared(0)
         data['league'] = {'league_id': 'A', 'season': '2026', 'status': 'in_season',

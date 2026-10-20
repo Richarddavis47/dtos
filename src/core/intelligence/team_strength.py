@@ -293,6 +293,7 @@ def compatible_profile(data: dict, projection: dict | None) -> dict | None:
     from .season_calendar import season_calendar
     profile = data.get('team_strength') or {}
     league = data.get('league') or {}
+    calendar = season_calendar(league, nfl_state=data.get('nfl_state'))
     if (not projection or profile.get('methodology_version') != METHOD_VERSION
             or profile.get('league_id') != str(league.get('league_id'))
             or str(profile.get('season')) != str(league.get('season'))
@@ -304,7 +305,8 @@ def compatible_profile(data: dict, projection: dict | None) -> dict | None:
             or profile.get('scoring_reference') != hashlib.sha256(json.dumps(data.get('scoring_settings') or league.get('scoring_settings') or {}, sort_keys=True).encode()).hexdigest()
             or projection.get('scoring_settings', {}) != (data.get('scoring_settings') or league.get('scoring_settings') or {})
             or profile.get('current_week') != data.get('week')
-            or profile.get('calendar_reference') != season_calendar(league, nfl_state=data.get('nfl_state'))['reference']
+            or calendar['current_week'] != data.get('week')
+            or profile.get('calendar_reference') != calendar['reference']
             or profile.get('roster_reference') != roster_reference(canonical_rosters(data), league.get('roster_positions') or [])):
         return None
     return profile

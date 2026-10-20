@@ -66,6 +66,12 @@ memory boundary requests to the existing bounded sampler. They do not create a
 second sampler, perform synchronous process scans, raise cache limits or write
 diagnostic archives. A short successful sample cannot establish 2 GiB safety.
 
+Projection horizons retain their existing selected league/NFL week policy. Team
+Strength admits a different NFL current week only for an observed one-week
+rollover from a fully scored league leg. Unfinished/missing completion evidence,
+a reverse clock or a multi-week disagreement remains unavailable. Raw league
+calendar fields are never rewritten to make the guard pass.
+
 ## Memory and lifetimes
 
 One lazy daemon sampler observes existing cold hydration, synchronization, FOIS
