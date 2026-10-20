@@ -427,12 +427,13 @@ def create_fois_router(
                     row for row in service.repository.timeline(selected_league, gm_id)
                     if row.evaluation_kind != "current_canonical"
                 )
-                rankings = sorted(league_scores(selected_league), key=lambda row: (
-                    -(row.overall_score if row.overall_score is not None else -1),
-                    -row.confidence, row.gm_id or "",
-                ))
-                rank = next((index for index, row in enumerate(rankings, 1)
-                             if row.gm_id == gm_id and row.overall_score is not None), None)
+                with span('fois_profile_rankings'):
+                    rankings = sorted(league_scores(selected_league), key=lambda row: (
+                        -(row.overall_score if row.overall_score is not None else -1),
+                        -row.confidence, row.gm_id or "",
+                    ))
+                    rank = next((index for index, row in enumerate(rankings, 1)
+                                 if row.gm_id == gm_id and row.overall_score is not None), None)
             categories = "".join(
                 f'<article class="card"><h3>{escape(item.category_name)}</h3>'
                 f'<p class="score">{item.normalized_score if item.normalized_score is not None else "Insufficient evidence"} {escape(item.letter_grade or "")}</p>'

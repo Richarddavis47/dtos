@@ -7,6 +7,7 @@ unknown/future fields. Scope and model identity are inside the hashed payload.
 from __future__ import annotations
 
 import hashlib
+from collections import OrderedDict
 import json
 import sqlite3
 import zlib
@@ -73,7 +74,7 @@ def encode(connection: sqlite3.Connection, payload: dict[str, Any], *, base_payl
     return envelope
 
 
-def _state(connection, identity, seen):
+def _state(connection, identity, seen, *, verified_root=None):
     if identity in seen or len(seen) > MAX_DELTA_DEPTH:
         raise ValueError('Invalid FOIS delta dependency chain')
     row = connection.execute('SELECT format,payload,decoded_bytes,league_id FROM fois_semantic_states WHERE state_id=?', (identity,)).fetchone()
@@ -94,14 +95,54 @@ def _state(connection, identity, seen):
     state = json.loads(raw)
     if str(state.get('league_id') or '') != row[3]:
         raise ValueError('FOIS state league mismatch')
+    if verified_root is not None:
+        verified_root(raw)
     return state
 
 
-def decode(connection: sqlite3.Connection, value: str) -> dict[str, Any]:
+class SnapshotDecoder:
+    """Small verified-root memo for one timeline call; never shared across reads.
+
+    Cache serialized states so returned nested evidence is independently owned.
+    Keys are verified content identities. Recursive dependency validation remains
+    unchanged on every root miss; no database write lock is held for reuse.
+    """
+    def __init__(self, connection, *, max_entries=8, max_bytes=8 * 1024 * 1024):
+        self.connection = connection
+        self.max_entries = max(0, min(max_entries, 8))
+        self.max_bytes = max(0, min(max_bytes, 8 * 1024 * 1024))
+        self.retained_bytes = 0
+        self._states = OrderedDict()
+
+    def state(self, identity):
+        cached = self._states.get(identity)
+        if cached is not None:
+            self._states.move_to_end(identity)
+            return json.loads(cached)
+        return _state(self.connection, identity, set(),
+                      verified_root=lambda raw: self._retain(identity, raw))
+
+    def _retain(self, identity, raw):
+        # Reuse bytes already hashed by the decoder; don't serialize/copy a
+        # second full state just to memoize it, including oversize misses.
+        if self.max_entries and len(raw) <= self.max_bytes:
+            while self._states and (len(self._states) >= self.max_entries or
+                                    self.retained_bytes + len(raw) > self.max_bytes):
+                _, retired = self._states.popitem(last=False)
+                self.retained_bytes -= len(retired)
+            self._states[identity] = raw
+            self.retained_bytes += len(raw)
+
+    def decode(self, value):
+        return decode(self.connection, value, _snapshot=self)
+
+
+def decode(connection: sqlite3.Connection, value: str, *, _snapshot=None) -> dict[str, Any]:
     payload = json.loads(value)
     if payload.get("$storage") != FORMAT:
         return payload
-    state = _state(connection, payload['state_id'], set())
+    state = (_snapshot.state(payload['state_id']) if _snapshot is not None
+             else _state(connection, payload['state_id'], set()))
     observation = payload["observation"]
     if not isinstance(observation, dict) or set(observation) - OBSERVATION_FIELDS:
         raise ValueError("Invalid FOIS observation metadata")
