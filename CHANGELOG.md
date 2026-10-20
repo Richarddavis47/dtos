@@ -1,5 +1,12 @@
 ## v1.21.76 / build 2176 — Chronological history and bounded FOIS reads
 
+## v1.21.78 / build 2178 — Canonical retained JSON semantics
+
+- Preserve final JSON normalization after verified delta reconstruction. An adversarial numeric object-path control showed that a valid content hash could otherwise conceal a different in-memory key type; restore the original canonical types without changing facts or grading.
+- Keep v1.21.77's privately owned delta application, scope guards and verified lightweight HTML summaries. Full APIs, source provenance, retained grades and the eight-root/8 MiB per-read memo remain unchanged.
+- No new schema, permanent history, infrastructure or historical FOIS regeneration. v1.21.77 remains immutable; this follow-up supersedes its skipped-normalization optimization. Production OOM, cold Home gap and unresolved Market attribution remain open pending further evidence and independent Scout review.
+
+
 ## v1.21.77 / build 2177 — Verified retained-history efficiency
 
 - Apply retained deltas only to privately owned decoded trees, preserving every hash, byte-count, scope and dependency check while avoiding redundant deep copies and JSON reparsing.

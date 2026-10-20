@@ -13,7 +13,10 @@ internal reader uses owned delta application. The general delta API still copies
 its arguments. Scope identities are captured before mutation and checked after
 application; dependency cycle/depth, decompression, serialized byte count, SHA
 identity and league validation remain mandatory. The already constructed JSON
-tree need not be copied and reparsed after canonical verification. Nested unknown
+tree need not be deep-copied. The final parse remains necessary to return
+canonical JSON types even for noncanonical retained paths with a valid target
+hash. Removing that normalization was caught by an additional adversarial
+control after v1.21.77; v1.21.78 restores it. Nested unknown
 fields, missing/null/zero, transaction and pick identity are not transformed.
 
 The existing eight-root/8 MiB serialized-byte LRU is unchanged. It lasts for one

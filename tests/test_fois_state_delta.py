@@ -63,6 +63,24 @@ class FOISDeltaTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'scope mismatch'):
             storage.decode(self.db, envelope)
 
+    def test_verified_delta_returns_canonical_json_key_types(self):
+        before = {**self.base, 'unknown': {}}
+        after = {**before, 'unknown': {'1': {'zero': 0, 'missing': None}}}
+        storage.encode(self.db, before)
+        envelope = storage.encode(self.db, after)
+        # The canonical producer uses string object paths. Even a retained
+        # noncanonical path with a valid target hash must return canonical JSON
+        # facts, not an integer-keyed object hidden by JSON output serialization.
+        delta = {'base': storage.split(before)[0], 'depth': 1,
+                 'changes': [['set', ['unknown', 1], {'zero': 0, 'missing': None}]]}
+        self.db.execute('UPDATE fois_semantic_states SET format=?,payload=? WHERE state_id=?',
+                        (storage.DELTA_FORMAT, zlib.compress(storage.canonical(delta).encode()),
+                         json.loads(envelope)['state_id']))
+        actual = storage.decode(self.db, envelope)
+        self.assertEqual(actual, after)
+        self.assertEqual(actual['unknown']['1']['zero'], 0)
+        self.assertIsNone(actual['unknown']['1']['missing'])
+
     def setUp(self):
         self.db = sqlite3.connect(':memory:')
         self.db.executescript(storage.SCHEMA)
