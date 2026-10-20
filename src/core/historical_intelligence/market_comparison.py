@@ -84,7 +84,10 @@ def observation_clocks(observation, boundary: str | None = None):
     not a substitute. Legacy outer dates remain stored unchanged.
     """
     from src.core.history_context.timestamps import canonical_utc_timestamp
-    boundary = canonical_utc_timestamp(boundary) if boundary else None
+    from src.core.intelligence_memory.timestamps import observation_time
+    cutoff = observation_time(boundary) if boundary is not None else None
+    if boundary is not None and cutoff is None:
+        return None
     rows = tuple(getattr(observation, "provider_evidence", ()))
     if not rows:
         return None
@@ -95,10 +98,10 @@ def observation_clocks(observation, boundary: str | None = None):
         knowledge = canonical_utc_timestamp(metadata.get('source_knowledge_at') or metadata.get('known_at') or row.observed_at)
         if not quote or not knowledge or not row.source_identity:
             return None
-        if boundary and (quote > boundary or knowledge > boundary):
+        if cutoff and (observation_time(quote) > cutoff or observation_time(knowledge) > cutoff):
             return None
         quotes.append(quote)
         known.append(knowledge)
-    return {'quote_observed_at': max(quotes), 'oldest_quote_at': min(quotes),
-            'source_knowledge_at': max(known), 'retained_attachment_at':
+    return {'quote_observed_at': max(quotes, key=observation_time), 'oldest_quote_at': min(quotes, key=observation_time),
+            'source_knowledge_at': max(known, key=observation_time), 'retained_attachment_at':
             getattr(observation, 'retained_attachment_at', None) or observation.observed_at}

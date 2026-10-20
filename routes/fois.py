@@ -20,6 +20,7 @@ from src.ui.intelligence_presentation import exact_rank, human_status, technical
 from src.platform.account_context import current_account
 from src.platform.league_context import current_league_context
 from src.core.fois.process_execution import FOISExecutionBusy
+from src.platform.request_diagnostics import diagnosed, span
 
 PageRenderer = Callable[[str, str], HTMLResponse]
 
@@ -121,7 +122,8 @@ def create_fois_router(
 
     def gm_score(league_id: str, gm_id: str):
         require_enabled()
-        score = service.repository.score_for_gm(league_id, gm_id, FOIS_MODEL_VERSION)
+        with span('fois_profile_lookup'):
+            score = service.repository.score_for_gm(league_id, gm_id, FOIS_MODEL_VERSION)
         if score is None:
             raise HTTPException(404, "No FOIS score exists for this GM tenure.")
         return score
@@ -410,90 +412,99 @@ def create_fois_router(
         return page("Front Office Intelligence System", body.decode("utf-8")) if page else HTMLResponse(body)
 
     @router.get("/fois/gms/{gm_id}", response_class=HTMLResponse)
+    @diagnosed('fois_profile', activate=True, memory=True)
     async def gm_profile_page(gm_id: str, league_id: str = Query(default="")) -> HTMLResponse:
-        data = require_data()
-        selected_league = league_id.strip() or str((data.get("league") or {}).get("league_id") or "")
+        with span('fois_profile_context'):
+            data = require_data()
+            selected_league = league_id.strip() or str((data.get("league") or {}).get("league_id") or "")
         score = gm_score(selected_league, gm_id)
-        from services.team_fois_explanations import fois_explanation, strengths_context
-        from src.ui.explanations import explanation_panel
-        explanation_html = explanation_panel(fois_explanation(score, league_id=selected_league))
-        history = tuple(
-            row for row in service.repository.timeline(selected_league, gm_id)
-            if row.evaluation_kind != "current_canonical"
-        )
-        rankings = sorted(league_scores(selected_league), key=lambda row: (
-            -(row.overall_score if row.overall_score is not None else -1),
-            -row.confidence, row.gm_id or "",
-        ))
-        rank = next((index for index, row in enumerate(rankings, 1)
-                     if row.gm_id == gm_id and row.overall_score is not None), None)
-        categories = "".join(
-            f'<article class="card"><h3>{escape(item.category_name)}</h3>'
-            f'<p class="score">{item.normalized_score if item.normalized_score is not None else "Insufficient evidence"} {escape(item.letter_grade or "")}</p>'
-            f'<p>{escape(item.explanation)}</p><p>Confidence {item.confidence:.0f}% · Evidence completeness {item.completeness:.0f}%</p></article>'
-            for item in score.category_scores
-        )
-        strengths = "".join(f"<li>{escape(item)}</li>" for item in score.strengths)
-        strengths_summary = escape(strengths_context(score))
-        weaknesses = "".join(f"<li>{escape(item)}</li>" for item in score.weaknesses) or "<li>No evidence-supported weakness is established yet.</li>"
-        details = technical_details((("GM identity", score.gm_id), ("FOIS model", score.model_version), ("Brain snapshot", score.brain_snapshot_id), ("Generated", score.generated_at)))
-        activity_html = '<p>Event-level activity unavailable from this retained profile. <a href="/history">Review league history</a>.</p>'
-        if str((data.get('league') or {}).get('league_id')) == selected_league:
-            from src.core.history_context import canonical_history_store
-            from src.core.historical_memory.read_model import historical_graph
-            history_graph = historical_graph(canonical_history_store, selected_league, data)
-            activity = []
-            seen = set()
-            for reference in score.evidence_references[:25]:
-                resolved = history_graph.trade_reference(str(reference))
-                if not resolved or resolved['transaction_id'] in seen:
-                    continue
-                if score.franchise_id not in resolved['participating_franchises']:
-                    continue
-                seen.add(resolved['transaction_id'])
-                activity.append('<li><a class="ds-action" href="' + escape(resolved['url'], quote=True) + '">' + escape(resolved['label']) + '</a></li>')
-            if activity:
-                activity_html = '<p>Supported completed trades from up to 25 retained profile references. Historical actors follow season observations; exact takeover timing is not inferred. Activity links do not revalidate grades; retained historical assessments remain NOT REVALIDATED.</p><ul>' + ''.join(activity) + '</ul>'
-        historical_rows = "".join(
-            f'<li data-fois-history="true"><b>HISTORICAL SNAPSHOT</b> · {escape(row.generated_at[:10])} · '
-            f'{row.overall_score if row.overall_score is not None else "Unavailable"} {escape(row.overall_letter_grade or "")}</li>'
-            for row in reversed(history)
-        ) or "<li>No earlier meaningful FOIS snapshot is available in retained history.</li>"
-        from src.core.gm_behavioral_intelligence.models import GM_BEHAVIOR_METHOD_VERSION
-        roster_id = score.franchise_id.rsplit(":", 1)[-1]
-        profile = (data.get("gm_behavioral_intelligence") or {}).get(roster_id) or score.gm_behavioral_profile or {}
-        behavioral_html = '<p>Supported behavioral evidence unavailable. Current holdings do not establish trading preferences.</p>'
-        if (profile.get("league_id") == selected_league
-                and profile.get("gm_id") == score.gm_id
-                and profile.get("method_version") == GM_BEHAVIOR_METHOD_VERSION):
-            from src.core.history_context import canonical_history_store
-            from src.core.historical_memory.read_model import historical_graph
-            from src.ui.trade_timeline import readable_trade_reference
-            history_graph = historical_graph(canonical_history_store, selected_league, data)
-            rows = []
-            for dimension in profile.get("dimensions") or ():
-                references = "".join(f'<li>{readable_trade_reference(reference, history_graph)}</li>'
-                                     for reference in dimension.get("evidence_references") or ())
-                counts = "; ".join(f'{str(key).replace("_", " ")}: {value}'
-                                   for key, value in (dimension.get("supporting_counts") or {}).items())
-                assets = "; ".join(f'{str(key).replace("_", " ")}: {value}'
-                                   for key, value in (dimension.get("supporting_asset_counts") or {}).items())
-                rows.append(f'<details class="fois-behavior"><summary>{escape(str(dimension.get("key") or "").replace("_", " ").title())} · {escape(str(dimension.get("confidence") or "low"))} evidence confidence</summary>'
-                            f'<p>{escape(str(dimension.get("explanation") or "Unavailable"))}</p>'
-                            f'<p>{dimension.get("sample_count", 0)} independent supported transactions · coverage {dimension.get("coverage", 0):.0%}</p>'
-                            f'<p>{escape(counts)}</p>' + (f'<p>Assets within those transactions: {escape(assets)}</p>' if assets else '')
-                            + f'<ul>{references}</ul></details>')
-            behavioral_html = '<p>League-specific observations describe supported actions, not personality, skill or acceptance probabilities. Historical habits do not override your selected strategy.</p>' + "".join(rows)
-        preservation = ('<p class="notice" role="status">Retained historical assessment: these grades predate the evidence-integrity correction. They remain unchanged and have not been revalidated. Regeneration requires separate authorization.</p>'
-                        if not score.evidence_revalidated else '')
-        body = f'''<a class="back" href="/fois?league_id={escape(selected_league)}">← GM Leaderboard</a><p class="eyebrow">CURRENT GM PROFILE</p><h2>{escape(score.gm_name or "General Manager")}</h2><p>{escape(score.franchise_name or "Current franchise")}</p>
-<div class="summary-grid"><article class="metric"><b>{exact_rank(rank, sum(row.overall_score is not None for row in rankings))}</b><span>League overall FOIS rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not ranked"} {escape(score.overall_letter_grade or "")}</b><span>FOIS Score</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Confidence</span></article><article class="metric"><b>{score.completeness:.0f}%</b><span>Evidence Coverage</span></article><article class="metric"><b>{score.supported_weight:.0f}%</b><span>Supported Weight</span></article></div>
-<section class="card"><h3>Executive Summary</h3><p>{escape(score.executive_summary)}</p><p><b>Management momentum:</b> {escape(human_status(score.management_momentum))}</p><p class="muted">Completed seasons alone do not establish movement. A comparable historical momentum assessment is required.</p></section>{explanation_html}
-<div class="card-grid">{categories}</div><div class="grid"><section class="card" data-fois-strengths><h3>Top strengths</h3><p>{strengths_summary}</p>{'<ul>' + strengths + '</ul>' if strengths else ''}</section><section class="card"><h3>Improvement areas</h3><ul>{weaknesses}</ul></section></div><details class="card" data-fois-history-count="{len(history)}"><summary>GM History · {len(history)} earlier snapshot(s)</summary><ul>{historical_rows}</ul></details>{details}'''
-        body = (_availability_notice(service) + '<style>.fois-profile{min-width:0}.fois-profile .dtos-explanation li,.fois-profile .fois-behavior p,.fois-profile .fois-behavior code{overflow-wrap:anywhere;word-break:normal}.fois-behavior summary{min-height:44px;cursor:pointer}.fois-behavior summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}</style>'
-                + '<div class="fois-profile">' + preservation + body
-                + '<section class="card"><h3>Activity · completed trade evidence</h3>' + activity_html + '</section>'
-                + '<section class="card"><h3>Management behavior and evidence</h3>' + behavioral_html + '</section></div>')
-        return page(f"{score.gm_name or 'GM'} — Executive Profile", body) if page else HTMLResponse(body)
+        with span('fois_profile_aggregation'):
+            from services.team_fois_explanations import fois_explanation, strengths_context
+            from src.ui.explanations import explanation_panel
+            explanation_html = explanation_panel(fois_explanation(score, league_id=selected_league))
+            with span('fois_profile_history'):
+                history = tuple(
+                    row for row in service.repository.timeline(selected_league, gm_id)
+                    if row.evaluation_kind != "current_canonical"
+                )
+                rankings = sorted(league_scores(selected_league), key=lambda row: (
+                    -(row.overall_score if row.overall_score is not None else -1),
+                    -row.confidence, row.gm_id or "",
+                ))
+                rank = next((index for index, row in enumerate(rankings, 1)
+                             if row.gm_id == gm_id and row.overall_score is not None), None)
+            categories = "".join(
+                f'<article class="card"><h3>{escape(item.category_name)}</h3>'
+                f'<p class="score">{item.normalized_score if item.normalized_score is not None else "Insufficient evidence"} {escape(item.letter_grade or "")}</p>'
+                f'<p>{escape(item.explanation)}</p><p>Confidence {item.confidence:.0f}% · Evidence completeness {item.completeness:.0f}%</p></article>'
+                for item in score.category_scores
+            )
+            strengths = "".join(f"<li>{escape(item)}</li>" for item in score.strengths)
+            strengths_summary = escape(strengths_context(score))
+            weaknesses = "".join(f"<li>{escape(item)}</li>" for item in score.weaknesses) or "<li>No evidence-supported weakness is established yet.</li>"
+            details = technical_details((("GM identity", score.gm_id), ("FOIS model", score.model_version), ("Brain snapshot", score.brain_snapshot_id), ("Generated", score.generated_at)))
+            activity_html = '<p>Event-level activity unavailable from this retained profile. <a href="/history">Review league history</a>.</p>'
+            with span('fois_profile_activity'):
+                if str((data.get('league') or {}).get('league_id')) == selected_league:
+                    from src.core.history_context import canonical_history_store
+                    from src.core.historical_memory.read_model import historical_graph
+                    history_graph = historical_graph(canonical_history_store, selected_league, data)
+                    activity = []
+                    seen = set()
+                    for reference in score.evidence_references[:25]:
+                        resolved = history_graph.trade_reference(str(reference))
+                        if not resolved or resolved['transaction_id'] in seen:
+                            continue
+                        if score.franchise_id not in resolved['participating_franchises']:
+                            continue
+                        seen.add(resolved['transaction_id'])
+                        activity.append('<li><a class="ds-action" href="' + escape(resolved['url'], quote=True) + '">' + escape(resolved['label']) + '</a></li>')
+                    if activity:
+                        activity_html = '<p>Supported completed trades from up to 25 retained profile references. Historical actors follow season observations; exact takeover timing is not inferred. Activity links do not revalidate grades; retained historical assessments remain NOT REVALIDATED.</p><ul>' + ''.join(activity) + '</ul>'
+            historical_rows = "".join(
+                f'<li data-fois-history="true"><b>HISTORICAL SNAPSHOT</b> · {escape(row.generated_at[:10])} · '
+                f'{row.overall_score if row.overall_score is not None else "Unavailable"} {escape(row.overall_letter_grade or "")}</li>'
+                for row in reversed(history)
+            ) or "<li>No earlier meaningful FOIS snapshot is available in retained history.</li>"
+            from src.core.gm_behavioral_intelligence.models import GM_BEHAVIOR_METHOD_VERSION
+            roster_id = score.franchise_id.rsplit(":", 1)[-1]
+            profile = (data.get("gm_behavioral_intelligence") or {}).get(roster_id) or score.gm_behavioral_profile or {}
+            behavioral_html = '<p>Supported behavioral evidence unavailable. Current holdings do not establish trading preferences.</p>'
+            with span('fois_profile_behavior'):
+                if (profile.get("league_id") == selected_league
+                        and profile.get("gm_id") == score.gm_id
+                        and profile.get("method_version") == GM_BEHAVIOR_METHOD_VERSION):
+                    from src.core.history_context import canonical_history_store
+                    from src.core.historical_memory.read_model import historical_graph
+                    from src.ui.trade_timeline import readable_trade_reference
+                    history_graph = historical_graph(canonical_history_store, selected_league, data)
+                    rows = []
+                    for dimension in profile.get("dimensions") or ():
+                        references = "".join(f'<li>{readable_trade_reference(reference, history_graph)}</li>'
+                                             for reference in dimension.get("evidence_references") or ())
+                        counts = "; ".join(f'{str(key).replace("_", " ")}: {value}'
+                                           for key, value in (dimension.get("supporting_counts") or {}).items())
+                        assets = "; ".join(f'{str(key).replace("_", " ")}: {value}'
+                                           for key, value in (dimension.get("supporting_asset_counts") or {}).items())
+                        rows.append(f'<details class="fois-behavior"><summary>{escape(str(dimension.get("key") or "").replace("_", " ").title())} · {escape(str(dimension.get("confidence") or "low"))} evidence confidence</summary>'
+                                    f'<p>{escape(str(dimension.get("explanation") or "Unavailable"))}</p>'
+                                    f'<p>{dimension.get("sample_count", 0)} independent supported transactions · coverage {dimension.get("coverage", 0):.0%}</p>'
+                                    f'<p>{escape(counts)}</p>' + (f'<p>Assets within those transactions: {escape(assets)}</p>' if assets else '')
+                                    + f'<ul>{references}</ul></details>')
+                    behavioral_html = '<p>League-specific observations describe supported actions, not personality, skill or acceptance probabilities. Historical habits do not override your selected strategy.</p>' + "".join(rows)
+            with span('fois_profile_validation'):
+                availability_html = _availability_notice(service)
+                preservation = ('<p class="notice" role="status">Retained historical assessment: these grades predate the evidence-integrity correction. They remain unchanged and have not been revalidated. Regeneration requires separate authorization.</p>'
+                                if not score.evidence_revalidated else '')
+            body = f'''<a class="back" href="/fois?league_id={escape(selected_league)}">← GM Leaderboard</a><p class="eyebrow">CURRENT GM PROFILE</p><h2>{escape(score.gm_name or "General Manager")}</h2><p>{escape(score.franchise_name or "Current franchise")}</p>
+    <div class="summary-grid"><article class="metric"><b>{exact_rank(rank, sum(row.overall_score is not None for row in rankings))}</b><span>League overall FOIS rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not ranked"} {escape(score.overall_letter_grade or "")}</b><span>FOIS Score</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Confidence</span></article><article class="metric"><b>{score.completeness:.0f}%</b><span>Evidence Coverage</span></article><article class="metric"><b>{score.supported_weight:.0f}%</b><span>Supported Weight</span></article></div>
+    <section class="card"><h3>Executive Summary</h3><p>{escape(score.executive_summary)}</p><p><b>Management momentum:</b> {escape(human_status(score.management_momentum))}</p><p class="muted">Completed seasons alone do not establish movement. A comparable historical momentum assessment is required.</p></section>{explanation_html}
+    <div class="card-grid">{categories}</div><div class="grid"><section class="card" data-fois-strengths><h3>Top strengths</h3><p>{strengths_summary}</p>{'<ul>' + strengths + '</ul>' if strengths else ''}</section><section class="card"><h3>Improvement areas</h3><ul>{weaknesses}</ul></section></div><details class="card" data-fois-history-count="{len(history)}"><summary>GM History · {len(history)} earlier snapshot(s)</summary><ul>{historical_rows}</ul></details>{details}'''
+            body = (availability_html + '<style>.fois-profile{min-width:0}.fois-profile .dtos-explanation li,.fois-profile .fois-behavior p,.fois-profile .fois-behavior code{overflow-wrap:anywhere;word-break:normal}.fois-behavior summary{min-height:44px;cursor:pointer}.fois-behavior summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}</style>'
+                    + '<div class="fois-profile">' + preservation + body
+                    + '<section class="card"><h3>Activity · completed trade evidence</h3>' + activity_html + '</section>'
+                    + '<section class="card"><h3>Management behavior and evidence</h3>' + behavioral_html + '</section></div>')
+        with span('fois_profile_render'):
+            return page(f"{score.gm_name or 'GM'} — Executive Profile", body) if page else HTMLResponse(body)
 
     return router
