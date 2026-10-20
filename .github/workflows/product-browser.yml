@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+# Validation driver GC budget only; Python/Chromium and the 2 GiB gate stay intact.
+env:
+  NODE_OPTIONS: --max-old-space-size=256
+
 jobs:
   product-browser:
     runs-on: ubuntu-24.04
