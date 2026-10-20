@@ -233,7 +233,7 @@ class CheckpointPipeline:
     def _capture(self, trigger: CheckpointTrigger, **values: Any) -> None:
         self._counts["checkpoints_attempted"] += 1
         try:
-            values['timestamp'] = checkpoint_timestamp(values.get('timestamp'))
+            checkpoint_timestamp(values.get('timestamp'))
         except CheckpointTimestampError:
             self._record(trigger, 'invalid_timestamp_skips')
             return
@@ -401,6 +401,10 @@ class CheckpointPipeline:
 
     def ingest_scheduled(self, data: dict[str, Any], *, observed_at: str) -> dict[str, Any]:
         context = self._context(data, provenance=ProvenanceType.LIVE_CAPTURED)
+        try:
+            observation_at = checkpoint_timestamp(observed_at)
+        except CheckpointTimestampError:
+            observation_at = None
         week = int(data.get("week") or 1)
         league = data.get("league") or {}
         playoff_week = int((league.get("settings") or {}).get("playoff_week_start") or 15)
@@ -434,7 +438,7 @@ class CheckpointPipeline:
                 self._capture(
                     trigger, asset_id=asset_id,
                     asset_type="future_pick" if asset_id.startswith("pick:") else "player",
-                    timestamp=observed_at,
+                    timestamp=observation_at,
                     event_id=f"global:{context['season']}:{week}:{trigger.value}:{asset_id}",
                     confidence=85 if values["market_value"] is not None else 40,
                     market_observations=self._market_observations(data, asset_id),

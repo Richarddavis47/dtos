@@ -31,14 +31,18 @@ class CheckpointFlightTests(unittest.TestCase):
         for asset, value in (("player-old", 5000), ("player-new", 6000), ("player-stay", 2000)):
             self.put(asset, "2025-09-20T00:00:00Z", value)
 
-    def put(self, asset, when, value):
-        self.store.put_sparse(IntelligenceCheckpoint(
+    def put(self, asset, when, value, *, retained_legacy=False):
+        checkpoint = IntelligenceCheckpoint(
             checkpoint_id=f"{asset}-{when}", asset_id=asset, asset_type="player",
             timestamp=when, season=2025, trigger_type=CheckpointTrigger.TRADE_EXECUTION,
             provenance_type=ProvenanceType.LIVE_CAPTURED, league_id="league-a",
             market_value=value, confidence=90, evidence_completeness=EvidenceCompleteness.COMPLETE,
             model_version="fixture-v1", related_event_id=f"trade-{when}",
-        ), market_context_id="player:global")
+        )
+        if retained_legacy:
+            self.store.put(checkpoint)
+        else:
+            self.store.put_sparse(checkpoint, market_context_id="player:global")
 
     def test_sleeper_player_identity_resolves_namespaced_global_evidence(self):
         self.put('player:10213', '2025-09-20T00:00:00Z', 500)
@@ -54,7 +58,7 @@ class CheckpointFlightTests(unittest.TestCase):
 
     def test_checkpoint_asof_rejects_event_labels_and_compares_actual_instants(self):
         self.put('player:10213', '2025-09-20T02:00:00+02:00', 500)
-        self.put('player:10213', '2025-draft-event-98', 900)
+        self.put('player:10213', '2025-draft-event-98', 900, retained_legacy=True)
         with checkpoint_read_flight(self.store) as reader:
             history = HistoricalIntelligenceService(FixtureStore('league-a'), checkpoint_reader=reader)
             self.assertEqual(history.nearest_market_checkpoint(

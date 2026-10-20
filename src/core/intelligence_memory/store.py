@@ -529,7 +529,9 @@ class IntelligenceCheckpointStore:
     ) -> tuple[IntelligenceCheckpoint, bool, MarketObservationDecision, bool, bool]:
         """Commit observation, compact checkpoint, and reference as one transaction."""
         from .timestamps import checkpoint_timestamp
-        checkpoint = replace(checkpoint, timestamp=checkpoint_timestamp(checkpoint.timestamp))
+        # Validate the instant without changing retained event identity. Exact
+        # historical-resolution keys already contain this timestamp spelling.
+        checkpoint_timestamp(checkpoint.timestamp)
         with self._lock, self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             existing = connection.execute(

@@ -84,7 +84,7 @@ class IntelligenceMemoryService:
         market_observations: Iterable[SourceObservation] | None = None,
         knowledge_state: str | None = None,
     ) -> CheckpointCaptureResult:
-        timestamp = checkpoint_timestamp(timestamp)
+        checkpoint_timestamp(timestamp)
         observations = tuple(observations)
         provider_evidence = tuple(market_observations) if market_observations is not None else observations
         from types import SimpleNamespace

@@ -142,6 +142,28 @@ class PreparationTests(unittest.TestCase):
                 market_observations=rows)
             self.assertIsNone(result.checkpoint.market_value, quote)
 
+    def test_valid_retained_timestamp_identity_reuses_resolution_without_provider_calls(self):
+        from tests import test_sparse_historical_market as sparse
+        store = IntelligenceCheckpointStore(self.root / 'resolution.db')
+        for i, stamp in enumerate(('2023-10-03T00:00:00Z', '2023-10-03T00:00:00+00:00')):
+            provider = sparse.Provider((sparse.source(value=0),))
+            resolver = sparse.HistoricalMarketResolver(store, (provider,))
+            original = replace(sparse.checkpoint(event_id='same-format-' + str(i)), timestamp=stamp)
+            context = sparse.market_context_id(asset_type='player', scoring_profile_id=None)
+            _, stored, _, _ = resolver.resolve_checkpoint(original, market_context_id=context,
+                persistence=sparse.PersistenceContext('trade_execution'))
+            self.assertEqual(stored.timestamp, stamp)
+            before = store.path.read_bytes()
+            # A new resolver has no in-memory provider cache to mask a miss.
+            provider = sparse.Provider()
+            again = sparse.HistoricalMarketResolver(store, (provider,))
+            result, stored, created, _ = again.resolve_checkpoint(original, market_context_id=context,
+                persistence=sparse.PersistenceContext('trade_execution'))
+            self.assertEqual(provider.calls, 0)
+            self.assertEqual(result.selection.value, 0)
+            self.assertFalse(created)
+            self.assertEqual(store.path.read_bytes(), before)
+
 
 class ProfileTraceTests(unittest.TestCase):
     def test_actual_profile_stages_without_computation_or_private_trace_payload(self):
