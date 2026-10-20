@@ -46,6 +46,23 @@ class FOISDeltaTests(unittest.TestCase):
         actual['nested']['player'].append('local')
         self.assertEqual(operations[0][2]['player'], ['original'])
 
+    def test_owned_decode_cannot_alias_mutable_scope_before_validation(self):
+        from src.core.fois import state_delta
+        before = {**self.base, 'score_key': {'identity': 'original'}}
+        after = {**before, 'score_key': {'identity': 'foreign'}, 'process': 8}
+        storage.encode(self.db, before)
+        envelope = storage.encode(self.db, after)
+        # A forged delta has a valid target content hash and byte length, but
+        # must not use a mutable scope alias to bypass the original scope guard.
+        delta = {'base': storage.split(before)[0], 'depth': 1,
+                 'changes': state_delta.changes(json.loads(storage.split(before)[1]),
+                                                json.loads(storage.split(after)[1]))}
+        self.db.execute('UPDATE fois_semantic_states SET format=?,payload=? WHERE state_id=?',
+                        (storage.DELTA_FORMAT, zlib.compress(storage.canonical(delta).encode()),
+                         json.loads(envelope)['state_id']))
+        with self.assertRaisesRegex(ValueError, 'scope mismatch'):
+            storage.decode(self.db, envelope)
+
     def setUp(self):
         self.db = sqlite3.connect(':memory:')
         self.db.executescript(storage.SCHEMA)

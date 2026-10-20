@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 from collections import OrderedDict
+from copy import deepcopy
 import json
 import sqlite3
 import zlib
@@ -87,7 +88,9 @@ def _state(connection, identity, seen, *, verified_root=None):
             raise ValueError('Invalid FOIS delta depth')
         base = _state(connection, delta['base'], seen | {identity})
         scope = ('league_id', 'score_key', 'tenure_id', 'model_version')
-        original_scope = tuple(base.get(k) for k in scope)
+        # Scope fields are normally scalar IDs. Preserve the original guard
+        # even for malformed nested JSON identities before mutating the tree.
+        original_scope = tuple(deepcopy(base.get(k)) for k in scope)
         # Recursive decoding returns a fresh tree, never a cached/shared object.
         # Mutate only that owned tree; still verify scope, bytes and hash below.
         state = state_delta.apply(base, delta['changes'], _owned=True)
