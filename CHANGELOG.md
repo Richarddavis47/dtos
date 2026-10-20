@@ -1,3 +1,10 @@
+## v1.21.74 / build 2174 — Request-correlated reliability diagnostics
+
+- Distinguish request/account/runtime admission, transport headers, HTTPX hook work, full body transfer, JSON parsing, projection/valuation preparation, cache publication and Home/body completion with bounded, payload-free correlated clocks.
+- Observe parent/FOIS-child processes, qualified PSS/RSS and cgroup anonymous/file memory around existing heavy work. Use capped sampling and the existing hosted log sink; no new diagnostic endpoint, database, source archive, resource allowance or infrastructure.
+- Keep browser-driver heap budgeting and Python-version setup fixtures in validation only. Preserve all test coverage and the unchanged 2 GiB/500 ms gates, canonical sources, authorization, runtime ownership and FOIS cancellation/retained-grade boundaries.
+- These are diagnostic boundaries, not a claimed latency or production OOM fix. Original incident causes remain open unless new correlated evidence establishes them. Author-run evidence requires independent Scout review.
+
 ## v1.21.73 / build 2173 — Navigation ownership and bounded sync diagnostics
 
 - Reserve request ownership before a cold runtime can become evictable. Release it after the response, trim temporary active-reader overflow back to the existing warm limit, and drain cancellation through the shared hydration/eviction writer. A cancelled waiter cannot cancel another reader's hydration.

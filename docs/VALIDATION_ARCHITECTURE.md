@@ -22,6 +22,22 @@ immutable; no new screenshot archive, public DOM bundle or mirror is generated.
 Install `requirements-validation.txt` only in validation environments. Production
 uses `requirements.txt` and does not install Playwright, Pillow or Chromium.
 
+The canonical regression child and hosted product-browser workflow default Node's
+V8 old-space budget to 256 MiB. This affects validation only, preserves explicit
+caller `NODE_OPTIONS`, and does not cap total driver RSS or change the 2 GiB
+cgroup, browser coverage, assertions or application memory admission. A controlled
+Python 3.14.3 / one-CPU / 2 GiB run of the unchanged seven-viewport Trade journey
+passed with and without the budget: kernel peak fell from 1,207,013,376 to
+889,208,832 bytes, with zero OOM events. The case transferred about 194 MB of
+fixture response bodies, including large discovery responses. Node's transient
+allocations overlap a much larger Python worker late in full discovery. This
+validation observation does not identify the cause of a production OOM.
+
+Cloud setup success tests explicitly model the helper's supported Python 3.12
+environment. An independent negative control preserves rejection of unsupported
+3.11/3.14 setup. The application and supplemental regression can still be measured
+under Python 3.14; the setup helper's version guard has not been removed.
+
 `tests.test_product_browser_journey` runs actual product routers and authentication
 middleware on a temporary loopback server. Synthetic local state supplies two
 accounts and three leagues. Desktop/mobile journeys submit real A→B→A activation

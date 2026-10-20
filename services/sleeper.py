@@ -8,6 +8,7 @@ import os
 import tempfile
 import threading
 from dataclasses import asdict
+from contextlib import ExitStack
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -26,6 +27,7 @@ from src.core.projection_intelligence.service import ProjectionService
 from src.core.projection_intelligence.sleeper_provider import SleeperProjectionClient
 from src.platform.lifecycle import lifecycle_coordinator
 from src.platform.sync_diagnostics import SyncDiagnostics
+from src.platform.request_diagnostics import diagnosed, source_hooks, span
 from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence
 from services.history import player_history_evidence_batch
@@ -123,8 +125,13 @@ def save_cache(
         payload = {k: v for k, v in state.items() if not k.endswith("syncing")}
         encoder = json.JSONEncoder(separators=(",", ":"), ensure_ascii=False)
         from src.platform.cache_budget import json_admission
-        publication_bytes = sum(len(chunk.encode('utf-8')) for chunk in encoder.iterencode(payload))
-        with json_admission(cache_file, CACHE_FILE, publication_bytes), lifecycle_coordinator.phase("cache_persistence") as phase:
+        with span('cache_size'):
+            publication_bytes = sum(len(chunk.encode('utf-8')) for chunk in encoder.iterencode(payload))
+        with ExitStack() as ownership:
+            with span('cache_admission'):
+                ownership.enter_context(json_admission(cache_file, CACHE_FILE, publication_bytes))
+            with span('cache_lifecycle_wait'):
+                phase = ownership.enter_context(lifecycle_coordinator.phase('cache_persistence'))
             phase.update({
                 "serialization_state": "streaming",
                 "cache_entry_count": len(payload),
@@ -134,11 +141,14 @@ def save_cache(
                 prefix=f".{cache_file.name}.", suffix=".tmp", delete=False,
             ) as handle:
                 temporary_path = handle.name
-                for chunk in encoder.iterencode(payload):
-                    handle.write(chunk)
-                handle.flush()
-                os.fsync(handle.fileno())
-            os.replace(temporary_path, cache_file)
+                with span('cache_encode_write'):
+                    for chunk in encoder.iterencode(payload):
+                        handle.write(chunk)
+                    handle.flush()
+                with span('cache_fsync'):
+                    os.fsync(handle.fileno())
+            with span('cache_replace'):
+                os.replace(temporary_path, cache_file)
             temporary_path = None
             phase["serialization_state"] = "complete"
     except Exception as exc:  # pragma: no cover
@@ -160,6 +170,7 @@ def request_headers() -> dict[str, str]:
     return {"User-Agent": f"{APPLICATION_NAME}/{VERSION} (+Front Office OS)"}
 
 
+@diagnosed('sleeper_sync', activate=True, memory=True)
 async def _sync_sleeper(
     force_players: bool = False,
     *,
@@ -187,7 +198,7 @@ async def _sync_sleeper(
             diagnostics.mark('lifecycle_wait')
             timeout = httpx.Timeout(REQUEST_TIMEOUT)
             async with httpx.AsyncClient(
-                timeout=timeout, headers=request_headers()
+                timeout=timeout, headers=request_headers(), event_hooks=source_hooks(),
             ) as client:
                 league, users, rosters, traded_picks, drafts, nfl_state = await asyncio.gather(
                     sleeper_get(client, f"/league/{league_id}"),
@@ -562,16 +573,14 @@ async def _sync_sleeper(
                 diagnostics.mark('provider_network')
                 try:
                     if projection_payload is not None:
-                        await asyncio.to_thread(
-                            projections.publish_horizon,
-                            {matchup_week: projection_payload, **dict(projection_week_payloads)},
-                            data=state["data"],
-                            league_id=league_id,
-                            season=projection_season,
-                            current_week=matchup_week,
-                            response_bytes=projection_bytes,
-                            transport_details=projection_transport,
-                        )
+                        with span('projection_publish', memory=True):
+                            await asyncio.to_thread(
+                                projections.publish_horizon,
+                                {matchup_week: projection_payload, **dict(projection_week_payloads)},
+                                data=state["data"], league_id=league_id,
+                                season=projection_season, current_week=matchup_week,
+                                response_bytes=projection_bytes, transport_details=projection_transport,
+                            )
                     else:
                         restored = projections.restore_into(state["data"])
                         if not restored:
@@ -596,12 +605,14 @@ async def _sync_sleeper(
                 diagnostics.mark('team_strength')
                 with lifecycle_coordinator.phase("valuation_intelligence") as phase:
                     from services.player_evidence import prepare_player_production
-                    production_evidence = await asyncio.to_thread(
-                        prepare_player_production, state["data"],
-                        expected_league_id=league_id, as_of=utcnow().isoformat(),
-                    )
+                    with span('production_prepare'):
+                        production_evidence = await asyncio.to_thread(
+                            prepare_player_production, state["data"],
+                            expected_league_id=league_id, as_of=utcnow().isoformat(),
+                        )
                     state["data"]["canonical_player_production"] = production_evidence
-                    await asyncio.to_thread(build_valuation_intelligence, state["data"], state)
+                    with span('valuation_prepare'):
+                        await asyncio.to_thread(build_valuation_intelligence, state["data"], state)
                     phase["canonical_generation"] = (
                         state["data"].get("valuation_intelligence") or {}
                     ).get("generated_at")

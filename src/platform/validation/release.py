@@ -119,6 +119,9 @@ def run_release_validation(root: Path, run_id: str | None = None) -> tuple[Valid
         trace_event("validation_step_launch", step=step.name, command=step.command, run_id=run_id)
         environment = os.environ.copy()
         environment["DTOS_VALIDATION_RUN_ID"] = run_id
+        if step.name == 'Unit and regression tests':
+            from src.platform.validation.browser_memory import bounded_test_environment
+            environment = bounded_test_environment(environment)
         command = step.command
         if step.name == "Process cleanup":
             command = (*command, "--validation-run-id", run_id)

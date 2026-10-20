@@ -51,6 +51,8 @@ class SyncDiagnostics:
         now = perf_counter()
         self.phases[name] = round((now - self.checkpoint) * 1000, 3)
         self.checkpoint = now
+        from src.platform.request_diagnostics import sync_checkpoint
+        sync_checkpoint(name, self.phases[name], self.league_scope)
 
     def finish(self, *, failed: bool) -> dict:
         """Diagnostics must not turn a valid publication into a source failure."""

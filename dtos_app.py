@@ -87,6 +87,8 @@ from src.platform.observability import (
     monitor_event_loop_lag,
     runtime_metrics,
 )
+from src.platform.request_diagnostics import diagnosed
+from src.platform.memory_attribution import memory_attribution
 from src.platform.market_warming import AssetMarketWarmingMiddleware
 from src.platform.lifecycle import lifecycle_coordinator
 from src.platform.league_context import (
@@ -116,6 +118,7 @@ account_store = AccountStore(ACCOUNT_DATABASE_FILE)
 account_service = AccountService(account_store)
 
 
+@diagnosed('fois_coordination', activate=True, memory=True)
 async def _generate_fois_coordinated(data: dict[str, Any]) -> tuple[Any, ...]:
     """Run FOIS as one lifecycle-heavy flight without overlapping other phases."""
     async with intelligence_heavy_lock:
@@ -141,6 +144,7 @@ async def _generate_fois_coordinated(data: dict[str, Any]) -> tuple[Any, ...]:
             lifecycle_coordinator.release_fois_generation()
 
 
+@diagnosed('runtime_publication')
 def _publish_runtime_context(
     runtime: LeagueRuntime, projections: ProjectionService,
 ) -> CanonicalLeagueContext:
@@ -171,6 +175,7 @@ def _publish_runtime_context(
     return context
 
 
+@diagnosed('runtime_hydration', activate=True, memory=True)
 async def _hydrate_league_runtime(
     runtime: LeagueRuntime, *, prepare_history: bool = True,
 ) -> dict[str, Any]:
@@ -288,6 +293,7 @@ league_runtime_manager = LeagueRuntimeManager(
     max_warm=MAX_WARM_LEAGUE_RUNTIMES,
     hydrator=_hydrate_league_runtime,
 )
+memory_attribution.register_runtime_manager(league_runtime_manager)
 default_league_runtime = league_runtime_manager.attach_default(
     LEAGUE_ID, STATE, warm=bool(STATE.get("data")),
 )

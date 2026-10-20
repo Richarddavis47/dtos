@@ -13,6 +13,7 @@ import psutil
 
 from src.platform.validation.lifecycle import listening_pids
 from tools.validation import browser_runtime, setup_cloud
+from src.platform.validation.browser_memory import bounded_test_environment
 
 
 def connection(port=9001, pid=321, status=psutil.CONN_LISTEN, family=socket.AF_INET):
@@ -121,12 +122,24 @@ class BrowserSelectionTests(unittest.TestCase):
 
 
 class CloudSetupTests(unittest.TestCase):
+    def test_browser_heap_budget_is_scoped_to_child_environment(self):
+        supplied = {'DTOS_CACHE_FILE': 'caller-cache', 'HTTPS_PROXY': 'caller-proxy'}
+        prepared = bounded_test_environment(supplied)
+        self.assertNotIn('NODE_OPTIONS', supplied)
+        self.assertEqual(prepared['NODE_OPTIONS'], '--max-old-space-size=256')
+        self.assertEqual(prepared['DTOS_CACHE_FILE'], supplied['DTOS_CACHE_FILE'])
+        self.assertEqual(prepared['HTTPS_PROXY'], supplied['HTTPS_PROXY'])
+
+    def test_existing_node_options_remain_authoritative(self):
+        for value in ('--max-old-space-size=192', '--require caller-bootstrap', ''):
+            self.assertEqual(bounded_test_environment({'NODE_OPTIONS': value})['NODE_OPTIONS'], value)
+
     def test_existing_linux_system_browser_avoids_download_and_checks_launch(self):
         with tempfile.TemporaryDirectory() as folder:
             python = Path(folder) / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
             python.parent.mkdir()
             python.touch()
-            with patch("sys.argv", ["setup_cloud", "--venv", folder]), patch("sys.platform", "linux"), patch(
+            with patch.object(setup_cloud.sys, 'version_info', (3, 12, 0)), patch("sys.argv", ["setup_cloud", "--venv", folder]), patch("sys.platform", "linux"), patch(
                 "shutil.which", return_value="/usr/bin/chromium",
             ), patch.dict(os.environ, {}, clear=True), patch("subprocess.run") as run:
                 self.assertEqual(setup_cloud.main(), 0)
@@ -140,13 +153,25 @@ class CloudSetupTests(unittest.TestCase):
             python = Path(folder) / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
             python.parent.mkdir()
             python.touch()
-            with patch("sys.argv", ["setup_cloud", "--venv", folder]), patch(
+            with patch.object(setup_cloud.sys, 'version_info', (3, 12, 0)), patch("sys.argv", ["setup_cloud", "--venv", folder]), patch(
                 "shutil.which", return_value=None,
             ), patch.dict(os.environ, {}, clear=True), patch("subprocess.run") as run:
                 self.assertEqual(setup_cloud.main(), 0)
         commands = [call.args[0] for call in run.call_args_list]
         self.assertEqual(commands[1][1:], ["-m", "playwright", "install", "chromium"])
         self.assertIn("tools.validation.browser_runtime", commands[-1])
+
+    def test_unsupported_python_is_rejected_before_setup_or_download(self):
+        import io
+        for version in ((3, 11, 0), (3, 14, 3)):
+            with self.subTest(version=version), patch.object(setup_cloud.sys, 'version_info', version), \
+                    patch('sys.argv', ['setup_cloud']), patch('sys.stderr', new_callable=io.StringIO), \
+                    patch('subprocess.run') as run, patch('venv.EnvBuilder') as builder:
+                with self.assertRaises(SystemExit) as error:
+                    setup_cloud.main()
+                self.assertEqual(error.exception.code, 2)
+                run.assert_not_called()
+                builder.assert_not_called()
 
 
 if __name__ == "__main__":
