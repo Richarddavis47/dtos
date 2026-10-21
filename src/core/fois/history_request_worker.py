@@ -30,19 +30,24 @@ def produce(spec, stream):
         'brain_snapshot_id': score.brain_snapshot_id,
         'brain_version': score.brain_version,
         'generation_timestamp': score.generated_at,
-        'confidence': score.confidence, 'completeness': score.completeness,
-        'evidence_state': ('retained_not_revalidated' if spec['retained'] else score.evidence_state)}
-    if spec['kind'] == 'profile':
-        tenure = repository.tenure_for_gm(league_id, gm_id)
-        metadata.update(profile=jsonable_encoder(score), tenure=jsonable_encoder(tenure),
-            takeover=jsonable_encoder(repository.takeover(tenure.tenure_id)) if tenure else None)
+        'confidence': score.confidence, 'completeness': score.completeness}
+    metadata.pop('evidence_state', None)
 
     def encoded(value):
         return json.dumps(value, ensure_ascii=False, allow_nan=False, separators=(',', ':')).encode()
 
-    # Match the existing JSONResponse wire representation, without retaining
-    # the complete tuple or a second full jsonable_encoder object graph.
-    stream.write(encoded(metadata)[:-1])
+    # Private bounded envelope, not part of the HTTP body. The parent finalizes
+    # only this small prefix at header publication, never decoding bulk history.
+    stream.write(encoded({'metadata': metadata, 'league_id': league_id, 'gm_id': gm_id,
+        'evidence_state': 'retained_not_revalidated' if spec['retained'] else score.evidence_state}) + b'\n')
+    if spec['kind'] == 'profile':
+        tenure = repository.tenure_for_gm(league_id, gm_id)
+        profile = {'profile': jsonable_encoder(score), 'tenure': jsonable_encoder(tenure),
+            'takeover': jsonable_encoder(repository.takeover(tenure.tenure_id)) if tenure else None}
+        stream.write(b',' + encoded(profile)[1:-1])
+
+    # Preserve the complete verified JSON body without retaining a full tuple
+    # or a second full jsonable_encoder object graph.
     key = b',"history":[' if spec['kind'] == 'profile' else b',"timeline":['
     stream.write(key)
     first = True

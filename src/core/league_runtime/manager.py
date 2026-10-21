@@ -62,6 +62,10 @@ class LeagueRuntime:
     owns_state: bool = True
     error: str | None = None
     background_tasks: set[asyncio.Task[Any]] = field(default_factory=set, repr=False)
+    # Only qualification publication/header handoff uses this per-league lock;
+    # historical reconstruction, serialization and provider work stay outside.
+    fois_publication_lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False)
+    fois_publication_revision: int = 0
 
     def touch(self) -> None:
         self.last_access_at = _utcnow()

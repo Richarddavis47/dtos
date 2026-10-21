@@ -21,7 +21,7 @@ from src.ui.intelligence_presentation import exact_rank, human_status, technical
 from src.platform.account_context import current_account
 from src.platform.league_context import current_league_context
 from src.core.fois.process_execution import FOISExecutionBusy
-from src.core.fois.history_execution import HistoryResponse
+from src.core.fois.history_execution import HistoryPublication, HistoryResponse
 from src.platform.request_diagnostics import diagnosed, span
 
 PageRenderer = Callable[[str, str], HTMLResponse]
@@ -211,7 +211,8 @@ def create_fois_router(
         context = current_league_context()
         return HistoryResponse(database=service.repository.path, league_id=league_id,
             gm_id=gm_id, kind=kind, metadata=_metadata(),
-            retained=context is not None and context.fois_state != 'ready')
+            retained=context is not None and context.fois_state != 'ready',
+            publication=HistoryPublication(context, league_id))
 
     @router.get("/api/fois/leagues/{league_id}/health")
     async def league_health(league_id: str) -> dict[str, Any]:
