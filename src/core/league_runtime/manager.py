@@ -86,6 +86,20 @@ class LeagueRuntime:
         )
         self.touch()
 
+    async def publish_source(self, data: dict[str, Any]) -> None:
+        """Commit a sync-thread source on its owning request loop.
+
+        Provider preparation never holds this lock. Record rollback transitions
+        too: restoring the same pointer must not erase an intervening source.
+        """
+        async with self.fois_publication_lock:
+            changed = self.state.get('data') is not data
+            self.apply_data(data)
+            if changed:
+                self.fois_publication_revision += 1
+                if self.canonical_context is not None:
+                    self.canonical_context.fois_state = 'pending'
+
     @diagnosed('runtime_eviction', memory=True)
     async def close(self) -> None:
         self.status = RuntimeState.EVICTING
@@ -258,7 +272,8 @@ class LeagueRuntimeManager:
                 raise LeagueRuntimeError("No league runtime hydrator is configured.")
             result = await self._hydrator(runtime)
             if isinstance(result, dict):
-                runtime.apply_data(result)
+                async with runtime.fois_publication_lock:
+                    runtime.apply_data(result)
             elif isinstance(result, LeagueRuntime) and result is not runtime:
                 raise LeagueRuntimeError("Hydrator must update the runtime it was given.")
             if not runtime.state.get("data"):

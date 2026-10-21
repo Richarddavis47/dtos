@@ -11,7 +11,7 @@ from dataclasses import asdict
 from contextlib import ExitStack
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 import httpx
 
@@ -166,6 +166,7 @@ async def _sync_sleeper(
     league_id: str = LEAGUE_ID,
     state: dict[str, Any] = STATE,
     projections: ProjectionService = projection_service,
+    publish_data: Callable[[dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Fetch and normalize one explicitly identified Sleeper league state."""
     diagnostics = SyncDiagnostics(league_id)
@@ -492,7 +493,7 @@ async def _sync_sleeper(
             from src.core.valuation.normalization import prepare_market_normalization
             await asyncio.to_thread(prepare_market_normalization, market_data)
             diagnostics.mark('market_normalization')
-            state["data"] = {
+            candidate = {
                 "league": league,
                 "scoring_settings": league.get("scoring_settings") or {},
                 "league_settings": league.get("settings") or {},
@@ -516,6 +517,10 @@ async def _sync_sleeper(
                 "market_data": market_data,
                 **retained_history,
             }
+            if publish_data is None:
+                state['data'] = candidate
+            else:
+                publish_data(candidate)
             # Drop synchronization-only references before provider, valuation,
             # and persistence phases allocate their own bounded working sets.
             del previous_data, retained_history, cached_players
@@ -633,7 +638,10 @@ async def _sync_sleeper(
             # Candidate construction mutates process-local working state before
             # the final durable cache publication. Any uncaught preparation
             # failure must restore the exact last-valid read generation.
-            state["data"] = last_valid["data"]
+            if publish_data is None:
+                state['data'] = last_valid['data']
+            else:
+                publish_data(last_valid['data'])
             state["last_sync"] = last_valid["last_sync"]
             state["transactions_last_sync"] = last_valid["transactions_last_sync"]
             state["transactions_last_error"] = last_valid["transactions_last_error"]
@@ -647,11 +655,10 @@ async def _sync_sleeper(
         return state
 
 
-async def sync_sleeper(force_players: bool = False) -> dict[str, Any]:
+async def sync_sleeper(force_players: bool = False, *, publish_data=None) -> dict[str, Any]:
     """Synchronize Sleeper without blocking the application event loop."""
-    return await asyncio.to_thread(
-        lambda: asyncio.run(_sync_sleeper(force_players=force_players)),
-    )
+    return await sync_sleeper_league(LEAGUE_ID, STATE, force_players=force_players,
+                                    projections=projection_service, publish_data=publish_data)
 
 
 async def sync_sleeper_league(
@@ -660,22 +667,40 @@ async def sync_sleeper_league(
     *,
     force_players: bool = False,
     projections: ProjectionService | None = None,
+    publish_data: Callable[[dict[str, Any]], Awaitable[None]] | None = None,
 ) -> dict[str, Any]:
     """Synchronize a league without replacing process-global league state."""
     service = projections or ProjectionService(league_id=str(league_id))
+    loop = asyncio.get_running_loop()
+
+    def commit(data):
+        # Only the sync worker waits here. Never acquire an asyncio lock from
+        # the worker's private loop or block the request-serving event loop.
+        asyncio.run_coroutine_threadsafe(publish_data(data), loop).result()
+
     worker = asyncio.create_task(asyncio.to_thread(
         lambda: asyncio.run(_sync_sleeper(
             force_players=force_players,
             league_id=str(league_id),
             state=state,
             projections=service,
+            publish_data=commit if publish_data is not None else None,
         )),
     ))
     try:
         return await asyncio.shield(worker)
     except asyncio.CancelledError:
         # Eviction/shutdown cannot abandon a still-writing league sync thread.
-        await asyncio.gather(worker, return_exceptions=True)
+        while not worker.done():
+            try:
+                await asyncio.shield(worker)
+            except asyncio.CancelledError:
+                continue
+            except Exception:
+                break
+        # Observe a failed worker without replacing the caller's cancellation.
+        if not worker.cancelled():
+            worker.exception()
         raise
 
 
@@ -727,35 +752,35 @@ async def sync_transactions(
 
 
 
-async def ensure_data_fresh() -> None:
+async def ensure_data_fresh(*, publish_data=None) -> None:
     """Queue a cached Sleeper refresh without delaying the calling route."""
     if not STATE.get("data"):
-        start_sleeper_sync(force_players=True)
+        start_sleeper_sync(force_players=True, publish_data=publish_data)
         return
     last_sync = STATE.get("last_sync")
     if not last_sync:
-        start_sleeper_sync()
+        start_sleeper_sync(publish_data=publish_data)
         return
     try:
         age = utcnow() - datetime.fromisoformat(last_sync)
     except (TypeError, ValueError):
-        start_sleeper_sync()
+        start_sleeper_sync(publish_data=publish_data)
         return
     if age > timedelta(minutes=SYNC_MINUTES):
-        start_sleeper_sync()
+        start_sleeper_sync(publish_data=publish_data)
 
 
 _SLEEPER_SYNC_TASK: asyncio.Task[dict[str, Any]] | None = None
 
 
 def start_sleeper_sync(
-    *, force_players: bool = False,
+    *, force_players: bool = False, publish_data=None,
 ) -> asyncio.Task[dict[str, Any]]:
     """Return the one tracked in-process refresh task for this app worker."""
     global _SLEEPER_SYNC_TASK
     if _SLEEPER_SYNC_TASK is None or _SLEEPER_SYNC_TASK.done():
         _SLEEPER_SYNC_TASK = asyncio.create_task(
-            sync_sleeper(force_players=force_players),
+            sync_sleeper(force_players=force_players, publish_data=publish_data),
             name="dtos-sleeper-sync",
         )
     return _SLEEPER_SYNC_TASK

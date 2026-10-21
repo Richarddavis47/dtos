@@ -1,0 +1,23 @@
+# Sleeper source publication integrity
+
+Baseline: v1.21.80/build 2180, `10b880faed27c45fb7916eab3240a35761980e0f` (the supplied abbreviated commit was reconciled against main and deployed readiness). Scope: the actual background-thread source replacement versus historical HTTP qualification/header and first-body publication.
+
+## Reproduction and cause
+
+The real `services.sleeper._sync_sleeper` installed a replacement in the authoritative state from its private thread/loop. The later locked `runtime.apply_data` in application hydration was too late. A historical response could already hold the per-runtime publication lock and have classified its admitted evidence CURRENT when the worker installed B. The same bypass existed for rollback; restoring A's pointer without advancing a publication revision concealed A→B→A.
+
+The deterministic disposable control uses real `sync_sleeper_league`/`_sync_sleeper`, provider input fixtures and a post-installation preparation barrier. It does not substitute a cooperative mock writer. Exact baseline controls record B installed at both the successful-header and first-body boundaries while the response says current, for timeline and profile. A completed rollback before final qualification also left current unchanged. Initial host-sandbox fixture attempts with delayed cross-thread wakeups are preserved as unsuccessful setup evidence; only completed isolated runs establish the reproduction.
+
+## Correction and ownership
+
+`LeagueRuntime.publish_source` acquires its existing asynchronous publication lock on the owning application loop, validates league identity via `apply_data`, installs the source and advances the FOIS revision/marks pending on a changed pointer. The real sync worker submits only this short commit with `run_coroutine_threadsafe` and waits in the worker thread. Acquisition, parsing, normalization, projection/valuation preparation and cache writes do not hold the publication lock. Both installation and rollback use the same callback. The configured-default wrappers, no-data recovery and selected-league hydrator supply their actual runtime owner; initial manager/application data applications also honor the lock.
+
+Lock order: the sync worker may own its existing per-league sync/lifecycle phase while waiting for the owner-loop commit. The commit acquires only the per-runtime publication lock and performs no waits for provider, lifecycle or worker completion. A historical response holds that lock only through qualification, successful headers and the bounded first prefix, under its existing output timeout. Bulk output remains outside the publication lock, inside the unchanged single-heavy-response resource lease. There is no new global lock, queue, executor or cross-request cache.
+
+Cancellation drains the shielded sync writer, including repeated cancellation, before caller ownership can end. Failure rollback advances revision when it changes the source; it never restores current qualification merely by restoring the pointer. The subsequent existing supported FOIS compatibility/refresh rules decide whether any evidence becomes genuinely current. No scoring-methodology change, retained-grade regeneration, schema or new persistent record is introduced.
+
+## Acceptance evidence
+
+`tests/test_sleeper_history_publication.py` exercises real-thread transitions before qualification, during headers and first-body handoff, failure rollback, distinct runtime ownership, rejected foreign data, repeated cancellation and all application sync entry points. `tests/test_fois_history_qualification.py` preserves stable/current, retained/unavailable, concurrent requests, child reconstruction/serialization, deferred headers, output cancellation, error/retry and account authority controls. Complete stable-history equivalence and bounded external liveness/memory controls remain release requirements.
+
+Exact final source identities, logs, canonical gates, resource results and deployment belong in the sanitized evidence handoff. Author-operated controls are not independent Scout verification. No claims are made about historical production OOM, the original cold-Home gap, production FOIS profile speed, physical Safari or large-scale capacity.
