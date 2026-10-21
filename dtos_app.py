@@ -871,9 +871,10 @@ async def sync_current_league(*, force_players: bool = False) -> dict[str, Any]:
 async def sync_current_transactions() -> bool:
     context = current_league_context()
     if context is None or context.league_id == LEAGUE_ID:
-        return await sync_transactions()
+        return await sync_transactions(publish_data=default_league_runtime.publish_transactions)
     result = await sync_transactions(
         state=context.state, league_id=context.league_id,
+        publish_data=context.runtime.publish_transactions,
     )
     if result:
         async with context.runtime.fois_publication_lock:

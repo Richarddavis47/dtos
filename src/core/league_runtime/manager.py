@@ -100,6 +100,21 @@ class LeagueRuntime:
                 if self.canonical_context is not None:
                     self.canonical_context.fois_state = 'pending'
 
+    async def publish_transactions(self, data: dict[str, Any], transactions: list, week: int) -> None:
+        """Update shared transaction containers at the same publication boundary.
+
+        Keep existing consumer aliases; never restore a stale roster captured
+        before network acquisition or mutate the source during HTTP handoff.
+        """
+        async with self.fois_publication_lock:
+            if self.state.get('data') is not data:
+                raise LeagueRuntimeError('League source advanced during preparation; retry the refresh.')
+            data['transactions'] = transactions
+            data.setdefault('season_transactions', {})[str(week)] = transactions
+            self.fois_publication_revision += 1
+            if self.canonical_context is not None:
+                self.canonical_context.fois_state = 'pending'
+
     @diagnosed('runtime_eviction', memory=True)
     async def close(self) -> None:
         self.status = RuntimeState.EVICTING

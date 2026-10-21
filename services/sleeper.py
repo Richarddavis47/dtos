@@ -706,6 +706,7 @@ async def sync_sleeper_league(
 
 async def sync_transactions(
     *, state: dict[str, Any] = STATE, league_id: str = LEAGUE_ID,
+    publish_data: Callable[..., Awaitable[None]] | None = None,
 ) -> bool:
     """Refresh only the cached transaction list from Sleeper."""
     transaction_lock = _LEAGUE_TRANSACTION_LOCKS.setdefault(
@@ -727,8 +728,13 @@ async def sync_transactions(
                 transactions = await sleeper_get(
                     client, f"/league/{league_id}/transactions/{week}"
                 )
-            data["transactions"] = transactions
-            data.setdefault('season_transactions', {})[str(week)] = transactions
+            if publish_data is not None:
+                # Only the bounded source mutation holds the owner lock;
+                # network, checkpoints and persistence stay outside it.
+                await publish_data(data, transactions, week)
+            else:
+                data['transactions'] = transactions
+                data.setdefault('season_transactions', {})[str(week)] = transactions
             from src.core.history_context import canonical_history_store
             canonical_history_store.update_current(league_id, data)
             state["transactions_last_sync"] = utcnow().isoformat()

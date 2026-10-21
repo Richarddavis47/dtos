@@ -230,3 +230,75 @@ class SleeperHistoryPublicationTests(IsolatedAsyncioTestCase):
             await sleeper.ensure_data_fresh(publish_data=self.runtime.publish_source)
             self.assertTrue(start.call_args.kwargs['force_players'])
             self.assertIs(start.call_args.kwargs['publish_data'].__self__, self.runtime)
+
+    async def test_actual_transaction_refresh_cannot_mutate_source_during_prefix(self):
+        import dtos_app
+        for suffix in ('/timeline', ''):
+            with self.subTest(api=suffix), ExitStack() as stack:
+                entered, resume, acquired = asyncio.Event(), asyncio.Event(), asyncio.Event()
+                self.runtime.state['data'] = {'league': {'league_id': 'A'}, 'transactions': []}
+                old = self.runtime.state['data']
+                self.context.fois_state = 'ready'
+                self.context.state = self.runtime.state
+                self.context.refresh_generations = lambda: self.runtime.source_generations.update(transactions='B')
+
+                async def get(client, path):
+                    acquired.set()
+                    return [{'transaction_id': 'B', 'status': 'complete'}]
+
+                stack.enter_context(patch.object(sleeper, 'sleeper_get', side_effect=get))
+                stack.enter_context(patch('src.core.history_context.canonical_history_store.update_current'))
+                stack.enter_context(patch('src.core.intelligence_memory.checkpoint_pipeline.ingest_transactions'))
+                stack.enter_context(patch.object(sleeper, 'save_cache'))
+
+                async def app(scope, receive, send):
+                    first = True
+                    async def handoff(message):
+                        nonlocal first
+                        if message['type'] == 'http.response.body' and first:
+                            first = False
+                            entered.set()
+                            await resume.wait()
+                        await send(message)
+                    await self.app(scope, receive, handoff)
+
+                async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://fixture') as client:
+                    request = asyncio.create_task(client.get('/api/fois/leagues/A/gms/gm' + suffix))
+                    await asyncio.wait_for(entered.wait(), 10)
+                    writer = asyncio.create_task(dtos_app.sync_current_transactions())
+                    try:
+                        await asyncio.wait_for(acquired.wait(), 10)
+                        # The real producer has reached its first suspension
+                        # after retrieval: publication or post-mutation work.
+                        self.assertEqual(old['transactions'], [])
+                        self.assertIs(self.runtime.state['data'], old)
+                        resume.set()
+                        response = await request
+                        self.assertTrue(await writer)
+                        self.assertEqual(response.json()['evidence_state'], 'current')
+                        self.assertIs(self.runtime.state['data'], old)
+                        self.assertEqual(old['transactions'][0]['transaction_id'], 'B')
+                        self.assertEqual(self.context.fois_state, 'pending')
+                    finally:
+                        resume.set()
+                        await asyncio.gather(request, writer, return_exceptions=True)
+
+    async def test_transaction_source_advanced_during_fetch_is_not_overwritten(self):
+        newer = {'league': {'league_id': 'A'}, 'roster_generation': 'newer'}
+        self.runtime.state['data']['transactions'] = []
+        prior = self.runtime.state['data']
+
+        async def get(client, path):
+            await self.runtime.publish_source(newer)
+            return [{'transaction_id': 'late', 'status': 'complete'}]
+
+        with patch.object(sleeper, 'sleeper_get', side_effect=get), \
+                patch('src.core.history_context.canonical_history_store.update_current') as history, \
+                patch.object(sleeper, 'save_cache') as save:
+            result = await sleeper.sync_transactions(state=self.runtime.state, league_id='A',
+                                                     publish_data=self.runtime.publish_transactions)
+        self.assertFalse(result)
+        self.assertIs(self.runtime.state['data'], newer)
+        self.assertEqual(prior['transactions'], [])
+        history.assert_not_called()
+        save.assert_not_called()
