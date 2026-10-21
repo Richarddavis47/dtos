@@ -1,3 +1,11 @@
+## v1.21.81 / build 2181 — Sleeper source publication integrity
+
+- Commit live Sleeper sync-thread source replacements and rollback through the owning event loop and existing per-runtime historical-publication lock. Provider acquisition and preparation stay outside the short critical section.
+- Invalidate current FOIS qualification on source replacement and preserve a monotonic publication revision through rollback, so restoring an earlier pointer cannot erase an intervening source transition. No historical grade regeneration or grading changes.
+- Wire configured-default, cold-recovery and selected-league synchronization through the same owner. Drain repeated cancellation until the source writer retires; preserve bounded historical admission, response serialization ownership and cleanup.
+- Protect the independently reproduced transaction-only source mutation with the same per-runtime boundary. Preserve shared consumer references and reject a fetch superseded by a full source replacement.
+- Deterministic real-worker controls reproduce the build 2180 timeline/profile header and first-body race, then verify ordered publication, rollback qualification, account/league isolation and cancellation. No schema, cache-limit or infrastructure changes. Historical production OOM, cold-Home delay and sustained scale remain open.
+
 ## v1.21.80 / build 2180 — Historical publication integrity
 
 - Pin the admitted league context, source generations and FOIS publication revision for full-history profile and timeline responses. Recheck qualification immediately before committing successful response headers; superseded verified evidence is RETAINED / NOT REVALIDATED, and lost or incompatible league contexts fail safely with retryable unavailability.

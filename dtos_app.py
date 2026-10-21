@@ -50,8 +50,8 @@ from services.sleeper import (
     STATE,
     ensure_data_fresh,
     load_cache,
-    start_sleeper_sync,
-    sync_sleeper,
+    start_sleeper_sync as _start_sleeper_sync,
+    sync_sleeper as _sync_sleeper,
     sync_sleeper_league,
     sync_transactions,
 )
@@ -184,6 +184,7 @@ async def _hydrate_league_runtime(
     await sync_sleeper_league(
         runtime.league_id, runtime.state, force_players=False,
         projections=projections,
+        publish_data=runtime.publish_source,
     )
     data = runtime.state.get("data") or {}
     if not data:
@@ -306,6 +307,16 @@ default_league_runtime.market_context = asset_market_cache
 runtime_state = RuntimeStateProxy(STATE)
 
 
+def start_sleeper_sync(*, force_players: bool = False):
+    return _start_sleeper_sync(force_players=force_players,
+                              publish_data=default_league_runtime.publish_source)
+
+
+async def sync_sleeper(force_players: bool = False):
+    return await _sync_sleeper(force_players=force_players,
+                               publish_data=default_league_runtime.publish_source)
+
+
 def _resource_context_snapshot() -> dict[str, Any]:
     lifecycle = lifecycle_coordinator.snapshot()
     manager = league_runtime_manager.health()
@@ -378,7 +389,7 @@ async def ensure_fresh() -> None:
     if not lifecycle_coordinator.startup_complete():
         return
     if not STATE.get("data"):
-        await ensure_data_fresh()
+        await ensure_data_fresh(publish_data=default_league_runtime.publish_source)
 
 
 async def background_sync() -> None:
@@ -643,7 +654,8 @@ async def lifespan(_: FastAPI):
     load_cache()
     default_runtime = league_runtime_manager.resident(LEAGUE_ID)
     if default_runtime is not None and STATE.get("data"):
-        default_runtime.apply_data(STATE["data"])
+        async with default_runtime.fois_publication_lock:
+            default_runtime.apply_data(STATE["data"])
         default_runtime.status = RuntimeState.WARM
     if STATE.get("data"):
         projection_service.restore_into(STATE["data"])
@@ -859,9 +871,10 @@ async def sync_current_league(*, force_players: bool = False) -> dict[str, Any]:
 async def sync_current_transactions() -> bool:
     context = current_league_context()
     if context is None or context.league_id == LEAGUE_ID:
-        return await sync_transactions()
+        return await sync_transactions(publish_data=default_league_runtime.publish_transactions)
     result = await sync_transactions(
         state=context.state, league_id=context.league_id,
+        publish_data=context.runtime.publish_transactions,
     )
     if result:
         async with context.runtime.fois_publication_lock:

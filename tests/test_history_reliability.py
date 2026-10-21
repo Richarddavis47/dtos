@@ -540,7 +540,8 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
         sleeper_service._SLEEPER_SYNC_TASK = None
         release = asyncio.Event()
 
-        async def blocked_sync(force_players: bool = False) -> dict[str, Any]:
+        async def blocked_sync(force_players: bool = False, *, publish_data=None) -> dict[str, Any]:
+            self.assertIsNone(publish_data)  # This standalone fixture has no runtime publisher.
             await release.wait()
             return sleeper_service.STATE
 
@@ -563,7 +564,12 @@ class HistoryReliabilityTests(unittest.IsolatedAsyncioTestCase):
     async def test_sleeper_sync_worker_does_not_starve_request_loop(self) -> None:
         import services.sleeper as sleeper_service
 
-        async def blocking_worker(force_players: bool = False) -> dict[str, Any]:
+        async def blocking_worker(force_players: bool = False, *, league_id, state,
+                                  projections, publish_data) -> dict[str, Any]:
+            self.assertEqual(league_id, sleeper_service.LEAGUE_ID)
+            self.assertIs(state, sleeper_service.STATE)
+            self.assertIs(projections, sleeper_service.projection_service)
+            self.assertIsNone(publish_data)
             time.sleep(.2)
             return {"force_players": force_players}
 

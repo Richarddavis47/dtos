@@ -27,6 +27,7 @@ def ensure_fois_refresh(runtime: LeagueRuntime, generate: Callable[[dict[str, An
             if context is not None:
                 context.fois_state = 'pending'
             runtime.fois_publication_revision += 1
+            publication_revision = runtime.fois_publication_revision
         try:
             scores = await generate(data)
         except asyncio.CancelledError:
@@ -45,7 +46,8 @@ def ensure_fois_refresh(runtime: LeagueRuntime, generate: Callable[[dict[str, An
                 runtime.fois_publication_revision += 1
         else:
             async with runtime.fois_publication_lock:
-                compatible = runtime.state.get('data') is data and runtime.source_generations == generations
+                compatible = (runtime.state.get('data') is data and runtime.source_generations == generations
+                              and runtime.fois_publication_revision == publication_revision)
                 state = 'ready' if scores and compatible else 'retained' if scores or retained else 'unavailable'
                 runtime.lifecycle['fois_generation'] = 'complete' if compatible else 'superseded'
                 runtime.lifecycle.pop('fois_error_type', None)

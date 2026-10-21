@@ -1,3 +1,11 @@
+## v1.21.81 / build 2181 — Sleeper source publication integrity
+
+Sleeper background synchronization now installs replacement source data, including failure rollback, under the same per-runtime boundary that qualifies and publishes complete historical responses. Heavy source work remains outside that boundary. Source transitions mark existing FOIS evidence pending and advance its publication revision; restoring an old source pointer cannot silently make an in-flight historical response current again.
+
+Configured-default, selected-league and cold-recovery sync paths share this protocol. Repeated cancellation drains the writing thread before ownership is released. Complete history, source identities, historical grading, request bounds and the 2 GiB/500 ms contracts remain unchanged. Deterministic controls use the real Sleeper sync thread and both historical HTTP APIs. Independent Scout acceptance is required; this release does not establish production OOM resolution, cold-Home attribution or sustained multi-league capacity.
+
+The transaction-only refresh also commits its bounded source mutation through the same runtime boundary, preserving shared consumer references. A fetch based on an older source cannot overwrite or modify a newer source after a concurrent full synchronization.
+
 ## v1.21.80 / build 2180 — Historical publication integrity
 
 - Pin the admitted league context, source generations and FOIS publication revision for full-history profile and timeline responses. Recheck qualification immediately before committing successful response headers; superseded verified evidence is RETAINED / NOT REVALIDATED, and lost or incompatible league contexts fail safely with retryable unavailability.
