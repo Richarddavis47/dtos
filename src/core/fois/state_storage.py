@@ -99,10 +99,8 @@ def _state(connection, identity, seen, *, verified_root=None):
         raw = canonical(state).encode()
     if len(raw) != row[2] or hashlib.sha256(FORMAT.encode() + b'\n' + raw).hexdigest() != identity:
         raise ValueError('Corrupt FOIS semantic state')
-    # The final parse also normalizes JSON key types after applying a retained
-    # delta. A valid content hash alone does not guarantee the in-memory tree
-    # has canonical JSON types (e.g. a noncanonical numeric object-path key).
-    state = json.loads(raw)
+    if row[0] == FORMAT:
+        state = json.loads(raw)
     if str(state.get('league_id') or '') != row[3]:
         raise ValueError('FOIS state league mismatch')
     if verified_root is not None:

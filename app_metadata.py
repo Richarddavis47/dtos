@@ -9,7 +9,7 @@ from pathlib import Path
 APPLICATION_NAME = "DTOS"
 VERSION = "1.21.78"
 BUILD_NUMBER = 2178
-RELEASE_CODENAME = "Canonical History Decode Semantics"
+RELEASE_CODENAME = "Historical Delta Integrity"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

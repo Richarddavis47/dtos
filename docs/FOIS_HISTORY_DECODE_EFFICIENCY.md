@@ -9,14 +9,15 @@ change the full timeline/profile APIs. Current-snapshot classification and exact
 observation metadata use the same boundary as full reads.
 
 Delta bases are freshly deserialized, privately owned JSON trees. Only this
-internal reader uses owned delta application. The general delta API still copies
-its arguments. Scope identities are captured before mutation and checked after
+internal reader uses owned delta application with shallow copy-on-write staging
+of changed ancestors. Object paths require exact string keys; list paths require
+exact nonnegative integer indices (never booleans). Path/container validation
+precedes staged mutation, so rejected batches cannot change the base, operation
+values or a memoized root. The general delta API still copies its arguments.
+Scope identities are captured before application and checked after
 application; dependency cycle/depth, decompression, serialized byte count, SHA
 identity and league validation remain mandatory. The already constructed JSON
-tree need not be deep-copied. The final parse remains necessary to return
-canonical JSON types even for noncanonical retained paths with a valid target
-hash. Removing that normalization was caught by an additional adversarial
-control after v1.21.77; v1.21.78 restores it. Nested unknown
+tree need not be copied and reparsed after canonical verification. Nested unknown
 fields, missing/null/zero, transaction and pick identity are not transformed.
 
 The existing eight-root/8 MiB serialized-byte LRU is unchanged. It lasts for one

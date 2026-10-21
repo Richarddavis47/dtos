@@ -16,6 +16,7 @@ from src.core.fois.models import FOIS_MODEL_VERSION
 from src.core.fois.registry import DEFAULT_METRIC_REGISTRY
 from src.core.fois.render_cache import FOISRenderCache
 from src.core.fois.service import FOISService, fois_enabled
+from src.core.fois.state_delta import InvalidDeltaError
 from src.ui.intelligence_presentation import exact_rank, human_status, technical_details
 from src.platform.account_context import current_account
 from src.platform.league_context import current_league_context
@@ -128,6 +129,14 @@ def create_fois_router(
             raise HTTPException(404, "No FOIS score exists for this GM tenure.")
         return score
 
+    def retained_history(league_id: str, gm_id: str, *, summarize=False):
+        read = service.repository.timeline_summary if summarize else service.repository.timeline
+        try:
+            return read(league_id, gm_id)
+        except InvalidDeltaError as exc:
+            raise HTTPException(503, 'FOIS history is unavailable because of an invalid retained delta. '
+                                'Historical grades have not been revalidated.') from exc
+
     @router.get("/api/fois")
     async def root() -> dict[str, Any]:
         return {**_metadata(), "status": _generation_status(service),
@@ -192,7 +201,7 @@ def create_fois_router(
     async def gm(league_id: str, gm_id: str) -> dict[str, Any]:
         score = gm_score(league_id, gm_id)
         tenure = service.repository.tenure_for_gm(league_id, gm_id)
-        timeline = service.repository.timeline(league_id, gm_id)
+        timeline = retained_history(league_id, gm_id)
         return {**_metadata(score), "profile": jsonable_encoder(score),
                 "tenure": jsonable_encoder(tenure),
                 "takeover": jsonable_encoder(service.repository.takeover(tenure.tenure_id)) if tenure else None,
@@ -204,7 +213,7 @@ def create_fois_router(
     @router.get("/api/fois/leagues/{league_id}/gms/{gm_id}/timeline")
     async def timeline(league_id: str, gm_id: str) -> dict[str, Any]:
         score = gm_score(league_id, gm_id)
-        return {**_metadata(score), "timeline": jsonable_encoder(service.repository.timeline(league_id, gm_id))}
+        return {**_metadata(score), "timeline": jsonable_encoder(retained_history(league_id, gm_id))}
 
     @router.get("/api/fois/leagues/{league_id}/health")
     async def league_health(league_id: str) -> dict[str, Any]:
@@ -424,7 +433,7 @@ def create_fois_router(
             explanation_html = explanation_panel(fois_explanation(score, league_id=selected_league))
             with span('fois_profile_history'):
                 history = tuple(
-                    row for row in service.repository.timeline_summary(selected_league, gm_id)
+                    row for row in retained_history(selected_league, gm_id, summarize=True)
                     if row.evaluation_kind != "current_canonical"
                 )
                 with span('fois_profile_rankings'):
