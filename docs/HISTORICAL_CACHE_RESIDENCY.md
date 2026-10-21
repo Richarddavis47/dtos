@@ -1,6 +1,12 @@
 # Retained-season memory residency
 
-The process-wide `SleeperSeasonCache` is independent of the league runtime
+All production consumers now share the canonical history store’s single
+`SleeperSeasonCache`: history services, intelligence-memory compatibility
+exports, GM observations and the default Weekly Report router. Explicit
+disposable cache injection remains available for tests. The former duplicate
+owners no longer multiply the process-wide residency allowance.
+
+This process-wide cache is independent of the league runtime
 manager. Before build 2182, writes and verified reads retained league, roster
 and transaction sections indefinitely. Runtime idle eviction released neither
 those objects nor the separate verified-checksum index. Registering a league

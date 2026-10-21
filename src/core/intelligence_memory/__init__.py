@@ -1,9 +1,8 @@
 """Sleeper-backed cache and compact permanent DTOS intelligence memory."""
 from __future__ import annotations
 
-from config import (
-    INTELLIGENCE_CHECKPOINT_FILE, SLEEPER_SEASON_CACHE_ROOT,
-)
+from config import INTELLIGENCE_CHECKPOINT_FILE
+from src.core.history_context import sleeper_season_cache
 from src.core.historical_intelligence import historical_intelligence
 
 from .chain import SeasonChain, SeasonReference, discover_season_chain
@@ -31,7 +30,6 @@ from .pipeline import CheckpointPipeline
 from .store import IntelligenceCheckpointStore
 
 intelligence_checkpoint_store = IntelligenceCheckpointStore(INTELLIGENCE_CHECKPOINT_FILE)
-sleeper_season_cache = SleeperSeasonCache(SLEEPER_SEASON_CACHE_ROOT)
 intelligence_memory_service = IntelligenceMemoryService(intelligence_checkpoint_store)
 checkpoint_pipeline = CheckpointPipeline(intelligence_memory_service)
 historical_intelligence.use_checkpoint_reader(intelligence_checkpoint_store)

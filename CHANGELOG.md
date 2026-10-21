@@ -1,6 +1,6 @@
 ## v1.21.82 / build 2182 — Bounded historical cache residency
 
-Bound the process-wide retained-season section cache independently of runtime eviction: at most 36 compact sections and an estimated 8 MiB of Python objects, with 12 verified checksum entries. Least-recently-used sections lose cache ownership; existing readers retain their exact objects. Oversized sections remain complete on demand without permanent residency.
+Share one canonical cache owner across history services, intelligence-memory exports and Weekly Reports. Bound its retained-season sections independently of runtime eviction: at most 36 compact sections and an estimated 8 MiB of Python objects, with 12 verified checksum entries. Least-recently-used sections lose cache ownership; existing readers retain their exact objects. Oversized sections remain complete on demand without permanent residency.
 
 Serialize cold local archive decodes, recheck warm entries after admission, and invalidate superseded file identities. Source writes retain their own exact file identity; a late writer cannot attach old facts to a newer publication. Shutdown clears residency with a refill epoch fence. Cache misses verify existing local archives without fetching providers or writing historical records. Historical grades, source admission, heavyweight response bounds and the 2 GiB/500 ms contracts remain unchanged.
 

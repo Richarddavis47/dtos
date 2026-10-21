@@ -17,7 +17,6 @@ from config import (
     HISTORICAL_START_SEASON,
     LEAGUE_ID,
     REQUEST_TIMEOUT,
-    SLEEPER_SEASON_CACHE_ROOT,
 )
 from src.core.historical_memory.aggregation import aggregate_production
 from src.core.historical_memory.importer import HistoricalImporter
@@ -30,8 +29,7 @@ from src.core.historical_memory.jobs import (
 from src.core.historical_memory.models import (
     HISTORICAL_SCHEMA_VERSION, IMPORTER_VERSION, PLAYER_HISTORY_SCHEMA_VERSION,
 )
-from src.core.history_context import canonical_history_store, minimal_metadata_store
-from src.core.history_context.season_cache import SleeperSeasonCache
+from src.core.history_context import canonical_history_store, minimal_metadata_store, sleeper_season_cache
 from src.core.historical_memory.providers import (
     NflverseProvider,
     classify_nflverse_404,
@@ -40,7 +38,6 @@ from src.core.historical_memory.season_state import classify_season
 from src.platform.lifecycle import lifecycle_coordinator
 
 historical_store = canonical_history_store
-sleeper_season_cache = SleeperSeasonCache(SLEEPER_SEASON_CACHE_ROOT)
 
 _PROGRESS_CACHE_LOCK = RLock()
 _RETAINED_PROGRESS: dict[str, dict[str, Any]] = {}

@@ -2,9 +2,7 @@
 import asyncio
 from fastapi import APIRouter, Query
 
-from config import SLEEPER_SEASON_CACHE_ROOT
-from src.core.history_context.season_cache import SleeperSeasonCache
-from src.core.history_context.store import canonical_history_store
+from src.core.history_context.store import canonical_history_store, sleeper_season_cache
 from services.matchup_season import prepare_season_matchups
 from services.weekly_report import weekly_facts
 from services.weekly_report_stories import compose_report
@@ -13,7 +11,7 @@ from src.ui.weekly_report import render_report
 
 def create_weekly_report_router(*, require_data, page, cache=None):
     router = APIRouter(tags=['weekly-report'])
-    archive = cache if cache is not None else SleeperSeasonCache(SLEEPER_SEASON_CACHE_ROOT)
+    archive = cache if cache is not None else sleeper_season_cache
 
     @router.get('/reports/weekly')
     async def report_page(season: int | None = Query(None, ge=2000, le=2100),

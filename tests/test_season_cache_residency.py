@@ -25,6 +25,16 @@ class SeasonCacheResidencyTests(unittest.TestCase):
     def write(self, league, value=0):
         self.cache.write(self.cache.normalize(str(league), 2025, facts(league, value)))
 
+    def test_production_consumers_share_one_canonical_owner(self):
+        import services.history
+        import src.core.history_context
+        import src.core.intelligence_memory
+        import routes.weekly_report
+        cache = src.core.history_context.sleeper_season_cache
+        self.assertIs(services.history.sleeper_season_cache, cache)
+        self.assertIs(src.core.intelligence_memory.sleeper_season_cache, cache)
+        self.assertIs(routes.weekly_report.sleeper_season_cache, cache)
+
     def test_distinct_leagues_have_bounded_sections_and_checksum_metadata(self):
         for league in range(25):
             self.write(league)
