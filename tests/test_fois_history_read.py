@@ -1,5 +1,6 @@
 """Retained timeline read preservation, bounded reuse and snapshot isolation."""
 from dataclasses import asdict, replace
+from contextlib import closing
 import hashlib
 import json
 from pathlib import Path
@@ -151,7 +152,7 @@ class FOISHistoryReadTests(unittest.TestCase):
             decoder = state_storage.SnapshotDecoder(reader)
             self.assertEqual(decoder.decode(envelope), expected)
             # DELETE-journal SQLite writer can commit while the read memo lives.
-            with sqlite3.connect(self.repository.path, timeout=.2) as writer:
+            with closing(sqlite3.connect(self.repository.path, timeout=.2)) as writer, writer:
                 writer.execute('UPDATE fois_semantic_states SET payload=?', (b'invalid replacement',))
             # An already-verified root still describes its original identity.
             self.assertEqual(decoder.decode(envelope), expected)
