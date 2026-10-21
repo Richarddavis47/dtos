@@ -7,7 +7,9 @@ import json
 import os
 import tempfile
 import threading
+import sys
 import zlib
+from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Awaitable, Callable
@@ -28,13 +30,132 @@ class SeasonSourceUnavailable(ValueError):
 
 
 class SleeperSeasonCache:
+    # Two idle runtime contexts x six retained seasons x three compact sections.
+    # The separate 8 MiB object budget matches the existing historical memo's
+    # small-footprint allowance; this is not a larger decoded-history cache.
+    MAX_SECTIONS = 36
+    MAX_RESIDENT_BYTES = 8 * 1024 * 1024
+    MAX_CHECKSUMS = 12
+
     def __init__(self, root: Path):
         self.root = Path(root)
         self._checksum_lock = threading.RLock()
-        self._checksum_cache: dict[Path, tuple[tuple[int, int, int, int], str]] = {}
-        self._section_cache: dict[
-            tuple[Path, str], tuple[tuple[int, int, int, int], Any]
-        ] = {}
+        self._checksum_cache = OrderedDict()
+        self._section_cache = OrderedDict()
+        self._section_sizes = {}
+        self._resident_bytes = 0
+        self._epoch = 0
+        # Only cache refills/decodes serialize. Warm readers and publication do
+        # not wait for reconstruction, and no provider call holds either lock.
+        self._decode_lock = threading.RLock()
+        self._counters = dict(evictions=0, oversized=0, hits=0, misses=0,
+                              decodes=0, active_decodes=0, maximum_active_decodes=0)
+
+    @staticmethod
+    def _identity(path):
+        stat = path.stat()
+        return (int(stat.st_dev), int(stat.st_ino), int(stat.st_size), int(stat.st_mtime_ns))
+
+    @staticmethod
+    def _object_bytes(value):
+        """Conservative Python object estimate; not RSS or serialized bytes."""
+        seen, pending, total = set(), [value], 0
+        while pending:
+            item = pending.pop()
+            if id(item) in seen:
+                continue
+            seen.add(id(item))
+            total += sys.getsizeof(item)
+            if isinstance(item, dict):
+                pending.extend(item.keys())
+                pending.extend(item.values())
+            elif isinstance(item, (list, tuple)):
+                pending.extend(item)
+        return total
+
+    def _drop(self, key):
+        self._section_cache.pop(key, None)
+        self._resident_bytes -= self._section_sizes.pop(key, 0)
+
+    def _invalidate(self, path, identity=None):
+        for key, row in tuple(self._section_cache.items()):
+            if key[0] == path and (identity is None or row[0] != identity):
+                self._drop(key)
+        row = self._checksum_cache.get(path)
+        if row is not None and (identity is None or row[0] != identity):
+            self._checksum_cache.pop(path, None)
+
+    def clear_resident(self):
+        """Release cache ownership only; borrowed read-only objects stay valid.
+
+        Epoch fencing prevents an already-running refill from repopulating the
+        retired residency after shutdown/clear. There are no cache-owned workers.
+        """
+        with self._checksum_lock:
+            self._epoch += 1
+            self._section_cache.clear()
+            self._section_sizes.clear()
+            self._checksum_cache.clear()
+            self._resident_bytes = 0
+
+    def residency(self):
+        with self._checksum_lock:
+            return {**self._counters, 'sections': len(self._section_cache),
+                    'checksums': len(self._checksum_cache), 'resident_bytes': self._resident_bytes,
+                    'maximum_sections': self.MAX_SECTIONS,
+                    'maximum_resident_bytes': self.MAX_RESIDENT_BYTES,
+                    'maximum_checksums': self.MAX_CHECKSUMS}
+
+    def _remember(self, path, identity, archive, epoch, names=('league', 'rosters', 'transactions'), *, checksum=False):
+        # Size traversal is outside the short publication/metadata lock.
+        rows = [(name, archive.facts.get(name)) for name in names]
+        rows = [(name, value, self._object_bytes(value) + self._object_bytes((path, name, identity)))
+                for name, value in rows]
+        with self._checksum_lock:
+            if epoch != self._epoch:
+                return
+            try:
+                if self._identity(path) != identity:
+                    return
+            except FileNotFoundError:
+                return
+            self._invalidate(path, identity)
+            if checksum:
+                self._checksum_cache[path] = (identity, archive.checksum)
+                self._checksum_cache.move_to_end(path)
+                while len(self._checksum_cache) > self.MAX_CHECKSUMS:
+                    self._checksum_cache.popitem(last=False)
+            for name, value, size in rows:
+                key = (path, name)
+                self._drop(key)
+                if size > self.MAX_RESIDENT_BYTES:
+                    self._counters['oversized'] += 1
+                    continue  # Complete evidence is returned, just not retained.
+                while self._section_cache and (
+                    len(self._section_cache) >= self.MAX_SECTIONS
+                    or self._resident_bytes + size > self.MAX_RESIDENT_BYTES
+                ):
+                    self._drop(next(iter(self._section_cache)))
+                    self._counters['evictions'] += 1
+                self._section_cache[key] = (identity, value)
+                self._section_sizes[key] = size
+                self._resident_bytes += size
+
+    def _cached_sections(self, path, names):
+        with self._checksum_lock:
+            try:
+                identity = self._identity(path)
+            except FileNotFoundError:
+                self._invalidate(path)
+                return None
+            self._invalidate(path, identity)
+            rows = {name: self._section_cache.get((path, name)) for name in names}
+            if all(row is not None for row in rows.values()):
+                for name in names:
+                    self._section_cache.move_to_end((path, name))
+                self._counters['hits'] += 1
+                return {name: row[1] for name, row in rows.items()}
+            return None
 
     @staticmethod
     def normalize(league_id: str, season: int, facts: dict[str, Any]) -> CachedSeason:
@@ -84,10 +205,7 @@ class SleeperSeasonCache:
         path = self.path(league_id, season)
         path.unlink(missing_ok=True)
         with self._checksum_lock:
-            self._checksum_cache.pop(path, None)
-            for key in tuple(self._section_cache):
-                if key[0] == path:
-                    self._section_cache.pop(key, None)
+            self._invalidate(path)
 
     def write(self, season: CachedSeason, *, verified_evictions: dict[int, str] | None = None) -> Path:
         path = self.path(season.league_id, season.season)
@@ -101,6 +219,8 @@ class SleeperSeasonCache:
         from src.platform.storage_gate import database_gate
         compressed = gzip.compress(payload, compresslevel=6)
         temporary: str | None = None
+        with self._checksum_lock:
+            epoch = self._epoch
         try:
             with database_gate(self.root / '.season-cache-quota', exclusive=True):
                 evictions = verified_evictions or {}
@@ -115,6 +235,7 @@ class SleeperSeasonCache:
                     handle.write(compressed)
                     handle.flush()
                     os.fsync(handle.fileno())
+                identity = self._identity(Path(temporary))
                 os.replace(temporary, path)
                 # Publish successfully before removing recoverable old caches.
                 # Failed admission/preparation therefore preserves every source.
@@ -122,16 +243,7 @@ class SleeperSeasonCache:
                 for year in evictions:
                     self.delete(season.league_id, year)
             temporary = None
-            stat = path.stat()
-            identity = (
-                int(stat.st_dev), int(stat.st_ino), int(stat.st_size),
-                int(stat.st_mtime_ns),
-            )
-            with self._checksum_lock:
-                self._checksum_cache[path] = (identity, season.checksum)
-                for name in ('league', 'rosters', 'transactions'):
-                    value = (season.facts.get(name) or {}) if name == 'transactions' else season.facts.get(name)
-                    self._section_cache[(path, name)] = (identity, value)
+            self._remember(path, identity, season, epoch, checksum=True)
         finally:
             if temporary:
                 Path(temporary).unlink(missing_ok=True)
@@ -147,10 +259,26 @@ class SleeperSeasonCache:
         return len(gzip.compress(payload, compresslevel=6))
 
     def read(self, league_id: str, season: int) -> CachedSeason | None:
+        with self._decode_lock:
+            with self._checksum_lock:
+                epoch = self._epoch
+                self._counters['active_decodes'] += 1
+                self._counters['maximum_active_decodes'] = max(
+                    self._counters['maximum_active_decodes'], self._counters['active_decodes'])
+                self._counters['decodes'] += 1
+            try:
+                return self._read(league_id, season, epoch)
+            finally:
+                with self._checksum_lock:
+                    self._counters['active_decodes'] -= 1
+
+    def _read(self, league_id, season, epoch):
         path = self.path(league_id, season)
         try:
             before = path.stat()
         except FileNotFoundError:
+            with self._checksum_lock:
+                self._invalidate(path)
             return None
         try:
             payload = json.loads(gzip.decompress(path.read_bytes()))
@@ -170,64 +298,32 @@ class SleeperSeasonCache:
             int(stat.st_dev), int(stat.st_ino), int(stat.st_size),
             int(stat.st_mtime_ns),
         )
-        with self._checksum_lock:
-            for name in ('league', 'rosters', 'transactions'):
-                value = (candidate.facts.get(name) or {}) if name == 'transactions' else candidate.facts.get(name)
-                self._section_cache[(path, name)] = (identity, value)
+        self._remember(path, identity, candidate, epoch)
         return candidate
 
     def section(self, league_id: str, season: int, name: str) -> Any:
         """Read a compact normalized section, reusing it while the archive is unchanged."""
-        path = self.path(league_id, season)
-        try:
-            stat = path.stat()
-        except FileNotFoundError:
-            return None
-        identity = (
-            int(stat.st_dev), int(stat.st_ino), int(stat.st_size),
-            int(stat.st_mtime_ns),
-        )
-        key = (path, str(name))
-        with self._checksum_lock:
-            cached = self._section_cache.get(key)
-        if cached is not None and cached[0] == identity:
-            return cached[1]
-        archive = self.read(league_id, season)
-        if archive is None:
-            return None
-        value = archive.facts.get(name)
-        with self._checksum_lock:
-            self._section_cache[key] = (identity, value)
-        return value
+        return self.sections(league_id, season, (str(name),)).get(str(name))
 
     def sections(self, league_id: str, season: int, names: tuple[str, ...]) -> dict[str, Any]:
-        """Pin several compact sections with one verified cold decode.
+        """Borrow read-only sections from one verified snapshot.
 
-        Reuse the existing file-identity cache; do not retain full matchup facts
-        merely to summarize transactions and season-observed ownership.
+        Eviction drops cache references, never mutates a reader's objects. A
+        miss reconstructs from the unchanged local archive, without providers
+        or durable writes. Only one cold decode per cache instance runs at once.
         """
         path = self.path(league_id, season)
-        try:
-            stat = path.stat()
-        except FileNotFoundError:
-            return {}
-        identity = (int(stat.st_dev), int(stat.st_ino), int(stat.st_size), int(stat.st_mtime_ns))
-        with self._checksum_lock:
-            cached = {name: self._section_cache.get((path, name)) for name in names}
-            if all(row is not None and row[0] == identity for row in cached.values()):
-                return {name: row[1] for name, row in cached.items()}
-        archive = self.read(league_id, season)
-        if archive is None:
-            return {}
-        values = {name: archive.facts.get(name) for name in names}
-        # A concurrent writer must not pin an old section to a new file identity.
-        after = path.stat()
-        if identity != (int(after.st_dev), int(after.st_ino), int(after.st_size), int(after.st_mtime_ns)):
-            raise ValueError('Sleeper season source changed during section preparation')
-        with self._checksum_lock:
-            for name, value in values.items():
-                self._section_cache[(path, name)] = (identity, value)
-        return values
+        values = self._cached_sections(path, names)
+        if values is not None:
+            return values
+        with self._decode_lock:
+            values = self._cached_sections(path, names)
+            if values is not None:
+                return values
+            with self._checksum_lock:
+                self._counters['misses'] += 1
+            archive = self.read(league_id, season)
+            return {name: archive.facts.get(name) for name in names} if archive is not None else {}
 
     def checksum_index(self, league_id: str) -> dict[int, str]:
         """Return verified archive identities without repeatedly decoding archives."""
@@ -243,15 +339,17 @@ class SleeperSeasonCache:
                 int(stat.st_mtime_ns),
             )
             with self._checksum_lock:
+                epoch = self._epoch
                 cached = self._checksum_cache.get(path)
+                if cached is not None and cached[0] == identity:
+                    self._checksum_cache.move_to_end(path)
             if cached is not None and cached[0] == identity:
                 result[season] = cached[1]
                 continue
             archive = self.read(league_id, season)
             if archive is None:
                 continue
-            with self._checksum_lock:
-                self._checksum_cache[path] = (identity, archive.checksum)
+            self._remember(path, identity, archive, epoch, names=(), checksum=True)
             result[season] = archive.checksum
         return result
 

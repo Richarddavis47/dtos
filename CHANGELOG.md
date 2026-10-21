@@ -1,3 +1,11 @@
+## v1.21.82 / build 2182 — Bounded historical cache residency
+
+Bound the process-wide retained-season section cache independently of runtime eviction: at most 36 compact sections and an estimated 8 MiB of Python objects, with 12 verified checksum entries. Least-recently-used sections lose cache ownership; existing readers retain their exact objects. Oversized sections remain complete on demand without permanent residency.
+
+Serialize cold local archive decodes, recheck warm entries after admission, and invalidate superseded file identities. Source writes retain their own exact file identity; a late writer cannot attach old facts to a newer publication. Shutdown clears residency with a refill epoch fence. Cache misses verify existing local archives without fetching providers or writing historical records. Historical grades, source admission, heavyweight response bounds and the 2 GiB/500 ms contracts remain unchanged.
+
+Independent Scout acceptance is required. This scoped residency correction does not establish the cause or resolution of the historical production OOM, the original cold-Home delay or sustained large-scale capacity.
+
 ## v1.21.81 / build 2181 — Sleeper source publication integrity
 
 - Commit live Sleeper sync-thread source replacements and rollback through the owning event loop and existing per-runtime historical-publication lock. Provider acquisition and preparation stay outside the short critical section.
