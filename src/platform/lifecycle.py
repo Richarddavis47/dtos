@@ -92,6 +92,7 @@ class LifecycleCoordinator:
         self._market_critical_reason: str | None = None
         self._fois_generation = 0
         self._market_build_active = 0
+        self._history_response = False
 
     def begin_startup(self, reason: str) -> int:
         """Open a process startup fence before canonical work begins."""
@@ -156,13 +157,27 @@ class LifecycleCoordinator:
         with self._condition:
             # Admission is symmetric: a running Market build must finish before
             # FOIS starts, just as an active FOIS flight blocks a new build.
-            while self._market_build_active:
+            while self._market_build_active or self._history_response:
                 self._condition.wait()
             self._fois_generation += 1
 
     def release_fois_generation(self) -> None:
         with self._condition:
             self._fois_generation = max(0, self._fois_generation - 1)
+            self._condition.notify_all()
+
+    def try_reserve_history_response(self) -> bool:
+        """No queued historical results; exclude other coordinated heavy work."""
+        with self._condition:
+            if (self._history_response or self._phase is not None or self._fois_generation
+                    or self._market_critical or self._startup_state != 'complete'):
+                return False
+            self._history_response = True
+            return True
+
+    def release_history_response(self) -> None:
+        with self._condition:
+            self._history_response = False
             self._condition.notify_all()
 
     @contextmanager
@@ -178,7 +193,7 @@ class LifecycleCoordinator:
                 while (
                     (self._phase is not None and self._owner != owner)
                     or (
-                        self._fois_generation
+                        (self._fois_generation or self._history_response)
                         and name == "asset_market_build"
                     )
                 ):
@@ -218,6 +233,7 @@ class LifecycleCoordinator:
             return (
                 self._startup_state == "complete"
                 and self._fois_generation == 0
+                and not self._history_response
                 and self._phase not in MARKET_BUILD_BLOCKERS
             )
 
@@ -228,6 +244,7 @@ class LifecycleCoordinator:
                 "market_build_allowed": (
                     self._startup_state == "complete"
                     and self._fois_generation == 0
+                    and not self._history_response
                     and self._phase not in MARKET_BUILD_BLOCKERS
                 ),
                 "startup_fence": {
@@ -249,6 +266,7 @@ class LifecycleCoordinator:
                     "market_critical": bool(self._market_critical),
                     "market_critical_reason": self._market_critical_reason,
                     "fois_generation": bool(self._fois_generation),
+                    "historical_response": self._history_response,
                 },
                 "recent_phases": list(self._history),
                 "memory": memory_snapshot(),

@@ -104,16 +104,19 @@ CREATE TABLE IF NOT EXISTS fois_evidence_links (
 
 
 class FOISRepository:
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, *, readonly: bool = False) -> None:
         self.path = path
         self._lock = RLock()
+        self._readonly = readonly
+        if readonly:
+            return
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._connection() as connection:
             connection.executescript(SCHEMA + state_storage.SCHEMA)
 
     @contextmanager
     def _connection(self):
-        connection = connect(self.path, timeout=30)
+        connection = connect(self.path, timeout=30, readonly=self._readonly)
         connection.row_factory = sqlite3.Row
         try:
             yield connection
@@ -337,6 +340,33 @@ class FOISRepository:
         validation and retained-grade qualification still run for every row.
         """
         return self._timeline(league_id, gm_id, model_version, summarize=True)
+
+    def iter_timeline(self, league_id: str, gm_id: str,
+                      model_version: str = FOIS_MODEL_VERSION, *, current=None):
+        """Full verified DTOs, retaining one returned row at a time.
+
+        Observation envelopes are small; release their cursor before decoding
+        so ordinary publication can commit. Content-addressed roots still pass
+        all checksum, dependency and scope checks in the existing decoder.
+        The current-canonical comparison is captured once for this read.
+        """
+        if current is None:
+            current = self.score_for_gm(league_id, gm_id, model_version)
+        with self._connection() as connection:
+            rows = connection.execute(
+                "SELECT payload FROM fois_snapshot_history WHERE league_id=? AND gm_id=? AND model_version=? ORDER BY generated_at,snapshot_id",
+                (league_id, gm_id, model_version),
+            ).fetchall()
+            decoder = state_storage.SnapshotDecoder(connection)
+            for row in rows:
+                value = _score(decoder.decode(row['payload']))
+                yield replace(value, evaluation_kind=(
+                    EvaluationKind.CURRENT_CANONICAL.value
+                    if current is not None and value.score_key == current.score_key
+                    and value.model_version == current.model_version
+                    and value.generated_at == current.generated_at
+                    else EvaluationKind.HISTORICAL_SNAPSHOT.value
+                ))
 
     def _timeline(self, league_id, gm_id, model_version, *, summarize):
         with self._connection() as connection:

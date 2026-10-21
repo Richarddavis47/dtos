@@ -597,10 +597,12 @@ async def startup_and_periodic_maintenance(startup_epoch: int) -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    from src.core.fois.history_execution import history_requests
     from src.core.fois.process_execution import retire_idle_fois_executor_sync
     from src.core.intelligence.cache import intelligence_cache
     from src.platform.memory_reclamation import maintain_unused_memory
 
+    history_requests.startup()
     memory_reclaimer = asyncio.create_task(
         maintain_unused_memory(
             lambda: runtime_metrics.requests, lambda: runtime_metrics.ready,
@@ -626,6 +628,7 @@ async def lifespan(_: FastAPI):
         try:
             yield
         finally:
+            await history_requests.shutdown()
             memory_reclaimer.cancel()
             event_loop_monitor.cancel()
             await asyncio.gather(memory_reclaimer, event_loop_monitor, return_exceptions=True)
@@ -664,6 +667,9 @@ async def lifespan(_: FastAPI):
     try:
         yield
     finally:
+        # Drain a response lease before joining background lifecycle waiters
+        # which may be waiting for that same lease to retire.
+        await history_requests.shutdown()
         maintenance_task.cancel()
         memory_reclaimer.cancel()
         event_loop_monitor.cancel()

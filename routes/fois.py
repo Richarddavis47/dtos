@@ -21,6 +21,7 @@ from src.ui.intelligence_presentation import exact_rank, human_status, technical
 from src.platform.account_context import current_account
 from src.platform.league_context import current_league_context
 from src.core.fois.process_execution import FOISExecutionBusy
+from src.core.fois.history_execution import HistoryResponse
 from src.platform.request_diagnostics import diagnosed, span
 
 PageRenderer = Callable[[str, str], HTMLResponse]
@@ -199,21 +200,18 @@ def create_fois_router(
 
     @router.get("/api/fois/leagues/{league_id}/gms/{gm_id}")
     async def gm(league_id: str, gm_id: str) -> dict[str, Any]:
-        score = gm_score(league_id, gm_id)
-        tenure = service.repository.tenure_for_gm(league_id, gm_id)
-        timeline = retained_history(league_id, gm_id)
-        return {**_metadata(score), "profile": jsonable_encoder(score),
-                "tenure": jsonable_encoder(tenure),
-                "takeover": jsonable_encoder(service.repository.takeover(tenure.tenure_id)) if tenure else None,
-                "history": jsonable_encoder(tuple(
-                    row for row in timeline if row.evaluation_kind != "current_canonical"
-                )),
-                "gm_quality_is_not_team_quality": True}
+        return full_history_response(league_id, gm_id, 'profile')
 
     @router.get("/api/fois/leagues/{league_id}/gms/{gm_id}/timeline")
     async def timeline(league_id: str, gm_id: str) -> dict[str, Any]:
-        score = gm_score(league_id, gm_id)
-        return {**_metadata(score), "timeline": jsonable_encoder(retained_history(league_id, gm_id))}
+        return full_history_response(league_id, gm_id, 'timeline')
+
+    def full_history_response(league_id, gm_id, kind):
+        require_enabled()
+        context = current_league_context()
+        return HistoryResponse(database=service.repository.path, league_id=league_id,
+            gm_id=gm_id, kind=kind, metadata=_metadata(),
+            retained=context is not None and context.fois_state != 'ready')
 
     @router.get("/api/fois/leagues/{league_id}/health")
     async def league_health(league_id: str) -> dict[str, Any]:
