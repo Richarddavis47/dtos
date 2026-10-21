@@ -1,3 +1,9 @@
+## v1.21.78 / build 2178 — Historical delta integrity
+
+- Reject non-string object paths, non-integer or boolean array indices, invalid bounds and incompatible path/container combinations before admitting retained historical evidence. Do not normalize malformed paths into apparently valid evidence.
+- Stage only shallow copies of changed ancestor containers. Invalid later instructions leave the private base and operation values unchanged; valid reads keep the summary optimization and avoid full-tree copies. The eight-root / 8 MiB per-read memo, hash/byte/scope/dependency checks and independent returned evidence remain intact.
+- Qualify invalid retained history with HTTP 503 across GM profile, full profile and timeline consumers; do not expose a misleading historical assessment. No grade regeneration, valuation change, schema, persistent cache or infrastructure change. Production OOM, profile latency and sustained multi-league scalability remain unresolved; independent Scout acceptance is required.
+
 ## v1.21.76 / build 2176 — Chronological history and bounded FOIS reads
 
 ## v1.21.77 / build 2177 — Verified retained-history efficiency
