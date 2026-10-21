@@ -302,3 +302,23 @@ class SleeperHistoryPublicationTests(IsolatedAsyncioTestCase):
         self.assertEqual(prior['transactions'], [])
         history.assert_not_called()
         save.assert_not_called()
+
+    async def test_source_revision_prevents_old_computation_restoring_current(self):
+        from services.league_maintenance import ensure_fois_refresh
+        started, finish = asyncio.Event(), asyncio.Event()
+
+        async def generate(data):
+            started.set()
+            await finish.wait()
+            return (self.score,)
+
+        ensure_fois_refresh(self.runtime, generate)
+        await started.wait()
+        try:
+            await self.runtime.publish_transactions(self.runtime.state['data'],
+                                                    [{'transaction_id': 'B'}], 1)
+        finally:
+            finish.set()
+        await asyncio.gather(*tuple(self.runtime.background_tasks))
+        self.assertEqual(self.context.fois_state, 'retained')
+        self.assertEqual(self.runtime.lifecycle['fois_generation'], 'superseded')
