@@ -106,3 +106,12 @@ The `/api/valuation` family exposes only the current cached production universe.
 Evidence Intelligence endpoints are `/api/valuation/evidence`, `/api/valuation/evidence/{asset_id}`, `/api/valuation/confidence`, `/api/valuation/coverage`, `/api/valuation/agreement`, `/api/valuation/explanation`, `/api/valuation/timeline`, and `/api/valuation/diagnostics`. Every response includes application version, build, commit, intelligence schema version, generation timestamp, availability, and canonical asset count. Asset-specific routes use canonical IDs such as `player:10213` and return HTTP 404 for missing identities.
 
 Automated calibration is exposed through `/api/valuation/calibration`, `/api/valuation/calibration/categories`, `/api/valuation/calibration/recommendations`, and `/api/valuation/calibration/history`. The HTML dashboard is `/api/valuation/dashboard`. These endpoints reuse the most recent full-universe audit and never initiate provider synchronization.
+
+
+### Complete FOIS history response execution
+
+The existing GM profile and timeline JSON endpoints preserve complete verified evidence. One full response is admitted at a time across the single application process, without queued heavy results. Busy coordinated work, insufficient cgroup headroom, worker failures or a preparation timeout can return HTTP 503 with an explicit unavailable qualification; retryable admission/resource failures include `Retry-After: 5`. Authorization and league membership checks run before this admission.
+
+A disposable read-only child verifies and serializes each complete response into an anonymous OS temporary file. The application serves 64 KiB chunks only after successful verification and serialization. No response archive or database schema is added. The lease remains owned until response completion or cleanup; preparation and output each have a 60-second bound. A transport failure after headers terminates an incomplete transfer rather than labeling it complete. Shutdown and repeated cancellation retire the owned child and close the file before readmission. Existing HTML history summaries and direct full-history repository APIs remain unchanged.
+
+The eight-root / 8 MiB per-read memo, exact source checks, delta validation and retained-grade qualifications remain unchanged. This admission policy applies to the existing single-process Render deployment; it is not a cross-instance queue or a guarantee of sustained multi-league capacity.

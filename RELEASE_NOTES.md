@@ -1,3 +1,10 @@
+## v1.21.79 / build 2179 — Bounded historical requests
+
+- Admit one complete FOIS profile/timeline API response across all accounts and leagues, with no queued heavy results. Coordinate admission with existing heavy phases and cgroup headroom; return qualified retryable unavailability when resources are busy.
+- Verify retained evidence and serialize complete JSON in one disposable, read-only child. Produce the response row by row into an anonymous temporary file, preserving exact evidence, canonical JSON, current/retained qualifications and the eight-root / 8 MiB memo. No permanent response archive or schema change.
+- Hold ownership through backpressured response output and cleanup. Bound preparation and output time, retire children on cancellation or parent death, and drain cleanup before allowing another request. Ordinary liveness remains on the serving event loop.
+- Controlled Python 3.14.3 / 2 GiB external probes verify complete 193/384/1,153-row responses, overlap rejection, source-file stability and cancellation. These are author-run fixtures, not a production OOM resolution or a sustained scalability guarantee. Historical grades remain RETAINED / NOT REVALIDATED; independent Scout acceptance is required.
+
 ## v1.21.78 / build 2178 — Historical delta integrity
 
 - Reject non-string object paths, non-integer or boolean array indices, invalid bounds and incompatible path/container combinations before admitting retained historical evidence. Do not normalize malformed paths into apparently valid evidence.
