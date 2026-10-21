@@ -748,12 +748,15 @@ class CanonicalHistoryStore:
         self, league_id: str, season: int, entity_type: str,
     ) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
-        if sleeper_season_cache.read(league_id, season) is None:
+        # Borrow both sections together. Eviction/publication must not change
+        # the source identity midway through an active transaction reader.
+        facts = sleeper_season_cache.sections(league_id, season, ('league', 'transactions'))
+        if not facts:
             from .recovery import HistoricalCheckpoints
             checkpoint = HistoricalCheckpoints(sleeper_season_cache.root).read(league_id, season)
             return [row for row in checkpoint['records'] if row['entity_type'] == entity_type] if checkpoint else []
-        transactions_by_week = readable_buckets({'transactions': sleeper_season_cache.section(
-            league_id, season, "transactions")}, 'transactions')
+        transactions_by_week = readable_buckets(facts, 'transactions')
+        source = facts.get('league') or {}
         processed = 0
         for week_key, transactions in transactions_by_week.items():
             week = int(week_key)
@@ -768,7 +771,6 @@ class CanonicalHistoryStore:
                 transaction_id = str(
                     transaction.get("transaction_id") or _digest(transaction)[:16]
                 )
-                source = sleeper_season_cache.section(league_id, season, "league") or {}
                 payload = {**transaction, "source_league_id": source.get("league_id") or league_id}
                 payload.setdefault("roster_ids", transaction.get("roster_ids") or [])
                 occurred_at, timestamp_provenance = canonical_transaction_timestamp(payload)

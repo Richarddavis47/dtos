@@ -51,7 +51,9 @@ background jobs, database rows or durable snapshots.
 
 ## Consumers and verification
 
-Compact section consumers are the canonical history transaction adapter and
+The canonical transaction adapter now borrows league and transaction sections
+together for its entire read, so eviction or replacement cannot mix source
+identity into later rows. Compact section consumers are that adapter and
 shared GM behavioral observations. Full source reads, player-week admission,
 historical checkpoints and acquisition coverage continue using verified
 `CachedSeason` snapshots. Runtime eviction needs no cache deletion hook: the

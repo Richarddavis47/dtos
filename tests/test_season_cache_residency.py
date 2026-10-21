@@ -181,6 +181,34 @@ class SeasonCacheResidencyTests(unittest.TestCase):
         self.assertEqual(hashes(), before)
         self.assertLessEqual(self.cache.residency()['sections'], 36)
 
+    def test_transaction_consumer_pins_source_across_eviction_and_replacement(self):
+        from src.core.history_context.store import CanonicalHistoryStore
+        source = facts('source-a')
+        source['transactions'] = {'1': [
+            {'type': 'trade', 'transaction_id': str(i), 'roster_ids': [1, 2],
+             'draft_picks': [{'season': '2029', 'round': 1, 'roster_id': 2,
+                              'owner_id': 1, 'previous_owner_id': 2}]}
+            for i in range(3)]}
+        self.cache.write(self.cache.normalize('root', 2025, source))
+        store = CanonicalHistoryStore()
+        original, calls = store._record, []
+
+        def record(*args, **kwargs):
+            if not calls:
+                newer = {**source, 'league': {**source['league'], 'league_id': 'source-b'}}
+                self.cache.write(self.cache.normalize('root', 2025, newer))
+                for league in range(25):
+                    self.write(league)
+            calls.append(True)
+            return original(*args, **kwargs)
+
+        with patch('src.core.history_context.store.sleeper_season_cache', self.cache), \
+                patch.object(store, '_record', side_effect=record):
+            rows = store._transaction_records('root', 2025, 'trade')
+        self.assertEqual(len(rows), 3)
+        self.assertTrue(all(row['payload']['source_league_id'] == 'source-a' for row in rows))
+        self.assertTrue(all(row['payload']['draft_picks'][0]['roster_id'] == 2 for row in rows))
+
 
 if __name__ == '__main__':
     unittest.main()
