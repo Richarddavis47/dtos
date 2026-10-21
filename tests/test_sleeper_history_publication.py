@@ -230,4 +230,3 @@ class SleeperHistoryPublicationTests(IsolatedAsyncioTestCase):
             await sleeper.ensure_data_fresh(publish_data=self.runtime.publish_source)
             self.assertTrue(start.call_args.kwargs['force_players'])
             self.assertIs(start.call_args.kwargs['publish_data'].__self__, self.runtime)
-
