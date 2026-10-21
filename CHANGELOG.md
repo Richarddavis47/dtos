@@ -1,3 +1,10 @@
+## v1.21.80 / build 2180 — Historical publication integrity
+
+- Pin the admitted league context, source generations and FOIS publication revision for full-history profile and timeline responses. Recheck qualification immediately before committing successful response headers; superseded verified evidence is RETAINED / NOT REVALIDATED, and lost or incompatible league contexts fail safely with retryable unavailability.
+- Serialize qualification changes and header handoff through a per-runtime publication boundary. Keep heavyweight reconstruction, bulk serialization and backpressured output outside that boundary and inside the existing single-response resource lease.
+- Finalize only a bounded metadata prefix in the parent. Preserve complete verified historical bodies, source checksums, exact identities, retained grades, the eight-root / 8 MiB memo and cleanup on cancellation or error. No grading, schema, persistent cache or infrastructure change.
+- Deterministic controls cover same-context A→B refreshes, child reconstruction/serialization, publication interleavings and cleanup. Production OOM, the original cold-Home delay and sustained multi-league capacity remain unresolved; independent Scout acceptance is required.
+
 ## v1.21.79 / build 2179 — Bounded historical requests
 
 - Admit one complete FOIS profile/timeline API response across all accounts and leagues, with no queued heavy results. Coordinate admission with existing heavy phases and cgroup headroom; return qualified retryable unavailability when resources are busy.

@@ -7,6 +7,7 @@ single lease covers child retirement, backpressured output and file cleanup.
 from __future__ import annotations
 
 import asyncio
+from contextlib import asynccontextmanager
 from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
@@ -26,6 +27,48 @@ WORKER_STOP_SECONDS = 2.0
 MEMORY_RESERVE_BYTES = 256 * 1024**2
 MEMORY_STOP_RESERVE_BYTES = 64 * 1024**2
 CHUNK_BYTES = 64 * 1024
+PUBLICATION_ENVELOPE_BYTES = 16 * 1024
+
+
+class HistoryPublication:
+    """Pin admission identity; qualify that evidence at the ASGI header boundary.
+
+    Runtime source publishers and FOIS refresh use the same per-runtime lock.
+    No reconstruction, bulk serialization or bulk response transfer holds it.
+    """
+    def __init__(self, context, league_id):
+        self.context = context
+        self.league_id = league_id
+        self.runtime = context.runtime if context is not None else None
+        if self.runtime is not None:
+            self.generations = dict(self.runtime.source_generations)
+            self.data = self.runtime.state.get('data')
+            self.revision = self.runtime.fois_publication_revision
+            self.ready = context.fois_state == 'ready'
+
+    @asynccontextmanager
+    async def guard(self):
+        if self.runtime is None:
+            yield
+        else:
+            async with self.runtime.fois_publication_lock:
+                yield
+
+    def qualification(self, intrinsic):
+        if self.runtime is None:
+            return intrinsic
+        runtime = self.runtime
+        current = runtime.canonical_context
+        if (runtime.league_id != self.league_id or current is None
+                or current.league_id != self.league_id
+                or str(runtime.status) in {'evicting', 'closed'}
+                or not runtime.state.get('data')):
+            return None
+        unchanged = (current is self.context and self.ready and current.fois_state == 'ready'
+            and runtime.source_generations == self.generations
+            and runtime.state.get('data') is self.data
+            and runtime.fois_publication_revision == self.revision)
+        return intrinsic if unchanged else 'retained_not_revalidated'
 
 
 def _memory_available(reserve):
@@ -54,6 +97,26 @@ async def _owned_read(executor, stream):
     except asyncio.CancelledError:
         await _drain(task)
         raise
+
+
+async def _publication_envelope(executor, stream, spec):
+    task = asyncio.ensure_future(asyncio.get_running_loop().run_in_executor(
+        executor, stream.readline, PUBLICATION_ENVELOPE_BYTES + 1))
+    try:
+        value = await asyncio.shield(task)
+    except asyncio.CancelledError:
+        await _drain(task)
+        raise
+    if len(value) > PUBLICATION_ENVELOPE_BYTES or not value.endswith(b'\n'):
+        raise ValueError('Invalid historical publication envelope')
+    envelope = json.loads(value)
+    if (not isinstance(envelope, dict) or envelope.get('league_id') != spec['league_id']
+            or envelope.get('gm_id') != spec['gm_id']
+            or not isinstance(envelope.get('metadata'), dict)
+            or 'evidence_state' in envelope['metadata']
+            or not isinstance(envelope.get('evidence_state'), str)):
+        raise ValueError('Invalid historical publication identity')
+    return envelope
 
 
 class HistoryRequests:
@@ -127,10 +190,11 @@ class HistoryResponse(Response):
     media_type = 'application/json'
 
     def __init__(self, *, database: Path, league_id: str, gm_id: str,
-                 kind: str, metadata: dict, retained: bool):
+                 kind: str, metadata: dict, retained: bool, publication=None):
         super().__init__(media_type=self.media_type)
         self.spec = {'database': str(database.resolve()), 'league_id': league_id,
                      'gm_id': gm_id, 'kind': kind, 'metadata': metadata, 'retained': retained}
+        self.publication = publication or HistoryPublication(None, league_id)
 
     async def _run(self, scope, receive, send):
         if not history_requests.acquire():
@@ -202,9 +266,31 @@ class HistoryResponse(Response):
             spool.seek(0)
             reader = ThreadPoolExecutor(max_workers=1, thread_name_prefix='dtos-history-output')
             async with asyncio.timeout(OUTPUT_TIMEOUT_SECONDS):
-                await send({'type': 'http.response.start', 'status': 200,
-                            'headers': [(b'content-type', b'application/json'),
-                                        (b'content-length', str(size).encode())]})
+                try:
+                    envelope = await _publication_envelope(reader, spool, self.spec)
+                except (ValueError, UnicodeError, OSError):
+                    envelope = None
+                async with self.publication.guard():
+                    qualification = (self.publication.qualification(envelope['evidence_state'])
+                                     if envelope is not None else None)
+                    if qualification is not None:
+                        prefix = json.dumps({**envelope['metadata'], 'evidence_state': qualification},
+                            ensure_ascii=False, allow_nan=False, separators=(',', ':')).encode()[:-1]
+                        size = size - spool.tell() + len(prefix)
+                        # Refresh cannot change qualification between this
+                        # final check and successful header commitment.
+                        await send({'type': 'http.response.start', 'status': 200,
+                                    'headers': [(b'content-type', b'application/json'),
+                                                (b'content-length', str(size).encode())]})
+                        # Also hand off the bounded prefix: ASGI servers may
+                        # defer committing headers until the first body event.
+                        await send({'type': 'http.response.body', 'body': prefix, 'more_body': True})
+                if qualification is None:
+                    await JSONResponse({'detail': 'Full FOIS history could not be qualified for the current league context. '
+                        'Please retry; historical grades have not been revalidated.',
+                        'history_status': 'unavailable'}, status_code=503,
+                        headers={'Retry-After': '5'})(scope, receive, send)
+                    return
                 while chunk := await _owned_read(reader, spool):
                     await send({'type': 'http.response.body', 'body': chunk, 'more_body': True})
                 await send({'type': 'http.response.body', 'body': b'', 'more_body': False})

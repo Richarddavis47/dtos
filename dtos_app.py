@@ -192,7 +192,8 @@ async def _hydrate_league_runtime(
         raise LeagueRuntimeError(
             "Supported league facts are unavailable. Try again or choose another connected league."
         )
-    runtime.apply_data(data)
+    async with runtime.fois_publication_lock:
+        runtime.apply_data(data)
     projections = ProjectionService(
         league_id=runtime.league_id,
         scoring_profile_id=runtime.scoring_profile,
@@ -203,7 +204,8 @@ async def _hydrate_league_runtime(
         # not spawn a new history/Market flight outside close's task snapshot.
         return data
     prior_context = runtime.canonical_context
-    context = _publish_runtime_context(runtime, projections)
+    async with runtime.fois_publication_lock:
+        context = _publish_runtime_context(runtime, projections)
     if prior_context is not None:
         context.history_state = prior_context.history_state
     context.market.reconcile(data, runtime.state, canonical_history_store, runtime.league_id)
@@ -646,7 +648,8 @@ async def lifespan(_: FastAPI):
     if STATE.get("data"):
         projection_service.restore_into(STATE["data"])
         if default_runtime is not None:
-            _publish_runtime_context(default_runtime, projection_service)
+            async with default_runtime.fois_publication_lock:
+                _publish_runtime_context(default_runtime, projection_service)
         await asyncio.to_thread(asset_market_cache.cleanup_artifacts, canonical_history_store)
         await asyncio.to_thread(
             asset_market_cache.restore_compatible,
@@ -861,7 +864,8 @@ async def sync_current_transactions() -> bool:
         state=context.state, league_id=context.league_id,
     )
     if result:
-        context.refresh_generations()
+        async with context.runtime.fois_publication_lock:
+            context.refresh_generations()
     return result
 
 
