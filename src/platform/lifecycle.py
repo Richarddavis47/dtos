@@ -192,9 +192,8 @@ class LifecycleCoordinator:
             with self._condition:
                 while (
                     (self._phase is not None and self._owner != owner)
-                    or self._history_response
                     or (
-                        self._fois_generation
+                        (self._fois_generation or self._history_response)
                         and name == "asset_market_build"
                     )
                 ):

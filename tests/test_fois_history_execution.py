@@ -264,3 +264,32 @@ class HistoricalExecutionTests(unittest.TestCase):
             await asyncio.wait_for(task, 5)
             await asyncio.wait_for(waiter, 5)
         asyncio.run(scenario())
+
+    def test_essential_source_hydration_is_not_queued_behind_history_output(self):
+        import threading
+        async def scenario():
+            output = asyncio.Event()
+            resume = asyncio.Event()
+            entered = threading.Event()
+            async def send(message):
+                if message['type'] == 'http.response.start':
+                    output.set()
+                    await resume.wait()
+            history = asyncio.create_task(self.response()._run({'type': 'http'}, None, send))
+            await asyncio.wait_for(output.wait(), 10)
+            def hydrate():
+                with lifecycle_coordinator.phase('sleeper_sync'):
+                    entered.set()
+            source = asyncio.create_task(asyncio.to_thread(hydrate))
+            try:
+                for _ in range(100):
+                    if entered.is_set():
+                        break
+                    await asyncio.sleep(.01)
+                self.assertTrue(entered.is_set(), 'Essential source acquisition waited for a slow history client')
+                self.assertEqual(execution.history_requests.active_count, 1)
+            finally:
+                resume.set()
+                await history
+                await source
+        asyncio.run(scenario())
