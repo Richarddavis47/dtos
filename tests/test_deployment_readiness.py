@@ -285,7 +285,7 @@ class DeploymentReadinessTests(unittest.TestCase):
                 dtos_app, "ensure_data_fresh", new_callable=AsyncMock,
             ) as fresh:
                 asyncio.run(dtos_app.ensure_fresh())
-            fresh.assert_awaited_once_with()
+            fresh.assert_awaited_once_with(publish_data=dtos_app.default_league_runtime.publish_source)
         finally:
             dtos_app.STATE["data"] = original_data
 
