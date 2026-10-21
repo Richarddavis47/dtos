@@ -694,6 +694,7 @@ async def lifespan(_: FastAPI):
         )
         await league_runtime_manager.shutdown()
         await shutdown_fois_executor()
+        sleeper_season_cache.clear_resident()
 
 
 app = FastAPI(title=APPLICATION_NAME, version=VERSION, lifespan=lifespan)

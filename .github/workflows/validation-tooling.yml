@@ -47,7 +47,7 @@ jobs:
       - name: Authoritative repository lint gate
         run: python -m ruff check .
       - name: Owned full-history execution and retained evidence controls
-        run: python -m unittest tests.test_fois_history_execution tests.test_fois_history_qualification tests.test_sleeper_history_publication tests.test_fois_history_read tests.test_fois_delta_integrity
+        run: python -m unittest tests.test_fois_history_execution tests.test_fois_history_qualification tests.test_sleeper_history_publication tests.test_fois_history_read tests.test_fois_delta_integrity tests.test_season_cache_residency
       - name: Tooling compilation and whitespace
         run: |
           python -m compileall -q src/platform/validation tools/validation tests
