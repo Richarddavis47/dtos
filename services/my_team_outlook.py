@@ -21,7 +21,7 @@ def _future(data, assessment, players):
     if same:
         firsts = [p for p in picks if p.get('round') == 1]
         years = sorted({str(p.get('year', p.get('season'))) for p in firsts})
-        text = f"{len(picks)} owned picks, including {len(firsts)} first-round picks"
+        text = f"{len(picks)} owned picks, including {len(firsts)} first-round " + ('pick' if len(firsts) == 1 else 'picks')
         text += (' (' + ', '.join(years) + ')' if years else '') + '.'
         note = (f"{capital.get('priced_pick_count', 0)}/{len(picks)} picks have compatible Market prices. "
                 'Original-franchise identities and current ownership are listed in Draft capital; unknown pick ranges remain unknown.')
@@ -46,7 +46,8 @@ def _future(data, assessment, players):
     age_note = (f"Reported ages cover {len(ages)}/{len(starters)} optimal starters ({manager_points(min(ages))}–{manager_points(max(ages))})."
                 if ages else 'Supported starter-age context is unavailable.')
     note += ' ' + age_note + ' Ages and current projections do not establish years remaining or a multi-season forecast.'
-    return text + ' Multi-season sustainability is not established.', note
+    brief = f"{len(picks)} picks/{len(firsts)} " + ('first' if len(firsts) == 1 else 'firsts') if same else 'Capital unconfirmed'
+    return text + ' Multi-season sustainability is not established.', note, brief
 
 
 def goal_options(roster_id):
@@ -82,7 +83,8 @@ def prepared_outlook(data, assessment, overview, players, *, strategy=''):
                     strength='A roster advantage cannot be confirmed from incompatible evidence.',
                     concern='Replacement quality is unconfirmed; unavailable evidence is not poor depth.',
                     future='Compatible future-capital evidence is unavailable.', guidance=guidance,
-                    action=action, href=href, details=['Refresh this league before relying on its assessment.'])
+                    action=action, href=href, brief='Lineup and strength unconfirmed. Biggest depth risk: evidence unavailable. Capital unconfirmed.',
+                    details=['Refresh this league before relying on its assessment.'])
     rows = [(pos, facts, facts.get('diagnostic') or {}) for pos, facts in evidence.positions.items()]
     diagnostics = [d for _, _, d in rows if d]
     supported = bool(diagnostics) and all(d.get('evidence', {}).get('calculation_supported') for d in diagnostics)
@@ -111,23 +113,45 @@ def prepared_outlook(data, assessment, overview, players, *, strategy=''):
         strength = (f"{best[0]} supplies the largest supported lineup contribution ({manager_points(best[1]['starting_points'])} points); this is not a positional advantage grade."
                     if best else 'A starting-strength advantage cannot be confirmed from available projections.')
     uncertain = [pos for pos, f, _ in rows if f.get('reserve_covered', 0) < f.get('reserve_expected', 0)]
-    needs = [(pos, d) for pos, _, d in rows if d.get('resilience_need') or d.get('quality_depth_need') or d.get('starter_need')]
+    needs = sorted(((pos, d) for pos, _, d in rows if d.get('resilience_need') or d.get('quality_depth_need') or d.get('starter_need')),
+                   key=lambda item: (not item[1].get('quality_depth_need'), not item[1].get('resilience_need')))
     if not compatible:
         concern = 'Replacement quality is unconfirmed; missing or incompatible projections are not zero production.'
     elif uncertain:
         concern = ', '.join(uncertain) + ' replacement projections are incomplete. Useful depth cannot be fully confirmed.'
     elif needs:
         pos, diagnostic = needs[0]
-        # The prepared diagnostic distinguishes quality, legal cover and starter
-        # needs, including valuable QB3/FLEX/Superflex replacements.
-        concern = str(diagnostic.get('interpretation') or f'{pos} needs a closer replacement-depth review.')
+        # Describe objective flags, not an old goal-specific interpretation.
+        # A browser-session goal change must not leave contradictory advice.
+        if diagnostic.get('quality_depth_need'):
+            concern = f'{pos} legal replacements project below the supported league reserve reference. Review the production cost before moving that cover.'
+        elif diagnostic.get('resilience_need'):
+            concern = f'{pos} has a legal replacement-coverage gap. Review exact starter-removal scenarios in Depth.'
+        else:
+            concern = f'A supported {pos} addition improves the legal lineup. Review its Market and future-capital cost under your selected goal.'
         if not fresh:
             concern = 'Provisional: ' + concern
     elif not fresh:
         concern = 'Replacement cover is provisional: availability or projection freshness is not fully verified. Review Depth before moving reserves.'
     else:
         concern = 'No supported replacement shortfall is established. Review exact removal costs before treating depth as expendable.'
-    future, capital_note = _future(data, assessment, players)
+    future, capital_note, brief_capital = _future(data, assessment, players)
+    brief_position = (f"Week {week} lineup #{rank.rank}/{rank.league_size} supported"
+                      if compatible and rank.rank is not None else 'Lineup unconfirmed')
+    if compatible and not fresh:
+        brief_position = 'Provisional ' + brief_position
+    brief_strength = 'Strength: ' + '/'.join(strengths) if strengths else 'Strength unconfirmed'
+    if not compatible or uncertain:
+        brief_risk = 'cover unconfirmed'
+    elif needs:
+        pos, diagnostic = needs[0]
+        brief_risk = pos + (' replacement quality' if diagnostic.get('quality_depth_need') else
+                           ' legal cover' if diagnostic.get('resilience_need') else ' starter gap')
+    elif not fresh:
+        brief_risk = 'cover unconfirmed'
+    else:
+        brief_risk = 'review reserve costs'
+    brief = f'{brief_position}. {brief_strength}. Biggest depth risk: {brief_risk}. {brief_capital}.'
     limits = list(evidence.limitations)
     if not fresh:
         limits.insert(0, 'Some current-week evidence is not fully verified; findings are provisional, not a fresh team verdict. Source and availability limitations follow.')
@@ -135,10 +159,19 @@ def prepared_outlook(data, assessment, overview, players, *, strategy=''):
                'Statistical record/PF standing is separate from official playoff qualification and final seeding.',
                f"Projection coverage: {evidence.projection_covered}/{evidence.roster_count} rostered players. Submitted starters remain separate from the optimal legal lineup.",
                'Current strength is not championship probability or future sustainability.', *limits]
+    # TeamAssessment admits this prepared profile through compatible_profile;
+    # consume its coverage without another preparation, solver or history read.
+    horizon = ((assessment.multi_horizon_strength or {}).get('horizons') or {}).get('current_week') or {}
+    if compatible and horizon.get('weeks_requested') == [week]:
+        total = _number(horizon.get('total'))
+        details.append(f"Prepared Team Strength covers {len(horizon.get('weeks_supported') or [])}/1 current weeks; "
+                       f"complete-horizon points: {manager_points(total)}. Other prepared horizons are projections, not a multi-season sustainability forecast.")
+    else:
+        details.append('Compatible multi-week Team Strength is not available for this comparison; no missing horizon is filled with zero.')
     if compatible:
         details.extend(f"{pos} reserve projections: {facts['reserve_covered']}/{facts['reserve_expected']}; "
                        f"best supported eligible reserve {manager_points(facts.get('best_reserve_points'))} points. "
                        'See Depth for legal, separate replacement scenarios; one player cannot cover simultaneous absences.'
                        for pos, facts, _ in rows if facts.get('starting_count') or facts.get('reserve_expected'))
     return dict(position=position, strength=strength, concern=concern, future=future,
-                guidance=guidance, action=action, href=href, details=list(dict.fromkeys(details)))
+                guidance=guidance, action=action, href=href, brief=brief, details=list(dict.fromkeys(details)))

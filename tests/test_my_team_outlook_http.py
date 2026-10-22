@@ -79,7 +79,7 @@ class MyTeamOutlookHTTPTests(unittest.TestCase):
         self.f.publish(datetime.now(timezone.utc).isoformat())
         response = self.client.get('/teams/1')
         self.assertEqual(response.status_code, 200)
-        primary = response.text.split('id="my-team-outlook"', 1)[1].split('<details', 1)[0]
+        primary = response.text.split('id="my-team-outlook"', 1)[1].split('id="full-roster"', 1)[0]
         self.assertIn('Week 2 optimal projected lineup', primary)
         self.assertNotIn('Provisional:', primary)
         self.assertIn('Supported positional strength: QB', primary)
