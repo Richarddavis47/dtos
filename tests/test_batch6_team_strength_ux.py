@@ -56,7 +56,11 @@ class TeamStrengthUXTests(unittest.TestCase):
         self.assertIn('In the supported optimal lineup, not submitted', html)
         self.assertIn('DTOS has not changed your Sleeper lineup', html)
         self.assertIn('prior optimal starters on a known NFL bye', html)
-        self.assertIn('Whole-lineup projected change: -27.335', html)
+        # Source-player precision above and underlying evidence remain exact;
+        # the derived depth change follows the shared manager-facing display.
+        self.assertEqual(profile['weekly'][3]['total_change_since_previous_week'], -27.335)
+        self.assertIn('Whole-lineup projected change: -27.34', html)
+        self.assertNotIn('Whole-lineup projected change: -27.335', html)
         self.assertIn('not attributed only to byes', html)
         self.assertIn('0 supported reserve slots', html)
         self.assertIn('&lt;Reserve QB&gt;', html)
