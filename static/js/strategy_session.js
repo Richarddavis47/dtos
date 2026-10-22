@@ -29,7 +29,16 @@
   if (!root) return;
   const context = JSON.parse(root.dataset.myTeamContext), select = document.getElementById('my-team-strategy');
   if (select) {
-    const reconcile = () => { select.value = get(context); };
+    const reconcile = () => {
+      select.value = get(context);
+      const outlook = document.getElementById('my-team-outlook');
+      const choice = JSON.parse(outlook?.dataset.outlookGoals || '{}')[select.value];
+      if (choice) {
+        document.getElementById('my-team-outlook-goal').textContent = choice.guidance;
+        const action = document.getElementById('my-team-outlook-action');
+        action.textContent = choice.action; action.setAttribute('href', choice.href);
+      }
+    };
     reconcile();
     addEventListener('focus', reconcile);
     addEventListener('pageshow', reconcile);
@@ -37,6 +46,7 @@
     select.onchange = () => {
       const ok = set(context, select.value);
       document.getElementById('my-team-strategy-feedback').textContent = ok ? 'Strategy saved for this league and franchise in this signed-in browser session.' : 'Strategy could not be retained. Browser session storage is unavailable or full.';
+      reconcile();
     };
   }
   const key = 'dtos-my-team:' + context.binding;

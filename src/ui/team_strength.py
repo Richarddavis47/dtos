@@ -1,6 +1,7 @@
 """Compact scoped strength display; no generic grade or hidden partial total."""
 from html import escape
 from services.asset_intelligence import contextual_player_url
+from src.ui.intelligence_presentation import manager_points
 
 
 def strength_panel(profile: dict | None, *, league_id: str | None = None, roster_id: int | None = None,
@@ -72,7 +73,7 @@ def strength_panel(profile: dict | None, *, league_id: str | None = None, roster
                         + ', '.join(player_link(pid, int(week)) for pid in byes)
                         + '. Entering this week’s optimal lineup: '
                         + (', '.join(player_link(pid, int(week)) for pid in entering) or 'None supported')
-                        + f'. Whole-lineup projected change: {escape(str(delta)) if delta is not None else "Unavailable"}.</li>')
+                        + f'. Whole-lineup projected change: {escape(manager_points(delta))}.</li>')
     depth = ('<h3>Upcoming bye / depth context</h3><ul>' + ''.join(pressure[:3]) + '</ul>'
              '<p>Whole-lineup changes are not attributed only to byes. Reserve coverage is not an injury forecast.</p>') if pressure else (
              '<h3>Upcoming bye / depth context</h3><p>No supported prior-optimal-starter bye transition is identified in this prepared horizon. '

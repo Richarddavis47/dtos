@@ -1,3 +1,11 @@
+## v1.21.84 / build 2184 — Actionable My Team outlook
+
+Move the existing roster takeaway directly below franchise identity, record and strategy. Reuse the prepared, generation-bound TeamAssessment, positional replacement diagnostics and exact future-capital inventory to explain current position, supported strength, principal concern, future flexibility and one goal-specific action. Statistical record/PF standing remains distinct from the selected week's league-scored optimal-lineup comparison and its supported population. Missing or provisional depth is not proven weak depth; age context is descriptive, with no new sustainability forecast or overall team grade.
+
+Keep roster, depth and capital shortcuts and read-only opponent views. Changing a goal updates the explanatory action immediately using prepared choices and the existing scoped session contract; neutral Market values, Sleeper projections and legal-lineup mathematics are unchanged. Supporting evidence is available in an accessible disclosure. No additional provider requests, FOIS/history work, solver runs, background jobs, persistent records or cache-budget changes are introduced by the formatter.
+
+Separately display unavailable preseason directory forecasts without `None%`, preserving genuine zero, and format derived projected depth changes with the established point formatter without altering underlying precision. Phone and expert comprehension controls are author-run evidence; physical iPhone/Safari, unfamiliar-human comprehension and independent Scout acceptance are not claimed. Beta expansion remains restricted.
+
 ## v1.21.83 / build 2183 — FOIS flight source ownership
 
 Release the persistent FOIS child's canonical current-source reference when its work unit completes or fails. Keep that source available throughout historical evaluation, and use the existing identity-checked release so cleanup cannot remove a newer publication or another league. Shared player identity/conflict evidence and bounded verified historical caches remain reusable. No scoring, source, schema, cache-budget or infrastructure change; retained historical grades are not regenerated or revalidated.

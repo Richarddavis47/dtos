@@ -202,6 +202,7 @@ def build_team_headquarters(
     else:
         updated = "Unavailable"
     from services.my_team_overview import roster_overview
+    from services.my_team_outlook import prepared_outlook
     overview = roster_overview(data, intelligence, players)
     roster_groups = {
         position: [
@@ -213,6 +214,7 @@ def build_team_headquarters(
     return {
         "team": team,
         "overview": overview,
+        "outlook": prepared_outlook(data, intelligence.team_assessment, overview, players, strategy=strategy),
         "strategy": strategy,
         "projection_snapshot": intelligence.context.projection_snapshot,
         "rank": rank,

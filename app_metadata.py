@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.21.83"
-BUILD_NUMBER = 2183
-RELEASE_CODENAME = "FOIS Flight Source Ownership"
+VERSION = "1.21.84"
+BUILD_NUMBER = 2184
+RELEASE_CODENAME = "Actionable My Team Outlook"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
