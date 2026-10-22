@@ -28,6 +28,10 @@ jobs:
       - name: Install validation-only browser dependencies
         run: |
           python -m pip install -r requirements-validation.txt
+          # Keep the same signed packages; Azure transfers repeatedly exhausted setup time.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -E -i 's|https?://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
           python -m playwright install --with-deps chromium
       - name: Authenticated product, interaction and accessibility contracts
         timeout-minutes: 14
@@ -47,9 +51,13 @@ jobs:
       - name: Install validation-only browser dependencies
         run: |
           python -m pip install -r requirements-validation.txt
+          # Keep the same signed packages; Azure transfers repeatedly exhausted setup time.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -E -i 's|https?://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
           python -m playwright install --with-deps chromium
       - name: My Team evidence and authenticated session journeys
-        run: python -m unittest tests.test_reserve_quality_admission tests.test_reserve_quality tests.test_reserve_quality_consumers tests.test_reserve_quality_browser tests.test_my_team_intelligence tests.test_my_team_intelligence_browser tests.test_my_team_final tests.test_my_team_final_browser tests.test_legacy_display_integrity tests.test_assessment_context_browser tests.test_dynamic_needs tests.test_dynamic_needs_browser tests.test_roster_diagnostic_admission tests.test_roster_diagnostic_http tests.test_roster_diagnostic_browser tests.test_roster_diagnostic_aging tests.test_roster_diagnostic_aging_browser tests.test_source_evidence_presentation tests.test_source_evidence_browser tests.test_league_gm_diagnostics tests.test_league_gm_diagnostics_browser tests.test_league_gm_integrity tests.test_league_gm_integrity_browser
+        run: python -m unittest tests.test_my_team_outlook tests.test_my_team_outlook_http tests.test_my_team_outlook_browser tests.test_reserve_quality_admission tests.test_reserve_quality tests.test_reserve_quality_consumers tests.test_reserve_quality_browser tests.test_my_team_intelligence tests.test_my_team_intelligence_browser tests.test_my_team_final tests.test_my_team_final_browser tests.test_legacy_display_integrity tests.test_assessment_context_browser tests.test_dynamic_needs tests.test_dynamic_needs_browser tests.test_roster_diagnostic_admission tests.test_roster_diagnostic_http tests.test_roster_diagnostic_browser tests.test_roster_diagnostic_aging tests.test_roster_diagnostic_aging_browser tests.test_source_evidence_presentation tests.test_source_evidence_browser tests.test_league_gm_diagnostics tests.test_league_gm_diagnostics_browser tests.test_league_gm_integrity tests.test_league_gm_integrity_browser
 
   projection-display-cross-version:
     runs-on: ubuntu-24.04
@@ -62,7 +70,13 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements-validation.txt
-      - run: python -m playwright install --with-deps chromium
+      - name: Install browser dependencies and Chromium
+        run: |
+          # Keep the same signed packages; Azure transfers repeatedly exhausted setup time.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -E -i 's|https?://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
+          python -m playwright install --with-deps chromium
       - name: Real prior publisher and isolated current reader
         run: python -m tools.validation.projection_display_cross_version --browser
 
@@ -77,7 +91,13 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements-validation.txt
-      - run: python -m playwright install --with-deps chromium
+      - name: Install browser dependencies and Chromium
+        run: |
+          # Keep the same signed packages; Azure transfers repeatedly exhausted setup time.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -E -i 's|https?://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
+          python -m playwright install --with-deps chromium
       - name: Historical evidence, source identity and phone routes
         run: python -m unittest tests.test_trade_timeline tests.test_historical_faab_conflicts tests.test_historical_tracker_phase2 tests.test_historical_tracker_phase2_browser tests.test_history_final_source tests.test_history_final_source_browser tests.test_playoff_participant_integrity tests.test_playoff_participant_browser tests.test_championship_evidence_consistency tests.test_championship_evidence_browser tests.test_trade_timeline_browser.TradeTimelineBrowserTests tests.test_historical_trade_time tests.test_fois_evidence_integrity tests.test_historical_state_integrity tests.test_historical_state_sources tests.test_fois_decision_context tests.test_historicalstore_migration tests.test_historical_player_evidence tests.test_historical_player_evidence_browser tests.test_historical_retained_admission tests.test_historical_retained_admission_browser tests.test_historical_snapshot_integrity tests.test_market_trend_current_integration tests.test_data_normalization tests.test_batch2_history_reconciliation tests.test_player_history_batch
       - name: Real prior quote publisher and current reader
@@ -96,6 +116,10 @@ jobs:
       - name: Install validation-only browser dependencies
         run: |
           python -m pip install -r requirements-validation.txt
+          # Keep the same signed packages; Azure transfers repeatedly exhausted setup time.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -E -i 's|https?://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
           python -m playwright install --with-deps chromium
       - name: Market pagination, visible roster and scoped fresh-start journeys
         run: python -m unittest tests.test_beginner_market tests.test_beginner_browser tests.test_beginner_final tests.test_beginner_final_browser tests.test_home_trade_news tests.test_home_news_corrections tests.test_home_trade_news_browser tests.test_home_opportunities tests.test_home_opportunities_browser tests.test_home_opportunity_integrity tests.test_home_read_responsiveness tests.test_public_readiness tests.test_market_warming_middleware tests.test_import_commissioner_integrity tests.test_batch6_rank_presentation tests.test_cold_league_recovery tests.test_unmatched_import_recovery tests.test_fois_navigation_reliability tests.test_navigation_residency tests.test_sync_diagnostics
