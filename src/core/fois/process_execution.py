@@ -290,36 +290,42 @@ def _compute_fois_payload(payload: dict[str, Any]) -> dict[str, Any]:
     compact_input_bytes = len(json.dumps(
         data, sort_keys=True, separators=(",", ":"), default=str,
     ).encode("utf-8"))
-    canonical_history_store.update_current(league_id, data)
-    repository = FOISRepository(Path(payload["fois_database"]))
-    history_metrics: dict[str, Any] = {}
-    started = perf_counter()
-    with checkpoint_read_flight(intelligence_checkpoint_store) as reader:
-        service = FOISService(
-            repository,
-            history_loader=lambda selected: load_results_history(
-                canonical_history_store, selected, metrics=history_metrics,
-                checkpoint_reader=reader,
-            ),
+    try:
+        canonical_history_store.update_current(league_id, data)
+        repository = FOISRepository(Path(payload["fois_database"]))
+        history_metrics: dict[str, Any] = {}
+        started = perf_counter()
+        with checkpoint_read_flight(intelligence_checkpoint_store) as reader:
+            service = FOISService(
+                repository,
+                history_loader=lambda selected: load_results_history(
+                    canonical_history_store, selected, metrics=history_metrics,
+                    checkpoint_reader=reader,
+                ),
+            )
+            scores = service._generate_sync(data)
+            history_metrics["checkpoint_flight"] = reader.metrics()
+        duration_ms = round((perf_counter() - started) * 1000, 3)
+        record(
+            "fois_child_phase", phase="compute", status="completed",
+            duration_ms=duration_ms, records=len(scores), history_metrics=history_metrics,
         )
-        scores = service._generate_sync(data)
-        history_metrics["checkpoint_flight"] = reader.metrics()
-    duration_ms = round((perf_counter() - started) * 1000, 3)
-    record(
-        "fois_child_phase", phase="compute", status="completed",
-        duration_ms=duration_ms, records=len(scores), history_metrics=history_metrics,
-    )
-    return {
-        "status": "complete",
-        "records": len(scores),
-        "duration_ms": duration_ms,
-        "peak_rss_bytes": psutil.Process(os.getpid()).memory_info().rss,
-        "worker_pid": os.getpid(),
-        "source_bytes": source_bytes,
-        "compact_input_bytes": compact_input_bytes,
-        "history_metrics": history_metrics,
-        "prepared_evidence": service.prepared_evidence,
-    }
+        return {
+            "status": "complete",
+            "records": len(scores),
+            "duration_ms": duration_ms,
+            "peak_rss_bytes": psutil.Process(os.getpid()).memory_info().rss,
+            "worker_pid": os.getpid(),
+            "source_bytes": source_bytes,
+            "compact_input_bytes": compact_input_bytes,
+            "history_metrics": history_metrics,
+            "prepared_evidence": service.prepared_evidence,
+        }
+    finally:
+        # The persistent child has no runtime-manager eviction owner. Keep this
+        # source throughout evaluation, then drop only this flight's reference;
+        # shared identities and bounded verified history caches remain reusable.
+        canonical_history_store.release_current(league_id, data)
 
 
 def _read_published(repository: Any, league_id: str) -> tuple[tuple[Any, ...], dict[str, object]]:
