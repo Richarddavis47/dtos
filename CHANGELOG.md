@@ -1,3 +1,9 @@
+## v1.21.83 / build 2183 — FOIS flight source ownership
+
+Release the persistent FOIS child's canonical current-source reference when its work unit completes or fails. Keep that source available throughout historical evaluation, and use the existing identity-checked release so cleanup cannot remove a newer publication or another league. Shared player identity/conflict evidence and bounded verified historical caches remain reusable. No scoring, source, schema, cache-budget or infrastructure change; retained historical grades are not regenerated or revalidated.
+
+Disposable before/after real-engine controls preserve complete qualified score contents (excluding only observation generation time), while completed work no longer accumulates current league dictionaries in the child. This is a demonstrated worker-retention correction, not an explanation or resolution of the much larger production parent footprint, recurring memory-limit events, historical OOM or cold-Home gap. Independent Scout acceptance and production headroom observation remain required before beta expansion.
+
 ## v1.21.82 / build 2182 — Bounded historical cache residency
 
 Share one canonical cache owner across history services, intelligence-memory exports and Weekly Reports. Bound its retained-season sections independently of runtime eviction: at most 36 compact sections and an estimated 8 MiB of Python objects, with 12 verified checksum entries. Least-recently-used sections lose cache ownership; existing readers retain their exact objects. Oversized sections remain complete on demand without permanent residency.
