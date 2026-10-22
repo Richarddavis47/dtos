@@ -6,6 +6,8 @@ Keep roster, depth and capital shortcuts and read-only opponent views. Changing 
 
 Separately display unavailable preseason directory forecasts without `None%`, preserving genuine zero, and format derived projected depth changes with the established point formatter without altering underlying precision. Phone and expert comprehension controls are author-run evidence; physical iPhone/Safari, unfamiliar-human comprehension and independent Scout acceptance are not claimed. Beta expansion remains restricted.
 
+Keep browser test coverage, dependency packages and deadlines unchanged while selecting the official Ubuntu CI mirror after repeated measured Azure package-transfer timeouts. This changes validation setup only, not production infrastructure.
+
 ## v1.21.83 / build 2183 — FOIS flight source ownership
 
 Release the persistent FOIS child's canonical current-source reference when its work unit completes or fails. Keep that source available throughout historical evaluation, and use the existing identity-checked release so cleanup cannot remove a newer publication or another league. Shared player identity/conflict evidence and bounded verified historical caches remain reusable. No scoring, source, schema, cache-budget or infrastructure change; retained historical grades are not regenerated or revalidated.
