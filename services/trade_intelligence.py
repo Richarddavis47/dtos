@@ -1,7 +1,7 @@
 """Application-facing Trade Intelligence view assembly."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import Any
 from hashlib import sha256
@@ -87,6 +87,178 @@ def validate_trade_ownership(workspace: dict, payload: dict) -> None:
     invalid_picks = tuple(i for i in (*sent, *received) if trade_pick_identity_errors(assets[i]))
     if invalid_picks:
         raise TradeInputError('pick_identity_invalid', 'The exact pick identity or current owner is inconsistent. Refresh the workspace.', invalid_picks)
+
+
+def personal_context(payload, workspace=None):
+    """Only the authenticated router may install this server-owned context."""
+    return payload.get('_personal_context') or (workspace or {}).get('personal_context') or {}
+
+
+def generated_personal_payload(payload):
+    """Saved protections constrain suggestions, never rewrite a manual offer."""
+    context = personal_context(payload)
+    if not context:
+        return payload
+    overrides = payload.get('override_saved_protections') or []
+    if (not isinstance(overrides, (list, tuple)) or len(overrides) > 256
+            or any(not isinstance(key, str) or not key for key in overrides)):
+        raise TradeInputError('invalid_proposal', 'Use exact assets to override a saved protection for this trade only.')
+    locks = {key for key, flags in (context.get('preferences') or {}).items()
+             if flags.get('protect') and key not in overrides}
+    if not locks:
+        return payload
+    return {**payload, 'protected_assets': sorted(set(payload.get('protected_assets') or ()) | locks)}
+
+
+def personal_order(rows, context):
+    """Stable preference order within existing verdict groups; never promotion."""
+    preferences = context.get('preferences') or {}
+    if not preferences:
+        return rows
+    def key(row):
+        proposal = row.get('proposal') or {}
+        incoming, outgoing = proposal.get('assets_received') or (), proposal.get('assets_sent') or ()
+        matched = [i for i in incoming if (preferences.get(i) or {}).get('target')]
+        avoided = [i for i in incoming if (preferences.get(i) or {}).get('avoid')]
+        spent = [i for i in outgoing if (preferences.get(i) or {}).get('target')]
+        row['personal_preference_matches'] = {'targets_received': matched, 'avoid_received': avoided,
+                                               'targets_sent': spent, 'meaning': 'Your explicit intent, not trade eligibility or an opponent preference.'}
+        return ({'SMASH ACCEPT': 0, 'WORTH PURSUING': 1}.get(row.get('evaluation', {}).get('recommendation'), 2),
+                bool(avoided), not bool(matched), bool(spent))
+    return sorted(rows, key=key)
+
+
+def personal_workspace(workspace, payload):
+    context = personal_context(payload, workspace)
+    if not context:
+        return workspace
+    result = {**workspace, 'personal_context': context}
+    if context.get('mode') != 'custom':
+        return result
+    neutral = workspace.get('neutral_pools') or workspace['pools']
+    values = context.get('values') or {}
+    result['neutral_pools'] = neutral
+    result['pools'] = {rid: tuple(replace(a, trade_value=values.get(a.asset_id)) for a in pool)
+                       for rid, pool in neutral.items()}
+    return result
+
+
+def _personal_evaluation(evaluation, proposal, context, *, active_team, partner_team, league,
+                         ownership, horizon_impact, evidence_context, team_windows, manager_strategies):
+    """Use the same evidence and policy for personal cost, preserving neutral reality.
+
+    The second reconciliation performs no source reads or lineup solving. Partner
+    prices, plausibility, confidence and production always remain canonical.
+    """
+    if context.get('mode') != 'custom':
+        return evaluation
+    values = context.get('values') or {}
+    from math import isclose
+    neutral_prices = context.get('neutral_values') or {}
+    mismatched = [a.asset_id for a in (*proposal.assets_sent, *proposal.assets_received)
+        if a.asset_id in values and values[a.asset_id] is not None and
+        (a.trade_value is None or neutral_prices.get(a.asset_id) is None or
+         not isclose(float(a.trade_value), float(neutral_prices[a.asset_id]), rel_tol=0, abs_tol=1e-8))]
+    if mismatched:
+        raise TradeInputError('personal_evidence_unavailable', 'Personal and neutral Market evidence are incompatible. Restart or refresh rankings.', tuple(mismatched))
+    personal_proposal = replace(proposal,
+        assets_sent=tuple(replace(a, trade_value=values.get(a.asset_id)) for a in proposal.assets_sent),
+        assets_received=tuple(replace(a, trade_value=values.get(a.asset_id)) for a in proposal.assets_received))
+    if horizon_impact is None:
+        raise TradeInputError('personal_evidence_unavailable', 'Custom valuation requires compatible prepared lineup evidence.')
+    custom = evaluate_bilateral(personal_proposal, active_team=active_team, partner_team=partner_team,
+        league=league, ownership=ownership, horizon_impact=horizon_impact,
+        evidence_context=evidence_context, team_windows=team_windows, manager_strategies=manager_strategies)
+    personal_market = custom['market_evidence']
+    neutral = {key: evaluation.get(key) for key in ('recommendation', 'generated_trade_eligible',
+        'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'market_evidence', 'values', 'reason_codes')}
+    neutral_dimensions = evaluation.get('dimensions') or {}
+    custom['dimensions']['counterparty_plausibility'] = neutral_dimensions.get('counterparty_plausibility')
+    custom['dimensions']['strategic_fit']['partner'] = neutral_dimensions['strategic_fit']['partner']
+    custom['dimensions']['package_quality']['partner'] = neutral_dimensions['package_quality']['partner']
+    custom['dimensions']['best_for']['partner'] = neutral_dimensions['best_for']['partner']
+    custom['dimensions']['confidence'] = neutral_dimensions['confidence']
+    custom['dimensions']['value_fairness'] = neutral_dimensions['value_fairness']
+    custom['dimensions']['personal_value_fairness'] = {
+        'label': 'Your Custom valuation balance', 'assessment': personal_market['availability'].upper(),
+        'explanation': 'Rank-slot values express your saved order, not an opponent valuation or historical quote.'}
+    custom['market_evidence'] = evaluation['market_evidence']
+    custom['neutral_assessment'] = neutral
+    custom['personal_value_evidence'] = {**personal_market, 'unit': 'personal_rank_slot_value',
+        'method': context.get('method'), 'revision': context.get('revision'),
+        'baseline_generation': context.get('baseline_generation'), 'market_generation': context.get('market_generation')}
+    custom['neutral_values'] = evaluation['values']
+    custom['perspectives']['bilateral_reality'] = (neutral_dimensions.get('counterparty_plausibility') or {}).get('assessment')
+    if custom.get('recommendation_trace'):
+        custom['recommendation_trace']['scope'] = 'Your personal rank-slot valuation with unchanged canonical legal-lineup production; neutral Market and counterparty evidence remain separately disclosed.'
+    custom['why_they_would_do_it'] = evaluation.get('why_they_would_do_it')
+    custom['counterparty_summary'] = evaluation.get('counterparty_summary')
+    plausible = (neutral_dimensions.get('counterparty_plausibility') or {}).get('assessment')
+    canonical_complete = evaluation['market_evidence']['availability'] == 'full'
+    confidence = (neutral_dimensions.get('confidence') or {}).get('assessment')
+    severe = 'SEVERE_MARKET_LOSS' in (evaluation.get('reason_codes') or [])
+    if severe:
+        custom['recommendation'] = 'REJECT'
+        custom['reason_codes'] = sorted(set(custom.get('reason_codes') or []) | {'NEUTRAL_SEVERE_MARKET_LOSS'})
+    if personal_market['availability'] != 'full':
+        custom['recommendation'] = None
+        custom['recommendation_availability'] = 'unavailable'
+        custom['major_drawback'] = 'Required personal valuation is unavailable for an asset; the saved baseline cannot price this full package.'
+    # The personal reconciliation's bilateral flag was computed with the
+    # user's prices on BOTH sides. It is not authoritative for the opponent.
+    # Re-admit only the supported personal active-side conclusion against the
+    # unchanged neutral counterpart and actual roster-capacity evidence.
+    strategy_sides = custom['dimensions']['strategic_fit']
+    capacity_unresolved = any((strategy_sides[side].get('roster_capacity') or {}).get('additional_spots_to_resolve')
+                              for side in ('active', 'partner'))
+    custom['generated_trade_eligible'] = bool(custom.get('legal') and canonical_complete
+        and personal_market['availability'] == 'full' and plausible in ('STRONG', 'PLAUSIBLE')
+        and confidence in ('MEDIUM', 'HIGH') and not severe and not capacity_unresolved
+        and custom.get('recommendation') in ('SMASH ACCEPT', 'WORTH PURSUING'))
+    for field in ('reason_codes', 'major_risks'):
+        codes = set(custom.get(field) or ())
+        codes.discard('LOW_COUNTERPARTY_PLAUSIBILITY')
+        if plausible == 'LOW':
+            codes.add('LOW_COUNTERPARTY_PLAUSIBILITY')
+        custom[field] = sorted(codes)
+    custom['perspectives']['for_your_team'] = custom.get('recommendation') or 'UNAVAILABLE'
+    if custom.get('recommendation_trace'):
+        custom['recommendation_trace'].update(confidence=confidence,
+            counterparty_plausibility=plausible,
+            counterparty_evidence_basis='neutral canonical Market and supported opponent roster evidence')
+    # Existing decision prose names the numerical cost context. Keep neutral
+    # evidence untouched and visibly qualify every selected Custom conclusion.
+    for key in ('dominant_reason', 'major_drawback', 'why_you_would_do_it'):
+        custom[key] = str(custom.get(key) or '').replace('canonical Market', 'personal valuation').replace('Market', 'personal valuation')
+    # These amounts are derived manager intent, not provider quotes. Preserve
+    # canonical partner structures and neutral Market evidence without mutation.
+    basis = 'personal_rank_slot_value'
+    personal_active = custom['dimensions']['strategic_fit']['active']
+    personal_active['valuation_basis'] = basis
+    custom['dimensions']['package_quality']['active']['valuation_basis'] = basis
+    capital = personal_active.get('future_capital') or {}
+    capital['valuation_basis'] = basis
+    if capital.get('assessment'):
+        capital['assessment']['valuation_basis'] = basis
+    for row in (*capital.get('sent', ()), *capital.get('received', ())):
+        row['valuation_basis'] = basis
+    fit = personal_active.get('capital_strategy_fit') or {}
+    if fit.get('explanation'):
+        fit['explanation'] = fit['explanation'].replace('canonical Market', 'personal valuation').replace('Market', 'personal valuation')
+    custom['valuation_basis'] = basis
+    custom['dominant_reason'] = 'Custom DTOS personal assessment. ' + custom['dominant_reason']
+    custom['major_drawback'] = ('Neutral DTOS: ' + str(evaluation.get('recommendation') or 'unavailable') +
+        '. Neutral Market cost remains separate. ' + custom['major_drawback'])
+    if severe:
+        custom['dominant_reason'] = 'Custom interest cannot override the existing severe neutral Market-loss safeguard.'
+        custom['major_drawback'] = (f"Neutral Market: you send {evaluation['values']['sent']} and receive {evaluation['values']['received']}. "
+                                    'The severe neutral value loss prevents an endorsement, even when your personal values favor the acquisition.')
+        custom['recommendation_trace']['rule_reasons'].insert(0, 'NEUTRAL_SEVERE_MARKET_LOSS')
+    if not canonical_complete:
+        custom['major_drawback'] = 'Required neutral Market pricing is missing; the actual acquisition cost cannot be fully assessed. ' + custom['major_drawback']
+    custom['provenance']['personal_valuation'] = {key: context.get(key) for key in
+        ('mode', 'revision', 'baseline_generation', 'market_generation', 'method', 'scope')}
+    return custom
 
 
 def _requested_strategy(workspace, payload):
@@ -228,6 +400,9 @@ def evaluate_trade_request(
     active_id = int(payload.get("active_roster_id") or 0)
     partner_id = int(payload.get("partner_roster_id") or 0)
     workspace = workspace or build_trade_workspace(data, active_id)
+    context = personal_context(payload, workspace)
+    if workspace.get('neutral_pools') is not None:
+        workspace = {**workspace, 'pools': workspace['neutral_pools']}
     if payload.get('strategy') is not None:
         _requested_strategy({}, payload)
     validate_trade_ownership(workspace, payload)
@@ -245,6 +420,13 @@ def evaluate_trade_request(
     if unknown:
         raise ValueError(f"Unknown trade assets: {', '.join(unknown)}")
     proposal = TradeProposal(active_id, partner_id, tuple(assets[item] for item in sent_ids), tuple(assets[item] for item in received_ids), str(payload.get("package_type") or "Manual"))
+    if context.get('mode') == 'custom':
+        missing_personal = tuple(item for item in (*sent_ids, *received_ids)
+                                 if (context.get('values') or {}).get(item) is None)
+        if missing_personal:
+            raise TradeInputError('personal_evidence_unavailable',
+                'This exact asset has no supported saved Custom rank or price. Use Neutral DTOS or Restart Rankings; your offer is unchanged.',
+                missing_personal)
     ownership = {asset.asset_id: asset.source_roster_id for asset in assets.values()}
     wrong_sent = [item for item in sent_ids if ownership[item] != active_id]
     wrong_received = [item for item in received_ids if ownership[item] != partner_id]
@@ -275,6 +457,12 @@ def evaluate_trade_request(
                                 str(partner_id): teams[partner_id].get('strategy')},
             evidence_context=prepared_context,
         )
+        evaluation = _personal_evaluation(evaluation, proposal, context,
+            active_team=teams[active_id], partner_team=teams[partner_id], league=data.get('league') or {},
+            ownership=ownership, horizon_impact=horizon_impact, evidence_context=prepared_context,
+            team_windows=workspace.get('competitive_windows'), manager_strategies={
+                str(active_id): payload.get('strategy') or workspace.get('requested_strategy') or teams[active_id].get('strategy'),
+                str(partner_id): teams[partner_id].get('strategy')})
         from src.core.intelligence.roster_diagnostics import package_diagnostics
         diagnostic = package_diagnostics(data, proposal, projections.snapshot(), horizon_impact,
             {str(active_id): payload.get('strategy') or workspace.get('requested_strategy') or teams[active_id].get('strategy'),
@@ -302,6 +490,14 @@ def evaluate_trade_request(
         raise RuntimeError("Canonical trade evaluation unavailable") from exc
     if canonical_projection_identity(projections.service.snapshot(), projection_identity['league_id'])['generation'] != projection_identity['generation']:
         raise TradeInputError('canonical_evidence_changed', 'Canonical projection evidence changed during evaluation. Try the same offer again.')
+    if context:
+        evaluation["personalization"] = {key: context.get(key) for key in ("mode", "revision", "baseline_generation", "market_generation", "method", "scope")}
+        preferences = context.get("preferences") or {}
+        evaluation["personal_preference_conflicts"] = [{"asset_id": key, "kind": "protect" if flags.get("protect") and key in sent_ids else "avoid"}
+            for key, flags in preferences.items() if (flags.get("protect") and key in sent_ids) or (flags.get("avoid") and key in received_ids)]
+        evaluation["personal_preference_warnings"] = [
+            ("Saved protection conflicts with outgoing " if flags.get("protect") and key in sent_ids else "Saved avoid preference conflicts with incoming ") + key
+            for key, flags in preferences.items() if (flags.get("protect") and key in sent_ids) or (flags.get("avoid") and key in received_ids)]
     identity_input = {
         "league_id": str((data.get("league") or {}).get("league_id") or data.get("league_id") or ""),
         "active_roster_id": active_id, "partner_roster_id": partner_id,
@@ -467,11 +663,13 @@ def _bounded_adjustment_candidates(
 
 def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
     """Return calculated repair/adjustment options, never static action labels."""
+    payload = generated_personal_payload(payload)
     started = perf_counter()
     boundary = _trade_search_boundary(data)
     reader = _search_reader(data, payload, boundary)
     active_id = int(payload.get("active_roster_id") or 0)
     workspace = build_trade_workspace(data, active_id)
+    workspace = personal_workspace(workspace, payload)
     _requested_strategy(workspace, payload)
     validate_trade_ownership(workspace, payload)
     evidence_context = build_trade_evidence_context(
@@ -910,10 +1108,12 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
 
 def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
     """Return up to three distinct, editable approaches to the same negotiation goal."""
+    payload = generated_personal_payload(payload)
     boundary = _trade_search_boundary(data)
     reader = _SearchProjectionReader(_trade_projection_service(data))
     active_id = int(payload.get("active_roster_id") or 0)
     workspace = build_trade_workspace(data, active_id)
+    workspace = personal_workspace(workspace, payload)
     _requested_strategy(workspace, payload)
     evidence_context = build_trade_evidence_context(
         data, (asset for pool in workspace["pools"].values() for asset in pool),
@@ -1089,6 +1289,7 @@ def _trade_search_boundary(data: dict[str, Any]) -> str:
 
 def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
     """Bounded generation adapter; manual analysis remains available for any construction."""
+    payload = generated_personal_payload(payload)
     started = perf_counter()
     active_id = int(payload.get("active_roster_id") or 0)
     workflow = str(payload.get("workflow") or "recommended")
@@ -1106,6 +1307,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
     boundary = _trade_search_boundary(data) if targeted_search else None
     projection_reader = _search_reader(data, payload, boundary) if targeted_search else None
     workspace = build_trade_workspace(data, active_id)
+    workspace = personal_workspace(workspace, payload)
     _requested_strategy(workspace, payload)
     teams = {int(team.get("roster_id") or 0): team for team in workspace["teams"]}
     ownership = {asset.asset_id: roster_id for roster_id, pool in workspace["pools"].items() for asset in pool}
@@ -1271,6 +1473,9 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             -int(row['evaluation']['dimensions'].get('league_partner_context', {}).get('soft_tie_break') or 0),
             row["evaluation"]["provenance"]["evaluation_id"],
         ))
+    generated = personal_order(generated, personal_context(payload))
+    for market in shop_markets:
+        market['returns'] = personal_order(market['returns'], personal_context(payload))
     limit = 5 if workflow in {"shop", "recommended"} else 3
     offer_labels = ("BEST SUPPORTED FIT FOUND", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE CONSTRUCTION") if workflow == "trade_for" else ()
     for index, result in enumerate(generated[:limit]):
@@ -1340,6 +1545,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
 
 def _generate_recommended(data, payload):
     """Progressive bounded discovery with actual evaluated near misses."""
+    payload = generated_personal_payload(payload)
     from services.recommended_trade_search import session_constraints, discover, construct, family_identity, surface_evidence
     from services.trade_search_policy import SearchFunnel, diverse_rows, result_state
     started = perf_counter()
@@ -1355,6 +1561,7 @@ def _generate_recommended(data, payload):
     boundary = _trade_search_boundary(data)
     reader = _search_reader(data, payload, boundary)
     workspace = build_trade_workspace(data, int(payload.get('active_roster_id') or 0))
+    workspace = personal_workspace(workspace, payload)
     _requested_strategy(workspace, payload)
     assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
     projection_available = bool(reader.snapshot() and str(reader.snapshot().get('league_id')) == str(workspace['manager_context'].league_id))
@@ -1404,7 +1611,7 @@ def _generate_recommended(data, payload):
         results = diverse_rows(evaluated, assets)
         if len(results) >= 5 or len(seen) >= funnel.budget or not projection_available:
             break
-    results = diverse_rows(evaluated, assets)
+    results = personal_order(diverse_rows(evaluated, assets), personal_context(payload))
     if _trade_search_boundary(data) != boundary:
         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
     return {'workflow': 'recommended', 'count': len(results), 'results': results,

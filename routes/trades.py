@@ -32,6 +32,9 @@ _STRATEGY_JS = (_STATIC_ROOT / "js" / "strategy_session.js").read_text(encoding=
 
 
 def _trade_failure(exc: Exception) -> HTTPException:
+    from services.personal_rankings import PersonalRankingError
+    if isinstance(exc, PersonalRankingError):
+        return HTTPException(exc.status, {"code": exc.code, "message": str(exc)})
     if isinstance(exc, TradeInputError):
         return HTTPException(422, {"code": exc.code, "message": str(exc), "assets": exc.assets})
     if isinstance(exc, ValueError):
@@ -43,13 +46,96 @@ def _trade_failure(exc: Exception) -> HTTPException:
     logging.getLogger(__name__).error("trade_engine_failure type=%s function=%s line=%s", type(exc).__name__, location.name if location else "unknown", location.lineno if location else 0)
     return HTTPException(503, {"code": "evaluation_unavailable", "message": "DTOS couldn't complete this evaluation. Your proposal is still intact."})
 
+class PersonalTradeResponse(JSONResponse):
+    """Publish a bounded trade result under its final intent/source identity.
+
+    Heavy evaluation and JSON encoding finish before this guard. Ranking CAS
+    writers use the same striped intent lock; source commits use the runtime
+    lock. A busy intent writer yields a retryable response, never loop blocking.
+    """
+    def __init__(self, content, *, context, verify):
+        super().__init__(content, headers={'Cache-Control': 'no-store'})
+        self.personal_context = context
+        self.verify = verify
+        from src.platform.league_context import current_league_context
+        league = current_league_context()
+        self.runtime = league.runtime if league else None
+
+    async def __call__(self, scope, receive, send):
+        from contextlib import asynccontextmanager
+        from services.personal_rankings import personal_publication
+
+        @asynccontextmanager
+        async def source_guard():
+            if self.runtime is None:
+                yield
+            else:
+                async with self.runtime.fois_publication_lock:
+                    yield
+
+        started = False
+        async def tracked_send(message):
+            nonlocal started
+            if message['type'] == 'http.response.start':
+                started = True
+            await send(message)
+        try:
+            async with source_guard():
+                with personal_publication(self.personal_context):
+                    self.verify()
+                    await super().__call__(scope, receive, tracked_send)
+        except Exception as exc:
+            if started:
+                raise
+            failure = _trade_failure(exc)
+            await JSONResponse({'detail': failure.detail}, status_code=failure.status_code,
+                headers={'Cache-Control': 'no-store'})(scope, receive, send)
+
+
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[[str, str], HTMLResponse]
 
 
-def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData, page: PageRenderer) -> APIRouter:
+def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData, page: PageRenderer,
+                         personal_resolver=None, personal_validator=None, personal_bootstrap=None) -> APIRouter:
     router = APIRouter()
+
+    async def personalize(payload):
+        if any(str(key).startswith('_personal') for key in payload):
+            raise TradeInputError('invalid_proposal', 'Personal valuation context is server owned.')
+        explicit = any(key in payload for key in ('valuation_mode', 'personal_revision', 'personal_market_generation'))
+        if not explicit:
+            return payload
+        if personal_resolver is None:
+            if payload.get('valuation_mode') == 'custom':
+                raise TradeInputError('personal_evidence_unavailable', 'Custom rankings are not available in this context.')
+            return payload
+        data = require_data()
+        context = await run_manager_read(lambda: personal_resolver(data, payload))
+        return {**payload, '_personal_context': context}
+
+    def fence(payload):
+        context = payload.get('_personal_context')
+        if context and personal_validator is not None:
+            personal_validator(require_data(), payload, context)
+
+    def private_response(result, payload):
+        try:
+            fence(payload)
+        except Exception as exc:
+            raise _trade_failure(exc) from exc
+        # Serialization and the final preference check are synchronous in this
+        # task: no await permits a same-loop preference write before handoff.
+        encoded = jsonable_encoder(result)
+        context = payload.get('_personal_context')
+        response = (PersonalTradeResponse(encoded, context=context, verify=lambda: fence(payload)) if context
+                    else JSONResponse(encoded, headers={'Cache-Control': 'no-store'}))
+        try:
+            fence(payload)
+        except Exception as exc:
+            raise _trade_failure(exc) from exc
+        return response
 
     @router.get("/static/js/strategy_session.js", include_in_schema=False)
     async def strategy_script() -> Response:
@@ -286,33 +372,39 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
                 "source": workspace["manager_context"].source,
             },
         }
-        return JSONResponse(jsonable_encoder(payload))
+        if personal_bootstrap is not None:
+            payload['personalization'] = await run_manager_read(
+                lambda: personal_bootstrap(require_data(), workspace['active_roster_id']))
+        return JSONResponse(jsonable_encoder(payload), headers={'Cache-Control': 'no-store'})
 
     @router.post("/api/trades/calculate", response_class=JSONResponse)
     async def calculate_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
+            payload = await personalize(payload)
             result = await run_manager_read(lambda: calculate_trade_market(require_data(), payload))
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return JSONResponse(jsonable_encoder(result))
+        return private_response(result, payload)
 
     @router.post("/api/trades/balance", response_class=JSONResponse)
     async def balance_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
+            payload = await personalize(payload)
             result = await run_manager_read(lambda: balance_trade_market(require_data(), payload))
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return JSONResponse(jsonable_encoder(result))
+        return private_response(result, payload)
 
     @router.post("/api/trades/evaluate", response_class=JSONResponse)
     async def evaluate_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
+            payload = await personalize(payload)
             def assess():
                 # A successful HTTP response alone does not establish assessment
                 # freshness. Bind it to the same semantic canonical publication
@@ -330,13 +422,14 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             result = await run_manager_read(assess)
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return JSONResponse(jsonable_encoder(result))
+        return private_response(result, payload)
 
     @router.post("/api/trades/generate", response_class=JSONResponse)
     async def generate_trades(payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
+            payload = await personalize(payload)
             data = require_data()
             def discover():
                 if str(payload.get('workflow') or 'recommended') != 'recommended':
@@ -354,7 +447,8 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
                 if home_ideas.cache_key(data, int(payload.get('active_roster_id') or 0), payload.get('strategy'),
                     payload.get('protected_assets') or [], payload.get('excluded_assets') or []) != key:
                     raise TradeInputError('canonical_evidence_changed', 'Prepared evidence changed. Try the same search again.')
-                home_ideas.publish(key, result, payload)
+                if not payload.get('_personal_context'):
+                    home_ideas.publish(key, result, payload)
                 return result
             def bounded_discover():
                 if payload.get('home_source_identity'):
@@ -364,31 +458,33 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             result = await run_manager_read(bounded_discover)
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return JSONResponse(jsonable_encoder(result))
+        return private_response(result, payload)
 
     @router.post("/api/trades/assist", response_class=JSONResponse)
     async def assist_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
+            payload = await personalize(payload)
             result = await run_manager_read(
                 lambda: assist_trade_request(require_data(), payload),
             )
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return JSONResponse(jsonable_encoder(result))
+        return private_response(result, payload)
 
     @router.post("/api/trades/alternatives", response_class=JSONResponse)
     async def trade_alternatives(payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
+            payload = await personalize(payload)
             result = await run_manager_read(
                 lambda: create_trade_alternatives(require_data(), payload),
             )
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return JSONResponse(jsonable_encoder(result))
+        return private_response(result, payload)
 
     @router.get("/api/trades/assets", response_class=JSONResponse)
     async def trade_assets(q: str = "", front_office: int | None = None, limit: int = 20) -> JSONResponse:
@@ -401,7 +497,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             )
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
-        return JSONResponse(jsonable_encoder(result))
+        return JSONResponse(jsonable_encoder(result), headers={"Cache-Control": "no-store"})
 
     @router.post("/api/trades/compare", response_class=JSONResponse)
     async def compare_trades(payload: dict[str, Any] = Body(...)) -> JSONResponse:
@@ -409,13 +505,15 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         try:
             for proposal in payload.get("proposals") or ():
                 authorize_workspace(require_data(), {**proposal, "workspace_context": payload.get("workspace_context")})
+            payload = await personalize(payload)
+            proposals = [{**row, '_personal_context': payload.get('_personal_context')} for row in payload.get('proposals') or ()]
             result = await run_manager_read(
                 lambda: compare_trade_requests(
-                    require_data(), list(payload.get("proposals") or ()),
+                    require_data(), proposals,
                 ),
             )
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return JSONResponse(jsonable_encoder(result))
+        return private_response(result, payload)
 
     return router

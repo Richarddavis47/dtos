@@ -107,6 +107,7 @@ def manager_navigation(title: str, *, roster_id: int | None = None) -> str:
         ("Weekly Report", "/reports/weekly"),
         ("Draft Capital", "/picks"), ("Advanced", "/brain"),
         ("Calibration", "/valuation/calibration"), ("Settings", "/settings"),
+        ("My DTOS", "/account/my-dtos"),
     )
     tools = "".join(f'<a href="{href}">{label}</a>' for label, href in secondary)
     return f'<nav class="manager-nav" aria-label="Primary navigation">{links}</nav><details class="secondary-nav"><summary>More league tools</summary><div>{tools}</div></details>'

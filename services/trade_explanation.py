@@ -20,6 +20,7 @@ REASONS = {
     'PURSUIT_ONLY_MARKET_TERMS_UNRESOLVED': 'This is a pursuit recommendation; acquisition-price terms remain unresolved.',
     'MARKET_PREMIUM_FOR_SUPPORTED_LINEUP_BENEFIT': 'The supported lineup benefit requires paying a Market premium.',
     'SEVERE_MARKET_LOSS': 'The return loses more than half the supported Market value, exceeding the existing severe-loss policy.',
+    'NEUTRAL_SEVERE_MARKET_LOSS': 'Severe neutral Market loss prevents endorsement; personal interest does not erase the actual Market cost.',
     'MARKET_COST_WITHOUT_MATERIAL_BENEFIT': 'The Market cost is not justified by a material supported lineup or qualifying depth benefit.',
     'SUPPORTED_MARKET_LINEUP_AND_DEPTH_PARITY': 'Supported Market, lineup and depth evidence is broadly balanced.',
     'MATERIAL_TRADEOFF_UNRESOLVED': 'A material trade-off remains unresolved.',
@@ -59,6 +60,13 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
     ctx = EvidenceContext('trade', f"{inputs.get('active_roster_id')}→{inputs.get('partner_roster_id')}",
                           provenance.get('evaluation_id'), provenance.get('strategy_methodology') or provenance.get('evaluator'), league_id)
     evidence, why, risks, limits, advanced = [], [], [], [], []
+    personal = bool(result.get('personal_value_evidence'))
+
+    def reason_text(code):
+        text = REASONS[code]
+        if personal and code not in {'NEUTRAL_SEVERE_MARKET_LOSS', 'LOW_COUNTERPARTY_PLAUSIBILITY'}:
+            text = text.replace('canonical Market', 'personal valuation').replace('Market', 'personal valuation')
+        return text
 
     def add(key, label, value, *, unit='classification', state=None, kind=K.DERIVED):
         evidence.append(EvidenceItem(key, label, kind, ctx, key, unit,
@@ -68,13 +76,13 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
         return key
 
     def reason(code, key):
-        return Statement(code, REASONS[code], (key,)) if code in REASONS else None
+        return Statement(code, reason_text(code), (key,)) if code in REASONS else None
 
-    rec = add('recommendation', 'Canonical recommendation', result.get('recommendation'), kind=K.INTERPRETATION)
+    rec = add('recommendation', 'Custom DTOS personal recommendation' if personal else 'Canonical recommendation', result.get('recommendation'), kind=K.INTERPRETATION)
     conclusion = Statement('CANONICAL_RECOMMENDATION', result.get('recommendation') or 'Recommendation unavailable', (rec,))
     for code in (result.get('recommendation_trace') or {}).get('rule_reasons') or []:
         if code in REASONS:
-            key = add(f'recommendation.{code}', 'Accepted recommendation reason', REASONS[code], kind=K.INTERPRETATION)
+            key = add(f'recommendation.{code}', 'Accepted recommendation reason', reason_text(code), kind=K.INTERPRETATION)
             why.append(reason(code, key))
     dims = result.get('dimensions') or {}
     diagnostic = dims.get('roster_diagnostics') or {}
@@ -111,7 +119,8 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
         capital = (strategy.get('future_capital') or {}).get('assessment') or {}
         for field, title in (('received_market_value', 'Capital received'), ('sent_market_value', 'Capital spent'), ('net_market_value', 'Net capital')):
             if capital:
-                add(f'{side}.capital.{field}', f'{label} · {title}', capital.get(field), unit='canonical Market price')
+                add(f'{side}.capital.{field}', f'{label} · {title}', capital.get(field),
+                    unit='personal rank-slot value' if personal and side == 'active' else 'canonical Market price')
         for horizon, title in HORIZONS.items():
             row = (strategy.get('horizons') or {}).get(horizon) or {}
             key = add(f'{side}.{horizon}', f'{label} · {title} optimal-lineup change', row.get('delta'), unit='fantasy points')
@@ -181,7 +190,7 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
     for code in result.get('major_risks') or []:
         if code not in REASONS:
             continue
-        key = add(f'risk.{code}', 'Accepted risk', REASONS[code], kind=K.INTERPRETATION)
+        key = add(f'risk.{code}', 'Accepted risk', reason_text(code), kind=K.INTERPRETATION)
         row = reason(code, key)
         if row:
             risks.append(row)
@@ -190,9 +199,9 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
         from services.trade_decision import decision_context
         drawback = (result.get('decision_context') or decision_context(result))['main_cost']
     if drawback:
-        key = add('major_drawback', 'Qualified main drawback' if market_state != 'full' else 'Canonical major drawback', drawback, kind=K.INTERPRETATION)
+        key = add('major_drawback', 'Personal decision drawback' if personal else 'Qualified main drawback' if market_state != 'full' else 'Canonical major drawback', drawback, kind=K.INTERPRETATION)
         risks.insert(0, Statement('CANONICAL_MAJOR_DRAWBACK', drawback, (key,)))
-    return Explanation('DTOS trade assessment', league_id, (ctx,), tuple(evidence), conclusion,
+    return Explanation('Custom DTOS personal assessment' if personal else 'DTOS trade assessment', league_id, (ctx,), tuple(evidence), conclusion,
                        tuple(why[:3]), tuple(risks[:3]), confidence_rows, tuple(limits), tuple(advanced))
 
 

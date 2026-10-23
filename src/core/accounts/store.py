@@ -12,7 +12,7 @@ from typing import Any, Iterator
 
 from .models import AccountContext, LeagueMembership
 
-ACCOUNT_SCHEMA_VERSION = 2
+ACCOUNT_SCHEMA_VERSION = 3
 
 
 def _now() -> str:
@@ -81,6 +81,14 @@ CREATE TABLE IF NOT EXISTS account_auth_audit(
   audit_id INTEGER PRIMARY KEY AUTOINCREMENT, occurred_at TEXT NOT NULL,
   account_id TEXT, event_type TEXT NOT NULL, result TEXT NOT NULL,
   detail TEXT NOT NULL DEFAULT '{}'
+);
+CREATE TABLE IF NOT EXISTS account_personal_rankings(
+  account_id TEXT NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+  league_id TEXT NOT NULL, roster_id INTEGER NOT NULL CHECK(roster_id>0),
+  document_json TEXT NOT NULL CHECK(length(CAST(document_json AS BLOB))<=524288),
+  revision INTEGER NOT NULL CHECK(revision>0),
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+  PRIMARY KEY(account_id,league_id,roster_id)
 );
 """
 
