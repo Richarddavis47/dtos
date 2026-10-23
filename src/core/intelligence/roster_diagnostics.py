@@ -766,6 +766,17 @@ def _requalify(result, qualification):
     return result
 
 
+def prepared_diagnostics(data, snapshot=None, *, projection_reader=None):
+    """Read/requalify an existing publication; never compute on a cache miss."""
+    snapshot = projection_snapshot(data) if snapshot is None else snapshot
+    inputs = diagnostic_inputs(data, snapshot)
+    saved = diagnostic_store.get(_identity(inputs, snapshot))
+    if saved is None:
+        return None
+    return _requalify(json.loads(saved), _qualification(
+        data, snapshot, inputs[2], projection_reader=projection_reader))
+
+
 def diagnose_league(data, snapshot=None, *, projection_reader=None):
     snapshot = projection_snapshot(data) if snapshot is None else snapshot
     inputs = diagnostic_inputs(data, snapshot)

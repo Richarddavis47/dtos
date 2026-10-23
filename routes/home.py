@@ -20,9 +20,7 @@ from src.ui.intelligence_presentation import league_is_preseason, record_evidenc
 from src.ui.badges import champion_badge, defending_champion, standing_badge, you_badge
 from src.platform.account_context import current_account
 from src.ui.render_cache import GenerationRenderCache
-from services.home_attention import attention_state
-from services.attention_changes import pick_changes
-from src.ui.home_attention import attention_panel
+from src.ui.front_office_brief import CSS as BRIEF_CSS
 from src.ui.standings import render_standings
 from src.platform.league_context import current_league_context
 from src.core.request_execution import run_manager_read
@@ -100,27 +98,16 @@ def create_home_router(
         body = home_body_render_cache.get_or_build(
             cache_key, generation, render_body,
         ).decode("utf-8")
-        # Outside body cache: changed projection admission must not leave stale
-        # Attention beside otherwise unchanged Home content. No preparation.
         selected = _selected_team(data, front_office)
         active = current_league_context()
-        projection = active.projection.snapshot() if active is not None else None
-        from config import METADATA_DATABASE_FILE
         rid = selected.get('roster_id') if selected else None
-        changes, coverage = pick_changes(data, rid, METADATA_DATABASE_FILE)
-        attention_evidence = attention_state(data, rid, projection, change_rows=changes, change_coverage=coverage)
-        attention = attention_panel({**attention_evidence, 'items': attention_evidence['items'][:2]})
-        if len(attention_evidence['items']) > 2:
-            attention += '<details class="ds-home-detail"><summary>More prepared Attention</summary>' + attention_panel({**attention_evidence, 'items': attention_evidence['items'][2:]}) + '</details>'
-        if not attention_evidence['items']:
-            attention = '<details class="ds-home-detail"><summary>Prepared Attention · coverage and limitations</summary>' + attention + '</details>'
         now = datetime.now(timezone.utc)
         news_data = capture_news_data(data)
         candidates, limitations = recent_candidates(news_data, now=now)
         news_key = (news_identity(news_data, candidates, now), viewer, tuple(limitations))
         news = trade_news_render_cache.get_or_build(news_key, str(retained_generation),
             lambda: json.dumps(build_news(news_data, candidates, limitations, now=now)).encode()).decode()
-        body = body.replace('<!--home-opportunities-->', '<style>' + OPPORTUNITY_CSS + '</style>' + opportunity_section(int(rid or 0)))
+        body = body.replace('<!--home-opportunities-->', '<style>' + OPPORTUNITY_CSS + BRIEF_CSS + '</style>' + opportunity_section(int(rid or 0)))
         body = body.replace('<!--home-trade-news-->', '<style>' + NEWS_CSS + '</style>' + render_news(json.loads(news), viewer=viewer))
         # Outside the body cache: optional analytics can fail or recover without
         # changing roster/Market facts. No generation is triggered by this read.
@@ -137,7 +124,7 @@ def create_home_router(
             from services.trade_workspace_context import workspace_context
             context = escape(json.dumps(workspace_context(data, int(rid))), quote=True)
             body += f'<div id="trade-home-boundary" hidden data-workspace-context="{context}"></div><script src="/static/js/trade_workspace.js" defer></script>'
-        return page("Home", body.replace('<!--home-attention-->', attention))
+        return page("Home", body)
 
     def _home_body(data: dict[str, Any], front_office: int | None, directory: dict, champion=None) -> str:
         teams = data.get("teams") or []
@@ -193,7 +180,7 @@ def create_home_router(
         facts = weekly_facts(data, report_week)
         report_state = {"completed": "Final", "in_progress": "In progress", "preview": "Preview"}.get(facts["state"], "Unavailable")
         body = (
-            header + '<!--home-trade-news--><!--home-opportunities-->' + _section('Standings', 'Official records and scoring · not DTOS power rankings', render_standings(data, champion=champion)) + '<!--home-attention-->'
+            header + '<!--home-opportunities--><!--home-trade-news-->' + _section('Standings', 'Official records and scoring · not DTOS power rankings', render_standings(data, champion=champion))
             + _section("Weekly Report", report_state + " · current week evidence", f'<div class="card ux-recap"><a href="/reports/weekly?week={report_week}">Open Week {report_week} report · {report_state} →</a></div>')
             + _section("Explore", "Useful destinations—not personalized Attention recommendations", action_html)
             + '<details class="ds-home-detail"><summary>DTOS team assessment · not official standings</summary>' + _section("Team Assessment Rankings", "Canonical team assessment · not standings or FOIS GM rankings", rank_html) + '</details>'

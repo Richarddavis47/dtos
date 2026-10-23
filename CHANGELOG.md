@@ -1,3 +1,11 @@
+## v1.21.85 / build 2185 — Prepared Front Office Brief
+
+Combine Home Attention and hypothetical Trade Opportunities into one prepared Front Office Brief before completed League Trade News. Show up to four supported insights, two initially visible, each with a reason, tradeoff and existing action. Explicit manager goals determine family precedence without changing objective lineup calculations or neutral Market prices. Exact owned capital, legal replacement quality and evaluator-supported offers remain separately qualified; related needs and offers are composed using their existing pre/post diagnostics.
+
+Read matching TeamAssessment and roster-diagnostic publications without cache-miss factories. Missing trade evidence cannot hide unrelated prepared roster/capital facts. Only eligible, fully priced favorable cached offers appear as recommendations; optional, rejected, exploratory, incomplete and stale offers are not promoted. Preserve exact opaque opportunity tokens, You Send/Receive identities and Preview/Keep Original/Adopt navigation. Source/goal changes and failed prepared reads clear obsolete client content.
+
+No automatic discovery, provider acquisition, historical Market reader, solver, FOIS or AI work is added. Keep the existing 24-entry/2 MiB/15-minute opportunity cache, historical execution/publication protections, 2 GiB budget and 500 ms liveness requirement. No new persistence or background work. Author-run browser and comprehension walkthroughs are not physical Safari, human-usability or independent Scout acceptance. Beta expansion remains restricted.
+
 ## v1.21.84 / build 2184 — Actionable My Team outlook
 
 Move the existing roster takeaway directly below franchise identity, record and strategy. Reuse the prepared, generation-bound TeamAssessment, positional replacement diagnostics and exact future-capital inventory to explain current position, supported strength, principal concern, future flexibility and one goal-specific action. Statistical record/PF standing remains distinct from the selected week's league-scored optimal-lineup comparison and its supported population. Missing or provisional depth is not proven weak depth; age context is descriptive, with no new sustainability forecast or overall team grade.

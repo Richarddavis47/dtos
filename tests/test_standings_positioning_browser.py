@@ -60,9 +60,9 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                     else None
                 ),
             ),
-            patch("routes.home.pick_changes", return_value=([], {})),
-            patch("routes.home.attention_state", return_value={"items": []}),
-            patch("routes.home.attention_panel", return_value=""),
+            patch("services.attention_changes.pick_changes", return_value=([], {})),
+            patch("services.home_attention.attention_state", return_value={"items": []}),
+            patch("src.ui.front_office_brief.cards", return_value=""),
             patch(
                 "services.sleeper.sleeper_get",
                 side_effect=AssertionError("No source calls on reads"),

@@ -89,6 +89,25 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         except (ValueError, TypeError) as exc:
             raise HTTPException(422, "invalid_exact_protections") from exc
         strategy = selected_strategy(request.cookies.get(COOKIE), context['league_id'], rid)
+        from services.trade_intelligence import _trade_projection_service
+        from src.platform.league_context import current_league_context
+        active = current_league_context()
+        reader = _trade_projection_service(data)
+
+        def publication():
+            current = require_data()
+            return (id(current), id(reader.snapshot()),
+                    id(active.projection) if active else None,
+                    active.runtime.fois_publication_revision if active else None,
+                    tuple(sorted(active.runtime.source_generations.items())) if active else (),
+                    id((current.get('market_data') or {}).get('providers')),
+                    id((current.get('market_data') or {}).get('pick_quotes')),
+                    (current.get('market_data') or {}).get('generation'),
+                    (current.get('team_strength') or {}).get('semantic_generation'), current.get('week'))
+
+        # Pin BEFORE yielding to either read worker. Capturing a newer head at
+        # the end could otherwise make superseded facts pass the final fence.
+        admitted_publication = publication()
         try:
             key = await run_manager_read(lambda: home_ideas.cache_key(data, rid, strategy, locks, omissions))
         except Exception as exc:
@@ -99,8 +118,33 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             if row is None:
                 raise HTTPException(410, "This idea expired or its source, strategy or protections changed. Your draft is unchanged. Find current ideas again.")
             return JSONResponse(row, headers={"Cache-Control": "no-store"})
+        from services.front_office_brief import prepared_evidence, select_insights
+        from services.home_attention import attention_state
+        from services.attention_changes import pick_changes
+        from src.ui.front_office_brief import cards as brief_cards
+        from config import METADATA_DATABASE_FILE
+
+        def prepared_brief():
+            facts = prepared_evidence(data, rid, strategy, market_compatible=key is not None)
+            changes, coverage = pick_changes(data, rid, METADATA_DATABASE_FILE)
+            attention = attention_state(data, rid, reader.snapshot(), change_rows=changes, change_coverage=coverage)
+            items = select_insights(facts, attention['items'], result['rows'])
+            rendered = brief_cards(items)
+            current = require_data()
+            from services.front_office_brief import intelligence_orchestrator
+            same_generation = intelligence_orchestrator.context(current, rid, {'strategy': strategy}).evidence_generation == facts['generation']
+            if not same_generation or home_ideas.cache_key(current, rid, strategy, locks, omissions) != key:
+                raise HTTPException(409, 'Prepared evidence changed. Reload Home to review current facts; your draft is unchanged.')
+            return facts, items, rendered
+
+        facts, items, brief_html = await run_manager_read(prepared_brief)
+        # Publication may change while the off-loop prepared read is pending.
+        # Do not let an obsolete response reintroduce an offer or roster claim.
+        if publication() != admitted_publication:
+            raise HTTPException(409, 'Prepared evidence changed. Reload Home to review current facts; your draft is unchanged.')
         return JSONResponse({'workspace_context': context, 'csrf_token': account.csrf_token if account else '',
             'strategy': strategy, 'source_identity': key[1] if key else None, 'count': len(result['rows']),
+            'brief_html': brief_html, 'brief_count': len(items), 'brief_generation': facts['generation'],
             'state': result['state'], 'reason': result.get('reason'), 'html': opportunity_cards(result['rows'], rid),
             'retained': bool(result.get('source_identity'))}, headers={"Cache-Control": "no-store"})
 
