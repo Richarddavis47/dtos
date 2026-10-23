@@ -168,7 +168,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                         if state == 'expired':
                             with ideas._lock:
                                 for key, (_, payload) in list(ideas._entries.items()):
-                                    ideas._entries[key] = (0, payload)
+                                    ideas._entries[key] = (ideas.monotonic() - ideas.MAX_AGE - 1, payload)
                         # No prepared team facts and no saved search: actual empty API selector.
                         from contextlib import ExitStack
                         with ExitStack() as stack:
