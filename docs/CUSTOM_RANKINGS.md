@@ -29,3 +29,9 @@ Saved Protect constrains generated outgoing suggestions, while explicit manual p
 Editor reads and edits use prepared directory rows and account intent only. They do not start provider calls, discovery, FOIS, history reconstruction, lineup solving or AI work. Browser pagination bounds rendered controls independently of the full saved order. Existing 2 GiB resource admission, 500 ms liveness and historical integrity requirements remain unchanged. Retained FOIS grades remain RETAINED / NOT REVALIDATED.
 
 Author-run fixtures and responsive Chromium are not independent Scout acceptance, physical iPhone/Safari testing or unfamiliar-human comprehension studies. Release evidence must state these limits and preserve unsuccessful validation runs.
+
+## Decision and rendered workflow controls
+
+Custom counterparty plausibility and confidence use neutral evidence for both admission and explanation. A personal calculation cannot veto or invent an opponent response using the user's prices. Severe neutral loss remains an explicit veto with neutral sent/received totals in the primary drawback. Active capital amounts and Balance totals carry personal rank-slot units in Custom mode; neutral amounts retain canonical units. The Calculator Balance control uses the selected mode's exact decimal gap, so equal neutral totals do not incorrectly disable a needed personal adjustment.
+
+Authenticated disposable Chromium controls exercise editor changes through real Trade evaluation, mode comparison, Balance, Preview, Keep original and Adopt at all four viewports. These are author-run controls, not live production-account or physical-device acceptance.

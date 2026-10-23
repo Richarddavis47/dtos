@@ -383,11 +383,19 @@
     }
     if (ownershipInvalid) box.append(node('p', 'Ownership invalid or unavailable: this retained hypothetical offer is not executable. Remove moved assets or select their current owner before balancing.', 'tw-error'));
     box.append(node('small', 'Market value ≠ lineup impact ≠ future capital ≠ strategy fit. Evaluate separately.'));
-    if (valuationMode === 'custom' && workspace.personalization) {
-      const values = workspace.personalization.values || {};
-      const sums = ['sent', 'received'].map(which => selected[which].length && selected[which].every(id => typeof values[id] === 'number' && Number.isFinite(values[id])) ? selected[which].reduce((sum, id) => sum + values[id], 0) : null);
+    let selectedValueComplete = complete, selectedValueDifference = difference;
+    if (valuationMode === 'custom') {
+      const values = workspace.personalization?.values || {};
+      const personalRows = ['sent', 'received'].map(which => selected[which].map(id => values[id]));
+      const knownPersonal = value => typeof value === 'number' && Number.isFinite(value) && value >= 0;
+      const personalScale = Math.max(0, ...personalRows.flat().filter(knownPersonal).map(value => marketParts(value).scale));
+      const personalUnits = value => { const p = marketParts(value); return p.integer * 10n ** BigInt(personalScale - p.scale); };
+      const personalTotals = personalRows.map(row => row.length && row.every(knownPersonal)
+        ? row.reduce((sum, value) => sum + personalUnits(value), 0n) : null);
+      selectedValueComplete = complete && personalTotals.every(total => total != null);
+      selectedValueDifference = selectedValueComplete ? personalTotals[1] - personalTotals[0] : 0n;
       const panel = node('section', null, 'tw-personal-comparison');
-      panel.append(node('h3', 'Your Custom DTOS valuation'), node('p', `You send: ${sums[0] == null ? 'Unavailable' : displayMarket(sums[0])} · You receive: ${sums[1] == null ? 'Unavailable' : displayMarket(sums[1])}`), node('small', 'Saved rank-slot values express your preferences. The neutral Market comparison below and opponent evidence are unchanged.'));
+      panel.append(node('h3', 'Your Custom DTOS valuation'), node('p', `You send: ${personalTotals[0] == null ? 'Unavailable' : displayMarketUnits(personalTotals[0], personalScale)} · You receive: ${personalTotals[1] == null ? 'Unavailable' : displayMarketUnits(personalTotals[1], personalScale)}`), node('small', 'Saved rank-slot values express your preferences. The neutral Market comparison below and opponent evidence are unchanged.'));
       box.prepend(panel);
     }
     const locks = [...new Set([...session.protectedAssets, ...session.excludedAssets, session.requiredOutgoingAsset, session.requiredIncomingAsset].filter(Boolean))];
@@ -414,7 +422,7 @@
         }
       }
     }
-    el('trade-balance-offer').disabled = busy || !complete || ownershipInvalid || difference === 0n;
+    el('trade-balance-offer').disabled = busy || !selectedValueComplete || ownershipInvalid || selectedValueDifference === 0n;
   }
   function review() {
     el('trade-review').hidden = false;
@@ -648,7 +656,7 @@
     if (e.personalization?.mode === 'custom') {
       out.append(node('h3', 'Custom DTOS · your personal assessment'), node('p', 'Neutral DTOS: ' + (e.neutral_assessment?.recommendation || 'Unavailable') + '. Market prices and your counterparty’s supported evidence remain neutral.', 'tw-verdict-qualification'));
       const value = e.personal_value_evidence;
-      if (value) out.append(node('p', 'Your personal values · You send ' + (value.sent?.total == null ? 'Unavailable' : displayMarket(value.sent.total)) + ' / You receive ' + (value.received?.total == null ? 'Unavailable' : displayMarket(value.received.total))));
+      if (value) out.append(node('p', 'Your personal values from Custom Rankings · You send ' + (value.sent?.total == null ? 'Unavailable' : displayMarket(value.sent.total)) + ' / You receive ' + (value.received?.total == null ? 'Unavailable' : displayMarket(value.received.total))));
     }
     for (const warning of e.personal_preference_warnings || []) out.append(node('p', warning + '. Your manually entered offer was not altered.', 'tw-drawback'));
     if (!retained) for (const conflict of e.personal_preference_conflicts || []) {

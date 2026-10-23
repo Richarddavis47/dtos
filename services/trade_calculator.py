@@ -36,7 +36,7 @@ def market_generation(workspace):
                             separators=(',', ':'), default=str).encode()).hexdigest()
 
 
-def market_verdict(sent, received):
+def market_verdict(sent, received, *, personal=False):
     result = market_balance(sent, received)
     difference = result['difference']
     result.update(verdict='UNAVAILABLE' if difference is None else 'APPROXIMATELY_BALANCED' if difference == 0
@@ -44,6 +44,10 @@ def market_verdict(sent, received):
                   absolute_gap=abs(difference) if difference is not None else None,
                   balance_policy='Equal canonical totals only; no inferred fairness band or probability.',
                   meaning='Which side receives more canonical Market value, not which team benefits strategically.')
+    if personal:
+        result.update(unit='personal_rank_slot_value', valuation_basis='personal_rank_slot_value',
+                      balance_policy='Equal personal rank-slot totals only; not neutral Market fairness or opponent willingness.',
+                      meaning='Which side receives more of your personal ranking value. Neutral Market and opponent evidence remain separate.')
     return result
 
 
@@ -69,7 +73,7 @@ def calculate_trade_market(data, payload, *, workspace=None):
         if mismatch:
             raise trade.TradeInputError('personal_evidence_unavailable', 'Custom and canonical Market evidence are incompatible.', tuple(mismatch))
         personal = market_verdict(tuple(replace(a, trade_value=values.get(a.asset_id)) for a in sent),
-                                  tuple(replace(a, trade_value=values.get(a.asset_id)) for a in received))
+                                  tuple(replace(a, trade_value=values.get(a.asset_id)) for a in received), personal=True)
         personal.update(unit='personal_rank_slot_value', meaning='Your saved ranking valuation; neutral Market and opponent costs remain separate.')
     result = {'market': market_verdict(sent, received), 'market_generation': generation,
             'assets_sent': [asdict(a) for a in sent], 'assets_received': [asdict(a) for a in received],
@@ -108,7 +112,7 @@ def balance_trade_market(data, payload):
         result.update(state='MARKET_EVIDENCE_UNAVAILABLE', quiet_state='Complete pricing is required to balance. Known subtotals are partial; review the unavailable assets.')
         return result
     if base['difference'] == 0:
-        result.update(state='ALREADY_BALANCED', quiet_state='Canonical totals are equal. Roster fit and strategy remain separate questions.')
+        result.update(state='ALREADY_BALANCED', quiet_state=('Your personal valuation totals are equal.' if original.get('personal') else 'Canonical totals are equal.') + ' Roster fit and strategy remain separate questions.')
         return result
     protected, excluded = _constraints(payload)
     anchors = {i for i in (payload.get('required_outgoing_asset'), payload.get('required_incoming_asset')) if i}
@@ -152,7 +156,7 @@ def balance_trade_market(data, payload):
         if key in seen:
             return
         seen.add(key)
-        market = market_verdict(tuple(by_id[i] for i in pair[0]), tuple(by_id[i] for i in pair[1]))
+        market = market_verdict(tuple(by_id[i] for i in pair[0]), tuple(by_id[i] for i in pair[1]), personal=bool(original.get('personal')))
         if market['absolute_gap'] is None or market['absolute_gap'] >= base['absolute_gap']:
             return
         changed = sum(len(set(sides[j]) ^ set(pair[j])) for j in (0, 1))

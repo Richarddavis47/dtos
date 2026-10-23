@@ -85,6 +85,9 @@ class PersonalTradeIntegrationTests(unittest.TestCase):
         self.assertFalse(custom['generated_trade_eligible'])
         self.assertEqual(custom['neutral_assessment']['recommendation'], 'REJECT')
         self.assertEqual(custom['market_evidence'], neutral['market_evidence'])
+        self.assertIn('severe neutral', custom['dominant_reason'].lower())
+        self.assertIn('995', custom['major_drawback'])
+        self.assertIn('75', custom['major_drawback'])
 
     def test_saved_protect_and_avoid_warn_without_rewriting_manual_package(self):
         result = self.evaluate(mode='custom', preferences={

@@ -230,9 +230,30 @@ def _personal_evaluation(evaluation, proposal, context, *, active_team, partner_
     # evidence untouched and visibly qualify every selected Custom conclusion.
     for key in ('dominant_reason', 'major_drawback', 'why_you_would_do_it'):
         custom[key] = str(custom.get(key) or '').replace('canonical Market', 'personal valuation').replace('Market', 'personal valuation')
+    # These amounts are derived manager intent, not provider quotes. Preserve
+    # canonical partner structures and neutral Market evidence without mutation.
+    basis = 'personal_rank_slot_value'
+    personal_active = custom['dimensions']['strategic_fit']['active']
+    personal_active['valuation_basis'] = basis
+    custom['dimensions']['package_quality']['active']['valuation_basis'] = basis
+    capital = personal_active.get('future_capital') or {}
+    capital['valuation_basis'] = basis
+    if capital.get('assessment'):
+        capital['assessment']['valuation_basis'] = basis
+    for row in (*capital.get('sent', ()), *capital.get('received', ())):
+        row['valuation_basis'] = basis
+    fit = personal_active.get('capital_strategy_fit') or {}
+    if fit.get('explanation'):
+        fit['explanation'] = fit['explanation'].replace('canonical Market', 'personal valuation').replace('Market', 'personal valuation')
+    custom['valuation_basis'] = basis
     custom['dominant_reason'] = 'Custom DTOS personal assessment. ' + custom['dominant_reason']
     custom['major_drawback'] = ('Neutral DTOS: ' + str(evaluation.get('recommendation') or 'unavailable') +
         '. Neutral Market cost remains separate. ' + custom['major_drawback'])
+    if severe:
+        custom['dominant_reason'] = 'Custom interest cannot override the existing severe neutral Market-loss safeguard.'
+        custom['major_drawback'] = (f"Neutral Market: you send {evaluation['values']['sent']} and receive {evaluation['values']['received']}. "
+                                    'The severe neutral value loss prevents an endorsement, even when your personal values favor the acquisition.')
+        custom['recommendation_trace']['rule_reasons'].insert(0, 'NEUTRAL_SEVERE_MARKET_LOSS')
     if not canonical_complete:
         custom['major_drawback'] = 'Required neutral Market pricing is missing; the actual acquisition cost cannot be fully assessed. ' + custom['major_drawback']
     custom['provenance']['personal_valuation'] = {key: context.get(key) for key in

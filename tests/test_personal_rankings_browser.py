@@ -168,6 +168,17 @@ class PersonalRankingsEditorHTTPTests(unittest.TestCase):
                    headers={'x-csrf-token': self.f.csrf, 'origin': 'https://foreign.invalid'})
         self.assertEqual(foreign.status_code, 403)
 
+    def test_new_account_without_league_has_html_recovery_and_private_api_denial(self):
+        account_id, _ = self.f.service.create_account('new-manager', 'New manager', 'fixture-only password')
+        token, _ = self.f.service.new_session(account_id)
+        self.f.client.cookies.set('dtos_session', token)
+        response = self.f.client.get('/account/my-dtos', follow_redirects=False)
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response.headers['location'], '/account/leagues')
+        self.assertIn('no-store', response.headers['cache-control'])
+        self.assertEqual(self.f.client.get('/api/my-dtos').status_code, 403)
+        self.assertIsNone(load_personal(self.f.store, account_id, '100', 1))
+
     def test_revoked_session_and_unsupported_commands_fail_without_writes(self):
         current = self.f.client.get('/api/my-dtos').json()
         response = self.f.client.post('/api/my-dtos', json={'command': 'unsupported', 'expected_revision': 0,

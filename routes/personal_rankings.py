@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 
 from src.core.request_execution import run_manager_read
 from src.platform.account_context import current_account, SESSION_COOKIE
@@ -22,7 +22,7 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
                                     market_model: Callable, page: Callable) -> APIRouter:
     router = APIRouter(tags=['my-dtos'])
 
-    def account_context(request: Request):
+    def account_context(request: Request, *, allow_no_league=False):
         account = current_account()
         # Recheck the live session rather than trusting a context acquired before
         # a revocation. Inspection contexts cannot write account-owned intent.
@@ -30,7 +30,11 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
         live = service.store.context_for_session(token) if token else None
         if account is None or live is None or live.account_id != account.account_id:
             raise HTTPException(401, 'Sign in to view your My DTOS preferences.')
-        if (live.membership is None or account.membership is None
+        if live.membership is None:
+            if allow_no_league:
+                return live
+            raise HTTPException(403, 'Connect or select your league before using My DTOS.')
+        if (account.membership is None
                 or live.membership.league_id != account.membership.league_id
                 or live.membership.roster_id != account.membership.roster_id):
             raise HTTPException(409, 'Your league changed. Reload My DTOS before editing.')
@@ -68,7 +72,9 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
 
     @router.get('/account/my-dtos', response_class=HTMLResponse)
     async def editor(request: Request):
-        account_context(request)
+        account = account_context(request, allow_no_league=True)
+        if account.membership is None:
+            return RedirectResponse('/account/leagues', status_code=303, headers=_HEADERS)
         body = '''<link rel="stylesheet" href="/static/css/personal_rankings.css">
 <section id="my-dtos" class="personal-rankings" aria-labelledby="my-dtos-heading">
 <div class="personal-heading"><div><p class="muted">Account · Your saved opinions</p><h2 id="my-dtos-heading">My DTOS</h2></div><a class="btn" href="/account">Account</a></div>
