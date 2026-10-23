@@ -72,19 +72,21 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
         body = '''<link rel="stylesheet" href="/static/css/personal_rankings.css">
 <section id="my-dtos" class="personal-rankings" aria-labelledby="my-dtos-heading">
 <div class="personal-heading"><div><p class="muted">Account · Your saved opinions</p><h2 id="my-dtos-heading">My DTOS</h2></div><a class="btn" href="/account">Account</a></div>
-<p>Rank the complete eligible Market universe your way. Sleeper projections, league rules and neutral Market evidence stay separate.</p>
+<p class="personal-intro">Your rankings. Neutral Market facts stay separate.</p>
 <p id="personal-scope" class="muted"></p>
 <div class="personal-mode" role="group" aria-label="DTOS valuation mode"><button class="btn" id="personal-neutral" type="button" aria-pressed="true">Neutral DTOS</button><button class="btn" id="personal-custom" type="button" aria-pressed="false">Custom DTOS</button></div>
-<p id="personal-mode-description">Neutral DTOS uses canonical Market values. Switching views does not erase your saved rankings.</p>
-<div id="personal-status" role="status" aria-live="polite">Loading prepared rankings…</div>
+<p id="personal-mode-description">Neutral values. Your saved rankings are preserved.</p>
+<div id="personal-status" role="status" aria-live="polite">Loading rankings…</div>
 <div id="personal-error" role="alert" hidden></div>
 <div class="personal-actions"><button class="btn" id="personal-initialize" type="button" hidden>Create Custom Rankings</button><button class="btn" id="personal-reload" type="button">Reload rankings</button><button class="btn" id="personal-restart" type="button" disabled>Restart Rankings</button><a class="btn" href="/trades">Trade Center</a><a class="btn" href="/market">Market</a></div>
+
 <details class="personal-explanation"><summary>How personal values work</summary><p id="personal-method">Your saved order is separate from neutral Market prices. Personal valuations use the supported canonical Market curve and are labeled as your opinion; they are never an opposing manager’s prices or historical quotes.</p><p>Targets and Avoid are soft saved preferences. Protect keeps an exact owned asset out of generated outgoing suggestions. Temporary Trade choices are separate. Manual packages remain editable and can be evaluated with an explicit conflict warning.</p><p>Tier breaks organize your personal ranking; they do not invent equal prices for unlike assets. New or unresolved assets require review or an explicit Restart.</p></details>
 <div class="personal-filters"><label for="personal-search">Search players or exact picks<input id="personal-search" type="search" placeholder="Player, year or original franchise" autocomplete="off"></label><label for="personal-position">Position<select id="personal-position"><option value="">Overall · players and picks</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option><option value="PICK">Draft picks</option></select></label></div>
-<p class="muted">Ranks and move destinations always refer to the full overall order, including while filtered. Use the drag handle, Move Up/Down or enter an overall position.</p>
+<p class="muted personal-order-note">Positions refer to the full overall order.</p>
 <p id="personal-results-count" class="muted"></p>
 <ol id="personal-list" class="personal-list" aria-label="Overall asset rankings"></ol>
 <nav class="personal-pagination" aria-label="Ranking pages"><button class="btn" id="personal-previous" type="button">Previous</button><span id="personal-page"></span><button class="btn" id="personal-next" type="button">Next</button></nav>
+
 <dialog id="personal-restart-dialog" aria-labelledby="personal-restart-title"><h3 id="personal-restart-title">Restart Rankings?</h3><p>This replaces your customized order and tier changes with the latest compatible Market rankings. Your Target, Avoid and Protect preferences are preserved unless you choose to reset them too.</p><label><input id="personal-reset-flags" type="checkbox"> Also reset Target, Avoid and Protect preferences</label><div class="personal-actions"><button class="btn" id="personal-restart-cancel" type="button">Keep my rankings</button><button class="btn" id="personal-restart-confirm" type="button">Replace with latest Market rankings</button></div></dialog>
 </section><script src="/static/js/personal_rankings.js" defer></script>'''
         response = page('My DTOS', body)

@@ -204,9 +204,28 @@ def _personal_evaluation(evaluation, proposal, context, *, active_team, partner_
         custom['recommendation'] = None
         custom['recommendation_availability'] = 'unavailable'
         custom['major_drawback'] = 'Required personal valuation is unavailable for an asset; the saved baseline cannot price this full package.'
-    custom['generated_trade_eligible'] = bool(custom.get('generated_trade_eligible') and canonical_complete
+    # The personal reconciliation's bilateral flag was computed with the
+    # user's prices on BOTH sides. It is not authoritative for the opponent.
+    # Re-admit only the supported personal active-side conclusion against the
+    # unchanged neutral counterpart and actual roster-capacity evidence.
+    strategy_sides = custom['dimensions']['strategic_fit']
+    capacity_unresolved = any((strategy_sides[side].get('roster_capacity') or {}).get('additional_spots_to_resolve')
+                              for side in ('active', 'partner'))
+    custom['generated_trade_eligible'] = bool(custom.get('legal') and canonical_complete
         and personal_market['availability'] == 'full' and plausible in ('STRONG', 'PLAUSIBLE')
-        and confidence != 'LIMITED' and not severe)
+        and confidence in ('MEDIUM', 'HIGH') and not severe and not capacity_unresolved
+        and custom.get('recommendation') in ('SMASH ACCEPT', 'WORTH PURSUING'))
+    for field in ('reason_codes', 'major_risks'):
+        codes = set(custom.get(field) or ())
+        codes.discard('LOW_COUNTERPARTY_PLAUSIBILITY')
+        if plausible == 'LOW':
+            codes.add('LOW_COUNTERPARTY_PLAUSIBILITY')
+        custom[field] = sorted(codes)
+    custom['perspectives']['for_your_team'] = custom.get('recommendation') or 'UNAVAILABLE'
+    if custom.get('recommendation_trace'):
+        custom['recommendation_trace'].update(confidence=confidence,
+            counterparty_plausibility=plausible,
+            counterparty_evidence_basis='neutral canonical Market and supported opponent roster evidence')
     # Existing decision prose names the numerical cost context. Keep neutral
     # evidence untouched and visibly qualify every selected Custom conclusion.
     for key in ('dominant_reason', 'major_drawback', 'why_you_would_do_it'):

@@ -194,7 +194,9 @@ def build_universe(data, market_reader):
     generation = _digest([league_id, source, getattr(market_reader, 'semantic_generation', None),
                           (data.get('market_data') or {}).get('generation'),
                           [(r['asset_id'], r['market_value'], r['owner_roster_id']) for r in rows]])
-    return {'generation': generation, 'source_generation': source, 'league_id': league_id, 'rows': rows}
+    return {'generation': generation, 'source_generation': source,
+            'source_semantic_generation': str(getattr(market_reader, 'semantic_generation', None) or source),
+            'league_id': league_id, 'rows': rows}
 
 
 def personal_values(document, universe):
@@ -245,6 +247,7 @@ def view_state(store, data, market_reader, account):
     return {'initialized': document is not None, 'revision': (document or {}).get('revision', 0),
             'mode': (document or {}).get('mode', 'neutral'), 'generation': universe['generation'],
             'baseline_generation': ((document or {}).get('baseline') or {}).get('generation'),
+            'baseline_source_generation': ((document or {}).get('baseline') or {}).get('source_generation'),
             'rows': rows, 'context': {k: context[k] for k in ('league_id', 'roster_id', 'binding')},
             'personal_available': values['available'], 'method': METHOD,
             'limitations': [values['reason']] if values.get('reason') else [],
@@ -276,7 +279,9 @@ def apply_command(store, data, market_reader, account, payload):
             raise PersonalRankingError('confirmation_required', 'Confirm that customized order and tiers will be lost.')
         if not ids:
             raise PersonalRankingError('market_unavailable', 'No eligible priced assets are available to seed rankings.', 503)
-        document = {'schema': 1, 'baseline': {'generation': universe['generation'], 'ids': ids},
+        document = {'schema': 1, 'baseline': {'generation': universe['generation'], 'ids': ids,
+                    'source_generation': universe['source_generation'],
+                    'source_semantic_generation': universe['source_semantic_generation']},
                     'order': ids, 'tiers': [], 'preferences': {} if payload.get('reset_preferences') is True else (document or {}).get('preferences', {}),
                     'mode': 'custom'}
     elif not document:

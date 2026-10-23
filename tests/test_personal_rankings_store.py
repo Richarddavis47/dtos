@@ -85,6 +85,23 @@ class PersonalRankingsStoreTests(unittest.TestCase):
         del after["account_personal_rankings"]
         self.assertEqual(after, before)
 
+    def test_baseline_source_identity_roundtrips_without_allowing_source_payloads(self):
+        value = document()
+        value["baseline"].update(source_generation="canonical-source-a",
+                                 source_semantic_generation="canonical-semantic-a")
+        saved = self.save(value)
+        self.assertEqual(saved["baseline"], value["baseline"])
+        self.assertEqual(self.load()["baseline"], value["baseline"])
+        for field, item in (("prices", {}), ("source_generation", None),
+                            ("source_semantic_generation", True), ("source_generation", ""),
+                            ("source_semantic_generation", "a" * 257)):
+            invalid = document()
+            invalid["baseline"][field] = item
+            before = self.facts()
+            with self.subTest(field=field, item=item), self.assertRaises(PersonalDocumentError):
+                self.save(invalid, revision=1)
+            self.assertEqual(self.facts(), before)
+
     def test_separate_account_league_and_franchise_scopes(self):
         self.save()
         self.assertIsNone(self.load(account="account-b"))

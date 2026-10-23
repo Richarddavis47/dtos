@@ -98,6 +98,63 @@ class PersonalTradeWorkflowTests(unittest.TestCase):
             self.assertLess(row['balance_adjustment']['suggested']['absolute_gap'], 100)
             self.assertEqual(custom['personalization']['mode'], 'custom')
 
+    def test_personal_upgrade_does_not_price_the_counterpartys_return_or_veto_eligibility(self):
+        # Swap actual price slots rather than inventing another valuation curve.
+        self.fixture.prices(a=250, b=1000, e=20)
+        quote = self.data['market_data']['pick_quotes']['FantasyCalc'][0]
+        quote['value'] = 400 * 12
+        quote['normalization_reference'].update(raw_value=400 * 12, normalized_value=400)
+        workspace = trade.build_trade_workspace(self.data, 2)
+        values = {a.asset_id: a.trade_value for pool in workspace['pools'].values() for a in pool}
+        self.context['neutral_values'] = dict(values)
+        self.context['values'] = dict(values, a=1000, b=250, e=400, **{'2028-R1-4': 20})
+        self.context['scope'] = ['fixture-account', 'league-1', 2]
+        payload = self.payload(active_roster_id=2, partner_roster_id=1,
+            assets_sent=['2028-R1-4'], assets_received=['a'], strategy='WIN NOW')
+        before = deepcopy(self.data)
+        custom = trade.evaluate_trade_request(self.data, payload, projection_reader=self.fixture.reader)['evaluation']
+        neutral = trade.evaluate_trade_request(self.data, {key: value for key, value in payload.items()
+            if key != '_personal_context'}, projection_reader=self.fixture.reader)['evaluation']
+        self.assertEqual(sorted(self.context['values'].values()), sorted(values.values()))
+        self.assertEqual(neutral['recommendation'], 'NOT WORTH IT')
+        self.assertEqual(custom['recommendation'], 'WORTH PURSUING')
+        self.assertEqual(custom['market_evidence'], neutral['market_evidence'])
+        self.assertEqual(custom['personal_value_evidence']['sent']['total'], 20)
+        self.assertEqual(custom['personal_value_evidence']['received']['total'], 1000)
+        self.assertIn(neutral['dimensions']['counterparty_plausibility']['assessment'], ('STRONG', 'PLAUSIBLE'))
+        self.assertEqual(custom['dimensions']['counterparty_plausibility'], neutral['dimensions']['counterparty_plausibility'])
+        self.assertEqual(custom['dimensions']['strategic_fit']['partner'], neutral['dimensions']['strategic_fit']['partner'])
+        self.assertEqual(custom['dimensions']['confidence'], neutral['dimensions']['confidence'])
+        self.assertTrue(custom['generated_trade_eligible'])
+        self.assertTrue(trade._trade_for_eligible(custom))
+        self.assertNotIn('LOW_COUNTERPARTY_PLAUSIBILITY', custom['reason_codes'])
+        self.assertNotIn('LOW_COUNTERPARTY_PLAUSIBILITY', custom['major_risks'])
+        self.assertEqual(custom['recommendation_trace']['confidence'], neutral['recommendation_trace']['confidence'])
+        self.assertEqual(self.data, before)
+
+    def test_neutral_counterparty_loss_still_blocks_personally_plausible_prices(self):
+        self.fixture.prices(a=250, b=350)
+        quote = self.data['market_data']['pick_quotes']['FantasyCalc'][0]
+        quote['value'] = 20 * 12
+        quote['normalization_reference'].update(raw_value=20 * 12, normalized_value=20)
+        workspace = trade.build_trade_workspace(self.data, 2)
+        values = {a.asset_id: a.trade_value for pool in workspace['pools'].values() for a in pool}
+        self.context['neutral_values'] = dict(values)
+        self.context['values'] = dict(values, b=20, **{'2028-R1-4': 350})
+        payload = self.payload(active_roster_id=2, partner_roster_id=1,
+            assets_sent=['2028-R1-4'], assets_received=['a'], strategy='WIN NOW')
+        custom = trade.evaluate_trade_request(self.data, payload, projection_reader=self.fixture.reader)['evaluation']
+        neutral = trade.evaluate_trade_request(self.data, {key: value for key, value in payload.items()
+            if key != '_personal_context'}, projection_reader=self.fixture.reader)['evaluation']
+        self.assertEqual(sorted(self.context['values'].values()), sorted(values.values()))
+        self.assertEqual(custom['recommendation'], 'WORTH PURSUING')
+        self.assertEqual(neutral['dimensions']['counterparty_plausibility']['assessment'], 'LOW')
+        self.assertEqual(custom['dimensions']['counterparty_plausibility'], neutral['dimensions']['counterparty_plausibility'])
+        self.assertFalse(custom['generated_trade_eligible'])
+        self.assertFalse(trade._trade_for_eligible(custom))
+        self.assertIn('LOW_COUNTERPARTY_PLAUSIBILITY', custom['reason_codes'])
+        self.assertIn('LOW_COUNTERPARTY_PLAUSIBILITY', custom['major_risks'])
+
     def test_saved_exact_protections_block_generated_outgoing_but_not_manual_assessment(self):
         self.context['preferences'] = {'a': {'protect': True}, '2028-R1-3': {'protect': True},
                                        '2028-R1-4': {'target': True}, 'c': {'avoid': True}}

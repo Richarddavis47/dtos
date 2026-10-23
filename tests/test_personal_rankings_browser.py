@@ -295,6 +295,7 @@ class PersonalRankingsEditorBrowserTests(unittest.TestCase):
                             page.get_by_text('42 eligible ranked assets', exact=False).wait_for()
                             self.assertEqual(page.locator('.personal-row').count(), 25)
                             self.assertIsNone(load_personal(f.store, f.account_id, '100', 1))
+                            initial_geometry = page.evaluate("""() => { const box = selector => {const r = document.querySelector(selector).getBoundingClientRect();return {top:r.top+scrollY,bottom:r.bottom+scrollY,height:r.height};};return {first_row:box('.personal-row'),first_title:box('.personal-row strong'),search:box('#personal-search'),mode:box('.personal-mode'),font_size:getComputedStyle(document.querySelector('#my-dtos')).fontSize};}""")
                             page.get_by_role('button', name='Create Custom Rankings', exact=True).click()
                             page.wait_for_function("document.querySelector('#personal-custom').getAttribute('aria-pressed') === 'true'")
                             page.keyboard.press('Tab')
@@ -336,8 +337,13 @@ class PersonalRankingsEditorBrowserTests(unittest.TestCase):
                             self.assertFalse(page.get_by_label('Start personal tier at Player 2', exact=True).is_checked())
                             self.assertFalse(errors, errors)
                             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
+                            page.evaluate('scrollTo(0,0)')
+                            custom_geometry = page.evaluate("""() => { const box = selector => {const r = document.querySelector(selector).getBoundingClientRect();return {top:r.top+scrollY,bottom:r.bottom+scrollY,height:r.height};};return {first_row:box('.personal-row'),first_title:box('.personal-row strong'),search:box('#personal-search'),mode:box('.personal-mode'),font_size:getComputedStyle(document.querySelector('#my-dtos')).fontSize};}""")
+                            if width == 390:
+                                self.assertLess(custom_geometry['first_title']['bottom'], height)
                             measurements.append({'width': width, 'height': height, 'rendered_rows': page.locator('.personal-row').count(),
                                                  'overflow': page.evaluate('document.documentElement.scrollWidth-innerWidth'),
+                                                 'initial_neutral': initial_geometry, 'saved_custom': custom_geometry,
                                                  'errors': errors, 'kind': 'responsive Chromium; isolated authenticated fixture'})
                             out = os.getenv('DTOS_PERSONAL_BROWSER_EVIDENCE')
                             if out:

@@ -32,13 +32,14 @@
     el('personal-neutral').disabled = busy; el('personal-custom').disabled = busy;
     el('personal-initialize').hidden = initialized;
     el('personal-initialize').disabled = busy || !state.rows?.length;
+    el('personal-restart').hidden = !initialized;
     el('personal-restart').disabled = busy || !initialized || !state.rows?.length;
     el('personal-reload').disabled = busy;
     const scope = state.account_scope || state.context || {};
     el('personal-scope').textContent = `League ${scope.league_id || 'unavailable'} · Franchise ${scope.roster_id || 'unavailable'} · ${state.rows?.length || 0} eligible ranked assets · Revision ${state.revision || 0}`;
     el('personal-mode-description').textContent = custom
-      ? 'Custom DTOS uses your saved overall order for supported personal values. Neutral Market fairness and opposing-manager evidence stay separate.'
-      : 'Neutral DTOS uses canonical Market values. Your custom order and saved preferences are preserved. Switch to Custom DTOS to edit rankings.';
+      ? 'Your personal values guide Custom decisions. Neutral Market fairness stays visible.'
+      : 'Neutral Market values are active. Your custom order and preferences are preserved.';
     const method = state.method_explanation || (typeof state.method === 'object' ? state.method?.description : null);
     if (method) el('personal-method').textContent = method;
     const rows = filtered(); const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE)); page = Math.min(page, pages - 1);
@@ -81,12 +82,12 @@
   }
   async function read() {
     if (busy) return;
-    const sequence = ++requestSequence; controller?.abort(); controller = new AbortController(); status('Loading prepared rankings…'); error('');
+    const sequence = ++requestSequence; controller?.abort(); controller = new AbortController(); status('Loading rankings…'); error('');
     try {
       const response = await fetch('/api/my-dtos', {credentials: 'same-origin', cache: 'no-store', signal: controller.signal}); const result = await response.json();
       if (sequence !== requestSequence) return;
       if (!response.ok) throw new Error(result.message || result.detail || 'My DTOS is unavailable. Sign in or reload and try again.');
-      state = result; render(); status(result.limitations?.length ? result.limitations.join(' ') : 'Prepared rankings loaded. No trade discovery was started.');
+      state = result; render(); status(result.limitations?.length ? result.limitations.join(' ') : 'Rankings loaded.');
     } catch (exc) { if (exc.name !== 'AbortError') { error(String(exc.message)); status('Rankings were not changed.'); } }
   }
   async function command(name, values = {}, focusKey) {
@@ -99,7 +100,7 @@
       if (prior.account_scope && result.account_scope && (prior.account_scope.league_id !== result.account_scope.league_id || prior.account_scope.roster_id !== result.account_scope.roster_id)) throw new Error('Your account or league changed. Reload before continuing.');
       state = result;
       if (focusKey) { const id = focusKey.slice(0, focusKey.lastIndexOf(':')); const index = filtered().findIndex(item => rowId(item.row) === id); if (index >= 0) page = Math.floor(index / PAGE_SIZE); }
-      status(`Saved. Revision ${result.revision}. No discovery was started.`);
+      status(`Saved. Revision ${result.revision}.`);
     } catch (exc) { state = prior; error(String(exc.message)); status('The requested change was not applied to this view. Reload to review saved state.'); }
     finally { busy = false; render(focusKey, scrollTop); }
   }

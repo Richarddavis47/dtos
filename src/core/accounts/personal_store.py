@@ -22,6 +22,7 @@ _PLAYER = re.compile(r"player:[A-Za-z0-9_-]{1,80}\Z")
 _PICK = re.compile(r"pick:[1-9][0-9]{3}:[1-9][0-9]?:[1-9][0-9]{0,9}\Z")
 _FIELDS = {"schema", "baseline", "order", "tiers", "preferences", "mode"}
 _FLAG_FIELDS = {"target", "avoid", "protect"}
+_BASELINE_FIELDS = {"generation", "ids", "source_generation", "source_semantic_generation"}
 
 
 class PersonalDocumentError(ValueError):
@@ -59,10 +60,15 @@ def encode_document(document: dict[str, Any]) -> str:
     if type(document.get("schema", 1)) is not int or document.get("schema", 1) != 1:
         raise PersonalDocumentError("Unsupported personal rankings schema.")
     baseline = document.get("baseline")
-    if (not isinstance(baseline, dict) or set(baseline) != {"generation", "ids"}
+    if (not isinstance(baseline, dict) or not {"generation", "ids"} <= set(baseline)
+            or set(baseline) - _BASELINE_FIELDS
             or not isinstance(baseline.get("generation"), str)
             or not baseline["generation"] or len(baseline["generation"]) > 256):
         raise PersonalDocumentError("Use an identified canonical Market baseline.")
+    for field in ("source_generation", "source_semantic_generation"):
+        if field in baseline and (not isinstance(baseline[field], str)
+                                  or not baseline[field] or len(baseline[field]) > 256):
+            raise PersonalDocumentError("Use supported canonical baseline source identity.")
     ids = baseline["ids"]
     order = document.get("order")
     if (not isinstance(ids, list) or not 1 <= len(ids) <= MAX_RANKED_ASSETS
