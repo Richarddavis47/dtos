@@ -30,7 +30,7 @@
         cards.replaceChildren(); find.disabled = true; metadata = null;
         invalidated = true; displayedIdentity = null; reload.hidden = false;
         status.textContent = 'Your active league or franchise changed. Reload Home to see its opportunities.';
-        root.dataset.state = 'context_changed'; return;
+        root.dataset.presentation = 'empty'; root.dataset.state = 'context_changed'; return;
       }
       const initial = !context; context = body.workspace_context; metadata = body;
       if (body.strategy !== (window.dtosStrategy.get(context) || '')) { cards.replaceChildren(); return load(); }
@@ -42,9 +42,10 @@
       if (!body.source_identity) status.textContent = 'Trade pricing is unavailable or changing. Prepared roster facts remain separate. Review My Team or try again shortly.';
       else if (!body.brief_count && 'brief_count' in body) status.textContent = 'No actionable insight qualifies in the prepared evidence. Review My Team or explicitly Find Trade Ideas; this is not proof that no opportunities exist.';
       root.dataset.state = body.state;
+      root.dataset.presentation = body.brief_count ? 'prepared' : 'empty';
     } catch (error) { if (run === revision && !departed && error.name !== 'AbortError') {
       cards.replaceChildren(); metadata = null; displayedIdentity = null;
-      status.textContent = error.message;
+      root.dataset.presentation = 'error'; status.textContent = error.message;
     } }
   }
   find.onclick = async () => {
@@ -52,7 +53,7 @@
     if (!context || !metadata?.source_identity) return load();
     const run = ++revision, before = identity(), frozen = {...locks()};
     request?.abort(); request = new AbortController(); find.disabled = true;
-    status.textContent = 'Searching supported opportunities… Home and your draft stay available.'; root.dataset.state = 'loading';
+    status.textContent = 'Searching supported opportunities… Home and your draft stay available.'; root.dataset.state = 'loading'; root.dataset.presentation = 'loading';
     const controller = request;
     const timeout = setTimeout(() => controller.abort(), 120000);
     try {
