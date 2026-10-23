@@ -106,7 +106,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         from config import METADATA_DATABASE_FILE
 
         def prepared_brief():
-            facts = prepared_evidence(data, rid, strategy)
+            facts = prepared_evidence(data, rid, strategy, market_compatible=key is not None)
             changes, coverage = pick_changes(data, rid, METADATA_DATABASE_FILE)
             from src.core.projection_intelligence import projection_service
             from src.platform.league_context import current_league_context

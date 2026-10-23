@@ -11,7 +11,7 @@ from src.core.intelligence.team_strength import compatible_profile
 from src.ui.intelligence_presentation import manager_points
 
 
-def prepared_evidence(data, roster_id, strategy):
+def prepared_evidence(data, roster_id, strategy, *, market_compatible=False):
     context = intelligence_orchestrator.context(data, roster_id, {'strategy': strategy})
     prefix = f'snapshot:{context.snapshot_key}:'
     result = intelligence_orchestrator.cache.peek(prefix + 'result_without_trade_opportunities')
@@ -26,6 +26,7 @@ def prepared_evidence(data, roster_id, strategy):
     return {'league_id': context.league_id, 'roster_id': roster_id,
             'strategy': strategy if strategy in {'WIN NOW', 'REBUILD', 'RETOOL'} else '',
             'generation': context.evidence_generation, 'assessment': assessment,
+            'market_compatible': market_compatible,
             'diagnostics': diagnostics, 'strength': compatible_profile(data, context.projection_snapshot),
             'week': data.get('week'), 'league_name': context.league.get('name') or 'Selected league'}
 
@@ -93,9 +94,11 @@ def select_insights(facts, attention, offers):
         firsts = [p for p in picks if p.get('round') == 1]
         if firsts:
             identities = [f"{p.get('year', p.get('season'))} first · {p.get('original_team') or 'Original franchise ' + str(p.get('original_roster_id'))} (original {p.get('original_roster_id')}) · owner {p.get('current_owner_id')}" for p in firsts]
+            pricing = (f"Prepared assessment pricing covers {capital.get('priced_pick_count', 0)}/{len(picks)} owned picks. "
+                       if facts.get('market_compatible') else 'Current pick pricing is unconfirmed; ownership inventory remains usable. ')
             candidates.append(_item('capital', 'capital', f'{len(firsts)} owned future first-round ' + ('pick' if len(firsts) == 1 else 'picks'),
                 '; '.join(identities[:2]) + (f'; {len(identities)-2} more exact firsts in Supporting evidence.' if len(identities)>2 else ''),
-                f"{capital.get('priced_pick_count', 0)}/{len(picks)} owned picks have compatible Market prices. Unknown ranges are not guaranteed early picks; capital does not establish future success.",
+                pricing + 'Unknown ranges are not guaranteed early picks; capital does not establish future success.',
                 'Review exact draft capital', team_url + '#draft-capital', issues=['capital'], details=identities))
     for event in attention:
         if not event.get('qualifies'):

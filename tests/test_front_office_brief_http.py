@@ -69,6 +69,7 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
             meta = self.read()
         self.assertIsNone(meta['source_identity'])
         self.assertIn('owned future first-round', meta['brief_html'])
+        self.assertIn('Current pick pricing is unconfirmed', meta['brief_html'])
         self.assertNotIn('RECOMMENDED TRADE', meta['brief_html'])
 
     def test_source_changes_during_prepared_read_returns_retryable_response(self):
