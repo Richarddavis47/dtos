@@ -1,3 +1,7 @@
+## v1.21.87 — My DTOS Custom Rankings
+
+Complete account-owned Market-seeded player/pick rankings, optional tiers and exact preferences; explicit Neutral/Custom modes and confirmed Restart. Personal values reuse the current compatible Market slot curve, with neutral fairness and opponent evidence separate. No Home personalization, automatic season rollover, AI or new Market methodology. Independent Scout acceptance follows release.
+
 ### Simple Trade, Supported Discovery — DTOS v1.21.28
 
 - Four primary entry points; immediate canonical Market comparison in Build.

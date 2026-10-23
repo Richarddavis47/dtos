@@ -39,6 +39,7 @@ from routes.league_runtime import create_league_runtime_router
 from routes.matchups import create_matchups_router
 from routes.weekly_report import create_weekly_report_router
 from routes.market import create_market_router
+from routes.personal_rankings import create_personal_rankings_router
 from routes.settings import create_settings_router
 from routes.teams import create_teams_router
 from routes.trades import create_trades_router
@@ -1018,6 +1019,23 @@ app.include_router(
     )
 )
 
+def current_personal_market():
+    """Prepared-only My DTOS access; never launch Market construction on reads."""
+    context = current_league_context()
+    cache = context.market if context is not None else asset_market_cache
+    market = cache.current()
+    requested = cache.metrics().get("requested_generation")
+    if market is not None and requested and requested != market.semantic_generation:
+        return None
+    return market
+
+
+app.include_router(create_personal_rankings_router(
+    service=account_service, require_data=require_data,
+    market_model=current_personal_market, page=page,
+))
+
+
 app.include_router(
     create_market_router(
         require_data=require_data,
@@ -1060,5 +1078,17 @@ app.include_router(
         ensure_fresh=ensure_fresh,
         require_data=require_data,
         page=page,
+        personal_resolver=lambda data, payload: __import__(
+            'services.personal_rankings', fromlist=['resolve_personal_context']
+        ).resolve_personal_context(data, payload, store=account_store,
+                                   market_reader=current_personal_market()),
+        personal_validator=lambda data, payload, context: __import__(
+            'services.personal_rankings', fromlist=['validate_personal_context']
+        ).validate_personal_context(data, payload, context, store=account_store,
+                                    market_reader=current_personal_market()),
+        personal_bootstrap=lambda data, active_id: __import__(
+            'services.personal_rankings', fromlist=['personal_bootstrap']
+        ).personal_bootstrap(data, active_id, store=account_store,
+                             market_reader=current_personal_market()),
     )
 )

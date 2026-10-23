@@ -31,7 +31,7 @@ def _constraints(payload):
 
 def market_generation(workspace):
     rows = [(a.asset_id, a.source_roster_id, a.trade_value, a.market_fact, a.pick_market_evidence)
-            for pool in workspace['pools'].values() for a in pool]
+            for pool in (workspace.get('neutral_pools') or workspace['pools']).values() for a in pool]
     return sha256(json.dumps(sorted(rows, key=lambda r: (r[0], r[1])), sort_keys=True,
                             separators=(',', ':'), default=str).encode()).hexdigest()
 
@@ -57,19 +57,42 @@ def calculate_trade_market(data, payload, *, workspace=None):
     by_id = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
     sent = tuple(by_id[i] for i in payload['assets_sent'])
     received = tuple(by_id[i] for i in payload['assets_received'])
-    return {'market': market_verdict(sent, received), 'market_generation': generation,
+    context = trade.personal_context(payload, workspace)
+    personal = None
+    if context.get('mode') == 'custom':
+        from dataclasses import replace
+        values = context.get('values') or {}
+        neutral = context.get('neutral_values') or {}
+        from math import isclose
+        mismatch = [a.asset_id for a in (*sent, *received) if values.get(a.asset_id) is not None and
+            (a.trade_value is None or neutral.get(a.asset_id) is None or not isclose(a.trade_value, neutral[a.asset_id], rel_tol=0, abs_tol=1e-8))]
+        if mismatch:
+            raise trade.TradeInputError('personal_evidence_unavailable', 'Custom and canonical Market evidence are incompatible.', tuple(mismatch))
+        personal = market_verdict(tuple(replace(a, trade_value=values.get(a.asset_id)) for a in sent),
+                                  tuple(replace(a, trade_value=values.get(a.asset_id)) for a in received))
+        personal.update(unit='personal_rank_slot_value', meaning='Your saved ranking valuation; neutral Market and opponent costs remain separate.')
+    result = {'market': market_verdict(sent, received), 'market_generation': generation,
             'assets_sent': [asdict(a) for a in sent], 'assets_received': [asdict(a) for a in received],
             'ownership_valid': True, 'constraint_conflicts': sorted(protected.intersection(payload['assets_sent']) |
                 excluded.intersection(payload['assets_sent'] + payload['assets_received'])),
             'provider_requests': 0, 'advanced_analysis_performed': False}
+    if context:
+        result['personalization'] = {key: context.get(key) for key in ('mode', 'revision', 'baseline_generation', 'market_generation', 'method', 'scope')}
+        prefs = context.get('preferences') or {}
+        result['personal_preference_warnings'] = [i for i in payload['assets_sent'] if (prefs.get(i) or {}).get('protect')]
+    if personal is not None:
+        result['personal'] = personal
+    return result
 
 
 def balance_trade_market(data, payload):
     started = perf_counter()
+    payload = trade.generated_personal_payload(payload)
     boundary = trade._trade_search_boundary(data)
     workspace = trade.build_trade_workspace(data, int(payload.get('active_roster_id') or 0), market_only=True)
     original = calculate_trade_market(data, payload, workspace=workspace)
-    base = original['market']
+    workspace = trade.personal_workspace(workspace, payload)
+    base = original.get('personal') or original['market']
     result = {'workflow': 'calculator_balance', 'original_market': base,
               'market_generation': original['market_generation'], 'results': [], 'near_misses': [],
               'count': 0, 'preview_only': True, 'provider_requests': 0,
@@ -77,6 +100,10 @@ def balance_trade_market(data, payload):
                               'excluded_assets': list(payload.get('excluded_assets') or [])},
               'search_evidence': {'construction_budget': CONSTRUCTION_BUDGET, 'evaluation_budget': EVALUATION_BUDGET,
                                   'constructed': 0, 'evaluated': 0, 'bounded': True}}
+    if original.get('personalization'):
+        result['personalization'] = original['personalization']
+        result['neutral_original_market'] = original['market']
+        result['valuation_context'] = 'Custom DTOS personal valuation' if original.get('personal') else 'Neutral DTOS Market'
     if base['difference'] is None:
         result.update(state='MARKET_EVIDENCE_UNAVAILABLE', quiet_state='Complete pricing is required to balance. Known subtotals are partial; review the unavailable assets.')
         return result
@@ -189,8 +216,9 @@ def balance_trade_market(data, payload):
         row['balance_adjustment'] = {'change': change, 'original': base, 'suggested': market,
                                     'market_generation': original['market_generation'],
                                     'gap_reduction': float(Decimal(str(base['absolute_gap'])) - Decimal(str(gap))),
-                                    'reason': 'Narrower canonical Market gap with current ownership and exact constraints preserved.',
-                                    'meaning': 'Market adjustment, not a guaranteed better trade or manager acceptance.',
+                                    'reason': ('Narrower personal valuation gap; neutral Market cost remains separate.' if original.get('personal') else 'Narrower canonical Market gap with current ownership and exact constraints preserved.'),
+                                    'meaning': 'Personal valuation adjustment, not an opponent price or guaranteed better trade.' if original.get('personal') else 'Market adjustment, not a guaranteed better trade or manager acceptance.',
+                                    'valuation_context': result.get('valuation_context', 'Neutral DTOS Market'),
                                     'quality': 'POOR' if poor else 'ROSTER_CAPACITY_ISSUE' if capacity else 'ASSESSED_SEPARATELY'}
         if poor or capacity or not evaluation.get('legal'):
             if len(result['near_misses']) < 3:

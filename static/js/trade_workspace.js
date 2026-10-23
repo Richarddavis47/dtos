@@ -121,9 +121,10 @@
   // One account/session/league-bound state. Controls are views of these exact IDs.
   const session = {schema: 2, resetGeneration: null, currentProposal: {sent: [], received: [], partner: 0}, originalProposal: null,
     previewProposal: null, adoptedProposal: null, requiredOutgoingAsset: null, requiredIncomingAsset: null,
-    protectedAssets: [], excludedAssets: [], adjustmentConstraints: {}, originWorkflow: flow, shopSearchPartner: 0,
+    protectedAssets: [], excludedAssets: [], overrideSavedProtections: [], adjustmentConstraints: {}, originWorkflow: flow, shopSearchPartner: 0,
     shopScopeAsset: null, shopPreference: 'best_overall', shopPosition: 'QB', currentAssessment: null};
   const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let lastOffersIsBalance = false; let searchExhausted = false;
+  let valuationMode = 'neutral', personalRevisionStale = false, checkingPersonal = false;
   const latestEvidence = {};
   const sourceKeys = ['market_generation', 'projection_generation', 'historical_generation'];
   const selected = session.currentProposal, filters = {sent: {q: '', pos: 'ALL'}, received: {q: '', pos: 'ALL'}};
@@ -136,11 +137,38 @@
   const node = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
   el('trade-result').dataset.assessmentState = 'not_evaluated';
   function message(text, error = false) { const box = el('trade-result'); delete box.dataset.assessment; delete box.dataset.assessmentFreshness; box.dataset.assessmentState = 'not_evaluated'; box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
-  function payload() { reconcileStrategy(); return {workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...session.protectedAssets], excluded_assets: [...session.excludedAssets], asset_id: flow === 'shop' ? session.requiredOutgoingAsset || selected.sent[0] : session.requiredIncomingAsset || selected.received[0], workspace_context: workspace.workspace_context}; }
+  function personalChangedNotice() {
+    message('Saved personal rankings, permissions or source evidence changed. Your exact draft is retained; reload current facts before evaluating or searching.', true);
+    const reload = node('button', 'Reload current facts'); reload.type = 'button'; reload.onclick = () => location.reload();
+    el('trade-result').append(reload);
+  }
+  async function checkPersonalRevision() {
+    if (!workspace?.personalization || checkingPersonal || departed || document.hidden) return;
+    checkingPersonal = true;
+    const binding = workspace.workspace_context.binding;
+    try {
+      const response = await fetch('/api/my-dtos', {credentials: 'same-origin', cache: 'no-store'});
+      const state = response.ok ? await response.json() : null;
+      if (departed || workspace.workspace_context.binding !== binding) return;
+      const p = workspace.personalization;
+      if (!response.ok || state.revision !== p.revision || (state.generation && p.market_generation && state.generation !== p.market_generation) ||
+          (state.context && (state.context.league_id !== workspace.workspace_context.league_id || Number(state.context.roster_id) !== active))) {
+        personalRevisionStale = true; activeRequest?.abort(); activeRequest = null; balanceRequest = null; revision++; runSequence++; busy = false;
+        session.previewProposal = null; lastOffers = null; p.values = {};
+        if (session.currentAssessment) staleAssessment('Personal ranking revision or source changed');
+        persist(); paint(); personalChangedNotice();
+      }
+    } catch (_) { /* A later explicit request still performs server-side admission and final revision checks. */ }
+    finally { checkingPersonal = false; }
+  }
+  addEventListener('focus', checkPersonalRevision);
+  addEventListener('pageshow', () => { if (workspace) checkPersonalRevision(); });
+  function personalPayload() { const p = workspace?.personalization; return p ? {override_saved_protections: [...session.overrideSavedProtections], valuation_mode: valuationMode, personal_revision: p.revision, personal_market_generation: p.market_generation, personal_baseline_generation: p.baseline_generation} : {}; }
+  function payload() { reconcileStrategy(); return {...personalPayload(), workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...session.protectedAssets], excluded_assets: [...session.excludedAssets], asset_id: flow === 'shop' ? session.requiredOutgoingAsset || selected.sent[0] : session.requiredIncomingAsset || selected.received[0], workspace_context: workspace.workspace_context}; }
   function persist(updateHistory = true, draftSession = session) {
     if (departed) return;
     reconcileStrategy();
-    const draft = {...draftSession, tabOwner, strategy: el('trade-strategy').value, ownership: workspace.workspace_context.ownership_generation};
+    const draft = {...draftSession, valuationMode, tabOwner, strategy: el('trade-strategy').value, ownership: workspace.workspace_context.ownership_generation};
     try {
       draft.savedAt = Date.now();
       sessionStorage.setItem(storageKey(), JSON.stringify(draft));
@@ -355,6 +383,13 @@
     }
     if (ownershipInvalid) box.append(node('p', 'Ownership invalid or unavailable: this retained hypothetical offer is not executable. Remove moved assets or select their current owner before balancing.', 'tw-error'));
     box.append(node('small', 'Market value ≠ lineup impact ≠ future capital ≠ strategy fit. Evaluate separately.'));
+    if (valuationMode === 'custom' && workspace.personalization) {
+      const values = workspace.personalization.values || {};
+      const sums = ['sent', 'received'].map(which => selected[which].length && selected[which].every(id => typeof values[id] === 'number' && Number.isFinite(values[id])) ? selected[which].reduce((sum, id) => sum + values[id], 0) : null);
+      const panel = node('section', null, 'tw-personal-comparison');
+      panel.append(node('h3', 'Your Custom DTOS valuation'), node('p', `You send: ${sums[0] == null ? 'Unavailable' : displayMarket(sums[0])} · You receive: ${sums[1] == null ? 'Unavailable' : displayMarket(sums[1])}`), node('small', 'Saved rank-slot values express your preferences. The neutral Market comparison below and opponent evidence are unchanged.'));
+      box.prepend(panel);
+    }
     const locks = [...new Set([...session.protectedAssets, ...session.excludedAssets, session.requiredOutgoingAsset, session.requiredIncomingAsset].filter(Boolean))];
     if (locks.length) {
       const details = node('details', null, 'ds-badge-detail'); details.dataset.badge = 'protection-summary';
@@ -489,11 +524,11 @@
     if (assessedOfferContexts.has(row)) return assessedOfferContexts.get(row);
     if (row.proposal?.preview_context) return row.proposal.preview_context;
     const e = row.evaluation || row.proposal?.preview_assessment || {};
-    const keys = ['recommendation', 'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'why_they_would_do_it', 'counterparty_summary', 'provenance', 'major_risks', 'major_limitations', 'recommendation_trace', 'legality', 'decision_context', 'market_evidence', 'dimensions', 'assessment_state', 'reserve_evidence'];
+    const keys = ['personalization', 'personal_value_evidence', 'neutral_assessment', 'recommendation', 'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'why_they_would_do_it', 'counterparty_summary', 'provenance', 'major_risks', 'major_limitations', 'recommendation_trace', 'legality', 'decision_context', 'market_evidence', 'dimensions', 'assessment_state', 'reserve_evidence', 'personalization', 'personal_value_evidence', 'neutral_assessment', 'neutral_values', 'personal_preference_warnings', 'personal_preference_conflicts'];
     const context = {schema: 1, evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
       opportunity: boundedEvidence(row.opportunity || null),
-      identity: {package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
+      identity: {personalization: JSON.stringify(personalPayload()), package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
         source: row.home_source_identity || row.assessment_source_identity || null,
         workflow: row.workflow || session.originWorkflow, binding: workspace.workspace_context.binding,
         ownership: workspace.workspace_context.ownership_generation, market: workspace.calculator_generation,
@@ -514,6 +549,8 @@
     if (identity.strategy !== el('trade-strategy').value) reasons.push('strategy changed');
     if (identity.binding !== workspace.workspace_context.binding || identity.ownership !== workspace.workspace_context.ownership_generation) reasons.push('ownership context changed');
     if (identity.market !== workspace.calculator_generation) reasons.push('Market evidence changed');
+    if (identity.personalization && identity.personalization !== JSON.stringify(personalPayload())) reasons.push('personal valuation mode or ranking revision changed');
+    if (!identity.personalization && valuationMode === 'custom') reasons.push('personal valuation identity unavailable');
     const inputs = context.evaluation?.provenance?.inputs || {};
     for (const key of sourceKeys) if (Object.hasOwn(latestEvidence, key) && Object.hasOwn(inputs, key) && inputs[key] !== latestEvidence[key]) reasons.push(key.replace('_generation', '') + ' evidence changed');
     if (context.restored && workspace.projection_evidence && !Object.hasOwn(inputs, 'projection_generation')) reasons.push('projection identity unavailable in retained context');
@@ -607,6 +644,23 @@
     if (incomplete) {
       out.append(node('p', 'Current evaluation completed · incomplete evidence. ' + (e.assessment_state?.limitation || e.decision_context?.blocker || e.decision_context?.limitation || 'A complete supported recommendation is unavailable; review the evidence and reevaluate.'), 'tw-assessment-status'));
       reevaluateAction(out);
+    }
+    if (e.personalization?.mode === 'custom') {
+      out.append(node('h3', 'Custom DTOS · your personal assessment'), node('p', 'Neutral DTOS: ' + (e.neutral_assessment?.recommendation || 'Unavailable') + '. Market prices and your counterparty’s supported evidence remain neutral.', 'tw-verdict-qualification'));
+      const value = e.personal_value_evidence;
+      if (value) out.append(node('p', 'Your personal values · You send ' + (value.sent?.total == null ? 'Unavailable' : displayMarket(value.sent.total)) + ' / You receive ' + (value.received?.total == null ? 'Unavailable' : displayMarket(value.received.total))));
+    }
+    for (const warning of e.personal_preference_warnings || []) out.append(node('p', warning + '. Your manually entered offer was not altered.', 'tw-drawback'));
+    if (!retained) for (const conflict of e.personal_preference_conflicts || []) {
+      if (conflict.kind !== 'protect') continue;
+      const override = node('button', session.overrideSavedProtections.includes(conflict.asset_id) ? 'Restore saved protection for ' + label(asset(conflict.asset_id) || {label: conflict.asset_id}) : 'Allow ' + label(asset(conflict.asset_id) || {label: conflict.asset_id}) + ' in suggestions for this trade only');
+      override.type = 'button'; override.onclick = () => {
+        if (busy) return;
+        if (session.overrideSavedProtections.includes(conflict.asset_id)) session.overrideSavedProtections = session.overrideSavedProtections.filter(id => id !== conflict.asset_id);
+        else session.overrideSavedProtections.push(conflict.asset_id);
+        revision++; session.previewProposal = null; persist(); message('Temporary protection override updated. Saved My DTOS preferences are unchanged. Run an explicit search or adjustment to use it.');
+      };
+      out.append(override);
     }
     if (retained) out.append(node('h4', 'Previous assessment explanation · NOT REVALIDATED'));
     if (!previousContainer && context?.previous_assessment) {
@@ -877,7 +931,7 @@
   function balanceOfferCard(row, preview, context) {
     const e = row.evaluation || row.proposal.preview_assessment || {}, balance = row.balance_adjustment || row.proposal.preview_balance_adjustment;
     const card = node('article', null, 'tw-offer tw-balance-offer');
-    card.append(node('h3', 'Market adjustment · preview'));
+    card.append(node('h3', (balance?.valuation_context?.startsWith('Custom') ? 'Personal valuation' : 'Market') + ' adjustment · preview'));
     const packageLabel = (ids, presented) => ids.map(id => {
       const a = asset(id), source = presented?.find(item => item.asset_id === id);
       return [a ? label(a) : source?.label || id, a?.kind === 'player' ? a.position : null, a?.kind === 'player' ? a.nfl_team : null].filter(Boolean).join(' · ');
@@ -885,7 +939,7 @@
     card.append(node('p', 'You send: ' + packageLabel(row.proposal.assets_sent, row.proposal_presentation?.send), 'tw-offer-package'),
       node('p', 'You receive: ' + packageLabel(row.proposal.assets_received, row.proposal_presentation?.receive), 'tw-offer-package'));
     const shown = balanceMarketDisplay(balance, 'suggested');
-    card.append(node('p', `Current Market: You send ${shown.sent} / You receive ${shown.received}. Difference: ${shown.gap}.`, 'tw-offer-market'));
+    card.append(node('p', `${balance?.valuation_context?.startsWith('Custom') ? 'Your personal valuation' : 'Current Market'}: You send ${shown.sent} / You receive ${shown.received}. Difference: ${shown.gap}.`, 'tw-offer-market'));
     const original = preview ? session.originalProposal || selected : selected;
     const changes = (before, after, side) => {
       const names = ids => ids.slice(0, 2).map(id => label(asset(id) || {label:id})).join(' + ') + (ids.length > 2 ? ' + ' + (ids.length - 2) + ' more' : '');
@@ -895,7 +949,7 @@
     card.append(node('p', [changes(original.sent, row.proposal.assets_sent, 'your outgoing package'), changes(original.received, row.proposal.assets_received, 'the assets you receive')].filter(Boolean).join('; '), 'tw-adjustment'));
     const retained = Boolean(contextQualification(context, row.proposal)), decision = decisionPresentation(e);
     if (context.exploration) card.append(node('p', 'Exploratory only · not a qualified bilateral recommendation', 'tw-drawback'));
-    card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : 'Separate DTOS assessment: ') + (e.recommendation || 'Unavailable')));
+    card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : e.personalization?.mode === 'custom' ? 'Separate Custom DTOS personal assessment: ' : 'Separate DTOS assessment: ') + (e.recommendation || 'Unavailable')));
     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
     const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
     const reason = unfavorable ? 'Closer current Market terms do not make this a recommended trade.' : decision.lineup?.explanation || e.why_you_would_do_it || 'Market balance is separate from strategic fit; no supported positive roster case is established.';
@@ -929,7 +983,11 @@
       const counterpart = e.dimensions?.counterparty_plausibility;
       if (counterpart) card.append(node('p', 'Counterparty support: ' + counterpart.assessment + ' · ' + (counterpart.reason_codes || []).map(code => code.replaceAll('_', ' ')).join('; ')));
     }
-    card.append(node('h3', e.recommendation || 'Recommendation unavailable'));
+    card.append(node('h3', (e.personalization?.mode === 'custom' ? 'Custom DTOS · ' : '') + (e.recommendation || 'Recommendation unavailable')));
+    if (e.personalization?.mode === 'custom') card.append(node('p', 'Neutral DTOS: ' + (e.neutral_assessment?.recommendation || 'Unavailable') + ' · Market fairness and opponent evidence remain separate.', 'tw-verdict-qualification'));
+    const matches = row.personal_preference_matches;
+    if (matches?.targets_received?.length) card.append(node('p', 'Matches your saved target preference: ' + matches.targets_received.map(id => label(asset(id) || {label:id})).join(' + ')));
+    if (matches?.avoid_received?.length) card.append(node('p', 'Includes an asset you prefer to avoid. This soft preference has not changed the trade facts.', 'tw-drawback'));
     const decision = decisionPresentation(e);
     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
     if (row.repair_type) card.append(node('p', row.repair_type));
@@ -1048,6 +1106,7 @@
     searchDetails(body, out);
   }
   async function run(path, extra = {}) {
+    if (personalRevisionStale) return personalChangedNotice();
     if (busy || !workspace) return;
     if (path === 'generate' && entryBlocked) return;
     if (path === 'generate' && ((flow === 'shop' && !session.requiredOutgoingAsset && selected.sent.length !== 1) || (flow === 'trade_for' && !session.requiredIncomingAsset && selected.received.length !== 1))) return message('Choose one target asset for this search. Multi-asset proposals can still be evaluated directly.', true);
@@ -1162,7 +1221,7 @@
     cancelBalance(); revision++; runSequence++; busy = false;
     selected.sent = []; selected.received = []; selected.partner = 0;
     for (const key of ['originalProposal','previewProposal','adoptedProposal','currentAssessment','requiredOutgoingAsset','requiredIncomingAsset','shopScopeAsset']) session[key] = null;
-    session.protectedAssets = []; session.excludedAssets = []; session.adjustmentConstraints = {};
+    session.protectedAssets = []; session.excludedAssets = []; session.overrideSavedProtections = []; session.adjustmentConstraints = {};
     session.originWorkflow = 'create'; session.shopSearchPartner = 0;
     session.shopPreference = 'best_overall'; session.shopPosition = 'QB';
     session.resetGeneration = String(Date.now()) + ':' + Math.random().toString(36).slice(2);
@@ -1276,6 +1335,27 @@
   matchMedia('(max-width:760px)').addEventListener('change', () => { if (workspace) paint(); });
   fetch('/api/trades/workspace?front_office=' + active + (marketEditor ? '&mode=calculator' : ''), {credentials: 'same-origin'}).then(async response => { if (!response.ok) throw new Error('Unable to load this authorized workspace.'); return response.json(); }).then(data => {
     workspace = data;
+    if (data.personalization) {
+      const p = data.personalization;
+      const savedMode = restoredDraft()?.valuationMode;
+      valuationMode = new URL(location.href).searchParams.has('home_offer') ? 'neutral' : (savedMode || p.mode || 'neutral');
+      if (valuationMode === 'custom' && (!(p.revision > 0) || p.available !== true)) valuationMode = 'neutral';
+      const panel = node('section', null, 'card tw-valuation-mode');
+      const label = node('label', 'Valuation mode'); label.htmlFor = 'trade-valuation-mode';
+      const select = node('select'); select.id = 'trade-valuation-mode';
+      for (const [value, text] of [['neutral', 'Neutral DTOS'], ['custom', 'Custom DTOS']]) { const option = node('option', text); option.value = value; option.disabled = value === 'custom' && (!(p.revision > 0) || p.available !== true); select.append(option); }
+      select.value = valuationMode;
+      const edit = node('a', 'Edit My DTOS rankings'); edit.href = '/account/my-dtos';
+      panel.append(label, select, node('p', 'Neutral Market and Sleeper lineup facts stay unchanged. Custom DTOS uses your saved ranking values for your decision.'), edit);
+      root.prepend(panel);
+      select.onchange = () => {
+        activeRequest?.abort(); activeRequest = null; balanceRequest = null; revision++; runSequence++; busy = false;
+        valuationMode = select.value; clearBalancePreview(); lastOffers = null; excludedFamilies.clear(); searchExhausted = false;
+        if (session.currentAssessment) staleAssessment('Valuation mode changed. Reevaluate this exact proposal.');
+        el('trade-result').hidden = true;
+        persist(); paint(); message('Valuation mode changed. Your exact offer is unchanged; reevaluate or run an explicit search.');
+      };
+    }
     if (window.dtosStrategy) el('trade-strategy').value = window.dtosStrategy.get(data.workspace_context);
     for (const a of team(active)?.assets || []) { const option = node('option', label(a) + (a.kind === 'pick' ? ' · Original franchise ' + a.original_roster_id + ' · ' + a.asset_id : '')); option.value = a.asset_id; el('trade-constraint-asset').append(option); }
     if (flow === 'recommended') {
@@ -1307,7 +1387,7 @@
         // Older drafts retained only a string summary: it is prior context,
         // never a freshly validated assessment or an inferred endorsement.
         if (session.previewProposal && !session.previewProposal.preview_context) session.previewProposal.preview_context = {...assessmentContext({proposal: session.previewProposal}), restored: true, stale_reason: 'Legacy preview qualification and supporting evidence were not retained'};
-        for (const key of ['protectedAssets', 'excludedAssets']) if (Array.isArray(saved[key])) session[key] = [...new Set(saved[key])];
+        for (const key of ['protectedAssets', 'excludedAssets', 'overrideSavedProtections']) if (Array.isArray(saved[key])) session[key] = [...new Set(saved[key])];
         if (saved.strategy && Array.from(el('trade-strategy').options).some(o => o.value === saved.strategy) && !window.dtosStrategy?.has(data.workspace_context)) {
           window.dtosStrategy?.set(data.workspace_context, saved.strategy);
           el('trade-strategy').value = saved.strategy;

@@ -1,3 +1,11 @@
+## v1.21.87 / build 2187 — My DTOS Custom Rankings
+
+Add complete Market-seeded overall player and exact-pick rankings under Account, with positional search, paginated editing, drag/touch and keyboard move controls, optional tier breaks and saved Target/Avoid/Protect intent. Neutral view preserves the saved custom order; explicit confirmed Restart uses the latest compatible Market baseline while retaining separate preferences by default.
+
+Custom DTOS assigns the current compatible Market price slots of the saved cohort to its saved global order. This personal current-value permutation never changes neutral prices, projections, legal lineup effects or opponent valuation evidence. New or unavailable identities do not acquire invented personal prices. Preserve canonical severe-loss and missing-evidence safeguards and expose separate personal and neutral conclusions across Calculator, Trade For, Shop, Recommended, Balance and Adjust.
+
+Persist only bounded account/league/franchise-owned identity/order/tier intent in the existing account database, with private reads, CSRF, commit-time ownership/session checks, revision conflicts and stale-result publication fences. No copied price warehouse, automatic discovery, FOIS regeneration, historical reconstruction or paid infrastructure is added. Physical Safari, unfamiliar-human usability and independent Scout acceptance remain separate requirements. Beta expansion is not authorized.
+
 ## v1.21.86 / build 2186 — Phone-first Front Office Brief
 
 Bring Home's first supported insight forward by compacting franchise identity, official record and primary actions. Place secondary franchise/context controls after the Brief. Remove redundant introductory copy and display prepared insights before secondary Find/Explore controls; loading, empty and recovery messages remain ahead of those controls. Reasons, drawbacks, exact trade assets, eligibility and all evidence disclosures are unchanged.

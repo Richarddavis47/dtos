@@ -1,0 +1,400 @@
+"""Bounded manager intent over a prepared canonical Market universe.
+
+No provider, solver, history, discovery or cache factories are called here.
+The slot curve is an explicitly personal current-value permutation, not a quote.
+"""
+from __future__ import annotations
+
+from copy import deepcopy
+from contextlib import closing, contextmanager
+from datetime import datetime, timezone
+from hashlib import sha256
+import json
+from math import isfinite
+import re
+from threading import RLock
+
+from services.trade_workspace_context import workspace_context
+from src.platform.account_context import current_account
+
+METHOD = 'personal-current-market-slot-curve-v1'
+MAX_ASSETS = 10_000
+POSITIONS = {'QB', 'RB', 'WR', 'TE'}
+# Fixed-size synchronization only, never a per-user cache. Short CAS writes and
+# header publication share a stripe; no reconstruction or serialization holds it.
+_PUBLICATION_LOCKS = tuple(RLock() for _ in range(32))
+
+
+class PersonalRankingError(ValueError):
+    def __init__(self, code, message, status=422):
+        super().__init__(message)
+        self.code, self.status = code, status
+
+
+@contextmanager
+def personal_publication(context, *, blocking=False):
+    key = _digest(context.get('scope') or [])
+    lock = _PUBLICATION_LOCKS[int(key[:8], 16) % len(_PUBLICATION_LOCKS)]
+    if not lock.acquire(blocking=blocking):
+        raise PersonalRankingError('personal_publication_busy', 'Personal preferences are being saved. Retry this operation.', 409)
+    try:
+        yield
+    finally:
+        lock.release()
+
+
+def to_trade_id(asset_id):
+    if not isinstance(asset_id, str):
+        raise PersonalRankingError('asset_identity_invalid', 'Use a canonical player or exact pick.')
+    if re.fullmatch(r'player:[A-Za-z0-9_-]{1,80}', asset_id):
+        return asset_id.removeprefix('player:')
+    match = re.fullmatch(r'pick:(20\d{2}):([1-9]\d?):([1-9]\d*)', asset_id)
+    if match:
+        year, round_number, original = match.groups()
+        return f'{year}-R{round_number}-{original}'
+    raise PersonalRankingError('asset_identity_invalid', 'Player or original-franchise pick identity is unavailable.')
+
+
+def _digest(value):
+    return sha256(json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+
+
+def _number(value):
+    return (not isinstance(value, bool) and isinstance(value, (int, float))
+            and isfinite(value) and 0 <= value <= 1000)
+
+
+def _league(data):
+    return str((data.get('league') or {}).get('league_id') or data.get('league_id') or '')
+
+
+def _publication_token(data, reader):
+    """Cheap immutable-handle fence; no directory reads or analytical work."""
+    return [id(data), id(reader), getattr(reader, 'semantic_generation', None),
+            getattr(reader, 'generated_at', None),
+            (data.get('market_data') or {}).get('generation'),
+            id((data.get('market_data') or {}).get('providers')),
+            id((data.get('market_data') or {}).get('pick_quotes'))]
+
+
+def _scope(data, account):
+    membership = account.membership if account else None
+    if not membership or membership.league_id != _league(data) or not membership.roster_id:
+        raise PersonalRankingError('unauthorized_scope', 'Select your connected league and franchise.', 403)
+    return membership
+
+
+def _live_scope(store, account, membership):
+    """Recheck revocation and ownership after asynchronous work, without writes."""
+    with closing(store.connect()) as connection:
+        live = connection.execute(
+            "SELECT 1 FROM accounts a JOIN account_sessions s ON s.account_id=a.account_id "
+            "JOIN account_league_memberships m ON m.account_id=a.account_id "
+            "WHERE a.account_id=? AND a.status='active' AND s.session_id=? "
+            "AND s.revoked_at IS NULL AND s.expires_at>? "
+            "AND m.league_id=? AND m.roster_id=? AND m.status='active'",
+            (account.account_id, account.session_id, datetime.now(timezone.utc).isoformat(),
+             membership.league_id, membership.roster_id),
+        ).fetchone()
+    if live is None:
+        raise PersonalRankingError('personal_scope_revoked', 'Your session or franchise access changed. Sign in and reload.', 403)
+
+
+def build_universe(data, market_reader):
+    """Read every eligible compact row from one already-published immutable model.
+
+    Preserve the directory's exact Market ordering, including its ID tie order.
+    Never materialize canonical dossiers or historical evidence.
+    """
+    if market_reader is None:
+        raise PersonalRankingError('market_unavailable', 'Market preparation is pending. Your saved rankings remain intact.', 503)
+    identity = market_reader.identity()
+    league_id = _league(data)
+    if not league_id or str(identity.get('league_id')) != league_id:
+        raise PersonalRankingError('market_scope_changed', 'Market evidence belongs to a different league. Retry after preparation.', 409)
+    prepared_data = getattr(market_reader, 'data', None)
+    if prepared_data is not None:
+        old_market, new_market = prepared_data.get('market_data') or {}, data.get('market_data') or {}
+        old = old_market.get('generation') or old_market.get('generated_at')
+        new = new_market.get('generation') or new_market.get('generated_at')
+        if not old or not new or old != new:
+            raise PersonalRankingError('market_source_changed', 'Compatible current Market evidence is pending.', 409)
+    source = identity.get('market_generation')
+    if not isinstance(source, str) or not source:
+        raise PersonalRankingError('market_unavailable', 'Market source identity is unavailable.', 503)
+    pick_owners = {}
+    player_owners = {}
+    for team in data.get('teams') or ():
+        rid = int(team.get('roster_id') or 0)
+        for player in team.get('players') or ():
+            pid = str(player.get('id') or player.get('player_id') or '')
+            if pid:
+                key = 'player:' + pid
+                player_owners[key] = None if key in player_owners and player_owners[key] != rid else rid
+        for pick in team.get('picks_owned') or ():
+            year, season = pick.get('year'), pick.get('season')
+            if year is not None and season is not None and str(year) != str(season):
+                continue
+            year = year if year is not None else season
+            original = pick.get('original_roster_id')
+            owner = pick.get('current_owner_id', rid)
+            key = f"pick:{year}:{pick.get('round')}:{original}"
+            try:
+                to_trade_id(key)
+                if int(owner) == rid:
+                    if key in pick_owners and pick_owners[key] != rid:
+                        pick_owners[key] = None
+                    else:
+                        pick_owners[key] = rid
+            except (PersonalRankingError, TypeError, ValueError):
+                continue
+    rows, seen = [], set()
+    offset, total = 0, None
+    while total is None or offset < total:
+        page = market_reader.directory(offset=offset, limit=250, sort='market', direction='desc', minimum=0)
+        if page.get('market_generation') != source or str(page.get('league_id')) != league_id:
+            raise PersonalRankingError('market_source_changed', 'Market publication changed. Retry the same action.', 409)
+        total = page.get('total')
+        if isinstance(total, bool) or not isinstance(total, int) or total < 0 or total > MAX_ASSETS:
+            raise PersonalRankingError('universe_capacity', 'The full ranking universe exceeds the supported bound; nothing was truncated.', 503)
+        chunk = page.get('assets') or []
+        if not chunk and offset < total:
+            raise PersonalRankingError('market_incomplete', 'The complete Market directory is unavailable.', 503)
+        for row in chunk:
+            key = row.get('asset_id')
+            try:
+                trade_id = to_trade_id(key)
+            except PersonalRankingError:
+                continue
+            if key in seen:
+                raise PersonalRankingError('identity_conflict', 'Duplicate Market asset identity cannot seed rankings.', 503)
+            seen.add(key)
+            kind = row.get('asset_type')
+            position = row.get('position')
+            if (kind == 'player') != key.startswith('player:'):
+                continue
+            if key in player_owners and player_owners[key] is None:
+                continue
+            if (kind == 'player' and position not in POSITIONS) or kind not in {'player', 'pick'}:
+                continue
+            if str(row.get('status') or '').lower() in {'retired', 'inactive'}:
+                continue
+            value = (row.get('values') or {}).get('market_value')
+            if not _number(value):
+                continue
+            owner = player_owners.get(key) if kind == 'player' else pick_owners.get(key)
+            if kind == 'pick' and owner is None:
+                continue
+            rows.append({'asset_id': key, 'trade_asset_id': trade_id,
+                         'label': str(row.get('display_name') or key),
+                         'position': 'PICK' if kind == 'pick' else position,
+                         'market_value': value, 'owner_roster_id': owner,
+                         'market_rank': len(rows) + 1})
+        offset += len(chunk)
+    generation = _digest([league_id, source, getattr(market_reader, 'semantic_generation', None),
+                          (data.get('market_data') or {}).get('generation'),
+                          [(r['asset_id'], r['market_value'], r['owner_roster_id']) for r in rows]])
+    return {'generation': generation, 'source_generation': source, 'league_id': league_id, 'rows': rows}
+
+
+def personal_values(document, universe):
+    """Permute the existing price curve; tiers never manufacture cardinal prices.
+
+    No interpolation/extrapolation, inflation, clipping or personal price copies.
+    Every saved rank must have compatible current evidence, otherwise numerical
+    Custom assessment is withheld. New assets require an explicit Restart.
+    """
+    rows = {r['asset_id']: r for r in universe['rows']}
+    order = document.get('order') or []
+    baseline = (document.get('baseline') or {}).get('ids') or []
+    if not order or len(set(order)) != len(order) or set(order) != set(baseline):
+        return {'available': False, 'values': {}, 'reason': 'Saved ranking order is incomplete or invalid.'}
+    missing = [key for key in order if key not in rows]
+    if missing:
+        return {'available': False, 'values': {}, 'reason': 'A saved asset has missing, retired or incompatible current evidence. Review or Restart Rankings.', 'unavailable_ids': missing}
+    # Only the saved cohort supplies the curve: a new unranked asset cannot
+    # silently push every existing opinion into a different slot.
+    order_set = set(order)
+    curve = sorted((rows[key]['market_value'] for key in order), reverse=True)
+    return {'available': True, 'values': dict(zip(order, curve)), 'reason': None,
+            'new_asset_ids': [key for key in rows if key not in order_set], 'method': METHOD}
+
+
+def view_state(store, data, market_reader, account):
+    from src.core.accounts.personal_store import load_personal
+    membership = _scope(data, account)
+    _live_scope(store, account, membership)
+    universe = build_universe(data, market_reader)
+    document = load_personal(store, account.account_id, membership.league_id, membership.roster_id)
+    values = personal_values(document, universe) if document else {'available': False, 'values': {}, 'reason': 'Start with the complete current Market order; no manual setup is required.'}
+    current = {row['asset_id']: row for row in universe['rows']}
+    order = document['order'] if document else list(current)
+    # Retain unresolved saved rows visibly, never substitute another identity.
+    order_set = set(order)
+    keys = [*order, *(key for key in current if key not in order_set)]
+    preferences = (document or {}).get('preferences') or {}
+    rows = []
+    for index, key in enumerate(keys, 1):
+        row = dict(current.get(key) or {'asset_id': key, 'label': key, 'position': 'PICK' if key.startswith('pick:') else 'Unavailable', 'market_value': None, 'owner_roster_id': None, 'market_rank': None})
+        row.update(rank=index, personal_rank=index if key in order_set and document else None,
+                   personal_value=values['values'].get(key), owned=row['owner_roster_id'] == membership.roster_id,
+                   preferences=preferences.get(key, {}), tier_start=key in ((document or {}).get('tiers') or []),
+                   custom_ranked=key in order_set and bool(document), identity_available=key in current)
+        rows.append(row)
+    context = workspace_context(data, membership.roster_id)
+    return {'initialized': document is not None, 'revision': (document or {}).get('revision', 0),
+            'mode': (document or {}).get('mode', 'neutral'), 'generation': universe['generation'],
+            'baseline_generation': ((document or {}).get('baseline') or {}).get('generation'),
+            'rows': rows, 'context': {k: context[k] for k in ('league_id', 'roster_id', 'binding')},
+            'personal_available': values['available'], 'method': METHOD,
+            'limitations': [values['reason']] if values.get('reason') else [],
+            'new_asset_ids': values.get('new_asset_ids', []),
+            'method_explanation': 'Your saved global order receives the descending current Market price slots of that same saved cohort. Moving up cannot lower a personal value. Tiers are labels and do not change prices. New assets need Restart Rankings; no past prices are reconstructed.'}
+
+
+def apply_command(store, data, market_reader, account, payload):
+    from src.core.accounts.personal_store import load_personal, save_personal
+    membership = _scope(data, account)
+    _live_scope(store, account, membership)
+    universe = build_universe(data, market_reader)
+    context = workspace_context(data, membership.roster_id)
+    expected_context = {k: context[k] for k in ('league_id', 'roster_id', 'binding')}
+    if payload.get('context') != expected_context or payload.get('market_generation') != universe['generation']:
+        raise PersonalRankingError('personal_context_changed', 'League, session or Market evidence changed. Reload before saving.', 409)
+    revision = payload.get('expected_revision')
+    if isinstance(revision, bool) or not isinstance(revision, int) or revision < 0:
+        raise PersonalRankingError('invalid_revision', 'A valid preference revision is required.')
+    document = load_personal(store, account.account_id, membership.league_id, membership.roster_id)
+    if revision != (document or {}).get('revision', 0):
+        raise PersonalRankingError('personal_revision_changed', 'Your rankings changed in another tab. Reload before editing.', 409)
+    command = payload.get('command')
+    ids = [r['asset_id'] for r in universe['rows']]
+    if command in {'initialize', 'restart'}:
+        if command == 'initialize' and document:
+            raise PersonalRankingError('already_initialized', 'Use Restart Rankings to replace a saved custom order.', 409)
+        if command == 'restart' and payload.get('confirmation') != 'RESTART RANKINGS':
+            raise PersonalRankingError('confirmation_required', 'Confirm that customized order and tiers will be lost.')
+        if not ids:
+            raise PersonalRankingError('market_unavailable', 'No eligible priced assets are available to seed rankings.', 503)
+        document = {'schema': 1, 'baseline': {'generation': universe['generation'], 'ids': ids},
+                    'order': ids, 'tiers': [], 'preferences': {} if payload.get('reset_preferences') is True else (document or {}).get('preferences', {}),
+                    'mode': 'custom'}
+    elif not document:
+        raise PersonalRankingError('rankings_not_started', 'Initialize the full Market-seeded rankings first.', 409)
+    else:
+        document = {k: deepcopy(v) for k, v in document.items() if k not in {'revision', 'created_at', 'updated_at'}}
+        key = payload.get('asset_id')
+        if command in {'reorder', 'tiers', 'preferences'} and key not in document['order']:
+            raise PersonalRankingError('asset_not_ranked', 'This asset is not in your saved baseline. Restart to include new assets.')
+        if command == 'reorder':
+            position = payload.get('to_position')
+            if isinstance(position, bool) or not isinstance(position, int) or not 1 <= position <= len(document['order']):
+                raise PersonalRankingError('invalid_position', 'Choose a valid position in the complete overall order.')
+            document['order'].remove(key)
+            document['order'].insert(position - 1, key)
+        elif command == 'tiers':
+            if type(payload.get('tier_start')) is not bool:
+                raise PersonalRankingError('invalid_tier', 'Choose whether a tier begins at this asset.')
+            tiers = set(document['tiers'])
+            tiers.add(key) if payload['tier_start'] else tiers.discard(key)
+            document['tiers'] = [i for i in document['order'] if i in tiers]
+        elif command == 'preferences':
+            flags = payload.get('preferences')
+            if not isinstance(flags, dict) or set(flags) - {'target', 'avoid', 'protect'} or any(type(v) is not bool for v in flags.values()):
+                raise PersonalRankingError('invalid_preference', 'Use Target, Avoid and Protect controls.')
+            if flags.get('target') and flags.get('avoid'):
+                raise PersonalRankingError('conflicting_preferences', 'An acquisition cannot be both a Target and Avoid.')
+            row = next((r for r in universe['rows'] if r['asset_id'] == key), None)
+            if flags.get('protect') and (row is None or row['owner_roster_id'] != membership.roster_id):
+                raise PersonalRankingError('not_owned', 'Only an exact currently owned asset can be protected.')
+            if any(flags.values()):
+                document['preferences'][key] = flags
+            else:
+                document['preferences'].pop(key, None)
+        elif command == 'mode' and payload.get('mode') in {'neutral', 'custom'}:
+            document['mode'] = payload['mode']
+        else:
+            raise PersonalRankingError('invalid_command', 'Choose a supported rankings action.')
+    with personal_publication({'scope': [account.account_id, membership.league_id, membership.roster_id]}, blocking=True):
+        save_personal(store, account.account_id, membership.league_id, membership.roster_id, document,
+                      expected_revision=revision, expected_session_id=account.session_id)
+    return view_state(store, data, market_reader, account)
+
+
+def resolve_personal_context(data, payload, *, store=None, market_reader=None, account=None, require_revision=True):
+    from src.core.accounts.personal_store import load_personal
+    account = account or current_account()
+    mode = payload.get('valuation_mode', 'neutral')
+    if mode not in {'neutral', 'custom'}:
+        raise PersonalRankingError('invalid_mode', 'Choose Neutral DTOS or Custom DTOS.')
+    if store is None or account is None:
+        if mode == 'custom':
+            raise PersonalRankingError('personal_unavailable', 'Sign in and prepare Custom Rankings before using Custom DTOS.', 403)
+        return {'mode': 'neutral'}
+    membership = _scope(data, account)
+    _live_scope(store, account, membership)
+    doc = load_personal(store, account.account_id, membership.league_id, membership.roster_id)
+    revision = (doc or {}).get('revision', 0)
+    if require_revision and (type(payload.get('personal_revision')) is not int or payload.get('personal_revision') != revision):
+        raise PersonalRankingError('personal_revision_changed', 'Personal preferences changed. Reload this workspace.', 409)
+    preferences = {to_trade_id(key): flags for key, flags in ((doc or {}).get('preferences') or {}).items()}
+    context = {'mode': mode, 'revision': revision, 'preferences': preferences,
+               'scope': [account.account_id, membership.league_id, membership.roster_id],
+               'baseline_generation': ((doc or {}).get('baseline') or {}).get('generation'), 'method': METHOD}
+    if mode == 'neutral':
+        return context
+    if not doc:
+        raise PersonalRankingError('rankings_not_started', 'Initialize your complete Custom Rankings first.', 409)
+    universe = build_universe(data, market_reader)
+    if require_revision and payload.get('personal_market_generation') != universe['generation']:
+        raise PersonalRankingError('personal_market_changed', 'The personal price curve changed with Market evidence. Reload before evaluating.', 409)
+    result = personal_values(doc, universe)
+    if not result['available']:
+        raise PersonalRankingError('personal_evidence_unavailable', result['reason'], 409)
+    context.update(values={to_trade_id(k): v for k, v in result['values'].items()},
+                   neutral_values={r['trade_asset_id']: r['market_value'] for r in universe['rows']},
+                   market_generation=universe['generation'], source_generation=universe['source_generation'],
+                   publication_token=_publication_token(data, market_reader))
+    return context
+
+
+def validate_personal_context(data, payload, context, **kwargs):
+    from src.core.accounts.personal_store import load_personal
+    account = kwargs.get('account') or current_account()
+    membership = _scope(data, account)
+    store = kwargs.get('store')
+    if store is None:
+        raise PersonalRankingError('personal_unavailable', 'Personal preferences cannot be verified.', 503)
+    _live_scope(store, account, membership)
+    doc = load_personal(store, account.account_id, membership.league_id, membership.roster_id)
+    if ((doc or {}).get('revision', 0) != context.get('revision')
+            or context.get('scope') != [account.account_id, membership.league_id, membership.roster_id]
+            or payload.get('valuation_mode', 'neutral') != context.get('mode')
+            or (context.get('mode') == 'custom'
+                and _publication_token(data, kwargs.get('market_reader')) != context.get('publication_token'))):
+        raise PersonalRankingError('personal_context_changed', 'Personal or source evidence changed during this operation. Retry.', 409)
+
+
+def personal_bootstrap(data, active_id, *, store=None, market_reader=None, account=None):
+    account = account or current_account()
+    if account is None or store is None:
+        return {'mode': 'neutral', 'revision': 0, 'initialized': False, 'available': False}
+    try:
+        state = view_state(store, data, market_reader, account)
+    except PersonalRankingError as exc:
+        # Optional personal preparation cannot take Neutral Trade navigation down.
+        from src.core.accounts.personal_store import load_personal
+        membership = _scope(data, account)
+        doc = load_personal(store, account.account_id, membership.league_id, membership.roster_id)
+        return {'mode': 'neutral', 'revision': (doc or {}).get('revision', 0),
+                'initialized': doc is not None, 'available': False, 'personal_available': False,
+                'limitations': [str(exc)]}
+    if state['context']['roster_id'] != active_id:
+        raise PersonalRankingError('unauthorized_franchise', 'Only your franchise can use your personal rankings.', 403)
+    result = {key: state[key] for key in ('mode', 'revision', 'initialized', 'generation', 'baseline_generation', 'personal_available', 'limitations')}
+    result.update(market_generation=state['generation'], available=state['personal_available'], values={})
+    if state['personal_available']:
+        context = resolve_personal_context(data, {'valuation_mode': 'custom', 'personal_revision': state['revision'],
+            'personal_market_generation': state['generation']}, store=store, market_reader=market_reader, account=account)
+        result['values'] = context['values']
+    return result
