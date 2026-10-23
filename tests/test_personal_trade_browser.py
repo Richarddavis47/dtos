@@ -162,6 +162,73 @@ class PersonalTradeBrowserTests(unittest.TestCase):
             finally:
                 browser.close()
 
+    def test_neutral_evaluation_survives_optional_rankings_warming_after_focus(self):
+        fixture = self.fixture()
+        self.addCleanup(fixture.doCleanups)
+        fixture.editor.market = None
+        with sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                page, records, errors = self.page(browser, fixture, 390, 844)
+                page.goto('http://testserver/trades/create')
+                page.locator('#trade-valuation-mode').wait_for()
+                self.assertEqual(page.locator('#trade-valuation-mode').input_value(), 'neutral')
+                page.locator('#trade-partner').select_option('2')
+                page.locator('#trade-sent-board button[data-asset-id="a"]').click()
+                if page.locator('[data-side="received"]').is_visible():
+                    page.locator('[data-side="received"]').click()
+                page.locator('#trade-received-board button[data-asset-id="2028-R1-4"]').click()
+                page.locator('#trade-strategy').select_option('REBUILD')
+                with page.expect_response(lambda response: response.url.endswith('/api/my-dtos')) as pending:
+                    page.evaluate("window.dispatchEvent(new Event('focus'))")
+                self.assertEqual(pending.value.status, 503)
+                self.assertEqual(page.get_by_role('button', name='Reload current facts', exact=True).count(), 0)
+                page.locator('#trade-run').click()
+                page.wait_for_function("document.querySelector('#trade-result').dataset.assessment==='true'")
+                evaluated = [record for record in records if record['endpoint'].endswith('/evaluate')]
+                self.assertEqual(len(evaluated), 1)
+                self.assertEqual(evaluated[0]['status'], 200)
+                self.assertEqual(evaluated[0]['response']['evaluation']['recommendation'], 'WORTH PURSUING')
+                self.assertEqual(evaluated[0]['payload']['valuation_mode'], 'neutral')
+                self.assertEqual(self.draft(page)['currentProposal']['sent'], ['a'])
+                self.assertEqual(self.draft(page)['currentProposal']['received'], ['2028-R1-4'])
+                self.save_evidence('neutral-warming', 390, 844, page, records, errors)
+                page.close()
+            finally:
+                browser.close()
+
+    def test_custom_warming_and_neutral_revoked_session_still_fail_closed_on_focus(self):
+        with sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                for mode, expected_status in (('custom', 503), ('neutral', 401)):
+                    with self.subTest(mode=mode, status=expected_status):
+                        fixture = self.fixture()
+                        try:
+                            page, records, errors = self.page(browser, fixture, 390, 844)
+                            self.edit_rankings_in_browser(page)
+                            self.choose_package(page)
+                            if mode == 'neutral':
+                                page.locator('#trade-valuation-mode').select_option('neutral')
+                                fixture.editor.store.revoke_session(fixture.editor.tokens['account-a'][0])
+                            else:
+                                fixture.editor.market = None
+                            original = self.draft(page)['currentProposal']
+                            with page.expect_response(lambda response: response.url.endswith('/api/my-dtos')) as pending:
+                                page.evaluate("window.dispatchEvent(new Event('focus'))")
+                            self.assertEqual(pending.value.status, expected_status)
+                            page.get_by_role('button', name='Reload current facts', exact=True).wait_for()
+                            page.locator('#trade-run').click()
+                            self.assertEqual([record for record in records if record['endpoint'].endswith('/evaluate')], [])
+                            self.assertEqual(self.draft(page)['currentProposal'], original)
+                            self.assertIn('reload current facts', page.locator('#trade-result').inner_text())
+                            self.save_evidence(mode + '-focus-blocked', 390, 844, page, records, errors)
+                            page.close()
+                        finally:
+                            fixture.doCleanups()
+            finally:
+                browser.close()
+
     def test_custom_calculator_balance_preview_keep_adopt_and_neutral_totals(self):
         with sync_playwright() as pw:
             browser = launch_chromium(pw, headless=True)

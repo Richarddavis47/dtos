@@ -150,6 +150,10 @@
       const response = await fetch('/api/my-dtos', {credentials: 'same-origin', cache: 'no-store'});
       const state = response.ok ? await response.json() : null;
       if (departed || workspace.workspace_context.binding !== binding) return;
+      // Optional ranking preparation must not block the established Neutral
+      // workflow. Explicit requests still enforce authorization and revision
+      // admission on the server. Auth, scope conflicts and Custom stay closed.
+      if (!response.ok && valuationMode === 'neutral' && ![401, 403, 409].includes(response.status)) return;
       const p = workspace.personalization;
       if (!response.ok || state.revision !== p.revision || (state.generation && p.market_generation && state.generation !== p.market_generation) ||
           (state.context && (state.context.league_id !== workspace.workspace_context.league_id || Number(state.context.roster_id) !== active))) {
