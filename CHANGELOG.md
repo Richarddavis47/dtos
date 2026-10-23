@@ -1,3 +1,9 @@
+## v1.21.86 / build 2186 — Phone-first Front Office Brief
+
+Bring Home's first supported insight forward by compacting franchise identity, official record and primary actions. Place secondary franchise/context controls after the Brief. Remove redundant introductory copy and display prepared insights before secondary Find/Explore controls; loading, empty and recovery messages remain ahead of those controls. Reasons, drawbacks, exact trade assets, eligibility and all evidence disclosures are unchanged.
+
+Preserve explicit discovery, prepared-only reads, source/strategy guards and the existing 24-entry/2 MiB/15-minute opportunity cache. No provider, solver, FOIS, historical reconstruction, background job or persistent state is added. Responsive Chromium evidence is separate from physical Safari, unfamiliar-user and independent Scout acceptance, which remain open. Existing resource and source-integrity safeguards remain unchanged.
+
 ## v1.21.85 / build 2185 — Prepared Front Office Brief
 
 Combine Home Attention and hypothetical Trade Opportunities into one prepared Front Office Brief before completed League Trade News. Show up to four supported insights, two initially visible, each with a reason, tradeoff and existing action. Explicit manager goals determine family precedence without changing objective lineup calculations or neutral Market prices. Exact owned capital, legal replacement quality and evaluator-supported offers remain separately qualified; related needs and offers are composed using their existing pre/post diagnostics.

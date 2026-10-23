@@ -73,7 +73,7 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
                         self.assertIn('WIN NOW:', page.locator('#my-team-outlook-goal').text_content())
                         self.assertEqual(page.locator('#my-team-outlook-action').get_attribute('href'), '/trades/trade-for?front_office=1')
                         page.locator('#my-team-outlook-action').click()
-                        page.wait_for_function("document.querySelector('#trade-strategy').value === 'WIN NOW'")
+                        page.wait_for_function("document.querySelector('#trade-strategy')?.value === 'WIN NOW'")
                         self.assertEqual(page.locator('#trade-strategy').input_value(), 'WIN NOW')
                         page.go_back(wait_until='domcontentloaded')
                         self.assertIn('WIN NOW:', page.locator('#my-team-outlook-goal').text_content())

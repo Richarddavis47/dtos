@@ -41,14 +41,26 @@ class SharedPhoneDesignBrowserTests(journey.ProductBrowserJourneyTests):
             )
         if path == "/":
             self.assertIn("Official record:", page.locator(".ux-feature").inner_text())
-            self.assertIn(
-                "DTOS strength assessment:", page.locator(".ux-feature").inner_text()
+            context = page.locator(".home-secondary-controls details").filter(
+                has=page.locator("summary", has_text="Assessment context and roster shortcuts")
             )
+            self.assertFalse(context.evaluate("e=>e.open"))
+            context.locator("summary").click()
+            self.assertIn("DTOS strength assessment:", context.inner_text())
+            self.assertIn("separate from official standings", context.inner_text())
+            context.locator("summary").click()
             self.assertEqual(page.locator(".ux-feature .ds-you").count(), 1)
             self.assertFalse(
                 page.locator(".ds-home-detail").first.get_attribute("open")
             )
+            # Return to keyboard modality after exercising the pointer disclosure.
+            page.keyboard.press("Tab")
             page.locator(".ux-primary-action").focus()
+            self.assertTrue(
+                page.locator(".ux-primary-action").evaluate(
+                    "e=>e===document.activeElement && e.matches(':focus-visible')"
+                )
+            )
             self.assertEqual(
                 page.locator(".ux-primary-action").evaluate(
                     "e=>getComputedStyle(e).outlineStyle"
