@@ -53,7 +53,7 @@ class SharedPhoneDesignBrowserTests(journey.ProductBrowserJourneyTests):
             self.assertFalse(
                 page.locator(".ds-home-detail").first.get_attribute("open")
             )
-            page.locator(".ux-primary-action").focus()
+            # Return to keyboard modality after exercising the pointer disclosure.\n            page.keyboard.press("Tab")\n            page.locator(".ux-primary-action").focus()
             self.assertEqual(
                 page.locator(".ux-primary-action").evaluate(
                     "e=>getComputedStyle(e).outlineStyle"
