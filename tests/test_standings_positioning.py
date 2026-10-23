@@ -391,9 +391,9 @@ class StandingsPublicationTests(unittest.TestCase):
                     patch.dict(dtos_app.STATE, {"data": data}),
                     patch("routes.home.build_team_directory", return_value={}),
                     patch("routes.home.defending_champion", return_value=None),
-                    patch("routes.home.pick_changes", return_value=([], {})),
-                    patch("routes.home.attention_state", return_value={"items": []}),
-                    patch("routes.home.attention_panel", return_value=""),
+                    patch("services.attention_changes.pick_changes", return_value=([], {})),
+                    patch("services.home_attention.attention_state", return_value={"items": []}),
+                    patch("src.ui.front_office_brief.cards", return_value=""),
                     patch("routes.home.current_league_context", return_value=None),
                 ):
 
@@ -470,9 +470,9 @@ class StandingsPublicationTests(unittest.TestCase):
             patch.object(dtos_app, "current_league_context", return_value=context),
             patch("routes.home.build_team_directory", return_value={}),
             patch("routes.home.defending_champion", return_value=None),
-            patch("routes.home.pick_changes", return_value=([], {})),
-            patch("routes.home.attention_state", return_value={"items": []}),
-            patch("routes.home.attention_panel", return_value=""),
+            patch("services.attention_changes.pick_changes", return_value=([], {})),
+            patch("services.home_attention.attention_state", return_value={"items": []}),
+            patch("src.ui.front_office_brief.cards", return_value=""),
             patch("routes.home.current_league_context", return_value=None),
         ):
             client = TestClient(app)

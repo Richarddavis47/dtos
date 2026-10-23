@@ -172,12 +172,13 @@ class UXFoundationTests(unittest.TestCase):
         # Compare section headings, not an earlier action containing the word
         # Explore. Existing section ordering remains an explicit contract.
         positions = [html.index(f"<h2>{heading}</h2>") for heading in headings]
-        self.assertLess(html.index('Open My Team'), html.index('<h2>Trade Opportunities</h2>'))
-        self.assertLess(html.index('<h2>Trade Opportunities</h2>'), html.index('<h2>Standings</h2>'))
+        self.assertLess(html.index('Open My Team'), html.index('id="home-brief-title"'))
+        self.assertLess(html.index('id="home-brief-title"'), html.index('<h2>Standings</h2>'))
         self.assertEqual(positions, sorted(positions))
         self.assertIn("North Stars", html)
-        self.assertIn('aria-label="Home Attention"', html)
-        self.assertIn('Attention coverage', html)
+        self.assertIn('Front Office Brief', html)
+        self.assertNotIn('aria-label="Home Attention"', html)
+        self.assertIn('Reading prepared evidence.', html)
         self.assertNotIn('Highest-value next steps', html)
         self.assertIn("Canonical team assessment", html)
         self.assertIn("not standings or FOIS GM rankings", html)
