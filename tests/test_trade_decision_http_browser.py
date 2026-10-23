@@ -302,7 +302,7 @@ class DecisionHTTPBrowserTests(unittest.TestCase):
             )
             page.goto("https://dtos.test/")
             page.get_by_role(
-                "link", name="Build or explore a trade", exact=True
+                "link", name="Build a trade", exact=True
             ).click()
             page.get_by_role("link", name="Build a Trade", exact=False).first.click()
             page.locator("#trade-context").get_by_text(
