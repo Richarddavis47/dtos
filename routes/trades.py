@@ -89,6 +89,25 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         except (ValueError, TypeError) as exc:
             raise HTTPException(422, "invalid_exact_protections") from exc
         strategy = selected_strategy(request.cookies.get(COOKIE), context['league_id'], rid)
+        from services.trade_intelligence import _trade_projection_service
+        from src.platform.league_context import current_league_context
+        active = current_league_context()
+        reader = _trade_projection_service(data)
+
+        def publication():
+            current = require_data()
+            return (id(current), id(reader.snapshot()),
+                    id(active.projection) if active else None,
+                    active.runtime.fois_publication_revision if active else None,
+                    tuple(sorted(active.runtime.source_generations.items())) if active else (),
+                    id((current.get('market_data') or {}).get('providers')),
+                    id((current.get('market_data') or {}).get('pick_quotes')),
+                    (current.get('market_data') or {}).get('generation'),
+                    (current.get('team_strength') or {}).get('semantic_generation'), current.get('week'))
+
+        # Pin BEFORE yielding to either read worker. Capturing a newer head at
+        # the end could otherwise make superseded facts pass the final fence.
+        admitted_publication = publication()
         try:
             key = await run_manager_read(lambda: home_ideas.cache_key(data, rid, strategy, locks, omissions))
         except Exception as exc:
@@ -108,10 +127,6 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         def prepared_brief():
             facts = prepared_evidence(data, rid, strategy, market_compatible=key is not None)
             changes, coverage = pick_changes(data, rid, METADATA_DATABASE_FILE)
-            from src.core.projection_intelligence import projection_service
-            from src.platform.league_context import current_league_context
-            active = current_league_context()
-            reader = active.projection if active and active.league_id == context['league_id'] else projection_service
             attention = attention_state(data, rid, reader.snapshot(), change_rows=changes, change_coverage=coverage)
             items = select_insights(facts, attention['items'], result['rows'])
             rendered = brief_cards(items)
@@ -120,24 +135,12 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             same_generation = intelligence_orchestrator.context(current, rid, {'strategy': strategy}).evidence_generation == facts['generation']
             if not same_generation or home_ideas.cache_key(current, rid, strategy, locks, omissions) != key:
                 raise HTTPException(409, 'Prepared evidence changed. Reload Home to review current facts; your draft is unchanged.')
-            # Keep fingerprints and cache reads off-loop. These immutable
-            # publication references fence the thread-to-response handoff.
-            publication = (active.runtime.fois_publication_revision if active else None,
-                           tuple(sorted(active.runtime.source_generations.items())) if active else (),
-                           id((current.get('market_data') or {}).get('providers')),
-                           id((current.get('market_data') or {}).get('pick_quotes')),
-                           current.get('week'))
-            return facts, items, rendered, current, reader, reader.snapshot(), active, publication
+            return facts, items, rendered
 
-        facts, items, brief_html, pinned_data, reader, pinned_projection, active, publication = await run_manager_read(prepared_brief)
+        facts, items, brief_html = await run_manager_read(prepared_brief)
         # Publication may change while the off-loop prepared read is pending.
         # Do not let an obsolete response reintroduce an offer or roster claim.
-        current = require_data()
-        now = (active.runtime.fois_publication_revision if active else None,
-               tuple(sorted(active.runtime.source_generations.items())) if active else (),
-               id((current.get('market_data') or {}).get('providers')),
-               id((current.get('market_data') or {}).get('pick_quotes')), current.get('week'))
-        if current is not pinned_data or reader.snapshot() is not pinned_projection or now != publication:
+        if publication() != admitted_publication:
             raise HTTPException(409, 'Prepared evidence changed. Reload Home to review current facts; your draft is unchanged.')
         return JSONResponse({'workspace_context': context, 'csrf_token': account.csrf_token if account else '',
             'strategy': strategy, 'source_identity': key[1] if key else None, 'count': len(result['rows']),

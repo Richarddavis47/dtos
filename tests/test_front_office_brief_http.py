@@ -83,6 +83,21 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
         self.assertEqual(response.status_code, 409)
         self.assertIn('draft is unchanged', response.text)
 
+    def test_source_transition_after_final_fingerprint_cannot_relabel_old_facts(self):
+        from services import home_trade_opportunities
+        original = home_trade_opportunities.cache_key
+        calls = []
+        def transition(*args, **kwargs):
+            key = original(*args, **kwargs)
+            calls.append(key)
+            if len(calls) == 2:
+                self.data['week'] = 3
+            return key
+        with patch('services.home_trade_opportunities.cache_key', side_effect=transition):
+            response = self.client.get('/api/trades/home-opportunities?front_office=1')
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(response.status_code, 409)
+
     def test_account_and_franchise_scope_stays_with_authenticated_owner(self):
         response = self.client.get('/api/trades/home-opportunities?front_office=2')
         self.assertEqual(response.status_code, 200)
