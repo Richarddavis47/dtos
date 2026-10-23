@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 
 
 def section(roster_id):
-    return f'''<section class="ux-section" id="home-opportunities" data-front-office="{roster_id}"><div class="ux-section-head"><h2>Trade Opportunities</h2><p>Hypothetical offers · explore before adopting</p></div><p id="home-opportunity-status" role="status">No search runs automatically on Home.</p><div id="home-opportunity-cards"></div><div class="ux-feature-actions"><button type="button" class="btn" id="home-find-ideas">Find Trade Ideas</button><button type="button" class="btn" id="home-reload-opportunities" hidden>Reload Home</button><a class="ds-action" href="/trades/recommended?front_office={roster_id}">Explore more trades →</a></div></section><script src="/static/js/strategy_session.js"></script><script src="/static/js/home-opportunities.js"></script>'''
+    return f'''<section class="ux-section" id="home-opportunities" data-front-office="{roster_id}" aria-labelledby="home-brief-title"><div class="ux-section-head"><h2 id="home-brief-title">Front Office Brief</h2><p>What to review next · prepared roster facts and hypothetical offers</p></div><p id="home-opportunity-status" role="status">Reading prepared evidence. No search runs automatically on Home.</p><div class="ux-feature-actions"><button type="button" class="btn" id="home-find-ideas">Find Trade Ideas</button><button type="button" class="btn" id="home-reload-opportunities" hidden>Reload Home</button><a class="ds-action" href="/trades/recommended?front_office={roster_id}">Explore more trades →</a></div><div id="home-opportunity-cards"></div></section><script src="/static/js/strategy_session.js"></script><script src="/static/js/home-opportunities.js"></script>'''
 
 
 def _brief(text):

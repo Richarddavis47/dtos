@@ -143,15 +143,12 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                     self.assertEqual(before, 0)
                     page.locator("#home-find-ideas").click()
                     page.locator(".home-opportunity").first.wait_for()
-                    self.assertEqual(page.locator(".home-opportunity").count(), 2)
+                    self.assertEqual(page.locator(".home-opportunity").count(), 1)
                     self.assertIn(
                         "RECOMMENDED",
                         page.locator(".home-opportunity").first.inner_text(),
                     )
-                    self.assertIn(
-                        "NOT WORTH IT",
-                        page.locator(".home-opportunity").nth(1).inner_text(),
-                    )
+                    self.assertNotIn("NOT WORTH IT", page.locator('#home-opportunity-cards').inner_text())
                     self.assertEqual(
                         page.evaluate(
                             "document.documentElement.scrollWidth<=innerWidth"
@@ -241,7 +238,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                     f.data["teams"][0]["team_name"] = original_name
                     page.goto("https://dtos.test/")
                     page.locator(".home-opportunity").first.wait_for()
-                    self.assertEqual(page.locator(".home-opportunity").count(), 2)
+                    self.assertEqual(page.locator(".home-opportunity").count(), 1)
                     # Different explicit strategy invalidates cached assessments and pending result.
                     page.evaluate(
                         """async () => {const m=await (await fetch('/api/trades/home-opportunities?front_office=1')).json();window.dtosStrategy.set(m.workspace_context,'REBUILD');window.dispatchEvent(new Event('focus'));}"""

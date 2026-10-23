@@ -12,6 +12,11 @@
 
 # DTOS Development Roadmap
 
+### Carry-forward backlog — accepted My Team v1.21.84
+
+- [ ] **Scout My Team wording follow-ups:** retain separately from Front Office Brief. The exact independent finding text/report was not located in the inspected repository/PR materials or discovered DTOS Page listings; Main Chat has been asked to supply it. Do not substitute author observations or treat this entry as a reopened correctness defect.
+- [ ] **Scout My Team mobile-polish follow-ups:** retain separately from Front Office Brief, with the original device/viewport and severity to be copied from Scout's report when supplied. No wording/mobile implementation is authorized by the Front Office Brief audit, and accepted v1.21.84 behavior remains the baseline.
+
 ### FOIS Final Trust & Verification — DTOS v1.21.26
 
 - Correct unsupported need advice and category-versus-overall strength wording.

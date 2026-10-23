@@ -465,7 +465,7 @@ class HomeOpportunityTests(unittest.TestCase):
         html = self.client.get("/").text
         self.assertLess(html.index("Open My Team"), html.index("League Trade News"))
         self.assertLess(
-            html.index("League Trade News"), html.index('id="home-opportunities"')
+            html.index('id="home-opportunities"'), html.index("League Trade News")
         )
 
 

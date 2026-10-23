@@ -33,13 +33,19 @@
         root.dataset.state = 'context_changed'; return;
       }
       const initial = !context; context = body.workspace_context; metadata = body;
-      if (!body.source_identity) { cards.replaceChildren(); status.textContent = 'Canonical evidence is changing. Try again shortly or Explore more trades.'; root.dataset.state = 'unavailable'; return; }
+      if (body.strategy !== (window.dtosStrategy.get(context) || '')) { cards.replaceChildren(); return load(); }
       if (initial && (locks().protected_assets.length || locks().excluded_assets.length)) return load();
-      if (cards.innerHTML !== body.html) cards.innerHTML = body.html;
+      const html = body.brief_html ?? body.html;
+      if (cards.innerHTML !== html) cards.innerHTML = html;
       displayedIdentity = identity(); // Escaped same-origin canonical presentation, no scoring here.
       status.textContent = body.count ? 'Recently completed search · current matching evidence. Hypothetical offers, not submitted trades.' : body.retained ? (body.reason || 'No supported opportunities in this bounded search.') : 'No current matching search is prepared. Find Trade Ideas when ready.';
+      if (!body.source_identity) status.textContent = 'Trade pricing is unavailable or changing. Prepared roster facts remain separate. Review My Team or try again shortly.';
+      else if (!body.brief_count && 'brief_count' in body) status.textContent = 'No actionable insight qualifies in the prepared evidence. Review My Team or explicitly Find Trade Ideas; this is not proof that no opportunities exist.';
       root.dataset.state = body.state;
-    } catch (error) { if (run === revision && !departed && error.name !== 'AbortError') status.textContent = error.message; }
+    } catch (error) { if (run === revision && !departed && error.name !== 'AbortError') {
+      cards.replaceChildren(); metadata = null; displayedIdentity = null;
+      status.textContent = error.message;
+    } }
   }
   find.onclick = async () => {
     if (invalidated) return;

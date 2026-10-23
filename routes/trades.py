@@ -99,8 +99,49 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             if row is None:
                 raise HTTPException(410, "This idea expired or its source, strategy or protections changed. Your draft is unchanged. Find current ideas again.")
             return JSONResponse(row, headers={"Cache-Control": "no-store"})
+        from services.front_office_brief import prepared_evidence, select_insights
+        from services.home_attention import attention_state
+        from services.attention_changes import pick_changes
+        from src.ui.front_office_brief import cards as brief_cards
+        from config import METADATA_DATABASE_FILE
+
+        def prepared_brief():
+            facts = prepared_evidence(data, rid, strategy)
+            changes, coverage = pick_changes(data, rid, METADATA_DATABASE_FILE)
+            from src.core.projection_intelligence import projection_service
+            from src.platform.league_context import current_league_context
+            active = current_league_context()
+            reader = active.projection if active and active.league_id == context['league_id'] else projection_service
+            attention = attention_state(data, rid, reader.snapshot(), change_rows=changes, change_coverage=coverage)
+            items = select_insights(facts, attention['items'], result['rows'])
+            rendered = brief_cards(items)
+            current = require_data()
+            from services.front_office_brief import intelligence_orchestrator
+            same_generation = intelligence_orchestrator.context(current, rid, {'strategy': strategy}).evidence_generation == facts['generation']
+            if not same_generation or home_ideas.cache_key(current, rid, strategy, locks, omissions) != key:
+                raise HTTPException(409, 'Prepared evidence changed. Reload Home to review current facts; your draft is unchanged.')
+            # Keep fingerprints and cache reads off-loop. These immutable
+            # publication references fence the thread-to-response handoff.
+            publication = (active.runtime.fois_publication_revision if active else None,
+                           tuple(sorted(active.runtime.source_generations.items())) if active else (),
+                           id((current.get('market_data') or {}).get('providers')),
+                           id((current.get('market_data') or {}).get('pick_quotes')),
+                           current.get('week'))
+            return facts, items, rendered, current, reader, reader.snapshot(), active, publication
+
+        facts, items, brief_html, pinned_data, reader, pinned_projection, active, publication = await run_manager_read(prepared_brief)
+        # Publication may change while the off-loop prepared read is pending.
+        # Do not let an obsolete response reintroduce an offer or roster claim.
+        current = require_data()
+        now = (active.runtime.fois_publication_revision if active else None,
+               tuple(sorted(active.runtime.source_generations.items())) if active else (),
+               id((current.get('market_data') or {}).get('providers')),
+               id((current.get('market_data') or {}).get('pick_quotes')), current.get('week'))
+        if current is not pinned_data or reader.snapshot() is not pinned_projection or now != publication:
+            raise HTTPException(409, 'Prepared evidence changed. Reload Home to review current facts; your draft is unchanged.')
         return JSONResponse({'workspace_context': context, 'csrf_token': account.csrf_token if account else '',
             'strategy': strategy, 'source_identity': key[1] if key else None, 'count': len(result['rows']),
+            'brief_html': brief_html, 'brief_count': len(items), 'brief_generation': facts['generation'],
             'state': result['state'], 'reason': result.get('reason'), 'html': opportunity_cards(result['rows'], rid),
             'retained': bool(result.get('source_identity'))}, headers={"Cache-Control": "no-store"})
 
