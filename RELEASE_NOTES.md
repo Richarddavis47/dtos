@@ -1,3 +1,11 @@
+## v1.21.88 / build 2188 — Custom Rankings Accessibility and Phone UX
+
+Keep keyboard focus on an enabled control for the same exact asset after ranking moves, including first/last and page boundaries. Preserve visible focus, overall-position announcements and the moved asset's viewport anchor.
+
+Browse compact ranking rows with Market/Personal values and on-demand reorder, Target/Avoid/Protect, tier and supporting controls. Put pagination above and below the list; keep search, positions and Neutral/Custom switching near the top. Preserve visible evidence warnings and scoped preferences.
+
+Personal order/value methodology, Market prices, projections, legal lineups, Trade conclusions, persistence and security are unchanged. No provider, solver, FOIS, history reconstruction or automatic discovery is added to ordinary editing. Responsive Chromium and emulated touch remain separate from physical iPhone/Safari and independent Scout acceptance.
+
 ## v1.21.87 / build 2187 — My DTOS Custom Rankings
 
 Add complete Market-seeded overall player and exact-pick rankings under Account, with positional search, paginated editing, drag/touch and keyboard move controls, optional tier breaks and saved Target/Avoid/Protect intent. Neutral view preserves the saved custom order; explicit confirmed Restart uses the latest compatible Market baseline while retaining separate preferences by default.

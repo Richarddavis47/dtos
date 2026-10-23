@@ -49,7 +49,7 @@ class PreparedMarketFixture:
 
 
 class PersonalEditorFixture:
-    def __init__(self):
+    def __init__(self, page_renderer=None):
         self.folder = tempfile.TemporaryDirectory()
         self.store = AccountStore(Path(self.folder.name) / 'accounts.sqlite3')
         self.service = AccountService(self.store)
@@ -68,6 +68,8 @@ class PersonalEditorFixture:
         app = FastAPI()
         app.add_middleware(AccountContextMiddleware, service=self.service, required=True)
         def page(title, body):
+            if page_renderer is not None:
+                return page_renderer(title, body)
             return HTMLResponse('<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>' + title + '</title><style>body{margin:0;padding:12px;background:#141617;color:#f4f7f5;font:16px system-ui}a{color:#9beac2}button,input,select{background:#252b28;color:#f4f7f5;border:1px solid #77887e;border-radius:5px;padding:8px}a.btn{display:inline-flex;align-items:center;padding:8px;box-sizing:border-box;text-decoration:none}h2{font-size:1.5rem}.muted{color:#c2cdc7}button:disabled{opacity:.6}p{line-height:1.5}</style></head><body>' + body + '</body></html>')
         app.include_router(create_personal_rankings_router(service=self.service, require_data=lambda: self.data,
                            market_model=lambda: self.market, page=page))
@@ -205,6 +207,7 @@ class PersonalRankingsEditorBrowserTests(unittest.TestCase):
                 self.assertEqual(page.locator('.personal-row').count(), 2)
                 own = page.locator('[data-asset-id="pick:2028:1:1"]')
                 self.assertEqual(own.get_attribute('data-overall-rank'), '41')
+                own.locator('summary').click()
                 own.get_by_label('Overall position for 2028 Round 1 (Original franchise 1)', exact=True).fill('3')
                 own.get_by_role('button', name='Move 2028 Round 1 (Original franchise 1) to entered overall position', exact=True).click()
                 page.wait_for_function("document.querySelector('[data-asset-id=\"pick:2028:1:1\"]').dataset.overallRank==='3'")
@@ -233,6 +236,7 @@ class PersonalRankingsEditorBrowserTests(unittest.TestCase):
                 baseline = load_personal(f.store, f.account_id, '100', 1)
                 f.market.rows.append({'asset_id': 'player:41', 'asset_type': 'player', 'position': 'WR',
                                      'display_name': 'New Player 41', 'values': {'market_value': 5}})
+                page.locator('#personal-settings > summary').click()
                 page.get_by_role('button', name='Reload rankings', exact=True).click()
                 page.get_by_text('43 eligible ranked assets', exact=False).wait_for()
                 page.locator('#personal-search').fill('New Player 41')
@@ -303,22 +307,27 @@ class PersonalRankingsEditorBrowserTests(unittest.TestCase):
                             errors = []
                             page.on('pageerror', lambda exc: errors.append(str(exc)))
                             page.goto('https://dtos.test/account/my-dtos')
-                            page.get_by_text('42 eligible ranked assets', exact=False).wait_for()
+                            page.locator('#personal-results-count').get_by_text('42 matches / 42 assets', exact=False).wait_for()
                             self.assertEqual(page.locator('.personal-row').count(), 25)
                             self.assertIsNone(load_personal(f.store, f.account_id, '100', 1))
                             initial_geometry = page.evaluate("""() => { const box = selector => {const r = document.querySelector(selector).getBoundingClientRect();return {top:r.top+scrollY,bottom:r.bottom+scrollY,height:r.height};};return {first_row:box('.personal-row'),first_title:box('.personal-row strong'),search:box('#personal-search'),mode:box('.personal-mode'),font_size:getComputedStyle(document.querySelector('#my-dtos')).fontSize};}""")
                             page.get_by_role('button', name='Create Custom Rankings', exact=True).click()
                             page.wait_for_function("document.querySelector('#personal-custom').getAttribute('aria-pressed') === 'true'")
                             page.keyboard.press('Tab')
+                            page.locator('[data-asset-id="player:2"] summary').focus()
+                            page.locator('[data-asset-id="player:2"] summary').press('Enter')
                             up = page.get_by_role('button', name='Move Player 2 up one overall position', exact=True)
                             up.focus()
                             self.assertTrue(up.evaluate("e=>e===document.activeElement && e.matches(':focus-visible') && getComputedStyle(e).outlineStyle==='solid'"))
                             up.press('Enter')
                             page.wait_for_function("document.querySelector('.personal-row').dataset.assetId==='player:2'")
+                            page.wait_for_function("!document.querySelector('#personal-custom').disabled")
+                            self.assertTrue(page.get_by_role('button', name='Move Player 2 down one overall position', exact=True).evaluate("e=>e===document.activeElement && !e.disabled && e.matches(':focus-visible') && getComputedStyle(e).outlineStyle==='solid'"))
                             self.assertEqual(page.locator('[data-asset-id="player:2"] .personal-values').inner_text(), 'Market 980\nPersonal 990')
                             page.locator('#personal-position').select_option('QB')
                             self.assertEqual(page.locator('.personal-row').first.get_attribute('data-overall-rank'), '2')
                             self.assertIn('Player 1', page.locator('.personal-row').first.inner_text())
+                            page.locator('[data-asset-id="player:5"] summary').click()
                             page.get_by_role('button', name='Move Player 5 up one overall position', exact=True).click()
                             page.wait_for_function("document.querySelector('[data-asset-id=\"player:5\"]').dataset.overallRank==='4'")
                             self.assertEqual(load_personal(f.store, f.account_id, '100', 1)['order'][3:5], ['player:5', 'player:4'])
@@ -337,6 +346,7 @@ class PersonalRankingsEditorBrowserTests(unittest.TestCase):
                             page.get_by_role('button', name='Custom DTOS', exact=True).click()
                             page.wait_for_function("document.querySelector('#personal-custom').getAttribute('aria-pressed') === 'true'")
                             self.assertEqual(page.locator('.personal-row').first.get_attribute('data-asset-id'), 'player:2')
+                            page.locator('#personal-settings > summary').click()
                             page.get_by_role('button', name='Restart Rankings', exact=True).click()
                             self.assertTrue(page.locator('#personal-restart-dialog').is_visible())
                             page.get_by_role('button', name='Keep my rankings', exact=True).click()
@@ -346,6 +356,7 @@ class PersonalRankingsEditorBrowserTests(unittest.TestCase):
                             page.wait_for_function("document.querySelector('.personal-row').dataset.assetId==='player:1'")
                             self.assertTrue(page.get_by_label('Target acquisition: Player 2', exact=True).is_checked())
                             self.assertFalse(page.get_by_label('Start personal tier at Player 2', exact=True).is_checked())
+                            page.locator('#personal-settings > summary').click()
                             self.assertFalse(errors, errors)
                             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
                             page.evaluate('scrollTo(0,0)')
