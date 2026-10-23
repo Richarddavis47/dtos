@@ -67,6 +67,7 @@ class PersonalTradeBrowserTests(unittest.TestCase):
         page.get_by_role('button', name='Create Custom Rankings', exact=True).click()
         page.wait_for_function("document.querySelector('#personal-custom').getAttribute('aria-pressed')==='true'")
         row = page.locator('[data-asset-id="player:a"]')
+        row.locator('summary').click()
         row.get_by_role('spinbutton').fill('1')
         row.get_by_role('button', name='Move a to entered overall position', exact=True).click()
         page.wait_for_function("document.querySelector('.personal-row').dataset.assetId==='player:a'")
