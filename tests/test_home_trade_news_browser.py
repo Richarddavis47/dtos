@@ -212,6 +212,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
                     link.click()
                     self.assertIn("Historical Trade Timeline", page.title())
                     page.get_by_role("link", name="← Back to Home", exact=True).click()
+                    page.locator(".league-trade-news").wait_for()
                     self.assertTrue(page.locator("[data-news-trade]").count() == 1)
                     page.reload(wait_until="networkidle")
                     self.assertTrue(page.locator("[data-news-trade]").count() == 1)
