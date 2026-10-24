@@ -57,6 +57,8 @@ class ManagerActivityIntegrityTests(unittest.TestCase):
         self.assertEqual(activity.waivers, 1)
         self.assertEqual(activity.adds, 1)
         self.assertEqual(activity.drops, 1)
+        events = next(row for row in activity.evidence if row.factor in ('Roster transactions', 'Completed non-trade transactions'))
+        self.assertEqual(events.observed_value, '1')
 
     def test_completed_commissioner_news_uses_shared_admission(self):
         from services.commissioner import _completed_transactions

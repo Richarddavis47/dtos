@@ -45,12 +45,12 @@ def _activity(data: dict[str, Any], roster_id: int, pick_count: int) -> Activity
     counts['waiver'] = activity.get('completed_waivers', 0)
     counts['free_agent'] = activity.get('completed_adds', 0)
     counts['drop'] = activity.get('completed_drops', 0)
-    total = sum(counts.values())
+    nontrade_events = max(0, activity.get('completed_transactions', 0) - activity.get('completed_trades', 0))
     scope = 'manager-attributed trades in retained canonical evidence' if shared is not None else 'completed franchise trades in observed source buckets'
     level = f"{counts['trade']} {scope}; observation period not established"
     evidence = (
         Evidence("Observed completed trades", str(counts["trade"]), counts["trade"], scope + '. ' + observed['coverage']['explanation'] + ' Franchise activity is not automatically current-manager behavior.', "Sleeper completed transactions"),
-        Evidence("Roster transactions", str(total - counts["trade"]), total - counts["trade"], "Completed claims/additions/drops only; failed, pending, cancelled and unknown attempts remain separate franchise observations.", "Sleeper cached transactions"),
+        Evidence("Completed non-trade transactions", str(nontrade_events), nontrade_events, "Unique completed decisions; additions and drops are separately counted asset movements, never extra transactions. Failed, pending, cancelled and unknown attempts remain separate franchise observations.", "Sleeper cached transactions"),
         Evidence("Draft assets owned", str(pick_count), pick_count, "Current owned picks provide observable draft-strategy context.", "Sleeper cached pick ledger"),
     )
     return ActivityProfile(level, counts["trade"], counts["waiver"], counts["free_agent"], counts["drop"], pick_count, evidence, activity)
