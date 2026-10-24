@@ -231,7 +231,7 @@ class RankingsAccessibilityBrowserTests(unittest.TestCase):
                         item = page.locator('.personal-row')
                         self.assertIn('Unranked New Player 41', item.inner_text())
                         self.assertIn('Personal Unavailable', item.inner_text())
-                        self.assertIn('not in your saved Custom baseline', item.inner_text())
+                        self.assertIn('Not in your saved Custom order', item.inner_text())
                         self.assertFalse(item.locator('details').evaluate('e=>e.open'))
                         self.assertTrue(item.locator('.personal-drag').is_disabled())
                         page.close()

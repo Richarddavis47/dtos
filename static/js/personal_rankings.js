@@ -4,7 +4,7 @@
   const root = document.getElementById('my-dtos');
   if (!root) return;
   const el = id => document.getElementById(id), PAGE_SIZE = 25;
-  let state = null, page = 0, busy = false, ready = false, requestSequence = 0, controller = null, drag = null;
+  let state = null, page = 0, busy = false, ready = false, requestSequence = 0, controller = null, drag = null, pendingRemoval = null, compatibilityFragmentFocused = false;
   const openRows = new Set();
   const status = message => { el('personal-status').textContent = message; };
   function error(message) { el('personal-error').hidden = !message; el('personal-error').textContent = message || ''; }
@@ -46,6 +46,52 @@
     if (focusKey) control.dataset.focusKey = focusKey;
     control.disabled = busy || !ready || !state?.initialized || state.mode !== 'custom'; control.addEventListener('click', operation); return control;
   }
+  function removalControl(assetId) {
+    return [...root.querySelectorAll('[data-remove-asset]')].find(control => control.dataset.removeAsset === assetId);
+  }
+  function restoreRecoveryFocus(assetId) {
+    const control = removalControl(assetId) || el('personal-compatibility-summary');
+    if (!el('personal-compatibility').hidden && control && !control.disabled) control.focus({preventScroll: true});
+    else el('personal-status').focus({preventScroll: true});
+  }
+  function startRemoval(issue) {
+    if (busy || !ready || !state?.initialized || !issue.can_remove) return;
+    pendingRemoval = issue.asset_id;
+    el('personal-remove-description').textContent = `${issue.label || issue.asset_id}: ${issue.reason}`;
+    const dialog = el('personal-remove-dialog');
+    if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', '');
+    el('personal-remove-cancel').focus();
+  }
+  function renderCompatibility() {
+    const issues = state?.compatibility_issues || [], container = el('personal-compatibility');
+    container.hidden = !issues.length;
+    el('personal-compatibility-summary').textContent = `Review ${issues.length} ${issues.length === 1 ? 'asset' : 'assets'} needing attention${issues.length ? ': ' + (issues[0].label || issues[0].asset_id) + (issues.length > 1 ? ' and others' : '') : ''}`;
+    el('personal-compatibility-retry').disabled = busy || !ready;
+    el('personal-compatibility-counts').textContent = `${state.saved_asset_count ?? (state.rows || []).filter(row => row.custom_ranked).length} assets in your saved order · ${state.eligible_asset_count ?? (state.rows || []).filter(row => row.identity_available !== false).length} currently eligible Market assets. These counts can differ; new eligible assets are not added to your saved order automatically.`;
+    const list = el('personal-compatibility-issues'); list.replaceChildren();
+    for (const issue of issues) {
+      const item = node('li', null, 'personal-compatibility-issue');
+      item.append(node('strong', issue.label || issue.asset_id), node('p', issue.reason));
+      const identity = node('details', null, 'personal-asset-identity'); identity.append(node('summary', 'Exact asset identity'), node('p', issue.asset_id)); item.append(identity);
+      item.append(node('p', issue.retryable
+        ? 'Its evidence may return. Retry to check the latest prepared Market list; no saved rankings change.'
+        : 'Retry checks current evidence. It cannot resolve an identity conflict or restore a removed asset by itself.', 'muted'));
+      if (issue.can_remove) {
+        const control = node('button', 'Review removal from Custom ordering', 'btn'); control.type = 'button';
+        control.setAttribute('aria-label', `Review removing ${issue.label || issue.asset_id} from Custom ordering`);
+        control.dataset.removeAsset = issue.asset_id; control.disabled = busy || !ready || !state.initialized;
+        control.addEventListener('click', () => startRemoval(issue)); item.append(control);
+      }
+      list.append(item);
+    }
+    if (issues.length && ready && location.hash === '#personal-compatibility' && !compatibilityFragmentFocused) {
+      compatibilityFragmentFocused = true; container.open = true;
+      requestAnimationFrame(() => {
+        const summary = el('personal-compatibility-summary'); summary.focus({preventScroll: true});
+        summary.scrollIntoView({block: 'start'});
+      });
+    }
+  }
   function render(focusKey, scrollTop, rowTop) {
     if (!state) return;
     const initialized = Boolean(state.initialized), custom = state.mode === 'custom';
@@ -59,10 +105,12 @@
     el('personal-reload').disabled = busy;
     const warnings = state.limitations || [];
     el('personal-warnings').hidden = !warnings.length; el('personal-warnings').textContent = warnings.join(' ');
+    renderCompatibility();
     const scope = state.account_scope || state.context || {};
-    el('personal-scope').textContent = `League ${scope.league_id || 'unavailable'} · Franchise ${scope.roster_id || 'unavailable'} · ${state.rows?.length || 0} eligible ranked assets · Revision ${state.revision || 0}`;
+    el('personal-scope').textContent = `League ${scope.league_id || 'unavailable'} · Franchise ${scope.roster_id || 'unavailable'} · ${state.eligible_asset_count ?? state.rows?.length ?? 0} eligible ranked assets${state.initialized ? ' · ' + (state.saved_asset_count ?? (state.rows || []).filter(row => row.custom_ranked).length) + ' saved ranking assets' : ''} · Revision ${state.revision || 0}`;
     el('personal-mode-description').textContent = custom
-      ? 'Your personal values guide Custom decisions. Neutral Market fairness stays visible.'
+      ? (state.personal_available ? 'Your personal values guide Custom decisions. Neutral Market fairness stays visible.'
+        : 'Your saved Custom order is shown. Custom Trade values are paused until the listed assets are reviewed; Neutral Trade remains available.')
       : initialized ? 'Neutral Market values are active. Your custom order and preferences are preserved.'
       : 'Neutral DTOS is ready. Create Custom Rankings to personalize your trade decisions.';
     const method = state.method_explanation || (typeof state.method === 'object' ? state.method?.description : null);
@@ -82,11 +130,11 @@
       const handle = button('↕', `Reorder or drag ${label} to another overall position`, () => { details.open = !details.open; }, `${id}:drag`);
       handle.disabled ||= !editable; handle.classList.add('personal-drag'); handle.draggable = !handle.disabled; handle.dataset.dragHandle = id; header.append(handle);
       const identity = node('div', null, 'personal-identity'); identity.append(node('strong', `${custom && row.custom_ranked === false ? 'Unranked' : rank + '.'} ${label}`), node('span', `${row.position || 'PICK'} · ${row.owned ? 'Your asset' : 'Not on your franchise'}`, 'muted')); header.append(identity); item.append(header);
-      const values = node('p', null, 'personal-values'); values.append(node('span', `Market ${value(row.market_value)}`), node('span', initialized ? `Personal ${value(row.personal_value)}` : 'Create rankings to personalize')); identity.append(values);
+      const values = node('p', null, 'personal-values'); values.append(node('span', `Market ${value(row.market_value)}`), node('span', initialized ? (state.personal_available ? `Personal ${value(row.personal_value)}` : 'Personal values need review') : 'Create rankings to personalize')); identity.append(values);
       const saved = ['target', 'avoid', 'protect'].filter(flag => prefs(row)[flag]);
       if (row.tier_start || state.tiers?.includes(id)) saved.push('Tier start');
       if (saved.length) identity.append(node('span', saved.map(flag => flag[0].toUpperCase() + flag.slice(1)).join(' · '), 'personal-saved-intent'));
-      if (initialized && row.custom_ranked === false) item.append(node('p', 'New eligible asset: not in your saved Custom baseline. Restart Rankings to include it in personal calculations.', 'personal-qualification'));
+      if (initialized && row.custom_ranked === false) item.append(node('p', 'Not in your saved Custom order: this asset has no personal value. Restart Rankings is a separate, optional full-baseline reset that requires confirmation.', 'personal-qualification'));
       if (row.limitation || row.unavailable_reason) item.append(node('p', row.limitation || row.unavailable_reason, 'personal-qualification'));
       details = node('details', null, 'personal-row-details'); details.open = openRows.has(id);
       const summary = node('summary', 'Edit'); summary.setAttribute('aria-label', `Edit and reorder ${label}`); summary.dataset.focusKey = `${id}:details`; details.append(summary);
@@ -130,9 +178,12 @@
       const response = await fetch('/api/my-dtos', {credentials: 'same-origin', cache: 'no-store', signal: controller.signal}); const result = await response.json();
       if (sequence !== requestSequence) return;
       if (!response.ok) throw new Error(result.message || result.detail || 'My DTOS is unavailable. Sign in or reload and try again.');
-      const retriedWithFocus = document.activeElement === el('personal-retry');
+      const retriedWithFocus = document.activeElement === el('personal-retry') || document.activeElement === el('personal-compatibility-retry');
       state = result; ready = true; el('personal-recovery').hidden = true; render(); status(result.initialized ? 'Rankings loaded. Review any evidence limits below.' : 'Market rankings loaded. Neutral DTOS is active.');
-      if (retriedWithFocus) el(result.initialized ? 'personal-custom' : 'personal-initialize').focus({preventScroll: true});
+      if (retriedWithFocus) {
+        if (result.compatibility_issues?.length) { el('personal-compatibility').open = true; el('personal-compatibility-summary').focus({preventScroll: true}); }
+        else el(result.initialized ? 'personal-custom' : 'personal-initialize').focus({preventScroll: true});
+      }
     } catch (exc) { if (sequence === requestSequence && exc.name !== 'AbortError') { error(String(exc.message)); el('personal-recovery').hidden = false; render(); status(state ? 'Previously loaded rankings are shown for reference. Retry to check current evidence before editing.' : 'Custom Rankings could not load. Check Market or retry; Neutral Trade remains available.'); } }
     finally { if (sequence === requestSequence) root.setAttribute('aria-busy', 'false'); }
   }
@@ -148,12 +199,13 @@
       state = result;
       if (focusKey) { const id = focusKey.slice(0, focusKey.lastIndexOf(':')); const index = filtered().findIndex(item => rowId(item.row) === id); if (index >= 0) page = Math.floor(index / PAGE_SIZE); }
       const moved = name === 'reorder' ? result.rows?.find(row => row.asset_id === values.asset_id) : null;
-      status(moved ? `Saved. ${moved.label || moved.asset_id} moved to overall position ${moved.personal_rank || values.to_position} of ${result.rows.length}. Revision ${result.revision}.` : `Saved. Revision ${result.revision}.`);
-    } catch (exc) { if (sequence === requestSequence) { state = prior; error(String(exc.message)); status('The requested change was not applied to this view. Reload to review saved state.'); } }
+      status(name === 'remove_asset' ? `Saved. The reviewed asset was removed only from Custom ordering. Your other ranking work and saved choices are preserved. Revision ${result.revision}.` : moved ? `Saved. ${moved.label || moved.asset_id} moved to overall position ${moved.personal_rank || values.to_position} of ${result.rows.length}. Revision ${result.revision}.` : `Saved. Revision ${result.revision}.`);
+    } catch (exc) { if (sequence === requestSequence) { state = prior; ready = false; el('personal-recovery').hidden = false; error(String(exc.message)); status('The requested change was not applied to this view. Retry rankings to check saved state before editing again.'); } }
     finally {
       if (sequence === requestSequence) {
         busy = false; render(focusKey, scrollTop, rowTop);
-        if (!focusKey) {
+        if (name === 'remove_asset') restoreRecoveryFocus(values.asset_id);
+        else if (!focusKey) {
           const control = el(activeId);
           if (control && !control.disabled && control.getClientRects().length) control.focus({preventScroll: true});
           else if (name === 'initialize') el('personal-custom').focus({preventScroll: true});
@@ -170,6 +222,13 @@
   el('personal-initialize').onclick = () => command('initialize');
   el('personal-reload').onclick = read;
   el('personal-retry').onclick = read;
+  el('personal-compatibility-retry').onclick = read;
+  el('personal-remove-cancel').onclick = () => { const id = pendingRemoval; pendingRemoval = null; el('personal-remove-dialog').close(); restoreRecoveryFocus(id); };
+  el('personal-remove-dialog').addEventListener('cancel', () => { const id = pendingRemoval; pendingRemoval = null; requestAnimationFrame(() => restoreRecoveryFocus(id)); });
+  el('personal-remove-confirm').onclick = () => {
+    const id = pendingRemoval; pendingRemoval = null; el('personal-remove-dialog').close();
+    if (id) command('remove_asset', {asset_id: id, confirmation: 'REMOVE FROM CUSTOM ORDER'});
+  };
   el('personal-restart').onclick = startRestart;
   el('personal-restart-cancel').onclick = () => { el('personal-restart-dialog').close(); el('personal-restart').focus(); };
   el('personal-restart-confirm').onclick = () => { const reset = el('personal-reset-flags').checked; el('personal-restart-dialog').close(); command('restart', {confirmation: 'RESTART RANKINGS', reset_preferences: reset}); };
@@ -192,6 +251,7 @@
   // Native HTML dragging cancels its initiating pointer. Only cancel the
   // separately captured touch gesture here; native dragend owns mouse cleanup.
   root.addEventListener('pointercancel', event => { if (!drag || drag.pointer !== event.pointerId) return; drag = null; root.querySelectorAll('.personal-drop-target').forEach(row => row.classList.remove('personal-drop-target')); });
+  addEventListener('hashchange', () => { compatibilityFragmentFocused = false; if (state) renderCompatibility(); });
   addEventListener('pagehide', () => { requestSequence++; controller?.abort(); drag = null; });
   addEventListener('pageshow', event => { if (event.persisted) { busy = false; read(); } });
   read();
