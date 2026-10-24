@@ -485,6 +485,28 @@ jobs:
               scope="Bounded unauthenticated read-only smoke; authenticated fixture/browser evidence is separate."), indent=2))
           print(json.dumps(dict(version=ready["version"],build=ready["build"],commit=sha,readiness="ready",smoke="passed")))
           PY
+      - name: Remove only the unchanged fully merged source branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import subprocess
+
+          root = Path(".validation/release-2191")
+          head = json.loads((root / "admission.json").read_text())["validated_head"]
+          path = "repos/Richarddavis47/dtos/git/refs/heads/fix/v1.21.91-plain-english"
+          result = subprocess.run(["gh", "api", path], capture_output=True, text=True)
+          if result.returncode:
+              assert "HTTP 404" in result.stderr or '"status":"404"' in result.stdout.replace(" ", ""), result.stderr
+              state = {"already_absent":True}
+          else:
+              assert json.loads(result.stdout)["object"]["sha"] == head, "Source branch advanced; preserve it."
+              subprocess.run(["gh", "api", "--method", "DELETE", path], check=True)
+              state = {"deleted_merged_branch":True}
+          (root / "branch-cleanup.json").write_text(json.dumps({"validated_head":head, **state}, indent=2))
+          PY
       - name: Upload immutable release and production verification
         if: always()
         uses: actions/upload-artifact@v4
@@ -495,6 +517,7 @@ jobs:
             .validation/release-2191/production-smoke.json
             .validation/release-2191/readiness-attempts.json
             .validation/release-2191/package.json
+            .validation/release-2191/branch-cleanup.json
             .validation/release-2191/VALIDATION.json
             .validation/release-2191/evidence-manifest.json
             .validation/release-2191/SHA256SUMS
