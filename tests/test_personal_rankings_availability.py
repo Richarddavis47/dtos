@@ -53,6 +53,26 @@ class CanonicalRankingAvailabilityTests(unittest.TestCase):
         ready = self.initialize()
         self.assertTrue(ready['personal_available'])
 
+    def test_canonical_inactive_price_survives_refresh_without_personal_rewrite(self):
+        self.initialize()
+        self.post('reorder', asset_id='player:3', to_position=1)
+        self.post('tiers', asset_id='player:2', tier_start=True)
+        self.post('preferences', asset_id='player:2', preferences={'target': True})
+        saved = load_personal(self.store, 'account-a', 'league-1', 1)
+        before = self.state()
+        data = copy.deepcopy(self.data)
+        data['players']['2'].update(status='Inactive', active=True)
+        self.publish(data)
+        directory = self.market.directory(limit=250, minimum=0)
+        neutral = next(r for r in directory['assets'] if r['asset_id'] == 'player:2')
+        self.assertEqual(neutral['status'], 'Inactive')
+        self.assertEqual(neutral['values']['market_value'], 600)
+        current = self.state()
+        self.assertTrue(current['personal_available'], current['limitations'])
+        self.assertEqual([(r['asset_id'], r['market_value'], r['personal_value']) for r in current['rows']],
+                         [(r['asset_id'], r['market_value'], r['personal_value']) for r in before['rows']])
+        self.assertEqual(load_personal(self.store, 'account-a', 'league-1', 1), saved)
+
     def publish(self, data):
         data['valuation_intelligence']['semantic_generation'] += '-next'
         self.data = data

@@ -24,6 +24,39 @@ VIEWPORTS = ((320, 432), (375, 667), (390, 844), (1280, 900))
 
 
 class PersonalRankingsRecoveryBrowserTests(unittest.TestCase):
+    def test_priced_inactive_asset_survives_read_retry_and_keeps_playing_qualification(self):
+        with sync_playwright() as engine:
+            browser = launch_chromium(engine, headless=True)
+            try:
+                for width, height in VIEWPORTS:
+                    with self.subTest(width=width):
+                        fixture = self.fixture()
+                        before = self.saved(fixture)
+                        fixture.market.rows[1]['status'] = 'Inactive'
+                        page = fixture.browser_page(browser, width, height)
+                        page.goto('https://dtos.test/account/my-dtos')
+                        self.loaded(page)
+                        row = page.locator('[data-asset-id="player:2"]')
+                        self.assertIn('not confirmation', row.inner_text())
+                        self.assertNotIn('Personal values need review', row.inner_text())
+                        self.assertTrue(fixture.client.get('/api/my-dtos').json()['personal_available'])
+                        settings = page.locator('#personal-settings > summary')
+                        self.keyboard_focus(settings)
+                        settings.press('Enter')
+                        self.assertTrue(page.locator('#personal-settings').evaluate('e=>e.open'))
+                        retry = page.get_by_role('button', name='Reload rankings', exact=True)
+                        self.keyboard_focus(retry)
+                        with page.expect_response(lambda r: '/api/my-dtos' in r.url and r.request.method == 'GET'):
+                            retry.press('Enter')
+                        self.loaded(page)
+                        self.assertIn('not confirmation', row.inner_text())
+                        self.assertEqual(self.saved(fixture), before)
+                        self.evidence('priced-inactive', page, fixture.client.get('/api/my-dtos').json(), width, height,
+                                      {'saved_order_tiers_preferences_and_revision_unchanged': True})
+                        page.close()
+            finally:
+                browser.close()
+
     def command(self, fixture, command, **fields):
         state = fixture.client.get('/api/my-dtos').json()
         response = fixture.client.post('/api/my-dtos', json={
