@@ -200,4 +200,3 @@ class CanonicalRankingAvailabilityTests(unittest.TestCase):
                 self.assertNotIn('personal_available', response.json())
                 with closing(self.store.connect()) as connection:
                     self.assertEqual(connection.execute('SELECT document_json FROM account_personal_rankings').fetchone()[0], encoded)
-
