@@ -262,8 +262,13 @@ class PersonalRankingsRecoveryBrowserTests(unittest.TestCase):
                 # A genuine preparation outage keeps Neutral recovery available.
                 reader = fixture.market
                 fixture.market = None
-                page.locator('#personal-retry').click()
-                page.locator('#personal-retry').wait_for(state='visible')
+                # Retry stays visible from the prior stale-write failure. Its
+                # visibility is not evidence that this new read has completed.
+                with page.expect_response(lambda response: response.url.endswith('/api/my-dtos')
+                                          and response.request.method == 'GET') as pending:
+                    page.locator('#personal-retry').click()
+                self.assertEqual(pending.value.status, 503)
+                page.wait_for_function("document.querySelector('#my-dtos').getAttribute('aria-busy')==='false' && document.querySelector('#personal-error').textContent.includes('Neutral Trade')")
                 self.assertIn('Neutral Trade', page.locator('#personal-error').inner_text())
                 self.assertTrue(page.locator('#personal-custom').is_disabled())
                 self.assertEqual(self.saved(fixture), concurrent)
