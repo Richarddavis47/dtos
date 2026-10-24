@@ -477,7 +477,7 @@ def evaluate_trade_request(
         from src.core.gm_behavioral_intelligence.diagnostics import partner_context
         partner_history = partner_context(prepared_context.league_observations, partner_id,
             partner_diagnostic, (asset.position for asset in proposal.assets_sent if asset.position))
-        from src.core.trade_intelligence.evidence_context import qualify_partner_explanation
+        from src.core.intelligence import qualify_partner_explanation
         partner_history = qualify_partner_explanation(evaluation, partner_history,
             prepared_context.behavior_by_roster.get(str(partner_id)))
         evaluation['dimensions']['league_partner_context'] = partner_history
