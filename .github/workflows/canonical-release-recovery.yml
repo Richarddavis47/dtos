@@ -297,8 +297,12 @@ jobs:
               return json.loads(subprocess.check_output(["gh", "api", path], text=True))
           assert VERSION == "1.21.91" and BUILD_NUMBER == 2191
           sha = os.environ["GITHUB_SHA"]
-          pr = api("repos/" + repo + "/pulls/280")
+          associated = api("repos/" + repo + "/commits/" + sha + "/pulls")
+          merged = [item for item in associated if item.get("merged_at") and item.get("merge_commit_sha") == sha]
+          assert len(merged) == 1, "Expected one fully merged source PR."
+          pr = api("repos/" + repo + "/pulls/" + str(merged[0]["number"]))
           assert pr["merged"] and pr["merge_commit_sha"] == sha
+          assert pr["head"]["repo"]["full_name"] == repo and pr["head"]["ref"].startswith("fix/v1.21.91-")
           head = pr["head"]["sha"]
           checks = api("repos/" + repo + "/commits/" + head + "/check-runs?per_page=100&filter=latest")
           required = {"product-browser", "my-team-browser", "beginner-navigation",
@@ -310,13 +314,13 @@ jobs:
           assert all(states.get(name) == "success" for name in required), states
           setting = api("repos/" + repo + "/releases/tags/v1.21.90")
           assert setting.get("immutable") is True, "The accepted prior release must be immutable."
-          subprocess.run(["git", "fetch", "origin", "refs/pull/280/head"], check=True)
+          subprocess.run(["git", "fetch", "origin", "refs/pull/" + str(pr["number"]) + "/head"], check=True)
           assert subprocess.check_output(["git", "rev-parse", "FETCH_HEAD"], text=True).strip() == head
           subprocess.run(["git", "diff", "--exit-code", "HEAD^{tree}", "FETCH_HEAD^{tree}"], check=True)
           notes = Path("RELEASE_NOTES.md").read_text().split("\n## ", 1)[0]
           Path(".validation/release-2191/notes.md").write_text(notes)
           Path(".validation/release-2191/admission.json").write_text(json.dumps(
-              dict(merge_commit=sha, validated_head=head, required_checks=states, prior_immutable_release=dict(tag=setting["tag_name"], immutable=setting["immutable"])), indent=2))
+              dict(merge_commit=sha, validated_head=head, pr_number=pr["number"], source_branch=pr["head"]["ref"], required_checks=states, prior_immutable_release=dict(tag=setting["tag_name"], immutable=setting["immutable"])), indent=2))
           PY
       - name: Collect verified raw evidence and individual phone images
         env:
@@ -362,9 +366,9 @@ jobs:
               assert hashlib.sha256(path.read_bytes()).hexdigest() == item["sha256"]
           failures = evidence / "prior-failed-jobs"
           failures.mkdir()
-          for job in (120789448802, 120789448890, 120790968882, 120792421041, 120796026274):
+          for job in (120789448802, 120789448890, 120790968882, 120792421041, 120796026274, 120805029770):
               with (failures / (str(job) + ".log")).open("wb") as output:
-                  subprocess.run(["gh", "api", "repos/" + repo + "/actions/jobs/" + str(job) + "/logs"],
+                  subprocess.run(["gh", "api", "--allow-escape-sequences", "repos/" + repo + "/actions/jobs/" + str(job) + "/logs"],
                                  stdout=output, check=True)
           events = [json.loads(line) for line in (evidence / "canonical/tests.jsonl").read_text().splitlines()]
           samples = [json.loads(line) for line in (evidence / "canonical/memory.jsonl").read_text().splitlines()]
@@ -495,17 +499,23 @@ jobs:
           import subprocess
 
           root = Path(".validation/release-2191")
-          head = json.loads((root / "admission.json").read_text())["validated_head"]
-          path = "repos/Richarddavis47/dtos/git/refs/heads/fix/v1.21.91-plain-english"
-          result = subprocess.run(["gh", "api", path], capture_output=True, text=True)
-          if result.returncode:
-              assert "HTTP 404" in result.stderr or '"status":"404"' in result.stdout.replace(" ", ""), result.stderr
-              state = {"already_absent":True}
-          else:
-              assert json.loads(result.stdout)["object"]["sha"] == head, "Source branch advanced; preserve it."
-              subprocess.run(["gh", "api", "--method", "DELETE", path], check=True)
-              state = {"deleted_merged_branch":True}
-          (root / "branch-cleanup.json").write_text(json.dumps({"validated_head":head, **state}, indent=2))
+          admission = json.loads((root / "admission.json").read_text())
+          sources = [(admission["source_branch"], admission["validated_head"]),
+                     ("fix/v1.21.91-plain-english", "ab2453989d4de2eb231ef01d1fe90c819c4bd175")]
+          states = []
+          for branch, head in dict(sources).items():
+              assert branch.startswith("fix/v1.21.91-")
+              path = "repos/Richarddavis47/dtos/git/refs/heads/" + branch
+              result = subprocess.run(["gh", "api", path], capture_output=True, text=True)
+              if result.returncode:
+                  assert "HTTP 404" in result.stderr or '"status":"404"' in result.stdout.replace(" ", ""), result.stderr
+                  state = {"already_absent":True}
+              else:
+                  assert json.loads(result.stdout)["object"]["sha"] == head, "Source branch advanced; preserve it."
+                  subprocess.run(["gh", "api", "--method", "DELETE", path], check=True)
+                  state = {"deleted_merged_branch":True}
+              states.append({"branch":branch, "validated_head":head, **state})
+          (root / "branch-cleanup.json").write_text(json.dumps(states, indent=2))
           PY
       - name: Upload immutable release and production verification
         if: always()
@@ -513,6 +523,8 @@ jobs:
         with:
           name: release-2191-production-verification
           path: |
+            .validation/release-2191/admission.json
+            .validation/release-2191/release-lookup.log
             .validation/release-2191/release.json
             .validation/release-2191/production-smoke.json
             .validation/release-2191/readiness-attempts.json
