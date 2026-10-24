@@ -77,6 +77,19 @@ class ManagerActivityIntegrityTests(unittest.TestCase):
         from tests.manager_evidence_fixtures import publish
         publish(self.data)
 
+    def test_franchise_history_does_not_raise_current_manager_profile_confidence(self):
+        from src.core.intelligence import build_league_model
+        from tests.test_league_gm_diagnostics import completed
+        self.data['transactions'] = []
+        baseline = build_league_model(self.data)
+        self.data['transactions'] = [completed('franchise-' + str(i)) for i in range(5)]
+        observed = build_league_model(self.data)
+        self.assertEqual(observed.reports[1].activity.trades, 5)
+        self.assertEqual(observed.reports[1].confidence, baseline.reports[1].confidence)
+        self.assertEqual(observed.compatibility(1, 2).bilateral_trades, 5)
+        self.assertEqual(observed.compatibility(1, 2).score, baseline.compatibility(1, 2).score)
+        self.assertNotIn('Established Trade Channel', observed.compatibility(1, 2).best_trade_themes)
+
     def test_supported_current_manager_is_admitted_with_exact_provenance(self):
         manager_products(self.data)
         self.seal()
