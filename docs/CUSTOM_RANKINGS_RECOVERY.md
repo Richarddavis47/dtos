@@ -8,7 +8,7 @@ the manager's saved preferences.
 ## Why a saved order can need attention
 
 A personal ranking uses the descending current Market price slots of the same
-saved asset cohort. If a saved asset no longer has compatible identity, status,
+saved asset cohort. If a saved asset no longer has compatible identity, eligibility,
 price or exact-pick ownership evidence, assigning the remaining price slots to
 the unchanged order would invent a value or misalign the cohort. Custom numeric
 evaluation therefore remains unavailable until every ranked asset is supported
@@ -18,9 +18,12 @@ available and unchanged.
 The compatibility review names each affected exact asset and explains the
 observed reason. A missing Market price is different from a supported zero. A
 missing row is not proof that a player retired. A current status explicitly marked
-retired or inactive, conflicting identity/ownership evidence and a missing price
-receive different explanations. Source-generation mismatch is a context-level
-qualification; retrying does not establish compatibility by itself.
+retired, conflicting identity/ownership evidence and a missing price receive
+different explanations. Inactive alone does not invalidate a compatible current
+dynasty Market price: the exact ranked player remains in the saved cohort with
+a visible playing-availability qualification. An inactive asset without that
+price still blocks the curve; inactivity never supplies a missing value.
+Source-generation mismatch is a context-level qualification; retrying does not establish compatibility by itself.
 
 The currently eligible Market count and saved-order count can legitimately
 differ. A newly eligible asset is not inserted into the manager's saved order or

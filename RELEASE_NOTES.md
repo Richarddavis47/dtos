@@ -1,3 +1,9 @@
+## v1.21.94 / build 2194 — Priced inactive dynasty assets
+
+Keep a saved inactive player in Custom Rankings when the same compatible current Market publication supplies its exact identity and supported price. Sleeper inactivity is not retirement or absence of a dynasty price. Explain that a priced inactive asset is not confirmation of availability to play. Preserve the same saved-cohort slot curve, ordering, tiers, preferences and revision on reads.
+
+Retired, missing, unpriced, conflicted and unsupported exact-pick assets remain qualified blockers; missing values never become zero. Individual confirmed recovery and optional Restart remain unchanged. No production ranking edits, new provider or analytical work, grading changes, storage or resource-limit changes. Authenticated production-account recovery and independent Scout acceptance remain separate from disposable author controls.
+
 ## v1.21.93 / build 2193 — Custom Rankings Compatibility & Recovery
 
 Saved Custom Rankings now identify the exact assets whose current evidence cannot support personal values. Review cause-specific pricing, retirement, identity or exact-pick ownership limitations and retry prepared evidence without changing saved intent. A confirmed, revision-checked removal from Custom ordering preserves all other relative ranks, other tier breaks and Target/Avoid/Protect choices; Restart remains a separate full reset. Removing an asset changes the saved cohort and can change the remaining personal value slots.

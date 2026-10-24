@@ -19,6 +19,56 @@ class PersonalCompatibilityRecoveryTests(unittest.TestCase):
     def saved(self):
         return load_personal(self.store, 'account-a', 'league-1', 1)
 
+    def test_inactive_priced_player_preserves_entire_saved_curve_without_repair(self):
+        self.initialize()
+        self.post('reorder', asset_id='player:3', to_position=1)
+        self.post('tiers', asset_id='player:2', tier_start=True)
+        self.post('preferences', asset_id='player:2', preferences={'target': True})
+        before, saved = self.state(), self.saved()
+        self.market.rows[1]['status'] = 'Inactive'
+        self.market.generation = 'Market-B'
+        after = self.state()
+        self.assertTrue(after['personal_available'], after['limitations'])
+        self.assertEqual(after['compatibility_issues'], [])
+        self.assertEqual([(r['asset_id'], r['personal_value']) for r in after['rows']],
+                         [(r['asset_id'], r['personal_value']) for r in before['rows']])
+        inactive = next(r for r in after['rows'] if r['asset_id'] == 'player:2')
+        self.assertIn('not confirmation', inactive['limitation'])
+        self.assertEqual(self.saved(), saved)
+
+    def test_inactivity_never_supplies_missing_price_or_overrides_identity(self):
+        self.initialize()
+        saved = self.saved()
+        row = self.market.rows[1]
+        row['status'] = 'Inactive'
+        row['values']['market_value'] = None
+        self.assertEqual(self.issue('player:2')['code'], 'market_price_missing')
+        self.assertFalse(self.state()['personal_available'])
+        row['values']['market_value'] = 0
+        self.assertTrue(self.state()['personal_available'])
+        self.assertEqual(next(r for r in self.state()['rows'] if r['asset_id'] == 'player:2')['market_value'], 0)
+        row['asset_type'] = 'pick'
+        self.assertEqual(self.issue('player:2')['code'], 'identity_conflict')
+        self.assertEqual(self.saved(), saved)
+
+    def test_missing_cohort_member_blocks_whole_curve_and_reappearance_restores_exactly(self):
+        self.initialize()
+        self.post('reorder', asset_id='player:3', to_position=1)
+        saved, before = self.saved(), self.state()
+        removed = self.market.rows.pop(1)
+        self.market.generation = 'Market-B'
+        blocked = self.state()
+        self.assertFalse(blocked['personal_available'])
+        self.assertTrue(all(r['personal_value'] is None for r in blocked['rows']))
+        self.assertEqual(blocked['compatibility_issues'][0]['asset_id'], removed['asset_id'])
+        self.market.rows.append(removed)
+        self.market.generation = 'Market-C'
+        restored = self.state()
+        self.assertTrue(restored['personal_available'])
+        self.assertEqual([(r['asset_id'], r['personal_value']) for r in restored['rows']],
+                         [(r['asset_id'], r['personal_value']) for r in before['rows']])
+        self.assertEqual(self.saved(), saved)
+
     def issue(self, key):
         return next(item for item in self.state()['compatibility_issues'] if item['asset_id'] == key)
 

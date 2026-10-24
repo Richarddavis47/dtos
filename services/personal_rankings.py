@@ -204,7 +204,10 @@ def build_universe(data, market_reader, *, requested_ids=()):
                 'This player does not have a supported QB, RB, WR or TE identity in the current Market list.')
             return None
         status = str(row.get('status') or '').lower()
-        if status in {'retired', 'inactive'}:
+        # Sleeper's game/roster status is not a dynasty-price admission rule.
+        # An inactive player can still have a verified current Market price.
+        # Require that exact price below; never infer it from status or activity.
+        if status == 'retired':
             unavailable[key] = _rejected_row(data, key, row, 'asset_' + status,
                 f'The current player record is marked {status}, so this asset is not eligible for the current personal value curve. Your saved opinion has not been deleted.')
             return None
@@ -252,7 +255,9 @@ def build_universe(data, market_reader, *, requested_ids=()):
                          'label': _asset_label(data, key, row),
                          'position': 'PICK' if kind == 'pick' else row.get('position'),
                          'market_value': value, 'owner_roster_id': owner,
-                         'market_rank': len(rows) + 1})
+                         'market_rank': len(rows) + 1,
+                         **({'limitation': 'Sleeper currently marks this player inactive. A compatible dynasty Market price is available; this is not confirmation that the player is available to play.'}
+                            if kind == 'player' and str(row.get('status') or '').lower() == 'inactive' else {})})
         offset += len(chunk)
     # The full ranking pass retains its original priced-directory bound. Read
     # only missing saved IDs for diagnostics, rather than scanning all unpriced
@@ -286,7 +291,7 @@ def build_universe(data, market_reader, *, requested_ids=()):
             continue
         player = ((data.get('players') or {}).get(key.removeprefix('player:')) or {}) if key.startswith('player:') else {}
         status = str(player.get('status') or '').lower()
-        if status in {'retired', 'inactive'}:
+        if status == 'retired':
             unavailable[key] = _rejected_row(data, key, player, 'asset_' + status,
                 f'The current player record is marked {status}, and the exact asset is absent from the current eligible Market list. Your saved opinion has not been deleted.')
         else:

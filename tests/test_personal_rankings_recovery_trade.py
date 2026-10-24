@@ -37,6 +37,33 @@ class PersonalRankingsRecoveryTradeTests(unittest.TestCase):
     def document(self):
         return load_personal(self.editor.store, 'account-a', 'league-1', 1)
 
+    def test_priced_inactive_player_remains_usable_across_all_custom_workflows(self):
+        saved = self.document()
+        neutral_before = self.fixture.trade('neutral').json()['evaluation']
+        custom_before = self.fixture.trade('custom').json()['evaluation']
+        row = next(r for r in self.editor.market.rows if r['asset_id'] == 'player:b')
+        row['status'] = 'Inactive'
+        self.editor.market.generation = 'Market-inactive-priced'
+        state = self.editor.state()
+        self.assertTrue(state['personal_available'], state['limitations'])
+        for endpoint, extra in self.operations:
+            with self.subTest(endpoint=endpoint, workflow=extra.get('workflow')):
+                response = self.fixture.trade('custom', endpoint=endpoint, **extra)
+                self.assertEqual(response.status_code, 200, response.text)
+        for mode, before in (('neutral', neutral_before), ('custom', custom_before)):
+            after = self.fixture.trade(mode).json()['evaluation']
+            for key in ('market_evidence', 'lineup_impact', 'multi_horizon_impact',
+                        'recommendation', 'generated_trade_eligible'):
+                self.assertEqual(after[key], before[key], (mode, key))
+            if mode == 'custom':
+                old_personal, new_personal = before['personal_value_evidence'], after['personal_value_evidence']
+                self.assertNotEqual(new_personal['market_generation'], old_personal['market_generation'])
+                self.assertEqual({k: v for k, v in new_personal.items() if k != 'market_generation'},
+                                 {k: v for k, v in old_personal.items() if k != 'market_generation'})
+            else:
+                self.assertNotIn('personal_value_evidence', after)
+        self.assertEqual(self.document(), saved)
+
     def make_one_price_unavailable(self):
         row = next(row for row in self.editor.market.rows if row['asset_id'] == 'player:b')
         row['values']['market_value'] = None
