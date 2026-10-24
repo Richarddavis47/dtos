@@ -269,18 +269,24 @@ class BehavioralIntegrityTests(unittest.TestCase):
                     outgoing=tuple(f'o{n}' for n in range(len(outgoing))), incoming_types=incoming,
                     outgoing_types=outgoing, incoming_positions=(), outgoing_positions=(), partner='old-partner')
                     for index in range(6))
-                result = profile(rows)
+                result = profile(rows, gm='league-a:gm:gm-1')
                 self.assertEqual(dimension(result, 'package_preference').tendency, package_shape(incoming, outgoing))
-                context = build_trade_evidence_context({'league': {'league_id': 'league-a'},
-                    'gm_behavioral_intelligence': {'2': result.contract()}})
+                from src.core.front_office_evidence import assemble_front_office_evidence
+                from tests.manager_evidence_fixtures import publish
+                summary = assemble_front_office_evidence(league_id='league-a', franchise_id='league-a:franchise:1',
+                    gm_id='league-a:gm:gm-1', trades=rows).contract()
+                data = {'league': {'league_id': 'league-a'}, 'teams': [{'roster_id': 1, 'owner_id': 'gm-1'}],
+                    'front_office_evidence': {'1': summary}, 'gm_behavioral_intelligence': {'1': result.contract()}}
+                publish(data)
+                context = build_trade_evidence_context(data)
                 def assets(types):
                     return tuple(TradeAsset(str(index), kind, kind, None, None, None, 500, None, 0, 1)
                                  for index, kind in enumerate(types))
-                match = assess_historical_fit(context, partner_roster_id=2, active_roster_id=1,
+                match = assess_historical_fit(context, partner_roster_id=1, active_roster_id=2,
                     partner_receives=assets(incoming), active_receives=assets(outgoing))
                 self.assertIn('PACKAGE_STYLE_MATCH', match['reason_codes'])
                 self.assertTrue(match['evidence_references'])
-                wrong = assess_historical_fit(context, partner_roster_id=2, active_roster_id=1,
+                wrong = assess_historical_fit(context, partner_roster_id=1, active_roster_id=2,
                     partner_receives=assets(('player',)), active_receives=assets(('player',) if package_shape(incoming, outgoing).startswith('multi_asset') else ('player',)*3))
                 self.assertNotIn('PACKAGE_STYLE_MATCH', wrong['reason_codes'])
 
@@ -349,6 +355,8 @@ class PersistedEvidencePreservationTests(unittest.TestCase):
             self.assertIsNone(retained.evidence_integrity_version)
             self.assertEqual(service.status()['retained_assessments_not_revalidated'], 1)
             self.assertEqual(data['gm_behavioral_intelligence']['1']['transaction_count'], 5)
+            from src.core.intelligence.league_scope import scoped_evidence
+            self.assertEqual(scoped_evidence(data, 'gm_behavioral_intelligence').rows['1']['transaction_count'], 5)
             with repo._connection() as connection:
                 self.assertEqual(before, tuple(connection.execute('SELECT * FROM fois_scores_v2').fetchone()))
 

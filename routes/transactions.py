@@ -311,10 +311,14 @@ def create_transactions_router(
         stats = "".join(
             f'<div class="tx-stat"><span>{escape(label)}</span><b>{escape(str(value))}</b>{f"<small>{escape(note)}</small>" if note else ""}</div>'
             for label, value, note in (
-                ("Total Trades", summary["trades"], ""),
-                ("Total Waiver Claims", summary["waivers"], ""),
-                ("Total Adds", summary["adds"], ""),
-                ("Total Drops", summary["drops"], ""),
+                ("Completed Trades", summary["trades"], ""),
+                ("Completed Waiver Claims", summary["waivers"], "Failed, pending, cancelled and unknown attempts are separate"),
+                ("Completed Adds", summary["adds"], ""),
+                ("Completed Drops", summary["drops"], ""),
+                ("Waiver Attempts", sum(summary.get("waiver_attempts", {}).values()),
+                    ' · '.join(f'{status}: {count}' for status, count in summary.get('waiver_attempts', {}).items())),
+                ("Unqualified Records", summary.get("unqualified_records", 0),
+                    f'{summary.get("conflicting_identities", 0)} conflicting transaction identities withheld'),
                 ("Most Active Team", summary["most_active_team"], f'{summary["most_active_count"]} transactions'),
                 ("Most Recent Transaction", summary["most_recent"], ""),
             )

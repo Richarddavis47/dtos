@@ -20,14 +20,14 @@ from src.core.history_context.coverage import periods
 from src.core.history_context.timestamps import canonical_utc_timestamp
 from src.core.team_identity import canonical_team_name
 
-METHOD = 'league-gm-observations-2'
+METHOD = 'league-gm-observations-3'
 MAX_ROWS = 10_000
 MAX_SEASONS = 20
 MAX_ENTRIES = 4
 MAX_BYTES = 2_097_152
 MINIMUM_TENDENCY = DEFAULT_FOIS_CONFIGURATION.minimum_sample_sizes['tendencies']
 FIELDS = ('type', 'status', 'transaction_id', 'league_id', 'roster_ids', 'adds',
-          'drops', 'draft_picks', 'waiver_budget', 'created', 'status_updated')
+          'drops', 'draft_picks', 'waiver_budget', 'created', 'status_updated', 'settings')
 
 
 def _digest(value):
@@ -374,7 +374,11 @@ class LeagueGMObservations:
                             'Historical youth/veteran preferences are unavailable without transaction-time age evidence.',
                             'Counts describe decisions, not motives, acceptance, skill or historical trade fairness.',
                             'FOIS grades remain RETAINED / NOT REVALIDATED; observations do not regrade trades.'])
+        from .activity import summarize_activity
+        activity = summarize_activity(raw_rows[:MAX_ROWS], team_map.values(),
+            lambda season, rid: identities.get((str(season), rid)) if str(season) != str(current_season) else None)
         core = {'league_id': league, 'method': METHOD, 'trade_count': len(events),
+                'activity': activity,
                 'coverage': {'state': state, 'explanation': note, 'seasons': coverage}, 'teams': teams,
                 'season_counts': dict(sorted(season_counts.items())), 'completed_with_supported_clock': len(timed),
                 'first_supported_completion': min(timed) if timed else None, 'latest_supported_completion': max(timed) if timed else None,
@@ -453,6 +457,7 @@ def partner_context(report, roster_id, diagnostic=None, received_positions=()):
     short += 'History ' + (report or {}).get('coverage', {}).get('state', 'unavailable').replace('_', ' ') + '.'
     return {'summary': text, 'short_summary': short, 'soft_tie_break': int(bool(matches)), 'references': facts['references'],
             'coverage': (report or {}).get('coverage', {}).get('state', 'unavailable'),
+            'coverage_explanation': (report or {}).get('coverage', {}).get('explanation', ''),
             'franchise_sample': facts['trades'], 'manager_sample': row['manager']['trades'],
             'consideration_coverage': {key: facts[key] for key in (
                 'composition_supported_trades', 'composition_partial_trades',

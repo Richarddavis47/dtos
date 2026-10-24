@@ -61,9 +61,28 @@ def _event_detail(transaction: dict[str, Any]) -> str:
     return f"{' / '.join(teams) or 'League transaction'}: {detail}"
 
 
+def _completed_transactions(data):
+    """Shared status/identity admission; attempts never become completed news."""
+    from src.core.gm_behavioral_intelligence.activity import summarize_activity
+    league = data.get("league") or {}
+    normalized = normalize_transactions(data)
+    accepted = set()
+    summarize_activity(((league.get("season"), str(league.get("league_id") or ""), row.get("raw") or {})
+        for row in normalized), data.get("teams") or (),
+        on_completed=lambda source, tid: accepted.add(tid))
+    seen = set()
+    result = []
+    for row in normalized:
+        tid = str(row.get("id") or "")
+        if tid in accepted and tid not in seen:
+            seen.add(tid)
+            result.append(row)
+    return result
+
+
 def _briefing(data: dict[str, Any], since: datetime) -> DailyBriefing:
     events: list[LeagueEvent] = []
-    for transaction in normalize_transactions(data):
+    for transaction in _completed_transactions(data):
         occurred_ms = int(transaction.get("created_ms") or 0)
         if occurred_ms < int(since.timestamp() * 1000):
             continue
@@ -204,7 +223,7 @@ def _headlines(data: dict[str, Any]) -> list[LeagueHeadline]:
                 "Roster",
             )
         )
-    normalized = normalize_transactions(data)
+    normalized = _completed_transactions(data)
     activity = Counter()
     for transaction in normalized:
         for team in transaction.get("teams") or []:
@@ -215,8 +234,8 @@ def _headlines(data: dict[str, Any]) -> list[LeagueHeadline]:
         headlines.append(
             LeagueHeadline(
                 f"{name} {'is tied as' if active_count > 1 else 'is'} the most active team in the cached transaction window",
-                f"The franchise appears in {count} transactions.",
-                "Current cached Sleeper transaction participation.",
+                f"The franchise appears in {count} completed transactions.",
+                "Completed, deduplicated Sleeper transaction participation.",
                 "Activity",
             )
         )
@@ -244,7 +263,7 @@ def _league_intelligence(data: dict[str, Any], cards: dict[int, Any], league_sum
     total_picks = sum(len(team.get("picks_owned") or []) for team in teams)
     pick_leader = max((len(team.get("picks_owned") or []) for team in teams), default=0)
     windows = Counter(card.current_window.value for card in cards.values())
-    transactions = normalize_transactions(data)
+    transactions = _completed_transactions(data)
     return {
         "average_roster_age": round(mean(ages), 1) if ages else None,
         "draft_concentration": round(pick_leader / total_picks * 100) if total_picks else None,

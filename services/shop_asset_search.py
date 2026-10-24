@@ -77,7 +77,7 @@ def rank_returns(rows, assets, pref):
         evidence = ranking_evidence(row, assets)
         quality = {'SMASH ACCEPT': 0, 'WORTH PURSUING': 1, 'FAIR / OPTIONAL': 2}.get(evidence['recommendation'], 3)
         plausibility = {'STRONG': 0, 'PLAUSIBLE': 1}.get(evidence['plausibility'], 2)
-        confidence = {'HIGH': 0, 'MEDIUM': 1}.get(evidence['confidence'], 2)
+        confidence = {'HIGH': 0, 'MEDIUM': 0}.get(evidence['confidence'], 2)
         impact = descending(evidence['production_evidence'].get('mean_weekly_delta'))
         depth = evidence['depth_by_week']
         # Slot-weeks are coverage evidence, not a monetary or dynasty score.
@@ -110,7 +110,8 @@ def rank_returns(rows, assets, pref):
             and buyer['post_optimal_points'] >= buyer['pre_optimal_points'])
         # A tie-break among already evaluated offers, never an uncertainty veto.
         history = (row['evaluation'].get('dimensions') or {}).get('league_partner_context') or {}
-        key = (*key, not supported_need, -int(history.get('soft_tie_break') or 0))
+        key = (*key, not supported_need, -int(history.get('soft_tie_break') or 0),
+               {'HIGH': 0, 'MEDIUM': 1}.get(evidence['confidence'], 2))
         decorated.append((key, row['evaluation']['provenance']['evaluation_id'], row, evidence))
     decorated.sort(key=lambda item: (item[0], item[1]))
     return [(row, evidence) for _, _, row, evidence in decorated]

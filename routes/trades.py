@@ -81,7 +81,8 @@ class PersonalTradeResponse(JSONResponse):
             await send(message)
         try:
             async with source_guard():
-                with personal_publication(self.personal_context):
+                from contextlib import nullcontext
+                with (personal_publication(self.personal_context) if self.personal_context else nullcontext()):
                     self.verify()
                     await super().__call__(scope, receive, tracked_send)
         except Exception as exc:
@@ -102,6 +103,8 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     router = APIRouter()
 
     async def personalize(payload):
+        from src.core.intelligence.manager_evidence import consumer_identity as source_identity
+        payload = {**payload, '_manager_source_identity': source_identity(require_data())}
         if any(str(key).startswith('_personal') for key in payload):
             raise TradeInputError('invalid_proposal', 'Personal valuation context is server owned.')
         explicit = any(key in payload for key in ('valuation_mode', 'personal_revision', 'personal_market_generation'))
@@ -119,6 +122,11 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         context = payload.get('_personal_context')
         if context and personal_validator is not None:
             personal_validator(require_data(), payload, context)
+        expected = payload.get('_manager_source_identity')
+        if expected:
+            from src.core.intelligence.manager_evidence import consumer_identity as source_identity
+            if source_identity(require_data()) != expected:
+                raise TradeInputError('canonical_evidence_changed', 'Manager/source evidence changed. Retry the same proposal.')
 
     def private_response(result, payload):
         try:
@@ -129,8 +137,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         # task: no await permits a same-loop preference write before handoff.
         encoded = jsonable_encoder(result)
         context = payload.get('_personal_context')
-        response = (PersonalTradeResponse(encoded, context=context, verify=lambda: fence(payload)) if context
-                    else JSONResponse(encoded, headers={'Cache-Control': 'no-store'}))
+        response = PersonalTradeResponse(encoded, context=context, verify=lambda: fence(payload))
         try:
             fence(payload)
         except Exception as exc:

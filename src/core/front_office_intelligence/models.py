@@ -1,7 +1,7 @@
 """Explainable Front Office Intelligence contracts."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from src.core.asset_intelligence import Evidence
@@ -18,6 +18,7 @@ class ActivityProfile:
     drops: int
     draft_assets: int
     evidence: tuple[Evidence, ...]
+    observed_activity: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

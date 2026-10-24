@@ -788,8 +788,11 @@
     if (partnerHistory) {
       const detail = node('details');
       detail.append(node('summary', (retained ? 'Previous partner context · NOT REVALIDATED' : 'Why this partner?')),
-        node('p', partnerHistory.summary || 'No partner preference established.'),
-        node('p', partnerHistory.attribution || 'Historical manager attribution unavailable.'));
+        node('p', partnerHistory.current_benefit || partnerHistory.summary || 'Supported counterparty benefit unavailable.'));
+      if (partnerHistory.current_cost) detail.append(node('p', 'Their principal cost: ' + partnerHistory.current_cost));
+      if (partnerHistory.manager_observations) detail.append(node('p', partnerHistory.manager_observations));
+      if (partnerHistory.manager_qualification) detail.append(node('p', partnerHistory.manager_qualification));
+      detail.append(node('p', partnerHistory.attribution || 'Historical manager attribution unavailable.'));
       if (retained) detail.append(node('p', 'This retained context is not revalidated against current roster needs or sources.'));
       for (const ref of partnerHistory.references || []) {
         if (/^\/trades\/history\/TRADE-[a-zA-Z0-9_-]+$/.test(ref.url || '')) {

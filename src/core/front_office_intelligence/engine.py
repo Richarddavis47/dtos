@@ -35,32 +35,25 @@ def _roster_ids(item: dict[str, Any]) -> set[int]:
 
 def _activity(data: dict[str, Any], roster_id: int, pick_count: int) -> ActivityProfile:
     counts = {"trade": 0, "waiver": 0, "free_agent": 0, "drop": 0}
-    shared = (data.get("front_office_evidence") or {}).get(str(roster_id))
+    from src.core.intelligence.league_scope import scoped_evidence
+    shared = scoped_evidence(data, "front_office_evidence").rows.get(str(roster_id))
     from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations
     observed = data.get('_league_gm_observations') or league_gm_observations.report(data)
     counts['trade'] = (int(shared.get('transaction_count') or 0) if shared is not None else
         int(((observed.get('teams') or {}).get(str(roster_id), {}).get('franchise') or {}).get('trades') or 0))
-    transactions = (
-        list(data.get("transactions") or ())
-        if shared is not None else _canonical_transactions(data)
-    )
-    for item in transactions:
-        if roster_id not in _roster_ids(item):
-            continue
-        kind = str(item.get("type") or "").lower()
-        if kind in counts and kind != 'trade':
-            counts[kind] += 1
-        if isinstance(item.get("drops"), dict) and roster_id in _roster_ids({"roster_ids": item["drops"].values()}):
-            counts["drop"] += 1
+    activity = ((observed.get('activity') or {}).get('teams', {}).get(str(roster_id)) or {}).get('franchise') or {}
+    counts['waiver'] = activity.get('completed_waivers', 0)
+    counts['free_agent'] = activity.get('completed_adds', 0)
+    counts['drop'] = activity.get('completed_drops', 0)
     total = sum(counts.values())
     scope = 'manager-attributed trades in retained canonical evidence' if shared is not None else 'completed franchise trades in observed source buckets'
     level = f"{counts['trade']} {scope}; observation period not established"
     evidence = (
         Evidence("Observed completed trades", str(counts["trade"]), counts["trade"], scope + '. ' + observed['coverage']['explanation'] + ' Franchise activity is not automatically current-manager behavior.', "Sleeper completed transactions"),
-        Evidence("Roster transactions", str(total - counts["trade"]), total - counts["trade"], "Counts cached waiver, add, and drop actions involving this roster.", "Sleeper cached transactions"),
+        Evidence("Roster transactions", str(total - counts["trade"]), total - counts["trade"], "Completed claims/additions/drops only; failed, pending, cancelled and unknown attempts remain separate franchise observations.", "Sleeper cached transactions"),
         Evidence("Draft assets owned", str(pick_count), pick_count, "Current owned picks provide observable draft-strategy context.", "Sleeper cached pick ledger"),
     )
-    return ActivityProfile(level, counts["trade"], counts["waiver"], counts["free_agent"], counts["drop"], pick_count, evidence)
+    return ActivityProfile(level, counts["trade"], counts["waiver"], counts["free_agent"], counts["drop"], pick_count, evidence, activity)
 
 
 def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
@@ -99,7 +92,7 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
     shared_behavior = scoped_evidence(data, 'gm_behavioral_intelligence', expected_league_id=profile.league_id).rows.get(str(profile.roster_id)) or {}
     first, last = shared_behavior.get("first_observed_at"), shared_behavior.get("last_observed_at")
     period = f" from {str(first)[:10]} to {str(last)[:10]}" if first and last else "; observation period unavailable"
-    scope = 'manager-attributed trades in retained evidence' if (data.get('front_office_evidence') or {}).get(str(profile.roster_id)) is not None else 'completed franchise trades in observed buckets'
+    scope = 'manager-attributed trades in retained evidence' if scoped_evidence(data, 'front_office_evidence').rows.get(str(profile.roster_id)) is not None else 'completed franchise trades in observed buckets'
     if scope.startswith('completed franchise'):
         period = '; observation period unavailable; historical manager attribution may be incomplete'
     style = f"{activity.trades} observed completed trades ({scope}){period}. Activity does not establish skill or selectivity."
@@ -123,7 +116,8 @@ def _profile(decision: TeamDecision, data: dict[str, Any]) -> FrontOfficeReport:
     qualification = diagnostic_qualification(decision.diagnostics)
     if qualification:
         summary += ' ' + qualification
-    shared = (data.get("front_office_evidence") or {}).get(str(profile.roster_id))
+    from src.core.intelligence.league_scope import scoped_evidence
+    shared = scoped_evidence(data, "front_office_evidence").rows.get(str(profile.roster_id))
     return FrontOfficeReport(profile.roster_id, profile.owner_name, profile.team_name, summary, window, tuple(philosophies), style, activity, tuple(preferences), strengths, constraints, confidence, evidence, decision, shared)
 
 

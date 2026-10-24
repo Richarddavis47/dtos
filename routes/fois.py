@@ -477,8 +477,12 @@ def create_fois_router(
             ) or "<li>No earlier meaningful FOIS snapshot is available in retained history.</li>"
             from src.core.gm_behavioral_intelligence.models import GM_BEHAVIOR_METHOD_VERSION
             roster_id = score.franchise_id.rsplit(":", 1)[-1]
-            profile = (data.get("gm_behavioral_intelligence") or {}).get(roster_id) or score.gm_behavioral_profile or {}
+            from src.core.intelligence.league_scope import scoped_evidence
+            current_profile = scoped_evidence(data, "gm_behavioral_intelligence").rows.get(roster_id)
+            profile = current_profile or score.gm_behavioral_profile or {}
             behavioral_html = '<p>Supported behavioral evidence unavailable. Current holdings do not establish trading preferences.</p>'
+            if profile and not current_profile:
+                behavioral_html = '<p>Retained manager observations · NOT REVALIDATED against current ownership or sources.</p>'
             with span('fois_profile_behavior'):
                 if (profile.get("league_id") == selected_league
                         and profile.get("gm_id") == score.gm_id
@@ -500,7 +504,7 @@ def create_fois_router(
                                     f'<p>{dimension.get("sample_count", 0)} independent supported transactions · coverage {dimension.get("coverage", 0):.0%}</p>'
                                     f'<p>{escape(counts)}</p>' + (f'<p>Assets within those transactions: {escape(assets)}</p>' if assets else '')
                                     + f'<ul>{references}</ul></details>')
-                    behavioral_html = '<p>League-specific observations describe supported actions, not personality, skill or acceptance probabilities. Historical habits do not override your selected strategy.</p>' + "".join(rows)
+                    behavioral_html = ('<p>Retained manager observations · NOT REVALIDATED against current ownership or sources.</p>' if not current_profile else '') + '<p>League-specific observations describe supported actions, not personality, skill or acceptance probabilities. Historical habits do not override your selected strategy.</p>' + "".join(rows)
             with span('fois_profile_validation'):
                 availability_html = _availability_notice(service)
                 preservation = ('<p class="notice" role="status">Retained historical assessment: these grades predate the evidence-integrity correction. They remain unchanged and have not been revalidated. Regeneration requires separate authorization.</p>'

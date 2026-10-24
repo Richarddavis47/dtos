@@ -17,6 +17,7 @@ from src.core.front_office_evidence import assemble_front_office_evidence
 from src.core.front_office_intelligence import build_league_model
 from src.core.intelligence.context import build_context
 from tests.test_trade_intelligence import fixture_data
+from tests.manager_evidence_fixtures import publish
 from tests.test_historical_franchise_state import FixtureStore
 
 
@@ -139,7 +140,10 @@ class SharedEvidenceContractTests(unittest.TestCase):
             franchise_id=f'{data["league"]["league_id"]}:franchise:1',
             gm_id="owner-1", trades=(trade("a"),),
         ).contract()
-        data["front_office_evidence"] = {"1": summary, "2": summary, "3": summary}
+        data["teams"][0]["owner_id"] = "owner-1"
+        summary["gm_id"] = "league-1:gm:owner-1"
+        data["front_office_evidence"] = {"1": summary}
+        publish(data)
         with patch(
             "src.core.history_context.store.CanonicalHistoryStore.records",
             side_effect=AssertionError("request-time history scan"),
@@ -165,9 +169,13 @@ class SharedEvidenceContractTests(unittest.TestCase):
         data["front_office_evidence"] = {
             "1": {
                 "league_id": str(data["league"]["league_id"]),
-                "semantic_identity": "generation-a",
+                "semantic_identity": "generation-a", "transaction_count": 0,
+                "franchise_id": "league-1:franchise:1", "gm_id": "league-1:gm:owner-1",
+                "method_version": "step5-process-outcome-unification-1",
             },
         }
+        data["teams"][0]["owner_id"] = "owner-1"
+        publish(data)
         first = build_context(data, 1).snapshot_key
         data["front_office_evidence"]["1"]["semantic_identity"] = "generation-b"
         second = build_context(data, 1).snapshot_key

@@ -11,6 +11,7 @@ class ScopedEvidence:
 
     rows: dict[str, dict[str, Any]]
     rejected: int = 0
+    manager_rejected: int = 0
 
 
 def league_id_from_data(data: Mapping[str, Any]) -> str:
@@ -22,13 +23,18 @@ def league_id_from_data(data: Mapping[str, Any]) -> str:
 def scoped_evidence(
     data: Mapping[str, Any], field: str, *, expected_league_id: str | None = None,
 ) -> ScopedEvidence:
-    """Return only private evidence whose source league matches the consumer."""
+    """Validate league scope and current-manager publication where applicable."""
     expected = str(expected_league_id or league_id_from_data(data))
     source = data.get(field) or {}
     if not isinstance(source, Mapping) or not expected:
         return ScopedEvidence({}, len(source) if isinstance(source, Mapping) else 0)
     rows: dict[str, dict[str, Any]] = {}
     rejected = 0
+    manager_rejected = 0
+    manager_source = None
+    if field in {"front_office_evidence", "gm_behavioral_intelligence"} and source:
+        from .manager_evidence import source_identity
+        manager_source = source_identity(data)
     for key, value in source.items():
         if not isinstance(value, Mapping):
             rejected += 1
@@ -37,8 +43,14 @@ def scoped_evidence(
         if str(row.get("league_id") or "") != expected:
             rejected += 1
             continue
+        if manager_source is not None:
+            from .manager_evidence import admitted
+            if not admitted(data, field, key, row, manager_source):
+                rejected += 1
+                manager_rejected += 1
+                continue
         rows[str(key)] = row
-    return ScopedEvidence(rows, rejected)
+    return ScopedEvidence(rows, rejected, manager_rejected)
 
 
 def scoped_market_trends(

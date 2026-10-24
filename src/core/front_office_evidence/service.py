@@ -96,4 +96,5 @@ def publish_front_office_evidence(
         and str(getattr(score, "league_id", "")) == league_id
         and str(score.front_office_evidence.get("league_id") or "") == league_id
     }
-    data["front_office_evidence"] = summaries
+    from src.core.intelligence.manager_evidence import publish_rows
+    publish_rows(data, "front_office_evidence", summaries)

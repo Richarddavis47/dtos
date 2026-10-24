@@ -1,3 +1,11 @@
+## v1.21.89 / build 2189 — Current-Manager Evidence and Waiver Activity Integrity
+
+Bind prepared manager observations to the actual producer's league, franchise, current owner, method and unchanged source publication. Revalidate at Trade consumption and protected response publication; superseded evaluations fail with the established retryable canonical-evidence error. Prior-owner decisions remain franchise history and retained grades remain RETAINED / NOT REVALIDATED. Missing manager history is neutral; current bilateral roster and capital quality precede historical confidence tie-breaks.
+
+Deduplicate canonical source-league/transaction identities and separate completed claims, additions and drops from failed, pending, cancelled and unknown attempts. Preserve exact asset identity, directed FAAB including zero and historical owner attribution. Apply the shared admission to League DNA, activity APIs, rendered summaries and completed Commissioner news. Explain the counterparty's current benefit and cost before qualified manager observations, sample period and limitations.
+
+No new provider, solver, FOIS, reconstruction, discovery or persistent analytical work is introduced by these qualification reads. Market prices, Sleeper projections, legal lineups, Custom/Neutral valuation contracts, bounded caches and heavyweight execution protections remain unchanged. Responsive Chromium controls are author evidence; physical Safari, unfamiliar-human acceptance and independent Scout review remain separate. Beta expansion is not authorized.
+
 ## v1.21.88 / build 2188 — Custom Rankings Accessibility and Phone UX
 
 Keep keyboard focus on an enabled control for the same exact asset after ranking moves, including first/last and page boundaries. Preserve visible focus, overall-position announcements and the moved asset's viewport anchor.
