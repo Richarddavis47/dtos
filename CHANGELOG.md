@@ -1,3 +1,9 @@
+## v1.21.93 / build 2193 — Custom Rankings Compatibility & Recovery
+
+Saved Custom Rankings now identify the exact assets whose current evidence cannot support personal values. Review cause-specific pricing, retirement, identity or exact-pick ownership limitations and retry prepared evidence without changing saved intent. A confirmed, revision-checked removal from Custom ordering preserves all other relative ranks, other tier breaks and Target/Avoid/Protect choices; Restart remains a separate full reset. Removing an asset changes the saved cohort and can change the remaining personal value slots.
+
+Neutral Market prices, Custom slot-curve mathematics, canonical projections, legal lineups and Trade safeguards are preserved. New assets do not silently enter saved rankings; missing evidence never becomes zero. No new storage schema, providers, background analysis or historical FOIS regeneration. Author fixtures and hosted gates are separate from future Scout acceptance; exact production revision-9 asset diagnosis requires authorized account access and is not inferred from counts.
+
 ## v1.21.92 / build 2192 — Final Plain-English Experience Correction
 
 Explain player dossier outlook, strengths, weaknesses and schedule/bye limits in football terms using the same prepared reports. Preserve genuinely supported findings and distinguish missing evidence from unfavorable evidence. Keep useful methodology and provenance in advanced disclosures rather than exposing internal scalar, baseline, threshold or evidence-object instructions in ordinary dossier content.

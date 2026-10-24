@@ -455,7 +455,9 @@
         error.code = code; throw error;
       }
       const error = new Error(d?.message || (typeof d === 'string' ? d : "DTOS couldn't complete this evaluation. Your proposal is still intact."));
-      error.code = code; throw error;
+      error.code = code;
+      if (d?.recovery_url === '/account/my-dtos#personal-compatibility') error.personalRecovery = true;
+      throw error;
     }
     return body;
   }
@@ -1208,6 +1210,10 @@
         return;
       }
       message(feedback, true);
+      if (error.personalRecovery) {
+        const link = node('a', 'Review affected Custom Rankings assets'); link.href = '/account/my-dtos#personal-compatibility';
+        el('trade-result').append(link);
+      }
       if (path === 'evaluate') { el('trade-result').dataset.assessmentState = 'failed'; reevaluateAction(el('trade-result')); }
       if (path === 'balance' && error.code === 'canonical_evidence_changed') {
         message('Market evidence changed. Your offer and exact protections are intact. Reload Market facts before balancing.', true);
@@ -1363,7 +1369,9 @@
       const select = node('select'); select.id = 'trade-valuation-mode';
       for (const [value, text] of [['neutral', 'Neutral DTOS'], ['custom', 'Custom DTOS']]) { const option = node('option', text); option.value = value; option.disabled = value === 'custom' && (!(p.revision > 0) || p.available !== true); select.append(option); }
       select.value = valuationMode;
-      const edit = node('a', 'Edit My DTOS rankings'); edit.href = '/account/my-dtos';
+      const needsReview = p.available !== true && p.revision > 0 && p.compatibility_issues?.length;
+      const edit = node('a', needsReview ? 'Review affected Custom Rankings assets' : 'Edit My DTOS rankings');
+      edit.href = needsReview ? '/account/my-dtos#personal-compatibility' : '/account/my-dtos';
       panel.append(label, select, node('p', 'Neutral Market and Sleeper lineup facts stay unchanged. Custom DTOS uses your saved ranking values for your decision.'), edit);
       if (p.available !== true) panel.append(node('p', !(p.revision > 0)
         ? 'Create Custom Rankings in My DTOS to use Custom Trade. Neutral DTOS is available now.'
