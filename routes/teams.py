@@ -224,6 +224,20 @@ def _draft_capital(view: dict[str, Any]) -> str:
 
 
 def _positional_depth(view):
+    from src.ui.intelligence_presentation import projection_evidence_summary
+
+    # Group only identical qualifications. Position-specific findings and the
+    # original detailed evidence stay attached to their respective cards.
+    qualifications = {}
+    for position, facts in view['overview']['positions'].items():
+        evidence = (facts.get('diagnostic') or {}).get('evidence') or {}
+        qualification = projection_evidence_summary(evidence)
+        qualifications.setdefault(qualification, []).append(position)
+    shared = ''.join(
+        f'<p><strong>{escape(" · ".join(positions))}:</strong> {escape(qualification)}</p>'
+        for qualification, positions in qualifications.items() if len(positions) > 1
+    )
+    shared_html = f'<div id="depth-evidence-notes" role="note">{shared}</div>' if shared else ''
     rows = []
     for position, facts in view['overview']['positions'].items():
         points = _points(facts['starting_points'])
@@ -233,8 +247,9 @@ def _positional_depth(view):
         evidence = diagnostic.get('evidence') or {}
         for limitation in evidence.get('limitations') or []:
             explanation = explanation.replace(limitation, '').strip()
-        from src.ui.intelligence_presentation import projection_evidence_summary
         qualification = projection_evidence_summary(evidence)
+        qualification_html = (f'<p><strong>{escape(qualification)}</strong></p>'
+                              if len(qualifications[qualification]) == 1 else '')
         candidates = diagnostic.get('surplus_assets') or []
         if not candidates and 'Surplus not established' not in explanation:
             explanation += ' Surplus not established: current evidence does not identify an expendable asset.'
@@ -242,8 +257,8 @@ def _positional_depth(view):
         expendable = ', '.join(names.get(p['player_id'], 'Player identity unavailable') for p in candidates)
         from src.ui.roster_diagnostic_evidence import evidence_html
         details = evidence_html(diagnostic, view['team'].get('players') or [], {key: (view.get('projection_snapshot') or {}).get(key) for key in ('league_id', 'season', 'week', 'projection_snapshot_id', 'scoring_profile_id', 'horizon_snapshot_ids')})
-        rows.append(f'<article class="thq-kpi"><h3>{position}</h3><p>{escape(explanation)}</p><p><strong>{escape(qualification)}</strong></p><p>{facts["starting_count"]} players in {escape(facts["lineup_basis"])} · {points} Sleeper-projected points</p><small>{facts["required_slots"]} required slots · {facts["eligible_flex_slots"]} eligible flex slots</small><p>Reserve projection coverage: <b>{facts["reserve_covered"]}/{facts["reserve_expected"]}</b> · {escape(facts["availability"])}. Best supported reserve: {backup} points.</p>{"<p>Conditional expendable depth: " + escape(expendable) + "</p>" if expendable else ""}<details><summary>Lineup eligibility and surplus</summary><p>Current-week evidence; not a sale recommendation or long-term value grade. Scenarios must not be summed.</p>{details}</details></article>')
-    return '<div class="thq-cards">' + ''.join(rows) + '</div>'
+        rows.append(f'<article class="thq-kpi"><h3>{position}</h3><p>{escape(explanation)}</p>{qualification_html}<p>{facts["starting_count"]} players in {escape(facts["lineup_basis"])} · {points} Sleeper-projected points</p><small>{facts["required_slots"]} required slots · {facts["eligible_flex_slots"]} eligible flex slots</small><p>Reserve projection coverage: <b>{facts["reserve_covered"]}/{facts["reserve_expected"]}</b> · {escape(facts["availability"])}. Best supported reserve: {backup} points.</p>{"<p>Conditional expendable depth: " + escape(expendable) + "</p>" if expendable else ""}<details><summary>Lineup eligibility and surplus</summary><p>Current-week evidence; not a sale recommendation or long-term value grade. Scenarios must not be summed.</p>{details}</details></article>')
+    return shared_html + '<div class="thq-cards">' + ''.join(rows) + '</div>'
 
 
 def _timeline(view: dict[str, Any], graph=None) -> str:

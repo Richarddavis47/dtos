@@ -7,6 +7,7 @@ from src.ui import player_summary, recommendation_panel
 from src.ui.intelligence_presentation import exact_rank
 from src.ui.market_facts import market_fact_html
 from src.ui.player_actions import player_action, player_actions_html
+from src.ui.player_dossier_text import evidence_text, outlook_text, strengths_text, weaknesses_text
 from src.core.player_ownership import PlayerOwnershipIndex
 
 from src.core.asset_intelligence import AssetEvaluation, PlayerReport
@@ -39,7 +40,7 @@ def _number(value, *, signed=False) -> str:
 
 def _evidence(evaluation: AssetEvaluation) -> str:
     rows = "".join(
-        f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(item.explanation)} <small>Source: {escape(item.source)}</small></li>"
+        f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(evidence_text(item.explanation))} <small>Source: {escape(item.source)}</small></li>"
         for item in evaluation.evidence
     )
     limits = "".join(f"<li>{escape(item)}</li>" for item in evaluation.limitations)
@@ -77,12 +78,12 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
         f'<article class="ai-value"><span>{escape(value.name)}</span><b>{_number(value.score)}</b><small>Scale 0–{value.scale_maximum} · {value.confidence}% {"evidence confidence" if value is report.core_values.market else "confidence"}</small>{market_fact_html(report.market_fact) if value is report.core_values.market else ""}{_evidence(value)}</article>'
         for value in (report.core_values.market, report.core_values.dynasty, report.core_values.redraft, report.core_values.team_fit)
     )
-    snapshot = (("Asset Tier", report.archetypes[0]), ("Position", profile.position), ("NFL Team", profile.nfl_team), ("Age", str(profile.age or "Sleeper metadata does not provide age.")), ("Experience", str(profile.experience if profile.experience is not None else "Sleeper metadata does not provide NFL experience.")), ("Contract", profile.contract_status if profile.contract_status != "Unavailable" else "No supported provider supplies contract data."), ("Injury", profile.injury_status), ("Bye", profile.bye_week if profile.bye_week != "Unavailable" else "Sleeper metadata does not currently provide a bye week."))
+    snapshot = (("Asset Tier", report.archetypes[0]), ("Position", profile.position), ("NFL Team", profile.nfl_team), ("Age", str(profile.age or "Sleeper metadata does not provide age.")), ("Experience", str(profile.experience if profile.experience is not None else "Sleeper metadata does not provide NFL experience.")), ("Contract", profile.contract_status if profile.contract_status != "Unavailable" else "No supported provider supplies contract data."), ("Injury", profile.injury_status), ("Bye", profile.bye_week if profile.bye_week != "Unavailable" else "Bye week not confirmed; check the NFL schedule."))
     snapshot_html = "".join(f"<li><b>{escape(label)}:</b> {escape(value)}</li>" for label, value in snapshot)
-    strengths = "".join(f"<li>{escape(item)}</li>" for item in report.strengths)
-    weaknesses = "".join(f"<li>{escape(item)}</li>" for item in report.weaknesses)
-    risk_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(item.explanation)}</li>" for item in report.risk.evidence)
-    opportunity = "".join(f"<li><b>{escape(label)}:</b> {_number(value.score)} — {escape(value.summary)}</li>" for label, value in report.opportunity.items())
+    strengths = "".join(f"<li>{escape(item)}</li>" for item in strengths_text(report))
+    weaknesses = "".join(f"<li>{escape(item)}</li>" for item in weaknesses_text(report))
+    risk_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(evidence_text(item.explanation))}</li>" for item in report.risk.evidence)
+    opportunity = "".join(f"<li><b>{escape(label)}:</b> {_number(value.score)} — {escape(outlook_text(value.summary))}</li>" for label, value in report.opportunity.items())
     recommendation_evidence = tuple(f"{item.factor}: {item.observed_value} — {item.explanation}" for item in report.recommendation.evidence)
     active_roster_id = int(selected_team.get("roster_id") or 0)
     player_id = str(profile.player_id)

@@ -331,7 +331,10 @@
     const totals = which => { const rows = selected[which].map(asset); return rows.length && rows.every(a => a && a.trade_value != null) ? rows.reduce((sum, a) => sum + a.trade_value, 0) : null; };
     const sent = totals('sent'), received = totals('received'), balance = el('trade-balance'); balance.replaceChildren(node('h3', 'Market Balance'), node('p', `You send: ${sent ?? 'Unavailable'} · You receive: ${received ?? 'Unavailable'}`), node('small', 'Neutral market relationship only — not the Trade Intelligence recommendation.'));
     paintCalculator();
-    el('trade-context').textContent = flow === 'shop' ? `Active league ${workspace.manager_context.league_id} · Shop search: ${team(session.shopSearchPartner)?.team_name || 'All eligible teams'}` : `${team(active)?.team_name || 'Your franchise'} → ${team(partner())?.team_name || 'Choose partner'} · Active league ${workspace.manager_context.league_id}`;
+    const leagueLabel = workspace.league_name || 'Selected league';
+    el('trade-context').textContent = flow === 'shop' ? `Active league · ${leagueLabel} · Shop search: ${team(session.shopSearchPartner)?.team_name || 'All eligible teams'}` : `${team(active)?.team_name || 'Your franchise'} → ${team(partner())?.team_name || 'Choose partner'} · Active league · ${leagueLabel}`;
+    const sourceIdentity = el('trade-source-context-identity');
+    if (sourceIdentity) sourceIdentity.textContent = `League ID: ${workspace.manager_context.league_id}`;
     for (const id of ['shop-preference','shop-protected']) if (el(id)) el(id).disabled = busy;
     if (el('shop-position')) el('shop-position').disabled = busy || el('shop-preference').value !== 'position_need';
     el('trade-run').disabled = busy || !selected.sent.length || !selected.received.length;
@@ -363,13 +366,13 @@
     const shown = n => displayMarketUnits(n, scale);
     const complete = rows.every(r => r.length && r.every(a => known.includes(a)));
     const ownershipInvalid = ['sent', 'received'].some(which => selected[which].some(id => !team(which === 'sent' ? active : partner())?.assets.some(a => a.asset_id === id)));
-    const box = el('trade-balance'); box.replaceChildren(node('h3', 'Canonical Market comparison'));
+    const box = el('trade-balance'); box.replaceChildren(node('h3', 'Market comparison'));
     rows.forEach((r, i) => box.append(node('p', `Side ${i ? 'B' : 'A'} · ${i ? 'You receive' : 'You send'}: ${r.length && r.every(a => known.includes(a)) ? shown(totals[i]) : r.some(a => known.includes(a)) ? 'Partial · known subtotal ' + shown(totals[i]) : 'Unavailable'}`)));
     const difference = totals[1] - totals[0];
-    const verdict = node('h4', !complete ? rows.every(r => r.length) ? 'Cannot determine reliably · pricing evidence missing' : 'Choose assets on both sides' : difference === 0n ? 'Approximately balanced · equal canonical totals' : `Side ${difference > 0n ? 'A' : 'B'} favored · ${difference > 0n ? 'you receive more' : 'your counterparty receives more'} Market value`);
+    const verdict = node('h4', !complete ? rows.every(r => r.length) ? 'Cannot determine reliably · pricing evidence missing' : 'Choose assets on both sides' : difference === 0n ? 'Approximately balanced · equal Market totals' : `Side ${difference > 0n ? 'A' : 'B'} favored · ${difference > 0n ? 'you receive more' : 'your counterparty receives more'} Market value`);
     if (complete && difference !== 0n) verdict.append(node('span', ' · ' + (team(difference > 0n ? active : partner())?.team_name || 'Manager unavailable')));
     verdict.id = 'calculator-verdict'; box.append(verdict);
-    if (complete) box.append(node('p', 'Value gap: ' + shown(difference < 0n ? -difference : difference) + ' canonical Market points.'));
+    if (complete) box.append(node('p', 'Value gap: ' + shown(difference < 0n ? -difference : difference) + ' Market points.'));
     if (complete) {
       const sentence = difference === 0n ? 'Market totals are equal.' : difference < 0n
         ? 'You are sending ' + shown(-difference) + ' more Market value than you receive.'
