@@ -1,4 +1,4 @@
-.personal-rankings{max-width:1040px;margin:0 auto;padding-bottom:5rem;font-size:1rem;overflow-wrap:anywhere}
+.personal-rankings{max-width:1040px;margin:0 auto;padding-bottom:5rem;font-size:1rem;overflow-wrap:anywhere;color:var(--text-primary,#f4f7f5)}
 .personal-heading{display:flex;align-items:center;justify-content:space-between;gap:.75rem;min-height:44px}
 /* This editor supplies its own title, actions and ranking-specific explanation.
    The shared generic League overview header duplicates them on this page only. */
@@ -12,6 +12,7 @@ body:has(#my-dtos) .ds-page-header{display:none}
 .personal-rankings input,.personal-rankings select{min-height:44px;box-sizing:border-box;max-width:100%;font:inherit}
 .personal-start{margin:.2rem 0;width:100%}
 .personal-start[hidden]{display:none}
+.personal-actions[hidden]{display:none}
 .personal-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:.5rem;margin:.4rem 0}
 .personal-filters label{display:flex;flex-direction:column;gap:.15rem;min-width:0;font-size:.875rem}
 .personal-filters input,.personal-filters select{width:100%;font-size:1rem;min-width:0}

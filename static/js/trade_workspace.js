@@ -1362,6 +1362,7 @@
       select.value = valuationMode;
       const edit = node('a', 'Edit My DTOS rankings'); edit.href = '/account/my-dtos';
       panel.append(label, select, node('p', 'Neutral Market and Sleeper lineup facts stay unchanged. Custom DTOS uses your saved ranking values for your decision.'), edit);
+      if (p.available !== true) panel.append(node('p', (p.limitations || []).join(' ') || 'Custom DTOS needs saved rankings with compatible Market prices. Open My DTOS to create or retry rankings; Neutral Trade remains available.', 'muted'));
       root.prepend(panel);
       select.onchange = () => {
         activeRequest?.abort(); activeRequest = null; balanceRequest = null; revision++; runSequence++; busy = false;

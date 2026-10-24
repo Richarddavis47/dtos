@@ -50,7 +50,7 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
                                 status_code=status, headers=_HEADERS)
         logging.getLogger(__name__).error('my_dtos_unavailable type=%s', type(exc).__name__)
         return JSONResponse({'status': 'preferences_unavailable',
-                             'message': 'My DTOS could not complete this operation. Your saved rankings remain available; reload and try again.'},
+                             'message': 'My DTOS could not complete this operation. No rankings were reset. Retry to review saved state, or use Neutral Trade.'},
                             status_code=503, headers=_HEADERS)
 
     def enrich(result, account):
@@ -59,6 +59,13 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
                                   'roster_id': account.membership.roster_id},
                 'heavy_work': {'provider_calls': 0, 'discovery_calls': 0,
                                'solver_calls': 0, 'fois_calls': 0, 'history_calls': 0}}
+
+    def source_check(data, reader, token):
+        from services.personal_rankings import PersonalRankingError, _publication_token
+        if (require_data() is not data or market_model() is not reader
+                or _publication_token(data, reader) != token):
+            raise PersonalRankingError('market_source_changed',
+                'Market changed while this operation was running. Retry rankings to review the current saved state.', 409)
 
     @router.get('/static/js/personal_rankings.js', include_in_schema=False)
     async def script():
@@ -78,12 +85,13 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
         body = '''<link rel="stylesheet" href="/static/css/personal_rankings.css">
 <section id="my-dtos" class="personal-rankings" aria-labelledby="my-dtos-heading">
 <div class="personal-heading"><h1 id="my-dtos-heading">My DTOS</h1><a class="btn" href="/account">Account</a></div>
-<div class="personal-mode" role="group" aria-label="DTOS valuation mode"><button class="btn" id="personal-neutral" type="button" aria-pressed="true">Neutral DTOS</button><button class="btn" id="personal-custom" type="button" aria-pressed="false">Custom DTOS</button></div>
+<div class="personal-mode" role="group" aria-label="DTOS valuation mode"><button class="btn" id="personal-neutral" type="button" aria-pressed="true" disabled>Neutral DTOS</button><button class="btn" id="personal-custom" type="button" aria-pressed="false" disabled>Custom DTOS</button></div>
 <button class="btn personal-start" id="personal-initialize" type="button" hidden>Create Custom Rankings</button>
 <div class="personal-filters"><label for="personal-search">Search assets<input id="personal-search" type="search" placeholder="Player, year or franchise" autocomplete="off"></label><label for="personal-position">Position<select id="personal-position"><option value="">Overall · players and picks</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option><option value="PICK">Draft picks</option></select></label></div>
 <nav class="personal-pagination" aria-label="Ranking pages"><button class="btn" id="personal-previous" type="button">Previous</button><span id="personal-page"></span><button class="btn" id="personal-next" type="button">Next</button></nav>
 <div id="personal-status" role="status" aria-live="polite">Loading rankings…</div>
 <div id="personal-error" role="alert" hidden></div>
+<div id="personal-recovery" class="personal-actions" hidden><button class="btn" id="personal-retry" type="button">Retry rankings</button><a class="btn" href="/market">Check Market</a><a class="btn" href="/trades">Use Neutral Trade</a></div>
 <p id="personal-warnings" class="personal-qualification" hidden></p>
 <p id="personal-results-count" class="muted"></p>
 <details id="personal-settings" class="personal-explanation"><summary>Ranking settings &amp; explanation</summary>
@@ -102,12 +110,14 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
 
     @router.get('/api/my-dtos')
     async def state(request: Request):
-        from services.personal_rankings import view_state
+        from services.personal_rankings import _publication_token, view_state
         account = account_context(request)
         try:
             data, reader = require_data(), market_model()
+            token = _publication_token(data, reader)
             result = await run_manager_read(lambda: view_state(service.store, data, reader, account))
             account_context(request)
+            source_check(data, reader, token)
             return JSONResponse(enrich(result, account), headers=_HEADERS)
         except HTTPException:
             raise
@@ -116,7 +126,7 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
 
     @router.post('/api/my-dtos')
     async def command(request: Request):
-        from services.personal_rankings import apply_command
+        from services.personal_rankings import _publication_token, apply_command
         account = account_context(request)
         supplied = request.headers.get('x-csrf-token', '')
         if not supplied or not hmac.compare_digest(supplied, account.csrf_token):
@@ -140,8 +150,11 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
             raise HTTPException(422, 'Invalid preference command.')
         try:
             data, reader = require_data(), market_model()
-            result = await run_manager_read(lambda: apply_command(service.store, data, reader, account, payload))
+            token = _publication_token(data, reader)
+            result = await run_manager_read(lambda: apply_command(service.store, data, reader, account, payload,
+                verify_source=lambda: source_check(data, reader, token)))
             account_context(request)
+            source_check(data, reader, token)
             return JSONResponse(enrich(result, account), headers=_HEADERS)
         except HTTPException:
             raise
