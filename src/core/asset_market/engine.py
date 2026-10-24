@@ -191,6 +191,12 @@ class AssetMarket:
         self.state = state
         self.store = store
         self.league_id = league_id
+        # Capture the same bounded semantic-input identity used by cache
+        # admission. self.data can later be replaced or updated; it is not an
+        # immutable record of which inputs produced this read model.
+        self._prepared_input_marker = AssetMarketCache.request_marker(
+            data, state, store, league_id,
+        )
         # A loaded artifact must report the historical identity captured when
         # that immutable generation was built.  Reading the live store here
         # would relabel retained build provenance after an unrelated history
@@ -265,6 +271,17 @@ class AssetMarket:
         self.by_id = self._read_model.by_id
         self._artifact_path = artifact_path
         self.build_duration_ms = round((time.perf_counter() - started) * 1000, 3)
+
+    def compatible_prepared_inputs(self, data: dict[str, Any]) -> bool:
+        """Compare prepared input identity without building or reading providers.
+
+        Provider publications have no top-level generation timestamp. The
+        existing cache marker covers the prepared valuation generation and
+        canonical ownership/universe revisions, excluding observational clocks.
+        """
+        return self._prepared_input_marker == AssetMarketCache.request_marker(
+            data, self.state, self.store, self.league_id,
+        )
 
     def identity(
         self, brain_snapshot_id: str | None = None,

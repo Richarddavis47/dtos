@@ -4,7 +4,7 @@
   const root = document.getElementById('my-dtos');
   if (!root) return;
   const el = id => document.getElementById(id), PAGE_SIZE = 25;
-  let state = null, page = 0, busy = false, requestSequence = 0, controller = null, drag = null;
+  let state = null, page = 0, busy = false, ready = false, requestSequence = 0, controller = null, drag = null;
   const openRows = new Set();
   const status = message => { el('personal-status').textContent = message; };
   function error(message) { el('personal-error').hidden = !message; el('personal-error').textContent = message || ''; }
@@ -44,18 +44,18 @@
   function button(text, accessible, operation, focusKey) {
     const control = node('button', text, 'btn'); control.type = 'button'; control.setAttribute('aria-label', accessible);
     if (focusKey) control.dataset.focusKey = focusKey;
-    control.disabled = busy || !state?.initialized || state.mode !== 'custom'; control.addEventListener('click', operation); return control;
+    control.disabled = busy || !ready || !state?.initialized || state.mode !== 'custom'; control.addEventListener('click', operation); return control;
   }
   function render(focusKey, scrollTop, rowTop) {
     if (!state) return;
     const initialized = Boolean(state.initialized), custom = state.mode === 'custom';
     el('personal-neutral').setAttribute('aria-pressed', String(!custom));
     el('personal-custom').setAttribute('aria-pressed', String(custom));
-    el('personal-neutral').disabled = busy; el('personal-custom').disabled = busy;
+    el('personal-neutral').disabled = busy || !ready; el('personal-custom').disabled = busy || !ready;
     el('personal-initialize').hidden = initialized;
-    el('personal-initialize').disabled = busy || !state.rows?.length;
+    el('personal-initialize').disabled = busy || !ready || !state.rows?.length;
     el('personal-restart').hidden = !initialized;
-    el('personal-restart').disabled = busy || !initialized || !state.rows?.length;
+    el('personal-restart').disabled = busy || !ready || !initialized || !state.rows?.length;
     el('personal-reload').disabled = busy;
     const warnings = state.limitations || [];
     el('personal-warnings').hidden = !warnings.length; el('personal-warnings').textContent = warnings.join(' ');
@@ -66,7 +66,7 @@
       : 'Neutral Market values are active. Your custom order and preferences are preserved.';
     const method = state.method_explanation || (typeof state.method === 'object' ? state.method?.description : null);
     if (method) el('personal-method').textContent = method;
-    const rows = filtered(); const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE)); page = Math.min(page, pages - 1);
+    const rows = filtered(); const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE)); page = Math.max(0, Math.min(page, pages - 1));
     for (const row of root.querySelectorAll('.personal-row')) {
       if (row.querySelector('details')?.open) openRows.add(row.dataset.assetId); else openRows.delete(row.dataset.assetId);
     }
@@ -98,15 +98,15 @@
       const down = button('Move Down', `Move ${label} down one overall position`, () => move(rank + 1, `${id}:down`), `${id}:down`); down.disabled ||= !editable || rank >= state.rows.length;
       controls.append(up, down);
       const moveLabel = node('label', 'Overall position'); moveLabel.className = 'personal-move-label';
-      const input = document.createElement('input'); input.type = 'number'; input.min = '1'; input.max = String(state.rows.length); input.value = String(rank); input.inputMode = 'numeric'; input.dataset.focusKey = `${id}:position`; input.setAttribute('aria-label', `Overall position for ${label}`); input.disabled = busy || !editable; moveLabel.append(input); controls.append(moveLabel);
+      const input = document.createElement('input'); input.type = 'number'; input.min = '1'; input.max = String(state.rows.length); input.value = String(rank); input.inputMode = 'numeric'; input.dataset.focusKey = `${id}:position`; input.setAttribute('aria-label', `Overall position for ${label}`); input.disabled = busy || !ready || !editable; moveLabel.append(input); controls.append(moveLabel);
       const moveButton = button('Move', `Move ${label} to entered overall position`, () => { const destination = Number(input.value); if (!Number.isInteger(destination) || destination < 1 || destination > state.rows.length) { error('Enter an available overall ranking position.'); input.focus(); return; } move(destination); }, `${id}:move`); moveButton.disabled ||= !editable; controls.append(moveButton); editing.append(controls);
       const flags = node('div', null, 'personal-flags');
       for (const [flag, caption] of [['target', 'Target acquisition'], ['avoid', 'Prefer to avoid acquiring'], ['protect', 'Protect outgoing']]) {
         const wrap = node('label', null, 'personal-flag'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = Boolean(prefs(row)[flag]); checkbox.dataset.focusKey = `${id}:${flag}`;
-        checkbox.setAttribute('aria-label', `${caption}: ${label}`); checkbox.disabled = busy || !initialized || row.custom_ranked === false || (flag === 'protect' && !row.owned && !checkbox.checked);
+        checkbox.setAttribute('aria-label', `${caption}: ${label}`); checkbox.disabled = busy || !ready || !initialized || row.custom_ranked === false || (flag === 'protect' && !row.owned && !checkbox.checked);
         checkbox.addEventListener('change', () => command('preferences', {asset_id: id, preferences: {...prefs(row), [flag]: checkbox.checked}}, `${id}:${flag}`)); wrap.append(checkbox, document.createTextNode(caption)); flags.append(wrap);
       }
-      const tierLabel = node('label', null, 'personal-flag'); const tier = document.createElement('input'); tier.type = 'checkbox'; tier.checked = Boolean(row.tier_start || state.tiers?.includes(id)); tier.dataset.focusKey = `${id}:tier`; tier.disabled = busy || !editable; tier.setAttribute('aria-label', `Start personal tier at ${label}`); tier.addEventListener('change', () => command('tiers', {asset_id: id, tier_start: tier.checked}, `${id}:tier`)); tierLabel.append(tier, document.createTextNode('Start personal tier')); flags.append(tierLabel); editing.append(flags);
+      const tierLabel = node('label', null, 'personal-flag'); const tier = document.createElement('input'); tier.type = 'checkbox'; tier.checked = Boolean(row.tier_start || state.tiers?.includes(id)); tier.dataset.focusKey = `${id}:tier`; tier.disabled = busy || !ready || !editable; tier.setAttribute('aria-label', `Start personal tier at ${label}`); tier.addEventListener('change', () => command('tiers', {asset_id: id, tier_start: tier.checked}, `${id}:tier`)); tierLabel.append(tier, document.createTextNode('Start personal tier')); flags.append(tierLabel); editing.append(flags);
       details.append(editing); item.append(details);
       if (prefs(row).protect && !row.owned) item.append(node('p', 'Saved protection is inactive because this exact asset is not currently owned by your franchise.', 'personal-qualification'));
       list.append(item);
@@ -115,7 +115,7 @@
     el('personal-results-count').textContent = `${rows.length} matches / ${state.rows?.length || 0} assets · Ranks are overall`;
     for (const suffix of ['', '-bottom']) {
       el('personal-page' + suffix).textContent = `Page ${page + 1} of ${pages}`;
-      el('personal-previous' + suffix).disabled = busy || page === 0; el('personal-next' + suffix).disabled = busy || page + 1 >= pages;
+      el('personal-previous' + suffix).disabled = busy || !ready || page === 0; el('personal-next' + suffix).disabled = busy || !ready || page + 1 >= pages;
     }
     if (scrollTop != null) window.scrollTo({top: scrollTop});
     const anchor = rowFor(focusAsset(focusKey));
@@ -124,16 +124,19 @@
   }
   async function read() {
     if (busy) return;
-    const sequence = ++requestSequence; controller?.abort(); controller = new AbortController(); status('Loading rankings…'); error('');
+    const sequence = ++requestSequence; controller?.abort(); controller = new AbortController(); ready = false; render(); root.setAttribute('aria-busy', 'true'); status('Checking prepared Market rankings…'); error('');
     try {
       const response = await fetch('/api/my-dtos', {credentials: 'same-origin', cache: 'no-store', signal: controller.signal}); const result = await response.json();
       if (sequence !== requestSequence) return;
       if (!response.ok) throw new Error(result.message || result.detail || 'My DTOS is unavailable. Sign in or reload and try again.');
-      state = result; render(); status(result.limitations?.length ? result.limitations.join(' ') : 'Rankings loaded.');
-    } catch (exc) { if (sequence === requestSequence && exc.name !== 'AbortError') { error(String(exc.message)); status('Rankings were not changed.'); } }
+      const retriedWithFocus = document.activeElement === el('personal-retry');
+      state = result; ready = true; el('personal-recovery').hidden = true; render(); status(result.limitations?.length ? result.limitations.join(' ') : 'Rankings loaded.');
+      if (retriedWithFocus) el(result.initialized ? 'personal-custom' : 'personal-initialize').focus({preventScroll: true});
+    } catch (exc) { if (sequence === requestSequence && exc.name !== 'AbortError') { error(String(exc.message)); el('personal-recovery').hidden = false; render(); status(state ? 'Previously loaded rankings are shown for reference. Retry to check current evidence before editing.' : 'Custom Rankings could not load. Check Market or retry; Neutral Trade remains available.'); } }
+    finally { if (sequence === requestSequence) root.setAttribute('aria-busy', 'false'); }
   }
   async function command(name, values = {}, focusKey) {
-    if (busy || !state) return;
+    if (busy || !ready || !state) return;
     const prior = state, scrollTop = window.scrollY, rowTop = rowFor(focusAsset(focusKey))?.getBoundingClientRect().top, activeId = document.activeElement?.id, sequence = ++requestSequence;
     busy = true; error(''); render(focusKey, scrollTop, rowTop); status('Saving your preference…');
     try {
@@ -165,12 +168,14 @@
   el('personal-custom').onclick = () => state?.initialized ? command('mode', {mode: 'custom'}, '') : command('initialize', {}, '');
   el('personal-initialize').onclick = () => command('initialize');
   el('personal-reload').onclick = read;
+  el('personal-retry').onclick = read;
   el('personal-restart').onclick = startRestart;
   el('personal-restart-cancel').onclick = () => { el('personal-restart-dialog').close(); el('personal-restart').focus(); };
   el('personal-restart-confirm').onclick = () => { const reset = el('personal-reset-flags').checked; el('personal-restart-dialog').close(); command('restart', {confirmation: 'RESTART RANKINGS', reset_preferences: reset}); };
   for (const id of ['personal-search', 'personal-position']) el(id).addEventListener(id === 'personal-search' ? 'input' : 'change', () => { page = 0; render(); });
   for (const suffix of ['', '-bottom']) for (const [direction, delta] of [['previous', -1], ['next', 1]]) {
     el('personal-' + direction + suffix).onclick = () => {
+      if (!ready || !state || busy) return;
       page += delta; render(); el('personal-page').scrollIntoView({block: 'nearest'});
       const clicked = el('personal-' + direction), fallback = el('personal-' + (direction === 'next' ? 'previous' : 'next'));
       (clicked.disabled ? fallback : clicked).focus({preventScroll: true});

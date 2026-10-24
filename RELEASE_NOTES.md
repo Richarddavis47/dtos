@@ -1,3 +1,11 @@
+## v1.21.90 / build 2190 — Custom Rankings Availability and Recovery
+
+Use the canonical Market cache's immutable prepared-input identity for Custom Rankings compatibility. The normal provider publication has no top-level generation timestamp; requiring one rejected a ready Market directory indefinitely. Preserve explicit legacy source checks, exact league/player/pick identities, current prepared-generation admission and saved rank-slot valuation semantics. Reject input changes during directory reads and source replacement before preference commits/publication; never reset saved intent on reads or refresh.
+
+Offer a visible Retry rankings action with Check Market and Neutral Trade recovery. Explain unavailable Custom mode in the existing Trade valuation panel. Preserve previously loaded rows for reference while disabling edits until a current read succeeds; ignore older responses after a newer read. Empty or incompatible evidence remains unavailable, not zero. Retry is a bounded prepared read, not an instruction to start discovery or providers.
+
+Actual canonical Market → authenticated store/HTTP → rendered Chromium controls cover recovery, source races, saved edits, exact picks and Custom/Neutral Trade navigation. No provider/solver/FOIS/history/discovery factory is added to ranking reads or edits; no schema, cache-budget or persistent price-store change. Physical Safari, unfamiliar-human and independent Scout acceptance remain separate. Beta expansion remains unauthorized.
+
 ## v1.21.89 / build 2189 — Current-Manager Evidence and Waiver Activity Integrity
 
 Bind prepared manager observations to the actual producer's league, franchise, current owner, method and unchanged source publication. Revalidate at Trade consumption and protected response publication; superseded evaluations fail with the established retryable canonical-evidence error. Prior-owner decisions remain franchise history and retained grades remain RETAINED / NOT REVALIDATED. Missing manager history is neutral; current bilateral roster and capital quality precede historical confidence tie-breaks.

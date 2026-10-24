@@ -72,6 +72,8 @@ def _publication_token(data, reader):
     """Cheap immutable-handle fence; no directory reads or analytical work."""
     return [id(data), id(reader), getattr(reader, 'semantic_generation', None),
             getattr(reader, 'generated_at', None),
+            data.get('asset_market_semantic_revision'),
+            (data.get('valuation_intelligence') or {}).get('semantic_generation'),
             (data.get('market_data') or {}).get('generation'),
             id((data.get('market_data') or {}).get('providers')),
             id((data.get('market_data') or {}).get('pick_quotes'))]
@@ -100,6 +102,24 @@ def _live_scope(store, account, membership):
         raise PersonalRankingError('personal_scope_revoked', 'Your session or franchise access changed. Sign in and reload.', 403)
 
 
+def _check_market_inputs(data, market_reader):
+    compatible = getattr(market_reader, 'compatible_prepared_inputs', None)
+    if callable(compatible):
+        valid = compatible(data) is True
+    else:
+        # Legacy readers must still supply explicit matching source identity;
+        # absent timestamps are not a substitute for a canonical input marker.
+        prepared = getattr(market_reader, 'data', None)
+        old_market = (prepared or {}).get('market_data') or {}
+        new_market = data.get('market_data') or {}
+        old = old_market.get('generation') or old_market.get('generated_at')
+        new = new_market.get('generation') or new_market.get('generated_at')
+        valid = bool(old and new and old == new)
+    if not valid:
+        raise PersonalRankingError('market_source_changed',
+            'Custom Rankings need a prepared Market update that matches this league’s current evidence. Your saved rankings are unchanged. Check Market, then retry; Neutral Trade remains available.', 409)
+
+
 def build_universe(data, market_reader):
     """Read every eligible compact row from one already-published immutable model.
 
@@ -107,18 +127,13 @@ def build_universe(data, market_reader):
     Never materialize canonical dossiers or historical evidence.
     """
     if market_reader is None:
-        raise PersonalRankingError('market_unavailable', 'Market preparation is pending. Your saved rankings remain intact.', 503)
+        raise PersonalRankingError('market_unavailable', 'Custom Rankings are pending: a compatible Market ranking list is not ready. Saved rankings are unchanged. Check Market, then retry; Neutral Trade remains available.', 503)
     identity = market_reader.identity()
     league_id = _league(data)
     if not league_id or str(identity.get('league_id')) != league_id:
         raise PersonalRankingError('market_scope_changed', 'Market evidence belongs to a different league. Retry after preparation.', 409)
-    prepared_data = getattr(market_reader, 'data', None)
-    if prepared_data is not None:
-        old_market, new_market = prepared_data.get('market_data') or {}, data.get('market_data') or {}
-        old = old_market.get('generation') or old_market.get('generated_at')
-        new = new_market.get('generation') or new_market.get('generated_at')
-        if not old or not new or old != new:
-            raise PersonalRankingError('market_source_changed', 'Compatible current Market evidence is pending.', 409)
+    _check_market_inputs(data, market_reader)
+    publication = _publication_token(data, market_reader)
     source = identity.get('market_generation')
     if not isinstance(source, str) or not source:
         raise PersonalRankingError('market_unavailable', 'Market source identity is unavailable.', 503)
@@ -191,6 +206,11 @@ def build_universe(data, market_reader):
                          'market_value': value, 'owner_roster_id': owner,
                          'market_rank': len(rows) + 1})
         offset += len(chunk)
+    _check_market_inputs(data, market_reader)
+    if _publication_token(data, market_reader) != publication:
+        raise PersonalRankingError('market_source_changed', 'Market changed while rankings loaded. Your saved rankings are unchanged. Retry rankings.', 409)
+    if not rows:
+        raise PersonalRankingError('market_unavailable', 'Custom Rankings need supported prices and exact asset identities. No eligible priced assets are ready in this Market list. Check Market, then retry rankings; your saved preferences are unchanged.', 503)
     generation = _digest([league_id, source, getattr(market_reader, 'semantic_generation', None),
                           (data.get('market_data') or {}).get('generation'),
                           [(r['asset_id'], r['market_value'], r['owner_roster_id']) for r in rows]])
@@ -255,7 +275,7 @@ def view_state(store, data, market_reader, account):
             'method_explanation': 'Your saved global order receives the descending current Market price slots of that same saved cohort. Moving up cannot lower a personal value. Tiers are labels and do not change prices. New assets need Restart Rankings; no past prices are reconstructed.'}
 
 
-def apply_command(store, data, market_reader, account, payload):
+def apply_command(store, data, market_reader, account, payload, *, verify_source=None):
     from src.core.accounts.personal_store import load_personal, save_personal
     membership = _scope(data, account)
     _live_scope(store, account, membership)
@@ -321,6 +341,9 @@ def apply_command(store, data, market_reader, account, payload):
         else:
             raise PersonalRankingError('invalid_command', 'Choose a supported rankings action.')
     with personal_publication({'scope': [account.account_id, membership.league_id, membership.roster_id]}, blocking=True):
+        _check_market_inputs(data, market_reader)
+        if verify_source is not None:
+            verify_source()
         save_personal(store, account.account_id, membership.league_id, membership.roster_id, document,
                       expected_revision=revision, expected_session_id=account.session_id)
     return view_state(store, data, market_reader, account)
