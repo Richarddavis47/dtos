@@ -70,7 +70,7 @@ def _league(data):
 
 def _publication_token(data, reader):
     """Cheap immutable-handle fence; no directory reads or analytical work."""
-    return [id(data), id(reader), getattr(reader, 'semantic_generation', None),
+    return [id(data), id(reader), getattr(reader, 'generation', None), getattr(reader, 'semantic_generation', None),
             getattr(reader, 'generated_at', None),
             data.get('asset_market_semantic_revision'),
             (data.get('valuation_intelligence') or {}).get('semantic_generation'),
@@ -120,7 +120,32 @@ def _check_market_inputs(data, market_reader):
             'Custom Rankings need a prepared Market update that matches this league’s current evidence. Your saved rankings are unchanged. Check Market, then retry; Neutral Trade remains available.', 409)
 
 
-def build_universe(data, market_reader):
+def _asset_label(data, key, row=None):
+    """Label an exact identity using only the pinned, already prepared snapshot."""
+    if row and row.get('display_name') and row['display_name'] != key:
+        return str(row['display_name'])
+    if key.startswith('player:'):
+        player = (data.get('players') or {}).get(key.removeprefix('player:')) or {}
+        name = player.get('full_name') or player.get('name') or ' '.join(
+            str(player.get(part) or '') for part in ('first_name', 'last_name')).strip()
+        return str(name or f"Player {key.removeprefix('player:')} (identity not confirmed)")
+    match = re.fullmatch(r'pick:(20\d{2}):([1-9]\d?):([1-9]\d*)', key)
+    if match:
+        year, round_number, original = match.groups()
+        team = next((team for team in data.get('teams') or ()
+                     if str(team.get('roster_id')) == original), {})
+        label = team.get('name') or team.get('team_name') or team.get('display_name')
+        return f"{year} Round {round_number} · original {label or 'franchise ' + original}"
+    return 'Unconfirmed asset identity'
+
+
+def _rejected_row(data, key, row, code, reason, retryable=False):
+    return {'asset_id': key, 'label': _asset_label(data, key, row),
+            'position': 'PICK' if key.startswith('pick:') else str(row.get('position') or 'Unavailable'),
+            'code': code, 'reason': reason, 'retryable': retryable}
+
+
+def build_universe(data, market_reader, *, requested_ids=()):
     """Read every eligible compact row from one already-published immutable model.
 
     Preserve the directory's exact Market ordering, including its ID tie order.
@@ -163,7 +188,41 @@ def build_universe(data, market_reader):
                         pick_owners[key] = rid
             except (PersonalRankingError, TypeError, ValueError):
                 continue
-    rows, seen = [], set()
+    def qualify(row, key):
+        kind = row.get('asset_type')
+        position = row.get('position')
+        if (kind == 'player') != key.startswith('player:') or kind not in {'player', 'pick'}:
+            unavailable[key] = _rejected_row(data, key, row, 'identity_conflict',
+                'The Market asset type does not match this saved exact identity. No replacement identity or personal value was assumed.')
+            return None
+        if key in player_owners and player_owners[key] is None:
+            unavailable[key] = _rejected_row(data, key, row, 'ownership_conflict',
+                'This player appears on conflicting current rosters. Its ownership and personal value cannot be confirmed.', True)
+            return None
+        if kind == 'player' and position not in POSITIONS:
+            unavailable[key] = _rejected_row(data, key, row, 'position_ineligible',
+                'This player does not have a supported QB, RB, WR or TE identity in the current Market list.')
+            return None
+        status = str(row.get('status') or '').lower()
+        if status in {'retired', 'inactive'}:
+            unavailable[key] = _rejected_row(data, key, row, 'asset_' + status,
+                f'The current player record is marked {status}, so this asset is not eligible for the current personal value curve. Your saved opinion has not been deleted.')
+            return None
+        value = (row.get('values') or {}).get('market_value')
+        if not _number(value):
+            unavailable[key] = _rejected_row(data, key, row,
+                'market_price_missing' if value is None else 'market_price_invalid',
+                'A compatible current Market price is missing. Missing pricing is not a zero value.' if value is None else
+                'The current Market price is outside the supported price contract. It cannot be used as a personal value.', True)
+            return None
+        owner = player_owners.get(key) if kind == 'player' else pick_owners.get(key)
+        if kind == 'pick' and owner is None:
+            unavailable[key] = _rejected_row(data, key, row, 'pick_ownership_unavailable',
+                'The exact pick has no single confirmed current owner in this league. Another same-year or same-round pick cannot replace it.', True)
+            return None
+        return row.get('values', {}).get('market_value')
+
+    rows, seen, unavailable = [], set(), {}
     offset, total = 0, None
     while total is None or offset < total:
         page = market_reader.directory(offset=offset, limit=250, sort='market', direction='desc', minimum=0)
@@ -184,39 +243,71 @@ def build_universe(data, market_reader):
             if key in seen:
                 raise PersonalRankingError('identity_conflict', 'Duplicate Market asset identity cannot seed rankings.', 503)
             seen.add(key)
+            value = qualify(row, key)
+            if value is None:
+                continue
             kind = row.get('asset_type')
-            position = row.get('position')
-            if (kind == 'player') != key.startswith('player:'):
-                continue
-            if key in player_owners and player_owners[key] is None:
-                continue
-            if (kind == 'player' and position not in POSITIONS) or kind not in {'player', 'pick'}:
-                continue
-            if str(row.get('status') or '').lower() in {'retired', 'inactive'}:
-                continue
-            value = (row.get('values') or {}).get('market_value')
-            if not _number(value):
-                continue
             owner = player_owners.get(key) if kind == 'player' else pick_owners.get(key)
-            if kind == 'pick' and owner is None:
-                continue
             rows.append({'asset_id': key, 'trade_asset_id': trade_id,
-                         'label': str(row.get('display_name') or key),
-                         'position': 'PICK' if kind == 'pick' else position,
+                         'label': _asset_label(data, key, row),
+                         'position': 'PICK' if kind == 'pick' else row.get('position'),
                          'market_value': value, 'owner_roster_id': owner,
                          'market_rank': len(rows) + 1})
         offset += len(chunk)
+    # The full ranking pass retains its original priced-directory bound. Read
+    # only missing saved IDs for diagnostics, rather than scanning all unpriced
+    # players or opening dossiers. The existing indexed filter caps each query
+    # to 250 exact IDs and returns the same immutable publication identity.
+    requested = tuple(dict.fromkeys(requested_ids))
+    if len(requested) > MAX_ASSETS:
+        raise PersonalRankingError('universe_capacity', 'Saved rankings exceed the supported identity bound; nothing was truncated.', 503)
+    known = {row['asset_id'] for row in rows}
+    missing = [key for key in requested if key not in known and key not in unavailable]
+    for begin in range(0, len(missing), 250):
+        batch = tuple(missing[begin:begin + 250])
+        page = market_reader.directory(offset=0, limit=250, sort='market', direction='desc',
+                                       minimum=None, availability_asset_ids=batch)
+        if page.get('market_generation') != source or str(page.get('league_id')) != league_id:
+            raise PersonalRankingError('market_source_changed', 'Market publication changed while reviewing saved assets. Retry rankings.', 409)
+        total = page.get('total')
+        chunk = page.get('assets') or []
+        if type(total) is not int or not 0 <= total <= len(batch) or len(chunk) != total:
+            raise PersonalRankingError('market_incomplete', 'The exact saved-asset review is incomplete. Retry rankings; no saved preferences were changed.', 503)
+        returned = set()
+        for row in chunk:
+            key = row.get('asset_id')
+            if key not in batch or key in returned:
+                raise PersonalRankingError('identity_conflict', 'Saved-asset review returned a conflicting exact identity.', 503)
+            returned.add(key)
+            if qualify(row, key) is not None:
+                raise PersonalRankingError('market_source_changed', 'The priced Market list changed during saved-asset review. Retry rankings.', 409)
+    for key in missing:
+        if key in unavailable:
+            continue
+        player = ((data.get('players') or {}).get(key.removeprefix('player:')) or {}) if key.startswith('player:') else {}
+        status = str(player.get('status') or '').lower()
+        if status in {'retired', 'inactive'}:
+            unavailable[key] = _rejected_row(data, key, player, 'asset_' + status,
+                f'The current player record is marked {status}, and the exact asset is absent from the current eligible Market list. Your saved opinion has not been deleted.')
+        else:
+            unavailable[key] = _rejected_row(data, key, player, 'asset_not_in_market',
+                'This saved exact asset is absent from the current Market list. Its current identity and price cannot be confirmed; no replacement asset or zero price was assumed.', True)
     _check_market_inputs(data, market_reader)
     if _publication_token(data, market_reader) != publication:
         raise PersonalRankingError('market_source_changed', 'Market changed while rankings loaded. Your saved rankings are unchanged. Retry rankings.', 409)
     if not rows:
         raise PersonalRankingError('market_unavailable', 'Custom Rankings need supported prices and exact asset identities. No eligible priced assets are ready in this Market list. Check Market, then retry rankings; your saved preferences are unchanged.', 503)
+    # Pricing eligibility and exact ownership are separate facts. A missing
+    # price does not make an owned player's saved Protect preference inactive.
+    for key, rejected in unavailable.items():
+        owners = player_owners if key.startswith('player:') else pick_owners
+        rejected['owner_roster_id'] = owners.get(key)
     generation = _digest([league_id, source, getattr(market_reader, 'semantic_generation', None),
                           (data.get('market_data') or {}).get('generation'),
                           [(r['asset_id'], r['market_value'], r['owner_roster_id']) for r in rows]])
     return {'generation': generation, 'source_generation': source,
             'source_semantic_generation': str(getattr(market_reader, 'semantic_generation', None) or source),
-            'league_id': league_id, 'rows': rows}
+            'league_id': league_id, 'rows': rows, 'unavailable_rows': unavailable}
 
 
 def personal_values(document, universe):
@@ -231,9 +322,26 @@ def personal_values(document, universe):
     baseline = (document.get('baseline') or {}).get('ids') or []
     if not order or len(set(order)) != len(order) or set(order) != set(baseline):
         return {'available': False, 'values': {}, 'reason': 'Saved ranking order is incomplete or invalid.'}
-    missing = [key for key in order if key not in rows]
+    order_set = set(order)
+    missing = [(index, key) for index, key in enumerate(order, 1) if key not in rows]
     if missing:
-        return {'available': False, 'values': {}, 'reason': 'A saved asset has missing, retired or incompatible current evidence. Review or Restart Rankings.', 'unavailable_ids': missing}
+        rejected = universe.get('unavailable_rows') or {}
+        issues = []
+        for saved_rank, key in missing:
+            issue = dict(rejected.get(key) or {'asset_id': key, 'label': key,
+                'position': 'PICK' if key.startswith('pick:') else 'Unavailable',
+                'code': 'asset_not_in_market', 'retryable': True,
+                'reason': 'This saved exact asset is absent from the current Market list. Its current identity and price cannot be confirmed; no replacement asset or zero price was assumed.'})
+            issue.update(saved_rank=saved_rank, can_remove=len(order) > 1)
+            issues.append(issue)
+        first = issues[0]
+        count = len(issues)
+        reason = (f"Custom values need attention for {first['label']}"
+                  + (f' and {count - 1} other saved asset(s)' if count > 1 else '')
+                  + f". {first['reason']} Review affected assets or retry; your saved order, tiers and preferences are unchanged. Neutral DTOS remains available.")
+        return {'available': False, 'values': {}, 'reason': reason,
+                'unavailable_ids': [key for _rank, key in missing], 'compatibility_issues': issues,
+                'new_asset_ids': [key for key in rows if key not in order_set]}
     # Only the saved cohort supplies the curve: a new unranked asset cannot
     # silently push every existing opinion into a different slot.
     order_set = set(order)
@@ -246,8 +354,8 @@ def view_state(store, data, market_reader, account):
     from src.core.accounts.personal_store import load_personal
     membership = _scope(data, account)
     _live_scope(store, account, membership)
-    universe = build_universe(data, market_reader)
     document = load_personal(store, account.account_id, membership.league_id, membership.roster_id)
+    universe = build_universe(data, market_reader, requested_ids=(document or {}).get('order') or ())
     values = personal_values(document, universe) if document else {'available': False, 'values': {}, 'reason': 'Create Custom Rankings to personalize. Your starting list is already ordered by Market; Neutral DTOS remains available.'}
     current = {row['asset_id']: row for row in universe['rows']}
     order = document['order'] if document else list(current)
@@ -257,7 +365,10 @@ def view_state(store, data, market_reader, account):
     preferences = (document or {}).get('preferences') or {}
     rows = []
     for index, key in enumerate(keys, 1):
-        row = dict(current.get(key) or {'asset_id': key, 'label': key, 'position': 'PICK' if key.startswith('pick:') else 'Unavailable', 'market_value': None, 'owner_roster_id': None, 'market_rank': None})
+        rejected = (universe.get('unavailable_rows') or {}).get(key) or {}
+        row = dict(current.get(key) or {'asset_id': key, 'label': rejected.get('label') or _asset_label(data, key),
+            'position': rejected.get('position') or ('PICK' if key.startswith('pick:') else 'Unavailable'),
+            'market_value': None, 'owner_roster_id': rejected.get('owner_roster_id'), 'market_rank': None})
         row.update(rank=index, personal_rank=index if key in order_set and document else None,
                    personal_value=values['values'].get(key), owned=row['owner_roster_id'] == membership.roster_id,
                    preferences=preferences.get(key, {}), tier_start=key in ((document or {}).get('tiers') or []),
@@ -272,7 +383,10 @@ def view_state(store, data, market_reader, account):
             'personal_available': values['available'], 'method': METHOD,
             'limitations': [values['reason']] if values.get('reason') else [],
             'new_asset_ids': values.get('new_asset_ids', []),
-            'method_explanation': 'Your saved global order receives the descending current Market price slots of that same saved cohort. Moving up cannot lower a personal value. Tiers are labels and do not change prices. New assets need Restart Rankings; no past prices are reconstructed.'}
+            'compatibility_issues': values.get('compatibility_issues', []),
+            'eligible_asset_count': len(current), 'saved_asset_count': len(document['order']) if document else 0,
+            'recovery_url': '/account/my-dtos#personal-compatibility',
+            'method_explanation': 'Your saved global order receives the descending current Market price slots of that same saved cohort. Moving up cannot lower a personal value. Tiers are labels and do not change prices. New assets need Restart Rankings; no past prices are reconstructed. Removing one asset from your Custom order is an explicit membership edit: other ranks and tier breaks stay in order, but remaining personal values may change because that asset’s current price slot leaves the curve. The saved baseline generation identifies the original seed publication, not a new Market quote.'}
 
 
 def apply_command(store, data, market_reader, account, payload, *, verify_source=None):
@@ -311,7 +425,17 @@ def apply_command(store, data, market_reader, account, payload, *, verify_source
         key = payload.get('asset_id')
         if command in {'reorder', 'tiers', 'preferences'} and key not in document['order']:
             raise PersonalRankingError('asset_not_ranked', 'This asset is not in your saved baseline. Restart to include new assets.')
-        if command == 'reorder':
+        if command == 'remove_asset':
+            if payload.get('confirmation') != 'REMOVE FROM CUSTOM ORDER':
+                raise PersonalRankingError('confirmation_required', 'Confirm removal of this exact asset from your Custom order. Its own tier break is removed; other ranks, tiers and Target/Avoid/Protect preferences are preserved. Remaining personal values may change.')
+            if key not in document['order']:
+                raise PersonalRankingError('asset_not_ranked', 'This exact asset is not in your saved Custom order.', 409)
+            if len(document['order']) <= 1:
+                raise PersonalRankingError('last_ranked_asset', 'Keep at least one ranked asset. Use Neutral DTOS or explicitly Restart Rankings instead.')
+            document['order'].remove(key)
+            document['baseline']['ids'].remove(key)
+            document['tiers'] = [asset for asset in document['tiers'] if asset != key]
+        elif command == 'reorder':
             position = payload.get('to_position')
             if isinstance(position, bool) or not isinstance(position, int) or not 1 <= position <= len(document['order']):
                 raise PersonalRankingError('invalid_position', 'Choose a valid position in the complete overall order.')
@@ -373,7 +497,7 @@ def resolve_personal_context(data, payload, *, store=None, market_reader=None, a
         return context
     if not doc:
         raise PersonalRankingError('rankings_not_started', 'Initialize your complete Custom Rankings first.', 409)
-    universe = build_universe(data, market_reader)
+    universe = build_universe(data, market_reader, requested_ids=doc['order'])
     if require_revision and payload.get('personal_market_generation') != universe['generation']:
         raise PersonalRankingError('personal_market_changed', 'The personal price curve changed with Market evidence. Reload before evaluating.', 409)
     result = personal_values(doc, universe)
@@ -419,7 +543,7 @@ def personal_bootstrap(data, active_id, *, store=None, market_reader=None, accou
                 'limitations': [str(exc)]}
     if state['context']['roster_id'] != active_id:
         raise PersonalRankingError('unauthorized_franchise', 'Only your franchise can use your personal rankings.', 403)
-    result = {key: state[key] for key in ('mode', 'revision', 'initialized', 'generation', 'baseline_generation', 'personal_available', 'limitations')}
+    result = {key: state[key] for key in ('mode', 'revision', 'initialized', 'generation', 'baseline_generation', 'personal_available', 'limitations', 'compatibility_issues', 'recovery_url')}
     result.update(market_generation=state['generation'], available=state['personal_available'], values={})
     if state['personal_available']:
         context = resolve_personal_context(data, {'valuation_mode': 'custom', 'personal_revision': state['revision'],

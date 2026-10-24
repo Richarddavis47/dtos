@@ -46,10 +46,12 @@ class PreparedMarket:
     def identity(self):
         return {'league_id': self.data['league']['league_id'], 'market_generation': self.generation}
 
-    def directory(self, *, offset=0, limit=250, sort='market', direction='desc', minimum=None):
+    def directory(self, *, offset=0, limit=250, sort='market', direction='desc', minimum=None, availability_asset_ids=None):
         self.calls += 1
-        selected = [r for r in self.rows if minimum is None or
-                    isinstance(r['values']['market_value'], (int, float)) and r['values']['market_value'] >= minimum]
+        selected = [r for r in self.rows
+                    if (availability_asset_ids is None or r['asset_id'] in availability_asset_ids)
+                    and (minimum is None or isinstance(r['values']['market_value'], (int, float))
+                         and r['values']['market_value'] >= minimum)]
         rows = sorted(selected,
                       key=lambda r: (r['values']['market_value'] if isinstance(r['values']['market_value'], (int, float))
                                      else -1, r['asset_id']), reverse=True)

@@ -34,7 +34,10 @@ _STRATEGY_JS = (_STATIC_ROOT / "js" / "strategy_session.js").read_text(encoding=
 def _trade_failure(exc: Exception) -> HTTPException:
     from services.personal_rankings import PersonalRankingError
     if isinstance(exc, PersonalRankingError):
-        return HTTPException(exc.status, {"code": exc.code, "message": str(exc)})
+        detail = {"code": exc.code, "message": str(exc)}
+        if exc.code in {'personal_evidence_unavailable', 'rankings_not_started'}:
+            detail['recovery_url'] = '/account/my-dtos#personal-compatibility'
+        return HTTPException(exc.status, detail)
     if isinstance(exc, TradeInputError):
         return HTTPException(422, {"code": exc.code, "message": str(exc), "assets": exc.assets})
     if isinstance(exc, ValueError):

@@ -240,7 +240,7 @@ class PersonalRankingsEditorBrowserTests(unittest.TestCase):
                 page.get_by_role('button', name='Reload rankings', exact=True).click()
                 page.get_by_text('43 eligible ranked assets', exact=False).wait_for()
                 page.locator('#personal-search').fill('New Player 41')
-                self.assertIn('New eligible asset', page.locator('.personal-row').inner_text())
+                self.assertIn('Not in your saved Custom order', page.locator('.personal-row').inner_text())
                 self.assertIn('Personal Unavailable', page.locator('.personal-row').inner_text())
                 self.assertTrue(page.locator('.personal-row .personal-drag').is_disabled())
                 self.assertEqual(load_personal(f.store, f.account_id, '100', 1)['order'], baseline['order'])
