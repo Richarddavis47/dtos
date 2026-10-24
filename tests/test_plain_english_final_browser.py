@@ -19,6 +19,8 @@ from tools.validation.browser_runtime import launch_chromium
 
 FORBIDDEN = ('Long-term scalar unavailable', 'No evidence-backed strength exceeds the v1 baseline',
              'No current evidence-backed weakness exceeds the v1 threshold', 'Consult canonical_evidence.schedule')
+DOSSIER_FOLLOWUP_PHRASES = ('Weekly evidence is disclosed at its actual horizon',
+                           'contextual v1 posture', 'No supported aggregate justifies a Buy/Sell posture.', 'Canonical Market:')
 VIEWPORTS = ((320, 432), (375, 667), (390, 844), (1280, 900))
 
 
@@ -76,7 +78,7 @@ def capture_pages(folder=None):
                                 disclosure = page.locator('#home-brief-more > summary')
                             else:
                                 disclosure = page.locator('#trade-source-context > summary')
-                            keyboard = None
+                            keyboard, advanced_text = None, ''
                             if disclosure.count():
                                 page.keyboard.press('Tab')
                                 disclosure.focus()
@@ -84,6 +86,7 @@ def capture_pages(folder=None):
                                     outline=disclosure.evaluate('e=>getComputedStyle(e).outlineStyle'))
                                 disclosure.press('Enter')
                                 keyboard['opened'] = disclosure.evaluate('e=>e.parentElement.open')
+                                advanced_text = disclosure.evaluate('e=>e.parentElement.innerText')
                                 disclosure.press('Enter')
                                 keyboard['closed'] = not disclosure.evaluate('e=>e.parentElement.open')
                             page.locator(selector).scroll_into_view_if_needed()
@@ -93,7 +96,7 @@ def capture_pages(folder=None):
                             if name == 'depth':
                                 notes = page.locator('#depth-evidence-notes')
                                 row['shared_depth_notes'] = notes.all_inner_texts()
-                            row.update(name=name, home_strategy=home_strategies[-1] if home_strategies else None, viewport=dict(width=width,height=height),
+                            row.update(name=name, advanced_text=advanced_text, home_strategy=home_strategies[-1] if home_strategies else None, viewport=dict(width=width,height=height),
                                 path=path, keyboard=keyboard, errors=errors,
                                 automatic_discovery_calls=sum('/api/trades/generate' in url for url in requests),
                                 environment='Responsive Chromium; disposable authenticated producer/HTTP fixture')
@@ -127,8 +130,9 @@ class FinalPlainEnglishBrowserTests(unittest.TestCase):
                 self.assertLessEqual(row['overflow'], 0)
                 self.assertEqual(row['errors'], [])
                 self.assertEqual(row['automatic_discovery_calls'], 0)
-                for phrase in FORBIDDEN:
+                for phrase in FORBIDDEN + (DOSSIER_FOLLOWUP_PHRASES if row['name'] == 'dossier' else ()):
                     self.assertNotIn(phrase, row['text'])
+                    self.assertNotIn(phrase, row['advanced_text'])
                 if row['keyboard']:
                     self.assertTrue(row['keyboard']['focused'])
                     self.assertNotEqual(row['keyboard']['outline'], 'none')

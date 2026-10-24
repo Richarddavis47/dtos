@@ -17,7 +17,9 @@ from tests import test_player_api as api_fixtures
 
 
 FORBIDDEN = ('Long-term scalar unavailable', 'No evidence-backed strength exceeds the v1 baseline',
-             'No current evidence-backed weakness exceeds the v1 threshold', 'Consult canonical_evidence.schedule')
+             'No current evidence-backed weakness exceeds the v1 threshold', 'Consult canonical_evidence.schedule',
+             'Weekly evidence is disclosed at its actual horizon', 'contextual v1 posture',
+             'No supported aggregate justifies a Buy/Sell posture.', 'Canonical Market:')
 
 
 class DossierPlainEnglishTests(unittest.TestCase):
@@ -42,6 +44,9 @@ class DossierPlainEnglishTests(unittest.TestCase):
         self.assertIn('A reliable multi-season outlook is not available.', html)
         self.assertIn('not a negative grade', html)
         self.assertIn('No specific weakness is established', html)
+        self.assertIn('A full-season forecast is not available.', html)
+        self.assertIn('does not have enough supported evidence to recommend buying or selling', html)
+        self.assertIn('Review the available evidence before deciding whether to acquire or move', html)
         self.assertIn('Player One', html)
         self.assertIn('/teams/1#full-roster', html)
         folder = os.getenv('DTOS_DOSSIER_EVIDENCE')
@@ -120,6 +125,27 @@ class DossierPlainEnglishTests(unittest.TestCase):
         text = ' '.join(weaknesses_text(report))
         self.assertIn('could not be verified', text)
         self.assertNotIn('age is missing', text)
+
+    def test_supported_buy_and_hold_keep_actions_and_report_unchanged(self):
+        from src.core.asset_intelligence.models import AssetRecommendation
+        report, team, teams = build_player_dossier(self.fixture.data, 'player one', 1)
+        for action in ('Buy', 'Hold'):
+            recommendation = AssetRecommendation(action,
+                f'{action} is the contextual v1 posture for this Front Office; the GM makes the final decision.',
+                'High', 80, (Evidence('Age context', 'Age 24', 0,
+                                     'Age is below the position-specific v1 risk threshold.', 'Disposable fixture'),))
+            supported = replace(report, recommendation=recommendation,
+                core_values=replace(report.core_values, team_fit=replace(report.core_values.team_fit, score=72)))
+            before = deepcopy(asdict(supported))
+            with self.subTest(action=action):
+                html = player_dossier(supported, team, teams)
+                self.assertIn(f'{action} reflects this player', html)
+                self.assertIn('Compare this player', html)
+                self.assertNotIn('contextual v1 posture', html)
+                self.assertNotIn('position-specific v1 risk threshold', html)
+                self.assertIn('below the model&#x27;s positional caution range', html)
+                self.assertEqual(supported.recommendation.action, action)
+                self.assertEqual(asdict(supported), before)
 
 
 if __name__ == '__main__':

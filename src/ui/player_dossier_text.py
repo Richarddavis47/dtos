@@ -9,7 +9,20 @@ def outlook_text(text: str) -> str:
     if text == _LONG_TERM:
         return ("A reliable multi-season outlook is not available. Age, NFL status and a weekly projection "
                 "do not tell us how long this player will keep producing. Compare current production and Market price separately.")
+    if text == 'Weekly evidence is disclosed at its actual horizon, not converted into a season-value score.':
+        return ("A full-season forecast is not available. Use the weekly Sleeper projection for that week's lineup; "
+                "it does not establish season-long production or value.")
     return text
+
+
+def recommendation_text(recommendation) -> str:
+    if recommendation.summary == 'No supported aggregate justifies a Buy/Sell posture.':
+        return ("DTOS does not have enough supported evidence to recommend buying or selling this player. "
+                "Review his current projection, recorded production and Market price before deciding.")
+    if recommendation.summary == f'{recommendation.action} is the contextual v1 posture for this Front Office; the GM makes the final decision.':
+        return (f"{recommendation.action} reflects this player's assessed fit for your selected team. "
+                "Check the supporting evidence and price before acting; this is not a prediction of future production.")
+    return recommendation.summary
 
 
 def strengths_text(report) -> tuple[str, ...]:

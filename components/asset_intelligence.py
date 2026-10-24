@@ -7,7 +7,7 @@ from src.ui import player_summary, recommendation_panel
 from src.ui.intelligence_presentation import exact_rank
 from src.ui.market_facts import market_fact_html
 from src.ui.player_actions import player_action, player_actions_html
-from src.ui.player_dossier_text import evidence_text, outlook_text, strengths_text, weaknesses_text
+from src.ui.player_dossier_text import evidence_text, outlook_text, recommendation_text, strengths_text, weaknesses_text
 from src.core.player_ownership import PlayerOwnershipIndex
 
 from src.core.asset_intelligence import AssetEvaluation, PlayerReport
@@ -84,13 +84,16 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
     weaknesses = "".join(f"<li>{escape(item)}</li>" for item in weaknesses_text(report))
     risk_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(evidence_text(item.explanation))}</li>" for item in report.risk.evidence)
     opportunity = "".join(f"<li><b>{escape(label)}:</b> {_number(value.score)} — {escape(outlook_text(value.summary))}</li>" for label, value in report.opportunity.items())
-    recommendation_evidence = tuple(f"{item.factor}: {item.observed_value} — {item.explanation}" for item in report.recommendation.evidence)
+    recommendation_evidence = tuple(f"{item.factor}: {item.observed_value} — {evidence_text(item.explanation)}" for item in report.recommendation.evidence)
     active_roster_id = int(selected_team.get("roster_id") or 0)
     player_id = str(profile.player_id)
     ownership = ownership or PlayerOwnershipIndex({"teams": teams, "players": {player_id: profile}}).resolve(player_id, active_roster_id)
     trade_action, trade_href = player_action(ownership, player_id, active_roster_id)
     actions_html = player_actions_html(ownership, player_id, active_roster_id)
-    primary_recommendation = recommendation_panel(title=report.recommendation.action, recommendation=report.recommendation.summary, confidence=report.recommendation.confidence, primary_reason=recommendation_evidence[0] if recommendation_evidence else report.executive_summary, evidence=recommendation_evidence, expected_impact="Aligns this player's role and value with the selected Front Office direction.", action_label=trade_action, action_href=trade_href, limitations=tuple(report.risk.limitations))
+    impact_text = ("Review the available evidence before deciding whether to acquire or move this player."
+                   if report.core_values.team_fit.score is None else
+                   "Compare this player's assessed team fit with the price and any lineup or depth tradeoff.")
+    primary_recommendation = recommendation_panel(title=report.recommendation.action, recommendation=recommendation_text(report.recommendation), confidence=report.recommendation.confidence, primary_reason=recommendation_evidence[0] if recommendation_evidence else report.executive_summary, evidence=recommendation_evidence, expected_impact=impact_text, action_label=trade_action, action_href=trade_href, limitations=tuple(report.risk.limitations))
     value = report.value_profile
     integrated = ""
     if value is not None:
@@ -110,7 +113,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
     return f"""
 {ASSET_CSS}
 <section class="card ai-context"><div><div class="identity-kicker">Player Dossier</div><div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=profile.nfl_team)}</div><p class="muted">{escape(report.executive_summary)}</p>{actions_html}</div><form method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section>
-<p><b>Canonical Market:</b> {_number(report.core_values.market.score)}</p>
+<p><b>Market:</b> {_number(report.core_values.market.score)}</p>
 {weekly_projection_html or ""}
 <details class="ai-evidence"><summary>Valuation, fit and source evidence</summary>{primary_recommendation}<section class="ai-values">{values}</section>{integrated}</details>
 <section class="ai-sections"><article class="ai-card"><h3>Player Snapshot</h3><ul>{snapshot_html}</ul><p><b>Archetypes:</b> {escape(", ".join(report.archetypes))}</p></article><article class="ai-card"><h3>Opportunity Analysis</h3><ul>{opportunity}</ul></article><article class="ai-card"><h3>Strength Analysis</h3><ul>{strengths}</ul></article><article class="ai-card"><h3>Weakness Analysis</h3><ul>{weaknesses}</ul></article><article class="ai-card"><h3>Risk Analysis · {escape(report.risk.level)} ({report.risk.score}/100)</h3><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{risk_evidence}</ul></details></article></section>
