@@ -83,7 +83,7 @@ def prepared_outlook(data, assessment, overview, players, *, strategy=''):
                     strength='A roster advantage cannot be confirmed from incompatible evidence.',
                     concern='Replacement quality is unconfirmed; unavailable evidence is not poor depth.',
                     future='Compatible future-capital evidence is unavailable.', guidance=guidance,
-                    action=action, href=href, brief='Refresh this league to compare its lineup and depth. Missing evidence does not establish a weakness. Draft-capital evidence also needs checking.',
+                    action=action, href=href, brief='Refresh this league to compare lineup, depth and picks. Missing evidence is not a weakness.',
                     details=['Refresh this league before relying on its assessment.'])
     rows = [(pos, facts, facts.get('diagnostic') or {}) for pos, facts in evidence.positions.items()]
     diagnostics = [d for _, _, d in rows if d]
@@ -137,22 +137,22 @@ def prepared_outlook(data, assessment, overview, players, *, strategy=''):
         concern = 'No supported replacement shortfall is established. Review exact removal costs before treating depth as expendable.'
     future, capital_note, brief_capital = _future(data, assessment, players)
     brief_position = (f"Week {week} projected lineup #{rank.rank}/{rank.league_size}"
-                      if compatible and rank.rank is not None else 'A compatible lineup comparison is not available')
+                      if compatible and rank.rank is not None else 'Lineup comparison needs compatible projections')
     if compatible and not fresh:
         brief_position = 'Provisional ' + brief_position
     brief_strength = (('Supported' if fresh else 'Provisional') + ' strength: ' + '/'.join(strengths)
-                      if strengths else 'A positional advantage is not established')
+                      if strengths else '')
     if not compatible or uncertain:
-        brief_risk = 'Depth evidence is incomplete; useful cover cannot be confirmed'
+        brief_risk = 'Depth evidence is incomplete; not proof of weak reserves'
     elif needs:
         pos, diagnostic = needs[0]
         brief_risk = pos + (' replacement quality needs attention' if diagnostic.get('quality_depth_need') else
                            ' legal cover needs attention' if diagnostic.get('resilience_need') else ' has a supported starter-upgrade opportunity')
     elif not fresh:
-        brief_risk = 'Depth findings are provisional; review before moving cover'
+        brief_risk = 'Depth is provisional; review before moving cover'
     else:
-        brief_risk = 'No supported replacement shortfall; review removal costs before selling depth'
-    brief = f'{brief_position}. {brief_strength}. {brief_risk}. {brief_capital}.'
+        brief_risk = 'No depth gap established; review before selling cover'
+    brief = '. '.join(part for part in (brief_position, brief_strength, brief_risk, brief_capital) if part) + '.'
     limits = list(evidence.limitations)
     if not fresh:
         limits.insert(0, 'Some current-week evidence is not fully verified; findings are provisional, not a fresh team verdict. Source and availability limitations follow.')
