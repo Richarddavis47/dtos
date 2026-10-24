@@ -270,7 +270,8 @@ class PersonalTradeBrowserTests(unittest.TestCase):
                             page.locator('#trade-valuation-mode').select_option('neutral')
                             self.assertEqual(page.locator('.tw-personal-comparison').count(), 0)
                             self.assertEqual(self.draft(page)['currentProposal'], adopted)
-                            self.assertIn('Canonical Market comparison', market.inner_text())
+                            self.assertIn('Market comparison', market.inner_text())
+                            self.assertNotIn('Canonical Market comparison', market.inner_text())
                             self.save_evidence('calculator', width, height, page, records, errors)
                             page.close()
                         finally:

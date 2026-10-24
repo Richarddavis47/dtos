@@ -1,3 +1,11 @@
+## v1.21.92 / build 2192 — Final Plain-English Experience Correction
+
+Explain player dossier outlook, strengths, weaknesses and schedule/bye limits in football terms using the same prepared reports. Preserve genuinely supported findings and distinguish missing evidence from unfavorable evidence. Keep useful methodology and provenance in advanced disclosures rather than exposing internal scalar, baseline, threshold or evidence-object instructions in ordinary dossier content.
+
+Explain Home strategy choices and the best projected starting lineup without inferring an unsupported competitive direction. Share identical Depth evidence limits once across the affected positions while retaining distinct positional warnings. Show supported league names and understandable Market totals in Builder, with exact source identifiers in technical evidence.
+
+Presentation-only integration: no price, projection, lineup, verdict, eligibility, strategy, Custom valuation, saved-ranking or historical-evidence changes. No added providers, discovery, solver, FOIS, reconstruction, storage or background jobs. Production rankings and preferences are not edited or reset. Retained FOIS grades remain RETAINED / NOT REVALIDATED. Physical Safari, unfamiliar-human and independent Scout acceptance are separate from author-run Chromium fixtures. Existing beta/concurrency restrictions remain.
+
 ## v1.21.91 / build 2191 — Plain-English Decision Experience
 
 Explain missing depth evidence as uncertainty, separately from a supported replacement weakness. Keep projected lineup rankings distinct from record/PF standing and provisional evidence visibly qualified. Preserve detailed source/availability evidence in existing disclosures.

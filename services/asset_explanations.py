@@ -38,6 +38,7 @@ def player_projection_explanation(view):
 
 
 def player_profile_explanation(report, *, league_id):
+    from src.ui.player_dossier_text import outlook_text
     profile = report.profile
     rows = [row('identity', 'Player', profile.name, 'player identity', K.SOURCE),
             row('team', 'Current NFL team', profile.nfl_team, 'NFL team', K.SOURCE),
@@ -47,7 +48,7 @@ def player_profile_explanation(report, *, league_id):
         rows.append(row('market', 'Profile Market acquisition price', report.core_values.market.score,
                         f'normalized Market 0–{report.core_values.market.scale_maximum}'))
     if report.long_term_outlook:
-        rows.append(row('longevity_context', 'Accepted long-term evidence context', report.long_term_outlook,
+        rows.append(row('longevity_context', 'Long-term outlook limits', outlook_text(report.long_term_outlook),
                         'scoped outlook', K.INTERPRETATION))
     if report.value_profile is not None:
         rows.append(row('roster_role', 'Current roster contribution role', report.value_profile.lineup.role,

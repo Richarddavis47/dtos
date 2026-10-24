@@ -327,15 +327,25 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     @router.get("/api/trades/workspace", response_class=JSONResponse)
     async def trade_workspace(front_office: int | None = None, mode: str = "") -> JSONResponse:
         await ensure_fresh()
+        data = require_data()
         try:
             workspace = await run_manager_read(
-                lambda: build_trade_workspace(require_data(), front_office, market_only=True) if mode == 'calculator'
-                else build_trade_workspace(require_data(), front_office),
+                lambda: build_trade_workspace(data, front_office, market_only=True) if mode == 'calculator'
+                else build_trade_workspace(data, front_office),
             )
         except ValueError as exc:
             raise HTTPException(404, str(exc)) from exc
+        source_league = data.get('league') or {}
+        league_name = (str(source_league.get('name') or '').strip()
+                       if str(source_league.get('league_id') or '') == str(workspace['manager_context'].league_id)
+                       else '')
+        account = current_account()
+        membership = account.membership if account else None
+        if not league_name and membership and str(membership.league_id) == str(workspace['manager_context'].league_id):
+            league_name = str(membership.league_name or '').strip()
         payload = {
             "active_front_office": workspace["active_roster_id"],
+            "league_name": league_name,
             "workflows": workspace["workflows"],
             "teams": [
                 {

@@ -56,7 +56,7 @@ def select_insights(facts, attention, offers):
     strength = (profile.get('teams') or {}).get(str(rid)) or {}
     weekly = (strength.get('weekly') or {}).get(str(facts['week'])) or (strength.get('weekly') or {}).get(facts['week']) or {}
     optimal = weekly.get('optimal') or {}
-    context = (f"Week {facts['week']} optimal legal lineup: {manager_points(optimal['projected_points'])} points under {facts['league_name']} scoring. "
+    context = (f"Week {facts['week']} best projected starting lineup: {manager_points(optimal['projected_points'])} points using {facts['league_name']} scoring and lineup rules. "
                if optimal.get('available') and _number(optimal.get('projected_points')) else '')
     for pos, d in positions.items():
         evidence = d.get('evidence') or own.get('evidence') or {}
@@ -68,9 +68,9 @@ def select_insights(facts, attention, offers):
         quality = d.get('quality_depth_need')
         if quality or d.get('resilience_need') or d.get('starter_need'):
             title = (f'{pos} replacement production needs review' if quality else
-                     f'{pos} legal cover needs review' if d.get('resilience_need') else
+                     f'{pos} backup cover needs review' if d.get('resilience_need') else
                      f'A supported {pos} addition could improve the lineup')
-            reason = context + (d.get('base_reason') or 'Prepared legal-lineup scenarios identify a production gap.')
+            reason = context + (d.get('base_reason') or 'Supported starting-lineup and backup comparisons show room to improve.')
             drawback = ('This is a current production gap, not evidence to buy an aging starter under REBUILD.'
                         if goal == 'REBUILD' else
                         'An upgrade has a Market and capital cost; this is not an endorsed trade.')
@@ -82,7 +82,7 @@ def select_insights(facts, attention, offers):
             # removal scenarios, never headcount or an invented injury model.
             points = manager_points(min(v for v in d['observed_replacement_points'] if _number(v)))
             candidates.append(_item(issue, 'depth', qualifier + f'Keep {pos} replacement production in view',
-                f'Prepared {pos} starter-removal scenarios have at least {points} projected replacement points under {facts["league_name"]} scoring in week {facts["week"]}.',
+                f'If a {pos} starter is unavailable, the supported backups offer at least {points} projected replacement points under {facts["league_name"]} scoring in week {facts["week"]}.',
                 'Useful cover is not automatically surplus. Separate removal scenarios cannot cover simultaneous absences.',
                 'Review removal costs', team_url + '#positional-depth', issues=[issue],
                 details=own.get('limitations', [])))
@@ -147,8 +147,8 @@ def select_insights(facts, attention, offers):
         trade_items.append(item)
     if not goal:
         candidates.append(_item('goal', 'goal', 'Choose a goal for strategic guidance',
-            'Your goal changes which tradeoffs deserve attention; no competitive direction is inferred.',
-            'Neutral Market values and objective legal-lineup calculations stay unchanged.',
+            'DTOS cannot determine whether to contend, retool or rebuild from the available evidence. Choose your goal to guide trade suggestions.',
+            'Market prices and projected starting-lineup points remain unchanged when you choose a goal.',
             'Choose your goal', team_url + '#my-team-strategy'))
     precedence = {'WIN NOW': ['need', 'offer', 'attention', 'depth', 'capital'],
                   'REBUILD': ['capital', 'offer', 'attention', 'need', 'depth'],

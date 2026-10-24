@@ -462,7 +462,8 @@ def create_transactions_router(
         context = live["player_context"]
         metadata = context["metadata"]
         league_context = context["league"]
-        reasons = context["availability"]
+        from src.ui.player_dossier_text import availability_text
+        reasons = {key: availability_text(key, value) for key, value in context["availability"].items()}
         fantasycalc = live["provider_details"].get("FantasyCalc") or {}
         trend_value = fantasycalc.get("trend_30_day")
         trend_label = f"{trend_value:+}" if isinstance(trend_value, (int, float)) else "No historical provider trend is available."

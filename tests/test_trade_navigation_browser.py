@@ -178,7 +178,8 @@ class TradeNavigationBrowserTests(unittest.TestCase):
                                       'dtos-trade-workspace:' + binding)
                 self.assertEqual(saved['currentProposal'], {'sent': [], 'received': [], 'partner': 0})
                 self.assertEqual(saved['protectedAssets'], [])
-                self.assertIn(league, page.locator('#trade-context').inner_text())
+                self.assertNotIn(league, page.locator('#trade-context').inner_text())
+                self.assertIn(league, page.locator('#trade-source-context-identity').text_content())
             # An isolated browser session has no access to that tab's proposal.
         with fixture.page() as (page, requests):
             fixture.ready(page, '/trades/create')
