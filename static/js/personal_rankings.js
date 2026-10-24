@@ -66,7 +66,7 @@
       : 'Neutral Market values are active. Your custom order and preferences are preserved.';
     const method = state.method_explanation || (typeof state.method === 'object' ? state.method?.description : null);
     if (method) el('personal-method').textContent = method;
-    const rows = filtered(); const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE)); page = Math.min(page, pages - 1);
+    const rows = filtered(); const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE)); page = Math.max(0, Math.min(page, pages - 1));
     for (const row of root.querySelectorAll('.personal-row')) {
       if (row.querySelector('details')?.open) openRows.add(row.dataset.assetId); else openRows.delete(row.dataset.assetId);
     }
@@ -115,7 +115,7 @@
     el('personal-results-count').textContent = `${rows.length} matches / ${state.rows?.length || 0} assets · Ranks are overall`;
     for (const suffix of ['', '-bottom']) {
       el('personal-page' + suffix).textContent = `Page ${page + 1} of ${pages}`;
-      el('personal-previous' + suffix).disabled = busy || page === 0; el('personal-next' + suffix).disabled = busy || page + 1 >= pages;
+      el('personal-previous' + suffix).disabled = busy || !ready || page === 0; el('personal-next' + suffix).disabled = busy || !ready || page + 1 >= pages;
     }
     if (scrollTop != null) window.scrollTo({top: scrollTop});
     const anchor = rowFor(focusAsset(focusKey));
@@ -175,6 +175,7 @@
   for (const id of ['personal-search', 'personal-position']) el(id).addEventListener(id === 'personal-search' ? 'input' : 'change', () => { page = 0; render(); });
   for (const suffix of ['', '-bottom']) for (const [direction, delta] of [['previous', -1], ['next', 1]]) {
     el('personal-' + direction + suffix).onclick = () => {
+      if (!ready || !state || busy) return;
       page += delta; render(); el('personal-page').scrollIntoView({block: 'nearest'});
       const clicked = el('personal-' + direction), fallback = el('personal-' + (direction === 'next' ? 'previous' : 'next'));
       (clicked.disabled ? fallback : clicked).focus({preventScroll: true});

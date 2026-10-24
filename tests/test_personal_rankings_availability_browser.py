@@ -51,6 +51,12 @@ class CanonicalPersonalTradeBrowserTests(trade_browser.PersonalTradeBrowserTests
                             page.goto('http://testserver/account/my-dtos')
                             retry = page.get_by_role('button', name='Retry rankings', exact=True)
                             retry.wait_for(state='visible')
+                            for suffix in ('', '-bottom'):
+                                self.assertTrue(page.locator('#personal-previous' + suffix).is_disabled())
+                                self.assertTrue(page.locator('#personal-next' + suffix).is_disabled())
+                            # Even a queued/synthetic activation must not make
+                            # a pending view recover onto an invalid page.
+                            page.evaluate("document.querySelector('#personal-previous').dispatchEvent(new MouseEvent('click', {bubbles:true}))")
                             self.assertIn('Neutral Trade', page.locator('#personal-error').inner_text())
                             self.assertEqual(page.get_by_role('link', name='Check Market', exact=True).get_attribute('href'), '/market')
                             out = os.getenv('DTOS_PERSONAL_AVAILABILITY_EVIDENCE')
@@ -63,6 +69,8 @@ class CanonicalPersonalTradeBrowserTests(trade_browser.PersonalTradeBrowserTests
                             page.get_by_role('button', name='Create Custom Rankings', exact=True).wait_for()
                             self.assertTrue(page.locator('#personal-recovery').is_hidden())
                             self.assertEqual(page.evaluate('document.activeElement.id'), 'personal-initialize')
+                            self.assertIn('Page 1 of', page.locator('#personal-page').inner_text())
+                            self.assertGreater(page.locator('.personal-row').count(), 0)
                             self.edit_rankings_in_browser(page)
                             self.choose_package(page)
                             self.assertEqual(page.locator('#trade-valuation-mode option[value="custom"]').is_disabled(), False)
