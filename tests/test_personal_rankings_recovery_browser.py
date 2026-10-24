@@ -176,6 +176,55 @@ class PersonalRankingsRecoveryBrowserTests(unittest.TestCase):
             finally:
                 browser.close()
 
+    def test_new_unranked_asset_does_not_expand_saved_reorder_bounds(self):
+        fixture = self.fixture()
+        before = self.saved(fixture)
+        self.assertEqual(len(before['order']), 42)
+        fixture.market.rows.append({
+            'asset_id': 'player:41', 'asset_type': 'player', 'position': 'WR',
+            'display_name': 'New Player 41', 'values': {'market_value': 5}})
+        with sync_playwright() as engine:
+            browser = launch_chromium(engine, headless=True)
+            try:
+                page = fixture.browser_page(browser, 390, 844)
+                writes = []
+                page.on('request', lambda request: writes.append(json.loads(request.post_data))
+                        if request.method == 'POST' and request.url.endswith('/api/my-dtos') else None)
+                page.goto('https://dtos.test/account/my-dtos')
+                self.loaded(page)
+                page.locator('#personal-next').click()
+                last = page.locator('[data-asset-id="pick:2028:1:2"]')
+                last.locator('summary').click()
+                down = last.get_by_role('button', name='Move 2028 Round 1 (Original franchise 2) down one overall position', exact=True)
+                self.assertTrue(down.is_disabled())
+                position = last.get_by_role('spinbutton')
+                self.assertEqual(position.get_attribute('max'), '42')
+                self.assertEqual(last.get_attribute('data-overall-rank'), '42')
+                position.fill('43')
+                last.get_by_role('button', name='Move 2028 Round 1 (Original franchise 2) to entered overall position', exact=True).click()
+                self.assertIn('saved ranking position', page.locator('#personal-error').inner_text())
+                self.assertEqual(writes, [])
+                self.assertEqual(self.saved(fixture), before)
+                position.fill('41')
+                last.get_by_role('button', name='Move 2028 Round 1 (Original franchise 2) to entered overall position', exact=True).click()
+                page.wait_for_function("document.querySelector('#personal-status').textContent.startsWith('Saved.')")
+                self.loaded(page)
+                self.assertIn('position 41 of 42', page.locator('#personal-status').inner_text())
+                changed = self.saved(fixture)
+                self.assertEqual(changed['revision'], before['revision'] + 1)
+                self.assertEqual(changed['order'][40], 'pick:2028:1:2')
+                self.assertNotIn('player:41', changed['order'])
+                write_count = len(writes)
+                new = page.locator('[data-asset-id="player:41"]')
+                self.assertTrue(new.locator('.personal-drag').is_disabled())
+                last.locator('.personal-drag').drag_to(new)
+                self.assertEqual(len(writes), write_count)
+                self.assertEqual(self.saved(fixture), changed)
+                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
+                page.close()
+            finally:
+                browser.close()
+
     def test_retry_multiple_blockers_and_stale_confirmation_preserve_actual_store(self):
         fixture = self.fixture()
         before = self.saved(fixture)

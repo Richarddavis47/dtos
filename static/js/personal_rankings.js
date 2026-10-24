@@ -12,6 +12,12 @@
     ? number.toLocaleString(undefined, {maximumFractionDigits: 2}) : 'Unavailable';
   function node(tag, text, className) { const result = document.createElement(tag); if (text != null) result.textContent = text; if (className) result.className = className; return result; }
   const rowId = row => row.asset_id;
+  const savedRankCount = () => (state?.rows || []).filter(row => row.custom_ranked === true).length;
+  const savedDropPosition = target => {
+    const position = Number(target?.dataset.overallRank);
+    return target?.dataset.customRanked === 'true' && Number.isInteger(position)
+      && position >= 1 && position <= savedRankCount() ? position : null;
+  };
   const prefs = row => row.preferences || state?.preferences?.[rowId(row)] || {};
   const focusAsset = key => key ? key.slice(0, key.lastIndexOf(':')) : null;
   function rowFor(id) { return id ? [...root.querySelectorAll('.personal-row')].find(row => row.dataset.assetId === id) : null; }
@@ -58,6 +64,7 @@
     if (busy || !ready || !state?.initialized || !issue.can_remove) return;
     pendingRemoval = issue.asset_id;
     el('personal-remove-description').textContent = `${issue.label || issue.asset_id}: ${issue.reason}`;
+    el('personal-remove-confirm').setAttribute('aria-label', `Remove ${issue.label || issue.asset_id} from Custom ordering`);
     const dialog = el('personal-remove-dialog');
     if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', '');
     el('personal-remove-cancel').focus();
@@ -94,7 +101,7 @@
   }
   function render(focusKey, scrollTop, rowTop) {
     if (!state) return;
-    const initialized = Boolean(state.initialized), custom = state.mode === 'custom';
+    const initialized = Boolean(state.initialized), custom = state.mode === 'custom', rankedCount = savedRankCount();
     el('personal-neutral').setAttribute('aria-pressed', String(!custom));
     el('personal-custom').setAttribute('aria-pressed', String(custom));
     el('personal-neutral').disabled = busy || !ready; el('personal-custom').disabled = busy || !ready;
@@ -124,7 +131,7 @@
     for (const id of openRows) if (!identities.has(id)) openRows.delete(id);
     for (const {row, index} of rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)) {
       const id = rowId(row), label = row.label || id, rank = index + 1, editable = initialized && custom && row.custom_ranked !== false;
-      const item = node('li', null, 'personal-row'); item.dataset.assetId = id; item.dataset.overallRank = String(rank); item.value = rank;
+      const item = node('li', null, 'personal-row'); item.dataset.assetId = id; item.dataset.overallRank = String(rank); item.dataset.customRanked = String(row.custom_ranked === true); item.value = rank;
       const header = node('div', null, 'personal-row-heading');
       let details;
       const handle = button('↕', `Reorder or drag ${label} to another overall position`, () => { details.open = !details.open; }, `${id}:drag`);
@@ -142,13 +149,16 @@
       const editing = node('div', null, 'personal-editing');
       if (row.market_rank != null) editing.append(node('p', `Current Market overall #${row.market_rank}${row.personal_rank != null ? ` · Your overall #${row.personal_rank}` : ''}`, 'muted'));
       const controls = node('div', null, 'personal-reorder');
-      const move = (destination, key = `${id}:position`) => command('reorder', {asset_id: id, to_position: destination}, key);
+      const move = (destination, key = `${id}:position`) => {
+        if (!editable || !Number.isInteger(destination) || destination < 1 || destination > rankedCount) { error('Enter an available saved ranking position.'); return; }
+        command('reorder', {asset_id: id, to_position: destination}, key);
+      };
       const up = button('Move Up', `Move ${label} up one overall position`, () => move(rank - 1, `${id}:up`), `${id}:up`); up.disabled ||= !editable || rank <= 1;
-      const down = button('Move Down', `Move ${label} down one overall position`, () => move(rank + 1, `${id}:down`), `${id}:down`); down.disabled ||= !editable || rank >= state.rows.length;
+      const down = button('Move Down', `Move ${label} down one overall position`, () => move(rank + 1, `${id}:down`), `${id}:down`); down.disabled ||= !editable || rank >= rankedCount;
       controls.append(up, down);
       const moveLabel = node('label', 'Overall position'); moveLabel.className = 'personal-move-label';
-      const input = document.createElement('input'); input.type = 'number'; input.min = '1'; input.max = String(state.rows.length); input.value = String(rank); input.inputMode = 'numeric'; input.dataset.focusKey = `${id}:position`; input.setAttribute('aria-label', `Overall position for ${label}`); input.disabled = busy || !ready || !editable; moveLabel.append(input); controls.append(moveLabel);
-      const moveButton = button('Move', `Move ${label} to entered overall position`, () => { const destination = Number(input.value); if (!Number.isInteger(destination) || destination < 1 || destination > state.rows.length) { error('Enter an available overall ranking position.'); input.focus(); return; } move(destination); }, `${id}:move`); moveButton.disabled ||= !editable; controls.append(moveButton); editing.append(controls);
+      const input = document.createElement('input'); input.type = 'number'; input.min = '1'; input.max = String(rankedCount); input.value = String(rank); input.inputMode = 'numeric'; input.dataset.focusKey = `${id}:position`; input.setAttribute('aria-label', `Overall position for ${label}`); input.disabled = busy || !ready || !editable; moveLabel.append(input); controls.append(moveLabel);
+      const moveButton = button('Move', `Move ${label} to entered overall position`, () => { const destination = Number(input.value); if (!Number.isInteger(destination) || destination < 1 || destination > rankedCount) { error('Enter an available saved ranking position.'); input.focus(); return; } move(destination); }, `${id}:move`); moveButton.disabled ||= !editable; controls.append(moveButton); editing.append(controls);
       const flags = node('div', null, 'personal-flags');
       for (const [flag, caption] of [['target', 'Target acquisition'], ['avoid', 'Prefer to avoid acquiring'], ['protect', 'Protect outgoing']]) {
         const wrap = node('label', null, 'personal-flag'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = Boolean(prefs(row)[flag]); checkbox.dataset.focusKey = `${id}:${flag}`;
@@ -157,7 +167,9 @@
       }
       const tierLabel = node('label', null, 'personal-flag'); const tier = document.createElement('input'); tier.type = 'checkbox'; tier.checked = Boolean(row.tier_start || state.tiers?.includes(id)); tier.dataset.focusKey = `${id}:tier`; tier.disabled = busy || !ready || !editable; tier.setAttribute('aria-label', `Start personal tier at ${label}`); tier.addEventListener('change', () => command('tiers', {asset_id: id, tier_start: tier.checked}, `${id}:tier`)); tierLabel.append(tier, document.createTextNode('Start personal tier')); flags.append(tierLabel); editing.append(flags);
       details.append(editing); item.append(details);
-      if (prefs(row).protect && !row.owned) item.append(node('p', 'Saved protection is inactive because this exact asset is not currently owned by your franchise.', 'personal-qualification'));
+      if (prefs(row).protect && !row.owned) item.append(node('p', row.owner_roster_id == null
+        ? 'Your Protect choice is saved, but current ownership is not confirmed. DTOS cannot apply it to generated offers until ownership is supported.'
+        : 'Saved protection is inactive because this exact asset is not currently owned by your franchise.', 'personal-qualification'));
       list.append(item);
     }
     if (!rows.length) list.append(node('li', state.rows?.length ? 'No assets match these filters. Clear the search or position filter.' : 'Prepared compatible Market rankings are unavailable. Neutral browsing remains available; reload after Market is ready.', 'personal-empty'));
@@ -199,7 +211,7 @@
       state = result;
       if (focusKey) { const id = focusKey.slice(0, focusKey.lastIndexOf(':')); const index = filtered().findIndex(item => rowId(item.row) === id); if (index >= 0) page = Math.floor(index / PAGE_SIZE); }
       const moved = name === 'reorder' ? result.rows?.find(row => row.asset_id === values.asset_id) : null;
-      status(name === 'remove_asset' ? `Saved. The reviewed asset was removed only from Custom ordering. Your other ranking work and saved choices are preserved. Revision ${result.revision}.` : moved ? `Saved. ${moved.label || moved.asset_id} moved to overall position ${moved.personal_rank || values.to_position} of ${result.rows.length}. Revision ${result.revision}.` : `Saved. Revision ${result.revision}.`);
+      status(name === 'remove_asset' ? `Saved. The reviewed asset was removed only from Custom ordering. Your other ranking work and saved choices are preserved. Revision ${result.revision}.` : moved ? `Saved. ${moved.label || moved.asset_id} moved to overall position ${moved.personal_rank || values.to_position} of ${savedRankCount()}. Revision ${result.revision}.` : `Saved. Revision ${result.revision}.`);
     } catch (exc) { if (sequence === requestSequence) { state = prior; ready = false; el('personal-recovery').hidden = false; error(String(exc.message)); status('The requested change was not applied to this view. Retry rankings to check saved state before editing again.'); } }
     finally {
       if (sequence === requestSequence) {
@@ -241,12 +253,12 @@
       (clicked.disabled ? fallback : clicked).focus({preventScroll: true});
     };
   }
-  root.addEventListener('dragstart', event => { const handle = event.target.closest('[data-drag-handle]'); if (!handle || busy || !state?.initialized || state.mode !== 'custom') { event.preventDefault(); return; } drag = {id: handle.dataset.dragHandle}; event.dataTransfer.setData('text/plain', drag.id); event.dataTransfer.effectAllowed = 'move'; });
-  root.addEventListener('dragover', event => { const target = event.target.closest('[data-overall-rank]'); if (!drag || !target) return; event.preventDefault(); root.querySelectorAll('.personal-drop-target').forEach(row => row.classList.remove('personal-drop-target')); target.classList.add('personal-drop-target'); });
-  root.addEventListener('drop', event => { const target = event.target.closest('[data-overall-rank]'); if (!drag || !target) return; event.preventDefault(); const id = drag.id; drag = null; command('reorder', {asset_id: id, to_position: Number(target.dataset.overallRank)}, `${id}:drag`); });
+  root.addEventListener('dragstart', event => { const handle = event.target.closest('[data-drag-handle]'); if (!handle || handle.disabled || busy || !state?.initialized || state.mode !== 'custom') { event.preventDefault(); return; } drag = {id: handle.dataset.dragHandle}; event.dataTransfer.setData('text/plain', drag.id); event.dataTransfer.effectAllowed = 'move'; });
+  root.addEventListener('dragover', event => { const target = event.target.closest('[data-overall-rank]'); if (!drag || !savedDropPosition(target)) return; event.preventDefault(); root.querySelectorAll('.personal-drop-target').forEach(row => row.classList.remove('personal-drop-target')); target.classList.add('personal-drop-target'); });
+  root.addEventListener('drop', event => { const target = event.target.closest('[data-overall-rank]'); if (!drag) return; const id = drag.id, position = savedDropPosition(target); drag = null; root.querySelectorAll('.personal-drop-target').forEach(row => row.classList.remove('personal-drop-target')); if (!position) return; event.preventDefault(); command('reorder', {asset_id: id, to_position: position}, `${id}:drag`); });
   root.addEventListener('dragend', () => { drag = null; root.querySelectorAll('.personal-drop-target').forEach(row => row.classList.remove('personal-drop-target')); });
   root.addEventListener('pointerdown', event => { if (event.pointerType === 'mouse') return; const handle = event.target.closest('[data-drag-handle]'); if (!handle || handle.disabled) return; event.preventDefault(); drag = {id: handle.dataset.dragHandle, pointer: event.pointerId, handle, x: event.clientX, y: event.clientY}; handle.setPointerCapture(event.pointerId); });
-  root.addEventListener('pointermove', event => { if (!drag || drag.pointer !== event.pointerId) return; if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 6) return; drag.moved = true; const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-overall-rank]'); root.querySelectorAll('.personal-drop-target').forEach(row => row.classList.remove('personal-drop-target')); if (target) { target.classList.add('personal-drop-target'); drag.destination = Number(target.dataset.overallRank); } });
+  root.addEventListener('pointermove', event => { if (!drag || drag.pointer !== event.pointerId) return; if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 6) return; drag.moved = true; const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-overall-rank]'); root.querySelectorAll('.personal-drop-target').forEach(row => row.classList.remove('personal-drop-target')); drag.destination = savedDropPosition(target); if (drag.destination) target.classList.add('personal-drop-target'); });
   root.addEventListener('pointerup', event => { if (!drag || drag.pointer !== event.pointerId) return; const {id, destination, handle, moved} = drag; drag = null; if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId); root.querySelectorAll('.personal-drop-target').forEach(row => row.classList.remove('personal-drop-target')); if (destination && moved) command('reorder', {asset_id: id, to_position: destination}, `${id}:drag`); });
   // Native HTML dragging cancels its initiating pointer. Only cancel the
   // separately captured touch gesture here; native dragend owns mouse cleanup.

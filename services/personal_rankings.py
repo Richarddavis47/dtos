@@ -393,7 +393,8 @@ def apply_command(store, data, market_reader, account, payload, *, verify_source
     from src.core.accounts.personal_store import load_personal, save_personal
     membership = _scope(data, account)
     _live_scope(store, account, membership)
-    universe = build_universe(data, market_reader)
+    document = load_personal(store, account.account_id, membership.league_id, membership.roster_id)
+    universe = build_universe(data, market_reader, requested_ids=(document or {}).get('order') or ())
     context = workspace_context(data, membership.roster_id)
     expected_context = {k: context[k] for k in ('league_id', 'roster_id', 'binding')}
     if payload.get('context') != expected_context or payload.get('market_generation') != universe['generation']:
@@ -401,7 +402,6 @@ def apply_command(store, data, market_reader, account, payload, *, verify_source
     revision = payload.get('expected_revision')
     if isinstance(revision, bool) or not isinstance(revision, int) or revision < 0:
         raise PersonalRankingError('invalid_revision', 'A valid preference revision is required.')
-    document = load_personal(store, account.account_id, membership.league_id, membership.roster_id)
     if revision != (document or {}).get('revision', 0):
         raise PersonalRankingError('personal_revision_changed', 'Your rankings changed in another tab. Reload before editing.', 409)
     command = payload.get('command')
@@ -453,7 +453,11 @@ def apply_command(store, data, market_reader, account, payload, *, verify_source
                 raise PersonalRankingError('invalid_preference', 'Use Target, Avoid and Protect controls.')
             if flags.get('target') and flags.get('avoid'):
                 raise PersonalRankingError('conflicting_preferences', 'An acquisition cannot be both a Target and Avoid.')
+            # Protection is ownership intent, not a price endorsement. The
+            # exact owner is independently prepared even if pricing is absent.
             row = next((r for r in universe['rows'] if r['asset_id'] == key), None)
+            if row is None:
+                row = (universe.get('unavailable_rows') or {}).get(key)
             if flags.get('protect') and (row is None or row['owner_roster_id'] != membership.roster_id):
                 raise PersonalRankingError('not_owned', 'Only an exact currently owned asset can be protected.')
             if any(flags.values()):

@@ -220,6 +220,45 @@ class PersonalCompatibilityRecoveryTests(unittest.TestCase):
         self.assertIsNone(row['personal_value'])
         self.assertEqual(self.saved(), saved)
 
+    def test_preferences_use_supported_ownership_even_when_market_price_is_missing(self):
+        self.initialize()
+        self.post('preferences', asset_id='player:3', preferences={'protect': True})
+        self.market.rows[3]['values']['market_value'] = None
+        before = self.saved()
+        state = self.state()
+        row = next(row for row in state['rows'] if row['asset_id'] == 'player:3')
+        self.assertTrue(row['owned'])
+        response = self.post('preferences', asset_id='player:3', preferences={'protect': True, 'target': True})
+        self.assertEqual(response.status_code, 200, response.json().get('status'))
+        self.assertFalse(response.json()['personal_available'])
+        after = self.saved()
+        self.assertEqual(after['preferences']['player:3'], {'protect': True, 'target': True})
+        self.assertEqual(after['order'], before['order'])
+        self.assertEqual(after['tiers'], before['tiers'])
+        self.assertEqual(after['revision'], before['revision'] + 1)
+        self.assertTrue(next(row for row in response.json()['rows'] if row['asset_id'] == 'player:3')['owned'])
+
+    def test_missing_price_does_not_allow_protection_with_foreign_conflicting_or_unknown_owner(self):
+        self.initialize()
+        self.market.rows[1]['values']['market_value'] = None
+        saved = self.saved()
+        foreign = self.post('preferences', asset_id='player:2', preferences={'protect': True})
+        self.assertEqual(foreign.status_code, 422)
+        self.assertEqual(foreign.json()['status'], 'not_owned')
+        self.assertEqual(self.saved(), saved)
+        self.market.rows[3]['values']['market_value'] = None
+        self.data['teams'][1]['players'].append({'id': '3'})
+        conflict = self.post('preferences', asset_id='player:3', preferences={'protect': True})
+        self.assertEqual(conflict.status_code, 422)
+        self.assertEqual(conflict.json()['status'], 'not_owned')
+        self.assertEqual(self.saved(), saved)
+        self.data['teams'][1]['players'].pop()
+        self.data['teams'][0]['players'] = [row for row in self.data['teams'][0]['players'] if row['id'] != '3']
+        unknown = self.post('preferences', asset_id='player:3', preferences={'protect': True})
+        self.assertEqual(unknown.status_code, 422)
+        self.assertEqual(unknown.json()['status'], 'not_owned')
+        self.assertEqual(self.saved(), saved)
+
     def test_more_than_ten_thousand_unpriced_rows_do_not_expand_ranking_scan(self):
         self.initialize()
         self.market.rows[1]['values']['market_value'] = None
