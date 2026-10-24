@@ -94,10 +94,11 @@ def select_insights(facts, attention, offers):
         firsts = [p for p in picks if p.get('round') == 1]
         if firsts:
             identities = [f"{p.get('year', p.get('season'))} first · {p.get('original_team') or 'Original franchise ' + str(p.get('original_roster_id'))} (original {p.get('original_roster_id')}) · owner {p.get('current_owner_id')}" for p in firsts]
+            labels = [f"{p.get('year', p.get('season'))} first · {p.get('original_team') or 'original team name unavailable (see exact identity below)'} · owned by your team" for p in firsts]
             pricing = (f"Prepared assessment pricing covers {capital.get('priced_pick_count', 0)}/{len(picks)} owned picks. "
                        if facts.get('market_compatible') else 'Current pick pricing is unconfirmed; ownership inventory remains usable. ')
             candidates.append(_item('capital', 'capital', f'{len(firsts)} owned future first-round ' + ('pick' if len(firsts) == 1 else 'picks'),
-                '; '.join(identities[:2]) + (f'; {len(identities)-2} more exact firsts in Supporting evidence.' if len(identities)>2 else ''),
+                '; '.join(labels[:2]) + (f'; {len(labels)-2} more exact firsts in Supporting evidence.' if len(labels)>2 else ''),
                 pricing + 'Unknown ranges are not guaranteed early picks; capital does not establish future success.',
                 'Review exact draft capital', team_url + '#draft-capital', issues=['capital'], details=identities))
     for event in attention:

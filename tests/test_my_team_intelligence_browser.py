@@ -33,7 +33,7 @@ class MyTeamIntelligenceBrowserTests(journeys.ProductBrowserJourneyTests):
             context = json.loads(root.get_attribute('data-my-team-context'))
             self.assertIn(context['league_id'], ('100', '200', '300'))
             self.assertEqual(page.locator('#my-team-strategy').count(), 1)
-            self.assertIn('Biggest depth risk', root.inner_text())
+            self.assertIn('Depth and uncertainty', root.inner_text())
             self.assertIn('Surplus not established', page.locator('#positional-depth').text_content())
             roster = page.get_by_role('navigation', name='Roster sections').get_by_role('link', name='View full roster', exact=True)
             roster.focus()

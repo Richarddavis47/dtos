@@ -87,7 +87,7 @@ def _trend_observation_summary(trend: dict[str, Any]) -> str:
         return (f'{count} retained checkpoints · observed range '
                 f'{escape(available(trend["observed_low"]))}–{escape(available(trend["observed_high"]))}')
     if trend.get('comparison_reasons') or trend.get('magnitude') is None:
-        return f'{count} retained checkpoints · Numerical movement unavailable: comparable history is required.'
+        return f'{count} recorded prices. There is not enough compatible dated evidence to show a numerical change; missing history does not mean the value stayed the same.'
     scope = ('Historical to current publication' if trend.get('comparison_scope') == 'historical_to_current'
              else 'Historical observations only')
     magnitude = trend.get('magnitude')
@@ -472,7 +472,7 @@ def create_market_router(
                     weekly_display = escape(selected_projection['display'])
                     confidence = selected_projection['confidence']
                     confidence_html = "Unavailable" if confidence is None else f"{confidence}%"
-                    forward_html = f'''<section class="card"><p class="eyebrow">Canonical Weekly Projection</p>{f'<div class="summary-grid"><article class="metric"><b>{weekly_display}</b><span>Sleeper projection</span></article><article class="metric"><b>{confidence_html}</b><span>Evidence confidence</span></article></div>' if weekly is not None else '<div class="evidence-unavailable"><b>Weekly projection unavailable.</b><br>Sleeper has not supplied a canonical projection for this asset and matchup context.</div>'}<details><summary>Evidence</summary><p>Sleeper supplies the weekly projection under this league's scoring profile. DTOS does not fabricate a fallback.</p></details></section>'''
+                    forward_html = f'''<section class="card"><p class="eyebrow">Sleeper Weekly Projection</p>{f'<div class="summary-grid"><article class="metric"><b>{weekly_display}</b><span>Sleeper projection</span></article><article class="metric"><b>{confidence_html}</b><span>Evidence confidence</span></article></div>' if weekly is not None else '<div class="evidence-unavailable"><b>Weekly projection unavailable.</b><br>A matching Sleeper projection for this player, week and league scoring is not available. Check this league again after its next update; no missing score is shown as zero.</div>'}<details><summary>Evidence</summary><p>Sleeper supplies the weekly projection under this league's scoring profile. DTOS does not fabricate a fallback.</p></details></section>'''
                 values = asset.get("values") or {}
                 values_available = any(values.get(name) is not None for name in ("market_value", "intrinsic_dtos_value", "contender_value", "rebuilder_value"))
                 value_html = (
@@ -485,7 +485,9 @@ def create_market_router(
                     f'<li>{escape(name.replace("_", " ").title())}: {float(row["change"]):+,.2f} Market points since {escape(str(row["observed_at"]))}</li>'
                     for name, row in trend["milestones"].items()
                 )
-                trend_html = f'''<section class="card"><p class="eyebrow">Observed Market Trend</p><h3>{escape(str(trend["direction"]).replace("_", " ").upper())} · {escape(trend["confidence"].upper())} CONFIDENCE</h3><p>{_trend_observation_summary(trend)}</p>{f'<ul>{milestone_html}</ul>' if milestone_html else '<p class="muted">No supported milestone comparison is available yet.</p>'}<p class="muted">Sparse observed checkpoints; no daily values are inferred.</p></section>'''
+                trend_heading = (str(trend['direction']).replace('_', ' ').upper() + ' · ' + trend['confidence'].upper() + ' CONFIDENCE'
+                                 if trend['direction'] in ('rising', 'falling', 'stable', 'volatile') else 'Not enough comparable price history')
+                trend_html = f'''<section class="card"><p class="eyebrow">Observed Market Trend</p><h3>{escape(trend_heading)}</h3><p>{_trend_observation_summary(trend)}</p>{f'<ul>{milestone_html}</ul>' if milestone_html else '<p class="muted">No supported milestone comparison is available yet.</p>'}<p class="muted">Recorded observations only; no daily prices are invented.</p></section>'''
                 trend_html += _trend_boundary_notice(trend)
                 from services.asset_explanations import market_explanation
                 from src.ui.explanations import explanation_panel
@@ -502,7 +504,7 @@ def create_market_router(
                     for value, label in values
                 )
             trend_available = any((row.get("market_trend") or {}).get("direction") in {"rising", "falling", "stable", "volatile"} for row in rows)
-            movers_html = '<div class="card"><p>Meaningful sparse Step 2 movement evidence is available.</p><a href="/api/market/trending">Review movement evidence →</a></div>' if trend_available else '<div class="evidence-unavailable"><b>Market movement is not available yet.</b><br>At least two legitimate Step 2 observations are required.</div>'
+            movers_html = '<div class="card"><p>Comparable dated Market prices show observed changes.</p><a href="/api/market/trending">Review observed price changes →</a></div>' if trend_available else '<div class="evidence-unavailable"><b>Not enough comparable price history yet.</b><br>At least two compatible dated prices are needed to show a change. Missing observations do not mean values stayed the same.</div>'
             front_office_input = (
                 f'<input type="hidden" name="front_office" value="{front_office}">'
                 if front_office is not None else ""

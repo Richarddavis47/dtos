@@ -15,7 +15,8 @@ def cards(items):
             output.append(offer_cards([row], item['roster_id']))
             continue
         details = ''.join('<p>' + escape(str(line)) + '</p>' for line in item['details'] if line)
-        output.append(f'''<article class="home-brief-insight" data-brief-family="{escape(item['family'])}"><h3>{escape(item['title'])}</h3><p><b>Why:</b> {escape(item['reason'])}</p><p><b>Tradeoff:</b> {escape(item['drawback'])}</p><a class="ds-action" href="{escape(item['href'], quote=True)}">{escape(item['action'])} →</a>''' +
+        label = 'Evidence limit' if item['family'] == 'attention' else 'Keep in mind'
+        output.append(f'''<article class="home-brief-insight" data-brief-family="{escape(item['family'])}"><h3>{escape(item['title'])}</h3><p><b>Why:</b> {escape(item['reason'])}</p><p><b>{label}:</b> {escape(item['drawback'])}</p><a class="ds-action" href="{escape(item['href'], quote=True)}">{escape(item['action'])} →</a>''' +
                       (f'<details><summary>Supporting evidence</summary>{details}</details>' if details else '') + '</article>')
     return ''.join(output[:2]) + ('<details class="ds-home-detail" id="home-brief-more"><summary>More Front Office insights</summary>' + ''.join(output[2:]) + '</details>' if len(output) > 2 else '')
 

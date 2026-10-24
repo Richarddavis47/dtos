@@ -248,7 +248,7 @@ def view_state(store, data, market_reader, account):
     _live_scope(store, account, membership)
     universe = build_universe(data, market_reader)
     document = load_personal(store, account.account_id, membership.league_id, membership.roster_id)
-    values = personal_values(document, universe) if document else {'available': False, 'values': {}, 'reason': 'Start with the complete current Market order; no manual setup is required.'}
+    values = personal_values(document, universe) if document else {'available': False, 'values': {}, 'reason': 'Create Custom Rankings to personalize. Your starting list is already ordered by Market; Neutral DTOS remains available.'}
     current = {row['asset_id']: row for row in universe['rows']}
     order = document['order'] if document else list(current)
     # Retain unresolved saved rows visibly, never substitute another identity.

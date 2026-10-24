@@ -233,8 +233,8 @@ def _positional_depth(view):
         evidence = diagnostic.get('evidence') or {}
         for limitation in evidence.get('limitations') or []:
             explanation = explanation.replace(limitation, '').strip()
-        qualification = ' · '.join(evidence.get('projection_freshness') or [])
-        qualification = (evidence.get('conclusion_state') or 'unavailable').title() + (' · ' + qualification if qualification else '')
+        from src.ui.intelligence_presentation import projection_evidence_summary
+        qualification = projection_evidence_summary(evidence)
         candidates = diagnostic.get('surplus_assets') or []
         if not candidates and 'Surplus not established' not in explanation:
             explanation += ' Surplus not established: current evidence does not identify an expendable asset.'

@@ -7,7 +7,7 @@ from services.my_team_outlook import goal_options
 
 def outlook_panel(outlook, *, editable, roster_id):
     rows = [('Current position', outlook['position']), ('Main strength', outlook['strength']),
-            ('Biggest depth risk', outlook['concern']), ('Future flexibility', outlook['future'])]
+            ('Depth and uncertainty', outlook['concern']), ('Future flexibility', outlook['future'])]
     action = (f'<a id="my-team-outlook-action" class="thq-action" href="{escape(outlook["href"], quote=True)}">{escape(outlook["action"])}</a>'
               if editable else '')
     trade = (f'<a class="thq-action" href="/trades/calculator?front_office={roster_id}">Trade Calculator</a>'

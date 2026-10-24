@@ -45,6 +45,16 @@ def human_status(value: Any, *, fallback: str = "Not yet available") -> str:
     return _STATUS_LABELS.get(raw.casefold(), raw.replace("_", " ").title())
 
 
+def projection_evidence_summary(evidence: dict[str, Any]) -> str:
+    """Explain an existing qualification; never infer production from freshness."""
+    state = evidence.get('conclusion_state')
+    if state == 'current':
+        return 'Supported by compatible current-week evidence. Check replacement scenarios before moving depth.'
+    if state == 'provisional':
+        return 'This comparison is provisional: some projections or availability checks are incomplete or not current. Review the evidence before acting.'
+    return 'DTOS cannot confirm replacement strength from the available projections. Missing evidence does not prove weak depth; review or refresh this league.'
+
+
 def available(value: Any, *, reason: str = "Not yet available") -> str:
     import math
     if value is None or value == "" or (isinstance(value, float) and not math.isfinite(value)):
