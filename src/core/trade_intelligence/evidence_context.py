@@ -26,10 +26,12 @@ class TradeEvidenceContext:
     trend_rebuilds: int = 0
     wrong_league_evidence_rejected: int = 0
     wrong_league_evidence_consumed: int = 0
+    manager_evidence_rejected: int = 0
     preparation_duration_ms: float = 0.0
     schema_version: str = TRADE_HISTORY_SCHEMA_VERSION
     method_version: str = TRADE_HISTORY_METHOD_VERSION
     league_observations: dict[str, Any] | None = None
+    manager_source_identity: str = ""
 
 
 def _market_generation(data: dict[str, Any]) -> str:
@@ -45,6 +47,8 @@ def build_trade_evidence_context(
     # imports Trade Intelligence. Resolve helpers after both APIs are initialized.
     from src.core.intelligence.league_scope import scoped_evidence, scoped_market_trends
 
+    from src.core.intelligence.manager_evidence import consumer_identity as source_identity
+    manager_source = source_identity(data)
     started = perf_counter()
     league = data.get("league") or {}
     league_id = str(league.get("league_id") or data.get("league_id") or "")
@@ -88,9 +92,11 @@ def build_trade_evidence_context(
         trends_by_asset=trends,
         generation=_market_generation(data),
         league_observations=observations,
+        manager_source_identity=manager_source,
         wrong_league_evidence_rejected=(
-            behavior.rejected + front_office.rejected + trend_rejections
+            behavior.rejected - behavior.manager_rejected + front_office.rejected - front_office.manager_rejected + trend_rejections
         ),
+        manager_evidence_rejected=behavior.manager_rejected + front_office.manager_rejected,
         preparation_duration_ms=round((perf_counter() - started) * 1000, 3),
     )
 
@@ -115,7 +121,7 @@ def assess_historical_fit(
             "process_distribution": {}, "outcome_distribution": {},
             "liquidity_supported": False,
         }
-    profile = context.behavior_by_roster.get(str(partner_roster_id), {})
+    profile = context.behavior_by_roster.get(str(partner_roster_id), {}) if context.manager_source_identity else {}
     from src.core.gm_behavioral_intelligence.models import GM_BEHAVIOR_METHOD_VERSION
     if profile.get("method_version") != GM_BEHAVIOR_METHOD_VERSION:
         # Cached pre-integrity asset counts and price subsets were not admitted
@@ -151,7 +157,7 @@ def assess_historical_fit(
             reasons.append(f"The package is consistent with supported {tendency.replace('_', ' ')} evidence.")
             reason_codes.append("PACKAGE_STYLE_MATCH")
             references.extend(str(value) for value in package.get("evidence_references") or ())
-    bilateral = context.front_office_by_roster.get(str(partner_roster_id), {})
+    bilateral = context.front_office_by_roster.get(str(partner_roster_id), {}) if context.manager_source_identity else {}
     count = int((bilateral.get("partner_counts") or {}).get(str(active_roster_id)) or 0)
     if count:
         score += 1
@@ -193,7 +199,8 @@ def assess_historical_fit(
     observations = context.league_observations
     if observations and str(observations.get('league_id') or '') == context.league_id:
         observed_partner = partner_context(observations, partner_roster_id)
-        reasons.append(observed_partner.get('short_summary') or observed_partner['summary'])
+        if not profile:
+            reasons.append(observed_partner.get('short_summary') or observed_partner['summary'])
         reason_codes.append('FRANCHISE_OBSERVATIONS_NOT_ACCEPTANCE')
     else:
         observed_partner = None
@@ -211,3 +218,43 @@ def assess_historical_fit(
         "liquidity_supported": liquid,
         "league_partner_observations": observed_partner,
     }
+
+
+def qualify_partner_explanation(evaluation, observations, profile):
+    """Pure prepared-evidence prose: their current benefit, cost, then history."""
+    from .strategy_dimensions import disclosed_costs
+    from src.core.history_context.timestamps import canonical_utc_timestamp
+    strategy = evaluation['dimensions']['strategic_fit']['partner']
+    market = evaluation.get('market_evidence') or {}
+    sent = (market.get('sent') or {}).get('total')
+    received = (market.get('received') or {}).get('total')
+    costs = disclosed_costs(strategy, sent - received if sent is not None and received is not None else None)
+    if market.get('availability') != 'full':
+        costs.insert(0, 'Required neutral Market pricing is missing; the other team’s full cost is unavailable')
+    cost = '; '.join(costs) if costs else 'No additional material cost established in the supported dimensions; projections remain conditional'
+    benefit = evaluation.get('why_they_would_do_it') or 'A supported current-roster benefit is not established.'
+    if profile:
+        count = profile.get('transaction_count')
+        first, last = canonical_utc_timestamp(profile.get('first_observed_at')), canonical_utc_timestamp(profile.get('last_observed_at'))
+        period = f'{first[:10]} to {last[:10]}' if first and last else 'observation dates unavailable'
+        history = (f'{count} supported current-manager trade observations; {period}. '
+            'Historical actions do not establish willingness to move these assets or an acceptance probability.')
+        qualification = 'Prepared current-manager identity and source publication are compatible; historical observations are not a forecast.'
+    else:
+        count, period = 0, 'observation dates unavailable'
+        history = 'Compatible current-manager history is unavailable or insufficient; no manager tendency is established.'
+        qualification = 'Franchise observations remain separately attributed; missing manager evidence does not disqualify a sound current offer.'
+    observations.update(current_benefit=benefit, current_cost=cost, manager_observations=history,
+        admitted_manager_sample=count, admitted_manager_period=period, manager_qualification=qualification)
+    # Keep independent raw franchise counts/coverage and their source references;
+    # do not turn an unavailable observation adapter into a denial of another
+    # properly admitted canonical manager sample.
+    consideration = observations.get('consideration_coverage') or {}
+    limits = ''
+    if consideration.get('composition_unavailable_trades'):
+        limits += f" Consideration unavailable in {consideration['composition_unavailable_trades']} observed franchise trades."
+    if consideration.get('composition_partial_trades'):
+        limits += f" Original consideration is partial in {consideration['composition_partial_trades']} observed franchise trades."
+    observations['summary'] = f'{benefit} Main cost: {cost}. {history} {qualification}' + limits + ' ' + observations.get('coverage_explanation', '')
+    observations['short_summary'] = f'{benefit} Main cost: {cost}.'
+    return observations

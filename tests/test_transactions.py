@@ -17,6 +17,7 @@ from services.sleeper import STATE, sync_transactions
 class TransactionsCenterTests(unittest.TestCase):
     def setUp(self) -> None:
         self.data = {
+            "league": {"league_id": "transaction-fixture", "season": "2026"},
             "teams": [
                 {"roster_id": 1, "team_name": "Alpha", "owner": "Alice"},
                 {"roster_id": 2, "team_name": "Bravo", "owner": "Bob"},

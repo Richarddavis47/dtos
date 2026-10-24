@@ -25,6 +25,8 @@ from src.core.intelligence_memory import (
 from src.core.front_office_evidence import assemble_front_office_evidence
 from src.core.gm_behavioral_intelligence import gm_behavioral_intelligence
 
+from src.core.intelligence.manager_evidence import begin_preparation, end_preparation, preparing, publish_rows
+
 LOGGER = logging.getLogger("dtos.fois")
 
 
@@ -82,6 +84,7 @@ class FOISService:
         if not fois_enabled():
             self._status["state"] = "disabled"
             return ()
+        token = begin_preparation(data)
         self._status["state"] = "running"
         started = perf_counter()
         try:
@@ -108,7 +111,7 @@ class FOISService:
                         )
                 for name, rows in prepared.items():
                     if name in {"front_office_evidence", "gm_behavioral_intelligence"}:
-                        data[name] = rows
+                        publish_rows(data, name, rows)
             self._status.update({
                 "state": "complete",
                 "last_run": scores[0].generated_at if scores else None,
@@ -133,7 +136,10 @@ class FOISService:
                 DEFAULT_FOIS_CONFIGURATION.model_version,
             )
             raise
+        finally:
+            end_preparation(token)
 
+    @preparing
     def _generate_sync(self, data: dict[str, Any]) -> tuple[Any, ...]:
         league = data.get("league") or {}
         league_id = str(league.get("league_id") or "configured-league")
@@ -331,5 +337,6 @@ class FOISService:
                     "FOIS generation listener failed: type=%s",
                     type(exc).__name__,
                 )
-        data.update(self.prepared_evidence)
+        for name, rows in self.prepared_evidence.items():
+            publish_rows(data, name, rows)
         return completed

@@ -46,11 +46,20 @@ def _evidence(report, row=None):
     return '<details><summary>Observed facts and coverage</summary>' + content + '</details>'
 
 
+def _activity(report, roster_id=None):
+    from src.core.gm_behavioral_intelligence.activity import activity_text
+    activity = (report or {}).get('activity') or {}
+    counts = activity.get('total') if roster_id is None else ((activity.get('teams') or {}).get(str(roster_id)) or {}).get('franchise')
+    if counts is None:
+        return '<p>Qualified transaction activity is unavailable.</p>'
+    return '<p class="gm-activity">' + _text(activity_text(counts)) + '</p>'
+
+
 def team_observations(report, roster_id):
     row = (report or {}).get('teams', {}).get(str(roster_id))
     if not row:
         return '<p>Franchise observations unavailable; no manager tendency established.</p>'
-    return CSS + '<section class="gm-observations" data-gm-franchise="' + _text(roster_id) + '"><h2>Franchise and manager context</h2><p>' + _text(row['summary']) + '</p><p class="muted">' + _text(report['coverage']['explanation']) + '</p>' + _evidence(report, row) + '</section>'
+    return CSS + '<section class="gm-observations" data-gm-franchise="' + _text(roster_id) + '"><h2>Franchise and manager context</h2><p>' + _text(row['summary']) + '</p><p class="muted">' + _text(report['coverage']['explanation']) + '</p>' + _activity(report, roster_id) + _evidence(report, row) + '</section>'
 
 
 def league_observations(intelligence, data, active_id):
@@ -81,6 +90,7 @@ def league_observations(intelligence, data, active_id):
     if count:
         ranked = sorted(report['teams'].values(), key=lambda row: (-row['franchise']['trades'], row['roster_id']))
         body += '<p>Most observed franchise participation: ' + _text(', '.join(f"{r['name']} ({r['franchise']['trades']} deals)" for r in ranked[:3] if r['franchise']['trades'])) + '. Multi-party participation is counted once per franchise and deal.</p>'
+    body += _activity(report)
     body += _evidence(report)
     body += '<details><summary>Current roster environment · separate from trading history</summary>' + ''.join('<p><b>' + _text(position) + ':</b> ' + _text(row.explanation) + '</p>' for position, row in intelligence.league.economy.items()) + '</details>'
     body += '<h3>What this means for your team</h3><p>Current needs and observed history are separate signals. Neither establishes willingness to accept.</p>'
@@ -97,5 +107,5 @@ def league_observations(intelligence, data, active_id):
     body += f'<a href="/trades/recommended?front_office={int(active_id)}">Explore trades →</a><h3>GM / franchise insights</h3>'
     for rid, row in report['teams'].items():
         needs = [r.position for r in intelligence.league.needs.get(int(rid), ()) if r.priority in {'High', 'Medium'}]
-        body += f'<details class="gm-row"><summary>{_text(row["name"])} · {_text(row["franchise"]["trades"])} observed trades</summary><p>{_text(row["summary"])}</p><p>Current supported needs: {_text(", ".join(needs) or "No reliable priority established")}. Current roster incentives can differ from historical actions.</p><a href="/teams/{int(rid)}">Open read-only Team HQ and exact assets →</a>{_evidence(report, row)}</details>'
+        body += f'<details class="gm-row"><summary>{_text(row["name"])} · {_text(row["franchise"]["trades"])} observed trades</summary><p>{_text(row["summary"])}</p><p>Current supported needs: {_text(", ".join(needs) or "No reliable priority established")}. Current roster incentives can differ from historical actions.</p><a href="/teams/{int(rid)}">Open read-only Team HQ and exact assets →</a>{_activity(report, rid)}{_evidence(report, row)}</details>'
     return body + '</section>'

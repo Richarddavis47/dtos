@@ -232,7 +232,16 @@ def run(root: Path):
             full_ms = (perf_counter() - started) * 1000
             cache = root / 'cache.json'
             cache.write_text(json.dumps({'data': current}))
-            spawned, _, execution = asyncio.run(generate_fois_isolated(current, FOISRepository(root / f'{league}-spawn.db'), cache_file=cache))
+            from src.core.intelligence.manager_evidence import begin_preparation, end_preparation
+            from src.core.front_office_evidence import publish_front_office_evidence
+            from src.core.gm_behavioral_intelligence import publish_gm_behavioral_intelligence
+            token = begin_preparation(current)
+            try:
+                spawned, _, execution = asyncio.run(generate_fois_isolated(current, FOISRepository(root / f'{league}-spawn.db'), cache_file=cache))
+                publish_front_office_evidence(current, spawned)
+                publish_gm_behavioral_intelligence(current, spawned)
+            finally:
+                end_preparation(token)
             assert execution['worker_pid'] != os.getpid()
 
             if semantic_scores(full) != semantic_scores(spawned):
@@ -265,7 +274,8 @@ def run(root: Path):
                     fact = TradeFact(**loaded[str(side)]['trades'][0])
                     def assets(types):
                         return tuple(SimpleNamespace(kind=kind, position=None, asset_id=f'{kind}:{n}') for n, kind in enumerate(types))
-                    context = build_trade_evidence_context({'league': {'league_id': league}, 'gm_behavioral_intelligence': {str(side): bp}})
+                    context = build_trade_evidence_context(current)
+                    assert context.behavior_by_roster[str(side)]['semantic_identity'] == bp['semantic_identity']
                     match = assess_historical_fit(context, partner_roster_id=side, active_roster_id=99, partner_receives=assets(fact.incoming_asset_types), active_receives=assets(fact.outgoing_asset_types))
                     assert preference['tendency'] == package_shape(fact.incoming_asset_types, fact.outgoing_asset_types)
                     assert 'PACKAGE_STYLE_MATCH' in match['reason_codes'] and match['evidence_references']

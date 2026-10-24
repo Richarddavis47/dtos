@@ -10,17 +10,23 @@ from src.core.front_office_intelligence import build_league_model
 from src.core.intelligence.context import build_context
 from src.core.trade_intelligence.evidence_context import build_trade_evidence_context
 from tests.test_trade_intelligence import fixture_data
+from tests.manager_evidence_fixtures import publish
 
 
 def _league_data(league_id: str) -> dict:
     data = fixture_data()
     data["league"]["league_id"] = league_id
+    for row in data["teams"]:
+        row["owner_id"] = "fixture-owner-" + str(row["roster_id"])
     return data
 
 
 def _behavior(league_id: str, position: str = "QB") -> dict:
     return {
         "league_id": league_id,
+        "franchise_id": league_id + ":franchise:2", "gm_id": league_id + ":gm:fixture-owner-2",
+        "source_evidence_identity": "summary:" + league_id,
+        "method_version": "step6-canonical-decision-aggregation-2",
         "overall_confidence": "high",
         "transaction_count": 8,
         "evidence_completeness": 90,
@@ -107,6 +113,11 @@ class MultiLeagueIntelligenceIsolationTests(unittest.TestCase):
             data["gm_behavioral_intelligence"] = {
                 "2": _behavior(league_id), "1": _behavior(other_id),
             }
+            data["front_office_evidence"] = {"2": {"league_id": league_id,
+                "franchise_id": league_id + ":franchise:2", "gm_id": league_id + ":gm:fixture-owner-2",
+                "semantic_identity": "summary:" + league_id, "source_history_generations": ["history-a"], "transaction_count": 0,
+                "method_version": "step5-process-outcome-unification-1"}}
+            publish(data)
             context = build_trade_evidence_context(data)
             return context.league_id, len(context.behavior_by_roster), context.wrong_league_evidence_rejected
 

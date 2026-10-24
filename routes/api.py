@@ -173,7 +173,19 @@ def create_api_router(
     @router.get("/api/league")
     async def api_league(include_players: bool = False) -> JSONResponse:
         await ensure_fresh()
-        data = require_data().copy()
+        source = require_data()
+        data = source.copy()
+        from src.core.intelligence.league_scope import scoped_evidence
+        manager_rejected = 0
+        for field in ('front_office_evidence', 'gm_behavioral_intelligence'):
+            if field in data:
+                admitted = scoped_evidence(source, field)
+                data[field] = admitted.rows
+                manager_rejected += admitted.rejected
+        data.pop('_manager_evidence_publication', None)
+        data['manager_evidence_qualification'] = {
+            'rejected_products': manager_rejected,
+            'meaning': 'Only compatible current-manager products are included; franchise history remains separate.'}
         data.pop("players", None)
         brain = data.get("valuation_intelligence")
         if isinstance(brain, dict):

@@ -233,4 +233,5 @@ def publish_gm_behavioral_intelligence(data: dict, scores: tuple[object, ...]) -
         and str(getattr(score, "league_id", "")) == league_id
         and str(getattr(score, "gm_behavioral_profile").get("league_id") or "") == league_id
     }
-    data["gm_behavioral_intelligence"] = profiles
+    from src.core.intelligence.manager_evidence import publish_rows
+    publish_rows(data, "gm_behavioral_intelligence", profiles)

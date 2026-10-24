@@ -9,6 +9,7 @@ from services.trade_intelligence import (
 )
 from src.core.trade_intelligence.evidence_context import build_trade_evidence_context
 from tests.test_trade_intelligence import fixture_data
+from tests.manager_evidence_fixtures import publish
 
 
 def _dimension(key: str, tendency: str, confidence: str = "high") -> dict:
@@ -34,6 +35,8 @@ class TradeHistoricalUpgradeTests(unittest.TestCase):
         self.data["gm_behavioral_intelligence"] = {
             "2": {
                 "league_id": str(self.data["league"]["league_id"]),
+                "franchise_id": "league-1:franchise:2", "gm_id": "league-1:gm:fixture-owner",
+                "semantic_identity": "behavior-a", "source_evidence_identity": "summary-a", "transaction_count": 8,
                 "overall_confidence": "high", "evidence_completeness": 90,
                 "method_version": "step6-canonical-decision-aggregation-2",
                 "dimensions": [
@@ -46,10 +49,15 @@ class TradeHistoricalUpgradeTests(unittest.TestCase):
         self.data["front_office_evidence"] = {
             "2": {
                 "league_id": str(self.data["league"]["league_id"]),
+                "franchise_id": "league-1:franchise:2", "gm_id": "league-1:gm:fixture-owner",
+                "semantic_identity": "summary-a", "source_history_generations": ["historical-source-a"], "transaction_count": 8,
+                "method_version": "step5-process-outcome-unification-1",
                 "partner_counts": {"1": 3},
                 "evidence_references": ["event:bilateral"],
             },
         }
+        self.data["teams"][1]["owner_id"] = "fixture-owner"
+        publish(self.data)
         self.data["market_trend_summaries"] = {
             self.received: {"direction": "rising", "confidence": "high"},
         }

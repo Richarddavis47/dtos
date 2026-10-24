@@ -48,6 +48,7 @@ def _semantic(value):
 
 def source_identity(data):
     from src.core.intelligence import TRADE_EVALUATION_POLICY_VERSION
+    from src.core.intelligence.manager_evidence import source_identity as manager_source_identity
     from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations
     from services.trade_intelligence import _trade_projection_service
     from src.core.projection_intelligence.service import canonical_projection_identity
@@ -93,6 +94,8 @@ def source_identity(data):
             _semantic(market),
             projection,
             league_gm_observations.source_identity(data),
+            manager_source_identity(data),
+            data.get("_manager_evidence_publication"),
             {key:(data.get('canonical_player_production') or {}).get(key)
              for key in ('league_id','season','scoring_fingerprint','generation')},
             {

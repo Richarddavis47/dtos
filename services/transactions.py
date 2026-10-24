@@ -192,9 +192,13 @@ def transaction_summary(
     transactions: list[dict[str, Any]], data: dict[str, Any]
 ) -> dict[str, Any]:
     """Calculate league-wide transaction activity metrics."""
-    activity: Counter[str] = Counter()
-    for transaction in transactions:
-        activity.update(transaction["roster_ids"])
+    from src.core.gm_behavioral_intelligence.activity import summarize_activity
+    league = data.get('league') or {}
+    observed = summarize_activity(((league.get('season'), str(league.get('league_id') or ''), row.get('raw') or {})
+        for row in transactions), data.get('teams') or [])
+    totals = observed['total']
+    activity = Counter({rid: row['franchise']['completed_transactions'] for rid, row in observed['teams'].items()
+                        if row['franchise']['completed_transactions']})
     team_by_id = {
         str(team.get("roster_id")): team for team in (data.get("teams") or [])
     }
@@ -211,10 +215,14 @@ def transaction_summary(
         transactions, key=lambda transaction: transaction["created_ms"], default=None
     )
     return {
-        "trades": sum(transaction["type"] == "trade" for transaction in transactions),
-        "waivers": sum(transaction["type"] == "waiver" for transaction in transactions),
-        "adds": sum(transaction["add_count"] for transaction in transactions),
-        "drops": sum(transaction["drop_count"] for transaction in transactions),
+        "trades": totals["completed_trades"],
+        "waivers": totals["completed_waivers"],
+        "adds": totals["completed_adds"],
+        "drops": totals["completed_drops"],
+        "waiver_attempts": totals["waiver_attempts"],
+        "activity_qualification": observed["attribution"],
+        "unqualified_records": observed["unqualified_records"],
+        "conflicting_identities": observed["conflicting_identities"],
         "most_active_team": str(
             (team_by_id.get(most_active_id) or {}).get("team_name") or "—"
         ),

@@ -405,6 +405,10 @@ def evaluate_trade_request(
         workspace = {**workspace, 'pools': workspace['neutral_pools']}
     if payload.get('strategy') is not None:
         _requested_strategy({}, payload)
+    from src.core.intelligence.manager_evidence import consumer_identity as manager_source_identity
+    manager_boundary = manager_source_identity(data)
+    if evidence_context is not None and evidence_context.manager_source_identity != manager_boundary:
+        raise TradeInputError('canonical_evidence_changed', 'Manager/source evidence changed. Retry the same proposal.')
     validate_trade_ownership(workspace, payload)
     locked = set(payload.get('protected_assets') or ()) & set(payload['assets_sent'])
     locked |= set(payload.get('excluded_assets') or ()) & set((*payload['assets_sent'], *payload['assets_received']))
@@ -473,6 +477,9 @@ def evaluate_trade_request(
         from src.core.gm_behavioral_intelligence.diagnostics import partner_context
         partner_history = partner_context(prepared_context.league_observations, partner_id,
             partner_diagnostic, (asset.position for asset in proposal.assets_sent if asset.position))
+        from src.core.intelligence import qualify_partner_explanation
+        partner_history = qualify_partner_explanation(evaluation, partner_history,
+            prepared_context.behavior_by_roster.get(str(partner_id)))
         evaluation['dimensions']['league_partner_context'] = partner_history
         evaluation['why_this_partner'] = partner_history.get('short_summary') or partner_history['summary']
         if active_diagnostic['coverage'] == 'supported current week' and active_diagnostic['need_positions_received']:
@@ -488,6 +495,8 @@ def evaluate_trade_request(
         # Once input/ownership checks passed, an evaluator exception is not a
         # stale proposal and must not expose internal exception text to users.
         raise RuntimeError("Canonical trade evaluation unavailable") from exc
+    if manager_source_identity(data) != manager_boundary:
+        raise TradeInputError('canonical_evidence_changed', 'Manager/source evidence changed during evaluation. Retry the same proposal.')
     if canonical_projection_identity(projections.service.snapshot(), projection_identity['league_id'])['generation'] != projection_identity['generation']:
         raise TradeInputError('canonical_evidence_changed', 'Canonical projection evidence changed during evaluation. Try the same offer again.')
     if context:
