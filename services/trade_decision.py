@@ -153,6 +153,19 @@ def decision_context(result, *, incoming=(), outgoing=()):
         )
         or None
     )
+    coverage_explanation = None
+    if delta is not None and (
+        result.get('recommendation_availability') != 'bounded'
+        or strategy.get('projection_coverage_complete') is False
+        or market_incomplete
+    ):
+        coverage_explanation = (
+            "This week's lineup comparison uses the available current-week projections; it is not a complete trade recommendation. "
+            + ("Projections or legal-lineup evidence for other requested periods are incomplete. "
+               if strategy.get('projection_coverage_complete') is False else '')
+            + ("Missing Market prices prevent a complete cost comparison. " if market_incomplete else '')
+            + "The known weekly effect remains useful, but does not fill gaps in the wider assessment."
+        )
     return {
         "verdict": result.get("recommendation"),
         "qualification": qualification,
@@ -166,6 +179,7 @@ def decision_context(result, *, incoming=(), outgoing=()):
             "selection_required": needs_strategy,
         },
         "lineup": {"delta": delta, "state": numeric_state, "explanation": lineup},
+        "coverage_explanation": coverage_explanation,
         "main_cost": cost,
         "limitation": limitation,
         "conditional": conditional,

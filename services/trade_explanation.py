@@ -279,7 +279,11 @@ def _decision_primary(result, decision):
     brief = '<section class="tw-decision" aria-label="Trade decision summary">' + market_html
     brief += paragraph(decision.get('blocker'), 'tw-drawback')
     brief += paragraph(decision['lineup']['explanation']) + paragraph(decision.get('summary'))
-    brief += paragraph('Main cost: ' + decision['main_cost'], 'tw-drawback')
+    brief += paragraph(decision.get('coverage_explanation'), 'tw-drawback')
+    brief += paragraph('Cost and uncertainty: ' + decision['main_cost'], 'tw-drawback')
+    brief += paragraph('Other team: ' + result['why_they_would_do_it'] if result.get('why_they_would_do_it') else None)
+    partner = (result.get('dimensions') or {}).get('league_partner_context') or {}
+    brief += paragraph('Their cost and uncertainty: ' + partner['current_cost'] if partner.get('current_cost') else None)
     if decision.get('limitation'):
         brief += paragraph('Evidence limit: ' + decision['limitation'], 'tw-drawback')
     if decision.get('conditional'):

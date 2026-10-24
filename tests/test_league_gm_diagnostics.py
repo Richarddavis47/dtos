@@ -365,7 +365,7 @@ class LeagueDiagnosticHTTPTests(unittest.TestCase):
             from src.ui.home_trade_opportunities import cards
             output = cards([{**result.json(), 'home_offer': 'fixture'}], 1)
             self.assertIn('Why this partner:', output)
-            self.assertIn('Drawback:', output)
+            self.assertIn('Cost and uncertainty:', output)
             self.assertIn('Why this partner?', self.client.get('/static/js/trade_workspace.js').text)
 
     def test_league_report_respects_authenticated_selected_strategy(self):

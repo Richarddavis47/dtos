@@ -14,6 +14,9 @@ class FrontOfficeBriefTests(unittest.TestCase):
 
     def test_cache_miss_has_no_factory_and_no_inferred_direction(self):
         from services.front_office_brief import prepared_evidence, select_insights
+        from src.core.intelligence.roster_diagnostics import diagnostic_store
+        # Establish the asserted cold-cache premise even after prepared-HQ tests.
+        diagnostic_store.clear()
         with patch('services.front_office_brief.intelligence_orchestrator', self.f.engine), \
              patch.object(self.f.engine, 'analyze', side_effect=AssertionError('factory')), \
              patch('src.core.intelligence.roster_diagnostics._compute', side_effect=AssertionError('solver')):
@@ -63,8 +66,10 @@ class FrontOfficeBriefTests(unittest.TestCase):
         items = select_insights(facts, [], [])
         self.assertEqual(items[0]['family'], 'capital')
         self.assertIn('2029', items[0]['reason'])
-        self.assertIn('original 2', items[0]['reason'])
-        self.assertIn('owner 1', items[0]['reason'])
+        self.assertIn('owned by your team', items[0]['reason'])
+        self.assertNotIn('owner 1', items[0]['reason'])
+        self.assertIn('original 2', ' '.join(items[0]['details']))
+        self.assertIn('owner 1', ' '.join(items[0]['details']))
         self.assertIn('Unknown ranges', items[0]['drawback'])
         self.assertEqual(self.f.data, before)
 

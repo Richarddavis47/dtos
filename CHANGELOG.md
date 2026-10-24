@@ -1,3 +1,13 @@
+## v1.21.91 / build 2191 — Plain-English Decision Experience
+
+Explain missing depth evidence as uncertainty, separately from a supported replacement weakness. Keep projected lineup rankings distinct from record/PF standing and provisional evidence visibly qualified. Preserve detailed source/availability evidence in existing disclosures.
+
+Explain why a supported current-week trade effect can coexist with an incomplete overall recommendation. Show the other roster’s prepared benefit and cost without elevating historical manager observations or changing eligibility. Use cost/uncertainty labels rather than manufacturing a tradeoff from reassurance. Keep missing-price conditional exploration and all canonical verdicts intact.
+
+My DTOS explains Create rankings to personalize and the Custom Trade setup prerequisite; remove repeated introductory wording while preserving saved order, Restart, recovery and Neutral/Custom behavior. Market describes comparable dated observations without internal Step 2 terminology. Home uses supported original-team labels for owned firsts and keeps exact source identifiers in Supporting evidence.
+
+Presentation-only prepared reads: no additional provider, discovery, solver, FOIS, reconstruction, inference or durable analytical work. No pricing, projection, lineup, strategy, authorization, source-publication or cache-budget changes. Retained historical grades remain RETAINED / NOT REVALIDATED. Responsive Chromium and simulated walkthroughs are author evidence; physical Safari, unfamiliar-human and independent Scout acceptance remain open. Existing beta/concurrency restrictions remain.
+
 ## v1.21.90 / build 2190 — Custom Rankings Availability and Recovery
 
 Use the canonical Market cache's immutable prepared-input identity for Custom Rankings compatibility. The normal provider publication has no top-level generation timestamp; requiring one rejected a ready Market directory indefinitely. Preserve explicit legacy source checks, exact league/player/pick identities, current prepared-generation admission and saved rank-slot valuation semantics. Reject input changes during directory reads and source replacement before preference commits/publication; never reset saved intent on reads or refresh.

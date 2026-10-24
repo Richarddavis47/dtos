@@ -717,11 +717,11 @@
     if (e.decision_context) {
       const brief = node('section', null, 'tw-decision');
       if (retained) brief.append(node('p', 'Previous decision context · NOT REVALIDATED. Numbers and conclusions below describe the original assessment.'));
-      for (const text of [decision.blocker, decision.lineup?.explanation, decision.summary, decision.main_cost, decision.limitation]) if (text) brief.append(node('p', text));
+      for (const text of [decision.blocker, decision.lineup?.explanation, decision.summary, decision.coverage_explanation, decision.limitation]) if (text) brief.append(node('p', text));
       out.append(brief);
       if (!previousContainer && e.decision_context.strategy?.selection_required) strategyAction(out);
     }
-    if (decision.main_cost || e.major_drawback || e.major_risks?.length) out.append(node('p', 'Major drawback: ' + (decision.main_cost || e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
+    if (decision.main_cost || e.major_drawback || e.major_risks?.length) out.append(node('p', 'Cost and uncertainty: ' + (decision.main_cost || e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
     else if (context?.restored) out.append(node('p', 'Major drawback unavailable in retained context. Reevaluate for supported costs.', 'tw-drawback'));
     if (previousContainer) for (const risk of e.major_risks || []) if (risk !== e.major_drawback) out.append(node('p', 'Previous risk: ' + risk.replaceAll('_', ' '), 'tw-drawback'));
     if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
@@ -1362,7 +1362,9 @@
       select.value = valuationMode;
       const edit = node('a', 'Edit My DTOS rankings'); edit.href = '/account/my-dtos';
       panel.append(label, select, node('p', 'Neutral Market and Sleeper lineup facts stay unchanged. Custom DTOS uses your saved ranking values for your decision.'), edit);
-      if (p.available !== true) panel.append(node('p', (p.limitations || []).join(' ') || 'Custom DTOS needs saved rankings with compatible Market prices. Open My DTOS to create or retry rankings; Neutral Trade remains available.', 'muted'));
+      if (p.available !== true) panel.append(node('p', !(p.revision > 0)
+        ? 'Create Custom Rankings in My DTOS to use Custom Trade. Neutral DTOS is available now.'
+        : (p.limitations || []).join(' ') || 'Saved Custom Rankings need compatible Market prices. Open My DTOS to retry; Neutral Trade remains available.', 'muted'));
       root.prepend(panel);
       select.onchange = () => {
         activeRequest?.abort(); activeRequest = null; balanceRequest = null; revision++; runSequence++; busy = false;

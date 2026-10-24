@@ -63,7 +63,8 @@
     el('personal-scope').textContent = `League ${scope.league_id || 'unavailable'} · Franchise ${scope.roster_id || 'unavailable'} · ${state.rows?.length || 0} eligible ranked assets · Revision ${state.revision || 0}`;
     el('personal-mode-description').textContent = custom
       ? 'Your personal values guide Custom decisions. Neutral Market fairness stays visible.'
-      : 'Neutral Market values are active. Your custom order and preferences are preserved.';
+      : initialized ? 'Neutral Market values are active. Your custom order and preferences are preserved.'
+      : 'Neutral DTOS is ready. Create Custom Rankings to personalize your trade decisions.';
     const method = state.method_explanation || (typeof state.method === 'object' ? state.method?.description : null);
     if (method) el('personal-method').textContent = method;
     const rows = filtered(); const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE)); page = Math.max(0, Math.min(page, pages - 1));
@@ -81,7 +82,7 @@
       const handle = button('↕', `Reorder or drag ${label} to another overall position`, () => { details.open = !details.open; }, `${id}:drag`);
       handle.disabled ||= !editable; handle.classList.add('personal-drag'); handle.draggable = !handle.disabled; handle.dataset.dragHandle = id; header.append(handle);
       const identity = node('div', null, 'personal-identity'); identity.append(node('strong', `${custom && row.custom_ranked === false ? 'Unranked' : rank + '.'} ${label}`), node('span', `${row.position || 'PICK'} · ${row.owned ? 'Your asset' : 'Not on your franchise'}`, 'muted')); header.append(identity); item.append(header);
-      const values = node('p', null, 'personal-values'); values.append(node('span', `Market ${value(row.market_value)}`), node('span', `Personal ${value(row.personal_value)}`)); identity.append(values);
+      const values = node('p', null, 'personal-values'); values.append(node('span', `Market ${value(row.market_value)}`), node('span', initialized ? `Personal ${value(row.personal_value)}` : 'Create rankings to personalize')); identity.append(values);
       const saved = ['target', 'avoid', 'protect'].filter(flag => prefs(row)[flag]);
       if (row.tier_start || state.tiers?.includes(id)) saved.push('Tier start');
       if (saved.length) identity.append(node('span', saved.map(flag => flag[0].toUpperCase() + flag.slice(1)).join(' · '), 'personal-saved-intent'));
@@ -130,7 +131,7 @@
       if (sequence !== requestSequence) return;
       if (!response.ok) throw new Error(result.message || result.detail || 'My DTOS is unavailable. Sign in or reload and try again.');
       const retriedWithFocus = document.activeElement === el('personal-retry');
-      state = result; ready = true; el('personal-recovery').hidden = true; render(); status(result.limitations?.length ? result.limitations.join(' ') : 'Rankings loaded.');
+      state = result; ready = true; el('personal-recovery').hidden = true; render(); status(result.initialized ? 'Rankings loaded. Review any evidence limits below.' : 'Market rankings loaded. Neutral DTOS is active.');
       if (retriedWithFocus) el(result.initialized ? 'personal-custom' : 'personal-initialize').focus({preventScroll: true});
     } catch (exc) { if (sequence === requestSequence && exc.name !== 'AbortError') { error(String(exc.message)); el('personal-recovery').hidden = false; render(); status(state ? 'Previously loaded rankings are shown for reference. Retry to check current evidence before editing.' : 'Custom Rankings could not load. Check Market or retry; Neutral Trade remains available.'); } }
     finally { if (sequence === requestSequence) root.setAttribute('aria-busy', 'false'); }

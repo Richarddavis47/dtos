@@ -38,7 +38,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                         self.assertIn('2028', page.locator('#home-opportunity-cards').inner_text())
                         self.assertIn('You send:', page.locator('.home-opportunity').inner_text())
                         self.assertIn('You receive:', page.locator('.home-opportunity').inner_text())
-                        self.assertIn('Drawback:', page.locator('.home-opportunity').inner_text())
+                        self.assertIn('Cost and uncertainty:', page.locator('.home-opportunity').inner_text())
                         self.assertFalse(any('/api/trades/generate' in r for r in requests))
                         row = page.evaluate('''() => {
                           const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {y:r.y,height:r.height,width:r.width};};
