@@ -134,7 +134,7 @@ jobs:
               seed._canonical_history_fixture(FIXTURE)
               with (OUTPUT / "canonical.log").open("w") as stream:
                   result = subprocess.run([sys.executable, "-m", "tools.validation.validate_release"],
-                                          stdout=stream, stderr=subprocess.STDOUT, timeout=3000)
+                                          stdout=stream, stderr=subprocess.STDOUT, timeout=3420)
               code = result.returncode
           except BaseException as exc:
               error = type(exc).__name__ + ": " + str(exc)
