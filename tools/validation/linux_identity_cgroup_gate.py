@@ -11,6 +11,7 @@ from datetime import date
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+from tools.validation.smoke_http import inspection_fixture
 
 GIB = 1024**3
 MIB = 1024**2
@@ -59,6 +60,14 @@ class Monitor:
         self.peak = max(self.peak, metric("memory.current"))
 
 
+def authorized_client(app) -> TestClient:
+    """Use the existing supplied inspection contract; never invent authority."""
+    fixture = inspection_fixture()
+    if fixture is None:
+        raise RuntimeError("Identity validation requires a complete disposable inspection context")
+    return TestClient(app, headers={"X-DTOS-Inspection-Auth": fixture[0]})
+
+
 def main() -> int:
     if sys.platform != "linux":
         raise RuntimeError("Linux cgroup validation must run on Linux")
@@ -80,7 +89,7 @@ def main() -> int:
         "phases": {},
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    with Monitor() as monitor, TestClient(app) as client:
+    with Monitor() as monitor, authorized_client(app) as client:
         ready = client.get("/health/ready")
         if ready.status_code != 200:
             raise AssertionError(f"fixture readiness failed: {ready.status_code}")

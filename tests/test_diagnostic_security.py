@@ -335,3 +335,27 @@ class ValidationDiagnosticCredentialTests(unittest.TestCase):
                 self.assertEqual(os.environ['DTOS_INSPECTION_ROSTER_ID'], '1')
             for key, value in original.items():
                 self.assertEqual(os.environ[key], value)
+
+
+class IdentityValidationAuthorizationTests(unittest.TestCase):
+    def test_missing_credential_fails_instead_of_bypassing_authorization(self):
+        from tools.validation.linux_identity_cgroup_gate import authorized_client
+        with patch.dict('os.environ', {'DTOS_INSPECTION_AUTH_TOKEN': ''}):
+            with self.assertRaisesRegex(RuntimeError, 'complete disposable inspection context'):
+                authorized_client(FastAPI())
+
+    def test_supplied_existing_credential_reaches_the_real_account_boundary(self):
+        from tools.validation.linux_identity_cgroup_gate import authorized_client
+        from tests.inspection_auth_fixture import authorize_inspection
+        app = FastAPI()
+        authorize_inspection(self, app, '111')
+
+        @app.get('/api/market/health')
+        async def market_health():
+            account = current_account()
+            return {'league': account.membership.league_id}
+
+        with authorized_client(app) as client:
+            response = client.get('/api/market/health')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'league': '111'})

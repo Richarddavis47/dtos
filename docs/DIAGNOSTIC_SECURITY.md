@@ -54,3 +54,5 @@ release does not authorize public promotion or beta expansion. No real private
 production league records are retrieved to prove the defect or its correction.
 
 Related legacy search, weekly-report and manual-sync handlers use the same existing private HTML policy as their corresponding private APIs. Anonymous requests redirect to sign-in before data access or sync work; authorized mutations still require CSRF. Retired static inspection files have no registered static-directory mount or download handler and are not republished. Robots and sitemap contain fixed route URLs only.
+
+The standalone Linux identity cgroup gate uses a caller-supplied complete existing inspection context for its private Market-health read. Missing credentials fail clearly; it does not create a production credential or silently exempt the route.
