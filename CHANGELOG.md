@@ -1,3 +1,9 @@
+## v1.21.96 / build 2196 — Public Welcome and Fictional Demo candidate
+
+Unreleased candidate: add a source-independent public `/welcome` page and route anonymous root visits to it. Preserve authenticated Home, account destinations and admission rules. Show three frozen, standard-football-scored fictional examples for roster depth/capital, bilateral Trade and Neutral/Custom values; no anonymous intelligence services or persistence.
+
+Release is held: the existing legacy inspection boundary admits anonymous protected-league facts in a pinned-baseline disposable control. Separate authorization for diagnostic protection/minimization and complete mandatory release validation are required before merge or deployment. No security policy or production account data changed in this candidate.
+
 ## v1.21.95 / build 2195 — Premium Decision Hierarchy
 
 Compact the shared account/league header and keep secondary league tools in an accessible disclosure. Bring prepared Home guidance and Market search forward, distinguish selected modes from primary actions, and present existing player evidence in one identity-led summary with quieter supporting sections. Keep Roster, Depth and Capital visible in a compact row, with secondary Trade shortcuts in the existing assessment disclosure.

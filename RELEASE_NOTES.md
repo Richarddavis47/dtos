@@ -1,3 +1,9 @@
+## v1.21.96 / build 2196 — Public Welcome and Fictional Demo candidate
+
+Unreleased candidate. Explain DTOS before sign-in through one static welcome page with accessible fictional Team, Trade and Custom-valuation examples. Preserve existing authenticated Home and account workflows. Frozen demo outputs use explicitly stated football scoring, legal lineups and exact fictional picks; anonymous visits start no providers, discovery, FOIS, reconstruction or solver work.
+
+Release hold: a pre-existing anonymous legacy-inspection data exposure was confirmed on the exact build 2195 source in disposable HTTP controls. It requires separate authorization; this candidate does not alter diagnostic access, registration admission or user preferences. Production remains v1.21.95. Full mandatory regression, canonical, hosted and security acceptance must complete before any future release.
+
 ## v1.21.95 / build 2195 — Premium Decision Hierarchy
 
 Compact the shared account/league header and keep secondary league tools in an accessible disclosure. Bring prepared Home guidance and Market search forward, distinguish selected modes from primary actions, and present existing player evidence in one identity-led summary with quieter supporting sections. Keep Roster, Depth and Capital visible in a compact row, with secondary Trade shortcuts in the existing assessment disclosure.

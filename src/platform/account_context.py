@@ -61,10 +61,12 @@ def league_path_identity(path: str) -> str | None:
 
 
 class AccountContextMiddleware:
-    def __init__(self, app: Any, *, service: AccountService, required: bool) -> None:
+    def __init__(self, app: Any, *, service: AccountService, required: bool,
+                 public_welcome: bool = False) -> None:
         self.app = app
         self.service = service
         self.required = required
+        self.public_welcome = public_welcome
 
     def _inspection_context(self, scope: dict[str, Any]) -> AccountContext | None:
         if not inspection_authorized(scope):
@@ -164,6 +166,12 @@ class AccountContextMiddleware:
             "/matchups", "/transactions", "/picks", "/settings", "/brain", "/valuation",
             "/players", "/history", "/commissioner",
         ))
+        if self.public_welcome and context is None and not inspection and path == "/" and method in {"GET", "HEAD"}:
+            await RedirectResponse(
+                "/welcome", status_code=303,
+                headers={"Cache-Control": "no-store", "Vary": "Cookie"},
+            )(scope, receive, send)
+            return
         if self.required and context is None and not inspection and (private_api or private_html):
             response = (
                 JSONResponse({"status": "authentication_required", "reason": "Sign in to access this DTOS league context."}, status_code=401)
