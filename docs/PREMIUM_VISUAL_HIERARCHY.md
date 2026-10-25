@@ -20,7 +20,8 @@ five main navigation destinations are retained.
 - Market reorders existing rendering: view selection, search/filter form, count
   and explanatory disclosure. Query fields, values and recovery remain unchanged.
   Its existing Result ordinal receives enough space to avoid overlapping the
-  player portrait, with a component text-bounds check at every viewport.
+  player portrait. On phones it sits above the identity instead of consuming
+  the name column. Component checks cover whole-word fit and portrait overlap.
 - The dossier formatter reuses its prepared recommendation wording and first
   existing concern/uncertainty. It does not infer a new verdict. The same Market
   value, weekly panel and complete evidence remain available. Supported strengths

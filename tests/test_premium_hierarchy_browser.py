@@ -104,13 +104,19 @@ class PremiumSharedJourneyTests(journey.ProductBrowserJourneyTests):
             )
             keyboard_disclosure(self, page, page.locator(".ds-page-guide>summary"))
             for rank in page.locator(".market-rank").all():
-                fit = rank.evaluate("""e=>{const r=e.getBoundingClientRect(),t=document.createRange();t.selectNodeContents(e);const b=t.getBoundingClientRect(),p=e.parentElement.querySelector('.player-portrait');return {width:e.clientWidth,scroll:e.scrollWidth,textLeft:b.left,textRight:b.right,left:r.left,right:r.right,portraitLeft:p?.getBoundingClientRect().left,font:parseFloat(getComputedStyle(e).fontSize)}}""")
+                fit = rank.evaluate("""e=>{const r=e.getBoundingClientRect(),t=document.createRange();t.selectNodeContents(e);const b=t.getBoundingClientRect(),p=e.parentElement.querySelector('.player-portrait');return {width:e.clientWidth,scroll:e.scrollWidth,textLeft:b.left,textRight:b.right,left:r.left,right:r.right,bottom:r.bottom,portraitLeft:p?.getBoundingClientRect().left,portraitTop:p?.getBoundingClientRect().top,font:parseFloat(getComputedStyle(e).fontSize)}}""")
                 self.assertLessEqual(fit["scroll"], fit["width"])
                 self.assertGreaterEqual(fit["textLeft"], fit["left"])
                 self.assertLessEqual(fit["textRight"], fit["right"])
                 self.assertGreaterEqual(fit["font"], 12)
+                word = rank.evaluate("""e=>{const s=getComputedStyle(e),c=document.createElement('canvas').getContext('2d');c.font=s.font;return c.measureText('Result').width+parseFloat(s.paddingLeft)+parseFloat(s.paddingRight)}""")
+                self.assertLessEqual(word, fit["width"], "Result label must fit as a whole word")
                 if fit["portraitLeft"] is not None:
-                    self.assertLessEqual(fit["right"], fit["portraitLeft"])
+                    self.assertTrue(
+                        fit["right"] <= fit["portraitLeft"]
+                        or fit["bottom"] <= fit["portraitTop"],
+                        "Result label must not overlap the player portrait",
+                    )
         if path in ("/", "/market", "/teams/1", "/fois"):
             keyboard_disclosure(
                 self, page, page.locator(".ds-shell .secondary-nav>summary")
