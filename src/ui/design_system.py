@@ -18,10 +18,13 @@ class PagePresentation:
     primary_href: str
     secondary_label: str = "Home"
     secondary_href: str = "/"
+    variant: str = "standard"
 
 
 def _presentation(title: str) -> PagePresentation:
     normalized = title.casefold()
+    if normalized == "asset market":
+        return PagePresentation("Find players and exact draft picks using neutral Market prices and your league's ownership context.", "Asset Market", "Open Team HQ", "/teams", variant="search")
     if "executive profile" in normalized:
         return PagePresentation("Review this manager's process, results, confidence, and historical evidence in the active league.", "General Manager profile", "GM Leaderboard", "/fois", "League History", "/history")
     if "front office intelligence system" in normalized:
@@ -36,7 +39,7 @@ def _presentation(title: str) -> PagePresentation:
     if "headquarters" in normalized or normalized == "teams":
         return PagePresentation("Understand this franchise's direction, strengths, and next move.", "Front Office direction", "Open Trade Center", "/trades")
     if "player intelligence" in normalized or "player dossier" in normalized:
-        return PagePresentation("Decide whether to acquire, hold, build around, or move this player.", "Player decision", "Open Trade Center", "/trades")
+        return PagePresentation("Decide whether to acquire, hold, build around, or move this player.", "Player decision", "Open Trade Center", "/trades", variant="identity")
     if "trade" in normalized:
         return PagePresentation("Find the best realistic trade to pursue for the active Front Office.", "Trade planning", "Review Teams", "/teams")
     if "front office" in normalized:
@@ -58,7 +61,9 @@ def page_header(title: str, *, league_name: str, last_updated: str) -> str:
     if title == "Home":
         return f'<header class="ds-page-header ds-overview-header" data-dtos-component="page-header" data-design-system="{DESIGN_SYSTEM_VERSION}"><h1>Home</h1><span class="ds-context">{escape(league_name)}</span></header>'
     presentation = _presentation(title)
-    return f'''<header class="ds-page-header" data-dtos-component="page-header" data-design-system="{DESIGN_SYSTEM_VERSION}"><div><h1>{escape(title)}</h1><details class="ds-page-guide"><summary>How it works</summary><p class="ds-purpose">{escape(presentation.purpose)}</p><div class="ds-context">{escape(league_name)} · {escape(presentation.context)}</div><div class="ds-freshness">League Sync: <b>{escape(last_updated or "Not synchronized yet")}</b></div></details></div><div class="ds-header-side"><div class="ds-actions"><a class="ds-action primary" href="{escape(presentation.primary_href)}">{escape(presentation.primary_label)}</a><a class="ds-action" href="{escape(presentation.secondary_href)}">{escape(presentation.secondary_label)}</a></div></div></header>'''
+    actions = f'<div class="ds-header-side"><div class="ds-actions"><a class="ds-action primary" href="{escape(presentation.primary_href)}">{escape(presentation.primary_label)}</a><a class="ds-action" href="{escape(presentation.secondary_href)}">{escape(presentation.secondary_label)}</a></div></div>'
+    task_first = presentation.variant in {"search", "identity"}
+    return f'''<header class="ds-page-header ds-page-header--{presentation.variant}" data-dtos-component="page-header" data-design-system="{DESIGN_SYSTEM_VERSION}"><div><h1>{escape(title)}</h1><details class="ds-page-guide"><summary>How it works</summary><p class="ds-purpose">{escape(presentation.purpose)}</p><div class="ds-context">{escape(league_name)} · {escape(presentation.context)}</div><div class="ds-freshness">League Sync: <b>{escape(last_updated or "Not synchronized yet")}</b></div>{actions if task_first else ""}</details></div>{"" if task_first else actions}</header>'''
 
 
 def account_page_header(title: str, *, purpose: str) -> str:
@@ -73,7 +78,7 @@ def account_page_header(title: str, *, purpose: str) -> str:
     )
 
 
-def manager_navigation(title: str, *, roster_id: int | None = None) -> str:
+def manager_navigation(title: str, *, roster_id: int | None = None, include_tools: bool = True) -> str:
     """Render the five primary manager destinations and subordinate tools."""
     normalized = title.casefold()
     if title == "Home":
@@ -101,6 +106,11 @@ def manager_navigation(title: str, *, roster_id: int | None = None) -> str:
         f'<a href="{href}"{" aria-current=\"page\"" if label == active else ""}><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{icons[label]}</svg>{label}</a>'
         for label, href in primary
     )
+    return f'<nav class="manager-nav" aria-label="Primary navigation">{links}</nav>' + (secondary_navigation() if include_tools else '')
+
+
+def secondary_navigation() -> str:
+    """The existing tool destinations, usable beside the shared account shell."""
     secondary = (
         ("FOIS", "/fois"), ("Commissioner", "/commissioner"),
         ("History", "/history"), ("Transactions", "/transactions"),
@@ -110,7 +120,7 @@ def manager_navigation(title: str, *, roster_id: int | None = None) -> str:
         ("My DTOS", "/account/my-dtos"),
     )
     tools = "".join(f'<a href="{href}">{label}</a>' for label, href in secondary)
-    return f'<nav class="manager-nav" aria-label="Primary navigation">{links}</nav><details class="secondary-nav"><summary>More league tools</summary><div>{tools}</div></details>'
+    return f'<details class="secondary-nav"><summary aria-label="More league tools">More tools</summary><div>{tools}</div></details>'
 
 
 def player_summary(*, player_id: str, name: str, position: str | None, nfl_team: str | None, context: str | None = None, projection: dict | None = None) -> str:

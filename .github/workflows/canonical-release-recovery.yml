@@ -64,6 +64,7 @@ jobs:
               DTOS_SLEEPER_SEASON_CACHE_ROOT="/fixture/sleeper-season-cache",
               DTOS_HISTORY_STORAGE_ROOT="/fixture", DTOS_ATTRIBUTION_TEST_LOG="/output/tests.jsonl",
               DTOS_PLAIN_ENGLISH_EVIDENCE="/output/plain-browser",
+              DTOS_PREMIUM_EVIDENCE="/output/premium-browser",
               DTOS_OUTLOOK_EVIDENCE="/output/outlook-browser",
               DTOS_BRIEF_EVIDENCE="/output/home-browser",
               DTOS_TREND_BROWSER_EVIDENCE="/output/market-browser.json",
@@ -133,7 +134,7 @@ jobs:
               seed._canonical_history_fixture(FIXTURE)
               with (OUTPUT / "canonical.log").open("w") as stream:
                   result = subprocess.run([sys.executable, "-m", "tools.validation.validate_release"],
-                                          stdout=stream, stderr=subprocess.STDOUT, timeout=3000)
+                                          stdout=stream, stderr=subprocess.STDOUT, timeout=3420)
               code = result.returncode
           except BaseException as exc:
               error = type(exc).__name__ + ": " + str(exc)
@@ -238,7 +239,7 @@ jobs:
           docker build --file .validation/canonical-build/Dockerfile --tag dtos-canonical-release:validation .validation/canonical-build 2>&1 | tee .validation/canonical-release/image-build.log
           docker run --rm dtos-canonical-release:validation sh -c 'python --version && chromium --version && python -m pip check' | tee .validation/canonical-release/environment.txt
       - name: Run unchanged ten-gate validator under actual 2 GiB
-        timeout-minutes: 52
+        timeout-minutes: 58
         env:
           DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |

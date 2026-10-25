@@ -76,7 +76,8 @@ class FinalPresentationPreservationTests(unittest.TestCase):
             self.assertEqual(prepared, before)
             self.assertIs(prepared.core_values.market.score, price)
             if price is not None:
-                self.assertIn('Market:</b> 0', html)
+                self.assertIn('data-availability="available"', html)
+                self.assertIn('<strong>0</strong>', html)
                 self.assertEqual(next(e.display for e in observed[-1].evidence if e.key == 'market'), '0')
             else:
                 self.assertFalse(any(e.key == 'market' for e in observed[-1].evidence))

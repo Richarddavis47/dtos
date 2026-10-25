@@ -14,20 +14,22 @@ from src.core.asset_intelligence import AssetEvaluation, PlayerReport
 
 ASSET_CSS = """
 <style>
-.ai-context{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center}
+.ai-context{display:block;border:0;border-left:3px solid var(--accent);border-radius:0 12px 12px 0;padding:16px}
 .ai-context .ds-actions{justify-content:flex-start}.ai-context form{display:grid;gap:8px}
-.ai-player-identity{margin:12px 0}.ai-player-identity .player-portrait,.ai-player-identity .player-headshot,.ai-player-identity .player-headshot-fallback{width:88px;height:88px;flex-basis:88px;border-radius:16px}
-.ai-player-identity .player-summary-copy b{font-size:28px}.ai-player-identity .player-summary-copy span{font-size:14px}
+.ai-player-identity{margin:8px 0}.ai-player-identity .player-portrait,.ai-player-identity .player-headshot,.ai-player-identity .player-headshot-fallback{width:64px;height:64px;flex-basis:64px;border-radius:12px}
+.ai-player-identity .player-summary-copy b{font-size:26px;line-height:1.2;overflow-wrap:anywhere}.ai-player-identity .player-summary-copy span{font-size:14px}
+.ai-summary-market{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:12px 0}.ai-summary-market strong{font-size:24px;color:var(--blue);font-variant-numeric:tabular-nums}.ai-summary-market[data-availability=unavailable] strong{font-size:15px;color:var(--text-secondary)}.ai-summary-market small{color:var(--text-secondary)}
+.ai-takeaway{font-size:18px;line-height:1.4;margin:12px 0}.ai-summary-limit{border-left:2px solid var(--warning);padding-left:10px;line-height:1.5}.ai-context form{grid-template-columns:auto minmax(0,1fr);align-items:center;margin-top:12px}.ai-context form select{width:100%;min-width:0}
 .ai-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin:20px 0}
 .ai-value{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px}
 .ai-value>b{font-size:30px;color:var(--blue);display:block;margin:8px 0;overflow-wrap:normal;word-break:normal}
 .ai-value span{font-size:13px;color:var(--text-secondary)}.ai-value small{display:block;color:var(--muted);margin:6px 0}
 .ai-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0;align-items:start}
-.ai-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px}
+.ai-card{background:transparent;border:0;border-top:1px solid var(--border);border-radius:0;padding:16px 0;min-width:0;overflow-wrap:anywhere}
 .ai-card h3{margin:0 0 12px;font-size:19px}.ai-card ul{padding-left:20px;margin:8px 0}.ai-card li{margin:8px 0;color:var(--text-secondary)}
-.ai-evidence summary{cursor:pointer;color:var(--accent);font-size:13px;min-height:44px;display:flex;align-items:center}
+.ai-evidence summary{cursor:pointer;color:var(--text-secondary);font-size:14px;min-height:44px;display:list-item;align-content:center;list-style:disclosure-closed inside}.ai-evidence[open]>summary{list-style-type:disclosure-open}
 .ai-evidence li{margin-bottom:8px}.ai-recommendation{border-color:#365334}.ai-priority{font-size:12px;color:var(--gold)}
-@media(max-width:760px){.ai-context{grid-template-columns:1fr}.ai-sections{grid-template-columns:1fr}.ai-player-identity .player-summary-copy b{font-size:24px}}
+@media(max-width:760px){.ai-context{padding:12px}.ai-sections{grid-template-columns:1fr;gap:0}.ai-player-identity .player-summary-copy b{font-size:24px}.ai-context form{grid-template-columns:1fr;gap:4px}}
 </style>
 """
 
@@ -82,6 +84,10 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
     snapshot_html = "".join(f"<li><b>{escape(label)}:</b> {escape(value)}</li>" for label, value in snapshot)
     strengths = "".join(f"<li>{escape(item)}</li>" for item in strengths_text(report))
     weaknesses = "".join(f"<li>{escape(item)}</li>" for item in weaknesses_text(report))
+    # Reuse the existing qualified recommendation and concern; no new evaluation.
+    takeaway = recommendation_text(report.recommendation)
+    concern = weaknesses_text(report)[0]
+    market_availability = 'unavailable' if report.core_values.market.score is None else 'available'
     risk_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(evidence_text(item.explanation))}</li>" for item in report.risk.evidence)
     opportunity = "".join(f"<li><b>{escape(label)}:</b> {_number(value.score)} — {escape(outlook_text(value.summary))}</li>" for label, value in report.opportunity.items())
     recommendation_evidence = tuple(f"{item.factor}: {item.observed_value} — {evidence_text(item.explanation)}" for item in report.recommendation.evidence)
@@ -112,9 +118,8 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
         integrated = integrated.replace("Trend:</b> Unavailable", f"Trend:</b> {escape(production_reason)}")
     return f"""
 {ASSET_CSS}
-<section class="card ai-context"><div><div class="identity-kicker">Player Dossier</div><div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=profile.nfl_team)}</div><p class="muted">{escape(report.executive_summary)}</p>{actions_html}</div><form method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section>
-<p><b>Market:</b> {_number(report.core_values.market.score)}</p>
+<section class="card ai-context" aria-label="Player decision summary"><div class="identity-kicker">Player Dossier</div><div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=profile.nfl_team)}</div><div class="ai-summary-market" data-availability="{market_availability}"><b>Market:</b> <strong>{_number(report.core_values.market.score)}</strong><small>Neutral DTOS price</small></div><p class="ai-takeaway">{escape(takeaway)}</p><p class="ai-summary-limit"><b>Concern or uncertainty:</b> {escape(concern)}</p>{actions_html}<form method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section>
 {weekly_projection_html or ""}
 <details class="ai-evidence"><summary>Valuation, fit and source evidence</summary>{primary_recommendation}<section class="ai-values">{values}</section>{integrated}</details>
-<section class="ai-sections"><article class="ai-card"><h3>Player Snapshot</h3><ul>{snapshot_html}</ul><p><b>Archetypes:</b> {escape(", ".join(report.archetypes))}</p></article><article class="ai-card"><h3>Opportunity Analysis</h3><ul>{opportunity}</ul></article><article class="ai-card"><h3>Strength Analysis</h3><ul>{strengths}</ul></article><article class="ai-card"><h3>Weakness Analysis</h3><ul>{weaknesses}</ul></article><article class="ai-card"><h3>Risk Analysis · {escape(report.risk.level)} ({report.risk.score}/100)</h3><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{risk_evidence}</ul></details></article></section>
+<section class="ai-sections"><article class="ai-card"><h3>Strength Analysis</h3><ul>{strengths}</ul></article><article class="ai-card"><h3>Weakness Analysis</h3><ul>{weaknesses}</ul></article><article class="ai-card"><h3>Opportunity Analysis</h3><ul>{opportunity}</ul></article><article class="ai-card"><details class="ai-evidence"><summary>Player Snapshot</summary><p>{escape(report.executive_summary)}</p><ul>{snapshot_html}</ul><p><b>Archetypes:</b> {escape(", ".join(report.archetypes))}</p></details></article><article class="ai-card"><h3>Risk Analysis · {escape(report.risk.level)} ({report.risk.score}/100)</h3><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{risk_evidence}</ul></details></article></section>
 """

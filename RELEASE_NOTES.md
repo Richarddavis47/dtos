@@ -1,3 +1,9 @@
+## v1.21.95 / build 2195 — Premium Decision Hierarchy
+
+Compact the shared account/league header and keep secondary league tools in an accessible disclosure. Bring prepared Home guidance and Market search forward, distinguish selected modes from primary actions, and present existing player evidence in one identity-led summary with quieter supporting sections. Keep Roster, Depth and Capital visible in a compact row, with secondary Trade shortcuts in the existing assessment disclosure.
+
+Presentation only: neutral and personal values, exact assets and picks, projections, legal lineups, recommendation eligibility, saved rankings and historical qualifications are preserved. No new provider, discovery, solver, FOIS or historical preparation work, persistent records or infrastructure. Unsupported Custom assets retain deliberate recovery; no production preferences are changed. Author Chromium fixtures do not establish physical Safari or unfamiliar-user acceptance.
+
 ## v1.21.94 / build 2194 — Priced inactive dynasty assets
 
 Keep a saved inactive player in Custom Rankings when the same compatible current Market publication supplies its exact identity and supported price. Sleeper inactivity is not retirement or absence of a dynasty price. Explain that a priced inactive asset is not confirmation of availability to play. Preserve the same saved-cohort slot curve, ordering, tiers, preferences and revision on reads.
