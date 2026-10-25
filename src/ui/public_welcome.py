@@ -37,7 +37,7 @@ body.public-welcome{margin:0;font-size:16px;color:var(--text-primary);line-heigh
 .public-welcome .pw-demo-nav a:hover{color:var(--accent)}
 .public-welcome .pw-demo{border-top:1px solid var(--border);padding:0 0 10px;scroll-margin-top:16px}
 .public-welcome .pw-demo>summary{min-height:58px;padding:12px 0;list-style:disclosure-closed inside;cursor:pointer}
-.public-welcome .pw-demo[open]>summary{list-style-type:disclosure-open}
+.public-welcome .pw-demo[open]>summary{list-style-type:disclosure-open;margin-bottom:8px}
 .public-welcome .pw-demo>summary h2{display:inline;font-size:20px;line-height:1.3;letter-spacing:-.02em;margin:0}
 .public-welcome .pw-index{font-size:12px;color:var(--accent);font-weight:700;margin-right:8px;vertical-align:middle}
 .public-welcome .pw-demo-note{font-size:12px;color:var(--text-secondary);margin:0 0 12px}

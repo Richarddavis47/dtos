@@ -34,10 +34,23 @@ def _visible_geometry(page):
       };
       const box=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y+scrollY,width:r.width,height:r.height};};
       const background=e=>{for(let node=e;node;node=node.parentElement){const color=getComputedStyle(node).backgroundColor;if(color!=='transparent' && color!=='rgba(0, 0, 0, 0)')return color;}return 'rgb(255, 255, 255)';};
+      const focusedNote=()=>{
+        const e=document.querySelector('.pw-demo[open]>summary:focus-visible');
+        if(!e)return null;
+        const note=e.nextElementSibling,range=document.createRange();
+        range.selectNodeContents(note);
+        const textTop=Math.min(...[...range.getClientRects()].filter(r=>r.width&&r.height).map(r=>r.top));
+        const rect=e.getBoundingClientRect(),style=getComputedStyle(e),width=parseFloat(style.outlineWidth),offset=parseFloat(style.outlineOffset);
+        const outerBottom=rect.bottom+Math.max(0,width+offset);
+        return {summary: e.parentElement.id,outline_width:width,outline_offset:offset,
+          summary_bottom:rect.bottom+scrollY,outline_bottom:outerBottom+scrollY,
+          note_text_top:textTop+scrollY,clearance:textTop-outerBottom};
+      };
       const selectors={header:'.pw-header',headline:'#welcome-title',primary:'.pw-hero>.pw-primary',
         access:'.pw-beta',demo:'#demo',team:'#demo-team',trade:'#demo-trade',values:'#demo-values'};
       return {viewport:[innerWidth,innerHeight],scrollY,
         overflow:document.documentElement.scrollWidth-innerWidth,
+        focused_note:focusedNote(),
         boxes:Object.fromEntries(Object.entries(selectors).map(([key,selector])=>[key,box(document.querySelector(selector))])),
         contrast:Object.fromEntries(['#welcome-title','.pw-value','.pw-beta','.pw-primary'].map(selector=>{const e=document.querySelector(selector);return [selector,{foreground:getComputedStyle(e).color,background:background(e)}];})),
         components:[...document.querySelectorAll('.pw-wrap,.pw-intro,.pw-hero,.pw-demo-group,.pw-conclusion,.pw-metrics,.pw-comparison,.pw-roster,.pw-package,.pw-side,.pw-account-actions')]
@@ -160,6 +173,13 @@ class PublicWelcomeBrowserTests(unittest.TestCase):
                 return focused
         self.fail('Keyboard did not reach '+selector)
 
+    def assert_focus_note_clearance(self, page):
+        geometry = _visible_geometry(page)['focused_note']
+        self.assertIsNotNone(geometry, 'The open demo summary must retain keyboard focus')
+        self.assertGreaterEqual(geometry['outline_width'], 3)
+        self.assertGreaterEqual(geometry['clearance'], 0,
+                                'Focus paint must not cross the fictional-data notice: '+str(geometry))
+
     def assert_no_work_or_writes(self):
         self.assertEqual(self.external_requests, [])
         self.assertEqual(self.errors, [])
@@ -196,16 +216,19 @@ class PublicWelcomeBrowserTests(unittest.TestCase):
                 self.assertFalse(page.locator('#demo-team').evaluate('e=>e.open'))
                 page.keyboard.press('Enter')
                 self.assertTrue(page.locator('#demo-team').evaluate('e=>e.open'))
+                self.assert_focus_note_clearance(page)
                 self.tab_to(page, '#demo-trade>summary')
                 page.keyboard.press('Enter')
                 self.assertTrue(page.locator('#demo-trade').evaluate('e=>e.open'))
                 self.assertTrue(page.locator('#demo-trade>summary').evaluate('e=>e===document.activeElement'))
+                self.assert_focus_note_clearance(page)
                 self.capture(page, 'trade-keyboard', width, height)
                 page.keyboard.press('Enter')
                 self.assertFalse(page.locator('#demo-trade').evaluate('e=>e.open'))
                 self.tab_to(page, '#demo-values>summary')
                 page.keyboard.press('Space')
                 self.assertTrue(page.locator('#demo-values').evaluate('e=>e.open'))
+                self.assert_focus_note_clearance(page)
                 self.capture(page, 'values-keyboard', width, height)
                 page.locator('#demo-trade>summary').click()
                 page.locator('#demo-values>summary').click()
