@@ -101,7 +101,7 @@ from src.core.historical_memory.storage import validate_historical_storage
 from src.core.intelligence_memory import (
     intelligence_checkpoint_store, sleeper_season_cache,
 )
-from src.ui import DESIGN_SYSTEM_CSS, manager_navigation, page_header
+from src.ui import DESIGN_SYSTEM_CSS, manager_navigation, page_header, secondary_navigation
 
 historical_storage_status = validate_historical_storage(
     database=METADATA_DATABASE_FILE, root=HISTORY_STORAGE_ROOT,
@@ -808,8 +808,8 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
         )
         franchise = account.membership.franchise_name if account.membership else "Choose a league"
         account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{escape(franchise or "Mapped franchise")} · Switch league</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
-    standard_chrome = f"""<header class="top"><div class="brand"><a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form></header>{account_html}
-{manager_navigation(title, roster_id=navigation_roster_id)}{page_header(title, league_name=league_name, last_updated=str(sync))}"""
+    standard_chrome = f"""<div class="ds-shell"><header class="top"><div class="brand"><a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form>{secondary_navigation()}</header>{account_html}
+{manager_navigation(title, roster_id=navigation_roster_id, include_tools=False)}</div>{page_header(title, league_name=league_name, last_updated=str(sync))}"""
     footer = f'<footer class="footer"><b>League Sync:</b> {escape(str(sync))} · Intelligence is generated from the latest cached league state. Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style></head>
 <body><main class="wrap">{"" if commissioner_chrome else standard_chrome}{error_html}{body}{"" if commissioner_chrome else footer}</main></body></html>"""
