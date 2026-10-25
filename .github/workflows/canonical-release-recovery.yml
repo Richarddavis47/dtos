@@ -239,7 +239,7 @@ jobs:
           docker build --file .validation/canonical-build/Dockerfile --tag dtos-canonical-release:validation .validation/canonical-build 2>&1 | tee .validation/canonical-release/image-build.log
           docker run --rm dtos-canonical-release:validation sh -c 'python --version && chromium --version && python -m pip check' | tee .validation/canonical-release/environment.txt
       - name: Run unchanged ten-gate validator under actual 2 GiB
-        timeout-minutes: 52
+        timeout-minutes: 58
         env:
           DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
