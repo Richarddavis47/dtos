@@ -218,6 +218,17 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                     page.evaluate("scrollTo(0,0)")
                     row = capture(page, "prepared-my-team", width, height)
                     self.assertLessEqual(row["boxes"]["shortcuts"]["height"], 64)
+                    self.assertEqual(
+                        page.locator("#my-team-outlook-action").evaluate(
+                            "e=>getComputedStyle(e).backgroundColor"
+                        ),
+                        "rgb(128, 223, 66)",
+                    )
+                    for shortcut in nav.locator("a").all():
+                        self.assertNotEqual(
+                            shortcut.evaluate("e=>getComputedStyle(e).backgroundColor"),
+                            "rgb(128, 223, 66)",
+                        )
                     detail = page.locator("#my-team-outlook-evidence")
                     self.assertFalse(detail.evaluate("e=>e.open"))
                     detail.locator("summary").press("Enter")
