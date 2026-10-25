@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from tests.inspection_auth_fixture import authorize_inspection
 
 from app_metadata import VERSION
 from routes.inspect import create_inspection_router
@@ -87,7 +88,7 @@ class InspectionContractTests(unittest.TestCase):
         self.state = fixture_state()
         app = FastAPI()
         app.include_router(create_inspection_router(state=self.state))
-        self.client = TestClient(app)
+        self.client = TestClient(app, headers=authorize_inspection(self, app, "league-1"))
 
     def test_every_endpoint_uses_the_complete_versioned_contract(self) -> None:
         routes = (

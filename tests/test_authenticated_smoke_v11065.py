@@ -39,12 +39,12 @@ class AuthenticatedSmokeContractTests(unittest.TestCase):
 
     def test_route_authentication_is_scoped_to_private_products_and_account(self) -> None:
         with patch.dict(os.environ, self.fixture, clear=True):
-            for path in ("/", "/market", "/trades", "/api/trades", "/account"):
+            for path in ("/", "/market", "/trades", "/api/trades", "/account", "/api/market/health", "/api/inspect/health", "/api/platform/health", "/api/data/health"):
                 with self.subTest(path=path):
                     self.assertTrue(smoke_http.route_uses_inspection_context(path))
             for path in (
                 "/health/live", "/health/ready", "/api/status",
-                "/api/market/health", "/api/inspect/health", "/openapi.json",
+                "/openapi.json",
             ):
                 with self.subTest(path=path):
                     self.assertFalse(smoke_http.route_uses_inspection_context(path))

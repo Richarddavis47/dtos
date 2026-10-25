@@ -755,7 +755,10 @@ def _diagnostic_request(
     path: str, expected: tuple[int, ...] = (200,),
 ) -> tuple[int, bytes, float, float]:
     started = time.perf_counter()
-    request = Request(BASE_URL + path, headers={"X-DTOS-Diagnostics": "1"})
+    headers = {"X-DTOS-Diagnostics": "1"}
+    if path.split("?", 1)[0].rstrip("/") in {"/api/market/health", "/api/platform/health", "/api/data/health"} or path.startswith("/api/inspect"):
+        headers["X-DTOS-Inspection-Auth"] = _FIXTURE_INSPECTION_TOKEN
+    request = Request(BASE_URL + path, headers=headers)
     try:
         with urlopen(request, timeout=60) as response:
             status, body = response.status, response.read()

@@ -31,15 +31,6 @@ def _header(scope: dict[str, Any], name: bytes) -> str:
     return next((value.decode("latin-1") for key, value in scope.get("headers") or () if key.lower() == name), "")
 
 
-PUBLIC_PREFIXES = (
-    "/account", "/health", "/api/status", "/api/platform", "/api/inspect",
-    "/openapi.json", "/docs", "/redoc", "/static",
-)
-PUBLIC_API_PREFIXES = (
-    "/api/status", "/api/platform/health", "/api/data/health", "/api/inspect",
-    "/api/account", "/api/market/health",
-)
-
 # Exact registered static paths, not namespace/prefix exemptions. Authentication,
 # active membership, CSRF and request scoping still apply to these endpoints.
 # Unknown descendants must continue through the fail-closed league-ID check.
@@ -115,7 +106,16 @@ class AccountContextMiddleware:
         if context is None and inspection_context is not None:
             context = inspection_context
         inspection = inspection_context is not None
-        private_api = path.startswith("/api/") and not path.startswith(PUBLIC_API_PREFIXES)
+        diagnostic = (path == "/api/inspect" or path.startswith("/api/inspect/")
+                      or path.rstrip("/") in {"/api/platform/health", "/api/data/health", "/api/market/health"})
+        if diagnostic and inspection_context is not None:
+            # The existing operator credential stays within its configured
+            # league even if a browser also supplies an unrelated session.
+            context = inspection_context
+        private_api = path.startswith("/api/") and not (
+            path in {"/api/status", "/api/status/"} or path.startswith("/api/account")
+        )
+        denial_headers = {"Cache-Control": "no-store, private", "Vary": "Cookie, X-DTOS-Inspection-Auth"}
         if context is not None and method not in {"GET", "HEAD", "OPTIONS"} and not path.startswith(("/account", "/api/inspect")):
             supplied = _header(scope, b"x-csrf-token")
             body = b""
@@ -137,6 +137,21 @@ class AccountContextMiddleware:
             if not self.service.store.verify_csrf(token, supplied):
                 response = JSONResponse({"status": "csrf_rejected"}, status_code=403)
                 await response(scope, receive, send)
+                return
+        if diagnostic and context is not None and context.membership is not None:
+            membership = context.membership
+            query_items = parse_qsl(scope.get("query_string", b"").decode("latin-1"), keep_blank_values=True)
+            wrong_league = any(key in {"league", "league_id"} and value != membership.league_id
+                               for key, value in query_items)
+            subject = re.fullmatch(r"/api/inspect/(?:team|front-office)/([^/]+)/?", path)
+            wrong_franchise = not inspection and (
+                (subject is not None and subject.group(1) != str(membership.roster_id))
+                or any(key == "front_office" and value != str(membership.roster_id)
+                       for key, value in query_items)
+            )
+            if wrong_league or wrong_franchise:
+                await JSONResponse({"status": "unauthorized_scope"}, status_code=403,
+                                   headers=denial_headers)(scope, receive, send)
                 return
         if context is not None and context.membership is not None:
             account_league_action = method == "POST" and (
@@ -164,17 +179,17 @@ class AccountContextMiddleware:
             "/matchups", "/transactions", "/picks", "/settings", "/brain", "/valuation",
             "/players", "/history", "/commissioner",
         ))
-        if self.required and context is None and not inspection and (private_api or private_html):
+        if (self.required or diagnostic) and context is None and not inspection and (private_api or private_html):
             response = (
-                JSONResponse({"status": "authentication_required", "reason": "Sign in to access this DTOS league context."}, status_code=401)
+                JSONResponse({"status": "authentication_required", "reason": "Sign in to access this DTOS league context."}, status_code=401, headers=denial_headers)
                 if private_api or path.startswith("/api/")
                 else RedirectResponse(f"/account/sign-in?next={path}", status_code=303)
             )
             await response(scope, receive, send)
             return
-        if self.required and context is not None and context.membership is None and not inspection and (private_api or private_html):
+        if (self.required or diagnostic) and context is not None and context.membership is None and not inspection and (private_api or private_html):
             response = (
-                JSONResponse({"status": "active_league_required"}, status_code=403)
+                JSONResponse({"status": "active_league_required"}, status_code=403, headers=denial_headers)
                 if private_api
                 else RedirectResponse("/account/leagues", status_code=303)
             )
@@ -186,7 +201,7 @@ class AccountContextMiddleware:
             async def private_send(message: dict[str, Any]) -> None:
                 if message.get("type") == "http.response.start":
                     headers = [(key, value) for key, value in message.get("headers", []) if key.lower() not in {b"cache-control", b"vary"}]
-                    headers.extend(((b"cache-control", b"no-store, private"), (b"vary", b"Cookie")))
+                    headers.extend(((b"cache-control", b"no-store, private"), (b"vary", b"Cookie, X-DTOS-Inspection-Auth" if diagnostic else b"Cookie")))
                     message = {**message, "headers": headers}
                 await original_send(message)
             send = private_send

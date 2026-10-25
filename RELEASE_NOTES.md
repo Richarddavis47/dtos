@@ -1,3 +1,13 @@
+# DTOS v1.21.96 / build 2196 — Private Diagnostic Boundaries
+
+Security-only correction from v1.21.95. Legacy inspection now requires an active authorized league; member-specific diagnostic requests are fenced to the controlled franchise. Existing read-only operator inspection uses its existing credential and scope, without new credentials or policy changes to operational inspection.
+
+Public health/readiness/status expose explicit deployment identity and readiness only. Raw errors, league facts and detailed operational state are no longer returned publicly. Authorized detailed health remains available. Health status codes and Render probe URLs are preserved.
+
+No public welcome page, registration/admission change, intelligence calculations, saved rankings, historical grades, production user-data mutation or new storage. The welcome candidate remains held for separate independent acceptance and later reconciliation.
+
+---
+
 ## v1.21.95 / build 2195 — Premium Decision Hierarchy
 
 Compact the shared account/league header and keep secondary league tools in an accessible disclosure. Bring prepared Home guidance and Market search forward, distinguish selected modes from primary actions, and present existing player evidence in one identity-led summary with quieter supporting sections. Keep Roster, Depth and Capital visible in a compact row, with secondary Trade shortcuts in the existing assessment disclosure.

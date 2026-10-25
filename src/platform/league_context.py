@@ -70,7 +70,7 @@ def _source_independent(path: str) -> bool:
     Authentication/CSRF stays in the outer account boundary. Account actions
     explicitly prepare their intended league before committing user intent.
     """
-    return path in {"/account", "/api/account", "/health/live", "/health/ready"} or path.startswith(
+    return path in {"/account", "/api/account", "/health", "/health/", "/health/live", "/health/live/", "/health/ready", "/health/ready/", "/api/status", "/api/status/"} or path.startswith(
         ("/account/", "/api/account/", "/static/")
     )
 

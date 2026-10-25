@@ -1,0 +1,55 @@
+# Diagnostic authorization and public probes
+
+Legacy `/api/inspect` is a **private, read-only** semantic interface. It accepts an
+active account session in its authorized league or the existing inspection-token
+context with a complete configured league/franchise scope. It is protected even
+when optional development authentication is disabled. A router dependency also
+fails closed if the router is mounted without the account boundary.
+
+An ordinary member may inspect league-scoped collections and its own franchise
+team/front-office details, but cannot select a foreign league or inspect another
+member's franchise-specific diagnostic record. This does not restrict existing
+in-league product pages. Privileged inspection may inspect league franchises
+within its configured authorized league. A valid operator header determines that
+scope even if an unrelated session cookie accompanies it. No new credential,
+admin role, relay, session or account-registration mechanism is added.
+
+Explicit conflicting league query parameters, including duplicates, fail with a
+generic 403 before runtime acquisition. The router verifies authorized league,
+selected runtime and actual source league agree before reading facts. An absent
+or mismatched source returns generic 503 without the default league payload.
+
+Protected successes and errors use `Cache-Control: no-store, private` and vary
+on Cookie and inspection authorization. `/api/inspect/operations` retains its
+existing separate GET-only, exact opaque-token and parameter boundary. A user
+session cannot authorize operations inspection.
+
+## Public allowlist
+
+- `/health/live`: status and version; HTTP 200 independently of data readiness.
+- `/health`, `/health/ready`: status, version/build/deployment identity; HTTP
+  200 when ready and 503 otherwise. Readiness reason is public-safe fixed text.
+- `/api/status`: status and version/build/deployment identity; HTTP 200.
+
+Trailing-slash redirects preserve the same safe responses. These routes do not
+acquire league runtimes or query historical progress. They do not return league
+IDs, roster/owner/pick counts, raw cached errors, source paths, worker/memory
+metrics, history progress or provider failure payloads. Existing Render liveness
+and readiness paths and status semantics are unchanged.
+
+Detailed `/api/platform/health`, `/api/data/health` and `/api/market/health` use
+normal private-API authorization in production. Authorized monitoring sends the
+existing inspection credential and configured scope. `/api/inspect/health`
+continues to provide authorized resource/history diagnostics. API account health
+only returns safe schema/storage-kind status; account context/list handlers keep
+their existing session checks.
+
+Validation smoke uses the same authenticated contract. Only the isolated,
+non-Render loopback validation worker may provision an ephemeral *test* value
+for that existing variable when none was supplied; caller-provided credentials
+are untouched and restored after server cleanup. Nothing provisions production
+credentials.
+
+The public welcome candidate remains isolated and unreleased. This security
+release does not authorize public promotion or beta expansion. No real private
+production league records are retrieved to prove the defect or its correction.

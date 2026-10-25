@@ -22,14 +22,14 @@ Invalid league identifiers return a stable JSON `404`. Responses include schema,
 
 | Method | Path | Inputs | Successful output |
 |---|---|---|---|
-| GET | `/health` | none | backward-compatible readiness, league, sync, and runtime health |
+| GET | `/health` | none | public deployment identity and readiness; HTTP 503 until ready |
 | GET | `/health/live` | none | lightweight process liveness |
 | GET | `/health/ready` | none | cached/synchronized data readiness; HTTP 503 until ready |
-| GET | `/api/status` | none | version, sync state, and entity counts |
-| GET | `/api/platform/health` | none | runtime, engines, providers, caches, timings, and configuration mode |
+| GET | `/api/status` | none | public deployment identity and readiness status |
+| GET | `/api/platform/health` | active authorized league | runtime, engines, providers, caches, timings, and configuration mode |
 | GET | `/api/intelligence` | `front_office` integer, optional | unified recommendation, market summary, timings, cache state |
 | GET | `/api/data/providers` | none | provider catalog, capabilities, licensing, and health |
-| GET | `/api/data/health` | none | provider, cache, snapshot, freshness, and failure health |
+| GET | `/api/data/health` | active authorized league | provider, cache, snapshot, freshness, and failure health |
 | GET | `/api/data/{category}/{key}` | category and data key | standardized source envelopes with provenance and quality |
 | GET | `/api/data/consensus/{category}/{key}` | category and data key | consensus, confidence, variance, agreement, and missing sources |
 | GET | `/api/data/history/{category}/{key}` | category and data key | timestamped attributed snapshots |
@@ -115,3 +115,5 @@ The existing GM profile and timeline JSON endpoints preserve complete verified e
 A disposable read-only child verifies and serializes each complete response into an anonymous OS temporary file. The application serves 64 KiB chunks only after successful verification and serialization. No response archive or database schema is added. The lease remains owned until response completion or cleanup; preparation and output each have a 60-second bound. A transport failure after headers terminates an incomplete transfer rather than labeling it complete. Shutdown and repeated cancellation retire the owned child and close the file before readmission. Existing HTML history summaries and direct full-history repository APIs remain unchanged.
 
 The eight-root / 8 MiB per-read memo, exact source checks, delta validation and retained-grade qualifications remain unchanged. This admission policy applies to the existing single-process Render deployment; it is not a cross-instance queue or a guarantee of sustained multi-league capacity.
+
+Legacy inspection is private and league-scoped. See [diagnostic security](DIAGNOSTIC_SECURITY.md) for public probe allowlists, operator access and franchise boundaries.

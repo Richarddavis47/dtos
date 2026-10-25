@@ -41,6 +41,34 @@ explicit caller override still wins, including an intentionally delayed test.
 
 
 @contextmanager
+def validation_inspection_context():
+    """Authenticate loopback validation with the existing inspection contract.
+
+    Never provision or replace a production credential. Caller-provided values
+    are authoritative; the isolated worker alone owns its ephemeral test token.
+    """
+    if os.environ.get("DTOS_INSPECTION_AUTH_TOKEN"):
+        yield
+        return
+    if os.environ.get("RENDER"):
+        raise RuntimeError("Production validation requires configured inspection authorization")
+    from secrets import token_urlsafe
+    from config import LEAGUE_ID
+    defaults = {"DTOS_INSPECTION_AUTH_TOKEN": token_urlsafe(32),
+                "DTOS_INSPECTION_LEAGUE_ID": str(LEAGUE_ID), "DTOS_INSPECTION_ROSTER_ID": "1"}
+    previous = {key: os.environ.get(key) for key in defaults}
+    os.environ.update(defaults)
+    try:
+        yield
+    finally:
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
+@contextmanager
 def isolated_default_fois_storage():
     """Owner outlives server teardown; explicit storage remains authoritative."""
     if os.environ.get("DTOS_HISTORY_STORAGE_ROOT"):
@@ -75,7 +103,7 @@ def execute(run_id: str, progress: ValidationProgress | None = None) -> HttpVali
             except OSError as exc:
                 result.errors.append(f"Progress evidence write failed: {exc}")
     record("worker_phase", phase="entry", status="started")
-    with tempfile.TemporaryFile() as log, isolated_default_fois_storage(), validation_startup_schedule():
+    with tempfile.TemporaryFile() as log, isolated_default_fois_storage(), validation_startup_schedule(), validation_inspection_context():
         try:
             started = perf_counter()
             record("worker_phase", phase="startup", status="started")

@@ -10,6 +10,7 @@ from unittest.mock import Mock, patch
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
+from tests.inspection_auth_fixture import authorize_inspection
 
 from routes.historical_assets import create_historical_assets_router
 from routes.history import create_history_router
@@ -261,7 +262,7 @@ class HistoricalInspectionContractTests(unittest.TestCase):
                 league_id="L", require_data=lambda: state["data"],
                 page=lambda _title, body: HTMLResponse(body),
             ))
-            client = TestClient(app)
+            client = TestClient(app, headers=authorize_inspection(self, app, "L"))
             health = client.get("/api/inspect/health").json()
             page = client.get("/api/inspect/pages/history").json()
             coverage = client.get("/api/history/coverage").json()
