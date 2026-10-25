@@ -207,7 +207,18 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                         link.press("Enter")
                         self.assertTrue(page.url.endswith(fragment))
                     page.evaluate("scrollTo(0,0)")
-                    capture(page, "prepared-my-team", width, height)
+                    row = capture(page, "prepared-my-team", width, height)
+                    self.assertLessEqual(row["boxes"]["shortcuts"]["height"], 64)
+                    detail = page.locator("#my-team-outlook-evidence")
+                    self.assertFalse(detail.evaluate("e=>e.open"))
+                    detail.locator("summary").press("Enter")
+                    for label in ("Trade Calculator", "Trade opportunities"):
+                        self.assertTrue(
+                            detail.get_by_role(
+                                "link", name=label, exact=True
+                            ).is_visible()
+                        )
+                    detail.locator("summary").press("Enter")
                     page.goto("https://dtos.test/players/a?front_office=1&from_team=1")
                     self.assertIn("a", page.locator(".ai-player-identity").inner_text())
                     self.assertTrue(page.locator(".ai-takeaway").is_visible())

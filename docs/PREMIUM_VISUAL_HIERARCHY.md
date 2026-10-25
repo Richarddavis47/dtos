@@ -24,8 +24,11 @@ five main navigation destinations are retained.
   value, weekly panel and complete evidence remain available. Supported strengths
   and concerns use quieter sections; Snapshot metadata opens through a native
   disclosure. Exact identity and return links are preserved.
-- My Team's existing shortcut row wraps. Anchors and strategy-aware action remain
-  unchanged; no extra navigation or assessment computation is created.
+- My Team exposes Roster, Depth and Capital in one compact three-column row,
+  with the unchanged strategy-aware action above it. Secondary Trade shortcuts
+  remain available inside the existing assessment disclosure, avoiding a tall
+  stack before the roster. Accessible link names, anchors and destinations are
+  preserved; no extra navigation or assessment computation is created.
 
 ## Resource and integrity contract
 

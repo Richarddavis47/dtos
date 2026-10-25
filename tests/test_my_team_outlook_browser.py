@@ -53,7 +53,7 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
                             shortcuts:rect('[aria-label="Roster sections"]'),
                             overflow:document.documentElement.scrollWidth-innerWidth,
                             summaryText:document.querySelector('#my-team-outlook').innerText,
-                            action:rect('#my-team-outlook a'),font:getComputedStyle(document.querySelector('#my-team-outlook p')).fontSize};}''')
+                            action:rect('#my-team-outlook-action'),font:getComputedStyle(document.querySelector('#my-team-outlook p')).fontSize};}''')
                         self.assertLessEqual(row['overflow'], 0)
                         self.assertGreaterEqual(row['action']['height'], 44)
                         row.update(width=width, height=height)
