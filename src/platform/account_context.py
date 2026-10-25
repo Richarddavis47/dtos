@@ -197,9 +197,12 @@ class AccountContextMiddleware:
             return
         private_response = bool(context is not None and (private_api or private_html or path.startswith(("/account", "/api/account"))))
         original_send = send
+        response_started = False
         if private_response:
             async def private_send(message: dict[str, Any]) -> None:
+                nonlocal response_started
                 if message.get("type") == "http.response.start":
+                    response_started = True
                     headers = [(key, value) for key, value in message.get("headers", []) if key.lower() not in {b"cache-control", b"vary"}]
                     headers.extend(((b"cache-control", b"no-store, private"), (b"vary", b"Cookie, X-DTOS-Inspection-Auth" if diagnostic else b"Cookie")))
                     message = {**message, "headers": headers}
@@ -208,5 +211,12 @@ class AccountContextMiddleware:
         marker = _CURRENT_ACCOUNT.set(context)
         try:
             await self.app(scope, receive, send)
+        except Exception:
+            if not diagnostic or response_started:
+                raise
+            # Never return a raw diagnostic exception (including debug traces)
+            # or a cacheable failure. Do not intercept cancellation/shutdown.
+            await JSONResponse({"status": "diagnostic_unavailable"}, status_code=500,
+                               headers=denial_headers)(scope, receive, original_send)
         finally:
             _CURRENT_ACCOUNT.reset(marker)

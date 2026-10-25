@@ -191,6 +191,24 @@ class DiagnosticSecurityTests(unittest.TestCase):
         self.assertEqual(result.status_code, 403)
         self.assert_private(result)
 
+    def test_revoked_membership_is_not_an_active_diagnostic_context(self):
+        self.sign_in('alice')
+        self.store.upsert_membership(self.accounts['alice'],
+            {'league_id': '111', 'name': 'alice', 'season': '2026'}, 'alice', 1, 'alice', 'revoked')
+        result = self.client.get('/api/inspect/team/1')
+        self.assertEqual(result.status_code, 403)
+        self.assert_private(result)
+
+    def test_internal_exception_is_generic_private_and_context_recovers(self):
+        self.sign_in('alice')
+        with patch('routes.inspect.InspectionEngine', side_effect=RuntimeError('PRIVATE_ERROR /private/secret')):
+            result = self.client.get('/api/inspect/team/1')
+        self.assertEqual(result.status_code, 500)
+        self.assert_private(result)
+        self.assertEqual(result.json(), {'status': 'diagnostic_unavailable'})
+        self.assertEqual(self.client.get('/api/inspect/team/1').status_code, 200)
+        self.assertEqual(self.manager.acquire_request.await_count, self.manager.release_request.await_count)
+
     def test_wrong_runtime_fails_without_returning_default_records(self):
         self.sign_in('bob')
         self.manager.acquire_request.side_effect = lambda *_args, **_kwargs: self.runtimes['111']
