@@ -34,9 +34,7 @@ def _header(scope: dict[str, Any], name: bytes) -> str:
 # Shared operational state cannot be scoped to a manager by selecting a
 # league runtime. Keep it behind the already established inspection credential.
 OPERATOR_DIAGNOSTIC_PATHS = frozenset({
-    "/api/platform/health", "/api/data/health", "/api/market/health",
-    "/api/inspect/health", "/api/leagues/runtime", "/api/leagues/resources",
-    "/api/leagues/resources/measure", "/api/intelligence-memory/health",
+    "/api/platform/health", "/api/data/health", "/api/inspect/health",
 })
 
 
@@ -116,7 +114,8 @@ class AccountContextMiddleware:
             context = inspection_context
         inspection = inspection_context is not None
         operator_diagnostic = path.rstrip("/") in OPERATOR_DIAGNOSTIC_PATHS
-        diagnostic = path == "/api/inspect" or path.startswith("/api/inspect/") or operator_diagnostic
+        diagnostic = (path == "/api/inspect" or path.startswith("/api/inspect/")
+                      or operator_diagnostic or path.rstrip("/") == "/api/market/health")
         if operator_diagnostic and inspection_context is None:
             await JSONResponse({"status": "inspection_authorization_required"},
                                status_code=403 if context is not None else 401,
