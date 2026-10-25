@@ -177,7 +177,7 @@ class AccountContextMiddleware:
         private_html = path == "/" or path.startswith((
             "/teams", "/trades", "/league", "/market", "/front-offices", "/fois",
             "/matchups", "/transactions", "/picks", "/settings", "/brain", "/valuation",
-            "/players", "/history", "/commissioner",
+            "/players", "/history", "/commissioner", "/search", "/reports", "/sync",
         ))
         if (self.required or diagnostic) and context is None and not inspection and (private_api or private_html):
             response = (

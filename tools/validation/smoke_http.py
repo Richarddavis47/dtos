@@ -39,7 +39,7 @@ _REQUEST_SEQUENCE = 0
 PRIVATE_HTML_PREFIXES = (
     "/teams", "/trades", "/league", "/market", "/front-offices", "/fois",
     "/matchups", "/transactions", "/picks", "/settings", "/brain", "/valuation",
-    "/players", "/history", "/commissioner",
+    "/players", "/history", "/commissioner", "/search", "/reports", "/sync",
 )
 PUBLIC_API_PREFIXES = (
     "/api/status", "/api/account",

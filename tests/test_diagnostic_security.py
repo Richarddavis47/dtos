@@ -9,6 +9,9 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from routes.historical_assets import create_historical_assets_router
+from routes.weekly_report import create_weekly_report_router
 from fastapi.testclient import TestClient
 
 from routes.api import create_api_router
@@ -234,6 +237,33 @@ class DiagnosticSecurityTests(unittest.TestCase):
             self.assertEqual(result.status_code, 401)
             self.assert_private(result)
         self.manager.acquire_request.assert_not_called()
+
+    def test_related_search_report_and_sync_paths_preserve_same_auth_boundary(self):
+        def page(_title, body):
+            return HTMLResponse(body)
+        self.app.include_router(create_historical_assets_router(league_id='111',
+            require_data=lambda: self.states['111']['data'], page=page))
+        self.app.include_router(create_weekly_report_router(
+            require_data=lambda: self.states['111']['data'], page=page))
+        for method, path in [('GET', '/search?q=fixture'), ('GET', '/reports/weekly'), ('POST', '/sync')]:
+            result = self.client.request(method, path, follow_redirects=False)
+            self.assertEqual(result.status_code, 303)
+            self.assertTrue(result.headers['location'].startswith('/account/sign-in'))
+            self.assertNotIn('PRIVATE_', result.text)
+        self.manager.acquire_request.assert_not_called()
+        self.no_work.assert_not_called()
+        self.sign_in('alice')
+        graph = Mock()
+        graph.search.return_value = [{'canonical_url': '/teams/1', 'display_label': 'PRIVATE_FIXTURE_FRANCHISE',
+             'result_type': 'franchise', 'resolution_status': 'resolved'}]
+        with patch('routes.historical_assets.historical_graph', return_value=graph), \
+             patch('routes.weekly_report.weekly_facts', return_value={'transactions': []}), \
+             patch('routes.weekly_report.compose_report', return_value={'stories': []}), \
+             patch('routes.weekly_report.render_report', return_value='PRIVATE_WEEKLY_REPORT'):
+            self.assertEqual(self.client.get('/search?q=fixture').status_code, 200)
+            self.assertEqual(self.client.get('/reports/weekly').status_code, 200)
+        self.assertEqual(self.client.post('/sync').status_code, 403)
+        self.no_work.assert_not_called()
 
     def test_existing_ordinary_member_navigation_and_operator_boundary_preserved(self):
         self.sign_in('alice')
