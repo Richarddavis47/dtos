@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from src.core.league_runtime import (
@@ -18,8 +18,23 @@ def create_league_runtime_router(
     router = APIRouter(prefix="/api/leagues", tags=["league-runtime"])
 
     @router.get("/runtime")
-    async def runtime_health() -> dict[str, Any]:
-        return manager.health()
+    async def runtime_health(request: Request) -> dict[str, Any]:
+        from src.platform.account_context import current_account
+        from src.platform.inspection_security import inspection_authorized
+        context = current_account()
+        result = manager.health()
+        if context is not None and context.membership is not None and not inspection_authorized(request.scope):
+            # This shared manager owns other accounts' runtimes too. Preserve
+            # aggregate operational counters, never their source errors/rows.
+            league = context.membership.league_id
+            result = dict(result)
+            if "runtimes" in result:
+                result["runtimes"] = [row for row in result["runtimes"] if row.get("league_id") == league]
+                result["status"] = "degraded" if any(str(row.get("status")).lower() == "failed" for row in result["runtimes"]) else "healthy"
+            for field in ("resident_league_ids", "in_flight"):
+                if field in result:
+                    result[field] = [value for value in result[field] if value == league]
+        return result
 
     @router.get("/resources")
     async def resources() -> dict[str, Any]:

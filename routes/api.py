@@ -14,7 +14,6 @@ from src.core.intelligence import intelligence_orchestrator
 from src.platform.observability import environment_summary, runtime_metrics
 from config import DURABLE_HISTORY_REQUIRED, HISTORY_STORAGE_ROOT, METADATA_DATABASE_FILE
 from src.core.historical_memory.storage import validate_historical_storage
-from services.history import history_progress_contracts
 
 historical_storage_status = validate_historical_storage(
     database=METADATA_DATABASE_FILE, root=HISTORY_STORAGE_ROOT,
@@ -42,62 +41,33 @@ def create_api_router(
     def selected_league() -> str:
         return league_resolver() if league_resolver else league_id
 
+    def public_identity() -> dict[str, Any]:
+        # Explicit public allowlist: no league facts, source errors, paths,
+        # runtime counters, worker state or historical preparation queries.
+        return {"version": VERSION, "build": BUILD_NUMBER, "deployment": deployment_metadata()}
+
     @router.get("/health")
     async def health() -> JSONResponse:
-        status_code = 200 if runtime_metrics.ready else 503
-        return JSONResponse({
-            "status": "ready" if runtime_metrics.ready else "starting",
-            "league_id": selected_league(),
-            "last_sync": state.get("last_sync"),
-            "last_error": state.get("last_error"),
-            "runtime": runtime_metrics.health(),
-        }, status_code=status_code)
+        return JSONResponse({"status": "ready" if runtime_metrics.ready else "starting",
+                             **public_identity()}, status_code=200 if runtime_metrics.ready else 503,
+                            headers={"Cache-Control": "no-store"})
 
     @router.get("/health/live")
-    async def health_live() -> dict[str, Any]:
-        return {
-            "status": "alive",
-            "version": VERSION,
-            "runtime": runtime_metrics.health(),
-        }
+    async def health_live() -> JSONResponse:
+        return JSONResponse({"status": "alive", "version": VERSION}, headers={"Cache-Control": "no-store"})
 
     @router.get("/health/ready")
     async def health_ready() -> JSONResponse:
-        status_code = 200 if runtime_metrics.ready else 503
-        return JSONResponse(
-            {
-                "status": "ready" if runtime_metrics.ready else "not_ready",
-                "version": VERSION,
-                "build": BUILD_NUMBER,
-                "deployment": deployment_metadata(),
-                "reason": runtime_metrics.readiness_reason,
-                "runtime": runtime_metrics.health(),
-                "historical_storage": historical_storage_status.public(),
-                **history_progress_contracts(selected_league()),
-            },
-            status_code=status_code,
-        )
+        return JSONResponse({"status": "ready" if runtime_metrics.ready else "not_ready",
+                             **public_identity(),
+                             "reason": "Application ready." if runtime_metrics.ready else "Application is not ready."},
+                            status_code=200 if runtime_metrics.ready else 503,
+                            headers={"Cache-Control": "no-store"})
 
     @router.get("/api/status")
     async def api_status() -> JSONResponse:
-        data = state.get("data") or {}
-        return JSONResponse(
-            {
-                "version": VERSION,
-                "build": BUILD_NUMBER,
-                "deployment": deployment_metadata(),
-                "league_id": selected_league(),
-                "last_sync": state.get("last_sync"),
-                "last_error": state.get("last_error"),
-                "syncing": state.get("syncing"),
-                "counts": {
-                    "owners": len(data.get("owners") or []),
-                    "teams": len(data.get("teams") or []),
-                    "traded_picks": len(data.get("traded_picks") or []),
-                    "transactions": len(data.get("transactions") or []),
-                },
-            }
-        )
+        return JSONResponse({"status": "ready" if runtime_metrics.ready else "starting",
+                             **public_identity()}, headers={"Cache-Control": "no-store"})
 
     @router.get("/api/platform/health")
     async def platform_health() -> JSONResponse:

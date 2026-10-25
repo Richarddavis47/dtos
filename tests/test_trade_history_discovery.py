@@ -9,6 +9,7 @@ from unittest.mock import patch
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
+from tests.inspection_auth_fixture import authorize_inspection
 
 from routes.historical_assets import create_historical_assets_router
 from routes.inspect import create_inspection_router
@@ -91,7 +92,8 @@ class TradeHistoryDiscoveryTests(unittest.TestCase):
             patch("routes.inspect.historical_store", self.store),
             patch("routes.historical_assets.historical_store", self.store),
         ):
-            client = TestClient(self._app())
+            app = self._app()
+            client = TestClient(app, headers=authorize_inspection(self, app, self.league_id))
             site_map = client.get("/api/inspect/site-map").json()
             included = [row for row in site_map["pages"] if not row["excluded"]]
             historical = [
@@ -154,7 +156,8 @@ class TradeHistoryDiscoveryTests(unittest.TestCase):
             patch("routes.inspect.historical_store", self.store),
             patch("routes.historical_assets.historical_store", self.store),
         ):
-            client = TestClient(self._app())
+            app = self._app()
+            client = TestClient(app, headers=authorize_inspection(self, app, self.league_id))
             site_map = client.get("/api/inspect/site-map").json()
             advertised = {
                 row["route"] for row in site_map["pages"] if not row["excluded"]

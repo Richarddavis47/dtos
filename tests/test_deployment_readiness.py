@@ -107,7 +107,7 @@ class DeploymentReadinessTests(unittest.TestCase):
         self.assertEqual(ready.json()["status"], "ready")
         self.assertEqual(
             ready.json()["reason"],
-            "Cached league data loaded.",
+            "Application ready.",
         )
 
     def test_diagnostic_headers_are_opt_in(self) -> None:

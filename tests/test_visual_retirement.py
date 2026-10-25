@@ -7,6 +7,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from tests.inspection_auth_fixture import authorize_inspection
 
 from routes.inspect import create_inspection_router
 
@@ -14,8 +15,8 @@ from routes.inspect import create_inspection_router
 class VisualRetirementTests(unittest.TestCase):
     def test_semantic_health_needs_no_artifacts_or_publication(self):
         app = FastAPI()
-        app.include_router(create_inspection_router(state={}))
-        with TestClient(app) as client:
+        app.include_router(create_inspection_router(state={"data": {"league": {"league_id": "fixture"}}}))
+        with TestClient(app, headers=authorize_inspection(self, app, "fixture")) as client:
             health = client.get("/api/inspect/health")
             self.assertEqual(health.status_code, 200)
             self.assertEqual(health.json()["mode"], "semantic_read_only")

@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
@@ -39,7 +39,28 @@ def create_inspection_router(
     context_resolver: Callable[[], Any | None] | None = None,
     resource_health: Callable[[], dict[str, Any]] | None = None,
 ) -> APIRouter:
-    router = APIRouter(prefix="/api/inspect", tags=["inspection"])
+    async def authorize(request: Request) -> None:
+        # Defense in depth: a router mounted without the normal ASGI boundary
+        # must not turn cached league facts into anonymous responses.
+        from src.platform.account_context import current_account
+        account = current_account()
+        headers = {"Cache-Control": "no-store, private", "Vary": "Cookie, X-DTOS-Inspection-Auth"}
+        if account is None:
+            raise HTTPException(401, "Authentication required", headers=headers)
+        if account.membership is None or account.membership.status != "active":
+            raise HTTPException(403, "Active league required", headers=headers)
+        subject = request.path_params.get("roster_id")
+        if (subject is not None and account.sleeper_link_state != "inspection_fixture"
+                and str(subject) != str(account.membership.roster_id)):
+            raise HTTPException(403, "Unauthorized franchise", headers=headers)
+        data = state.get("data") or {}
+        actual = str((data.get("league") or {}).get("league_id") or "")
+        context = context_resolver() if context_resolver else None
+        selected = str(context.league_id) if context is not None else str(league_id or actual)
+        if not actual or actual != selected or selected != account.membership.league_id:
+            raise HTTPException(503, "Authorized league evidence is unavailable", headers=headers)
+
+    router = APIRouter(prefix="/api/inspect", tags=["inspection"], dependencies=[Depends(authorize)])
     def engine() -> InspectionEngine:
         return InspectionEngine(state)
 

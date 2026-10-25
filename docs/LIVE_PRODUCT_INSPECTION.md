@@ -2,6 +2,8 @@
 
 ## How ChatGPT inspects DTOS
 
+Authenticate with an active account session or the existing configured inspection credential and scope. Anonymous access is denied; no token belongs in a URL.
+
 1. Start at `https://dtos.onrender.com/api/inspect/live`.
 2. Read the current production identity.
 3. Follow collection links to discover teams, matchups, relevant players, picks,
@@ -38,4 +40,4 @@ historical, not a current-readiness dependency.
 ```
 
 Every release must verify current identity, completeness, critical links,
-presentation contracts, and zero side effects from the public root.
+presentation contracts, and zero side effects from the authorized semantic root.

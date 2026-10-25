@@ -39,11 +39,10 @@ _REQUEST_SEQUENCE = 0
 PRIVATE_HTML_PREFIXES = (
     "/teams", "/trades", "/league", "/market", "/front-offices", "/fois",
     "/matchups", "/transactions", "/picks", "/settings", "/brain", "/valuation",
-    "/players", "/history", "/commissioner",
+    "/players", "/history", "/commissioner", "/search", "/reports", "/sync",
 )
 PUBLIC_API_PREFIXES = (
-    "/api/status", "/api/platform/health", "/api/data/health", "/api/inspect",
-    "/api/account", "/api/market/health",
+    "/api/status", "/api/account",
 )
 
 
@@ -75,7 +74,9 @@ def route_uses_inspection_context(path: str) -> bool:
         return False
     route = urlsplit(path).path
     private_html = route == "/" or route.startswith(PRIVATE_HTML_PREFIXES)
-    private_api = route.startswith("/api/") and not route.startswith(PUBLIC_API_PREFIXES)
+    private_api = route.startswith("/api/") and not (
+        route in {"/api/status", "/api/status/"} or route.startswith("/api/account")
+    )
     return private_html or private_api or route == "/account"
 
 

@@ -1,5 +1,14 @@
 ## v1.21.95 / build 2195 — Premium Decision Hierarchy
 
+## v1.21.96 — Private Diagnostic Boundaries
+
+- Require active, league-scoped authorization for legacy semantic inspection, including alternate paths and standalone-router defense in depth.
+- Fence member franchise inspection, validate runtime league identity, and preserve existing authorized operational inspection.
+- Limit public health/readiness/status to explicit deployment-safe fields; keep detailed platform/data/Market health private under required authentication.
+- Reserve shared operational health/resource diagnostics for the existing inspection credential, preventing cross-league cached-error disclosure to ordinary sessions.
+- Close matching legacy HTML search/report and manual-sync authorization omissions.
+- Keep the unreleased public welcome candidate separate. No registration, valuation, grading or saved-preference changes.
+
 Compact the shared account/league header and keep secondary league tools in an accessible disclosure. Bring prepared Home guidance and Market search forward, distinguish selected modes from primary actions, and present existing player evidence in one identity-led summary with quieter supporting sections. Keep Roster, Depth and Capital visible in a compact row, with secondary Trade shortcuts in the existing assessment disclosure.
 
 Presentation only: neutral and personal values, exact assets and picks, projections, legal lineups, recommendation eligibility, saved rankings and historical qualifications are preserved. No new provider, discovery, solver, FOIS or historical preparation work, persistent records or infrastructure. Unsupported Custom assets retain deliberate recovery; no production preferences are changed. Author Chromium fixtures do not establish physical Safari or unfamiliar-user acceptance.

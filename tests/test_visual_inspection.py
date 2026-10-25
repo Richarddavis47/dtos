@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
+from tests.inspection_auth_fixture import authorize_inspection
 
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from routes.inspect import create_inspection_router
@@ -55,7 +56,8 @@ class VisualInspectionTests(unittest.TestCase):
 
     def test_public_contract_exposes_schema_site_map_and_pending_health(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
-            client = TestClient(self.app(Path(folder)))
+            app = self.app(Path(folder))
+            client = TestClient(app, headers=authorize_inspection(self, app, "l1"))
             schema = client.get("/api/inspect/schema").json()
             site_map = client.get("/api/inspect/site-map").json()
             health = client.get("/api/inspect/health").json()
@@ -68,7 +70,8 @@ class VisualInspectionTests(unittest.TestCase):
 
     def test_invalid_page_and_viewport_are_clean_json_errors(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
-            client = TestClient(self.app(Path(folder)))
+            app = self.app(Path(folder))
+            client = TestClient(app, headers=authorize_inspection(self, app, "l1"))
             self.assertEqual(client.get("/api/inspect/pages/missing").status_code, 404)
             self.assertEqual(client.get("/api/inspect/visual/pages/home/watch").status_code, 404)
 
