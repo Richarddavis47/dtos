@@ -28,7 +28,9 @@ five main navigation destinations are retained.
   with the unchanged strategy-aware action above it. Secondary Trade shortcuts
   remain available inside the existing assessment disclosure, avoiding a tall
   stack before the roster. Accessible link names, anchors and destinations are
-  preserved; no extra navigation or assessment computation is created.
+  preserved; no extra navigation or assessment computation is created. The strategy
+  field keeps room for its selected text on desktop and wraps its label within the
+  same row on narrow phones; font size and touch-target height are preserved.
 
 ## Resource and integrity contract
 

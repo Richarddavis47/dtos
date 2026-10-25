@@ -108,6 +108,15 @@ class PremiumSharedJourneyTests(journey.ProductBrowserJourneyTests):
                 self, page, page.locator(".ds-shell .secondary-nav>summary")
             )
         if path == "/teams/1":
+            choice = page.locator("#my-team-strategy")
+            fit = choice.evaluate(
+                """e=>{const s=getComputedStyle(e),c=document.createElement('canvas').getContext('2d');c.font=s.font;return {required:c.measureText(e.selectedOptions[0].text).width+parseFloat(s.paddingLeft)+parseFloat(s.paddingRight)+28,width:e.clientWidth}}"""
+            )
+            self.assertLessEqual(
+                fit["required"],
+                fit["width"],
+                "Selected strategy label must fit without clipping",
+            )
             nav = page.locator('nav[aria-label="Roster sections"]')
             self.assertEqual(nav.evaluate("e=>e.scrollWidth>e.clientWidth"), False)
             for fragment in ("#full-roster", "#positional-depth", "#draft-capital"):
