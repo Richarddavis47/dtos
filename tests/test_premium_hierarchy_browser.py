@@ -103,6 +103,14 @@ class PremiumSharedJourneyTests(journey.ProductBrowserJourneyTests):
                 row["boxes"]["searchHeading"]["y"], 400 if width < 760 else 560
             )
             keyboard_disclosure(self, page, page.locator(".ds-page-guide>summary"))
+            for rank in page.locator(".market-rank").all():
+                fit = rank.evaluate("""e=>{const r=e.getBoundingClientRect(),t=document.createRange();t.selectNodeContents(e);const b=t.getBoundingClientRect(),p=e.parentElement.querySelector('.player-portrait');return {width:e.clientWidth,scroll:e.scrollWidth,textLeft:b.left,textRight:b.right,left:r.left,right:r.right,portraitLeft:p?.getBoundingClientRect().left,font:parseFloat(getComputedStyle(e).fontSize)}}""")
+                self.assertLessEqual(fit["scroll"], fit["width"])
+                self.assertGreaterEqual(fit["textLeft"], fit["left"])
+                self.assertLessEqual(fit["textRight"], fit["right"])
+                self.assertGreaterEqual(fit["font"], 12)
+                if fit["portraitLeft"] is not None:
+                    self.assertLessEqual(fit["right"], fit["portraitLeft"])
         if path in ("/", "/market", "/teams/1", "/fois"):
             keyboard_disclosure(
                 self, page, page.locator(".ds-shell .secondary-nav>summary")
