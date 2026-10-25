@@ -37,7 +37,7 @@ IDs, roster/owner/pick counts, raw cached errors, source paths, worker/memory
 metrics, history progress or provider failure payloads. Existing Render liveness
 and readiness paths and status semantics are unchanged.
 
-Detailed platform/data health and `/api/inspect/health` expose shared operational state. They require the existing inspection credential with configured scope; an ordinary member session is insufficient, including when development authentication is optional. Market health remains available in its authorized league context. Existing authenticated runtime/resource tools and CSRF-protected measurement remain unchanged. Authorized monitoring sends the
+Detailed platform/data health and `/api/inspect/health` expose shared operational state. They require the existing inspection credential with configured scope; an ordinary member session is insufficient, including when development authentication is optional. Market health remains available in its authorized league context. Existing authenticated resource tools and CSRF-protected measurement remain available. Runtime inventory keeps harmless aggregate counters but filters runtime rows, source errors and active league identities to the member’s authorized league; the existing operator context retains its shared inventory. Authorized monitoring sends the
 existing inspection credential and configured scope. `/api/inspect/health`
 continues to provide operator-authorized resource/history diagnostics. API account health
 only returns safe schema/storage-kind status; account context/list handlers keep

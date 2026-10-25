@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from routes.historical_assets import create_historical_assets_router
 from routes.weekly_report import create_weekly_report_router
+from routes.league_runtime import create_league_runtime_router
 from fastapi.testclient import TestClient
 
 from routes.api import create_api_router
@@ -264,6 +265,26 @@ class DiagnosticSecurityTests(unittest.TestCase):
             self.assertEqual(self.client.get('/reports/weekly').status_code, 200)
         self.assertEqual(self.client.post('/sync').status_code, 403)
         self.no_work.assert_not_called()
+
+    def test_runtime_inventory_filters_other_accounts_without_mutating_shared_health(self):
+        shared = {'status': 'degraded', 'resident_runtime_count': 2, 'resident_league_ids': ['111', '222'],
+                  'in_flight': ['222'], 'runtimes': [
+                      {'league_id': '111', 'status': 'WARM', 'last_error': None},
+                      {'league_id': '222', 'status': 'FAILED', 'last_error': 'PRIVATE_OTHER_LEAGUE_ERROR'}]}
+        before = copy.deepcopy(shared)
+        manager = Mock()
+        manager.health.return_value = shared
+        self.app.include_router(create_league_runtime_router(manager=manager))
+        self.sign_in('alice')
+        response = self.client.get('/api/leagues/runtime')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('PRIVATE_OTHER_LEAGUE_ERROR', response.text)
+        self.assertEqual(response.json()['resident_league_ids'], ['111'])
+        self.assertEqual(response.json()['runtimes'], [shared['runtimes'][0]])
+        self.assertEqual(response.json()['in_flight'], [])
+        self.assertEqual(shared, before)
+        response = self.client.get('/api/leagues/runtime', headers={'X-DTOS-Inspection-Auth': 'fixture-only-token'})
+        self.assertEqual(response.json(), shared)
 
     def test_global_operational_diagnostics_do_not_leak_across_member_scopes(self):
         from src.platform.account_context import OPERATOR_DIAGNOSTIC_PATHS
