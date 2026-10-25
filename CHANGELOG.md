@@ -5,6 +5,7 @@
 - Require active, league-scoped authorization for legacy semantic inspection, including alternate paths and standalone-router defense in depth.
 - Fence member franchise inspection, validate runtime league identity, and preserve existing authorized operational inspection.
 - Limit public health/readiness/status to explicit deployment-safe fields; keep detailed platform/data/Market health private under required authentication.
+- Reserve shared operational health/resource diagnostics for the existing inspection credential, preventing cross-league cached-error disclosure to ordinary sessions.
 - Close matching legacy HTML search/report and manual-sync authorization omissions.
 - Keep the unreleased public welcome candidate separate. No registration, valuation, grading or saved-preference changes.
 

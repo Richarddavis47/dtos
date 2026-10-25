@@ -265,6 +265,19 @@ class DiagnosticSecurityTests(unittest.TestCase):
         self.assertEqual(self.client.post('/sync').status_code, 403)
         self.no_work.assert_not_called()
 
+    def test_global_operational_diagnostics_do_not_leak_across_member_scopes(self):
+        from src.platform.account_context import OPERATOR_DIAGNOSTIC_PATHS
+        self.sign_in('alice')
+        with patch('routes.api.intelligence_orchestrator.last_error', 'PRIVATE_OTHER_LEAGUE_ERROR'):
+            for path in OPERATOR_DIAGNOSTIC_PATHS:
+                response = self.client.request('POST' if path.endswith('/measure') else 'GET', path)
+                self.assertEqual(response.status_code, 403, path)
+                self.assert_private(response)
+        self.manager.acquire_request.assert_not_called()
+        headers = {'X-DTOS-Inspection-Auth': 'fixture-only-token'}
+        self.assertEqual(self.client.get('/api/platform/health', headers=headers).status_code, 200)
+        self.assertEqual(self.client.get('/api/inspect/health', headers=headers).status_code, 200)
+
     def test_existing_ordinary_member_navigation_and_operator_boundary_preserved(self):
         self.sign_in('alice')
         for path in ['/', '/league', '/market', '/trades', '/account/my-dtos', '/fois']:

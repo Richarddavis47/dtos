@@ -37,10 +37,9 @@ IDs, roster/owner/pick counts, raw cached errors, source paths, worker/memory
 metrics, history progress or provider failure payloads. Existing Render liveness
 and readiness paths and status semantics are unchanged.
 
-Detailed `/api/platform/health`, `/api/data/health` and `/api/market/health` use
-normal private-API authorization in production. Authorized monitoring sends the
+Detailed platform/data/Market health, `/api/inspect/health`, global league-runtime/resource inventory and intelligence-memory health expose shared operational state. They require the existing inspection credential with configured scope; an ordinary member session is insufficient, including when development authentication is optional. Authorized monitoring sends the
 existing inspection credential and configured scope. `/api/inspect/health`
-continues to provide authorized resource/history diagnostics. API account health
+continues to provide operator-authorized resource/history diagnostics. API account health
 only returns safe schema/storage-kind status; account context/list handlers keep
 their existing session checks.
 

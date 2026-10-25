@@ -31,6 +31,15 @@ def _header(scope: dict[str, Any], name: bytes) -> str:
     return next((value.decode("latin-1") for key, value in scope.get("headers") or () if key.lower() == name), "")
 
 
+# Shared operational state cannot be scoped to a manager by selecting a
+# league runtime. Keep it behind the already established inspection credential.
+OPERATOR_DIAGNOSTIC_PATHS = frozenset({
+    "/api/platform/health", "/api/data/health", "/api/market/health",
+    "/api/inspect/health", "/api/leagues/runtime", "/api/leagues/resources",
+    "/api/leagues/resources/measure", "/api/intelligence-memory/health",
+})
+
+
 # Exact registered static paths, not namespace/prefix exemptions. Authentication,
 # active membership, CSRF and request scoping still apply to these endpoints.
 # Unknown descendants must continue through the fail-closed league-ID check.
@@ -106,8 +115,14 @@ class AccountContextMiddleware:
         if context is None and inspection_context is not None:
             context = inspection_context
         inspection = inspection_context is not None
-        diagnostic = (path == "/api/inspect" or path.startswith("/api/inspect/")
-                      or path.rstrip("/") in {"/api/platform/health", "/api/data/health", "/api/market/health"})
+        operator_diagnostic = path.rstrip("/") in OPERATOR_DIAGNOSTIC_PATHS
+        diagnostic = path == "/api/inspect" or path.startswith("/api/inspect/") or operator_diagnostic
+        if operator_diagnostic and inspection_context is None:
+            await JSONResponse({"status": "inspection_authorization_required"},
+                               status_code=403 if context is not None else 401,
+                               headers={"Cache-Control": "no-store, private",
+                                        "Vary": "Cookie, X-DTOS-Inspection-Auth"})(scope, receive, send)
+            return
         if diagnostic and inspection_context is not None:
             # The existing operator credential stays within its configured
             # league even if a browser also supplies an unrelated session.
