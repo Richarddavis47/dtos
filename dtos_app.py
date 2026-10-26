@@ -794,7 +794,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     account = current_account()
     if context is not None and account is not None and account.membership is not None:
         if (str(context.league_id) != str(account.membership.league_id)
-                or str(((context.state.get("data") or {}).get("league") or {}).get("league_id") or context.league_id) != str(account.membership.league_id)):
+                or str(((context.state.get("data") or {}).get("league") or {}).get("league_id") or "") != str(account.membership.league_id)):
             raise HTTPException(409, "Your selected league changed. Reload this page.")
     # Account pages intentionally avoid runtime hydration. Never substitute the
     # default runtime's identity or sync diagnostics for the selected membership.

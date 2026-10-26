@@ -210,3 +210,20 @@ class OperatorContextIntegrityTests(unittest.TestCase):
             self.assertEqual(
                 r.json()["data_platform"]["providers"]["Fixture"]["status"], "degraded"
             )
+
+    def test_unidentified_runtime_cannot_supply_a_league_name(self):
+        import dtos_app
+        from types import SimpleNamespace
+
+        f = PersonalEditorFixture(page_renderer=dtos_app.page)
+        self.addCleanup(f.close)
+        context = SimpleNamespace(
+            league_id="100", state={"data": {"league": {"name": "UNVERIFIED LEAGUE"}}}
+        )
+        with (
+            patch.object(dtos_app, "account_store", f.store),
+            patch.object(dtos_app, "current_league_context", return_value=context),
+        ):
+            response = f.client.get("/account/my-dtos")
+            self.assertEqual(response.status_code, 409)
+            self.assertNotIn("UNVERIFIED LEAGUE", response.text)
