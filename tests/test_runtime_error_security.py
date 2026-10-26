@@ -94,7 +94,7 @@ class RuntimeErrorSecurityTests(unittest.TestCase):
         manager.validate_league_id.side_effect = LeagueRuntimeNotFound(SECRET)
         self.assert_safe(self.client.get('/api/leagues/222/runtime'), 422)
 
-    def test_cached_runtime_errors_are_safe_for_members_and_unmodified_for_operators(self):
+    def test_cached_runtime_errors_are_safe_for_members_and_operators_without_mutating_state(self):
         manager = Mock()
         own = {'league_id': '222', 'status': 'failed', 'last_error': SECRET}
         foreign = {'league_id': '111', 'status': 'failed', 'last_error': SECRET}
@@ -111,8 +111,11 @@ class RuntimeErrorSecurityTests(unittest.TestCase):
         self.assertEqual(shared, before)
         response = self.client.get('/api/leagues/runtime', headers={'X-DTOS-Inspection-Auth': 'fixture-only-token'})
         self.assertEqual(response.status_code, 200)
-        self.assertIn(SECRET, response.text)
+        self.assertNotIn(SECRET, response.text)
+        self.assertEqual(len(response.json()['runtimes']), 2)
+        self.assertEqual(shared, before)
         self.assertIn('no-store, private', response.headers['cache-control'])
+        self.assert_safe(self.client.get('/api/leagues/222/runtime', headers={'X-DTOS-Inspection-Auth': 'fixture-only-token'}), 200)
         own['last_error'] = None
         self.assertIsNone(self.client.get('/api/leagues/222/runtime').json()['last_error'])
 
