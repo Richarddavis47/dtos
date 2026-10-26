@@ -9,7 +9,7 @@ from pathlib import Path
 APPLICATION_NAME = "DTOS"
 VERSION = "1.21.100"
 BUILD_NUMBER = 2200
-RELEASE_CODENAME = "Operator Diagnostics and Selected League Identity"
+RELEASE_CODENAME = "Safe Diagnostics, League Identity and Trade Pickers"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

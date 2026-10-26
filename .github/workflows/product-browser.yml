@@ -149,6 +149,7 @@ jobs:
           DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
           DTOS_WELCOME_EVIDENCE: .validation/public-welcome/browser
           DTOS_OPERATOR_CONTEXT_EVIDENCE: .validation/public-welcome/operator-context
+          DTOS_PICKER_EVIDENCE: .validation/public-welcome/picker
         run: |
           set -o pipefail
           mkdir -p .validation/public-welcome
@@ -162,7 +163,7 @@ jobs:
               python=platform.python_version(),collected_at=time.time(),
               fixture='Disposable authenticated HTTP and frozen fictional data; controlled Chromium, not physical Safari'),indent=2))
           PY
-          python -m unittest -v tests.test_operator_context_integrity tests.test_public_demo_fixture tests.test_public_entry tests.test_public_welcome_presentation tests.test_public_welcome_security tests.test_public_welcome_browser tests.test_runtime_error_security tests.test_cached_sync_security tests.test_diagnostic_security tests.test_operational_inspection 2>&1 | tee .validation/public-welcome/raw.log
+          python -m unittest -v tests.test_trade_picker_order tests.test_operator_context_integrity tests.test_public_demo_fixture tests.test_public_entry tests.test_public_welcome_presentation tests.test_public_welcome_security tests.test_public_welcome_browser tests.test_runtime_error_security tests.test_cached_sync_security tests.test_diagnostic_security tests.test_operational_inspection 2>&1 | tee .validation/public-welcome/raw.log
       - name: Preserve source and public phone evidence including failed attempts
         if: always()
         uses: actions/upload-artifact@v4
