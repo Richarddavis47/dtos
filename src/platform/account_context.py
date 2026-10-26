@@ -149,7 +149,7 @@ class AccountContextMiddleware:
                     return {"type": "http.request", "body": body, "more_body": False}
                 receive = replay
             if not self.service.store.verify_csrf(token, supplied):
-                response = JSONResponse({"status": "csrf_rejected"}, status_code=403)
+                response = JSONResponse({"status": "csrf_rejected"}, status_code=403, headers=denial_headers)
                 await response(scope, receive, send)
                 return
         if diagnostic and context is not None and context.membership is not None:
@@ -174,7 +174,7 @@ class AccountContextMiddleware:
             )
             league_id = None if account_league_action else league_path_identity(path)
             if league_id is not None and league_id != context.membership.league_id:
-                response = JSONResponse({"status": "unauthorized_league"}, status_code=403)
+                response = JSONResponse({"status": "unauthorized_league"}, status_code=403, headers=denial_headers)
                 await response(scope, receive, send)
                 return
             query = dict(parse_qsl(scope.get("query_string", b"").decode("latin-1"), keep_blank_values=True))

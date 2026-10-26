@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, parse_qsl, quote, urlencode
 
 from starlette.responses import HTMLResponse, JSONResponse
 from src.platform.inspection_security import operations_path
+from src.platform.runtime_errors import PRIVATE_HEADERS, log_runtime_failure, runtime_error_payload
 
 from src.core.league_runtime import (
     CanonicalLeagueContext, LeagueRuntimeError, LeagueRuntimeManager,
@@ -75,11 +76,11 @@ def _source_independent(path: str) -> bool:
     )
 
 
-def _unavailable_response(scope: dict[str, Any], *, status: int, reason: str):
+def _unavailable_response(scope: dict[str, Any], *, status: int):
     path = str(scope.get("path") or "/")
     accept = next((value.decode("latin-1") for key, value in scope.get("headers") or () if key.lower() == b"accept"), "")
     if scope.get("method") != "GET" or path.startswith("/api/") or "text/html" not in accept:
-        return JSONResponse({"status": "invalid" if status == 422 else "failed", "reason": reason}, status_code=status, headers={"Cache-Control": "no-store"})
+        return JSONResponse(runtime_error_payload(status), status_code=status, headers=PRIVATE_HEADERS)
     from src.platform.account_context import current_account
     from src.ui.theme import DESIGN_SYSTEM_CSS
 
@@ -105,7 +106,7 @@ def _unavailable_response(scope: dict[str, Any], *, status: int, reason: str):
         f'<a class="ds-action primary" href="{escape(retry, quote=True)}">Try this page again</a>'
         '<a class="ds-action" href="/account/leagues">Choose a connected league</a>'
         '<a class="ds-action" href="/account">Your account</a></nav></main></body></html>',
-        status_code=status, headers={"Cache-Control": "no-store"},
+        status_code=status, headers=PRIVATE_HEADERS,
     )
 
 
@@ -133,26 +134,26 @@ class LeagueContextMiddleware:
             (query.get("league_id") or query.get("league") or [None])[0]
             or _path_league(str(scope.get("path") or ""), str(scope.get("method") or "GET"))
         )
-        if not requested or str(requested) == self.default_league_id:
-            runtime = await self.manager.acquire_request(self.default_league_id, hydrate=False)
-        else:
-            if not self.import_enabled and not trusted:
-                response = JSONResponse({
-                    "status": "feature_gated",
-                    "reason": "Secondary-league hydration is disabled until isolation validation is enabled.",
-                }, status_code=403)
-                await response(scope, receive, send)
-                return
-            try:
+        try:
+            if not requested or str(requested) == self.default_league_id:
+                runtime = await self.manager.acquire_request(self.default_league_id, hydrate=False)
+            else:
+                if not self.import_enabled and not trusted:
+                    response = JSONResponse({
+                        "status": "feature_gated",
+                        "reason": "Secondary-league hydration is disabled until isolation validation is enabled.",
+                    }, status_code=403)
+                    await response(scope, receive, send)
+                    return
                 runtime = await self.manager.acquire_request(str(requested))
-            except LeagueRuntimeNotFound as exc:
-                response = _unavailable_response(scope, status=422, reason=str(exc))
-                await response(scope, receive, send)
-                return
-            except LeagueRuntimeError as exc:
-                response = _unavailable_response(scope, status=503, reason=str(exc))
-                await response(scope, receive, send)
-                return
+        except LeagueRuntimeNotFound as exc:
+            log_runtime_failure(exc, operation="request_acquisition", status=422)
+            await _unavailable_response(scope, status=422)(scope, receive, send)
+            return
+        except LeagueRuntimeError as exc:
+            log_runtime_failure(exc, operation="request_acquisition", status=503)
+            await _unavailable_response(scope, status=503)(scope, receive, send)
+            return
         context = runtime.canonical_context if runtime is not None else None
         if runtime is not None:
             runtime.touch()

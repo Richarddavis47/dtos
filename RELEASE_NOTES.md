@@ -1,4 +1,14 @@
-# DTOS v1.21.96 / build 2196 — Private Diagnostic Boundaries
+# DTOS v1.21.97 / build 2197 — Private Runtime Failures
+
+Security-only follow-up to build 2196. Handled league acquisition and explicit hydration failures retain HTTP 422/503 semantics, with fixed public error codes and recovery messages. Raw exception strings, mismatched source identifiers and paths no longer form these response bodies. HTML recovery remains available and the existing generic diagnostic 500 is unchanged.
+
+Server-side diagnostics record correlation ID, exception type and at most six source-function locations; they never serialize exception messages, chained messages, locals or credentials. Member runtime health qualifies cached error text. Existing credential-authorized operational evidence remains protected and available. Denial and failure responses are private/no-store.
+
+No new credentials, account/session policy, intelligence calculations, provider work, persistent analytical storage, user-data changes or historical FOIS regeneration. The public welcome candidate remains isolated pending separate independent acceptance and authorization.
+
+---
+
+## DTOS v1.21.96 / build 2196 — Private Diagnostic Boundaries
 
 Security-only correction from v1.21.95. Legacy inspection now requires an active authorized league; member-specific diagnostic requests are fenced to the controlled franchise. Existing read-only operator inspection uses its existing credential and scope, without new credentials or policy changes to operational inspection.
 

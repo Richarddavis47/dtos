@@ -56,3 +56,10 @@ production league records are retrieved to prove the defect or its correction.
 Related legacy search, weekly-report and manual-sync handlers use the same existing private HTML policy as their corresponding private APIs. Anonymous requests redirect to sign-in before data access or sync work; authorized mutations still require CSRF. Retired static inspection files have no registered static-directory mount or download handler and are not republished. Robots and sitemap contain fixed route URLs only.
 
 The standalone Linux identity cgroup gate uses a caller-supplied complete existing inspection context for its private Market-health read. Missing credentials fail clearly; it does not create a production credential or silently exempt the route.
+
+
+## Handled runtime failures
+
+League acquisition (default and secondary contexts) and explicit runtime validation/hydration never use exception text as a public reason. HTTP 422 returns `league_runtime_not_found`; HTTP 503 returns `league_runtime_unavailable`. Responses keep their invalid/failed status and useful retry/connected-league recovery. The existing outer diagnostic 500 remains `diagnostic_unavailable`.
+
+API and HTML failures use private/no-store headers. Request IDs remain on the existing observability boundary. Bounded `league_runtime_failure` server records contain type, operation, correlation and at most six file/function/line locations, without exception messages, chained messages, locals, request credentials, paths or source IDs. Detailed retained operational state continues through its existing protected inspection contract. Member runtime health displays an unavailable explanation instead of a cached raw exception, without changing shared state or operator evidence.
