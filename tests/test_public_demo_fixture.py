@@ -37,6 +37,20 @@ class PublicDemoFixtureTests(unittest.TestCase):
         self.assertLessEqual(len(self.raw), 16 * 1024)
         self.assertEqual(self.network_attempts, [])
 
+    def test_named_players_keep_verified_positions_and_hypothetical_labels(self):
+        expected = {
+            "Josh Allen": "QB", "Lamar Jackson": "QB", "Jalen Hurts": "QB",
+            "Bijan Robinson": "RB", "Christian McCaffrey": "RB",
+            "DeVonta Smith": "WR", "Ja'Marr Chase": "WR", "CeeDee Lamb": "WR",
+            "Brock Bowers": "TE", "George Kittle": "TE", "Justin Jefferson": "WR",
+        }
+        rows = self.frozen["team"]["lineup"] + self.frozen["team"]["reserve"] + self.frozen["trade"]["receive"]
+        self.assertEqual({r["name"]: r["position"] for r in rows}, expected)
+        self.assertIn("not actual player assessments", self.frozen["limitations"][0])
+        self.assertEqual(self.frozen["trade"]["send"][0]["name"], "Lamar Jackson")
+        for row in self.frozen["personal"]["before_order"] + self.frozen["personal"]["after_order"]:
+            self.assertIn(row["label"], {"Lamar Jackson", "Justin Jefferson"})
+
     def test_standard_football_stats_and_full_ppr_context(self):
         data, stats = fixture.fixture_input()
         self.assertEqual(data["league"]["total_rosters"], len(data["teams"]))

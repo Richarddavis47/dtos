@@ -1,3 +1,10 @@
+# v1.21.101 / build 2201 — Names-only welcome demonstrations
+
+- Replace visible fictional player labels with verified NFL player names and positions.
+- Retain text-only position indicators, fictional team scenarios, exact example picks and all illustrative calculations.
+- State beside every demo that values and rosters are illustrative, not live player valuations or actual trades; include a visible non-endorsement statement.
+- No portraits, external imagery, provider data imports, private account changes or additional anonymous analytical work.
+
 # v1.21.100 / build 2200 — Operator diagnostics, selected league identity and Trade pickers
 
 Trade roster pickers group actual positions QB/RB/WR/TE then other supported positions, sort prepared neutral prices descending with unavailable last, and separate exact draft picks. Selected packages, valuation policy and discovery behavior remain unchanged.
