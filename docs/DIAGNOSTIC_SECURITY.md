@@ -63,3 +63,14 @@ The standalone Linux identity cgroup gate uses a caller-supplied complete existi
 League acquisition (default and secondary contexts) and explicit runtime validation/hydration never use exception text as a public reason. HTTP 422 returns `league_runtime_not_found`; HTTP 503 returns `league_runtime_unavailable`. Responses keep their invalid/failed status and useful retry/connected-league recovery. The existing outer diagnostic 500 remains `diagnostic_unavailable`.
 
 API and HTML failures use private/no-store headers. Request IDs remain on the existing observability boundary. Bounded `league_runtime_failure` server records contain type, operation, correlation and at most six file/function/line locations, without exception messages, chained messages, locals, request credentials, paths or source IDs. Detailed retained operational state continues through its existing protected inspection contract. Member runtime health displays an unavailable explanation instead of a cached raw exception, without changing shared state or operator evidence.
+
+
+## Cached synchronization failures
+
+Successful member and operator semantic inspection never formats `last_error` into warnings. Legacy strings are treated only as a failure flag. Shared HTML, explicit manual-sync JSON, transaction recovery and prepared Sleeper/Commissioner health use the same fixed availability-aware message: existing admitted data may be served with a stale-data warning; missing data receives an unavailable/recovery explanation. Neither message certifies cached evidence as freshly evaluated.
+
+The league and transaction synchronization producers retain safe status instead of exception text. The existing durable cache writer qualifies both error fields, and the loader qualifies legacy fields in memory without creating a write on read or migrating source facts. Old on-disk error text is not exported and is replaced on the next ordinary cache publication; no bulk data rewrite is performed.
+
+Existing protected logging emits `synchronization_failure` with operation, exception type, existing correlation ID and no more than six basename/function/line locations. It does not stringify exceptions, include chained messages, credentials, request data or source identifiers. Existing expected runtime 422/503 and generic diagnostic 500 contracts are unchanged. No new privileged-access mechanism is introduced.
+
+Cached runtime-error text is also qualified in existing operator runtime-health responses. Privileged metadata and authorization remain available, but a privileged status response is not a log relay. Server-side bounded diagnostics retain operation/type/location/correlation details. Shared internal runtime objects remain unchanged.

@@ -15,6 +15,7 @@ from models.commissioner import (
     LeagueHeadline,
 )
 from src.core.intelligence import intelligence_orchestrator
+from src.core.sync_status import synchronization_warning
 from services.transactions import normalize_transactions
 from src.core.team_identity import canonical_team_name, team_name_map
 
@@ -355,7 +356,7 @@ def build_commissioner_desk(
             "health": {
                 "status": "Degraded" if last_error else "Healthy",
                 "last_sync": str(last_sync or "Never"),
-                "error": str(last_error) if last_error else None,
+                "error": synchronization_warning({"data": data}) if last_error else None,
             },
         },
     }

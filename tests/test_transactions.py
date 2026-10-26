@@ -174,7 +174,8 @@ class TransactionSyncTests(unittest.IsolatedAsyncioTestCase):
             STATE["data"]["transactions"], [{"transaction_id": "cached"}]
         )
         self.assertEqual(
-            STATE["transactions_last_error"], "RuntimeError: Sleeper unavailable"
+            STATE["transactions_last_error"],
+            "Transactions could not be refreshed. Showing the last successfully loaded information; it may be out of date. Try again later."
         )
         save_cache.assert_not_called()
 

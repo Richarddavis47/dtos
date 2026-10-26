@@ -35,7 +35,7 @@ def create_league_runtime_router(
             for field in ("resident_league_ids", "in_flight"):
                 if field in result:
                     result[field] = [value for value in result[field] if value == league]
-        if not inspection_authorized(request.scope) and "runtimes" in result:
+        if "runtimes" in result:
             result = {**result, "runtimes": [customer_runtime_health(row) for row in result["runtimes"]]}
         return result
 
@@ -66,9 +66,7 @@ def create_league_runtime_router(
                 "resident": False,
                 "import_enabled": import_enabled,
             })
-        health = runtime.public_health()
-        if not inspection_authorized(request.scope):
-            health = customer_runtime_health(health)
+        health = customer_runtime_health(runtime.public_health())
         return JSONResponse({**health, "resident": True})
 
     @router.post("/{league_id}/runtime")
@@ -89,9 +87,7 @@ def create_league_runtime_router(
         except Exception as exc:
             log_runtime_failure(exc, operation="explicit_hydration", status=503)
             return runtime_error_response(503)
-        health = runtime.public_health()
-        if not inspection_authorized(request.scope):
-            health = customer_runtime_health(health)
+        health = customer_runtime_health(runtime.public_health())
         return JSONResponse({**health, "resident": True})
 
     return router

@@ -27,6 +27,8 @@ from src.core.projection_intelligence.service import ProjectionService
 from src.core.projection_intelligence.sleeper_provider import SleeperProjectionClient
 from src.platform.lifecycle import lifecycle_coordinator
 from src.platform.sync_diagnostics import SyncDiagnostics
+from src.platform.runtime_errors import log_sync_failure
+from src.core.sync_status import safe_sync_state, synchronization_warning
 from src.platform.request_diagnostics import diagnosed, source_hooks, span
 from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence
@@ -96,11 +98,11 @@ def load_cache(
         cached_league = str(((payload.get("data") or {}).get("league") or {}).get("league_id") or league_id)
         if cached_league != str(league_id):
             raise ValueError("Cached Sleeper league identity does not match the requested runtime.")
-        state.update(payload)
+        state.update(safe_sync_state(payload))
         state["syncing"] = False
         state["transactions_syncing"] = False
     except Exception as exc:  # pragma: no cover
-        logger.warning("Could not load cache: %s", exc)
+        log_sync_failure(exc, operation="cache_load")
 
 
 def save_cache(
@@ -111,7 +113,7 @@ def save_cache(
     temporary_path = None
     try:
         cache_file.parent.mkdir(parents=True, exist_ok=True)
-        payload = {k: v for k, v in state.items() if not k.endswith("syncing")}
+        payload = safe_sync_state({k: v for k, v in state.items() if not k.endswith("syncing")})
         encoder = json.JSONEncoder(separators=(",", ":"), ensure_ascii=False)
         from src.platform.cache_budget import json_admission
         with span('cache_size'):
@@ -141,7 +143,7 @@ def save_cache(
             temporary_path = None
             phase["serialization_state"] = "complete"
     except Exception as exc:  # pragma: no cover
-        logger.warning("Could not save cache: %s", exc)
+        log_sync_failure(exc, operation="cache_save")
     finally:
         if temporary_path is not None:
             try:
@@ -645,8 +647,8 @@ async def _sync_sleeper(
             state["last_sync"] = last_valid["last_sync"]
             state["transactions_last_sync"] = last_valid["transactions_last_sync"]
             state["transactions_last_error"] = last_valid["transactions_last_error"]
-            state["last_error"] = f"{type(exc).__name__}: {exc}"
-            logger.exception("Sleeper sync failed")
+            state["last_error"] = synchronization_warning(state)
+            log_sync_failure(exc, operation="league_sync")
         finally:
             state["syncing"] = False
             if "lifecycle_context" in locals():
@@ -750,8 +752,8 @@ async def sync_transactions(
             logger.info("Transaction sync complete: %s transactions", len(transactions))
             return True
         except Exception as exc:
-            state["transactions_last_error"] = f"{type(exc).__name__}: {exc}"
-            logger.exception("Transaction sync failed")
+            state["transactions_last_error"] = synchronization_warning(state, transactions=True)
+            log_sync_failure(exc, operation="transaction_sync")
             return False
         finally:
             state["transactions_syncing"] = False

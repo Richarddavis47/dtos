@@ -284,7 +284,11 @@ class DiagnosticSecurityTests(unittest.TestCase):
         self.assertEqual(response.json()['in_flight'], [])
         self.assertEqual(shared, before)
         response = self.client.get('/api/leagues/runtime', headers={'X-DTOS-Inspection-Auth': 'fixture-only-token'})
-        self.assertEqual(response.json(), shared)
+        from src.platform.runtime_errors import runtime_error_payload
+        expected = copy.deepcopy(shared)
+        expected['runtimes'][1]['last_error'] = runtime_error_payload(503)['reason']
+        self.assertEqual(response.json(), expected)
+        self.assertNotIn('PRIVATE_OTHER_LEAGUE_ERROR', response.text)
 
     def test_global_operational_diagnostics_do_not_leak_across_member_scopes(self):
         from src.platform.account_context import OPERATOR_DIAGNOSTIC_PATHS

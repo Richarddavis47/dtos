@@ -165,7 +165,8 @@ class CachedSleeperFallbackTests(unittest.IsolatedAsyncioTestCase):
             with patch("services.sleeper.sleeper_get", new=AsyncMock(side_effect=RuntimeError("Sleeper unavailable"))), patch("services.sleeper.save_cache"):
                 await sync_sleeper()
             self.assertEqual(player_asset_index(STATE["data"])[0]["player_id"], "player one")
-            self.assertIn("Sleeper unavailable", STATE["last_error"])
+            self.assertIn("last successfully loaded", STATE["last_error"])
+            self.assertNotIn("Sleeper unavailable", STATE["last_error"])
         finally:
             STATE.clear()
             STATE.update(original)

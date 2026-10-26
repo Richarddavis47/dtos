@@ -197,6 +197,9 @@ class ColdLeagueRecoveryTests(unittest.TestCase):
                 runtime = self.manager.resident("200")
                 while runtime.background_tasks:
                     await asyncio.gather(*tuple(runtime.background_tasks))
+                    # gather(done_tasks) may complete eagerly; let ownership
+                    # discard callbacks run before inspecting the set again.
+                    await asyncio.sleep(0)
             self.client.portal.call(finish)
             self.assertGreaterEqual(fois.await_count, 1)
             self.assertEqual(snapshot(self.store), before)
@@ -213,6 +216,9 @@ class ColdLeagueRecoveryTests(unittest.TestCase):
                 result = await self.dtos._hydrate_league_runtime(runtime, prepare_history=False)
                 while runtime.background_tasks:
                     await asyncio.gather(*tuple(runtime.background_tasks))
+                    # gather(done_tasks) may complete eagerly; let ownership
+                    # discard callbacks run before inspecting the set again.
+                    await asyncio.sleep(0)
                 return result
             with patch("services.league_maintenance.ensure_periodic_refresh"), patch.object(self.dtos.AssetMarketCache, "reconcile"), patch.object(self.dtos, "start_background_backfill", new_callable=AsyncMock, return_value={"status": "unavailable"}), patch.object(self.dtos, "history_progress_contracts"), patch.object(self.dtos, "resolve_historical_trade_market", new_callable=AsyncMock):
                 self.assertTrue(asyncio.run(hydrate_and_finish()))

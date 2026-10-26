@@ -6,6 +6,8 @@ from typing import Any, Awaitable, Callable
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from src.core.sync_status import synchronization_warning
+
 from app_metadata import BUILD_NUMBER, VERSION, deployment_metadata
 from src.core.intelligence.serialization import recommendation_contract
 from services.asset_intelligence import player_asset_index
@@ -220,7 +222,7 @@ def create_api_router(
                 {
                     "ok": state.get("last_error") is None,
                     "last_sync": state.get("last_sync"),
-                    "error": state.get("last_error"),
+                    "error": synchronization_warning(state) if state.get("last_error") else None,
                 }
             )
         return RedirectResponse(url="/", status_code=303)

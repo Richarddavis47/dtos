@@ -27,21 +27,29 @@ def runtime_error_response(status: int) -> JSONResponse:
     return JSONResponse(runtime_error_payload(status), status_code=status, headers=PRIVATE_HEADERS)
 
 
-def log_runtime_failure(exc: Exception, *, operation: str, status: int) -> None:
+def _log_failure(exc: Exception, *, event: str, operation: str, status: int | None = None) -> None:
     # Neither str/repr(exc), chained messages, locals, source lines, request
     # headers/query nor source/league identifiers belong in request logs.
     from src.platform.observability import request_id_context
 
     frames = deque(traceback.walk_tb(exc.__traceback__), maxlen=6)
-    logging.getLogger("dtos.request").warning(
-        "league_runtime_failure",
-        extra={"event": "league_runtime_failure", "request_id": request_id_context.get(),
-               "status_code": status, "diagnostic": {
-                   "operation": operation, "exception_type": type(exc).__name__,
-                   "frames": [{"file": PurePath(frame.f_code.co_filename).name,
-                               "function": frame.f_code.co_name, "line": line}
-                              for frame, line in frames]}},
-    )
+    extra = {"event": event, "request_id": request_id_context.get(), "diagnostic": {
+        "operation": operation, "exception_type": type(exc).__name__,
+        "frames": [{"file": PurePath(frame.f_code.co_filename).name,
+                    "function": frame.f_code.co_name, "line": line}
+                   for frame, line in frames]}}
+    if status is not None:
+        extra["status_code"] = status
+    logging.getLogger("dtos.request").warning(event, extra=extra)
+
+
+def log_runtime_failure(exc: Exception, *, operation: str, status: int) -> None:
+    _log_failure(exc, event="league_runtime_failure", operation=operation, status=status)
+
+
+def log_sync_failure(exc: Exception, *, operation: str) -> None:
+    """Keep bounded operational locations and correlation without credentials."""
+    _log_failure(exc, event="synchronization_failure", operation=operation)
 
 
 def customer_runtime_health(payload: dict[str, Any]) -> dict[str, Any]:
