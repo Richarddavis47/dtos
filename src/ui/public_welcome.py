@@ -142,7 +142,7 @@ def render_welcome(data: Mapping[str, Any] | None = None) -> str:
     if data is None:
         data = json.loads(Path(__file__).with_name("public_demo_data.json").read_text(encoding="utf-8"))
     team, trade, personal, league = (data[key] for key in ("team", "trade", "personal", "league"))
-    demo_note = '<p class="pw-demo-note">Demonstration data · fictional league · not current player advice.</p>'
+    demo_note = '<p class="pw-demo-note">Illustrative values and hypothetical rosters. Not live player valuations or actual trades.</p>'
     packages = "".join(
         f'<section class="pw-package"><h3>{title}</h3><ul>'
         + "".join(f'<li>{_asset(row)}</li>' for row in rows) + '</ul></section>'
@@ -203,4 +203,4 @@ def render_welcome(data: Mapping[str, Any] | None = None) -> str:
 <details class="pw-detail" id="demo-evidence"><summary>Example scoring, source and limitations</summary><p>{_text(data["label"])} · {_text(data["season"])} · Week {_text(data["week"])}. {_text(league["scoring_label"])}</p><p>Required starting slots: {_text(", ".join(league["starter_slots"]))}.</p><ul class="pw-scoring">{scoring}</ul><ul>{limitations}</ul><p>Frozen fictional fixture: {_text(data["fixture_id"])} · version {_text(data["version"])}. No live analysis runs when you open or explore this page.</p></details>
 </section></div>
 <section class="pw-setup" aria-labelledby="setup-title"><h2 id="setup-title">Use DTOS with your Sleeper league</h2><p>Create your DTOS account, enter your public Sleeper username, then review your franchise match. Your DTOS account is separate from Sleeper; resolving a username does not independently prove control of that Sleeper account.</p><p><b>Already participating in the beta?</b> Use the existing account destinations below.</p><nav class="pw-account-actions" aria-label="Account destinations"><a class="pw-action" href="/account/sign-in">Sign In</a><a class="pw-action" href="/account/create">Create Account</a><a class="pw-action" href="/account/recover">Account Recovery</a></nav><p class="pw-access-note">Account creation is available. DTOS remains in a controlled beta with limited capacity. Creating an account does not change that capacity.</p></section>
-</main><footer class="pw-footer">DTOS · Dynasty front office intelligence. Demonstrations use fictional data, not your league, saved rankings or current player advice.</footer></div></body></html>'''
+</main><footer class="pw-footer">DTOS · Dynasty front office intelligence. Real names are used only to identify players in fictional examples. No affiliation, sponsorship or endorsement by the players, their teams or the NFL is implied. These examples are not your league, saved rankings or current player advice.</footer></div></body></html>'''

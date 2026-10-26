@@ -59,7 +59,7 @@ class PublicWelcomePresentationTests(unittest.TestCase):
         for title in ('Understand Your Team', 'Make Better Trades', 'Build Your Own DTOS',
                       'You Send', 'You Receive', 'Neutral DTOS', 'Custom DTOS'):
             self.assertIn(title, text)
-        self.assertEqual(source.count('Demonstration data · fictional league · not current player advice.'), 3)
+        self.assertEqual(source.count('Illustrative values and hypothetical rosters. Not live player valuations or actual trades.'), 3)
         self.assertIn('same hypothetical offer', text)
         self.assertIn(self.fixture['team']['name'], text)
         for side in ('active', 'partner'):

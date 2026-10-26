@@ -35,7 +35,7 @@ def fixture_input():
         (
             1,
             "harbor-q1",
-            "Harbor QB One",
+            "Josh Allen",
             "QB",
             700,
             {"pass_yd": 350, "pass_td": 4, "rush_yd": 40},
@@ -43,7 +43,7 @@ def fixture_input():
         (
             1,
             "harbor-q2",
-            "Harbor QB Two",
+            "Lamar Jackson",
             "QB",
             400,
             {"pass_yd": 300, "pass_td": 3, "rush_yd": 60},
@@ -51,7 +51,7 @@ def fixture_input():
         (
             1,
             "harbor-q3",
-            "Harbor QB Three",
+            "Jalen Hurts",
             "QB",
             300,
             {"pass_yd": 250, "pass_td": 2, "rush_yd": 60},
@@ -59,7 +59,7 @@ def fixture_input():
         (
             1,
             "harbor-r1",
-            "Harbor RB One",
+            "Bijan Robinson",
             "RB",
             450,
             {"rush_yd": 80, "rush_td": 1, "rec": 2},
@@ -67,16 +67,16 @@ def fixture_input():
         (
             1,
             "harbor-r2",
-            "Harbor RB Two",
+            "Christian McCaffrey",
             "RB",
             100,
             {"rush_yd": 40, "rec": 2, "rec_yd": 20},
         ),
-        (1, "harbor-w1", "Harbor WR One", "WR", 400, {"rec": 3, "rec_yd": 40}),
-        (1, "harbor-w2", "Harbor WR Two", "WR", 100, {"rec": 3, "rec_yd": 50}),
-        (1, "harbor-w3", "Harbor WR Three", "WR", 350, {"rec": 4, "rec_yd": 60}),
-        (1, "harbor-t1", "Harbor TE One", "TE", 250, {"rec": 4, "rec_yd": 60}),
-        (1, "harbor-t2", "Harbor TE Two", "TE", 50, {"rec": 2, "rec_yd": 20}),
+        (1, "harbor-w1", "DeVonta Smith", "WR", 400, {"rec": 3, "rec_yd": 40}),
+        (1, "harbor-w2", "Ja'Marr Chase", "WR", 100, {"rec": 3, "rec_yd": 50}),
+        (1, "harbor-w3", "CeeDee Lamb", "WR", 350, {"rec": 4, "rec_yd": 60}),
+        (1, "harbor-t1", "Brock Bowers", "TE", 250, {"rec": 4, "rec_yd": 60}),
+        (1, "harbor-t2", "George Kittle", "TE", 50, {"rec": 2, "rec_yd": 20}),
         (
             2,
             "summit-q1",
@@ -120,7 +120,7 @@ def fixture_input():
         (
             2,
             "summit-w1",
-            "Summit WR One",
+            "Justin Jefferson",
             "WR",
             400,
             {"rec": 8, "rec_yd": 120, "rec_td": 1},
@@ -561,7 +561,7 @@ def generate():
                 "scoring": SCORING,
             },
             "limitations": [
-                "All players, prices and projected football statistics are fictional.",
+                "Real player names identify illustrative roster slots only. All prices, projected statistics, rosters and transactions are hypothetical; they are not actual player assessments.",
                 "Frozen Week 5 example; supported changes are not promised results.",
                 "No injury probabilities, playoff odds or multi-season forecast are inferred.",
                 "Reserve points summarize useful disjoint legal replacements, not a second complete starting lineup.",
@@ -642,7 +642,7 @@ def generate():
                 ],
                 "before_order": order_rows(canonical_baseline, zero["values"]),
                 "after_order": order_rows(personal_order, personal["values"]),
-                "explanation": "Move Summit WR One to first in the full example ranking. The saved-cohort Market value curve assigns that rank its existing highest value.",
+                "explanation": "Move Justin Jefferson to first in the full example ranking. The saved-cohort Market value curve assigns that rank its existing highest value.",
                 "unchanged": [
                     "Neutral Market prices",
                     "Both legal-lineup calculations",
