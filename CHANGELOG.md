@@ -1,3 +1,9 @@
+# v1.21.100 / build 2200 — Operator diagnostics, selected league identity and Trade pickers
+
+Trade roster pickers group actual positions QB/RB/WR/TE then other supported positions, sort prepared neutral prices descending with unavailable last, and separate exact draft picks. Selected packages, valuation policy and discovery behavior remain unchanged.
+
+Replace raw orchestration error serialization with a stable failure category and warning while preserving protected diagnostic state and authorization. Render source-independent account headers from selected membership instead of the default league runtime, reject incompatible runtime identity, and fence asynchronous rankings reads to the rendered league/franchise/session. Preserve rankings, numerical engines and the fictional welcome page.
+
 ## v1.21.99 / build 2199 — Public Welcome and Read Only Demo
 
 - Reconcile the original held welcome candidate with secured build 2198; anonymous Home opens `/welcome`, while authenticated Home and private navigation retain their existing behavior.

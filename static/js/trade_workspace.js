@@ -240,6 +240,29 @@
     }
     return box;
   }
+  // Display-only copies: workspace ownership and selected package order stay intact.
+  function pickerGroup(a) { return a.kind === 'pick' ? 'Draft picks' : (a.position || 'Other positions'); }
+  function pickerAssets(assets) {
+    const primary = ['QB', 'RB', 'WR', 'TE'];
+    const text = (a,b) => a < b ? -1 : a > b ? 1 : 0;
+    const priced = a => typeof a.trade_value === 'number' && Number.isFinite(a.trade_value);
+    return [...assets].sort((a,b) => {
+      if ((a.kind === 'pick') !== (b.kind === 'pick')) return a.kind === 'pick' ? 1 : -1;
+      if (a.kind === 'pick') return (Number(a.season) - Number(b.season)) || (Number(a.round) - Number(b.round)) || text(String(a.original_roster_id), String(b.original_roster_id)) || text(a.asset_id,b.asset_id);
+      const ap = primary.indexOf(a.position), bp = primary.indexOf(b.position);
+      const group = (ap < 0 ? primary.length : ap) - (bp < 0 ? primary.length : bp);
+      return group || text(pickerGroup(a),pickerGroup(b)) || Number(priced(b)) - Number(priced(a)) || (priced(a) && priced(b) ? b.trade_value - a.trade_value : 0) || text(a.asset_id,b.asset_id);
+    });
+  }
+  function pickerOptions(select, assets) {
+    let group = null, previous = null;
+    for (const a of pickerAssets(assets)) {
+      const name = pickerGroup(a);
+      if (name !== previous) { group = node('optgroup'); group.label = name; select.append(group); previous = name; }
+      const option = node('option', label(a) + (a.kind === 'pick' ? ' · ' + a.season + ' Round ' + a.round + ' · Originally ' + (team(a.original_roster_id)?.team_name || a.original_roster_id) : '') + ' · Market ' + displayMarket(a.trade_value));
+      option.value = a.asset_id; group.append(option);
+    }
+  }
   function assetRow(a, which, review = false) {
     const row = node('div', null, 'tw-asset'), button = node('button'); button.type = 'button'; button.append(identity(a, true));
     button.append(node('strong', displayMarket(a.trade_value)));
@@ -293,8 +316,8 @@
     const teamLink = node('a', 'Open Team HQ'); teamLink.href = '/teams/' + owner.roster_id; container.append(teamLink);
     const search = node('input'); search.type = 'search'; search.value = f.q; search.placeholder = 'Search players or picks'; search.setAttribute('aria-label', which === 'sent' ? 'Search my assets' : 'Search their assets');
     const results = node('div', null, 'tw-asset-results'), chips = node('div', null, 'tw-filters');
-    const positions = ['ALL', 'QB', 'RB', 'WR', 'TE', 'PICKS'].filter(p => p === 'ALL' || owner.assets.some(a => (a.kind === 'pick' ? 'PICKS' : a.position) === p));
-    function renderRows() { results.replaceChildren(); const rows = owner.assets.filter(a => (f.pos === 'ALL' || (a.kind === 'pick' ? 'PICKS' : a.position) === f.pos) && label(a).toLowerCase().includes(f.q.trim().toLowerCase())); for (const a of rows) results.append(assetRow(a, which)); if (!rows.length) results.append(node('p', owner.assets.length ? 'No matching assets. Clear search or choose All.' : 'No currently owned assets available.')); }
+    const positions = ['ALL', 'QB', 'RB', 'WR', 'TE', ...[...new Set(owner.assets.filter(a => a.kind !== 'pick' && !['QB','RB','WR','TE'].includes(a.position)).map(a => a.position || 'Other positions'))].sort(), 'PICKS'].filter(p => p === 'ALL' || owner.assets.some(a => (a.kind === 'pick' ? 'PICKS' : (a.position || 'Other positions')) === p));
+    function renderRows() { results.replaceChildren(); const rows = pickerAssets(owner.assets).filter(a => (f.pos === 'ALL' || (a.kind === 'pick' ? 'PICKS' : (a.position || 'Other positions')) === f.pos) && label(a).toLowerCase().includes(f.q.trim().toLowerCase())); let previous = null; for (const a of rows) { const group = pickerGroup(a); if (group !== previous) { const heading = node('h4', group); heading.dataset.pickerGroup = group; results.append(heading); previous = group; } results.append(assetRow(a, which)); } if (!rows.length) results.append(node('p', owner.assets.length ? 'No matching assets. Clear search or choose All.' : 'No currently owned assets available.')); }
     search.oninput = () => { f.q = search.value; renderRows(); };
     for (const pos of positions) { const b = node('button', pos); b.type = 'button'; b.dataset.position = pos; b.setAttribute('aria-pressed', String(f.pos === pos)); b.onclick = () => { f.pos = pos; board(which); container.querySelector('[data-position="' + pos + '"]').focus(); }; chips.append(b); }
     results.setAttribute('role', 'region'); results.setAttribute('aria-label', owner.team_name + ' owned assets'); results.tabIndex = 0;
@@ -1386,7 +1409,7 @@
       };
     }
     if (window.dtosStrategy) el('trade-strategy').value = window.dtosStrategy.get(data.workspace_context);
-    for (const a of team(active)?.assets || []) { const option = node('option', label(a) + (a.kind === 'pick' ? ' · Original franchise ' + a.original_roster_id + ' · ' + a.asset_id : '')); option.value = a.asset_id; el('trade-constraint-asset').append(option); }
+    pickerOptions(el('trade-constraint-asset'), team(active)?.assets || []);
     if (flow === 'recommended') {
       el('trade-find').textContent = 'Discover Recommended Trades';
       el('recommendation-refresh').onclick = () => {
@@ -1397,7 +1420,7 @@
       el('recommendation-filter').onchange = () => { excludedFamilies.clear(); searchExhausted = false; changed(); searchStatus('Filter changed. Discover supported opportunities under the selected context.', 'ready'); };
     }
     if (flow === 'shop') {
-      for (const a of team(active)?.assets || []) { const option = node('option', label(a)); option.value = a.asset_id; el('shop-protected').append(option); }
+      pickerOptions(el('shop-protected'), team(active)?.assets || []);
       el('shop-preference').onchange = () => { session.shopPreference = el('shop-preference').value; changed(); if (session.requiredOutgoingAsset) run('generate'); };
       el('shop-position').onchange = () => { session.shopPosition = el('shop-position').value; changed(); if (session.requiredOutgoingAsset) run('generate'); };
       el('shop-protected').onchange = () => { session.protectedAssets = Array.from(el('shop-protected').selectedOptions, option => option.value); changed(); if (session.requiredOutgoingAsset) run('generate'); };

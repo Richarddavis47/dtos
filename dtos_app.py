@@ -791,7 +791,21 @@ label{color:var(--muted);font-size:12px;font-weight:750}
 
 def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLResponse:
     context = current_league_context()
-    selected_state = context.state if context is not None else STATE
+    account = current_account()
+    if context is not None and account is not None and account.membership is not None:
+        if (str(context.league_id) != str(account.membership.league_id)
+                or str(((context.state.get("data") or {}).get("league") or {}).get("league_id") or "") != str(account.membership.league_id)):
+            raise HTTPException(409, "Your selected league changed. Reload this page.")
+    # Account pages intentionally avoid runtime hydration. Never substitute the
+    # default runtime's identity or sync diagnostics for the selected membership.
+    if context is None and account is not None:
+        membership = account.membership
+        selected_state = {"last_sync": "Not checked here", "data": {"league": {
+            "league_id": membership.league_id if membership else "",
+            "name": (membership.league_name or membership.league_id) if membership else "Choose a league",
+        }}}
+    else:
+        selected_state = context.state if context is not None else STATE
     sync = selected_state.get("last_sync") or "Never"
     error = selected_state.get("last_error")
     error_html = f'<div class="error"><b>Sync error:</b> {escape(synchronization_warning(selected_state))}</div>' if error else ""

@@ -118,8 +118,7 @@ class PublicWelcomeSecurityTests(unittest.TestCase):
         self.f.no_work.assert_not_called()
 
     def test_operator_error_observation_is_strictly_privileged_not_public_demo_data(self):
-        # Separate pre-existing hardening item. Do not weaken the operator gate
-        # or suppress this observation by altering the health response here.
+        # Privileged access remains, but operational responses also withhold raw errors.
         marker='OPERATOR_ONLY_PREFLIGHT /private/operator.sqlite3 FAKE_OPERATOR_CREDENTIAL'
         expected = self.client.get('/welcome').content
         with patch('routes.api.intelligence_orchestrator.last_error',marker):
@@ -136,7 +135,9 @@ class PublicWelcomeSecurityTests(unittest.TestCase):
                     self.assertIn('no-store, private',member.headers['cache-control'])
                     operator=client.get('/api/platform/health',headers={'X-DTOS-Inspection-Auth':'fixture-only-token'})
                     self.assertEqual(operator.status_code,200)
-                    self.assertEqual(operator.json()['orchestration']['last_error'],marker)
+                    for private in (marker, '/private/operator.sqlite3', 'FAKE_OPERATOR_CREDENTIAL'):
+                        self.assertNotIn(private, operator.text)
+                    self.assertEqual(operator.json()['orchestration']['error_code'], 'orchestration_failed')
                     self.assertIn('no-store, private',operator.headers['cache-control'])
                     self.assertEqual(client.get('/welcome').content,expected)
                     self.assertNotIn(marker,client.get('/api/status').text)

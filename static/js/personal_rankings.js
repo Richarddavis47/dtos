@@ -190,6 +190,7 @@
       const response = await fetch('/api/my-dtos', {credentials: 'same-origin', cache: 'no-store', signal: controller.signal}); const result = await response.json();
       if (sequence !== requestSequence) return;
       if (!response.ok) throw new Error(result.message || result.detail || 'My DTOS is unavailable. Sign in or reload and try again.');
+      if ((root.dataset.csrfToken && result.csrf_token !== root.dataset.csrfToken) || root.dataset.leagueId && (String(result.account_scope?.league_id) !== root.dataset.leagueId || String(result.account_scope?.roster_id) !== root.dataset.rosterId)) throw new Error('Your selected league or franchise changed. Reload this page before using rankings.');
       const retriedWithFocus = document.activeElement === el('personal-retry') || document.activeElement === el('personal-compatibility-retry');
       state = result; ready = true; el('personal-recovery').hidden = true; render(); status(result.initialized ? 'Rankings loaded. Review any evidence limits below.' : 'Market rankings loaded. Neutral DTOS is active.');
       if (retriedWithFocus) {
