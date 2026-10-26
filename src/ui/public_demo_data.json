@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "fixture_id": "public-football-demo-v1",
+  "input_sha256": "7522f80f34a68e9c1435f05913437a003c973119d1fcdc425aa7989a4b568e85",
+  "label": "Demonstration data · fictional league · not current player advice",
+  "season": 2026,
+  "week": 5,
+  "league": {
+    "name": "Demo Dynasty League",
+    "scoring_label": "Full PPR · 4-point passing touchdowns · Superflex",
+    "starter_slots": [
+      "QB",
+      "RB",
+      "WR",
+      "TE",
+      "FLEX",
+      "SUPER_FLEX"
+    ],
+    "scoring": {
+      "pass_yd": 0.04,
+      "pass_td": 4,
+      "pass_int": -2,
+      "rush_yd": 0.1,
+      "rush_td": 6,
+      "rec": 1,
+      "rec_yd": 0.1,
+      "rec_td": 6,
+      "fum_lost": -2
+    }
+  },
+  "limitations": [
+    "All players, prices and projected football statistics are fictional.",
+    "Frozen Week 5 example; supported changes are not promised results.",
+    "No injury probabilities, playoff odds or multi-season forecast are inferred.",
+    "Reserve points summarize useful disjoint legal replacements, not a second complete starting lineup."
+  ],
+  "team": {
+    "name": "Harbor Front Office",
+    "strategy": "RETOOL",
+    "lineup_points": 108.0,
+    "comparison_population": 4,
+    "comparison_rank": 2,
+    "lineup": [
+      {
+        "asset_id": "harbor-q1",
+        "name": "Harbor QB One",
+        "position": "QB",
+        "slot": "QB",
+        "points": 34.0
+      },
+      {
+        "asset_id": "harbor-q2",
+        "name": "Harbor QB Two",
+        "position": "QB",
+        "slot": "SUPER_FLEX",
+        "points": 30.0
+      },
+      {
+        "asset_id": "harbor-r1",
+        "name": "Harbor RB One",
+        "position": "RB",
+        "slot": "FLEX",
+        "points": 16.0
+      },
+      {
+        "asset_id": "harbor-t1",
+        "name": "Harbor TE One",
+        "position": "TE",
+        "slot": "TE",
+        "points": 10.0
+      },
+      {
+        "asset_id": "harbor-w3",
+        "name": "Harbor WR Three",
+        "position": "WR",
+        "slot": "WR",
+        "points": 10.0
+      },
+      {
+        "asset_id": "harbor-r2",
+        "name": "Harbor RB Two",
+        "position": "RB",
+        "slot": "RB",
+        "points": 8.0
+      }
+    ],
+    "reserve": [
+      {
+        "asset_id": "harbor-q3",
+        "name": "Harbor QB Three",
+        "position": "QB",
+        "points": 24.0
+      },
+      {
+        "asset_id": "harbor-w1",
+        "name": "Harbor WR One",
+        "position": "WR",
+        "points": 7.0
+      },
+      {
+        "asset_id": "harbor-w2",
+        "name": "Harbor WR Two",
+        "position": "WR",
+        "points": 8.0
+      },
+      {
+        "asset_id": "harbor-t2",
+        "name": "Harbor TE Two",
+        "position": "TE",
+        "points": 4.0
+      }
+    ],
+    "strength": "Three projected quarterbacks provide meaningful Superflex replacement cover.",
+    "limitation": "Using a reserve quarterback to improve receivers can remove that quarterback cover. Current points do not establish future availability.",
+    "next_step": "Compare a receiver upgrade with its quarterback-depth cost before pursuing it.",
+    "capital": [
+      {
+        "asset_id": "pick:2028:1:2",
+        "label": "2028 first · originally Summit Front Office",
+        "year": 2028,
+        "round": 1,
+        "original_franchise": "Summit Front Office",
+        "original_franchise_id": 2,
+        "current_owner": "Harbor Front Office",
+        "current_owner_id": 1
+      }
+    ]
+  },
+  "trade": {
+    "send": [
+      {
+        "asset_id": "harbor-q2",
+        "name": "Harbor QB Two",
+        "position": "QB"
+      }
+    ],
+    "receive": [
+      {
+        "asset_id": "summit-w1",
+        "name": "Summit WR One",
+        "position": "WR"
+      }
+    ],
+    "market_sent": 528.0,
+    "market_received": 528.0,
+    "active": {
+      "name": "Harbor Front Office",
+      "before": 108.0,
+      "after": 120.0,
+      "delta": 12.0,
+      "reserve_before": 43.0,
+      "reserve_after": 27.0,
+      "reserve_delta": -16.0,
+      "benefit": "The incoming receiver improves the best legal starting lineup.",
+      "cost": "Sending a starting quarterback uses the third quarterback as the Superflex starter; there is no further quarterback replacement in this example."
+    },
+    "partner": {
+      "name": "Summit Front Office",
+      "before": 112.0,
+      "after": 116.0,
+      "delta": 4.0,
+      "reserve_before": 36.0,
+      "reserve_after": 36.0,
+      "reserve_delta": 0.0,
+      "benefit": "The incoming quarterback improves the best legal starting lineup.",
+      "cost": "Summit gives up its highest-projected receiver and relies on its other receivers to cover WR and FLEX."
+    },
+    "recommendation": "WORTH PURSUING",
+    "eligible": true,
+    "qualification": "An evaluated hypothetical offer, not a prediction that another manager accepts. Both rosters are evaluated using the same neutral evidence."
+  },
+  "personal": {
+    "neutral_sent": 528,
+    "neutral_received": 528,
+    "personal_sent": 528.0,
+    "personal_received": 785.0,
+    "universe_asset_count": 32,
+    "cohort_label": "All compatible priced player assets in this fictional fixture. The owned future picks have no supplied Market quote and receive no personal price.",
+    "unpriced_exact_picks": [
+      "pick:2028:1:2",
+      "pick:2028:1:1"
+    ],
+    "before_order": [
+      {
+        "asset_id": "player:summit-w1",
+        "trade_asset_id": "summit-w1",
+        "label": "Summit WR One",
+        "rank": 5,
+        "value": 528
+      },
+      {
+        "asset_id": "player:harbor-q2",
+        "trade_asset_id": "harbor-q2",
+        "label": "Harbor QB Two",
+        "rank": 7,
+        "value": 528
+      }
+    ],
+    "after_order": [
+      {
+        "asset_id": "player:summit-w1",
+        "trade_asset_id": "summit-w1",
+        "label": "Summit WR One",
+        "rank": 1,
+        "value": 785
+      },
+      {
+        "asset_id": "player:harbor-q2",
+        "trade_asset_id": "harbor-q2",
+        "label": "Harbor QB Two",
+        "rank": 7,
+        "value": 528
+      }
+    ],
+    "explanation": "Move Summit WR One to first in the full example ranking. The saved-cohort Market value curve assigns that rank its existing highest value.",
+    "unchanged": [
+      "Neutral Market prices",
+      "Both legal-lineup calculations",
+      "Opponent neutral valuation"
+    ],
+    "limitation": "This is a two-asset excerpt from the complete example order. Personal preference is not evidence of an opponent valuation or trade acceptance."
+  }
+}

@@ -1,3 +1,15 @@
+# DTOS v1.21.99 / build 2199 — Public Welcome and Read Only Demo
+
+Complete the existing welcome-page candidate on secured build 2198. Anonymous `/` opens the public `/welcome` experience; authenticated Home, account creation/sign-in/recovery and protected application routes keep their existing boundaries.
+
+Three connected, explicitly fictional and read-only demonstrations explain team strength/replacement cover/exact capital, both sides of a hypothetical trade and Neutral versus personal Custom values. Existing canonical services revalidate the frozen numerical examples offline. Public requests only serve prepared HTML, with no scripts, provider calls, solver work, Trade discovery, FOIS, history, ranking persistence or new background jobs.
+
+All security corrections from builds 2196–2198 are preserved. The existing `orchestration.last_error` operator-health observation remains strictly behind its inspection credential, separate from the public demo and future operator hardening. No new administrative mechanism, data warehouse, production user-data change or historical-grade regeneration.
+
+Controlled-beta status does not imply an invitation gate. Existing Create Account remains publicly reachable; this release does not authorize increased beta admission, public promotion, pricing or billing.
+
+---
+
 # DTOS v1.21.98 / build 2198 — Safe Cached Synchronization
 
 Security-only correction of cached synchronization error disclosure. Successful inspection responses retain authorized last-valid facts while using stable warnings instead of raw exceptions. The shared page banner, explicit manual-sync JSON, transaction recovery and prepared health summaries follow the same rule, including legacy raw cached errors.

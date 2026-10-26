@@ -1,3 +1,11 @@
+## v1.21.99 / build 2199 — Public Welcome and Read Only Demo
+
+- Reconcile the original held welcome candidate with secured build 2198; anonymous Home opens `/welcome`, while authenticated Home and private navigation retain their existing behavior.
+- Present three frozen, clearly fictional Team, bilateral Trade and Neutral/Custom examples using the existing charcoal/green design and native accessible disclosures.
+- Preserve exact fixture identities and verified 528/528 Market, 108→120 and 112→116 lineup, 43→27 replacement-production and 528→785 personal-value relationships.
+- Serve one prepared, no-script/no-network public HTML document without provider, solver, FOIS, historical, discovery or preference work. Preserve all accepted security, resource and source-publication protections.
+- Keep public account creation honest about controlled-beta capacity; no invitation gate, registration-policy change, billing or beta expansion. Separately document the strictly privileged orchestration-error field.
+
 ## v1.21.98 / build 2198 — Safe Cached Synchronization
 
 - Replace raw cached synchronization warnings in legacy inspection, shared HTML, manual-sync JSON and prepared health summaries with fixed availability-aware messages.
