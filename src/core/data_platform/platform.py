@@ -172,7 +172,18 @@ class DataPlatform:
         return tuple(asdict(self.scheduler.schedule(provider.metadata, (self._health.get(provider.metadata.name) or self._empty_health(provider)).last_refresh, in_season=in_season)) for provider in self.registry.providers())
 
     def health(self) -> dict[str, Any]:
-        return {"status": "healthy" if all(row.status not in {ProviderStatus.DEGRADED, ProviderStatus.RATE_LIMITED} for row in self._health.values()) else "degraded", "providers": {name: asdict(row) for name, row in self._health.items()}, "reliability": self.reliability.health(), "cache": {"entries": len(self._cache), "ttl_seconds": self.cache_ttl_seconds}, "snapshots": sum(len(self.warehouse.history(key[2])) for key in self._cache)}
+        # Export operational categories, not exception-bearing diagnostic state.
+        providers = {}
+        for name, row in self._health.items():
+            public = asdict(row)
+            if row.status in {ProviderStatus.DEGRADED, ProviderStatus.RATE_LIMITED}:
+                public["failure_reason"] = (
+                    "Provider rate limit reached. Retry according to its schedule."
+                    if row.status is ProviderStatus.RATE_LIMITED else
+                    "Provider request failed. Review protected server diagnostics."
+                )
+            providers[name] = public
+        return {"status": "healthy" if all(row.status not in {ProviderStatus.DEGRADED, ProviderStatus.RATE_LIMITED} for row in self._health.values()) else "degraded", "providers": providers, "reliability": self.reliability.health(), "cache": {"entries": len(self._cache), "ttl_seconds": self.cache_ttl_seconds}, "snapshots": sum(len(self.warehouse.history(key[2])) for key in self._cache)}
 
     @staticmethod
     async def get_json(client: Any, url: str) -> Any:

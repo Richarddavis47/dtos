@@ -184,3 +184,29 @@ class OperatorContextIntegrityTests(unittest.TestCase):
                 r = f.client.get("/account/my-dtos")
                 self.assertEqual(r.status_code, 409)
                 self.assertNotIn("FOREIGN", r.text)
+
+    def test_nested_provider_exception_is_safe_in_operator_http(self):
+        from tests import test_public_welcome_security as secure
+        from tests.test_data_platform import FixtureProvider
+        from src.core.data_platform import DataPlatform
+
+        f = secure.PublicWelcomeSecurityTests()
+        f.setUp()
+        self.addCleanup(f.doCleanups)
+        marker = "FAKE_PROVIDER_CREDENTIAL /private/provider.sqlite source-SECRET-222"
+        platform = DataPlatform()
+        platform.register(FixtureProvider(failure=marker))
+        platform.fetch("Fixture", "p1", {}, allow_cached=False)
+        self.assertEqual(platform._health["Fixture"].failure_reason, marker)
+        f.client.cookies.set("dtos_session", f.f.sessions["bob"])
+        with patch("routes.api.data_platform", platform):
+            r = f.client.get(
+                "/api/platform/health",
+                headers={"X-DTOS-Inspection-Auth": "fixture-only-token"},
+            )
+            self.assertEqual(r.status_code, 200)
+            for private in marker.split():
+                self.assertNotIn(private, r.text)
+            self.assertEqual(
+                r.json()["data_platform"]["providers"]["Fixture"]["status"], "degraded"
+            )
