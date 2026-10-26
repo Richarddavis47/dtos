@@ -152,6 +152,16 @@ class CommissionerDeskTests(unittest.TestCase):
         self.assertEqual(html.count('aria-label="Primary navigation"'), 1)
         self.assertIn('aria-label="Account and league context"', html)
 
+    def test_cached_sync_health_never_displays_exception_details(self) -> None:
+        error = "PRIVATE_SYNC_MARKER /private/source.sqlite3 Authorization: FAKE_CREDENTIAL"
+        view = self.build(last_error=error)
+        rendered = commissioner_desk(view)
+        self.assertEqual(view["snapshot"]["health"]["status"], "Degraded")
+        self.assertIn("last successfully loaded", view["snapshot"]["health"]["error"])
+        for marker in ("PRIVATE_SYNC_MARKER", "/private/source", "FAKE_CREDENTIAL"):
+            self.assertNotIn(marker, rendered)
+        self.assertIsNone(self.build()["snapshot"]["health"]["error"])
+
     def test_confidence_score_is_bounded(self) -> None:
         self.assertEqual(ConfidenceScore(150).value, 100)
         self.assertEqual(ConfidenceScore(-5).value, 0)

@@ -1,6 +1,8 @@
 """DTOS Transactions Center routes and presentation."""
 from __future__ import annotations
 
+from src.core.sync_status import synchronization_warning
+
 import asyncio
 from datetime import datetime
 from html import escape
@@ -305,7 +307,7 @@ def create_transactions_router(
         if refresh == "success":
             refresh_alert = '<div class="tx-alert good">Transactions refreshed successfully.</div>'
         elif refresh == "error":
-            message = state.get("transactions_last_error") or "Transaction refresh failed. Cached data is still available."
+            message = synchronization_warning(state, transactions=True)
             refresh_alert = f'<div class="tx-alert bad"><b>Refresh failed:</b> {escape(str(message))}</div>'
 
         stats = "".join(

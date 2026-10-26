@@ -99,6 +99,7 @@ class ProjectionRolloverTests(unittest.TestCase):
         self.assertIs(state['data'], previous)
         self.assertEqual(state['last_sync'], 'old-sync')
         self.assertEqual(state['transactions_last_sync'], 'old-transactions')
-        self.assertIn('controlled candidate failure', state['last_error'])
+        self.assertIn('last successfully loaded', state['last_error'])
+        self.assertNotIn('controlled candidate failure', state['last_error'])
         self.assertFalse(state['syncing'])
         save.assert_not_called()

@@ -21,6 +21,7 @@ from src.core.intelligence.pipeline import IntelligencePipeline
 from src.core.intelligence.recommendations import resolve_recommendation
 from src.core.intelligence.registry import IntelligenceRegistry, intelligence_registry
 from src.core.market_intelligence import market_intelligence
+from src.core.sync_status import synchronization_warning
 from src.core.league_intelligence import evaluate_league
 from src.core.player_value_projection import evaluate_player_values, player_data_registry
 from src.core.roster_intelligence import evaluate_roster
@@ -223,7 +224,7 @@ class IntelligenceOrchestrator:
         return {
             "status": provider_status,
             "engines": {name: {"status": provider_status} for name in self.registry.names()},
-            "sleeper": {"status": "connected" if state.get("last_error") is None and state.get("last_sync") else "cached_fallback" if state.get("data") else "unavailable", "last_sync": state.get("last_sync"), "last_error": state.get("last_error")},
+            "sleeper": {"status": "connected" if state.get("last_error") is None and state.get("last_sync") else "cached_fallback" if state.get("data") else "unavailable", "last_sync": state.get("last_sync"), "last_error": synchronization_warning(state) if state.get("last_error") else None},
             "cache": self.cache.health(),
             "database": {"status": "not_configured", "detail": "DTOS currently uses the configured cache file."},
             "market": market_intelligence.health(),

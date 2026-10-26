@@ -1,3 +1,13 @@
+# DTOS v1.21.98 / build 2198 — Safe Cached Synchronization
+
+Security-only correction of cached synchronization error disclosure. Successful inspection responses retain authorized last-valid facts while using stable warnings instead of raw exceptions. The shared page banner, explicit manual-sync JSON, transaction recovery and prepared health summaries follow the same rule, including legacy raw cached errors.
+
+League/transaction failures retain safe availability-aware status. Existing cache writes no longer persist raw synchronization errors; loading an old cache qualifies its status in memory without rewriting it on read. Existing rollback, source publication, timestamps and data admission remain unchanged. Bounded server diagnostics preserve operation, exception type, correlation and at most six source locations, without exception messages, chained payloads, credentials or private source identifiers.
+
+No new provider, solver, discovery, FOIS or history work, permanent storage, security credentials, user-data mutations, valuation changes or historical-grade regeneration. The welcome candidate remains isolated and unreleased. Independent Scout acceptance follows release.
+
+---
+
 # DTOS v1.21.97 / build 2197 — Private Runtime Failures
 
 Security-only follow-up to build 2196. Handled league acquisition and explicit hydration failures retain HTTP 422/503 semantics, with fixed public error codes and recovery messages. Raw exception strings, mismatched source identifiers and paths no longer form these response bodies. HTML recovery remains available and the existing generic diagnostic 500 is unchanged.

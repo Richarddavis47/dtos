@@ -15,6 +15,7 @@ from src.core.inspection.models import (
     PageMetrics,
 )
 from src.core.team_identity import team_name_for
+from src.core.sync_status import synchronization_warning
 
 NAVIGATION = (
     InspectionLink("Asset Market", "/market", "navigation"),
@@ -351,7 +352,7 @@ class InspectionEngine:
     ) -> PageInspection:
         shared_warnings = list(warnings)
         if self._state.get("last_error"):
-            shared_warnings.append(f"Cached synchronization warning: {self._state['last_error']}")
+            shared_warnings.append(synchronization_warning(self._state))
         if not self._state.get("last_sync"):
             shared_warnings.append("No successful synchronization timestamp is cached.")
         metrics = PageMetrics(

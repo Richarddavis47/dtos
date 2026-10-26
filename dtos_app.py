@@ -13,6 +13,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
+from src.core.sync_status import synchronization_warning
+
 from app_metadata import APPLICATION_NAME, VERSION
 from config import (
     ACCOUNT_DATABASE_FILE, AUTH_REQUIRED, BACKGROUND_START_DELAY,
@@ -790,7 +792,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     selected_state = context.state if context is not None else STATE
     sync = selected_state.get("last_sync") or "Never"
     error = selected_state.get("last_error")
-    error_html = f'<div class="error"><b>Sync error:</b> {escape(error)}</div>' if error else ""
+    error_html = f'<div class="error"><b>Sync error:</b> {escape(synchronization_warning(selected_state))}</div>' if error else ""
     league_name = str(((selected_state.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
     account = current_account()
     account_html = ""

@@ -1,3 +1,10 @@
+## v1.21.98 / build 2198 — Safe Cached Synchronization
+
+- Replace raw cached synchronization warnings in legacy inspection, shared HTML, manual-sync JSON and prepared health summaries with fixed availability-aware messages.
+- Preserve last-valid league facts, timestamps and recovery without treating cached data as newly verified.
+- Store safe league/transaction failure status, normalize legacy cache status on load/save without changing source facts, and retain bounded message-free correlated server diagnostics.
+- Preserve private/no-store inspection, existing runtime 422/503/500 contracts, authorization, valuations, historical grades and resource protections. Keep the welcome candidate unreleased.
+
 ## v1.21.97 / build 2197 — Private Runtime Failures
 
 - Replace reflected runtime exception strings with stable public-safe 422/503 messages and error codes in league-context middleware and explicit runtime APIs.
