@@ -1,3 +1,10 @@
+## v1.21.97 / build 2197 — Private Runtime Failures
+
+- Replace reflected runtime exception strings with stable public-safe 422/503 messages and error codes in league-context middleware and explicit runtime APIs.
+- Preserve request correlation and bounded server-side type/location diagnostics without exception messages, credentials, source identifiers or traceback payloads.
+- Qualify cached runtime errors in member health views while retaining existing authorized operational inspection; keep protected failure/denial responses private and non-cacheable.
+- Preserve the accepted generic diagnostic 500, account/league isolation, recovery navigation, valuations and resource safeguards. The welcome candidate remains unreleased.
+
 ## v1.21.95 / build 2195 — Premium Decision Hierarchy
 
 ## v1.21.96 — Private Diagnostic Boundaries

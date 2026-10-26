@@ -5,6 +5,8 @@ from typing import Any
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
+from src.platform.inspection_security import inspection_authorized
+from src.platform.runtime_errors import customer_runtime_health, log_runtime_failure, runtime_error_response
 
 from src.core.league_runtime import (
     LeagueRuntimeError, LeagueRuntimeManager, LeagueRuntimeNotFound,
@@ -20,7 +22,6 @@ def create_league_runtime_router(
     @router.get("/runtime")
     async def runtime_health(request: Request) -> dict[str, Any]:
         from src.platform.account_context import current_account
-        from src.platform.inspection_security import inspection_authorized
         context = current_account()
         result = manager.health()
         if context is not None and context.membership is not None and not inspection_authorized(request.scope):
@@ -34,6 +35,8 @@ def create_league_runtime_router(
             for field in ("resident_league_ids", "in_flight"):
                 if field in result:
                     result[field] = [value for value in result[field] if value == league]
+        if not inspection_authorized(request.scope) and "runtimes" in result:
+            result = {**result, "runtimes": [customer_runtime_health(row) for row in result["runtimes"]]}
         return result
 
     @router.get("/resources")
@@ -49,11 +52,12 @@ def create_league_runtime_router(
         )
 
     @router.get("/{league_id}/runtime")
-    async def league_health(league_id: str) -> JSONResponse:
+    async def league_health(league_id: str, request: Request) -> JSONResponse:
         try:
             normalized = manager.validate_league_id(league_id)
         except LeagueRuntimeNotFound as exc:
-            return JSONResponse({"status": "invalid", "reason": str(exc)}, status_code=422)
+            log_runtime_failure(exc, operation="runtime_validation", status=422)
+            return runtime_error_response(422)
         runtime = manager.resident(normalized)
         if runtime is None:
             return JSONResponse({
@@ -62,10 +66,13 @@ def create_league_runtime_router(
                 "resident": False,
                 "import_enabled": import_enabled,
             })
-        return JSONResponse({**runtime.public_health(), "resident": True})
+        health = runtime.public_health()
+        if not inspection_authorized(request.scope):
+            health = customer_runtime_health(health)
+        return JSONResponse({**health, "resident": True})
 
     @router.post("/{league_id}/runtime")
-    async def hydrate_league(league_id: str) -> JSONResponse:
+    async def hydrate_league(league_id: str, request: Request) -> JSONResponse:
         if not import_enabled:
             return JSONResponse({
                 "status": "feature_gated",
@@ -74,14 +81,17 @@ def create_league_runtime_router(
         try:
             runtime = await manager.get(league_id)
         except LeagueRuntimeNotFound as exc:
-            return JSONResponse({"status": "invalid", "reason": str(exc)}, status_code=422)
+            log_runtime_failure(exc, operation="explicit_hydration", status=422)
+            return runtime_error_response(422)
         except LeagueRuntimeError as exc:
-            return JSONResponse({"status": "failed", "reason": str(exc)}, status_code=503)
+            log_runtime_failure(exc, operation="explicit_hydration", status=503)
+            return runtime_error_response(503)
         except Exception as exc:
-            return JSONResponse({
-                "status": "failed",
-                "reason": f"{type(exc).__name__}: league hydration failed",
-            }, status_code=503)
-        return JSONResponse({**runtime.public_health(), "resident": True})
+            log_runtime_failure(exc, operation="explicit_hydration", status=503)
+            return runtime_error_response(503)
+        health = runtime.public_health()
+        if not inspection_authorized(request.scope):
+            health = customer_runtime_health(health)
+        return JSONResponse({**health, "resident": True})
 
     return router
