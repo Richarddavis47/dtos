@@ -4,6 +4,7 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+from html import escape
 from pathlib import Path
 from typing import Any, Callable
 
@@ -110,6 +111,11 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
 <dialog id="personal-remove-dialog" aria-labelledby="personal-remove-title" aria-describedby="personal-remove-description"><h3 id="personal-remove-title">Remove this asset from Custom ordering?</h3><p id="personal-remove-description"></p><p>This removes only this asset’s saved rank and tier break. Other assets keep their relative order and tier breaks. All Target/Avoid/Protect choices stay saved. Personal values are recalculated from the remaining ranked assets’ current Market prices. This does not change your roster or Market prices.</p><p>To include this asset in your ranking list again, use the separate Restart Rankings action. You can keep your order and retry instead if its evidence may return.</p><div class="personal-actions"><button class="btn" id="personal-remove-cancel" type="button">Keep this asset</button><button class="btn" id="personal-remove-confirm" type="button">Remove from Custom ordering</button></div></dialog>
 <dialog id="personal-restart-dialog" aria-labelledby="personal-restart-title"><h3 id="personal-restart-title">Restart Rankings?</h3><p>This replaces your customized order and tier changes with the latest compatible Market rankings. Your Target, Avoid and Protect preferences are preserved unless you choose to reset them too.</p><label><input id="personal-reset-flags" type="checkbox"> Also reset Target, Avoid and Protect preferences</label><div class="personal-actions"><button class="btn" id="personal-restart-cancel" type="button">Keep my rankings</button><button class="btn" id="personal-restart-confirm" type="button">Replace with latest Market rankings</button></div></dialog>
 </section><script src="/static/js/personal_rankings.js" defer></script>'''
+        # Pin the rendered shell to the same scope as the first asynchronous read.
+        body = body.replace('id="my-dtos"', 'id="my-dtos" data-league-id="' +
+                            escape(str(account.membership.league_id), quote=True) +
+                            '" data-roster-id="' + str(account.membership.roster_id) +
+                            '" data-csrf-token="' + escape(account.csrf_token, quote=True) + '"', 1)
         response = page('My DTOS', body)
         for key, value in _HEADERS.items():
             response.headers[key] = value

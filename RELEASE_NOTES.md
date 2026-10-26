@@ -1,3 +1,7 @@
+# v1.21.100 / build 2200 — Operator diagnostics and My DTOS identity
+
+Replace raw orchestration error serialization with a stable failure category and warning while preserving protected diagnostic state and authorization. Render source-independent account headers from selected membership instead of the default league runtime, reject incompatible runtime identity, and fence asynchronous rankings reads to the rendered league/franchise/session. Preserve rankings, numerical engines and the fictional welcome page.
+
 # DTOS v1.21.99 / build 2199 — Public Welcome and Read Only Demo
 
 Complete the existing welcome-page candidate on secured build 2198. Anonymous `/` opens the public `/welcome` experience; authenticated Home, account creation/sign-in/recovery and protected application routes keep their existing boundaries.

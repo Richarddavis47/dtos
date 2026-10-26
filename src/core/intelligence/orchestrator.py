@@ -229,7 +229,7 @@ class IntelligenceOrchestrator:
             "database": {"status": "not_configured", "detail": "DTOS currently uses the configured cache file."},
             "market": market_intelligence.health(),
             "player_data": player_data_registry.health(),
-            "orchestration": {"runs": self.runs, "last_timings_ms": self.last_timings_ms, "last_error": self.last_error},
+            "orchestration": {"runs": self.runs, "last_timings_ms": self.last_timings_ms, "last_error": "Intelligence preparation failed. Review protected server diagnostics and retry." if self.last_error is not None else None, "error_code": "orchestration_failed" if self.last_error is not None else None},
         }
 
     def player_report(self, data: dict[str, Any], player: dict[str, Any], roster_id: int) -> Any:
