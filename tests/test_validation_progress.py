@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -265,9 +266,13 @@ class ValidationProgressTests(unittest.TestCase):
                     "errors": [], "passed": True,
                 }
                 results.mkdir(parents=True, exist_ok=True)
-                (results / "healthy.json").write_text(
-                    json.dumps(payload), encoding="utf-8",
-                )
+                artifact = results / "healthy.json"
+                artifact.write_text(json.dumps(payload), encoding="utf-8")
+                # wait() simulates 130 seconds without advancing real time.
+                # Give its output the same simulated completion time; an
+                # immediate kernel mtime may otherwise predate launched_at.
+                completed = (started + timedelta(seconds=130)).timestamp()
+                os.utime(artifact, (completed, completed))
                 return 0
 
             worker.wait.side_effect = complete
@@ -276,10 +281,47 @@ class ValidationProgressTests(unittest.TestCase):
                 patch.object(run_http_validation, "DIAGNOSTICS_DIRECTORY", diagnostics),
                 patch.object(run_http_validation.subprocess, "Popen", return_value=worker),
                 patch.dict("os.environ", {"DTOS_VALIDATION_RUN_ID": "healthy"}, clear=False),
-                patch("builtins.print"),
+                patch("builtins.print") as output,
             ):
-                self.assertEqual(run_http_validation.main(), 0)
+                self.assertEqual(run_http_validation.main(), 0, output.call_args_list)
             self.assertFalse((results / "healthy.json").exists())
+
+    def test_outer_watchdog_still_rejects_an_artifact_predating_launch(self) -> None:
+        from tools.validation import run_http_validation
+
+        worker = Mock(pid=46, returncode=0)
+        worker.poll.return_value = 0
+        with tempfile.TemporaryDirectory() as folder:
+            results = Path(folder) / "results"
+            diagnostics = Path(folder) / "diagnostics"
+
+            def complete(*, timeout):
+                self.assertEqual(timeout, 180.0)
+                started = datetime.now(timezone.utc)
+                payload = {
+                    "run_id": "predated", "started_at": started.isoformat(),
+                    "completed_at": (started + timedelta(seconds=130)).isoformat(),
+                    "completed": True, "startup": "PASS", "http_smoke": "PASS",
+                    "cleanup": "PASS", "process_cleanup": "PASS", "pid": 1,
+                    "port": 1, "shutdown_method": "graceful", "timings": {},
+                    "errors": [], "passed": True,
+                }
+                artifact = results / "predated.json"
+                artifact.write_text(json.dumps(payload), encoding="utf-8")
+                os.utime(artifact, (0, 0))
+                return 0
+
+            worker.wait.side_effect = complete
+            with (
+                patch.object(run_http_validation, "RESULTS_DIRECTORY", results),
+                patch.object(run_http_validation, "DIAGNOSTICS_DIRECTORY", diagnostics),
+                patch.object(run_http_validation.subprocess, "Popen", return_value=worker),
+                patch.dict("os.environ", {"DTOS_VALIDATION_RUN_ID": "predated"}),
+                patch("builtins.print") as output,
+            ):
+                self.assertEqual(run_http_validation.main(), 1)
+                output.assert_any_call("HTTP validation infrastructure failure: Worker result artifact predates this validation run.")
+            self.assertFalse((results / "predated.json").exists())
 
     def test_outer_watchdog_does_not_change_request_contracts(self) -> None:
         from tools.validation import run_http_validation, smoke_http
