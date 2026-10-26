@@ -42,6 +42,7 @@ from routes.matchups import create_matchups_router
 from routes.weekly_report import create_weekly_report_router
 from routes.market import create_market_router
 from routes.personal_rankings import create_personal_rankings_router
+from routes.public_entry import create_public_entry_router
 from routes.settings import create_settings_router
 from routes.teams import create_teams_router
 from routes.trades import create_trades_router
@@ -724,6 +725,7 @@ app.add_middleware(
 )
 app.add_middleware(
     AccountContextMiddleware, service=account_service, required=AUTH_REQUIRED,
+    public_welcome=True,
 )
 install_observability(app)
 
@@ -902,6 +904,8 @@ app.include_router(
         league_resolver=current_league_id,
     )
 )
+
+app.include_router(create_public_entry_router())
 
 app.include_router(create_league_runtime_router(
     manager=league_runtime_manager,

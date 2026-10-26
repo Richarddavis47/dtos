@@ -123,3 +123,50 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Market pagination, visible roster and scoped fresh-start journeys
         run: python -m unittest tests.test_front_office_brief tests.test_front_office_brief_http tests.test_front_office_brief_browser tests.test_beginner_market tests.test_beginner_browser tests.test_beginner_final tests.test_beginner_final_browser tests.test_home_trade_news tests.test_home_news_corrections tests.test_home_trade_news_browser tests.test_home_opportunities tests.test_home_opportunities_browser tests.test_home_opportunity_integrity tests.test_home_read_responsiveness tests.test_public_readiness tests.test_market_warming_middleware tests.test_import_commissioner_integrity tests.test_batch6_rank_presentation tests.test_cold_league_recovery tests.test_unmatched_import_recovery tests.test_fois_navigation_reliability tests.test_navigation_residency tests.test_sync_diagnostics
+
+  public-welcome-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-validation.txt
+      - name: Install existing validation dependencies and Chromium
+        run: |
+          python -m pip install -r requirements-validation.txt
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -E -i 's|https?://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
+          python -m playwright install --with-deps chromium
+      - name: Verify source-pinned public routing demo security and browser controls
+        env:
+          DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          DTOS_WELCOME_EVIDENCE: .validation/public-welcome/browser
+        run: |
+          set -o pipefail
+          mkdir -p .validation/public-welcome
+          python - <<'PY'
+          import json, os, platform, subprocess, time
+          from pathlib import Path
+          head = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert head == os.environ['DTOS_EXPECTED_HEAD']
+          Path('.validation/public-welcome/source.json').write_text(json.dumps(dict(
+              head=head,tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),
+              python=platform.python_version(),collected_at=time.time(),
+              fixture='Disposable authenticated HTTP and frozen fictional data; controlled Chromium, not physical Safari'),indent=2))
+          PY
+          python -m unittest -v tests.test_public_demo_fixture tests.test_public_entry tests.test_public_welcome_presentation tests.test_public_welcome_security tests.test_public_welcome_browser tests.test_runtime_error_security tests.test_cached_sync_security tests.test_diagnostic_security tests.test_operational_inspection 2>&1 | tee .validation/public-welcome/raw.log
+      - name: Preserve source and public phone evidence including failed attempts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-welcome-security-browser
+          path: .validation/public-welcome
+          if-no-files-found: error
+          retention-days: 14
