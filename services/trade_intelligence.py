@@ -185,6 +185,7 @@ def _personal_evaluation(evaluation, proposal, context, *, active_team, partner_
     custom['market_evidence'] = evaluation['market_evidence']
     custom['neutral_assessment'] = neutral
     custom['personal_value_evidence'] = {**personal_market, 'unit': 'personal_rank_slot_value',
+        'ranking_availability': context.get('availability', 'full'),
         'method': context.get('method'), 'revision': context.get('revision'),
         'baseline_generation': context.get('baseline_generation'), 'market_generation': context.get('market_generation')}
     custom['neutral_values'] = evaluation['values']
@@ -429,7 +430,7 @@ def evaluate_trade_request(
                                  if (context.get('values') or {}).get(item) is None)
         if missing_personal:
             raise TradeInputError('personal_evidence_unavailable',
-                'This exact asset has no supported saved Custom rank or price. Use Neutral DTOS or Restart Rankings; your offer is unchanged.',
+                'This package needs a personal value that cannot be verified. Its rank may depend on missing Market evidence elsewhere in your saved order. Review affected assets in My DTOS or use Neutral DTOS; your exact offer is unchanged.',
                 missing_personal)
     ownership = {asset.asset_id: asset.source_roster_id for asset in assets.values()}
     wrong_sent = [item for item in sent_ids if ownership[item] != active_id]

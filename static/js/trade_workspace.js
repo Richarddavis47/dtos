@@ -426,6 +426,7 @@
       selectedValueDifference = selectedValueComplete ? personalTotals[1] - personalTotals[0] : 0n;
       const panel = node('section', null, 'tw-personal-comparison');
       panel.append(node('h3', 'Your Custom DTOS valuation'), node('p', `You send: ${personalTotals[0] == null ? 'Unavailable' : displayMarketUnits(personalTotals[0], personalScale)} · You receive: ${personalTotals[1] == null ? 'Unavailable' : displayMarketUnits(personalTotals[1], personalScale)}`), node('small', 'Saved rank-slot values express your preferences. The neutral Market comparison below and opponent evidence are unchanged.'));
+      if (personalRows.flat().some(value => !knownPersonal(value))) panel.append(node('p', 'This package includes an asset without a verified personal value. Check its saved rank and affected assets in My DTOS, or use Neutral DTOS. Your offer is unchanged.'));
       box.prepend(panel);
     }
     const locks = [...new Set([...session.protectedAssets, ...session.excludedAssets, session.requiredOutgoingAsset, session.requiredIncomingAsset].filter(Boolean))];
@@ -1392,10 +1393,11 @@
       const select = node('select'); select.id = 'trade-valuation-mode';
       for (const [value, text] of [['neutral', 'Neutral DTOS'], ['custom', 'Custom DTOS']]) { const option = node('option', text); option.value = value; option.disabled = value === 'custom' && (!(p.revision > 0) || p.available !== true); select.append(option); }
       select.value = valuationMode;
-      const needsReview = p.available !== true && p.revision > 0 && p.compatibility_issues?.length;
+      const needsReview = p.revision > 0 && p.compatibility_issues?.length;
       const edit = node('a', needsReview ? 'Review affected Custom Rankings assets' : 'Edit My DTOS rankings');
       edit.href = needsReview ? '/account/my-dtos#personal-compatibility' : '/account/my-dtos';
       panel.append(label, select, node('p', 'Neutral Market and Sleeper lineup facts stay unchanged. Custom DTOS uses your saved ranking values for your decision.'), edit);
+      if (p.personal_partial_available) panel.append(node('p', (p.limitations || []).join(' ') || `${p.personal_value_count} saved assets have verified Custom values. Only packages using verified values can receive a Custom assessment. Other assets and your saved order remain intact.`, 'muted'));
       if (p.available !== true) panel.append(node('p', !(p.revision > 0)
         ? 'Create Custom Rankings in My DTOS to use Custom Trade. Neutral DTOS is available now.'
         : (p.limitations || []).join(' ') || 'Saved Custom Rankings need compatible Market prices. Open My DTOS to retry; Neutral Trade remains available.', 'muted'));

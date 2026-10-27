@@ -331,8 +331,14 @@ class PersonalRankingsRecoveryBrowserTests(unittest.TestCase):
                 page, records, errors = helper.page(browser, fixture, 390, 844)
                 page.goto('http://testserver/trades/create')
                 page.locator('#trade-valuation-mode').wait_for()
-                self.assertTrue(page.locator('#trade-valuation-mode option[value="custom"]').is_disabled())
-                self.assertEqual(page.locator('#trade-valuation-mode').input_value(), 'neutral')
+                # Missing cohort inputs no longer disable provably exact slots.
+                # Deliberate removal below still restores complete availability.
+                state = fixture.editor.state()
+                self.assertTrue(state['personal_partial_available'])
+                self.assertFalse(state['personal_available'])
+                self.assertFalse(page.locator('#trade-valuation-mode option[value="custom"]').is_disabled())
+                self.assertEqual(page.locator('#trade-valuation-mode').input_value(), 'custom')
+                page.locator('#trade-valuation-mode').select_option('neutral')
                 page.goto('http://testserver/account/my-dtos')
                 self.loaded(page)
                 page.locator('#personal-compatibility-summary').click()
@@ -342,8 +348,8 @@ class PersonalRankingsRecoveryBrowserTests(unittest.TestCase):
                 page.goto('http://testserver/trades/create')
                 page.locator('#trade-valuation-mode').wait_for()
                 self.assertFalse(page.locator('#trade-valuation-mode option[value="custom"]').is_disabled())
-                # Recovery enables Custom, but does not silently replace an
-                # existing Neutral session choice made while it was unavailable.
+                # Complete recovery does not silently replace an existing
+                # Neutral session choice made while reviewing missing evidence.
                 page.locator('#trade-valuation-mode').select_option('custom')
                 page.locator('#trade-partner').select_option('2')
                 page.locator('#trade-sent-board button[data-asset-id="a"]').click()
