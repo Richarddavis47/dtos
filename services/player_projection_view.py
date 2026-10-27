@@ -21,7 +21,7 @@ def player_projection_view(data: dict, player_id: str, service, week: int | None
     result = {'player_id': player_id, 'league_id': str(league.get('league_id') or ''), 'season': league.get('season'), 'week': selected, 'weeks': [], 'value': None,
               'display': 'Unavailable', 'availability': 'unavailable', 'generation': None,
               'confidence': None,
-              'reason': 'Compatible prepared projection evidence is unavailable.'}
+              'reason': 'Weekly projections have not been prepared for this league and scoring setup. Check the league refresh status, then retry.'}
     pinned = service.snapshot() if service is not None else None
     scoring = data.get('scoring_settings') or league.get('scoring_settings') or {}
     if not (pinned and str(pinned.get('league_id')) == str(league.get('league_id'))
@@ -32,7 +32,7 @@ def player_projection_view(data: dict, player_id: str, service, week: int | None
     result['weeks'] = sorted(int(w) for w in manifest if str(w).isdecimal() and 1 <= int(w) <= 18)
     result['generation'] = pinned['horizon_generation']
     if str(selected) not in manifest:
-        result['reason'] = 'This week is outside the currently prepared source horizon.'
+        result['reason'] = 'No prepared Sleeper projection covers this selected week. Choose an available week or retry after the league refresh.'
         return result
     snapshot = service.week_snapshot(selected, generation_snapshot=pinned)
     if not (snapshot and snapshot.get('horizon_generation') == pinned['horizon_generation']
@@ -40,6 +40,7 @@ def player_projection_view(data: dict, player_id: str, service, week: int | None
             and snapshot.get('season') == pinned.get('season')
             and snapshot.get('scoring_profile_id') == pinned.get('scoring_profile_id')
             and snapshot.get('scoring_settings', {}) == scoring):
+        result['reason'] = 'The weekly projection update does not match the current league snapshot. Retry after the league refresh; no older projection was substituted.'
         return result
     row = (snapshot.get('players') or {}).get(str(player_id)) or {}
     value = number(row.get('canonical_projection'))
@@ -53,5 +54,5 @@ def player_projection_view(data: dict, player_id: str, service, week: int | None
                       availability='available', reason=None,
                       display_reason=None if display is not None else row.get('display_reason') or 'Canonical league-scored Sleeper statistics; exact Sleeper display replay is unverified.')
     else:
-        result['reason'] = row.get('availability_reason') or 'No supported player projection for this week.'
+        result['reason'] = row.get('availability_reason') or 'No supported Sleeper projection is available for this player in the selected week. This is missing evidence, not a zero projection.'
     return result

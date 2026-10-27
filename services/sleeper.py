@@ -34,6 +34,7 @@ from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence
 from services.history import player_history_evidence_batch
 from services.standings import record_fields, standings_order
+from services.matchup_season import number, source_player_actual
 from config import (
     CACHE_FILE,
     LEAGUE_ID,
@@ -414,12 +415,8 @@ async def _sync_sleeper(
                 matchup_id = str(m.get("matchup_id") or "Unassigned")
                 players_points = m.get("players_points") or {}
                 starters = [str(x) for x in (m.get("starters") or [])]
-                starter_points_list = m.get("starters_points") or []
-                starter_points = {
-                    pid: float(starter_points_list[index] or 0)
-                    if index < len(starter_points_list) else float(players_points.get(pid, 0) or 0)
-                    for index, pid in enumerate(starters)
-                }
+                starter_points = {pid: source_player_actual(m, pid, index)
+                                  for index, pid in enumerate(starters)}
                 team_player_by_id = {str(p["id"]): p for p in team.get("players", [])}
                 lineup = []
                 for index, player_id in enumerate(starters):
@@ -434,7 +431,7 @@ async def _sync_sleeper(
                         "slot": player.get("starter_slot") or (
                             lineup_slots[index] if index < len(lineup_slots) else "START"
                         ),
-                        "points": round(float(starter_points.get(player_id, 0) or 0), 2),
+                        "points": round(starter_points[player_id], 2) if starter_points[player_id] is not None else None,
                     })
                 bench = []
                 for player_id in (m.get("players") or []):
@@ -449,17 +446,17 @@ async def _sync_sleeper(
                         "name": player.get("name") or pid,
                         "position": player.get("position") or "—",
                         "nfl_team": player.get("team") or "Vacant",
-                        "points": round(float(players_points.get(pid, 0) or 0), 2),
+                        "points": round(number(players_points.get(pid)), 2) if number(players_points.get(pid)) is not None else None,
                     })
                 matchup_groups.setdefault(matchup_id, []).append({
                     "team": team["team_name"],
                     "owner": team["owner"],
-                    "points": round(float(m.get("points", 0) or 0), 2),
+                    "points": round(number(m.get("points")), 2) if number(m.get("points")) is not None else None,
                     "custom_points": m.get("custom_points"),
                     "roster_id": team["roster_id"],
                     "record": f'{team["wins"]}-{team["losses"]}-{team["ties"]}',
                     "lineup": lineup,
-                    "bench": sorted(bench, key=lambda p: (-p["points"], p["name"])),
+                    "bench": sorted(bench, key=lambda p: (p["points"] is None, -(p["points"] if p["points"] is not None else 0), p["name"])),
                 })
 
             resolver = PlayerIdentityResolver(players if isinstance(players, dict) else {})

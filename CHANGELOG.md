@@ -1,3 +1,7 @@
+# v1.21.102 / build 2202 — Source actuals and data completeness
+
+Recover same-row Sleeper player actuals when starter entries are missing; preserve missing versus zero across sync and matchup presentation. Clarify projection recovery states and remove customer-facing beta labels without changing account access or demo qualifications. Preserve Custom slot-curve safeguards and saved preferences. See docs/audits/DATA_COMPLETENESS_2202.md for measured scope and unresolved inventory.
+
 # v1.21.101 / build 2201 — Names-only welcome demonstrations
 
 - Replace visible fictional player labels with verified NFL player names and positions.
