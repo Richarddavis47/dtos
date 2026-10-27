@@ -232,7 +232,9 @@ class PersonalRankingsHTTPTests(unittest.TestCase):
         self.market.generation = 'Market-removed'
         removed = self.state()
         self.assertFalse(removed['personal_available'])
-        self.assertTrue(all(r['personal_value'] is None for r in removed['rows']))
+        self.assertEqual({r['asset_id']: r['personal_value'] for r in removed['rows']
+                          if r['personal_value_available']}, {'player:4': 0})
+        self.assertIsNone(next(r for r in removed['rows'] if r['asset_id'] == 'player:2')['personal_value'])
         self.assertIn('player:2', [r['asset_id'] for r in removed['rows']])
 
     def test_missing_boolean_unidentified_retired_and_foreign_league_are_not_priced(self):

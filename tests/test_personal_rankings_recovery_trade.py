@@ -82,6 +82,10 @@ class PersonalRankingsRecoveryTradeTests(unittest.TestCase):
 
     def test_named_blocker_stops_every_custom_workflow_without_discovery_or_evaluation(self):
         before = deepcopy(self.document())
+        # Strictly different interior prices leave no determinate slot when a
+        # cohort price is missing. Equal-value runs have separate positive tests.
+        for index, row in enumerate(self.editor.market.rows):
+            row['values']['market_value'] = 100 + index * 7
         self.make_one_price_unavailable()
         state = self.editor.state()
         self.assertFalse(state['personal_available'])

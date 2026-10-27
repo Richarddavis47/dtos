@@ -117,6 +117,7 @@
     el('personal-scope').textContent = `League ${scope.league_id || 'unavailable'} · Franchise ${scope.roster_id || 'unavailable'} · ${state.eligible_asset_count ?? state.rows?.length ?? 0} eligible ranked assets${state.initialized ? ' · ' + (state.saved_asset_count ?? (state.rows || []).filter(row => row.custom_ranked).length) + ' saved ranking assets' : ''} · Revision ${state.revision || 0}`;
     el('personal-mode-description').textContent = custom
       ? (state.personal_available ? 'Your personal values guide Custom decisions. Neutral Market fairness stays visible.'
+        : state.personal_partial_available ? `${state.personal_value_count} saved assets have verified personal values. Custom calculations can use those assets; other values need the missing Market evidence. Your saved order is unchanged.`
         : 'Your saved Custom order is shown. Custom Trade values are paused until the listed assets are reviewed; Neutral Trade remains available.')
       : initialized ? 'Neutral Market values are active. Your custom order and preferences are preserved.'
       : 'Neutral DTOS is ready. Create Custom Rankings to personalize your trade decisions.';
@@ -137,7 +138,7 @@
       const handle = button('↕', `Reorder or drag ${label} to another overall position`, () => { details.open = !details.open; }, `${id}:drag`);
       handle.disabled ||= !editable; handle.classList.add('personal-drag'); handle.draggable = !handle.disabled; handle.dataset.dragHandle = id; header.append(handle);
       const identity = node('div', null, 'personal-identity'); identity.append(node('strong', `${custom && row.custom_ranked === false ? 'Unranked' : rank + '.'} ${label}`), node('span', `${row.position || 'PICK'} · ${row.owned ? 'Your asset' : 'Not on your franchise'}`, 'muted')); header.append(identity); item.append(header);
-      const values = node('p', null, 'personal-values'); values.append(node('span', `Market ${value(row.market_value)}`), node('span', initialized ? (state.personal_available ? `Personal ${value(row.personal_value)}` : 'Personal values need review') : 'Create rankings to personalize')); identity.append(values);
+      const values = node('p', null, 'personal-values'); values.append(node('span', `Market ${value(row.market_value)}`), node('span', initialized ? (row.personal_value_available || state.personal_available ? `Personal ${value(row.personal_value)}` : row.personal_value_reason ? 'Personal value depends on missing prices' : 'Personal value needs evidence') : 'Create rankings to personalize')); identity.append(values);
       const saved = ['target', 'avoid', 'protect'].filter(flag => prefs(row)[flag]);
       if (row.tier_start || state.tiers?.includes(id)) saved.push('Tier start');
       if (saved.length) identity.append(node('span', saved.map(flag => flag[0].toUpperCase() + flag.slice(1)).join(' · '), 'personal-saved-intent'));
@@ -145,6 +146,7 @@
       if (row.limitation || row.unavailable_reason) item.append(node('p', row.limitation || row.unavailable_reason, 'personal-qualification'));
       details = node('details', null, 'personal-row-details'); details.open = openRows.has(id);
       const summary = node('summary', 'Edit'); summary.setAttribute('aria-label', `Edit and reorder ${label}`); summary.dataset.focusKey = `${id}:details`; details.append(summary);
+      if (row.personal_value_reason) details.append(node('p', row.personal_value_reason, 'personal-qualification'));
       details.addEventListener('toggle', () => { if (!details.isConnected) return; if (details.open) openRows.add(id); else openRows.delete(id); });
       const editing = node('div', null, 'personal-editing');
       if (row.market_rank != null) editing.append(node('p', `Current Market overall #${row.market_rank}${row.personal_rank != null ? ` · Your overall #${row.personal_rank}` : ''}`, 'muted'));

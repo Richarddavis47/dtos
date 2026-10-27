@@ -128,7 +128,7 @@ def _asset_label(data, key, row=None):
         player = (data.get('players') or {}).get(key.removeprefix('player:')) or {}
         name = player.get('full_name') or player.get('name') or ' '.join(
             str(player.get(part) or '') for part in ('first_name', 'last_name')).strip()
-        return str(name or f"Player {key.removeprefix('player:')} (identity not confirmed)")
+        return str(name or 'Player identity not confirmed')
     match = re.fullmatch(r'pick:(20\d{2}):([1-9]\d?):([1-9]\d*)', key)
     if match:
         year, round_number, original = match.groups()
@@ -319,21 +319,23 @@ def personal_values(document, universe):
     """Permute the existing price curve; tiers never manufacture cardinal prices.
 
     No interpolation/extrapolation, inflation, clipping or personal price copies.
-    Every saved rank must have compatible current evidence, otherwise numerical
-    Custom assessment is withheld. New assets require an explicit Restart.
+    A missing quote remains a reserved input, never a removed/zero-priced asset.
+    Only slots identical under every possible compatible completion are usable.
+    New assets require an explicit Restart.
     """
     rows = {r['asset_id']: r for r in universe['rows']}
     order = document.get('order') or []
     baseline = (document.get('baseline') or {}).get('ids') or []
     if not order or len(set(order)) != len(order) or set(order) != set(baseline):
-        return {'available': False, 'values': {}, 'reason': 'Saved ranking order is incomplete or invalid.'}
+        return {'available': False, 'partial_available': False, 'values': {},
+                'reason': 'Saved ranking order is incomplete or invalid.'}
     order_set = set(order)
     missing = [(index, key) for index, key in enumerate(order, 1) if key not in rows]
     if missing:
         rejected = universe.get('unavailable_rows') or {}
         issues = []
         for saved_rank, key in missing:
-            issue = dict(rejected.get(key) or {'asset_id': key, 'label': key,
+            issue = dict(rejected.get(key) or {'asset_id': key, 'label': 'An asset in your saved order',
                 'position': 'PICK' if key.startswith('pick:') else 'Unavailable',
                 'code': 'asset_not_in_market', 'retryable': True,
                 'reason': 'This saved exact asset is absent from the current Market list. Its current identity and price cannot be confirmed; no replacement asset or zero price was assumed.'})
@@ -341,17 +343,29 @@ def personal_values(document, universe):
             issues.append(issue)
         first = issues[0]
         count = len(issues)
-        reason = (f"Custom values need attention for {first['label']}"
+        # Order statistics are monotone in each input. These are internal
+        # extremal completions of the existing 0..1000 domain, NOT prices for
+        # missing assets. Agreement proves a slot cannot depend on those inputs.
+        # Keep every saved slot; never compress the priced subset's curve.
+        known = [rows[key]['market_value'] for key in order if key in rows]
+        lower = sorted([*known, *([0] * count)], reverse=True)
+        upper = sorted([*known, *([1000] * count)], reverse=True)
+        exact = {key: lower[index] for index, key in enumerate(order)
+                 if key in rows and lower[index] == upper[index]}
+        reason = (f"Current Market evidence needs attention for {first['label']}"
                   + (f' and {count - 1} other saved asset(s)' if count > 1 else '')
-                  + f". {first['reason']} Review affected assets or retry; your saved order, tiers and preferences are unchanged. Neutral DTOS remains available.")
-        return {'available': False, 'values': {}, 'reason': reason,
+                  + f". {first['reason']} "
+                  + (f'{len(exact)} saved assets still have exact personal values; Custom calculations can use those assets only. '
+                     if exact else 'No personal values can yet be verified without the missing prices. ')
+                  + 'Review affected assets or retry; your saved order, tiers and preferences are unchanged. Neutral DTOS remains available.')
+        return {'available': False, 'partial_available': bool(exact), 'values': exact, 'reason': reason,
                 'unavailable_ids': [key for _rank, key in missing], 'compatibility_issues': issues,
                 'new_asset_ids': [key for key in rows if key not in order_set]}
     # Only the saved cohort supplies the curve: a new unranked asset cannot
     # silently push every existing opinion into a different slot.
     order_set = set(order)
     curve = sorted((rows[key]['market_value'] for key in order), reverse=True)
-    return {'available': True, 'values': dict(zip(order, curve)), 'reason': None,
+    return {'available': True, 'partial_available': False, 'values': dict(zip(order, curve)), 'reason': None,
             'new_asset_ids': [key for key in rows if key not in order_set], 'method': METHOD}
 
 
@@ -378,6 +392,9 @@ def view_state(store, data, market_reader, account):
                    personal_value=values['values'].get(key), owned=row['owner_roster_id'] == membership.roster_id,
                    preferences=preferences.get(key, {}), tier_start=key in ((document or {}).get('tiers') or []),
                    custom_ranked=key in order_set and bool(document), identity_available=key in current)
+        row['personal_value_available'] = key in values['values']
+        if document and key in order_set and key in current and key not in values['values']:
+            row['personal_value_reason'] = 'This personal rank depends on Market prices missing elsewhere in your saved order. Its neutral Market price is still available.'
         rows.append(row)
     context = workspace_context(data, membership.roster_id)
     return {'initialized': document is not None, 'revision': (document or {}).get('revision', 0),
@@ -386,12 +403,14 @@ def view_state(store, data, market_reader, account):
             'baseline_source_generation': ((document or {}).get('baseline') or {}).get('source_generation'),
             'rows': rows, 'context': {k: context[k] for k in ('league_id', 'roster_id', 'binding')},
             'personal_available': values['available'], 'method': METHOD,
+            'personal_partial_available': values.get('partial_available', False),
+            'personal_value_count': len(values['values']),
             'limitations': [values['reason']] if values.get('reason') else [],
             'new_asset_ids': values.get('new_asset_ids', []),
             'compatibility_issues': values.get('compatibility_issues', []),
             'eligible_asset_count': len(current), 'saved_asset_count': len(document['order']) if document else 0,
             'recovery_url': '/account/my-dtos#personal-compatibility',
-            'method_explanation': 'Your saved global order receives the descending current Market price slots of that same saved cohort. Moving up cannot lower a personal value. Tiers are labels and do not change prices. New assets need Restart Rankings; no past prices are reconstructed. Removing one asset from your Custom order is an explicit membership edit: other ranks and tier breaks stay in order, but remaining personal values may change because that asset’s current price slot leaves the curve. The saved baseline generation identifies the original seed publication, not a new Market quote.'}
+            'method_explanation': 'Your saved global order receives the descending current Market price slots of that same saved cohort. Moving up cannot lower a personal value. Tiers are labels and do not change prices. When quotes are missing, every saved position stays reserved. A priced asset receives a personal value only if that slot is identical for every possible missing price within the supported Market scale. Missing assets never receive guessed prices. New assets need Restart Rankings; no past prices are reconstructed. Removing one asset from your Custom order is an explicit membership edit: other ranks and tier breaks stay in order, but remaining personal values may change because that asset’s current price slot leaves the curve. The saved baseline generation identifies the original seed publication, not a new Market quote.'}
 
 
 def apply_command(store, data, market_reader, account, payload, *, verify_source=None):
@@ -510,9 +529,10 @@ def resolve_personal_context(data, payload, *, store=None, market_reader=None, a
     if require_revision and payload.get('personal_market_generation') != universe['generation']:
         raise PersonalRankingError('personal_market_changed', 'The personal price curve changed with Market evidence. Reload before evaluating.', 409)
     result = personal_values(doc, universe)
-    if not result['available']:
+    if not (result['available'] or result.get('partial_available')):
         raise PersonalRankingError('personal_evidence_unavailable', result['reason'], 409)
     context.update(values={to_trade_id(k): v for k, v in result['values'].items()},
+                   availability='full' if result['available'] else 'partial',
                    neutral_values={r['trade_asset_id']: r['market_value'] for r in universe['rows']},
                    market_generation=universe['generation'], source_generation=universe['source_generation'],
                    publication_token=_publication_token(data, market_reader))
@@ -552,9 +572,10 @@ def personal_bootstrap(data, active_id, *, store=None, market_reader=None, accou
                 'limitations': [str(exc)]}
     if state['context']['roster_id'] != active_id:
         raise PersonalRankingError('unauthorized_franchise', 'Only your franchise can use your personal rankings.', 403)
-    result = {key: state[key] for key in ('mode', 'revision', 'initialized', 'generation', 'baseline_generation', 'personal_available', 'limitations', 'compatibility_issues', 'recovery_url')}
-    result.update(market_generation=state['generation'], available=state['personal_available'], values={})
-    if state['personal_available']:
+    result = {key: state[key] for key in ('mode', 'revision', 'initialized', 'generation', 'baseline_generation', 'personal_available', 'personal_partial_available', 'personal_value_count', 'limitations', 'compatibility_issues', 'recovery_url')}
+    result.update(market_generation=state['generation'],
+                  available=state['personal_available'] or state['personal_partial_available'], values={})
+    if result['available']:
         context = resolve_personal_context(data, {'valuation_mode': 'custom', 'personal_revision': state['revision'],
             'personal_market_generation': state['generation']}, store=store, market_reader=market_reader, account=account)
         result['values'] = context['values']

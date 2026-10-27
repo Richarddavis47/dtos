@@ -75,6 +75,9 @@ def calculate_trade_market(data, payload, *, workspace=None):
         personal = market_verdict(tuple(replace(a, trade_value=values.get(a.asset_id)) for a in sent),
                                   tuple(replace(a, trade_value=values.get(a.asset_id)) for a in received), personal=True)
         personal.update(unit='personal_rank_slot_value', meaning='Your saved ranking valuation; neutral Market and opponent costs remain separate.')
+        personal['ranking_availability'] = context.get('availability', 'full')
+        if personal['availability'] != 'full':
+            personal['unavailable_reason'] = 'This package needs personal values that cannot be verified. A saved rank may depend on missing Market prices elsewhere in your order. Review affected assets in My DTOS or use the separate Neutral comparison; your offer is unchanged.'
     result = {'market': market_verdict(sent, received), 'market_generation': generation,
             'assets_sent': [asdict(a) for a in sent], 'assets_received': [asdict(a) for a in received],
             'ownership_valid': True, 'constraint_conflicts': sorted(protected.intersection(payload['assets_sent']) |

@@ -39,8 +39,12 @@ class PersonalRankingsRecoveryTradeBrowserTests(unittest.TestCase):
                             page, records, errors = helper.page(browser, fixture, width, height)
                             page.goto('http://testserver/trades/create')
                             page.locator('#trade-valuation-mode').wait_for()
+                            self.assertTrue(before['personal_partial_available'])
+                            self.assertFalse(page.locator('#trade-valuation-mode option[value="custom"]').is_disabled())
+                            # This draft needs a dependent rank. Deliberately use
+                            # Neutral while reviewing it; other exact slots stay usable.
+                            page.locator('#trade-valuation-mode').select_option('neutral')
                             self.assertEqual(page.locator('#trade-valuation-mode').input_value(), 'neutral')
-                            self.assertTrue(page.locator('#trade-valuation-mode option[value="custom"]').is_disabled())
                             self.assertFalse(page.locator('#trade-valuation-mode option[value="neutral"]').is_disabled())
                             review = page.get_by_role('link', name='Review affected Custom Rankings assets', exact=True)
                             self.assertEqual(review.get_attribute('href'), '/account/my-dtos#personal-compatibility')
@@ -94,7 +98,7 @@ class PersonalRankingsRecoveryTradeBrowserTests(unittest.TestCase):
                             self.assertFalse(errors, errors)
                             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
                             measurements.append({'width': width, 'height': height,
-                                'overflow': 0, 'blocked_custom_neutral_available': True,
+                                'overflow': 0, 'dependent_values_withheld_other_custom_values_available': True,
                                 'keyboard_review_link_visible_focus': True,
                                 'explicit_single_asset_confirmation': True,
                                 'remaining_order_preserved': True,

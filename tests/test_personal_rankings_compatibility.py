@@ -51,7 +51,7 @@ class PersonalCompatibilityRecoveryTests(unittest.TestCase):
         self.assertEqual(self.issue('player:2')['code'], 'identity_conflict')
         self.assertEqual(self.saved(), saved)
 
-    def test_missing_cohort_member_blocks_whole_curve_and_reappearance_restores_exactly(self):
+    def test_missing_cohort_member_withholds_dependent_slots_and_reappearance_restores_exactly(self):
         self.initialize()
         self.post('reorder', asset_id='player:3', to_position=1)
         saved, before = self.saved(), self.state()
@@ -59,7 +59,9 @@ class PersonalCompatibilityRecoveryTests(unittest.TestCase):
         self.market.generation = 'Market-B'
         blocked = self.state()
         self.assertFalse(blocked['personal_available'])
-        self.assertTrue(all(r['personal_value'] is None for r in blocked['rows']))
+        self.assertEqual({r['asset_id']: r['personal_value'] for r in blocked['rows']
+                          if r['personal_value_available']}, {'player:4': 0})
+        self.assertIsNone(next(r for r in blocked['rows'] if r['asset_id'] == removed['asset_id'])['personal_value'])
         self.assertEqual(blocked['compatibility_issues'][0]['asset_id'], removed['asset_id'])
         self.market.rows.append(removed)
         self.market.generation = 'Market-C'
@@ -107,7 +109,9 @@ class PersonalCompatibilityRecoveryTests(unittest.TestCase):
         self.assertFalse(state['personal_available'])
         self.assertIn('Older producer', state['limitations'][0])
         self.assertEqual(self.saved(), saved)
-        self.assertTrue(all(row['personal_value'] is None for row in state['rows']))
+        self.assertEqual({r['asset_id']: r['personal_value'] for r in state['rows']
+                          if r['personal_value_available']}, {'player:4': 0})
+        self.assertIsNone(next(r for r in state['rows'] if r['asset_id'] == 'player:2')['personal_value'])
 
     def test_missing_market_price_is_not_zero_and_retry_can_restore_without_write(self):
         self.initialize()

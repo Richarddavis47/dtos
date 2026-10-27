@@ -1,3 +1,9 @@
+# v1.21.104 / build 2204 — Exact partial Custom values
+
+Preserve every saved rank slot when Market evidence is missing. Expose a supported asset’s personal value only when its existing slot is identical under every compatible completion of missing prices; otherwise withhold it. Missing assets never receive prices, and no order, tier, flag or revision is rewritten on reads. The existing full-cohort valuation rule and neutral Market mathematics are unchanged.
+
+Allow supported Custom packages through the existing Trade workflows while dependent packages remain qualified or blocked. Explain partial availability and asset-specific recovery. Keep source/revision/publication and membership fencing, resource limits, Welcome and account behavior unchanged. See docs/audits/DATA_COMPLETENESS_2204.md for the proof, scope and unresolved production source access.
+
 # v1.21.103 / build 2203 — Source to screen continuity
 
 Preserve coherent full-population Market normalization references when cached preparation receives only a retained league subset. Reject changed, incomplete or mixed partial references atomically instead of deriving a new price curve from the subset. Fresh complete provider publications retain the existing normalization methodology. Saved ranking intent and Neutral/Custom separation are unchanged.
