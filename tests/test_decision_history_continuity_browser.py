@@ -161,11 +161,18 @@ class DecisionHistoryBrowserTests(unittest.TestCase):
                             page.keyboard.press('Tab')
                             action.focus()
                             self.assertNotEqual(action.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
+                            control = action.bounding_box()
+                            self.assertGreaterEqual(control['width'], 44)
+                            self.assertGreaterEqual(control['height'], 44)
+                            self.assertLessEqual(action.evaluate('e=>e.scrollWidth-e.clientWidth'), 0)
+                            self.assertGreaterEqual(events.first.locator('time').bounding_box()['width'], 145)
+                            events.first.evaluate("e=>e.scrollIntoView({block:'start'})")
                             overflow = page.evaluate('document.documentElement.scrollWidth-innerWidth')
                             self.assertLessEqual(overflow, 0)
                             self.assertFalse(errors, errors)
                             self.save(page, 'my-team', width, height, {'overflow': overflow,
-                                'errors': errors, 'activity': events.all_inner_texts()})
+                                'errors': errors, 'activity': events.all_inner_texts(),
+                                'view_control': control, 'timestamp_width': events.first.locator('time').bounding_box()['width']})
                             page.close()
                         finally:
                             fixture.doCleanups()

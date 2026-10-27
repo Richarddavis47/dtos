@@ -4,7 +4,7 @@ Join Trade player identities to existing canonical retained Market observations 
 
 Keep uniquely acquired transaction periods when an active-window duplicate omits them, including genuine week zero. Conflicting periods remain unqualified; exact assets, status, ownership and source payloads are unchanged.
 
-Keep failed, pending, cancelled and unknown-status actions explicitly qualified in My Team recent activity rather than presenting completed additions or drops. Carry supported dated neutral movement into the existing Trade evidence disclosure. This context does not change recommendation thresholds, lineup calculations or manager-confidence rules. No new provider requests, historical imports, grades, permanent warehouse or personalized price cache.
+Keep failed, pending, cancelled and unknown-status actions explicitly qualified in My Team recent activity rather than presenting completed additions or drops. Keep those activity rows readable on narrow phones. Carry supported dated neutral movement into the existing Trade evidence disclosure. This context does not change recommendation thresholds, lineup calculations or manager-confidence rules. No new provider requests, historical imports, grades, permanent warehouse or personalized price cache.
 
 Continue the 24-surface inventory in docs/audits/DATA_COMPLETENESS_2205.md and data_completeness_2205.csv. Source-pinned before/after controls and disposable source → cache → private HTTP → Chromium controls cover the recovered paths. Live tenant inspection remains unauthorized with the configured credential; fixture acceptance does not establish live historical completeness or production capacity.
 
