@@ -10,7 +10,7 @@ on:
         required: true
         default: all
         type: choice
-        options: [all, ordinary, archive-warmed, combined-read]
+        options: [all, ordinary, archive-warmed, combined-read, controls]
 
 permissions:
   contents: read
@@ -114,7 +114,37 @@ jobs:
            finally:stop.set();thread.join(3)
           if __name__=='__main__':raise SystemExit(main())
           PY
+      - name: Bounded repeated cleanup and isolation controls
+        if: matrix.scenario == 'controls'
+        run: |
+          mkdir -p .validation/linux-market-controls .validation/controls-fixture
+          cat > .validation/attribution/controls.py <<'PY'
+          import sys,os,json,time,gc,unittest,threading
+          from pathlib import Path
+          sys.path[:0]=['/audit','/app']
+          import observer as o
+          for key,name in {'CACHE':'cache.json','ACCOUNT_DB':'accounts.sqlite3','FOIS_DB':'fois.sqlite3','HISTORY_DB':'history.sqlite3','PROJECTION_DB':'projections.sqlite3','METADATA_DB':'metadata.sqlite3','INTELLIGENCE_CHECKPOINT':'intel.sqlite3'}.items():os.environ['DTOS_'+key+'_FILE']='/fixture/'+name
+          os.environ.update(DTOS_HISTORY_STORAGE_ROOT='/fixture',DTOS_SLEEPER_SEASON_CACHE_ROOT='/fixture/seasons',DTOS_DURABLE_HISTORY_REQUIRED='0',SLEEPER_BASE_URL='http://127.0.0.1:9/v1')
+          assert int(Path('/sys/fs/cgroup/memory.max').read_text())==2147483648
+          o.event('controls_start');t=threading.Thread(target=o.watch,daemon=True);t.start();results=[]
+          try:
+           for i in range(3):
+            o.event('controls_cycle_'+str(i)+'_before')
+            suite=unittest.defaultTestLoader.loadTestsFromNames(['tests.test_league_runtime','tests.test_navigation_residency','tests.test_fois_process_execution','tests.test_fois_preparation_cleanup','tests.test_fois_history_execution','tests.test_public_entry'])
+            r=unittest.TextTestRunner(verbosity=2).run(suite);results.append({'cycle':i,'tests':r.testsRun,'failures':len(r.failures),'errors':len(r.errors),'skips':len(r.skipped),'passed':r.wasSuccessful()});del suite,r;gc.collect();o.event('controls_cycle_'+str(i)+'_after')
+            for n in range(6):time.sleep(.5);o.snap('controls_idle_'+str(i))
+            if not results[-1]['passed']:break
+          finally:o.stop.set();t.join(3)
+          Path('/output/controls.json').write_text(json.dumps({'passed':all(r['passed'] for r in results) and len(results)==3,'results':results,'scope':'Disposable reduced fixtures; actual middleware/runtime and worker paths. Not production load or full-page multi-league traffic.'},indent=2))
+          raise SystemExit(0 if all(r['passed'] for r in results) and len(results)==3 else 1)
+          PY
+          docker run --rm --init --network none --memory 2g --memory-swap 2g --cpus 2 \
+            -v "$PWD/.validation/attribution:/audit:ro" \
+            -v "$PWD/.validation/linux-market-controls:/output" \
+            -v "$PWD/.validation/controls-fixture:/fixture" \
+            dtos-market-cgroup:validation python /audit/controls.py
       - name: Run 2 GiB cgroup lifecycle
+        if: matrix.scenario != 'controls'
         run: |
           mkdir -p .validation/linux-market-${{ matrix.scenario }}
           mkdir -p .validation/fixture-${{ matrix.scenario }}
@@ -149,7 +179,7 @@ jobs:
             python -m tools.validation.navigation_residency_probe \
               --fixture-root /fixture --output /output/navigation-residency.json
       - name: Verify sanitized result
-        if: always()
+        if: always() && matrix.scenario != 'controls'
         run: |
           test -f .validation/linux-market-${{ matrix.scenario }}/summary.json
           python -c "import json, pathlib; p=json.loads(pathlib.Path('.validation/linux-market-${{ matrix.scenario }}/summary.json').read_text()); assert p.get('completed') is True and p.get('passed') is True and p.get('exit_code') == 0"
