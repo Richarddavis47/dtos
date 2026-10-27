@@ -45,7 +45,7 @@ jobs:
           from src.platform.lifecycle import lifecycle_coordinator
           from src.core.history_context import canonical_history_store
           from services.history import _SEASON_SECTION_CACHE
-          
+
           async def cached_maintenance(epoch):
               lifecycle_coordinator.complete_startup(epoch,'Disposable cached-source fixture; live sync intentionally not exercised.')
               await asyncio.Event().wait()
@@ -110,18 +110,18 @@ jobs:
               append('http.jsonl',row)
               if expect is not None:assert status in expect,row
               return status,body,row
-          
+
           def external_probe():
               while not halt.wait(.2):
                   if 'begin' not in phase and not phase.startswith('cold_'):continue
                   try:request('/health/live',expect=(200,))
                   except Exception as e:append('probe-errors.jsonl',{'type':type(e).__name__,'phase':phase,'wall':time.time()})
-          
+
           def configure():
               names={'CACHE':'dtos_cache.json','ACCOUNT_DB':'accounts.sqlite3','FOIS_DB':'fois.sqlite3','HISTORY_DB':'dtos_history.sqlite3','PROJECTION_DB':'projections.sqlite3','METADATA_DB':'dtos_metadata.sqlite3','INTELLIGENCE_CHECKPOINT':'intel.sqlite3','GLOBAL_EVIDENCE':'global.sqlite3'}
               for k,v in names.items():os.environ['DTOS_'+k+'_FILE']='/fixture/'+v
               os.environ.update(DTOS_HISTORY_STORAGE_ROOT='/fixture',DTOS_SLEEPER_SEASON_CACHE_ROOT='/fixture/seasons',DTOS_DURABLE_HISTORY_REQUIRED='0',SLEEPER_LEAGUE_ID='1804000000000000000',DTOS_AUTH_REQUIRED='1',DTOS_MULTI_LEAGUE_IMPORT_ENABLED='1',DTOS_BACKGROUND_START_DELAY='3600',SLEEPER_BASE_URL='http://127.0.0.1:9/v1')
-          
+
           def main():
               configure();assert int(Path('/sys/fs/cgroup/memory.max').read_text())==2147483648
               event('application_observation_container_start',python=sys.version,pid=os.getpid(),padding_bytes=0)
