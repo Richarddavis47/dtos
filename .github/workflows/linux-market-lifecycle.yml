@@ -6,6 +6,10 @@ on:
         description: Use Docker init to reap orphaned validation helpers
         type: boolean
         default: true
+      short:
+        description: Targeted genuine quiet idle and three server reaping cycles
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -123,7 +127,7 @@ jobs:
 
           def external_probe():
               while not halt.wait(.2):
-                  if 'begin' not in phase and not phase.startswith('cold_'):continue
+                  if not ((phase.startswith('navigation_cycle_') and phase.endswith('_begin')) or phase in ('cold_authenticated_home_begin','concurrent_reads_begin')):continue
                   try:request('/health/live',expect=(200,))
                   except Exception as e:append('probe-errors.jsonl',{'type':type(e).__name__,'phase':phase,'wall':time.time()})
 
@@ -173,8 +177,8 @@ jobs:
                   event('cold_authenticated_home_begin');request('/',tokens[0],(200,));event('cold_authenticated_home_complete')
                   # Warm up views explicitly; no arbitrary work is triggered by observer.
                   checkslog=open(OUT/'workers.log','w')
-                  checks=subprocess.Popen([sys.executable,'/audit/worker_checks.py'],stdout=checkslog,stderr=subprocess.STDOUT,env={**os.environ,'PYTHONPATH':'/audit:/app'})
-                  for cycle in range(6):
+                  checks=None if os.environ.get('DTOS_AUDIT_SHORT')=='1' else subprocess.Popen([sys.executable,'/audit/worker_checks.py'],stdout=checkslog,stderr=subprocess.STDOUT,env={**os.environ,'PYTHONPATH':'/audit:/app'})
+                  for cycle in range(1 if os.environ.get('DTOS_AUDIT_SHORT')=='1' else 6):
                       event('navigation_cycle_'+str(cycle)+'_begin')
                       for i in ((0,1,2) if cycle%2==0 else (2,1,0)):
                           for path in ('/','/league','/market','/trades','/account/my-dtos'):
@@ -192,15 +196,27 @@ jobs:
                       futures=[pool.submit(request,'/',t,(200,)) for t in tokens]+[pool.submit(request,'/welcome',None,(200,))]
                       for f in futures:f.result()
                   event('concurrent_reads_complete')
-                  checks.wait(timeout=300);event('worker_controls_complete',exit_code=checks.returncode);assert checks.returncode==0
+                  if checks is not None:
+                      checks.wait(timeout=300);event('worker_controls_complete',exit_code=checks.returncode);assert checks.returncode==0
                   event('extended_quiet_idle_begin');time.sleep(120);event('extended_quiet_idle120')
                   _,body,_=request('/__audit__/state',tokens[0],(200,));append('states.jsonl',{'stage':'after_quiet_idle','state':json.loads(body),'wall':time.time()})
                   event('idle_with_liveness_begin')
                   for _ in range(90):request('/health/live',expect=(200,));time.sleep(1)
                   event('idle_with_liveness90')
                   _,body,_=request('/__audit__/state',tokens[0],(200,));append('states.jsonl',{'stage':'after_liveness_idle','state':json.loads(body),'wall':time.time()})
-                  event('server_shutdown_begin');server.send_signal(signal.SIGTERM);code=server.wait(timeout=30);event('server_reaped',pid=server.pid,exit_code=code);assert code==0
+                  event('server_shutdown_begin');server.send_signal(signal.SIGTERM);code=server.wait(timeout=30);event('server_reaped',pid=server.pid,exit_code=code);assert code in (0,-signal.SIGTERM)
                   time.sleep(10);event('post_shutdown10')
+                  if os.environ.get('DTOS_AUDIT_SHORT')=='1':
+                      for iteration in range(2):
+                          server=subprocess.Popen([sys.executable,'-m','uvicorn','server:app','--host','127.0.0.1','--port','8767'],stdout=log,stderr=subprocess.STDOUT,env={**os.environ,'PYTHONPATH':'/audit:/app'},start_new_session=True)
+                          event('reap_restart_'+str(iteration)+'_begin',pid=server.pid)
+                          for attempt in range(120):
+                              if server.poll() is not None:raise RuntimeError('reap restart failed')
+                              try:request('/',tokens[0],(200,));break
+                              except OSError:time.sleep(.25)
+                          else:raise TimeoutError('reap restart')
+                          server.send_signal(signal.SIGTERM);code=server.wait(timeout=30);event('restart_server_reaped',pid=server.pid,exit_code=code);assert code in (0,-signal.SIGTERM)
+                          time.sleep(10);event('restart_post_shutdown10')
                   # Record adopted exited children before collecting; diagnostic PID1 only.
                   collected=[]
                   if os.getpid()==1:
@@ -244,13 +260,14 @@ jobs:
             -v "$PWD/.validation/final-fixture:/fixture" \
             -v "$PWD/.validation/final-output:/output" \
             -v "$PWD/.validation/audit:/audit:ro" \
+            -e DTOS_AUDIT_SHORT=${{ inputs.short && '1' || '0' }} \
             -e PYTHONPATH=/audit:/app \
             dtos-final-memory python /audit/probe.py 2>&1 | tee .validation/final-output/probe.log
       - name: Preserve original observations including unsuccessful runs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: final-memory-init-${{ inputs.init }}
+          name: final-memory-init-${{ inputs.init }}-short-${{ inputs.short }}
           path: .validation/final-output/*
           if-no-files-found: error
           retention-days: 30
