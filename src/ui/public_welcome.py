@@ -31,7 +31,7 @@ body.public-welcome{margin:0;font-size:16px;color:var(--text-primary);line-heigh
 .public-welcome .pw-hero{min-width:0}.public-welcome .pw-eyebrow{font-size:12px;color:var(--accent);font-weight:750;letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px}
 .public-welcome h1{font-size:clamp(28px,3.7vw,42px);line-height:1.13;letter-spacing:-.035em;margin:0 0 18px;max-width:15ch}
 .public-welcome .pw-value{color:var(--text-secondary);margin:0 0 20px;max-width:42ch;font-size:17px}
-.public-welcome .pw-beta{color:var(--text-secondary);font-size:13px;max-width:43ch;margin:12px 0 0}
+.public-welcome .pw-access{color:var(--text-secondary);font-size:13px;max-width:43ch;margin:12px 0 0}
 .public-welcome .pw-demo-group{min-width:0;scroll-margin-top:16px}.public-welcome .pw-demo-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 10px}
 .public-welcome .pw-demo-nav a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:6px;border-bottom:1px solid var(--border);font-size:13px;font-weight:650;color:var(--text-secondary);text-align:center}
 .public-welcome .pw-demo-nav a:hover{color:var(--accent)}
@@ -180,7 +180,7 @@ def render_welcome(data: Mapping[str, Any] | None = None) -> str:
 <p class="pw-eyebrow">Dynasty football · Sleeper</p><h1 id="welcome-title">A clearer view of your dynasty.</h1>
 <p class="pw-value">Understand your team, weigh both sides of a trade, and bring your own player values.</p>
 <a class="pw-action pw-primary" href="#demo">Explore the Demo</a>
-<p class="pw-beta">Controlled beta · Participation remains limited. Existing participants can sign in.</p>
+<p class="pw-access">Explore the read-only examples, or sign in to use your league.</p>
 </section><section class="pw-demo-group" id="demo" tabindex="-1" aria-label="Read-only product demonstrations">
 <nav class="pw-demo-nav" aria-label="Explore the demonstrations"><a href="#demo-team">Team</a><a href="#demo-trade">Trade</a><a href="#demo-values">Your values</a></nav>
 <details class="pw-demo" id="demo-team" open><summary><h2><span class="pw-index">01</span>Understand Your Team</h2></summary>
@@ -202,5 +202,5 @@ def render_welcome(data: Mapping[str, Any] | None = None) -> str:
 </details>
 <details class="pw-detail" id="demo-evidence"><summary>Example scoring, source and limitations</summary><p>{_text(data["label"])} · {_text(data["season"])} · Week {_text(data["week"])}. {_text(league["scoring_label"])}</p><p>Required starting slots: {_text(", ".join(league["starter_slots"]))}.</p><ul class="pw-scoring">{scoring}</ul><ul>{limitations}</ul><p>Frozen fictional fixture: {_text(data["fixture_id"])} · version {_text(data["version"])}. No live analysis runs when you open or explore this page.</p></details>
 </section></div>
-<section class="pw-setup" aria-labelledby="setup-title"><h2 id="setup-title">Use DTOS with your Sleeper league</h2><p>Create your DTOS account, enter your public Sleeper username, then review your franchise match. Your DTOS account is separate from Sleeper; resolving a username does not independently prove control of that Sleeper account.</p><p><b>Already participating in the beta?</b> Use the existing account destinations below.</p><nav class="pw-account-actions" aria-label="Account destinations"><a class="pw-action" href="/account/sign-in">Sign In</a><a class="pw-action" href="/account/create">Create Account</a><a class="pw-action" href="/account/recover">Account Recovery</a></nav><p class="pw-access-note">Account creation is available. DTOS remains in a controlled beta with limited capacity. Creating an account does not change that capacity.</p></section>
+<section class="pw-setup" aria-labelledby="setup-title"><h2 id="setup-title">Use DTOS with your Sleeper league</h2><p>Create your DTOS account, enter your public Sleeper username, then review your franchise match. Your DTOS account is separate from Sleeper; resolving a username does not independently prove control of that Sleeper account.</p><p><b>Already have an account?</b> Use the existing account destinations below.</p><nav class="pw-account-actions" aria-label="Account destinations"><a class="pw-action" href="/account/sign-in">Sign In</a><a class="pw-action" href="/account/create">Create Account</a><a class="pw-action" href="/account/recover">Account Recovery</a></nav><p class="pw-access-note">Account creation is available. Recommendations depend on supported league and Market evidence; service availability can vary.</p></section>
 </main><footer class="pw-footer">DTOS · Dynasty front office intelligence. Real names are used only to identify players in fictional examples. No affiliation, sponsorship or endorsement by the players, their teams or the NFL is implied. These examples are not your league, saved rankings or current player advice.</footer></div></body></html>'''

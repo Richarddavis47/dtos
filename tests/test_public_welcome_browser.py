@@ -47,12 +47,12 @@ def _visible_geometry(page):
           note_text_top:textTop+scrollY,clearance:textTop-outerBottom};
       };
       const selectors={header:'.pw-header',headline:'#welcome-title',primary:'.pw-hero>.pw-primary',
-        access:'.pw-beta',demo:'#demo',team:'#demo-team',trade:'#demo-trade',values:'#demo-values'};
+        access:'.pw-access',demo:'#demo',team:'#demo-team',trade:'#demo-trade',values:'#demo-values'};
       return {viewport:[innerWidth,innerHeight],scrollY,
         overflow:document.documentElement.scrollWidth-innerWidth,
         focused_note:focusedNote(),
         boxes:Object.fromEntries(Object.entries(selectors).map(([key,selector])=>[key,box(document.querySelector(selector))])),
-        contrast:Object.fromEntries(['#welcome-title','.pw-value','.pw-beta','.pw-primary'].map(selector=>{const e=document.querySelector(selector);return [selector,{foreground:getComputedStyle(e).color,background:background(e)}];})),
+        contrast:Object.fromEntries(['#welcome-title','.pw-value','.pw-access','.pw-primary'].map(selector=>{const e=document.querySelector(selector);return [selector,{foreground:getComputedStyle(e).color,background:background(e)}];})),
         components:[...document.querySelectorAll('.pw-wrap,.pw-intro,.pw-hero,.pw-demo-group,.pw-conclusion,.pw-metrics,.pw-comparison,.pw-roster,.pw-package,.pw-side,.pw-account-actions')]
           .filter(visible).map(e=>({class:e.className,...box(e),client:e.clientWidth,scroll:e.scrollWidth})),
         controls:[...document.querySelectorAll('a,summary')].filter(visible).filter(e=>!e.matches('.pw-skip'))

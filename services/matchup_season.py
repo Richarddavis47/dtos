@@ -29,6 +29,20 @@ def number(value: Any) -> float | None:
         return None
 
 
+def source_player_actual(row: dict, player_id: str, starter_index: int | None = None) -> float | None:
+    """Read an exact player's actual score from one admitted matchup row.
+
+    Missing starter-list entries may use the same source row's player map.
+    Genuine zero wins over the fallback. Never borrow another week or roster.
+    """
+    actuals = row.get('starters_points') or []
+    if starter_index is not None and starter_index < len(actuals):
+        value = number(actuals[starter_index])
+        if value is not None:
+            return value
+    return number((row.get('players_points') or {}).get(str(player_id)))
+
+
 def compact_week(rows: Any) -> list[dict] | None:
     """Retain source identities/actuals, never duplicate player/Market payloads."""
     if not isinstance(rows, list):
@@ -205,8 +219,7 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
                            "projection_display_reason": projection.get("display_reason")}
         lineup = []
         for index, pid in enumerate(starter_ids):
-            actuals = row.get("starters_points") or []
-            actual = number(actuals[index]) if index < len(actuals) else number((row.get("players_points") or {}).get(pid))
+            actual = source_player_actual(row, pid, index)
             lineup.append(player_row(pid, slots[index] if index < len(slots) else "Source starter", actual))
         bench = [player_row(str(pid), "Non-starter", number((row.get("players_points") or {}).get(str(pid))))
                  for pid in row.get("players") or [] if str(pid) not in starter_ids]

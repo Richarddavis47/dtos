@@ -76,7 +76,8 @@ class PublicWelcomePresentationTests(unittest.TestCase):
             self.assertIn(pick['original_franchise'], text)
             self.assertIn(pick['current_owner'], text)
         self.assertIn('Account creation is available.', text)
-        self.assertIn('controlled beta with limited capacity', text)
+        self.assertNotIn('beta', text.lower())
+        self.assertIn('service availability can vary', text)
         self.assertIn('not a prediction that the other manager will accept', text)
         self.assertNotIn('invite-only', text.lower())
 
