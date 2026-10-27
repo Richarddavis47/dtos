@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from playwright.sync_api import sync_playwright
 
@@ -12,6 +13,14 @@ from tools.validation.browser_runtime import launch_chromium
 
 
 class DecisionHistoryBrowserTests(unittest.TestCase):
+    def setUp(self):
+        # Use the application's complete CSS, including its base text color and
+        # box sizing; the isolated HTTP helper supplies only its page shell.
+        import dtos_app
+        style = patch.object(trade_browser, 'DESIGN_SYSTEM_CSS', dtos_app.CSS)
+        style.start()
+        self.addCleanup(style.stop)
+
     def test_retained_market_dates_reach_existing_trade_disclosure_at_all_widths(self):
         helper = trade_browser.PersonalTradeBrowserTests()
         with sync_playwright() as pw:
@@ -67,6 +76,7 @@ class DecisionHistoryBrowserTests(unittest.TestCase):
                             reason.locator('xpath=ancestor::details[1]').locator(':scope > summary').click()
                             reason.scroll_into_view_if_needed()
                             self.assertFalse(errors, errors)
+                            self.assertEqual(page.locator('body').evaluate('e=>getComputedStyle(e).color'), 'rgb(242, 246, 248)')
                             overflow = page.evaluate('document.documentElement.scrollWidth-innerWidth')
                             self.assertLessEqual(overflow, 0)
                             self.assertEqual(fixture.f.editor.state()['revision'], revision)
