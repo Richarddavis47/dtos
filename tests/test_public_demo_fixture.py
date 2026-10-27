@@ -186,7 +186,9 @@ class PublicDemoFixtureTests(unittest.TestCase):
             doc, {"rows": [{"asset_id": "player:a", "market_value": 0}]}
         )
         self.assertFalse(missing["available"])
-        self.assertEqual(missing["values"], {})
+        self.assertEqual(missing["values"], {"player:a": 0})
+        self.assertNotIn("player:b", missing["values"])
+        self.assertTrue(missing["partial_available"])
 
     def test_public_export_has_only_fictional_presentation_fields(self):
         data, _ = fixture.fixture_input()

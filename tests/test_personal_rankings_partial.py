@@ -296,6 +296,11 @@ class CanonicalPartialPublicationTests(unittest.TestCase):
         self.addCleanup(f.doCleanups)
         self.addCleanup(f.cache.clear)
         data = deepcopy(f.data)
+        # Canonical synchronized team rows carry player identity and position;
+        # the editor-only fixture intentionally omits these Trade inputs.
+        for team in data['teams']:
+            for player in team['players']:
+                player.update(data['players'][player['id']])
         data['market_data'] = {'providers': {'FantasyCalc': {
             key: {'value': 6000, 'confidence': 90, 'format': 'dynasty_2qb'} for key in data['players']}},
             'pick_quotes': {'FantasyCalc': [{'provider': 'FantasyCalc', 'market_format': 'fc:12:2qb:ppr',
