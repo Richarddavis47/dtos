@@ -397,3 +397,35 @@ class HistoricalConsumerContinuityTests(unittest.TestCase):
         self.assertIn('/league/prior-L/transactions/18', paths)
         evidence('historical-source-http', {'scope': 'Disposable JSON HTTP transport; real SleeperHistoricalSource, cache and canonical consumers',
             'requested_paths': paths, 'transaction_records': rows, 'draft_records': picks})
+
+
+class MyTeamActivityContinuityTests(unittest.TestCase):
+    @staticmethod
+    def fixture():
+        from tests import test_my_team_outlook_http as outlook
+        f = outlook.MyTeamOutlookHTTPTests('test_actual_my_team_takeaway_precedes_roster_and_capital')
+        f.setUp()
+        player = next(iter(f.data['players']))
+        f.data['transactions'] = [{'transaction_id': 'activity-' + str(i), 'type': kind,
+            'status': status, 'roster_ids': [1], 'created': 1790000000000 + i,
+            'adds' if kind == 'waiver' else 'drops': {player: 1}, 'settings': {'waiver_bid': 0}}
+            for i, (kind, status) in enumerate([('waiver', 'complete'), ('waiver', 'failed'),
+                ('waiver', 'pending'), ('waiver', 'cancelled'), ('drop', 'failed'), ('drop', None)])]
+        return f
+
+    def test_actual_my_team_http_distinguishes_completed_actions_from_attempts(self):
+        from services.team_headquarters import _timeline
+        f = self.fixture()
+        self.addCleanup(f.doCleanups)
+        original = deepcopy(f.data['transactions'])
+        response = f.client.get('/teams/1')
+        self.assertEqual(response.status_code, 200, response.text)
+        for label in ('Failed waiver attempt', 'Pending waiver attempt', 'Cancelled waiver attempt',
+                      'Failed drop attempt', 'Unknown-status drop attempt'):
+            self.assertIn(label, response.text)
+        rows = _timeline(f.data, 1)
+        self.assertEqual([r['actions'] for r in rows].count('1 added'), 1)
+        self.assertEqual([r['actions'] for r in rows].count('No completed roster move verified'), 5)
+        self.assertEqual(f.data['transactions'], original)
+        evidence('my-team-activity', {'scope': 'Disposable authenticated actual My Team producer and HTML route',
+            'source_statuses': [r['status'] for r in original], 'timeline': rows, 'status': response.status_code})

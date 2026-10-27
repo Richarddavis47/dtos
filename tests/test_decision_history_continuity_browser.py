@@ -2,12 +2,14 @@
 import json
 import os
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 from playwright.sync_api import sync_playwright
 
 from tests.test_decision_history_continuity import DecisionHistoryFixture, HistoricalContinuityFixture
+from tests import test_decision_history_continuity as history_tests
 from tests import test_personal_trade_browser as trade_browser
 from tools.validation.browser_runtime import launch_chromium
 
@@ -131,3 +133,41 @@ class DecisionHistoryBrowserTests(unittest.TestCase):
             data.update(width=width, height=height, environment='Controlled Chromium; disposable authenticated HTTP')
             (root / f'{kind}-{width}.json').write_text(json.dumps(data, indent=2, default=str))
             page.screenshot(path=str(root / f'{kind}-{width}.png'))
+
+    def test_my_team_statuses_reach_rendered_activity_at_all_widths(self):
+        helper = trade_browser.PersonalTradeBrowserTests()
+        with sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                for width, height in helper.viewports:
+                    with self.subTest(width=width):
+                        fixture = history_tests.MyTeamActivityContinuityTests.fixture()
+                        try:
+                            transport = SimpleNamespace(editor=SimpleNamespace(client=fixture.client))
+                            page, _, errors = helper.page(browser, transport, width, height)
+                            page.goto('http://testserver/teams/1')
+                            disclosure = page.locator('#my-team-advanced > summary')
+                            disclosure.focus()
+                            disclosure.press('Enter')
+                            events = page.locator('.thq-event')
+                            self.assertEqual(events.count(), 6)
+                            for label in ('Failed waiver attempt', 'Pending waiver attempt', 'Cancelled waiver attempt',
+                                          'Failed drop attempt', 'Unknown-status drop attempt'):
+                                self.assertEqual(page.locator('.thq-event-type').get_by_text(label, exact=True).count(), 1)
+                            self.assertEqual(events.filter(has_text='No completed roster move verified').count(), 5)
+                            self.assertEqual(events.filter(has_text='1 added').count(), 1)
+                            events.first.scroll_into_view_if_needed()
+                            action = events.first.get_by_role('link', name='View', exact=True)
+                            page.keyboard.press('Tab')
+                            action.focus()
+                            self.assertNotEqual(action.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
+                            overflow = page.evaluate('document.documentElement.scrollWidth-innerWidth')
+                            self.assertLessEqual(overflow, 0)
+                            self.assertFalse(errors, errors)
+                            self.save(page, 'my-team', width, height, {'overflow': overflow,
+                                'errors': errors, 'activity': events.all_inner_texts()})
+                            page.close()
+                        finally:
+                            fixture.doCleanups()
+            finally:
+                browser.close()
