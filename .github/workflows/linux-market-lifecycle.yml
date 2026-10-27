@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build pinned production-compatible Python image
         run: |
+          set -euo pipefail
           pinned_digest=sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4
           base_image=public.ecr.aws/docker/library/python@$pinned_digest
           if ! docker pull "$base_image"; then
@@ -25,6 +26,7 @@ jobs:
           docker build -f tools/validation/Dockerfile.market-cgroup --build-arg PYTHON_BASE_IMAGE="$base_image" -t dtos-final-memory .
       - name: Prepare fixture in a separate container
         run: |
+          set -euo pipefail
           mkdir -p .validation/final-fixture .validation/final-output .validation/audit
           docker run --rm --init --network none --memory 2g --memory-swap 2g --cpus 2 \
             -v "$PWD/.validation/final-fixture:/fixture" \
@@ -35,6 +37,7 @@ jobs:
             dtos-final-memory python -m tools.validation.generate_sanitized_market_fixture 2>&1 | tee .validation/final-output/fixture.log
       - name: Install bounded diagnostic observers
         run: |
+          set -euo pipefail
           cat > .validation/audit/server.py <<'PY'
           """Disposable transport substitution only; production routes/lifespan/ownership."""
           import asyncio,json,time,os
@@ -67,7 +70,14 @@ jobs:
               from src.core.fois.history_execution import history_requests
               from src.core.intelligence.cache import intelligence_cache
               r=d.league_runtime_manager
-              return {'runtime':r.health(),'runtime_refs':[{'league':x.league_id,'active':x.active_requests,'tasks':len(x.background_tasks),'has_data':bool(x.state.get('data')),'market':x.market_context.metrics() if x.market_context else None} for x in r.resident_runtimes()], 'history_current':len(canonical_history_store._current),'season_cache_sections':len(_SEASON_SECTION_CACHE),'fois_in_flight':f._IN_FLIGHT,'fois_executor':f._EXECUTOR is not None,'history_admitted':history_requests.active_count,'lifecycle':lifecycle_coordinator.snapshot()}
+              return {'provider_attempts':provider_attempts,'runtime':r.health(),'runtime_refs':[{'league':x.league_id,'active':x.active_requests,'tasks':len(x.background_tasks),'has_data':bool(x.state.get('data')),'market':x.market_context.metrics() if x.market_context else None} for x in r.resident_runtimes()], 'history_current':len(canonical_history_store._current),'season_cache_sections':len(_SEASON_SECTION_CACHE),'season_residency':d.sleeper_season_cache.residency(),'fois_in_flight':f._IN_FLIGHT,'fois_executor':f._EXECUTOR is not None,'history_admitted':history_requests.active_count,'lifecycle':lifecycle_coordinator.snapshot()}
+          from services import sleeper
+          provider_attempts=0
+          async def blocked_provider(*args,**kwargs):
+              global provider_attempts
+              provider_attempts+=1
+              raise RuntimeError('Network-disabled disposable observation')
+          sleeper.sleeper_get=blocked_provider
           app=d.app
           PY
           cat > .validation/audit/probe.py <<'PY'
@@ -117,8 +127,24 @@ jobs:
                   try:request('/health/live',expect=(200,))
                   except Exception as e:append('probe-errors.jsonl',{'type':type(e).__name__,'phase':phase,'wall':time.time()})
 
+          def page_read(path,token):
+              if path != '/market':return request(path,token,(200,))
+              deadline=time.monotonic()+120
+              while True:
+                  result=request(path,token,(200,503))
+                  if result[0]==200:return result
+                  if time.monotonic()>deadline:raise TimeoutError('Market did not become ready within 120 seconds')
+                  time.sleep(5)
+
+          def storage_snapshot(label):
+              files={}
+              for p in Path('/fixture').rglob('*'):
+                  if p.is_file():
+                      files[str(p.relative_to('/fixture'))]={'bytes':p.stat().st_size}
+              append('storage.jsonl',{'stage':label,'files':files,'wall':time.time()})
+
           def configure():
-              names={'CACHE':'dtos_cache.json','ACCOUNT_DB':'accounts.sqlite3','FOIS_DB':'fois.sqlite3','HISTORY_DB':'dtos_history.sqlite3','PROJECTION_DB':'projections.sqlite3','METADATA_DB':'dtos_metadata.sqlite3','INTELLIGENCE_CHECKPOINT':'intel.sqlite3','GLOBAL_EVIDENCE':'global.sqlite3'}
+              names={'CACHE':'dtos_cache.json','ACCOUNT_DB':'accounts.sqlite3','FOIS_DB':'fois.sqlite3','HISTORY_DB':'dtos_history.sqlite3','PROJECTION_DB':'dtos_projections.sqlite3','METADATA_DB':'dtos_metadata.sqlite3','INTELLIGENCE_CHECKPOINT':'intel.sqlite3','GLOBAL_EVIDENCE':'global.sqlite3'}
               for k,v in names.items():os.environ['DTOS_'+k+'_FILE']='/fixture/'+v
               os.environ.update(DTOS_HISTORY_STORAGE_ROOT='/fixture',DTOS_SLEEPER_SEASON_CACHE_ROOT='/fixture/seasons',DTOS_DURABLE_HISTORY_REQUIRED='0',SLEEPER_LEAGUE_ID='1804000000000000000',DTOS_AUTH_REQUIRED='1',DTOS_MULTI_LEAGUE_IMPORT_ENABLED='1',DTOS_BACKGROUND_START_DELAY='3600',SLEEPER_BASE_URL='http://127.0.0.1:9/v1')
 
@@ -152,10 +178,10 @@ jobs:
                       event('navigation_cycle_'+str(cycle)+'_begin')
                       for i in ((0,1,2) if cycle%2==0 else (2,1,0)):
                           for path in ('/','/league','/market','/trades','/account/my-dtos'):
-                              request(path,tokens[i],(200,))
+                              page_read(path,tokens[i])
                           request('/welcome',expect=(200,));request('/health/live',expect=(200,))
                           _,body,_=request('/__audit__/state',tokens[i],(200,));append('states.jsonl',{'cycle':cycle,'league':leagues[i],'state':json.loads(body),'wall':time.time()})
-                      event('navigation_cycle_'+str(cycle)+'_complete')
+                      storage_snapshot('cycle_'+str(cycle));event('navigation_cycle_'+str(cycle)+'_complete')
                       # No requests during this quiet interval. Sampling is external.
                       time.sleep(60)
                       event('navigation_cycle_'+str(cycle)+'_idle60')
@@ -185,7 +211,7 @@ jobs:
                               collected.append({'pid':pid,'wait_status':status})
                           except ChildProcessError:break
                   event('observer_adopted_reap',collected=collected)
-                  time.sleep(5);event('finished');return 0
+                  time.sleep(5);storage_snapshot('finished');event('finished');return 0
               finally:
                   for p in (checks,server):
                       if p is not None and p.poll() is None:p.terminate();p.wait(timeout=30)
@@ -211,6 +237,7 @@ jobs:
           PY
       - name: Observe application and extended recovery under 2 GiB
         run: |
+          set -euo pipefail
           init_option=""
           if [ "${{ inputs.init }}" = "true" ]; then init_option="--init"; fi
           docker run --rm $init_option --network none --memory 2g --memory-swap 2g --cpus 2 \
