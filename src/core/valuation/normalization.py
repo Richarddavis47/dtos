@@ -8,6 +8,8 @@ from dataclasses import replace
 from datetime import datetime, timezone
 import hashlib
 import json
+from math import isfinite
+from itertools import chain
 from typing import Any, Iterable
 
 from src.core.freshness import assess_freshness
@@ -165,6 +167,46 @@ def _prepare_market_normalization(market_data: dict[str, Any]) -> None:
         population = prepare_distribution(provider, (
             row.get("value") for row in rows.values() if isinstance(row, dict)
         ))
+        supported_format = 'fc:12:2qb:ppr' if provider == 'FantasyCalc' else 'dp:2qb'
+        quotes = (market_data.get('pick_quotes') or {}).get(provider, ())
+        for quote in quotes:
+            if quote.get('market_format') != supported_format:
+                quote.pop('normalization_reference', None)
+        for row in chain(rows.values(), quotes):
+            if isinstance(row, dict) and row.get('value') is None:
+                row.pop('normalization_reference', None)
+        priced = [row for row in rows.values() if isinstance(row, dict) and row.get('value') is not None]
+        priced += [quote for quote in quotes if quote.get('market_format') == supported_format
+                   and quote.get('value') is not None]
+        references = [row.get('normalization_reference') or {} for row in priced]
+        partial = any(type(ref.get('population_size')) is int
+                      and ref['population_size'] > len(population) for ref in references)
+        if partial:
+            # A cached league subset is not a new provider population. Retain
+            # its original transform, including picks on that same curve.
+            identities = set()
+            scale = DEFAULT_CONFIG.provider_scales[provider]
+            for row, reference in zip(priced, references):
+                try:
+                    raw = float(row['value'])
+                except (ValueError, TypeError):
+                    raise ValueError('Complete Market population required for normalization') from None
+                value, generation = reference.get('normalized_value'), reference.get('generation')
+                if (isinstance(row['value'], bool) or not isfinite(raw)
+                        or not scale.minimum <= raw <= scale.maximum
+                        or reference.get('provider') != provider
+                        or reference.get('raw_value') != raw
+                        or reference.get('version') != NORMALIZATION_VERSION
+                        or reference.get('method') not in {'provider_range_linear', 'provider_range_70_percentile_30'}
+                        or type(value) is not int or not 0 <= value <= CANONICAL_MAX
+                        or not isinstance(generation, str) or len(generation) != 64
+                        or any(c not in '0123456789abcdef' for c in generation)
+                        or type(reference.get('population_size')) is not int):
+                    raise ValueError('Complete Market population required for normalization')
+                identities.add((generation, reference['population_size']))
+            if len(identities) != 1:
+                raise ValueError('Complete Market population required for normalization')
+            continue
         generation = hashlib.sha256(json.dumps(
             [NORMALIZATION_VERSION, provider, population], separators=(",", ":")
         ).encode()).hexdigest()
@@ -183,9 +225,8 @@ def _prepare_market_normalization(market_data: dict[str, Any]) -> None:
             }
         # External pick prices use the identical provider comparison transform,
         # never a pick-only percentile distribution or legacy round adjustment.
-        for quote in (market_data.get('pick_quotes') or {}).get(provider, ()):
+        for quote in quotes:
             quote.pop('normalization_reference', None)
-            supported_format = 'fc:12:2qb:ppr' if provider == 'FantasyCalc' else 'dp:2qb'
             if quote.get('market_format') != supported_format:
                 continue
             try:

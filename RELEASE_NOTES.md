@@ -1,3 +1,9 @@
+# v1.21.103 / build 2203 — Source to screen continuity
+
+Preserve coherent full-population Market normalization references when cached preparation receives only a retained league subset. Reject changed, incomplete or mixed partial references atomically instead of deriving a new price curve from the subset. Fresh complete provider publications retain the existing normalization methodology. Saved ranking intent and Neutral/Custom separation are unchanged.
+
+Make 320px matchup player rows readable by stacking paired sides with franchise labels. Keep wider comparisons, scores, projections, navigation and disclosures unchanged. See docs/audits/DATA_COMPLETENESS_2203.md for source qualifications and remaining gaps; private production Market access was unavailable, so this release does not claim restored numerical Custom availability for the four reported IDs.
+
 # v1.21.102 / build 2202 — Source actuals and data completeness
 
 Recover same-row Sleeper player actuals when starter entries are missing; preserve missing versus zero across sync and matchup presentation. Clarify projection recovery states and remove customer-facing beta labels without changing account access or demo qualifications. Preserve Custom slot-curve safeguards and saved preferences. See docs/audits/DATA_COMPLETENESS_2202.md for measured scope and unresolved inventory.

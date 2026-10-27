@@ -57,3 +57,74 @@ class MarketNormalizationReferenceTests(unittest.TestCase):
         market["providers"]["FantasyCalc"]["50"]["confidence"] = 0
         prepare_market_normalization(market)
         self.assertEqual(cached_market_consensus(market, ["50"])["50"][1], 0)
+
+    def test_cached_repreparation_preserves_full_population_after_filter(self):
+        for provider, fmt in (('FantasyCalc', 'fc:12:2qb:ppr'), ('DynastyProcess', 'dp:2qb')):
+            market = {'providers': {provider: self.fixture()['providers']['FantasyCalc']},
+                      'pick_quotes': {provider: [{'value': 5000, 'market_format': fmt,
+                          'year': 2028, 'round': 1, 'original_roster_id': 7}]}}
+            prepare_market_normalization(market)
+            expected = deepcopy(market['providers'][provider]['50'])
+            pick = deepcopy(market['pick_quotes'][provider][0])
+            market['providers'][provider] = {'50': market['providers'][provider]['50']}
+            before = deepcopy(market)
+            for _ in range(3):
+                prepare_market_normalization(market)
+                self.assertEqual(market, before)
+                self.assertEqual(market['providers'][provider]['50'], expected)
+                self.assertEqual(market['pick_quotes'][provider][0], pick)
+
+    def test_changed_or_mixed_partial_references_fail_atomically(self):
+        from unittest.mock import patch
+        for change in ('raw', 'version', 'generation', 'missing', 'pick'):
+            market = self.fixture()
+            market['pick_quotes'] = {'FantasyCalc': [{'value': 5000, 'market_format': 'fc:12:2qb:ppr'}]}
+            prepare_market_normalization(market)
+            market['providers']['FantasyCalc'] = {k: v for k, v in market['providers']['FantasyCalc'].items() if k in {'49', '50'}}
+            row = market['providers']['FantasyCalc']['50']
+            if change == 'raw':
+                row['value'] += 1
+            elif change == 'version':
+                row['normalization_reference']['version'] = 'obsolete'
+            elif change == 'generation':
+                row['normalization_reference']['generation'] = '0' * 64
+            elif change == 'missing':
+                row.pop('normalization_reference')
+            else:
+                market['pick_quotes']['FantasyCalc'][0]['value'] += 1
+            before = deepcopy(market)
+            with self.assertRaisesRegex(ValueError, 'Complete Market population'), patch('socket.create_connection', side_effect=AssertionError('no source work')):
+                prepare_market_normalization(market)
+            self.assertEqual(market, before)
+
+    def test_fresh_complete_source_replaces_old_curve_and_preserves_zero(self):
+        market = self.fixture()
+        market['providers']['FantasyCalc']['0'] = {'value': 0, 'confidence': 90}
+        prepare_market_normalization(market)
+        before = market['providers']['FantasyCalc']['50']['normalization_reference']['generation']
+        # A fresh provider adapter emits a new full payload without references.
+        fresh = {'providers': {'FantasyCalc': {str(i): {'value': i * 110, 'confidence': 90} for i in range(101)}}}
+        prepare_market_normalization(fresh)
+        self.assertNotEqual(fresh['providers']['FantasyCalc']['50']['normalization_reference']['generation'], before)
+        zero = fresh['providers']['FantasyCalc']['0']
+        expected = normalize_cached_value('FantasyCalc', zero).normalized_value
+        fresh['providers']['FantasyCalc'] = {'0': zero, '50': fresh['providers']['FantasyCalc']['50']}
+        prepare_market_normalization(fresh)
+        self.assertEqual(normalize_cached_value('FantasyCalc', zero).normalized_value, expected)
+        self.assertEqual(zero['value'], 0)
+        small = {'providers': {'FantasyCalc': {'0': {'value': 0}, '1': {'value': 100}}}}
+        prepare_market_normalization(small)
+        small['providers']['FantasyCalc'].pop('1')
+        prepare_market_normalization(small)
+        self.assertEqual(normalize_cached_value('FantasyCalc', small['providers']['FantasyCalc']['0']).normalized_value, 0)
+
+    def test_pick_only_retention_and_unsupported_format(self):
+        market = self.fixture()
+        market['pick_quotes'] = {'FantasyCalc': [{'value': 5000, 'market_format': 'fc:12:2qb:ppr'}]}
+        prepare_market_normalization(market)
+        expected = deepcopy(market['pick_quotes']['FantasyCalc'][0])
+        market['providers']['FantasyCalc'] = {}
+        market['pick_quotes']['FantasyCalc'].append({'value': 5000, 'market_format': 'unproven', 'normalization_reference': expected['normalization_reference']})
+        prepare_market_normalization(market)
+        self.assertEqual(market['pick_quotes']['FantasyCalc'][0], expected)
+        self.assertNotIn('normalization_reference', market['pick_quotes']['FantasyCalc'][1])
