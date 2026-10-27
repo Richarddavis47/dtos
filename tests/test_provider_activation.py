@@ -154,5 +154,58 @@ class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(other["availability"]["projection"])
 
 
+    async def test_known_partial_cache_refreshes_complete_source_once_without_mutation(self):
+        from copy import deepcopy
+        from unittest.mock import AsyncMock
+        from src.core.valuation.normalization import prepare_market_normalization
+        from src.core.valuation.calibration import cached_market_consensus
+        stamp = datetime.now(timezone.utc).isoformat()
+        cached = {'providers': {'FantasyCalc': {'50': {'value': 5000, 'confidence': 85}}},
+                  'pick_quotes': {'FantasyCalc': [], 'DynastyProcess': []},
+                  'provider_status': {name: {'status': 'healthy', 'last_refresh': stamp,
+                      'records_retrieved': 100 if name == 'FantasyCalc' else 0}
+                      for name in ('FantasyCalc', 'DynastyProcess')}}
+        before = deepcopy(cached)
+        payload = [{'player': {'sleeperId': str(i), 'position': 'WR'}, 'value': i * 100} for i in range(1, 101)]
+        client = FixtureClient({FANTASYCALC_URL: FixtureResponse(json_value=payload)})
+        client.get = AsyncMock(side_effect=client.get)
+        recovered = await refresh_public_market(client, cached)
+        self.assertEqual(cached, before)
+        client.get.assert_awaited_once_with(FANTASYCALC_URL)
+        prepare_market_normalization(recovered)
+        self.assertEqual(cached_market_consensus(recovered, ['50'])['50'][0], 440)
+        recovered['providers']['FantasyCalc'] = {'50': recovered['providers']['FantasyCalc']['50']}
+        reuse = FixtureClient({})
+        reuse.get = AsyncMock(side_effect=AssertionError('No refresh for compatible retained evidence'))
+        again = await refresh_public_market(reuse, recovered)
+        reuse.get.assert_not_called()
+        prepare_market_normalization(again)
+        self.assertEqual(cached_market_consensus(again, ['50'])['50'][0], 440)
+        again['provider_status']['FantasyCalc']['status'] = 'failed'
+        last_valid = await refresh_public_market(FixtureClient({FANTASYCALC_URL: FixtureResponse(status=503)}), again)
+        prepare_market_normalization(last_valid)
+        self.assertEqual(cached_market_consensus(last_valid, ['50'])['50'][0], 440)
+        self.assertEqual(last_valid['provider_status']['FantasyCalc']['records_retrieved'], 100)
+
+    async def test_failed_complete_population_recovery_retains_untrusted_cache_without_promotion(self):
+        from copy import deepcopy
+        from src.core.valuation.normalization import prepare_market_normalization
+        stamp = datetime.now(timezone.utc).isoformat()
+        cached = {'providers': {'FantasyCalc': {'50': {'value': 5000, 'confidence': 85}}},
+                  'pick_quotes': {'FantasyCalc': [], 'DynastyProcess': []},
+                  'provider_status': {name: {'status': 'healthy', 'last_refresh': stamp,
+                      'records_retrieved': 100 if name == 'FantasyCalc' else 0}
+                      for name in ('FantasyCalc', 'DynastyProcess')}}
+        before = deepcopy(cached)
+        failed = await refresh_public_market(FixtureClient({FANTASYCALC_URL: FixtureResponse(status=503)}), cached)
+        self.assertEqual(cached, before)
+        self.assertEqual(failed['providers'], before['providers'])
+        self.assertEqual(failed['provider_status']['FantasyCalc']['refresh_result'], 'cached_fallback')
+        self.assertEqual(failed['provider_status']['FantasyCalc']['records_retrieved'], 100)
+        # A failed source request cannot erase the known full-population count.
+        with self.assertRaisesRegex(ValueError, 'Complete Market population'):
+            prepare_market_normalization(failed)
+
+
 if __name__ == "__main__":
     unittest.main()
