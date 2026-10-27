@@ -863,7 +863,21 @@ class CanonicalHistoryStore:
         current_transactions = data.get('transactions') or ()
         if isinstance(current_transactions, dict):
             current_transactions = [dict(row, leg=int(week)) for week, bucket in current_transactions.items() for row in bucket or ()]
-        transactions = [dict(row, leg=int(week)) for week, bucket in buckets.items() for row in bucket or ()] + list(current_transactions)
+        bucket_rows = [dict(row, leg=int(week)) for week, bucket in buckets.items() for row in bucket or ()]
+        source_periods = defaultdict(set)
+        for row in bucket_rows:
+            if row.get('transaction_id'):
+                source_periods[str(row['transaction_id'])].add(row['leg'])
+        active_rows = []
+        for row in current_transactions:
+            # The duplicate active-window payload may omit period fields that
+            # the acquired endpoint bucket already proves. Preserve that exact
+            # context only when unique; never choose among conflicting weeks.
+            known = source_periods.get(str(row.get('transaction_id')), ())
+            if row.get('week') is None and row.get('leg') is None and len(known) == 1:
+                row = {**row, 'leg': next(iter(known))}
+            active_rows.append(row)
+        transactions = bucket_rows + active_rows
         transactions = list({str(row.get('transaction_id') or _digest(row)): row for row in transactions}.values())
         if isinstance(transactions, dict):
             transaction_rows = [row for values in transactions.values() for row in values or ()]
@@ -876,7 +890,7 @@ class CanonicalHistoryStore:
             entity = "trade" if transaction.get("type") == "trade" else "transaction"
             rows.append(self._record(
                 league_id, season, entity, transaction_id, payload,
-                week=transaction.get("week") or transaction.get("leg"),
+                week=transaction.get("week") if transaction.get("week") is not None else transaction.get("leg"),
                 occurred_at=occurred_at, timestamp_provenance=timestamp_provenance,
             ))
         return rows

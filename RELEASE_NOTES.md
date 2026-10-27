@@ -1,3 +1,13 @@
+# v1.21.105 / build 2205 — Historical decision evidence continuity
+
+Join Trade player identities to existing canonical retained Market observations and the compatible neutral current endpoint. Preserve original package keys, current-price provenance, historical cutoffs, source formats and Custom/Neutral separation. Exact draft picks are not guessed into global player trends.
+
+Keep uniquely acquired transaction periods when an active-window duplicate omits them, including genuine week zero. Conflicting periods remain unqualified; exact assets, status, ownership and source payloads are unchanged.
+
+Carry supported dated neutral movement into the existing Trade evidence disclosure. This context does not change recommendation thresholds, lineup calculations or manager-confidence rules. No new provider requests, historical imports, grades, permanent warehouse or personalized price cache.
+
+Continue the 24-surface inventory in docs/audits/DATA_COMPLETENESS_2205.md and data_completeness_2205.csv. Source-pinned before/after controls and disposable source → cache → private HTTP → Chromium controls cover the recovered paths. Live tenant inspection remains unauthorized with the configured credential; fixture acceptance does not establish live historical completeness or production capacity.
+
 # v1.21.104 / build 2204 — Exact partial Custom values
 
 Preserve every saved rank slot when Market evidence is missing. Expose a supported asset’s personal value only when its existing slot is identical under every compatible completion of missing prices; otherwise withhold it. Missing assets never receive prices, and no order, tier, flag or revision is rewritten on reads. The existing full-cohort valuation rule and neutral Market mathematics are unchanged.

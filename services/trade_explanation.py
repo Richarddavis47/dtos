@@ -85,6 +85,10 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
             key = add(f'recommendation.{code}', 'Accepted recommendation reason', reason_text(code), kind=K.INTERPRETATION)
             why.append(reason(code, key))
     dims = result.get('dimensions') or {}
+    history = dims.get('historical_counterparty_evidence') or {}
+    for index, signal in enumerate((history.get('trend_signals') or [])[:2]):
+        if signal.get('explanation'):
+            add(f'market_timing.{index}', 'Observed neutral Market movement', signal['explanation'])
     diagnostic = dims.get('roster_diagnostics') or {}
     for side, row in diagnostic.get('sides', {}).items():
         key = add('diagnostics.' + side, ('Your' if side == 'active' else 'Their') + ' package roster context', row['summary'])

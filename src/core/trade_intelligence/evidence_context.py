@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from time import perf_counter
+from math import isfinite
 from typing import Any, Iterable
 
 from src.core.intelligence_memory import intelligence_checkpoint_store
@@ -39,6 +40,24 @@ def _market_generation(data: dict[str, Any]) -> str:
     return str(market.get("generation") or market.get("generated_at") or "current")
 
 
+def _market_player_id(data, asset):
+    """Join Trade's player key to Market by exact prepared identity only.
+
+    Exact picks remain outside this player-only join: an original-franchise
+    number is not a globally unique league/pick history identity.
+    """
+    key = str(getattr(asset, "asset_id", asset) or "")
+    if getattr(asset, "kind", None) not in {None, "player"}:
+        return None
+    raw = key.removeprefix("player:")
+    canonical = f"player:{raw}"
+    players = data.get("normalized_players") or data.get("players") or {}
+    prepared = (data.get("valuation_intelligence") or {}).get("assets") or {}
+    if raw in players or canonical in prepared:
+        return canonical
+    return None
+
+
 def build_trade_evidence_context(
     data: dict[str, Any], assets: Iterable[Any] = (),
 ) -> TradeEvidenceContext:
@@ -53,11 +72,15 @@ def build_trade_evidence_context(
     league = data.get("league") or {}
     league_id = str(league.get("league_id") or data.get("league_id") or "")
     rows_by_id: dict[str, dict[str, Any]] = {}
+    market_ids = {}
     for value in assets:
         asset_id = str(getattr(value, "asset_id", value) or "")
         if not asset_id:
             continue
-        current = getattr(value, "trade_value", None)
+        # A Custom workspace changes trade_value, never the neutral endpoint
+        # used for externally observed Market movement.
+        current = getattr(value, "market_value", getattr(value, "trade_value", None))
+        market_ids[asset_id] = _market_player_id(data, value)
         rows_by_id.setdefault(
             asset_id, {"asset_id": asset_id, "values": {"market_value": current}},
         )
@@ -69,12 +92,20 @@ def build_trade_evidence_context(
             data, ids, league_id=league_id,
         )
     elif ids:
-        trends = MarketTrendService(intelligence_checkpoint_store).summaries(
-            [rows_by_id[asset_id] for asset_id in ids],
-            league_id=league_id or None, as_of=None,
-            generation=_market_generation(data),
-            compact=False,
-        )
+        from src.core.market_trends.current import current_comparison
+        market_rows = [{**rows_by_id[key], "asset_id": market_ids[key]}
+                       for key in ids if market_ids[key] is not None]
+        summaries = MarketTrendService(intelligence_checkpoint_store).summaries(
+            market_rows, league_id=league_id or None, as_of=None,
+            generation=_market_generation(data), compact=False,
+            current_comparisons={row["asset_id"]: current_comparison(
+                data, row["asset_id"], row["values"]["market_value"])
+                for row in market_rows},
+        ) if market_rows else {}
+        # Consumers retain their original exact package keys. No canonical
+        # prices, source records or package identities are rewritten.
+        trends = {key: summaries[market_ids[key]] for key in ids
+                  if market_ids[key] in summaries}
     else:
         trends = {}
     behavior = scoped_evidence(
@@ -172,12 +203,29 @@ def assess_historical_fit(
             trend_direction = str(trend.get("direction") or "insufficient_evidence")
             trend_confidence = str(trend.get("confidence") or "unavailable")
             if trend_direction in {"rising", "falling", "volatile"} and trend_confidence in {"medium", "high"}:
-                trend_signals.append({
+                signal = {
                     "asset_id": asset.asset_id, "direction": trend_direction,
                     "confidence": trend_confidence, "trade_direction": direction,
-                })
+                }
+                from src.core.history_context.timestamps import canonical_utc_timestamp
+                start = canonical_utc_timestamp(trend.get("comparison_start_at"))
+                end = canonical_utc_timestamp(trend.get("comparison_end_at"))
+                change = trend.get("magnitude")
+                scope = trend.get("comparison_scope")
+                if (start and end and start <= end and trend.get("comparison_units") == "0-1000"
+                        and scope in {"history_only", "historical_to_current"}
+                        and isinstance(change, (int, float)) and not isinstance(change, bool) and isfinite(change)):
+                    signal["explanation"] = (
+                        f"{asset.label}: recorded neutral Market change {change:+.2f} points "
+                        f"from {start[:10]} to {end[:10]}. "
+                        + ("This includes the compatible current publication at its observation time."
+                           if scope == "historical_to_current" else
+                           "This is history only; the current price is not part of that comparison."))
+                trend_signals.append(signal)
     if trend_signals:
-        reasons.append("Supported market movement informs timing, but does not alter canonical value.")
+        details = " ".join(row["explanation"] for row in trend_signals[:2] if row.get("explanation"))
+        reasons.append("Supported market movement informs timing, but does not alter canonical value."
+                       + (" " + details if details else ""))
         reason_codes.append("MARKET_TIMING_CONTEXT")
     liquidity_rows = [
         trend.get("league_liquidity") for trend in context.trends_by_asset.values()
