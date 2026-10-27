@@ -48,3 +48,12 @@
  .compact-standings td[data-label]::before{display:none}
  .compact-standings .standing-inline a{border-radius:8px;background:linear-gradient(145deg,#ffffff0b,#00000010);box-shadow:inset 0 1px 0 #ffffff12}
 }
+
+/* Narrow phones need readable player rows, not two compressed half-columns. */
+.matchup-side-label{display:none}
+@media(max-width:360px){
+ .season-sides,.matchup-pair{grid-template-columns:minmax(0,1fr)}
+ .matchup-side-label{display:block;margin:6px 0;color:var(--muted);font-size:.75rem}
+ .matchup-player .player-summary-copy b{font-size:.875rem}
+ .matchup-player-points{gap:12px;margin-bottom:6px}
+}

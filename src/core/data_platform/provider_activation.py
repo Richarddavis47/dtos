@@ -93,7 +93,8 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
 
     # Older healthy caches predate retained pick evidence. Materialize a missing
     # family during preparation; an existing empty family is a valid fetch result.
-    if "FantasyCalc" not in pick_quotes or refresh_due(statuses.get("FantasyCalc")):
+    if ("FantasyCalc" not in pick_quotes or refresh_due(statuses.get("FantasyCalc"))
+            or _incomplete_cached_market(previous, "FantasyCalc")):
         try:
             response = await client.get(FANTASYCALC_URL)
             response.raise_for_status()
@@ -141,9 +142,10 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
             statuses["FantasyCalc"] = _status(enabled=True, state="healthy", result="success", records=len(normalized), refreshed_at=stamp)
             attribution["FantasyCalc"] = {"label": "FantasyCalc", "url": "https://fantasycalc.com/", "retrieval_mode": "public API"}
         except Exception as exc:  # provider isolation is intentional
-            statuses["FantasyCalc"] = _status(enabled=True, state="failed", result="cached_fallback" if providers.get("FantasyCalc") else "failed", records=len(providers.get("FantasyCalc") or {}), reason=f"FantasyCalc temporarily unavailable: {type(exc).__name__}.")
+            statuses["FantasyCalc"] = _status(enabled=True, state="failed", result="cached_fallback" if providers.get("FantasyCalc") else "failed", records=_cached_source_count(previous, "FantasyCalc", providers), reason=f"FantasyCalc temporarily unavailable: {type(exc).__name__}.")
 
-    if "DynastyProcess" not in pick_quotes or refresh_due(statuses.get("DynastyProcess")):
+    if ("DynastyProcess" not in pick_quotes or refresh_due(statuses.get("DynastyProcess"))
+            or _incomplete_cached_market(previous, "DynastyProcess")):
         try:
             value_response = await client.get(DYNASTYPROCESS_VALUES_URL)
             ids_response = await client.get(DYNASTYPROCESS_IDS_URL)
@@ -190,9 +192,35 @@ async def refresh_public_market(client: Any, cached: dict[str, Any] | None = Non
             statuses["DynastyProcess"] = _status(enabled=True, state="healthy", result="success", records=len(normalized), refreshed_at=stamp)
             attribution["DynastyProcess"] = {"label": "DynastyProcess", "url": "https://github.com/dynastyprocess/data", "retrieval_mode": "public dataset"}
         except Exception as exc:  # provider isolation is intentional
-            statuses["DynastyProcess"] = _status(enabled=True, state="failed", result="cached_fallback" if providers.get("DynastyProcess") else "failed", records=len(providers.get("DynastyProcess") or {}), reason=f"DynastyProcess temporarily unavailable: {type(exc).__name__}.")
+            statuses["DynastyProcess"] = _status(enabled=True, state="failed", result="cached_fallback" if providers.get("DynastyProcess") else "failed", records=_cached_source_count(previous, "DynastyProcess", providers), reason=f"DynastyProcess temporarily unavailable: {type(exc).__name__}.")
 
     return {"providers": providers, "pick_quotes": pick_quotes, "provider_status": statuses, "attribution": attribution, "context_mode": "online" if providers else "offline", "allow_cached_fallback": bool(providers)}
+
+
+def _incomplete_cached_market(market_data: dict[str, Any], provider: str) -> bool:
+    """Recover a known incomplete curve during existing sync, never on reads.
+
+    The normalizer works on a detached copy; preflight cannot mutate the
+    last-valid publication. A healthy retained reference needs no source call.
+    """
+    from src.core.valuation.normalization import prepare_market_normalization
+    candidate = {
+        'providers': {provider: (market_data.get('providers') or {}).get(provider, {})},
+        'pick_quotes': {provider: (market_data.get('pick_quotes') or {}).get(provider, ())},
+        'provider_status': {provider: (market_data.get('provider_status') or {}).get(provider, {})},
+    }
+    try:
+        prepare_market_normalization(candidate)
+    except (ValueError, TypeError, AttributeError):
+        return True
+    return False
+
+
+def _cached_source_count(previous: dict[str, Any], provider: str, providers: dict[str, Any]) -> int:
+    """A failed fetch must not relabel a filtered cache as a complete source."""
+    retained = len(providers.get(provider) or {})
+    count = ((previous.get('provider_status') or {}).get(provider) or {}).get('records_retrieved')
+    return count if retained and type(count) is int and count >= retained else retained
 
 
 def player_context(player_id: str, data: dict[str, Any]) -> dict[str, Any]:

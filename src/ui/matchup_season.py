@@ -67,7 +67,7 @@ def _team_identity(side, *, linked=False):
     return f'<div class="matchup-team">{image}<div><b>{title}</b>{own}<small>{escape(str(side.get("owner") or ""))}</small></div></div>'
 
 
-def _player_cell(player, week, identity, state, *, starter=False):
+def _player_cell(player, week, identity, state, *, starter=False, team_label=''):
     from src.ui import player_summary
     if player is None:
         return '<div class="matchup-player empty">No player in this row</div>'
@@ -84,7 +84,8 @@ def _player_cell(player, week, identity, state, *, starter=False):
     qualification = f'<small>{escape(player["projection_display_reason"])}</small>' if player.get('projection_display_reason') and player['projection'] is not None else ''
     actual = '' if state == 'pregame' else f'<span><small>Actual</small><b>{_points(player["actual"])}</b></span>'
     label = 'Pregame projection · Sleeper' if player['projection'] is not None else 'Projection unavailable'
-    return (f'<div class="matchup-player{" battle-side" if starter else ""}">{content}<div class="matchup-player-points">'
+    side_label = f'<small class="matchup-side-label">{escape(team_label)}</small>' if team_label else ''
+    return (f'<div class="matchup-player{" battle-side" if starter else ""}">{side_label}{content}<div class="matchup-player-points">'
             f'{actual}'
             f'<span data-dtos-semantic-field="pregame_projection" data-dtos-availability="{"available" if player["projection"] is not None else "unavailable"}" '
             f'data-dtos-value="{projected if player["projection"] is not None else ""}" '
@@ -106,7 +107,8 @@ def _aligned_roster(sides, week, identity, state):
         for index in range(max(map(len, groups), default=0)):
             rows = [group[index] if index < len(group) else None for group in groups]
             slot = next((p['slot'] for p in rows if p), '') if key == 'lineup' else ''
-            cells = ''.join(_player_cell(p, week, identity, state, starter=key == 'lineup') for p in rows)
+            cells = ''.join(_player_cell(p, week, identity, state, starter=key == 'lineup', team_label=side['team'])
+                            for p, side in zip(rows, sides))
             body += f'<div class="matchup-roster-row"><div class="matchup-slot">{escape(slot)}</div><div class="matchup-pair">{cells}</div></div>'
         body += '</section>'
     return body

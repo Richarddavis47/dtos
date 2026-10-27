@@ -200,3 +200,57 @@ class ProducerIdentityTests(unittest.TestCase):
                 raw = connection.execute('SELECT normalization_version,provider_evidence_json FROM global_market_observations').fetchone()
             self.assertEqual(raw[0], NORMALIZATION_VERSION)
             self.assertEqual(json.loads(raw[1])[0]['normalization_version'], NORMALIZATION_VERSION)
+
+
+class CSVObservationIdentityTests(unittest.TestCase):
+    def test_csv_numeric_quote_reaches_prepared_checkpoint_without_price_change(self):
+        data, state = fixture()
+        import asyncio
+        from unittest.mock import patch
+        from src.core.data_platform.provider_activation import (
+            refresh_public_market, DYNASTYPROCESS_VALUES_URL, DYNASTYPROCESS_IDS_URL)
+        from tests.test_provider_activation import FixtureClient, FixtureResponse
+        source = FixtureClient({
+            DYNASTYPROCESS_VALUES_URL: FixtureResponse(text='player,pos,fp_id,value_2qb,scrape_date\nRostered QB,QB,123,5000,2026-10-23\n'),
+            DYNASTYPROCESS_IDS_URL: FixtureResponse(text='fantasypros_id,sleeper_id\n123,1\n'),
+        })
+        stamp = datetime(2026, 10, 24, tzinfo=timezone.utc)
+        with patch('src.core.data_platform.provider_activation._now', return_value=stamp):
+            data['market_data'] = asyncio.run(refresh_public_market(source, {
+                'pick_quotes': {'FantasyCalc': []}, 'provider_status': {
+                    'FantasyCalc': {'status': 'healthy', 'last_refresh': stamp.isoformat()}}}))
+        quote = data['market_data']['providers']['DynastyProcess']['1']
+        self.assertEqual(quote['value'], '5000')
+        prepare_market_normalization(data['market_data'])
+        before = deepcopy(data['market_data'])
+        asset = ValuationUniverse(data, state).by_id['player:1']
+        price = asset['layers']['market_value']['value']
+        self.assertEqual(price, 500)
+        data['valuation_intelligence'] = {'assets': {'player:1': _score_asset(asset, [], {}, None)}}
+        observations = CheckpointPipeline._market_observations(data, 'player:1')
+        self.assertEqual(len(observations), 1)
+        obs = observations[0]
+        self.assertEqual(obs.provider, 'DynastyProcess')
+        self.assertEqual(obs.raw_value, 5000)
+        self.assertEqual(obs.normalized_value, price)
+        self.assertEqual(obs.source_identity, data['market_data']['providers']['DynastyProcess']['1']['normalization_reference']['generation'])
+        self.assertEqual(obs.observed_at, quote['retrieved_at'])
+        self.assertEqual(obs.metadata['source_updated_at'], '2026-10-23')
+        self.assertEqual(obs.metadata['source_timestamp_precision'], 'day')
+        self.assertEqual(data['market_data'], before)
+
+    def test_numeric_quote_validation_never_invents_observation_provenance(self):
+        from src.core.valuation.observation_identity import observation_evidence
+        data, _asset = prepared()
+        quote = data['market_data']['providers']['FantasyCalc']['1']
+        value = quote['normalization_reference']['normalized_value']
+        for bad in (None, True, False, 'not a number', 'NaN', 'Infinity', float('inf')):
+            row = deepcopy(quote)
+            row['value'] = bad
+            self.assertIsNone(observation_evidence([('FantasyCalc', row, value)], canonical_value=value))
+        row = deepcopy(quote)
+        row['value'] = str(quote['value'])
+        evidence = observation_evidence([('FantasyCalc', row, value)], canonical_value=value)
+        self.assertEqual(evidence['observations'][0]['raw_value'], float(quote['value']))
+        row['normalization_reference']['raw_value'] += 1
+        self.assertIsNone(observation_evidence([('FantasyCalc', row, value)], canonical_value=value))

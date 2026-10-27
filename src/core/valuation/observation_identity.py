@@ -1,5 +1,6 @@
 """Compact provenance captured with the selected price, never inferred on reads."""
 import json
+from math import isfinite
 
 from .config import NORMALIZATION_VERSION
 from .consensus import MARKET_SELECTION_VERSION
@@ -15,8 +16,21 @@ def observation_evidence(selected, *, canonical_value):
     identities, observations = [], []
     for provider, quote, normalized in selected:
         ref = quote.get('normalization_reference') or {}
+        raw = quote.get('value')
+        # CSV-native numbers and JSON numbers have the same quote meaning.
+        # Preserve existing numeric types; reject missing/bool/nonfinite data.
+        if isinstance(raw, str):
+            try:
+                raw = float(raw)
+            except ValueError:
+                return None
+        reference_raw = ref.get('raw_value')
+        if (type(raw) not in {int, float} or not isfinite(raw)
+                or type(reference_raw) not in {int, float} or not isfinite(reference_raw)):
+            return None
         # A legacy/fallback normalization cannot acquire guessed provenance.
-        if (ref.get('provider') != provider or ref.get('raw_value') != quote.get('value')
+        if (ref.get('provider') != provider or reference_raw != raw
+                or type(ref.get('normalized_value')) is not int
                 or ref.get('normalized_value') != normalized or not ref.get('generation')
                 or ref.get('version') != NORMALIZATION_VERSION
                 or ref.get('method') not in {'provider_range_linear', 'provider_range_70_percentile_30'}):
@@ -31,7 +45,7 @@ def observation_evidence(selected, *, canonical_value):
                            'source_scale': quote.get('value_scale'),
                            'normalization': ref['version'], 'method': ref['method']})
         clocks = market_times(quote)
-        observations.append({'provider': provider, 'raw_value': quote['value'],
+        observations.append({'provider': provider, 'raw_value': raw,
                              'normalized_value': normalized,
                              'normalization_version': ref['version'],
                              'observed_at': clocks['retrieved_at'],
@@ -39,7 +53,9 @@ def observation_evidence(selected, *, canonical_value):
                              'temporal_distance_seconds': None,
                              'metadata': {'source_updated_at': clocks['source_updated_at'],
                                           'retrieved_at': clocks['retrieved_at'],
-                                          'published_at': clocks['published_at']}})
+                                          'published_at': clocks['published_at'],
+                                          **({'source_timestamp_precision': 'day'}
+                                             if quote.get('source_timestamp_precision') == 'day' else {})}})
     # The normalized index is comparable under this same definition, not a raw
     # provider currency. Changing population may move the index, not prove cause.
     semantics = {'value_concept': 'external_market_normalized_index',
