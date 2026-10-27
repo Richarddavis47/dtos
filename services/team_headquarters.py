@@ -163,14 +163,21 @@ def _timeline(data: dict[str, Any], roster_id: int) -> list[dict[str, Any]]:
         if str(roster_id) not in involved and not assets:
             continue
         actions = Counter(asset["action"] for asset in assets)
+        status = str(transaction.get('status') or '').casefold()
+        status = {'completed': 'complete', 'canceled': 'cancelled'}.get(status, status)
+        completed = status == 'complete'
+        attempt = {'failed': 'Failed', 'pending': 'Pending', 'cancelled': 'Cancelled',
+                   }.get(status, 'Unknown-status')
         items.append(
             {
                 "id": transaction["id"],
-                "type": transaction["type_label"],
+                "type": transaction["type_label"] if completed else f'{attempt} {transaction["type_label"].lower()} attempt',
+                "status": status if status in {'complete', 'failed', 'pending', 'cancelled'} else 'unknown',
                 "timestamp": transaction["timestamp"],
                 "created_ms": transaction["created_ms"],
                 "assets": assets,
-                "actions": ", ".join(f"{count} {action.lower()}" for action, count in sorted(actions.items())) or "Team involved",
+                "actions": (", ".join(f"{count} {action.lower()}" for action, count in sorted(actions.items())) or "Team involved")
+                if completed else 'No completed roster move verified',
             }
         )
     return sorted(items, key=lambda item: item["created_ms"], reverse=True)[:12]

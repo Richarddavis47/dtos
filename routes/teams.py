@@ -77,7 +77,7 @@ TEAM_HQ_CSS = """
 .thq-pick small{display:block;color:var(--muted);margin-top:4px;font-size:12px}
 .thq-timeline{display:grid;gap:8px}.thq-event{display:grid;grid-template-columns:145px 100px minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface)}
 .thq-event-type{color:var(--accent);font-weight:650}.thq-event-assets{color:var(--text-secondary);font-size:13px}
-.thq-event a{display:inline-flex;min-height:44px;align-items:center;color:var(--accent)}
+.thq-event a{display:inline-flex;min-width:44px;min-height:44px;align-items:center;white-space:nowrap;color:var(--accent)}
 .thq-future-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.thq-future b{display:block;margin:8px 0}.thq-future small{color:var(--muted)}
 .thq-actions{display:flex;gap:8px;flex-wrap:wrap}
 .thq-action{display:inline-flex;min-height:44px;align-items:center;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-weight:650}
@@ -102,7 +102,7 @@ TEAM_HQ_CSS = """
  .thq-updated{text-align:left}.thq-section-head{display:block}.thq-section-head span{display:block;margin-top:4px}
  .thq-cards,.thq-performance,.thq-intel{grid-template-columns:repeat(2,minmax(0,1fr))}
  .thq-roster,.thq-picks,.thq-summary,.thq-future-grid{grid-template-columns:1fr}
- .thq-event{grid-template-columns:1fr auto}.thq-event-assets{grid-column:1/-1}
+ .thq-event{grid-template-columns:minmax(0,1fr);gap:6px}.thq-event-assets{grid-column:auto}.thq-event time{overflow-wrap:normal}.thq-event a{justify-self:start}
  .thq-kpi b{font-size:21px}
 }
 @media(max-width:460px){.thq-starters,.thq-grades{grid-template-columns:1fr}.thq-intel{grid-template-columns:1fr}#positional-depth .thq-cards{grid-template-columns:1fr}}
