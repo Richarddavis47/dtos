@@ -178,9 +178,15 @@ def _prepare_market_normalization(market_data: dict[str, Any]) -> None:
         priced = [row for row in rows.values() if isinstance(row, dict) and row.get('value') is not None]
         priced += [quote for quote in quotes if quote.get('market_format') == supported_format
                    and quote.get('value') is not None]
+        if not priced:
+            # An empty family supplies no price; it must not suppress another
+            # provider's independently supported evidence.
+            continue
         references = [row.get('normalization_reference') or {} for row in priced]
-        partial = any(type(ref.get('population_size')) is int
-                      and ref['population_size'] > len(population) for ref in references)
+        source_count = ((market_data.get('provider_status') or {}).get(provider) or {}).get('records_retrieved')
+        partial = ((type(source_count) is int and source_count > len(rows))
+                   or any(type(ref.get('population_size')) is int
+                          and ref['population_size'] > len(population) for ref in references))
         if partial:
             # A cached league subset is not a new provider population. Retain
             # its original transform, including picks on that same curve.
@@ -204,7 +210,7 @@ def _prepare_market_normalization(market_data: dict[str, Any]) -> None:
                         or type(reference.get('population_size')) is not int):
                     raise ValueError('Complete Market population required for normalization')
                 identities.add((generation, reference['population_size']))
-            if len(identities) != 1:
+            if len(identities) != 1 or next(iter(identities))[1] <= len(population):
                 raise ValueError('Complete Market population required for normalization')
             continue
         generation = hashlib.sha256(json.dumps(

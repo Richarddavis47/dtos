@@ -128,3 +128,31 @@ class MarketNormalizationReferenceTests(unittest.TestCase):
         prepare_market_normalization(market)
         self.assertEqual(market['pick_quotes']['FantasyCalc'][0], expected)
         self.assertNotIn('normalization_reference', market['pick_quotes']['FantasyCalc'][1])
+
+    def test_known_source_count_prevents_missing_references_from_looking_complete(self):
+        market = self.fixture()
+        market['provider_status'] = {'FantasyCalc': {'records_retrieved': 100}}
+        prepare_market_normalization(market)
+        market['providers']['FantasyCalc'] = {'50': market['providers']['FantasyCalc']['50']}
+        row = market['providers']['FantasyCalc']['50']
+        row.pop('normalization_reference')
+        before = deepcopy(market)
+        with self.assertRaisesRegex(ValueError, 'Complete Market population'):
+            prepare_market_normalization(market)
+        self.assertEqual(market, before)
+        # A legacy subset-recomputed reference is not proof of a full curve.
+        subset = deepcopy(market)
+        subset.pop('provider_status')
+        prepare_market_normalization(subset)
+        market['providers'] = subset['providers']
+        before = deepcopy(market)
+        with self.assertRaisesRegex(ValueError, 'Complete Market population'):
+            prepare_market_normalization(market)
+        self.assertEqual(market, before)
+
+    def test_empty_partial_family_does_not_block_other_supported_provider(self):
+        market = {'providers': {'FantasyCalc': {}, 'DynastyProcess': {'50': {'value': 5000}}},
+                  'provider_status': {'FantasyCalc': {'records_retrieved': 100}}}
+        prepare_market_normalization(market)
+        self.assertEqual(market['providers']['FantasyCalc'], {})
+        self.assertIsNotNone(market['providers']['DynastyProcess']['50']['normalization_reference']['normalized_value'])

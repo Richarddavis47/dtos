@@ -8,7 +8,7 @@ The released normalizer pins a scalar reference from the full provider populatio
 
 Cached subset preparation now preserves player and supported pick references only if every priced retained item has a matching raw value, provider, supported method/version, bounded numerical value and the same full-population generation/size. Missing, damaged, changed or mixed partial references fail atomically. Heavy work does not enter the publication lock; preparation still uses a detached snapshot and commits only against the unchanged source identity. A fresh full provider response without references uses the existing formula and establishes a new generation normally. No percentile formula, source scale, price-selection policy, Custom slot model or historical record changes.
 
-Existing already-recomputed subset references cannot reveal their discarded original population; a subsequent normal complete provider refresh is needed to establish its full reference. This correction prevents future repeated drift; it does not reconstruct missing past metadata or force live synchronization.
+Retained provider row counts also identify known partial tables when all references are absent or were previously recomputed from the subset. Those cases fail closed and require a normal complete provider refresh. Legacy caches lacking both retained full-population references and reliable source counts cannot reveal their discarded original population; this batch does not reconstruct that missing metadata. This correction prevents future repeated drift; it does not reconstruct missing past metadata or force live synchronization.
 
 ## Four reported saved identities
 
