@@ -53,7 +53,7 @@ jobs:
           from pathlib import Path
           import psutil
           OUT=Path('/output');OUT.mkdir(exist_ok=True);CG=Path('/sys/fs/cgroup');phase='observer_start';lock=threading.Lock();stop=threading.Event();samples=0
-          
+
           def snap(label):
            global samples
            with lock:
@@ -69,12 +69,12 @@ jobs:
             row['window_ms']=(time.monotonic()-start)*1000
             with (OUT/'attribution.jsonl').open('a') as f:f.write(json.dumps(row,separators=(',',':'))+'\n')
             samples+=1
-          
+
           def event(label,**extra):
            global phase
            phase=label;snap(label)
            with (OUT/'boundaries.jsonl').open('a') as f:f.write(json.dumps({'wall':time.time(),'monotonic':time.monotonic(),'event':label,**extra})+'\n')
-          
+
           def wrap(module,name):
            old=getattr(module,name)
            def call(*args,**kwargs):
@@ -85,18 +85,18 @@ jobs:
              event(name+'_exit',**extra);return result
             except BaseException as e:event(name+'_error',error_type=type(e).__name__);raise
            setattr(module,name,call)
-          
+
           def child(which):
            sys.path.insert(0,'/app')
            module=importlib.import_module('tools.validation.'+('generate_sanitized_market_fixture' if which=='generator' else 'linux_market_cgroup_gate'))
            for name in (['_production_history','_canonical_history_fixture'] if which=='generator' else ['_retire_validation_archive','_pad_to_production_baseline','_start_server','_stop_server']):wrap(module,name)
            event(which+'_entry');code=module.main();event(which+'_exit',code=code);return code
-          
+
           def watch():
            while not stop.wait(.5):
             if samples>=4000:return
             snap(phase)
-          
+
           def main():
            if len(sys.argv)>1:return child(sys.argv[1])
            assert int((CG/'memory.max').read_text())==2147483648
