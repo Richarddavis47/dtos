@@ -281,7 +281,8 @@ class CanonicalAssetFactTests(unittest.TestCase):
             self.assertNotIn('Current projections:</b> null', body)
             service.week_snapshot = lambda week, **kw: {**pinned, 'week': week, 'players': {'2': {'canonical_projection': None}}}
             body = client.get('/players/2?week=5').text
-            self.assertIn('No supported player projection for this week.', body)
+            self.assertIn('No supported Sleeper projection is available for this player in the selected week.', body)
+            self.assertIn('This is missing evidence, not a zero projection.', body)
             self.assertNotIn('Current projections:</b> 0', body)
 
 
