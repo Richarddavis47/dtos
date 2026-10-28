@@ -139,7 +139,7 @@ class ReserveQualityBrowserTests(unittest.TestCase):
                         'expansion_saved_state_unchanged': True,
                         'author_run_environment': 'isolated authenticated HTTP and responsive Chromium'})
 
-    def test_supported_consolidation_stays_favorable_and_discloses_depth_cost(self):
+    def test_supported_consolidation_preserves_user_gain_and_counterparty_limit(self):
         self.prepare('1313066632158924800', consolidation=True)
         with self.f.browser(320, 432) as page:
             e = self.evaluate(page, sent=('a', 'b'), received=('c',), strategy='WIN NOW')
@@ -150,7 +150,11 @@ class ReserveQualityBrowserTests(unittest.TestCase):
             text = page.locator('#trade-result .tw-decision').inner_text()
             self.assertIn('1.00', text)
             self.assertIn('legal-replacement production falls', text)
-            self.assertIn('WORTH PURSUING', page.locator('#trade-result .dtos-explanation > p').first.inner_text())
+            self.assertFalse(e['generated_trade_eligible'])
+            self.assertEqual(e['dimensions']['counterparty_plausibility']['assessment'], 'LOW')
+            self.assertIn('COUNTERPARTY LIMITED', page.locator('#trade-result .dtos-explanation > p').first.inner_text())
+            self.assertNotIn('WORTH PURSUING', page.locator('#trade-result .dtos-explanation > p').first.inner_text())
+            self.assertIn('WORTH PURSUING', page.locator('#trade-result .tw-side-assessment').inner_text())
             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 320)
 
     def test_retained_assessment_preserves_original_partner_and_reserve_evidence(self):

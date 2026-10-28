@@ -111,6 +111,8 @@ def evaluate_horizon_impact(data, proposal, service):
     return {'availability': 'supported', 'sides': sides,
             'comparison': 'pre_trade_optimal_vs_post_trade_optimal',
             'projection_generation': prepared['projection_generation'],
+            'season': prepared['season'], 'current_week': prepared['current_week'],
+            'scoring_profile_id': snapshot.get('scoring_profile_id'),
             'team_strength_generation': prepared['semantic_generation'],
             'methodology': prepared['methodology_version'], 'league_id': prepared['league_id'],
             'hypothetical_only': True, 'canonical_mutations': 0, 'durable_writes': 0,

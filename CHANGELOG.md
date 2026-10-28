@@ -1,3 +1,13 @@
+# v1.21.106 / build 2206 — Trade recommendation integrity and context
+
+Make the existing bilateral qualification the primary Trade conclusion. User-side or Custom upside remains visible as subordinate context and cannot promote a counterparty-limited, incomplete or non-executable offer. Apply the same contract to the shared explanation, preview and alternative cards; retain prior assessments as not revalidated.
+
+Keep prepared legal-lineup comparisons distinct from stricter roster-availability diagnostics. Preserve supported numeric comparisons with conditional availability where required, name current season/week and separate multi-week totals and supported-week averages. Do not combine different windows or erase known numbers with a generic unavailable heading. Missing/incompatible comparisons remain missing, genuine zero remains zero.
+
+No evaluation thresholds, prices, ranking preferences, projections, solver mathematics, pick identities, history/FOIS grades or discovery policy change. No extra provider, solver, FOIS, history or discovery calls are introduced by formatting. The connected live browser requires app reauthentication; reproduction and positive authenticated acceptance use disposable source-compatible fixtures, not live Day Traders evidence. See docs/audits/TRADE_RECOMMENDATION_CLARITY_2206.md for precise scope and remaining limits.
+
+Apply the same completed-evidence admission to headline, expanded weekly totals, averages, horizon subtotals and preview/alternative explanations. Verify pinned season, week, scoring, source generation and before/after snapshot references without calculating new projections. An invalid future week does not erase independently supported current or playoff comparisons. Preserve unsupported values as missing. Correct the incomplete Preview/Keep/Adopt and precision fixtures without promoting unqualified offers or inventing numerical evidence.
+
 # v1.21.105 / build 2205 — Historical decision evidence continuity
 
 Join Trade player identities to existing canonical retained Market observations and the compatible neutral current endpoint. Preserve original package keys, current-price provenance, historical cutoffs, source formats and Custom/Neutral separation. Exact draft picks are not guessed into global player trends.

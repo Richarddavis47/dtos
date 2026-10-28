@@ -25,7 +25,51 @@ def assessment_state(result):
     }
 
 
-def decision_context(result, *, incoming=(), outgoing=()):
+def final_decision(result, *, _admissions=None):
+    """Present existing bilateral admission; never turn user-side upside into eligibility."""
+    from services.trade_search_policy import classify
+
+    from services.trade_lineup_evidence import completed_lineup_admissions
+    evidence = (_admissions or completed_lineup_admissions(result)).values()
+    state = classify(result)
+    label = result.get("recommendation")
+    qualified = result.get("generated_trade_eligible") is True
+    headline = label or "Recommendation unavailable"
+    qualification = None
+    if not qualified and label in ("SMASH ACCEPT", "WORTH PURSUING"):
+        headline = {
+            "COUNTERPARTY LIMITED": "COUNTERPARTY LIMITED",
+            "HARD INVALID": "NOT EXECUTABLE",
+            "MISSING REQUIRED EVIDENCE": "Recommendation unavailable",
+        }.get(state, "Not a qualified recommendation")
+        if state != "HARD INVALID" and (result.get("market_evidence") or {}).get("availability") != "full":
+            headline = "Recommendation unavailable"
+        qualification = (
+            "Not a qualified bilateral recommendation. Your side has supported upside, "
+            "but the other team's benefit or compensation is not established. This does not predict acceptance."
+            if state == "COUNTERPARTY LIMITED" else
+            "Not a qualified bilateral recommendation. Review the missing evidence or execution limits before pursuing."
+        )
+    if label in ("SMASH ACCEPT", "WORTH PURSUING") and (
+        any(row['identity_state'] != 'compatible' or row['invalid_comparison'] for row in evidence)
+    ):
+        headline = "Recommendation unavailable"
+        state = "MISSING REQUIRED EVIDENCE"
+        qualified = False
+        qualification = "Not a qualified bilateral recommendation. The recorded lineup comparisons cannot be verified against their source context."
+    return {"headline": headline, "classification": state, "qualified": qualified,
+            "side_assessment": label, "qualification": qualification}
+
+
+def lineup_comparisons(result, side="active", *, _admissions=None):
+    """Read completed, pinned comparisons only. Roster availability is a separate qualification."""
+    from services.trade_lineup_evidence import completed_lineup_evidence
+    return (_admissions[side] if _admissions is not None else completed_lineup_evidence(result, side))['horizons']
+
+
+def decision_context(result, *, incoming=(), outgoing=(), _admissions=None):
+    from services.trade_lineup_evidence import completed_lineup_admissions
+    admissions = _admissions or completed_lineup_admissions(result)
     dimensions = result.get("dimensions") or {}
     strategy = (dimensions.get("strategic_fit") or {}).get("active") or {}
     intent = strategy.get("manager_strategy") or {}
@@ -38,11 +82,10 @@ def decision_context(result, *, incoming=(), outgoing=()):
     diagnostic = ((dimensions.get("roster_diagnostics") or {}).get("sides") or {}).get(
         "active"
     ) or {}
-    current = (strategy.get("horizons") or {}).get("current_week") or {}
+    comparisons = admissions['active']['horizons']
+    current = comparisons.get("current_week") or {}
     delta = current.get("delta")
-    numeric_state = diagnostic.get("numeric_impact_state") or "unavailable"
-    if numeric_state == "unsupported":
-        delta = None
+    numeric_state = current.get("state") or "unavailable"
     blockers = []
     if result.get("legal") is False:
         blockers.append(
@@ -74,19 +117,26 @@ def decision_context(result, *, incoming=(), outgoing=()):
             "The full package requires roster-space decisions; cut cost is unresolved."
         )
     qualifier = "Conditional " if numeric_state != "supported" else ""
+    weeks = current.get("weeks") or []
+    week_label = " (" + ("Season " + str(current["season"]) + ", " if current.get("season") else "") + "week " + ", ".join(map(str, weeks)) + ")" if weeks else ""
     if delta is None:
-        lineup = "Starting-lineup improvement is unavailable from compatible current-week evidence."
+        lineup = "Current-week starting-lineup change" + week_label + " cannot be verified from compatible evidence."
+        if any(row.get("delta") is not None for row in comparisons.values()):
+            lineup += " Other supported periods are shown separately below; they do not establish this week’s effect."
     elif delta > 0:
-        lineup = f"{qualifier}current-week optimal legal-lineup gain: {delta:.2f} projected points."
+        lineup = f"{qualifier}current-week optimal legal-lineup gain{week_label}: {delta:.2f} projected points."
     elif delta < 0:
-        lineup = f"{qualifier}current-week optimal legal-lineup cost: {abs(delta):.2f} projected points."
+        lineup = f"{qualifier}current-week optimal legal-lineup cost{week_label}: {abs(delta):.2f} projected points."
     else:
         gain = (strategy.get("reserve_quality") or {}).get("material_gain") is True
-        lineup = "Current-week optimal starters are unchanged" + (
+        lineup = qualifier + "Current-week optimal starters are unchanged" + week_label + (
             "; supported useful replacement production improves."
             if gain
             else "; do not treat added depth as a starter upgrade."
         )
+    if delta is not None and numeric_state != "supported":
+        lineup += " This prepared comparison does not establish dependable availability or replacement cover; review the roster limitations."
+    final = final_decision(result, _admissions=admissions)
     cost = (
         result.get("major_drawback")
         or "The available assessment does not establish a main cost; inspect evidence before deciding."
@@ -122,6 +172,15 @@ def decision_context(result, *, incoming=(), outgoing=()):
         else result.get("why_you_would_do_it")
         or "No supported positive roster-specific case is established."
     )
+    admitted = admissions['active']
+    if admitted['identity_state'] != 'compatible' or admitted['invalid_comparison']:
+        context = "The recorded production rationale cannot be verified against this source context. Independently supported weeks remain separate; no missing comparison is filled."
+        cost = ("Market cost cannot be fully assessed because required pricing is missing or incompatible. " if market_incomplete else "") + "The full roster-production cost cannot be verified; available Market totals and capital are shown separately."
+    partner_admitted = admissions['partner']
+    by_side = {'active': admitted, 'partner': partner_admitted}
+    verified = {side: row['identity_state'] == 'compatible' and not row['invalid_comparison']
+                for side, row in by_side.items()}
+    partner_context = dimensions.get('league_partner_context') or {}
     conditional = []
     if needs_strategy:
         conditional = [
@@ -167,8 +226,9 @@ def decision_context(result, *, incoming=(), outgoing=()):
             + "The known weekly effect remains useful, but does not fill gaps in the wider assessment."
         )
     return {
-        "verdict": result.get("recommendation"),
-        "qualification": qualification,
+        "verdict": final["headline"],
+        "final_decision": final,
+        "qualification": qualification or final["qualification"],
         "summary": context,
         "blocker": " ".join(blockers)
         if not result.get("recommendation") or market_incomplete else None,
@@ -178,7 +238,21 @@ def decision_context(result, *, incoming=(), outgoing=()):
             "state": "resolved" if resolved else "unresolved",
             "selection_required": needs_strategy,
         },
-        "lineup": {"delta": delta, "state": numeric_state, "explanation": lineup},
+        "lineup": {**current, "delta": delta, "state": numeric_state, "explanation": lineup},
+        "lineup_comparisons": comparisons,
+        "partner_lineup_comparisons": {name: {key: row.get(key) for key in
+            ('delta', 'state', 'weeks', 'pre_total', 'post_total', 'subtotal', 'comparable_weeks')}
+            for name, row in partner_admitted['horizons'].items()},
+        "lineup_phase_admission": {side: {str(week): [row['pre'] is not None, row['post'] is not None, row['delta'] is not None]
+            for week, row in view['weekly'].items()} for side, view in by_side.items()},
+        "lineup_rationale_verified": verified,
+        "lineup_source_generation": (result.get('multi_horizon_impact') or {}).get('team_strength_generation'),
+        "lineup_weekly_comparisons": {side: {str(week): row['delta'] for week, row in view['weekly'].items()}
+            for side, view in by_side.items()},
+        "partner_summary": (result.get('counterparty_summary') or result.get('why_they_would_do_it')) if verified['partner'] else
+            "Their roster-production benefit cannot be verified in this source context.",
+        "partner_cost": partner_context.get('current_cost') if verified['partner'] else
+            "Their roster-production cost cannot be verified in this source context.",
         "coverage_explanation": coverage_explanation,
         "main_cost": cost,
         "limitation": limitation,

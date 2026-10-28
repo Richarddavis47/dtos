@@ -117,7 +117,10 @@ class RetainedStrategyBrowserTests(unittest.TestCase):
             page.locator('#trade-strategy').locator('xpath=ancestor::details').evaluate_all('rows=>rows.forEach(e=>e.open=true)')
             page.select_option('#trade-strategy', 'REBUILD')
             page.click('#trade-run')
-            page.locator('#trade-result [data-reevaluate]').wait_for() if page.locator('#trade-result [data-reevaluate]').count() else page.get_by_text('This spends depth.', exact=False).first.wait_for()
+            # The shared adjustment fixture lacks bilateral/lineup evidence;
+            # retain its honest unavailable assessment across strategy changes.
+            page.locator('#trade-result .tw-final-verdict').filter(has_text='Recommendation unavailable').wait_for()
+            retained_evaluation = fixture.state(page)['currentAssessment']['evaluation']
             original = fixture.state(page)['currentProposal']
             second = page.context.new_page()
             try:
@@ -128,7 +131,8 @@ class RetainedStrategyBrowserTests(unittest.TestCase):
                 page.evaluate("window.dispatchEvent(new Event('focus'))")
                 self.assertEqual(page.input_value('#trade-strategy'), 'WIN NOW')
                 self.assertIn('strategy changed', page.locator('#trade-result').inner_text().lower())
-                self.assertIn('This spends depth.', page.locator('#trade-result').inner_text())
+                self.assertEqual(fixture.state(page)['currentAssessment']['evaluation'], retained_evaluation)
+                self.assertIn('Market cost cannot be fully assessed', page.locator('#trade-result').inner_text())
                 self.assertTrue(page.get_by_role('button', name='Reevaluate Trade', exact=True).is_visible())
                 self.assertEqual(fixture.state(page)['currentProposal'], original)
                 self.assertEqual(page.evaluate('document.cookie'), shared)

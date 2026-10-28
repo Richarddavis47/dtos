@@ -148,6 +148,7 @@ jobs:
         env:
           DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
           DTOS_WELCOME_EVIDENCE: .validation/public-welcome/browser
+          DTOS_TRADE_CLARITY_EVIDENCE: .validation/public-welcome/trade-clarity
           DTOS_OPERATOR_CONTEXT_EVIDENCE: .validation/public-welcome/operator-context
           DTOS_PICKER_EVIDENCE: .validation/public-welcome/picker
           DTOS_PHASE2_EVIDENCE: .validation/public-welcome/source-screen
@@ -166,7 +167,7 @@ jobs:
               python=platform.python_version(),collected_at=time.time(),
               fixture='Disposable authenticated HTTP and frozen fictional data; controlled Chromium, not physical Safari'),indent=2))
           PY
-          python -m unittest -v tests.test_decision_history_continuity tests.test_decision_history_continuity_browser tests.test_trade_picker_order tests.test_operator_context_integrity tests.test_public_demo_fixture tests.test_public_entry tests.test_public_welcome_presentation tests.test_public_welcome_security tests.test_public_welcome_browser tests.test_runtime_error_security tests.test_cached_sync_security tests.test_diagnostic_security tests.test_operational_inspection tests.test_personal_rankings_partial tests.test_personal_rankings_partial_browser tests.test_source_continuity_browser tests.test_market_observation_producer_identity tests.test_market_normalization_reference tests.test_provider_activation tests.test_personal_rankings_availability.CanonicalRankingAvailabilityTests.test_cached_provider_curve_survives_real_publication_and_private_http 2>&1 | tee .validation/public-welcome/raw.log
+          python -m unittest -v tests.test_trade_recommendation_clarity tests.test_trade_recommendation_clarity_browser tests.test_trade_lineup_provenance tests.test_trade_lineup_provenance_browser tests.test_trade_point_display tests.test_decision_history_continuity tests.test_decision_history_continuity_browser tests.test_trade_picker_order tests.test_operator_context_integrity tests.test_public_demo_fixture tests.test_public_entry tests.test_public_welcome_presentation tests.test_public_welcome_security tests.test_public_welcome_browser tests.test_runtime_error_security tests.test_cached_sync_security tests.test_diagnostic_security tests.test_operational_inspection tests.test_personal_rankings_partial tests.test_personal_rankings_partial_browser tests.test_source_continuity_browser tests.test_market_observation_producer_identity tests.test_market_normalization_reference tests.test_provider_activation tests.test_personal_rankings_availability.CanonicalRankingAvailabilityTests.test_cached_provider_curve_survives_real_publication_and_private_http 2>&1 | tee .validation/public-welcome/raw.log
       - name: Preserve source and public phone evidence including failed attempts
         if: always()
         uses: actions/upload-artifact@v4

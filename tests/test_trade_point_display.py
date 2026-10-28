@@ -30,7 +30,9 @@ class TradePointDisplayTests(unittest.TestCase):
 
     def test_all_trade_point_surfaces_use_the_shared_formatter(self):
         source = Path('static/js/trade_workspace.js').read_text(encoding='utf-8')
-        for field in ('impact.delta', 'horizon.delta', 'horizon.supported_week_delta_subtotal', 'c.delta'):
+        for field in ('horizons.current_week?.delta', 'horizon.delta', 'horizon.subtotal', 'catalystDelta(c, decision)'):
             self.assertIn(f'displayPoints({field})', source)
         self.assertNotIn('String(impact.delta)', source)
+        self.assertNotIn('displayPoints(impact.delta)', source)
+        self.assertNotIn('displayPoints(c.delta)', source)
         self.assertNotIn('${c.delta}', source)

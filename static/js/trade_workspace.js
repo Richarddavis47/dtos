@@ -537,7 +537,16 @@
       rule_reasons: trace.rule_reasons, scope: trace.scope, detail_encoding: 'entries-v1',
       details: Object.entries(trace).filter(([key]) => !['rule_reasons', 'scope'].includes(key))
         .map(entry => JSON.stringify(entry))};
-    return {reserve_evidence: reserveEvidence, ...value, recommendation_trace: compactTrace,
+    // Intern each admitted comparison once within the unchanged 12k/512-node
+    // context bound. Never revive raw strategy numbers after HTML is discarded.
+    const rows = value => value ? Object.fromEntries(Object.entries(value).map(([key,row]) =>
+      [key, typeof row === 'string' ? row : JSON.stringify(row)])) : value;
+    const d = value.decision_context;
+    const compactDecision = d ? {...d, lineup_comparisons: rows(d.lineup_comparisons),
+      partner_lineup_comparisons: rows(d.partner_lineup_comparisons),
+      lineup_phase_admission: d.lineup_phase_admission ? Object.fromEntries(Object.entries(d.lineup_phase_admission)
+        .map(([side,weeks]) => [side,rows(weeks)])) : d.lineup_phase_admission} : d;
+    return {reserve_evidence: reserveEvidence, ...value, decision_context: compactDecision, recommendation_trace: compactTrace,
       dimensions: {...dims,
         strategic_fit: strategies ? {...strategies, active: withoutReserveCopies(strategies.active), partner: withoutReserveCopies(strategies.partner)} : strategies,
         package_quality: packages ? Object.fromEntries(Object.entries(packages).map(([key, row]) => [key, withoutReserveCopies(row)])) : packages}};
@@ -645,8 +654,40 @@
     if (retained) retainAssessment();
     persist();
   }
+  function finalVerdict(e) {
+    if (e.decision_context?.final_decision) return e.decision_context.final_decision.headline;
+    // Older retained responses lack the presentation contract. Never elevate
+    // user-side upside over their recorded bilateral admission.
+    if (e.generated_trade_eligible !== true && ['SMASH ACCEPT', 'WORTH PURSUING'].includes(e.recommendation)) {
+      if (e.legal === false || ['NOT EXECUTABLE', 'REQUIRES ROSTER RESOLUTION'].includes(e.legality?.execution_status)) return 'NOT EXECUTABLE';
+      if (e.market_evidence?.availability !== 'full') return 'Recommendation unavailable';
+      if (!['STRONG', 'PLAUSIBLE'].includes(e.dimensions?.counterparty_plausibility?.assessment)) return 'COUNTERPARTY LIMITED';
+      return 'Not a qualified recommendation';
+    }
+    return e.recommendation || 'Recommendation unavailable';
+  }
+  function parsedExplanation(e) {
+    const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html');
+    const primary = parsed.querySelector('.dtos-explanation > p');
+    // Older cached HTML must follow the same recorded bilateral admission in
+    // expanded cards and previews as in the main result. No re-evaluation.
+    if (primary && primary.firstChild?.textContent.trim() === e.recommendation && finalVerdict(e) !== e.recommendation) {
+      primary.replaceChildren(node('span', finalVerdict(e)), node('span', 'Not a qualified bilateral recommendation; your-side assessment is separate.', 'tw-verdict-qualification'));
+    }
+    return parsed;
+  }
   function decisionPresentation(e) {
     const decision = {...(e.decision_context || {})};
+    const row = value => {
+      if (typeof value !== 'string') return value;
+      try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' ? parsed : null; }
+      catch (_) { return null; }
+    };
+    const rows = value => Object.fromEntries(Object.entries(value || {}).map(([key,value]) => [key,row(value)]));
+    decision.lineup_comparisons = rows(decision.lineup_comparisons);
+    decision.partner_lineup_comparisons = rows(decision.partner_lineup_comparisons);
+    decision.lineup_phase_admission = Object.fromEntries(Object.entries(decision.lineup_phase_admission || {})
+      .map(([side,weeks]) => [side,rows(weeks)]));
     // Presentation admission for older bounded saved fields, not re-evaluation.
     // Prefer the server qualification; preserve the canonical label/eligibility.
     if (['partial', 'unavailable'].includes(e.market_evidence?.availability)) {
@@ -658,6 +699,31 @@
       if (!cost.includes(unknownCost)) decision.main_cost = unknownCost + (knownCost ? ' ' + knownCost : '');
     }
     return decision;
+  }
+  function catalystDelta(c, decision) {
+    // Copied opportunity labels cannot qualify their own numbers. Reuse the
+    // already-admitted period and source; never fill a missing comparison.
+    if (!decision.lineup_source_generation || c.generation !== decision.lineup_source_generation || !Array.isArray(c.weeks)) return null;
+    const numeric = value => typeof value === 'number' && Number.isFinite(value);
+    if (c.type === 'UPCOMING_BYE_LINEUP_FIT' && c.weeks.length === 1) {
+      const value = decision.lineup_weekly_comparisons?.[c.side]?.[String(c.weeks[0])];
+      return numeric(value) && c.delta === value ? value : null;
+    }
+    const periods = c.side === 'active' ? decision.lineup_comparisons : c.side === 'partner' ? decision.partner_lineup_comparisons : {};
+    const period = periods?.[c.horizon];
+    return numeric(period?.delta) && c.delta === period.delta && JSON.stringify(c.weeks) === JSON.stringify(period.weeks) ? period.delta : null;
+  }
+  function appendLineupComparisons(out, e, horizons, title, retained) {
+      for (const [key, horizon] of Object.entries(horizons)) {
+        if (!horizon || typeof horizon !== 'object') continue;
+        const label = {current_week: 'Current week', next_n: 'Next-N', rest_of_regular_season: 'Rest of regular season', playoff_window: 'Playoff window'}[key] || key;
+        out.append(node('p', `${title} · ${label}: ${displayPoints(horizon.delta)}`),
+          node('small', `Season ${e.provenance?.inputs?.projection_evidence?.season ?? 'not verified'} · weeks ${(horizon.weeks || []).join(', ') || 'not verified'}. ${['supported','provisional'].includes(horizon.state) ? 'Source-qualified optimal before versus optimal after; availability remains conditional where stated.' : 'A complete source-compatible comparison cannot be verified.'}`));
+        if (retained && horizon.pre_total != null && horizon.post_total != null)
+          out.append(node('p', `${title} at the previous assessment · ${label}: ${displayPoints(horizon.pre_total)} → ${displayPoints(horizon.post_total)} Sleeper-projected legal-lineup points. Earlier evidence, not current or revalidated.`));
+        if (horizon.delta == null && horizon.subtotal != null)
+          out.append(node('small', `Comparable-week change subtotal: ${displayPoints(horizon.subtotal)} across ${horizon.comparable_weeks?.length || 0} weeks. Not a complete horizon projection.`));
+      }
   }
   function showEvaluation(e, opportunity = null, context = null, previousContainer = null) {
     const decision = decisionPresentation(e);
@@ -715,7 +781,7 @@
     if (e.explanation_html) {
       // Same-origin server renderer escapes all evidence text. No client-side
       // recommendation/scoring or reason-code interpretation is performed.
-      const document = new DOMParser().parseFromString(e.explanation_html, 'text/html');
+      const document = parsedExplanation(e);
       if (incomplete && e.recommendation && e.assessment_state?.recommendation_supported !== true) {
         const conclusion = document.querySelector('.dtos-explanation > p');
         if (conclusion) conclusion.textContent = 'Recommendation unavailable · current evaluation is incomplete.';
@@ -735,7 +801,7 @@
       if (!previousContainer) out.querySelector('.dtos-explanation > p')?.after(balanceLink);
       if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
     } else {
-    out.append(node('h3', retained ? 'Retained assessment: ' + (e.recommendation || 'Unavailable') + ' · NOT REVALIDATED' : incomplete && e.assessment_state?.recommendation_supported !== true ? 'Recommendation unavailable' : e.recommendation || 'Assessment unavailable'), node('p', retained ? 'Previous assessment reasoning (not current): ' + (e.dominant_reason || 'Unavailable') : e.dominant_reason));
+    out.append(node('h3', retained ? 'Retained assessment: ' + (e.recommendation || 'Unavailable') + ' · NOT REVALIDATED' : incomplete && e.assessment_state?.recommendation_supported !== true ? 'Recommendation unavailable' : finalVerdict(e)), node('p', retained ? 'Previous assessment reasoning (not current): ' + (e.dominant_reason || 'Unavailable') : e.dominant_reason));
     if (previousContainer && e.market_evidence) {
       const m = e.market_evidence, side = name => m[name]?.total != null ? displayMarket(m[name].total) : m[name]?.known_subtotal != null ? 'Incomplete · known subtotal ' + displayMarket(m[name].known_subtotal) : 'Unavailable';
       out.append(node('h4', 'Market evidence at the previous assessment'),
@@ -756,14 +822,14 @@
     if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
     if (e.recommendation_trace) {
       const trace = node('details'); trace.append(node('summary', 'Recommendation evidence'));
-      for (const reason of e.recommendation_trace.rule_reasons || []) trace.append(node('p', reason.replaceAll('_', ' ')));
+      for (const reason of decision.lineup_rationale_verified?.active === false ? [] : e.recommendation_trace.rule_reasons || []) trace.append(node('p', reason.replaceAll('_', ' ')));
       trace.append(node('small', e.recommendation_trace.scope)); out.append(trace);
     }
-    for (const [title, value] of [['Why you may do it', e.why_you_would_do_it], ['Why they may do it', e.why_they_would_do_it]]) if (value) out.append(node('h4', title), node('p', value));
-    if (retained && e.counterparty_summary) out.append(node('h4', 'Previous counterparty package explanation · NOT REVALIDATED'), node('p', e.counterparty_summary));
+    for (const [title, value] of [['Why you may do it', decision.summary || e.why_you_would_do_it], ['Why they may do it', decision.partner_summary || e.why_they_would_do_it]]) if (value) out.append(node('h4', title), node('p', value));
+    if (retained && (decision.partner_summary || e.counterparty_summary)) out.append(node('h4', 'Previous counterparty package explanation · NOT REVALIDATED'), node('p', decision.partner_summary || e.counterparty_summary));
     for (const [key, dim] of Object.entries(e.dimensions || {})) if (dim && dim.assessment) {
       const detail = node('details'); detail.append(node('summary', (dim.label || key.replaceAll('_', ' ')) + ': ' + dim.assessment));
-      if (dim.explanation) detail.append(node('p', dim.explanation));
+      if (dim.explanation) detail.append(node('p', key === 'counterparty_plausibility' && decision.lineup_rationale_verified?.partner === false ? decision.partner_summary : dim.explanation));
       for (const reason of dim.reasons || []) detail.append(node('p', reason));
       if (key === 'confidence' && dim.dimensions) {
         const coverage = dim.dimensions;
@@ -777,22 +843,24 @@
     for (const [which, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
       const impact = e.lineup_impact?.[which], quality = e.dimensions?.package_quality?.[which];
       const reserveEvidence = e.reserve_evidence?.[which] || quality;
-      if (quality) out.append(node('p', title + ' package: ' + quality.assessment), node('small', quality.explanation));
-      if (impact) out.append(node('p', title + ' projected lineup change: ' + displayPoints(impact.delta)), node('small', impact.delta == null ? impact.post?.reason || impact.pre?.reason || 'Canonical projection evidence is incomplete.' : 'Optimal legal lineup, before versus after.'));
+      const verified = decision.lineup_rationale_verified?.[which];
+      if (quality) out.append(node('p', title + ' package: ' + quality.assessment), node('small', verified === false ? 'The recorded package-production rationale cannot be verified.' : quality.explanation));
+      const horizons = (which === 'active' ? decision.lineup_comparisons : decision.partner_lineup_comparisons) || {};
+      if (impact) out.append(node('p', title + ' projected lineup change: ' + displayPoints(horizons.current_week?.delta)), node('small', 'Source-qualified optimal legal lineup, before versus after; missing comparison evidence is not zero.'));
       const strategy = e.dimensions?.strategic_fit?.[which];
-      const horizons = e.multi_horizon_impact?.sides?.[which]?.horizons || strategy?.horizons || {};
       if (strategy) {
         const detail = node('details'); detail.append(node('summary', title + ' strategic evidence'));
-        for (const reason of strategy.reason_codes || []) detail.append(node('p', reason.replaceAll('_', ' ')));
+        for (const reason of verified === false ? [] : strategy.reason_codes || []) detail.append(node('p', reason.replaceAll('_', ' ')));
         const reserves = reserveEvidence?.reserve_quality_by_week || strategy.reserve_quality_by_week || {};
         if (Object.keys(reserves).length) {
           detail.append(node('p', retained ? 'Previous useful replacement production · NOT REVALIDATED' : 'Useful replacement production'));
           for (const [week, savedRow] of Object.entries(reserves)) {
             const row = retainedReserveRow(savedRow, reserveEvidence);
             if (!row) { detail.append(node('p', `Week ${week}: retained reserve details are incomplete; reevaluate for current evidence.`)); continue; }
+            const admitted = decision.lineup_phase_admission?.[which]?.[week] || [];
             const number = value => typeof value === 'number' && Number.isFinite(value) ? (Object.is(value, -0) ? 0 : value).toFixed(2) : 'unavailable';
-            detail.append(node('p', `Week ${week}: ${number(row.pre_points)} → ${number(row.post_points)} projected reserve points; change ${displayPoints(row.delta)}. Legal reserve slots: ${row.pre_slots ?? 'unavailable'} → ${row.post_slots ?? 'unavailable'}.`));
-            if (row.conclusion_state !== 'current') detail.append(node('small', row.delta == null ? 'Complete replacement-production comparison unavailable; missing evidence is not zero.' : 'Conditional replacement projection; availability and source evidence remain qualified.'));
+            detail.append(node('p', `Week ${week}: ${number(admitted[0] === true ? row.pre_points : null)} → ${number(admitted[1] === true ? row.post_points : null)} projected reserve points; change ${displayPoints(admitted[2] === true ? row.delta : null)}. Legal reserve slots: ${admitted[0] === true ? row.pre_slots ?? 'unavailable' : 'unavailable'} → ${admitted[1] === true ? row.post_slots ?? 'unavailable' : 'unavailable'}.`));
+            if (row.conclusion_state !== 'current' || admitted[2] !== true) detail.append(node('small', row.delta == null || admitted[2] !== true ? 'Complete replacement-production comparison unavailable; missing evidence is not zero.' : 'Conditional replacement projection; availability and source evidence remain qualified.'));
             for (const limitation of row.limitations || []) detail.append(node('small', limitation));
           }
           detail.append(node('small', 'One disjoint legal reserve assignment. This does not predict injuries, games played or a complete second starting lineup.'));
@@ -801,24 +869,15 @@
         if (strategy.unavailable_dimensions?.length) detail.append(node('small', 'Unavailable: ' + strategy.unavailable_dimensions.join(', ').replaceAll('_', ' ')));
         out.append(detail);
       }
-      for (const [key, horizon] of Object.entries(horizons)) {
-        if (!horizon || typeof horizon !== 'object') continue;
-        const label = {current_week: 'Current week', next_n: 'Next-N', rest_of_regular_season: 'Rest of regular season', playoff_window: 'Playoff window'}[key] || key;
-        out.append(node('p', `${title} · ${label}: ${displayPoints(horizon.delta)}`),
-          node('small', `Supported weeks: before ${horizon.pre_supported_weeks?.length || 0}/${horizon.weeks_requested?.length || 0}; after ${horizon.post_supported_weeks?.length || 0}/${horizon.weeks_requested?.length || 0}. Optimal before versus optimal after.`));
-        if (retained && horizon.pre_total != null && horizon.post_total != null)
-          out.append(node('p', `${title} at the previous assessment · ${label}: ${displayPoints(horizon.pre_total)} → ${displayPoints(horizon.post_total)} Sleeper-projected legal-lineup points. Earlier evidence, not current or revalidated.`));
-        if (horizon.delta == null && horizon.supported_week_delta_subtotal != null)
-          out.append(node('small', `Comparable-week change subtotal: ${displayPoints(horizon.supported_week_delta_subtotal)} across ${horizon.comparable_weeks?.length || 0} weeks. Not a complete horizon projection.`));
-      }
+      appendLineupComparisons(out, e, horizons, title, retained);
     }
     }
     const partnerHistory = e.dimensions?.league_partner_context;
     if (partnerHistory) {
       const detail = node('details');
       detail.append(node('summary', (retained ? 'Previous partner context · NOT REVALIDATED' : 'Why this partner?')),
-        node('p', partnerHistory.current_benefit || partnerHistory.summary || 'Supported counterparty benefit unavailable.'));
-      if (partnerHistory.current_cost) detail.append(node('p', 'Their principal cost: ' + partnerHistory.current_cost));
+        node('p', decision.partner_summary || partnerHistory.current_benefit || partnerHistory.summary || 'Supported counterparty benefit unavailable.'));
+      if (decision.partner_cost || partnerHistory.current_cost) detail.append(node('p', 'Their principal cost: ' + (decision.partner_cost || partnerHistory.current_cost)));
       if (partnerHistory.manager_observations) detail.append(node('p', partnerHistory.manager_observations));
       if (partnerHistory.manager_qualification) detail.append(node('p', partnerHistory.manager_qualification));
       detail.append(node('p', partnerHistory.attribution || 'Historical manager attribution unavailable.'));
@@ -858,11 +917,11 @@
     }
     if (opportunity) {
       out.append(node('h4', 'Why now · supported context'));
-      for (const c of opportunity.why_now?.catalysts || []) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(c.delta)}`), node('small', c.limitation));
+      for (const c of opportunity.why_now?.catalysts || []) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(catalystDelta(c, decision))}`), node('small', c.limitation));
       if (!opportunity.why_now?.catalysts?.length) out.append(node('p', 'No supported current catalyst is available.'));
       if (opportunity.stable_opportunity_reasons?.length) {
         out.append(node('h4', 'Supported trade fit — not urgency'));
-        for (const c of opportunity.stable_opportunity_reasons) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(c.delta)}`));
+        for (const c of opportunity.stable_opportunity_reasons) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(catalystDelta(c, decision))}`));
       }
     } else if (e.why_now) out.append(node('h4', 'Why now'), node('p', e.why_now));
     if (e.major_limitations?.length) out.append(node('h4', 'Evidence limitations'), node('p', e.major_limitations.join(', ').replaceAll('_', ' ')));
@@ -993,7 +1052,7 @@
     card.append(node('p', [changes(original.sent, row.proposal.assets_sent, 'your outgoing package'), changes(original.received, row.proposal.assets_received, 'the assets you receive')].filter(Boolean).join('; '), 'tw-adjustment'));
     const retained = Boolean(contextQualification(context, row.proposal)), decision = decisionPresentation(e);
     if (context.exploration) card.append(node('p', 'Exploratory only · not a qualified bilateral recommendation', 'tw-drawback'));
-    card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : e.personalization?.mode === 'custom' ? 'Separate Custom DTOS personal assessment: ' : 'Separate DTOS assessment: ') + (e.recommendation || 'Unavailable')));
+    card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : e.personalization?.mode === 'custom' ? 'Separate Custom DTOS personal assessment: ' : 'Separate DTOS assessment: ') + finalVerdict(e)));
     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
     const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
     const reason = unfavorable ? 'Closer current Market terms do not make this a recommended trade.' : decision.lineup?.explanation || e.why_you_would_do_it || 'Market balance is separate from strategic fit; no supported positive roster case is established.';
@@ -1006,11 +1065,13 @@
       const button = node('button', 'Preview adjustment', 'tw-next-action primary'); button.type = 'button'; button.onclick = () => previewOffer(row); card.append(button);
     }
     const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
-    detail.append(node('p', balance.reason), node('p', balance.meaning), node('p', 'Counterparty: ' + (e.counterparty_summary || e.why_they_would_do_it || 'Supported partner context unavailable.')));
+    detail.append(node('p', balance.reason), node('p', balance.meaning), node('p', 'Counterparty: ' + (decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it || 'Supported partner context unavailable.')));
     if (e.explanation_html) {
-      const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html'); detail.append(...parsed.body.childNodes);
+      const parsed = parsedExplanation(e); detail.append(...parsed.body.childNodes);
     } else {
-      for (const text of [e.why_you_would_do_it, e.dominant_reason, ...(e.major_risks || []), ...(e.major_limitations || [])]) if (text) detail.append(node('p', text));
+      for (const text of [decision.summary || e.why_you_would_do_it, e.dominant_reason, ...(e.major_risks || []), ...(e.major_limitations || [])]) if (text) detail.append(node('p', text));
+      appendLineupComparisons(detail, e, decision.lineup_comparisons, 'Your team', true);
+      appendLineupComparisons(detail, e, decision.partner_lineup_comparisons, 'Their team', true);
     }
     card.append(detail, node('small', 'Current values, not trade-date grades. Preview before adopting.'));
     return card;
@@ -1027,7 +1088,7 @@
       const counterpart = e.dimensions?.counterparty_plausibility;
       if (counterpart) card.append(node('p', 'Counterparty support: ' + counterpart.assessment + ' · ' + (counterpart.reason_codes || []).map(code => code.replaceAll('_', ' ')).join('; ')));
     }
-    card.append(node('h3', (e.personalization?.mode === 'custom' ? 'Custom DTOS · ' : '') + (e.recommendation || 'Recommendation unavailable')));
+    card.append(node('h3', (e.personalization?.mode === 'custom' ? 'Custom DTOS · ' : '') + finalVerdict(e)));
     if (e.personalization?.mode === 'custom') card.append(node('p', 'Neutral DTOS: ' + (e.neutral_assessment?.recommendation || 'Unavailable') + ' · Market fairness and opponent evidence remain separate.', 'tw-verdict-qualification'));
     const matches = row.personal_preference_matches;
     if (matches?.targets_received?.length) card.append(node('p', 'Matches your saved target preference: ' + matches.targets_received.map(id => label(asset(id) || {label:id})).join(' + ')));
@@ -1042,9 +1103,9 @@
     const sentRows = row.proposal_presentation?.send || row.proposal.assets_sent.map(id => ({label: label(asset(id) || {label:id})}));
     const receivedRows = row.proposal_presentation?.receive || row.proposal.assets_received.map(id => ({label: label(asset(id) || {label:id})}));
     card.append(node('p', 'You send: ' + sentRows.map(a => a.label).join(' + ')), node('p', 'You receive: ' + receivedRows.map(a => a.label).join(' + ')),
-      node('p', 'Why this helps me: ' + (e.why_you_would_do_it || e.dominant_reason || 'Review the supported evidence.')),
+      node('p', 'Why this helps me: ' + (decision.summary || e.why_you_would_do_it || e.dominant_reason || 'Review the supported evidence.')),
       node('p', 'Major drawback: ' + (decision.main_cost || e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ') || e.major_limitations?.join('; ').replaceAll('_', ' ') || (row.proposal.preview_context?.restored ? 'Unavailable in retained context. Reevaluate for supported costs.' : 'No material drawback identified in available evidence.')), 'tw-drawback'),
-      node('p', 'Counterparty: ' + (e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.')));
+      node('p', 'Counterparty: ' + (decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.')));
     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
     const intent = e.dimensions?.strategic_fit?.active?.manager_strategy?.strategy;
     if (intent) card.append(node('p', 'Strategy: ' + intent));
@@ -1052,15 +1113,17 @@
     if (history) card.append(node('small', history));
     if (!e.explanation_html) {
       const detail = node('details'); detail.append(node('summary', 'Supported assessment evidence' + (e.dimensions?.confidence?.assessment ? ' · Confidence ' + e.dimensions.confidence.assessment : '')));
-      for (const [key, dim] of Object.entries(e.dimensions || {})) if (dim?.assessment) detail.append(node('p', (dim.label || key.replaceAll('_', ' ')) + ': ' + dim.assessment), node('small', dim.explanation));
+      for (const [key, dim] of Object.entries(e.dimensions || {})) if (dim?.assessment) detail.append(node('p', (dim.label || key.replaceAll('_', ' ')) + ': ' + dim.assessment), node('small', key === 'counterparty_plausibility' && decision.lineup_rationale_verified?.partner === false ? decision.partner_summary : dim.explanation));
       for (const reason of [...(e.major_risks || []), ...(e.major_limitations || [])]) detail.append(node('p', reason.replaceAll('_', ' ')));
+      appendLineupComparisons(detail, e, decision.lineup_comparisons, 'Your team', true);
+      appendLineupComparisons(detail, e, decision.partner_lineup_comparisons, 'Their team', true);
       if (e.provenance?.evaluation_id) detail.append(node('small', 'Original assessment: ' + e.provenance.evaluation_id));
       if (detail.childElementCount > 1) card.append(detail);
     }
     if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
     if (e.explanation_html) {
       const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
-      const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html');
+      const parsed = parsedExplanation(e);
       detail.append(...parsed.body.childNodes); card.append(detail);
     }
     if (row.variants?.length && !preview) {

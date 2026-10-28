@@ -7,12 +7,42 @@ from services.trade_explanation import trade_explanation, render_trade_explanati
 from services.trade_intelligence import evaluate_trade_request
 from src.ui.explanations import explanation_panel
 from src.core.trade_intelligence.bilateral import evaluate_bilateral
-from src.core.trade_intelligence.models import TradeProposal
-from tests.test_batch5_trade_strategy import asset, side
 from tests.test_trade_intelligence import fixture_data
 
 
 class ActiveTradeExplanationTests(unittest.TestCase):
+    def completed_result(self, *, missing_week=False):
+        from tests.test_capital_strategy_reconciliation import CapitalStrategyTests
+        from src.core.intelligence.team_strength import prepare_for_data
+        fixture = CapitalStrategyTests()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        fixture.points.update(a=27.335, c=32.335, b=0, e=0)
+        fixture.publish()
+        for week in (4, 5):
+            for row in fixture.payloads[week]:
+                if row['player_id'] in ('a', 'c'):
+                    row['stats'] = {'pass_yd': 20 if row['player_id'] == 'a' else 15.5}
+        fixture.reader.publish_horizon(fixture.payloads, data=fixture.data, league_id='league-1', season=2026, current_week=2)
+        with patch('services.global_evidence.retained_global_evidence', return_value=None):
+            prepare_for_data(fixture.reader, fixture.data)
+        fixture.data['market_data']['providers']['FantasyCalc'].pop('a')
+        result = fixture.evaluate(['a'], ['c'], intent='RETOOL')
+        if missing_week:
+            # Model loss of a prepared post-trade result, not an upstream zero.
+            # Keep the verified pre-trade zero and independent weeks intact.
+            rows = result['multi_horizon_impact']['sides']['active']['weekly']
+            rows[3]['pre']['optimal']['projected_points'] = 0.0
+            rows[3]['post']['optimal']['projected_points'] = None
+            rows[3]['delta'] = None
+            for name in ('next_n', 'rest_of_regular_season'):
+                row = result['dimensions']['strategic_fit']['active']['horizons'][name]
+                valid = [week for week in row['weeks_requested'] if rows[week]['delta'] is not None]
+                row.update(delta=None, post_total=None, availability='partial_or_unavailable',
+                    post_supported_weeks=valid, comparable_weeks=valid,
+                    supported_week_delta_subtotal=sum(rows[week]['delta'] for week in valid))
+        return result
+
     def test_actual_service_output_includes_shared_render_without_second_evaluation(self):
         data = fixture_data()
         with patch('services.trade_intelligence.evaluate_bilateral', wraps=evaluate_bilateral) as evaluator:
@@ -24,22 +54,16 @@ class ActiveTradeExplanationTests(unittest.TestCase):
         self.assertIn(evaluation.get('recommendation') or 'Recommendation unavailable', evaluation['explanation_html'])
 
     def test_actual_evaluator_partial_market_mixed_horizons_and_determinism(self):
-        proposal = TradeProposal(1, 2, (asset('a', None, 1),), (asset('b', 200, 2),), 'Manual')
-        active = side(1, 5)
-        active['horizons']['playoff_window']['delta'] = -9
-        result = evaluate_bilateral(proposal, active_team={}, partner_team={}, league={'league_id': 'A'},
-            horizon_impact={'sides': {'active': active, 'partner': side(2, 3)}})
-        result['provenance'].update(evaluation_id='completed-fixture', inputs={
-            'league_id': 'A', 'active_roster_id': 1, 'partner_roster_id': 2})
+        result = self.completed_result()
         before = copy.deepcopy(result)
         start = perf_counter()
-        rendered = explanation_panel(trade_explanation(result, league_id='A'))
+        rendered = explanation_panel(trade_explanation(result, league_id='league-1'))
         for _ in range(100):
-            self.assertEqual(explanation_panel(trade_explanation(result, league_id='A')), rendered)
+            self.assertEqual(explanation_panel(trade_explanation(result, league_id='league-1')), rendered)
         print({'scope': 'completed bilateral fixture; 101 explanation renders, no storage', 'seconds': perf_counter() - start})
         self.assertEqual(result, before)
-        self.assertIn('Current week optimal-lineup change: <strong>5', rendered)
-        self.assertIn('Playoff window optimal-lineup change: <strong>-9', rendered)
+        self.assertEqual(next(item.display for item in trade_explanation(result, league_id='league-1').evidence if item.key == 'active.current_week'), '5')
+        self.assertEqual(next(item.display for item in trade_explanation(result, league_id='league-1').evidence if item.key == 'active.playoff_window'), '-9')
         self.assertIn('Some assets lack supported acquisition prices', rendered)
         self.assertIn('not acceptance probability', rendered)
         self.assertNotIn('will accept', rendered.lower())
@@ -55,22 +79,12 @@ class ActiveTradeExplanationTests(unittest.TestCase):
         self.assertNotIn('<script>', rendered)
 
     def test_horizons_visible_weekly_detail_preserves_zero_missing_and_precision(self):
-        proposal = TradeProposal(1, 2, (asset('a', None, 1),), (asset('b', 200, 2),), 'Manual')
-        active = side(1, 5)
-        active['horizons']['playoff_window']['delta'] = -9
-        active['horizons']['rest_of_regular_season'].update(delta=None, availability='partial_or_unavailable',
-                                                          supported_week_delta_subtotal=5)
-        active['weekly'][2]['pre']['optimal']['projected_points'] = 27.335
-        active['weekly'][2]['post']['optimal']['projected_points'] = 32.335
-        active['weekly'][3] = copy.deepcopy(active['weekly'][2])
-        active['weekly'][3]['pre']['optimal']['projected_points'] = 0.0
-        active['weekly'][3]['post']['optimal']['projected_points'] = None
-        active['weekly'][3]['delta'] = None
-        result = evaluate_bilateral(proposal, active_team={}, partner_team={}, league={'league_id': 'A'},
-            horizon_impact={'sides': {'active': active, 'partner': side(2, 3)}})
-        result['provenance'].update(evaluation_id='completed', inputs={'league_id': 'A'})
+        result = self.completed_result(missing_week=True)
+        # Exercise the shared legacy explanation layer; the compact actual
+        # workspace and disclosures are covered through authenticated browsers.
+        result.pop('decision_context')
         original = copy.deepcopy(result)
-        html = render_trade_explanation(result, league_id='A')
+        html = render_trade_explanation(result, league_id='league-1')
         # Package disclosures can precede technical evidence. Assert that every
         # primary horizon is outside *all* closed disclosures, not a tag index.
         from html.parser import HTMLParser
@@ -95,9 +109,9 @@ class ActiveTradeExplanationTests(unittest.TestCase):
         primary = PrimaryText()
         primary.feed(html)
         before_detail = ''.join(primary.text)
-        self.assertIn('Current week: 5', before_detail)
-        self.assertIn('Playoff window: -9', before_detail)
-        self.assertIn('Rest of regular season: Unavailable', before_detail)
+        self.assertIn('weeks 2: 5', before_detail)
+        self.assertIn('weeks 4, 5: -9', before_detail)
+        self.assertIn('Rest of regular season · Season 2026 · weeks 2, 3: Unavailable', before_detail)
         self.assertIn('not one combined upgrade/downgrade', before_detail)
         self.assertIn('Weekly optimal-lineup detail', html)
         self.assertIn('Before trade optimal total: <strong>27.335', html)
