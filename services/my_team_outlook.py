@@ -4,12 +4,19 @@ This is not a team grade or a forecast. Scope and coverage remain part of every
 claim; selecting a goal changes the next action, never the underlying evidence.
 """
 from math import isfinite
+from collections import Counter
 
 from src.ui.intelligence_presentation import manager_points
 
 
 def _number(value):
     return value if isinstance(value, (int, float)) and not isinstance(value, bool) and isfinite(value) else None
+
+
+def _slot_description(slots):
+    labels = {'SUPER_FLEX': 'Superflex', 'SF': 'Superflex', 'REC_FLEX': 'WR/TE FLEX', 'WRRB_FLEX': 'RB/WR FLEX'}
+    return ', '.join(f"{count} {labels.get(slot, slot)} slot" + ('s' if count != 1 else '')
+                     for slot, count in Counter(slots or []).items())
 
 
 def _future(data, assessment, players):
@@ -97,11 +104,15 @@ def prepared_outlook(data, assessment, overview, players, *, strategy=''):
     position = f"Standing {overview['standing']} by Sleeper record/PF. "
     league_name = league.get('name') or 'Selected league'
     if compatible and evidence.optimal_lineup_projection is not None:
-        comparison = (f"#{rank.rank} among {rank.league_size} supported franchises" if rank.rank is not None else 'comparison rank unavailable')
+        comparison = (f"#{rank.rank} among {rank.league_size} supported franchises ({len(data.get('teams') or [])} total)" if rank.rank is not None else 'comparison rank unavailable')
         qualifier = '' if fresh else 'Provisional: '
         population = 'supported-player optimal lineup' if evidence.projection_covered < evidence.roster_count else 'optimal projected lineup'
         position += (f"{qualifier}Week {week} {population} {comparison}, "
                      f"{manager_points(evidence.optimal_lineup_projection)} points under {league_name} scoring.")
+    elif compatible and getattr(evidence, 'unsupported_slots', ()):
+        position += (f"Current optimal-lineup comparison unavailable for Week {week}: "
+                     f"{_slot_description(evidence.unsupported_slots)} lack supported eligible projections. "
+                     'This does not change the official standing.')
     else:
         position += 'Current optimal-lineup comparison unavailable; compatible week, scoring and projections are required.'
     strengths = [pos for pos, _, d in rows if compatible and d.get('strength')]
@@ -136,7 +147,7 @@ def prepared_outlook(data, assessment, overview, players, *, strategy=''):
     else:
         concern = 'No supported replacement shortfall is established. Review exact removal costs before treating depth as expendable.'
     future, capital_note, brief_capital = _future(data, assessment, players)
-    brief_position = (f"Week {week} projected lineup #{rank.rank}/{rank.league_size}"
+    brief_position = (f"Week {week} projected lineup #{rank.rank}/{rank.league_size} supported ({len(data.get('teams') or [])} total)"
                       if compatible and rank.rank is not None else 'Lineup comparison needs compatible projections')
     if compatible and not fresh:
         brief_position = 'Provisional ' + brief_position
@@ -158,11 +169,22 @@ def prepared_outlook(data, assessment, overview, players, *, strategy=''):
         limits.insert(0, 'Some current-week evidence is not fully verified; findings are provisional, not a fresh team verdict. Source and availability limitations follow.')
     details = [overview.get('standing_reason') or 'Standing basis unavailable.', capital_note,
                'Statistical record/PF standing is separate from official playoff qualification and final seeding.',
-               f"Projection coverage: {evidence.projection_covered}/{evidence.roster_count} rostered players. Submitted starters remain separate from the optimal legal lineup.",
+               f"Projection coverage: {evidence.projection_covered}/{evidence.roster_count} rostered players. This counts player-week numbers, including reserve/taxi players; it is separate from playable starting-slot eligibility. Submitted starters remain separate from the optimal legal lineup.",
                'Current strength is not championship probability or future sustainability.', *limits]
     # TeamAssessment admits this prepared profile through compatible_profile;
     # consume its coverage without another preparation, solver or history read.
     horizon = ((assessment.multi_horizon_strength or {}).get('horizons') or {}).get('current_week') or {}
+    comparison = (assessment.multi_horizon_strength or {}).get('current_week_comparison') or {}
+    if (compatible and comparison.get('league_id') == assessment.league_id
+            and comparison.get('week') == week
+            and comparison.get('projection_generation') == (assessment.multi_horizon_strength or {}).get('projection_generation')):
+        details.append(f"Lineup comparison: {comparison['supported_count']}/{comparison['league_size']} franchises can fill the configured starting slots with supported eligible projections. "
+                       'Incomplete bench coverage alone does not exclude a franchise; this is separate from official standings and full replacement-depth support.')
+        names = {str(t.get('roster_id')): t.get('team_name') or t.get('name') for t in data.get('teams') or []}
+        for row in comparison.get('excluded') or []:
+            label = names.get(str(row['roster_id'])) or f"Franchise {row['roster_id']}"
+            slots = _slot_description(row.get('unsupported_slots')) or 'unverified lineup configuration'
+            details.append(f"{label}: excluded from this modeled comparison; starting slots without supported eligible players: {slots}. Missing points are not zero.")
     if compatible and horizon.get('weeks_requested') == [week]:
         total = _number(horizon.get('total'))
         details.append(f"Prepared Team Strength covers {len(horizon.get('weeks_supported') or [])}/1 current weeks; "

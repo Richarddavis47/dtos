@@ -55,6 +55,22 @@ def _eligible(position: str, slot: str) -> bool:
     return position == slot or position in FLEX_ELIGIBILITY.get(slot, set())
 
 
+def eligible_positions(player: dict[str, Any]) -> tuple[str, ...]:
+    """Explicit fantasy eligibility is separate from the player's NFL position.
+
+    Legacy inputs retain their single position. Malformed or explicitly empty
+    fantasy eligibility cannot manufacture another eligible position.
+    """
+    values = player.get('fantasy_positions')
+    if values is None:
+        position = str(player.get('position') or '').upper()
+        return (position,) if position else ()
+    if not isinstance(values, (list, tuple)) or any(
+            not isinstance(value, str) or not value.strip() for value in values):
+        return ()
+    return tuple(sorted({value.strip().upper() for value in values}))
+
+
 def optimal_legal_lineup(players: Iterable[dict[str, Any]], roster_positions: Iterable[str], *, week: int | None = None) -> OptimalLineup:
     """Return the highest-projected legal lineup without mutating submitted slots."""
     pool = []
@@ -63,6 +79,7 @@ def optimal_legal_lineup(players: Iterable[dict[str, Any]], roster_positions: It
     for player in players:
         projection = _projection(player)
         position = str(player.get("position") or "").upper()
+        fantasy_positions = eligible_positions(player)
         asset_id = str(player.get("id") or player.get("player_id") or "")
         if asset_id in seen:
             raise ValueError("Duplicate player identity in lineup evidence")
@@ -73,8 +90,8 @@ def optimal_legal_lineup(players: Iterable[dict[str, Any]], roster_positions: It
             continue
         if projection is None and asset_id:
             missing.append(asset_id)
-        if projection is not None and position and asset_id:
-            pool.append((projection, asset_id, position, str(player.get("name") or player.get("full_name") or asset_id)))
+        if projection is not None and fantasy_positions and asset_id:
+            pool.append((projection, asset_id, position, str(player.get("name") or player.get("full_name") or asset_id), fantasy_positions))
     slots = [str(slot).upper() for slot in roster_positions if str(slot).upper() not in BENCH_SLOTS]
     if not slots:
         return OptimalLineup((), None, False, "League starting-lineup configuration is unavailable.")
@@ -85,14 +102,17 @@ def optimal_legal_lineup(players: Iterable[dict[str, Any]], roster_positions: It
     # Equal-score ties use the canonical (slot, asset) assignment for deterministic output.
     slots.sort(key=lambda slot: (len(FLEX_ELIGIBILITY.get(slot, {slot})), slot))
     states: dict[int, tuple[float, tuple[LineupEntry, ...]]] = {0: (0.0, ())}
-    for projection, asset_id, position, label in sorted(pool, key=lambda row: (-row[0], row[1])):
+    for projection, asset_id, position, label, fantasy_positions in sorted(pool, key=lambda row: (-row[0], row[1])):
         # Eligibility depends on the player and configured slot, never on a
         # partial assignment. Evaluate it once rather than once per DP state.
-        eligible_slots = tuple((index, slot, 1 << index) for index, slot in enumerate(slots)
-                               if _eligible(position, slot))
+        eligible_slots = tuple((index, slot, 1 << index,
+                                position if _eligible(position, slot) and position in fantasy_positions
+                                else next(pos for pos in fantasy_positions if _eligible(pos, slot)))
+                               for index, slot in enumerate(slots)
+                               if any(_eligible(pos, slot) for pos in fantasy_positions))
         updated = dict(states)
         for mask, (score, selected) in states.items():
-            for index, slot, bit in eligible_slots:
+            for index, slot, bit, assigned_position in eligible_slots:
                 if mask & bit:
                     continue
                 # Identical slots are interchangeable. Keep only their prefix-filled
@@ -109,7 +129,7 @@ def optimal_legal_lineup(players: Iterable[dict[str, Any]], roster_positions: It
                         tuple((entry.slot, entry.asset_id) for entry in selected) + ((slot, asset_id),) <
                         tuple((entry.slot, entry.asset_id) for entry in current[1])):
                     updated[mask | bit] = (candidate_score,
-                        selected + (LineupEntry(slot, asset_id, label, position, projection),))
+                        selected + (LineupEntry(slot, asset_id, label, assigned_position, projection),))
         states = updated
     _, entries = max(states.values(), key=lambda row: (len(row[1]), row[0], tuple((entry.slot, entry.asset_id) for entry in row[1])))
     if not entries:

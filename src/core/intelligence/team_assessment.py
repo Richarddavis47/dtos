@@ -73,6 +73,7 @@ def build_team_assessment(context: Any, team: TeamIntelligenceCard) -> TeamAsses
     from .team_strength import compatible_profile
     profile = compatible_profile(context.cached_data, snapshot)
     strength = ({'generation': profile['semantic_generation'], 'projection_generation': profile['projection_generation'],
+                 'current_week_comparison': profile.get('current_week_comparison'),
                  **profile['teams'].get(str(team.roster_id), {})} if profile else None)
     return TeamAssessment(
         context.league_id, team.roster_id, context.evidence_generation,

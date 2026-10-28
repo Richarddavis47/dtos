@@ -14,7 +14,7 @@ from src.core.projection_intelligence.scoring import STAT_KEYS, fantasy_points
 
 PROVIDER_ID = "sleeper_projections"
 SOURCE_CLASSIFICATION = "Sleeper Canonical Weekly Projection Evidence"
-PARSER_VERSION = "3.1"
+PARSER_VERSION = "3.2"
 TRANSPORT_VERSION = "1.0"
 REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 ALLOWED_PROJECTION_HOSTS = frozenset({"api.sleeper.app", "api.sleeper.com"})
@@ -101,6 +101,7 @@ def parse_projection_feed(
             "season": season,
             "week": week,
             "position": position,
+            "fantasy_positions": (item.get("player") or {}).get("fantasy_positions"),
             "team": item.get("team"),
             "opponent": item.get("opponent"),
             "projected_stats": normalized_stats,
@@ -120,7 +121,7 @@ def parse_projection_feed(
         player_id: {
             key: value for key, value in row.items()
             if key in {
-                "player_id", "season", "week", "position", "team",
+                "player_id", "season", "week", "position", "fantasy_positions", "team",
                 "opponent", "projected_stats", "source_stat_order", "source_updated_at", "source_company",
             }
         }

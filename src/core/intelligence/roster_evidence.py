@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from math import isfinite
 from typing import Any
 
-from src.core.trade_intelligence.lineup import BENCH_SLOTS, FLEX_ELIGIBILITY, OptimalLineup, optimal_legal_lineup
+from src.core.trade_intelligence.lineup import BENCH_SLOTS, FLEX_ELIGIBILITY, OptimalLineup, optimal_legal_lineup, eligible_positions
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,8 @@ class RosterEvidence:
     roster_count: int
     limitations: tuple[str, ...]
     positions: dict = field(default_factory=dict)
+    excluded_player_ids: tuple[str, ...] = ()
+    unsupported_slots: tuple[str, ...] = ()
 
 
 def _points(value: Any) -> float | None:
@@ -77,6 +79,7 @@ def build_roster_evidence(context: Any) -> RosterEvidence:
     bounded = _bounded(slots, diagnostic_inputs(data, snapshot)[4]) if diagnostic else True
     candidate = optimal_legal_lineup((
         {'id': key, 'position': player.get('position'), 'name': player.get('name'),
+         'fantasy_positions': rows.get(key, {}).get('fantasy_positions'),
          'projected_points': points[key]} for key, player in eligible
     ), slots) if supported_diagnostic and bounded else OptimalLineup((), None, False, 'Detailed lineup diagnostics unavailable.')
     complete = candidate.available and len(candidate.entries) == slot_count
@@ -93,7 +96,8 @@ def build_roster_evidence(context: Any) -> RosterEvidence:
     chosen = {entry.asset_id for entry in candidate.entries} if complete else set(actual)
     positions = {}
     for position in ('QB', 'RB', 'WR', 'TE'):
-        room = [(key, player) for key, player in eligible if player.get('position') == position]
+        room = [(key, player) for key, player in eligible if position in eligible_positions({
+            'position': player.get('position'), 'fantasy_positions': rows.get(key, {}).get('fantasy_positions')})]
         starters = [key for key, _ in room if key in chosen]
         reserves = [key for key, _ in room if key not in chosen]
         known = [key for key in reserves if points[key] is not None]
@@ -116,4 +120,5 @@ def build_roster_evidence(context: Any) -> RosterEvidence:
         actual, actual_total,
         tuple(entry.asset_id for entry in candidate.entries) if complete else (),
         candidate.projected_points if complete else None,
-        sum(value is not None for value in points.values()), len(players), tuple(limitations), positions)
+        sum(value is not None for value in points.values()), len(players), tuple(limitations), positions,
+        tuple(sorted(excluded)), candidate.unsupported_slots)

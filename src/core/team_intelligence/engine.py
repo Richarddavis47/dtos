@@ -97,6 +97,7 @@ def _from_grading_evidence(decisions, grading, market_data=None, strength_profil
             window = replace(window, production_profile={
                 'generation': strength_profile['semantic_generation'],
                 'projection_generation': strength_profile['projection_generation'],
+                'current_week_comparison': strength_profile.get('current_week_comparison'),
                 **strength_profile['teams'].get(str(roster_id), {})})
         cards[roster_id] = TeamIntelligenceCard(roster_id, overall, lineup,
             unavailable('Intrinsic dynasty utility'), lineup, depth,

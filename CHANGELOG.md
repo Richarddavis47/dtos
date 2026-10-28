@@ -1,3 +1,11 @@
+# v1.21.107 / build 2207 — Projection coverage and legal eligibility
+
+Preserve Sleeper's explicit fantasy positions separately from primary NFL position, and apply exact league slots without counting one athlete twice. Current Out/IR and already-prepared known-bye exclusions now agree across Team Strength, roster diagnostics and useful reserve production. Original quotes and genuine zero remain intact; explicit source identity conflicts are withheld.
+
+My Team explains supported versus total lineup population and excluded starting slots. League needs distinguishes full replacement-evidence coverage from a valid starting lineup. Weekly views explain ADP-only, absent, incompatible and participation evidence without inventing projections. No new request-time source, optimizer, FOIS, discovery, history or persistence work is introduced.
+
+Fresh authorized Sleeper source replay still supports seven of ten Day Traders lineups; all seven totals are unchanged. One dual-eligible player's usable slot is recovered, but three teams still lack complete lineups. The five reported players have ADP-only Week 8 records, not scoring projections. The original 182.03 production snapshot and live authenticated browser remain unverified; current source replay gives 185.4278. See docs/audits/PROJECTION_COVERAGE_2207.md.
+
 # v1.21.106 / build 2206 — Trade recommendation integrity and context
 
 Make the existing bilateral qualification the primary Trade conclusion. User-side or Custom upside remains visible as subordinate context and cannot promote a counterparty-limited, incomplete or non-executable offer. Apply the same contract to the shared explanation, preview and alternative cards; retain prior assessments as not revalidated.

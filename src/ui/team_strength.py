@@ -31,11 +31,15 @@ def strength_panel(profile: dict | None, *, league_id: str | None = None, roster
         note = (f'Partial supported subtotal: {partial:.2f}; not a complete horizon.' if partial is not None
                 else 'Complete projection unavailable for this horizon.') if total is None else 'Sum of complete weekly optimal lineups.'
         rank = row.get('league_rank')
+        comparison = profile.get('current_week_comparison') or {}
+        rank_note = (f'<p>{escape(label)} rank: #{rank}</p>' if rank is not None else
+                     f"<p>Full-league rank unavailable: {comparison['supported_count']}/{comparison['league_size']} franchises have comparable current-week lineups. My Team shows the supported-population comparison separately.</p>"
+                     if key == 'current_week' and comparison else '<p>Comparable league rank unavailable</p>')
         confidence = row.get('source_confidence_range')
         confidence_note = ('Source evidence support: ' + escape('–'.join(map(str, confidence)))
                            + '; not an outcome probability.') if confidence else 'Source confidence unavailable.'
         cards.append(f'<article class="thq-kpi"><span>{escape(label)}</span><b>{value}</b><p>{coverage}</p><small>{note}</small>'
-                     + (f'<p>{escape(label)} rank: #{rank}</p>' if rank is not None else '<p>Comparable league rank unavailable</p>')
+                     + rank_note
                      + f'<p>{confidence_note}</p></article>')
     current_weeks = profile['horizons']['current_week'].get('weeks_requested') or []
     current_week = current_weeks[0] if len(current_weeks) == 1 else None
