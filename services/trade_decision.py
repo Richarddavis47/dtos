@@ -246,6 +246,9 @@ def decision_context(result, *, incoming=(), outgoing=(), _admissions=None):
         "lineup_phase_admission": {side: {str(week): [row['pre'] is not None, row['post'] is not None, row['delta'] is not None]
             for week, row in view['weekly'].items()} for side, view in by_side.items()},
         "lineup_rationale_verified": verified,
+        "lineup_source_generation": (result.get('multi_horizon_impact') or {}).get('team_strength_generation'),
+        "lineup_weekly_comparisons": {side: {str(week): row['delta'] for week, row in view['weekly'].items()}
+            for side, view in by_side.items()},
         "partner_summary": (result.get('counterparty_summary') or result.get('why_they_would_do_it')) if verified['partner'] else
             "Their roster-production benefit cannot be verified in this source context.",
         "partner_cost": partner_context.get('current_cost') if verified['partner'] else

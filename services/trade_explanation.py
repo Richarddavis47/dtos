@@ -118,7 +118,7 @@ def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Expl
     for side, label in (('active', 'Your team'), ('partner', 'Their team')):
         quality = (dims.get('package_quality') or {}).get(side) or {}
         key = add(f'package.{side}', f'{label} package quality', quality.get('assessment'))
-        if quality.get('explanation') and admissions[side]['identity_state'] == 'compatible':
+        if quality.get('explanation') and admissions[side]['identity_state'] == 'compatible' and not admissions[side]['invalid_comparison']:
             advanced.append(Statement('PACKAGE_QUALITY', quality['explanation'], (key,)))
         strategy = (dims.get('strategic_fit') or {}).get(side) or {}
         fit = strategy.get('capital_strategy_fit') or {}
@@ -256,7 +256,7 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
         admitted = admissions[side]
         verified = admitted['identity_state'] == 'compatible' and not admitted['invalid_comparison']
         context = (result.get(reason) or 'No supported team-specific rationale is established.') if verified else 'The recorded roster-production rationale cannot be verified; inspect independently supported periods.'
-        tradeoff = quality.get('explanation') or 'Package trade-offs are unavailable.'
+        tradeoff = (quality.get('explanation') or 'Package trade-offs are unavailable.') if verified else 'Package-production trade-offs cannot be verified in this source context; supported Market and capital facts remain separate.'
         weekly = manager_points(admitted['mean_weekly_delta'])
         weeks = ', '.join(map(str, admitted['weeks_counted_once'])) or 'none'
         teams.append('<section><h4>' + title + '</h4><p>' + escape(context) + '</p><p>Average optimal-lineup change across supported weeks ' + escape(weeks) + ': ' + escape(weekly) + '</p><details><summary>Package trade-offs</summary><p>' + escape(tradeoff) + '</p></details></section>')

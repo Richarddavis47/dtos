@@ -152,6 +152,13 @@ class LineupProvenanceTests(unittest.TestCase):
         self.assertIsNone(items["weekly.active.3.delta"].display)
         self.assertEqual(items["weekly.active.2.delta"].display, "6.31")
         self.assertEqual(items["active.playoff_window"].display, "12.62")
+        html = render_trade_explanation(e, league_id="league-1")
+        active_summary = html.split("<h4>Your team · gains and sacrifices</h4>", 1)[
+            1
+        ].split("</section>", 1)[0]
+        self.assertIn(
+            "Package-production trade-offs cannot be verified", active_summary
+        )
         self.save("isolated-week-failure", a)
 
     def test_partner_conflict_withholds_endorsement_without_erasing_valid_user_week(

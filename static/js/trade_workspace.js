@@ -700,6 +700,19 @@
     }
     return decision;
   }
+  function catalystDelta(c, decision) {
+    // Copied opportunity labels cannot qualify their own numbers. Reuse the
+    // already-admitted period and source; never fill a missing comparison.
+    if (!decision.lineup_source_generation || c.generation !== decision.lineup_source_generation || !Array.isArray(c.weeks)) return null;
+    const numeric = value => typeof value === 'number' && Number.isFinite(value);
+    if (c.type === 'UPCOMING_BYE_LINEUP_FIT' && c.weeks.length === 1) {
+      const value = decision.lineup_weekly_comparisons?.[c.side]?.[String(c.weeks[0])];
+      return numeric(value) && c.delta === value ? value : null;
+    }
+    const periods = c.side === 'active' ? decision.lineup_comparisons : c.side === 'partner' ? decision.partner_lineup_comparisons : {};
+    const period = periods?.[c.horizon];
+    return numeric(period?.delta) && c.delta === period.delta && JSON.stringify(c.weeks) === JSON.stringify(period.weeks) ? period.delta : null;
+  }
   function appendLineupComparisons(out, e, horizons, title, retained) {
       for (const [key, horizon] of Object.entries(horizons)) {
         if (!horizon || typeof horizon !== 'object') continue;
@@ -904,11 +917,11 @@
     }
     if (opportunity) {
       out.append(node('h4', 'Why now · supported context'));
-      for (const c of opportunity.why_now?.catalysts || []) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(c.delta)}`), node('small', c.limitation));
+      for (const c of opportunity.why_now?.catalysts || []) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(catalystDelta(c, decision))}`), node('small', c.limitation));
       if (!opportunity.why_now?.catalysts?.length) out.append(node('p', 'No supported current catalyst is available.'));
       if (opportunity.stable_opportunity_reasons?.length) {
         out.append(node('h4', 'Supported trade fit — not urgency'));
-        for (const c of opportunity.stable_opportunity_reasons) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(c.delta)}`));
+        for (const c of opportunity.stable_opportunity_reasons) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(catalystDelta(c, decision))}`));
       }
     } else if (e.why_now) out.append(node('h4', 'Why now'), node('p', e.why_now));
     if (e.major_limitations?.length) out.append(node('h4', 'Evidence limitations'), node('p', e.major_limitations.join(', ').replaceAll('_', ' ')));
@@ -1100,7 +1113,7 @@
     if (history) card.append(node('small', history));
     if (!e.explanation_html) {
       const detail = node('details'); detail.append(node('summary', 'Supported assessment evidence' + (e.dimensions?.confidence?.assessment ? ' · Confidence ' + e.dimensions.confidence.assessment : '')));
-      for (const [key, dim] of Object.entries(e.dimensions || {})) if (dim?.assessment) detail.append(node('p', (dim.label || key.replaceAll('_', ' ')) + ': ' + dim.assessment), node('small', dim.explanation));
+      for (const [key, dim] of Object.entries(e.dimensions || {})) if (dim?.assessment) detail.append(node('p', (dim.label || key.replaceAll('_', ' ')) + ': ' + dim.assessment), node('small', key === 'counterparty_plausibility' && decision.lineup_rationale_verified?.partner === false ? decision.partner_summary : dim.explanation));
       for (const reason of [...(e.major_risks || []), ...(e.major_limitations || [])]) detail.append(node('p', reason.replaceAll('_', ' ')));
       appendLineupComparisons(detail, e, decision.lineup_comparisons, 'Your team', true);
       appendLineupComparisons(detail, e, decision.partner_lineup_comparisons, 'Their team', true);

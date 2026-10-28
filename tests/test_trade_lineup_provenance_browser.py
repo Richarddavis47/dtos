@@ -28,6 +28,10 @@ class LineupProvenanceBrowserTests(unittest.TestCase):
         def evaluated(*args, **kwargs):
             result = original(*args, **kwargs)
             e = result["evaluation"]
+            from services.recommended_trade_search import surface_evidence
+            # A copied opportunity was prepared on the original valid result.
+            # It must not revive a comparison after that result loses admission.
+            state['opportunity'] = surface_evidence({'evaluation': e})
             if state["case"] == "global":
                 e["multi_horizon_impact"]["projection_generation"] = (
                     "incompatible-test-publication"
@@ -54,6 +58,7 @@ class LineupProvenanceBrowserTests(unittest.TestCase):
                     )
                 },
                 "evaluation": deepcopy(state["evaluation"]),
+                "opportunity": deepcopy(state['opportunity']),
                 "exploration": True,
                 "search_result_type": "MISSING REQUIRED EVIDENCE",
             }
