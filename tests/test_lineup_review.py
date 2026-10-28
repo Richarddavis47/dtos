@@ -345,3 +345,15 @@ class LineupReviewTests(unittest.TestCase):
             ),
         )
         self.assertEqual(prepared_games([fact], 2026)["games"], {})
+
+    def test_current_week_points_override_a_conflicting_future_game_time(self):
+        for player in ("1-q", "1-bq"):
+            data, service, now = prepared(self)
+            row = data["season_matchups"]["weeks"]["8"]["rows"][0]
+            if player == "1-q":
+                row["starters_points"][0] = 5
+            else:
+                row["players_points"] = {player: -2}
+            review = self.review(data, service, now)
+            self.assertFalse(review["actionable"], review)
+            self.assertIn("current-week score", review["reason"])

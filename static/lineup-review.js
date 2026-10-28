@@ -11,11 +11,14 @@
       const checked = Date.parse(panel.dataset.reviewCheckedAt);
       const remaining = until - checked - performance.now();
       if (!Number.isFinite(until) || !Number.isFinite(remaining) || Date.now() >= until || remaining <= 0) {
+        const current = panel.querySelector('[data-review-current]');
+        const moveFocus = current.contains(document.activeElement);
         panel.dataset.lineupReview = 'expired';
         panel.querySelector('h3').textContent = 'Review your lineup';
-        panel.querySelector('[data-review-current]').hidden = true;
+        current.hidden = true;
         panel.querySelector('[data-review-expired]').hidden = false;
         panel.removeAttribute('data-review-until');
+        if (moveFocus) panel.querySelector('a').focus({preventScroll: true});
       } else {
         delay = Math.min(delay, until - Date.now() + 1, remaining + 1);
       }

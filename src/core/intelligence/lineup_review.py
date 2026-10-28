@@ -299,6 +299,19 @@ def review_lineup(
         # Both the incoming player and any displaced/moved starter must still
         # be unlocked. No assumptions about bye/Out players unlocking slots.
         involved = [pid] + ([before["player_id"]] if before["player_id"] != "0" else [])
+        actuals = {
+            p["player_id"]: p.get("actual")
+            for group in ("lineup", "bench", "reserve", "taxi")
+            for p in side.get(group) or []
+        }
+        if any(
+            actuals.get(player) is not None and actuals[player] != 0
+            for player in involved
+        ):
+            result["reason"] = (
+                "A proposed player has a current-week score, so play may already have begun. Review the lineup in Sleeper; no substitution is confirmed."
+            )
+            return result
         for involved_pid in involved:
             when = kickoff(involved_pid)
             if when is None or when <= now:

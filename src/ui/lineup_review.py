@@ -47,6 +47,6 @@ def review_panel(review):
     return (
         f'<section class="lineup-review" data-lineup-review="{review["state"]}"{deadline} aria-label="Lineup review">'
         f"<h3>{heading}</h3>{points}<div data-review-current><p>{escape(review['reason'])}</p>{changes}</div>"
-        "<p data-review-expired hidden>This lineup check has expired. Reload to recheck game locks and evidence before changing your lineup.</p>"
+        '<p data-review-expired role="status" aria-live="polite" hidden>This lineup check has expired. Reload to recheck game locks and evidence before changing your lineup.</p>'
         '<p><a class="button" href="https://sleeper.com/" rel="noopener noreferrer">Review in Sleeper</a></p></section>'
     )

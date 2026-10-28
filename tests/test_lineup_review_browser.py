@@ -211,3 +211,44 @@ class LineupReviewBrowserTests(unittest.TestCase):
                 )
             finally:
                 browser.close()
+
+    def test_expiring_a_focused_evidence_disclosure_keeps_visible_keyboard_focus(self):
+        from tests.lineup_review_fixture import prepared, http
+        from urllib.parse import urlsplit
+
+        data, service, _ = prepared(self)
+        client = http(self, data, service)
+        with sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                page = browser.new_page()
+
+                def transport(route):
+                    path = urlsplit(route.request.url)
+                    response = client.get(
+                        path.path + ("?" + path.query if path.query else "")
+                    )
+                    route.fulfill(
+                        status=response.status_code,
+                        headers=dict(response.headers),
+                        body=response.content,
+                    )
+
+                page.route("**/*", transport)
+                page.goto("https://dtos.test/matchups/1?week=8")
+                panel = page.get_by_role("region", name="Lineup review")
+                summary = panel.locator("summary")
+                page.keyboard.press("Tab")
+                summary.focus()
+                summary.press("Enter")
+                panel.evaluate('e=>e.dataset.reviewUntil="2000-01-01T00:00:00Z"')
+                page.evaluate('document.dispatchEvent(new Event("visibilitychange"))')
+                action = panel.get_by_role("link", name="Review in Sleeper")
+                self.assertTrue(action.evaluate("e=>document.activeElement===e"))
+                self.assertNotEqual(
+                    action.evaluate("e=>getComputedStyle(e).outlineStyle"), "none"
+                )
+                self.assertTrue(panel.get_by_role("status").is_visible())
+                self.assertIn("expired", panel.get_by_role("status").inner_text())
+            finally:
+                browser.close()
