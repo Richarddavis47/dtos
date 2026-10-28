@@ -279,7 +279,7 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
         boundary = (pinned or {}).get('generated_at')
         if store is not None and boundary:
             facts = store.read('schedule', None, season=int(league['season']), as_of=boundary)
-            from services.lineup_review import prepared_games
+            from src.core.intelligence.lineup_review import prepared_games
             lineup_schedule = prepared_games(facts, int(league['season']))
             teams = {player.get('team') or player.get('nfl_team') for team in data.get('teams') or [] for player in team.get('players') or []}
             schedules = {team: schedule_from_facts(facts, team, season=int(league['season']), as_of=boundary) for team in teams if team}

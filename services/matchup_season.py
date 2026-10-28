@@ -215,7 +215,7 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
             player = players.get(pid) or {}
             projection = ((snapshot or {}).get("players") or {}).get(pid) or {}
             from src.core.projection_intelligence.service import projection_row_compatible
-            from services.lineup_review import player_identity
+            from src.core.intelligence.lineup_review import player_identity
             identity = player_identity(players, pid, season=season, league_id=league_id)
             admitted = snapshot is not None and projection_row_compatible(snapshot, pid, projection)
             value = number(projection.get("canonical_projection")) if admitted else None
@@ -294,7 +294,7 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
             'previous_optimal_players_on_known_bye', 'optimal_entries_since_previous_week', 'change_meaning')}
             if side['optimal'] is not None else None)
         if side['optimal']:
-            from services.lineup_review import player_identity
+            from src.core.intelligence.lineup_review import player_identity
             side['optimal_display_entries'] = [dict(entry, **player_identity(players, entry['asset_id'], season=season, league_id=league_id))
                                                for entry in side['optimal'].get('entries') or []]
         for player in lineup + bench + reserve + taxi:
@@ -307,7 +307,7 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
                     if week == current and status in UNAVAILABLE_PLAYER_STATUSES else
                     'No current NFL team is recorded; future participation is not established.'
                     if (((snapshot or {}).get('players') or {}).get(player['player_id']) or {}).get('nfl_team_state') == 'unassigned' else None)
-        from services.lineup_review import review_lineup
+        from src.core.intelligence.lineup_review import review_lineup
         side['lineup_review'] = review_lineup(data, side, snapshot, strength, week=week,
                                              observed_at=prepared.get('observed_at'),
                                              retained_projection=bool(refresh.get('retained_publication')))

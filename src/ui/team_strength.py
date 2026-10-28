@@ -13,7 +13,7 @@ def strength_panel(profile: dict | None, *, league_id: str | None = None, roster
         from services.team_fois_explanations import team_strength_explanation
         from src.ui.explanations import explanation_panel
         explanation = explanation_panel(team_strength_explanation(profile, league_id=league_id, roster_id=roster_id))
-    from services.lineup_review import player_identity
+    from src.core.intelligence.lineup_review import player_identity
     identities = {str(player['id']): player_identity({str(player['id']): player}, str(player['id']),
                    season=profile.get('season'), league_id=league_id) for player in players or []}
     names = {pid: identity['name'] for pid, identity in identities.items()}

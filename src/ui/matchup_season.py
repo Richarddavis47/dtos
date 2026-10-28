@@ -130,7 +130,7 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
     own_reviews = ''.join(review_panel(side.get('lineup_review')) for identity, sides in view['groups'].items()
                           for side in sides if side.get('is_viewer') and view['period'] != 'historical'
                           and (matchup_id is None or identity == matchup_id))
-    body = nav + f'<section class="card matchup-heading"><h2>{escape(heading)}</h2><p>{escape(description)}</p></section>' + own_reviews
+    body = nav + own_reviews + f'<section class="card matchup-heading"><h2>{escape(heading)}</h2><p>{escape(description)}</p></section>'
     if own_reviews:
         body += '<script src="/static/lineup-review.js" defer></script>'
     if not view['opponents_locked']:

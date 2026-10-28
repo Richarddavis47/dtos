@@ -12,7 +12,7 @@ its player projection remains missing. A truncated starter array, unresolved
 player or missing player projection does not become zero. All configured slots
 must be accounted for before the submitted total can support a comparison.
 
-`services.lineup_review` is a pure consumer, not another optimizer. It checks
+`src.core.intelligence.lineup_review` is a pure consumer, not another optimizer. It checks
 an already prepared optimum against the actual current source assignments.
 It reuses NFL game facts from Team Strength's existing bounded background
 schedule read; no schedule read, provider request or solver is added on ordinary
