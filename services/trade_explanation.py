@@ -279,7 +279,8 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
             + legacy[split:-len('</section>')] + '</details></section>')
 
 
-def _decision_primary(result, decision, admissions):
+def _decision_primary(result, decision, admissions=None):
+    admissions = admissions or completed_lineup_admissions(result)
     def paragraph(text, css=''):
         return '<p' + (f' class="{css}"' if css else '') + '>' + escape(str(text)) + '</p>' if text else ''
     market = result.get('market_evidence') or {}
