@@ -39,7 +39,11 @@ def review_panel(review):
             f"{escape(review['projection_observed_at'])}. These are retrieval/preparation times, not a guaranteed provider update time. "
             "Only supported player projections are compared. This alert expires at the first affected kickoff or when either check becomes 15 minutes old.</p></details>"
         )
-    deadline = f' data-review-until="{escape(review["valid_until"])}"' if active else ""
+    deadline = (
+        f' data-review-until="{escape(review["valid_until"])}" data-review-checked-at="{escape(review["verified_at"])}"'
+        if active
+        else ""
+    )
     return (
         f'<section class="lineup-review" data-lineup-review="{review["state"]}"{deadline} aria-label="Lineup review">'
         f"<h3>{heading}</h3>{points}<div data-review-current><p>{escape(review['reason'])}</p>{changes}</div>"

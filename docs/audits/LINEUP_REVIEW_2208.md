@@ -35,7 +35,7 @@ claim or provider polling schedule. A failed projection refresh retains valid
 numbers but suppresses an actionable alert. Read-time lock revalidation uses the
 request clock. An open browser retracts the imperative suggestion at the earliest
 affected kickoff or evidence-age deadline, and on returning to the tab, using
-one local timer and no network activity. Sleeper remains authoritative at actual
+one local timer and no network activity. A monotonic navigation-age deadline also prevents a slow customer wall clock from extending the verified window; counting response transfer conservatively shortens it. Sleeper remains authoritative at actual
 submission; DTOS does not submit, reserve or change a lineup.
 
 We intentionally do not solve a second, lock-constrained lineup on navigation.

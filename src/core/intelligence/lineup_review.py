@@ -304,6 +304,7 @@ def review_lineup(
         observed_at=observed_at,
         projection_observed_at=snapshot["generated_at"],
         valid_until=min(deadlines).isoformat(),
+        verified_at=now.isoformat(),
         reason="These moves fit your starting slots and precede their recorded kickoffs. Check Sleeper before submitting.",
     )
     return result

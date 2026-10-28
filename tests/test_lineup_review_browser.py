@@ -172,3 +172,42 @@ class LineupReviewBrowserTests(unittest.TestCase):
             Path(directory, "browser-results.json").write_text(
                 json.dumps(reports, indent=2)
             )
+
+    def test_slow_customer_clock_cannot_extend_verified_action_window(self):
+        from datetime import datetime, timedelta, timezone
+        from tests.lineup_review_fixture import prepared, http
+
+        data, service, _ = prepared(self)
+        client = http(self, data, service)
+        with sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                page = browser.new_page()
+                page.clock.install(time=datetime.now(timezone.utc) - timedelta(hours=1))
+
+                def transport(route):
+                    from urllib.parse import urlsplit
+
+                    path = urlsplit(route.request.url)
+                    response = client.get(
+                        path.path + ("?" + path.query if path.query else "")
+                    )
+                    route.fulfill(
+                        status=response.status_code,
+                        headers=dict(response.headers),
+                        body=response.content,
+                    )
+
+                page.route("**/*", transport)
+                page.goto("https://dtos.test/matchups/1?week=8")
+                panel = page.get_by_role("region", name="Lineup review")
+                self.assertEqual(
+                    panel.get_attribute("data-lineup-review"), "actionable"
+                )
+                page.clock.fast_forward(16 * 60 * 1000)
+                self.assertEqual(panel.get_attribute("data-lineup-review"), "expired")
+                self.assertEqual(
+                    panel.get_by_text("Higher-projected lineup available").count(), 0
+                )
+            finally:
+                browser.close()
