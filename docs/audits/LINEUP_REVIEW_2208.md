@@ -130,3 +130,6 @@ preserved. `lineup_review_baseline` is a separate known-contribution subtotal;
 it supports filling explicitly empty slots but cannot fill an unknown player's
 projection. The alert and team card label this subtotal rather than claiming a
 complete submitted-lineup projection.
+
+
+The final read-through reproduced a valid schedule alias gap: LA/LAR, JAC/JAX and WSH/WAS game keys suppressed otherwise supported changes. The review now reuses the existing canonical NFL team normalizer at both the prepared schedule and consumed player-team boundary. No player ID is substituted, no game or price is invented, and real team transitions still fail closed. The original alias failure and exact-source reruns remain in the handoff.

@@ -17,7 +17,16 @@ from src.core.intelligence.team_strength import prepare_for_data
 from src.core.projection_intelligence.service import ProjectionService
 
 
-def prepared(owner, *, empty=False, league_id="lineup-A", points=None, slots=None):
+def prepared(
+    owner,
+    *,
+    empty=False,
+    league_id="lineup-A",
+    points=None,
+    slots=None,
+    nfl_team="BUF",
+    schedule_team=None,
+):
     tmp = TemporaryDirectory()
     owner.addCleanup(tmp.cleanup)
     now = datetime.now(timezone.utc)
@@ -77,7 +86,7 @@ def prepared(owner, *, empty=False, league_id="lineup-A", points=None, slots=Non
                 name=f"Example {label.upper()} {rid}",
                 position=pos,
                 fantasy_positions=[pos],
-                team="BUF",
+                team=nfl_team,
                 status="Active",
                 roster_slot="Starter" if pid in starters else "Bench",
                 starter_index=starters.index(pid) if pid in starters else None,
@@ -92,7 +101,7 @@ def prepared(owner, *, empty=False, league_id="lineup-A", points=None, slots=Non
                         player_id=pid,
                         week=week,
                         season=2026,
-                        team="BUF",
+                        team=nfl_team,
                         opponent="NYJ",
                         player=dict(position=pos, fantasy_positions=[pos]),
                         updated_at=now.isoformat(),
@@ -135,7 +144,7 @@ def prepared(owner, *, empty=False, league_id="lineup-A", points=None, slots=Non
             provider="nflverse",
             fingerprint=f"fixture-game-{week}",
             values=dict(
-                home_team="BUF",
+                home_team=schedule_team or nfl_team,
                 away_team="NYJ",
                 game_type="REG",
                 game_id=f"fixture-game-{week}",

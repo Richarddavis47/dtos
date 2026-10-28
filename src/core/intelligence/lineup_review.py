@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 from src.core.trade_intelligence.lineup import _eligible, eligible_positions
+from src.core.data_platform.normalization.identity import normalize_team
 
 MAX_REVIEW_AGE = timedelta(minutes=15)
 METHOD = "prepared-lineup-review-v1"
@@ -66,6 +67,7 @@ def prepared_games(facts, season):
         for team in (values.get("home_team"), values.get("away_team")):
             if not team:
                 continue
+            team = normalize_team(team)
             key = f"{week}:{team}"
             entry = {"kickoff": kickoff.isoformat(), "reference": fact["fingerprint"]}
             # Multiple conflicting games cannot establish a player's lock.
@@ -229,7 +231,11 @@ def review_lineup(
             value = (
                 str(player.get("team") or player.get("nfl_team") or "").strip().upper()
             )
-            return value if value not in {"", "VACANT", "UNKNOWN", "—", "-"} else None
+            return (
+                normalize_team(value)
+                if value not in {"", "VACANT", "UNKNOWN", "—", "-"}
+                else None
+            )
 
         source_team, current_team, roster_team = (
             team_id(row),

@@ -59,6 +59,18 @@ class LineupReviewTests(unittest.TestCase):
         self.assertFalse(self.review(data, service, now)["actionable"])
         self.assertIsNone(self.side(data, service)["projection"])
 
+    def test_canonical_nfl_team_aliases_preserve_game_lock_evidence(self):
+        for canonical, source in (("LAR", "LA"), ("JAX", "JAC"), ("WAS", "WSH")):
+            with self.subTest(canonical=canonical, source=source):
+                data, service, now = prepared(
+                    self, nfl_team=canonical, schedule_team=source
+                )
+                review = self.review(data, service, now)
+                self.assertTrue(review["actionable"], review)
+                self.assertEqual(review["gain"], 15)
+                body = http(self, data, service).get("/matchups/1?week=8").text
+                self.assertIn("Higher-projected lineup available", body)
+
     def test_started_and_unknown_games_suppress_without_mutating_optimum(self):
         data, service, now = prepared(self)
         profile = data["team_strength"]
