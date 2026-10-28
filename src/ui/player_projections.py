@@ -23,7 +23,7 @@ def player_projection_panel(view: dict, front_office: int | None = None) -> str:
             if front_office is not None:
                 query['front_office'] = front_office
             links.append(f'<a class="button" href="{path}?{escape(urlencode(query))}">{label}</a>')
-    reason = ''.join(f'<p>{escape(str(view[key]))}</p>' for key in ('reason', 'display_reason') if view.get(key))
+    reason = ''.join(f'<p>{escape(str(view[key]))}</p>' for key in ('reason', 'participation_note', 'eligibility_note', 'display_reason') if view.get(key))
     return ('<link rel="stylesheet" href="/static/css/matchups.css">'
         f'<section class="card" id="player-weekly-projections" data-week-endpoint="{path}/projections" aria-label="Weekly Sleeper projections"><h2>Weekly Sleeper projections</h2>'
         f'<p>Week {selected} · <strong data-projection-week="{selected}" '

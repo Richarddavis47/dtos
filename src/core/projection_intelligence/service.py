@@ -18,7 +18,7 @@ from src.core.projection_intelligence.sleeper_provider import (
     PARSER_VERSION, SOURCE_CLASSIFICATION, freshness_state, parse_projection_feed,
 )
 from src.core.projection_intelligence.scoring import (
-    fantasy_points, sleeper_web_display, SCORING_METHOD_VERSION, DISPLAY_METHOD_VERSION,
+    fantasy_points, sleeper_web_display, SCORING_METHOD_VERSION, DISPLAY_METHOD_VERSION, STAT_KEYS,
 )
 from src.core.projection_intelligence.consumer_registry import projection_consumer_health
 
@@ -125,10 +125,24 @@ def canonical_projection_identity(snapshot: dict | None, league_id: str) -> dict
     }
 
 
+def projection_row_compatible(snapshot: dict, player_id: str, row: dict) -> bool:
+    """Reject explicit row conflicts within a pinned immutable publication.
+
+    Legacy rows may inherit identities from their keyed parent publication;
+    an explicitly different player, week, season, scoring or leaf never does.
+    """
+    leaf = (snapshot.get('horizon_snapshot_ids') or {}).get(str(snapshot.get('week'))) or snapshot.get('projection_snapshot_id')
+    expected = {'player_id': str(player_id), 'season': snapshot.get('season'),
+                'week': snapshot.get('week'), 'scoring_profile_id': snapshot.get('scoring_profile_id'),
+                'projection_snapshot_id': leaf}
+    return isinstance(row, dict) and all(row.get(key) is None or (
+        value is not None and str(row[key]) == str(value)) for key, value in expected.items())
+
+
 def _projection_semantics(players: dict[str, dict[str, Any]]) -> dict[str, Any]:
     """Retain only fields that can change canonical weekly decisions."""
     fields = (
-        "player_id", "position", "team", "opponent", "season", "week",
+        "player_id", "position", "fantasy_positions", "team", "opponent", "season", "week",
         "provider_id", "scoring_profile_id", "canonical_projection",
         "availability", "availability_state", "projection_confidence",
         "source_freshness", "sleeper_evidence_fingerprint",
@@ -743,11 +757,24 @@ class ProjectionService:
         # Older cached parser output could score an empty source record as zero.
         # Explicitly empty raw evidence cannot become a canonical expectation.
         if evidence is not None and 'projected_stats' in evidence:
-            from src.core.projection_intelligence.scoring import STAT_KEYS
             if not any(key in STAT_KEYS for key in (evidence['projected_stats'] or {})):
                 value = None
         projected = float(value) if value is not None else None
         availability = cls._availability(player, evidence)
+        from src.core.trade_intelligence.lineup import eligible_positions
+        position = str(player.get('position') or '').upper()
+        if position in {'', '—', '-', 'UNKNOWN', 'VACANT'}:
+            position = str((evidence or {}).get('position') or '').upper()
+        eligibility = {'position': position, 'fantasy_positions': (
+            player.get('fantasy_positions') if player.get('fantasy_positions') is not None
+            else (evidence or {}).get('fantasy_positions'))}
+        team = player.get('team') or player.get('nfl_team')
+        if str(team or '').upper() in {'', '—', '-', 'UNKNOWN', 'VACANT'}:
+            team = (evidence or {}).get('team') or None
+        missing_reason = (None if projected is not None else 'NO_PLAYER_RECORD'
+                          if evidence is None else 'NO_SCORING_STATISTICS'
+                          if not any(key in STAT_KEYS for key in (evidence.get('projected_stats') or {}))
+                          else 'UNSUPPORTED_SCORING')
         state = "projected_zero" if projected == 0 else "projected" if projected is not None else "unavailable"
         confidence = (
             90 if projected is not None and sleeper_freshness == "Fresh" else
@@ -756,8 +783,11 @@ class ProjectionService:
         )
         return {
             "player_id": player_id,
-            "position": str(player.get("position") or (evidence or {}).get("position") or "").upper(),
-            "team": player.get("team") or player.get("nfl_team") or (evidence or {}).get("team"),
+            "position": position,
+            "fantasy_positions": list(eligible_positions(eligibility)),
+            "team": team,
+            "nfl_team_state": 'known' if team else 'unassigned'
+                if any(k in player for k in ('team', 'nfl_team')) else 'unknown',
             "opponent": (evidence or {}).get("opponent"),
             "season": season, "week": week,
             "provider": "Sleeper", "provider_id": "sleeper_projections",
@@ -783,6 +813,7 @@ class ProjectionService:
             "projection_coverage": "available" if projected is not None else "unavailable",
             "availability": availability,
             "availability_state": state,
+            "missing_projection_reason": missing_reason,
             "status": state,
             "sleeper_zero_state": "numeric_zero" if projected == 0 else "projected" if projected is not None else "missing",
             "source_timestamp": (evidence or {}).get("source_updated_at"),

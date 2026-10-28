@@ -82,6 +82,8 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
 
     market_map = {}
     economy = {}
+    lineup_known = sum(card.starting_lineup.rank is not None for card in roster.team_intelligence.values())
+    league_size = len(roster.team_intelligence)
     for position in POSITIONS:
         buyers = tuple(sorted(roster_id for roster_id, rows in needs.items() if next(item for item in rows if item.position == position).priority in {"Critical", "High"}))
         sellers = tuple(sorted(roster_id for roster_id, rows in surpluses.items() if position in {item.category for item in rows}))
@@ -91,7 +93,9 @@ def evaluate_league(intelligence: Any) -> LeagueIntelligenceReport:
         known = sum(item.priority != 'Unavailable' for rows in needs.values() for item in rows if item.position == position)
         state = 'Unavailable' if not known else 'Observed demand exceeds expendable supply' if demand > supply else 'Observed expendable supply exceeds demand' if supply > demand else 'No observed imbalance'
         economy[position] = PositionEconomy(position, state, supply, demand, None,
-            f'{demand} supported starter-need contexts and {supply} conditional depth suppliers across {known} supported rosters; availability is not willingness and no Market premium is inferred.')
+            f'{demand} supported starter-need contexts and {supply} conditional depth suppliers across {known}/{league_size} complete-roster needs assessments. '
+            f'{lineup_known}/{league_size} franchises have supported optimal lineups. Needs assessments additionally require complete eligible replacement evidence and supported availability; '
+            'missing depth evidence is not proven weak depth or an absent starting lineup. Availability is not willingness and no Market premium is inferred.')
     rebuild_ids = tuple(sorted(roster_id for roster_id, item in directions.items() if item.label in {"Rebuilding", "Full Rebuild"}))
     contender_ids = tuple(sorted(roster_id for roster_id, item in directions.items() if item.label in {"Elite Contender", "Contender"}))
     pick_sellers = tuple(sorted(roster_id for roster_id, rows in surpluses.items() if "Future Picks" in {item.category for item in rows} and roster_id in contender_ids))

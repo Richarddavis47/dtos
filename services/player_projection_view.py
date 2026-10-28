@@ -12,10 +12,14 @@ def player_projection_views(data: dict, player_ids, service, week: int | None = 
             cache[selected] = service.week_snapshot(selected, generation_snapshot=pinned)
         return cache[selected]
     reader = SimpleNamespace(snapshot=lambda: pinned, week_snapshot=read)
-    return {str(pid): player_projection_view(data, str(pid), reader, week) for pid in player_ids}
+    from src.core.intelligence.team_strength import compatible_profile
+    prepared = compatible_profile(data, pinned) or {}
+    return {str(pid): player_projection_view(data, str(pid), reader, week,
+                                            prepared_profile=prepared) for pid in player_ids}
 
 
-def player_projection_view(data: dict, player_id: str, service, week: int | None = None) -> dict:
+def player_projection_view(data: dict, player_id: str, service, week: int | None = None,
+                           *, prepared_profile=None) -> dict:
     league = data.get('league') or {}
     selected = week if week is not None else int(data.get('week') or 1)
     result = {'player_id': player_id, 'league_id': str(league.get('league_id') or ''), 'season': league.get('season'), 'week': selected, 'weeks': [], 'value': None,
@@ -43,6 +47,31 @@ def player_projection_view(data: dict, player_id: str, service, week: int | None
         result['reason'] = 'The weekly projection update does not match the current league snapshot. Retry after the league refresh; no older projection was substituted.'
         return result
     row = (snapshot.get('players') or {}).get(str(player_id)) or {}
+    from src.core.projection_intelligence.service import projection_row_compatible
+    if not projection_row_compatible(snapshot, str(player_id), row):
+        result['reason'] = 'This player’s prepared projection conflicts with the selected player, week, season or scoring publication. Retry after the league refresh; no other projection was substituted.'
+        return result
+    if prepared_profile is None:
+        from src.core.intelligence.team_strength import compatible_profile
+        prepared_profile = compatible_profile(data, pinned) or {}
+    known_bye = (prepared_profile.get('projection_generation') == pinned.get('horizon_generation')
+                 and prepared_profile.get('league_id') == pinned.get('league_id')
+                 and prepared_profile.get('season') == pinned.get('season')
+                 and any(str(player_id) in ((team.get('weekly') or {}).get(selected)
+                         or (team.get('weekly') or {}).get(str(selected)) or {}).get('known_bye_player_ids', [])
+                         for team in (prepared_profile.get('teams') or {}).values()))
+    status = str(row.get('availability') or '').casefold()
+    from src.core.projection_intelligence.service import UNAVAILABLE_PLAYER_STATUSES
+    participation = (f"NFL bye in Week {selected}; this player is excluded from that week's playable-lineup comparison."
+                     if known_bye else
+                     f"Listed {status.upper()} at preparation; this player is excluded from current-week playable lineup cover."
+                     if status in UNAVAILABLE_PLAYER_STATUSES and selected == pinned.get('week') else
+                     'No current NFL team is recorded. This does not establish future signing or playing time.'
+                     if row.get('nfl_team_state') == 'unassigned' else None)
+    result['participation_note'] = participation
+    positions = row.get('fantasy_positions')
+    if isinstance(positions, list) and len(positions) > 1:
+        result['eligibility_note'] = 'Sleeper fantasy eligibility: ' + ' / '.join(positions) + '. League slot rules determine lineup use.'
     value = number(row.get('canonical_projection'))
     result.update(value=value, snapshot_id=snapshot.get('projection_snapshot_id'),
                   confidence=row.get('projection_confidence'))
@@ -54,5 +83,10 @@ def player_projection_view(data: dict, player_id: str, service, week: int | None
                       availability='available', reason=None,
                       display_reason=None if display is not None else row.get('display_reason') or 'Canonical league-scored Sleeper statistics; exact Sleeper display replay is unverified.')
     else:
-        result['reason'] = row.get('availability_reason') or 'No supported Sleeper projection is available for this player in the selected week. This is missing evidence, not a zero projection.'
+        reasons = {
+            'NO_PLAYER_RECORD': f'No supported Sleeper projection for Week {selected}: no matching player-week record was supplied.',
+            'NO_SCORING_STATISTICS': f'No supported Sleeper projection for Week {selected}: a player-week record exists, but contains no usable scoring statistics.',
+            'UNSUPPORTED_SCORING': f'No supported Sleeper projection for Week {selected}: the supplied statistics cannot establish points in this scoring setup.',
+        }
+        result['reason'] = row.get('availability_reason') or reasons.get(row.get('missing_projection_reason')) or 'No supported Sleeper projection is available for this player in the selected week. This is missing evidence, not a zero projection.'
     return result

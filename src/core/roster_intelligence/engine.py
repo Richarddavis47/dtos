@@ -40,8 +40,10 @@ def evaluate_roster(intelligence: Any) -> RosterReport:
         reserves = []
         if lineup.optimal_lineup_projection is not None:
             reserves = [{'id': item.player_id, 'position': player.get('position'), 'projected_points': item.projected_points}
+                | {'fantasy_positions': projection_rows.get(item.player_id, {}).get('fantasy_positions')}
                 for item, player in zip(evidence_players, other.profile.players)
                 if item.player_id not in lineup.optimal_starter_ids
+                and item.player_id not in lineup.excluded_player_ids
                 and str(player.get('roster_slot') or '').upper() not in {'IR', 'TAXI', 'RESERVE'}]
             backup_result = optimal_legal_lineup(reserves, context.settings.get('roster_positions') or ())
             # Depth is the supported reserve contribution, not a second full team.

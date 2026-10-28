@@ -11,12 +11,12 @@ import json
 from math import isfinite
 from statistics import median
 
-from src.core.trade_intelligence.lineup import BENCH_SLOTS, FLEX_ELIGIBILITY, _eligible
+from src.core.trade_intelligence.lineup import BENCH_SLOTS, FLEX_ELIGIBILITY, _eligible, eligible_positions
 from src.core.trade_intelligence.lineup_memo import LineupStore, SearchLineupMemo
 from src.core.trade_intelligence.capital_assessment import resolve_strategy
 
 POSITIONS = ("QB", "RB", "WR", "TE")
-METHOD = "legal-roster-diagnostics-v2"
+METHOD = "legal-roster-diagnostics-v3-source-eligibility"
 diagnostic_store = LineupStore(max_entries=12, max_bytes=2_097_152, ttl=180)
 
 
@@ -118,19 +118,9 @@ def _qualification(data, snapshot, slots, *, projection_reader=None):
     )
     if not isinstance(refresh, dict):
         refresh = {}
-    leaf = ((snapshot or {}).get("horizon_snapshot_ids") or {}).get(
-        str((snapshot or {}).get("week"))
-    ) or (snapshot or {}).get("projection_snapshot_id")
-    mixed = (
-        any(
-            row.get("projection_snapshot_id") not in (None, leaf)
-            or row.get("scoring_profile_id")
-            not in (None, snapshot.get("scoring_profile_id"))
-            for row in rows.values()
-        )
-        if snapshot
-        else False
-    )
+    from src.core.projection_intelligence.service import projection_row_compatible
+    mixed = any(not projection_row_compatible(snapshot, pid, row)
+                for pid, row in rows.items()) if snapshot else False
     limitations = []
     if not valid:
         limitations.append(
@@ -203,6 +193,8 @@ def diagnostic_inputs(data, snapshot):
     )
     rows = (snapshot or {}).get("players") or {}
     pools, excluded, uncertain, eligibility = {}, {}, {}, {}
+    from .team_strength import compatible_profile
+    profile = compatible_profile(data, snapshot) if admitted else None
     database = data.get("players") or {}
     if not isinstance(database, dict):
         database = {
@@ -217,6 +209,8 @@ def diagnostic_inputs(data, snapshot):
             raise ValueError("Duplicate diagnostic franchise identity")
         pools[rid], excluded[rid], uncertain[rid] = [], [], []
         eligibility[rid] = []
+        current = ((profile or {}).get('teams', {}).get(rid, {}).get('weekly') or {})
+        known_byes = set((current.get(week) or current.get(str(week)) or {}).get('known_bye_player_ids') or [])
         for player in team.get("players") or []:
             pid = str(player.get("id") or player.get("player_id") or "")
             if not pid or pid in owned:
@@ -252,7 +246,7 @@ def diagnostic_inputs(data, snapshot):
             unavailable = (
                 slot in {"IR", "TAXI", "RESERVE"}
                 or source.get("lineup_eligible") is False
-                or source.get("bye_week") == week
+                or source.get("bye_week") == week or pid in known_byes
                 or status in UNAVAILABLE_PLAYER_STATUSES
                 or unknown_status
             )
@@ -262,7 +256,7 @@ def diagnostic_inputs(data, snapshot):
                 else "Not lineup eligible"
                 if source.get("lineup_eligible") is False
                 else "Observed bye week"
-                if source.get("bye_week") == week
+                if source.get("bye_week") == week or pid in known_byes
                 else "Unsupported availability status"
                 if unknown_status
                 else status.title()
@@ -272,6 +266,7 @@ def diagnostic_inputs(data, snapshot):
                     "player_id": pid,
                     "name": source.get("name") or source.get("full_name") or pid,
                     "position": source.get("position") or row.get("position"),
+                    "fantasy_positions": row.get('fantasy_positions'),
                     "status": status,
                     "excluded": unavailable,
                     "reason": reason,
@@ -287,6 +282,7 @@ def diagnostic_inputs(data, snapshot):
                     "id": pid,
                     "name": source.get("name") or source.get("full_name") or pid,
                     "position": source.get("position") or row.get("position"),
+                    "fantasy_positions": row.get('fantasy_positions'),
                     "projected_points": points,
                 }
             )
@@ -509,7 +505,7 @@ def _compute(inputs, snapshot, key):
             }
         positions = {}
         for pos in POSITIONS:
-            members = [p for p in pool if p["position"] == pos]
+            members = [p for p in pool if pos in eligible_positions(p)]
             candidates = [(owner, p) for owner, p in references[pos] if owner != rid]
             target = (
                 median(p["projected_points"] for _, p in candidates)
@@ -536,7 +532,7 @@ def _compute(inputs, snapshot, key):
                 _eligible(pos, slot) for slot in slots if slot not in BENCH_SLOTS
             )
             starters = [e for e in base.entries if e.position == pos]
-            backup = [p for p in reserves[rid] if p["position"] == pos]
+            backup = [p for p in reserves[rid] if pos in eligible_positions(p)]
             # Reserve assignment is disjoint across ALL lineup slots, so one
             # replacement cannot be counted at both FLEX and its core position.
             supported_reserve = [

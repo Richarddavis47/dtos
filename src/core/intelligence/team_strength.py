@@ -14,10 +14,10 @@ from typing import Any
 from time import perf_counter
 
 from src.core.trade_intelligence.lineup import optimal_legal_lineup
-from src.core.projection_intelligence.service import UNAVAILABLE_PLAYER_STATUSES
+from src.core.projection_intelligence.service import UNAVAILABLE_PLAYER_STATUSES, projection_row_compatible
 from src.core.projection_intelligence.sleeper_provider import freshness_state
 
-METHOD_VERSION = 'weekly-optimal-horizons-v3-reserve-quality'
+METHOD_VERSION = 'weekly-optimal-horizons-v4-source-eligibility'
 
 
 def _weeks(values: list[int] | tuple[int, ...]) -> tuple[int, ...]:
@@ -129,11 +129,15 @@ def prepare_team_strength(service: Any, *, league_id: str, season: int, current_
             rows = (snapshot or {}).get('players') or {}
             for pid in ids:
                 row = rows.get(pid)
-                if row is not None and (row.get('week') != week or row.get('season') != season):
+                if row is not None and (row.get('week') != week or row.get('season') != season
+                                        or not projection_row_compatible(snapshot, pid, row)):
                     raise ValueError('Player projection boundary mismatch')
             pool = [{'id': pid, 'position': rows.get(pid, {}).get('position'),
+                     'fantasy_positions': rows.get(pid, {}).get('fantasy_positions'),
                      'projected_points': rows.get(pid, {}).get('canonical_projection'),
-                     'lineup_eligible': pid not in excluded,
+                     'lineup_eligible': pid not in excluded and not (
+                         week == current_week and str(rows.get(pid, {}).get('availability') or '').casefold()
+                         in UNAVAILABLE_PLAYER_STATUSES),
                      'bye_week': byes.get(pid)}
                     for pid in ids]
             optimization_started = perf_counter()
@@ -171,7 +175,9 @@ def prepare_team_strength(service: Any, *, league_id: str, season: int, current_
             weekly[week] = {'available': lineup.available, 'optimal': asdict(lineup),
                 'projection_snapshot_id': (snapshot or {}).get('projection_snapshot_id'),
                 'coverage': {'supported_slots': len(lineup.entries), 'unsupported_slots': list(lineup.unsupported_slots),
-                             'missing_player_ids': list(lineup.missing_player_ids)},
+                             'missing_player_ids': list(lineup.missing_player_ids),
+                             'excluded_player_ids': sorted(p['id'] for p in pool
+                                 if not p['lineup_eligible'] or p.get('bye_week') == week)},
                 'reserve_capacity': {'supported_slots': len(reserve_lineup.entries),
                     'unsupported_slots': list(reserve_lineup.unsupported_slots),
                     'known_subtotal': reserve_points,
@@ -218,6 +224,16 @@ def prepare_team_strength(service: Any, *, league_id: str, season: int, current_
               'playoff_round_weeks': [list(weeks) for weeks in rounds] if rounds is not None else None,
               'playoff_opponent': None, 'playoff_meaning': 'opponent_independent_window_not_qualification',
               'teams': teams, 'provider_calls': 0, 'durable_writes': 0}
+    result['current_week_comparison'] = {
+        'league_id': str(league_id), 'season': season, 'week': current_week,
+        'projection_generation': pinned['horizon_generation'],
+        'scoring_profile_id': pinned.get('scoring_profile_id'),
+        'league_size': len(teams),
+        'supported_count': sum(team['weekly'][current_week]['available'] for team in teams.values()),
+        'required_slots': [slot for slot in roster_positions if slot.upper() not in {'BN', 'BENCH', 'IR', 'TAXI', 'RESERVE'}],
+        'excluded': [{'roster_id': rid, **team['weekly'][current_week]['coverage']}
+                     for rid, team in teams.items() if not team['weekly'][current_week]['available']],
+        'meaning': 'Modeled optimal lineups among supported eligible players; incomplete bench coverage alone does not exclude a franchise.'}
     result['roster_reference'] = roster_reference(rosters, roster_positions)
     result['semantic_generation'] = hashlib.sha256(json.dumps(result, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     if timings is not None:
