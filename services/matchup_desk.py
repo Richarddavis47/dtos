@@ -83,7 +83,7 @@ def pregame_desk(data, week, matchup_id, projection_service=None, *, prepared_vi
         opportunity = team['lineup_opportunity']
         if opportunity.get('opportunity'):
             result['angles'].append({'kind': 'lineup_opportunity', 'reference': identity,
-                'text': f"{team['name']} has {opportunity['gain']:.2f} projected points available from the prepared optimal lineup among supported players. The submitted lineup has not changed."})
+                'text': f"{team['name']} has a prepared optimal-lineup comparison of +{opportunity['gain']:.2f} projected points among supported players. This is not confirmation that substitutions remain possible. The submitted lineup has not changed."})
     edges = [row for row in result['slot_edges'] if row.get('edge_roster_id') is not None]
     if edges:
         edge = sorted(edges, key=lambda row: (-row['gap'], row['slot']))[0]

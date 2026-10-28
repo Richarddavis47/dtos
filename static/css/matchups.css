@@ -51,6 +51,11 @@
 
 /* Narrow phones need readable player rows, not two compressed half-columns. */
 .matchup-side-label{display:none}
+.lineup-review{margin:12px 0;padding:16px;border:1px solid var(--border,#37443e);border-radius:12px;background:var(--panel,#151c19);overflow-wrap:anywhere}
+.lineup-review h3{margin:0 0 8px;font-size:1.15rem}
+.lineup-review[data-lineup-review="actionable"]{border-left:4px solid var(--green,#41db8d)}
+.lineup-review p{margin:8px 0}.lineup-review li{margin:6px 0}.lineup-review ul{padding-left:20px}
+.lineup-review a{min-height:44px;display:inline-flex;align-items:center}
 @media(max-width:360px){
  .season-sides,.matchup-pair{grid-template-columns:minmax(0,1fr)}
  .matchup-side-label{display:block;margin:6px 0;color:var(--muted);font-size:.75rem}

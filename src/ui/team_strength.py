@@ -13,10 +13,18 @@ def strength_panel(profile: dict | None, *, league_id: str | None = None, roster
         from services.team_fois_explanations import team_strength_explanation
         from src.ui.explanations import explanation_panel
         explanation = explanation_panel(team_strength_explanation(profile, league_id=league_id, roster_id=roster_id))
-    names = {str(player['id']): str(player.get('name') or player['id']) for player in players or []}
+    from services.lineup_review import player_identity
+    identities = {str(player['id']): player_identity({str(player['id']): player}, str(player['id']),
+                   season=profile.get('season'), league_id=league_id) for player in players or []}
+    names = {pid: identity['name'] for pid, identity in identities.items()}
+    positions = {pid: identity['position'] for pid, identity in identities.items()}
 
     def player_link(pid, week=None):
-        return f'<a href="{escape(contextual_player_url(str(pid), from_team=from_team, section="my-team-advanced", week=week))}">{escape(names.get(str(pid), str(pid)))}</a>'
+        label = escape(names.get(str(pid), 'Player name not verified'))
+        position = positions.get(str(pid))
+        if position:
+            label += f' ({escape(position)})'
+        return f'<a href="{escape(contextual_player_url(str(pid), from_team=from_team, section="my-team-advanced", week=week))}">{label}</a>'
 
     cards = []
     labels = {'current_week': 'Current-week strength', 'next_n': 'Next-N strength',

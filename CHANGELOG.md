@@ -1,3 +1,11 @@
+# v1.21.108 / build 2208 — Prepared lineup review and game-lock integrity
+
+Keep the actual Sleeper submitted lineup separate from the prepared optimal lineup, including explicitly empty slots. Show a higher-projected lineup alert only when the exact current-week changes have compatible projections, fresh roster/preparation checks, verified player identity, eligible slots and future recorded game times. Unknown or started-game changes remain informational; no lineup is submitted automatically. Open tabs expire the actionable suggestion without polling.
+
+Resolve optimal player names and positions, explain prepared bye/Out/unassigned-team evidence, and apply the existing projection provenance check to matchup rows and optimal disclosures. Reuse the existing bounded schedule preparation and add no ordinary-read provider, solver, FOIS, history or discovery work. Neutral/Custom valuations, Trade verdicts, historical grades and saved state remain unchanged.
+
+The live 0/10 versus 3/10 needs count is not resolved without a matching publication identity and reconnected browser. Controlled fixtures do not establish live Day Traders or physical Safari acceptance. See docs/audits/LINEUP_REVIEW_2208.md.
+
 # v1.21.107 / build 2207 — Projection coverage and legal eligibility
 
 Preserve Sleeper's explicit fantasy positions separately from primary NFL position, and apply exact league slots without counting one athlete twice. Current Out/IR and already-prepared known-bye exclusions now agree across Team Strength, roster diagnostics and useful reserve production. Original quotes and genuine zero remain intact; explicit source identity conflicts are withheld.

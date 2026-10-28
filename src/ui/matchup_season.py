@@ -81,7 +81,9 @@ def _player_cell(player, week, identity, state, *, starter=False, team_label='')
     else:
         content += '<small>Dossier unavailable</small>' if pid != '0' else ''
     projected = escape(str(player.get('projection_display') or _points(player['projection'])))
-    qualification = f'<small>{escape(player["projection_display_reason"])}</small>' if player.get('projection_display_reason') and player['projection'] is not None else ''
+    qualification = f'<small>{escape(player["projection_display_reason"])}</small>' if player.get('projection_display_reason') else ''
+    if player.get('participation_note'):
+        qualification += f'<small>{escape(player["participation_note"])}</small>'
     actual = '' if state == 'pregame' else f'<span><small>Actual</small><b>{_points(player["actual"])}</b></span>'
     label = 'Pregame projection · Sleeper' if player['projection'] is not None else 'Projection unavailable'
     side_label = f'<small class="matchup-side-label">{escape(team_label)}</small>' if team_label else ''
@@ -124,7 +126,13 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
         heading += ' · Playoff round'
         description += ' Component weeks: ' + ', '.join(map(str, view['round_weeks'])) + '.'
         description += ' Round complete.' if view['round_complete'] else ' Round unresolved until all component weeks finish.'
-    body = nav + f'<section class="card matchup-heading"><h2>{escape(heading)}</h2><p>{escape(description)}</p></section>'
+    from src.ui.lineup_review import review_panel
+    own_reviews = ''.join(review_panel(side.get('lineup_review')) for identity, sides in view['groups'].items()
+                          for side in sides if side.get('is_viewer') and view['period'] != 'historical'
+                          and (matchup_id is None or identity == matchup_id))
+    body = nav + f'<section class="card matchup-heading"><h2>{escape(heading)}</h2><p>{escape(description)}</p></section>' + own_reviews
+    if own_reviews:
+        body += '<script src="/static/lineup-review.js" defer></script>'
     if not view['opponents_locked']:
         return body + '<section class="card"><h3>Playoff opponents not established</h3><p>Projected seeding is not a locked matchup. Playoff-window strength remains opponent-independent.</p><a href="/teams">View team strength</a></section>'
     byes = ''.join(f'<section class="card"><h3><a href="/teams/{side["roster_id"]}">{escape(side["team"])}</a></h3><p>First-round bye · qualified for the playoffs. No opponent or game score is assigned.</p></section>' for side in view.get('byes') or [])
@@ -158,6 +166,8 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
                 projected += '<small>Source-listed lineup projection · future submission not established.</small>'
             blocks.append('<section class="matchup-card-side">' + _team_identity(side, linked=matchup_id is not None) + actual + projected + '</section>')
         coverage = ' · '.join(f'{s["team"]}: {s["supported_slots"]}/{s["expected_slots"]} projected slots' for s in sides)
+        if any(s.get('empty_slots') for s in sides):
+            coverage += ' · Explicit empty submitted slots contribute no points; no player projection was replaced with zero.'
         partial = '<small class="matchup-warning">Incomplete projection coverage · projected leader unavailable</small>' if state == 'pregame' and any(s['projection'] is None for s in sides) else ''
         unassigned = '<p>Opponent unassigned. This alone does not establish a playoff bye or elimination.</p>' if len(sides) < 2 else ''
         bracket = (view.get('bracket_labels') or {}).get(identity, '')
@@ -176,7 +186,8 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
                 if side['coverage'] == 'partial':
                     technical += f'<p>Known-starter subtotal: {_points(side["known_subtotal"])} — not a complete team projection.</p>'
                 if optimal.get('entries'):
-                    technical += '<p>Optimal projected starters · not the submitted lineup</p><ul>' + ''.join(f'<li>{escape(e["slot"])} · {escape(e["label"])}</li>' for e in optimal['entries']) + '</ul>'
+                    technical += '<p>Optimal projected starters · not the submitted lineup</p><ul>' + ''.join(f'<li>{escape(e["slot"])} · {escape(e["name"])}'
+                        + (f' ({escape(e["position"])})' if e.get('position') else '') + '</li>' for e in side.get('optimal_display_entries') or []) + '</ul>'
         for side in sides:
             if side.get('round_scores'):
                 technical += '<h4>' + escape(side['team']) + '</h4><p>Complete round score: <b>' + _points(side.get('round_actual')) + '</b></p>'

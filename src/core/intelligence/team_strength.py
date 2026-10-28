@@ -271,6 +271,7 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
     calendar = season_calendar(league, nfl_state=data.get('nfl_state'))
     if calendar['current_week'] != data.get('week'):
         raise ValueError('Current fantasy week and projection preparation week disagree')
+    lineup_schedule = None
     if bye_evidence is None:
         from services.global_evidence import retained_global_evidence
         from src.core.data_platform.global_schedule import schedule_from_facts
@@ -278,6 +279,8 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
         boundary = (pinned or {}).get('generated_at')
         if store is not None and boundary:
             facts = store.read('schedule', None, season=int(league['season']), as_of=boundary)
+            from services.lineup_review import prepared_games
+            lineup_schedule = prepared_games(facts, int(league['season']))
             teams = {player.get('team') or player.get('nfl_team') for team in data.get('teams') or [] for player in team.get('players') or []}
             schedules = {team: schedule_from_facts(facts, team, season=int(league['season']), as_of=boundary) for team in teams if team}
             player_weeks = {str(player['id']): schedules.get(player.get('team') or player.get('nfl_team'), {}).get('bye_week')
@@ -288,7 +291,7 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
                     'reference': hashlib.sha256(json.dumps(sorted(row['fingerprint'] for row in facts)).encode()).hexdigest()}
     existing = compatible_profile(data, pinned)
     preparation_key = hashlib.sha256(json.dumps({
-        'next_n': next_n, 'bye_evidence': bye_evidence,
+        'next_n': next_n, 'bye_evidence': bye_evidence, 'lineup_review_schedule': lineup_schedule,
     }, sort_keys=True).encode()).hexdigest()
     if existing is not None and existing.get('preparation_key') == preparation_key:
         return existing
@@ -298,6 +301,7 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
         calendar_reference=calendar['reference'], next_n=next_n, bye_evidence=bye_evidence, timings=timings,
         projection_snapshot=pinned)
     profile['calendar'] = calendar
+    profile['lineup_review_schedule'] = lineup_schedule
     profile['preparation_key'] = preparation_key
     profile['scoring_reference'] = hashlib.sha256(json.dumps(scoring, sort_keys=True).encode()).hexdigest()
     data['team_strength'] = profile
