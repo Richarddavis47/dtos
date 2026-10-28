@@ -141,6 +141,27 @@ class LineupProvenanceTests(unittest.TestCase):
         self.assertEqual(items["active.playoff_window"].display, "12.62")
         self.save("isolated-week-failure", a)
 
+    def test_partner_conflict_withholds_endorsement_without_erasing_valid_user_week(
+        self,
+    ):
+        e = deepcopy(self.e)
+        e["multi_horizon_impact"]["sides"]["partner"]["weekly"][2]["post"][
+            "projection_snapshot_id"
+        ] = "foreign-partner-publication"
+        d = decision_context(e)
+        self.assertAlmostEqual(d["lineup"]["delta"], 6.31)
+        self.assertEqual(d["final_decision"]["headline"], "Recommendation unavailable")
+        self.assertFalse(d["final_decision"]["qualified"])
+        values = {
+            x.key: x.display
+            for x in trade_explanation(e, league_id="league-1").evidence
+        }
+        self.assertEqual(values["weekly.active.2.delta"], "6.31")
+        self.assertIsNone(values["weekly.partner.2.delta"])
+        self.assertEqual(
+            e["generated_trade_eligible"], self.e["generated_trade_eligible"]
+        )
+
     def test_phase_week_season_scoring_and_before_after_mismatch(self):
         for phase in ("pre", "post"):
             for key, value in (

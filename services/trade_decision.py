@@ -30,7 +30,7 @@ def final_decision(result):
     from services.trade_search_policy import classify
 
     from services.trade_lineup_evidence import completed_lineup_evidence
-    evidence = completed_lineup_evidence(result)
+    evidence = [completed_lineup_evidence(result, side) for side in ("active", "partner")]
     state = classify(result)
     label = result.get("recommendation")
     qualified = result.get("generated_trade_eligible") is True
@@ -51,7 +51,7 @@ def final_decision(result):
             "Not a qualified bilateral recommendation. Review the missing evidence or execution limits before pursuing."
         )
     if label in ("SMASH ACCEPT", "WORTH PURSUING") and (
-        evidence['identity_state'] != 'compatible' or evidence['invalid_comparison']
+        any(row['identity_state'] != 'compatible' or row['invalid_comparison'] for row in evidence)
     ):
         headline = "Recommendation unavailable"
         qualified = False

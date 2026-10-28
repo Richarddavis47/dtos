@@ -164,7 +164,7 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
             add(f'weekly.{side}.{week}.delta', f'{label} · {context}Week {week} · Optimal-lineup change',
                 row['delta'], unit='fantasy points', state=A.PARTIAL if row['state'] == 'provisional' else None)
         for week, change in (strategy.get('reserve_slot_changes') or {}).items():
-            add(f'{side}.depth.{week}', f'{label} · week {week} reserve coverage change', change if admissions[side]['identity_state'] == 'compatible' else None, unit='supported reserve slots')
+            add(f'{side}.depth.{week}', f'{label} · week {week} reserve coverage change', change if (admitted_weekly.get(int(week)) or {}).get('delta') is not None else None, unit='supported reserve slots')
         for week, row in (strategy.get('reserve_quality_by_week') or {}).items():
             for field, title in (('pre_points', 'before trade'), ('post_points', 'after trade'), ('delta', 'change')):
                 add(f'{side}.reserve_quality.{week}.{field}', f'{label} · Week {week} · Legal reserve production {title}',
