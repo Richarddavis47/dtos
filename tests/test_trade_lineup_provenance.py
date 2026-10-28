@@ -116,6 +116,15 @@ class LineupProvenanceTests(unittest.TestCase):
             self.assertNotEqual(a["identity_state"], "compatible")
             self.assertTrue(all(w["delta"] is None for w in a["weekly"].values()))
 
+    def test_missing_evaluation_league_identity_never_admits_comparisons(self):
+        e = deepcopy(self.e)
+        e["provenance"]["inputs"].pop("league_id")
+        admitted = completed_lineup_evidence(e)
+        self.assertEqual(admitted["identity_state"], "unavailable")
+        self.assertTrue(
+            all(row["delta"] is None for row in admitted["weekly"].values())
+        )
+
     def test_missing_future_manifest_preserves_independent_current_root(self):
         e = deepcopy(self.e)
         e["provenance"]["inputs"]["projection_evidence"].pop("horizon_snapshot_ids")

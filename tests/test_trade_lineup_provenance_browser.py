@@ -159,6 +159,28 @@ class LineupProvenanceBrowserTests(unittest.TestCase):
                         page.reload()
                         page.get_by_role(
                             "button", name="Adopt alternative", exact=True
+                        ).wait_for()
+                        page.locator("#trade-result details").evaluate_all(
+                            "rows=>rows.forEach(e=>e.open=true)"
+                        )
+                        restored_text = page.locator("#trade-result").inner_text()
+                        if case == "global":
+                            self.assertNotIn("6.31", restored_text)
+                            self.assertNotIn("18.93", restored_text)
+                        else:
+                            self.assertIn(
+                                "Your team · Next-N: Unavailable", restored_text
+                            )
+                            self.assertNotIn("Your team · Next-N: 18.93", restored_text)
+                            self.assertIn(
+                                "Your team · Current week: 6.31", restored_text
+                            )
+                            self.assertIn(
+                                "Your team · Playoff window: 12.62", restored_text
+                            )
+                            self.assertIn("Their team · Next-N: -18.93", restored_text)
+                        page.get_by_role(
+                            "button", name="Adopt alternative", exact=True
                         ).click()
                         page.reload()
                         page.locator("#trade-context").wait_for()
@@ -171,6 +193,35 @@ class LineupProvenanceBrowserTests(unittest.TestCase):
                             next(iter(f.f.state(page).values()))["valuationMode"], mode
                         )
                         self.assertLessEqual(
+                            len(
+                                json.dumps(
+                                    next(iter(f.f.state(page).values()))[
+                                        "currentAssessment"
+                                    ]
+                                )
+                            ),
+                            64000,
+                        )
+                        page.locator("#trade-result details").evaluate_all(
+                            "rows=>rows.forEach(e=>e.open=true)"
+                        )
+                        adopted_text = page.locator("#trade-result").inner_text()
+                        if case == "global":
+                            self.assertNotIn("6.31", adopted_text)
+                            self.assertNotIn("18.93", adopted_text)
+                        else:
+                            self.assertIn(
+                                "Your team · Next-N: Unavailable", adopted_text
+                            )
+                            self.assertNotIn("Your team · Next-N: 18.93", adopted_text)
+                            self.assertIn(
+                                "Your team · Current week: 6.31", adopted_text
+                            )
+                            self.assertIn(
+                                "Your team · Playoff window: 12.62", adopted_text
+                            )
+                            self.assertIn("Their team · Next-N: -18.93", adopted_text)
+                        self.assertLessEqual(
                             page.evaluate("document.documentElement.scrollWidth"), width
                         )
                         reports.append(
@@ -181,6 +232,15 @@ class LineupProvenanceBrowserTests(unittest.TestCase):
                                 qualified=False,
                                 package_preserved=True,
                                 mode=mode,
+                                restored_text=restored_text,
+                                adopted_text=adopted_text,
+                                saved_context_bytes=len(
+                                    json.dumps(
+                                        next(iter(f.f.state(page).values()))[
+                                            "currentAssessment"
+                                        ]
+                                    )
+                                ),
                             )
                         )
                         target = os.environ.get("DTOS_TRADE_CLARITY_EVIDENCE")

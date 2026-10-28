@@ -40,7 +40,8 @@ def completed_lineup_evidence(result, side="active"):
     required = ("league_id", "season", "week", "scoring_profile_id", "generation")
     missing = any(projection.get(key) in (None, "") for key in required)
     missing |= (
-        not inputs.get("projection_generation")
+        not inputs.get("league_id")
+        or not inputs.get("projection_generation")
         or not impact.get("projection_generation")
         or not impact.get("league_id")
     )
@@ -181,6 +182,8 @@ def completed_lineup_evidence(result, side="active"):
         horizons[name] = {
             **common,
             "delta": delta if complete else None,
+            "pre_total": row.get("pre_total") if complete else None,
+            "post_total": row.get("post_total") if complete else None,
             "state": "incompatible"
             if conflict
             else "unavailable"

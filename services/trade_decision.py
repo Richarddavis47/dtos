@@ -175,6 +175,11 @@ def decision_context(result, *, incoming=(), outgoing=()):
     if admitted['identity_state'] != 'compatible' or admitted['invalid_comparison']:
         context = "The recorded production rationale cannot be verified against this source context. Independently supported weeks remain separate; no missing comparison is filled."
         cost = ("Market cost cannot be fully assessed because required pricing is missing or incompatible. " if market_incomplete else "") + "The full roster-production cost cannot be verified; available Market totals and capital are shown separately."
+    partner_admitted = completed_lineup_evidence(result, 'partner')
+    by_side = {'active': admitted, 'partner': partner_admitted}
+    verified = {side: row['identity_state'] == 'compatible' and not row['invalid_comparison']
+                for side, row in by_side.items()}
+    partner_context = dimensions.get('league_partner_context') or {}
     conditional = []
     if needs_strategy:
         conditional = [
@@ -234,6 +239,16 @@ def decision_context(result, *, incoming=(), outgoing=()):
         },
         "lineup": {**current, "delta": delta, "state": numeric_state, "explanation": lineup},
         "lineup_comparisons": comparisons,
+        "partner_lineup_comparisons": {name: {key: row.get(key) for key in
+            ('delta', 'state', 'weeks', 'pre_total', 'post_total', 'subtotal', 'comparable_weeks')}
+            for name, row in partner_admitted['horizons'].items()},
+        "lineup_phase_admission": {side: {str(week): [row['pre'] is not None, row['post'] is not None, row['delta'] is not None]
+            for week, row in view['weekly'].items()} for side, view in by_side.items()},
+        "lineup_rationale_verified": verified,
+        "partner_summary": (result.get('counterparty_summary') or result.get('why_they_would_do_it')) if verified['partner'] else
+            "Their roster-production benefit cannot be verified in this source context.",
+        "partner_cost": partner_context.get('current_cost') if verified['partner'] else
+            "Their roster-production cost cannot be verified in this source context.",
         "coverage_explanation": coverage_explanation,
         "main_cost": cost,
         "limitation": limitation,
