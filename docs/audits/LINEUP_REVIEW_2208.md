@@ -24,7 +24,7 @@ league (no best ball or enabled automatic-substitution policy); complete
 comparable totals and a positive displayed gain; exact compatible weekly
 projection rows; current owned/non-IR/non-taxi players; source/current starter
 agreement; verified names and eligible assignments; and recorded future kickoffs
-for every player being moved. Unknown participation, missing game times, started
+for every player being moved. NFL team, fantasy eligibility and participation are rechecked against the current exact-ID catalog; a transition cannot reuse a former team’s game lock. Only regular-season game facts may establish fantasy Week 1–18 locks. Unknown participation, missing game times, started
 games or stale/missing acquisition times fail closed. Unchanged locked starters
 may remain in the same slot. Repeated identical slots are matched to unchanged
 starters before assigning the remaining prepared entries.

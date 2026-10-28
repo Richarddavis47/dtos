@@ -234,7 +234,7 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
                            'UNSUPPORTED_SCORING': 'The supplied statistics cannot establish points in this league’s scoring setup.'}
                 reason = reasons.get(projection.get('missing_projection_reason')) or 'No compatible projection is prepared for this player and week. Missing evidence is not zero.'
             return {"player_id": pid, "name": "Empty slot" if pid == '0' else identity['name'],
-                           "position": player.get("position"), "nfl_team": player.get("team"),
+                           "position": identity['position'], "nfl_team": player.get("team"),
                            "status": player.get("injury_status") or player.get("status"),
                            "identity_available": identity['identity_available'], "slot": slot,
                            "actual": actual, "projection": value,

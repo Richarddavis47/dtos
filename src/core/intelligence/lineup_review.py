@@ -58,6 +58,8 @@ def prepared_games(facts, season):
         ):
             continue
         values = fact.get("values") or {}
+        if values.get("game_type") != "REG":
+            continue
         week, kickoff = fact.get("week"), timestamp(values.get("kickoff"))
         if type(week) is not int or not 1 <= week <= 18 or kickoff is None:
             continue
@@ -202,17 +204,33 @@ def review_lineup(
         )
         return result
     rows = (snapshot or {}).get("players") or {}
-    from src.core.projection_intelligence.service import projection_row_compatible
+    from src.core.projection_intelligence.service import (
+        projection_row_compatible,
+        player_availability,
+    )
 
     def kickoff(pid):
         row = rows.get(pid) or {}
-        team_id = (
-            row.get("nfl_team")
-            or row.get("team")
-            or owned[pid].get("nfl_team")
-            or owned[pid].get("team")
+        catalog = (data.get("players") or {}).get(pid) or {}
+
+        def team_id(player):
+            value = (
+                str(player.get("team") or player.get("nfl_team") or "").strip().upper()
+            )
+            return value if value not in {"", "VACANT", "UNKNOWN", "—", "-"} else None
+
+        source_team, current_team, roster_team = (
+            team_id(row),
+            team_id(catalog),
+            team_id(owned[pid]),
         )
-        game = (schedule.get("games") or {}).get(f"{week}:{team_id}") or {}
+        if (
+            not source_team
+            or source_team != current_team
+            or (roster_team and roster_team != source_team)
+        ):
+            return None
+        game = (schedule.get("games") or {}).get(f"{week}:{source_team}") or {}
         return timestamp(game.get("kickoff")) if game.get("reference") else None
 
     # Keep equivalent slots stable, especially an already locked starter in a
@@ -246,6 +264,24 @@ def review_lineup(
     for before, after in zip(source, assigned):
         pid = str(after["asset_id"])
         row = rows.get(pid) or {}
+        catalog = (data.get("players") or {}).get(pid) or {}
+        if (
+            not player_identity(
+                data.get("players") or {},
+                pid,
+                season=league.get("season"),
+                league_id=league.get("league_id"),
+            )["identity_available"]
+            or not any(
+                _eligible(pos, before["slot"]) for pos in eligible_positions(catalog)
+            )
+            or player_availability(catalog, row)
+            not in {"active", "questionable", "doubtful"}
+        ):
+            result["reason"] = (
+                "Current player identity, position or participation no longer agrees with the prepared assignment. Refresh the league before making changes."
+            )
+            return result
         if (
             not projection_row_compatible(snapshot, pid, row)
             or row.get("canonical_projection") != after.get("projected_points")

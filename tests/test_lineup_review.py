@@ -165,6 +165,7 @@ class LineupReviewTests(unittest.TestCase):
                 week=8,
                 fingerprint=str(i),
                 values=dict(
+                    game_type="REG",
                     home_team="BUF",
                     away_team="NYJ",
                     kickoff=f"2026-10-29T{hour}:00:00Z",
@@ -190,7 +191,7 @@ class LineupReviewTests(unittest.TestCase):
         snap = copy.deepcopy(
             service.week_snapshot(8, generation_snapshot=service.snapshot())
         )
-        snap["players"]["1-r"]["nfl_team"] = "KC"
+        snap["players"]["1-r"]["team"] = "KC"
         data["team_strength"]["lineup_review_schedule"]["games"]["8:KC"] = {
             "kickoff": (now - timedelta(hours=1)).isoformat(),
             "reference": "played-game",
@@ -308,3 +309,39 @@ class LineupReviewTests(unittest.TestCase):
             self.assertEqual(
                 response.text.count("Higher-projected lineup available"), 1
             )
+
+    def test_current_nfl_team_and_eligibility_transitions_suppress_alert(self):
+        for mutation in ("team", "fantasy_positions", "status"):
+            data, service, now = prepared(self)
+            if mutation == "team":
+                for player in data["teams"][0]["players"]:
+                    if player["id"] == "1-bq":
+                        player["team"] = "KC"
+                data["players"]["1-bq"]["team"] = "KC"
+                data["team_strength"]["lineup_review_schedule"]["games"]["8:KC"] = {
+                    "kickoff": (now - timedelta(hours=1)).isoformat(),
+                    "reference": "started-game",
+                }
+            elif mutation == "fantasy_positions":
+                data["players"]["1-bq"]["fantasy_positions"] = ["TE"]
+            else:
+                data["players"]["1-bq"]["injury_status"] = "Out"
+            review = self.review(data, service, now)
+            self.assertFalse(review["actionable"], review)
+            self.assertEqual(review["state"], "informational")
+
+    def test_non_regular_schedule_cannot_verify_regular_week_locks(self):
+        fact = dict(
+            family="schedule",
+            provider="nflverse",
+            season=2026,
+            week=8,
+            fingerprint="wrong-phase",
+            values=dict(
+                game_type="PRE",
+                home_team="BUF",
+                away_team="NYJ",
+                kickoff="2026-10-29T20:00:00Z",
+            ),
+        )
+        self.assertEqual(prepared_games([fact], 2026)["games"], {})
