@@ -54,6 +54,7 @@ def final_decision(result):
         any(row['identity_state'] != 'compatible' or row['invalid_comparison'] for row in evidence)
     ):
         headline = "Recommendation unavailable"
+        state = "MISSING REQUIRED EVIDENCE"
         qualified = False
         qualification = "Not a qualified bilateral recommendation. The recorded lineup comparisons cannot be verified against their source context."
     return {"headline": headline, "classification": state, "qualified": qualified,

@@ -76,6 +76,10 @@ class LineupProvenanceTests(unittest.TestCase):
                 self.assertEqual(
                     d["final_decision"]["headline"], "Recommendation unavailable"
                 )
+                self.assertEqual(
+                    d["final_decision"]["classification"], "MISSING REQUIRED EVIDENCE"
+                )
+                self.assertFalse(d["final_decision"]["qualified"])
                 view = trade_explanation(e, league_id="league-1")
                 values = [
                     item.display
