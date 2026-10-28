@@ -105,11 +105,12 @@ def optimal_legal_lineup(players: Iterable[dict[str, Any]], roster_positions: It
     for projection, asset_id, position, label, fantasy_positions in sorted(pool, key=lambda row: (-row[0], row[1])):
         # Eligibility depends on the player and configured slot, never on a
         # partial assignment. Evaluate it once rather than once per DP state.
-        eligible_slots = tuple((index, slot, 1 << index,
-                                position if _eligible(position, slot) and position in fantasy_positions
-                                else next(pos for pos in fantasy_positions if _eligible(pos, slot)))
-                               for index, slot in enumerate(slots)
-                               if any(_eligible(pos, slot) for pos in fantasy_positions))
+        eligible_slots = []
+        for index, slot in enumerate(slots):
+            eligible = tuple(pos for pos in fantasy_positions if _eligible(pos, slot))
+            if eligible:
+                assigned_position = position if position in eligible else eligible[0]
+                eligible_slots.append((index, slot, 1 << index, assigned_position))
         updated = dict(states)
         for mask, (score, selected) in states.items():
             for index, slot, bit, assigned_position in eligible_slots:

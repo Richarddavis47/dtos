@@ -29,6 +29,8 @@ Each record has adp_dd_ppr=1000 and no recognized scoring statistics. All remain
 
 Parser and prepared diagnostic/method identities change to invalidate incompatible derived output; no cache capacity, retention policy or data warehouse is added. Canonical scoring and Sleeper display calculations do not change.
 
+The full Product gate caught source-string reference builders that still expected the old three-field eligibility loop. Adapt their reference construction to the explicit assigned fantasy position while retaining every seeded exact-assignment, order-symmetry and eligibility-count assertion. The production loop also avoids redundant eligibility checks: one check per fantasy-position/slot pair, outside the dynamic-programming states. Existing single-position check bounds remain unchanged.
+
 ## Ten-franchise fresh-source replay
 
 Exact source starting slots: QB, RB, RB, WR, WR, WR, TE, FLEX, FLEX, FLEX, SUPER_FLEX. The source's complete scoring settings, including PPR and TE bonus, are used directly. No default scoring template is substituted. Teams below use franchise numbers, not private owner names.

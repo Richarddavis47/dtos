@@ -20,9 +20,11 @@ def load_tests(loader, tests, pattern):
 
 
 def test_lazy_tie_keys_preserve_pre_correction_assignments():
+    # The assigned fantasy position is now explicit. Keep the same eager-tie
+    # reference, seeds and exact assignment assertions under that eligibility.
     source = inspect.getsource(lineup.optimal_legal_lineup)
-    optimized = "                candidate_score = score + projection\n                current = updated.get(mask | bit)\n                if current is not None and candidate_score < current[0]:\n                    continue\n                # Tie keys matter only on equal scores. Building them for every\n                # losing/winning assignment added substantial profiled overhead.\n                if current is None or candidate_score > current[0] or (\n                        tuple((entry.slot, entry.asset_id) for entry in selected) + ((slot, asset_id),) <\n                        tuple((entry.slot, entry.asset_id) for entry in current[1])):\n                    updated[mask | bit] = (candidate_score,\n                        selected + (LineupEntry(slot, asset_id, label, position, projection),))\n"
-    original = "                candidate = (score + projection, selected + (LineupEntry(slot, asset_id, label, position, projection),))\n                current = updated.get(mask | bit)\n                # Tie keys matter only on equal scores. Building them for every\n                # losing/winning assignment added substantial profiled overhead.\n                if current is None or candidate[0] > current[0] or (candidate[0] == current[0] and\n                        tuple((entry.slot, entry.asset_id) for entry in candidate[1]) <\n                        tuple((entry.slot, entry.asset_id) for entry in current[1])):\n                    updated[mask | bit] = candidate\n"
+    optimized = "                candidate_score = score + projection\n                current = updated.get(mask | bit)\n                if current is not None and candidate_score < current[0]:\n                    continue\n                # Tie keys matter only on equal scores. Building them for every\n                # losing/winning assignment added substantial profiled overhead.\n                if current is None or candidate_score > current[0] or (\n                        tuple((entry.slot, entry.asset_id) for entry in selected) + ((slot, asset_id),) <\n                        tuple((entry.slot, entry.asset_id) for entry in current[1])):\n                    updated[mask | bit] = (candidate_score,\n                        selected + (LineupEntry(slot, asset_id, label, assigned_position, projection),))\n"
+    original = "                candidate = (score + projection, selected + (LineupEntry(slot, asset_id, label, assigned_position, projection),))\n                current = updated.get(mask | bit)\n                # Tie keys matter only on equal scores. Building them for every\n                # losing/winning assignment added substantial profiled overhead.\n                if current is None or candidate[0] > current[0] or (candidate[0] == current[0] and\n                        tuple((entry.slot, entry.asset_id) for entry in candidate[1]) <\n                        tuple((entry.slot, entry.asset_id) for entry in current[1])):\n                    updated[mask | bit] = candidate\n"
     assert optimized in source
     namespace = dict(vars(lineup))
     exec(source.replace(optimized, original), namespace)
@@ -42,12 +44,16 @@ def test_lazy_tie_keys_preserve_pre_correction_assignments():
 
 
 def test_eligibility_reuse_preserves_exact_pre_reuse_solver():
+    # Recompute the same explicit positions per state in the reference only;
+    # the optimized path must still check a legacy player's slot just once.
     source = inspect.getsource(lineup.optimal_legal_lineup)
-    optimized = "            for index, slot, bit in eligible_slots:\n                if mask & bit:\n"
+    optimized = "            for index, slot, bit, assigned_position in eligible_slots:\n                if mask & bit:\n"
     original = (
         "            for index, slot in enumerate(slots):\n"
         "                bit = 1 << index\n"
-        "                if mask & bit or not _eligible(position, slot):\n"
+        "                eligible = tuple(pos for pos in fantasy_positions if _eligible(pos, slot))\n"
+        "                assigned_position = position if position in eligible else next(iter(eligible), None)\n"
+        "                if mask & bit or not eligible:\n"
     )
     assert optimized in source
     namespace = dict(vars(lineup))
