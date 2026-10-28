@@ -80,8 +80,9 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
         return Statement(code, reason_text(code), (key,)) if code in REASONS else None
 
     final = final_decision(result)
-    rec = add('recommendation', 'Your-side Custom assessment' if personal else 'Your-side assessment', result.get('recommendation'), kind=K.INTERPRETATION)
-    conclusion = Statement('CANONICAL_RECOMMENDATION', final['headline'], (rec,))
+    add('recommendation', 'Your-side Custom assessment' if personal else 'Your-side assessment', result.get('recommendation'), kind=K.INTERPRETATION)
+    final_key = add('bilateral_decision', 'Final bilateral qualification', final['headline'], kind=K.INTERPRETATION)
+    conclusion = Statement('FINAL_BILATERAL_RECOMMENDATION', final['headline'], (final_key,))
     for code in (result.get('recommendation_trace') or {}).get('rule_reasons') or []:
         if code in REASONS:
             key = add(f'recommendation.{code}', 'Accepted recommendation reason', reason_text(code), kind=K.INTERPRETATION)

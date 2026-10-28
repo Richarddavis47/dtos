@@ -191,3 +191,42 @@ class RecommendationClarityBrowserTests(unittest.TestCase):
                     page.screenshot(
                         path=str(Path(target, f"gain-{width}.png")), full_page=True
                     )
+
+    def test_older_cached_offer_and_preview_do_not_repromote_personal_upside(self):
+        from tests import test_trade_scout_state_browser as cached
+
+        harness = cached.ScoutWorkspaceStateBrowserTests()
+        row = harness.offer(["player:a"], ["player:x"])
+        row.update(exploration=True, search_result_type="COUNTERPARTY LIMITED")
+        row["evaluation"].update(
+            generated_trade_eligible=False,
+            legal=True,
+            market_evidence={"availability": "full"},
+            dimensions={"counterparty_plausibility": {"assessment": "LOW"}},
+            explanation_html='<section class="dtos-explanation"><h3>Custom assessment</h3><p>WORTH PURSUING</p><p>Original supported benefit.</p></section>',
+        )
+
+        def api(route, payload):
+            route.fulfill(
+                json={"results": [], "exploratory_results": [row], "count": 0}
+            )
+
+        with harness.page(api=api) as (page, _):
+            harness.ready(page, "/trades/recommended")
+            page.locator("#trade-find").click()
+            card = page.locator(".tw-offer").first
+            card.wait_for()
+            self.assertNotIn("WORTH PURSUING", card.locator("h3").first.inner_text())
+            card.get_by_text("Why this offer · evidence and risks", exact=True).click()
+            self.assertIn(
+                "COUNTERPARTY LIMITED",
+                card.locator(".dtos-explanation > p").first.inner_text(),
+            )
+            card.get_by_role(
+                "button", name="Open editable offer: preview", exact=True
+            ).click()
+            page.locator("#trade-result .tw-offer").wait_for()
+            self.assertNotIn(
+                "WORTH PURSUING",
+                page.locator("#trade-result .tw-offer > h3").first.inner_text(),
+            )

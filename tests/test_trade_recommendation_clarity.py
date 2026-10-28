@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import unittest
 from services.trade_decision import decision_context, final_decision
-from services.trade_explanation import render_trade_explanation
+from services.trade_explanation import render_trade_explanation, trade_explanation
 from services.trade_intelligence import (
     evaluate_trade_request,
     generate_trade_workflow,
@@ -165,6 +165,16 @@ class RecommendationClarityTests(unittest.TestCase):
         self.assertIn("Your-side assessment only", e["explanation_html"])
         self.assertEqual(e["personalization"]["revision"], 9)
         self.assertEqual(sorted(custom.values()), sorted(values.values()))
+        view = trade_explanation(e, league_id="league-1")
+        self.assertEqual(view.conclusion.evidence_keys, ("bilateral_decision",))
+        self.assertEqual(
+            next(
+                item.display
+                for item in view.evidence
+                if item.key == "bilateral_decision"
+            ),
+            "COUNTERPARTY LIMITED",
+        )
         self.limited = e
         target = os.environ.get("DTOS_TRADE_CLARITY_EVIDENCE")
         if target:

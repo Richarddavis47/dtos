@@ -657,6 +657,16 @@
     }
     return e.recommendation || 'Recommendation unavailable';
   }
+  function parsedExplanation(e) {
+    const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html');
+    const primary = parsed.querySelector('.dtos-explanation > p');
+    // Older cached HTML must follow the same recorded bilateral admission in
+    // expanded cards and previews as in the main result. No re-evaluation.
+    if (primary && primary.firstChild?.textContent.trim() === e.recommendation && finalVerdict(e) !== e.recommendation) {
+      primary.replaceChildren(node('span', finalVerdict(e)), node('span', 'Not a qualified bilateral recommendation; your-side assessment is separate.', 'tw-verdict-qualification'));
+    }
+    return parsed;
+  }
   function decisionPresentation(e) {
     const decision = {...(e.decision_context || {})};
     // Presentation admission for older bounded saved fields, not re-evaluation.
@@ -727,11 +737,7 @@
     if (e.explanation_html) {
       // Same-origin server renderer escapes all evidence text. No client-side
       // recommendation/scoring or reason-code interpretation is performed.
-      const document = new DOMParser().parseFromString(e.explanation_html, 'text/html');
-      const primaryVerdict = document.querySelector('.dtos-explanation > p');
-      if (primaryVerdict && primaryVerdict.firstChild?.textContent.trim() === e.recommendation && finalVerdict(e) !== e.recommendation) {
-        primaryVerdict.replaceChildren(node('span', finalVerdict(e)), node('span', 'Not a qualified bilateral recommendation; your-side assessment is separate.', 'tw-verdict-qualification'));
-      }
+      const document = parsedExplanation(e);
       if (incomplete && e.recommendation && e.assessment_state?.recommendation_supported !== true) {
         const conclusion = document.querySelector('.dtos-explanation > p');
         if (conclusion) conclusion.textContent = 'Recommendation unavailable · current evaluation is incomplete.';
@@ -1024,7 +1030,7 @@
     const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
     detail.append(node('p', balance.reason), node('p', balance.meaning), node('p', 'Counterparty: ' + (e.counterparty_summary || e.why_they_would_do_it || 'Supported partner context unavailable.')));
     if (e.explanation_html) {
-      const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html'); detail.append(...parsed.body.childNodes);
+      const parsed = parsedExplanation(e); detail.append(...parsed.body.childNodes);
     } else {
       for (const text of [e.why_you_would_do_it, e.dominant_reason, ...(e.major_risks || []), ...(e.major_limitations || [])]) if (text) detail.append(node('p', text));
     }
@@ -1076,7 +1082,7 @@
     if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
     if (e.explanation_html) {
       const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
-      const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html');
+      const parsed = parsedExplanation(e);
       detail.append(...parsed.body.childNodes); card.append(detail);
     }
     if (row.variants?.length && !preview) {
