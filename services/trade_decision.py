@@ -25,6 +25,63 @@ def assessment_state(result):
     }
 
 
+def final_decision(result):
+    """Present existing bilateral admission; never turn user-side upside into eligibility."""
+    from services.trade_search_policy import classify
+
+    state = classify(result)
+    label = result.get("recommendation")
+    qualified = result.get("generated_trade_eligible") is True
+    headline = label or "Recommendation unavailable"
+    qualification = None
+    if not qualified and label in ("SMASH ACCEPT", "WORTH PURSUING"):
+        headline = {
+            "COUNTERPARTY LIMITED": "COUNTERPARTY LIMITED",
+            "HARD INVALID": "NOT EXECUTABLE",
+            "MISSING REQUIRED EVIDENCE": "Recommendation unavailable",
+        }.get(state, "Not a qualified recommendation")
+        if state != "HARD INVALID" and (result.get("market_evidence") or {}).get("availability") != "full":
+            headline = "Recommendation unavailable"
+        qualification = (
+            "Not a qualified bilateral recommendation. Your side has supported upside, "
+            "but the other team's benefit or compensation is not established. This does not predict acceptance."
+            if state == "COUNTERPARTY LIMITED" else
+            "Not a qualified bilateral recommendation. Review the missing evidence or execution limits before pursuing."
+        )
+    return {"headline": headline, "classification": state, "qualified": qualified,
+            "side_assessment": label, "qualification": qualification}
+
+
+def lineup_comparisons(result, side="active"):
+    """Read completed, pinned comparisons only. Roster availability is a separate qualification."""
+    strategy = ((result.get("dimensions") or {}).get("strategic_fit") or {}).get(side) or {}
+    diagnostic = (((result.get("dimensions") or {}).get("roster_diagnostics") or {}).get("sides") or {}).get(side) or {}
+    inputs = (result.get("provenance") or {}).get("inputs") or {}
+    projection = inputs.get("projection_evidence") or {}
+    impact = result.get("multi_horizon_impact") or {}
+    # Do not revive numbers from mismatched prepared publications.
+    conflict = any(a is not None and b is not None and str(a) != str(b) for a, b in (
+        (inputs.get("projection_generation"), impact.get("projection_generation")),
+        (inputs.get("league_id"), impact.get("league_id")),
+        (projection.get("generation"), impact.get("projection_generation")),
+    ))
+    numeric_state = diagnostic.get("numeric_impact_state") or "unavailable"
+    rows = {}
+    for name, row in (strategy.get("horizons") or {}).items():
+        delta = row.get("delta")
+        if conflict or row.get("availability") != "complete":
+            delta = None
+        weeks = list(row.get("weeks_requested") or [])
+        state = "incompatible" if conflict else "unavailable" if delta is None else (
+            "supported" if numeric_state == "supported" else "provisional")
+        rows[name] = {"delta": delta, "state": state, "weeks": weeks,
+            "coverage": row.get("availability"), "season": projection.get("season"),
+            "league_id": inputs.get("league_id"), "scoring_profile_id": projection.get("scoring_profile_id"),
+            "projection_generation": inputs.get("projection_generation"),
+            "availability_state": numeric_state}
+    return rows
+
+
 def decision_context(result, *, incoming=(), outgoing=()):
     dimensions = result.get("dimensions") or {}
     strategy = (dimensions.get("strategic_fit") or {}).get("active") or {}
@@ -38,11 +95,10 @@ def decision_context(result, *, incoming=(), outgoing=()):
     diagnostic = ((dimensions.get("roster_diagnostics") or {}).get("sides") or {}).get(
         "active"
     ) or {}
-    current = (strategy.get("horizons") or {}).get("current_week") or {}
+    comparisons = lineup_comparisons(result)
+    current = comparisons.get("current_week") or {}
     delta = current.get("delta")
-    numeric_state = diagnostic.get("numeric_impact_state") or "unavailable"
-    if numeric_state == "unsupported":
-        delta = None
+    numeric_state = current.get("state") or "unavailable"
     blockers = []
     if result.get("legal") is False:
         blockers.append(
@@ -74,19 +130,26 @@ def decision_context(result, *, incoming=(), outgoing=()):
             "The full package requires roster-space decisions; cut cost is unresolved."
         )
     qualifier = "Conditional " if numeric_state != "supported" else ""
+    weeks = current.get("weeks") or []
+    week_label = " (" + ("Season " + str(current["season"]) + ", " if current.get("season") else "") + "week " + ", ".join(map(str, weeks)) + ")" if weeks else ""
     if delta is None:
-        lineup = "Starting-lineup improvement is unavailable from compatible current-week evidence."
+        lineup = "Current-week starting-lineup change" + week_label + " cannot be verified from compatible evidence."
+        if any(row.get("delta") is not None for row in comparisons.values()):
+            lineup += " Other supported periods are shown separately below; they do not establish this week’s effect."
     elif delta > 0:
-        lineup = f"{qualifier}current-week optimal legal-lineup gain: {delta:.2f} projected points."
+        lineup = f"{qualifier}current-week optimal legal-lineup gain{week_label}: {delta:.2f} projected points."
     elif delta < 0:
-        lineup = f"{qualifier}current-week optimal legal-lineup cost: {abs(delta):.2f} projected points."
+        lineup = f"{qualifier}current-week optimal legal-lineup cost{week_label}: {abs(delta):.2f} projected points."
     else:
         gain = (strategy.get("reserve_quality") or {}).get("material_gain") is True
-        lineup = "Current-week optimal starters are unchanged" + (
+        lineup = qualifier + "Current-week optimal starters are unchanged" + week_label + (
             "; supported useful replacement production improves."
             if gain
             else "; do not treat added depth as a starter upgrade."
         )
+    if delta is not None and numeric_state != "supported":
+        lineup += " This prepared comparison does not establish dependable availability or replacement cover; review the roster limitations."
+    final = final_decision(result)
     cost = (
         result.get("major_drawback")
         or "The available assessment does not establish a main cost; inspect evidence before deciding."
@@ -167,8 +230,9 @@ def decision_context(result, *, incoming=(), outgoing=()):
             + "The known weekly effect remains useful, but does not fill gaps in the wider assessment."
         )
     return {
-        "verdict": result.get("recommendation"),
-        "qualification": qualification,
+        "verdict": final["headline"],
+        "final_decision": final,
+        "qualification": qualification or final["qualification"],
         "summary": context,
         "blocker": " ".join(blockers)
         if not result.get("recommendation") or market_incomplete else None,
@@ -178,7 +242,8 @@ def decision_context(result, *, incoming=(), outgoing=()):
             "state": "resolved" if resolved else "unresolved",
             "selection_required": needs_strategy,
         },
-        "lineup": {"delta": delta, "state": numeric_state, "explanation": lineup},
+        "lineup": {**current, "delta": delta, "state": numeric_state, "explanation": lineup},
+        "lineup_comparisons": comparisons,
         "coverage_explanation": coverage_explanation,
         "main_cost": cost,
         "limitation": limitation,

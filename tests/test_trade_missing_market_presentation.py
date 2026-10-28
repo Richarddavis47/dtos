@@ -74,7 +74,7 @@ class MissingMarketPresentationTests(unittest.TestCase):
         self.assertIsNone(e['recommendation'])
         self.assertFalse(e['generated_trade_eligible'])
         self.assertIsNone(e['decision_context']['lineup']['delta'])
-        self.assertIn('improvement is unavailable', e['decision_context']['lineup']['explanation'])
+        self.assertIn('cannot be verified', e['decision_context']['lineup']['explanation'])
         self.assertNotIn('lineup gain:', e['explanation_html'])
         self.assertIn('Market cost cannot be fully assessed', e['decision_context']['main_cost'])
 
@@ -185,7 +185,9 @@ class MissingMarketPresentationTests(unittest.TestCase):
                 if target:
                     Path(target).write_text(json.dumps(rows, indent=2))
                 self.assert_conditional(e)
-                self.assertIn('WORTH PURSUING', primary.inner_text())
+                self.assertNotIn('WORTH PURSUING', primary.inner_text())
+                self.assertIn('Recommendation unavailable', primary.inner_text())
+                self.assertIn('WORTH PURSUING', page.locator('.tw-side-assessment').inner_text())
                 self.assertIsNotNone(rect)
                 self.assertGreaterEqual(rect['y'], 0)
                 self.assertLessEqual(rect['y'] + rect['height'], height)

@@ -5,6 +5,7 @@ from src.core.explanations import (
 )
 from src.ui.intelligence_presentation import manager_points
 from html import escape
+from services.trade_decision import final_decision, lineup_comparisons
 
 
 HORIZONS = {'current_week': 'Current week', 'next_n': 'Next-N',
@@ -70,16 +71,17 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
 
     def add(key, label, value, *, unit='classification', state=None, kind=K.DERIVED):
         evidence.append(EvidenceItem(key, label, kind, ctx, key, unit,
-            state or (A.UNAVAILABLE if value is None else A.AVAILABLE),
+            A.UNAVAILABLE if value is None else (state or A.AVAILABLE),
             None if value is None else manager_points(value)
-            if unit == 'fantasy points' and not key.startswith('weekly.') else str(value)))
+            if unit == 'fantasy points' and (not key.startswith('weekly.') or key.endswith('.delta')) else str(value)))
         return key
 
     def reason(code, key):
         return Statement(code, reason_text(code), (key,)) if code in REASONS else None
 
-    rec = add('recommendation', 'Custom DTOS personal recommendation' if personal else 'Canonical recommendation', result.get('recommendation'), kind=K.INTERPRETATION)
-    conclusion = Statement('CANONICAL_RECOMMENDATION', result.get('recommendation') or 'Recommendation unavailable', (rec,))
+    final = final_decision(result)
+    rec = add('recommendation', 'Your-side Custom assessment' if personal else 'Your-side assessment', result.get('recommendation'), kind=K.INTERPRETATION)
+    conclusion = Statement('CANONICAL_RECOMMENDATION', final['headline'], (rec,))
     for code in (result.get('recommendation_trace') or {}).get('rule_reasons') or []:
         if code in REASONS:
             key = add(f'recommendation.{code}', 'Accepted recommendation reason', reason_text(code), kind=K.INTERPRETATION)
@@ -127,10 +129,14 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
                     unit='personal rank-slot value' if personal and side == 'active' else 'canonical Market price')
         for horizon, title in HORIZONS.items():
             row = (strategy.get('horizons') or {}).get(horizon) or {}
-            key = add(f'{side}.{horizon}', f'{label} · {title} optimal-lineup change', row.get('delta'), unit='fantasy points')
+            admitted = lineup_comparisons(result, side).get(horizon) or {}
+            value = admitted.get('delta')
+            weeks = ', '.join(map(str, admitted.get('weeks') or []))
+            title += (' · Season ' + str(admitted['season']) if admitted.get('season') else '') + (' · weeks ' + weeks if weeks else '')
+            key = add(f'{side}.{horizon}', f'{label} · {title} optimal-lineup change', value, unit='fantasy points', state=A.PARTIAL if admitted.get('state') == 'provisional' else None)
             if side == 'active':
                 active_impact_keys.append(key)
-                active_impacts.append(f"{title}: {manager_points(row.get('delta'))}")
+                active_impacts.append(f"{title}: {manager_points(value)}" + (" (conditional availability)" if admitted.get("state") == "provisional" else ""))
             if row.get('weeks_requested') is not None:
                 add(f'{key}.coverage', f'{label} · {title} requested / supported before / supported after weeks',
                     ' / '.join(', '.join(map(str, row.get(field) or [])) or 'none' for field in
@@ -141,13 +147,16 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
                 add(f'{key}.subtotal', f'{label} · {title} comparable-week subtotal only',
                     row['supported_week_delta_subtotal'], unit='fantasy points', state=A.PARTIAL)
         weekly = (((result.get('multi_horizon_impact') or {}).get('sides') or {}).get(side) or {}).get('weekly') or {}
+        qualification = (((dims.get('roster_diagnostics') or {}).get('sides') or {}).get(side) or {}).get('numeric_impact_state')
+        season = inputs.get('projection_evidence', {}).get('season')
+        context = ('Season ' + str(season) + ' · ' if season else '') + 'selected league scoring · '
         for week, row in sorted(weekly.items(), key=lambda item: int(item[0])):
             # Accepted before/after OPTIMAL totals and delta only. Never solve
             # another lineup, derive a missing delta, or use submitted starters.
             for phase, title in (('pre', 'Before trade'), ('post', 'After trade')):
                 points = ((row.get(phase) or {}).get('optimal') or {}).get('projected_points')
-                add(f'weekly.{side}.{week}.{phase}', f'{label} · Week {week} · {title} optimal total', points, unit='fantasy points')
-            add(f'weekly.{side}.{week}.delta', f'{label} · Week {week} · Optimal-lineup change', row.get('delta'), unit='fantasy points')
+                add(f'weekly.{side}.{week}.{phase}', f'{label} · {context}Week {week} · {title} optimal total', points, unit='fantasy points', state=A.PARTIAL if qualification != 'supported' else None)
+            add(f'weekly.{side}.{week}.delta', f'{label} · {context}Week {week} · Optimal-lineup change', row.get('delta'), unit='fantasy points', state=A.PARTIAL if qualification != 'supported' else None)
         for week, change in (strategy.get('reserve_slot_changes') or {}).items():
             add(f'{side}.depth.{week}', f'{label} · week {week} reserve coverage change', change, unit='supported reserve slots')
         for week, row in (strategy.get('reserve_quality_by_week') or {}).items():
@@ -217,7 +226,7 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
     rendered = explanation_panel(view, evidence_groups=(('Weekly optimal-lineup detail', weekly),) if weekly else ())
     decision = result.get('decision_context')
     presentation = decision
-    if not presentation and (result.get('market_evidence') or {}).get('availability') != 'full':
+    if not presentation:
         from services.trade_decision import decision_context
         presentation = decision_context(result)
     if presentation and presentation.get('qualification'):
@@ -233,7 +242,8 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
         tradeoff = quality.get('explanation') or 'Package trade-offs are unavailable.'
         production = ((dims.get('strategic_fit') or {}).get(side) or {}).get('production_evidence') or {}
         weekly = manager_points(production.get('mean_weekly_delta'))
-        teams.append('<section><h4>' + title + '</h4><p>' + escape(context) + '</p><p>Supported weekly optimal-lineup change: ' + escape(weekly) + '</p><details><summary>Package trade-offs</summary><p>' + escape(tradeoff) + '</p></details></section>')
+        weeks = ', '.join(map(str, production.get('weeks_counted_once') or [])) or 'none'
+        teams.append('<section><h4>' + title + '</h4><p>' + escape(context) + '</p><p>Average optimal-lineup change across supported weeks ' + escape(weeks) + ': ' + escape(weekly) + '</p><details><summary>Package trade-offs</summary><p>' + escape(tradeoff) + '</p></details></section>')
     summary = '<section class="tw-team-summary" aria-label="Both teams assessment">' + ''.join(teams) + '</section>'
     risk_start = rendered.find('<h4>Trade-off / risk</h4>')
     risk = ''
@@ -243,12 +253,12 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
         rendered = rendered[:risk_start] + rendered[risk_end:]
     legacy = rendered.replace('</p>', '</p>' + risk + summary, 1)
     if not decision:
-        return legacy
+        return legacy.replace('<p>', '<p class="tw-final-verdict">', 1)
     # Preserve the complete established explanation behind depth-on-demand.
     # The verdict and all material costs/qualifications stay in the primary flow.
     split = legacy.index('</p>') + len('</p>')
     primary = _decision_primary(result, decision)
-    return (legacy[:split] + primary
+    return (legacy[:split].replace('<p>', '<p class="tw-final-verdict">', 1) + primary
             + '<details class="tw-evaluation-detail"><summary>Full team, weekly and evaluator evidence</summary>'
             + legacy[split:-len('</section>')] + '</details></section>')
 
@@ -281,8 +291,17 @@ def _decision_primary(result, decision):
         market_html += paragraph('Known individual prices remain available; no complete comparable package total or advantage is established.')
     market_html += '<small>Current values, not trade-date grades. Market advantage is separate from strategy and lineup impact.</small></section>'
     brief = '<section class="tw-decision" aria-label="Trade decision summary">' + market_html
+    final = final_decision(result)
+    if not final['qualified'] and final['side_assessment'] in ('SMASH ACCEPT', 'WORTH PURSUING'):
+        brief += paragraph('Your-side assessment only: ' + final['side_assessment'] + '. This is not the bilateral verdict.', 'tw-side-assessment')
     brief += paragraph(decision.get('blocker'), 'tw-drawback')
     brief += paragraph(decision['lineup']['explanation']) + paragraph(decision.get('summary'))
+    comparisons = decision.get('lineup_comparisons') or {}
+    for name, row in comparisons.items():
+        if name == 'current_week' or row.get('delta') is None:
+            continue
+        weeks = ', '.join(map(str, row.get('weeks') or []))
+        brief += paragraph(HORIZONS.get(name, name) + ' · weeks ' + weeks + ': ' + manager_points(row['delta']) + ' projected points total across this window; not an additional weekly gain.' + (' Availability remains conditional.' if row.get('state') == 'provisional' else ''))
     brief += paragraph(decision.get('coverage_explanation'), 'tw-drawback')
     brief += paragraph('Cost and uncertainty: ' + decision['main_cost'], 'tw-drawback')
     brief += paragraph('Other team: ' + result['why_they_would_do_it'] if result.get('why_they_would_do_it') else None)

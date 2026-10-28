@@ -645,6 +645,18 @@
     if (retained) retainAssessment();
     persist();
   }
+  function finalVerdict(e) {
+    if (e.decision_context?.final_decision) return e.decision_context.final_decision.headline;
+    // Older retained responses lack the presentation contract. Never elevate
+    // user-side upside over their recorded bilateral admission.
+    if (e.generated_trade_eligible !== true && ['SMASH ACCEPT', 'WORTH PURSUING'].includes(e.recommendation)) {
+      if (e.legal === false || ['NOT EXECUTABLE', 'REQUIRES ROSTER RESOLUTION'].includes(e.legality?.execution_status)) return 'NOT EXECUTABLE';
+      if (e.market_evidence?.availability !== 'full') return 'Recommendation unavailable';
+      if (!['STRONG', 'PLAUSIBLE'].includes(e.dimensions?.counterparty_plausibility?.assessment)) return 'COUNTERPARTY LIMITED';
+      return 'Not a qualified recommendation';
+    }
+    return e.recommendation || 'Recommendation unavailable';
+  }
   function decisionPresentation(e) {
     const decision = {...(e.decision_context || {})};
     // Presentation admission for older bounded saved fields, not re-evaluation.
@@ -716,6 +728,10 @@
       // Same-origin server renderer escapes all evidence text. No client-side
       // recommendation/scoring or reason-code interpretation is performed.
       const document = new DOMParser().parseFromString(e.explanation_html, 'text/html');
+      const primaryVerdict = document.querySelector('.dtos-explanation > p');
+      if (primaryVerdict && primaryVerdict.firstChild?.textContent.trim() === e.recommendation && finalVerdict(e) !== e.recommendation) {
+        primaryVerdict.replaceChildren(node('span', finalVerdict(e)), node('span', 'Not a qualified bilateral recommendation; your-side assessment is separate.', 'tw-verdict-qualification'));
+      }
       if (incomplete && e.recommendation && e.assessment_state?.recommendation_supported !== true) {
         const conclusion = document.querySelector('.dtos-explanation > p');
         if (conclusion) conclusion.textContent = 'Recommendation unavailable · current evaluation is incomplete.';
@@ -735,7 +751,7 @@
       if (!previousContainer) out.querySelector('.dtos-explanation > p')?.after(balanceLink);
       if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
     } else {
-    out.append(node('h3', retained ? 'Retained assessment: ' + (e.recommendation || 'Unavailable') + ' · NOT REVALIDATED' : incomplete && e.assessment_state?.recommendation_supported !== true ? 'Recommendation unavailable' : e.recommendation || 'Assessment unavailable'), node('p', retained ? 'Previous assessment reasoning (not current): ' + (e.dominant_reason || 'Unavailable') : e.dominant_reason));
+    out.append(node('h3', retained ? 'Retained assessment: ' + (e.recommendation || 'Unavailable') + ' · NOT REVALIDATED' : incomplete && e.assessment_state?.recommendation_supported !== true ? 'Recommendation unavailable' : finalVerdict(e)), node('p', retained ? 'Previous assessment reasoning (not current): ' + (e.dominant_reason || 'Unavailable') : e.dominant_reason));
     if (previousContainer && e.market_evidence) {
       const m = e.market_evidence, side = name => m[name]?.total != null ? displayMarket(m[name].total) : m[name]?.known_subtotal != null ? 'Incomplete · known subtotal ' + displayMarket(m[name].known_subtotal) : 'Unavailable';
       out.append(node('h4', 'Market evidence at the previous assessment'),
@@ -993,7 +1009,7 @@
     card.append(node('p', [changes(original.sent, row.proposal.assets_sent, 'your outgoing package'), changes(original.received, row.proposal.assets_received, 'the assets you receive')].filter(Boolean).join('; '), 'tw-adjustment'));
     const retained = Boolean(contextQualification(context, row.proposal)), decision = decisionPresentation(e);
     if (context.exploration) card.append(node('p', 'Exploratory only · not a qualified bilateral recommendation', 'tw-drawback'));
-    card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : e.personalization?.mode === 'custom' ? 'Separate Custom DTOS personal assessment: ' : 'Separate DTOS assessment: ') + (e.recommendation || 'Unavailable')));
+    card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : e.personalization?.mode === 'custom' ? 'Separate Custom DTOS personal assessment: ' : 'Separate DTOS assessment: ') + finalVerdict(e)));
     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
     const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
     const reason = unfavorable ? 'Closer current Market terms do not make this a recommended trade.' : decision.lineup?.explanation || e.why_you_would_do_it || 'Market balance is separate from strategic fit; no supported positive roster case is established.';
@@ -1027,7 +1043,7 @@
       const counterpart = e.dimensions?.counterparty_plausibility;
       if (counterpart) card.append(node('p', 'Counterparty support: ' + counterpart.assessment + ' · ' + (counterpart.reason_codes || []).map(code => code.replaceAll('_', ' ')).join('; ')));
     }
-    card.append(node('h3', (e.personalization?.mode === 'custom' ? 'Custom DTOS · ' : '') + (e.recommendation || 'Recommendation unavailable')));
+    card.append(node('h3', (e.personalization?.mode === 'custom' ? 'Custom DTOS · ' : '') + finalVerdict(e)));
     if (e.personalization?.mode === 'custom') card.append(node('p', 'Neutral DTOS: ' + (e.neutral_assessment?.recommendation || 'Unavailable') + ' · Market fairness and opponent evidence remain separate.', 'tw-verdict-qualification'));
     const matches = row.personal_preference_matches;
     if (matches?.targets_received?.length) card.append(node('p', 'Matches your saved target preference: ' + matches.targets_received.map(id => label(asset(id) || {label:id})).join(' + ')));
