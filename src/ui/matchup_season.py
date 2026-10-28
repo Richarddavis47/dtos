@@ -164,6 +164,11 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
                 projected = '<small>Historical pregame projection: Unavailable</small>'
             elif view['period'] == 'future':
                 projected += '<small>Source-listed lineup projection · future submission not established.</small>'
+            if view['period'] != 'historical' and side.get('empty_slots'):
+                subtotal = side.get('lineup_review_baseline') if side.get('lineup_review_baseline') is not None else side.get('known_subtotal')
+                projected = ('<span class="matchup-projected"><small>Known named-starter subtotal</small><b>'
+                             + _points(subtotal) + '</b></span>'
+                             + f'<small>{side["empty_slots"]} empty starting slot(s). Full lineup projection is not established.</small>')
             blocks.append('<section class="matchup-card-side">' + _team_identity(side, linked=matchup_id is not None) + actual + projected + '</section>')
         coverage = ' · '.join(f'{s["team"]}: {s["supported_slots"]}/{s["expected_slots"]} projected slots' for s in sides)
         if any(s.get('empty_slots') for s in sides):

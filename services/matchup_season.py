@@ -262,10 +262,13 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
             bench = [p for p in bench if classifications.get(p['player_id']) not in {'IR', 'Taxi'}]
         supported = [p["projection"] for p in lineup if p["projection"] is not None]
         empty = sum(p['player_id'] == '0' for p in lineup)
-        total = float(sum((Decimal(str(value)) for value in supported), Decimal(0))) if supported or empty else None
-        # An explicit source empty slot contributes no points; this does not
-        # fabricate a zero projection for a player or pad a truncated lineup.
-        complete = bool(slots) and len(lineup) == len(slots) and len(supported) + empty == len(slots)
+        total = float(sum((Decimal(str(value)) for value in supported), Decimal(0))) if supported else None
+        complete = bool(slots) and len(lineup) == len(slots) and len(supported) == len(slots)
+        # Keep the existing full-lineup projection contract: an empty slot is
+        # incomplete. A separate review baseline may account for an explicit
+        # empty slot's lack of contribution; never for an unknown projection.
+        accounted = bool(slots) and len(lineup) == len(slots) and len(supported) + empty == len(slots)
+        review_baseline = (total if total is not None else 0.0) if accounted else None
         score = number(row.get("custom_points"))
         if score is None:
             score = number(row.get("points"))
@@ -274,6 +277,7 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
                 "reserve": reserve, "taxi": taxi, "roster_sections_available": roster_sections_available,
                 "actual": score, "projection": total if complete else None,
                 "known_subtotal": total, "supported_slots": len(supported), "empty_slots": empty, "expected_slots": len(slots),
+                "lineup_review_baseline": review_baseline,
                 "coverage": "complete" if complete else "partial" if supported else "unavailable"}
         weekly_strength = (((strength or {}).get('teams') or {}).get(str(rid), {}).get('weekly') or {})
         weekly_strength = weekly_strength.get(week, weekly_strength.get(str(week))) or {}

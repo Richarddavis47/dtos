@@ -35,7 +35,8 @@ class LineupReviewTests(unittest.TestCase):
         side = self.side(data, service)
         self.assertEqual(side["lineup"][0]["player_id"], "0")
         self.assertIsNone(side["lineup"][0]["projection"])
-        self.assertEqual(side["projection"], 37)
+        self.assertIsNone(side["projection"])
+        self.assertEqual(side["lineup_review_baseline"], 37)
         self.assertEqual(side["empty_slots"], 1)
         self.assertEqual(side["optimal"]["projected_points"], 62)
         self.assertIn("1-bq", [e["asset_id"] for e in side["optimal"]["entries"]])
@@ -357,3 +358,11 @@ class LineupReviewTests(unittest.TestCase):
             review = self.review(data, service, now)
             self.assertFalse(review["actionable"], review)
             self.assertIn("current-week score", review["reason"])
+
+    def test_outgoing_position_transition_is_not_a_compatible_points_baseline(self):
+        data, service, now = prepared(self)
+        data["players"]["1-q"]["position"] = "TE"
+        data["players"]["1-q"]["fantasy_positions"] = ["TE"]
+        review = self.review(data, service, now)
+        self.assertFalse(review["actionable"], review)
+        self.assertIn("position changed", review["reason"])

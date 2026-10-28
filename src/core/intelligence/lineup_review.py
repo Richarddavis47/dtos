@@ -95,7 +95,19 @@ def review_lineup(
         "reason": "A complete comparable submitted and optimal lineup is not prepared.",
     }
     optimal = side.get("optimal") or {}
-    target, baseline = optimal.get("projected_points"), side.get("projection")
+    target = optimal.get("projected_points")
+    baseline = (
+        side.get("lineup_review_baseline")
+        if "lineup_review_baseline" in side
+        else side.get("projection")
+    )
+    result.update(
+        baseline=baseline,
+        baseline_kind="named_starter_subtotal"
+        if side.get("empty_slots")
+        else "submitted_projection",
+        empty_slots=side.get("empty_slots", 0),
+    )
     if (
         not optimal.get("available")
         or optimal.get("unsupported_slots")
@@ -313,6 +325,19 @@ def review_lineup(
             )
             return result
         for involved_pid in involved:
+            source_position = (rows.get(involved_pid) or {}).get("position")
+            current_position = (
+                (data.get("players") or {}).get(involved_pid) or {}
+            ).get("position")
+            if (
+                source_position
+                and current_position
+                and source_position != current_position
+            ):
+                result["reason"] = (
+                    "A player’s position changed after these projections were prepared. Refresh the league before comparing these moves."
+                )
+                return result
             when = kickoff(involved_pid)
             if when is None or when <= now:
                 result["reason"] = (

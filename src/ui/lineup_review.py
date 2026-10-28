@@ -15,6 +15,15 @@ def review_panel(review):
         if gain is not None and gain > 0
         else ""
     )
+    if (
+        gain is not None
+        and gain > 0
+        and review.get("baseline_kind") == "named_starter_subtotal"
+    ):
+        points += (
+            f"<p>Compared with {review['baseline']:.2f} projected points from the named starters; "
+            f"{review['empty_slots']} submitted slot(s) are empty. This is a subtotal, not a complete lineup projection.</p>"
+        )
     changes = ""
     if active:
 

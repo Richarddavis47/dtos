@@ -7,8 +7,7 @@ slot order, including explicit `0` empty slots. The analytical optimum remains
 the existing independently prepared highest-projected legal lineup. No solver
 mathematics, projection, trade verdict or valuation policy changes.
 
-An explicit empty submitted slot contributes no points to that submitted total;
-its player projection remains missing. A truncated starter array, unresolved
+An explicit empty submitted slot leaves the full submitted-lineup projection unavailable; its player projection remains missing. A separate, labeled named-starter subtotal supports only the review comparison when every nonempty starter has compatible scoring evidence. The empty slot has no player contribution. A truncated starter array, unresolved
 player or missing player projection does not become zero. All configured slots
 must be accounted for before the submitted total can support a comparison.
 
@@ -122,3 +121,12 @@ visible action remains there. The unchanged complete Product list reached 505
 cases before its previous 16-minute deadline, with no assertion-failure output.
 Its bounded test budget is 20 minutes (22-minute job), preserving all assertions,
 coverage, 2 GiB controls and the independent 500 ms liveness requirements.
+
+
+The full Product run completed 539 tests and caught an introduced empty-slot
+availability regression: the existing full submitted projection must stay
+unavailable with an empty slot. That contract and its existing assertion are
+preserved. `lineup_review_baseline` is a separate known-contribution subtotal;
+it supports filling explicitly empty slots but cannot fill an unknown player's
+projection. The alert and team card label this subtotal rather than claiming a
+complete submitted-lineup projection.
