@@ -230,3 +230,14 @@ def completed_lineup_evidence(result, side="active"):
         "mean_weekly_delta": mean if valid_mean else None,
         "weeks_counted_once": counted if valid_mean else [],
     }
+
+
+def completed_lineup_admissions(result):
+    """One local view per side, freshly built at each consumption boundary.
+
+    Callers may reuse this immutable-by-convention view during one synchronous
+    formatting call. Nothing is cached globally or attached to the result.
+    """
+    return {
+        side: completed_lineup_evidence(result, side) for side in ("active", "partner")
+    }

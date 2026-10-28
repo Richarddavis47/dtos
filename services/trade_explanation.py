@@ -6,7 +6,7 @@ from src.core.explanations import (
 from src.ui.intelligence_presentation import manager_points
 from html import escape
 from services.trade_decision import final_decision, lineup_comparisons
-from services.trade_lineup_evidence import completed_lineup_evidence
+from services.trade_lineup_evidence import completed_lineup_admissions
 
 
 HORIZONS = {'current_week': 'Current week', 'next_n': 'Next-N',
@@ -54,7 +54,8 @@ REASONS = {
 }
 
 
-def trade_explanation(result: dict, *, league_id: str) -> Explanation:
+def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Explanation:
+    admissions = _admissions or completed_lineup_admissions(result)
     provenance = result.get('provenance') or {}
     inputs = provenance.get('inputs') or {}
     if str(inputs.get('league_id')) != league_id:
@@ -80,11 +81,11 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
     def reason(code, key):
         return Statement(code, reason_text(code), (key,)) if code in REASONS else None
 
-    final = final_decision(result)
+    final = final_decision(result, _admissions=admissions)
     add('recommendation', 'Your-side Custom assessment' if personal else 'Your-side assessment', result.get('recommendation'), kind=K.INTERPRETATION)
     final_key = add('bilateral_decision', 'Final bilateral qualification', final['headline'], kind=K.INTERPRETATION)
     conclusion = Statement('FINAL_BILATERAL_RECOMMENDATION', final['headline'], (final_key,))
-    active_admission = completed_lineup_evidence(result)
+    active_admission = admissions['active']
     production_verified = active_admission['identity_state'] == 'compatible' and not active_admission['invalid_comparison']
     for code in (result.get('recommendation_trace') or {}).get('rule_reasons') or []:
         if code in REASONS and production_verified:
@@ -95,7 +96,6 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
     for index, signal in enumerate((history.get('trend_signals') or [])[:2]):
         if signal.get('explanation'):
             add(f'market_timing.{index}', 'Observed neutral Market movement', signal['explanation'])
-    admissions = {side: completed_lineup_evidence(result, side) for side in ('active', 'partner')}
     diagnostic = dims.get('roster_diagnostics') or {}
     for side, row in diagnostic.get('sides', {}).items():
         if (admissions.get(side) or {}).get('identity_state') != 'compatible':
@@ -122,7 +122,7 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
             advanced.append(Statement('PACKAGE_QUALITY', quality['explanation'], (key,)))
         strategy = (dims.get('strategic_fit') or {}).get(side) or {}
         fit = strategy.get('capital_strategy_fit') or {}
-        side_admission = completed_lineup_evidence(result, side)
+        side_admission = admissions[side]
         side_verified = side_admission['identity_state'] == 'compatible' and not side_admission['invalid_comparison']
         if fit.get('explanation') and side_verified:
             key = add(f'{side}.strategy_fit', f'{label} strategy and capital assessment', fit['explanation'], kind=K.INTERPRETATION)
@@ -138,7 +138,7 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
                     unit='personal rank-slot value' if personal and side == 'active' else 'canonical Market price')
         for horizon, title in HORIZONS.items():
             row = (strategy.get('horizons') or {}).get(horizon) or {}
-            admitted = lineup_comparisons(result, side).get(horizon) or {}
+            admitted = lineup_comparisons(result, side, _admissions=admissions).get(horizon) or {}
             value = admitted.get('delta')
             weeks = ', '.join(map(str, admitted.get('weeks') or []))
             title += (' · Season ' + str(admitted['season']) if admitted.get('season') else '') + (' · weeks ' + weeks if weeks else '')
@@ -155,7 +155,7 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
             if admitted.get('subtotal') is not None and admitted.get('delta') is None:
                 add(f'{key}.subtotal', f'{label} · {title} comparable-week subtotal only',
                     admitted['subtotal'], unit='fantasy points', state=A.PARTIAL)
-        admitted_weekly = completed_lineup_evidence(result, side)['weekly']
+        admitted_weekly = admissions[side]['weekly']
         for week, row in sorted(admitted_weekly.items()):
             context = ('Season ' + str(row['season']) + ' · ' if row.get('season') else '') + 'selected league scoring · '
             for phase, title in (('pre', 'Before trade'), ('post', 'After trade')):
@@ -217,7 +217,7 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
     drawback = result.get('major_drawback')
     if market_state != 'full' or not production_verified:
         from services.trade_decision import decision_context
-        drawback = decision_context(result)['main_cost']
+        drawback = decision_context(result, _admissions=admissions)['main_cost']
     if drawback:
         key = add('major_drawback', 'Personal decision drawback' if personal else 'Qualified main drawback' if market_state != 'full' else 'Canonical major drawback', drawback, kind=K.INTERPRETATION)
         risks.insert(0, Statement('CANONICAL_MAJOR_DRAWBACK', drawback, (key,)))
@@ -228,12 +228,13 @@ def trade_explanation(result: dict, *, league_id: str) -> Explanation:
 def render_trade_explanation(result: dict, *, league_id: str) -> str:
     """Use the shared renderer; weekly rows are optional presentation detail."""
     from src.ui.explanations import explanation_panel
-    view = trade_explanation(result, league_id=league_id)
+    admissions = completed_lineup_admissions(result)
+    view = trade_explanation(result, league_id=league_id, _admissions=admissions)
     weekly = tuple(item.key for item in view.evidence if item.key.startswith('weekly.'))
     rendered = explanation_panel(view, evidence_groups=(('Weekly optimal-lineup detail', weekly),) if weekly else ())
     from services.trade_decision import decision_context
-    presentation = decision_context(result)
-    admission = completed_lineup_evidence(result)
+    presentation = decision_context(result, _admissions=admissions)
+    admission = admissions['active']
     # The completed DTO may include supported asset-age and incoming status
     # context supplied by the producer. Keep it when production still verifies;
     # never restore stale source-dependent rationale after an admission failure.
@@ -252,7 +253,7 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
     for side, title, reason in (('active', 'Your team · gains and sacrifices', 'why_you_would_do_it'),
                                 ('partner', 'Their team · benefits and costs', 'why_they_would_do_it')):
         quality = (dims.get('package_quality') or {}).get(side) or {}
-        admitted = completed_lineup_evidence(result, side)
+        admitted = admissions[side]
         verified = admitted['identity_state'] == 'compatible' and not admitted['invalid_comparison']
         context = (result.get(reason) or 'No supported team-specific rationale is established.') if verified else 'The recorded roster-production rationale cannot be verified; inspect independently supported periods.'
         tradeoff = quality.get('explanation') or 'Package trade-offs are unavailable.'
@@ -272,13 +273,13 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
     # Preserve the complete established explanation behind depth-on-demand.
     # The verdict and all material costs/qualifications stay in the primary flow.
     split = legacy.index('</p>') + len('</p>')
-    primary = _decision_primary(result, decision)
+    primary = _decision_primary(result, decision, admissions)
     return (legacy[:split].replace('<p>', '<p class="tw-final-verdict">', 1) + primary
             + '<details class="tw-evaluation-detail"><summary>Full team, weekly and evaluator evidence</summary>'
             + legacy[split:-len('</section>')] + '</details></section>')
 
 
-def _decision_primary(result, decision):
+def _decision_primary(result, decision, admissions):
     def paragraph(text, css=''):
         return '<p' + (f' class="{css}"' if css else '') + '>' + escape(str(text)) + '</p>' if text else ''
     market = result.get('market_evidence') or {}
@@ -306,14 +307,14 @@ def _decision_primary(result, decision):
         market_html += paragraph('Known individual prices remain available; no complete comparable package total or advantage is established.')
     market_html += '<small>Current values, not trade-date grades. Market advantage is separate from strategy and lineup impact.</small></section>'
     brief = '<section class="tw-decision" aria-label="Trade decision summary">' + market_html
-    final = final_decision(result)
+    final = final_decision(result, _admissions=admissions)
     if not final['qualified'] and final['side_assessment'] in ('SMASH ACCEPT', 'WORTH PURSUING'):
         brief += paragraph('Your-side assessment only: ' + final['side_assessment'] + '. This is not the bilateral verdict.', 'tw-side-assessment')
     brief += paragraph(decision.get('blocker'), 'tw-drawback')
     brief += paragraph(decision['lineup']['explanation']) + paragraph(decision.get('summary'))
     brief += paragraph(decision.get('coverage_explanation'), 'tw-drawback')
     brief += paragraph('Cost and uncertainty: ' + decision['main_cost'], 'tw-drawback')
-    partner_admission = completed_lineup_evidence(result, 'partner')
+    partner_admission = admissions['partner']
     partner_supported = partner_admission['identity_state'] == 'compatible' and not partner_admission['invalid_comparison']
     brief += paragraph('Other team: ' + result['why_they_would_do_it'] if result.get('why_they_would_do_it') and partner_supported else 'Other team: a complete roster-production benefit cannot be verified.' if not partner_supported else None)
     partner = (result.get('dimensions') or {}).get('league_partner_context') or {}

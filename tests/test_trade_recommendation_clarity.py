@@ -120,7 +120,7 @@ class RecommendationClarityTests(unittest.TestCase):
         )
 
     def test_genuine_zero_remains_unchanged_not_missing(self):
-        self.f.f.points['c'] = 20
+        self.f.f.points["c"] = 20
         self.f.f.publish()
         e = self.evaluate()
         d = decision_context(e)
@@ -251,12 +251,27 @@ class RecommendationClarityTests(unittest.TestCase):
                 stack.enter_context(patch(target, side_effect=AssertionError(target)))
                 for target in targets
             ]
+            from services.trade_lineup_evidence import completed_lineup_evidence
+
+            admission = stack.enter_context(
+                patch(
+                    "services.trade_lineup_evidence.completed_lineup_evidence",
+                    wraps=completed_lineup_evidence,
+                )
+            )
             start = perf_counter()
             for _ in range(100):
                 decision_context(e)
                 render_trade_explanation(e, league_id="league-1")
             elapsed = perf_counter() - start
             self.assertTrue(all(guard.call_count == 0 for guard in guards))
+            # Both separate consumption boundaries remain freshly qualified;
+            # each checks both sides once, without a global/result cache.
+            self.assertEqual(admission.call_count, 400)
+            self.assertEqual(
+                {call.args[1] for call in admission.call_args_list},
+                {"active", "partner"},
+            )
         self.assertEqual(e, before)
         target = os.environ.get("DTOS_TRADE_CLARITY_EVIDENCE")
         if target:
@@ -268,6 +283,8 @@ class RecommendationClarityTests(unittest.TestCase):
                         seconds=elapsed,
                         added_heavy_calls=dict.fromkeys(targets, 0),
                         evidence_mutations=0,
+                        source_admission_calls=admission.call_count,
+                        independently_qualified_boundaries=200,
                     ),
                     indent=2,
                 )

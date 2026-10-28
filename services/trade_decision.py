@@ -25,12 +25,12 @@ def assessment_state(result):
     }
 
 
-def final_decision(result):
+def final_decision(result, *, _admissions=None):
     """Present existing bilateral admission; never turn user-side upside into eligibility."""
     from services.trade_search_policy import classify
 
-    from services.trade_lineup_evidence import completed_lineup_evidence
-    evidence = [completed_lineup_evidence(result, side) for side in ("active", "partner")]
+    from services.trade_lineup_evidence import completed_lineup_admissions
+    evidence = (_admissions or completed_lineup_admissions(result)).values()
     state = classify(result)
     label = result.get("recommendation")
     qualified = result.get("generated_trade_eligible") is True
@@ -61,13 +61,15 @@ def final_decision(result):
             "side_assessment": label, "qualification": qualification}
 
 
-def lineup_comparisons(result, side="active"):
+def lineup_comparisons(result, side="active", *, _admissions=None):
     """Read completed, pinned comparisons only. Roster availability is a separate qualification."""
     from services.trade_lineup_evidence import completed_lineup_evidence
-    return completed_lineup_evidence(result, side)['horizons']
+    return (_admissions[side] if _admissions is not None else completed_lineup_evidence(result, side))['horizons']
 
 
-def decision_context(result, *, incoming=(), outgoing=()):
+def decision_context(result, *, incoming=(), outgoing=(), _admissions=None):
+    from services.trade_lineup_evidence import completed_lineup_admissions
+    admissions = _admissions or completed_lineup_admissions(result)
     dimensions = result.get("dimensions") or {}
     strategy = (dimensions.get("strategic_fit") or {}).get("active") or {}
     intent = strategy.get("manager_strategy") or {}
@@ -80,7 +82,7 @@ def decision_context(result, *, incoming=(), outgoing=()):
     diagnostic = ((dimensions.get("roster_diagnostics") or {}).get("sides") or {}).get(
         "active"
     ) or {}
-    comparisons = lineup_comparisons(result)
+    comparisons = admissions['active']['horizons']
     current = comparisons.get("current_week") or {}
     delta = current.get("delta")
     numeric_state = current.get("state") or "unavailable"
@@ -134,7 +136,7 @@ def decision_context(result, *, incoming=(), outgoing=()):
         )
     if delta is not None and numeric_state != "supported":
         lineup += " This prepared comparison does not establish dependable availability or replacement cover; review the roster limitations."
-    final = final_decision(result)
+    final = final_decision(result, _admissions=admissions)
     cost = (
         result.get("major_drawback")
         or "The available assessment does not establish a main cost; inspect evidence before deciding."
@@ -170,12 +172,11 @@ def decision_context(result, *, incoming=(), outgoing=()):
         else result.get("why_you_would_do_it")
         or "No supported positive roster-specific case is established."
     )
-    from services.trade_lineup_evidence import completed_lineup_evidence
-    admitted = completed_lineup_evidence(result)
+    admitted = admissions['active']
     if admitted['identity_state'] != 'compatible' or admitted['invalid_comparison']:
         context = "The recorded production rationale cannot be verified against this source context. Independently supported weeks remain separate; no missing comparison is filled."
         cost = ("Market cost cannot be fully assessed because required pricing is missing or incompatible. " if market_incomplete else "") + "The full roster-production cost cannot be verified; available Market totals and capital are shown separately."
-    partner_admitted = completed_lineup_evidence(result, 'partner')
+    partner_admitted = admissions['partner']
     by_side = {'active': admitted, 'partner': partner_admitted}
     verified = {side: row['identity_state'] == 'compatible' and not row['invalid_comparison']
                 for side, row in by_side.items()}
