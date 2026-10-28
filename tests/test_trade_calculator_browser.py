@@ -31,10 +31,18 @@ class CalculatorBrowserTests(unittest.TestCase):
             'suggested': {'sent': {'total': 600}, 'received': {'total': 600}, 'absolute_gap': 0},
             'reason': 'Narrower owned exact-pick gap.', 'meaning': 'Market adjustment, not a guaranteed better trade.', 'strategic_caution': True}
         if route.request.url.endswith('/evaluate'):
-            # This controlled response explicitly represents a current complete
-            # attempt; label presence alone must not certify client freshness.
-            evaluation = {**offered['evaluation'], 'assessment_state': {
-                'state': 'fresh_complete', 'attempt': 'completed', 'recommendation_supported': True}}
+            # The fixture proves a prepared Market adjustment, not a bilateral
+            # lineup/counterparty case. Completed does not mean fully supported.
+            from services.trade_decision import decision_context, assessment_state
+            from services.trade_explanation import render_trade_explanation
+            evaluation = {**offered['evaluation'], 'recommendation': None,
+                'generated_trade_eligible': False, 'recommendation_availability': 'unavailable',
+                'provenance': {'evaluation_id': 'adjustment-fixture', 'evaluator': 'controlled-market-adjustment',
+                    'inputs': {'league_id': 'fixture-league'}},
+                'major_drawback': 'Lineup and counterparty evidence are missing from this adjustment fixture.'}
+            evaluation['decision_context'] = decision_context(evaluation)
+            evaluation['assessment_state'] = assessment_state(evaluation)
+            evaluation['explanation_html'] = render_trade_explanation(evaluation, league_id='fixture-league')
             return route.fulfill(json={'evaluation': evaluation, 'assessment_source_identity': {'fixture': 'canonical-fixture'}})
         route.fulfill(json={'results': [offered], 'count': 1})
 
@@ -104,8 +112,10 @@ class CalculatorBrowserTests(unittest.TestCase):
             page.locator('#calculator-verdict').get_by_text('Approximately balanced', exact=False).wait_for()
             self.assertEqual(self.state(page)['currentProposal'], adopted)
             page.click('#trade-run')
-            page.locator('#trade-result').get_by_text('WORTH PURSUING', exact=False).wait_for()
-            self.assertEqual(page.locator('#trade-result').get_attribute('data-assessment-state'), 'fresh_complete')
+            page.locator('#trade-result .dtos-explanation > p').filter(has_text='Recommendation unavailable').wait_for()
+            self.assertNotIn('WORTH PURSUING', page.locator('#trade-result .dtos-explanation > p').first.inner_text())
+            self.assertEqual(page.locator('#trade-result').get_attribute('data-assessment-state'), 'fresh_incomplete')
+            self.assertEqual(self.state(page)['currentProposal'], adopted)
             self.assertEqual(requests[-1][0], 'evaluate')
             self.assertEqual(requests[-1][1]['assets_sent'], adopted['sent'])
             self.assertEqual(requests[-1][1]['workflow'], 'create')

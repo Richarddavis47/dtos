@@ -166,7 +166,26 @@ class PhoneDesignSemanticTests(unittest.TestCase):
         }
         original = copy.deepcopy(result)
         html = render_trade_explanation(result, league_id="A")
-        self.assertIn("5.43", html)
+        self.assertNotIn("5.43", html)
+        self.assertIn("Unavailable", html)
         self.assertNotIn("5.4318000000001", html)
-        self.assertIn("27.335", html)
         self.assertEqual(result, original)
+
+        # Separate valid comparison from the deliberately incomplete row above.
+        # Actual canonical publishing/optimization supplies pre/post and context;
+        # no complete flag is manufactured on the missing post-trade evidence.
+        from tests.test_capital_strategy_reconciliation import CapitalStrategyTests
+        fixture = CapitalStrategyTests()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        fixture.points.update(a=27.335, c=32.7668000000001)
+        fixture.publish()
+        completed = fixture.evaluate(['a'], ['c'], intent='WIN NOW')
+        self.assertAlmostEqual(completed['multi_horizon_impact']['sides']['active']['weekly'][2]['delta'], 5.4318000000001)
+        self.assertAlmostEqual(completed['decision_context']['lineup']['delta'], 5.4318000000001)
+        original = copy.deepcopy(completed)
+        html = render_trade_explanation(completed, league_id='league-1')
+        self.assertIn('5.43', html)
+        self.assertNotIn('5.4318000000001', html)
+        self.assertIn('27.335', html)
+        self.assertEqual(completed, original)

@@ -120,10 +120,9 @@ class RecommendationClarityTests(unittest.TestCase):
         )
 
     def test_genuine_zero_remains_unchanged_not_missing(self):
+        self.f.f.points['c'] = 20
+        self.f.f.publish()
         e = self.evaluate()
-        e["dimensions"]["strategic_fit"]["active"]["horizons"]["current_week"][
-            "delta"
-        ] = 0
         d = decision_context(e)
         self.assertEqual(d["lineup"]["delta"], 0)
         self.assertIn("unchanged", d["lineup"]["explanation"])

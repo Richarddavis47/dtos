@@ -29,6 +29,8 @@ def final_decision(result):
     """Present existing bilateral admission; never turn user-side upside into eligibility."""
     from services.trade_search_policy import classify
 
+    from services.trade_lineup_evidence import completed_lineup_evidence
+    evidence = completed_lineup_evidence(result)
     state = classify(result)
     label = result.get("recommendation")
     qualified = result.get("generated_trade_eligible") is True
@@ -48,38 +50,20 @@ def final_decision(result):
             if state == "COUNTERPARTY LIMITED" else
             "Not a qualified bilateral recommendation. Review the missing evidence or execution limits before pursuing."
         )
+    if label in ("SMASH ACCEPT", "WORTH PURSUING") and (
+        evidence['identity_state'] != 'compatible' or evidence['invalid_comparison']
+    ):
+        headline = "Recommendation unavailable"
+        qualified = False
+        qualification = "Not a qualified bilateral recommendation. The recorded lineup comparisons cannot be verified against their source context."
     return {"headline": headline, "classification": state, "qualified": qualified,
             "side_assessment": label, "qualification": qualification}
 
 
 def lineup_comparisons(result, side="active"):
     """Read completed, pinned comparisons only. Roster availability is a separate qualification."""
-    strategy = ((result.get("dimensions") or {}).get("strategic_fit") or {}).get(side) or {}
-    diagnostic = (((result.get("dimensions") or {}).get("roster_diagnostics") or {}).get("sides") or {}).get(side) or {}
-    inputs = (result.get("provenance") or {}).get("inputs") or {}
-    projection = inputs.get("projection_evidence") or {}
-    impact = result.get("multi_horizon_impact") or {}
-    # Do not revive numbers from mismatched prepared publications.
-    conflict = any(a is not None and b is not None and str(a) != str(b) for a, b in (
-        (inputs.get("projection_generation"), impact.get("projection_generation")),
-        (inputs.get("league_id"), impact.get("league_id")),
-        (projection.get("generation"), impact.get("projection_generation")),
-    ))
-    numeric_state = diagnostic.get("numeric_impact_state") or "unavailable"
-    rows = {}
-    for name, row in (strategy.get("horizons") or {}).items():
-        delta = row.get("delta")
-        if conflict or row.get("availability") != "complete":
-            delta = None
-        weeks = list(row.get("weeks_requested") or [])
-        state = "incompatible" if conflict else "unavailable" if delta is None else (
-            "supported" if numeric_state == "supported" else "provisional")
-        rows[name] = {"delta": delta, "state": state, "weeks": weeks,
-            "coverage": row.get("availability"), "season": projection.get("season"),
-            "league_id": inputs.get("league_id"), "scoring_profile_id": projection.get("scoring_profile_id"),
-            "projection_generation": inputs.get("projection_generation"),
-            "availability_state": numeric_state}
-    return rows
+    from services.trade_lineup_evidence import completed_lineup_evidence
+    return completed_lineup_evidence(result, side)['horizons']
 
 
 def decision_context(result, *, incoming=(), outgoing=()):
@@ -185,6 +169,11 @@ def decision_context(result, *, incoming=(), outgoing=()):
         else result.get("why_you_would_do_it")
         or "No supported positive roster-specific case is established."
     )
+    from services.trade_lineup_evidence import completed_lineup_evidence
+    admitted = completed_lineup_evidence(result)
+    if admitted['identity_state'] != 'compatible' or admitted['invalid_comparison']:
+        context = "The recorded production rationale cannot be verified against this source context. Independently supported weeks remain separate; no missing comparison is filled."
+        cost = ("Market cost cannot be fully assessed because required pricing is missing or incompatible. " if market_incomplete else "") + "The full roster-production cost cannot be verified; available Market totals and capital are shown separately."
     conditional = []
     if needs_strategy:
         conditional = [
