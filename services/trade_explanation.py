@@ -296,12 +296,6 @@ def _decision_primary(result, decision):
         brief += paragraph('Your-side assessment only: ' + final['side_assessment'] + '. This is not the bilateral verdict.', 'tw-side-assessment')
     brief += paragraph(decision.get('blocker'), 'tw-drawback')
     brief += paragraph(decision['lineup']['explanation']) + paragraph(decision.get('summary'))
-    comparisons = decision.get('lineup_comparisons') or {}
-    for name, row in comparisons.items():
-        if name == 'current_week' or row.get('delta') is None:
-            continue
-        weeks = ', '.join(map(str, row.get('weeks') or []))
-        brief += paragraph(HORIZONS.get(name, name) + ' · weeks ' + weeks + ': ' + manager_points(row['delta']) + ' projected points total across this window; not an additional weekly gain.' + (' Availability remains conditional.' if row.get('state') == 'provisional' else ''))
     brief += paragraph(decision.get('coverage_explanation'), 'tw-drawback')
     brief += paragraph('Cost and uncertainty: ' + decision['main_cost'], 'tw-drawback')
     brief += paragraph('Other team: ' + result['why_they_would_do_it'] if result.get('why_they_would_do_it') else None)
