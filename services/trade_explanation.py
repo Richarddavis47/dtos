@@ -234,13 +234,14 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
     from services.trade_decision import decision_context
     presentation = decision_context(result)
     admission = completed_lineup_evidence(result)
-    # The completed DTO may include supported asset-age context supplied by the
-    # producer. Keep that cost when its production evidence still verifies;
+    # The completed DTO may include supported asset-age and incoming status
+    # context supplied by the producer. Keep it when production still verifies;
     # never restore stale source-dependent rationale after an admission failure.
     if admission['identity_state'] == 'compatible' and not admission['invalid_comparison']:
-        saved_cost = (result.get('decision_context') or {}).get('main_cost')
-        if saved_cost:
-            presentation['main_cost'] = saved_cost
+        for key in ('main_cost', 'limitation'):
+            saved = (result.get('decision_context') or {}).get(key)
+            if saved:
+                presentation[key] = saved
     decision = presentation if result.get('decision_context') else None
     if presentation and presentation.get('qualification'):
         qualifier = '<span class="tw-verdict-qualification">' + escape(presentation['qualification']) + '</span>'
