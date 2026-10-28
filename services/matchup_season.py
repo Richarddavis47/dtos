@@ -192,10 +192,15 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
                 and str(candidate.get("season")) == season and candidate.get("week") == week
                 and candidate.get("horizon_generation") == pinned["horizon_generation"]
                 and candidate.get('scoring_profile_id') == pinned.get('scoring_profile_id')
+                and (not pinned.get('horizon_snapshot_ids') or
+                     (candidate.get('projection_snapshot_id') ==
+                      (pinned.get('projection_snapshot_id') if week == pinned.get('week')
+                       else pinned['horizon_snapshot_ids'].get(str(week)))))
                 and candidate.get('scoring_settings', {}) == scoring):
             snapshot = candidate
     teams = {int(t["roster_id"]): t for t in data.get("teams") or [] if str(t.get("roster_id")).isdecimal()}
     strength = compatible_profile(data, pinned) if snapshot and not historical else None
+    refresh = (projection_service.refresh_evidence(pinned) if pinned and hasattr(projection_service, 'refresh_evidence') else {})
     players = data.get("players") or {}
     slots = [slot for slot in data.get("roster_positions") or league.get('roster_positions') or []
              if slot not in {"BN", "BENCH", "IR", "TAXI", "RESERVE"}]
@@ -209,14 +214,33 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
         def player_row(pid, slot, actual):
             player = players.get(pid) or {}
             projection = ((snapshot or {}).get("players") or {}).get(pid) or {}
-            value = number(projection.get("canonical_projection"))
-            return {"player_id": pid, "name": player.get("full_name") or ("Empty slot" if pid == "0" else pid),
-                           "position": player.get("position"), "nfl_team": player.get("team"),
+            from src.core.projection_intelligence.service import projection_row_compatible
+            from src.core.intelligence.lineup_review import player_identity
+            identity = player_identity(players, pid, season=season, league_id=league_id)
+            admitted = snapshot is not None and projection_row_compatible(snapshot, pid, projection)
+            value = number(projection.get("canonical_projection")) if admitted else None
+            reason = None
+            if pid == '0':
+                reason = 'Empty submitted slot; no player projection is assigned.'
+            elif historical:
+                reason = 'Historical pregame projections are not retained for this matchup; current projections are not substituted.'
+            elif snapshot is None:
+                reason = 'Compatible weekly projections are not prepared for this league and scoring setup. Retry after the league refresh.'
+            elif not admitted:
+                reason = 'This player’s projection does not match the selected week, season or scoring publication. Retry after the league refresh.'
+            elif value is None:
+                reasons = {'NO_PLAYER_RECORD': 'No matching player-week projection record was supplied.',
+                           'NO_SCORING_STATISTICS': 'A player-week record was supplied without usable scoring statistics.',
+                           'UNSUPPORTED_SCORING': 'The supplied statistics cannot establish points in this league’s scoring setup.'}
+                reason = reasons.get(projection.get('missing_projection_reason')) or 'No compatible projection is prepared for this player and week. Missing evidence is not zero.'
+            return {"player_id": pid, "name": "Empty slot" if pid == '0' else identity['name'],
+                           "position": identity['position'], "nfl_team": player.get("team"),
                            "status": player.get("injury_status") or player.get("status"),
-                           "identity_available": bool(player), "slot": slot,
+                           "identity_available": identity['identity_available'], "slot": slot,
                            "actual": actual, "projection": value,
                            "projection_display": projection.get("sleeper_web_display_projection") if value is not None else None,
-                           "projection_display_reason": projection.get("display_reason")}
+                           "projection_display_reason": reason or projection.get("display_reason"),
+                           "availability_reason": reason}
         lineup = []
         for index, pid in enumerate(starter_ids):
             actual = source_player_actual(row, pid, index)
@@ -237,8 +261,14 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
             taxi = [p for p in bench if classifications.get(p['player_id']) == 'Taxi']
             bench = [p for p in bench if classifications.get(p['player_id']) not in {'IR', 'Taxi'}]
         supported = [p["projection"] for p in lineup if p["projection"] is not None]
+        empty = sum(p['player_id'] == '0' for p in lineup)
         total = float(sum((Decimal(str(value)) for value in supported), Decimal(0))) if supported else None
         complete = bool(slots) and len(lineup) == len(slots) and len(supported) == len(slots)
+        # Keep the existing full-lineup projection contract: an empty slot is
+        # incomplete. A separate review baseline may account for an explicit
+        # empty slot's lack of contribution; never for an unknown projection.
+        accounted = bool(slots) and len(lineup) == len(slots) and len(supported) + empty == len(slots)
+        review_baseline = (total if total is not None else 0.0) if accounted else None
         score = number(row.get("custom_points"))
         if score is None:
             score = number(row.get("points"))
@@ -246,17 +276,45 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
                 "owner": team.get("owner"), "avatar": team.get("avatar"),
                 "reserve": reserve, "taxi": taxi, "roster_sections_available": roster_sections_available,
                 "actual": score, "projection": total if complete else None,
-                "known_subtotal": total, "supported_slots": len(supported), "expected_slots": len(slots),
+                "known_subtotal": total, "supported_slots": len(supported), "empty_slots": empty, "expected_slots": len(slots),
+                "lineup_review_baseline": review_baseline,
                 "coverage": "complete" if complete else "partial" if supported else "unavailable"}
         weekly_strength = (((strength or {}).get('teams') or {}).get(str(rid), {}).get('weekly') or {})
         weekly_strength = weekly_strength.get(week, weekly_strength.get(str(week))) or {}
         # Consume the accepted prepared optimizer; never optimize on navigation.
         snapshot_id = (snapshot or {}).get('projection_snapshot_id')
         side['optimal'] = weekly_strength.get('optimal') if snapshot_id and weekly_strength.get('projection_snapshot_id') == snapshot_id else None
+        if side['optimal']:
+            from src.core.projection_intelligence.service import projection_row_compatible
+            rows = snapshot.get('players') or {}
+            # Revalidate selected rows at the publication/consumption boundary,
+            # without another optimizer run or borrowing a different horizon.
+            if any(not projection_row_compatible(snapshot, str(e['asset_id']), rows.get(str(e['asset_id'])) or {})
+                   or number((rows.get(str(e['asset_id'])) or {}).get('canonical_projection')) != number(e.get('projected_points'))
+                   for e in side['optimal'].get('entries') or []):
+                side['optimal'] = None
         side['weekly_context'] = ({key: weekly_strength.get(key) for key in (
             'reserve_capacity', 'known_bye_player_ids', 'bye_evidence_availability',
             'previous_optimal_players_on_known_bye', 'optimal_entries_since_previous_week', 'change_meaning')}
             if side['optimal'] is not None else None)
+        if side['optimal']:
+            from src.core.intelligence.lineup_review import player_identity
+            side['optimal_display_entries'] = [dict(entry, **player_identity(players, entry['asset_id'], season=season, league_id=league_id))
+                                               for entry in side['optimal'].get('entries') or []]
+        for player in lineup + bench + reserve + taxi:
+            if player['player_id'] in weekly_strength.get('known_bye_player_ids', []):
+                player['participation_note'] = f'NFL bye in Week {week}; not available for that week’s playable lineup.'
+            else:
+                from src.core.projection_intelligence.service import UNAVAILABLE_PLAYER_STATUSES
+                status = str(player.get('status') or '').casefold()
+                player['participation_note'] = (f'Listed {status.upper()} at preparation; excluded from current-week playable cover.'
+                    if week == current and status in UNAVAILABLE_PLAYER_STATUSES else
+                    'No current NFL team is recorded; future participation is not established.'
+                    if (((snapshot or {}).get('players') or {}).get(player['player_id']) or {}).get('nfl_team_state') == 'unassigned' else None)
+        from src.core.intelligence.lineup_review import review_lineup
+        side['lineup_review'] = review_lineup(data, side, snapshot, strength, week=week,
+                                             observed_at=prepared.get('observed_at'),
+                                             retained_projection=bool(refresh.get('retained_publication')))
         if component:
             round_scores = []
             for component_week in component:

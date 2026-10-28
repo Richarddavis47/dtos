@@ -27,6 +27,7 @@ from src.platform.account_context import current_account
 from src.ui.matchup_season import render_season_week
 
 _MATCHUP_CSS = (Path(__file__).resolve().parents[1] / 'static' / 'css' / 'matchups.css').read_text(encoding='utf-8')
+_LINEUP_REVIEW_JS = (Path(__file__).resolve().parents[1] / 'static' / 'lineup-review.js').read_text(encoding='utf-8')
 
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
@@ -181,6 +182,10 @@ def create_matchups_router(
 ) -> APIRouter:
     """One prepared read boundary for every season/week; no analysis fallback."""
     router = APIRouter(tags=["matchups"])
+
+    @router.get('/static/lineup-review.js', include_in_schema=False)
+    async def lineup_review_script() -> Response:
+        return Response(_LINEUP_REVIEW_JS, media_type='application/javascript', headers={'Cache-Control': 'no-cache'})
 
     @router.get('/static/css/matchups.css', include_in_schema=False)
     async def matchup_styles() -> Response:
