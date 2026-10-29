@@ -293,9 +293,14 @@ class TradeWorkflowExperienceTests(unittest.TestCase):
                 for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
                     page, records, _, errors, _ = self.page(browser, f, width, height)
                     self.ready(page)
-                    page.get_by_role('link', name='Evaluate Trade', exact=True).click()
+                    with page.expect_navigation(wait_until='domcontentloaded'):
+                        page.get_by_role('link', name='Evaluate Trade', exact=True).click()
                     page.locator('.tw-calculator').wait_for()
-                    page.get_by_role('link', name='Generate Trades', exact=True).click()
+                    # This link replaces the calculator document. Wait for the
+                    # real navigation before testing the new page's controls.
+                    with page.expect_navigation(wait_until='domcontentloaded'):
+                        page.get_by_role('link', name='Generate Trades', exact=True).click()
+                    page.locator('#trade-find').wait_for(state='visible')
                     page.wait_for_function("!document.querySelector('#trade-find').disabled")
                     self.assertEqual(records, [])
                     strategy = page.locator('#trade-strategy').bounding_box()
