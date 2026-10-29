@@ -13,6 +13,10 @@ MESSAGES = {
         "Market preparation needs another try",
         "The latest preparation did not finish. Try Market again, or return to Home. No missing prices have been replaced with zero.",
     ),
+    "source_failed": (
+        "League update needed for Market",
+        "The last league update did not finish, and no matching Market is ready. Open Home to review your league connection or try Market again. Your saved rankings are unchanged.",
+    ),
     "incompatible": (
         "Current Market evidence needs an update",
         "The retained Market does not match this league’s current evidence. Try Market again to request compatible preparation. Saved Custom rankings have not been reset.",
@@ -63,6 +67,8 @@ def observe_resident_market(manager, store):
         return dict(state="waiting", can_check=False)
     data = runtime.state.get("data") or {}
     if str((data.get("league") or {}).get("league_id") or "") != league_id:
+        if runtime.state.get("last_error") and not runtime.state.get("syncing"):
+            return dict(state="source_failed", can_check=False)
         return dict(
             state="waiting",
             can_check=runtime.status == "hydrating"

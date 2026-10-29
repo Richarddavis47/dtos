@@ -19,6 +19,7 @@ Add an explicitly allowlisted, resident-only `AssetMarketCache.preparation_statu
 | Ready | Exact current input marker, store identity and requested generation match a nonempty publication | Recheck account scope, then replace the waiting history entry with the same Market query |
 | Last successful Market | Same compatible publication remains usable and last league synchronization failed | Keep values; display its preparation timestamp, separately from Custom limitations |
 | Failed | Existing preparation reports failed phase/state | Stop automatic checks; explicit retry uses normal Market entry |
+| League update failed | Existing synchronization failure, without a matching usable Market | Explain the source update requirement, preserve saved rankings and offer Home/Market recovery; no raw errors |
 | Incompatible | A retained model does not match current input/store/generation requirements | Do not expose retained incompatible prices; explain need for a compatible publication |
 | Empty | Compatible publication has zero assets | Do not describe it as a complete Market; offer recovery |
 

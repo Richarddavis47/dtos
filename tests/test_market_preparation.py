@@ -265,6 +265,15 @@ class MarketPreparationTests(unittest.TestCase):
         f.cache.last_error = "FAKE_CREDENTIAL /private/source/222 sentinel"
         self.assertEqual(status()["state"], "failed")
         self.assertNotIn("FAKE_CREDENTIAL", json.dumps(status()))
+        f.cache._refresh_state = "idle"
+        f.cache._build_phase = "idle"
+        f.cache._market = None
+        self.assertEqual(status()["state"], "source_failed")
+        self.assertFalse(status()["can_check"])
+        self.assertIn("last league update did not finish", status()["message"])
+        f.runtime.state["data"] = {}
+        self.assertEqual(status()["state"], "source_failed")
+        self.assertNotIn("FAKE_CREDENTIAL", json.dumps(status()))
 
     def test_only_actual_build_phases_are_reported(self):
         f = self.fixture()

@@ -2021,6 +2021,8 @@ class AssetMarketCache:
                 status = 'preparing'
             elif phase == 'failed' or self._refresh_state == 'failed':
                 status = 'failed'
+            elif state.get('last_error') and not retained:
+                status = 'source_failed'
             elif not data:
                 status = 'waiting'
             elif retained:

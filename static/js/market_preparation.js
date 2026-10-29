@@ -40,7 +40,7 @@
         pause('Your account or selected league changed. Open Market again for the current league.');
         retry.textContent = 'Open current Market'; retry.href = '/market'; return;
       }
-      if (!['waiting', 'preparing', 'failed', 'incompatible', 'empty', 'ready', 'stale'].includes(status.state)
+      if (!['waiting', 'preparing', 'failed', 'source_failed', 'incompatible', 'empty', 'ready', 'stale'].includes(status.state)
           || typeof status.title !== 'string' || typeof status.message !== 'string') throw new Error('Incomplete status');
       failures = 0;
       title.textContent = status.title; message.textContent = status.message;
