@@ -1,3 +1,11 @@
+# v1.21.110 / build 2210 — Contextual Back and workspace return
+
+Add a consistent authenticated Back control that returns through meaningful, same-tab page context rather than a fixed section landing. Preserve Market queries, explicit My Team sections, safe direct-link fallbacks and browser Back/Forward. Validate account/session/league/franchise scope before contextual or cached-page return; private context checks require no league runtime or analytics.
+
+Restore the existing exact Trade draft, Neutral/Custom mode, strategy, temporary filters and preview/Keep/Adopt/Adjust context. Retained results remain not revalidated and pending departures are cancelled. Deliberate primary Trade-tab entry preserves the existing fresh-session policy. Keep My DTOS editor view without writing rankings. Bound temporary navigation state to 32 entries, 64 KiB and two hours; no permanent history database or recommendation cache.
+
+Preserve Welcome/account admission, five primary destinations, prices, projections, legal lineups, Trade verdicts, exact picks, historical qualifications, saved preferences and resource safeguards. See docs/audits/CONTEXTUAL_BACK_2210.md for source audit, security boundaries and acceptance limitations.
+
 # v1.21.109 / build 2209 — Trade workflow and discoverability
 
 Separate Generate Trades from Evaluate Trade. Put the goal and Neutral/Custom valuation controls ahead of owned assets, keep search preferences optional, and place generated results directly beneath the primary action. Preserve exact packages and the established Preview/Keep/Adopt/Adjust lifecycle.

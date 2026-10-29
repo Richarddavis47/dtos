@@ -6,6 +6,17 @@
   const el = id => document.getElementById(id), PAGE_SIZE = 25;
   let state = null, page = 0, busy = false, ready = false, requestSequence = 0, controller = null, drag = null, pendingRemoval = null, compatibilityFragmentFocused = false;
   const openRows = new Set();
+  const navigationScope = document.querySelector('meta[name=dtos-navigation-scope]')?.content;
+  let restoredView = false;
+  function restoreNavigationView() {
+    if (restoredView || !navigationScope || !state || state.context?.binding !== navigationScope) return;
+    restoredView = true;
+    const view = history.state?.dtosPersonalView;
+    if (!view || view.scope !== navigationScope) return;
+    if (typeof view.q === 'string') el('personal-search').value = view.q.slice(0,200);
+    if (Array.from(el('personal-position').options).some(o => o.value === view.position)) el('personal-position').value = view.position;
+    if (Number.isSafeInteger(view.page) && view.page >= 0 && view.page < 1000) page = view.page;
+  }
   const status = message => { el('personal-status').textContent = message; };
   function error(message) { el('personal-error').hidden = !message; el('personal-error').textContent = message || ''; }
   const value = number => typeof number === 'number' && Number.isFinite(number)
@@ -194,7 +205,7 @@
       if (!response.ok) throw new Error(result.message || result.detail || 'My DTOS is unavailable. Sign in or reload and try again.');
       if ((root.dataset.csrfToken && result.csrf_token !== root.dataset.csrfToken) || root.dataset.leagueId && (String(result.account_scope?.league_id) !== root.dataset.leagueId || String(result.account_scope?.roster_id) !== root.dataset.rosterId)) throw new Error('Your selected league or franchise changed. Reload this page before using rankings.');
       const retriedWithFocus = document.activeElement === el('personal-retry') || document.activeElement === el('personal-compatibility-retry');
-      state = result; ready = true; el('personal-recovery').hidden = true; render(); status(result.initialized ? 'Rankings loaded. Review any evidence limits below.' : 'Market rankings loaded. Neutral DTOS is active.');
+      state = result; ready = true; restoreNavigationView(); el('personal-recovery').hidden = true; render(); window.dtosNavigation?.restoreView(); status(result.initialized ? 'Rankings loaded. Review any evidence limits below.' : 'Market rankings loaded. Neutral DTOS is active.');
       if (retriedWithFocus) {
         if (result.compatibility_issues?.length) { el('personal-compatibility').open = true; el('personal-compatibility-summary').focus({preventScroll: true}); }
         else el(result.initialized ? 'personal-custom' : 'personal-initialize').focus({preventScroll: true});
@@ -267,7 +278,12 @@
   // separately captured touch gesture here; native dragend owns mouse cleanup.
   root.addEventListener('pointercancel', event => { if (!drag || drag.pointer !== event.pointerId) return; drag = null; root.querySelectorAll('.personal-drop-target').forEach(row => row.classList.remove('personal-drop-target')); });
   addEventListener('hashchange', () => { compatibilityFragmentFocused = false; if (state) renderCompatibility(); });
-  addEventListener('pagehide', () => { requestSequence++; controller?.abort(); drag = null; });
-  addEventListener('pageshow', event => { if (event.persisted) { busy = false; read(); } });
+  addEventListener('pagehide', () => {
+    if (navigationScope && state?.context?.binding === navigationScope) try {
+      history.replaceState({...history.state,dtosPersonalView:{scope:navigationScope,q:el('personal-search').value.slice(0,200),position:el('personal-position').value,page}},'');
+    } catch (_) { /* No preference state is written by navigation. */ }
+    requestSequence++; controller?.abort(); drag = null;
+  });
+  addEventListener('pageshow', async event => { if (event.persisted) { if (window.dtosNavigation && !(await window.dtosNavigation.verify())) return; busy = false; read(); } });
   read();
 })();

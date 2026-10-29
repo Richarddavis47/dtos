@@ -91,15 +91,18 @@ def _unavailable_response(scope: dict[str, Any], *, status: int):
     if query:
         retry += "?" + query
     heading = "League could not be opened" if status == 422 else "League data is temporarily unavailable"
+    from services.contextual_navigation import navigation_markup, with_back
+    back, navigation_head = navigation_markup()
+    heading_html = with_back('<h1>' + heading + '</h1>', back)
     return HTMLResponse(
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         '<title>League data unavailable · DTOS</title><style>' + DESIGN_SYSTEM_CSS +
         'body{margin:0;background:var(--background,#141617);color:var(--text,#f1f5f3);font:16px system-ui}'
         'main{max-width:640px;margin:auto;padding:24px 16px;box-sizing:border-box;overflow-wrap:anywhere}'
-        'nav{display:flex;flex-wrap:wrap;gap:12px}nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px}</style></head>'
+        'nav{display:flex;flex-wrap:wrap;gap:12px}nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px}</style>' + navigation_head + '</head>'
         '<body><main><p>' + escape(league or "Selected league") + '</p>'
-        '<h1>' + heading + '</h1>'
+        + heading_html +
         '<p>No supported roster is ready for this league right now. Your account and saved leagues are unchanged.</p>'
         '<p>You can retry this page or use your account controls to choose another connected league.</p>'
         '<nav aria-label="League recovery">'

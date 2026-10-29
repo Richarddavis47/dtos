@@ -24,7 +24,7 @@
       if (!next || controller !== pending) return;
       root.replaceWith(next);
       next.querySelector('select').focus();
-      history.replaceState(null, '', `${location.pathname}?${query}`);
+      history.replaceState({...history.state}, '', `${location.pathname}?${query}`);
     } catch (error) {
       if (error.name !== 'AbortError') status.textContent = 'Unable to load this week. Please try again.';
     } finally {
