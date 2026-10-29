@@ -81,6 +81,34 @@ class CustomerClarityTests(unittest.TestCase):
                     self.assertEqual(page.locator(".manager-nav a").count(), 5)
                     if row["navFixed"]:
                         self.assertLess(row["dock"]["bottom"], row["nav"]["top"])
+                    # The caption is not a control. It must not click through
+                    # to a Market link obscured beneath the fixed strip.
+                    obscured = page.locator(".market-asset").nth(3)
+                    top = obscured.evaluate("e=>e.getBoundingClientRect().top+scrollY")
+                    page.evaluate("y=>scrollTo(0,y-20)", top)
+                    page.wait_for_function(
+                        'document.documentElement.classList.contains("dtos-back-docked")'
+                    )
+                    bounds = obscured.bounding_box()
+                    point = [bounds["x"] + bounds["width"] * 0.65, 25]
+                    self.assertTrue(
+                        page.evaluate(
+                            "p=>document.querySelector('.dtos-back-dock').contains(document.elementFromPoint(...p))",
+                            point,
+                        )
+                    )
+                    original_url = page.url
+                    page.mouse.click(*point)
+                    page.evaluate(
+                        "() => new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))"
+                    )
+                    self.assertEqual(page.url, original_url)
+                    self.assertEqual(len(requests), before)
+                    row["strip_blocks_obscured_links"] = True
+                    page.evaluate("scrollTo(0,1000)")
+                    page.wait_for_function(
+                        'document.documentElement.classList.contains("dtos-back-docked")'
+                    )
                     back = page.locator("#dtos-back")
                     page.keyboard.press("Tab")
                     back.focus()
