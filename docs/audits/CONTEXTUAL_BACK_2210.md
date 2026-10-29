@@ -9,7 +9,7 @@ Build 2209 used ordinary multipage links plus isolated return links. Its Market 
 | Home / Brief | Five primary destinations; explicit discovery | Back beside page title when a meaningful preceding page exists; no discovery |
 | My Team / Roster / Depth / Capital | One page with named anchor shortcuts; shared header hidden | One visible Back alongside franchise identity; explicit section anchors count, ordinary disclosures do not |
 | League / standings / matchups | Real submitted lineup and official standings remain independent | Shared Back preserves preceding route and known week/query context |
-| History / FOIS / franchise | Existing guarded preparation and parent links | Shared contextual return, safe League fallback; no historical work added |
+| History / FOIS / franchise | Existing guarded preparation and parent links | Shared contextual return with existing transaction filters/pagination, safe League fallback; refresh actions never replayed and no historical work added |
 | Market / search | Server-side query/filter/selection URLs | Preserve exact supported search URL and browser entry scroll/focus |
 | Player dossiers | Specific supported origin links; projection week replaces URL | Contextual chain takes priority; validated specific origin or Market fallback; week replacement preserves other history state |
 | Trade / Generate / Evaluate / Builder / Trade For / Shop | Existing exact draft, preview and revision/source safeguards | Contextual return restores draft and bounded temporary filters; retained evaluations remain not revalidated; departure cancels pending work |

@@ -364,6 +364,9 @@ class ContextualBackTests(unittest.TestCase):
                     else:
                         self.back(p, "/league")
                     p.locator("#dtos-back").focus()
+                    p.evaluate(
+                        "()=>{window.dtosNavigation.restoreView();return new Promise(requestAnimationFrame)}"
+                    )
                     self.assertEqual(
                         p.locator("#dtos-back").evaluate(
                             "e=>document.activeElement===e"
@@ -831,7 +834,9 @@ class ContextualBackTests(unittest.TestCase):
                 p.goto(self.origin + "/account/my-dtos")
                 p.locator(".personal-row").first.wait_for()
                 self.assertTrue(p.locator("#dtos-back").is_visible())
-                self.assertGreaterEqual(p.locator("#dtos-back").bounding_box()["height"],44)
+                self.assertGreaterEqual(
+                    p.locator("#dtos-back").bounding_box()["height"], 44
+                )
                 p.locator("#personal-search").fill("c")
                 p.locator("#personal-position").select_option("QB")
                 p.locator('.manager-nav a[href="/market"]').click()
@@ -846,7 +851,6 @@ class ContextualBackTests(unittest.TestCase):
                 self.assertFalse(errors, errors)
             finally:
                 b.close()
-
 
     def test_prepared_contextual_return_adds_no_provider_or_intelligence_work(self):
         from contextlib import ExitStack
@@ -927,6 +931,30 @@ class ContextualBackTests(unittest.TestCase):
                                 indent=2,
                             )
                         )
+            finally:
+                b.close()
+
+    def test_history_filters_survive_a_contextual_return_without_replaying_refresh(
+        self,
+    ):
+        f = self.fixture()
+        with sync_playwright() as pw:
+            b = launch_chromium(pw, headless=True)
+            try:
+                p, requests, _, _, errors = self.page(b, f)
+                path = "/transactions?team=1&type=trade&status=complete&q=alpha&page=2&per_page=25"
+                p.goto(self.origin + path)
+                p.locator('.manager-nav a[href="/market"]').click()
+                p.wait_for_url("**/market")
+                self.back(p, path)
+                self.assertEqual(urlsplit(p.url).query, urlsplit(path).query)
+                self.assertFalse(
+                    any(
+                        method == "POST" or "refresh" in urlsplit(url).path
+                        for method, url, _ in requests
+                    )
+                )
+                self.assertFalse(errors, errors)
             finally:
                 b.close()
 

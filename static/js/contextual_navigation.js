@@ -11,7 +11,7 @@
   const tab = window.name.match(/\|dtos-trade-tab=([a-zA-Z0-9-]+)$/)?.[1] || uuid();
   if (!window.name.endsWith('|dtos-trade-tab=' + tab)) window.name += '|dtos-trade-tab=' + tab;
   const paths = new Set(['', 'teams', 'league', 'matchups', 'market', 'players', 'trades', 'picks', 'history', 'fois', 'front-offices', 'transactions', 'reports', 'settings', 'brain', 'valuation', 'commissioner', 'account', 'search']);
-  const queryKeys = new Set(['q','position','availability','sort','direction','front_office','selected','offset','limit','week','season','year','round','from_team','from_section','from_trade','from_market','market_league','matchup','asset_id','owner_roster_id','home_offer','partner_roster_id','shop_preference','league','league_id','view','tab','format','team','scope']);
+  const queryKeys = new Set(['q','position','availability','sort','direction','front_office','selected','offset','limit','week','season','year','round','from_team','from_section','from_trade','from_market','market_league','matchup','asset_id','owner_roster_id','home_offer','partner_roster_id','shop_preference','league','league_id','view','tab','format','team','scope','owner','type','player','draft_pick','date_from','date_to','status','page','per_page','from_home','since']);
   const sections = new Set(['#full-roster','#positional-depth','#draft-capital','#my-team-advanced']);
   function safeUrl(raw) {
     if (!raw || typeof raw !== 'string' || raw.length > 2400 || /[\x00-\x1f\\]/.test(raw)) return null;
@@ -59,7 +59,7 @@
     if (/^\/(fois|history|matchups|front-offices)(\/|$)/.test(p)) return '/league';
     return '/';
   }
-  let ledger, entry, checking = null, restoring = false, clickBusy = false, active = true, checkGeneration = 0, checkController = null;
+  let ledger, entry, checking = null, restoring = false, clickBusy = false, active = true, checkGeneration = 0, checkController = null, lastRestoredFocus = null;
   const now = () => Date.now();
   const fresh = () => ({version:1,scope,tab,entries:[],cursor:null,expires:now()+ttl});
   function load() {
@@ -139,10 +139,12 @@
   function restoreView() {
     if (!restoring || !entry || document.documentElement.classList.contains('dtos-nav-suspended')) return;
     const apply = () => {
-      if (!active) return;
+      if (!active || !restoring) return;
+      const focused = document.activeElement;
+      if (focused && focused !== document.body && focused !== document.documentElement && focused !== lastRestoredFocus) {restoring=false;return;}
       let focus = entry.focusId ? document.getElementById(entry.focusId) : null;
       if (!focus && entry.focusHref) focus=[...document.querySelectorAll('a[href]')].find(a=>safeUrl(a.href)===entry.focusHref);
-      if (focus && !focus.disabled && focus.getClientRects().length) focus.focus({preventScroll:true});
+      if (focus && !focus.disabled && focus.getClientRects().length) {lastRestoredFocus=focus;focus.focus({preventScroll:true});}
       scrollTo({top:Number.isFinite(entry.scroll)?entry.scroll:0,behavior:'instant'});
     };
     requestAnimationFrame(apply);
@@ -252,5 +254,6 @@
     if(event.persisted){suspend();if(!(await verify()))return;ledger=load();traversed();}
     else restoreView();
   });
+  for (const name of ['pointerdown','keydown','wheel','touchstart']) addEventListener(name,event=>{if(event.isTrusted)restoring=false;},{passive:true});
   addEventListener('load',restoreView);
 })();
