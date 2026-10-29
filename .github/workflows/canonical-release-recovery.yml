@@ -22,7 +22,9 @@ jobs:
   canonical-release:
     if: github.event_name != 'push'
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    # Preserve the complete growing regression suite and artifact cleanup time.
+    # The 2 GiB / two-CPU / network-none controls and assertions stay unchanged.
+    timeout-minutes: 80
     steps:
       - uses: actions/checkout@v4
         with:
@@ -142,7 +144,7 @@ jobs:
               seed._canonical_history_fixture(FIXTURE)
               with (OUTPUT / "canonical.log").open("w") as stream:
                   result = subprocess.run([sys.executable, "-m", "tools.validation.validate_release"],
-                                          stdout=stream, stderr=subprocess.STDOUT, timeout=3420)
+                                          stdout=stream, stderr=subprocess.STDOUT, timeout=4200)
               code = result.returncode
           except BaseException as exc:
               error = type(exc).__name__ + ": " + str(exc)
@@ -247,7 +249,7 @@ jobs:
           docker build --file .validation/canonical-build/Dockerfile --tag dtos-canonical-release:validation .validation/canonical-build 2>&1 | tee .validation/canonical-release/image-build.log
           docker run --rm dtos-canonical-release:validation sh -c 'python --version && chromium --version && python -m pip check' | tee .validation/canonical-release/environment.txt
       - name: Run unchanged ten-gate validator under actual 2 GiB
-        timeout-minutes: 58
+        timeout-minutes: 72
         env:
           DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
