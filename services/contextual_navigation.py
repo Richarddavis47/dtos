@@ -27,7 +27,7 @@ def navigation_markup():
     if context is None:
         return "", ""
     back = (
-        '<a id="dtos-back" class="dtos-back" href="/" aria-label="Back to Home">'
+        '<a id="dtos-back" class="dtos-back" href="/" aria-label="Go back to Home">'
         '<span aria-hidden="true">←</span> Back</a>'
     )
     head = (

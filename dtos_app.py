@@ -829,10 +829,13 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
         account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{escape(franchise or "Mapped franchise")} · Switch league</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
     from services.contextual_navigation import navigation_markup, with_back
     back, navigation_head = navigation_markup()
-    team_heading = 'data-my-team-context=' in body or 'id="my-dtos"' in body
-    if team_heading:
+    team_heading = 'data-my-team-context=' in body
+    own_heading = team_heading or 'id="my-dtos"' in body
+    if back and team_heading:
+        body = body.replace('<div class="thq-identity">', '<div class="thq-identity dtos-page-title">' + back, 1)
+    elif own_heading:
         body = with_back(body, back)
-    header = with_back(page_header(title, league_name=league_name, last_updated=str(sync)), '' if team_heading else back)
+    header = with_back(page_header(title, league_name=league_name, last_updated=str(sync)), '' if own_heading else back)
     standard_chrome = f"""<div class="ds-shell"><header class="top"><div class="brand"><a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form>{secondary_navigation()}</header>{account_html}
 {manager_navigation(title, roster_id=navigation_roster_id, include_tools=False)}</div>{header}"""
     footer = f'<footer class="footer"><b>League Sync:</b> {escape(str(sync))} · Intelligence is generated from the latest cached league state. Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'

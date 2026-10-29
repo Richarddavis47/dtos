@@ -182,7 +182,7 @@
     if (departed) return;
     reconcileStrategy();
     if (!updateHistory && draftSession !== session) navigationHandoff = true;
-    const navigationView = {filters: Object.fromEntries(['sent','received'].map(key => [key, {q: String(filters[key]?.q || '').slice(0,200), pos: String(filters[key]?.pos || '').slice(0,16)}])), side, interrupted: interruptedNavigation,
+    const navigationView = {workflow: flow, filters: Object.fromEntries(['sent','received'].map(key => [key, {q: String(filters[key]?.q || '').slice(0,200), pos: String(filters[key]?.pos || '').slice(0,16)}])), side, interrupted: interruptedNavigation,
       includePicks: el('trade-include-picks')?.checked !== false,
       typeFilter: el('recommendation-filter')?.value || 'all',
       assistOpen: !el('trade-assist').hidden, reviewOpen: !el('trade-review').hidden,
@@ -1594,7 +1594,7 @@
         setPartner(proposal.partner); selected.sent = [...proposal.sent]; selected.received = [...proposal.received];
         for (const key of ['resetGeneration', 'originalProposal', 'previewProposal', 'adoptedProposal', 'requiredOutgoingAsset', 'requiredIncomingAsset', 'adjustmentConstraints', 'originWorkflow', 'shopSearchPartner', 'shopScopeAsset', 'shopPreference', 'shopPosition', 'currentAssessment']) if (saved.schema === 2 && key in saved) session[key] = saved[key];
         const view = saved.navigationView;
-        if (view && typeof view === 'object') {
+        if (view && typeof view === 'object' && view.workflow === flow) {
           for (const which of ['sent','received']) {
             const f = view.filters?.[which];
             if (f && typeof f.q === 'string') filters[which].q = f.q.slice(0,200);

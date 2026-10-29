@@ -114,7 +114,7 @@
   function paint() {
     const prev = previous(), target = prev?.url || parent();
     back.hidden = identity(target) === identity(entry?.url || safeUrl(location.href) || '/');
-    back.href = target; back.setAttribute('aria-label','Back to ' + label(target));
+    back.href = target; back.setAttribute('aria-label','Go back to ' + label(target));
     back.title = 'Back to ' + label(target);
   }
   function initialize() {

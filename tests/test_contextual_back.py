@@ -426,8 +426,10 @@ class ContextualBackTests(unittest.TestCase):
                     for _ in range(5):
                         if "/market" not in urlsplit(p.url).path:
                             break
+                        prior_url = p.url
                         p.locator("#dtos-back").click()
-                        p.wait_for_timeout(60)
+                        p.wait_for_url(lambda url: str(url) != prior_url)
+                        p.wait_for_load_state("domcontentloaded")
                         if p.locator("#trade-builder").count():
                             break
                     p.locator("#trade-partner").wait_for()

@@ -2,12 +2,12 @@
 
 ## Existing navigation and correction
 
-Build 2209 used ordinary multipage links plus isolated return links. Its Market dossier links already carried search context in some flows; Trade already retained exact drafts under a session/league/franchise/tab binding. Fixed parent links could not express League → My Team or Trade → Market → dossier → Market → Trade. My Team and My DTOS hide their shared headings; Back is placed in their visible franchise/editor headings. Player projection week navigation replaced the entire history state, losing unrelated entry identity. Departing Trade did not preserve all temporary filters and cancellation state.
+Build 2209 used ordinary multipage links plus isolated return links. Its Market dossier links already carried search context in some flows; Trade already retained exact drafts under a session/league/franchise/tab binding. The contextual control has a distinct accessible name from existing fixed parent links. Fixed parent links could not express League → My Team or Trade → Market → dossier → Market → Trade. My Team and My DTOS hide their shared headings; Back is placed in the visible franchise identity row and editor heading. Player projection week navigation replaced the entire history state, losing unrelated entry identity. Departing Trade did not preserve all temporary filters and cancellation state.
 
 | Surface | Existing contract | Added behavior |
 | --- | --- | --- |
 | Home / Brief | Five primary destinations; explicit discovery | Back beside page title when a meaningful preceding page exists; no discovery |
-| My Team / Roster / Depth / Capital | One page with named anchor shortcuts; shared header hidden | One visible Back in franchise heading; explicit section anchors count, ordinary disclosures do not |
+| My Team / Roster / Depth / Capital | One page with named anchor shortcuts; shared header hidden | One visible Back alongside franchise identity; explicit section anchors count, ordinary disclosures do not |
 | League / standings / matchups | Real submitted lineup and official standings remain independent | Shared Back preserves preceding route and known week/query context |
 | History / FOIS / franchise | Existing guarded preparation and parent links | Shared contextual return, safe League fallback; no historical work added |
 | Market / search | Server-side query/filter/selection URLs | Preserve exact supported search URL and browser entry scroll/focus |
@@ -27,7 +27,7 @@ GET /api/account/navigation-context returns only the opaque binding and controll
 
 ## Trade restoration versus fresh entry
 
-Contextual Back reuses the existing bounded Trade draft and native entry snapshot. It preserves exact sent/received packages and picks, counterparty, strategy, Neutral/Custom mode, targets/protections, preview/original/adopted state and supported temporary filters. It does not create a second recommendation cache. Temporary filter metadata is bounded. Existing workspace ownership, source and preference revision checks still run. Previously computed assessments are retained/not revalidated; no evaluation or discovery runs automatically.
+Contextual Back reuses the existing bounded Trade draft and native entry snapshot. It preserves exact sent/received packages and picks, counterparty, strategy, Neutral/Custom mode, targets/protections, preview/original/adopted state and supported temporary filters. It does not create a second recommendation cache. Temporary filter metadata is bounded and restored only within the same workflow; a new Trade For entry keeps its established acquisition-side default. Existing workspace ownership, source and preference revision checks still run. Previously computed assessments are retained/not revalidated; no evaluation or discovery runs automatically.
 
 Leaving cancels pending operations and invalidates late results. The returned page explains that an interrupted operation stopped. Explicit Build My Own handoff remains authoritative and is not overwritten by departure snapshots. A foreign history binding cannot resurrect a cleared draft.
 
