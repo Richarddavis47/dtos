@@ -22,7 +22,7 @@
     const revision = ++serial;
     controller = new AbortController();
     const request = controller;
-    const timeout = setTimeout(() => request.abort(), 8000);
+    const timeout = setTimeout(() => request.abort(), Math.min(8000, Math.max(1, deadline - Date.now())));
     try {
       const response = await fetch('/api/account/market-preparation', {
         credentials: 'same-origin', cache: 'no-store', signal: request.signal,
@@ -68,7 +68,7 @@
       clearTimeout(timeout);
       if (revision === serial) controller = null;
     }
-    if (active && !document.hidden && revision === serial) timer = setTimeout(check, 5000);
+    if (active && !document.hidden && revision === serial) timer = setTimeout(check, Math.min(5000, Math.max(1, deadline - Date.now())));
   }
   addEventListener('dtos:context-invalidated', () => { active = false; cancel(); });
   addEventListener('pagehide', () => { active = false; cancel(); });
