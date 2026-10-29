@@ -207,6 +207,8 @@ class TradePickerOrderTests(unittest.TestCase):
                             # package retention is asserted separately above.
                             page.evaluate("sessionStorage.clear()")
                             page.goto("https://dtos.test/trades/" + workflow)
+                            if workflow == "recommended":
+                                page.locator("#trade-asset-options > summary").click()
                             board.locator(".tw-asset").first.wait_for(state="attached")
                             your_assets = page.get_by_role(
                                 "button", name="My assets", exact=True

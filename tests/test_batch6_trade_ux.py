@@ -45,6 +45,8 @@ class TradeUXTests(unittest.TestCase):
                             page.route('**/*', route)
                             target = '?asset_id=1-QB-0' if flow == 'shop' else '?asset_id=2-QB-0' if flow == 'trade-for' else ''
                             page.goto('https://dtos.test/trades/' + flow + target)
+                            if flow == 'recommended':
+                                page.locator('#trade-asset-options > summary').click()
                             page.locator('#trade-sent-board button[data-asset-id="1-QB-0"]').wait_for()
                             if flow == 'create':
                                 page.get_by_label('Counterparty', exact=True).select_option('2')
@@ -72,8 +74,11 @@ class TradeUXTests(unittest.TestCase):
                             focus_before = page.evaluate('document.activeElement.id')
                             scroll_before = page.evaluate('scrollY')
                             pending.pop().fulfill(json=body)
-                            page.locator('#trade-builder[aria-busy="false"]').wait_for()
-                            if flow == 'shop':
+                            # A separate live announcement delivers immediate feedback.
+                            # Preserve visible completion and workspace busy semantics. Wait for actual completion, not root busy.
+                            page.locator('#recommendation-status[data-state="complete"]').wait_for()
+                            self.assertEqual(page.locator('#trade-builder').get_attribute('aria-busy'), 'false')
+                            if flow == 'shop':  # Initial targeted entry retains its context.
                                 self.assertEqual(page.evaluate('document.activeElement.id'), focus_before)
                                 self.assertEqual(page.evaluate('scrollY'), scroll_before)
                             else:
@@ -162,11 +167,13 @@ class TradeUXTests(unittest.TestCase):
                         pending.pop().fulfill(json={'workflow': 'recommended', 'results': [],
                             'quiet_state': 'No credible opportunity in this bounded search.'})
                         page.locator('#trade-builder[aria-busy="false"]').wait_for()
-                        self.assertEqual(page.locator('#trade-result').inner_text(), 'No credible opportunity in this bounded search.')
+                        self.assertIn('No qualified recommendations', page.locator('#trade-result').inner_text())
+                        self.assertIn('No credible opportunity in this bounded search.', page.locator('#trade-result').inner_text())
                         self.assertNotIn('tw-error', page.locator('#trade-result').get_attribute('class') or '')
                         self.assertEqual(page.locator('.tw-offer').count(), 0)
                         page.locator('#trade-find').click()
                         page.locator('#trade-builder[aria-busy="true"]').wait_for()
+                        page.locator('#trade-search-options > summary').click()
                         page.locator('#recommendation-filter').select_option('future')
                         pending.pop().fulfill(status=503, json={'detail': 'Old search unavailable'})
                         page.locator('#trade-builder[aria-busy="false"]').wait_for()

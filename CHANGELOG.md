@@ -1,3 +1,11 @@
+# v1.21.109 / build 2209 — Trade workflow and discoverability
+
+Separate Generate Trades from Evaluate Trade. Put the goal and Neutral/Custom valuation controls ahead of owned assets, keep search preferences optional, and place generated results directly beneath the primary action. Preserve exact packages and the established Preview/Keep/Adopt/Adjust lifecycle.
+
+Use honest preparation, searching, complete, error and cancellation states; prevent duplicate submissions and reject stale or incomplete responses. An optional picks toggle maps only this search to existing exact-asset exclusions, without changing an entered offer, saved intent, selection mathematics or recommendation policy. No new persistent preference memory or automatic discovery is added.
+
+Keep final bilateral recommendation headings authoritative. Separate qualified recommendations from optional, exploratory, rejected and unsupported alternatives; no personal upside upgrades a limited offer. Valuation, projections, legal lineups, exact picks, history, security and build 2208 lineup safeguards remain unchanged.
+
 # v1.21.108 / build 2208 — Prepared lineup review and game-lock integrity
 
 Keep the actual Sleeper submitted lineup separate from the prepared optimal lineup, including explicitly empty slots. Show a higher-projected lineup alert only when the exact current-week changes have compatible projections, fresh roster/preparation checks, verified player identity, eligible slots and future recorded game times. Unknown or started-game changes remain informational; no lineup is submitted automatically. Open tabs expire the actionable suggestion without polling.

@@ -119,7 +119,8 @@ class CalculatorStaleFeedbackBrowserTests(unittest.TestCase):
                     page.click('[data-side=sent]')
                     self.assertEqual(page.locator('#trade-result').inner_text(), message)
                 elif change == 'strategy':
-                    page.locator('summary').filter(has_text='Strategy for advanced').click()
+                    self.assertTrue(page.locator('#trade-strategy').is_visible())
+                    page.locator('#trade-strategy').focus()
                     page.select_option('#trade-strategy', 'REBUILD')
                 else:
                     page.select_option('#trade-partner', '')
@@ -133,7 +134,8 @@ class CalculatorStaleFeedbackBrowserTests(unittest.TestCase):
                 page.click('#trade-balance-offer')
                 page.wait_for_timeout(30)
                 self.assertTrue(page.get_by_role('button', name='Remove A from calculator', exact=True).is_disabled())
-                page.locator('summary').filter(has_text='Strategy for advanced').click()
+                self.assertTrue(page.locator('#trade-strategy').is_visible())
+                page.locator('#trade-strategy').focus()
                 page.select_option('#trade-strategy', 'REBUILD')
                 page.get_by_role('button', name='Remove A from calculator', exact=True).click()
                 self.add(page, 'sent', asset_id)

@@ -362,7 +362,7 @@ class DecisionHTTPBrowserTests(unittest.TestCase):
                 before = len(self.requests)
                 page.select_option("#trade-strategy", "REBUILD")
                 self.assertIn(
-                    "Not started for this strategy",
+                    "Strategy changed",
                     page.locator("#recommendation-status").inner_text(),
                 )
                 self.assertTrue(page.locator("#trade-result").is_hidden())

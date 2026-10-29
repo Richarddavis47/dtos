@@ -127,6 +127,7 @@ class TradeWorkspaceBrowserTests(unittest.TestCase):
                                 search.wait_for()
                                 self.assertTrue(search.is_visible())
                             page.goto("https://dtos.test/trades/recommended")
+                            page.locator('#trade-asset-options > summary').click()
                             page.get_by_label("Counterparty", exact=True).select_option("2")
                             self.assertEqual(page.locator('#trade-builder').get_attribute('data-trade-workflow'), 'recommended')
                         page.close()

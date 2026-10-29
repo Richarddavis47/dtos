@@ -314,6 +314,7 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
                             "Trade options ready",
                             page.locator("#recommendation-status").inner_text(),
                         )
+                        self.assertIn('Qualified recommendations', page.locator('#trade-result').inner_text())
                         first = page.locator(
                             "#trade-result .tw-offer > p"
                         ).all_text_contents()
