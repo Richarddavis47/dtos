@@ -7,9 +7,15 @@ import json
 from src.platform.account_context import current_account
 
 
+def workspace_binding(league_id: str, roster_id: int | None) -> str:
+    """The existing opaque identity, independent of ownership/source generations."""
+    account = current_account()
+    identity = (account.account_id, account.session_id) if account else ("local", "local")
+    return hashlib.sha256(json.dumps((identity, league_id, roster_id), separators=(",", ":")).encode()).hexdigest()
+
+
 def workspace_context(data: dict, roster_id: int) -> dict:
     """Bind temporary state to account/session/league and canonical ownership."""
-    account = current_account()
     league_id = str((data.get("league") or {}).get("league_id") or data.get("league_id") or "")
     ownership = []
     for team in data.get("teams") or ():
@@ -18,8 +24,7 @@ def workspace_context(data: dict, roster_id: int) -> dict:
         picks = sorted((str(p.get("season")), str(p.get("round")), str(p.get("original_roster_id")), str(p.get("current_owner_id"))) for p in team.get("picks_owned") or ())
         ownership.append((owner, players, picks))
     generation = hashlib.sha256(json.dumps(sorted(ownership), separators=(",", ":")).encode()).hexdigest()
-    identity = (account.account_id, account.session_id) if account else ("local", "local")
-    binding = hashlib.sha256(json.dumps((identity, league_id, roster_id), separators=(",", ":")).encode()).hexdigest()
+    binding = workspace_binding(league_id, roster_id)
     from services.strategy_session import strategy_scope
     return {"league_id": league_id, "roster_id": roster_id, "binding": binding, "ownership_generation": generation, "schema": 1,
             "strategy_scope": strategy_scope()}

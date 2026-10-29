@@ -20,7 +20,9 @@ from src.ui.design_system import DESIGN_SYSTEM_CSS, account_page_header
 
 def _shell(title: str, body: str, *, purpose: str = "Manage secure access to your dynasty front office.", status_code: int = 200) -> HTMLResponse:
     css = """body{margin:0;background:var(--background);color:var(--text);font-family:system-ui,sans-serif}.auth{max-width:720px;margin:auto;padding:28px 18px}.auth .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin:14px 0}.auth .grid{display:grid;gap:12px}.auth label{font-weight:650;font-size:14px}.auth input,.auth select{width:100%;min-height:44px;padding:13px;margin-top:6px;border-radius:10px;border:1px solid var(--border);background:var(--background);color:var(--text)}.auth .btn{display:inline-flex;min-height:46px;align-items:center;justify-content:center;border:0;border-radius:10px;padding:10px 16px;background:var(--accent);color:#081307;font-weight:750;cursor:pointer}.auth a{color:var(--accent)}.auth .muted{color:var(--muted)}.auth .error{color:var(--negative)}.auth .good{color:var(--positive)}@media(max-width:600px){.auth{padding:18px 13px}.auth .card{padding:18px}}"""
-    header = account_page_header(title, purpose=purpose)
+    from services.contextual_navigation import navigation_markup, with_back
+    back, navigation_head = navigation_markup() if not any(word in title.casefold() for word in ("sign in", "create account", "recover", "welcome")) else ("", "")
+    header = with_back(account_page_header(title, purpose=purpose), back)
     css += '.auth,.auth *{box-sizing:border-box}.auth input,.auth select{font-size:16px}.auth .card{overflow-wrap:anywhere}'
     progress = r"""<script>(()=>{
       const forms=[...document.forms].filter(f=>/\/account\/(sleeper|leagues(?:\/|$))/.test(f.getAttribute('action')||''));
@@ -33,7 +35,7 @@ def _shell(title: str, body: str, *, purpose: str = "Manage secure access to you
         });addEventListener('pageshow',()=>{button.disabled=false;button.removeAttribute('aria-busy');button.textContent=label;form.querySelector('[data-account-progress]')?.remove();});
       }
     })();</script>"""
-    return HTMLResponse(f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · DTOS</title><style>{DESIGN_SYSTEM_CSS}{css}</style></head><body><main class="auth">{header}{body}</main>{progress}</body></html>', status_code=status_code, headers={"Cache-Control": "no-store"})
+    return HTMLResponse(f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · DTOS</title><style>{DESIGN_SYSTEM_CSS}{css}</style>{navigation_head}</head><body><main class="auth">{header}{body}</main>{progress}</body></html>', status_code=status_code, headers={"Cache-Control": "no-store"})
 
 
 def _source_unavailable(*, identity: bool = False) -> HTMLResponse:

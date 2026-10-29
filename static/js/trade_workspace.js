@@ -88,12 +88,13 @@
   const root = document.getElementById('trade-builder');
   if (!root) return;
   const tabOwner = tradeTabOwner();
+  const replacePage = url => window.dtosNavigation ? window.dtosNavigation.replace(url) : location.replace(url);
   const el = id => document.getElementById(id), active = Number(root.dataset.frontOffice);
   const calculator = root.dataset.tradeWorkflow === 'calculator';
   const marketEditor = calculator || root.dataset.tradeWorkflow === 'create';
   const flow = calculator ? 'create' : root.dataset.tradeWorkflow.replace('-', '_');
   let workspace, revision = 0, runSequence = 0, side = root.dataset.tradeWorkflow === 'trade-for' ? 'received' : 'sent', busy = false, entryBlocked = false, departed = false;
-  let balanceRequest = null, activeRequest = null;
+  let balanceRequest = null, activeRequest = null, navigationHandoff = false;
   let balanceFeedback = null;
   let searchFeedback = null;
   function searchStatus(text, state, offerRevision = revision, requestGeneration = runSequence) {
@@ -132,6 +133,7 @@
     shopScopeAsset: null, shopPreference: 'best_overall', shopPosition: 'QB', currentAssessment: null};
   const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let lastOffersIsBalance = false; let searchExhausted = false; let hasDiscovered = false;
   let valuationMode = 'neutral', personalRevisionStale = false, checkingPersonal = false;
+  let interruptedNavigation = false;
   const latestEvidence = {};
   const sourceKeys = ['market_generation', 'projection_generation', 'historical_generation'];
   const selected = session.currentProposal, filters = {sent: {q: '', pos: 'ALL'}, received: {q: '', pos: 'ALL'}};
@@ -150,7 +152,7 @@
     el('trade-result').append(reload);
   }
   async function checkPersonalRevision() {
-    if (!workspace?.personalization || checkingPersonal || departed || document.hidden) return;
+    if (!workspace?.personalization || checkingPersonal || departed || document.hidden || window.dtosNavigation?.checking) return;
     checkingPersonal = true;
     const binding = workspace.workspace_context.binding;
     try {
@@ -173,13 +175,19 @@
     finally { checkingPersonal = false; }
   }
   addEventListener('focus', checkPersonalRevision);
-  addEventListener('pageshow', () => { if (workspace) checkPersonalRevision(); });
+  addEventListener('pageshow', async event => { if (event.persisted && window.dtosNavigation && !(await window.dtosNavigation.verify())) return; if (workspace) checkPersonalRevision(); });
   function personalPayload() { const p = workspace?.personalization; return p ? {override_saved_protections: [...session.overrideSavedProtections], valuation_mode: valuationMode, personal_revision: p.revision, personal_market_generation: p.market_generation, personal_baseline_generation: p.baseline_generation} : {}; }
   function payload() { reconcileStrategy(); return {...personalPayload(), workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...session.protectedAssets], excluded_assets: [...session.excludedAssets], asset_id: flow === 'shop' ? session.requiredOutgoingAsset || selected.sent[0] : session.requiredIncomingAsset || selected.received[0], workspace_context: workspace.workspace_context}; }
   function persist(updateHistory = true, draftSession = session) {
     if (departed) return;
     reconcileStrategy();
-    const draft = {...draftSession, valuationMode, tabOwner, strategy: el('trade-strategy').value, ownership: workspace.workspace_context.ownership_generation};
+    if (!updateHistory && draftSession !== session) navigationHandoff = true;
+    const navigationView = {workflow: flow, filters: Object.fromEntries(['sent','received'].map(key => [key, {q: String(filters[key]?.q || '').slice(0,200), pos: String(filters[key]?.pos || '').slice(0,16)}])), side, interrupted: interruptedNavigation,
+      includePicks: el('trade-include-picks')?.checked !== false,
+      typeFilter: el('recommendation-filter')?.value || 'all',
+      assistOpen: !el('trade-assist').hidden, reviewOpen: !el('trade-review').hidden,
+      details: Object.fromEntries(['trade-asset-options','trade-search-options','shop-refinements'].map(id => [id, !!el(id)?.open]))};
+    const draft = {...draftSession, valuationMode, tabOwner, navigationView, strategy: el('trade-strategy').value, ownership: workspace.workspace_context.ownership_generation};
     try {
       draft.savedAt = Date.now();
       sessionStorage.setItem(storageKey(), JSON.stringify(draft));
@@ -196,19 +204,23 @@
       preload: root.dataset.preloadAsset, draft
     }}, ''); } catch (_) { /* History-disabled browsing still works. */ }
   }
+  function retainedDraft() {
+    try { return JSON.parse(sessionStorage.getItem(storageKey()) || 'null'); }
+    catch (_) { return null; }
+  }
   function restoredDraft() {
     if (departed) return null;
     const navigation = performance.getEntriesByType('navigation')[0]?.type;
     const entry = history.state?.dtosTrade;
-    const retained = JSON.parse(sessionStorage.getItem(storageKey()) || 'null');
+    const retained = retainedDraft();
     if (retained?.tabOwner && retained.tabOwner !== tabOwner) return {...retained, endedAtHome:true};
     if (retained?.endedAtHome) return retained;
     if (entry?.draft && entry.draft.resetGeneration !== retained?.resetGeneration && retained?.resetGeneration) {
-      departed = true; location.replace('/trades/create?front_office=' + active); return retained;
+      departed = true; replacePage('/trades/create?front_office=' + active); return retained;
     }
     if (['reload', 'back_forward'].includes(navigation) && entry?.binding === workspace.workspace_context.binding &&
         entry.workflow === flow && entry.preload === root.dataset.preloadAsset) return entry.draft;
-    return JSON.parse(sessionStorage.getItem(storageKey()) || 'null');
+    return retainedDraft();
   }
   function syncLocks() { if (el('shop-protected')) for (const option of el('shop-protected').options) option.selected = session.protectedAssets.includes(option.value); }
   function addLock(kind, id) { if (!session[kind].includes(id)) session[kind].push(id); syncLocks(); persist(); }
@@ -325,8 +337,8 @@
     const results = node('div', null, 'tw-asset-results'), chips = node('div', null, 'tw-filters');
     const positions = ['ALL', 'QB', 'RB', 'WR', 'TE', ...[...new Set(owner.assets.filter(a => a.kind !== 'pick' && !['QB','RB','WR','TE'].includes(a.position)).map(a => a.position || 'Other positions'))].sort(), 'PICKS'].filter(p => p === 'ALL' || owner.assets.some(a => (a.kind === 'pick' ? 'PICKS' : (a.position || 'Other positions')) === p));
     function renderRows() { results.replaceChildren(); const rows = pickerAssets(owner.assets).filter(a => (f.pos === 'ALL' || (a.kind === 'pick' ? 'PICKS' : (a.position || 'Other positions')) === f.pos) && label(a).toLowerCase().includes(f.q.trim().toLowerCase())); let previous = null; for (const a of rows) { const group = pickerGroup(a); if (group !== previous) { const heading = node('h4', group); heading.dataset.pickerGroup = group; results.append(heading); previous = group; } results.append(assetRow(a, which)); } if (!rows.length) results.append(node('p', owner.assets.length ? 'No matching assets. Clear search or choose All.' : 'No currently owned assets available.')); }
-    search.oninput = () => { f.q = search.value; renderRows(); };
-    for (const pos of positions) { const b = node('button', pos); b.type = 'button'; b.dataset.position = pos; b.setAttribute('aria-pressed', String(f.pos === pos)); b.onclick = () => { f.pos = pos; board(which); container.querySelector('[data-position="' + pos + '"]').focus(); }; chips.append(b); }
+    search.oninput = () => { f.q = search.value; renderRows(); persist(); };
+    for (const pos of positions) { const b = node('button', pos); b.type = 'button'; b.dataset.position = pos; b.setAttribute('aria-pressed', String(f.pos === pos)); b.onclick = () => { f.pos = pos; persist(); board(which); container.querySelector('[data-position="' + pos + '"]').focus(); }; chips.append(b); }
     results.setAttribute('role', 'region'); results.setAttribute('aria-label', owner.team_name + ' owned assets'); results.tabIndex = 0;
     let marketLink = null;
     if (marketEditor) { marketLink = node('a', 'Review Market totals & Evaluate', 'ds-action'); marketLink.href = '#trade-balance'; }
@@ -1242,6 +1254,7 @@
     return row.exploration !== true && e.generated_trade_eligible === true && ['SMASH ACCEPT', 'WORTH PURSUING'].includes(finalVerdict(e));
   }
   async function run(path, extra = {}, options = {}) {
+    interruptedNavigation = false;
     if (personalRevisionStale) return personalChangedNotice();
     if (busy || !workspace) return;
     if (path === 'generate' && entryBlocked) return;
@@ -1380,7 +1393,7 @@
   };
   if (el('trade-include-picks')) el('trade-include-picks').onchange = () => {
     cancelBalance(); revision++; lastOffers = null; excludedFamilies.clear(); searchExhausted = false; hasDiscovered = false; displayedFamilies = [];
-    el('trade-result').hidden = true; paint();
+    el('trade-result').hidden = true; persist(); paint();
     searchStatus('Search options changed. Generate again to use them; your entered offer is unchanged.', 'ready');
   };
   el('trade-balance-offer').onclick = () => run('balance');
@@ -1393,6 +1406,10 @@
     selected.sent = []; selected.received = []; selected.partner = 0;
     for (const key of ['originalProposal','previewProposal','adoptedProposal','currentAssessment','requiredOutgoingAsset','requiredIncomingAsset','shopScopeAsset']) session[key] = null;
     session.protectedAssets = []; session.excludedAssets = []; session.overrideSavedProtections = []; session.adjustmentConstraints = {};
+    for (const which of ['sent','received']) {filters[which].q = ''; filters[which].pos = 'ALL';}
+    side = 'sent'; interruptedNavigation = false;
+    if (el('trade-include-picks')) el('trade-include-picks').checked = true;
+    if (el('recommendation-filter')) el('recommendation-filter').selectedIndex = 0;
     session.originWorkflow = 'create'; session.shopSearchPartner = 0;
     session.shopPreference = 'best_overall'; session.shopPosition = 'QB';
     session.resetGeneration = String(Date.now()) + ':' + Math.random().toString(36).slice(2);
@@ -1420,7 +1437,7 @@
     try { sessionStorage.removeItem(storageKey()); } catch (_) { message('The saved draft could not be cleared. Allow browser session storage and try again; your strategy is unchanged.', true); return; }
     clearDraft();
     // Replace the cleared entry; Back cannot resurrect its old Shop/Trade For objective.
-    location.replace('/trades/create?front_office=' + active);
+    replacePage('/trades/create?front_office=' + active);
   };
   el('trade-build-own').onclick = () => {
     if (!workspace) return;
@@ -1459,7 +1476,7 @@
     feedback.textContent = retained ? '' : 'Strategy could not be retained for fresh navigation: browser session storage is unavailable or full.';
   }
   function reconcileStrategy() {
-    if (!workspace || !window.dtosStrategy || departed) return;
+    if (!workspace || !window.dtosStrategy || departed || window.dtosNavigation?.checking) return;
     const intent = window.dtosStrategy.get(workspace.workspace_context);
     if (intent === el('trade-strategy').value) return;
     el('trade-strategy').value = intent;
@@ -1482,19 +1499,33 @@
   el('trade-strategy').onchange = () => { writeStrategyIntent(); el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; hasDiscovered = false; displayedFamilies = []; if (workspace) paint(); excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; searchStatus('Strategy changed. Generate or evaluate again to use this goal; your assets are unchanged.', 'ready'); persist(); };
   // A document restored from browser history must not accept a response from
   // work started before leaving it. Normal navigation loads fresh server context.
+  function retainNavigationView() {
+    if (!workspace || departed || navigationHandoff) return;
+    if (history.state?.dtosTrade?.binding && history.state.dtosTrade.binding !== workspace.workspace_context.binding) return;
+    try {
+      const retained = JSON.parse(sessionStorage.getItem(storageKey()) || 'null');
+      // Start New / deliberate primary Trade entry invalidates old history.
+      if (retained?.endedAtHome || (retained?.resetGeneration && retained.resetGeneration !== session.resetGeneration)) return;
+    } catch (_) { /* In-page work still functions without browser storage. */ }
+    interruptedNavigation = interruptedNavigation || busy && !!activeRequest;
+    persist();
+  }
+  addEventListener('dtos:navigation-leave', retainNavigationView);
+  addEventListener('dtos:context-invalidated', () => { cancelBalance(); departed = true; revision++; runSequence++; });
   addEventListener('pagehide', () => {
-    cancelBalance(); departed = true; revision++; runSequence++;
+    retainNavigationView(); cancelBalance(); departed = true; revision++; runSequence++;
     busy = false; el('trade-result').hidden = true; if (workspace) paint();
   });
-  addEventListener('pageshow', event => {
+  addEventListener('pageshow', async event => {
+    if (event.persisted && window.dtosNavigation && !(await window.dtosNavigation.verify())) return;
     // BF-cache keeps this document's own proposal and locks. Make it the active
     // draft again; a later explicit action must start from this history entry.
     if (event.persisted) {
       departed = false;
       if (workspace && history.state?.dtosTrade?.binding === workspace.workspace_context.binding) {
-        const retained = JSON.parse(sessionStorage.getItem(storageKey()) || 'null');
+        const retained = retainedDraft();
         if (retained?.resetGeneration && retained.resetGeneration !== session.resetGeneration) {
-          location.replace('/trades/create?front_office=' + active); return;
+          replacePage('/trades/create?front_office=' + active); return;
         }
         reconcileStrategy();
         if (session.currentAssessment) { session.currentAssessment = restoreContext(session.currentAssessment); showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment); }
@@ -1562,6 +1593,21 @@
       if (proposal && (team(proposal.partner) || Number(proposal.partner) === 0) && Array.isArray(proposal.sent) && Array.isArray(proposal.received)) {
         setPartner(proposal.partner); selected.sent = [...proposal.sent]; selected.received = [...proposal.received];
         for (const key of ['resetGeneration', 'originalProposal', 'previewProposal', 'adoptedProposal', 'requiredOutgoingAsset', 'requiredIncomingAsset', 'adjustmentConstraints', 'originWorkflow', 'shopSearchPartner', 'shopScopeAsset', 'shopPreference', 'shopPosition', 'currentAssessment']) if (saved.schema === 2 && key in saved) session[key] = saved[key];
+        const view = saved.navigationView;
+        if (view && typeof view === 'object' && view.workflow === flow) {
+          for (const which of ['sent','received']) {
+            const f = view.filters?.[which];
+            if (f && typeof f.q === 'string') filters[which].q = f.q.slice(0,200);
+            if (f && typeof f.pos === 'string' && f.pos.length < 40) filters[which].pos = f.pos;
+          }
+          if (['sent','received'].includes(view.side)) side = view.side;
+          if (el('trade-include-picks') && typeof view.includePicks === 'boolean') el('trade-include-picks').checked = view.includePicks;
+          if (Array.from(el('recommendation-filter')?.options || []).some(o => o.value === view.typeFilter)) el('recommendation-filter').value = view.typeFilter;
+          for (const id of ['trade-asset-options','trade-search-options','shop-refinements']) if (el(id) && typeof view.details?.[id] === 'boolean') el(id).open = view.details[id];
+          if (view.assistOpen === true) el('trade-assist').hidden = false;
+          if (view.reviewOpen === true) el('trade-review').hidden = false;
+          interruptedNavigation = view.interrupted === true;
+        }
         session.currentAssessment = session.currentAssessment ? restoreContext(session.currentAssessment) : null;
         if (session.previewProposal?.preview_context) session.previewProposal.preview_context = restoreContext(session.previewProposal.preview_context);
         // Older drafts retained only a string summary: it is prior context,
@@ -1633,6 +1679,8 @@
     if (flow === 'shop') { el('trade-find').textContent = 'Find Shop returns'; searchStatus('Not started. Find Shop returns searches the selected scope; strategy alone cannot resolve missing projection coverage.', 'not_started'); }
     if (session.currentAssessment && !entryBlocked) showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment);
     if (session.previewProposal && !entryBlocked) previewOffer({proposal: session.previewProposal});
+    if (interruptedNavigation && !entryBlocked) operationStatus('The previous operation stopped when you left. Your exact workspace is retained; Generate or Evaluate explicitly to continue.', 'cancelled');
+    window.dtosNavigation?.restoreView();
     const homeOffer = new URL(location.href).searchParams.get('home_offer');
     if (homeOffer && !entryBlocked && !departed && (!['reload', 'back_forward'].includes(performance.getEntriesByType('navigation')[0]?.type) || (!session.adoptedProposal && !session.previewProposal && history.state?.dtosHomeOffer !== homeOffer))) {
       const navigationRevision = revision;
