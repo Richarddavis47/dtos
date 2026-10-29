@@ -66,6 +66,20 @@ class BeginnerMarketTests(unittest.TestCase):
         self.assertNotIn('SYNTHETIC_PRIVATE', html)
         self.assertNotIn('/private/market', html)
         self.assertEqual(self.get('/api/market/search?q=Denzel%20Boston').json()['results'], before)
+        # A Market-provider fallback is distinct from a failed Sleeper sync.
+        # The same admitted prices must survive both HTTP representations.
+        self.fixture.state['last_error'] = None
+        source_status = self.fixture.data.setdefault('market_data', {}).setdefault('provider_status', {})
+        source_status['FantasyCalc'] = {'status': 'failed', 'refresh_result': 'cached_fallback',
+                                       'reason': 'SYNTHETIC_PRIVATE /private/market credential=fake'}
+        html = self.get('/market?q=Denzel%20Boston').text
+        self.assertIn('Market source could not update', html)
+        self.assertIn('Some quotes are from its last successful update', html)
+        self.assertNotIn('latest league update failed', html)
+        self.assertNotIn('SYNTHETIC_PRIVATE', html)
+        after = self.get('/api/market/search?q=Denzel%20Boston').json()['results']
+        self.assertEqual([(row['asset_id'], row['values']['market_value']) for row in after],
+                         [(row['asset_id'], row['values']['market_value']) for row in before])
 
     def test_failed_replacement_uses_safe_rendered_recovery_without_old_prices(self):
         self.fixture.data['asset_market_semantic_revision'] = 'next-compatible-inputs-needed'
