@@ -239,7 +239,11 @@ class TradeWorkflowExperienceTests(unittest.TestCase):
                 retry.wait_for()
                 self.assertTrue(page.locator('#trade-find').is_disabled())
                 control['fail_workspace'] = False
-                retry.click()
+                # Retry reloads this same URL. Wait for the replacement document,
+                # not a predicate against the old document while it is unloading.
+                with page.expect_navigation(wait_until='domcontentloaded'):
+                    retry.click()
+                page.locator('#trade-find').wait_for(state='visible')
                 page.wait_for_function("!document.querySelector('#trade-find').disabled")
                 self.assertEqual(records, [])
                 self.assertEqual(errors, [])
