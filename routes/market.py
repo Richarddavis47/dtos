@@ -359,7 +359,11 @@ def create_market_router(
             if exc.status_code != 503 or 'text/html' not in request.headers.get('accept', ''):
                 raise
             from src.platform.market_warming import warming_page
-            return warming_page(request.url.query, headers=exc.headers)
+            selected_state, selected_league, cache = dependencies()
+            snapshot = cache.preparation_status(
+                selected_state.get('data') or {}, selected_state, historical_store, selected_league,
+            ) if hasattr(cache, 'preparation_status') else None
+            return warming_page(request.url.query, headers=exc.headers, snapshot=snapshot)
         selected_state, selected_league, _cache = dependencies()
         data = selected_state.get("data") or {}
         ownership = PlayerOwnershipIndex(data)
@@ -540,6 +544,26 @@ def create_market_router(
 
         # Shared caches must never retain account chrome or session CSRF fields.
         body = render_cache.get_or_build(key, generation, render).decode("utf-8")
+        selected_state, selected_league, cache = dependencies()
+        if hasattr(cache, 'preparation_status'):
+            observed = cache.preparation_status(
+                selected_state.get('data') or {}, selected_state, historical_store, selected_league,
+            )
+            if observed['state'] == 'stale' or (
+                observed['state'] not in {'ready', 'empty'} and observed.get('retained')
+                and cache.current() is market
+            ):
+                from src.core.history_context.timestamps import canonical_utc_timestamp
+                prepared_at = canonical_utc_timestamp(market.generated_at)
+                freshness = f' Market prepared: {escape(prepared_at)}.' if prepared_at else ''
+                from services.market_preparation import presentation
+                explanation = (presentation(observed)['message'] if observed['state'] == 'stale' else
+                    'These values are from an earlier prepared publication. A matching current replacement is not ready; current roster ownership is shown separately.')
+                body = (
+                    '<p class="evidence-unavailable" role="status"><b>Last successful Market available.</b> '
+                    + explanation
+                    + freshness + ' Custom ranking limitations are shown separately.</p>' + body
+                )
         return page("Asset Market", body)
 
     router.add_api_route("/market", market_page, methods=["GET"], response_class=HTMLResponse)

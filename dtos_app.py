@@ -106,6 +106,8 @@ from src.core.intelligence_memory import (
 )
 from src.ui import DESIGN_SYSTEM_CSS, manager_navigation, page_header, secondary_navigation
 from routes.navigation import create_navigation_router
+from routes.market_preparation import create_market_preparation_router
+from services.market_preparation import observe_resident_market
 
 historical_storage_status = validate_historical_storage(
     database=METADATA_DATABASE_FILE, root=HISTORY_STORAGE_ROOT,
@@ -1061,6 +1063,9 @@ def current_personal_market():
 
 
 app.include_router(create_navigation_router())
+app.include_router(create_market_preparation_router(
+    observer=lambda: observe_resident_market(league_runtime_manager, canonical_history_store),
+))
 app.include_router(create_personal_rankings_router(
     service=account_service, require_data=require_data,
     market_model=current_personal_market, page=page,
