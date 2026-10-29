@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -62,6 +63,15 @@ class HistoryFinalSourceBrowserTests(unittest.TestCase):
         self.assertNotEqual(summary.evaluate('(e)=>getComputedStyle(e).outlineStyle'), 'none')
         summary.press('Enter')
         return disclosure
+
+    def pending_route(self, page, previous_count):
+        # aria-busy is set before fetch reaches the interception callback.
+        # Wait for that actual request, including when testing a second fetch.
+        deadline = time.monotonic() + 5
+        while len(self.pending) == previous_count and time.monotonic() < deadline:
+            page.wait_for_timeout(10)
+        self.assertEqual(len(self.pending), previous_count + 1)
+        return self.pending[-1]
 
     def test_released_asset_loaded_and_production_terminal_at_phone_and_desktop_widths(self):
         data = self.fixture.data
@@ -147,9 +157,10 @@ class HistoryFinalSourceBrowserTests(unittest.TestCase):
         with patch.object(data_platform, 'warehouse', SnapshotWarehouse()), sync_playwright() as pw:
             browser, page = self.browser(pw)
             self.behavior = 'pending'
+            previous_count = len(self.pending)
             disclosure = self.open(page)
             page.wait_for_function("document.querySelector('[data-production-content]').getAttribute('aria-busy') === 'true'")
-            route = self.pending[-1]
+            route = self.pending_route(page, previous_count)
             old = self.fixture.client.get(urlsplit(route.request.url).path).text
             page.evaluate("history.pushState({}, '', '/trades/history/965057520920260608')")
             route.fulfill(status=200, content_type='text/html', body=old)
@@ -162,9 +173,10 @@ class HistoryFinalSourceBrowserTests(unittest.TestCase):
             self.assertEqual(disclosure.get_attribute('data-trade'), fixtures.FAAB)
             self.assertEqual(page.locator('.timeline-faab').count(), 1)
             self.behavior = 'pending'
+            previous_count = len(self.pending)
             disclosure = self.open(page)
             page.wait_for_function("document.querySelector('[data-production-content]').getAttribute('aria-busy') === 'true'")
-            route = self.pending[-1]
+            route = self.pending_route(page, previous_count)
             body = self.fixture.client.get(urlsplit(route.request.url).path).text
             page.evaluate("history.replaceState({}, '', location.pathname + '#production')")
             route.fulfill(status=200, content_type='text/html', body=body)
