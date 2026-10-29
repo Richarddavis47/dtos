@@ -270,10 +270,84 @@ class MarketPreparationTests(unittest.TestCase):
         f.cache._market = None
         self.assertEqual(status()["state"], "source_failed")
         self.assertFalse(status()["can_check"])
-        self.assertIn("last league update did not finish", status()["message"])
+        self.assertIn("last source update did not finish", status()["message"])
         f.runtime.state["data"] = {}
         self.assertEqual(status()["state"], "source_failed")
         self.assertNotIn("FAKE_CREDENTIAL", json.dumps(status()))
+
+    def test_real_market_refresh_fallback_reaches_http_without_repricing_or_error_text(
+        self,
+    ):
+        import asyncio
+        from datetime import datetime, timezone
+        from tests import test_provider_activation as providers
+        from src.core.data_platform.provider_activation import (
+            refresh_public_market,
+            FANTASYCALC_URL,
+        )
+        from src.core.valuation.normalization import prepare_market_normalization
+        from src.core.valuation.calibration import cached_market_consensus
+
+        f = self.fixture()
+        stamp = datetime.now(timezone.utc).isoformat()
+        market_data = {
+            "providers": {
+                "FantasyCalc": {
+                    str(i): {"value": i * 100, "confidence": 85, "updated_at": stamp}
+                    for i in range(1, 101)
+                }
+            },
+            "pick_quotes": {"FantasyCalc": [], "DynastyProcess": []},
+            "provider_status": {
+                name: {
+                    "status": "healthy",
+                    "last_refresh": stamp,
+                    "records_retrieved": 100 if name == "FantasyCalc" else 0,
+                }
+                for name in ("FantasyCalc", "DynastyProcess")
+            },
+        }
+        prepare_market_normalization(market_data)
+        before = cached_market_consensus(market_data, ["50"])["50"][0]
+        self.assertIsNotNone(before)
+        market_data["provider_status"]["FantasyCalc"]["status"] = "failed"
+        client = providers.FixtureClient(
+            {FANTASYCALC_URL: providers.FixtureResponse(status=503)}
+        )
+        client.get = AsyncMock(side_effect=client.get)
+        retained = asyncio.run(refresh_public_market(client, market_data))
+        prepare_market_normalization(retained)
+        self.assertEqual(cached_market_consensus(retained, ["50"])["50"][0], before)
+        self.assertEqual(
+            retained["provider_status"]["FantasyCalc"]["refresh_result"],
+            "cached_fallback",
+        )
+        retained["provider_status"]["FantasyCalc"]["reason"] = (
+            "SYNTHETIC_PRIVATE /private/source credential=fake"
+        )
+        f.data["market_data"] = retained
+        self.ready(f)
+        self.assertFalse(f.runtime.state.get("last_error"))
+        for _ in range(3):
+            response = f.editor.client.get("/api/account/market-preparation")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()["state"], "stale")
+            self.assertIn("Market source could not update", response.json()["message"])
+            self.assertNotIn("league update failed", response.json()["message"])
+            self.assertNotIn("SYNTHETIC_PRIVATE", response.text)
+            self.assertNotIn("/private/source", response.text)
+            self.assertEqual(cached_market_consensus(retained, ["50"])["50"][0], before)
+        client.get.assert_awaited_once_with(FANTASYCALC_URL)
+        # Disabled/unsupported catalog sources cannot falsely mark Market stale.
+        retained["provider_status"]["FantasyCalc"]["status"] = "healthy"
+        retained["provider_status"]["Sleeper ADP"] = {
+            "status": "failed",
+            "refresh_result": "cached_fallback",
+        }
+        self.assertEqual(
+            f.editor.client.get("/api/account/market-preparation").json()["state"],
+            "ready",
+        )
 
     def test_only_actual_build_phases_are_reported(self):
         f = self.fixture()

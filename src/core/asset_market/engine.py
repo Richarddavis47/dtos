@@ -2004,6 +2004,12 @@ class AssetMarketCache:
         from src.core.history_context.timestamps import canonical_utc_timestamp
 
         marker = self.request_marker(data, state, store, league_id)
+        source_status = (data.get('market_data') or {}).get('provider_status') or {}
+        market_fallback = any(
+            (source_status.get(name) or {}).get('status') == 'failed'
+            and (source_status.get(name) or {}).get('refresh_result') == 'cached_fallback'
+            for name in ('FantasyCalc', 'DynastyProcess')
+        )
         with self._lock:
             market = self._market
             compatible = bool(
@@ -2016,12 +2022,12 @@ class AssetMarketCache:
             retained = market is not None and market.store is store
             fresh_at = canonical_utc_timestamp(market.generated_at) if compatible else None
             if compatible:
-                status = ('stale' if state.get('last_error') else 'ready') if market.assets else 'empty'
+                status = ('stale' if state.get('last_error') or market_fallback else 'ready') if market.assets else 'empty'
             elif self._building:
                 status = 'preparing'
             elif phase == 'failed' or self._refresh_state == 'failed':
                 status = 'failed'
-            elif state.get('last_error') and not retained:
+            elif (state.get('last_error') or market_fallback) and not retained:
                 status = 'source_failed'
             elif not data:
                 status = 'waiting'
@@ -2034,6 +2040,7 @@ class AssetMarketCache:
                 'preparing_generation', 'loading_artifact', 'publishing', 'building',
             } else 'waiting'
             return dict(state=status, stage=stage, updated_at=fresh_at,
+                        stale_cause='market' if market_fallback else 'league',
                         retained=retained, can_check=status in {'waiting', 'preparing'})
 
     def metrics(self) -> dict[str, Any]:

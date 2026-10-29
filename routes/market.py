@@ -556,11 +556,9 @@ def create_market_router(
                 from src.core.history_context.timestamps import canonical_utc_timestamp
                 prepared_at = canonical_utc_timestamp(market.generated_at)
                 freshness = f' Market prepared: {escape(prepared_at)}.' if prepared_at else ''
-                explanation = (
-                    'The latest league update failed. These retained values still match the current compatible publication.'
-                    if observed['state'] == 'stale' else
-                    'These values are from an earlier prepared publication. A matching current replacement is not ready; current roster ownership is shown separately.'
-                )
+                from services.market_preparation import presentation
+                explanation = (presentation(observed)['message'] if observed['state'] == 'stale' else
+                    'These values are from an earlier prepared publication. A matching current replacement is not ready; current roster ownership is shown separately.')
                 body = (
                     '<p class="evidence-unavailable" role="status"><b>Last successful Market available.</b> '
                     + explanation

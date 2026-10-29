@@ -14,8 +14,8 @@ MESSAGES = {
         "The latest preparation did not finish. Try Market again, or return to Home. No missing prices have been replaced with zero.",
     ),
     "source_failed": (
-        "League update needed for Market",
-        "The last league update did not finish, and no matching Market is ready. Open Home to review your league connection or try Market again. Your saved rankings are unchanged.",
+        "Source update needed for Market",
+        "The last source update did not finish, and no matching Market is ready. Open Home to review your league connection or try Market again. Your saved rankings are unchanged.",
     ),
     "incompatible": (
         "Current Market evidence needs an update",
@@ -44,6 +44,11 @@ def presentation(snapshot):
     """Explicit allowlist; raw cache diagnostics must never cross this boundary."""
     state = snapshot.get("state") if snapshot.get("state") in MESSAGES else "waiting"
     title, message = MESSAGES[state]
+    if state == "stale" and snapshot.get("stale_cause") == "market":
+        message = (
+            "Compatible prices remain available, but a Market source could not update. "
+            "Some quotes are from its last successful update. Open an asset’s source evidence for dates."
+        )
     return dict(
         state=state,
         title=title,

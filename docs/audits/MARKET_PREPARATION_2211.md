@@ -18,6 +18,7 @@ Add an explicitly allowlisted, resident-only `AssetMarketCache.preparation_statu
 | Preparing | Cache reports an active build | Only existing phases: preparing evidence, building values, loading prepared evidence, publishing |
 | Ready | Exact current input marker, store identity and requested generation match a nonempty publication | Recheck account scope, then replace the waiting history entry with the same Market query |
 | Last successful Market | Same compatible publication remains usable and last league synchronization failed | Keep values; display its preparation timestamp, separately from Custom limitations |
+| Retained Market quotes | Canonical FantasyCalc/DynastyProcess status explicitly reports failed `cached_fallback`, while compatible prices remain admitted | Explain that some source quotes were retained, without claiming Sleeper failed or changing prices; per-asset source dates remain authoritative |
 | Failed | Existing preparation reports failed phase/state | Stop automatic checks; explicit retry uses normal Market entry |
 | League update failed | Existing synchronization failure, without a matching usable Market | Explain the source update requirement, preserve saved rankings and offer Home/Market recovery; no raw errors |
 | Incompatible | A retained model does not match current input/store/generation requirements | Do not expose retained incompatible prices; explain need for a compatible publication |
