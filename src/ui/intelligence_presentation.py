@@ -6,7 +6,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any, Iterable
 
 _STATUS_LABELS = {
-    "completed_with_pending": "Completed with pending season",
+    "completed_with_pending": "Completed seasons ready; more evidence pending",
     "complete": "Complete", "completed": "Completed", "running": "In progress",
     "pending": "Pending", "resolved": "Verified",
     "unresolved": "Identity not verified", "failed": "Needs attention",

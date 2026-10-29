@@ -1,3 +1,11 @@
+# v1.21.112 / build 2212 — Customer clarity and accessible Back
+
+Keep the existing contextual Back link available after its header scrolls away, using a compact top strip and a reserved header slot. Preserve its DOM/tab order, focus, existing history and authorization checks, five-tab navigation and Trade workspace/fresh-entry behavior. No scroll-triggered requests or additional navigation history.
+
+Explain projection-source timing in plain English, separate completed historical seasons from pending evidence, and show concise mode-aware Custom warnings with their full original limitations still available through disclosure. Label supported multiweek Trade lineup changes as totals rather than per-week averages. Preserve existing number formatting, unrounded comparisons, canonical facts, prices, projections, legal lineups, strategy/verdicts, grades and saved preferences.
+
+Welcome/account behavior and build2211 Market recovery remain intact. No new provider work, analytical storage, cache or infrastructure. See docs/audits/CUSTOMER_CLARITY_2212.md for the bounded audit and acceptance contract.
+
 # v1.21.111 / build 2211 — Market preparation and recovery
 
 Show readable, truthful Market preparation stages from existing resident cache state. Fix dark-on-dark preparing-page copy and provide accessible recovery, qualified last-successful Market notices and bounded automatic transition to a compatible nonempty publication. Checks run only while the page is visible, at most twelve times over one minute, and never acquire a runtime, prepare a Market or call providers.

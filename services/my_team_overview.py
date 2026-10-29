@@ -36,9 +36,10 @@ def roster_overview(data, intelligence, players):
         strength = 'Supported current-week positional strength: ' + ', '.join(strengths) + '. Strength is not automatically expendable surplus.'
     if expendable:
         strength += ' Conditional expendable depth: ' + ', '.join(expendable) + '; review exact removal scenarios before trading.'
-    from src.core.intelligence.roster_diagnostics import diagnostic_qualification
+    from src.ui.intelligence_presentation import projection_evidence_summary
     diagnostic = next((row for _, row in diagnostic_rows if row), {})
-    notice = diagnostic_qualification(diagnostic)
+    diagnostic_evidence = diagnostic.get('evidence') or {}
+    notice = projection_evidence_summary(diagnostic_evidence) if diagnostic_evidence.get('conclusion_state') not in (None, 'current') else ''
     if notice:
         strength = notice + ' ' + strength.replace('Supported current-week positional strength:', 'Provisional current-week positional strength:')
         risk = notice + ' ' + risk

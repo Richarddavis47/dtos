@@ -3,3 +3,13 @@
 @media(max-width:360px){.dtos-page-title{gap:6px}.dtos-back{font-size:13px;padding:4px 6px}.ds-page-header .dtos-page-title h1{font-size:22px}.ds-page-header:not([data-dtos-shell="account-onboarding"])>div:first-child{gap:8px}.ds-page-header .ds-page-guide:not([open]){max-width:52px}.ds-page-header .ds-page-guide:not([open])>summary{white-space:normal}}
 
 .thq-identity.dtos-page-title{flex-wrap:nowrap;gap:8px}
+
+/* The original Back link docks only after its reserved header slot scrolls away. */
+.dtos-back-slot{display:inline-flex;flex-shrink:0;align-items:center}
+.dtos-back-dock{position:fixed;inset:0 0 auto;z-index:35;display:flex;align-items:center;padding:calc(6px + env(safe-area-inset-top)) 16px 6px 100px;min-height:calc(57px + env(safe-area-inset-top));min-width:0;background:var(--surface,#1c201e);color:var(--text,#f2f6f8);border-bottom:1px solid var(--border,#47534b);box-sizing:border-box;pointer-events:none}
+html.dtos-back-docked #dtos-back{position:fixed;top:calc(6px + env(safe-area-inset-top));left:16px;z-index:36;min-height:44px;box-sizing:border-box;padding:6px 10px;background:var(--surface,#1c201e)}
+.dtos-back-caption{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--text-secondary,#b6c2cb)}
+.dtos-back-slot[hidden],.dtos-back-dock[hidden],.dtos-nav-suspended .dtos-back-dock{display:none!important}
+.dtos-nav-suspended #dtos-back{visibility:hidden}
+html.dtos-back-docked{scroll-padding-top:calc(72px + env(safe-area-inset-top))}
+@media(prefers-reduced-motion:reduce){.dtos-back-dock{scroll-behavior:auto}}

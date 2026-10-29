@@ -257,3 +257,50 @@
   for (const name of ['pointerdown','keydown','wheel','touchstart']) addEventListener(name,event=>{if(event.isTrusted)restoring=false;},{passive:true});
   addEventListener('load',restoreView);
 })();
+
+/* Access to the same Back link; no additional history, storage or requests. */
+(() => {
+  'use strict';
+  const back = document.getElementById('dtos-back');
+  if (!back || !window.dtosNavigation || !window.IntersectionObserver) return;
+  const slot = document.createElement('span'); slot.className = 'dtos-back-slot'; slot.hidden = back.hidden;
+  back.before(slot); slot.append(back);
+  const dock = document.createElement('div'); dock.className = 'dtos-back-dock'; dock.hidden = true; dock.setAttribute('aria-hidden', 'true');
+  const caption = document.createElement('span'); caption.className = 'dtos-back-caption'; caption.setAttribute('aria-hidden', 'true');
+  dock.append(caption); document.body.append(dock);
+  let frame = null, enabled = true;
+  function restore() {
+    dock.hidden = true; document.documentElement.classList.remove('dtos-back-docked');
+    slot.style.width = ''; slot.style.height = '';
+  }
+  function update() {
+    frame = null;
+    slot.hidden = back.hidden;
+    if (!enabled || back.hidden) { restore(); return; }
+    const above = slot.getBoundingClientRect().bottom <= 0;
+    if (!above) { restore(); return; }
+    if (!document.documentElement.classList.contains('dtos-back-docked')) {
+      const rect = slot.getBoundingClientRect();
+      slot.style.width = rect.width + 'px'; slot.style.height = rect.height + 'px';
+    }
+    caption.textContent = back.title || 'Back to your previous page';
+    dock.hidden = false; document.documentElement.classList.add('dtos-back-docked');
+  }
+  function schedule() { if (frame === null) frame = requestAnimationFrame(update); }
+  const observer = new IntersectionObserver(schedule); observer.observe(slot);
+  new MutationObserver(schedule).observe(back, {attributes:true, attributeFilter:['hidden','href','title','aria-label']});
+  addEventListener('resize', () => { restore(); schedule(); }, {passive:true});
+  addEventListener('pageshow', () => { enabled = true; schedule(); });
+  addEventListener('pagehide', () => { enabled = false; if (frame !== null) cancelAnimationFrame(frame); frame = null; restore(); });
+  addEventListener('dtos:context-invalidated', () => { enabled = false; restore(); });
+  document.addEventListener('focusin', event => {
+    const target = event.target;
+    if (target === back || !target.matches?.(':focus-visible')) return;
+    requestAnimationFrame(() => {
+      if (dock.hidden || !enabled || document.activeElement !== target) return;
+      const bounds = target.getBoundingClientRect(), edge = dock.getBoundingClientRect().bottom + 8;
+      if (bounds.top < edge && bounds.bottom > 0) scrollBy({top:bounds.top - edge, behavior:'instant'});
+    });
+  });
+  schedule();
+})();

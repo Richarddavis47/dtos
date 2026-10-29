@@ -94,6 +94,7 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
 <div id="personal-error" role="alert" hidden></div>
 <div id="personal-recovery" class="personal-actions" hidden><button class="btn" id="personal-retry" type="button">Retry rankings</button><a class="btn" href="/market">Check Market</a><a class="btn" href="/trades">Use Neutral Trade</a></div>
 <p id="personal-warnings" class="personal-qualification" hidden></p>
+<details id="personal-warning-details" class="personal-explanation" hidden><summary>Custom evidence and limitations</summary><ul id="personal-warning-list"></ul></details>
 <details id="personal-compatibility" class="personal-explanation personal-compatibility" hidden><summary id="personal-compatibility-summary">Review assets needing attention</summary>
 <p>Your saved order, tiers and Target/Avoid/Protect choices are intact. Missing prices can affect other personal rank values. Any personal values that can still be verified remain usable; calculations needing unresolved values stay paused. Neutral Trade remains available.</p>
 <p id="personal-compatibility-counts" class="muted"></p>
