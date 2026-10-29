@@ -101,11 +101,13 @@
     searchFeedback = {text, state, offerRevision, requestGeneration};
     el('recommendation-status').dataset.searchState = state;
     el('recommendation-status').textContent = text; el('recommendation-status').dataset.state = state;
+    el('trade-operation-announcement').textContent = text;
   }
   function operationStatus(text, state) {
     searchFeedback = null;
     el('recommendation-status').textContent = text;
     el('recommendation-status').dataset.state = state;
+    el('trade-operation-announcement').textContent = text;
   }
   const balanceStatus = (text, offerRevision = revision, requestGeneration = runSequence) => {
     if (offerRevision !== revision || requestGeneration !== runSequence) return;
@@ -334,7 +336,7 @@
     if (!workspace) return;
     clearStaleBalanceFeedback();
     if (searchFeedback && (searchFeedback.offerRevision !== revision || searchFeedback.requestGeneration !== runSequence)) {
-      searchFeedback = null; el('recommendation-status').textContent = ''; delete el('recommendation-status').dataset.state;
+      searchFeedback = null; el('recommendation-status').textContent = ''; el('trade-operation-announcement').textContent = ''; delete el('recommendation-status').dataset.state;
     }
     board('sent'); board('received');
     // Once Calculator has actual assets, its live comparison and Balance are
@@ -386,9 +388,9 @@
     if (el('recommendation-refresh')) { el('recommendation-refresh').disabled = busy || searchExhausted; el('recommendation-refresh').hidden = !hasDiscovered; }
     // Keep the calculator live status outside a busy ancestor so assistive
     // technology announces processing immediately. Balance owns aria-busy.
-    // Status announcements stay outside the busy work region. Marking the
-    // whole workspace busy suppresses the immediate live feedback.
-    root.setAttribute('aria-busy', 'false');
+    // Preserve the workspace busy contract. The separate live announcement
+    // mirrors visible progress outside this busy region for immediate feedback.
+    root.setAttribute('aria-busy', String(busy && !marketEditor));
     el('trade-board').setAttribute('aria-busy', String(busy));
   }
   function paintCalculator() {
@@ -1305,7 +1307,9 @@
       }
       reconcileStrategy();
       if (started !== revision) return;
-      if (path === 'generate' && ((body.workflow != null && body.workflow !== flow) || !Array.isArray(body.results))) throw new Error('Search response was incomplete. Your offer is unchanged; try generating again.');
+      const validSearchRows = Array.isArray(body.results) || (flow === 'shop' && Array.isArray(body.markets) && body.markets.every(m => Array.isArray(m.returns)));
+      if (path === 'generate' && ((body.workflow != null && body.workflow !== flow) || !validSearchRows)) throw new Error('Search response was incomplete. Your offer is unchanged; try generating again.');
+      const completedOffers = body.results?.length ? body.results : (body.markets || []).flatMap(m => m.returns || []);
       if (path === 'generate' && flow === 'recommended') hasDiscovered = true;
       observeEvidence(body);
       if (path === 'evaluate' && !body.evaluation?.recommendation && !body.evaluation?.explanation_html) throw new Error('Evaluation incomplete. Retained assessment is not revalidated; try Reevaluate Trade again.');
@@ -1318,7 +1322,7 @@
         if (body.requested_mode !== extra.repair_mode || body.returned_modes?.some(mode => mode !== extra.repair_mode) || invalidPreservation) throw new Error('DTOS rejected a mismatched repair mode. Your proposal is unchanged.');
       }
       if (path === 'balance') balanceStatus(body.results?.length ? 'Balancing options ready. Preview before adopting.' : body.other_trade_ideas?.length ? 'No supported target-preserving option. Other trade ideas are separate below; your offer is unchanged.' : 'No balancing options returned. Your offer is unchanged.', started, startedRun);
-      if (path === 'generate') searchStatus(body.results?.some(qualifiedOffer) ? 'Trade options ready. Search complete; review the qualified offers before adopting.' : 'Search complete. No qualified recommendations; any alternatives keep their own limitations.', 'complete', started, startedRun);
+      if (path === 'generate') searchStatus(completedOffers.some(qualifiedOffer) ? 'Trade options ready. Search complete; review the qualified offers before adopting.' : 'Search complete. No qualified recommendations; any alternatives keep their own limitations.', 'complete', started, startedRun);
       else operationStatus(path === 'evaluate' ? 'Evaluation complete. Review the final bilateral verdict.' : 'Options ready. Preview before adopting; your original stays intact.', 'complete');
       if (path === 'evaluate') {
         const context = assessmentContext({...body, evaluation: body.evaluation});

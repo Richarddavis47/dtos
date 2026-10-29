@@ -55,16 +55,16 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 {optional_search}
 <section id="trade-target" class="tw-target" hidden aria-label="Selected trade target"></section>
 <div class="tw-primary-actions">{primary}{next_ideas}</div>
-<p id="recommendation-status" class="ds-inline-feedback" role="status" aria-live="polite" aria-atomic="true">Preparing current league assets…</p>
+<p id="recommendation-status" class="ds-inline-feedback" role="status" aria-live="off" aria-atomic="true">Preparing current league assets…</p>
 <button id="trade-cancel" type="button" hidden>Cancel current operation</button>
 <span id="trade-results-home"></span><section id="trade-result" role="status" aria-live="polite" tabindex="-1" hidden></section>
 {tray}
-<div id="trade-workspace-tools"><a href="/trades?front_office={active}" aria-label="All Trade Workflows">All workflows</a><button id="trade-start-new" type="button">Start New Trade</button><button id="trade-clear-package" type="button" hidden>Clear package · keep objective and protections</button></div>
 {'<details id="trade-asset-options"><summary>Owned assets and exact constraints · optional</summary>' if workflow == 'recommended' else ''}
 {partner_controls}
 <div id="trade-board"><div class="tw-side-tabs" role="group" aria-label="Asset side"><button type="button" data-side="sent" aria-pressed="true">My assets</button><button type="button" data-side="received" aria-pressed="false">Their assets</button></div>
 <div class="tw-boards"><section id="trade-sent-board"></section><section id="trade-received-board"></section></div></div>
 {'</details>' if workflow == 'recommended' else ''}
+<div id="trade-workspace-tools"><a href="/trades?front_office={active}" aria-label="All Trade Workflows">All workflows</a><button id="trade-start-new" type="button">Start New Trade</button><button id="trade-clear-package" type="button" hidden>Clear package · keep objective and protections</button></div>
 {calculator_panel}
 <section id="trade-review" tabindex="-1" hidden><h3>Your proposal</h3><div class="tw-packages"><section><h4>You send</h4><div id="trade-sent-chips"></div></section><section><h4>You receive</h4><div id="trade-received-chips"></div></section></div></section>
 <div class="ti-actions"><button id="trade-view" type="button">View Trade</button>{'' if market_editor else '<button id="trade-run" type="button">Evaluate Trade</button>'}<button id="trade-edit" type="button">Edit Trade</button><button id="trade-adjust" type="button">Adjust Offer / protect assets</button>{'' if workflow in ('recommended', 'shop', 'trade-for') else '<button id="trade-find" type="button" hidden>Find Bilateral Options</button>'}{calculator_link}</div>
@@ -72,4 +72,4 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <button id="trade-build-own" type="button" {'hidden' if workflow == 'create' else ''}>Build My Own</button>
 {market_detail}{balance_controls if not market_editor else ""}
 <details id="trade-source-context"><summary>League identity details</summary><p id="trade-source-context-identity"></p></details>
-<p class="muted">Ownership is revalidated before evaluation. Market Balance is neutral market evidence, not the recommendation. DTOS evaluates proposals; it does not send trades to Sleeper.</p></section><script src="/static/js/strategy_session.js" defer></script><script src="/static/js/trade_workspace.js" defer></script>'''
+<p class="muted">Ownership is revalidated before evaluation. Market Balance is neutral market evidence, not the recommendation. DTOS evaluates proposals; it does not send trades to Sleeper.</p></section><p id="trade-operation-announcement" class="tw-announcement" role="status" aria-live="polite" aria-atomic="true"></p><script src="/static/js/strategy_session.js" defer></script><script src="/static/js/trade_workspace.js" defer></script>'''

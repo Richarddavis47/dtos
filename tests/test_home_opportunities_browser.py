@@ -264,6 +264,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                     self.assertEqual(page.locator(".home-opportunity").count(), 0)
                     page.get_by_role("link", name="Explore more trades").click()
                     page.wait_for_url("**/trades/recommended?front_office=1")
+                    page.locator("#trade-asset-options > summary").click()
                     page.locator(
                         "#trade-sent-board button[data-asset-id]"
                     ).first.wait_for()

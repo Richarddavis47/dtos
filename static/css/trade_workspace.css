@@ -101,3 +101,8 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
 /* The shared Trade Center title and active purpose tab identify the phone page;
    keep its duplicate workspace heading available to assistive technology. */
 @media(max-width:760px){.tw-workspace .tw-heading h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.tw-workspace .tw-heading{margin:0;gap:0}}
+
+/* Keep roster access close to the controls; secondary workspace actions follow it. */
+.tw-boards>section>h3{margin:6px 0}
+
+.tw-announcement{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}

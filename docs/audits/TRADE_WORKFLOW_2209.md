@@ -73,7 +73,8 @@ error, not an empty successful search. Errors preserve the original package
 and expose retry through the existing action. Workspace failure has an
 explicit reload/recovery control.
 
-The live status is outside a busy ancestor. Duplicate actions stay disabled.
+The live announcement mirrors visible progress outside the busy workspace.
+The existing workspace busy contract and disabled duplicate actions remain intact.
 Cancellation uses the established AbortController and revision/run-sequence
 guards; it stops the client from accepting the result, not a promise that
 all server cleanup has already finished. A delayed response cannot revive an
