@@ -45,9 +45,13 @@ def human_status(value: Any, *, fallback: str = "Not yet available") -> str:
     return _STATUS_LABELS.get(raw.casefold(), raw.replace("_", " ").title())
 
 
-def projection_evidence_summary(evidence: dict[str, Any]) -> str:
+def projection_evidence_summary(evidence: dict[str, Any], *, concise: bool = False) -> str:
     """Explain an existing qualification; never infer production from freshness."""
     state = evidence.get('conclusion_state')
+    if concise:
+        return ('Current-week evidence supports this roster comparison.' if state == 'current' else
+                'Provisional: check dates and player availability.' if state == 'provisional' else
+                'Roster comparison cannot be verified; review projections, scoring and availability.')
     if state == 'current':
         return 'Supported by compatible current-week evidence. Check replacement scenarios before moving depth.'
     if state == 'provisional':

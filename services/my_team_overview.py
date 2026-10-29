@@ -39,7 +39,7 @@ def roster_overview(data, intelligence, players):
     from src.ui.intelligence_presentation import projection_evidence_summary
     diagnostic = next((row for _, row in diagnostic_rows if row), {})
     diagnostic_evidence = diagnostic.get('evidence') or {}
-    notice = projection_evidence_summary(diagnostic_evidence) if diagnostic_evidence.get('conclusion_state') not in (None, 'current') else ''
+    notice = projection_evidence_summary(diagnostic_evidence, concise=True) if diagnostic_evidence.get('conclusion_state') not in (None, 'current') else ''
     if notice:
         strength = notice + ' ' + strength.replace('Supported current-week positional strength:', 'Provisional current-week positional strength:')
         risk = notice + ' ' + risk

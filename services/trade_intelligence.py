@@ -489,7 +489,7 @@ def evaluate_trade_request(
         if qualifications:
             evidence = active_diagnostic['evidence']
             from src.ui.intelligence_presentation import projection_evidence_summary
-            evaluation['why_you_would_do_it'] = (evaluation.get('why_you_would_do_it') or '') + ' ' + projection_evidence_summary(evidence)
+            evaluation['why_you_would_do_it'] = (evaluation.get('why_you_would_do_it') or '') + ' ' + projection_evidence_summary(evidence, concise=True)
         evaluation['counterparty_summary'] = (evaluation.get('counterparty_summary') or '') + ' ' + partner_diagnostic['summary']
     except Exception as exc:
         # Once input/ownership checks passed, an evaluator exception is not a
