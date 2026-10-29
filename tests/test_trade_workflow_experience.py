@@ -234,21 +234,26 @@ class TradeWorkflowExperienceTests(unittest.TestCase):
         with sync_playwright() as pw:
             browser = launch_chromium(pw, headless=True)
             try:
-                page, records, errors = helper.page(browser, f, 390, 844)
-                page.goto('http://testserver/trades/recommended')
-                page.locator('#trade-valuation-mode').wait_for()
-                for mode in ('custom', 'neutral'):
-                    page.select_option('#trade-valuation-mode', mode)
-                    page.select_option('#trade-strategy', 'RETOOL')
-                    page.locator('#trade-find').click()
-                    self.complete(page)
-                    self.assertEqual(records[-1]['payload']['valuation_mode'], mode)
-                    self.assertEqual(records[-1]['status'], 200)
-                    self.assertEqual(records[-1]['payload']['assets_sent'], [])
-                    self.assertEqual(records[-1]['payload']['assets_received'], [])
+                for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+                    page, records, errors = helper.page(browser, f, width, height)
+                    page.goto('http://testserver/trades/recommended')
+                    page.locator('#trade-valuation-mode').wait_for()
+                    for selector in ('#trade-strategy', '#trade-valuation-mode'):
+                        fit = page.locator(selector).evaluate("e=>{const c=document.createElement('canvas').getContext('2d'),s=getComputedStyle(e);c.font=s.font;return {text:Math.max(...Array.from(e.options).filter(o=>!o.disabled).map(o=>c.measureText(o.textContent).width)),available:e.clientWidth-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight)-24}}")
+                        self.assertLessEqual(fit['text'], fit['available'], (width, selector, fit))
+                    for mode in ('custom', 'neutral'):
+                        page.select_option('#trade-valuation-mode', mode)
+                        page.select_option('#trade-strategy', 'RETOOL')
+                        page.locator('#trade-find').click()
+                        self.complete(page)
+                        self.assertEqual(records[-1]['payload']['valuation_mode'], mode)
+                        self.assertEqual(records[-1]['status'], 200)
+                        self.assertEqual(records[-1]['payload']['assets_sent'], [])
+                        self.assertEqual(records[-1]['payload']['assets_received'], [])
+                    self.assertEqual(errors, [])
+                    page.close()
                 self.assertEqual(f.editor.state()['revision'], before['revision'])
                 self.assertEqual(f.editor.state()['rows'], before['rows'])
-                self.assertEqual(errors, [])
             finally:
                 browser.close()
 
