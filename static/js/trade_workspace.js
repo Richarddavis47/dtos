@@ -1626,7 +1626,7 @@
     syncLocks(); el('trade-find').hidden = flow === 'create'; persist(); paint();
     if (data.projection_evidence) latestEvidence.projection_generation = data.projection_evidence.generation;
     if (flow === 'recommended') searchStatus('Ready. Choose a goal or leave it unselected, then Generate Trades.', 'ready');
-    if (flow === 'create') operationStatus('Choose assets below to evaluate your offer. Market totals update as you build.', 'ready');
+    if (flow === 'create') operationStatus('Choose assets to evaluate below.', 'ready');
     if (flow === 'trade_for') searchStatus('Choose an opponent-owned target below to find acquisition options.', 'ready');
     if (flow === 'shop') { el('trade-find').textContent = 'Find Shop returns'; searchStatus('Not started. Find Shop returns searches the selected scope; strategy alone cannot resolve missing projection coverage.', 'not_started'); }
     if (session.currentAssessment && !entryBlocked) showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment);
