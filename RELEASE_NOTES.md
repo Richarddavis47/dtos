@@ -1,3 +1,11 @@
+# v1.21.111 / build 2211 — Market preparation and recovery
+
+Show readable, truthful Market preparation stages from existing resident cache state. Fix dark-on-dark preparing-page copy and provide accessible recovery, qualified last-successful Market notices and bounded automatic transition to a compatible nonempty publication. Checks run only while the page is visible, at most twelve times over one minute, and never acquire a runtime, prepare a Market or call providers.
+
+Preserve account/session/league/franchise scope and contextual Back history when opening the ready Market. Stop on failed or incompatible preparation, scope changes and repeated connection failures; keep an explicit retry and useful Home/My Team navigation. Custom asset limitations remain separate from overall Market readiness.
+
+Pricing, source admission, subset preservation, failed-refresh evidence, Custom rank slots, Trade verdicts, projections, legal lineups, saved preferences, Welcome and account behavior remain unchanged. No new analytical storage, worker, provider polling or paid service. See docs/audits/MARKET_PREPARATION_2211.md for state contracts and limitations.
+
 # v1.21.110 / build 2210 — Contextual Back and workspace return
 
 Add a consistent authenticated Back control that returns through meaningful, same-tab page context rather than a fixed section landing. Preserve Market queries, explicit My Team sections, safe direct-link fallbacks and browser Back/Forward. Validate account/session/league/franchise scope before contextual or cached-page return; private context checks require no league runtime or analytics.

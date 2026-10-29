@@ -16,26 +16,40 @@ MARKET_WARMING_PATHS = frozenset({"/market", "/api/market/assets"})
 MARKET_WARMING_METHODS = frozenset({"GET", "HEAD"})
 
 
-def warming_page(query: str = "", *, headers: dict[str, str] | None = None) -> HTMLResponse:
+def warming_page(query: str = "", *, headers: dict[str, str] | None = None,
+                 snapshot: dict[str, Any] | None = None) -> HTMLResponse:
     """Browser-only presentation; source admission and the JSON contract stay intact."""
     from src.ui.theme import DESIGN_SYSTEM_CSS
 
     from services.contextual_navigation import navigation_markup, with_back
+    from services.market_preparation import presentation
+    status = presentation(snapshot or {'state': 'waiting', 'can_check': True})
     back, navigation_head = navigation_markup()
-    heading = with_back('<h1>Market is preparing</h1>', back)
+    heading = with_back(f'<h1 id="market-preparation-title">{escape(status["title"])}</h1>', back)
     href = '/market' + ('?' + query if query else '')
     return HTMLResponse(
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         '<title>Market is preparing · DTOS</title><style>' + DESIGN_SYSTEM_CSS +
+        'body{color:var(--text-primary);margin:0}'
         'main{max-width:640px;margin:auto;padding:24px 16px;box-sizing:border-box;overflow-wrap:anywhere}'
-        '.recovery-actions{display:flex;flex-wrap:wrap;gap:12px}.recovery-actions a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px}</style>' + navigation_head + '</head>'
-        '<body><main>' + heading + '<p>Current Market values are not ready yet. '
-        'You can keep using Home and My Team, then try again shortly.</p>'
-        '<p>No missing prices have been replaced with zero.</p><nav class="recovery-actions" aria-label="Market recovery">'
-        f'<a class="ds-action primary" href="{escape(href, quote=True)}">Try Market again</a>'
+        '.preparation-detail{color:var(--text-secondary)}'
+        '.recovery-actions{display:flex;flex-wrap:wrap;gap:12px}.recovery-actions a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid var(--text-muted);border-radius:8px;text-decoration:none}'
+        '.recovery-actions .primary{background:var(--accent-primary);color:#141617;border-color:var(--accent-primary)}'
+        'a:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px}</style>' + navigation_head +
+        '<script src="/static/js/market_preparation.js" defer></script></head>'
+        '<body><main id="market-preparation">' + heading +
+        '<div role="status" aria-live="polite" aria-atomic="true" id="market-preparation-status">'
+        f'<p id="market-preparation-message">{escape(status["message"])}</p>'
+        f'<p class="preparation-detail" id="market-preparation-stage">{escape(status["stage"])}</p></div>'
+        '<p class="preparation-detail" id="market-preparation-recovery">This page checks for completion for up to one minute while visible. '
+        'If it is still waiting, use Try Market again. You can leave this page safely.</p>'
+        '<nav class="recovery-actions" aria-label="Market recovery">'
+        f'<a id="market-preparation-retry" class="ds-action primary" href="{escape(href, quote=True)}">Try Market again</a>'
         '<a class="ds-action" href="/">Home</a><a class="ds-action" href="/teams">My Team</a>'
-        '</nav></main></body></html>',
+        '</nav><details><summary>About Market preparation</summary><p>Only compatible prepared prices are displayed. '
+        'No missing prices are replaced with zero. Custom ranking setup or asset-specific limitations are separate from overall Market readiness.</p></details>'
+        '<noscript><p>Automatic completion checks need JavaScript. Use Try Market again to check manually.</p></noscript></main></body></html>',
         status_code=503, headers={**(headers or {}), 'Cache-Control': 'no-store'},
     )
 
@@ -92,7 +106,10 @@ class AssetMarketWarmingMiddleware:
             key.lower() == b'accept' and b'text/html' in value.lower()
             for key, value in scope.get('headers', ())
         ):
-            response = warming_page(scope.get('query_string', b'').decode('latin-1'), headers=headers)
+            snapshot = self.cache.preparation_status(
+                self.data_provider(), self.state, self.store, self.league_id,
+            ) if hasattr(self.cache, 'preparation_status') else None
+            response = warming_page(scope.get('query_string', b'').decode('latin-1'), headers=headers, snapshot=snapshot)
             response.background = background
         else:
             response = JSONResponse(

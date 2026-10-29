@@ -57,6 +57,29 @@ class BeginnerMarketTests(unittest.TestCase):
         self.assertIn('Browse all assets', html)
         self.assertIn('href="/market?limit=10"', html)
 
+    def test_last_valid_market_notice_does_not_change_prices_or_expose_sync_error(self):
+        before = self.get('/api/market/search?q=Denzel%20Boston').json()['results']
+        self.fixture.state['last_error'] = 'SYNTHETIC_PRIVATE /private/market credential=fake'
+        html = self.get('/market?q=Denzel%20Boston').text
+        self.assertIn('Last successful Market available.', html)
+        self.assertIn('Market prepared:', html)
+        self.assertNotIn('SYNTHETIC_PRIVATE', html)
+        self.assertNotIn('/private/market', html)
+        self.assertEqual(self.get('/api/market/search?q=Denzel%20Boston').json()['results'], before)
+
+    def test_failed_replacement_uses_safe_rendered_recovery_without_old_prices(self):
+        self.fixture.data['asset_market_semantic_revision'] = 'next-compatible-inputs-needed'
+        self.fixture.cache._build_phase = 'failed'
+        self.fixture.cache._refresh_state = 'failed'
+        self.fixture.cache.last_error = 'SYNTHETIC_PRIVATE /private/source credential=fake'
+        with patch.object(self.fixture.cache, '_start_background', return_value=False):
+            response = self.client.get('/market?q=Denzel', headers={'Accept': 'text/html'})
+        self.assertEqual(response.status_code, 503)
+        self.assertIn('Market preparation needs another try', response.text)
+        self.assertIn('Try Market again', response.text)
+        self.assertNotIn('SYNTHETIC_PRIVATE', response.text)
+        self.assertNotIn('Find your next dynasty asset', response.text)
+
     def test_search_filter_sort_and_nonoverlapping_pages(self):
         first = self.get('/api/market/search?q=Boston&limit=1&sort=market').json()
         second = self.get('/api/market/search?q=Boston&limit=1&offset=1&sort=market').json()

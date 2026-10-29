@@ -1992,6 +1992,48 @@ class AssetMarketCache:
                 return self._market
             raise
 
+    def preparation_status(
+        self, data: dict[str, Any], state: dict[str, Any],
+        store: HistoricalStore, league_id: str,
+    ) -> dict[str, Any]:
+        """Observe only resident publication state; never prepare or read storage.
+
+        This intentionally does not expose diagnostics/exception text. A retained
+        model from another input marker is not permission to serve that model.
+        """
+        from src.core.history_context.timestamps import canonical_utc_timestamp
+
+        marker = self.request_marker(data, state, store, league_id)
+        with self._lock:
+            market = self._market
+            compatible = bool(
+                data and market is not None and market.store is store
+                and marker == self._request_marker
+                and (not self._requested_generation
+                     or self._requested_generation == market.semantic_generation)
+            )
+            phase = self._build_phase
+            retained = market is not None and market.store is store
+            fresh_at = canonical_utc_timestamp(market.generated_at) if compatible else None
+            if compatible:
+                status = ('stale' if state.get('last_error') else 'ready') if market.assets else 'empty'
+            elif self._building:
+                status = 'preparing'
+            elif phase == 'failed' or self._refresh_state == 'failed':
+                status = 'failed'
+            elif not data:
+                status = 'waiting'
+            elif retained:
+                status = 'incompatible'
+            else:
+                status = 'waiting'
+            # Only actively observed machinery may be described as progress.
+            stage = phase if status == 'preparing' and phase in {
+                'preparing_generation', 'loading_artifact', 'publishing', 'building',
+            } else 'waiting'
+            return dict(state=status, stage=stage, updated_at=fresh_at,
+                        retained=retained, can_check=status in {'waiting', 'preparing'})
+
     def metrics(self) -> dict[str, Any]:
         with self._lock:
             market = self._market
