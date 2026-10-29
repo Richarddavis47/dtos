@@ -155,7 +155,7 @@ class TradeDecisionBrowserTests(unittest.TestCase):
                 "#recommendation-status[data-search-state=complete]"
             ).wait_for()
             self.assertIn(
-                "No credible", page.locator("#recommendation-status").inner_text()
+                "No qualified recommendations", page.locator("#recommendation-status").inner_text()
             )
             self.assertIn(
                 "Projection coverage is incomplete",

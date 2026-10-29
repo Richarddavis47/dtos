@@ -31,8 +31,9 @@ The goal is no longer behind a disclosure or after the roster. Recommended
 owned-asset boards are optional, with all original exact IDs, filters and
 selection behavior intact. Shop and Trade For still expose their necessary
 target selection. Generated output is directly beneath the primary controls;
-explicit completion focuses the result and reveals its beginning, with fixed
-navigation clearance. Calculator/Balance retain their established placements
+explicit search completion focuses the result and reveals its beginning, with fixed
+navigation clearance. Initial automatic targeted Shop entry preserves its top
+context; a subsequent explicit search focuses results. Calculator/Balance retain their established placements
 and price-only versus full-analysis distinction.
 
 ## Supported preferences, not a new policy

@@ -194,6 +194,29 @@ class TradeWorkflowExperienceTests(unittest.TestCase):
             finally:
                 browser.close()
 
+    def test_targeted_shop_entry_keeps_context_but_explicit_search_focuses_result(self):
+        f = self.fixture()
+        with sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+                    page, records, _, errors, _ = self.page(browser, f, width, height)
+                    page.goto('https://dtos.test/trades/shop?front_office=1&asset_id=a&owner_roster_id=1')
+                    self.complete(page)
+                    self.assertEqual(page.evaluate('scrollY'), 0)
+                    self.assertFalse(page.locator('#trade-result').evaluate('e=>e===document.activeElement'))
+                    original = records[-1]['payload']
+                    self.assertEqual(original['asset_id'], 'a')
+                    page.locator('#trade-find').click()
+                    self.complete(page)
+                    self.assertTrue(page.locator('#trade-result').evaluate('e=>e===document.activeElement'))
+                    self.assertEqual(records[-1]['payload']['asset_id'], original['asset_id'])
+                    self.assertEqual(records[-1]['payload']['workspace_context'], original['workspace_context'])
+                    self.assertEqual(errors, [])
+                    page.close()
+            finally:
+                browser.close()
+
     def test_preparation_failure_retry_and_ready_controls(self):
         f = self.fixture()
         with sync_playwright() as pw:

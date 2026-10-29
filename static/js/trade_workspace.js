@@ -1241,7 +1241,7 @@
     const e = row.evaluation || {};
     return row.exploration !== true && e.generated_trade_eligible === true && ['SMASH ACCEPT', 'WORTH PURSUING'].includes(finalVerdict(e));
   }
-  async function run(path, extra = {}) {
+  async function run(path, extra = {}, options = {}) {
     if (personalRevisionStale) return personalChangedNotice();
     if (busy || !workspace) return;
     if (path === 'generate' && entryBlocked) return;
@@ -1365,7 +1365,7 @@
         if (balanceRequest === controller) balanceRequest = null;
         if (activeRequest === controller) activeRequest = null;
         busy = false; paint();
-        if (started === revision && !el('trade-result').hidden) focusResult();
+        if (started === revision && !el('trade-result').hidden && options.focusOnCompletion !== false) focusResult();
       }
     }
   }
@@ -1519,12 +1519,14 @@
       const needsReview = p.revision > 0 && p.compatibility_issues?.length;
       const edit = node('a', needsReview ? 'Review affected Custom Rankings assets' : 'Edit My DTOS rankings');
       edit.href = needsReview ? '/account/my-dtos#personal-compatibility' : '/account/my-dtos';
-      const help = node('details'); help.append(node('summary', 'About valuations'), node('p', 'Neutral Market and Sleeper lineup facts stay unchanged. Custom DTOS uses your saved ranking values for your decision.'), edit);
-      panel.append(label, select, help);
+      const help = node('details'); help.append(node('summary', 'About valuations'), node('p', 'Neutral Market and Sleeper lineup facts stay unchanged. Custom DTOS uses your saved ranking values for your decision.'));
+      panel.append(label, select);
+      if (needsReview || p.available !== true) panel.append(edit); else help.append(edit);
       if (p.personal_partial_available) panel.append(node('p', `${p.personal_value_count} saved assets have verified Custom values. Only supported packages can be assessed.`, 'muted'));
-      if (p.available !== true) help.append(node('p', !(p.revision > 0)
+      if (p.available !== true) panel.append(node('p', !(p.revision > 0)
         ? 'Create Custom Rankings in My DTOS to use Custom Trade. Neutral DTOS is available now.'
         : (p.limitations || []).join(' ') || 'Saved Custom Rankings need compatible Market prices. Open My DTOS to retry; Neutral Trade remains available.', 'muted'));
+      panel.append(help);
       el('trade-intent-controls').append(panel);
       select.onchange = () => {
         activeRequest?.abort(); activeRequest = null; balanceRequest = null; revision++; runSequence++; busy = false;
@@ -1625,7 +1627,7 @@
     if (window.dtosStrategy) el('trade-strategy').value = window.dtosStrategy.get(data.workspace_context);
     syncLocks(); el('trade-find').hidden = flow === 'create'; persist(); paint();
     if (data.projection_evidence) latestEvidence.projection_generation = data.projection_evidence.generation;
-    if (flow === 'recommended') searchStatus('Ready. Choose a goal or leave it unselected, then Generate Trades.', 'ready');
+    if (flow === 'recommended') searchStatus('Ready. Generate Trades searches eligible teams; choosing a goal is optional.', 'ready');
     if (flow === 'create') operationStatus('Choose assets to evaluate below.', 'ready');
     if (flow === 'trade_for') searchStatus('Choose an opponent-owned target below to find acquisition options.', 'ready');
     if (flow === 'shop') { el('trade-find').textContent = 'Find Shop returns'; searchStatus('Not started. Find Shop returns searches the selected scope; strategy alone cannot resolve missing projection coverage.', 'not_started'); }
@@ -1646,7 +1648,7 @@
         previewOffer(row);
       }).catch(error => { if (!departed && revision === navigationRevision) message(error.message, true); });
     }
-    if (startTargetSearch && !entryBlocked && !departed) { run('generate'); if (flow === 'shop') searchStatus('Searching automatically for this newly selected asset… Your proposal stays intact.', 'loading'); }
+    if (startTargetSearch && !entryBlocked && !departed) { run('generate', {}, {focusOnCompletion: flow !== 'shop'}); if (flow === 'shop') searchStatus('Searching automatically for this newly selected asset… Your proposal stays intact.', 'loading'); }
   }).catch(error => {
     operationStatus('Current league assets could not be prepared. Your saved workspace has not been reset.', 'error');
     message(error.message, true);

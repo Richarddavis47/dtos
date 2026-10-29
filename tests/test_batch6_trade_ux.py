@@ -71,12 +71,18 @@ class TradeUXTests(unittest.TestCase):
                             elif flow == 'create':
                                 body.update(requested_mode='MAKE_THIS_TRADE_WORK',
                                             returned_modes=['MAKE_THIS_TRADE_WORK'], target_preserved=True)
+                            focus_before = page.evaluate('document.activeElement.id')
+                            scroll_before = page.evaluate('scrollY')
                             pending.pop().fulfill(json=body)
                             # A separate live announcement delivers immediate feedback.
                             # Preserve visible completion and workspace busy semantics. Wait for actual completion, not root busy.
                             page.locator('#recommendation-status[data-state="complete"]').wait_for()
                             self.assertEqual(page.locator('#trade-builder').get_attribute('aria-busy'), 'false')
-                            self.assertEqual(page.evaluate('document.activeElement.id'), 'trade-result')
+                            if flow == 'shop':  # Initial targeted entry retains its context.
+                                self.assertEqual(page.evaluate('document.activeElement.id'), focus_before)
+                                self.assertEqual(page.evaluate('scrollY'), scroll_before)
+                            else:
+                                self.assertEqual(page.evaluate('document.activeElement.id'), 'trade-result')
                             card = page.locator('.tw-offer')
                             self.assertEqual(card.locator('h3').first.inner_text(), offer['evaluation']['recommendation'] or 'Recommendation unavailable')
                             summary = card.locator('summary').filter(has_text='Why this offer · evidence and risks')
