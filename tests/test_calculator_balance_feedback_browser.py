@@ -90,7 +90,8 @@ class CalculatorBalanceFeedbackBrowserTests(unittest.TestCase):
                 if intent == 'partner':
                     page.select_option('#trade-partner', '')
                 elif intent == 'strategy':
-                    page.locator('summary').filter(has_text='Strategy for advanced').click()
+                    self.assertTrue(page.locator('#trade-strategy').is_visible())
+                    page.locator('#trade-strategy').focus()
                     page.select_option('#trade-strategy', 'REBUILD')
                 elif intent == 'build_own':
                     page.click('#trade-build-own')

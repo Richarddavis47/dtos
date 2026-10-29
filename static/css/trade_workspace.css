@@ -60,3 +60,44 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
 /* Final bilateral admission leads; personal interest is supporting context. */
 .tw-final-verdict { font-size: clamp(1.1rem, 2.8vw, 1.45rem); font-weight: 750; line-height: 1.3; overflow-wrap: anywhere; }
 .tw-side-assessment { color: #c0c9c4; font-size: .9rem; }
+
+/* Intent and decision controls precede optional inventories. No fixed overlay. */
+.tw-intent-nav,.tw-primary-actions{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0}
+.tw-intent-nav a{display:inline-flex;align-items:center;min-height:44px;padding:6px 10px;border-bottom:2px solid transparent}
+.tw-intent-nav a[aria-current=page]{border-color:var(--accent);font-weight:700}
+.tw-intent-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.tw-intent-controls>*{min-width:0}
+.tw-control-label,.tw-workspace .tw-valuation-mode label{display:block;font-size:13px;font-weight:650;margin:0 0 4px}
+.tw-intent-controls select{min-width:0;width:100%;margin:4px 0}
+.tw-intent-controls .tw-valuation-mode{padding:0;margin:0;border:0}
+.tw-intent-controls .tw-valuation-mode p{font-size:13px;margin:6px 0;overflow-wrap:anywhere}
+.tw-intent-controls .tw-valuation-mode>details>summary{min-height:44px;font-size:13px}
+.tw-workspace .tw-primary-action{background:var(--accent);color:#07111f;font-weight:700;flex:1}
+.tw-workspace #trade-search-options>summary,.tw-workspace #trade-asset-options>summary{min-height:44px;display:flex;align-items:center;cursor:pointer}
+.tw-workspace .tw-check{display:flex;align-items:center;gap:10px}
+.tw-workspace .tw-check input{width:24px;min-width:24px;min-height:44px;margin:0}
+.tw-workspace #recommendation-status{margin:6px 0;min-height:1.3em;overflow-wrap:anywhere}
+.tw-workspace #trade-workspace-tools{margin:8px 0}
+.tw-workspace #trade-workspace-tools button{font-size:13px;background:var(--surface);color:var(--muted)}
+.tw-workspace #trade-workspace-tools>a{display:inline-flex;align-items:center;min-height:44px;padding:6px 8px;font-size:13px}
+.tw-workspace #trade-result{scroll-margin-top:16px}
+.tw-workspace .tw-target{padding:10px;margin:6px 0}
+.tw-workspace .tw-target h3{font-size:16px;margin:0 0 6px}
+.tw-workspace .tw-target img{width:40px;height:40px}
+.tw-workspace .tw-target b{font-size:16px}
+.tw-workspace #trade-context{margin:4px 0;font-size:13px}
+.tw-workspace .tw-heading{margin-bottom:4px}
+.tw-entry-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
+.tw-entry-actions a{display:block;min-height:44px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface-elevated)}
+.tw-entry-actions b,.tw-entry-actions span{display:block}
+.tw-entry-actions b{font-size:20px;color:var(--accent)}
+.tw-entry-actions span{color:var(--muted);margin-top:6px}
+.tw-entry-actions a:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.tw-entry-actions~.ti-workflows{display:flex;flex-wrap:wrap;gap:8px}
+.tw-entry-actions~.ti-workflows>.ti-workflow{padding:8px;border:0;background:transparent}
+.tw-entry-actions~.ti-workflows span{font-size:13px}
+@media(max-width:400px){.tw-entry-actions{grid-template-columns:1fr}.tw-intent-controls{gap:8px}.tw-intent-nav a{padding:6px 8px}}
+
+/* The shared Trade Center title and active purpose tab identify the phone page;
+   keep its duplicate workspace heading available to assistive technology. */
+@media(max-width:760px){.tw-workspace .tw-heading h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.tw-workspace .tw-heading{margin:0;gap:0}}

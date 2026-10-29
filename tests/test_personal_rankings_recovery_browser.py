@@ -357,8 +357,9 @@ class PersonalRankingsRecoveryBrowserTests(unittest.TestCase):
                     page.locator('[data-side="received"]').click()
                 page.locator('#trade-received-board button[data-asset-id="2028-R1-4"]').click()
                 detail = page.locator('.tw-strategy-detail')
-                if not detail.evaluate('e=>e.open'):
+                if detail.locator('summary').count() and not detail.evaluate('e=>e.open'):
                     detail.locator('summary').click()
+                self.assertTrue(page.locator('#trade-strategy').is_visible())
                 page.locator('#trade-strategy').select_option('REBUILD')
                 page.locator('#trade-run').click()
                 page.get_by_text('Custom DTOS · your personal assessment', exact=True).wait_for()

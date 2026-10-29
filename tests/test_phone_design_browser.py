@@ -193,6 +193,11 @@ class FocusedPhoneInteractionTests(unittest.TestCase):
             ):
                 fixture.ready(page, "/trades/recommended")
                 self.theme(page)
+                # Next 5 is now a follow-up to an explicit first search.
+                page.locator("#trade-find").click()
+                page.wait_for_timeout(30)
+                pending.pop(0).fulfill(json={"workflow": "recommended", "results": [], "count": 0})
+                page.wait_for_function("!document.querySelector('#trade-find').disabled")
                 button = page.locator("#recommendation-refresh")
                 button.click()
                 status = page.locator("#recommendation-status")
@@ -215,9 +220,9 @@ class FocusedPhoneInteractionTests(unittest.TestCase):
                 page.wait_for_function(
                     '!document.querySelector("#recommendation-refresh").disabled'
                 )
-                self.assertIn("Trade options ready", status.inner_text())
+                self.assertIn("No qualified recommendations", status.inner_text())
                 page.select_option("#trade-strategy", "REBUILD")
-                self.assertEqual(status.inner_text(), "")
+                self.assertIn("Strategy changed", status.inner_text())
                 self.assertLessEqual(
                     page.evaluate("document.documentElement.scrollWidth"), width + 1
                 )

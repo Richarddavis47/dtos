@@ -124,7 +124,8 @@ class CalculatorBrowserTests(unittest.TestCase):
         with self.fixture.page(workspace=self.data) as (page, requests):
             self.build(page)
             initial = page.locator('#trade-balance').inner_text()
-            page.locator('summary').filter(has_text='Strategy for advanced').click()
+            self.assertTrue(page.locator('#trade-strategy').is_visible())
+            page.locator('#trade-strategy').focus()
             for strategy in ('WIN NOW', 'RETOOL', 'REBUILD'):
                 page.select_option('#trade-strategy', strategy)
                 self.assertEqual(page.locator('#trade-balance').inner_text(), initial)
