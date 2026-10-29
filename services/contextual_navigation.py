@@ -42,7 +42,7 @@ def navigation_markup():
 def with_back(header, back):
     if not back:
         return header
-    start = header.find("<h1>")
+    start = header.find("<h1")
     end = header.find("</h1>", start)
     if start < 0 or end < 0:
         return header

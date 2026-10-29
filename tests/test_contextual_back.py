@@ -828,6 +828,8 @@ class ContextualBackTests(unittest.TestCase):
                 p, requests, _, _, errors = self.page(b, f)
                 p.goto(self.origin + "/account/my-dtos")
                 p.locator(".personal-row").first.wait_for()
+                self.assertTrue(p.locator("#dtos-back").is_visible())
+                self.assertGreaterEqual(p.locator("#dtos-back").bounding_box()["height"],44)
                 p.locator("#personal-search").fill("c")
                 p.locator("#personal-position").select_option("QB")
                 p.locator('.manager-nav a[href="/market"]').click()

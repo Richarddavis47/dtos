@@ -2,7 +2,7 @@
 
 ## Existing navigation and correction
 
-Build 2209 used ordinary multipage links plus isolated return links. Its Market dossier links already carried search context in some flows; Trade already retained exact drafts under a session/league/franchise/tab binding. Fixed parent links could not express League → My Team or Trade → Market → dossier → Market → Trade. My Team's hidden shared header required placing Back in its visible franchise heading. Player projection week navigation replaced the entire history state, losing unrelated entry identity. Departing Trade did not preserve all temporary filters and cancellation state.
+Build 2209 used ordinary multipage links plus isolated return links. Its Market dossier links already carried search context in some flows; Trade already retained exact drafts under a session/league/franchise/tab binding. Fixed parent links could not express League → My Team or Trade → Market → dossier → Market → Trade. My Team and My DTOS hide their shared headings; Back is placed in their visible franchise/editor headings. Player projection week navigation replaced the entire history state, losing unrelated entry identity. Departing Trade did not preserve all temporary filters and cancellation state.
 
 | Surface | Existing contract | Added behavior |
 | --- | --- | --- |

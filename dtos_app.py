@@ -829,7 +829,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
         account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{escape(franchise or "Mapped franchise")} · Switch league</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
     from services.contextual_navigation import navigation_markup, with_back
     back, navigation_head = navigation_markup()
-    team_heading = 'data-my-team-context=' in body
+    team_heading = 'data-my-team-context=' in body or 'id="my-dtos"' in body
     if team_heading:
         body = with_back(body, back)
     header = with_back(page_header(title, league_name=league_name, last_updated=str(sync)), '' if team_heading else back)
