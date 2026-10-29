@@ -228,17 +228,38 @@ class ExplicitNavigationBrowserTests(unittest.TestCase):
             self.assertLess(perf_counter() - started, 3)
 
     def test_bfcache_reactivates_its_own_draft_without_reusing_pending_results(self):
-        with self.fixture.page(workspace=self.data) as (page, _):
-            self.fixture.ready(page, '/trades/shop?asset_id=player:a')
-            if not page.locator('#shop-refinements').evaluate('n => n.open'):
-                page.locator('#shop-refinements > summary').click()
-            page.locator('#shop-protected').select_option(['player:b', 'pick:2028:1:3'])
-            current = self.state(page)
-            page.evaluate('dispatchEvent(new PageTransitionEvent("pagehide", {persisted: true}))')
-            page.evaluate('sessionStorage.removeItem("dtos-trade-workspace:scout-session")')
-            page.evaluate('dispatchEvent(new PageTransitionEvent("pageshow", {persisted: true}))')
-            actual = self.state(page)
-            self.assertEqual({k:v for k,v in actual.items() if k != "savedAt"}, {k:v for k,v in current.items() if k != "savedAt"})
+        for pending_search in (False, True):
+            with self.subTest(pending_search=pending_search), self.fixture.page(workspace=self.data) as (page, _):
+                self.fixture.ready(page, '/trades/shop?asset_id=player:a')
+                page.locator('.tw-offer').first.wait_for()
+                page.wait_for_function('document.querySelector("#trade-builder").getAttribute("aria-busy")==="false"')
+                held = []
+                if pending_search:
+                    page.route('**/api/trades/generate', lambda route: held.append(route))
+                if not page.locator('#shop-refinements').evaluate('n => n.open'):
+                    page.locator('#shop-refinements > summary').click()
+                page.locator('#shop-protected').select_option(['player:b', 'pick:2028:1:3'])
+                page.wait_for_function('document.querySelector("#trade-builder").getAttribute("aria-busy")===' + ('"true"' if pending_search else '"false"'))
+                if pending_search:
+                    self.assertEqual(len(held), 1)
+                current = self.state(page)
+                self.assertFalse(current['navigationView']['interrupted'])
+                expected = deepcopy(current)
+                # Departure intentionally qualifies interrupted work. Every
+                # other draft field, including exact protections, stays equal.
+                expected['navigationView']['interrupted'] = pending_search
+                page.evaluate('dispatchEvent(new PageTransitionEvent("pagehide", {persisted: true}))')
+                page.evaluate('sessionStorage.removeItem("dtos-trade-workspace:scout-session")')
+                page.evaluate('dispatchEvent(new PageTransitionEvent("pageshow", {persisted: true}))')
+                actual = self.state(page)
+                self.assertEqual({k:v for k,v in actual.items() if k != "savedAt"}, {k:v for k,v in expected.items() if k != "savedAt"})
+                if pending_search:
+                    held[0].fulfill(json={'markets': [{'counterparty_roster_id': 2,
+                        'returns': [self.fixture.offer(['player:d'], ['player:y'])]}]})
+                    page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+                    self.assertEqual(page.locator('.tw-offer').count(), 0)
+                    self.assertEqual(len(held), 1)  # BF-cache return must not discover again.
+                    self.assertEqual({k:v for k,v in self.state(page).items() if k != "savedAt"}, {k:v for k,v in expected.items() if k != "savedAt"})
 
     def test_late_workspace_load_in_departed_document_cannot_persist_over_newer_intent(self):
         pending = []
