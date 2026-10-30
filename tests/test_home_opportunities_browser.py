@@ -239,9 +239,9 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                     page.goto("https://dtos.test/")
                     page.locator(".home-opportunity").first.wait_for()
                     self.assertEqual(page.locator(".home-opportunity").count(), 1)
-                    # Different explicit strategy invalidates cached assessments and pending result.
+                    # Legacy browser-goal compatibility; explicit durable saves have separate HTTP/browser controls.
                     page.evaluate(
-                        """async () => {const m=await (await fetch('/api/trades/home-opportunities?front_office=1')).json();window.dtosStrategy.set(m.workspace_context,'REBUILD');window.dispatchEvent(new Event('focus'));}"""
+                        """async () => {const m=await (await fetch('/api/trades/home-opportunities?front_office=1')).json();const c=m.workspace_context,s={scope:c.strategy_scope,rows:[[c.league_id+':'+c.roster_id,'REBUILD']]};document.cookie='dtos_strategy='+btoa(JSON.stringify(s)).replaceAll('+','-').replaceAll('/','_').replaceAll('=','')+'; Path=/; SameSite=Strict';window.dispatchEvent(new Event('focus'));}"""
                     )
                     page.wait_for_function(
                         "document.querySelectorAll('.home-opportunity').length===0"
@@ -252,7 +252,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                         "document.querySelector('#home-opportunities').dataset.state==='loading'"
                     )
                     page.evaluate(
-                        """async () => {const m=await (await fetch('/api/trades/home-opportunities?front_office=1')).json();window.dtosStrategy.set(m.workspace_context,'WIN NOW');window.dispatchEvent(new Event('focus'));}"""
+                        """async () => {const m=await (await fetch('/api/trades/home-opportunities?front_office=1')).json();const c=m.workspace_context,s={scope:c.strategy_scope,rows:[[c.league_id+':'+c.roster_id,'WIN NOW']]};document.cookie='dtos_strategy='+btoa(JSON.stringify(s)).replaceAll('+','-').replaceAll('/','_').replaceAll('=','')+'; Path=/; SameSite=Strict';window.dispatchEvent(new Event('focus'));}"""
                     )
                     page.wait_for_function(
                         "document.querySelector('#home-opportunities').dataset.state!=='loading'"

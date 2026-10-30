@@ -16,6 +16,10 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
         f.setUp()
         self.addCleanup(f.doCleanups)
         f.publish(datetime.now(timezone.utc).isoformat())
+        def explicit_save(page):
+            values=page.locator('#my-team-goal-form').evaluate('e=>Object.fromEntries(new FormData(e))')
+            response=f.f.f.client.post('/account/franchise-goal',data=values,follow_redirects=False)
+            self.assertEqual(response.status_code,303,response.text)
         measurements = []
         with sync_playwright() as pw:
             browser = launch_chromium(pw, headless=True)
@@ -27,6 +31,7 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
                         self.assertEqual(response.status, 200)
                         page.wait_for_load_state('networkidle')
                         page.locator('#my-team-strategy').select_option('')
+                        explicit_save(page)
                         page.reload(wait_until='networkidle')
                         root = page.locator('#my-team-outlook')
                         self.assertEqual(root.count(), 1)
@@ -70,6 +75,8 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
                             link.click()
                             self.assertTrue(page.locator(target).is_visible())
                         page.locator('#my-team-strategy').select_option('WIN NOW')
+                        explicit_save(page)
+                        page.reload(wait_until='networkidle')
                         self.assertIn('WIN NOW:', page.locator('#my-team-outlook-goal').text_content())
                         self.assertEqual(page.locator('#my-team-outlook-action').get_attribute('href'), '/trades/trade-for?front_office=1')
                         page.locator('#my-team-outlook-action').click()

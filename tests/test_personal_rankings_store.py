@@ -276,7 +276,7 @@ class PersonalRankingsStoreTests(unittest.TestCase):
         self.store = AccountStore(self.path)
         self.assertEqual(self.load()["revision"], 1)
         with closing(self.store.connect()) as connection:
-            self.assertEqual([row[0] for row in connection.execute("SELECT version FROM account_schema_migrations ORDER BY version")], [1, 2, 3])
+            self.assertEqual([row[0] for row in connection.execute("SELECT version FROM account_schema_migrations ORDER BY version")], [1, 2, 3, 4])
             self.assertEqual(connection.execute("SELECT count(*) FROM account_personal_rankings").fetchone()[0], 1)
 
 

@@ -177,10 +177,9 @@
   addEventListener('focus', checkPersonalRevision);
   addEventListener('pageshow', async event => { if (event.persisted && window.dtosNavigation && !(await window.dtosNavigation.verify())) return; if (workspace) checkPersonalRevision(); });
   function personalPayload() { const p = workspace?.personalization; return p ? {override_saved_protections: [...session.overrideSavedProtections], valuation_mode: valuationMode, personal_revision: p.revision, personal_market_generation: p.market_generation, personal_baseline_generation: p.baseline_generation} : {}; }
-  function payload() { reconcileStrategy(); return {...personalPayload(), workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...session.protectedAssets], excluded_assets: [...session.excludedAssets], asset_id: flow === 'shop' ? session.requiredOutgoingAsset || selected.sent[0] : session.requiredIncomingAsset || selected.received[0], workspace_context: workspace.workspace_context}; }
+  function payload() { return {...personalPayload(), workflow: flow, strategy: el('trade-strategy').value || null, active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received], protected_assets: [...session.protectedAssets], excluded_assets: [...session.excludedAssets], asset_id: flow === 'shop' ? session.requiredOutgoingAsset || selected.sent[0] : session.requiredIncomingAsset || selected.received[0], workspace_context: workspace.workspace_context}; }
   function persist(updateHistory = true, draftSession = session) {
     if (departed) return;
-    reconcileStrategy();
     if (!updateHistory && draftSession !== session) navigationHandoff = true;
     const navigationView = {workflow: flow, filters: Object.fromEntries(['sent','received'].map(key => [key, {q: String(filters[key]?.q || '').slice(0,200), pos: String(filters[key]?.pos || '').slice(0,16)}])), side, interrupted: interruptedNavigation,
       includePicks: el('trade-include-picks')?.checked !== false,
@@ -1019,7 +1018,6 @@
     return null;
   }
   function openOffer(row) {
-    reconcileStrategy();
     const conflict = offerConflict(row); if (conflict) return message(conflict, true);
     if (newRecommendedObjective(row)) { session.requiredOutgoingAsset = null; session.requiredIncomingAsset = null; session.originWorkflow = 'recommended'; }
     setPartner(row.proposal.partner_roster_id); selected.sent = [...row.proposal.assets_sent]; selected.received = [...row.proposal.assets_received];
@@ -1028,7 +1026,6 @@
     changed(); session.currentAssessment = context; persist(); review(); showEvaluation(row.evaluation || context.evaluation || {}, row.opportunity || context.opportunity, context); focusResult();
   }
   function previewOffer(row) {
-    reconcileStrategy();
     const conflict = offerConflict(row); if (conflict) return message(conflict, true);
     const adjustment = row.balance_adjustment || row.proposal.preview_balance_adjustment;
     if (adjustment && adjustment.market_generation !== workspace.calculator_generation) {
@@ -1239,7 +1236,12 @@
         for (const row of other) section.append(offerCard(row));
         out.append(section);
       }
-      for (const reason of body.discovery?.limitations || []) out.append(node('small', reason.replaceAll('_', ' ')));
+      const bounds = new Set(['BOUNDED_PLAYER_AND_CAPITAL_DISCOVERY', 'NOT_EXHAUSTIVE_DYNASTY_OR_PICK_OPPORTUNITY_SEARCH']);
+      if ((body.discovery?.limitations || []).some(reason => bounds.has(reason))) {
+        const scope = node('p', 'DTOS explored a limited set of possible offers, not every theoretical trade.', 'tw-discovery-scope');
+        scope.setAttribute('role', 'note'); scope.setAttribute('aria-label', 'Discovery coverage'); out.append(scope);
+      }
+      for (const reason of body.discovery?.limitations || []) if (!bounds.has(reason)) out.append(node('p', reason.replaceAll('_', ' '), 'tw-discovery-scope'));
       searchDetails(body, out);
       return;
     }
@@ -1330,7 +1332,6 @@
         message('Evidence refreshed. Checking the same request once more… Your proposal stays intact.');
         body = await post(path, requestPayload, controller?.signal);
       }
-      reconcileStrategy();
       if (started !== revision) return;
       const validSearchRows = Array.isArray(body.results) || (flow === 'shop' && Array.isArray(body.markets) && body.markets.every(m => Array.isArray(m.returns)));
       if (path === 'generate' && ((body.workflow != null && body.workflow !== flow) || !validSearchRows)) throw new Error('Search response was incomplete. Your offer is unchanged; try generating again.');
@@ -1445,7 +1446,7 @@
   el('trade-start-new').onclick = () => {
     if (!workspace) return;
     const hasDraft = selected.sent.length || selected.received.length || partner() || session.requiredOutgoingAsset || session.requiredIncomingAsset || session.currentAssessment || session.previewProposal || session.protectedAssets.length || session.excludedAssets.length || Object.keys(session.adjustmentConstraints).length;
-    if (hasDraft && !confirm('Start a new trade? This clears this league’s current package, target, previews and temporary protections. Your selected strategy and other league drafts stay saved.')) return;
+    if (hasDraft && !confirm('Start a new trade? This clears this league’s current package, target, previews and temporary protections. Your Trade strategy and other league drafts stay unchanged.')) return;
     try { sessionStorage.removeItem(storageKey()); } catch (_) { message('The saved draft could not be cleared. Allow browser session storage and try again; your strategy is unchanged.', true); return; }
     clearDraft();
     // Replace the cleared entry; Back cannot resurrect its old Shop/Trade For objective.
@@ -1480,35 +1481,7 @@
   });
   root.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { side = b.dataset.side; root.querySelectorAll('[data-side]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); paint(); });
   el('trade-partner').onchange = () => { if (flow === 'shop') { session.shopSearchPartner = Number(el('trade-partner').value || 0); if (!selected.received.length) selected.partner = session.shopSearchPartner; changed(); if (session.requiredOutgoingAsset) run('generate'); return; } if (session.requiredIncomingAsset) { el('trade-partner').value = String(partner()); return message('The required target stays with its actual owner. Choose Build My Own to change the objective.', true); } setPartner(el('trade-partner').value); selected.received = []; changed(); if (flow === 'shop' && session.requiredOutgoingAsset) run('generate'); };
-  function writeStrategyIntent() {
-    if (!workspace || !window.dtosStrategy) return;
-    const retained = window.dtosStrategy.set(workspace.workspace_context, el('trade-strategy').value);
-    let feedback = el('trade-strategy-feedback');
-    if (!feedback) { feedback = node('p', '', 'ds-inline-feedback'); feedback.id = 'trade-strategy-feedback'; feedback.setAttribute('role', 'status'); el('trade-strategy').after(feedback); }
-    feedback.textContent = retained ? '' : 'Strategy could not be retained for fresh navigation: browser session storage is unavailable or full.';
-  }
-  function reconcileStrategy() {
-    if (!workspace || !window.dtosStrategy || departed || window.dtosNavigation?.checking) return;
-    const intent = window.dtosStrategy.get(workspace.workspace_context);
-    if (intent === el('trade-strategy').value) return;
-    el('trade-strategy').value = intent;
-    cancelBalance(); revision++; runSequence++;
-    lastOffers = null; lastOffersIsBalance = false; excludedFamilies.clear(); searchExhausted = false;
-    if (session.previewProposal?.preview_context) {
-      session.previewProposal.preview_context.restored = true;
-      session.previewProposal.preview_context.stale_reason = 'Strategy changed in another tab';
-    }
-    if (session.currentAssessment) staleAssessment('Strategy changed in another tab');
-    else if (session.previewProposal) previewOffer({proposal: session.previewProposal});
-    root.querySelectorAll('[data-assessment-strategy]').forEach(summary => { summary.textContent = 'Assessment strategy: ' + (summary.dataset.assessmentStrategy || 'Use supported competitive window') + ' · Current selected strategy: ' + (intent || 'Use supported competitive window'); });
-    root.querySelectorAll('.tw-offer').forEach(card => {
-      if (!card.querySelector('[data-offer-stale]')) { const notice = node('p', 'Retained offer assessment · not revalidated after strategy change. Preview retains its original strategy; reevaluate after adoption.', 'tw-drawback'); notice.dataset.offerStale = 'true'; card.prepend(notice); }
-    });
-    if (workspace) paint();
-  }
-  addEventListener('focus', reconcileStrategy);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) reconcileStrategy(); });
-  el('trade-strategy').onchange = () => { writeStrategyIntent(); el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; hasDiscovered = false; displayedFamilies = []; if (workspace) paint(); excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; searchStatus('Strategy changed. Generate or evaluate again to use this goal; your assets are unchanged.', 'ready'); persist(); };
+  el('trade-strategy').onchange = () => { el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; hasDiscovered = false; displayedFamilies = []; if (workspace) paint(); excludedFamilies.clear(); searchExhausted = false; el('trade-result').hidden = true; searchStatus('Strategy changed. Generate or evaluate again to use this goal; your assets are unchanged.', 'ready'); persist(); };
   // A document restored from browser history must not accept a response from
   // work started before leaving it. Normal navigation loads fresh server context.
   function retainNavigationView() {
@@ -1539,7 +1512,6 @@
         if (retained?.resetGeneration && retained.resetGeneration !== session.resetGeneration) {
           replacePage('/trades/create?front_office=' + active); return;
         }
-        reconcileStrategy();
         if (session.currentAssessment) { session.currentAssessment = restoreContext(session.currentAssessment); showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment); }
         if (session.previewProposal) { if (session.previewProposal.preview_context) session.previewProposal.preview_context = restoreContext(session.previewProposal.preview_context); previewOffer({proposal: session.previewProposal}); }
         persist();
@@ -1632,8 +1604,7 @@
         // never a freshly validated assessment or an inferred endorsement.
         if (session.previewProposal && !session.previewProposal.preview_context) session.previewProposal.preview_context = {...assessmentContext({proposal: session.previewProposal}), restored: true, stale_reason: 'Legacy preview qualification and supporting evidence were not retained'};
         for (const key of ['protectedAssets', 'excludedAssets', 'overrideSavedProtections']) if (Array.isArray(saved[key])) session[key] = [...new Set(saved[key])];
-        if (saved.strategy && Array.from(el('trade-strategy').options).some(o => o.value === saved.strategy) && !window.dtosStrategy?.has(data.workspace_context)) {
-          window.dtosStrategy?.set(data.workspace_context, saved.strategy);
+        if (typeof saved.strategy === 'string' && Array.from(el('trade-strategy').options).some(o => o.value === saved.strategy)) {
           el('trade-strategy').value = saved.strategy;
         }
         if (saved.ownership !== data.workspace_context.ownership_generation) message('Ownership has changed. Your proposal is retained for review; evaluation will identify any assets that moved.', true);
@@ -1688,7 +1659,7 @@
       if (Array.from(el('shop-preference').options).some(o => o.value === session.shopPreference)) el('shop-preference').value = session.shopPreference;
       if (Array.from(el('shop-position').options).some(o => o.value === session.shopPosition)) el('shop-position').value = session.shopPosition;
     }
-    if (window.dtosStrategy) el('trade-strategy').value = window.dtosStrategy.get(data.workspace_context);
+
     syncLocks(); el('trade-find').hidden = flow === 'create'; persist(); paint();
     if (data.projection_evidence) latestEvidence.projection_generation = data.projection_evidence.generation;
     if (flow === 'recommended') searchStatus('Ready. Generate Trades searches eligible teams; choosing a goal is optional.', 'ready');
@@ -1708,7 +1679,6 @@
       fetch('/api/trades/home-opportunities?' + query, {credentials: 'same-origin'}).then(async response => {
         if (!response.ok) throw new Error('This Home idea expired or its evidence, strategy or protections changed. Your draft is unchanged. Find current ideas on Home.');
         const row = await response.json();
-        reconcileStrategy();
         if (departed || revision !== navigationRevision || requestedStrategy !== el('trade-strategy').value) return;
         try { history.replaceState({...history.state, dtosHomeOffer: homeOffer}, ''); } catch (_) { /* Navigation state may be unavailable. */ }
         previewOffer(row);

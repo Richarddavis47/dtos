@@ -1,3 +1,13 @@
+# v1.22 / build 2215 — Trade strategy state and discovery clarity
+
+Separate temporary Trade strategy from the saved franchise goal. Trade choices stay in the existing workspace; reload and contextual Back restore them, while fresh primary Trade entry starts from the franchise goal. Changing Trade strategy never saves or clears a goal.
+
+My Team now labels unsaved goal previews and requires an explicit **Save goal** action to persist the goal across sessions. The existing account database holds only a bounded, account/league/franchise-scoped preference with transactional revision and authorization checks. Legacy browser-session goals remain readable and unchanged; no automatic import or restoration is performed. Existing rankings and production goals are not edited by acceptance testing.
+
+Replace joined discovery labels with: “DTOS explored a limited set of possible offers, not every theoretical trade.” Preserve zero-result explanations, Shop leads, bilateral admission and all build 2214 discovery mathematics. No new analytical work, provider calls or analytical storage.
+
+Technical SemVer/tag: v1.22.0; customer-facing product version: v1.22. See docs/audits/TRADE_STRATEGY_STATE_2215.md for root causes, boundaries and validation requirements.
+
 # v1.21.114 / build 2214 — Rebuild trade discovery
 
 Recommended Trades now covers more supported production-for-capital opportunities. Rebuild searches several exact pick maturities/rounds, retains the intended outgoing player before bounded package pruning and gives mixed returns room within the existing candidate budget. Buyer utility and own lineup costs precede a late age tie-break; age never sets a price or forces a sale.

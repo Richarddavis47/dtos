@@ -12,7 +12,7 @@ from typing import Any, Iterator
 
 from .models import AccountContext, LeagueMembership
 
-ACCOUNT_SCHEMA_VERSION = 3
+ACCOUNT_SCHEMA_VERSION = 4
 
 
 def _now() -> str:
@@ -88,6 +88,13 @@ CREATE TABLE IF NOT EXISTS account_personal_rankings(
   document_json TEXT NOT NULL CHECK(length(CAST(document_json AS BLOB))<=524288),
   revision INTEGER NOT NULL CHECK(revision>0),
   created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+  PRIMARY KEY(account_id,league_id,roster_id)
+);
+CREATE TABLE IF NOT EXISTS account_franchise_goals(
+  account_id TEXT NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+  league_id TEXT NOT NULL, roster_id INTEGER NOT NULL CHECK(roster_id>0),
+  strategy TEXT NOT NULL CHECK(strategy IN ('','WIN NOW','RETOOL','REBUILD')),
+  revision INTEGER NOT NULL CHECK(revision>0), updated_at TEXT NOT NULL,
   PRIMARY KEY(account_id,league_id,roster_id)
 );
 """
@@ -230,7 +237,10 @@ class AccountStore:
             membership_row = None
             if row["active_league_id"]:
                 membership_row = connection.execute(
-                    "SELECT * FROM account_league_memberships WHERE account_id=? AND league_id=? AND status='active'",
+                    "SELECT m.*,g.strategy AS franchise_goal,g.revision AS goal_revision "
+                    "FROM account_league_memberships m LEFT JOIN account_franchise_goals g "
+                    "ON g.account_id=m.account_id AND g.league_id=m.league_id AND g.roster_id=m.roster_id "
+                    "WHERE m.account_id=? AND m.league_id=? AND m.status='active'",
                     (row["account_id"], row["active_league_id"]),
                 ).fetchone()
             membership = LeagueMembership(**{
@@ -244,6 +254,8 @@ class AccountStore:
                 sleeper_user_id=row["sleeper_user_id"], sleeper_username=row["sleeper_username"],
                 sleeper_link_state=row["link_state"], active_league_id=row["active_league_id"] if membership else None,
                 membership=membership, csrf_token=row["csrf_token"], session_id=row["session_id"],
+                franchise_goal=membership_row['franchise_goal'] if membership_row else None,
+                franchise_goal_revision=int(membership_row['goal_revision'] or 0) if membership_row else 0,
             )
 
     def verify_csrf(self, token: str, submitted: str) -> bool:

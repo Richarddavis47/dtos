@@ -7,7 +7,7 @@ from typing import Any, Awaitable, Callable
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
-from app_metadata import BUILD_NUMBER, VERSION, repository_metadata
+from app_metadata import BUILD_NUMBER, PRODUCT_VERSION, repository_metadata
 from src.core.data_platform import data_platform
 
 
@@ -59,7 +59,7 @@ def create_settings_router(
   <div class="ds-table-wrap">
     <h3>Application Identity</h3>
     <table><tbody>
-      <tr><td>DTOS version</td><td>{escape(VERSION)}</td></tr>
+      <tr><td>DTOS version</td><td>{escape(PRODUCT_VERSION)}</td></tr>
       <tr><td>Build</td><td>{BUILD_NUMBER}</td></tr>
       <tr><td>Git branch</td><td>{escape(branch)}</td></tr>
       <tr><td>Latest commit</td><td>{escape(commit)}</td></tr>
