@@ -569,7 +569,7 @@ def personal_bootstrap(data, active_id, *, store=None, market_reader=None, accou
         doc = load_personal(store, account.account_id, membership.league_id, membership.roster_id)
         return {'mode': 'neutral', 'revision': (doc or {}).get('revision', 0),
                 'initialized': doc is not None, 'available': False, 'personal_available': False,
-                'limitations': [str(exc)]}
+                'readiness_code': exc.code, 'limitations': [str(exc)]}
     if state['context']['roster_id'] != active_id:
         raise PersonalRankingError('unauthorized_franchise', 'Only your franchise can use your personal rankings.', 403)
     result = {key: state[key] for key in ('mode', 'revision', 'initialized', 'generation', 'baseline_generation', 'personal_available', 'personal_partial_available', 'personal_value_count', 'limitations', 'compatibility_issues', 'recovery_url')}

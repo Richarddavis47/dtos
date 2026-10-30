@@ -1557,7 +1557,8 @@
       const panel = node('section', null, 'tw-valuation-mode');
       const label = node('label', 'Valuation mode'); label.htmlFor = 'trade-valuation-mode';
       const select = node('select'); select.id = 'trade-valuation-mode';
-      for (const [value, text] of [['neutral', 'Neutral DTOS'], ['custom', p.available === true ? 'Custom DTOS' : p.revision > 0 ? 'Custom · review prices' : 'Custom · create rankings']]) { const option = node('option', text); option.value = value; option.disabled = value === 'custom' && (!(p.revision > 0) || p.available !== true); select.append(option); }
+      const preparing = ['market_unavailable', 'market_source_changed', 'market_incomplete'].includes(p.readiness_code);
+      for (const [value, text] of [['neutral', 'Neutral DTOS'], ['custom', p.available === true ? 'Custom DTOS' : p.revision > 0 ? preparing ? 'Custom · prepare Market' : 'Custom · review prices' : 'Custom · create rankings']]) { const option = node('option', text); option.value = value; option.disabled = value === 'custom' && (!(p.revision > 0) || p.available !== true); select.append(option); }
       select.value = valuationMode;
       const needsReview = p.revision > 0 && p.compatibility_issues?.length;
       const edit = node('a', needsReview ? 'Review affected Custom Rankings assets' : 'Edit My DTOS rankings');
@@ -1569,6 +1570,11 @@
       if (p.available !== true) panel.append(node('p', !(p.revision > 0)
         ? 'Create Custom Rankings in My DTOS to use Custom Trade. Neutral DTOS is available now.'
         : (p.limitations || []).join(' ') || 'Saved Custom Rankings need compatible Market prices. Open My DTOS to retry; Neutral Trade remains available.', 'muted'));
+      if (p.available !== true && p.revision > 0) {
+        const retry = node('button', 'Reload Custom evidence', 'btn'); retry.type = 'button'; retry.id = 'trade-personal-retry';
+        retry.title = 'Reload prepared evidence while keeping this offer. Saved rankings are unchanged.';
+        retry.onclick = () => location.reload(); panel.append(retry);
+      }
       panel.append(help);
       el('trade-intent-controls').append(panel);
       select.onchange = () => {

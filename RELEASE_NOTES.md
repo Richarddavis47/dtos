@@ -1,3 +1,11 @@
+# v1.21.113 / build 2213 — Custom Trade readiness and compatible Market recovery
+
+Keep Custom Rankings and Trade readiness aligned after Market verifies that new prepared inputs reproduce its existing complete semantic generation. Admit that one verified input marker without rebinding original build provenance, changing prices or reconstructing the personal rank-slot curve. Pending, failed, superseded and genuinely different evidence still requires its existing qualification or a new publication.
+
+Add an explicit Reload Custom evidence action for saved rankings whose prepared Trade context is unavailable. Use the existing same-page reload/workspace restoration; keep the exact offer and Neutral mode, and never silently reset rankings, switch modes, discover offers or evaluate a trade. Distinguish missing preparation from asset-price review.
+
+Preserve saved revisions, ranks, tiers, flags, exact picks, Neutral pricing, legal lineups, recommendation thresholds, historical grades, public/account behavior and contextual Back. No new provider calls, analytical storage, polling, valuation rules or infrastructure. See docs/audits/CUSTOM_TRADE_READINESS_2213.md.
+
 # v1.21.112 / build 2212 — Customer clarity and accessible Back
 
 Keep the existing contextual Back link available after its header scrolls away, using a compact top strip and a reserved header slot. Preserve its DOM/tab order, focus, existing history and authorization checks, five-tab navigation and Trade workspace/fresh-entry behavior. The top strip blocks clicks on obscured content. No scroll-triggered requests or additional navigation history.
