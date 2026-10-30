@@ -22,6 +22,10 @@ from src.core.trade_intelligence.models import TradeAsset, TradeProposal
 from src.core.trade_intelligence.lineup import _eligible as lineup_slot_eligible
 from src.core.trade_intelligence.lineup_memo import SearchLineupMemo
 from src.core.trade_intelligence.market_balance import market_balance as trade_market_balance
+from src.core.trade_intelligence.roster_space import (
+    active_player_ids as trade_active_player_ids,
+    configured_active_slots as trade_configured_active_slots,
+)
 from src.core.trade_intelligence.evidence_context import (
     TradeEvidenceContext, build_trade_evidence_context, qualify_partner_explanation,
 )
@@ -32,4 +36,4 @@ def evaluate_horizon_impact(data, proposal, service):
     return evaluate(data, proposal, service)
 
 
-__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "SearchLineupMemo", "TradeAsset", "TradeEvidenceContext", "TradeProposal", "TRADE_EVALUATION_POLICY_VERSION", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "apply_positional_ranks", "build_asset_pool", "build_context", "build_league_model", "build_trade_evidence_context", "calculate_confidence", "evaluate_bilateral", "evaluate_horizon_impact", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry", "lineup_slot_eligible", "qualify_partner_explanation", "resolve_trade_strategy", "trade_market_balance", "trade_pick_identity_errors"]
+__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "SearchLineupMemo", "TradeAsset", "TradeEvidenceContext", "TradeProposal", "TRADE_EVALUATION_POLICY_VERSION", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "apply_positional_ranks", "build_asset_pool", "build_context", "build_league_model", "build_trade_evidence_context", "calculate_confidence", "evaluate_bilateral", "evaluate_horizon_impact", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry", "lineup_slot_eligible", "qualify_partner_explanation", "resolve_trade_strategy", "trade_active_player_ids", "trade_configured_active_slots", "trade_market_balance", "trade_pick_identity_errors"]

@@ -12,7 +12,7 @@ from time import perf_counter
 from src.core.intelligence.team_strength import compatible_profile
 from src.core.intelligence import lineup_slot_eligible as _eligible, TradeProposal, generate_proposals
 
-METHOD = 'recommended-opportunities-v3-rebuild-coverage'
+METHOD = 'recommended-opportunities-v4-roster-admission'
 FILTERS = {'all', 'win_now', 'value', 'roster_fit', 'future', 'sell_high'}
 
 
@@ -226,11 +226,14 @@ def construct(workspace, thesis, protected, excluded, *, search_phase=0, search_
     incoming = tuple(a for a in workspace['pools'][partner] if a.asset_id not in excluded)
     sent = next(a for a in outgoing if a.asset_id == thesis['send']['asset_id'])
     received = next(a for a in incoming if a.asset_id == thesis['receive']['asset_id'])
-    rows = [TradeProposal(active, partner, (sent,), (received,),
+    admission = workspace.get('candidate_admission')
+    rows = ([TradeProposal(active, partner, (sent,), (received,),
                           'Capital / production exchange' if sent.kind == 'pick' or received.kind == 'pick' else 'Complementary player exchange')]
+            if admission is None or admission.allows(active, partner, (sent,), (received,)) else [])
     candidates = generate_proposals(active, partner, outgoing, incoming,
         required_sent_asset_id=sent.asset_id, required_received_asset_id=received.asset_id,
-        construction_only=True, search_phase=search_phase, search_diagnostics=search_diagnostics)
+        construction_only=True, search_phase=search_phase, search_diagnostics=search_diagnostics,
+        candidate_admission=admission if admission is not None and admission.capacity_supported else None)
     from src.core.intelligence import resolve_trade_strategy
     intent = thesis.get('analysis_strategy') or resolve_trade_strategy(workspace.get('requested_strategy'))['strategy']
     if intent == 'REBUILD' and sent.kind == 'player' and received.kind == 'pick':
@@ -245,7 +248,7 @@ def construct(workspace, thesis, protected, excluded, *, search_phase=0, search_
             groups.setdefault(shape, []).append(candidate)
         candidates = [group[index] for index in range(max(map(len, groups.values()), default=0))
                       for group in groups.values() if index < len(group)]
-    seen = {(tuple(a.asset_id for a in rows[0].assets_sent), tuple(a.asset_id for a in rows[0].assets_received))}
+    seen = {(tuple(a.asset_id for a in row.assets_sent), tuple(a.asset_id for a in row.assets_received)) for row in rows}
     for candidate in candidates:
         key = (tuple(a.asset_id for a in candidate.assets_sent), tuple(a.asset_id for a in candidate.assets_received))
         if key in seen or sent.asset_id not in key[0]:
@@ -363,6 +366,12 @@ def zero_result_guidance(funnel, discoveries, workspace, *, projection_available
         text += ' Compatible projection evidence is not ready. Check source preparation before trying again.'
     else:
         text += ' No priced, permitted construction reached evaluation. Review Market evidence and optional filters; protections are unchanged.'
+    admission = workspace.get('candidate_admission')
+    construction = admission.summary() if admission else {}
+    if construction.get('roster_capacity_rejected_checks'):
+        text += ' Some constructions needed extra roster space; DTOS did not assume a drop or an IR/taxi move.'
+    if construction.get('ownership_rejected_assets'):
+        text += ' Assets with unconfirmed current ownership or conflicting exact identity were excluded from the search.'
     leads = []
     assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
     if projection_available:
@@ -381,5 +390,5 @@ def zero_result_guidance(funnel, discoveries, workspace, *, projection_available
                 break
     if leads:
         text += ' Consider reviewing ' + ', '.join(row['label'] for row in leads) + ' in Shop Asset. These are search leads, not qualified offers.'
-    return {'message': text, 'assessed_limit_counts': counts, 'shop_review_leads': leads,
+    return {'message': text, 'assessed_limit_counts': counts, 'construction_admission': construction, 'shop_review_leads': leads,
             'recommendation': False, 'acceptance_probability': None}

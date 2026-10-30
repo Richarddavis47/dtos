@@ -1,3 +1,11 @@
+# v1.22.1 / build 2216 — Rebuild roster-space and ownership integrity
+
+Keep known roster-space and ownership blockers out of Recommended Trades before bounded package selection and expensive evaluation. Use the existing configured active-roster rules, exact player/pick ownership and compatible prepared lineup evidence. Consider legal balancing player-plus-pick packages within unchanged search caps; never assume drops, IR/taxi moves or extra roster slots.
+
+Keep all bilateral quality, overpay, lineup, depth, Market and Custom safeguards. Add bounded construction-rejection and preparation timing evidence, and explain legitimate zero-result capacity/ownership obstacles without endorsing Shop leads. Preserve temporary Trade strategy isolation, saved rankings/goals, navigation, public/account behavior and retained historical grades.
+
+No new provider calls, ordinary-read analytics, persistent analytical storage or infrastructure. See docs/audits/REBUILD_ROSTER_SPACE_2216.md for proof, qualifications and acceptance boundaries.
+
 # v1.22 / build 2215 — Trade strategy state and discovery clarity
 
 Separate temporary Trade strategy from the saved franchise goal. Trade choices stay in the existing workspace; reload and contextual Back restore them, while fresh primary Trade entry starts from the franchise goal. Changing Trade strategy never saves or clears a goal.
