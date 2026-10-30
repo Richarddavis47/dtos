@@ -1,5 +1,13 @@
 # v1.21.112 / build 2212 — Customer clarity and accessible Back
 
+## v1.21.114 / build 2214
+
+- Explore multiple exact capital returns for supported Rebuild sale opportunities within the existing discovery budgets.
+- Enforce both discovery anchors before package pruning; reserve bounded coverage for player-plus-pick returns.
+- Prioritize supported buyer utility and own starter costs; age is only a late search tie-break.
+- Explain assessed zero-result limits and optional Shop review leads without endorsing rejected trades.
+- Preserve bilateral thresholds, Neutral/Custom mathematics, source qualification and all existing workflows.
+
 ## v1.21.113 / build 2213
 
 - Reconcile prepared Custom admission only after an exact canonical semantic-generation match; preserve immutable prices and build provenance.
