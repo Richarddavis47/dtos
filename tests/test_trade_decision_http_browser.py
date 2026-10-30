@@ -312,7 +312,8 @@ class DecisionHTTPBrowserTests(unittest.TestCase):
                 next(iter(self.state(page).values()))["currentProposal"],
                 {"sent": [], "received": [], "partner": 0},
             )
-            self.assertEqual(page.locator("#trade-strategy").input_value(), "WIN NOW")
+            # Fresh Home entry uses no saved goal; temporary WIN NOW is not persisted.
+            self.assertEqual(page.locator("#trade-strategy").input_value(), "")
             self.assertTrue(
                 all(path.startswith("/api/trades/") for path, _ in self.requests)
             )

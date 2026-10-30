@@ -1,4 +1,4 @@
-"""Released client, retained offer controls and shared session intent."""
+"""Released client, retained offer controls and independent temporary strategy intent."""
 
 import unittest
 from tests import test_trade_scout_state_browser as scout
@@ -109,7 +109,7 @@ class AssessmentContextBrowserTests(unittest.TestCase):
                         self.assertEqual(
                             state["currentAssessment"]["exploration"], old != "WIN NOW"
                         )
-                        self.assertEqual(page.input_value("#trade-strategy"), new)
+                        self.assertEqual(page.input_value("#trade-strategy"), old)
                         text = page.locator("#trade-result").inner_text()
                         if old != new:
                             self.assertIn("not revalidated", text)
@@ -136,13 +136,13 @@ class AssessmentContextBrowserTests(unittest.TestCase):
                             "button", name="Reevaluate Trade", exact=True
                         ).click()
                         page.get_by_text(
-                            new + " original reasoning.", exact=True
+                            old + " original reasoning.", exact=True
                         ).wait_for()
                         self.assertNotIn(
                             "not revalidated",
                             page.locator("#trade-result").inner_text(),
                         )
-                        self.assertEqual(requests[-1][1]["strategy"], new)
+                        self.assertEqual(requests[-1][1]["strategy"], old)
                         self.assertLessEqual(
                             page.evaluate("document.documentElement.scrollWidth"),
                             width + 1,

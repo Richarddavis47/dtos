@@ -10,8 +10,8 @@
     window.name += '|dtos-trade-tab=' + value;
     return value;
   }
-  // Home ends only this tab's authorized league workflow. Strategy lives in
-  // its separate session cookie; other tabs/leagues and supporting routes stay intact.
+  // Home ends only this tab's authorized league workflow, including temporary
+  // Trade strategy. Explicit franchise goals and other tabs/leagues stay intact.
   const homeBoundary = document.getElementById('trade-home-boundary');
   if (homeBoundary) {
     const endWorkflow = () => {

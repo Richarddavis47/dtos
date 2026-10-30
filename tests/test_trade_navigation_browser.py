@@ -59,7 +59,7 @@ class TradeNavigationBrowserTests(unittest.TestCase):
                 page.locator('#trade-context').get_by_text('Active league', exact=False).wait_for()
                 self.assertEqual(fixture.proposal(page)['sent'], [])
 
-                page.get_by_label('Your strategy', exact=True).select_option('WIN NOW')
+                page.get_by_label('Trade strategy', exact=True).select_option('WIN NOW')
 
                 def dossier(route):
                     response = fixture.account.client.get('/players/mcbride')

@@ -352,7 +352,7 @@ class CapitalStrategyTests(unittest.TestCase):
                         page.route('**/*', route)
                         page.goto('https://dtos.test/trades/create?front_office=2')
                         page.get_by_label('Counterparty', exact=True).select_option('1')
-                        page.get_by_label('Your strategy', exact=True).select_option('WIN NOW')
+                        page.get_by_label('Trade strategy', exact=True).select_option('WIN NOW')
                         page.locator('#trade-sent-board button[data-asset-id="2028-R1-4"]').click()
                         if width < 760:
                             page.get_by_role('button', name='Their assets', exact=True).click()
@@ -361,7 +361,7 @@ class CapitalStrategyTests(unittest.TestCase):
                         page.locator('#trade-result .dtos-explanation').wait_for()
                         self.assertEqual(results[-1]['recommendation'], 'WORTH PURSUING')
                         self.assertIn('costs future flexibility', page.locator('#trade-result').inner_text())
-                        page.get_by_label('Your strategy', exact=True).select_option('REBUILD')
+                        page.get_by_label('Trade strategy', exact=True).select_option('REBUILD')
                         self.assertTrue(page.locator('#trade-result').is_hidden())
                         page.get_by_role('button', name='Evaluate Trade', exact=True).click()
                         page.locator('#trade-result .dtos-explanation').wait_for()

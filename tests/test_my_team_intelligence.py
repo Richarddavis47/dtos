@@ -160,8 +160,8 @@ class StrategySessionTests(TestCase):
         return base64.urlsafe_b64encode(json.dumps({'scope': scope, 'rows': rows}).encode()).decode().rstrip('=')
 
     def test_account_session_league_and_franchise_scope(self):
-        a = SimpleNamespace(account_id='a', session_id='s1')
-        b = SimpleNamespace(account_id='b', session_id='s2')
+        a = SimpleNamespace(account_id='a', session_id='s1', membership=None)
+        b = SimpleNamespace(account_id='b', session_id='s2', membership=None)
         with patch('services.strategy_session.current_account', return_value=a):
             saved = self.encode(strategy_scope(), [['A:1', 'REBUILD'], ['B:2', 'WIN NOW']])
             self.assertEqual(selected_strategy(saved, 'A', 1), 'REBUILD')
