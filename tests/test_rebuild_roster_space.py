@@ -242,4 +242,3 @@ class RebuildRosterSpaceTests(unittest.TestCase):
                 reports.append({'league': league_id, 'own_age_control': age, 'strategy': strategy,
                     'seconds': perf_counter()-start, 'count': result['count'], 'search': result['search_evidence']})
         evidence('multi-position-leagues', reports)
-
