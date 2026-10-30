@@ -884,8 +884,13 @@ def package_diagnostics(
     data, proposal, snapshot, impact, strategies, *, projection_reader=None
 ):
     """All players move together; existing capacity/horizon gates stay authoritative."""
-    inputs = diagnostic_inputs(data, snapshot)
-    baseline = _diagnose_inputs(data, snapshot, inputs, projection_reader)
+    if snapshot is None:
+        # Preserve the public resolver and original admission for an absent input.
+        baseline = diagnose_league(data, snapshot, projection_reader=projection_reader)
+        inputs = diagnostic_inputs(data, snapshot)
+    else:
+        inputs = diagnostic_inputs(data, snapshot)
+        baseline = _diagnose_inputs(data, snapshot, inputs, projection_reader)
     lid, week, slots, admitted, pools, _, _, qualification = inputs
     teams = {str(t.get("roster_id")): t for t in data.get("teams") or []}
     active, partner = str(proposal.active_roster_id), str(proposal.partner_roster_id)

@@ -116,3 +116,21 @@ class TradeResponseIntegrityTests(unittest.TestCase):
         for side in result['sides'].values():
             self.assertTrue(side['pre_evidence']['refresh']['retained_publication'])
             self.assertNotEqual(side['numeric_impact_state'], 'supported')
+
+    def test_missing_snapshot_preserves_original_resolution_without_inventing_points(self):
+        f = self.fixture()
+        workspace = trade.build_trade_workspace(f.data, 1)
+        assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
+        proposal = TradeProposal(1, 2, (assets['a'],), (assets['c'],), 'control')
+        reader = trade._SearchProjectionReader(f.reader)
+        impact = evaluate_horizon_impact(f.data, proposal, reader)
+        with patch.object(diagnostics, 'projection_snapshot', return_value=f.reader.snapshot()):
+            expected = diagnostics.diagnose_league(f.data, None, projection_reader=reader)
+            result = diagnostics.package_diagnostics(f.data, proposal, None, impact,
+                {'1': 'REBUILD', '2': 'WIN NOW'}, projection_reader=reader)
+        for field in ('generation', 'projection_generation'):
+            self.assertEqual(result[field], expected[field])
+        self.assertFalse(result['evidence']['calculation_supported'])
+        for side in result['sides'].values():
+            self.assertIsNone(side['available_pre_optimal_points'])
+            self.assertEqual(side['coverage'], 'partial / unavailable')

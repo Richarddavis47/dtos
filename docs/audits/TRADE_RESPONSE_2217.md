@@ -8,7 +8,7 @@ A source-compatible ten-franchise, 31-player-per-team, ten-week controlled profi
 
 ## Narrow correction
 
-Package evaluation prepares canonical pre-trade diagnostic inputs once and independently constructs post-trade inputs once. It decodes the admitted league baseline once and copies the selected teams' strategy views from that same result. Public league/team consumers retain their existing read-time admission and cache contracts.
+With an explicit snapshot, package evaluation prepares canonical pre-trade diagnostic inputs once and independently constructs post-trade inputs once. It decodes the admitted league baseline once and copies the selected teams' strategy views from that same result. An absent snapshot retains the original public resolver, provenance and unavailable-package admission. Public league/team consumers retain their existing read-time admission and cache contracts.
 
 A refresh failure can qualify an unchanged publication while package assembly is running. Both selected pre-views are requalified at the latest shared boundary before comparison; an earlier current label must not survive a new retained-publication qualification. Post-trade eligibility and evidence are always prepared independently, including incoming Out/inactive, reserve and unknown players. No inputs, solver calls, candidate evaluations, ownership checks or final thresholds are skipped.
 
