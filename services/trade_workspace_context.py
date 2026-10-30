@@ -26,8 +26,13 @@ def workspace_context(data: dict, roster_id: int) -> dict:
     generation = hashlib.sha256(json.dumps(sorted(ownership), separators=(",", ":")).encode()).hexdigest()
     binding = workspace_binding(league_id, roster_id)
     from services.strategy_session import strategy_scope
+    account = current_account()
+    own = bool(account and account.membership and account.membership.league_id == league_id
+               and account.membership.roster_id == roster_id)
     return {"league_id": league_id, "roster_id": roster_id, "binding": binding, "ownership_generation": generation, "schema": 1,
-            "strategy_scope": strategy_scope()}
+            "strategy_scope": strategy_scope(),
+            "franchise_goal": getattr(account, "franchise_goal", None) if own else None,
+            "franchise_goal_revision": getattr(account, "franchise_goal_revision", 0) if own else 0}
 
 
 def authorize_workspace(data: dict, payload: dict) -> None:

@@ -89,7 +89,7 @@ class DiagnosticAgingBrowserTests(unittest.TestCase):
                     with patch.object(diagnostics, "_now", return_value=f.observed):
                         page.goto("https://dtos.test/trades/create?front_office=1")
                         page.get_by_label("Counterparty", exact=True).select_option("2")
-                        page.get_by_label("Your strategy", exact=True).select_option(
+                        page.get_by_label("Trade strategy", exact=True).select_option(
                             "WIN NOW"
                         )
                         page.locator(

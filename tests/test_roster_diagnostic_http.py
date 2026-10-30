@@ -14,6 +14,9 @@ class DiagnosticHTTPTests(unittest.TestCase):
 
         self.f = fixtures.OpportunityIntegrityTests()
         self.f.setUp()
+        from routes.accounts import create_accounts_router
+        from src.core.accounts import AccountService
+        self.f.f.client.app.include_router(create_accounts_router(service=AccountService(self.f.f.store), runtime_manager=None))
         self.addCleanup(self.f.doCleanups)
         self.enterContext(
             patch(

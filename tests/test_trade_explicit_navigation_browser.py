@@ -215,7 +215,7 @@ class ExplicitNavigationBrowserTests(unittest.TestCase):
         with self.fixture.page(workspace=self.data) as (page, requests):
             self.fixture.ready(page, '/trades/trade-for?asset_id=player:x')
             page.evaluate('history.replaceState({...history.state, unrelated:"retain"}, "")')
-            page.get_by_label('Your strategy', exact=True).select_option('WIN NOW')
+            page.get_by_label('Trade strategy', exact=True).select_option('WIN NOW')
             started = perf_counter()
             page.reload()
             page.locator('#trade-target:not([hidden])').wait_for()

@@ -29,6 +29,8 @@ class AccountContext:
     membership: LeagueMembership | None
     csrf_token: str
     session_id: str
+    franchise_goal: str | None = None
+    franchise_goal_revision: int = 0
 
     @property
     def controlled_roster_id(self) -> int | None:

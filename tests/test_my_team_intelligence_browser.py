@@ -1,5 +1,8 @@
 """Actual authenticated routers, session intent and phone geometry; no captures."""
 import json
+from pathlib import Path
+from starlette.staticfiles import StaticFiles
+from routes.navigation import create_navigation_router
 import unittest
 from urllib.parse import urlsplit
 
@@ -14,6 +17,9 @@ class MyTeamIntelligenceBrowserTests(journeys.ProductBrowserJourneyTests):
                  {'width': 1280, 'height': 900})
 
     def configure_app(self, app, common):
+        # Match deployed navigation readiness and static assets, not only page HTML.
+        app.include_router(create_navigation_router())
+        app.mount('/static', StaticFiles(directory=Path(__file__).resolve().parents[1] / 'static'))
         app.include_router(create_historical_assets_router(
             require_data=common['require_data'], page=common['page'], league_id='100',
             league_resolver=lambda: current_league_context().league_id))
@@ -90,29 +96,27 @@ class MyTeamIntelligenceBrowserTests(journeys.ProductBrowserJourneyTests):
             ctx = page.evaluate("fetch('/api/trades/workspace').then(r => r.json())")
             # Use the server-authorized current workspace binding, never source list order.
             binding = ctx['workspace_context']
-            key = (page.context, binding['league_id'], binding['roster_id'])
-            if not hasattr(self, '_goals'):
-                self._goals = {}
-            expected = self._goals.get(key, '')
+            expected = page.evaluate("key=>JSON.parse(sessionStorage.getItem(key)||'{}').strategy", "dtos-trade-workspace:" + binding['binding']) or ''
             self.assertEqual(page.locator('#trade-strategy').input_value(), expected)
             goal = 'WIN NOW' if binding['league_id'] == '200' else 'REBUILD'
             page.locator('#trade-strategy').select_option(goal)
-            self._goals[key] = goal
             page.reload(wait_until='domcontentloaded')
             page.locator('#trade-sent-board input[type=search]').wait_for()
             self.assertEqual(page.locator('#trade-strategy').input_value(), goal)
-            # Clearing the entire temporary proposal must not delete selected intent.
-            page.evaluate("Object.keys(sessionStorage).filter(k => k.startsWith('dtos-trade-workspace:')).forEach(k => sessionStorage.removeItem(k))")
-            page.reload(wait_until='domcontentloaded')
+            # Actual fresh primary entry clears both draft and contextual return state.
+            page.locator('.manager-nav a[href="/trades"]').click()
+            page.wait_for_url('**/trades')
+            page.goto(origin + '/trades/create', wait_until='domcontentloaded')
             page.locator('#trade-sent-board input[type=search]').wait_for()
-            self.assertEqual(page.locator('#trade-strategy').input_value(), goal)
+            self.assertEqual(page.locator('#trade-strategy').input_value(), '')
             fresh = page.context.new_page()
             try:
                 fresh.goto(page.url, wait_until='domcontentloaded')
                 fresh.locator('#trade-sent-board input[type=search]').wait_for()
-                self.assertEqual(fresh.locator('#trade-strategy').input_value(), goal)
+                self.assertEqual(fresh.locator('#trade-strategy').input_value(), '')
             finally:
                 fresh.close()
+            page.locator('#trade-strategy').select_option(goal)
             page.goto(origin + '/teams/1', wait_until='domcontentloaded')
             page.go_back(wait_until='domcontentloaded')
             page.locator('#trade-sent-board input[type=search]').wait_for()

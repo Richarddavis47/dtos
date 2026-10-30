@@ -127,7 +127,7 @@ class AccountFoundationTests(unittest.TestCase):
         AccountStore(self.store.path)
         AccountStore(self.store.path)
         health = self.store.health()
-        self.assertEqual(health["schema_version"], 3)
+        self.assertEqual(health["schema_version"], 4)
         self.assertEqual(health["counts"]["accounts"], 1)
         self.assertEqual(health["counts"]["sleeper_links"], 1)
         self.assertEqual(health["counts"]["memberships"], 1)

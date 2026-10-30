@@ -472,6 +472,8 @@ class ContextualBackTests(unittest.TestCase):
         self,
     ):
         f = self.fixture()
+        from src.core.accounts.goal_store import save_goal
+        save_goal(f.editor.store, f.editor.store.context_for_session(f.editor.tokens["account-a"][0]), "WIN NOW", 0)
         with sync_playwright() as pw:
             b = launch_chromium(pw, headless=True)
             try:
@@ -508,7 +510,8 @@ class ContextualBackTests(unittest.TestCase):
                     self.draft(p)["currentProposal"],
                     {"sent": [], "received": [], "partner": 0},
                 )
-                self.assertEqual(p.locator("#trade-strategy").input_value(), "REBUILD")
+                # Fresh primary entry uses the franchise goal, not an old Trade choice.
+                self.assertEqual(p.locator("#trade-strategy").input_value(), "WIN NOW")
                 self.assertFalse(any(m == "POST" for m, _, _ in requests))
                 self.assertFalse(errors, errors)
             finally:

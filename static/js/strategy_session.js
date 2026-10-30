@@ -1,4 +1,4 @@
-/* Session cookie shares only explicit intent between tabs. Never assets or locks. */
+/* Saved goal view. Legacy session intent is read-only; Trade never writes it. */
 (() => {
   const name = 'dtos_strategy', allowed = ['', 'WIN NOW', 'RETOOL', 'REBUILD'];
   function read(context) {
@@ -9,28 +9,18 @@
     } catch (_) { return {scope: context.strategy_scope, rows: []}; }
   }
   function get(context) {
+    if (context.franchise_goal_revision > 0 && allowed.includes(context.franchise_goal)) return context.franchise_goal;
     const value = read(context).rows.find(row => row[0] === `${context.league_id}:${context.roster_id}`)?.[1];
     return allowed.includes(value) ? value : '';
   }
-  function set(context, value) {
-    if (!allowed.includes(value)) return false;
-    const saved = read(context), key = `${context.league_id}:${context.roster_id}`;
-    const rows = saved.rows.filter(row => row[0] !== key);
-    if (rows.length >= 64) return false;
-    rows.push([key, value]); saved.rows = rows;
-    const encoded = btoa(JSON.stringify(saved)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
-    if (encoded.length > 3800) return false;
-    document.cookie = `${name}=${encoded}; Path=/; SameSite=Strict${location.protocol === 'https:' ? '; Secure' : ''}`;
-    return get(context) === value;
-  }
-  const has = context => read(context).rows.some(row => row[0] === `${context.league_id}:${context.roster_id}`);
-  window.dtosStrategy = {get, set, has};
+  window.dtosStrategy = {get};
   const root = document.querySelector('[data-my-team-context]');
   if (!root) return;
   const context = JSON.parse(root.dataset.myTeamContext), select = document.getElementById('my-team-strategy');
   if (select) {
+    let dirty = false;
     const reconcile = () => {
-      select.value = get(context);
+      if (!dirty) select.value = get(context);
       const outlook = document.getElementById('my-team-outlook');
       const choice = JSON.parse(outlook?.dataset.outlookGoals || '{}')[select.value];
       if (choice) {
@@ -44,8 +34,8 @@
     addEventListener('pageshow', reconcile);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) reconcile(); });
     select.onchange = () => {
-      const ok = set(context, select.value);
-      document.getElementById('my-team-strategy-feedback').textContent = ok ? 'Strategy saved for this league and franchise in this signed-in browser session.' : 'Strategy could not be retained. Browser session storage is unavailable or full.';
+      dirty = true;
+      document.getElementById('my-team-strategy-feedback').textContent = 'Unsaved goal preview. Choose Save goal to change your franchise preference; Trade choices stay separate.';
       reconcile();
     };
   }

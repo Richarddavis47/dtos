@@ -392,8 +392,25 @@ def create_teams_router(
                                            roster_id=assessment.roster_id, players=team.get('players'), from_team=roster_id)
         binding = workspace_context(data, roster_id)
         context_json = escape(json.dumps(binding, separators=(',', ':')), quote=True)
-        options = ''.join(f'<option value="{escape(value)}" {"selected" if value == strategy else ""}>{escape(value or "Choose a goal (optional)")}</option>' for value in ('', 'WIN NOW', 'RETOOL', 'REBUILD'))
-        strategy_control = f'<label for="my-team-strategy">Your strategy</label><select id="my-team-strategy">{options}</select><p id="my-team-strategy-feedback" role="status"></p>' if editable else '<p>Viewing another franchise; its manager strategy is not inferred from holdings.</p>'
+        options = ''.join(f'<option value="{escape(value)}" {"selected" if value == strategy else ""}>{escape(value.title() if value else "No goal")}</option>' for value in ('', 'WIN NOW', 'RETOOL', 'REBUILD'))
+        if editable:
+            from services.strategy_session import strategy_scope
+            revision = getattr(account, "franchise_goal_revision", 0) if account else 0
+            scope = strategy_scope()
+            feedback = 'Franchise goal saved for this account, league and team.' if revision > 0 and request.query_params.get('goal_saved') == '1' else ''
+            hint = ('Your saved franchise goal. Trade choices stay separate.' if revision else
+                    'Save explicitly for your account. Trade choices stay separate.')
+            strategy_control = (f'<form method="post" action="/account/franchise-goal" id="my-team-goal-form">'
+                f'<label for="my-team-strategy">Franchise goal</label><select id="my-team-strategy" name="strategy" aria-describedby="my-team-goal-help">{options}</select>'
+                f'<input type="hidden" name="csrf_token" value="{escape(account.csrf_token if account else "")}">'
+                f'<input type="hidden" name="expected_revision" value="{revision}">'
+                f'<input type="hidden" name="league_id" value="{escape(league_id)}">'
+                f'<input type="hidden" name="roster_id" value="{roster_id}">'
+                f'<input type="hidden" name="strategy_scope" value="{escape(scope)}">'
+                f'<button type="submit" class="thq-action" id="my-team-save-goal" {"" if account else "disabled"}>Save goal</button>'
+                f'<p id="my-team-goal-help">{hint}</p><p id="my-team-strategy-feedback" role="status">{feedback}</p></form>')
+        else:
+            strategy_control = '<p>Viewing another franchise; its manager strategy is not inferred from holdings.</p>'
         own_team = account.membership.roster_id if account and account.membership else roster_id
         scope_notice = '' if editable else f'<nav class="thq-actions" aria-label="Read-only franchise navigation"><a class="thq-action" href="/">Back to Home</a><a class="thq-action" href="/teams/{own_team}">My Team</a><span>Read-only franchise evaluation</span></nav>'
         overview = view['overview']
@@ -404,6 +421,8 @@ def create_teams_router(
 <style>
 .thq-outlook{{padding:12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);overflow-wrap:anywhere}}.thq-outlook h2{{font-size:18px;margin:0 0 8px}}.thq-outlook p{{font-size:14px;line-height:1.5;margin:6px 0}}.thq-outlook li{{font-size:14px;line-height:1.5;margin:6px 0}}.thq-outlook .thq-strength-detail{{margin:0}}.thq-outlook .thq-strength-detail>summary{{display:list-item;list-style:disclosure-closed inside}}.thq-outlook .thq-strength-detail[open]>summary{{list-style-type:disclosure-open}}.thq-outlook summary h2{{display:inline;font-size:18px;margin:0}}.thq-outlook summary p{{line-height:1.4;margin:4px 0}}.thq-outlook .thq-actions{{margin:6px 0 0}}.thq-name-row{{display:flex;flex-wrap:wrap;align-items:center;gap:6px}}.thq-name-row>details[open]{{flex-basis:100%}}.thq-header{{margin-bottom:12px;gap:12px}}.thq-header .thq-avatar,.thq-header .franchise-portrait{{width:48px;height:48px;flex-basis:48px;font-size:23px}}.thq-title h1{{font-size:22px;margin:0}}.thq-title p{{margin:0}}.thq-actions{{margin:8px 0;gap:6px}}.thq-section{{margin-top:16px}}.thq-room-head{{padding:4px 10px;font-size:14px}}.thq-player{{padding:8px 10px}}.thq-player>div{{position:relative;padding-right:52px}}.thq-player>div>.thq-action{{position:absolute;right:0;top:0;padding:8px;min-height:44px}}.thq-player .player-summary{{gap:8px}}.thq-player .player-summary img{{width:40px;height:40px}}.thq-player-meta{{font-size:14px;margin-top:4px}}.thq-roster{{gap:10px}}.thq-strategy small{{display:none}}.thq-strategy{{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px}}.thq-strategy label{{margin:0}}.thq-strategy select{{min-width:0;margin:0}}#my-team-strategy-feedback{{grid-column:1/-1}}.thq-header{{padding:8px}}#my-team-strategy-feedback:empty{{display:none}}.thq-actions[aria-label="Roster sections"]{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;max-width:100%;padding-bottom:4px}}.thq-outlook-next:empty{{display:none}}.thq-outlook-next{{margin:6px 0}}.thq-actions[aria-label="Roster sections"] .thq-action{{min-width:0;padding:8px 6px;font-size:14px;background:var(--surface);color:var(--text)}}.thq-outlook-next>.thq-action{{background:var(--accent);color:#0c1908;border-color:var(--accent)}}.thq-player .player-portrait{{width:40px;height:40px;flex-basis:40px}}body:has([data-my-team-context]) .ds-header-side{{display:none}}body:has([data-my-team-context]) .ds-page-header{{display:none}}body:has([data-my-team-context]) .ds-page-header h1{{font-size:20px}}
 @media(max-width:760px){{.thq-header{{padding:8px}}#full-roster{{margin-top:12px}}.thq-outlook a,.thq-outlook summary{{scroll-margin-bottom:100px}}body:has([data-my-team-context]) .wrap{{padding-top:8px}}body:has([data-my-team-context]) .account-context{{padding:4px 0;margin-bottom:4px}}.thq-header .thq-title h1,.thq-header .thq-title p{{margin:0}}.thq-header .identity-kicker{{line-height:1.2}}.thq-outlook{{padding:8px}}body:has([data-my-team-context]) .brand p{{display:none}}body:has([data-my-team-context]) .secondary-nav{{margin-bottom:4px}}.thq-header>div:last-child{{margin-top:8px}}.thq-header .thq-title p{{font-size:14px}}.thq-identity{{gap:8px}}}}
+.thq-strategy{{display:block}}#my-team-goal-form{{display:grid;grid-template-columns:60px minmax(104px,1fr) auto;gap:6px;align-items:center}}#my-team-strategy-feedback{{grid-column:1/-1}}#my-team-goal-help{{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}}#my-team-save-goal{{min-height:44px;min-width:0;padding:8px;white-space:nowrap}}
+
 @media(max-width:360px){{.thq-strategy{{grid-template-columns:56px minmax(0,1fr)}}.thq-strategy label{{white-space:normal;overflow-wrap:normal;line-height:1.3}}.thq-strategy select{{padding-left:4px;padding-right:4px}}}}
 </style>
 <section class="thq-content" data-my-team-context="{context_json}">

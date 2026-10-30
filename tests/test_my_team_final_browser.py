@@ -84,22 +84,24 @@ class MyTeamFinalBrowserTests(journeys.ProductBrowserJourneyTests):
                 try:
                     second.goto(origin + '/teams/1', wait_until='domcontentloaded')
                     second.locator('#my-team-strategy').select_option(new)
+                    second.locator('#my-team-save-goal').click()
+                    second.wait_for_url('**/teams/1?goal_saved=1')
                     shared = second.evaluate('document.cookie')
-                    # Do not rely on focus delivery: ordinary edits must reconcile too.
+                    # An explicit saved franchise goal must not overwrite active Trade intent.
                     page.locator('#trade-partner').select_option('2')
                     self.assertEqual(page.evaluate('document.cookie'), shared)
-                    self.assertEqual(page.locator('#trade-strategy').input_value(), new)
+                    self.assertEqual(page.locator('#trade-strategy').input_value(), old)
                     button = page.locator('#trade-sent-board button[data-asset-id]').first
                     button.click()
                     self.assertEqual(page.evaluate('document.cookie'), shared)
                     page.reload(wait_until='domcontentloaded')
                     page.locator('#trade-sent-board input[type=search]').wait_for()
-                    self.assertEqual(page.locator('#trade-strategy').input_value(), new)
+                    self.assertEqual(page.locator('#trade-strategy').input_value(), old)
                     second.reload(wait_until='domcontentloaded')
                     self.assertEqual(second.locator('#my-team-strategy').input_value(), new)
                     key = "dtos-trade-workspace:" + page.evaluate("fetch('/api/trades/workspace').then(r=>r.json()).then(w=>w.workspace_context.binding)")
                     saved = json.loads(page.evaluate('(k)=>sessionStorage.getItem(k)', key))
-                    self.assertEqual(saved['strategy'], new)
+                    self.assertEqual(saved['strategy'], old)
                     self.assertEqual(saved['protectedAssets'], [])
                 finally:
                     second.close()
@@ -107,7 +109,7 @@ class MyTeamFinalBrowserTests(journeys.ProductBrowserJourneyTests):
 
 
 class RetainedStrategyBrowserTests(unittest.TestCase):
-    def test_new_intent_qualifies_assessment_without_overwriting_package_or_cookie(self):
+    def test_other_tab_intent_preserves_current_assessment_package_and_goal_cookie(self):
         from tests.test_trade_calculator_browser import CalculatorBrowserTests
         fixture = CalculatorBrowserTests()
         fixture.setUp()
@@ -129,11 +131,11 @@ class RetainedStrategyBrowserTests(unittest.TestCase):
                 second.select_option('#trade-strategy', 'WIN NOW')
                 shared = second.evaluate('document.cookie')
                 page.evaluate("window.dispatchEvent(new Event('focus'))")
-                self.assertEqual(page.input_value('#trade-strategy'), 'WIN NOW')
-                self.assertIn('strategy changed', page.locator('#trade-result').inner_text().lower())
+                self.assertEqual(page.input_value('#trade-strategy'), 'REBUILD')
+                self.assertNotIn('Strategy changed in another tab', page.locator('#trade-result').inner_text())
                 self.assertEqual(fixture.state(page)['currentAssessment']['evaluation'], retained_evaluation)
                 self.assertIn('Market cost cannot be fully assessed', page.locator('#trade-result').inner_text())
-                self.assertTrue(page.get_by_role('button', name='Reevaluate Trade', exact=True).is_visible())
+                self.assertTrue(page.locator('#trade-result').is_visible())
                 self.assertEqual(fixture.state(page)['currentProposal'], original)
                 self.assertEqual(page.evaluate('document.cookie'), shared)
                 page.click('#trade-balance-offer')
@@ -143,8 +145,8 @@ class RetainedStrategyBrowserTests(unittest.TestCase):
                 self.assertEqual(page.evaluate('document.cookie'), shared)
                 page.get_by_role('button', name='Adopt alternative', exact=True).click()
                 self.assertEqual(page.evaluate('document.cookie'), shared)
-                self.assertEqual(page.input_value('#trade-strategy'), 'WIN NOW')
-                self.assertEqual(requests[-1][1]['strategy'], 'WIN NOW')
+                self.assertEqual(page.input_value('#trade-strategy'), 'REBUILD')
+                self.assertEqual(requests[-1][1]['strategy'], 'REBUILD')
             finally:
                 second.close()
 

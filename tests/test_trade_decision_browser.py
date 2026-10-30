@@ -75,7 +75,7 @@ class TradeDecisionBrowserTests(unittest.TestCase):
             self.assertEqual(
                 self.fixture.proposal(page), {"sent": [], "received": [], "partner": 0}
             )
-            self.assertEqual(page.locator("#trade-strategy").input_value(), "RETOOL")
+            self.assertEqual(page.locator("#trade-strategy").input_value(), "")
             page.go_forward()
             page.get_by_role("link", name="Build trade").wait_for()
             page.get_by_role("link", name="Build trade").click()
@@ -125,7 +125,8 @@ class TradeDecisionBrowserTests(unittest.TestCase):
                 self.fixture.proposal(second),
                 {"sent": [], "received": [], "partner": 0},
             )
-            self.assertEqual(second.locator("#trade-strategy").input_value(), "RETOOL")
+            # A fresh tab starts from the franchise goal, not another tab's temporary strategy.
+            self.assertEqual(second.locator("#trade-strategy").input_value(), "")
             self.assertEqual(self.fixture.proposal(page), original)
             second.close()
 
@@ -192,7 +193,7 @@ class TradeDecisionBrowserTests(unittest.TestCase):
                 )
             )
 
-    def test_home_boundary_invalidates_proposal_but_not_strategy(self):
+    def test_home_boundary_ends_temporary_strategy_without_saving_a_goal(self):
         with self.fixture.page(390) as (page, _):
             home = (
                 '<div id="trade-home-boundary" data-workspace-context=\''
@@ -215,7 +216,7 @@ class TradeDecisionBrowserTests(unittest.TestCase):
             self.assertEqual(
                 self.fixture.proposal(page), {"sent": [], "received": [], "partner": 0}
             )
-            self.assertEqual(page.locator("#trade-strategy").input_value(), "REBUILD")
+            self.assertEqual(page.locator("#trade-strategy").input_value(), "")
 
     def test_explicit_generated_offer_after_home_imports_new_assets_not_ended_constraints(
         self,
@@ -264,7 +265,7 @@ class TradeDecisionBrowserTests(unittest.TestCase):
                 )
                 self.assertEqual(saved["adjustmentConstraints"], {})
                 self.assertEqual(
-                    page.locator("#trade-strategy").input_value(), "RETOOL"
+                    page.locator("#trade-strategy").input_value(), ""
                 )
                 page.reload()
                 page.locator("#trade-context").get_by_text(

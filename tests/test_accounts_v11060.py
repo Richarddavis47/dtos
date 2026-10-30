@@ -137,7 +137,7 @@ class LeagueSeriesAndScaleTests(unittest.IsolatedAsyncioTestCase):
             AccountStore(path)
             with closing(AccountStore(path).connect()) as connection:
                 versions = [row[0] for row in connection.execute("SELECT version FROM account_schema_migrations ORDER BY version")]
-            self.assertEqual(versions, [1, 2, 3])
+            self.assertEqual(versions, [1, 2, 3, 4])
 
     def test_continuing_six_seasons_form_one_series_without_name_matching(self) -> None:
         rows = [_league(str(year), year, previous=str(year - 1) if year > 2021 else None, name="Day Traders") for year in range(2021, 2027)]

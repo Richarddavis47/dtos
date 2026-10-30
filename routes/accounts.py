@@ -103,6 +103,32 @@ def _recovery_page(codes: list[str]) -> HTMLResponse:
 def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> APIRouter:
     router = APIRouter(tags=["accounts"])
 
+    @router.post('/account/franchise-goal')
+    async def save_franchise_goal(request: Request) -> Response:
+        from services.strategy_session import strategy_scope
+        from src.core.accounts.goal_store import GoalSaveError, save_goal
+        context = current_account()
+        if context is None:
+            return JSONResponse({'status': 'authentication_required'}, status_code=401, headers={'Cache-Control': 'no-store'})
+        if not _safe_browser_post(request) or len(await request.body()) > 4096:
+            return JSONResponse({'status': 'invalid_goal_form'}, status_code=422, headers={'Cache-Control': 'no-store'})
+        values = await _form(request)
+        if not _csrf(service, request, values.get('csrf_token', '')):
+            return JSONResponse({'status': 'csrf_rejected'}, status_code=403, headers={'Cache-Control': 'no-store'})
+        membership = context.membership
+        if (set(values) != {'strategy', 'expected_revision', 'league_id', 'roster_id', 'csrf_token', 'strategy_scope'}
+                or not membership or values['league_id'] != membership.league_id
+                or values['roster_id'] != str(membership.roster_id)
+                or values['strategy_scope'] != strategy_scope()):
+            return JSONResponse({'status': 'goal_scope_changed'}, status_code=403, headers={'Cache-Control': 'no-store'})
+        try:
+            revision = int(values['expected_revision']) if values['expected_revision'].isascii() and values['expected_revision'].isdigit() and len(values['expected_revision']) < 12 else -1
+            save_goal(service.store, context, values['strategy'], revision)
+        except GoalSaveError as error:
+            return _shell('Franchise goal unchanged', '<section class="card"><h2>Your goal was not changed</h2>'
+                f'<p>{escape(str(error))}</p><a class="btn" href="/teams/{membership.roster_id}">Reload My Team</a></section>', status_code=error.status)
+        return RedirectResponse(f'/teams/{membership.roster_id}?goal_saved=1', status_code=303, headers={'Cache-Control': 'no-store'})
+
     def activation_revision(context: Any) -> str:
         # Existing semantic account revision, not a source/retrieval clock or
         # another stored intent record. Even reselecting the same league updates it.

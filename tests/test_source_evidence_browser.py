@@ -155,7 +155,7 @@ class SourceEvidenceBrowserTests(unittest.TestCase):
                                     "Counterparty", exact=True
                                 ).select_option("2")
                                 page.get_by_label(
-                                    "Your strategy", exact=True
+                                    "Trade strategy", exact=True
                                 ).select_option("WIN NOW")
                                 page.locator(
                                     '#trade-sent-board button[data-asset-id="2028-R1-3"]'
