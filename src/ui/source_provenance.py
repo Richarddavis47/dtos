@@ -7,6 +7,21 @@ import json
 from src.core.projection_intelligence.sleeper_provider import source_update_time
 
 
+def projection_timing_text(evidence):
+    """Describe observation ages, not projection completeness or player ability."""
+    states = {str(value).casefold() for value in evidence.get("projection_freshness") or []}
+    parts = []
+    if "fresh" in states:
+        parts.append("Some projection observations are recent" if len(states) > 1 else "Projection observations are recent")
+    if "aging" in states:
+        parts.append("some are at least an hour old" if parts else "Projection observations are at least an hour old")
+    if "stale" in states:
+        parts.append("some are at least six hours old" if parts else "Projection observations are at least six hours old")
+    if not states or states - {"fresh", "aging", "stale"}:
+        parts.append("other update times are not verified" if parts else "Projection update times are not verified")
+    return "; ".join(parts) + "."
+
+
 def source_presentation(evidence, identity=None, *, now=None):
     """Keep complete original clocks separate from the short, qualified range."""
     from src.core.intelligence.roster_diagnostics import _now
@@ -23,9 +38,8 @@ def source_presentation(evidence, identity=None, *, now=None):
             unknown += 1
         else:
             valid.append(parsed)
-    states = ", ".join(evidence.get("projection_freshness") or ["Unavailable"])
     parts = [
-        f"Projection source observation: {states}",
+        "Projection updates: " + projection_timing_text(evidence).rstrip("."),
         f"{len(valid)} distinct source observations",
     ]
     if valid:
@@ -40,17 +54,16 @@ def source_presentation(evidence, identity=None, *, now=None):
         )
     if unknown or not original:
         parts.append(
-            "Unknown, invalid or future source clocks; provenance is incomplete"
+            "Some source update times cannot be verified; provenance is incomplete"
         )
     if evidence.get("refresh", {}).get("retained_publication"):
         parts.append(
             "Using retained projection evidence; latest refresh did not complete"
         )
     if evidence.get("conclusion_state") != "current":
-        parts.append(
-            "Numerical conclusions are "
-            + str(evidence.get("conclusion_state") or "unavailable")
-        )
+        parts.append("This comparison is provisional; freshness or player availability is not fully verified"
+                     if evidence.get("conclusion_state") == "provisional" else
+                     "A complete compatible lineup comparison cannot be verified")
     summary = (
         '<p class="diagnostic-source-summary">' + escape(" · ".join(parts)) + ".</p>"
     )

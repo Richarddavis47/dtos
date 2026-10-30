@@ -120,7 +120,9 @@ class SourceEvidencePresentationTests(unittest.TestCase):
                 )
                 self.assertEqual(evidence, before)
                 self.assertLess(len(summary), 600)
-                self.assertIn(state, summary)
+                self.assertIn({"Fresh": "observations are recent", "Aging": "at least an hour old",
+                               "Stale": "at least six hours old", "Unavailable": "update times are not verified"}[state], summary)
+                self.assertIn(state, details)
                 for stamp in stamps:
                     self.assertIn(stamp, details)
                 self.assertIn("exact-source", details)

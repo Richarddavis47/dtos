@@ -122,7 +122,17 @@
     el('personal-restart').disabled = busy || !ready || !initialized || !state.rows?.length;
     el('personal-reload').disabled = busy;
     const warnings = state.limitations || [];
-    el('personal-warnings').hidden = !warnings.length; el('personal-warnings').textContent = warnings.join(' ');
+    el('personal-warnings').hidden = !warnings.length;
+    el('personal-warnings').classList.toggle('is-neutral', !custom);
+    el('personal-warnings').textContent = !initialized
+      ? (state.rows?.length ? 'Create rankings to personalize. Neutral DTOS remains available; review the Market evidence below before setting up Custom.'
+        : 'No supported Market ranking assets are ready for Custom setup. Check Market or retry rankings; saved work has not been changed.')
+      : state.personal_available ? 'Custom values are ready with qualifications. Review the details before acting.'
+      : state.personal_partial_available
+        ? `${state.personal_value_count} saved assets have verified personal values. Other Custom values need more Market evidence; Neutral DTOS remains available. Your saved order is preserved.`
+        : 'Custom Trade values need more evidence. Neutral DTOS remains available, and your saved ranking work is preserved. Review the affected assets below.';
+    el('personal-warning-details').hidden = !warnings.length;
+    el('personal-warning-list').replaceChildren(...warnings.map(text => node('li', text)));
     renderCompatibility();
     const scope = state.account_scope || state.context || {};
     el('personal-scope').textContent = `League ${scope.league_id || 'unavailable'} · Franchise ${scope.roster_id || 'unavailable'} · ${state.eligible_asset_count ?? state.rows?.length ?? 0} eligible ranked assets${state.initialized ? ' · ' + (state.saved_asset_count ?? (state.rows || []).filter(row => row.custom_ranked).length) + ' saved ranking assets' : ''} · Revision ${state.revision || 0}`;

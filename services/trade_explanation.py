@@ -244,6 +244,12 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
             if saved:
                 presentation[key] = saved
     decision = presentation if result.get('decision_context') else None
+    multiweek = any(
+        name != 'current_week' and row.get('delta') is not None and len(row.get('weeks') or []) > 1
+        for side in admissions.values() for name, row in side['horizons'].items()
+    )
+    period_units = ('<p class="tw-horizon-units">Next-N and longer-period changes are totals across the listed weeks, not per-week averages. '
+                    'Team summaries labeled Average are per-week averages.</p>') if multiweek else ''
     if presentation and presentation.get('qualification'):
         qualifier = '<span class="tw-verdict-qualification">' + escape(presentation['qualification']) + '</span>'
         rendered = rendered.replace('</p>', qualifier + '</p>', 1)
@@ -276,7 +282,7 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
     primary = _decision_primary(result, decision, admissions)
     return (legacy[:split].replace('<p>', '<p class="tw-final-verdict">', 1) + primary
             + '<details class="tw-evaluation-detail"><summary>Full team, weekly and evaluator evidence</summary>'
-            + legacy[split:-len('</section>')] + '</details></section>')
+            + period_units + legacy[split:-len('</section>')] + '</details></section>')
 
 
 def _decision_primary(result, decision, admissions=None):

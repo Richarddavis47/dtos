@@ -742,6 +742,8 @@
     return numeric(period?.delta) && c.delta === period.delta && JSON.stringify(c.weeks) === JSON.stringify(period.weeks) ? period.delta : null;
   }
   function appendLineupComparisons(out, e, horizons, title, retained) {
+      if (Object.entries(horizons).some(([key,h]) => key !== 'current_week' && typeof h?.delta === 'number' && Number.isFinite(h.delta) && h.weeks?.length > 1))
+        out.append(node('small', 'Next-N and longer-period changes are totals across the listed weeks, not per-week averages.'));
       for (const [key, horizon] of Object.entries(horizons)) {
         if (!horizon || typeof horizon !== 'object') continue;
         const label = {current_week: 'Current week', next_n: 'Next-N', rest_of_regular_season: 'Rest of regular season', playoff_window: 'Playoff window'}[key] || key;
@@ -966,16 +968,26 @@
     button.onclick = () => { const detail = root.querySelector('.tw-strategy-detail'); if (detail?.tagName === 'DETAILS') detail.open = true; el('trade-strategy').focus(); };
     out.append(button);
   }
+  function projectionTimingText(evidence) {
+    const states = new Set((evidence.projection_freshness || []).map(value => String(value).toLowerCase())), parts = [];
+    if (states.has('fresh')) parts.push(states.size > 1 ? 'Some projection observations are recent' : 'Projection observations are recent');
+    if (states.has('aging')) parts.push(parts.length ? 'some are at least an hour old' : 'Projection observations are at least an hour old');
+    if (states.has('stale')) parts.push(parts.length ? 'some are at least six hours old' : 'Projection observations are at least six hours old');
+    if (!states.size || [...states].some(value => !['fresh','aging','stale'].includes(value))) parts.push(parts.length ? 'other update times are not verified' : 'Projection update times are not verified');
+    return parts.join('; ');
+  }
   function sourceProvenance(evidence, identity) {
     // Presentation only: canonical qualification remains authoritative.
     const original = [...new Set((evidence.source_observations || []).map(String))];
     const valid = original.map(t => /(?:Z|[+-]\d{2}:\d{2})$/.test(t) ? Date.parse(t) : NaN).filter(t => Number.isFinite(t) && t <= Date.now()).sort((a,b) => a-b);
     const label = t => new Date(t).toISOString().replace('T', ' ').slice(0,16) + ' UTC';
-    const parts = ['Projection source observation: ' + (evidence.projection_freshness || ['Unavailable']).join(', '), valid.length + ' distinct source observations'];
+    const parts = ['Projection updates: ' + projectionTimingText(evidence), valid.length + ' distinct source observations'];
     if (valid.length) parts.push(valid.length === 1 ? 'Observed ' + label(valid[0]) : 'Earliest ' + label(valid[0]) + '; latest ' + label(valid[valid.length-1]));
-    if (valid.length !== original.length || !original.length) parts.push('Unknown, invalid or future source clocks; provenance is incomplete');
+    if (valid.length !== original.length || !original.length) parts.push('Some source update times cannot be verified; provenance is incomplete');
     if (evidence.refresh?.retained_publication) parts.push('Using retained projection evidence; latest refresh did not complete');
-    if (evidence.conclusion_state !== 'current') parts.push('Numerical conclusions are ' + (evidence.conclusion_state || 'unavailable'));
+    if (evidence.conclusion_state !== 'current') parts.push(evidence.conclusion_state === 'provisional'
+      ? 'This comparison is provisional; freshness or player availability is not fully verified'
+      : 'A complete compatible lineup comparison cannot be verified');
     const summary = node('p', parts.join(' · ') + '.', 'diagnostic-source-summary');
     const detail = node('details', '', 'diagnostic-source-provenance');
     detail.append(node('summary', 'Detailed source provenance'), node('p', 'Original source observations; retrieval and refresh attempts do not reset source age. Fresh before 1 hour; Aging from 1 hour; Stale from 6 hours.'));

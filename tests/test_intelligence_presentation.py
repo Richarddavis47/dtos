@@ -8,7 +8,7 @@ from src.ui.intelligence_presentation import (
 
 class IntelligencePresentationTests(unittest.TestCase):
     def test_statuses_are_human_readable(self):
-        self.assertEqual("Completed with pending season", human_status("completed_with_pending"))
+        self.assertEqual("Completed seasons ready; more evidence pending", human_status("completed_with_pending"))
         self.assertEqual("Identity not verified", human_status("unresolved"))
 
     def test_missing_values_explain_availability(self):

@@ -59,9 +59,12 @@ class DiagnosticAgingBrowserTests(unittest.TestCase):
                                 ).first
                                 summary.focus()
                                 page.keyboard.press("Enter")
-                                self.assertIn(label, room.inner_text())
+                                self.assertIn({"Fresh": "observations are recent", "Aging": "at least an hour old",
+                                               "Stale": "at least six hours old"}[label], room.inner_text())
+                                original = json.loads(room.locator('.diagnostic-source-provenance pre').first.text_content())
+                                self.assertEqual(original['projection_freshness'], [label])
                                 self.assertIn(
-                                    "Projection source observation:", room.inner_text()
+                                    "Projection updates:", room.inner_text()
                                 )
                                 self.assertNotIn("remove_one", room.inner_text())
                                 self.assertLessEqual(
