@@ -776,6 +776,11 @@ def prepared_diagnostics(data, snapshot=None, *, projection_reader=None):
 def diagnose_league(data, snapshot=None, *, projection_reader=None):
     snapshot = projection_snapshot(data) if snapshot is None else snapshot
     inputs = diagnostic_inputs(data, snapshot)
+    return _diagnose_inputs(data, snapshot, inputs, projection_reader)
+
+
+def _diagnose_inputs(data, snapshot, inputs, projection_reader):
+    """Consume inputs prepared by this call, never a caller-supplied cache key."""
     key = _identity(inputs, snapshot)
     saved = diagnostic_store.get(key)
     if saved is None:
@@ -793,6 +798,11 @@ def team_diagnostics(
     data, roster_id, snapshot=None, *, strategy=None, projection_reader=None
 ):
     league = diagnose_league(data, snapshot, projection_reader=projection_reader)
+    return _team_from_league(data, roster_id, snapshot, strategy, league)
+
+
+def _team_from_league(data, roster_id, snapshot, strategy, league):
+    """Copy one team's view from the same already-qualified league result."""
     row = deepcopy(
         league["teams"].get(
             str(roster_id),
@@ -874,10 +884,9 @@ def package_diagnostics(
     data, proposal, snapshot, impact, strategies, *, projection_reader=None
 ):
     """All players move together; existing capacity/horizon gates stay authoritative."""
-    baseline = diagnose_league(data, snapshot, projection_reader=projection_reader)
-    lid, week, slots, admitted, pools, _, _, qualification = diagnostic_inputs(
-        data, snapshot
-    )
+    inputs = diagnostic_inputs(data, snapshot)
+    baseline = _diagnose_inputs(data, snapshot, inputs, projection_reader)
+    lid, week, slots, admitted, pools, _, _, qualification = inputs
     teams = {str(t.get("roster_id")): t for t in data.get("teams") or []}
     active, partner = str(proposal.active_roster_id), str(proposal.partner_roster_id)
     sent = {
@@ -923,6 +932,13 @@ def package_diagnostics(
     qualification = _qualification(
         data, snapshot, slots, projection_reader=projection_reader
     )
+    # A failed refresh can qualify an unchanged publication during assembly.
+    # Keep both pre-views at this latest qualification boundary, without
+    # decoding/rebuilding the same league inputs separately for each team.
+    baseline = _requalify(
+        {**baseline, "teams": {rid: row for rid, row in baseline["teams"].items()
+                              if rid in {active, partner}}}, qualification
+    )
     by_id = {p["id"]: p for pool in pools.values() for p in pool}
     solver = SearchLineupMemo(("diagnostics", lid, baseline["generation"]))
     result = {
@@ -966,12 +982,8 @@ def package_diagnostics(
         ("active", active, sent, received),
         ("partner", partner, received, sent),
     ):
-        before = team_diagnostics(
-            data,
-            rid,
-            snapshot,
-            strategy=strategies.get(rid) or teams[rid].get("strategy"),
-            projection_reader=projection_reader,
+        before = _team_from_league(
+            data, rid, snapshot, strategies.get(rid) or teams[rid].get("strategy"), baseline
         )
         pool = post_pools[rid]
         post_evidence = deepcopy(
