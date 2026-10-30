@@ -76,6 +76,7 @@ def generate_proposals(
     search_diagnostics: dict | None = None,
     return_preference: dict | None = None,
     search_phase: int = 0,
+    candidate_admission=None,
 ) -> tuple[TradeProposal, ...]:
     if construction_only:
         if required_sent_asset_id and required_received_asset_id:
@@ -86,6 +87,7 @@ def generate_proposals(
                 active_roster_id, partner_roster_id, outgoing_pool, incoming_pool,
                 required_received_asset_id, search_diagnostics, search_phase=search_phase,
                 required_outgoing_id=required_sent_asset_id,
+                candidate_admission=candidate_admission,
             )
         if required_sent_asset_id:
             # Search the other side's bounded return pool around the owned
@@ -170,7 +172,7 @@ def _diverse_shortlist(pool, target, limit=12):
     return tuple(selected)
 
 
-def _canonical_candidates(active_id, partner_id, outgoing_pool, incoming_pool, target_id, diagnostics=None, return_preference=None, search_phase=0, *, required_outgoing_id=None):
+def _canonical_candidates(active_id, partner_id, outgoing_pool, incoming_pool, target_id, diagnostics=None, return_preference=None, search_phase=0, *, required_outgoing_id=None, candidate_admission=None):
     """Bounded Trade For search ordering, never a valuation/acceptance decision.
 
     Raw acquisition-price distance orders a bounded shortlist per shape and phase.
@@ -219,12 +221,20 @@ def _canonical_candidates(active_id, partner_id, outgoing_pool, incoming_pool, t
                       if not return_preference or return_preference['name'] != 'position_need' or any(a.position == return_preference['position'] for a in sent)]
         receives = [(received, price, ids) for received, price, ids in valued(incoming, received_count, received_packages)
                     if _matches(received, received_kind) and target_id in ids]
+        signatures = {}
+        if candidate_admission is not None:
+            for owner, packages in ((active_id, sends), (partner_id, receives)):
+                for assets, _, ids in packages:
+                    signatures[owner, ids] = candidate_admission.signature(assets, owner)
         best = []
         nearest = []
         shape_count = len(sends) * len(receives)
         pair_count += shape_count
         for sent, sent_price, sent_ids in sends:
             for received, received_price, received_ids in receives:
+                if candidate_admission is not None and not candidate_admission.allows_signatures(
+                        active_id, partner_id, signatures[active_id, sent_ids], signatures[partner_id, received_ids]):
+                    continue
                 key = (abs(sent_price - received_price), sent_ids, received_ids)
                 if len(best) < per_shape or key < best[-1][0]:
                     best.append((key, sent, received))

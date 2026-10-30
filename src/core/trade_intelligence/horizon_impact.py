@@ -3,6 +3,7 @@ from copy import deepcopy
 from decimal import Decimal
 
 from src.core.intelligence.team_strength import compatible_profile, canonical_rosters, prepare_team_strength
+from src.core.trade_intelligence.roster_space import capacity_evidence
 
 
 class PinnedProjectionReader:
@@ -77,16 +78,9 @@ def evaluate_horizon_impact(data, proposal, service):
     for label, rid in (('active', active), ('partner', partner)):
         pre_team, post_team = pre['teams'][rid], post['teams'][rid]
         ordinal = 0 if label == 'active' else 1
-        capacity = len([slot for slot in data['league']['roster_positions'] if slot.upper() not in ('IR', 'TAXI', 'RESERVE')])
-        def active_count(row):
-            return len(set(row['players']) - set(row['reserve']) - set(row['taxi']))
         sides[label] = {
             'roster_id': rid,
-            'roster_capacity': {'configured_active_slots': capacity,
-                'pre_active_players': active_count(before[ordinal]),
-                'post_active_players': active_count(after[ordinal]),
-                'additional_spots_to_resolve': max(0, active_count(after[ordinal]) - capacity),
-                'meaning': 'configured active roster pressure; cut selection and temporary league exceptions not inferred'},
+            'roster_capacity': capacity_evidence(before[ordinal], after[ordinal], data['league']['roster_positions']),
             'horizons': {name: {
                 'pre_total': horizon['total'], 'post_total': post_team['horizons'][name]['total'],
                 'delta': _delta(horizon['total'], post_team['horizons'][name]['total']),

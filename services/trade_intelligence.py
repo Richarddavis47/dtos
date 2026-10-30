@@ -1572,6 +1572,8 @@ def _generate_recommended(data, payload):
     workspace = build_trade_workspace(data, int(payload.get('active_roster_id') or 0))
     workspace = personal_workspace(workspace, payload)
     _requested_strategy(workspace, payload)
+    from services.trade_candidate_admission import admit_workspace
+    workspace = admit_workspace(data, workspace, reader.snapshot())
     assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
     projection_available = bool(reader.snapshot() and str(reader.snapshot().get('league_id')) == str(workspace['manager_context'].league_id))
     evidence_context = build_trade_evidence_context(data, assets.values())
@@ -1581,6 +1583,7 @@ def _generate_recommended(data, payload):
     tag = {'win_now': 'WIN-NOW OPPORTUNITY', 'value': 'VALUE OPPORTUNITY', 'roster_fit': 'ROSTER CONSTRUCTION',
            'future': 'FUTURE VALUE'}.get(selected_filter)
     discoveries = []
+    preparation_seconds = perf_counter() - started
     for phase in range(3):
         discovery = discover(data, workspace, reader, protected, excluded, max_theses=(6, 24, 48)[phase],
                              excluded_families=excluded_families, search_phase=phase)
@@ -1621,8 +1624,10 @@ def _generate_recommended(data, payload):
         if len(results) >= 5 or len(seen) >= funnel.budget or not projection_available:
             break
     results = personal_order(diverse_rows(evaluated, assets), personal_context(payload))
+    verification_started = perf_counter()
     if _trade_search_boundary(data) != boundary:
         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
+    verification_seconds = perf_counter() - verification_started
     guidance = None if results else zero_result_guidance(funnel, discoveries, workspace, projection_available=projection_available)
     return {'workflow': 'recommended', 'count': len(results), 'results': results,
             'exploratory_results': funnel.explore(assets, excluded_families=excluded_families),
@@ -1632,10 +1637,12 @@ def _generate_recommended(data, payload):
             'recommendation_filter': selected_filter, 'discovery': discovery,
             'has_more': bool(results and projection_available and (discovery.get('omitted_theses') or len(evaluated) > len(results) or phase < 2)),
             'search_evidence': {**funnel.result(len(results)), 'stages': funnel.stages, 'phases': len(discoveries),
+                'construction_admission': workspace['candidate_admission'].summary(),
                 'full_evaluations': len(seen), 'packages_constructed': constructed,
                 'qualifying_before_session_filter': funnel.counts['eligible'] + funnel.counts['filtered'],
-                'timings_seconds': {'discovery': sum(d['discovery_seconds'] for d in discoveries), 'candidate_generation': construction_seconds,
-                    'shared_evaluation': evaluation_seconds, 'reason_derivation': derivation_seconds, 'total_workflow': perf_counter() - started},
+                'timings_seconds': {'preparation': preparation_seconds, 'discovery': sum(d['discovery_seconds'] for d in discoveries), 'candidate_generation': construction_seconds,
+                    'shared_evaluation': evaluation_seconds, 'reason_derivation': derivation_seconds,
+                    'publication_verification': verification_seconds, 'total_workflow': perf_counter() - started},
                 'bounded': True, 'projection_weeks_read': len(reader.weeks), 'provider_requests': 0,
                 'reuse': reader.lineup_memo.status(),
                 'raw_history_scans': 0, 'durable_writes': 0},
