@@ -1555,7 +1555,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
 def _generate_recommended(data, payload):
     """Progressive bounded discovery with actual evaluated near misses."""
     payload = generated_personal_payload(payload)
-    from services.recommended_trade_search import session_constraints, discover, construct, family_identity, surface_evidence
+    from services.recommended_trade_search import session_constraints, discover, construct, family_identity, surface_evidence, zero_result_guidance
     from services.trade_search_policy import SearchFunnel, diverse_rows, result_state
     started = perf_counter()
     selected_filter, excluded_families = session_constraints(payload)
@@ -1623,12 +1623,12 @@ def _generate_recommended(data, payload):
     results = personal_order(diverse_rows(evaluated, assets), personal_context(payload))
     if _trade_search_boundary(data) != boundary:
         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
+    guidance = None if results else zero_result_guidance(funnel, discoveries, workspace, projection_available=projection_available)
     return {'workflow': 'recommended', 'count': len(results), 'results': results,
             'exploratory_results': funnel.explore(assets, excluded_families=excluded_families),
             'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results), 'near_misses': funnel.near(),
-            'quiet_state': None if results else 'Canonical projection evidence is unavailable for this league.' if not projection_available
-                else 'Required trade evidence is unavailable; review the evaluated near misses.' if result_state(funnel, results) == 'MISSING REQUIRED EVIDENCE'
-                else 'No credible result within the bounded search and current filters. Review evaluated near misses.',
+            'quiet_state': guidance['message'] if guidance else None,
+            'zero_result_guidance': guidance,
             'recommendation_filter': selected_filter, 'discovery': discovery,
             'has_more': bool(results and projection_available and (discovery.get('omitted_theses') or len(evaluated) > len(results) or phase < 2)),
             'search_evidence': {**funnel.result(len(results)), 'stages': funnel.stages, 'phases': len(discoveries),

@@ -78,6 +78,15 @@ def generate_proposals(
     search_phase: int = 0,
 ) -> tuple[TradeProposal, ...]:
     if construction_only:
+        if required_sent_asset_id and required_received_asset_id:
+            # A discovery thesis fixes BOTH primary assets. Enforce the sale
+            # before the bounded proximity selection, rather than discarding
+            # unrelated selected packages after they consumed its shape slots.
+            return _canonical_candidates(
+                active_roster_id, partner_roster_id, outgoing_pool, incoming_pool,
+                required_received_asset_id, search_diagnostics, search_phase=search_phase,
+                required_outgoing_id=required_sent_asset_id,
+            )
         if required_sent_asset_id:
             # Search the other side's bounded return pool around the owned
             # shopped asset, then restore the canonical user perspective.
@@ -161,7 +170,7 @@ def _diverse_shortlist(pool, target, limit=12):
     return tuple(selected)
 
 
-def _canonical_candidates(active_id, partner_id, outgoing_pool, incoming_pool, target_id, diagnostics=None, return_preference=None, search_phase=0):
+def _canonical_candidates(active_id, partner_id, outgoing_pool, incoming_pool, target_id, diagnostics=None, return_preference=None, search_phase=0, *, required_outgoing_id=None):
     """Bounded Trade For search ordering, never a valuation/acceptance decision.
 
     Raw acquisition-price distance orders a bounded shortlist per shape and phase.
@@ -176,6 +185,15 @@ def _canonical_candidates(active_id, partner_id, outgoing_pool, incoming_pool, t
     pool_limit = (12, 18, 24)[min(search_phase, 2)]
     per_shape = (1, 4, 8)[min(search_phase, 2)]
     outgoing = _diverse_shortlist(outgoing_pool, target, pool_limit)
+    if required_outgoing_id:
+        required = next((a for a in outgoing_pool if a.asset_id == required_outgoing_id
+                         and a.trade_value is not None), None)
+        if required is None:
+            if diagnostics is not None:
+                diagnostics.update(unavailable_outgoing_price=True, constructed_candidates=0)
+            return ()
+        if required not in outgoing:
+            outgoing = (*outgoing[:pool_limit - 1], required)
     incoming = (target, *_diverse_shortlist(tuple(a for a in incoming_pool if a.asset_id != target_id), target, pool_limit - 1))
     proposals, seen = [], set()
     pair_count = 0
@@ -196,6 +214,7 @@ def _canonical_candidates(active_id, partner_id, outgoing_pool, incoming_pool, t
     for label, sent_count, received_count, sent_kind, received_kind in shapes:
         sends = [(sent, price, ids) for sent, price, ids in valued(outgoing, sent_count, sent_packages)
                       if _matches(sent, sent_kind)
+                      if required_outgoing_id is None or required_outgoing_id in ids
                       if not return_preference or return_preference['name'] != 'draft_capital' or any(a.kind == 'pick' for a in sent)
                       if not return_preference or return_preference['name'] != 'position_need' or any(a.position == return_preference['position'] for a in sent)]
         receives = [(received, price, ids) for received, price, ids in valued(incoming, received_count, received_packages)

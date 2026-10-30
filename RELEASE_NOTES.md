@@ -1,3 +1,13 @@
+# v1.21.114 / build 2214 — Rebuild trade discovery
+
+Recommended Trades now covers more supported production-for-capital opportunities. Rebuild searches several exact pick maturities/rounds, retains the intended outgoing player before bounded package pruning and gives mixed returns room within the existing candidate budget. Buyer utility and own lineup costs precede a late age tie-break; age never sets a price or forces a sale.
+
+Zero-result searches explain the main assessed limit and may identify an already-supported player to review in Shop Asset. These leads are explicitly not qualified offers. Counterparty-limited and rejected alternatives retain the existing final verdict hierarchy.
+
+No changes to recommendation thresholds, Neutral/Custom valuations, exact picks, projections, legal lineups, historical grades, saved preferences, navigation or public/account behavior. No new provider calls, permanent storage, background work or infrastructure. Full-evaluation budget remains 180; existing phase, pool and package caps remain unchanged.
+
+See docs/audits/REBUILD_DISCOVERY_2214.md for source tracing, live-versus-fixture evidence, preservation controls and limits. Release is conditional on the complete canonical, Product, security and resource validation against the final source tree.
+
 # v1.21.113 / build 2213 — Custom Trade readiness and compatible Market recovery
 
 Keep Custom Rankings and Trade readiness aligned after Market verifies that new prepared inputs reproduce its existing complete semantic generation. Admit that one verified input marker without rebinding original build provenance, changing prices or reconstructing the personal rank-slot curve. Pending, failed, superseded and genuinely different evidence still requires its existing qualification or a new publication.
