@@ -185,7 +185,10 @@ class StrategyStateBrowserTests(unittest.TestCase):
             browser = launch_chromium(pw, headless=True)
             try:
                 page, records, _, errors, _ = self.page(browser, f)
-                page.goto(page._test_origin + "/teams/1")
+                page.goto(page._test_origin + "/teams/1?goal_saved=1")
+                self.assertEqual(
+                    page.locator("#my-team-strategy-feedback").inner_text(), ""
+                )
                 page.select_option("#my-team-strategy", "REBUILD")
                 self.assertEqual(self.rows(f), [])
                 self.assertIn(
@@ -312,6 +315,14 @@ class StrategyStateBrowserTests(unittest.TestCase):
                     page.goto(page._test_origin + "/teams/1")
                     select = page.locator("#my-team-strategy")
                     self.assertEqual(select.input_value(), "")
+                    for choice in ("", "WIN NOW", "RETOOL", "REBUILD"):
+                        select.select_option(choice)
+                        fit = select.evaluate(
+                            """e=>{const s=getComputedStyle(e), c=document.createElement('canvas').getContext('2d');c.font=s.font;return {required:c.measureText(e.selectedOptions[0].text).width+parseFloat(s.paddingLeft)+parseFloat(s.paddingRight)+28,width:e.clientWidth}}"""
+                        )
+                        self.assertLessEqual(
+                            fit["required"], fit["width"], (width, choice, fit)
+                        )
                     select.select_option("REBUILD")
                     save = page.locator("#my-team-save-goal")
                     save.scroll_into_view_if_needed()

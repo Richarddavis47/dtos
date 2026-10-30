@@ -106,6 +106,8 @@ class StrategyStateHTTPTests(unittest.TestCase):
         self.assertEqual(self.post(form).status_code, 409)
         for fields, status in (
             ({"strategy": "guaranteed winner", "expected_revision": "1"}, 422),
+            ({"expected_revision": "²"}, 422),
+            ({"expected_revision": "not a revision"}, 422),
             ({"csrf_token": "wrong"}, 403),
             ({"roster_id": "2"}, 403),
             ({"league_id": "foreign"}, 403),

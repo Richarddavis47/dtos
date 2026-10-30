@@ -122,7 +122,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
                 or values['strategy_scope'] != strategy_scope()):
             return JSONResponse({'status': 'goal_scope_changed'}, status_code=403, headers={'Cache-Control': 'no-store'})
         try:
-            revision = int(values['expected_revision']) if values['expected_revision'].isdigit() and len(values['expected_revision']) < 12 else -1
+            revision = int(values['expected_revision']) if values['expected_revision'].isascii() and values['expected_revision'].isdigit() and len(values['expected_revision']) < 12 else -1
             save_goal(service.store, context, values['strategy'], revision)
         except GoalSaveError as error:
             return _shell('Franchise goal unchanged', '<section class="card"><h2>Your goal was not changed</h2>'
