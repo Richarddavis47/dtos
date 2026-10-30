@@ -1,3 +1,11 @@
+# v1.22.2 / build 2217 — Trade search diagnostic reuse
+
+Remove repeated preparation, decoding and qualification of identical pre-trade league diagnostics within each package evaluation. Reuse one same-call baseline for both team views, independently construct and qualify post-trade rosters, and retain the latest refresh/freshness qualification for both sides.
+
+Preserve every candidate, full evaluator, legal-lineup solve, search cap, ownership/capacity rule and final verdict. No new cross-request cache, provider calls, persistence or concurrency change. Cold Market preparation and non-preemptive synchronous cancellation remain explicitly qualified; this is not a new readiness policy or instant-cancellation mechanism.
+
+See docs/audits/TRADE_RESPONSE_2217.md for source tracing, controlled comparison requirements and limitations.
+
 # v1.22.1 / build 2216 — Rebuild roster-space and ownership integrity
 
 Keep known roster-space and ownership blockers out of Recommended Trades before bounded package selection and expensive evaluation. Use the existing configured active-roster rules, exact player/pick ownership and compatible prepared lineup evidence. Consider legal balancing player-plus-pick packages within unchanged search caps; never assume drops, IR/taxi moves or extra roster slots.
