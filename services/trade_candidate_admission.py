@@ -7,8 +7,11 @@ Incoming players are active; no implicit cuts, IR/taxi moves or exceptions.
 from collections import Counter
 
 from src.core.intelligence.team_strength import canonical_rosters, compatible_profile
-from src.core.trade_intelligence.capital_assessment import pick_identity_errors
-from src.core.trade_intelligence.roster_space import active_player_ids, configured_active_slots
+from src.core.intelligence import (
+    trade_pick_identity_errors as pick_identity_errors,
+    trade_active_player_ids as active_player_ids,
+    trade_configured_active_slots as configured_active_slots,
+)
 
 
 class CandidateAdmission:
