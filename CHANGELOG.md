@@ -1,5 +1,11 @@
 # v1.21.112 / build 2212 — Customer clarity and accessible Back
 
+## v1.21.113 / build 2213
+
+- Reconcile prepared Custom admission only after an exact canonical semantic-generation match; preserve immutable prices and build provenance.
+- Provide an explicit prepared-evidence reload without resetting rankings or entered offers.
+- Preserve exact partial rank slots, Neutral independence, source fences, security and resource controls.
+
 Keep the existing contextual Back link available after its header scrolls away, using a compact top strip and a reserved header slot. Preserve its DOM/tab order, focus, existing history and authorization checks, five-tab navigation and Trade workspace/fresh-entry behavior. The top strip blocks clicks on obscured content. No scroll-triggered requests or additional navigation history.
 
 Explain projection-source timing in plain English, separate completed historical seasons from pending evidence, and show concise mode-aware Custom warnings with their full original limitations still available through disclosure. Label supported multiweek Trade lineup changes as totals rather than per-week averages. Preserve existing number formatting, unrounded comparisons, canonical facts, prices, projections, legal lineups, strategy/verdicts, grades and saved preferences.

@@ -197,6 +197,9 @@ class AssetMarket:
         self._prepared_input_marker = AssetMarketCache.request_marker(
             data, state, store, league_id,
         )
+        # Build provenance remains pinned above. This single bounded admission
+        # may advance only when the cache proves the durable generation equal.
+        self._admitted_input_marker = self._prepared_input_marker
         # A loaded artifact must report the historical identity captured when
         # that immutable generation was built.  Reading the live store here
         # would relabel retained build provenance after an unrelated history
@@ -276,10 +279,11 @@ class AssetMarket:
         """Compare prepared input identity without building or reading providers.
 
         Provider publications have no top-level generation timestamp. The
-        existing cache marker covers the prepared valuation generation and
+        cache-admitted marker covers the prepared valuation generation and
         canonical ownership/universe revisions, excluding observational clocks.
+        Equivalent input admission never rewrites original build provenance.
         """
-        return self._prepared_input_marker == AssetMarketCache.request_marker(
+        return self._admitted_input_marker == AssetMarketCache.request_marker(
             data, self.state, self.store, self.league_id,
         )
 
@@ -1630,6 +1634,10 @@ class AssetMarketCache:
                 self.hits += 1
                 self.noop_rebuild_requests += 1
                 self.construction_admission_skips += 1
+                # All canonical universe, value, ownership and provider
+                # digests matched. Reuse the immutable prices/provenance while
+                # admitting the newly verified inputs to prepared consumers.
+                self._market._admitted_input_marker = request_marker
                 self._request_marker = request_marker
                 self._requested_generation = generation
                 self._artifact_compatibility = "compatible"
