@@ -20,6 +20,9 @@ MAX_RANKED_ASSETS = 10_000
 MAX_DOCUMENT_BYTES = 512 * 1024
 _PLAYER = re.compile(r"player:[A-Za-z0-9_-]{1,80}\Z")
 _PICK = re.compile(r"pick:[1-9][0-9]{3}:[1-9][0-9]?:[1-9][0-9]{0,9}\Z")
+ABSOLUTE_METHOD = 'personal-current-market-slot-curve-v1'
+RELATIVE_METHOD = 'personal-relative-priced-order-v1'
+VALUATION_METHODS = {ABSOLUTE_METHOD, RELATIVE_METHOD}
 _FIELDS = {"schema", "baseline", "order", "tiers", "preferences", "mode"}
 _FLAG_FIELDS = {"target", "avoid", "protect"}
 _BASELINE_FIELDS = {"generation", "ids", "source_generation", "source_semantic_generation"}
@@ -55,9 +58,11 @@ def encode_document(document: dict[str, Any]) -> str:
     rows.  The separate 512 KiB serialized bound also applies to preferences.
     Tiers are breaks *before* exact assets, not numeric valuation multipliers.
     """
-    if not isinstance(document, dict) or set(document) - _FIELDS:
+    schema = document.get('schema', 1) if isinstance(document, dict) else None
+    fields = _FIELDS | ({'valuation_method', 'method_review'} if schema == 2 else set())
+    if not isinstance(document, dict) or set(document) - fields:
         raise PersonalDocumentError("Use the supported ranking intent fields only.")
-    if type(document.get("schema", 1)) is not int or document.get("schema", 1) != 1:
+    if type(schema) is not int or schema not in (1, 2):
         raise PersonalDocumentError("Unsupported personal rankings schema.")
     baseline = document.get("baseline")
     if (not isinstance(baseline, dict) or not {"generation", "ids"} <= set(baseline)
@@ -95,11 +100,29 @@ def encode_document(document: dict[str, Any]) -> str:
             raise PersonalDocumentError("Use supported non-conflicting exact-asset preference flags.")
     if document.get("mode", "neutral") not in ("neutral", "custom"):
         raise PersonalDocumentError("Choose Neutral DTOS or Custom DTOS.")
+    if schema == 2:
+        if not isinstance(document.get('valuation_method'), str) or document['valuation_method'] not in VALUATION_METHODS:
+            raise PersonalDocumentError('Unsupported Custom valuation method or version.')
+        review = document.get('method_review')
+        if (not isinstance(review, dict)
+                or set(review) != {'generation', 'source_generation', 'generated_at', 'priced_ids', 'value_digest'}
+                or any(not isinstance(review.get(k), str) or not review[k] or len(review[k]) > 256
+                       for k in ('generation', 'source_generation', 'value_digest'))
+                or review.get('generated_at') is not None and
+                   (not isinstance(review['generated_at'], str) or len(review['generated_at']) > 128)
+                or not isinstance(review.get('priced_ids'), list)
+                or len(review['priced_ids']) > len(ids)
+                or any(not _asset_id(k) for k in review['priced_ids'])
+                or len(set(review['priced_ids'])) != len(review['priced_ids'])
+                or not set(review['priced_ids']) <= set(ids)):
+            raise PersonalDocumentError('Use a complete bounded valuation review reference.')
     # A canonical roundtrip both bounds storage and separates caller-owned
     # mutable objects from the serialized document actually committed.
-    normalized = {"schema": 1, "baseline": baseline, "order": order,
+    normalized = {"schema": schema, "baseline": baseline, "order": order,
                   "tiers": tiers, "preferences": preferences,
                   "mode": document.get("mode", "neutral")}
+    if schema == 2:
+        normalized.update(valuation_method=document['valuation_method'], method_review=document['method_review'])
     encoded = json.dumps(normalized, separators=(",", ":"), sort_keys=True, allow_nan=False)
     if len(encoded.encode("utf-8")) > MAX_DOCUMENT_BYTES:
         raise PersonalDocumentError("Personal rankings exceed the 512 KiB saved-intent limit; no changes were saved.")

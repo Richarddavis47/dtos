@@ -1556,6 +1556,11 @@
       edit.href = needsReview ? '/account/my-dtos#personal-compatibility' : '/account/my-dtos';
       const help = node('details'); help.append(node('summary', 'About valuations'), node('p', 'Neutral Market and Sleeper lineup facts stay unchanged. Custom DTOS uses your saved ranking values for your decision.'));
       panel.append(label, select);
+      if (p.method_label) panel.append(node('p', `Custom pricing: ${p.method_label}. Neutral Market is separate.`, 'muted'));
+      if (p.method_review?.publication_changed) {
+        const review = node('a', 'Review Custom pricing after the Market update'); review.href = '/account/my-dtos';
+        panel.append(node('p', p.method_review.message, 'muted'), review);
+      }
       if (needsReview || p.available !== true) panel.append(edit); else help.append(edit);
       if (p.personal_partial_available) panel.append(node('p', `${p.personal_value_count} saved assets have verified Custom values. Only supported packages can be assessed.`, 'muted'));
       if (p.available !== true) panel.append(node('p', !(p.revision > 0)
