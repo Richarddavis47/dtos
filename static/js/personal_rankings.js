@@ -156,12 +156,12 @@
   function render(focusKey, scrollTop, rowTop) {
     if (!state) return;
     const initialized = Boolean(state.initialized), custom = state.mode === 'custom', rankedCount = savedRankCount();
-    el('personal-active-method').textContent = `${state.method_label || 'Absolute Slot'} · active Custom pricing method`;
+    el('personal-active-method').textContent = `Custom pricing: ${state.method_label || 'Absolute Slot'} · compare methods`;
     el('personal-method-preview').disabled = busy || !ready || !initialized;
     el('personal-method-select').disabled = busy || !ready || !initialized;
     const review = state.method_review;
     el('personal-publication-review').hidden = !review?.publication_changed;
-    el('personal-publication-review').textContent = review?.publication_changed ? `${review.message} Since the last review: ${review.added_count} newly priced; ${review.removed_count} no longer priced. Use Preview method to review the current evidence.` : '';
+    el('personal-publication-review').textContent = review?.publication_changed ? `${review.message} Since the last review: ${review.added_count} newly priced; ${review.removed_count} no longer priced. Open Custom pricing above to review the current evidence.` : '';
     el('personal-neutral').setAttribute('aria-pressed', String(!custom));
     el('personal-custom').setAttribute('aria-pressed', String(custom));
     el('personal-neutral').disabled = busy || !ready; el('personal-custom').disabled = busy || !ready;

@@ -87,12 +87,12 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
 <section id="my-dtos" class="personal-rankings" aria-labelledby="my-dtos-heading">
 <div class="personal-heading"><h1 id="my-dtos-heading">My DTOS</h1><a class="btn" href="/account">Account</a></div>
 <div class="personal-mode" role="group" aria-label="DTOS valuation mode"><button class="btn" id="personal-neutral" type="button" aria-pressed="true" disabled>Neutral DTOS</button><button class="btn" id="personal-custom" type="button" aria-pressed="false" disabled>Custom DTOS</button></div>
-<section class="personal-method-choice" aria-labelledby="personal-method-heading">
-<h2 id="personal-method-heading">Custom pricing method</h2><p id="personal-active-method">Absolute Slot · existing default</p>
+<details class="personal-method-choice" id="personal-method-choice">
+<summary id="personal-active-method">Custom pricing: Absolute Slot · compare methods</summary>
 <p>Separate from Neutral or Custom mode. Compare before changing; your saved ranking order and choices stay intact.</p>
 <div class="personal-actions"><label for="personal-method-select">Compare with<select id="personal-method-select"><option value="personal-relative-priced-order-v1">Relative</option><option value="personal-current-market-slot-curve-v1">Absolute</option></select></label><button class="btn" id="personal-method-preview" type="button" disabled>Preview method</button></div>
+</details>
 <p id="personal-publication-review" class="personal-qualification" hidden></p>
-</section>
 <button class="btn personal-start" id="personal-initialize" type="button" hidden>Create Custom Rankings</button>
 <div class="personal-filters"><label for="personal-search">Search assets<input id="personal-search" type="search" placeholder="Player, year or franchise" autocomplete="off"></label><label for="personal-position">Position<select id="personal-position"><option value="">Overall · players and picks</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option><option value="PICK">Draft picks</option></select></label></div>
 <nav class="personal-pagination" aria-label="Ranking pages"><button class="btn" id="personal-previous" type="button" disabled>Previous</button><span id="personal-page"></span><button class="btn" id="personal-next" type="button" disabled>Next</button></nav>
