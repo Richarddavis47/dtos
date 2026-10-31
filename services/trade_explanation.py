@@ -322,7 +322,8 @@ def _decision_primary(result, decision, admissions=None):
     brief += paragraph(decision.get('coverage_explanation'), 'tw-drawback')
     brief += paragraph('Cost and uncertainty: ' + decision['main_cost'], 'tw-drawback')
     for key in ('your_side_summary', 'their_side_summary', 'decision_conditions', 'evidence_next_action'):
-        brief += paragraph(decision.get(key), 'tw-verdict-qualification' if key == 'decision_conditions' else '')
+        for line in (decision.get(key) or '').splitlines():
+            brief += paragraph(line, 'tw-drawback' if key == 'decision_conditions' else '')
     partner_admission = admissions['partner']
     partner_supported = partner_admission['identity_state'] == 'compatible' and not partner_admission['invalid_comparison']
     brief += paragraph('Other team: ' + result['why_they_would_do_it'] if result.get('why_they_would_do_it') and partner_supported else 'Other team: a complete roster-production benefit cannot be verified.' if not partner_supported else None)

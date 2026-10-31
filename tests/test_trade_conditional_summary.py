@@ -29,7 +29,8 @@ class ConditionalSummaryTests(unittest.TestCase):
             self.assertIn('do not establish rebuilding intent', d['decision_conditions'])
             e['decision_context'] = d
             html = render_trade_explanation(e, league_id='league-1')
-            self.assertIn(d['decision_conditions'], html)
+            for line in d['decision_conditions'].splitlines():
+                self.assertIn(line, html)
             self.assertEqual(e['recommendation'], before['recommendation'])
             self.assertEqual(e['generated_trade_eligible'], before['generated_trade_eligible'])
 

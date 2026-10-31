@@ -59,7 +59,7 @@ def decision_summary(result, admissions):
             else:
                 lines.append('Future-capital qualification is incomplete; a balanced Market total does not establish the long-term trade-off.')
                 missing.append(f"{title}'s exact pick ownership, compatible price and future-capital qualification")
-        summaries[side] = ' '.join(lines)
+        summaries[side] = '\n'.join(lines)
     strategy = partner.get('manager_strategy') or (fit.get('partner') or {}).get('manager_strategy') or {}
     if strategy.get('source') == 'explicit_manager' and strategy.get('strategy'):
         condition = f"Their recorded direction is {strategy['strategy']}; it does not prove willingness to accept this offer."
@@ -69,19 +69,19 @@ def decision_summary(result, admissions):
         condition = 'Their manager strategy is unconfirmed; rebuilding or contending intent is not established.'
     mean = admissions['partner']['mean_weekly_delta']
     if number(mean) and mean < 0:
-        condition += ' They give up supported projected production. The offer makes sense only if they prefer the supported asset or capital compensation to that loss; confirm that motivation before treating it as actionable.'
-    condition += ' Market fairness and receiving a pick do not establish rebuilding intent or predict acceptance.'
-    next_action = ('Review ' + '; '.join(dict.fromkeys(missing)) + '. Wait for compatible evidence or inspect a counterparty with supported coverage; adding a pick cannot fix missing projections.' if missing else
+        condition += '\nThey give up supported projected production. The offer makes sense only if they prefer the supported asset or capital compensation to that loss; confirm that motivation before treating it as actionable.'
+    condition += '\nMarket fairness and receiving a pick do not establish rebuilding intent or predict acceptance.'
+    next_action = ('Review:\n' + '.\n'.join(dict.fromkeys(missing)) + '.\nWait for compatible evidence or inspect a counterparty with supported coverage; adding a pick cannot fix missing projections.' if missing else
                    'Review both teams’ sacrifices and discuss the stated compensation and direction with the other manager; this is not a prediction of acceptance.')
     if not missing and result.get('generated_trade_eligible') is not True:
         next_action = 'This is not a qualified recommendation. Inspect the stated Market, roster and counterparty blockers before considering a package change.'
     if market.get('availability') != 'full':
-        next_action = 'Review the assets missing compatible current Market prices; Neutral and Custom values must remain separate. ' + next_action
+        next_action = 'Review the assets missing compatible current Market prices; Neutral and Custom values must remain separate.\n' + next_action
     if result.get('recommendation') in ('REJECT', 'NOT WORTH IT'):
         reason = result.get('dominant_reason') or 'Known package costs fail its qualification.'
-        next_action = 'This package is rejected under the recorded assessment: ' + reason + ' Evidence gaps do not remove that objection. ' + next_action
+        next_action = 'This package is rejected under the recorded assessment: ' + reason + ' Evidence gaps do not remove that objection.\n' + next_action
     personal = result.get('personal_value_evidence')
     if personal and personal.get('availability') != 'full':
-        next_action = 'Personal Custom rank-slot evidence is incomplete for this package. Review affected assets in My DTOS or use the independent Neutral mode; no ranking reset is required. ' + next_action
+        next_action = 'Personal Custom rank-slot evidence is incomplete for this package. Review affected assets in My DTOS or use the independent Neutral mode; no ranking reset is required.\n' + next_action
     return {'your_side_summary': summaries['active'], 'their_side_summary': summaries['partner'],
             'decision_conditions': condition, 'evidence_next_action': next_action}
