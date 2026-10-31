@@ -83,3 +83,14 @@ class ConditionalSummaryTests(unittest.TestCase):
         d = decision_context(e)
         self.assertNotIn('+6.31', d['your_side_summary'])
         self.assertIn('cannot be verified', d['their_side_summary'])
+
+    def test_custom_capital_is_labeled_personal_while_market_totals_stay_neutral(self):
+        f = self.fixture()
+        e = f.evaluate()
+        e['personal_value_evidence'] = {'unit':'personal_rank_slot_value'}
+        e['dimensions']['strategic_fit']['active']['future_capital']['assessment']['sent_market_value'] = 999
+        before = deepcopy(e)
+        d = decision_context(e)
+        self.assertIn('Personal Custom future-capital value: 999', d['your_side_summary'])
+        self.assertIn('Neutral Market: 942 sent / 931 received', d['your_side_summary'])
+        self.assertEqual(e, before)

@@ -54,7 +54,8 @@ def decision_summary(result, admissions):
         assessment = capital.get('assessment') or {}
         if capital.get('sent') or capital.get('received'):
             if assessment.get('availability') == 'supported' and number(assessment.get('sent_market_value')) and number(assessment.get('received_market_value')):
-                lines.append(f"Future capital Market value: {assessment['sent_market_value']:g} sent / {assessment['received_market_value']:g} received. Picks do not supply projected points; future outcomes are uncertain.")
+                basis = 'Personal Custom future-capital value' if side == 'active' and result.get('personal_value_evidence') else 'Future capital Market value'
+                lines.append(f"{basis}: {assessment['sent_market_value']:g} sent / {assessment['received_market_value']:g} received. Picks do not supply projected points; future outcomes are uncertain.")
             else:
                 lines.append('Future-capital qualification is incomplete; a balanced Market total does not establish the long-term trade-off.')
                 missing.append(f"{title}'s exact pick ownership, compatible price and future-capital qualification")

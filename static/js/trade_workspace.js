@@ -1151,7 +1151,8 @@
       const exact = asset(pick.asset_id);
       const name = exact ? label(exact) : `${pick.year} round ${pick.round} pick (original franchise label unavailable)`;
       const range = pick.projected_range && pick.projected_range !== 'UNKNOWN' ? `${pick.projected_range} · ${pick.range_confidence || 'confidence unconfirmed'}` : 'Draft range not established';
-      card.append(node('p', `Future capital you give up: ${name} · Neutral Market ${pick.market_price == null ? 'no compatible price' : displayMarket(pick.market_price)} · ${range}. Future player outcomes are uncertain.`, 'tw-drawback'));
+      const neutralPrice = e.personal_value_evidence ? pick.market_evidence?.normalized_market_price : pick.market_price;
+      card.append(node('p', `Future capital you give up: ${name} · Neutral Market ${neutralPrice == null ? 'no compatible price' : displayMarket(neutralPrice)} · ${range}. Future player outcomes are uncertain.`, 'tw-drawback'));
     }
     const intent = e.dimensions?.strategic_fit?.active?.manager_strategy?.strategy;
     if (intent) card.append(node('p', 'Strategy: ' + intent));
