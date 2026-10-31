@@ -1091,6 +1091,7 @@
     if (context.exploration) card.append(node('p', 'Exploratory only · not a qualified bilateral recommendation', 'tw-drawback'));
     card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : e.personalization?.mode === 'custom' ? 'Separate Custom DTOS personal assessment: ' : 'Separate DTOS assessment: ') + finalVerdict(e)));
     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
+    for (const key of ['your_side_summary', 'their_side_summary', 'decision_conditions', 'evidence_next_action']) if (decision[key]) card.append(node('p', decision[key], key === 'decision_conditions' ? 'tw-verdict-qualification' : ''));
     const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
     const reason = unfavorable ? 'Closer current Market terms do not make this a recommended trade.' : decision.lineup?.explanation || e.why_you_would_do_it || 'Market balance is separate from strategic fit; no supported positive roster case is established.';
     card.append(node('p', 'Why consider: ' + reason),
@@ -1137,13 +1138,21 @@
       const cost = row.adjustment_evidence;
       card.append(node('p', `Outgoing Market cost: ${cost.current_outgoing_cost} → ${cost.alternative_outgoing_cost} (${cost.market_cost_reduction} lower).`));
     }
+    card.append(node('p', 'Trade with ' + (team(row.proposal.partner_roster_id)?.team_name || 'the selected counterparty')));
     const sentRows = row.proposal_presentation?.send || row.proposal.assets_sent.map(id => ({label: label(asset(id) || {label:id})}));
     const receivedRows = row.proposal_presentation?.receive || row.proposal.assets_received.map(id => ({label: label(asset(id) || {label:id})}));
     card.append(node('p', 'You send: ' + sentRows.map(a => a.label).join(' + ')), node('p', 'You receive: ' + receivedRows.map(a => a.label).join(' + ')),
-      node('p', 'Why this helps me: ' + (decision.summary || e.why_you_would_do_it || e.dominant_reason || 'Review the supported evidence.')),
+      ...(!decision.your_side_summary ? [node('p', 'Why this helps me: ' + (decision.summary || e.why_you_would_do_it || e.dominant_reason || 'Review the supported evidence.'))] : []),
       node('p', 'Major drawback: ' + (decision.main_cost || e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ') || e.major_limitations?.join('; ').replaceAll('_', ' ') || (row.proposal.preview_context?.restored ? 'Unavailable in retained context. Reevaluate for supported costs.' : 'No material drawback identified in available evidence.')), 'tw-drawback'),
-      node('p', 'Counterparty: ' + (decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.')));
+      ...(!decision.their_side_summary ? [node('p', 'Counterparty: ' + (decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.'))] : []));
+    for (const key of ['your_side_summary', 'their_side_summary', 'decision_conditions', 'evidence_next_action']) if (decision[key]) card.append(node('p', decision[key], key === 'decision_conditions' ? 'tw-verdict-qualification' : ''));
     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
+    for (const pick of e.dimensions?.strategic_fit?.active?.future_capital?.sent || []) {
+      const exact = asset(pick.asset_id);
+      const name = exact ? label(exact) : `${pick.year} round ${pick.round} pick (original franchise label unavailable)`;
+      const range = pick.projected_range && pick.projected_range !== 'UNKNOWN' ? `${pick.projected_range} · ${pick.range_confidence || 'confidence unconfirmed'}` : 'Draft range not established';
+      card.append(node('p', `Future capital you give up: ${name} · Neutral Market ${pick.market_price == null ? 'no compatible price' : displayMarket(pick.market_price)} · ${range}. Future player outcomes are uncertain.`, 'tw-drawback'));
+    }
     const intent = e.dimensions?.strategic_fit?.active?.manager_strategy?.strategy;
     if (intent) card.append(node('p', 'Strategy: ' + intent));
     const history = e.dimensions?.counterparty_plausibility?.manager_history?.disclosure;
@@ -1205,6 +1214,9 @@
           node('p', row.conflict_explanation || row.blocker_type + ': ' + (row.blockers || []).join(', ').replaceAll('_', ' ')));
         for (const id of row.blocking_asset_ids || []) detail.append(node('p', 'Blocking asset: ' + label(asset(id) || {label: id}) + ' · ' + id));
         if (row.smallest_optional_relaxation) detail.append(node('p', (row.blocker_type === 'MISSING REQUIRED EVIDENCE' ? 'Evidence limit: ' : 'Optional change: ') + row.smallest_optional_relaxation));
+        detail.append(node('p', 'Other franchise: ' + (team(p.partner_roster_id)?.team_name || 'selected counterparty')));
+        const diagnosed = decisionPresentation(row.evaluation);
+        for (const key of ['their_side_summary', 'decision_conditions', 'evidence_next_action']) if (diagnosed[key]) detail.append(node('p', diagnosed[key]));
         if (row.evaluation?.decision_context?.strategy?.selection_required) strategyAction(detail);
         if (row.blocker_type === 'MISSING REQUIRED EVIDENCE') {
           const market = node('a', 'Review current Market evidence'); market.href = '/market';

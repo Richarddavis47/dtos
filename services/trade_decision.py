@@ -225,7 +225,10 @@ def decision_context(result, *, incoming=(), outgoing=(), _admissions=None):
             + ("Missing Market prices prevent a complete cost comparison. " if market_incomplete else '')
             + "The known weekly effect remains useful, but does not fill gaps in the wider assessment."
         )
+    from services.trade_decision_summary import decision_summary
+    two_sided = decision_summary(result, admissions)
     return {
+        **two_sided,
         "verdict": final["headline"],
         "final_decision": final,
         "qualification": qualification or final["qualification"],
