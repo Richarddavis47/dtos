@@ -40,7 +40,7 @@ class ConditionalSummaryTests(unittest.TestCase):
                 e = f.evaluate()
                 e['dimensions']['counterparty_plausibility']['manager_strategy'] = {'strategy': strategy, 'source': source}
                 d = decision_context(e)
-                expected = {'explicit_manager':'Their saved direction', 'canonical_competitive_window':'not a confirmed manager intention', 'unavailable':'strategy is unconfirmed'}[source]
+                expected = {'explicit_manager':'Their recorded direction', 'canonical_competitive_window':'not a confirmed manager intention', 'unavailable':'strategy is unconfirmed'}[source]
                 self.assertIn(expected, d['decision_conditions'])
                 self.assertIn('do not', d['decision_conditions'])
 

@@ -62,7 +62,7 @@ def decision_summary(result, admissions):
         summaries[side] = ' '.join(lines)
     strategy = partner.get('manager_strategy') or (fit.get('partner') or {}).get('manager_strategy') or {}
     if strategy.get('source') == 'explicit_manager' and strategy.get('strategy'):
-        condition = f"Their saved direction is {strategy['strategy']}; it does not prove willingness to accept this offer."
+        condition = f"Their recorded direction is {strategy['strategy']}; it does not prove willingness to accept this offer."
     elif strategy.get('source') == 'canonical_competitive_window' and strategy.get('strategy'):
         condition = f"Their roster-based direction is {strategy['strategy']}; this is not a confirmed manager intention."
     else:
