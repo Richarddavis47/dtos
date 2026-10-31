@@ -272,6 +272,12 @@ class RelativeHTTPTests(unittest.TestCase):
                 stack.enter_context(patch(t, side_effect=AssertionError(t)))
                 for t in targets
             ]
+            self.f.market.rows.append(
+                self.f.market.row("player:outside", 1000, "QB", "New unranked player")
+            )
+            self.f.market.generation += "-new-unranked"
+            self.assertFalse(self.f.state()["method_review"]["publication_changed"])
+            self.assertEqual(self.saved(), before)
             self.f.market.rows[1]["values"]["market_value"] = 600
             self.f.market.generation += "-returned"
             current = self.f.state()

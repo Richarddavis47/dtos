@@ -496,7 +496,8 @@ def view_state(store, data, market_reader, account):
     context = workspace_context(data, membership.roster_id)
     method = valuation_method(document)
     review = (document or {}).get('method_review') or {}
-    publication_changed = method == RELATIVE_METHOD and review.get('generation') != universe['generation']
+    publication_changed = (method == RELATIVE_METHOD and review.get('generation') != universe['generation']
+                           and review.get('value_digest') != _digest(values['values']))
     priced_ids = set((document or {}).get('order') or ()) & set(current)
     reviewed_ids = set(review.get('priced_ids') or ())
     return {'initialized': document is not None, 'revision': (document or {}).get('revision', 0),
@@ -699,6 +700,7 @@ def personal_bootstrap(data, active_id, *, store=None, market_reader=None, accou
         doc = load_personal(store, account.account_id, membership.league_id, membership.roster_id)
         return {'mode': 'neutral', 'revision': (doc or {}).get('revision', 0),
                 'initialized': doc is not None, 'available': False, 'personal_available': False,
+                'method': valuation_method(doc), 'method_label': METHOD_LABELS[valuation_method(doc)],
                 'readiness_code': exc.code, 'limitations': [str(exc)]}
     if state['context']['roster_id'] != active_id:
         raise PersonalRankingError('unauthorized_franchise', 'Only your franchise can use your personal rankings.', 403)
