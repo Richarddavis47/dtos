@@ -6,6 +6,49 @@
   const el = id => document.getElementById(id), PAGE_SIZE = 25;
   let state = null, page = 0, busy = false, ready = false, requestSequence = 0, controller = null, drag = null, pendingRemoval = null, compatibilityFragmentFocused = false;
   const openRows = new Set();
+  let pendingMethodPreview = null;
+  function closeMethodPreview() {
+    pendingMethodPreview = null;
+    if (el('personal-method-dialog').open) el('personal-method-dialog').close();
+  }
+  async function previewMethod() {
+    if (busy || !ready || !state?.initialized) return;
+    const prior = state, sequence = ++requestSequence;
+    busy = true; error(''); render(); status('Comparing methods with the current Market evidence…');
+    try {
+      const response = await fetch('/api/my-dtos', {method: 'POST', credentials: 'same-origin', cache: 'no-store',
+        headers: {'Content-Type': 'application/json', 'X-CSRF-Token': prior.csrf_token},
+        body: JSON.stringify({command: 'method_preview', expected_revision: prior.revision,
+          market_generation: prior.generation, context: prior.context, valuation_method: el('personal-method-select').value})});
+      const result = await response.json();
+      if (sequence !== requestSequence) return;
+      if (!response.ok) throw new Error(result.message || result.detail || 'Comparison could not load. Retry rankings.');
+      if (result.csrf_token !== prior.csrf_token || JSON.stringify(result.account_scope) !== JSON.stringify(prior.account_scope)) throw new Error('Your session or league changed. Reload rankings.');
+      const preview = result.method_preview; pendingMethodPreview = preview;
+      const box = el('personal-method-comparison'); box.replaceChildren();
+      box.append(node('p', `Current: ${preview.current.label} · ${preview.current.personal_value_count} personal values · ${preview.current.owned_value_count} for your saved assets.`),
+        node('p', `Proposed: ${preview.proposed.label} · ${preview.proposed.personal_value_count} personal values · ${preview.proposed.owned_value_count} for your saved assets.`),
+        node('p', `${preview.proposed.unpriced_count} saved ${preview.proposed.unpriced_count === 1 ? 'asset remains' : 'assets remain'} unpriced. Ranking revision ${preview.ranking_revision}.`));
+      const source = node('details'); source.append(node('summary', 'Market publication used'), node('p', `Source ${preview.source_generation} · ${preview.generated_at || 'Publication time not supplied'}`)); box.append(source);
+      if (preview.eligibility_change_count) {
+        box.append(node('h3', 'Quote changes since your last review'));
+        for (const change of preview.eligibility_changes) box.append(node('p', `${change.label}: ${change.change}.`));
+        if (preview.eligibility_change_count > preview.eligibility_changes.length) box.append(node('p', `${preview.eligibility_change_count} eligibility changes in total. Review affected ranking assets for the remaining unavailable prices.`));
+        box.append(node('p', 'Current values are recalculated below. Previous numerical prices are not stored by this review.'));
+      }
+      box.append(node('h3', 'Representative personal values'));
+      for (const row of preview.examples) box.append(node('p', `${row.label}: ${value(row.current_value)} → ${value(row.proposed_value)}. Neutral Market ${value(row.market_value)}.`));
+      box.append(node('h3', 'Hypothetical package comparisons'));
+      if (!preview.packages.length) box.append(node('p', 'No owned-versus-counterparty package is supported in this snapshot. No example was invented.'));
+      for (const pack of preview.packages) box.append(node('p', `Send ${pack.sent.map(r => r.label).join(' + ')}; receive ${pack.received.map(r => r.label).join(' + ')}. Current personal totals ${value(pack.current.sent)} / ${value(pack.current.received)}; proposed ${value(pack.proposed.sent)} / ${value(pack.proposed.received)}.`));
+      el('personal-method-disclosure').textContent = preview.disclosure;
+      el('personal-method-confirm').textContent = preview.current.method === preview.proposed.method ? 'Confirm current evidence review' : `Use ${preview.proposed.label}`;
+      el('personal-method-dialog').showModal(); el('personal-method-cancel').focus({preventScroll: true}); el('personal-method-dialog').scrollTop = 0;
+      status('Comparison ready. No preferences changed.');
+    } catch (exc) {
+      if (sequence === requestSequence) { closeMethodPreview(); ready = false; el('personal-recovery').hidden = false; error(String(exc.message)); status('No method was changed. Retry rankings before comparing again.'); }
+    } finally { if (sequence === requestSequence) { busy = false; render(); } }
+  }
   const navigationScope = document.querySelector('meta[name=dtos-navigation-scope]')?.content;
   let restoredView = false;
   function restoreNavigationView() {
@@ -113,6 +156,12 @@
   function render(focusKey, scrollTop, rowTop) {
     if (!state) return;
     const initialized = Boolean(state.initialized), custom = state.mode === 'custom', rankedCount = savedRankCount();
+    el('personal-active-method').textContent = `Custom pricing: ${state.method_label || 'Absolute Slot'} · compare methods`;
+    el('personal-method-preview').disabled = busy || !ready || !initialized;
+    el('personal-method-select').disabled = busy || !ready || !initialized;
+    const review = state.method_review;
+    el('personal-publication-review').hidden = !review?.publication_changed;
+    el('personal-publication-review').textContent = review?.publication_changed ? `${review.message} Since the last review: ${review.added_count} newly priced; ${review.removed_count} no longer priced. Open Custom pricing above to review the current evidence.` : '';
     el('personal-neutral').setAttribute('aria-pressed', String(!custom));
     el('personal-custom').setAttribute('aria-pressed', String(custom));
     el('personal-neutral').disabled = busy || !ready; el('personal-custom').disabled = busy || !ready;
@@ -208,6 +257,7 @@
   }
   async function read() {
     if (busy) return;
+    closeMethodPreview();
     const sequence = ++requestSequence; controller?.abort(); controller = new AbortController(); ready = false; render(); root.setAttribute('aria-busy', 'true'); status('Checking prepared Market rankings…'); error('');
     try {
       const response = await fetch('/api/my-dtos', {credentials: 'same-origin', cache: 'no-store', signal: controller.signal}); const result = await response.json();
@@ -225,6 +275,7 @@
   }
   async function command(name, values = {}, focusKey) {
     if (busy || !ready || !state) return;
+    closeMethodPreview();
     const prior = state, scrollTop = window.scrollY, rowTop = rowFor(focusAsset(focusKey))?.getBoundingClientRect().top, activeId = document.activeElement?.id, sequence = ++requestSequence;
     busy = true; error(''); render(focusKey, scrollTop, rowTop); status('Saving your preference…');
     try {
@@ -240,7 +291,8 @@
     finally {
       if (sequence === requestSequence) {
         busy = false; render(focusKey, scrollTop, rowTop);
-        if (name === 'remove_asset') restoreRecoveryFocus(values.asset_id);
+        if (name === 'valuation_method') el('personal-method-preview').focus({preventScroll: true});
+        else if (name === 'remove_asset') restoreRecoveryFocus(values.asset_id);
         else if (!focusKey) {
           const control = el(activeId);
           if (control && !control.disabled && control.getClientRects().length) control.focus({preventScroll: true});
@@ -255,6 +307,14 @@
   }
   el('personal-neutral').onclick = () => { if (!state?.initialized) { status('Neutral DTOS is active. No saved rankings were created.'); return; } command('mode', {mode: 'neutral'}, ''); };
   el('personal-custom').onclick = () => state?.initialized ? command('mode', {mode: 'custom'}, '') : command('initialize', {}, '');
+  el('personal-method-preview').onclick = previewMethod;
+  el('personal-method-select').onchange = closeMethodPreview;
+  el('personal-method-cancel').onclick = () => { closeMethodPreview(); el('personal-method-preview').focus(); };
+  el('personal-method-dialog').addEventListener('cancel', () => { pendingMethodPreview = null; requestAnimationFrame(() => el('personal-method-preview').focus()); });
+  el('personal-method-confirm').onclick = () => {
+    const preview = pendingMethodPreview;
+    if (preview) command('valuation_method', {valuation_method: preview.proposed.method, preview_token: preview.preview_token, confirmation: 'APPLY VALUATION METHOD'});
+  };
   el('personal-initialize').onclick = () => command('initialize');
   el('personal-reload').onclick = read;
   el('personal-retry').onclick = read;
@@ -289,6 +349,7 @@
   root.addEventListener('pointercancel', event => { if (!drag || drag.pointer !== event.pointerId) return; drag = null; root.querySelectorAll('.personal-drop-target').forEach(row => row.classList.remove('personal-drop-target')); });
   addEventListener('hashchange', () => { compatibilityFragmentFocused = false; if (state) renderCompatibility(); });
   addEventListener('pagehide', () => {
+    closeMethodPreview();
     if (navigationScope && state?.context?.binding === navigationScope) try {
       history.replaceState({...history.state,dtosPersonalView:{scope:navigationScope,q:el('personal-search').value.slice(0,200),position:el('personal-position').value,page}},'');
     } catch (_) { /* No preference state is written by navigation. */ }

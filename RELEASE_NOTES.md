@@ -1,3 +1,11 @@
+# v1.22.4 / build 2219 — Optional Relative Custom Valuation
+
+Add a previewed, explicit and reversible Relative Priced-Order Custom pricing method. Existing accounts retain Absolute Slot unchanged. Relative permutes compatible current prices among priced saved assets in their relative saved order; unsupported rows remain saved and unvalued. Neutral prices, source admission, exact identities and all bilateral Trade safeguards remain independent.
+
+Compare availability, representative values and hypothetical personal package totals before confirming. Preview confirmation is bound to the session, scope, ranking revision, target method and current Market publication. Method changes increment the existing preference revision without editing order, baseline, tiers or flags. Publication changes recompute the selected method and show eligibility changes since the last explicit review; no prices or personal maps are stored.
+
+No production preferences are changed by validation. No provider calls, solvers, discovery, historical work or polling are added to ordinary reads. See docs/audits/RELATIVE_CUSTOM_2219.md for numerical contracts, migration/rollback and verification boundaries.
+
 # v1.22.3 / build 2218 — Two-sided Trade decision clarity
 
 Show admitted current-week and supported-week production changes, both sides’ Market compensation, reserve evidence and future-capital costs in primary Trade summaries. State unconfirmed manager direction and the conditions behind production-for-capital plausibility. Give evidence-specific near-miss actions; adding picks cannot repair missing projections.
