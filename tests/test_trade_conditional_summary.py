@@ -75,7 +75,7 @@ class ConditionalSummaryTests(unittest.TestCase):
             d = decision_summary(e, a)
         self.assertIn('+0.00', d['your_side_summary'])
         self.assertNotIn('current-week legal-lineup change cannot', d['your_side_summary'])
-        f.f.prices(a=995, c=75)
+        f.f.f.prices(a=995, c=75)
         bad = f.evaluate(assets_sent=['a'], assets_received=['c'])
         self.assertEqual(bad['recommendation'], 'REJECT')
         self.assertFalse(bad['generated_trade_eligible'])
