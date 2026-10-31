@@ -87,10 +87,12 @@ class ConditionalSummaryTests(unittest.TestCase):
     def test_custom_capital_is_labeled_personal_while_market_totals_stay_neutral(self):
         f = self.fixture()
         e = f.evaluate()
-        e['personal_value_evidence'] = {'unit':'personal_rank_slot_value'}
+        e['personal_value_evidence'] = {'unit':'personal_rank_slot_value', 'availability':'partial'}
         e['dimensions']['strategic_fit']['active']['future_capital']['assessment']['sent_market_value'] = 999
         before = deepcopy(e)
         d = decision_context(e)
         self.assertIn('Personal Custom future-capital value: 999', d['your_side_summary'])
+        self.assertIn('Personal Custom rank-slot evidence is incomplete', d['evidence_next_action'])
+        self.assertIn('independent Neutral mode', d['evidence_next_action'])
         self.assertIn('Neutral Market: 942 sent / 931 received', d['your_side_summary'])
         self.assertEqual(e, before)

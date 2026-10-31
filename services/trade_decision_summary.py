@@ -77,5 +77,8 @@ def decision_summary(result, admissions):
         next_action = 'This is not a qualified recommendation. Inspect the stated Market, roster and counterparty blockers before considering a package change.'
     if market.get('availability') != 'full':
         next_action = 'Review the assets missing compatible current Market prices; Neutral and Custom values must remain separate. ' + next_action
+    personal = result.get('personal_value_evidence')
+    if personal and personal.get('availability') != 'full':
+        next_action = 'Personal Custom rank-slot evidence is incomplete for this package. Review affected assets in My DTOS or use the independent Neutral mode; no ranking reset is required. ' + next_action
     return {'your_side_summary': summaries['active'], 'their_side_summary': summaries['partner'],
             'decision_conditions': condition, 'evidence_next_action': next_action}
