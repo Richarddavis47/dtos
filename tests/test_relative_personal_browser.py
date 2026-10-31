@@ -77,6 +77,16 @@ class RelativeMethodBrowserTests(unittest.TestCase):
                                 "Absolute Slot",
                                 page.locator("#personal-active-method").inner_text(),
                             )
+                            self.assertTrue(
+                                page.locator(
+                                    "#personal-method-select"
+                                ).evaluate("""e => {
+                                const style = getComputedStyle(e), canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d'); ctx.font = style.font;
+                                return [...e.options].every(o => ctx.measureText(o.text).width +
+                                    parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + 24 <= e.clientWidth);
+                            }""")
+                            )
                             if output:
                                 page.screenshot(
                                     path=str(output / f"absolute-{width}.png"),

@@ -90,7 +90,7 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
 <section class="personal-method-choice" aria-labelledby="personal-method-heading">
 <h2 id="personal-method-heading">Custom pricing method</h2><p id="personal-active-method">Absolute Slot · existing default</p>
 <p>Separate from Neutral or Custom mode. Compare before changing; your saved ranking order and choices stay intact.</p>
-<div class="personal-actions"><label for="personal-method-select">Compare with<select id="personal-method-select"><option value="personal-relative-priced-order-v1">Relative Priced-Order</option><option value="personal-current-market-slot-curve-v1">Absolute Slot</option></select></label><button class="btn" id="personal-method-preview" type="button" disabled>Preview method</button></div>
+<div class="personal-actions"><label for="personal-method-select">Compare with<select id="personal-method-select"><option value="personal-relative-priced-order-v1">Relative</option><option value="personal-current-market-slot-curve-v1">Absolute</option></select></label><button class="btn" id="personal-method-preview" type="button" disabled>Preview method</button></div>
 <p id="personal-publication-review" class="personal-qualification" hidden></p>
 </section>
 <button class="btn personal-start" id="personal-initialize" type="button" hidden>Create Custom Rankings</button>
