@@ -1,3 +1,9 @@
+# v1.22.3 / build 2218 — Two-sided Trade decision clarity
+
+Show admitted current-week and supported-week production changes, both sides’ Market compensation, reserve evidence and future-capital costs in primary Trade summaries. State unconfirmed manager direction and the conditions behind production-for-capital plausibility. Give evidence-specific near-miss actions; adding picks cannot repair missing projections.
+
+Preserve qualification thresholds, search, Neutral/Custom mathematics, exact identities, lineup calculation, source guards and saved intent. No new source, solver, history or discovery work for explanations.
+
 # v1.22.2 / build 2217 — Trade search diagnostic reuse
 
 Remove repeated preparation, decoding and qualification of identical pre-trade league diagnostics within each package evaluation. Reuse one same-call baseline for both team views, independently construct and qualify post-trade rosters, and retain the latest refresh/freshness qualification for both sides.
