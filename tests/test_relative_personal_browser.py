@@ -68,6 +68,14 @@ class RelativeMethodBrowserTests(unittest.TestCase):
                             errors = []
                             page.on("pageerror", lambda e: errors.append(str(e)))
                             page.goto("https://dtos.test/account/my-dtos")
+                            page.wait_for_function(
+                                "!document.querySelector('#personal-method-preview').disabled"
+                            )
+                            if output:
+                                page.screenshot(
+                                    path=str(output / f"compact-{width}.png"),
+                                    full_page=True,
+                                )
                             page.locator("#personal-active-method").press("Enter")
                             button = page.locator("#personal-method-preview")
                             button.wait_for(state="visible")
