@@ -294,6 +294,73 @@ class RelativeHTTPTests(unittest.TestCase):
                 }
             )
 
+    def test_selected_method_is_scoped_and_new_session_cannot_apply_old_preview(self):
+        self.assertEqual(self.activate().status_code, 200)
+        saved_a = self.saved()
+        preview_a = self.preview(ABSOLUTE_METHOD)
+        self.f.use_account("account-b")
+        self.assertFalse(self.f.state()["initialized"])
+        self.f.initialize()
+        self.assertEqual(self.f.state()["method"], ABSOLUTE_METHOD)
+        self.f.use_account("account-a")
+        self.assertEqual(self.saved(), saved_a)
+        # A different controlled franchise has a separate method and ranking document.
+        self.f.store.upsert_membership(
+            "account-a",
+            {"league_id": "league-1", "season": "2026"},
+            "account-a",
+            2,
+            "Other franchise",
+            "active",
+        )
+        self.assertFalse(self.f.state()["initialized"])
+        self.assertEqual(self.f.state()["method"], ABSOLUTE_METHOD)
+        self.assertEqual(
+            self.activate(ABSOLUTE_METHOD, preview=preview_a).status_code, 409
+        )
+        self.f.store.upsert_membership(
+            "account-a",
+            {"league_id": "league-1", "season": "2026"},
+            "account-a",
+            1,
+            "Original franchise",
+            "active",
+        )
+        self.assertEqual(self.saved(), saved_a)
+        # An entirely different selected league must not inherit Relative or flags.
+        old_data, old_market = self.f.data, self.f.market
+        self.f.store.upsert_membership(
+            "account-a",
+            {"league_id": "league-2", "season": "2026"},
+            "account-a",
+            1,
+            "Other league franchise",
+            "active",
+        )
+        self.f.store.activate("account-a", "league-2")
+        self.f.data = deepcopy(old_data)
+        self.f.data["league"]["league_id"] = "league-2"
+        self.f.market = controls.PreparedMarket(self.f.data)
+        self.assertFalse(self.f.state()["initialized"])
+        self.f.initialize()
+        self.assertEqual(self.f.state()["method"], ABSOLUTE_METHOD)
+        self.assertEqual(
+            self.activate(ABSOLUTE_METHOD, preview=preview_a).status_code, 409
+        )
+        self.f.store.activate("account-a", "league-1")
+        self.f.data, self.f.market = old_data, old_market
+        self.assertEqual(self.saved(), saved_a)
+        self.f.tokens["account-a"] = self.f.service.new_session("account-a")
+        self.f.use_account("account-a")
+        self.assertEqual(
+            self.activate(ABSOLUTE_METHOD, preview=preview_a).status_code, 409
+        )
+        self.assertEqual(self.saved(), saved_a)
+        restarted = self.f.post("restart", confirmation="RESTART RANKINGS")
+        self.assertEqual(restarted.status_code, 200, restarted.text)
+        self.assertEqual(restarted.json()["method"], RELATIVE_METHOD)
+        self.assertEqual(self.saved()["preferences"], saved_a["preferences"])
+
     def test_anonymous_foreign_origin_and_legacy_default(self):
         self.assertEqual(self.f.state()["method"], ABSOLUTE_METHOD)
         self.f.client.cookies.clear()
