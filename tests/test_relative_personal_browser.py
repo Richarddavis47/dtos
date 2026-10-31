@@ -91,6 +91,14 @@ class RelativeMethodBrowserTests(unittest.TestCase):
                                 "personal-method-cancel",
                             )
                             self.assertEqual(saved(), before)
+                            title_box = page.locator(
+                                "#personal-method-title"
+                            ).bounding_box()
+                            dialog_box = dialog.bounding_box()
+                            self.assertGreaterEqual(title_box["y"], dialog_box["y"])
+                            self.assertLess(
+                                title_box["y"] + title_box["height"], height
+                            )
                             self.assertIn("not recommendations", dialog.inner_text())
                             self.assertIn(
                                 "No preferences changed",

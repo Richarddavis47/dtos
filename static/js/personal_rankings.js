@@ -43,7 +43,7 @@
       for (const pack of preview.packages) box.append(node('p', `Send ${pack.sent.map(r => r.label).join(' + ')}; receive ${pack.received.map(r => r.label).join(' + ')}. Current personal totals ${value(pack.current.sent)} / ${value(pack.current.received)}; proposed ${value(pack.proposed.sent)} / ${value(pack.proposed.received)}.`));
       el('personal-method-disclosure').textContent = preview.disclosure;
       el('personal-method-confirm').textContent = preview.current.method === preview.proposed.method ? 'Confirm current evidence review' : `Use ${preview.proposed.label}`;
-      el('personal-method-dialog').showModal(); el('personal-method-cancel').focus();
+      el('personal-method-dialog').showModal(); el('personal-method-cancel').focus({preventScroll: true}); el('personal-method-dialog').scrollTop = 0;
       status('Comparison ready. No preferences changed.');
     } catch (exc) {
       if (sequence === requestSequence) { closeMethodPreview(); ready = false; el('personal-recovery').hidden = false; error(String(exc.message)); status('No method was changed. Retry rankings before comparing again.'); }
