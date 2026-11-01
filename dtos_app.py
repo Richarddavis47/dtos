@@ -66,6 +66,7 @@ from services.history import (
 )
 from services.fois import fois_service, storage_summary as fois_storage_summary
 from src.core.fois import FOIS_MODEL_VERSION
+from src.platform.fois_admission import FOISMemoryDeferred
 from src.core.fois.process_execution import (
     shutdown_fois_executor,
     warm_fois_executor,
@@ -278,14 +279,12 @@ async def _generate_resident_fois(data: dict[str, Any], *, runtime: LeagueRuntim
     task = next((task for task in runtime.background_tasks if task.get_name() == 'dtos-league-fois' and not task.done()), None)
     if task is None:
         if runtime.lifecycle.get('fois_generation') == 'deferred':
-            from src.platform.fois_admission import FOISMemoryDeferred
             raise FOISMemoryDeferred('FOIS preparation is deferred while memory is constrained.')
         return None
     await asyncio.shield(task)
     if runtime.lifecycle.get('fois_generation') == 'failed':
         raise RuntimeError('FOIS calculation is unavailable.')
     if runtime.lifecycle.get('fois_generation') == 'deferred':
-        from src.platform.fois_admission import FOISMemoryDeferred
         raise FOISMemoryDeferred('FOIS preparation is deferred while memory is constrained.')
     if runtime.canonical_context.fois_state != 'ready':
         return None
@@ -418,6 +417,8 @@ async def background_sync() -> None:
             runtime_metrics.mark_background("fois_generation", "running")
             try:
                 await _generate_resident_fois(STATE["data"])
+            except FOISMemoryDeferred:
+                runtime_metrics.mark_background("fois_generation", "deferred")
             except Exception:
                 runtime_metrics.mark_background("fois_generation", "failed")
         else:
@@ -493,6 +494,8 @@ async def resolve_historical_trade_market(*, runtime: LeagueRuntime | None = Non
         runtime_metrics.mark_background("fois_generation", "running")
         try:
             await _generate_resident_fois(state["data"], runtime=runtime)
+        except FOISMemoryDeferred:
+            runtime_metrics.mark_background("fois_generation", "deferred")
         except Exception:
             runtime_metrics.mark_background("fois_generation", "failed")
         else:
@@ -573,6 +576,8 @@ async def deployment_maintenance(startup_epoch: int | None = None) -> None:
     runtime_metrics.mark_background("fois_generation", "running")
     try:
         await _generate_resident_fois(STATE["data"])
+    except FOISMemoryDeferred:
+        runtime_metrics.mark_background("fois_generation", "deferred")
     except Exception:
         # FOIS is an optional persisted intelligence projection. Its failure is
         # observable, but cannot hold canonical readiness or Asset Market idle.
