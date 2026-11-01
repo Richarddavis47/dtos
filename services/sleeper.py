@@ -188,6 +188,10 @@ async def _sync_sleeper(
         try:
             lifecycle_context = lifecycle_coordinator.phase("sleeper_sync")
             lifecycle_context.__enter__()
+            # The sync lease prevents a new coordinated FOIS flight. Reap its
+            # idle process before allocating source/normalization publications.
+            from src.core.fois.process_execution import retire_idle_fois_executor_sync
+            await asyncio.to_thread(retire_idle_fois_executor_sync, force=True)
             diagnostics.mark('lifecycle_wait')
             timeout = httpx.Timeout(REQUEST_TIMEOUT)
             async with httpx.AsyncClient(

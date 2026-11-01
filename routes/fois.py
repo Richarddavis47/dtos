@@ -50,6 +50,11 @@ def _evidence_state(score):
 
 def _availability_notice(service):
     context = current_league_context()
+    if context is not None and context.runtime.lifecycle.get('fois_generation') == 'deferred':
+        return ('<p role="status">FOIS preparation is deferred to protect league availability. '
+                'Wait for other preparation to finish, then retry. '
+                'Previous grades remain RETAINED / NOT REVALIDATED. '
+                'Your league, roster, Market and Trade remain usable.</p>')
     if context is None or context.fois_state == 'ready':
         return ''
     status = _generation_status(service)

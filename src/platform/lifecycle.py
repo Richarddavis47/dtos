@@ -157,7 +157,7 @@ class LifecycleCoordinator:
         with self._condition:
             # Admission is symmetric: a running Market build must finish before
             # FOIS starts, just as an active FOIS flight blocks a new build.
-            while self._market_build_active or self._history_response:
+            while self._phase is not None or self._market_build_active or self._history_response:
                 self._condition.wait()
             self._fois_generation += 1
 
@@ -190,6 +190,10 @@ class LifecycleCoordinator:
         with span('lifecycle_phase', activate=observed, memory=observed) as clock:
             owner = threading.get_ident()
             with self._condition:
+                if name == 'sleeper_sync' and self._fois_generation:
+                    # Sync enters on the event loop. Never wait here for FOIS,
+                    # whose completion also needs that loop to release its lease.
+                    raise RuntimeError('Synchronization deferred while FOIS preparation is running.')
                 while (
                     (self._phase is not None and self._owner != owner)
                     or (

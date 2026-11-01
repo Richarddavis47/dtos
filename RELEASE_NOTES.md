@@ -1,3 +1,11 @@
+# v1.22.6 / build 2221 — FOIS memory admission safety
+
+Reserve build2220 and PR310 for the separate K/DEF candidate. This production-baseline safety candidate checks raw container headroom before FOIS scratch preparation and executor submission, with512MiB working reserve plus256MiB safety margin. No inactive-file discount or host-free-memory override. Unknown container telemetry defers work.
+
+Serialize FOIS reservation against existing heavy phases; defer sync rather than blocking its event loop while FOIS owns its lease. Reap an idle FOIS worker before sync allocations. Retain previous grades as RETAINED / NOT REVALIDATED and report deferred generation distinctly, with a60-second automatic-attempt cooldown and existing retry controls. No source prices, projections, lineup or grading formulas change.
+
+Reserve sizing is conservative relative to observed243MiB worker residency, not a formal maximum-allocation guarantee. Retained parent pressure remains an operating limitation. Release requires complete canonical, Product and resource acceptance; no production stress or infrastructure changes.
+
 # v1.22.4 / build 2219 — Optional Relative Custom Valuation
 
 Add a previewed, explicit and reversible Relative Priced-Order Custom pricing method. Existing accounts retain Absolute Slot unchanged. Relative permutes compatible current prices among priced saved assets in their relative saved order; unsupported rows remain saved and unvalued. Neutral prices, source admission, exact identities and all bilateral Trade safeguards remain independent.

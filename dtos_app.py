@@ -277,10 +277,16 @@ async def _generate_resident_fois(data: dict[str, Any], *, runtime: LeagueRuntim
     ensure_fois_refresh(runtime, _generate_fois_coordinated)
     task = next((task for task in runtime.background_tasks if task.get_name() == 'dtos-league-fois' and not task.done()), None)
     if task is None:
+        if runtime.lifecycle.get('fois_generation') == 'deferred':
+            from src.platform.fois_admission import FOISMemoryDeferred
+            raise FOISMemoryDeferred('FOIS preparation is deferred while memory is constrained.')
         return None
     await asyncio.shield(task)
     if runtime.lifecycle.get('fois_generation') == 'failed':
         raise RuntimeError('FOIS calculation is unavailable.')
+    if runtime.lifecycle.get('fois_generation') == 'deferred':
+        from src.platform.fois_admission import FOISMemoryDeferred
+        raise FOISMemoryDeferred('FOIS preparation is deferred while memory is constrained.')
     if runtime.canonical_context.fois_state != 'ready':
         return None
     return fois_service.repository.league(runtime.league_id, FOIS_MODEL_VERSION)
