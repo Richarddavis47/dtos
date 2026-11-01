@@ -60,12 +60,20 @@ def memory_snapshot() -> dict[str, Any]:
         "/sys/fs/cgroup/memory.max",
         "/sys/fs/cgroup/memory/memory.limit_in_bytes",
     )
+    memory_scope = 'cgroup'
+    if os.name == 'nt' and current is None and limit is None:
+        from src.platform.windows_job_memory import measured_job_memory
+        job = measured_job_memory()
+        if job is not None:
+            current, limit = job['current'], job['limit']
+            memory_scope = 'windows_job_commit'
     stat = _key_value_file("/sys/fs/cgroup/memory.stat")
     events = _key_value_file("/sys/fs/cgroup/memory.events")
     return {
         "rss_bytes": int(info.rss),
         "vms_bytes": int(info.vms),
         "system_available_bytes": int(psutil.virtual_memory().available),
+        "memory_accounting_scope": memory_scope,
         "cgroup_current_bytes": current,
         "cgroup_limit_bytes": limit,
         "cgroup_inactive_file_bytes": (
@@ -157,7 +165,7 @@ class LifecycleCoordinator:
         with self._condition:
             # Admission is symmetric: a running Market build must finish before
             # FOIS starts, just as an active FOIS flight blocks a new build.
-            while self._market_build_active or self._history_response:
+            while self._phase is not None or self._market_build_active or self._history_response:
                 self._condition.wait()
             self._fois_generation += 1
 
@@ -190,6 +198,10 @@ class LifecycleCoordinator:
         with span('lifecycle_phase', activate=observed, memory=observed) as clock:
             owner = threading.get_ident()
             with self._condition:
+                if name == 'sleeper_sync' and self._fois_generation:
+                    # Sync enters on the event loop. Never wait here for FOIS,
+                    # whose completion also needs that loop to release its lease.
+                    raise RuntimeError('Synchronization deferred while FOIS preparation is running.')
                 while (
                     (self._phase is not None and self._owner != owner)
                     or (
