@@ -60,12 +60,20 @@ def memory_snapshot() -> dict[str, Any]:
         "/sys/fs/cgroup/memory.max",
         "/sys/fs/cgroup/memory/memory.limit_in_bytes",
     )
+    memory_scope = 'cgroup'
+    if os.name == 'nt' and current is None and limit is None:
+        from src.platform.windows_job_memory import measured_job_memory
+        job = measured_job_memory()
+        if job is not None:
+            current, limit = job['current'], job['limit']
+            memory_scope = 'windows_job_commit'
     stat = _key_value_file("/sys/fs/cgroup/memory.stat")
     events = _key_value_file("/sys/fs/cgroup/memory.events")
     return {
         "rss_bytes": int(info.rss),
         "vms_bytes": int(info.vms),
         "system_available_bytes": int(psutil.virtual_memory().available),
+        "memory_accounting_scope": memory_scope,
         "cgroup_current_bytes": current,
         "cgroup_limit_bytes": limit,
         "cgroup_inactive_file_bytes": (
