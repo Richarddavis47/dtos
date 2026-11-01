@@ -104,6 +104,14 @@ class RemoteAttachmentTests(unittest.TestCase):
             with self.subTest(release=release), self.assertRaises(RuntimeError):
                 p.verify_remote_assets(release, self.expected, True)
 
+    def test_log_escape_bytes_are_retained_in_file_only(self):
+        with tempfile.TemporaryDirectory() as folder, patch.object(p.subprocess, 'run') as run:
+            p.download('repos/owner/repo/actions/jobs/1/logs', Path(folder) / 'log')
+            self.assertIn('--allow-escape-sequences', run.call_args.args[0])
+            self.assertIsNotNone(run.call_args.kwargs['stdout'])
+            p.download('repos/owner/repo/actions/artifacts/2/zip', Path(folder) / 'zip')
+            self.assertNotIn('--allow-escape-sequences', run.call_args.args[0])
+
 
 class ContextAdmissionTests(unittest.TestCase):
     def setUp(self):

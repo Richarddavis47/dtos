@@ -46,8 +46,13 @@ def api(path, body=None):
 
 
 def download(path, destination):
+    args = ['gh', 'api', path]
+    if path.endswith('/logs'):
+        # Match the established publisher: retain ANSI bytes in a file, never
+        # render downloaded logs directly in the terminal.
+        args.append('--allow-escape-sequences')
     with destination.open('wb') as stream:
-        subprocess.run(['gh', 'api', path], stdout=stream, check=True)
+        subprocess.run(args, stdout=stream, check=True)
 
 
 def digest(path):
