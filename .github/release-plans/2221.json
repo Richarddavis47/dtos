@@ -1,0 +1,114 @@
+{
+  "schema": 1,
+  "repository": "Richarddavis47/dtos",
+  "actor": "Richarddavis47",
+  "publisher_ref": "refs/heads/release/2221-actions-publisher",
+  "baseline": "118269a2b3c6a6e812422d79818c55d088aff191",
+  "candidate": "9e540c4ce29d92d106a1a9005e80989ff33330d6",
+  "tree": "67c8ac595bfc7fe9c5d1bb4fc7643ba9ac834d22",
+  "pr": 311,
+  "source_branch": "fix/production-oom-admission",
+  "version": "1.22.6",
+  "build": 2221,
+  "draft_id": 430871975,
+  "prior_immutable_tag": "v1.22.3",
+  "canonical_tests": 3963,
+  "canonical_entries": 553,
+  "product_tests": 550,
+  "recovery_file": ".github/release-plans/2221-recovery.zip",
+  "recovery_sha256": "0383a9c205bd2e351ece86cf649bc97e2a5fb9ce0b6c3facd6d5c079365269b6",
+  "runs": [
+    {
+      "id": 41347129005,
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ]
+    },
+    {
+      "id": 41347129001,
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version"
+      ]
+    },
+    {
+      "id": 41347129017,
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ]
+    },
+    {
+      "id": 41347128991,
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13101614043,
+      "run": 41347129005,
+      "name": "canonical-release-2g-python314",
+      "file": "canonical-original.zip",
+      "sha256": "751e766df62130b738201cbb0c38f83228b4e3baf51342ec49b7c34967d3eefc"
+    },
+    {
+      "id": 13099762700,
+      "run": 41347129001,
+      "name": "public-welcome-security-browser",
+      "file": "product-original.zip",
+      "sha256": "cdf1529759e5bee3378f835cc77e96713839bdfdbac1fa3b59f297d98350b125"
+    },
+    {
+      "id": 13100270547,
+      "run": 41347128991,
+      "name": "linux-market-lifecycle-ordinary-summary",
+      "file": "lifecycle-ordinary.zip",
+      "sha256": "a66d02089c583e5c6aad205bd9af8e944c2b1406954c35f14f36140cf5df042c"
+    },
+    {
+      "id": 13099259794,
+      "run": 41347128991,
+      "name": "linux-market-lifecycle-archive-warmed-summary",
+      "file": "lifecycle-archive-warmed.zip",
+      "sha256": "25a9e04a82c1284524bcd85305d5c019ecfea8fe9d9b9ad83d77fab49604d45c"
+    },
+    {
+      "id": 13099259790,
+      "run": 41347128991,
+      "name": "linux-market-lifecycle-combined-read-summary",
+      "file": "lifecycle-combined-read.zip",
+      "sha256": "b1c27d266a7faf8b935827d0d387f62c6673ce69e40e7595522432cf52e1d8cf"
+    }
+  ],
+  "prior_runs": [
+    41343443532,
+    41343443569,
+    41343443526,
+    41343443642,
+    41343224342
+  ],
+  "prior_jobs": [
+    124958133189,
+    124958133190,
+    124958132675,
+    124958132859,
+    124958132724,
+    124958211417
+  ]
+}
