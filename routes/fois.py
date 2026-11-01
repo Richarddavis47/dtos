@@ -21,6 +21,7 @@ from src.ui.intelligence_presentation import exact_rank, human_status, technical
 from src.platform.account_context import current_account
 from src.platform.league_context import current_league_context
 from src.core.fois.process_execution import FOISExecutionBusy
+from src.platform.fois_admission import FOISMemoryDeferred
 from src.core.fois.history_execution import HistoryPublication, HistoryResponse
 from src.platform.request_diagnostics import diagnosed, span
 
@@ -171,6 +172,10 @@ def create_fois_router(
             scores = await (generate or service.generate)(data)
         except FOISExecutionBusy:
             scores = None
+        except FOISMemoryDeferred:
+            return JSONResponse({'league_id': league_id, 'generation_status': 'deferred',
+                'detail': 'FOIS preparation is deferred to protect league availability. Retry after other preparation finishes and memory is available. Previous grades remain RETAINED / NOT REVALIDATED.'},
+                status_code=503, headers={'Retry-After': '60'})
         except Exception:
             return JSONResponse({'league_id': league_id, 'generation_status': 'failed',
                 'detail': 'FOIS calculation is temporarily unavailable. Your league remains usable; previous evidence has not been revalidated.'}, status_code=503)
