@@ -1,3 +1,9 @@
+# v1.22.5 / build 2220 — League-configured K/DEF projection coverage
+
+Include K and DEF in the existing bounded weekly source request. Preserve and score explicit defensive statistics with each league's coefficients; do not substitute default PPR totals or infer scoring buckets from projected means. Admit K/DEF starting slots to roster diagnostics through the existing legal-lineup solver, while retaining missing-slot and scope/generation rejection.
+
+Name unsupported required slots and distinguish team-impact preparation from independently usable Neutral Market evidence. Preserve submitted lineups, Trade thresholds, Market/Custom mathematics and saved preferences. No additional ordinary-read preparation or provider request count. Actual Granite recovery remains unverified when authenticated source access is unavailable.
+
 # v1.22.4 / build 2219 — Optional Relative Custom Valuation
 
 Add a previewed, explicit and reversible Relative Priced-Order Custom pricing method. Existing accounts retain Absolute Slot unchanged. Relative permutes compatible current prices among priced saved assets in their relative saved order; unsupported rows remain saved and unvalued. Neutral prices, source admission, exact identities and all bilateral Trade safeguards remain independent.

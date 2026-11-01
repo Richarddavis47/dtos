@@ -5,7 +5,7 @@ from typing import Any
 from decimal import Decimal, ROUND_FLOOR, ROUND_HALF_UP
 
 
-SCORING_METHOD_VERSION = "sleeper-coefficient-4dp-decimal-v1"
+SCORING_METHOD_VERSION = "sleeper-coefficient-4dp-decimal-v2"
 DISPLAY_METHOD_VERSION = "sleeper-web-sequential-number-tofixed2-qualified-v2"
 
 
@@ -35,6 +35,20 @@ STAT_KEYS.update({key: key for key in (
     'bonus_rec_te', 'bonus_rec_rb', 'bonus_rec_wr', 'bonus_rush_td_qb',
     'bonus_pass_yd_300', 'bonus_pass_yd_400', 'bonus_rush_yd_100', 'bonus_rec_yd_100',
     'fgm_0_19', 'fgm_20_29', 'fgm_30_39', 'fgm_40_49', 'fgm_50p',
+)})
+
+# Score only explicit source statistics with the league's own coefficients.
+# Never derive points/yardage buckets from a projected mean or use pts_ppr
+# as a substitute for the configured league's defensive scoring.
+STAT_KEYS.update({key: key for key in (
+    'sack', 'int', 'ff', 'fum_rec', 'fum_rec_td', 'safe', 'blk_kick',
+    'def_td', 'def_st_td', 'def_st_ff', 'def_st_fum_rec',
+    'st_td', 'st_ff', 'st_fum_rec', 'def_kr_yd', 'def_pr_yd', 'def_pr_td',
+    'pts_allow', 'pts_allow_0', 'pts_allow_1_6', 'pts_allow_7_13',
+    'pts_allow_14_20', 'pts_allow_21_27', 'pts_allow_28_34', 'pts_allow_35p',
+    'yds_allow', 'yds_allow_0_100', 'yds_allow_100_199', 'yds_allow_200_299',
+    'yds_allow_300_349', 'yds_allow_350_399', 'yds_allow_400_449',
+    'yds_allow_450_499', 'yds_allow_500_549', 'yds_allow_550p',
 )})
 
 
