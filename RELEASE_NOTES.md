@@ -4,7 +4,7 @@ Reserve build2220 and PR310 for the separate K/DEF candidate. This production-ba
 
 Serialize FOIS reservation against existing heavy phases; defer sync rather than blocking its event loop while FOIS owns its lease. Reap an idle FOIS worker before sync allocations. Retain previous grades as RETAINED / NOT REVALIDATED and report deferred generation distinctly, with a60-second automatic-attempt cooldown and existing retry controls. No source prices, projections, lineup or grading formulas change.
 
-Reserve sizing is conservative relative to observed243MiB worker residency, not a formal maximum-allocation guarantee. Retained parent pressure remains an operating limitation. Release requires complete canonical, Product and resource acceptance; no production stress or infrastructure changes.
+Reserve sizing is conservative relative to observed243MB worker residency, not a formal maximum-allocation guarantee. Retained parent pressure remains an operating limitation. Release requires complete canonical, Product and resource acceptance; no production stress or infrastructure changes.
 
 # v1.22.4 / build 2219 — Optional Relative Custom Valuation
 
