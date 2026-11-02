@@ -1,5 +1,7 @@
 """Authenticated phone readiness/deferral/retry; all mutations are disposable."""
 import json
+import os
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 from urllib.parse import urlsplit
@@ -17,6 +19,9 @@ class TradeResourceBrowserTests(unittest.TestCase):
         f.setUp()
         self.addCleanup(f.doCleanups)
         measurements = []
+        evidence = os.environ.get('DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE')
+        if evidence:
+            Path(evidence).mkdir(parents=True, exist_ok=True)
         with sync_playwright() as playwright:
             browser = launch_chromium(playwright, headless=True)
             try:
@@ -47,7 +52,7 @@ class TradeResourceBrowserTests(unittest.TestCase):
                         page.route('**/*', transport)
                         page.goto('https://dtos.test/trades/recommended?front_office=1')
                         page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
-                        self.assertIn('compatible lineup publication', page.locator('#trade-search-readiness').inner_text())
+                        self.assertIn('Projections prepared.', page.locator('#trade-search-readiness').inner_text())
                         self.assertEqual(posts, [])
                         # Temporary strategy is retained through deferral and retry.
                         page.locator('#trade-strategy').select_option('REBUILD')
@@ -58,6 +63,8 @@ class TradeResourceBrowserTests(unittest.TestCase):
                         self.assertIn('temporarily paused', page.locator('#trade-search-readiness').inner_text())
                         self.assertNotIn('No qualified', page.locator('#recommendation-status').inner_text())
                         self.assertEqual(len(posts), 1)
+                        if evidence:
+                            page.screenshot(path=str(Path(evidence) / f'{width}x{height}-deferred.png'))
                         page.wait_for_timeout(150)
                         self.assertEqual(len(posts), 1)  # No automatic expensive retry.
                         control['pressure'] = False
@@ -68,6 +75,8 @@ class TradeResourceBrowserTests(unittest.TestCase):
                             self.assertEqual(posts[0]['payload'].get(key), posts[1]['payload'].get(key))
                         self.assertEqual(page.locator('#trade-strategy').input_value(), 'REBUILD')
                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
+                        if evidence:
+                            page.screenshot(path=str(Path(evidence) / f'{width}x{height}-complete.png'))
                         page.reload()
                         page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
                         self.assertEqual(len(posts), 2)
@@ -80,4 +89,6 @@ class TradeResourceBrowserTests(unittest.TestCase):
                         context.close()
             finally:
                 browser.close()
+        if evidence:
+            Path(evidence, 'measurements.json').write_text(json.dumps(measurements, indent=2))
         print('DTOS_TRADE_RESOURCE_BROWSER ' + json.dumps(measurements))

@@ -1696,10 +1696,10 @@
     syncLocks(); el('trade-find').hidden = flow === 'create'; persist(); paint();
     if (data.projection_evidence) latestEvidence.projection_generation = data.projection_evidence.generation;
     if (el('trade-search-readiness') && data.search_readiness) {
-      el('trade-search-readiness').textContent = [data.lineup_preparation?.message, data.search_readiness.message].filter(Boolean).join(' ');
+      el('trade-search-readiness').textContent = [data.lineup_preparation?.state === 'prepared' ? 'Projections prepared.' : 'Compatible team-impact projections needed. Neutral Market remains usable.', data.search_readiness.state === 'ready' ? 'Search capacity ready.' : data.search_readiness.message].filter(Boolean).join(' ');
       el('trade-search-readiness').dataset.state = data.search_readiness.state;
     }
-    if (flow === 'recommended') searchStatus('Ready. Generate Trades searches eligible teams; choosing a goal is optional.', 'ready');
+    if (flow === 'recommended') searchStatus(data.search_readiness && data.search_readiness.state !== 'ready' ? 'Search capacity is temporarily unconfirmed. Generate rechecks it before starting; no search has run.' : 'Choose Generate to search eligible teams; choosing a goal is optional.', data.search_readiness && data.search_readiness.state !== 'ready' ? 'deferred' : 'ready');
     if (flow === 'create') operationStatus('Choose assets to evaluate below.', 'ready');
     if (flow === 'trade_for') searchStatus('Choose an opponent-owned target below to find acquisition options.', 'ready');
     if (flow === 'shop') { el('trade-find').textContent = 'Find Shop returns'; searchStatus('Not started. Find Shop returns searches the selected scope; strategy alone cannot resolve missing projection coverage.', 'not_started'); }
