@@ -1,6 +1,7 @@
 """Display-only ordering over prepared neutral workspace DTOs."""
 
 import os
+from datetime import datetime
 from pathlib import Path
 import unittest
 from urllib.parse import urlsplit
@@ -237,6 +238,10 @@ class TradePickerOrderTests(unittest.TestCase):
                     page.close()
             finally:
                 browser.close()
-        self.assertEqual(
-            f.client.get("/api/trades/workspace?front_office=1").json(), expected
-        )
+        repeated = f.client.get("/api/trades/workspace?front_office=1").json()
+        # The capacity observation has a fresh clock; all actual workspace data
+        # and display ordering must remain unchanged through this journey.
+        for observation in (expected, repeated):
+            checked = observation['search_readiness'].pop('checked_at')
+            self.assertIsNotNone(datetime.fromisoformat(checked).tzinfo)
+        self.assertEqual(repeated, expected)

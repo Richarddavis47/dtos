@@ -68,10 +68,15 @@ def main():
     TREE = subprocess.check_output(
         ["git", "rev-parse", "HEAD^{tree}"], text=True
     ).strip()
+    working_tree_clean = not subprocess.check_output(
+        ["git", "status", "--porcelain"], text=True
+    ).strip()
     if os.environ.get("DTOS_EXPECTED_HEAD"):
         assert HEAD == os.environ["DTOS_EXPECTED_HEAD"], "Wrong candidate"
+        assert working_tree_clean, "Tracked source differs from the candidate"
     import asyncio
     import hashlib
+    import logging
     import json
     import threading
     import time
@@ -97,12 +102,22 @@ def main():
     reader = ProjectionService(fixture / "projections.sqlite3")
     client = TestClient(dtos_app.app)
     client.get("/health/live")
+    live_timings = []
+
+    class LiveTiming(logging.Handler):
+        def emit(self, record):
+            if getattr(record, 'event', None) == 'request_complete' and getattr(record, 'path', None) == '/health/live':
+                live_timings.append(record.duration_ms)
+
+    timing_handler = LiveTiming()
+    logging.getLogger('dtos.request').addHandler(timing_handler)
     report = {
         "scope": "Actually enforced2GiB disposable source-compatible workloads. File/anonymous ballast is test harness memory, not claimed production headroom. No production Trade invoked.",
         "states": [],
         "operations": [],
         "head": HEAD,
         "tree": TREE,
+        "working_tree_clean": working_tree_clean,
     }
 
     def observe(label):
@@ -193,12 +208,16 @@ def main():
         return padding
 
     async def health(label):
+        observed = len(live_timings)
         started = time.monotonic()
         r = await asyncio.to_thread(client.get, "/health/live")
         elapsed = (time.monotonic() - started) * 1000
-        assert r.status_code == 200 and elapsed < 500
+        assert len(live_timings) == observed + 1, 'Missing server timing evidence'
+        server_ms = live_timings[-1]
+        assert r.status_code == 200 and server_ms < 500
         report.setdefault("liveness", []).append(
-            {"label": label, "milliseconds": elapsed}
+            {"label": label, "milliseconds": server_ms, "server_duration_ms": server_ms,
+             "client_elapsed_ms": elapsed, "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"}
         )
 
     async def scenarios():
@@ -342,6 +361,13 @@ def main():
             report["file_cache_recovery"]["content_still_valid"] = True
             del ballast
             release_unused_allocator_pages()
+        assert not path.exists(), "Harness scratch file survived cleanup"
+        assert lifecycle_coordinator.trade_search_available()
+        report["cleanup"] = {
+            "harness_scratch_exists_after": path.exists(),
+            "trade_lease_available": lifecycle_coordinator.trade_search_available(),
+            "trade_model": "in-process thread; no dedicated Trade subprocess or scratch database",
+        }
         observe("all_ballast_released")
         assert not any(
             execution.observe_memory()["cgroup_memory_events"].get(k)
@@ -362,6 +388,7 @@ def main():
         ):
             asyncio.run(scenarios())
     finally:
+        logging.getLogger('dtos.request').removeHandler(timing_handler)
         stop.set()
         thread.join()
         root.joinpath("result.json").write_text(
