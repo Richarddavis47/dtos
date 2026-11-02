@@ -1,6 +1,6 @@
 """Bounded admission and lifetime ownership for explicit Trade operations.
 
-Cold 180-candidate fixtures measured 188--194 MB incremental container usage,
+Cold 180-candidate fixtures measured 188--222 MB incremental container usage,
 including response JSON, with both roster-only and 12,229-identity sources.
 Reserve 256 MiB for work and another 128 MiB for ordinary overlapping reads.
 Clean inactive file pages are a conditional reclaim allowance, never free heap:
