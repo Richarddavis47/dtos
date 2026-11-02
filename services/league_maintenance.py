@@ -11,6 +11,8 @@ from src.core.league_runtime import LeagueRuntime, RuntimeState
 def ensure_fois_refresh(runtime: LeagueRuntime, generate: Callable[[dict[str, Any]], Awaitable[Any]]) -> None:
     """One optional, lifecycle-owned attempt; browsing never waits or retries it."""
     name = 'dtos-league-fois'
+    if perf_counter() < runtime.lifecycle.get('fois_retry_after_monotonic', 0):
+        return
     if runtime.status in {RuntimeState.EVICTING, RuntimeState.CLOSED} or any(
         task.get_name() == name and not task.done() for task in runtime.background_tasks
     ):
@@ -36,7 +38,10 @@ def ensure_fois_refresh(runtime: LeagueRuntime, generate: Callable[[dict[str, An
         except Exception as exc:
             # The generator records its failure. Never turn an optional failure
             # into loss of canonical league/history facts or a fabricated grade.
-            runtime.lifecycle['fois_generation'] = 'failed'
+            from src.platform.fois_admission import FOISMemoryDeferred
+            runtime.lifecycle['fois_generation'] = 'deferred' if isinstance(exc, FOISMemoryDeferred) else 'failed'
+            if isinstance(exc, FOISMemoryDeferred):
+                runtime.lifecycle['fois_retry_after_monotonic'] = perf_counter() + 60
             runtime.lifecycle['fois_error_type'] = type(exc).__name__
             state = 'retained' if retained else 'unavailable'
             async with runtime.fois_publication_lock:

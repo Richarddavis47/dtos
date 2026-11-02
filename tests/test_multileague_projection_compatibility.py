@@ -89,12 +89,88 @@ class MultiLeagueProjectionTests(unittest.TestCase):
                 self.assertIn(position, row['positions']['QB']['reason'])
                 self.feed = original
 
+    def test_ir_and_canonical_taxi_assets_cannot_fill_required_slots(self):
+        for roster_slot in ('IR', 'Taxi'):
+            with self.subTest(roster_slot=roster_slot):
+                self.data['teams'][0]['players'][8]['roster_slot'] = roster_slot
+                self.data['players']['1-8']['roster_slot'] = roster_slot
+                profile = self.publish()
+                optimal = profile['teams']['1']['weekly'][8]['optimal']
+                self.assertFalse(optimal['available'])
+                self.assertIn('K', optimal['unsupported_slots'])
+                diagnostics = diagnose_league(self.data, self.snapshot, projection_reader=self.service)
+                self.assertIsNone(diagnostics['teams']['1']['optimal_points'])
+                self.assertIn('K', ' '.join(diagnostics['teams']['1']['limitations']))
+
     def test_explicit_zero_def_is_supported(self):
         next(r for r in self.feed if r['player_id'] == '1-9')['stats'] = {'sack': 0, 'int': 0}
         profile = self.publish()
         self.assertEqual(self.snapshot['players']['1-9']['canonical_projection'], 0)
         self.assertTrue(profile['teams']['1']['weekly'][8]['available'])
         self.assertEqual(profile['teams']['1']['weekly'][8]['optimal']['projected_points'], 111)
+
+    def test_superflex_without_dedicated_te_preserves_legal_scoring(self):
+        self.data['league']['roster_positions'] = [
+            'QB', 'RB', 'RB', 'WR', 'WR', 'FLEX', 'FLEX',
+            'WRRB_FLEX', 'REC_FLEX', 'SUPER_FLEX', *(['BN'] * 12),
+        ]
+        self.data['league']['scoring_settings'].update(bonus_rec_te=1, bonus_rec_rb=.5)
+        for team in self.data['teams']:
+            pid = f"{team['roster_id']}-extra"
+            player = dict(id=pid, name='Additional fixture receiver', position='WR',
+                          fantasy_positions=['WR'], team='BUF', status='Active', roster_slot='Bench')
+            team['players'].append(player)
+            self.data['players'][pid] = player.copy()
+            self.feed.append(dict(player_id=pid, season=2026, week=8,
+                                  player={'position': 'WR'}, stats={'rec_yd': 100, 'rec': 5}))
+        profile = self.publish()
+        diagnostic = diagnose_league(self.data, self.snapshot, projection_reader=self.service)
+        for rid, team in profile['teams'].items():
+            optimal = team['weekly'][8]['optimal']
+            self.assertTrue(optimal['available'])
+            self.assertEqual(optimal['projected_points'], 135)
+            self.assertEqual(diagnostic['teams'][rid]['optimal_points'], 135)
+            self.assertEqual(len(optimal['entries']), 10)
+            self.assertNotIn('TE', [entry['slot'] for entry in optimal['entries']])
+            self.assertIn('SUPER_FLEX', [entry['slot'] for entry in optimal['entries']])
+
+    def test_asymmetric_player_trade_reoptimizes_each_side_with_k_and_def(self):
+        self.publish()
+        before = deepcopy(self.data)
+        sent = TradeAsset('1-10', 'player', 'Fixture bench QB', 'QB', 100, 100, 100, 100, 0, 1)
+        received = TradeAsset('2-0', 'player', 'Fixture QB', 'QB', 100, 100, 100, 100, 0, 2)
+        proposal = TradeProposal(active_roster_id=1, partner_roster_id=2,
+            assets_sent=(sent,), assets_received=(received,), package_type='test')
+        impact = evaluate_horizon_impact(self.data, proposal, self.service)
+        result = package_diagnostics(self.data, proposal, self.snapshot, impact, {}, projection_reader=self.service)
+        self.assertEqual(result['sides']['active']['pre_optimal_points'], 115)
+        self.assertEqual(result['sides']['active']['post_optimal_points'], 105)
+        self.assertEqual(impact['sides']['active']['weekly'][8]['delta'], -10)
+        self.assertEqual(impact['sides']['partner']['weekly'][8]['delta'], 0)
+        self.assertEqual(self.data, before)
+
+    def test_scoring_refresh_requires_a_new_compatible_publication(self):
+        self.publish()
+        old = deepcopy(self.snapshot)
+        self.data['league']['scoring_settings']['pass_yd'] = .05
+        self.assertFalse(diagnostic_inputs(self.data, old)[3])
+        profile = self.publish()
+        self.assertNotEqual(self.snapshot['projection_snapshot_id'], old['projection_snapshot_id'])
+        self.assertTrue(diagnostic_inputs(self.data, self.snapshot)[3])
+        self.assertEqual(profile['teams']['1']['weekly'][8]['optimal']['projected_points'], 120)
+        self.assertFalse(diagnostic_inputs(self.data, old)[3])
+
+    def test_future_week_cannot_borrow_current_def_projection(self):
+        future = [dict(row, week=9) for row in self.feed if row['player_id'] != '1-9']
+        self.service.publish_horizon({8: self.feed, 9: future}, data=self.data,
+            league_id='one-qb', season=2026, current_week=8)
+        with patch('services.global_evidence.retained_global_evidence', return_value=None):
+            profile = prepare_for_data(self.service, self.data)
+        self.assertTrue(profile['teams']['1']['weekly'][8]['optimal']['available'])
+        future_lineup = profile['teams']['1']['weekly'][9]['optimal']
+        self.assertFalse(future_lineup['available'])
+        self.assertIsNone(future_lineup['projected_points'])
+        self.assertIn('DEF', future_lineup['unsupported_slots'])
 
     def test_scoring_week_league_and_generation_conflicts_fail_closed(self):
         self.publish()

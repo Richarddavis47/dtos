@@ -26,6 +26,7 @@ from src.core.front_office_evidence import assemble_front_office_evidence
 from src.core.gm_behavioral_intelligence import gm_behavioral_intelligence
 
 from src.core.intelligence.manager_evidence import begin_preparation, end_preparation, preparing, publish_rows
+from src.platform.fois_admission import FOISMemoryDeferred
 
 LOGGER = logging.getLogger("dtos.fois")
 
@@ -129,6 +130,9 @@ class FOISService:
                 self._status["last_duration_ms"],
             )
             return scores
+        except FOISMemoryDeferred as exc:
+            self._status.update(state='deferred', generation_status='deferred', last_error=str(exc))
+            raise
         except Exception as exc:
             self._status.update({"state": "failed", "last_error": str(exc)})
             LOGGER.exception(

@@ -1,8 +1,18 @@
-# v1.22.5 / build 2220 — League-configured K/DEF projection coverage
+# v1.22.7 / build 2222 — League-configured K and DEF projection continuity
 
-Include K and DEF in the existing bounded weekly source request. Preserve and score explicit defensive statistics with each league's coefficients; do not substitute default PPR totals or infer scoring buckets from projected means. Admit K/DEF starting slots to roster diagnostics through the existing legal-lineup solver, while retaining missing-slot and scope/generation rejection.
+Reconcile the held K/DEF candidate with build 2221 without changing its FOIS memory admission, 768 MiB reserve, lifecycle coordination, retirement or deferred-retry behavior.
 
-Name unsupported required slots and distinguish team-impact preparation from independently usable Neutral Market evidence. Preserve submitted lineups, Trade thresholds, Market/Custom mathematics and saved preferences. No additional ordinary-read preparation or provider request count. Actual Granite recovery remains unverified when authenticated source access is unavailable.
+Request K/DEF in the existing bounded Sleeper projection call, preserve explicit defensive statistics under each league's scoring coefficients, and evaluate required K/DEF slots using legal lineup rules. Missing projections remain unknown; no Market prices, Custom formulas, Trade thresholds, pick ownership, submitted lineups or retained FOIS grades change. Incompatible or incomplete required evidence remains qualified.
+
+The original Week 8 source replay is historical acceptance evidence, not proof of a current live DTOS publication. Combined-source validation and any new live observations are recorded separately. See docs/audits/MULTILEAGUE_PROJECTIONS_2220.md.
+
+# v1.22.6 / build 2221 — FOIS memory admission safety
+
+Reserve build2220 and PR310 for the separate K/DEF candidate. This production-baseline safety candidate checks raw container headroom before FOIS scratch preparation and executor submission, with512MiB working reserve plus256MiB safety margin. No inactive-file discount or host-free-memory override. Unknown container telemetry defers work.
+
+Serialize FOIS reservation against existing heavy phases; defer sync rather than blocking its event loop while FOIS owns its lease. Reap an idle FOIS worker before sync allocations. Retain previous grades as RETAINED / NOT REVALIDATED and report deferred generation distinctly, with a60-second automatic-attempt cooldown and existing retry controls. No source prices, projections, lineup or grading formulas change.
+
+Reserve sizing is conservative relative to observed243MB worker residency, not a formal maximum-allocation guarantee. Retained parent pressure remains an operating limitation. Release requires complete canonical, Product and resource acceptance; no production stress or infrastructure changes.
 
 # v1.22.4 / build 2219 — Optional Relative Custom Valuation
 

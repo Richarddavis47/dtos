@@ -22,6 +22,7 @@ from src.core.fois.models import FOIS_MODEL_VERSION
 from src.platform.validation.progress import progress_from_environment
 from src.platform.request_diagnostics import diagnosed, span
 from src.platform.memory_attribution import memory_attribution
+from src.platform.fois_admission import require_fois_headroom
 
 FOIS_PROCESS_TIMEOUT_SECONDS = 60.0
 FOIS_IDLE_RETENTION_SECONDS = 60.0
@@ -103,6 +104,7 @@ def _submit(function, *arguments):
     """Account for queued/running jobs atomically with idle retirement."""
     global _IN_FLIGHT, _LAST_USED
     with _EXECUTOR_LOCK:
+        require_fois_headroom()
         executor = _executor()
         future = executor.submit(function, *arguments)
         processes = getattr(executor, '_processes', None)
@@ -122,7 +124,7 @@ def _finished(_future) -> None:
         _LAST_USED = perf_counter()
 
 
-def retire_idle_fois_executor_sync() -> bool:
+def retire_idle_fois_executor_sync(*, force: bool = False) -> bool:
     """Reap only an unused compute cache, never published scores or active work.
 
     Retain the warm process for clustered generations for one minute. Hold the
@@ -131,7 +133,7 @@ def retire_idle_fois_executor_sync() -> bool:
     """
     global _EXECUTOR
     with _EXECUTOR_LOCK:
-        if _EXECUTOR is None or _IN_FLIGHT or perf_counter() - _LAST_USED < FOIS_IDLE_RETENTION_SECONDS:
+        if _EXECUTOR is None or _IN_FLIGHT or (not force and perf_counter() - _LAST_USED < FOIS_IDLE_RETENTION_SECONDS):
             return False
         processes = getattr(_EXECUTOR, '_processes', None)
         pids = tuple(processes) if isinstance(processes, dict) else ()
@@ -375,6 +377,7 @@ async def generate_fois_isolated(
 ) -> tuple[tuple[Any, ...], dict[str, object], dict[str, object]]:
     """Compute/persist FOIS in one spawned child, then reconcile in the parent."""
     with span('fois_generation', activate=True, memory=True), _generation_slot():
+        require_fois_headroom()
         league_id = str((data.get("league") or {}).get("league_id") or "configured-league")
         started = perf_counter()
         progress = progress_from_environment()
