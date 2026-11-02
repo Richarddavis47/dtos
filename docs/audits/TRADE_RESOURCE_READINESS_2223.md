@@ -1,0 +1,33 @@
+# Trade resource readiness — build 2223
+
+## Confirmed baseline gaps
+
+Production baseline cab3368234b350bf8fb49d30c8788fbb48714c5a executed Trade discovery in a normal shared thread through `run_manager_read`. Trade was absent from heavy-work coordination. There was no Trade memory admission or cooperative cancellation. A disposable baseline cancellation returned while its real 180-evaluation thread ran for another 18.799 seconds; the coordinator reported idle. This establishes an overlap/lifetime defect, not the cause of any particular production OOM.
+
+Authorized read-only November 2 observations show raw cgroup usage and inactive file cache moving together during source work. At 17:04:36 raw current was 2,084,999,168 bytes, anonymous 1,364,918,272, file 689,188,864, inactive file 684,773,376 and kernel 30,638,080. A later sample was 2,026,070,016 current with 624,181,248 inactive file. These are not free heap. Render's separate 17:04 metric was 1,360,101,400 bytes; timing/accounting differ. No production Trade workload was triggered. No unbounded reference leak or exact fatal allocation is established.
+
+## Demand and admission
+
+Fresh enforced 2 GiB containers observed existing ten-franchise, 32-player, 12-exact-pick, 13-week searches with 180 full bilateral evaluations. Cold incremental cgroup peaks were 188,366,848 bytes with roster-only identities and 193,499,136 with a 12,229-identity synthetic source-shaped population. Responses were 3.45–4.69 MB. Warm fixture costs varied; these are measured examples, not a maximum theorem. The execution model is one in-process thread, with no Trade subprocess or scratch database. Existing lineup memoization remains bounded at 32 MiB.
+
+The Trade working allowance is 256 MiB, plus 128 MiB safety for ordinary overlapping reads. Effective limit is the measured container limit capped at 2 GiB. Unknown container telemetry fails closed. No host free-memory fallback is allowed. When complete cgroup file and OOM-event evidence is available, conditional reclaim credit is half of clean inactive file pages, capped at 384 MiB, subtracting dirty, writeback, shared and unevictable bytes. Raw headroom plus credit must cover the 384 MiB combined allowance. This policy is deliberately distinct from FOIS's unchanged 768 MiB raw-memory reserve. During work, checkpoints remeasure at most every 250 ms and stop if telemetry becomes unknown, OOM events advance or the remaining safety margin is lost.
+
+One explicit Trade operation holds a nonqueued lifecycle lease across preparation inside the operation, evaluation and response serialization. FOIS, sync, historical and Market heavy phases cannot overlap it. A bounded recovery pass retires an idle FOIS executor, expires only already-expired entries and invokes the existing native allocator trim. It never evicts active runtime/publication data, invalidates last-valid sources, performs GC, polls providers or rewrites user state. Runtime eviction is not added because no unnecessary live-runtime retention defect was established.
+
+## Cancellation, timeout and customer contract
+
+Cooperative checkpoints cross broad evaluation exception handlers without being mislabeled as a valuation failure. Disconnection, explicit cancellation and a 105-second deadline stop actual work; the async owner drains the thread before releasing the lease. This is cooperative, not forcible thread termination. Admission is repeated for every explicit operation. No automatic expensive retry exists.
+
+Authenticated workspace reads report prepared-lineup status separately from current capacity. No discovery, cleanup, optimizer, historical work or source refresh runs merely to observe readiness. Capacity deferral is HTTP 503 with a safe specific message, not an empty completed search; deadline expiration is HTTP 504. Customer responses contain no raw memory measurements or paths. Numeric resource observations remain in protected server diagnostics. The existing authorization, source/preference publication fences, session recovery and five-tab navigation remain in force.
+
+## Controlled acceptance and limitations
+
+`python -m tools.validation.trade_resource_recovery` prepares synthetic fixtures in one container and observes application work in a fresh actual 2 GiB container with two CPUs and no network. Its Product workflow records exact head/tree, cgroup current/peak, anonymous/file/kernel breakdown, process ownership, harness ballast, real evaluation counts, liveness and cleanup. Normal completion, anonymous-pressure deferral, subsequent recovery, real cancellation/timeout/failure and kernel file-cache reclaim are separate outcomes. Normal one-QB HTTP evaluation verifies QB/RB/WR/TE/FLEX/K/DEF before and after, with no fabricated K/DEF Market values.
+
+Precommit proof completed three real 180-candidate searches (including conditional clean-file reclaim), retained identical business-result digests and recorded no OOM events. A clean-cache pressure case reclaimed about 168 MB while retaining valid file contents. Test-only anonymous and model-demand ballast is identified independently; it is not subtracted to claim production headroom. The proof's container lifetime peak was 1,969,917,952 bytes. These are fixture outcomes; final exact-source hosted artifacts are authoritative for release acceptance.
+
+No production account, rankings, strategy, goal, valuation method, lineup or trade is mutated. No synthetic production search is required for release smoke. Live Granite end-to-end search remains a separate bounded Scout acceptance after fresh capacity and prepared-publication checks. If unsafe, leave the workspace intact and defer. Do not force a search or infer acceptance from fixture completion. One qualifying recommendation is not required: a supported completed evaluation is meaningful even when every candidate is rejected.
+
+## Scout handoff
+
+Check deployed version/commit and authenticated Granite league context. Read workspace readiness once; verify prepared projections and resource readiness are separate. Operator diagnostics may corroborate `trade_readiness` / `trade_admission` numeric observations without exposing them publicly. If capacity is ready and no conflicting heavy activity is active, perform at most one unseeded search. Admission rechecks atomically. Record source identity, timing, candidate counts and completed/deferred/failed state. Confirm exact picks, selected strategy and Neutral/Custom mode remain unchanged, and no goal/ranking save occurs. A 503 deferral is not a zero-recommendation completion. No looped retries or production stress.

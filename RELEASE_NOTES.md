@@ -1,3 +1,11 @@
+# v1.22.8 / build 2223 — Trade resource readiness and bounded recovery
+
+Explicit Trade searches and full evaluations now check current container memory and share lifecycle coordination with Sleeper, FOIS and historical preparation. One Trade operation runs at a time. Unsafe or unknown capacity returns a specific deferred state and preserves the workspace; retry is explicit. Compatible projections, capacity readiness and completed searches with no qualified offers remain distinct.
+
+A measured Trade policy reserves 256 MiB for work plus 128 MiB safety. With complete cgroup evidence, only half of clean inactive file-backed memory, capped at 384 MiB, may count as conditional reclaim capacity. Raw memory measurements remain intact. FOIS retains its separate raw-memory 768 MiB policy. Explicit admission may retire an idle FOIS worker, expire already-expired cache entries and return unused allocator pages; it never clears active publications or refreshes sources.
+
+Cooperative cancellation and a 105-second server deadline retain ownership until the actual Trade thread exits. No search caps, prices, Custom formulas, lineups, ownership rules or bilateral qualification thresholds change. Resource tests separate preparation from observation, label harness padding, and exercise actual execution, deferral, recovery, timeout and cleanup inside 2 GiB. This is bounded operating evidence, not general production-capacity clearance. See docs/audits/TRADE_RESOURCE_READINESS_2223.md.
+
 # v1.22.7 / build 2222 — League-configured K and DEF projection continuity
 
 Reconcile the held K/DEF candidate with build 2221 without changing its FOIS memory admission, 768 MiB reserve, lifecycle coordination, retirement or deferred-retry behavior.

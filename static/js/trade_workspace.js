@@ -1367,6 +1367,10 @@
         if (body.requested_mode !== extra.repair_mode || body.returned_modes?.some(mode => mode !== extra.repair_mode) || invalidPreservation) throw new Error('DTOS rejected a mismatched repair mode. Your proposal is unchanged.');
       }
       if (path === 'balance') balanceStatus(body.results?.length ? 'Balancing options ready. Preview before adopting.' : body.other_trade_ideas?.length ? 'No supported target-preserving option. Other trade ideas are separate below; your offer is unchanged.' : 'No balancing options returned. Your offer is unchanged.', started, startedRun);
+      if (['generate', 'evaluate', 'assist', 'alternatives', 'compare'].includes(path) && el('trade-search-readiness')) {
+        el('trade-search-readiness').textContent = 'Capacity check passed for this completed operation. Review the result and its evidence below.';
+        el('trade-search-readiness').dataset.state = 'ready';
+      }
       if (path === 'generate') searchStatus(completedOffers.some(qualifiedOffer) ? 'Trade options ready. Search complete; review the qualified offers before adopting.' : 'Search complete. No qualified recommendations; any alternatives keep their own limitations.', 'complete', started, startedRun);
       else operationStatus(path === 'evaluate' ? 'Evaluation complete. Review the final bilateral verdict.' : 'Options ready. Preview before adopting; your original stays intact.', 'complete');
       if (path === 'evaluate') {
@@ -1382,7 +1386,12 @@
     } catch (error) { if (started === revision) {
       const feedback = timedOut ? (path === 'balance' ? 'Balancing' : 'Search') + ' timed out. Your offer is unchanged. Try again.' : path === 'balance' && error instanceof TypeError ? 'Balancing could not connect. Your offer is unchanged. Try again.' : error.message;
       if (path === 'balance') balanceStatus(feedback, started, startedRun);
-      if (path === 'generate') searchStatus(feedback, 'error', started, startedRun);
+      const capacityDeferred = error.code === 'trade_capacity_deferred';
+      if (capacityDeferred && el('trade-search-readiness')) {
+        el('trade-search-readiness').textContent = feedback;
+        el('trade-search-readiness').dataset.state = 'deferred';
+      }
+      if (path === 'generate') searchStatus(feedback, capacityDeferred ? 'deferred' : 'error', started, startedRun);
       else operationStatus('This operation could not complete. Review the explanation below; your offer is retained.', 'error');
       if (path === 'evaluate' && session.currentAssessment) {
         staleAssessment(error.code === 'ownership_changed' ? 'Current ownership blocker: ' + feedback : 'Reevaluation failed or incomplete: ' + feedback);
@@ -1686,6 +1695,10 @@
 
     syncLocks(); el('trade-find').hidden = flow === 'create'; persist(); paint();
     if (data.projection_evidence) latestEvidence.projection_generation = data.projection_evidence.generation;
+    if (el('trade-search-readiness') && data.search_readiness) {
+      el('trade-search-readiness').textContent = [data.lineup_preparation?.message, data.search_readiness.message].filter(Boolean).join(' ');
+      el('trade-search-readiness').dataset.state = data.search_readiness.state;
+    }
     if (flow === 'recommended') searchStatus('Ready. Generate Trades searches eligible teams; choosing a goal is optional.', 'ready');
     if (flow === 'create') operationStatus('Choose assets to evaluate below.', 'ready');
     if (flow === 'trade_for') searchStatus('Choose an opponent-owned target below to find acquisition options.', 'ready');

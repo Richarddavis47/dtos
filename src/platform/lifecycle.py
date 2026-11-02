@@ -101,6 +101,7 @@ class LifecycleCoordinator:
         self._fois_generation = 0
         self._market_build_active = 0
         self._history_response = False
+        self._trade_search = False
 
     def begin_startup(self, reason: str) -> int:
         """Open a process startup fence before canonical work begins."""
@@ -165,7 +166,7 @@ class LifecycleCoordinator:
         with self._condition:
             # Admission is symmetric: a running Market build must finish before
             # FOIS starts, just as an active FOIS flight blocks a new build.
-            while self._phase is not None or self._market_build_active or self._history_response:
+            while self._phase is not None or self._market_build_active or self._history_response or self._trade_search:
                 self._condition.wait()
             self._fois_generation += 1
 
@@ -177,7 +178,7 @@ class LifecycleCoordinator:
     def try_reserve_history_response(self) -> bool:
         """No queued historical results; exclude other coordinated heavy work."""
         with self._condition:
-            if (self._history_response or self._phase is not None or self._fois_generation
+            if (self._history_response or self._phase is not None or self._fois_generation or self._trade_search
                     or self._market_critical or self._startup_state != 'complete'):
                 return False
             self._history_response = True
@@ -186,6 +187,26 @@ class LifecycleCoordinator:
     def release_history_response(self) -> None:
         with self._condition:
             self._history_response = False
+            self._condition.notify_all()
+
+    def trade_search_available(self) -> bool:
+        with self._condition:
+            return (self._startup_state == 'complete' and self._phase is None
+                and not self._trade_search and not self._fois_generation
+                and not self._history_response and not self._market_critical
+                and not self._market_build_active)
+
+    def try_reserve_trade_search(self) -> bool:
+        """One explicit operation, no queued allocations or heavyweight overlap."""
+        with self._condition:
+            if not self.trade_search_available():
+                return False
+            self._trade_search = True
+            return True
+
+    def release_trade_search(self) -> None:
+        with self._condition:
+            self._trade_search = False
             self._condition.notify_all()
 
     @contextmanager
@@ -198,6 +219,10 @@ class LifecycleCoordinator:
         with span('lifecycle_phase', activate=observed, memory=observed) as clock:
             owner = threading.get_ident()
             with self._condition:
+                if self._trade_search:
+                    # Sync can enter on the event loop. Defer instead of waiting
+                    # for a Trade waiter that needs the same loop to finish.
+                    raise RuntimeError('Preparation deferred while a Trade operation is running.')
                 if name == 'sleeper_sync' and self._fois_generation:
                     # Sync enters on the event loop. Never wait here for FOIS,
                     # whose completion also needs that loop to release its lease.
@@ -246,6 +271,7 @@ class LifecycleCoordinator:
                 self._startup_state == "complete"
                 and self._fois_generation == 0
                 and not self._history_response
+                and not self._trade_search
                 and self._phase not in MARKET_BUILD_BLOCKERS
             )
 
@@ -257,6 +283,7 @@ class LifecycleCoordinator:
                     self._startup_state == "complete"
                     and self._fois_generation == 0
                     and not self._history_response
+                    and not self._trade_search
                     and self._phase not in MARKET_BUILD_BLOCKERS
                 ),
                 "startup_fence": {
@@ -270,6 +297,7 @@ class LifecycleCoordinator:
                     "state": (
                         "MARKET_CRITICAL" if self._market_critical
                         else "FOIS_GENERATION" if self._fois_generation
+                        else "TRADE_SEARCH" if self._trade_search
                         else "HISTORICAL_HEAVY" if self._phase == "historical_import"
                         else "HISTORICAL_MARKET" if self._phase == "historical_market_resolution"
                         else "PROJECTION_HEAVY" if self._phase == "valuation_intelligence"
@@ -279,6 +307,7 @@ class LifecycleCoordinator:
                     "market_critical_reason": self._market_critical_reason,
                     "fois_generation": bool(self._fois_generation),
                     "historical_response": self._history_response,
+                    "trade_search": self._trade_search,
                 },
                 "recent_phases": list(self._history),
                 "memory": memory_snapshot(),
@@ -296,6 +325,7 @@ class LifecycleCoordinator:
             self._startup_completed_at = None
             self._market_critical = 0
             self._market_critical_reason = None
+            self._trade_search = False
             self._condition.notify_all()
 
 
