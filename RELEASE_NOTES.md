@@ -1,3 +1,11 @@
+# v1.22.7 / build 2222 — League-configured K and DEF projection continuity
+
+Reconcile the held K/DEF candidate with build 2221 without changing its FOIS memory admission, 768 MiB reserve, lifecycle coordination, retirement or deferred-retry behavior.
+
+Request K/DEF in the existing bounded Sleeper projection call, preserve explicit defensive statistics under each league's scoring coefficients, and evaluate required K/DEF slots using legal lineup rules. Missing projections remain unknown; no Market prices, Custom formulas, Trade thresholds, pick ownership, submitted lineups or retained FOIS grades change. Incompatible or incomplete required evidence remains qualified.
+
+The original Week 8 source replay is historical acceptance evidence, not proof of a current live DTOS publication. Combined-source validation and any new live observations are recorded separately. See docs/audits/MULTILEAGUE_PROJECTIONS_2220.md.
+
 # v1.22.6 / build 2221 — FOIS memory admission safety
 
 Reserve build2220 and PR310 for the separate K/DEF candidate. This production-baseline safety candidate checks raw container headroom before FOIS scratch preparation and executor submission, with512MiB working reserve plus256MiB safety margin. No inactive-file discount or host-free-memory override. Unknown container telemetry defers work.

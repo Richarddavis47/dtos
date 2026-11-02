@@ -88,7 +88,7 @@ def _qualification(data, snapshot, slots, *, projection_reader=None):
         and all(_number(v) is not None for v in scoring.values())
     )
     supported_slots = bool(slots) and all(
-        slot in BENCH_SLOTS or slot in POSITIONS or slot in FLEX_ELIGIBILITY
+        slot in BENCH_SLOTS or slot in (*POSITIONS, "K", "DEF") or slot in FLEX_ELIGIBILITY
         for slot in slots
     )
     rows = (snapshot or {}).get("players") or {}
@@ -191,6 +191,13 @@ def diagnostic_inputs(data, snapshot):
         and qualification["calculation_supported"]
         and snapshot.get("scoring_settings") == scoring
     )
+    if not admitted:
+        name = str(league.get("name") or "This league")
+        qualification["limitations"].append(
+            f"{name}, week {week}: team-impact projections must match the selected "
+            "league, season, week and scoring. Retry league preparation; "
+            "Neutral Market comparisons remain separate from lineup evidence."
+        )
     rows = (snapshot or {}).get("players") or {}
     pools, excluded, uncertain, eligibility = {}, {}, {}, {}
     from .team_strength import compatible_profile
@@ -455,6 +462,13 @@ def _compute(inputs, snapshot, key):
     }
     for rid, pool in pools.items():
         base, reserve = optimal[rid], reserve_lineups[rid]
+        slot_limitations = (
+            ["Required starting positions lack compatible eligible projections: "
+             + ", ".join(base.unsupported_slots)
+             + ". Neutral Market comparisons remain usable independently; "
+             "changing draft picks cannot resolve missing lineup evidence."]
+            if base.unsupported_slots else []
+        )
         missing = [p["id"] for p in pool if p["projected_points"] is None]
         complete = bool(admitted and slots and not missing and not uncertain[rid])
         team_evidence = deepcopy(
@@ -693,12 +707,13 @@ def _compute(inputs, snapshot, key):
             "optimal_ids": [e.asset_id for e in base.entries],
             "reserve_ids": [e.asset_id for e in reserve.entries],
             "missing_projection_ids": missing,
+            "lineup_limitations": slot_limitations,
             "excluded_player_ids": excluded[rid],
             "uncertain_player_ids": uncertain[rid],
             "coverage": "supported current week"
             if complete
             else "partial / unavailable",
-            "limitations": qualification["limitations"]
+            "limitations": qualification["limitations"] + slot_limitations
             + [
                 "Current-week diagnostic; future projections, byes and long-term quality are not inferred.",
                 "Removal/addition effects are separate scenarios and must not be summed.",
@@ -722,6 +737,7 @@ def _requalify(result, qualification):
     for team in result["teams"].values():
         original_evidence = team.get("evidence") or {}
         evidence = deepcopy(shared)
+        evidence["limitations"].extend(team.get("lineup_limitations") or [])
         evidence["projection_coverage"] = (team.get("evidence") or {}).get(
             "projection_coverage", {}
         )

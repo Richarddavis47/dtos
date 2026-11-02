@@ -14,7 +14,7 @@ from src.core.projection_intelligence.scoring import STAT_KEYS, fantasy_points
 
 PROVIDER_ID = "sleeper_projections"
 SOURCE_CLASSIFICATION = "Sleeper Canonical Weekly Projection Evidence"
-PARSER_VERSION = "3.2"
+PARSER_VERSION = "3.3"
 TRANSPORT_VERSION = "1.0"
 REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 ALLOWED_PROJECTION_HOSTS = frozenset({"api.sleeper.app", "api.sleeper.com"})
@@ -151,6 +151,7 @@ class SleeperProjectionClient:
             ("season_type", "regular"), ("position[]", "QB"),
             ("position[]", "RB"), ("position[]", "WR"),
             ("position[]", "TE"), ("position[]", "FLEX"),
+            ("position[]", "K"), ("position[]", "DEF"),
         ]
         current = httpx.URL(url).copy_merge_params(params)
         visited: set[str] = set()
