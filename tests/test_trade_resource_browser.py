@@ -14,6 +14,64 @@ from tools.validation.browser_runtime import launch_chromium
 
 
 class TradeResourceBrowserTests(unittest.TestCase):
+    def test_entry_layout_keeps_picker_accessible_for_each_readiness_state(self):
+        """Typed display snapshots only: never submit work or bypass admission."""
+        f = fixtures.OpportunityIntegrityTests()
+        f.setUp()
+        self.addCleanup(f.doCleanups)
+        measurements = []
+        with sync_playwright() as playwright:
+            browser = launch_chromium(playwright, headless=True)
+            try:
+                for width, height in [(320, 432), (375, 667), (390, 844), (1280, 900)]:
+                    context = browser.new_context(viewport={'width': width, 'height': height})
+                    try:
+                        page = context.new_page()
+                        snapshot = {'capacity': 'ready', 'projections': 'prepared'}
+                        posts = []
+
+                        def transport(route):
+                            request = route.request
+                            u = urlsplit(request.url)
+                            if u.hostname != 'dtos.test':
+                                return route.fulfill(status=200, body='')
+                            if request.method == 'POST':
+                                posts.append(u.path)
+                            response = f.f.client.request(request.method, u.path + ('?' + u.query if u.query else ''))
+                            if response.status_code == 404 and u.path.startswith('/static/'):
+                                response = f.static.get(u.path)
+                            body = response.content
+                            if u.path == '/api/trades/workspace':
+                                self.assertEqual(response.status_code, 200)
+                                data = response.json()
+                                data['search_readiness']['state'] = snapshot['capacity']
+                                data['lineup_preparation']['state'] = snapshot['projections']
+                                body = json.dumps(data).encode()
+                            route.fulfill(status=response.status_code,
+                                content_type=response.headers.get('content-type', 'text/html'), body=body)
+
+                        page.route('**/*', transport)
+                        for preparation in ('prepared', 'incompatible'):
+                            for capacity in ('ready', 'deferred', 'unknown'):
+                                with self.subTest(width=width, preparation=preparation, capacity=capacity):
+                                    snapshot.update(capacity=capacity, projections=preparation)
+                                    page.goto('https://dtos.test/trades/create?front_office=1')
+                                    page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
+                                    readiness = page.locator('#trade-search-readiness')
+                                    self.assertEqual(readiness.get_attribute('data-state'), capacity)
+                                    self.assertIn('Projections prepared.' if preparation == 'prepared' else 'Team-impact projections needed.', readiness.inner_text())
+                                    self.assertIn({'ready':'capacity ready', 'deferred':'paused for capacity', 'unknown':'Capacity unverified'}[capacity], readiness.inner_text())
+                                    picker_y = page.locator('#trade-sent-board button[data-asset-id]').first.evaluate('e=>e.getBoundingClientRect().top+scrollY')
+                                    self.assertLess(picker_y, 900, (width, preparation, capacity, picker_y))
+                                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
+                                    self.assertEqual(posts, [])
+                                    measurements.append(dict(width=width, preparation=preparation, capacity=capacity, picker_y=picker_y))
+                    finally:
+                        context.close()
+            finally:
+                browser.close()
+        print('DTOS_TRADE_ENTRY_LAYOUT ' + json.dumps(measurements))
+
     def test_four_sizes_distinguish_capacity_source_and_completed_search_without_losing_work(self):
         f = fixtures.OpportunityIntegrityTests()
         f.setUp()
