@@ -1,0 +1,144 @@
+{
+  "schema": 1,
+  "repository": "Richarddavis47/dtos",
+  "actor": "Richarddavis47",
+  "publisher_ref": "refs/heads/release/2223-actions-publisher",
+  "baseline": "cab3368234b350bf8fb49d30c8788fbb48714c5a",
+  "candidate": "a76da620c17338e4c5ee0a007829b56bbcf845f4",
+  "tree": "9acf0b605c79e1d5091adc706b0fe23e45805f29",
+  "pr": 312,
+  "source_branch": "fix/v1.22.8-trade-resource-readiness",
+  "version": "1.22.8",
+  "build": 2223,
+  "draft_id": 432222478,
+  "prior_immutable_tag": "v1.22.7",
+  "canonical_tests": 3989,
+  "canonical_entries": 563,
+  "product_tests": 565,
+  "recovery_file": ".github/release-plans/2223-recovery.zip",
+  "recovery_sha256": "b40e7d3dc85c0ea7e31de36814f960ce67959979c759cd85409259eab76be381",
+  "runs": [
+    {
+      "id": 41546919055,
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ]
+    },
+    {
+      "id": 41546918966,
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version"
+      ]
+    },
+    {
+      "id": 41546918958,
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ]
+    },
+    {
+      "id": 41546918959,
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "lifecycle-combined-read.zip",
+      "sha256": "998ece1af5f18ab0ae5b17ee39a70749644faed5c4d11faa244003a63bc17d2c",
+      "size": 15437,
+      "id": 13189526112,
+      "name": "linux-market-lifecycle-combined-read-summary",
+      "run": 41546918959
+    },
+    {
+      "file": "lifecycle-archive-warmed.zip",
+      "sha256": "7cf166e4259572a80cdd76bbf3a8b2b049b369ef76d419c650f7a1e9dd516031",
+      "size": 12837,
+      "id": 13188474634,
+      "name": "linux-market-lifecycle-archive-warmed-summary",
+      "run": 41546918959
+    },
+    {
+      "file": "lifecycle-ordinary.zip",
+      "sha256": "6c034ce810c384dea38b49ba382ea7690b69f982b7400321e97d4a0380daa371",
+      "size": 13266,
+      "id": 13188328750,
+      "name": "linux-market-lifecycle-ordinary-summary",
+      "run": 41546918959
+    },
+    {
+      "id": 13189144253,
+      "name": "public-welcome-security-browser",
+      "run": 41546918966,
+      "file": "product-original.zip",
+      "sha256": "2fc100df2eba7e0d4b78400fc8c16615ac8b2aa403a721771c5ebc81c811333b"
+    },
+    {
+      "id": 13189802505,
+      "name": "trade-resource-2g",
+      "run": 41546918966,
+      "file": "trade-resource-original.zip",
+      "sha256": "710a62eab43cc1da18a099ee3c3ade760d645eb54c31e165adf44a6039e35d53"
+    },
+    {
+      "id": 13194080840,
+      "name": "canonical-release-2g-python314",
+      "run": 41546919055,
+      "file": "canonical-original.zip",
+      "sha256": "6f0beb18936697541b4c0e2390620c51277ebf3c68b100068b3460a6a873b1c3"
+    }
+  ],
+  "prior_runs": [
+    41496155680,
+    41496155612,
+    41496155488,
+    41496155475,
+    41496251692,
+    41496252351,
+    41496252012,
+    41496251786,
+    41497894246,
+    41497894264,
+    41497894460,
+    41497894284,
+    41498772231,
+    41498772296,
+    41498772286,
+    41498772368,
+    41532346751,
+    41532345338,
+    41532345083,
+    41532345396,
+    41535528070,
+    41535527759,
+    41535527782,
+    41535527943
+  ],
+  "prior_jobs": [
+    125451881843,
+    125460548226,
+    125460548381,
+    125460548473,
+    125575479630,
+    125586732716
+  ],
+  "python_version": "3.14.3"
+}
