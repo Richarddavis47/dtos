@@ -528,6 +528,10 @@ def evaluate_trade_request(
     player_facts = selected_player_facts(data, (*proposal.assets_sent, *proposal.assets_received), projections,
         scoring_supported=active_diagnostic.get('evidence', {}).get('scoring') == 'supported')
     evaluation['player_facts'] = player_facts
+    from services.trade_lineup_detail import bind_lineup_details
+    bind_lineup_details(data, evaluation, projections, proposal)
+    from services.trade_evidence_limits import evidence_limitations
+    evaluation['evidence_limitations'] = evidence_limitations(evaluation)
     from services.trade_explanation import render_trade_explanation
     evaluation['explanation_html'] = render_trade_explanation(evaluation, league_id=identity_input['league_id'])
     evaluation["actions"] = ["EDIT TRADE", "ADJUST OFFER"]

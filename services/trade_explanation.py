@@ -75,7 +75,7 @@ def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Expl
         evidence.append(EvidenceItem(key, label, kind, ctx, key, unit,
             A.UNAVAILABLE if value is None else (state or A.AVAILABLE),
             None if value is None else manager_points(value)
-            if unit == 'fantasy points' and (not key.startswith('weekly.') or key.endswith('.delta')) else str(value)))
+            if unit == 'fantasy points' else str(value)))
         return key
 
     def reason(code, key):
@@ -229,6 +229,10 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
     """Use the shared renderer; weekly rows are optional presentation detail."""
     from src.ui.explanations import explanation_panel
     admissions = completed_lineup_admissions(result)
+    from services.trade_lineup_detail import lineup_detail_view, render_lineup_details, render_lineup_risks
+    slot_view = lineup_detail_view(result, admissions=admissions)
+    slot_detail = render_lineup_details(result, admissions=admissions, view=slot_view)
+    slot_risks = render_lineup_risks(result, slot_view)
     view = trade_explanation(result, league_id=league_id, _admissions=admissions)
     weekly = tuple(item.key for item in view.evidence if item.key.startswith('weekly.'))
     rendered = explanation_panel(view, evidence_groups=(('Weekly optimal-lineup detail', weekly),) if weekly else ())
@@ -275,12 +279,14 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
         rendered = rendered[:risk_start] + rendered[risk_end:]
     legacy = rendered.replace('</p>', '</p>' + risk + summary, 1)
     if not decision:
-        return legacy.replace('<p>', '<p class="tw-final-verdict">', 1)
+        return legacy.replace('<p>', '<p class="tw-final-verdict">', 1).replace(
+            '</section>', slot_risks + slot_detail + '</section>', 1)
     # Preserve the complete established explanation behind depth-on-demand.
     # The verdict and all material costs/qualifications stay in the primary flow.
     split = legacy.index('</p>') + len('</p>')
     primary = _decision_primary(result, decision, admissions)
     return (legacy[:split].replace('<p>', '<p class="tw-final-verdict">', 1) + primary
+            + slot_risks + slot_detail
             + '<details class="tw-evaluation-detail"><summary>Full team, weekly and evaluator evidence</summary>'
             + period_units + legacy[split:-len('</section>')] + '</details></section>')
 
