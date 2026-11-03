@@ -10,6 +10,7 @@ from src.core.decision_engine.models.decision import DecisionContext
 from src.core.decision_engine.team.team_evaluator import evaluate_team
 from tests.test_trade_intelligence import fixture_data
 from src.core.projection_intelligence.service import ProjectionService
+from services.trade_lineup_evidence import diagnostic_summary_display
 from src.core.intelligence.roster_diagnostics import (
     diagnose_league,
     team_diagnostics,
@@ -549,10 +550,10 @@ class DynamicNeedsIntegrationTests(unittest.TestCase):
         self.assertIn(
             "Replacement support is recalculated", second["counterparty_summary"]
         )
-        summary = second["dimensions"]["roster_diagnostics"]["sides"]["active"][
-            "summary"
-        ]
-        self.assertIn(summary, second["explanation_html"])
+        diagnostic = second["dimensions"]["roster_diagnostics"]["sides"]["active"]
+        original = diagnostic["summary"]
+        self.assertIn(diagnostic_summary_display(diagnostic), second["explanation_html"])
+        self.assertEqual(diagnostic["summary"], original)
 
     def test_selected_my_team_and_opponent_share_structural_diagnostic(self):
         from services.team_headquarters import build_team_headquarters

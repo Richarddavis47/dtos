@@ -96,7 +96,10 @@ class TradeFinalEvidenceBrowserTests(unittest.TestCase):
                 text = detail.inner_text()
                 # These are facts from the actual saved canonical evaluator response.
                 self.assertIn(old["evaluation"]["why_they_would_do_it"], text)
-                self.assertIn(old["evaluation"]["counterparty_summary"], text)
+                # Bounded retained responses preserve the canonical prose and
+                # the separately formatted decision view, without full diagnostics.
+                self.assertIn("27.7 → 20.0", old["evaluation"]["counterparty_summary"])
+                self.assertIn(old["evaluation"]["decision_context"]["partner_summary"], text)
                 for limitation in old["evaluation"]["major_limitations"]:
                     self.assertIn(limitation.replace("_", " "), text)
                 self.assertIn("-7.70", text)
