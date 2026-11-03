@@ -12,6 +12,36 @@ from src.core.intelligence.team_strength import prepare_for_data
 
 
 class TradeLineupDetailBrowserTests(unittest.TestCase):
+    def test_generated_card_lineups_are_one_disclosure_from_the_primary_card(self):
+        from tests import test_trade_workflow_experience as workflow
+        from playwright.sync_api import sync_playwright
+        from tools.validation.browser_runtime import launch_chromium
+        helper = workflow.TradeWorkflowExperienceTests()
+        self.addCleanup(helper.doCleanups)
+        f = helper.fixture()
+        with sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                page, records, _, errors, _ = helper.page(browser, f)
+                try:
+                    helper.ready(page)
+                    page.select_option('#trade-strategy', 'RETOOL')
+                    page.locator('#trade-find').press('Enter')
+                    helper.complete(page)
+                    card = page.locator('.tw-offer').first
+                    detail = card.locator(':scope > .tw-lineup-details')
+                    self.assertEqual(detail.count(), 1)
+                    count = len(records)
+                    detail.locator('summary').press('Enter')
+                    self.assertTrue(detail.evaluate('e=>e.open'))
+                    self.assertGreater(detail.locator('table').count(), 0)
+                    self.assertEqual(len(records), count)
+                    self.assertFalse(errors, errors)
+                finally:
+                    page.close()
+            finally:
+                browser.close()
+
     def test_one_qb_slot_audit_at_four_sizes_without_extra_requests(self):
         helper = browser_fixture.DecisionHTTPBrowserTests()
         helper.setUp()

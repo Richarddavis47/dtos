@@ -245,6 +245,34 @@ class TradeLineupDetailTests(unittest.TestCase):
         self.assertIn('2029-R1-1', e['provenance']['inputs']['assets_sent'])
         self.assertIn('A.J. Brown', render_lineup_risks(e, view))
 
+    def test_discovery_materializes_only_returned_lineups_without_re_evaluation(self):
+        from tests import test_trade_discovery_repair as discovery
+        from services.trade_intelligence import generate_trade_workflow
+        from services.trade_lineup_detail import bind_lineup_details
+        f = discovery.DiscoveryRepairTests()
+        f.setUp()
+        self.addCleanup(f.doCleanups)
+        with patch('services.trade_lineup_detail.bind_lineup_details', wraps=bind_lineup_details) as bind:
+            response = generate_trade_workflow(f.data, {'active_roster_id': 1, 'workflow': 'recommended', 'strategy': 'WIN NOW'})
+        rows = [r for key in ('results', 'near_misses', 'exploratory_results') for r in response.get(key) or []]
+        # Related variants are returned assessments too, not extra search work.
+        pending, seen = list(rows), set()
+        rows = []
+        while pending:
+            row = pending.pop()
+            if id(row) in seen:
+                continue
+            seen.add(id(row))
+            rows.append(row)
+            pending.extend(row.get('variants') or [])
+        self.assertGreater(len(rows), 0)
+        self.assertGreater(bind.call_count, 0)
+        self.assertLessEqual(bind.call_count, len(rows))
+        self.assertLess(bind.call_count, response['search_evidence']['full_evaluations'])
+        for row in rows:
+            self.assertIn('lineup_detail_context', row['evaluation'])
+            self.assertIn('Before and after', row['evaluation']['explanation_html'])
+
 
 if __name__ == '__main__':
     unittest.main()

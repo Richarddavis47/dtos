@@ -528,12 +528,14 @@ def evaluate_trade_request(
     player_facts = selected_player_facts(data, (*proposal.assets_sent, *proposal.assets_received), projections,
         scoring_supported=active_diagnostic.get('evidence', {}).get('scoring') == 'supported')
     evaluation['player_facts'] = player_facts
-    from services.trade_lineup_detail import bind_lineup_details
-    bind_lineup_details(data, evaluation, projections, proposal)
-    from services.trade_evidence_limits import evidence_limitations
-    evaluation['evidence_limitations'] = evidence_limitations(evaluation)
+    deferred_detail = getattr(projections, 'defer_lineup_details', False)
+    if not deferred_detail:
+        from services.trade_lineup_detail import bind_lineup_details
+        bind_lineup_details(data, evaluation, projections, proposal)
+        from services.trade_evidence_limits import evidence_limitations
+        evaluation['evidence_limitations'] = evidence_limitations(evaluation)
     from services.trade_explanation import render_trade_explanation
-    evaluation['explanation_html'] = render_trade_explanation(evaluation, league_id=identity_input['league_id'])
+    evaluation['explanation_html'] = render_trade_explanation(evaluation, league_id=identity_input['league_id'], _slot_details=not deferred_detail)
     evaluation["actions"] = ["EDIT TRADE", "ADJUST OFFER"]
     if not evaluation["generated_trade_eligible"]:
         evaluation["repair_paths"] = ["MAKE THIS TRADE WORK", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE TARGET"]
@@ -1091,7 +1093,7 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
             no_path += ' Missing prices: ' + ', '.join(f'{by_id[i].label} ({i})' for i in sorted(missing_candidates)) + '.'
     if _trade_search_boundary(data) != boundary:
         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during adjustment. Refresh and try again.')
-    return {
+    return _with_lineup_details(data, {
         "instruction": instruction,
         "requested_mode": requested_mode.value,
         "returned_modes": [requested_mode.value for _ in options],
@@ -1119,14 +1121,14 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
             'reuse': reader.lineup_memo.status(),
             'timings_seconds': {'construction': construction_seconds, 'shared_evaluation': evaluation_seconds,
                                'total': perf_counter() - started}},
-    }
+    }, reader)
 
 
 def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
     """Return up to three distinct, editable approaches to the same negotiation goal."""
     payload = generated_personal_payload(payload)
     boundary = _trade_search_boundary(data)
-    reader = _SearchProjectionReader(_trade_projection_service(data))
+    reader = _SearchProjectionReader(_trade_projection_service(data), defer_lineup_details=True)
     active_id = int(payload.get("active_roster_id") or 0)
     workspace = build_trade_workspace(data, active_id)
     workspace = personal_workspace(workspace, payload)
@@ -1202,7 +1204,7 @@ def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> 
     choose(all_rows, "EXPAND THE DEAL", lambda sent, received: len(sent) + len(received) > len(sent_ids) + len(received_ids))
     if _trade_search_boundary(data) != boundary:
         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during alternative construction. Refresh and try again.')
-    return {
+    return _with_lineup_details(data, {
         "count": len(chosen[:3]), "results": chosen[:3], "protected_asset_id": key_asset_id,
         "preview_only": True, "original_proposal": {k: payload[k] for k in ('active_roster_id', 'partner_roster_id', 'assets_sent', 'assets_received')},
         "near_misses": funnel.near(), "result_state": result_state(funnel, chosen[:3]),
@@ -1210,7 +1212,7 @@ def create_trade_alternatives(data: dict[str, Any], payload: dict[str, Any]) -> 
         "target_asset_id": target_id, "calculated": True, "provider_requests": 0,
         "asset_market_constructions": 0,
         "quiet_state": None if chosen else "No credible alternative within the bounded search. Review the evaluated packages and their blockers.",
-    }
+    }, reader)
 
 
 def _distinct_trade_for_offers(rows, by_id):
@@ -1261,13 +1263,52 @@ def _trade_projection_service(data):
     return runtime.projection if runtime is not None else projection_service
 
 
+def _with_lineup_details(data, response, reader):
+    """Materialize only returned assessments, never all 180 searched packages.
+
+    Reuse the request's pinned weekly handles and completed assignments. This
+    does not reevaluate a package or change any admission/ranking decision.
+    """
+    from types import SimpleNamespace
+    from services.trade_lineup_detail import bind_lineup_details
+    from services.trade_evidence_limits import evidence_limitations
+    from services.trade_explanation import render_trade_explanation
+    seen = set()
+
+    def visit(row):
+        if not isinstance(row, dict) or id(row) in seen:
+            return
+        seen.add(id(row))
+        e, proposal = row.get('evaluation'), row.get('proposal')
+        if e and proposal and not e.get('lineup_detail_context'):
+            presented = row.get('proposal_presentation') or {}
+            kinds = {a['asset_id']: a.get('kind') for a in
+                     (*presented.get('send', []), *presented.get('receive', []))}
+            ids = (*proposal.get('assets_sent', []), *proposal.get('assets_received', []))
+            if reader and all(kinds.get(pid) in {'player', 'pick'} for pid in ids):
+                p = SimpleNamespace(active_roster_id=proposal['active_roster_id'],
+                    partner_roster_id=proposal['partner_roster_id'],
+                    assets_sent=tuple(SimpleNamespace(asset_id=pid, kind=kinds[pid]) for pid in proposal['assets_sent']),
+                    assets_received=tuple(SimpleNamespace(asset_id=pid, kind=kinds[pid]) for pid in proposal['assets_received']))
+                bind_lineup_details(data, e, reader, p)
+            e['evidence_limitations'] = evidence_limitations(e)
+            lid = (e.get('provenance') or {}).get('inputs', {}).get('league_id')
+            e['explanation_html'] = render_trade_explanation(e, league_id=lid)
+        for key in ('results', 'near_misses', 'exploratory_results', 'other_trade_ideas', 'variants'):
+            for child in row.get(key) or []:
+                visit(child)
+    visit(response)
+    return response
+
+
 class _SearchProjectionReader:
     """Request-local immutable-generation reads; no cross-search cache/storage."""
-    def __init__(self, service, *, reuse_scope=None):
+    def __init__(self, service, *, reuse_scope=None, defer_lineup_details=False):
         from src.core.intelligence import SearchLineupMemo
         self.service = service
         self.pinned = service.snapshot()
         self.weeks = {}
+        self.defer_lineup_details = defer_lineup_details
         self.lineup_memo = SearchLineupMemo(reuse_scope if reuse_scope is not None else object())
         self.lineup_solver = self.lineup_memo.solve
 
@@ -1285,7 +1326,7 @@ class _SearchProjectionReader:
 def _search_reader(data, payload, boundary):
     from services.trade_workspace_context import workspace_context
     binding = workspace_context(data, int(payload.get('active_roster_id') or 0))['binding']
-    return _SearchProjectionReader(_trade_projection_service(data), reuse_scope=(binding, boundary))
+    return _SearchProjectionReader(_trade_projection_service(data), reuse_scope=(binding, boundary), defer_lineup_details=True)
 
 
 def _trade_search_boundary(data: dict[str, Any]) -> str:
@@ -1516,7 +1557,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
         }
     if targeted_search and _trade_search_boundary(data) != boundary:
         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during trade search. Refresh and run the search again.')
-    return {
+    return _with_lineup_details(data, {
         "workflow": workflow, "target_asset_id": target or None,
         "result_state": "HARD INVALID" if target in excluded or (workflow == "shop" and target in protected) else result_state(funnel, generated[:limit]), "near_misses": funnel.near(),
         "count": min(len(generated), limit), "results": generated[:limit],
@@ -1558,7 +1599,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
         "wrong_league_evidence_rejected": evidence_context.wrong_league_evidence_rejected,
         "wrong_league_evidence_consumed": evidence_context.wrong_league_evidence_consumed,
         "constraints": {"protected_assets": sorted(protected), "excluded_assets": sorted(excluded)},
-    }
+    }, projection_reader)
 
 
 def _generate_recommended(data, payload):
@@ -1640,7 +1681,7 @@ def _generate_recommended(data, payload):
         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
     verification_seconds = perf_counter() - verification_started
     guidance = None if results else zero_result_guidance(funnel, discoveries, workspace, projection_available=projection_available)
-    return {'workflow': 'recommended', 'count': len(results), 'results': results,
+    return _with_lineup_details(data, {'workflow': 'recommended', 'count': len(results), 'results': results,
             'exploratory_results': funnel.explore(assets, excluded_families=excluded_families),
             'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results), 'near_misses': funnel.near(),
             'quiet_state': guidance['message'] if guidance else None,
@@ -1659,7 +1700,7 @@ def _generate_recommended(data, payload):
                 'raw_history_scans': 0, 'durable_writes': 0},
             'constraints': {'protected_assets': sorted(protected), 'excluded_assets': sorted(excluded)},
             'session': {'persistence': 'request_only', 'excluded_family_count': len(excluded_families), 'maximum_families': 256},
-            'provider_requests': 0, 'durable_writes': 0, 'generated_only_after_counterparty_gate': True}
+            'provider_requests': 0, 'durable_writes': 0, 'generated_only_after_counterparty_gate': True}, reader)
 
 
 def autocomplete_trade_assets(data: dict[str, Any], query: str, active_roster_id: int | None = None, limit: int = 20) -> dict[str, Any]:

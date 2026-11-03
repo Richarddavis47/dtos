@@ -225,14 +225,14 @@ def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Expl
                        tuple(why[:3]), tuple(risks[:3]), confidence_rows, tuple(limits), tuple(advanced))
 
 
-def render_trade_explanation(result: dict, *, league_id: str) -> str:
+def render_trade_explanation(result: dict, *, league_id: str, _slot_details=True) -> str:
     """Use the shared renderer; weekly rows are optional presentation detail."""
     from src.ui.explanations import explanation_panel
     admissions = completed_lineup_admissions(result)
     from services.trade_lineup_detail import lineup_detail_view, render_lineup_details, render_lineup_risks
-    slot_view = lineup_detail_view(result, admissions=admissions)
-    slot_detail = render_lineup_details(result, admissions=admissions, view=slot_view)
-    slot_risks = render_lineup_risks(result, slot_view)
+    slot_view = lineup_detail_view(result, admissions=admissions) if _slot_details else None
+    slot_detail = render_lineup_details(result, admissions=admissions, view=slot_view) if _slot_details else ''
+    slot_risks = render_lineup_risks(result, slot_view) if _slot_details else ''
     view = trade_explanation(result, league_id=league_id, _admissions=admissions)
     weekly = tuple(item.key for item in view.evidence if item.key.startswith('weekly.'))
     rendered = explanation_panel(view, evidence_groups=(('Weekly optimal-lineup detail', weekly),) if weekly else ())
