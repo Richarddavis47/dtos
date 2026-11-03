@@ -1,5 +1,6 @@
 """Prepared league identity → authenticated Builder HTTP → rendered client."""
 from copy import deepcopy
+from datetime import datetime
 import json
 import os
 from pathlib import Path
@@ -25,7 +26,12 @@ class BuilderPlainEnglishHTTPTests(unittest.TestCase):
         self.assertEqual(payload['league_name'], 'Day Traders & Friends')
         self.assertEqual(payload['manager_context']['league_id'], 'league-1')
         self.assertEqual(self.f.data, before)
-        self.assertEqual(self.f.client.get('/api/trades/workspace?mode=calculator').json(), payload)
+        repeated = self.f.client.get('/api/trades/workspace?mode=calculator').json()
+        # Readiness is freshly observed; its clock is not saved workspace state.
+        for observation in (payload, repeated):
+            checked = observation['search_readiness'].pop('checked_at')
+            self.assertIsNotNone(datetime.fromisoformat(checked).tzinfo)
+        self.assertEqual(repeated, payload)
 
     def test_missing_name_has_no_invented_label_or_identity_substitution(self):
         self.f.data['league'].pop('name', None)

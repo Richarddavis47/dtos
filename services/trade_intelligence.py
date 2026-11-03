@@ -7,6 +7,7 @@ from typing import Any
 from hashlib import sha256
 import json
 from time import perf_counter
+from src.platform.trade_execution import trade_checkpoint
 
 from src.core.intelligence import AssetContext, TradeAsset, TradeEvidenceContext, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, build_trade_evidence_context, evaluate_bilateral, generate_proposals
 from src.core.valuation.calibration import cached_market_facts
@@ -398,6 +399,7 @@ def evaluate_trade_request(
     data: dict[str, Any], payload: dict[str, Any], *, workspace: dict[str, Any] | None = None,
     evidence_context: TradeEvidenceContext | None = None, projection_reader=None,
 ) -> dict[str, Any]:
+    trade_checkpoint()
     active_id = int(payload.get("active_roster_id") or 0)
     partner_id = int(payload.get("partner_roster_id") or 0)
     workspace = workspace or build_trade_workspace(data, active_id)
@@ -672,6 +674,7 @@ def _bounded_adjustment_candidates(
 
 def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
     """Return calculated repair/adjustment options, never static action labels."""
+    trade_checkpoint()
     payload = generated_personal_payload(payload)
     started = perf_counter()
     boundary = _trade_search_boundary(data)
@@ -1298,6 +1301,7 @@ def _trade_search_boundary(data: dict[str, Any]) -> str:
 
 def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
     """Bounded generation adapter; manual analysis remains available for any construction."""
+    trade_checkpoint()
     payload = generated_personal_payload(payload)
     started = perf_counter()
     active_id = int(payload.get("active_roster_id") or 0)
@@ -1384,6 +1388,7 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
     funnel = SearchFunnel(240, eligible_partner_ids, workspace['pools'])
     assessed = set()
     for phase in range(3):
+        trade_checkpoint()
         for partner_id in partner_ids:
             generation_started = perf_counter()
             diagnostics = {}
@@ -1585,12 +1590,14 @@ def _generate_recommended(data, payload):
     discoveries = []
     preparation_seconds = perf_counter() - started
     for phase in range(3):
+        trade_checkpoint()
         discovery = discover(data, workspace, reader, protected, excluded, max_theses=(6, 24, 48)[phase],
                              excluded_families=excluded_families, search_phase=phase)
         discoveries.append(discovery)
         # Round-robin theses across teams before considering variants.
         packages = []
         for thesis in discovery['theses']:
+            trade_checkpoint()
             stage = perf_counter()
             diagnostics = {}
             proposals = construct(workspace, thesis, protected, excluded, search_phase=phase, search_diagnostics=diagnostics)

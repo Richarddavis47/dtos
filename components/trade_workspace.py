@@ -56,6 +56,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <section id="trade-target" class="tw-target" hidden aria-label="Selected trade target"></section>
 <div class="tw-primary-actions">{primary}{next_ideas}</div>
 <p id="recommendation-status" class="ds-inline-feedback" role="status" aria-live="off" aria-atomic="true">Preparing current league assets…</p>
+<p id="trade-search-readiness" class="ds-inline-feedback">Search capacity will be checked when you generate or evaluate.</p>
 <button id="trade-cancel" type="button" hidden>Cancel current operation</button>
 <span id="trade-results-home"></span><section id="trade-result" role="status" aria-live="polite" tabindex="-1" hidden></section>
 {tray}

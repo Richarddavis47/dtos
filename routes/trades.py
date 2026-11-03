@@ -16,6 +16,8 @@ from components.trade_intelligence import manager_context_selection, trade_cente
 from services.trade_intelligence import assist_trade_request, autocomplete_trade_assets, build_trade_center, build_trade_workflow_context, build_trade_workspace, compare_trade_requests, create_trade_alternatives, evaluate_trade_request, generate_trade_workflow
 from src.core.intelligence.serialization import recommendation_contract
 from src.core.request_execution import run_manager_read
+from src.platform.trade_execution import (run_trade_operation, public_readiness,
+    TradeSearchDeferred, TradeSearchTimedOut, trade_checkpoint)
 from src.platform.account_context import current_account
 from services.trade_workspace_context import workspace_context, authorize_workspace
 from services.trade_intelligence import TradeInputError
@@ -33,6 +35,10 @@ _STRATEGY_JS = (_STATIC_ROOT / "js" / "strategy_session.js").read_text(encoding=
 
 def _trade_failure(exc: Exception) -> HTTPException:
     from services.personal_rankings import PersonalRankingError
+    if isinstance(exc, TradeSearchDeferred):
+        return HTTPException(503, {"code": "trade_capacity_deferred", "message": str(exc), "retry": "explicit"})
+    if isinstance(exc, TradeSearchTimedOut):
+        return HTTPException(504, {"code": "trade_search_timed_out", "message": str(exc), "retry": "explicit"})
     if isinstance(exc, PersonalRankingError):
         detail = {"code": exc.code, "message": str(exc)}
         if exc.code in {'personal_evidence_unavailable', 'rankings_not_started'}:
@@ -132,19 +138,13 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
                 raise TradeInputError('canonical_evidence_changed', 'Manager/source evidence changed. Retry the same proposal.')
 
     def private_response(result, payload):
-        try:
-            fence(payload)
-        except Exception as exc:
-            raise _trade_failure(exc) from exc
-        # Serialization and the final preference check are synchronous in this
-        # task: no await permits a same-loop preference write before handoff.
+        fence(payload)
+        # Serialize under the Trade resource lease. PersonalTradeResponse repeats
+        # the source/preference fence under publication locks at async handoff.
         encoded = jsonable_encoder(result)
         context = payload.get('_personal_context')
         response = PersonalTradeResponse(encoded, context=context, verify=lambda: fence(payload))
-        try:
-            fence(payload)
-        except Exception as exc:
-            raise _trade_failure(exc) from exc
+        fence(payload)
         return response
 
     @router.get("/static/js/strategy_session.js", include_in_schema=False)
@@ -395,6 +395,14 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         if personal_bootstrap is not None:
             payload['personalization'] = await run_manager_read(
                 lambda: personal_bootstrap(require_data(), workspace['active_roster_id']))
+        payload['search_readiness'] = await run_manager_read(public_readiness)
+        from services.trade_intelligence import _trade_projection_service
+        from src.core.intelligence.team_strength import compatible_profile
+        profile = compatible_profile(data, _trade_projection_service(data).snapshot())
+        payload['lineup_preparation'] = {
+            'state': 'prepared' if profile is not None else 'incompatible_or_missing',
+            'message': ('A compatible lineup publication is prepared. Each offer still needs supported legal pre/post lineups.'
+                if profile is not None else 'Team-impact analysis needs a compatible prepared league, week and scoring publication. Individual projections may still be visible; Neutral Market comparisons remain separate.')}
         return JSONResponse(jsonable_encoder(payload), headers={'Cache-Control': 'no-store'})
 
     @router.post("/api/trades/calculate", response_class=JSONResponse)
@@ -404,9 +412,9 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             authorize_workspace(require_data(), payload)
             payload = await personalize(payload)
             result = await run_manager_read(lambda: calculate_trade_market(require_data(), payload))
+            return private_response(result, payload)
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return private_response(result, payload)
 
     @router.post("/api/trades/balance", response_class=JSONResponse)
     async def balance_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
@@ -415,12 +423,12 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             authorize_workspace(require_data(), payload)
             payload = await personalize(payload)
             result = await run_manager_read(lambda: balance_trade_market(require_data(), payload))
+            return private_response(result, payload)
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return private_response(result, payload)
 
     @router.post("/api/trades/evaluate", response_class=JSONResponse)
-    async def evaluate_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
+    async def evaluate_trade(request: Request, payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
@@ -439,13 +447,12 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
                 if isinstance(result.get('evaluation'), dict):
                     result['assessment_source_identity'] = before
                 return result
-            result = await run_manager_read(assess)
+            return await run_trade_operation(lambda: private_response(assess(), payload), request=request)
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return private_response(result, payload)
 
     @router.post("/api/trades/generate", response_class=JSONResponse)
-    async def generate_trades(payload: dict[str, Any] = Body(...)) -> JSONResponse:
+    async def generate_trades(request: Request, payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
@@ -467,6 +474,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
                 if home_ideas.cache_key(data, int(payload.get('active_roster_id') or 0), payload.get('strategy'),
                     payload.get('protected_assets') or [], payload.get('excluded_assets') or []) != key:
                     raise TradeInputError('canonical_evidence_changed', 'Prepared evidence changed. Try the same search again.')
+                trade_checkpoint()
                 if not payload.get('_personal_context'):
                     home_ideas.publish(key, result, payload)
                 return result
@@ -475,36 +483,33 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
                     with home_ideas.search_slot(payload['workspace_context']['binding']):
                         return discover()
                 return discover()
-            result = await run_manager_read(bounded_discover)
+            return await run_trade_operation(lambda: private_response(bounded_discover(), payload), request=request)
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return private_response(result, payload)
 
     @router.post("/api/trades/assist", response_class=JSONResponse)
-    async def assist_trade(payload: dict[str, Any] = Body(...)) -> JSONResponse:
+    async def assist_trade(request: Request, payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
             payload = await personalize(payload)
-            result = await run_manager_read(
-                lambda: assist_trade_request(require_data(), payload),
+            return await run_trade_operation(
+                lambda: private_response(assist_trade_request(require_data(), payload), payload), request=request,
             )
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return private_response(result, payload)
 
     @router.post("/api/trades/alternatives", response_class=JSONResponse)
-    async def trade_alternatives(payload: dict[str, Any] = Body(...)) -> JSONResponse:
+    async def trade_alternatives(request: Request, payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
             authorize_workspace(require_data(), payload)
             payload = await personalize(payload)
-            result = await run_manager_read(
-                lambda: create_trade_alternatives(require_data(), payload),
+            return await run_trade_operation(
+                lambda: private_response(create_trade_alternatives(require_data(), payload), payload), request=request,
             )
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return private_response(result, payload)
 
     @router.get("/api/trades/assets", response_class=JSONResponse)
     async def trade_assets(q: str = "", front_office: int | None = None, limit: int = 20) -> JSONResponse:
@@ -520,20 +525,17 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         return JSONResponse(jsonable_encoder(result), headers={"Cache-Control": "no-store"})
 
     @router.post("/api/trades/compare", response_class=JSONResponse)
-    async def compare_trades(payload: dict[str, Any] = Body(...)) -> JSONResponse:
+    async def compare_trades(request: Request, payload: dict[str, Any] = Body(...)) -> JSONResponse:
         await ensure_fresh()
         try:
             for proposal in payload.get("proposals") or ():
                 authorize_workspace(require_data(), {**proposal, "workspace_context": payload.get("workspace_context")})
             payload = await personalize(payload)
             proposals = [{**row, '_personal_context': payload.get('_personal_context')} for row in payload.get('proposals') or ()]
-            result = await run_manager_read(
-                lambda: compare_trade_requests(
-                    require_data(), proposals,
-                ),
+            return await run_trade_operation(
+                lambda: private_response(compare_trade_requests(require_data(), proposals), payload), request=request,
             )
         except Exception as exc:
             raise _trade_failure(exc) from exc
-        return private_response(result, payload)
 
     return router

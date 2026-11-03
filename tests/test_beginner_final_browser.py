@@ -1,6 +1,7 @@
 """Released routers/scripts with authenticated disposable state and real Chromium."""
 
 import json
+import os
 import time
 import unittest
 from pathlib import Path
@@ -21,6 +22,8 @@ from tests import test_trade_workspace_batch1 as boundary
 class FinalResetBrowserTests(unittest.TestCase):
     def setUp(self):
         Path(".validation/beginner-final").mkdir(parents=True, exist_ok=True)
+        self.picker_evidence = Path(os.environ.get("DTOS_TRADE_PICKER_EVIDENCE", ".validation/beginner-final"))
+        self.picker_evidence.mkdir(parents=True, exist_ok=True)
 
     def test_visible_roster_picker_full_reset_and_two_league_intent(self):
         import dtos_app
@@ -194,6 +197,13 @@ class FinalResetBrowserTests(unittest.TestCase):
                     picker_y = own.locator("button[data-asset-id]").first.evaluate(
                         "e=>e.getBoundingClientRect().top+scrollY"
                     )
+                    (self.picker_evidence / f"picker-{width}x{height}.json").write_text(
+                        json.dumps(dict(width=width, height=height, picker_y=picker_y,
+                            readiness=page.locator("#trade-search-readiness").inner_text(),
+                            layout=page.locator("#trade-builder > *, .tw-intent-nav a").evaluate_all(
+                                "es=>es.map(e=>({id:e.id,y:e.getBoundingClientRect().top+scrollY,width:e.getBoundingClientRect().width,height:e.getBoundingClientRect().height,font:getComputedStyle(e).font,text:e.textContent.slice(0,160)}))")), indent=2)
+                    )
+                    page.screenshot(path=str(self.picker_evidence / f"picker-{width}x{height}.png"))
                     self.assertLess(picker_y, 900, (width, picker_y))
                     self.assertNotIn("Market evidence", own.inner_text())
                     page.locator("#trade-strategy").select_option("REBUILD")
@@ -587,8 +597,10 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     self.assertEqual(page.url, selected)
                     self.assertEqual(page.locator(".market-asset").count(), 3)
                     page.go_back()
+                    page.wait_for_url(lambda url: urlsplit(url).path.startswith("/picks/"), wait_until="domcontentloaded")
                     self.assertIn("/picks/", page.url)
                     page.go_forward()
+                    page.wait_for_url(lambda url: url == selected, wait_until="domcontentloaded")
                     self.assertEqual(page.url, selected)
                     page.goto(
                         "https://dtos.test/market?position=PICK&sort=confidence&direction=asc&offset=10&limit=10&front_office=1"
@@ -628,8 +640,10 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     page.get_by_role("link", name="Back to Home", exact=True).click()
                     self.assertIn("Team 1", page.locator("main").inner_text())
                     page.go_back()
+                    page.wait_for_url(lambda url: urlsplit(url).path == "/teams/2", wait_until="domcontentloaded")
                     self.assertIn("/teams/2", page.url)
                     page.go_forward()
+                    page.wait_for_url(lambda url: urlsplit(url).path == "/", wait_until="domcontentloaded")
                     owner.store.upsert_membership(
                         owner.account_id,
                         {"league_id": "league-2", "season": "2026", "name": "Other"},

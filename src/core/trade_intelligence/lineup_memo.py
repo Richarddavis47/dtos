@@ -100,6 +100,8 @@ class SearchLineupMemo:
         self.seconds = 0.0
 
     def solve(self, players, positions, *, week=None):
+        from src.platform.trade_execution import trade_checkpoint
+        trade_checkpoint()
         started = perf_counter()
         players, positions = list(players), list(positions)
         # The solver's only direct use of week is excluding known byes. Identical
@@ -119,6 +121,7 @@ class SearchLineupMemo:
         else:
             self.hits += 1
         self.seconds += perf_counter() - started
+        trade_checkpoint()
         return value
 
     def status(self):
