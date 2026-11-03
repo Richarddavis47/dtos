@@ -40,6 +40,9 @@ class ColdLeagueRecoveryTests(unittest.TestCase):
         self.dtos = dtos_app
         self.folder = tempfile.TemporaryDirectory()
         self.addCleanup(self.folder.cleanup)
+        # Cache recovery is a real input now. Every disposable account owns an
+        # isolated source-cache family, not a publication left by another test.
+        self.enterContext(patch('services.sleeper.CACHE_FILE', Path(self.folder.name) / 'cache.json'))
         self.store = AccountStore(Path(self.folder.name) / "accounts.sqlite3")
         original_client = httpx.AsyncClient
         self.service = AccountService(self.store, client_factory=lambda **options: original_client(transport=httpx.MockTransport(self.upstream), **options))

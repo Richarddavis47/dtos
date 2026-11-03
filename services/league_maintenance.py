@@ -97,7 +97,8 @@ def ensure_periodic_refresh(
                 runtime.lifecycle["refresh_error_type"] = type(exc).__name__
             else:
                 runtime.lifecycle["refresh_state"] = (
-                    "failed" if runtime.state.get("last_error") else "complete"
+                    "deferred" if runtime.lifecycle.get('preparation_state') == 'waiting_for_capacity'
+                    else "failed" if runtime.state.get("last_error") else "complete"
                 )
                 runtime.lifecycle.pop("refresh_error_type", None)
                 from src.platform.storage_accounting import periodic_storage_accounting

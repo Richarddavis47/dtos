@@ -3,6 +3,7 @@
 from .manager import (
     LeagueRuntime,
     LeagueRuntimeError,
+    LeagueRuntimeDeferred,
     LeagueRuntimeManager,
     LeagueRuntimeNotFound,
     RuntimeState,
@@ -13,6 +14,7 @@ from .identity import StructuredCacheKey, scoring_profile_id
 __all__ = [
     "LeagueRuntime",
     "LeagueRuntimeError",
+    "LeagueRuntimeDeferred",
     "LeagueRuntimeManager",
     "CanonicalLeagueContext",
     "LeagueRuntimeNotFound",

@@ -13,7 +13,7 @@ from src.platform.runtime_errors import PRIVATE_HEADERS, log_runtime_failure, ru
 
 from src.core.league_runtime import (
     CanonicalLeagueContext, LeagueRuntimeError, LeagueRuntimeManager,
-    LeagueRuntimeNotFound,
+    LeagueRuntimeNotFound, LeagueRuntimeDeferred,
 )
 
 _CURRENT_CONTEXT: ContextVar[CanonicalLeagueContext | None] = ContextVar(
@@ -71,16 +71,17 @@ def _source_independent(path: str) -> bool:
     Authentication/CSRF stays in the outer account boundary. Account actions
     explicitly prepare their intended league before committing user intent.
     """
-    return path in {"/account", "/api/account", "/health", "/health/", "/health/live", "/health/live/", "/health/ready", "/health/ready/", "/api/status", "/api/status/", "/welcome", "/welcome/"} or path.startswith(
+    return path in {"/favicon.ico", "/account", "/api/account", "/health", "/health/", "/health/live", "/health/live/", "/health/ready", "/health/ready/", "/api/status", "/api/status/", "/welcome", "/welcome/"} or path.startswith(
         ("/account/", "/api/account/", "/static/")
     )
 
 
-def _unavailable_response(scope: dict[str, Any], *, status: int):
+def _unavailable_response(scope: dict[str, Any], *, status: int, deferred: bool = False):
     path = str(scope.get("path") or "/")
     accept = next((value.decode("latin-1") for key, value in scope.get("headers") or () if key.lower() == b"accept"), "")
     if scope.get("method") != "GET" or path.startswith("/api/") or "text/html" not in accept:
-        return JSONResponse(runtime_error_payload(status), status_code=status, headers=PRIVATE_HEADERS)
+        return JSONResponse(runtime_error_payload(status, deferred=deferred), status_code=status,
+                            headers={**PRIVATE_HEADERS, **({"Retry-After": "60"} if deferred else {})})
     from src.platform.account_context import current_account
     from src.ui.theme import DESIGN_SYSTEM_CSS
 
@@ -90,7 +91,13 @@ def _unavailable_response(scope: dict[str, Any], *, status: int):
     query = urlencode(parse_qsl(scope.get("query_string", b"").decode("latin-1"), keep_blank_values=True))
     if query:
         retry += "?" + query
-    heading = "League could not be opened" if status == 422 else "League data is temporarily unavailable"
+    heading = "League preparation is waiting" if deferred else "League could not be opened" if status == 422 else "League data is temporarily unavailable"
+    explanation = (
+        'Another preparation task is active, or safe memory headroom is not available. '
+        'Try this page again in a minute. No Trade search has run.'
+        if deferred else
+        'No compatible prepared league data could be loaded. Try again or choose another connected league.'
+    )
     from services.contextual_navigation import navigation_markup, with_back
     back, navigation_head = navigation_markup()
     heading_html = with_back('<h1>' + heading + '</h1>', back)
@@ -100,16 +107,17 @@ def _unavailable_response(scope: dict[str, Any], *, status: int):
         '<title>League data unavailable · DTOS</title><style>' + DESIGN_SYSTEM_CSS +
         'body{margin:0;background:var(--background,#141617);color:var(--text,#f1f5f3);font:16px system-ui}'
         'main{max-width:640px;margin:auto;padding:24px 16px;box-sizing:border-box;overflow-wrap:anywhere}'
+        'h1{font-size:clamp(26px,7vw,32px);line-height:1.2}'
         'nav{display:flex;flex-wrap:wrap;gap:12px}nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px}</style>' + navigation_head + '</head>'
         '<body><main><p>' + escape(league or "Selected league") + '</p>'
         + heading_html +
-        '<p>No supported roster is ready for this league right now. Your account and saved leagues are unchanged.</p>'
-        '<p>You can retry this page or use your account controls to choose another connected league.</p>'
+        '<p>' + explanation + '</p>'
         '<nav aria-label="League recovery">'
         f'<a class="ds-action primary" href="{escape(retry, quote=True)}">Try this page again</a>'
         '<a class="ds-action" href="/account/leagues">Choose a connected league</a>'
-        '<a class="ds-action" href="/account">Your account</a></nav></main></body></html>',
-        status_code=status, headers=PRIVATE_HEADERS,
+        '<a class="ds-action" href="/account">Your account</a></nav>'
+        '<p>Your account and saved leagues are unchanged.</p></main></body></html>',
+        status_code=status, headers={**PRIVATE_HEADERS, **({"Retry-After": "60"} if deferred else {})},
     )
 
 
@@ -152,6 +160,10 @@ class LeagueContextMiddleware:
         except LeagueRuntimeNotFound as exc:
             log_runtime_failure(exc, operation="request_acquisition", status=422)
             await _unavailable_response(scope, status=422)(scope, receive, send)
+            return
+        except LeagueRuntimeDeferred as exc:
+            log_runtime_failure(exc, operation="request_deferred", status=503)
+            await _unavailable_response(scope, status=503, deferred=True)(scope, receive, send)
             return
         except LeagueRuntimeError as exc:
             log_runtime_failure(exc, operation="request_acquisition", status=503)

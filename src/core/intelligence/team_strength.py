@@ -20,6 +20,35 @@ from src.core.projection_intelligence.sleeper_provider import freshness_state
 METHOD_VERSION = 'weekly-optimal-horizons-v4-source-eligibility'
 
 
+def restore_cached_week_keys(data: dict[str, Any]) -> None:
+    """Restore the in-memory week key type after JSON transport, not points.
+
+    Prepared pre-trade comparisons use canonical integer NFL weeks, as do newly
+    computed post-trade comparisons. JSON object keys are always strings.
+    Reject malformed or ambiguous keys rather than inventing weekly evidence.
+    """
+    profile = data.get('team_strength')
+    if not profile:
+        return
+    if not isinstance(profile, dict) or not isinstance(profile.get('teams'), dict):
+        raise ValueError('Invalid cached team-strength structure')
+    for row in profile['teams'].values():
+        if not isinstance(row, dict) or not isinstance(row.get('weekly'), dict):
+            raise ValueError('Invalid cached weekly comparison')
+        restored = {}
+        for week, evidence in row['weekly'].items():
+            if type(week) is int:
+                canonical = week
+            elif isinstance(week, str) and week in {str(n) for n in range(1, 19)}:
+                canonical = int(week)
+            else:
+                raise ValueError('Invalid cached NFL week identity')
+            if not 1 <= canonical <= 18 or canonical in restored:
+                raise ValueError('Ambiguous cached NFL week identity')
+            restored[canonical] = evidence
+        row['weekly'] = restored
+
+
 def _weeks(values: list[int] | tuple[int, ...]) -> tuple[int, ...]:
     if any(type(week) is not int or not 1 <= week <= 18 for week in values):
         raise ValueError('Team strength requires canonical NFL week identities')
