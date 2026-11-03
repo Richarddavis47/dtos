@@ -97,6 +97,9 @@ class SearchFunnel:
         self.pools = {str(rid): len(pool) for rid, pool in (pools or {}).items()}
         self.near_misses = []
         self.explorations = []
+        self.evidence_causes = Counter()
+        self.evidence_qualifications = Counter()
+        self.unresolved_evidence_causes = 0
 
     def construction(self, partner, proposals, diagnostics=None):
         self.teams.add(partner)
@@ -116,6 +119,13 @@ class SearchFunnel:
             field = 'filtered'
         self.counts[field] += 1
         e = row['evaluation']
+        if state == 'MISSING REQUIRED EVIDENCE':
+            from services.trade_evidence_limits import evidence_limitations
+            limits = e.get('evidence_limitations') or evidence_limitations(e)
+            causes = {r['cause'] for r in limits['blocking_requirements']}
+            self.evidence_causes.update(causes)
+            self.evidence_qualifications.update({r['cause'] for r in limits['contextual_qualifications']})
+            self.unresolved_evidence_causes += not causes
         if not filtered and state not in ELIGIBLE and supported_exploration(e):
             self.explorations.append({**row, 'exploration': True})
             self.explorations.sort(key=exploration_key)
@@ -148,7 +158,12 @@ class SearchFunnel:
                 'teams_searched': len(self.teams), 'asset_pool_sizes': self.pools,
                 'ranked': self.counts['eligible'], 'displayed': displayed,
                 'evaluation_budget': self.budget, 'budget_reached': self.counts['evaluated'] >= self.budget,
-                'rejection_reason_counts': dict(self.reasons), 'bounded': True}
+                'rejection_reason_counts': dict(self.reasons), 'bounded': True,
+                'evidence_limitations': {'assessments': self.counts['missing_evidence'],
+                    'blocking_requirement_counts': dict(self.evidence_causes),
+                    'contextual_qualification_counts': dict(self.evidence_qualifications),
+                    'unknown_cause_count': self.unresolved_evidence_causes,
+                    'meaning': 'Counts per evidence-limited assessment; categories overlap. Contextual qualifications are not necessarily admission blockers; upstream absence is not inferred.'}}
 
     def explore(self, assets, *, excluded_families=()):
         return [row for row in diverse_rows(self.explorations, assets, limit=3, ranker=exploration_key)

@@ -6,7 +6,7 @@ from src.core.explanations import (
 from src.ui.intelligence_presentation import manager_points
 from html import escape
 from services.trade_decision import final_decision, lineup_comparisons
-from services.trade_lineup_evidence import completed_lineup_admissions
+from services.trade_lineup_evidence import completed_lineup_admissions, weekly_total_display, diagnostic_summary_display
 
 
 HORIZONS = {'current_week': 'Current week', 'next_n': 'Next-N',
@@ -74,8 +74,9 @@ def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Expl
     def add(key, label, value, *, unit='classification', state=None, kind=K.DERIVED):
         evidence.append(EvidenceItem(key, label, kind, ctx, key, unit,
             A.UNAVAILABLE if value is None else (state or A.AVAILABLE),
-            None if value is None else manager_points(value)
-            if unit == 'fantasy points' and (not key.startswith('weekly.') or key.endswith('.delta')) else str(value)))
+            None if value is None else weekly_total_display(value)
+            if unit == 'fantasy points' and key.startswith('weekly.') and not key.endswith('.delta') else manager_points(value)
+            if unit == 'fantasy points' else str(value)))
         return key
 
     def reason(code, key):
@@ -100,8 +101,9 @@ def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Expl
     for side, row in diagnostic.get('sides', {}).items():
         if (admissions.get(side) or {}).get('identity_state') != 'compatible':
             continue
-        key = add('diagnostics.' + side, ('Your' if side == 'active' else 'Their') + ' package roster context', row['summary'])
-        advanced.append(Statement('ROSTER_DIAGNOSTICS', row['summary'] + ' ' + diagnostic['meaning'], (key,)))
+        summary = diagnostic_summary_display(row)
+        key = add('diagnostics.' + side, ('Your' if side == 'active' else 'Their') + ' package roster context', summary)
+        advanced.append(Statement('ROSTER_DIAGNOSTICS', summary + ' ' + diagnostic['meaning'], (key,)))
         for position, facts in row['positions'].items():
             text = facts['pre']['interpretation'] + ' Availability-qualified post-package starter/reserve counts: ' + str(len(facts['post_starters'])) + '/' + str(len(facts['post_disjoint_reserves'])) + '.'
             item_key = add('diagnostics.' + side + '.' + position, position + ' replacement context', text)
@@ -225,10 +227,14 @@ def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Expl
                        tuple(why[:3]), tuple(risks[:3]), confidence_rows, tuple(limits), tuple(advanced))
 
 
-def render_trade_explanation(result: dict, *, league_id: str) -> str:
+def render_trade_explanation(result: dict, *, league_id: str, _slot_details=True) -> str:
     """Use the shared renderer; weekly rows are optional presentation detail."""
     from src.ui.explanations import explanation_panel
     admissions = completed_lineup_admissions(result)
+    from services.trade_lineup_detail import lineup_detail_view, render_lineup_details, render_lineup_risks
+    slot_view = lineup_detail_view(result, admissions=admissions) if _slot_details else None
+    slot_detail = render_lineup_details(result, admissions=admissions, view=slot_view) if _slot_details else ''
+    slot_risks = render_lineup_risks(result, slot_view) if _slot_details else ''
     view = trade_explanation(result, league_id=league_id, _admissions=admissions)
     weekly = tuple(item.key for item in view.evidence if item.key.startswith('weekly.'))
     rendered = explanation_panel(view, evidence_groups=(('Weekly optimal-lineup detail', weekly),) if weekly else ())
@@ -248,7 +254,8 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
         name != 'current_week' and row.get('delta') is not None and len(row.get('weeks') or []) > 1
         for side in admissions.values() for name, row in side['horizons'].items()
     )
-    period_units = ('<p class="tw-horizon-units">Next-N and longer-period changes are totals across the listed weeks, not per-week averages. '
+    period_units = ('<p class="tw-horizon-units">Expanded weekly totals retain up to four decimals; decision summaries use two. '
+                    'Next-N and longer-period changes are totals across the listed weeks, not per-week averages. '
                     'Team summaries labeled Average are per-week averages.</p>') if multiweek else ''
     if presentation and presentation.get('qualification'):
         qualifier = '<span class="tw-verdict-qualification">' + escape(presentation['qualification']) + '</span>'
@@ -275,12 +282,14 @@ def render_trade_explanation(result: dict, *, league_id: str) -> str:
         rendered = rendered[:risk_start] + rendered[risk_end:]
     legacy = rendered.replace('</p>', '</p>' + risk + summary, 1)
     if not decision:
-        return legacy.replace('<p>', '<p class="tw-final-verdict">', 1)
+        return legacy.replace('<p>', '<p class="tw-final-verdict">', 1).replace(
+            '</section>', slot_risks + slot_detail + '</section>', 1)
     # Preserve the complete established explanation behind depth-on-demand.
     # The verdict and all material costs/qualifications stay in the primary flow.
     split = legacy.index('</p>') + len('</p>')
     primary = _decision_primary(result, decision, admissions)
     return (legacy[:split].replace('<p>', '<p class="tw-final-verdict">', 1) + primary
+            + slot_risks + slot_detail
             + '<details class="tw-evaluation-detail"><summary>Full team, weekly and evaluator evidence</summary>'
             + period_units + legacy[split:-len('</section>')] + '</details></section>')
 

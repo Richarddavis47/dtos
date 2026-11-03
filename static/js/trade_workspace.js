@@ -520,7 +520,7 @@
     if (value == null || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value))) return value;
     if (Array.isArray(value)) return value.slice(0, 32).map(v => boundedEvidence(v, depth + 1, budget)).filter(v => v !== null);
     if (typeof value !== 'object') return null;
-    return Object.fromEntries(Object.entries(value).filter(([key]) => !['explanation_html', '__proto__', 'constructor', 'prototype'].includes(key))
+    return Object.fromEntries(Object.entries(value).filter(([key]) => !['explanation_html', 'lineup_detail_context', 'evidence_limitations', '__proto__', 'constructor', 'prototype'].includes(key))
       .slice(0, 64).map(([key, v]) => [key.slice(0, 80), boundedEvidence(v, depth + 1, budget)]));
   }
   const packageIdentity = p => JSON.stringify([Number(p.partner_roster_id ?? p.partner), [...(p.assets_sent || p.sent || [])].sort(), [...(p.assets_received || p.received || [])].sort()]);
@@ -1111,7 +1111,9 @@
     const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
     detail.append(node('p', balance.reason), node('p', balance.meaning), node('p', 'Counterparty: ' + (decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it || 'Supported partner context unavailable.')));
     if (e.explanation_html) {
-      const parsed = parsedExplanation(e); detail.append(...parsed.body.childNodes);
+      const parsed = parsedExplanation(e);
+      for (const evidence of parsed.querySelectorAll('.dtos-explanation > .tw-lineup-warning, .dtos-explanation > .tw-lineup-details')) card.append(evidence);
+      detail.append(...parsed.body.childNodes);
     } else {
       for (const text of [decision.summary || e.why_you_would_do_it, e.dominant_reason, ...(e.major_risks || []), ...(e.major_limitations || [])]) if (text) detail.append(node('p', text));
       appendLineupComparisons(detail, e, decision.lineup_comparisons, 'Your team', true);
@@ -1177,6 +1179,9 @@
     if (e.explanation_html) {
       const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
       const parsed = parsedExplanation(e);
+      // Slot detail and current-week participation risks need only one disclosure.
+      // Move the server-admitted nodes; never recalculate eligibility in the client.
+      for (const evidence of parsed.querySelectorAll('.dtos-explanation > .tw-lineup-warning, .dtos-explanation > .tw-lineup-details')) card.append(evidence);
       detail.append(...parsed.body.childNodes); card.append(detail);
     }
     if (row.variants?.length && !preview) {
@@ -1224,12 +1229,25 @@
         detail.append(node('p', 'Other franchise: ' + (team(p.partner_roster_id)?.team_name || 'selected counterparty')));
         const diagnosed = decisionPresentation(row.evaluation);
         for (const key of ['their_side_summary', 'decision_conditions', 'evidence_next_action']) if (diagnosed[key]) detail.append(node('p', diagnosed[key]));
+        if (row.evaluation.explanation_html) {
+          const parsed = parsedExplanation(row.evaluation);
+          for (const evidence of parsed.querySelectorAll('.dtos-explanation > .tw-lineup-warning, .dtos-explanation > .tw-lineup-details')) detail.append(evidence);
+        }
         if (row.evaluation?.decision_context?.strategy?.selection_required) strategyAction(detail);
         if (row.blocker_type === 'MISSING REQUIRED EVIDENCE') {
           const market = node('a', 'Review current Market evidence'); market.href = '/market';
           detail.append(market);
         }
       }
+      out.append(detail);
+    }
+    const gaps = body.search_evidence?.evidence_limitations;
+    if (gaps?.assessments) {
+      const detail = node('details'); detail.append(node('summary', `Why ${gaps.assessments} assessments needed more evidence`));
+      const labels = {exchanged_asset_market_price: 'Compatible Market prices for exchanged assets', projection_context: 'Matching league, week, scoring and publication', current_week_lineup: 'Current-week legal lineup evidence', future_week_lineup: 'Future-week legal lineup evidence', projection_horizon: 'Supported weekly horizon', future_capital_qualification: 'Exact future-capital evidence', future_capital_tradeoff: 'Future-capital strategy trade-off'};
+      for (const [cause, count] of Object.entries(gaps.blocking_requirement_counts || {})) detail.append(node('p', `${labels[cause] || 'Other recorded evidence requirement'}: ${count} assessments.`));
+      if (gaps.unknown_cause_count) detail.append(node('p', `Specific cause not established: ${gaps.unknown_cause_count} assessments.`));
+      detail.append(node('small', 'Categories overlap. These are recorded evaluation gaps, not proof that Sleeper lacks the data. Availability, reserve and manager-history qualifications are recorded separately; changing a pick cannot supply missing projections.'));
       out.append(detail);
     }
     if (body.search_evidence) { const detail = node('details'); detail.append(node('summary', 'Technical search details'), node('pre', JSON.stringify(body.search_evidence, null, 2))); out.append(detail); }

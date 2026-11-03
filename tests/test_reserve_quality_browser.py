@@ -15,6 +15,7 @@ from unittest.mock import patch
 from src.core.intelligence.team_strength import prepare_for_data
 from src.ui.intelligence_presentation import manager_points
 from tests import test_trade_decision_http_browser as decision
+from services.trade_lineup_evidence import counterparty_summary_display
 
 
 class ReserveQualityBrowserTests(unittest.TestCase):
@@ -192,7 +193,9 @@ class ReserveQualityBrowserTests(unittest.TestCase):
                 self.assertIn('-7.70', text)
                 self.assertIn('27.70 → 20.00', text)
                 self.assertIn(old['why_they_would_do_it'], text)
-                self.assertIn(old['counterparty_summary'], text)
+                original_summary = old['counterparty_summary']
+                self.assertIn(counterparty_summary_display(old), text)
+                self.assertEqual(old['counterparty_summary'], original_summary)
                 self.assertIn('WIN NOW', text)
                 self.assertIn('2029 Round 1', text)
                 self.assertIn('not current', text.lower())

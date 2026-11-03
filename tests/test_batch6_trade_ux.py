@@ -91,17 +91,22 @@ class TradeUXTests(unittest.TestCase):
                             page.keyboard.press('Enter')
                             self.assertTrue(summary.evaluate('(e) => e.parentElement.open'))
                             compact_text = card.locator('.dtos-explanation').text_content()
+                            compact_slots = card.locator(':scope > .tw-lineup-details').text_content()
+                            compact_risks = card.locator(':scope > .tw-lineup-warning').all_text_contents()
                             original_count = page.locator('#trade-sent-chips .tw-asset').count()
                             card.get_by_role('button', name='Open editable offer:', exact=False).click()
                             self.assertEqual(page.locator('#trade-sent-chips .tw-asset').count(), original_count)
                             page.get_by_role('button', name='Adopt alternative', exact=True).click()
-                            # All evaluator evidence, including closed details, stays
-                            # identical. Ignore only the workspace's navigation link.
+                            # All evaluator evidence remains identical. The card
+                            # deliberately promotes slot details/current risks out
+                            # of its nested explanation; compare those separately.
                             assessment = page.locator('#trade-result .dtos-explanation')
                             balance = assessment.locator(':scope > a[href="#trade-balancing"]')
                             self.assertEqual(balance.count(), 1)
                             self.assertTrue(balance.is_visible())
-                            complete_text = assessment.evaluate("e=>{const copy=e.cloneNode(true);copy.querySelector('a[href=\"#trade-balancing\"]').remove();return copy.textContent;}")
+                            self.assertEqual(assessment.locator(':scope > .tw-lineup-details').text_content(), compact_slots)
+                            self.assertEqual(assessment.locator(':scope > .tw-lineup-warning').all_text_contents(), compact_risks)
+                            complete_text = assessment.evaluate("e=>{const copy=e.cloneNode(true);copy.querySelectorAll(':scope > a[href=\"#trade-balancing\"], :scope > .tw-lineup-details, :scope > .tw-lineup-warning').forEach(n=>n.remove());return copy.textContent;}")
                             self.assertEqual(complete_text, compact_text)
                             self.assertEqual(page.locator('#trade-review button[data-asset-id="1-QB-0"]').count(), 1)
                             self.assertEqual(page.locator('#trade-review button[data-asset-id="2-QB-0"]').count(), 1)

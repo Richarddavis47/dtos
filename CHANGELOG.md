@@ -1,3 +1,11 @@
+# v1.22.10 / build 2225 — Trade lineup transparency and evidence limits
+
+Completed Trade assessments expose both franchises’ independently optimized before/after analytical starters and disjoint projected reserves. Details show actual league-configured slots, player names/positions, individual contributions, weekly totals and compatible publication identity. Missing positions remain explicit, genuine zeros remain numeric, and incompatible slot evidence is withheld without inventing a lineup. Submitted Sleeper starters remain separate and unchanged.
+
+Current-week incoming/starter availability warnings are visible beside the decision. Weekly details distinguish eligible projected reserves, excluded cover and unknown projections without extrapolating injury recovery. Recorded search-limit diagnostics now distinguish overlapping projection, Market and future-capital requirements from contextual reserve, freshness and manager-history qualifications. They do not infer upstream absence or change search classification.
+
+Primary fantasy-point displays use two decimals; expanded weekly totals retain up to four decimals without binary artifacts. Canonical values, all decision thresholds, prices, saved preferences, exact picks and resource policies are unchanged. Expanding details performs no new requests or optimization. Original Granite 107/44/29 counts are reported observations, not a reconstruction: its full matched diagnostics were not available during implementation. See docs/audits/TRADE_LINEUP_EVIDENCE_2225.md.
+
 # v1.22.9 / build 2224 — League entry and bounded preparation recovery
 
 A secondary league can restore its existing compatible, retained Sleeper cache before attempting synchronization. Restored pages identify the last successful sync, while projection, Market and historical evidence keep their independent compatibility requirements. Cache restoration never starts provider requests, historical imports, FOIS or Market construction.
