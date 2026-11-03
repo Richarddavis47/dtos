@@ -24,6 +24,10 @@ Named warnings come from the exact weekly publication and completed canonical el
 
 New search evidence counts each recorded required evidence category at most once per evidence-limited assessment, with the actual classified-assessment denominator and explicit overlap/unknown counts. Market prices for exchanged assets, current/future legal lineups, compatible publication context and future-capital qualification/trade-off are separated. Reserve, availability/freshness and manager-history/direction limitations are contextual qualifications, not automatically relabeled as the admission cause. Classification, ranking, candidate budget and final verdict rules are unchanged. Downstream absence does not establish that the provider lacked a record.
 
+## Display precision
+
+Primary summaries and compact slot tables use the existing two-decimal formatter. Expanded weekly pre/post totals retain up to four decimal places for auditability, suppressing binary artifacts such as 155.56980000000001. Canonical totals and contributions remain exact, and no threshold or ordering uses a rounded display value. Relocated card disclosures and warnings are compared separately against the adopted full explanation; other evidence remains identical.
+
 ## Preservation and acceptance
 
 Neutral/Custom valuation, all rank-slot methods/preferences, exact picks, highest-projected legal lineup mathematics, FOIS/history grades, Trade qualification, strategy isolation, submitted starters and navigation contracts remain unchanged. Existing FOIS 768 MiB and Trade 256+128 MiB policies and heavyweight lifecycle code are untouched. No provider, solver, FOIS, history or discovery work is started by opening the disclosure or ordinary navigation.

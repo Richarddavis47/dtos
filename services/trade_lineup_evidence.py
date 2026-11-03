@@ -4,7 +4,7 @@ A failed window does not invalidate independent weeks. Validation compares the
 recorded values/identities; it never fills a missing delta or changes a price.
 """
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from math import isclose, isfinite
 
 
@@ -24,6 +24,17 @@ def same_number(left, right):
 
 def total(values):
     return float(sum((Decimal(str(v)) for v in values), Decimal(0)))
+
+
+def weekly_total_display(value):
+    """Expanded analytical totals: retain useful precision, cap binary artifacts."""
+    if not number(value):
+        return 'Unavailable'
+    try:
+        rounded = Decimal(str(value)).quantize(Decimal('0.0001'))
+        return '0' if rounded == 0 else format(rounded, 'f').rstrip('0').rstrip('.')
+    except InvalidOperation:
+        return 'Unavailable'
 
 
 def completed_lineup_evidence(result, side="active"):

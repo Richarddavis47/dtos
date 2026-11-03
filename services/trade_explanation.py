@@ -6,7 +6,7 @@ from src.core.explanations import (
 from src.ui.intelligence_presentation import manager_points
 from html import escape
 from services.trade_decision import final_decision, lineup_comparisons
-from services.trade_lineup_evidence import completed_lineup_admissions
+from services.trade_lineup_evidence import completed_lineup_admissions, weekly_total_display
 
 
 HORIZONS = {'current_week': 'Current week', 'next_n': 'Next-N',
@@ -74,7 +74,8 @@ def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Expl
     def add(key, label, value, *, unit='classification', state=None, kind=K.DERIVED):
         evidence.append(EvidenceItem(key, label, kind, ctx, key, unit,
             A.UNAVAILABLE if value is None else (state or A.AVAILABLE),
-            None if value is None else manager_points(value)
+            None if value is None else weekly_total_display(value)
+            if unit == 'fantasy points' and key.startswith('weekly.') and not key.endswith('.delta') else manager_points(value)
             if unit == 'fantasy points' else str(value)))
         return key
 
@@ -252,7 +253,8 @@ def render_trade_explanation(result: dict, *, league_id: str, _slot_details=True
         name != 'current_week' and row.get('delta') is not None and len(row.get('weeks') or []) > 1
         for side in admissions.values() for name, row in side['horizons'].items()
     )
-    period_units = ('<p class="tw-horizon-units">Next-N and longer-period changes are totals across the listed weeks, not per-week averages. '
+    period_units = ('<p class="tw-horizon-units">Expanded weekly totals retain up to four decimals; decision summaries use two. '
+                    'Next-N and longer-period changes are totals across the listed weeks, not per-week averages. '
                     'Team summaries labeled Average are per-week averages.</p>') if multiweek else ''
     if presentation and presentation.get('qualification'):
         qualifier = '<span class="tw-verdict-qualification">' + escape(presentation['qualification']) + '</span>'

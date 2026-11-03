@@ -114,7 +114,7 @@ class ActiveTradeExplanationTests(unittest.TestCase):
         self.assertIn('Rest of regular season · Season 2026 · weeks 2, 3: Unavailable', before_detail)
         self.assertIn('not one combined upgrade/downgrade', before_detail)
         self.assertIn('Weekly optimal-lineup detail', html)
-        self.assertIn('Before trade optimal total: <strong>27.34', html)
+        self.assertIn('Before trade optimal total: <strong>27.335', html)
         self.assertIn('Week 3 · Before trade optimal total: <strong>0</strong>', html)
         self.assertEqual(result['multi_horizon_impact']['sides']['active']['weekly'][2]['pre']['optimal']['projected_points'], 27.335)
         self.assertIn('Week 3 · After trade optimal total: <strong>Unavailable', html)

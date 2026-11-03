@@ -156,6 +156,11 @@ class TradeLineupDetailTests(unittest.TestCase):
         self.assertEqual(manager_points(155.56980000000001), '155.57')
         self.assertEqual(manager_points(155.8992), '155.9')
         self.assertEqual(manager_points(161.2492), '161.25')
+        from services.trade_lineup_evidence import weekly_total_display
+        self.assertEqual(weekly_total_display(155.56980000000001), '155.5698')
+        self.assertEqual(weekly_total_display(27.335), '27.335')
+        self.assertEqual(weekly_total_display(0), '0')
+        self.assertEqual(weekly_total_display(None), 'Unavailable')
 
     def test_cause_counts_have_an_explicit_overlapping_denominator(self):
         self.f.feed = [r for r in self.f.feed if r['player_id'] != '2-9']
