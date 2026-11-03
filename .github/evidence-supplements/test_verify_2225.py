@@ -1,0 +1,56 @@
+import hashlib
+import json
+from pathlib import Path
+import tempfile
+import unittest
+import zipfile
+
+from verify_2225 import verify_archive
+
+
+class SupplementTransportTests(unittest.TestCase):
+    def archive(self, root, *, name='record.json', payload=b'{}', listed_payload=None, extra=False):
+        rows = [{'name': name, 'bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest()}]
+        files = {name: payload if listed_payload is None else listed_payload,
+                 'MANIFEST.json': json.dumps(rows).encode()}
+        files['SHA256SUMS'] = ''.join(hashlib.sha256(b).hexdigest() + '  ' + n + '\n' for n, b in files.items()).encode()
+        if extra:
+            files['extra.json'] = b'{}'
+        path = root / 'supplement.zip'
+        with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
+            for n, b in files.items():
+                z.writestr(n, b)
+        return path, hashlib.sha256(path.read_bytes()).hexdigest()
+
+    def test_original_bytes_and_both_manifests_validate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path, digest = self.archive(Path(directory))
+            self.assertEqual(verify_archive(path, digest), 1)
+
+    def test_transport_hash_and_payload_corruption_fail(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path, digest = self.archive(Path(directory))
+            with self.assertRaisesRegex(RuntimeError, 'archive checksum'):
+                verify_archive(path, '0' * 64)
+            path, digest = self.archive(Path(directory), listed_payload=b'changed')
+            with self.assertRaisesRegex(RuntimeError, 'Payload checksum'):
+                verify_archive(path, digest)
+
+    def test_unlisted_member_and_path_escape_fail(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path, digest = self.archive(Path(directory), extra=True)
+            with self.assertRaisesRegex(RuntimeError, 'Unmanifested'):
+                verify_archive(path, digest)
+            path, digest = self.archive(Path(directory), name='../escape.json')
+            with self.assertRaisesRegex(RuntimeError, 'Unsafe archive path'):
+                verify_archive(path, digest)
+
+    def test_credential_shaped_payload_is_not_published(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path, digest = self.archive(Path(directory), payload=b'ghp_' + b'X' * 40)
+            with self.assertRaisesRegex(RuntimeError, 'Credential-shaped'):
+                verify_archive(path, digest)
+
+
+if __name__ == '__main__':
+    unittest.main()

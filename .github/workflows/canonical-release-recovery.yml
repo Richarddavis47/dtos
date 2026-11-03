@@ -4,6 +4,12 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      evidence_operation:
+        type: choice
+        options: [validate, corrigendum]
+        default: validate
+        required: true
   push:
     branches: [main]
     paths: ['.github/workflows/canonical-release-recovery.yml']
@@ -20,7 +26,7 @@ env:
 
 jobs:
   canonical-release:
-    if: github.event_name != 'push'
+    if: github.event_name != 'push' && (github.event_name != 'workflow_dispatch' || inputs.evidence_operation != 'corrigendum')
     runs-on: ubuntu-24.04
     # Preserve the complete growing regression suite and artifact cleanup time.
     # The 2 GiB / two-CPU / network-none controls and assertions stay unchanged.
@@ -556,3 +562,34 @@ jobs:
             .validation/release-2191/SHA256SUMS
           if-no-files-found: error
           retention-days: 14
+
+  guarded-evidence-corrigendum:
+    if: github.event_name == 'workflow_dispatch' && inputs.evidence_operation == 'corrigendum'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Scoped evidence integrity controls
+        run: python -m unittest discover -s .github/evidence-supplements -p test_verify_2225.py -v
+      - name: Verify original immutable evidence and publish only its separate corrigendum
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python .github/evidence-supplements/verify_2225.py
+      - name: Preserve separately checksummed evidence and attestation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-2225-evidence-corrigendum-${{ github.run_id }}
+          path: .validation/2225-corrigendum
+          if-no-files-found: error
+          retention-days: 90
