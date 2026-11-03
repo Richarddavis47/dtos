@@ -520,7 +520,7 @@
     if (value == null || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value))) return value;
     if (Array.isArray(value)) return value.slice(0, 32).map(v => boundedEvidence(v, depth + 1, budget)).filter(v => v !== null);
     if (typeof value !== 'object') return null;
-    return Object.fromEntries(Object.entries(value).filter(([key]) => !['explanation_html', '__proto__', 'constructor', 'prototype'].includes(key))
+    return Object.fromEntries(Object.entries(value).filter(([key]) => !['explanation_html', 'lineup_detail_context', 'evidence_limitations', '__proto__', 'constructor', 'prototype'].includes(key))
       .slice(0, 64).map(([key, v]) => [key.slice(0, 80), boundedEvidence(v, depth + 1, budget)]));
   }
   const packageIdentity = p => JSON.stringify([Number(p.partner_roster_id ?? p.partner), [...(p.assets_sent || p.sent || [])].sort(), [...(p.assets_received || p.received || [])].sort()]);

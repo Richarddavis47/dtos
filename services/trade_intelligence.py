@@ -1280,7 +1280,10 @@ def _with_lineup_details(data, response, reader):
             return
         seen.add(id(row))
         e, proposal = row.get('evaluation'), row.get('proposal')
-        if e and proposal and not e.get('lineup_detail_context'):
+        lid = (((e or {}).get('provenance') or {}).get('inputs') or {}).get('league_id')
+        # Legacy/incomplete retained assessments have no trustworthy binding.
+        # Leave them qualified as recorded; never fabricate a source identity.
+        if e and proposal and lid and not e.get('lineup_detail_context'):
             presented = row.get('proposal_presentation') or {}
             kinds = {a['asset_id']: a.get('kind') for a in
                      (*presented.get('send', []), *presented.get('receive', []))}
@@ -1292,7 +1295,6 @@ def _with_lineup_details(data, response, reader):
                     assets_received=tuple(SimpleNamespace(asset_id=pid, kind=kinds[pid]) for pid in proposal['assets_received']))
                 bind_lineup_details(data, e, reader, p)
             e['evidence_limitations'] = evidence_limitations(e)
-            lid = (e.get('provenance') or {}).get('inputs', {}).get('league_id')
             e['explanation_html'] = render_trade_explanation(e, league_id=lid)
         for key in ('results', 'near_misses', 'exploratory_results', 'other_trade_ideas', 'variants'):
             for child in row.get(key) or []:

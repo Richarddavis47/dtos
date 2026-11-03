@@ -273,6 +273,15 @@ class TradeLineupDetailTests(unittest.TestCase):
             self.assertIn('lineup_detail_context', row['evaluation'])
             self.assertIn('Before and after', row['evaluation']['explanation_html'])
 
+    def test_unbound_retained_assessment_is_not_given_fabricated_provenance(self):
+        from services.trade_intelligence import _with_lineup_details
+        row = {'proposal': {'active_roster_id': 1, 'partner_roster_id': 2,
+                           'assets_sent': ['1-0'], 'assets_received': ['2-0']},
+               'evaluation': {'recommendation': 'FAIR / OPTIONAL'}}
+        before = deepcopy(row)
+        with patch('services.trade_lineup_detail.bind_lineup_details', side_effect=AssertionError('No binding without provenance')):
+            self.assertEqual(_with_lineup_details(self.data, {'results': [row]}, self.f.service), {'results': [before]})
+
 
 if __name__ == '__main__':
     unittest.main()

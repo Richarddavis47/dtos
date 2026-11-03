@@ -14,6 +14,8 @@ The completed evaluation binds a small request-local identity/roster view and al
 
 A matched resource comparison found unacceptable extra retention when the new detail was materialized for every searched candidate. That attempt remains in evidence and is superseded. Discovery now binds and renders the new slot disclosure only for the already-selected returned assessments, using the same pinned reader and original canonical results. All candidates still receive their full unchanged bilateral evaluation; none are skipped, pruned or admitted differently to save presentation cost.
 
+The new source-detail view is not saved into the existing bounded retained workspace evidence. Selected assets, exact package, mode and other supported context retain their existing restoration contract. A reloaded old assessment remains NOT REVALIDATED; an explicit supported evaluation can produce a fresh detailed audit. No new permanent recommendation or source cache is introduced.
+
 ## Availability and depth
 
 Named warnings come from the exact weekly publication and completed canonical eligibility/exclusion records. Rostered cover, disjoint projected reserves and dependable availability remain distinct. Out/IR exclusions, byes, missing compatible projections and unknown participation are explained. Future-week recorded status is explicitly not a recovery-date forecast. Current-week incoming/starter risks appear near the decision, outside nested evidence panels. Missing contributions never become zero. Reserve assignments require disjoint identity, eligibility, projection and subtotal checks independently of starter evidence.

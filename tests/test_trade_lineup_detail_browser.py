@@ -110,6 +110,14 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
                     first_week.scroll_into_view_if_needed()
                     page.screenshot(path=str(directory / f'lineup-{width}.png'))
                 records.append(record)
+                # Preserve the offer under existing bounded retained-state rules;
+                # do not introduce a persistent copy of the new source view.
+                state = helper.state(page)
+                self.assertNotIn('lineup_detail_context', json.dumps(state))
+                page.reload()
+                page.locator('#trade-context').get_by_text('Active league', exact=False).wait_for()
+                self.assertGreater(page.locator('#trade-sent-chips [data-asset-id="1-10"]').count(), 0)
+                self.assertGreater(page.locator('#trade-received-chips [data-asset-id="2-0"]').count(), 0)
         self.assertEqual(helper.data, original)
         if os.environ.get('DTOS_LINEUP_DETAIL_EVIDENCE'):
             (Path(os.environ['DTOS_LINEUP_DETAIL_EVIDENCE']) / 'browser.json').write_text(json.dumps(records, indent=2))
