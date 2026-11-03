@@ -1,0 +1,85 @@
+{
+  "record_type": "New handoff metadata indexing retained evidence; no new study execution.",
+  "prepared_at": "2026-11-03T20:10:36.311841+00:00",
+  "completion_status": "Evidence handoff; scientific/production conclusion remains PARTIAL.",
+  "original_archive": {
+    "filename": "Granite-cache-restoration-memory-profile.zip",
+    "bytes": 9072793,
+    "sha256": "df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439",
+    "unchanged": true,
+    "manifest_payloads": 72
+  },
+  "tested_source": {
+    "commit": "150339f3d02e40ef161a8eb5d870e9b7c38f5874",
+    "tree": "e4669e8a4517e29f1d45a332580a52af439adab1"
+  },
+  "runtime": {
+    "declared_python_version": "3.14.3",
+    "version_evidence": "Original README and pinned runtime image configuration; no original python --version stdout artifact retained.",
+    "image": "dtos-canonical314-flat:2223",
+    "immutable_image_id": "sha256:2c9de92bf8e05a79587f6edba94052cf614c984a5cb81a62613871388cd6533e",
+    "runtime_layer_cache_id": "c4fcc099914558d39ab469a50f080c0c03c5bb6a190fda5d4f269d20c9312327",
+    "runtime_mounts": "Original run-constrained.py mounts runtime directories read-only and runs /usr/local/bin/python in a surrogate container; see archive.",
+    "enforced_container_flags": [
+      "--memory=2g",
+      "--memory-swap=2g",
+      "--cpus=2",
+      "--network=none",
+      "--init",
+      "--rm"
+    ],
+    "cgroup_limit_bytes": 2147483648,
+    "swap_limit_bytes": 0,
+    "enforcement_evidence": "Original harness reads/asserts cgroup memory.max and memory.swap.max; original profile records and samples retained. No original docker-inspect record retained; containers were removed."
+  },
+  "commands": {
+    "provenance": "Transcribed as new handoff instructions from retained task execution record; original shell transcript was not archived. Do not label these as original stdout.",
+    "preparation": "python /workspace/2226-efficiency/run-constrained.py /evidence/prepare_fixtures.py --output /evidence/granite-scale --catalog-players 10500 --projection-extra 1000",
+    "healthy": "python /workspace/2226-efficiency/run-constrained.py /evidence/profile_restore.py --root /evidence/granite-scale --scenario healthy",
+    "pressure_and_recovery": "Same profile command with --scenario pressure, supported_pressure, fois, fois_healthy, fois_same_pressure or incompatible; each original record identifies its scenario.",
+    "cleanup": "python /workspace/2226-efficiency/run-constrained.py /evidence/minimal_repeat.py",
+    "focused": "See test-inventory.json.",
+    "correction": "Original README omitted spaces in two preparation options; corrected instructions here do not alter the historical README."
+  },
+  "peak_calculation": {
+    "kernel_lifetime_peak_bytes": 161583104,
+    "pre_restore_cgroup_bytes": 78131200,
+    "difference_bytes": 83451904,
+    "difference_mib": 79.5859375,
+    "scope": "Total incremental fixture peak, not the sum of overlapping stage increments and not Granite demand."
+  },
+  "cleanup_cycles": {
+    "cycles": 12,
+    "records": 13,
+    "scope": "Initial sample plus12cycles; weak-reference assertions; warm-up/plateau, not long-term leak freedom."
+  },
+  "evidence_classes": {
+    "production_metadata": "operator-supplied-input.json plus original study-time readiness observation inside report.json; no new production measurements.",
+    "source_inspection": "Pinned source, static test inventory and admission-policy cap; no source changes.",
+    "disposable_results": "Original logs, profile JSONs, cleanup JSONL, fixture database/cache files and producer harnesses in original archive.",
+    "untested": "Real Granite allocation demand, representativeness equivalence, earlier17:01 rejection inputs, live Granite entry recovery, long-term production leak freedom, full canonical/hosted suites for this no-change study."
+  },
+  "privacy_review": {
+    "repository_visibility": "public",
+    "credentials_or_private_roster_contents_exported": false,
+    "basis": "Original producer uses synthetic fixtures and no-network disposable stores; original archive unchanged; bounded token/email/account-marker scans and source review.",
+    "retained_methodological_data": "Fixture-generated request and hashed scope identifiers, local /workspace and Docker storage paths, timestamps, memory counters, public deployment identity and explicitly supplied production capacity figures.",
+    "limitation": "Pattern scanning is not an exhaustive secret certification; no actual Granite cache was obtained."
+  },
+  "missing_original_evidence": [
+    "Verbose/JUnit per-test execution attribution; source inventory is new and separately labeled.",
+    "Complete original shell command/exit transcript and per-run producer hash mapping.",
+    "Original python --version stdout, full dependency/environment lock, runtime image/layer archive and per-container docker-inspect records.",
+    "Browser screenshots/Playwright traces;12original structured browser measurements do exist in log line467.",
+    "Standalone original stderr for shell log-redirection/packaging failures; summaries and available original profiler failure log are retained.",
+    "Actual Granite cache/profile and earlier decision-time admission inputs."
+  ],
+  "preservation": {
+    "application_code_changed": false,
+    "workflow_changed": false,
+    "tests_rerun": false,
+    "production_requests": false,
+    "release_or_deployment": false,
+    "original_corrigendum_unchanged": true
+  }
+}

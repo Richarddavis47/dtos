@@ -1,0 +1,21 @@
+{
+  "application_test_failures": 0,
+  "attempts": [
+    {
+      "scope": "initial profiling harness",
+      "outcome": "failed assertion",
+      "reason": "Harness expected phase null; deployed API returns idle. Corrected harness asserts idle and no heavy owners; no application guard change.",
+      "preserved": "attempt-1/"
+    },
+    {
+      "scope": "log redirection",
+      "outcome": "shell permission error before application execution",
+      "reason": "Container-created fixture directory not writable by host task user. Subsequent logs written to task-owned parent."
+    },
+    {
+      "scope": "focused regression",
+      "outcome": "passed",
+      "tests": 36
+    }
+  ]
+}

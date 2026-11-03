@@ -1,0 +1,77 @@
+{
+  "record_type": "New static source inventory; no tests imported or executed. Not original per-test execution attribution.",
+  "tested_commit": "150339f3d02e40ef161a8eb5d870e9b7c38f5874",
+  "source_tree": "e4669e8a4517e29f1d45a332580a52af439adab1",
+  "command_transcribed_from_retained_task_record": "python /workspace/2226-efficiency/run-constrained.py -m unittest tests.test_league_entry_coordination tests.test_multileague_projection_compatibility tests.test_memory_reclamation tests.test_multileague_projection_browser tests.test_fois_memory_admission > /workspace/2226-efficiency/focused-controls.log 2>&1",
+  "original_log_summary": "Ran 36 tests in 19.120s / OK",
+  "original_verbose_or_junit_artifact": null,
+  "skip_or_failure_summary": "Original summary has no FAILED, skipped=, expected-failure or unexpected-success count. It is nonverbose and does not map individual results.",
+  "modules": [
+    {
+      "source_path": "tests/test_league_entry_coordination.py",
+      "source_sha256": "943e20752edd2b4896d7daa2c2b298273e2363da56e5749128f2ac26dce9ebe6",
+      "defined_test_methods": [
+        "tests.test_league_entry_coordination.CachedPublicationTests.test_active_fois_allows_admitted_restore_without_sync_or_changing_source",
+        "tests.test_league_entry_coordination.CachedPublicationTests.test_foreign_league_season_scoring_and_expired_evidence_are_rejected",
+        "tests.test_league_entry_coordination.CachedPublicationTests.test_unknown_or_insufficient_memory_defers_before_decode",
+        "tests.test_league_entry_coordination.CachedPublicationTests.test_active_fois_retains_its_outstanding_reserve_and_release_allows_restore",
+        "tests.test_league_entry_coordination.CachedPublicationTests.test_json_week_keys_restore_without_repricing_or_changing_evidence",
+        "tests.test_league_entry_coordination.OwnedRecoveryTests.test_default_periodic_deferral_waits_for_existing_interval_without_starting_fois",
+        "tests.test_league_entry_coordination.OwnedRecoveryTests.test_single_flight_cooldown_and_explicit_recovery",
+        "tests.test_league_entry_coordination.OwnedRecoveryTests.test_cancellation_collects_cache_reader_before_releasing_state",
+        "tests.test_league_entry_coordination.EntryHTTPTests.test_restored_one_qb_cache_supports_real_pre_post_trade_evaluation",
+        "tests.test_league_entry_coordination.EntryHTTPTests.test_busy_cold_entry_has_truthful_status_no_source_calls_or_account_mutations",
+        "tests.test_league_entry_coordination.EntryHTTPTests.test_warm_league_reads_work_while_fois_is_active_without_new_preparation",
+        "tests.test_league_entry_coordination.EntryHTTPTests.test_saved_publication_serves_cold_entry_during_fois_without_new_heavy_work",
+        "tests.test_league_entry_coordination.EntryHTTPTests.test_manual_retry_after_cooldown_and_fois_release_performs_real_source_hydration",
+        "tests.test_league_entry_coordination.EntryHTTPTests.test_busy_page_accessible_at_phone_sizes_without_automatic_retry"
+      ]
+    },
+    {
+      "source_path": "tests/test_multileague_projection_compatibility.py",
+      "source_sha256": "216d30536d51ed0674ff17ed35b7326d7f0b347564da697fa4be3a777b11241b",
+      "defined_test_methods": [
+        "tests.test_multileague_projection_compatibility.MultiLeagueProjectionTests.test_complete_one_qb_source_to_team_and_package_impact",
+        "tests.test_multileague_projection_compatibility.MultiLeagueProjectionTests.test_missing_k_or_def_never_becomes_zero_or_legal",
+        "tests.test_multileague_projection_compatibility.MultiLeagueProjectionTests.test_ir_and_canonical_taxi_assets_cannot_fill_required_slots",
+        "tests.test_multileague_projection_compatibility.MultiLeagueProjectionTests.test_explicit_zero_def_is_supported",
+        "tests.test_multileague_projection_compatibility.MultiLeagueProjectionTests.test_superflex_without_dedicated_te_preserves_legal_scoring",
+        "tests.test_multileague_projection_compatibility.MultiLeagueProjectionTests.test_asymmetric_player_trade_reoptimizes_each_side_with_k_and_def",
+        "tests.test_multileague_projection_compatibility.MultiLeagueProjectionTests.test_scoring_refresh_requires_a_new_compatible_publication",
+        "tests.test_multileague_projection_compatibility.MultiLeagueProjectionTests.test_future_week_cannot_borrow_current_def_projection",
+        "tests.test_multileague_projection_compatibility.MultiLeagueProjectionTests.test_scoring_week_league_and_generation_conflicts_fail_closed",
+        "tests.test_multileague_projection_compatibility.MultiLeagueProjectionTests.test_source_def_score_is_league_specific_not_ppr_display",
+        "tests.test_multileague_projection_compatibility.MultiLeagueProjectionTests.test_existing_bounded_bulk_fetch_requests_k_and_def"
+      ]
+    },
+    {
+      "source_path": "tests/test_memory_reclamation.py",
+      "source_sha256": "f244d282b03ca6cde1ab680d93e4bc872d49689ac22d19316853fa8072100d07",
+      "defined_test_methods": [
+        "tests.test_memory_reclamation.MemoryReclamationTests.test_expired_backlog_drains_off_loop_with_capacity_bound_and_yields",
+        "tests.test_memory_reclamation.MemoryReclamationTests.test_windows_and_unavailable_native_api_are_safe_noops",
+        "tests.test_memory_reclamation.MemoryReclamationTests.test_native_release_preserves_live_objects",
+        "tests.test_memory_reclamation.MemoryReclamationTests.test_bounded_off_loop_work_only_after_ready_request_activity"
+      ]
+    },
+    {
+      "source_path": "tests/test_multileague_projection_browser.py",
+      "source_sha256": "91940834d4a550b887bfc2d6463a1a7729960ce5e40dddc1f35c61bf18aaaf8c",
+      "defined_test_methods": [
+        "tests.test_multileague_projection_browser.MultiLeagueProjectionBrowserTests.test_supported_and_missing_required_slots_at_all_sizes"
+      ]
+    },
+    {
+      "source_path": "tests/test_fois_memory_admission.py",
+      "source_sha256": "ef49170df3f9be70203bf051df824d60e0c941269b62bbe5bb109204c7725a15",
+      "defined_test_methods": [
+        "tests.test_fois_memory_admission.FOISMemoryAdmissionTests.test_raw_pressure_never_discounts_file_cache_or_host_memory",
+        "tests.test_fois_memory_admission.FOISMemoryAdmissionTests.test_sufficient_headroom_admits_and_missing_measurement_defers",
+        "tests.test_fois_memory_admission.FOISMemoryAdmissionTests.test_deferral_precedes_executor_creation",
+        "tests.test_fois_memory_admission.FOISMemoryAdmissionTests.test_sync_never_waits_on_event_loop_for_active_fois",
+        "tests.test_fois_memory_admission.FOISMemoryAdmissionTests.test_sync_and_fois_reservation_do_not_overlap",
+        "tests.test_fois_memory_admission.FOISForcedRetirementTests.test_sync_can_reap_idle_worker_without_waiting_retention"
+      ]
+    }
+  ]
+}

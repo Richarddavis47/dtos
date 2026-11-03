@@ -1,0 +1,578 @@
+{
+  "generated_at": "2026-11-03T19:46:26.327529+00:00",
+  "application_commit": "150339f3d02e40ef161a8eb5d870e9b7c38f5874",
+  "application_tree": "e4669e8a4517e29f1d45a332580a52af439adab1",
+  "application_changed": false,
+  "release_created": false,
+  "deployed": false,
+  "scope": "New enforced-container fixture measurements, not private Granite cache contents or live Granite recovery.",
+  "reported_production": {
+    "source": "Operator measurements supplied by product owner; not freshly collected by this Codex run.",
+    "observed_at": "2026-11-03T13:55:00-05:00",
+    "cache_bytes": 23048708,
+    "container_usage_mib_approximately": 1687,
+    "container_limit_mib": 2048,
+    "raw_headroom_mib_approximately": 361,
+    "cache_age_approximately": "9h51m",
+    "recorded_oom_events": 0,
+    "earlier_1701_rejection_reason": "Not retrospectively established by this later measurement."
+  },
+  "unchanged_admission": {
+    "factor": 16,
+    "minimum_working_bytes": 134217728,
+    "safety_bytes": 134217728,
+    "fois_additional_working_bytes": 671088640,
+    "trade_working_bytes": 268435456,
+    "trade_safety_bytes": 134217728,
+    "granite_working_bytes": 368779328,
+    "granite_required_without_fois_bytes": 502997056,
+    "granite_required_with_fois_bytes": 1174085696,
+    "additional_free_capacity_without_fois_mib": 118.69537353515625
+  },
+  "fixture": {
+    "cache_bytes": 22974328,
+    "actual_granite_bytes": 23048708,
+    "size_ratio": 0.9967729210678533,
+    "teams": 12,
+    "rostered_players": 288,
+    "catalog_identities": 10500,
+    "canonical_projection_rows": 1288,
+    "compatible_durable_projection_restored": true,
+    "weeks": [
+      8,
+      9
+    ],
+    "publication_shape_limitations": [
+      "Typed source-shaped synthetic fields and provider identifiers; no claim that field density reproduces a real Sleeper catalog.",
+      "All unowned catalog records are inactive; current/future projections are only published for owned players plus the declared rich-publication subset.",
+      "Catalog identities are attached after canonical preparation; missing rows remain unknown, not zero, and do not fabricate provider evidence.",
+      "File sizes approximate the reported cache scale, not a reconstruction of its private contents."
+    ]
+  },
+  "healthy": {
+    "seconds": 0.1780054150003707,
+    "kernel_confirmed_peak_increment_bytes": 83451904,
+    "kernel_peak_bytes": 161583104,
+    "retained_before_close_increment_bytes": 74772480,
+    "stages": [
+      {
+        "name": "cache_json_decode",
+        "seconds": 0.12429974100086838,
+        "increment_bytes": 83456000
+      },
+      {
+        "name": "shallow_status_materialization",
+        "seconds": 2.773987944237888e-06,
+        "increment_bytes": 0
+      },
+      {
+        "name": "runtime_apply_reference",
+        "seconds": 0.0001052670122589916,
+        "increment_bytes": 0
+      },
+      {
+        "name": "durable_reference_unpack",
+        "seconds": 0.0014636580017395318,
+        "increment_bytes": 1572864
+      },
+      {
+        "name": "durable_state_decode",
+        "seconds": 0.02469020799617283,
+        "increment_bytes": 9695232
+      },
+      {
+        "name": "projection_ctor_durable_decode",
+        "seconds": 0.02625692100264132,
+        "increment_bytes": 9957376
+      },
+      {
+        "name": "projection_attach_compatible",
+        "seconds": 0.0006145990046206862,
+        "increment_bytes": 0
+      },
+      {
+        "name": "brain_context",
+        "seconds": 0.0023737890005577356,
+        "increment_bytes": 532480
+      },
+      {
+        "name": "canonical_fingerprint",
+        "seconds": 3.3750999136827886e-05,
+        "increment_bytes": 0
+      },
+      {
+        "name": "canonical_fingerprint",
+        "seconds": 0.00036491500213742256,
+        "increment_bytes": 0
+      },
+      {
+        "name": "canonical_fingerprint",
+        "seconds": 5.3679978009313345e-06,
+        "increment_bytes": 0
+      },
+      {
+        "name": "canonical_fingerprint",
+        "seconds": 4.435991286300123e-06,
+        "increment_bytes": 0
+      },
+      {
+        "name": "canonical_fingerprint",
+        "seconds": 4.846995580010116e-06,
+        "increment_bytes": 0
+      },
+      {
+        "name": "canonical_fingerprint",
+        "seconds": 0.010278539004502818,
+        "increment_bytes": 3932160
+      },
+      {
+        "name": "canonical_publication",
+        "seconds": 0.02390552600263618,
+        "increment_bytes": 4337664
+      },
+      {
+        "name": "runtime_close_gc_allocator_release",
+        "seconds": 0.05036937400291208,
+        "increment_bytes": 0
+      }
+    ]
+  },
+  "scenario_outcomes": [
+    {
+      "label": "target",
+      "outcome": "restored",
+      "seconds": 0.14921318700362463,
+      "raw_headroom": 2069561344,
+      "required": 477503296,
+      "observed_increment": 78934016,
+      "observed_peak": 156860416,
+      "fois_reserved": false,
+      "scenario": "healthy",
+      "cache": "oneqb-rostered.json",
+      "prototype_only": false
+    },
+    {
+      "label": "warm_superflex",
+      "outcome": "restored",
+      "seconds": 0.14705031699850224,
+      "raw_headroom": 2069200896,
+      "required": 477591024,
+      "observed_increment": 78934016,
+      "observed_peak": 157216768,
+      "fois_reserved": false,
+      "scenario": "fois",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "target",
+      "outcome": "deferred",
+      "seconds": 0.0008326940005645156,
+      "raw_headroom": 941727744,
+      "required": 1172895616,
+      "observed_increment": 0,
+      "observed_peak": 1205755904,
+      "fois_reserved": true,
+      "scenario": "fois",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "explicit_recovery",
+      "outcome": "restored",
+      "seconds": 0.17301487200893462,
+      "raw_headroom": 2009849856,
+      "required": 501806976,
+      "observed_increment": 86601728,
+      "observed_peak": 224235520,
+      "fois_reserved": false,
+      "scenario": "fois",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "warm_superflex",
+      "outcome": "restored",
+      "seconds": 0.14280555500590708,
+      "raw_headroom": 2069225472,
+      "required": 477591024,
+      "observed_increment": 78934016,
+      "observed_peak": 157192192,
+      "fois_reserved": false,
+      "scenario": "fois_healthy",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "target",
+      "outcome": "restored",
+      "seconds": 0.1521845560055226,
+      "raw_headroom": 2008129536,
+      "required": 1172895616,
+      "observed_increment": 85028864,
+      "observed_peak": 224382976,
+      "fois_reserved": true,
+      "scenario": "fois_healthy",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "warm_superflex",
+      "outcome": "restored",
+      "seconds": 0.1451664000051096,
+      "raw_headroom": 2069176320,
+      "required": 477591024,
+      "observed_increment": 78934016,
+      "observed_peak": 157245440,
+      "fois_reserved": false,
+      "scenario": "fois_same_pressure",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "target",
+      "outcome": "deferred",
+      "seconds": 0.0008204470068449154,
+      "raw_headroom": 941641728,
+      "required": 1172895616,
+      "observed_increment": 0,
+      "observed_peak": 1205841920,
+      "fois_reserved": true,
+      "scenario": "fois_same_pressure",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "after_fois_release_same_pressure",
+      "outcome": "restored",
+      "seconds": 0.17282649400294758,
+      "raw_headroom": 941654016,
+      "required": 501806976,
+      "observed_increment": 86593536,
+      "observed_peak": 1292423168,
+      "fois_reserved": false,
+      "scenario": "fois_same_pressure",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "target",
+      "outcome": "restored",
+      "seconds": 0.16415264800889418,
+      "raw_headroom": 2069323776,
+      "required": 501806976,
+      "observed_increment": 83451904,
+      "observed_peak": 161615872,
+      "fois_reserved": false,
+      "scenario": "healthy",
+      "cache": "oneqb.json",
+      "prototype_only": true
+    },
+    {
+      "label": "target",
+      "outcome": "restored",
+      "seconds": 0.1780054150003707,
+      "raw_headroom": 2069356544,
+      "required": 501806976,
+      "observed_increment": 83451904,
+      "observed_peak": 161583104,
+      "fois_reserved": false,
+      "scenario": "healthy",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "target",
+      "outcome": "incompatible",
+      "seconds": 0.15267760001006536,
+      "raw_headroom": 2069090304,
+      "required": 501806976,
+      "observed_increment": 83451904,
+      "observed_peak": 161849344,
+      "fois_reserved": false,
+      "scenario": "incompatible",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "explicit_recovery",
+      "outcome": "restored",
+      "seconds": 0.17974453100760002,
+      "raw_headroom": 2069745664,
+      "required": 501806976,
+      "observed_increment": 113496064,
+      "observed_peak": 191234048,
+      "fois_reserved": false,
+      "scenario": "incompatible",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "warm_superflex",
+      "outcome": "restored",
+      "seconds": 0.1702209259965457,
+      "raw_headroom": 2069274624,
+      "required": 477591024,
+      "observed_increment": 78934016,
+      "observed_peak": 157143040,
+      "fois_reserved": false,
+      "scenario": "pressure",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "target",
+      "outcome": "deferred",
+      "seconds": 0.0008943360007833689,
+      "raw_headroom": 375308288,
+      "required": 501806976,
+      "observed_increment": 0,
+      "observed_peak": 1772175360,
+      "fois_reserved": false,
+      "scenario": "pressure",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "explicit_recovery",
+      "outcome": "restored",
+      "seconds": 0.17377072099770885,
+      "raw_headroom": 2009677824,
+      "required": 501806976,
+      "observed_increment": 86806528,
+      "observed_peak": 224612352,
+      "fois_reserved": false,
+      "scenario": "pressure",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "target",
+      "outcome": "restored",
+      "seconds": 0.20624538899573963,
+      "raw_headroom": 2069446656,
+      "required": 501806976,
+      "observed_increment": 83447808,
+      "observed_peak": 161488896,
+      "fois_reserved": false,
+      "scenario": "repeat",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "repeat_0",
+      "outcome": "restored",
+      "seconds": 0.17070039099780843,
+      "raw_headroom": 2064166912,
+      "required": 501806976,
+      "observed_increment": 101953536,
+      "observed_peak": 185270272,
+      "fois_reserved": false,
+      "scenario": "repeat",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "repeat_1",
+      "outcome": "restored",
+      "seconds": 0.16905266699905042,
+      "raw_headroom": 2057801728,
+      "required": 501806976,
+      "observed_increment": 95666176,
+      "observed_peak": 185348096,
+      "fois_reserved": false,
+      "scenario": "repeat",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "repeat_2",
+      "outcome": "restored",
+      "seconds": 0.17492308400687762,
+      "raw_headroom": 2050514944,
+      "required": 501806976,
+      "observed_increment": 88342528,
+      "observed_peak": 185311232,
+      "fois_reserved": false,
+      "scenario": "repeat",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "repeat_3",
+      "outcome": "restored",
+      "seconds": 0.1727475709922146,
+      "raw_headroom": 2043056128,
+      "required": 501806976,
+      "observed_increment": 80998400,
+      "observed_peak": 185425920,
+      "fois_reserved": false,
+      "scenario": "repeat",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "repeat_4",
+      "outcome": "restored",
+      "seconds": 0.17373141199641395,
+      "raw_headroom": 2036649984,
+      "required": 501806976,
+      "observed_increment": 74682368,
+      "observed_peak": 185262080,
+      "fois_reserved": false,
+      "scenario": "repeat",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "warm_superflex",
+      "outcome": "restored",
+      "seconds": 0.15593492399784736,
+      "raw_headroom": 2069393408,
+      "required": 477591024,
+      "observed_increment": 79196160,
+      "observed_peak": 157290496,
+      "fois_reserved": false,
+      "scenario": "supported_pressure",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "target",
+      "outcome": "restored",
+      "seconds": 0.1741148109867936,
+      "raw_headroom": 533950464,
+      "required": 501806976,
+      "observed_increment": 86601728,
+      "observed_peak": 1700134912,
+      "fois_reserved": false,
+      "scenario": "supported_pressure",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "warm_superflex",
+      "outcome": "restored",
+      "seconds": 0.15621970299980603,
+      "raw_headroom": 2069377024,
+      "required": 477591024,
+      "observed_increment": 78934016,
+      "observed_peak": 157040640,
+      "fois_reserved": false,
+      "scenario": "warm",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "warm_other_oneqb",
+      "outcome": "restored",
+      "seconds": 0.21492597401083913,
+      "raw_headroom": 2008313856,
+      "required": 477503296,
+      "observed_increment": 87044096,
+      "observed_peak": 226213888,
+      "fois_reserved": false,
+      "scenario": "warm",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    },
+    {
+      "label": "target",
+      "outcome": "restored",
+      "seconds": 0.1894358830031706,
+      "raw_headroom": 1921388544,
+      "required": 501806976,
+      "observed_increment": 68419584,
+      "observed_peak": 294514688,
+      "fois_reserved": false,
+      "scenario": "warm",
+      "cache": "oneqb.json",
+      "prototype_only": false
+    }
+  ],
+  "cleanup": {
+    "runtime_projection_brain_market_weakrefs_collected": true,
+    "runtime_close_bytes": 96768000,
+    "after_gc_bytes": 96321536,
+    "after_native_trim_bytes": 71528448,
+    "gc_collected_objects": 95,
+    "minimal_repeat_cycles": 12,
+    "minimal_repeat_post_cleanup_bytes": [
+      71688192,
+      77197312,
+      82563072,
+      87740416,
+      92889088,
+      98230272,
+      103616512,
+      108556288,
+      113852416,
+      113983488,
+      113827840,
+      113926144
+    ],
+    "retention_qualification": "Post-cleanup usage warmed to about109MiB and plateaued in final4cycles; not all memory returns to initial baseline. Root of bounded retention is not attributed. No unbounded runtime-graph leak demonstrated in this bounded experiment."
+  },
+  "prototype": {
+    "scope": "External fixture-only experiment; no application file changed.",
+    "change": "Avoid the full projection fallback fingerprint only when its result is immediately replaced by the existing durable projection ID.",
+    "generation_identity_preserved": true,
+    "baseline_peak_bytes": 83451904,
+    "prototype_peak_bytes": 83451904,
+    "baseline_seconds": 0.1780054150003707,
+    "prototype_seconds": 0.16415264800889418,
+    "conclusion": "No overall peak reduction; no admission improvement; do not deploy as Granite availability fix."
+  },
+  "validation": {
+    "focused_tests": 36,
+    "focused_seconds": 19.12,
+    "browser_cases": 12,
+    "browser_viewports": [
+      [
+        320,
+        432
+      ],
+      [
+        375,
+        667
+      ],
+      [
+        390,
+        844
+      ],
+      [
+        1280,
+        900
+      ]
+    ],
+    "browser_scope": "Chromium emulation with keyboard/touch and no overflow; not physical iPhone/Safari.",
+    "profile_reports_verified": 11,
+    "full_canonical": "Not rerun: no application source change or release proposed.",
+    "hosted": "Not rerun: no application source change or release proposed.",
+    "failures_preserved": "Initial profiler asserted null instead of the documented idle lifecycle state; retained in attempt-1. A redirected log in a container-owned directory failed before application execution; rerun wrote logs in the task-owned parent."
+  },
+  "conclusion": {
+    "sixteen_x": "Conservative compared with these fixtures, but not established as an optimal or universal bound. File size alone does not determine JSON/durable-publication allocation. No lower universal reserve proven safe.",
+    "confirmed_waste": "A discarded projection fingerprint and duplicate durable reference-envelope decoding are identifiable. The measured complete projection constructor and canonical-publication costs do not justify a119MiB admission reduction; the tested fingerprint optimization left peak unchanged.",
+    "source_correction": "None implemented or released. No reserve reduced; no code or data mutation.",
+    "ram_plan": "Not demonstrated technically necessary: compatible fixtures and warm runtimes complete within2GiB. A larger plan alone does not relax this gate because it uses min(actual_limit,2GiB). More RAM would require a separately authorized policy review to benefit this admission path; no plan/policy change is proposed. These measurements do not establish reliable production capacity under every overlapping workload.",
+    "remaining_capacity": "At the operator-reported361MiB, current policy still defers Granite even without FOIS. About118.7MiB additional genuinely free capacity is needed without FOIS. No live search was run."
+  },
+  "production_readiness": {
+    "scope": "One bounded public read-only readiness check; no hydration or search.",
+    "observed_at": "2026-11-03T19:43:12.816184+00:00",
+    "status": 200,
+    "body": {
+      "status": "ready",
+      "version": "1.22.10",
+      "build": 2225,
+      "deployment": {
+        "branch": "main",
+        "commit": "150339f3d02e40ef161a8eb5d870e9b7c38f5874",
+        "deployed_at": "2026-11-03T09:08:35.407148+00:00"
+      },
+      "reason": "Application ready."
+    },
+    "external_elapsed_ms": 533.299
+  }
+}
