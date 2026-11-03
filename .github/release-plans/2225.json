@@ -1,0 +1,145 @@
+{
+  "schema": 1,
+  "repository": "Richarddavis47/dtos",
+  "actor": "Richarddavis47",
+  "publisher_ref": "refs/heads/release/2225-actions-publisher",
+  "baseline": "11eec0d4fa958c8e68e4e3187dff48d43e067809",
+  "candidate": "6fc4d49bec335dc0cc4e2e24ceaf2dedeb2c39aa",
+  "tree": "e4669e8a4517e29f1d45a332580a52af439adab1",
+  "pr": 314,
+  "source_branch": "feat/v1.22.10-trade-lineup-evidence",
+  "version": "1.22.10",
+  "build": 2225,
+  "draft_id": 432464862,
+  "prior_immutable_tag": "v1.22.9",
+  "canonical_tests": 4019,
+  "canonical_entries": 563,
+  "product_tests": 595,
+  "recovery_file": ".github/release-plans/2225-recovery.zip",
+  "recovery_sha256": "d92f0503f48bb1a68095e40f3949ad646553fe8180ebc261132db809479e6c1e",
+  "runs": [
+    {
+      "id": 41599109250,
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ]
+    },
+    {
+      "id": 41599109226,
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version"
+      ]
+    },
+    {
+      "id": 41599109210,
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ]
+    },
+    {
+      "id": 41599109249,
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13214226170,
+      "name": "linux-market-lifecycle-archive-warmed-summary",
+      "run": 41599109249,
+      "sha256": "c6e386db4509660a16df49487a0f36b546c1106cd9f3638b4619a021d657029a",
+      "file": "lifecycle-archive-warmed.zip"
+    },
+    {
+      "id": 13213561793,
+      "name": "linux-market-lifecycle-combined-read-summary",
+      "run": 41599109249,
+      "sha256": "5d738a9e85c9062bb39e660914d7f5901d72036ba49778dc57f1a03249ac3338",
+      "file": "lifecycle-combined-read.zip"
+    },
+    {
+      "id": 13213561775,
+      "name": "linux-market-lifecycle-ordinary-summary",
+      "run": 41599109249,
+      "sha256": "961da417588c94fd29f34e3660122efddce78c50b0517448114d9480750566c9",
+      "file": "lifecycle-ordinary.zip"
+    },
+    {
+      "id": 13214720487,
+      "name": "league-entry-2g",
+      "file": "league-entry-original.zip",
+      "sha256": "679937dd5aaed768d8ba780e3073a6f2cf993668cb7b8b11ac409282fc2187f1",
+      "run": 41599109226
+    },
+    {
+      "id": 13214204551,
+      "name": "trade-resource-2g",
+      "file": "trade-resource-original.zip",
+      "sha256": "4a73aad2bc64ae8d0751581a4b121fc83adb0f8fa91f1c7da7c34a7fc8466972",
+      "run": 41599109226
+    },
+    {
+      "id": 13214032735,
+      "name": "public-welcome-security-browser",
+      "file": "product-original.zip",
+      "sha256": "34126133ddb36263ec827b403df083e9b6e79c678ba2fd8d83d20d415a6e27c2",
+      "run": 41599109226
+    },
+    {
+      "id": 13217012320,
+      "name": "canonical-release-2g-python314",
+      "run": 41599109250,
+      "sha256": "c2af52a94ce7a3ccdcc6e45e0093a5af082b8dc9f8b267f55aa9664de599b18d",
+      "file": "canonical-original.zip"
+    }
+  ],
+  "prior_runs": [
+    41590246883,
+    41590246713,
+    41590246947,
+    41590246766,
+    41590653976,
+    41590653984,
+    41590654051,
+    41590654042,
+    41591351481,
+    41591351530,
+    41591351483,
+    41591351498,
+    41594640774,
+    41594640811,
+    41594640751,
+    41594640866,
+    41597602738,
+    41597602576,
+    41597602621,
+    41597602668
+  ],
+  "prior_jobs": [
+    125765088195,
+    125766359953,
+    125768586317,
+    125768567374,
+    125788506471
+  ],
+  "python_version": "3.14.3",
+  "prior_evidence_file": ".github/release-plans/2225-prior.zip",
+  "prior_evidence_sha256": "3be1eebcbb054ae7f473cd3ede41ea35f1149d65423ba477b86c85bad71726fe"
+}
