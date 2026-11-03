@@ -110,7 +110,7 @@ def main():
                     test.doCleanups()
             result['warm_cold_saved_http'] = 'passed'
             current = memory_snapshot()['cgroup_current_bytes']
-            padding = bytearray(max(0, 1490 * 1024**2 - current))
+            padding = bytearray(max(0, 900 * 1024**2 - current))
             for i in range(0, len(padding), 4096):
                 padding[i] = 1
             result['harness_padding_bytes'] = len(padding)
@@ -132,6 +132,7 @@ def main():
             extra = bytearray(max(0, 2*1024**3 - memory_snapshot()['cgroup_current_bytes'] - 200*1024**2))
             for i in range(0,len(extra),4096):
                 extra[i] = 1
+            result['harness_pressure_padding_bytes'] = len(extra)
             observe('unsafe_pressure')
             liveness('unsafe_pressure_deferred')
             blocked = LeagueRuntime('league-1')
@@ -144,9 +145,32 @@ def main():
                     raise AssertionError('Unsafe cache decoding was admitted')
             assert not blocked.state['data']
             del extra
+            current = memory_snapshot()['cgroup_current_bytes']
+            commitment_padding = bytearray(max(0,1490*1024**2-current))
+            for i in range(0,len(commitment_padding),4096):
+                commitment_padding[i] = 1
+            result['harness_commitment_padding_bytes'] = len(commitment_padding)
+            observe('active_fois_outstanding_reserve')
+            with patch.object(preparation, 'league_cache_file', return_value=args.input):
+                try:
+                    preparation.restore_cached_runtime(LeagueRuntime('league-1'), publish)
+                except preparation.HeavyWorkDeferred:
+                    result['active_fois_commitment_deferred'] = True
+                else:
+                    raise AssertionError('Cache restore spent outstanding FOIS reserve')
             future.result(timeout=15)
         finally:
             lifecycle_coordinator.release_fois_generation()
+        # Capacity need not disappear merely because the analytical owner exits.
+        # Prove real restoration at the same retained pressure after its lease ends.
+        recovered = LeagueRuntime('league-1')
+        with patch.object(preparation, 'league_cache_file', return_value=args.input):
+            assert preparation.restore_cached_runtime(recovered,publish,expected_season=2026)
+        result['after_fois_release_same_pressure_completed'] = True
+        observe('same_pressure_after_fois_release')
+        liveness('same_pressure_after_fois_release')
+        asyncio.run(recovered.close())
+        commitment_padding = None
         padding = None
         asyncio.run(runtime.close())
         gc.collect()

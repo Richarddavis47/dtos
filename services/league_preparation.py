@@ -17,6 +17,9 @@ from src.core.league_runtime import LeagueRuntime
 from src.core.sync_status import safe_sync_state
 from src.platform.cache_budget import JSON_BUDGET, reusable
 from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator, memory_snapshot
+from src.platform.fois_admission import (
+    WORKING_RESERVE_BYTES as FOIS_WORKING, SAFETY_MARGIN_BYTES as FOIS_SAFETY,
+)
 
 MIB = 1024 * 1024
 SERVICE_LIMIT = 2 * 1024 * MIB
@@ -69,7 +72,13 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
                     raise ValueError('Saved publication outside retention policy')
                 sample = memory_snapshot()
                 used, limit = sample.get('cgroup_current_bytes'), sample.get('cgroup_limit_bytes')
-                required = max(CACHE_MINIMUM_WORKING, stat.st_size * CACHE_EXPANSION_FACTOR) + CACHE_SAFETY
+                working = max(CACHE_MINIMUM_WORKING, stat.st_size * CACHE_EXPANSION_FACTOR)
+                # Existing FOIS allocations are already in cgroup current, but
+                # its outstanding demand is not. Do not spend the analytical
+                # owner's reserve on a newly decoded league. No RSS subtraction
+                # or file-cache credit is treated as committed free capacity.
+                required = working + (FOIS_WORKING + max(FOIS_SAFETY, CACHE_SAFETY)
+                                      if lifecycle_coordinator.fois_generation_active() else CACHE_SAFETY)
                 if (type(used) is not int or type(limit) is not int or used < 0 or limit <= 0
                         or min(limit, SERVICE_LIMIT) - used < required):
                     raise HeavyWorkDeferred('Saved league preparation is waiting for safe memory headroom.')

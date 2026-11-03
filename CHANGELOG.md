@@ -6,7 +6,7 @@ When another heavyweight operation prevents hydration, DTOS now reports waiting 
 
 JSON cache restoration also restores canonical integer week keys in prepared lineup evidence. Cached pre-trade and newly calculated post-trade weeks now join without changing points, projections, source generations or verdict rules.
 
-Restoration uses actual raw cgroup memory, a serialized-size allocation allowance and a safety margin, without counting inactive file memory as free. Source reads are owned through cancellation and shutdown. Existing FOIS 768 MiB and Trade 256+128 MiB policies, calculations, authorization and saved preferences are unchanged. Disposable constrained-container evidence is separate from live Granite acceptance. See docs/audits/LEAGUE_ENTRY_RECOVERY_2224.md.
+Restoration uses actual raw cgroup memory, a serialized-size allocation allowance and a safety margin, without counting inactive file memory as free. An active FOIS lease retains its full outstanding working allowance and safety margin before a new cache decode is admitted. Source reads are owned through cancellation and shutdown. Existing FOIS 768 MiB and Trade 256+128 MiB policies, calculations, authorization and saved preferences are unchanged. Disposable constrained-container evidence is separate from live Granite acceptance. See docs/audits/LEAGUE_ENTRY_RECOVERY_2224.md.
 
 # v1.22.8 / build 2223 — Trade resource readiness and bounded recovery
 

@@ -179,6 +179,11 @@ class LifecycleCoordinator:
             self._fois_generation = max(0, self._fois_generation - 1)
             self._condition.notify_all()
 
+    def fois_generation_active(self) -> bool:
+        """Read outstanding heavy ownership without allocating a full snapshot."""
+        with self._condition:
+            return bool(self._fois_generation)
+
     def try_reserve_history_response(self) -> bool:
         """No queued historical results; exclude other coordinated heavy work."""
         with self._condition:

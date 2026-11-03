@@ -69,6 +69,19 @@ class CachedPublicationTests(unittest.TestCase):
                     preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
                 decode.assert_not_called()
 
+    def test_active_fois_retains_its_outstanding_reserve_and_release_allows_restore(self):
+        sample = {'cgroup_current_bytes':1490 * 1024**2, 'cgroup_limit_bytes':2 * 1024**3}
+        with patch.object(preparation, 'memory_snapshot', return_value=sample):
+            lifecycle_coordinator.reserve_fois_generation()
+            try:
+                with patch.object(preparation.json, 'load') as decode:
+                    with self.assertRaises(HeavyWorkDeferred):
+                        preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
+                    decode.assert_not_called()
+            finally:
+                lifecycle_coordinator.release_fois_generation()
+            self.assertTrue(preparation.restore_cached_runtime(LeagueRuntime('200'), Mock()))
+
     def test_json_week_keys_restore_without_repricing_or_changing_evidence(self):
         from src.core.intelligence.team_strength import restore_cached_week_keys
         evidence = {'available':True, 'optimal':{'projected_points':0}, 'source_generation':'same'}
