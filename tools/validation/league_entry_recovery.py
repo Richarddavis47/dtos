@@ -162,10 +162,19 @@ def main():
         test = TradeResourceHTTPTests('test_one_qb_supported_legal_pre_post_and_unchanged_source')
         test.setUp()
         try:
+            # Use the restored JSON source, not only an already-live fixture.
+            cache = args.output / 'one-qb-cache.json'
+            from datetime import datetime, timezone
+            cache.write_text(json.dumps({'data':test.f.data, 'last_sync':datetime.now(timezone.utc).isoformat()}))
+            restored = LeagueRuntime(test.f.data['league']['league_id'])
+            with patch.object(preparation, 'league_cache_file', return_value=cache):
+                assert preparation.restore_cached_runtime(restored, lambda _:None, expected_season=2026)
+            test.f.data = restored.state['data']
             test.test_one_qb_supported_legal_pre_post_and_unchanged_source()
             result['one_qb_k_def_http_evaluation'] = 'passed'
         finally:
             test.doCleanups()
+            cache.unlink(missing_ok=True)
         # Cleanup/cancellation have dedicated regression controls; do not call
         # deferred work a historical completion here.
         result['fois_worker_pid'] = worker['pid']

@@ -69,6 +69,17 @@ class CachedPublicationTests(unittest.TestCase):
                     preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
                 decode.assert_not_called()
 
+    def test_json_week_keys_restore_without_repricing_or_changing_evidence(self):
+        from src.core.intelligence.team_strength import restore_cached_week_keys
+        evidence = {'available':True, 'optimal':{'projected_points':0}, 'source_generation':'same'}
+        data = {'team_strength':{'teams':{'1':{'weekly':{'8':evidence}}}}}
+        restore_cached_week_keys(data)
+        self.assertIs(data['team_strength']['teams']['1']['weekly'][8], evidence)
+        self.assertEqual(evidence['optimal']['projected_points'], 0)
+        for weekly in ({'19':evidence}, {'08':evidence}, {8:evidence,'8':evidence}, {'missing':evidence}):
+            with self.assertRaises(ValueError):
+                restore_cached_week_keys({'team_strength':{'teams':{'1':{'weekly':weekly}}}})
+
 
 class OwnedRecoveryTests(unittest.IsolatedAsyncioTestCase):
     async def test_default_periodic_deferral_waits_for_existing_interval_without_starting_fois(self):
@@ -130,6 +141,21 @@ class OwnedRecoveryTests(unittest.IsolatedAsyncioTestCase):
 class EntryHTTPTests(unittest.TestCase):
     setUp = cold.ColdLeagueRecoveryTests.setUp
     upstream = cold.ColdLeagueRecoveryTests.upstream
+
+    def test_restored_one_qb_cache_supports_real_pre_post_trade_evaluation(self):
+        from tests.test_trade_resource_admission import TradeResourceHTTPTests
+        test = TradeResourceHTTPTests('test_one_qb_supported_legal_pre_post_and_unchanged_source')
+        test.setUp()
+        try:
+            path = Path(self.folder.name) / 'one-qb.json'
+            path.write_text(json.dumps({'data':test.f.data, 'last_sync':datetime.now(timezone.utc).isoformat()}))
+            runtime = LeagueRuntime(test.f.data['league']['league_id'])
+            with patch.object(preparation, 'league_cache_file', return_value=path):
+                self.assertTrue(preparation.restore_cached_runtime(runtime, lambda _:None, expected_season=2026))
+            test.f.data = runtime.state['data']
+            test.test_one_qb_supported_legal_pre_post_and_unchanged_source()
+        finally:
+            test.doCleanups()
 
     def test_busy_cold_entry_has_truthful_status_no_source_calls_or_account_mutations(self):
         before = snapshot(self.store)

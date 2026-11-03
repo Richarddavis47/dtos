@@ -4,6 +4,8 @@ A secondary league can restore its existing compatible, retained Sleeper cache b
 
 When another heavyweight operation prevents hydration, DTOS now reports waiting for capacity rather than claiming no supported roster exists. An explicit retry is limited to one attempt per minute and shares the existing per-league flight. Navigation and favicon requests cannot repeatedly start the same blocked hydration. Warm league reads remain local while FOIS runs.
 
+JSON cache restoration also restores canonical integer week keys in prepared lineup evidence. Cached pre-trade and newly calculated post-trade weeks now join without changing points, projections, source generations or verdict rules.
+
 Restoration uses actual raw cgroup memory, a serialized-size allocation allowance and a safety margin, without counting inactive file memory as free. Source reads are owned through cancellation and shutdown. Existing FOIS 768 MiB and Trade 256+128 MiB policies, calculations, authorization and saved preferences are unchanged. Disposable constrained-container evidence is separate from live Granite acceptance. See docs/audits/LEAGUE_ENTRY_RECOVERY_2224.md.
 
 # v1.22.8 / build 2223 — Trade resource readiness and bounded recovery

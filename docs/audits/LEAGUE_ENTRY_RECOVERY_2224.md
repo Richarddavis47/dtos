@@ -18,6 +18,8 @@ Secondary caches were already persisted per league, but only default-league star
 * Warm refresh deferral preserves supported existing pages and reports waiting for capacity. Source failures remain separate. No preemption or cancellation of active FOIS work is introduced.
 * Cache-reader threads are drained before cancellation/shutdown releases their runtime. Restores create no scratch copy and do not write the source cache.
 
+A further end-to-end source-cache → one-QB Trade control reproduced a real JSON boundary defect: saved pre-trade weekly keys were strings while newly computed post-trade keys were integers, causing a KeyError for week 8. Both default and secondary cache reads now restore the existing canonical integer key type, rejecting malformed/ambiguous week identities. Evidence, points and semantic generations remain unchanged. The original full run was canceled and retained; the final revised candidate requires fresh complete validation.
+
 ## Preserved contracts
 
 FOIS raw 768 MiB policy and Trade 256 MiB working plus 128 MiB margin are unchanged. No scoring, projections, submitted/optimal lineup mathematics, K/DEF rules, Market/Custom values, exact pick identity, bilateral verdicts, saved preferences, goals or rankings change. Public account/Welcome and contextual history/Trade workspace contracts remain intact. No new source warehouse, provider polling or anonymous analytical work.

@@ -91,6 +91,8 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
                     or data.get('scoring_settings', league['scoring_settings']) != league['scoring_settings']
                     or data.get('roster_positions', league['roster_positions']) != league['roster_positions']):
                 raise ValueError('Incompatible saved publication')
+            from src.core.intelligence.team_strength import restore_cached_week_keys
+            restore_cached_week_keys(data)
         except (OSError, ValueError, KeyError, TypeError, OverflowError):
             runtime.lifecycle['cache_restore'] = 'incompatible'
             return False

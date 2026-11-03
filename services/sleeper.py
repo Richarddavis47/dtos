@@ -99,6 +99,8 @@ def load_cache(
         cached_league = str(((payload.get("data") or {}).get("league") or {}).get("league_id") or league_id)
         if cached_league != str(league_id):
             raise ValueError("Cached Sleeper league identity does not match the requested runtime.")
+        from src.core.intelligence.team_strength import restore_cached_week_keys
+        restore_cached_week_keys(payload.get('data') or {})
         state.update(safe_sync_state(payload))
         state["syncing"] = False
         state["transactions_syncing"] = False
