@@ -54,11 +54,11 @@ class SyncDiagnostics:
         from src.platform.request_diagnostics import sync_checkpoint
         sync_checkpoint(name, self.phases[name], self.league_scope)
 
-    def finish(self, *, failed: bool) -> dict:
+    def finish(self, *, failed: bool, deferred: bool = False) -> dict:
         """Diagnostics must not turn a valid publication into a source failure."""
         report = {
             'schema': 'sync-profile-v1', 'league_scope': self.league_scope,
-            'status': 'failed' if failed else 'complete',
+            'status': 'deferred' if deferred else 'failed' if failed else 'complete',
             'duration_ms': round((perf_counter() - self.started) * 1000, 3),
             'phase_ms': dict(self.phases), 'memory_before': self.before,
         }

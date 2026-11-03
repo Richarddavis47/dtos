@@ -25,7 +25,7 @@ from src.core.provider_network import build_provider_network
 from src.core.projection_intelligence import projection_service
 from src.core.projection_intelligence.service import ProjectionService
 from src.core.projection_intelligence.sleeper_provider import SleeperProjectionClient
-from src.platform.lifecycle import lifecycle_coordinator
+from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator
 from src.platform.sync_diagnostics import SyncDiagnostics
 from src.platform.runtime_errors import log_sync_failure
 from src.core.sync_status import safe_sync_state, synchronization_warning
@@ -637,6 +637,12 @@ async def _sync_sleeper(
             intelligence_cache.invalidate("snapshot:")
             intelligence_cache.invalidate("crawl:")
             logger.info("Sleeper sync complete: %s teams", len(team_rows))
+            state['preparation_state'] = 'ready'
+        except HeavyWorkDeferred:
+            # The source request never began. This is scheduling, not a source
+            # failure or evidence that the retained roster does not exist.
+            state['preparation_state'] = 'waiting_for_capacity'
+            raise
         except Exception as exc:
             # Candidate construction mutates process-local working state before
             # the final durable cache publication. Any uncaught preparation
@@ -649,12 +655,14 @@ async def _sync_sleeper(
             state["transactions_last_sync"] = last_valid["transactions_last_sync"]
             state["transactions_last_error"] = last_valid["transactions_last_error"]
             state["last_error"] = synchronization_warning(state)
+            state['preparation_state'] = 'failed'
             log_sync_failure(exc, operation="league_sync")
         finally:
             state["syncing"] = False
             if "lifecycle_context" in locals():
                 lifecycle_context.__exit__(None, None, None)
-            diagnostics.finish(failed=bool(state.get('last_error')))
+            diagnostics.finish(failed=bool(state.get('last_error')),
+                               deferred=state.get('preparation_state') == 'waiting_for_capacity')
         return state
 
 
@@ -692,6 +700,11 @@ async def sync_sleeper_league(
     ))
     try:
         return await asyncio.shield(worker)
+    except HeavyWorkDeferred:
+        # Existing startup/periodic/manual callers consume the state contract.
+        # Cold runtime acquisition translates this typed state into deferral;
+        # do not kill the global refresh loop or turn scheduling into success.
+        return state
     except asyncio.CancelledError:
         # Eviction/shutdown cannot abandon a still-writing league sync thread.
         while not worker.done():

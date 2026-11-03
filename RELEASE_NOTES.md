@@ -1,3 +1,11 @@
+# v1.22.9 / build 2224 — League entry and bounded preparation recovery
+
+A secondary league can restore its existing compatible, retained Sleeper cache before attempting synchronization. Restored pages identify the last successful sync, while projection, Market and historical evidence keep their independent compatibility requirements. Cache restoration never starts provider requests, historical imports, FOIS or Market construction.
+
+When another heavyweight operation prevents hydration, DTOS now reports waiting for capacity rather than claiming no supported roster exists. An explicit retry is limited to one attempt per minute and shares the existing per-league flight. Navigation and favicon requests cannot repeatedly start the same blocked hydration. Warm league reads remain local while FOIS runs.
+
+Restoration uses actual raw cgroup memory, a serialized-size allocation allowance and a safety margin, without counting inactive file memory as free. Source reads are owned through cancellation and shutdown. Existing FOIS 768 MiB and Trade 256+128 MiB policies, calculations, authorization and saved preferences are unchanged. Disposable constrained-container evidence is separate from live Granite acceptance. See docs/audits/LEAGUE_ENTRY_RECOVERY_2224.md.
+
 # v1.22.8 / build 2223 — Trade resource readiness and bounded recovery
 
 Explicit Trade searches and full evaluations now check current container memory and share lifecycle coordination with Sleeper, FOIS and historical preparation. One Trade operation runs at a time. Unsafe or unknown capacity returns a specific deferred state and preserves the workspace; retry is explicit. Compatible projections, capacity readiness and completed searches with no qualified offers remain distinct.

@@ -188,12 +188,46 @@ async def _hydrate_league_runtime(
     runtime: LeagueRuntime, *, prepare_history: bool = True,
 ) -> dict[str, Any]:
     """Hydrate one requested league without replacing the configured default."""
+    if not runtime.state.get('data'):
+        from services.league_preparation import restore_cached_runtime_owned
+        from src.platform.account_context import current_account
+        account = current_account()
+        membership = account.membership if account is not None else None
+        season = (membership.season if membership is not None
+                  and membership.league_id == runtime.league_id else None)
+
+        def publish_cached(selected):
+            projection = ProjectionService(
+                league_id=selected.league_id, scoring_profile_id=selected.scoring_profile,
+            )
+            projection.restore_into(selected.state['data'])
+            context = _publish_runtime_context(selected, projection)
+            context.history_state = 'unavailable'
+
+        restored = await restore_cached_runtime_owned(
+            runtime, publish_cached, expected_season=season,
+        )
+        if restored:
+            # Source/Market/history readiness keep their own compatibility
+            # contracts. Browsing a saved roster must not start those builds.
+            from services.league_maintenance import ensure_periodic_refresh
+            ensure_periodic_refresh(runtime, _refresh_resident_league, interval_seconds=SYNC_MINUTES * 60)
+            return runtime.state['data']
     projections = ProjectionService(league_id=runtime.league_id)
-    await sync_sleeper_league(
-        runtime.league_id, runtime.state, force_players=False,
-        projections=projections,
-        publish_data=runtime.publish_source,
-    )
+    from src.platform.lifecycle import HeavyWorkDeferred
+    try:
+        await sync_sleeper_league(
+            runtime.league_id, runtime.state, force_players=False,
+            projections=projections,
+            publish_data=runtime.publish_source,
+        )
+        if runtime.state.get('preparation_state') == 'waiting_for_capacity':
+            raise HeavyWorkDeferred('League synchronization is waiting for capacity.')
+    except HeavyWorkDeferred:
+        runtime.lifecycle['preparation_state'] = 'waiting_for_capacity'
+        if runtime.state.get('data') and runtime.canonical_context is not None:
+            return runtime.state['data']
+        raise
     data = runtime.state.get("data") or {}
     if not data:
         # Sync retains valid facts on failure. A cold failure has no canonical
@@ -203,6 +237,7 @@ async def _hydrate_league_runtime(
         )
     async with runtime.fois_publication_lock:
         runtime.apply_data(data)
+    runtime.lifecycle['preparation_state'] = 'ready'
     projections = ProjectionService(
         league_id=runtime.league_id,
         scoring_profile_id=runtime.scoring_profile,
@@ -408,6 +443,10 @@ async def background_sync() -> None:
     while True:
         await asyncio.sleep(SYNC_MINUTES * 60)
         await start_sleeper_sync()
+        if STATE.get('preparation_state') == 'waiting_for_capacity':
+            default_league_runtime.lifecycle['preparation_state'] = 'waiting_for_capacity'
+            runtime_metrics.mark_background('sleeper_sync', 'deferred')
+            continue  # Existing interval, never an immediate expensive retry.
         projection_status = projection_service.health().get("status")
         runtime_metrics.mark_background(
             "projection_generation",
@@ -823,6 +862,16 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     sync = selected_state.get("last_sync") or "Never"
     error = selected_state.get("last_error")
     error_html = f'<div class="error"><b>Sync error:</b> {escape(synchronization_warning(selected_state))}</div>' if error else ""
+    preparation_state = selected_state.get('preparation_state')
+    if not preparation_state and context is not None:
+        preparation_state = getattr(getattr(context, 'runtime', None), 'lifecycle', {}).get('preparation_state')
+    if preparation_state in {'last_valid', 'waiting_for_capacity'}:
+        waiting = preparation_state == 'waiting_for_capacity'
+        message = ('Refresh is waiting for capacity. Existing supported league data remains available. '
+                   if waiting else 'Showing saved league data. ')
+        error_html += ('<p role="status" class="muted">' + message + 'Last successful sync: '
+                       + escape(str(selected_state.get('last_sync') or 'not recorded'))
+                       + '. Current projections and Market values retain their own availability checks.</p>')
     league_name = str(((selected_state.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
     account = current_account()
     account_html = ""

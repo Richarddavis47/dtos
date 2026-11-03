@@ -218,6 +218,9 @@ def create_api_router(
     async def manual_sync(request: Request):
         await sync_sleeper(force_players=False)
         if "application/json" in request.headers.get("accept", ""):
+            if state.get('preparation_state') == 'waiting_for_capacity':
+                from src.platform.runtime_errors import runtime_error_response
+                return runtime_error_response(503, deferred=True)
             return JSONResponse(
                 {
                     "ok": state.get("last_error") is None,

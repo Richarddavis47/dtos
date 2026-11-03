@@ -9,7 +9,7 @@ from src.platform.inspection_security import inspection_authorized
 from src.platform.runtime_errors import customer_runtime_health, log_runtime_failure, runtime_error_response
 
 from src.core.league_runtime import (
-    LeagueRuntimeError, LeagueRuntimeManager, LeagueRuntimeNotFound,
+    LeagueRuntimeError, LeagueRuntimeManager, LeagueRuntimeNotFound, LeagueRuntimeDeferred,
 )
 
 
@@ -81,6 +81,9 @@ def create_league_runtime_router(
         except LeagueRuntimeNotFound as exc:
             log_runtime_failure(exc, operation="explicit_hydration", status=422)
             return runtime_error_response(422)
+        except LeagueRuntimeDeferred as exc:
+            log_runtime_failure(exc, operation="explicit_hydration_deferred", status=503)
+            return runtime_error_response(503, deferred=True)
         except LeagueRuntimeError as exc:
             log_runtime_failure(exc, operation="explicit_hydration", status=503)
             return runtime_error_response(503)

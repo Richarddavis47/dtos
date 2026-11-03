@@ -13,7 +13,10 @@ from starlette.responses import JSONResponse
 PRIVATE_HEADERS = {"Cache-Control": "no-store, private", "Vary": "Cookie, X-DTOS-Inspection-Auth"}
 
 
-def runtime_error_payload(status: int) -> dict[str, str]:
+def runtime_error_payload(status: int, *, deferred: bool = False) -> dict[str, str]:
+    if deferred and status == 503:
+        return {"status": "deferred", "code": "league_preparation_waiting",
+                "reason": "League preparation is waiting for capacity. Another preparation task is active or safe memory headroom is not available. Try this page again in a minute; no Trade search has run."}
     if status == 422:
         return {"status": "invalid", "code": "league_runtime_not_found",
                 "reason": "This league could not be opened. Choose a connected league or try again."}
@@ -23,8 +26,9 @@ def runtime_error_payload(status: int) -> dict[str, str]:
             "reason": "League data is temporarily unavailable. Try again or choose another connected league."}
 
 
-def runtime_error_response(status: int) -> JSONResponse:
-    return JSONResponse(runtime_error_payload(status), status_code=status, headers=PRIVATE_HEADERS)
+def runtime_error_response(status: int, *, deferred: bool = False) -> JSONResponse:
+    headers = {**PRIVATE_HEADERS, **({"Retry-After": "60"} if deferred else {})}
+    return JSONResponse(runtime_error_payload(status, deferred=deferred), status_code=status, headers=headers)
 
 
 def _log_failure(exc: Exception, *, event: str, operation: str, status: int | None = None) -> None:

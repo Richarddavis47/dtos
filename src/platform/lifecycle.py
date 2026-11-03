@@ -19,6 +19,10 @@ HEAVY_PHASES = frozenset({
 MARKET_BUILD_BLOCKERS = HEAVY_PHASES - {"asset_market_build"}
 
 
+class HeavyWorkDeferred(RuntimeError):
+    """Preparation did not start because another heavyweight owner is active."""
+
+
 def _utcnow() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -210,7 +214,7 @@ class LifecycleCoordinator:
             self._condition.notify_all()
 
     @contextmanager
-    def phase(self, name: str) -> Iterator[dict[str, Any]]:
+    def phase(self, name: str, *, wait: bool = True) -> Iterator[dict[str, Any]]:
         if name not in HEAVY_PHASES:
             raise ValueError(f"Unsupported lifecycle phase: {name}")
         from src.platform.request_diagnostics import span
@@ -222,11 +226,13 @@ class LifecycleCoordinator:
                 if self._trade_search:
                     # Sync can enter on the event loop. Defer instead of waiting
                     # for a Trade waiter that needs the same loop to finish.
-                    raise RuntimeError('Preparation deferred while a Trade operation is running.')
+                    raise HeavyWorkDeferred('Preparation deferred while a Trade operation is running.')
                 if name == 'sleeper_sync' and self._fois_generation:
                     # Sync enters on the event loop. Never wait here for FOIS,
                     # whose completion also needs that loop to release its lease.
-                    raise RuntimeError('Synchronization deferred while FOIS preparation is running.')
+                    raise HeavyWorkDeferred('Synchronization deferred while FOIS preparation is running.')
+                if not wait and (self._phase is not None or self._history_response):
+                    raise HeavyWorkDeferred('Preparation deferred while another preparation task is running.')
                 while (
                     (self._phase is not None and self._owner != owner)
                     or (

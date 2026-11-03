@@ -23,6 +23,7 @@ class RuntimeState(StrEnum):
     HYDRATING = "hydrating"
     WARM = "warm"
     FAILED = "failed"
+    DEFERRED = "deferred"
     EVICTING = "evicting"
     CLOSED = "closed"
 
@@ -33,6 +34,13 @@ class LeagueRuntimeError(RuntimeError):
 
 class LeagueRuntimeNotFound(LeagueRuntimeError):
     pass
+
+
+class LeagueRuntimeDeferred(LeagueRuntimeError):
+    """No source failure: explicit retry is bounded while capacity is busy."""
+
+
+HYDRATION_RETRY_SECONDS = 60
 
 
 @dataclass(slots=True, weakref_slot=True)
@@ -156,6 +164,9 @@ class LeagueRuntime:
             "active_requests": self.active_requests,
             "team_count": len(data.get("teams") or ()),
             "source_generations": dict(self.source_generations),
+            "preparation_state": self.lifecycle.get('preparation_state', self.status.value),
+            "retry_after_seconds": max(0, int(self.lifecycle.get('hydration_retry_after', 0) - monotonic()) + 1)
+                if self.status is RuntimeState.DEFERRED else None,
         }
         if self.canonical_context is not None:
             result["product"] = self.canonical_context.health()
@@ -181,6 +192,7 @@ class LeagueRuntimeManager:
         self.restore_hits = 0
         self.evictions = 0
         self.failures = 0
+        self.deferrals = 0
 
     @staticmethod
     def validate_league_id(league_id: str) -> str:
@@ -205,6 +217,9 @@ class LeagueRuntimeManager:
         key = self.validate_league_id(league_id)
         async with self._lock:
             runtime = self._runtimes.get(key)
+            if hydrate and runtime is not None and runtime.status is RuntimeState.DEFERRED:
+                if monotonic() < runtime.lifecycle.get('hydration_retry_after', 0):
+                    raise LeagueRuntimeDeferred('League preparation is waiting for capacity. Try again in a minute.')
             if runtime is not None and runtime.status not in {RuntimeState.FAILED, RuntimeState.CLOSED}:
                 runtime.touch()
                 self._runtimes.move_to_end(key)
@@ -294,6 +309,7 @@ class LeagueRuntimeManager:
             if not runtime.state.get("data"):
                 raise LeagueRuntimeNotFound(f"Sleeper league {runtime.league_id} returned no league data.")
             runtime.status = RuntimeState.WARM
+            runtime.lifecycle.pop('hydration_retry_after', None)
             runtime.error = None
             runtime.touch()
             with self._metrics_lock:
@@ -301,6 +317,15 @@ class LeagueRuntimeManager:
             await self._evict_if_needed(exclude=runtime.league_id)
             return runtime
         except Exception as exc:
+            from src.platform.lifecycle import HeavyWorkDeferred
+            if isinstance(exc, (HeavyWorkDeferred, LeagueRuntimeDeferred)):
+                runtime.status = RuntimeState.DEFERRED
+                runtime.error = None
+                runtime.lifecycle['hydration_retry_after'] = monotonic() + HYDRATION_RETRY_SECONDS
+                runtime.lifecycle['preparation_state'] = 'waiting_for_capacity'
+                with self._metrics_lock:
+                    self.deferrals += 1
+                raise LeagueRuntimeDeferred('League preparation is waiting for capacity. Try again in a minute.') from exc
             runtime.status = RuntimeState.FAILED
             runtime.error = f"{type(exc).__name__}: {exc}"
             with self._metrics_lock:
@@ -403,6 +428,7 @@ class LeagueRuntimeManager:
                 "restore_hits": self.restore_hits,
                 "evictions": self.evictions,
                 "failures": self.failures,
+                "deferrals": self.deferrals,
             }
         runtimes = tuple(self._runtimes.values())
         return {
