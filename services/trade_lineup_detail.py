@@ -3,7 +3,11 @@ from collections import Counter
 from html import escape
 
 from services.trade_lineup_evidence import completed_lineup_admissions, number, same_number, total
-from src.core.trade_intelligence.lineup import BENCH_SLOTS, _eligible, eligible_positions
+from src.core.intelligence import (
+    lineup_bench_slots as BENCH_SLOTS,
+    lineup_slot_eligible as _eligible,
+    lineup_eligible_positions as eligible_positions,
+)
 from src.ui.intelligence_presentation import manager_points
 
 
