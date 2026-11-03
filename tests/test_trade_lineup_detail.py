@@ -161,6 +161,12 @@ class TradeLineupDetailTests(unittest.TestCase):
         self.assertEqual(weekly_total_display(27.335), '27.335')
         self.assertEqual(weekly_total_display(0), '0')
         self.assertEqual(weekly_total_display(None), 'Unavailable')
+        from services.trade_lineup_evidence import diagnostic_summary_display
+        raw = {'pre_optimal_points': 155.56980000000001, 'post_optimal_points': 161.2492,
+               'summary': 'Package optimal lineup: 155.56980000000001 → 161.2492 Sleeper-projected points. Recorded qualifications.'}
+        original = deepcopy(raw)
+        self.assertEqual(diagnostic_summary_display(raw), 'Package optimal lineup: 155.57 → 161.25 Sleeper-projected points. Recorded qualifications.')
+        self.assertEqual(raw, original)
 
     def test_cause_counts_have_an_explicit_overlapping_denominator(self):
         self.f.feed = [r for r in self.f.feed if r['player_id'] != '2-9']

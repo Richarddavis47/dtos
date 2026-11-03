@@ -10,7 +10,6 @@ from hashlib import sha256
 import json
 from math import isfinite
 from statistics import median
-from src.ui.intelligence_presentation import manager_points
 
 from src.core.trade_intelligence.lineup import BENCH_SLOTS, FLEX_ELIGIBILITY, _eligible, eligible_positions
 from src.core.trade_intelligence.lineup_memo import LineupStore, SearchLineupMemo
@@ -1137,7 +1136,7 @@ def package_diagnostics(
                     .get("objective_need")
                 }
             ),
-            "summary": f"Package optimal lineup: {manager_points(canonical_pre)} → {manager_points(canonical_post)} Sleeper-projected points. Replacement support is recalculated after all player movements. "
+            "summary": f"Package optimal lineup: {canonical_pre if canonical_pre is not None else 'unavailable'} → {canonical_post if canonical_post is not None else 'unavailable'} Sleeper-projected points. Replacement support is recalculated after all player movements. "
             + " ".join(post_evidence["limitations"])
             + (
                 " Availability-qualified depth differs or canonical comparison is unavailable; no complete diagnostic conclusion is claimed."

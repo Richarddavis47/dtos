@@ -26,6 +26,8 @@ New search evidence counts each recorded required evidence category at most once
 
 ## Display precision
 
+Matched controls caught a tie-break sensitivity when diagnostic prose was formatted before canonical evaluation hashing. That attempt was held. The final implementation restores canonical roster diagnostics byte-for-byte and formats only presentation fields after hashing. Release corroboration requires all 180 evaluation identifiers, numerical outcomes, classifications and selected package identities to match the frozen baseline. Returned-detail traversal uses a bounded iterative walk, so it does not retain the request reader through a recursive closure.
+
 Primary summaries and compact slot tables use the existing two-decimal formatter. Expanded weekly pre/post totals retain up to four decimal places for auditability, suppressing binary artifacts such as 155.56980000000001. Canonical totals and contributions remain exact, and no threshold or ordering uses a rounded display value. Relocated card disclosures and warnings are compared separately against the adopted full explanation; other evidence remains identical.
 
 ## Preservation and acceptance

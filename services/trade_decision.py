@@ -68,7 +68,7 @@ def lineup_comparisons(result, side="active", *, _admissions=None):
 
 
 def decision_context(result, *, incoming=(), outgoing=(), _admissions=None):
-    from services.trade_lineup_evidence import completed_lineup_admissions
+    from services.trade_lineup_evidence import completed_lineup_admissions, counterparty_summary_display
     admissions = _admissions or completed_lineup_admissions(result)
     dimensions = result.get("dimensions") or {}
     strategy = (dimensions.get("strategic_fit") or {}).get("active") or {}
@@ -252,7 +252,7 @@ def decision_context(result, *, incoming=(), outgoing=(), _admissions=None):
         "lineup_source_generation": (result.get('multi_horizon_impact') or {}).get('team_strength_generation'),
         "lineup_weekly_comparisons": {side: {str(week): row['delta'] for week, row in view['weekly'].items()}
             for side, view in by_side.items()},
-        "partner_summary": (result.get('counterparty_summary') or result.get('why_they_would_do_it')) if verified['partner'] else
+        "partner_summary": counterparty_summary_display(result) if verified['partner'] else
             "Their roster-production benefit cannot be verified in this source context.",
         "partner_cost": partner_context.get('current_cost') if verified['partner'] else
             "Their roster-production cost cannot be verified in this source context.",

@@ -6,7 +6,7 @@ from src.core.explanations import (
 from src.ui.intelligence_presentation import manager_points
 from html import escape
 from services.trade_decision import final_decision, lineup_comparisons
-from services.trade_lineup_evidence import completed_lineup_admissions, weekly_total_display
+from services.trade_lineup_evidence import completed_lineup_admissions, weekly_total_display, diagnostic_summary_display
 
 
 HORIZONS = {'current_week': 'Current week', 'next_n': 'Next-N',
@@ -101,8 +101,9 @@ def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Expl
     for side, row in diagnostic.get('sides', {}).items():
         if (admissions.get(side) or {}).get('identity_state') != 'compatible':
             continue
-        key = add('diagnostics.' + side, ('Your' if side == 'active' else 'Their') + ' package roster context', row['summary'])
-        advanced.append(Statement('ROSTER_DIAGNOSTICS', row['summary'] + ' ' + diagnostic['meaning'], (key,)))
+        summary = diagnostic_summary_display(row)
+        key = add('diagnostics.' + side, ('Your' if side == 'active' else 'Their') + ' package roster context', summary)
+        advanced.append(Statement('ROSTER_DIAGNOSTICS', summary + ' ' + diagnostic['meaning'], (key,)))
         for position, facts in row['positions'].items():
             text = facts['pre']['interpretation'] + ' Availability-qualified post-package starter/reserve counts: ' + str(len(facts['post_starters'])) + '/' + str(len(facts['post_disjoint_reserves'])) + '.'
             item_key = add('diagnostics.' + side + '.' + position, position + ' replacement context', text)

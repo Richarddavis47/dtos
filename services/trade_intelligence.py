@@ -1275,15 +1275,18 @@ def _with_lineup_details(data, response, reader):
     from services.trade_explanation import render_trade_explanation
     seen = set()
 
-    def visit(row):
+    pending = [response]
+    while pending:
+        row = pending.pop()
         if not isinstance(row, dict) or id(row) in seen:
-            return
+            continue
         seen.add(id(row))
         e, proposal = row.get('evaluation'), row.get('proposal')
         lid = (((e or {}).get('provenance') or {}).get('inputs') or {}).get('league_id')
         # Legacy/incomplete retained assessments have no trustworthy binding.
         # Leave them qualified as recorded; never fabricate a source identity.
         if e and proposal and lid and not e.get('lineup_detail_context'):
+            trade_checkpoint()
             presented = row.get('proposal_presentation') or {}
             kinds = {a['asset_id']: a.get('kind') for a in
                      (*presented.get('send', []), *presented.get('receive', []))}
@@ -1296,10 +1299,8 @@ def _with_lineup_details(data, response, reader):
                 bind_lineup_details(data, e, reader, p)
             e['evidence_limitations'] = evidence_limitations(e)
             e['explanation_html'] = render_trade_explanation(e, league_id=lid)
-        for key in ('results', 'near_misses', 'exploratory_results', 'other_trade_ideas', 'variants'):
-            for child in row.get(key) or []:
-                visit(child)
-    visit(response)
+        for key in ('results', 'near_misses', 'exploratory_results', 'other_trade_ideas', 'variants', 'markets', 'returns'):
+            pending.extend(row.get(key) or [])
     return response
 
 

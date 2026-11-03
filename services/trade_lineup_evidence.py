@@ -37,6 +37,28 @@ def weekly_total_display(value):
         return 'Unavailable'
 
 
+def diagnostic_summary_display(diagnostic):
+    """Format only the known producer's numerical sentence, after hashing."""
+    from src.ui.intelligence_presentation import manager_points
+    source = diagnostic.get('summary') or ''
+    marker = ' Sleeper-projected points.'
+    if (source.startswith('Package optimal lineup: ') and marker in source
+            and 'pre_optimal_points' in diagnostic and 'post_optimal_points' in diagnostic):
+        tail = source.partition(marker)[2]
+        return ('Package optimal lineup: ' + manager_points(diagnostic['pre_optimal_points'])
+                + ' → ' + manager_points(diagnostic['post_optimal_points']) + marker + tail)
+    return source
+
+
+def counterparty_summary_display(result):
+    source = result.get('counterparty_summary') or result.get('why_they_would_do_it')
+    diagnostic = (((result.get('dimensions') or {}).get('roster_diagnostics') or {}).get('sides') or {}).get('partner') or {}
+    original = diagnostic.get('summary')
+    if original and source and source.endswith(original):
+        return source[:-len(original)] + diagnostic_summary_display(diagnostic)
+    return source
+
+
 def completed_lineup_evidence(result, side="active"):
     inputs = (result.get("provenance") or {}).get("inputs") or {}
     projection = inputs.get("projection_evidence") or {}
