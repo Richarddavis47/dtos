@@ -42,7 +42,7 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
                             self.assertNotEqual(summary.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
                             summary.press('Enter')
                             self.assertTrue(detail.evaluate('e=>e.open'))
-                            self.assertIn('among 7 supported', detail.inner_text())
+                            self.assertIn('among 7 comparable', detail.inner_text())
                             self.assertIn('7/10 franchises can fill', detail.inner_text())
                             self.assertIn('Franchise 8: excluded', detail.inner_text())
                             self.assertIn('1 QB slot', detail.inner_text())

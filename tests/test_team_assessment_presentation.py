@@ -3,6 +3,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace as NS
 import unittest
+import re
 from unittest.mock import AsyncMock, patch
 
 from services.team_assessment_presentation import weekly_comparison, MODEL_NOTE
@@ -89,6 +90,11 @@ class AssessmentCoverageTests(unittest.TestCase):
                 self.assertNotIn('#', text)
             else:
                 self.assertIn(f"{diag['teams']['1']['optimal_points']:.2f}", text)
+                values = [r['optimal_points'] for r in diag['teams'].values()
+                          if r.get('optimal_points') is not None and r['evidence']['calculation_supported']]
+                expected = 1 + sum(p > diag['teams']['1']['optimal_points'] for p in values)
+                self.assertEqual(tuple(map(int, re.search(r'#(\d+) (?:of|among) (\d+) comparable', text).groups())),
+                                 (expected, len(values)))
         self.assertEqual(data['team_strength'], saved)
         # Restore current availability, then requalify the very same publication.
         player['status'] = 'Active'
@@ -110,5 +116,5 @@ class AssessmentCoverageTests(unittest.TestCase):
         with patch.object(diagnostic_store, 'get', return_value=None):
             for text in pages():
                 lead = text.split('</summary>', 1)[0] if 'my-team-outlook' in text else text
-                self.assertTrue('matching prepared comparison' in lead or 'evidence is not prepared' in lead)
+                self.assertTrue('matching prepared comparison' in lead or 'evidence is not prepared' in lead or 'Comparison pending' in lead)
                 self.assertNotIn('#', lead)

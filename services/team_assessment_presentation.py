@@ -18,9 +18,10 @@ def prepared_comparison(data, snapshot=None):
 def weekly_comparison(card, week, *, compact=False, diagnostics=None):
     gap = (f'Week {week} projected lineup comparison needs compatible current availability, '
            'league, week and scoring evidence. A matching prepared comparison is not available.')
+    short_gap = f'Week {week} · Comparison pending: current availability and source evidence need matching preparation.'
     if (not diagnostics or diagnostics.get('league_id') != getattr(card, 'league_id', None)
             or diagnostics.get('week') != week or not diagnostics.get('projection_generation')):
-        return gap
+        return short_gap if compact else gap
     teams = diagnostics.get('teams') or {}
     row = teams.get(str(getattr(card, 'roster_id', ''))) or {}
     qualification = row.get('evidence') or {}
@@ -29,7 +30,7 @@ def weekly_comparison(card, week, *, compact=False, diagnostics=None):
     points = row.get('optimal_points')
     if points is None or not qualification.get('calculation_supported'):
         reasons = qualification.get('limitations') or row.get('lineup_limitations') or []
-        return gap + (' ' + ' '.join(reasons) if reasons else '')
+        return short_gap if compact else gap + (' ' + ' '.join(reasons) if reasons else '')
     supported = [r['optimal_points'] for r in teams.values()
                  if r.get('optimal_points') is not None and (r.get('evidence') or {}).get('calculation_supported')]
     rank = 1 + sum(value > points for value in supported)
