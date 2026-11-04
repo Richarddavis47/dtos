@@ -16,6 +16,7 @@ from src.platform.inspection_security import (
     OPERATIONS,
     PREFIX,
     PRIVATE_HEADERS,
+    RESTORATION_PREFLIGHT_LEAGUES,
     inspection_authorized,
 )
 from tools.projection_reachability import InspectionLimit
@@ -55,7 +56,7 @@ def _sanitize_graph(report):
     return report
 
 
-def create_operations_inspection_router(*, stores=None):
+def create_operations_inspection_router(*, stores=None, restoration_preflight=None):
     router = APIRouter(prefix=PREFIX, tags=['private operations inspection'],
                        dependencies=[Depends(_authorize)], include_in_schema=False)
 
@@ -71,13 +72,22 @@ def create_operations_inspection_router(*, stores=None):
         global _NEXT_GRAPH_READ
         if operation not in OPERATIONS:
             raise HTTPException(404, 'Unsupported inspection operation', headers=PRIVATE_HEADERS)
-        allowed = {'limit', 'offset'} if operation == 'projection-inventory' else set()
+        allowed = ({'limit', 'offset'} if operation == 'projection-inventory'
+                   else {'league_id'} if operation == 'restoration-preflight' else set())
         params = list(request.query_params.multi_items())
         if (len(request.scope.get('query_string', b'')) > 128 or len(params) > 2
                 or any(k not in allowed for k, _ in params) or len({k for k, _ in params}) != len(params)):
             raise HTTPException(400, 'Unsupported inspection parameters', headers=PRIVATE_HEADERS)
         limit, offset = 50, 0
-        if allowed:
+        league_id = None
+        if operation == 'restoration-preflight':
+            values = dict(params)
+            league_id = values.get('league_id', '')
+            if not 1 <= len(league_id) <= 32 or not league_id.isascii() or not league_id.isdigit():
+                raise HTTPException(400, 'A numeric league_id is required', headers=PRIVATE_HEADERS)
+            if league_id not in RESTORATION_PREFLIGHT_LEAGUES:
+                raise HTTPException(403, 'Inspection league scope is not authorized', headers=PRIVATE_HEADERS)
+        elif allowed:
             try:
                 values = dict(params)
                 if any(not v.isascii() or not v.isdigit() for v in values.values()):
@@ -96,27 +106,32 @@ def create_operations_inspection_router(*, stores=None):
             if graph:
                 _NEXT_GRAPH_READ = time.monotonic() + GRAPH_COOLDOWN_SECONDS
             budget = evidence.Budget(time.monotonic() + (10 if graph else 3))
-            selected = stores or evidence.InspectionStores.configured()
-            if operation == 'identity':
+            if operation == 'restoration-preflight':
+                if restoration_preflight is None:
+                    raise InspectionLimit('Restoration inspection is not configured')
+                result = restoration_preflight(league_id, budget)
+            elif operation == 'identity':
                 result = evidence.identity()
-            elif operation == 'storage':
-                result = evidence.storage(selected, budget)
-            elif operation == 'projection-reachability':
-                result = _sanitize_graph(evidence.projection(selected, budget))
-            elif operation == 'projection-inventory':
-                result = evidence.projection(selected, budget, inventory=(offset, limit, []))
-                result['report'] = _sanitize_graph(result['report'])
-                # Validate typed, size-bounded scalar fields only.
-                for row in result['snapshots']:
-                    for value in row.values():
-                        if isinstance(value, str) and len(value) > 128:
-                            raise InspectionLimit('Inventory scalar budget exceeded')
-                        if value is not None and type(value) not in {str, int, bool}:
-                            raise InspectionLimit('Invalid inventory scalar')
-            elif operation == 'fois-storage':
-                result = evidence.fois_storage(selected, budget)
             else:
-                result = evidence.retention(selected, budget)
+                selected = stores or evidence.InspectionStores.configured()
+                if operation == 'storage':
+                    result = evidence.storage(selected, budget)
+                elif operation == 'projection-reachability':
+                    result = _sanitize_graph(evidence.projection(selected, budget))
+                elif operation == 'projection-inventory':
+                    result = evidence.projection(selected, budget, inventory=(offset, limit, []))
+                    result['report'] = _sanitize_graph(result['report'])
+                    # Validate typed, size-bounded scalar fields only.
+                    for row in result['snapshots']:
+                        for value in row.values():
+                            if isinstance(value, str) and len(value) > 128:
+                                raise InspectionLimit('Inventory scalar budget exceeded')
+                            if value is not None and type(value) not in {str, int, bool}:
+                                raise InspectionLimit('Invalid inventory scalar')
+                elif operation == 'fois-storage':
+                    result = evidence.fois_storage(selected, budget)
+                else:
+                    result = evidence.retention(selected, budget)
             budget.check()
             response = JSONResponse(result, headers=PRIVATE_HEADERS)
             if len(response.body) > MAX_RESPONSE_BYTES:

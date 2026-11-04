@@ -20,15 +20,13 @@ from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator, mem
 from src.platform.fois_admission import (
     WORKING_RESERVE_BYTES as FOIS_WORKING, SAFETY_MARGIN_BYTES as FOIS_SAFETY,
 )
-
-MIB = 1024 * 1024
-SERVICE_LIMIT = 2 * 1024 * MIB
+from src.platform.cache_restoration_admission import (
+    MIB as MIB, SERVICE_LIMIT, CACHE_EXPANSION_FACTOR, CACHE_MINIMUM_WORKING,
+    CACHE_SAFETY, restoration_admission,
+)
 # JSON decoding plus consumer generation fingerprints have separate temporary
 # representations. Reserve conservatively from serialized size; never discount
 # file cache or borrow the FOIS/Trade working reservations.
-CACHE_EXPANSION_FACTOR = 16
-CACHE_MINIMUM_WORKING = 128 * MIB
-CACHE_SAFETY = 128 * MIB
 
 
 async def restore_cached_runtime_owned(runtime: LeagueRuntime, publish: Callable[[LeagueRuntime], None],
@@ -71,16 +69,18 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
                         or not 0 <= time.time() - stat.st_mtime <= JSON_BUDGET.maximum_age_seconds):
                     raise ValueError('Saved publication outside retention policy')
                 sample = memory_snapshot()
-                used, limit = sample.get('cgroup_current_bytes'), sample.get('cgroup_limit_bytes')
-                working = max(CACHE_MINIMUM_WORKING, stat.st_size * CACHE_EXPANSION_FACTOR)
                 # Existing FOIS allocations are already in cgroup current, but
                 # its outstanding demand is not. Do not spend the analytical
                 # owner's reserve on a newly decoded league. No RSS subtraction
                 # or file-cache credit is treated as committed free capacity.
-                required = working + (FOIS_WORKING + max(FOIS_SAFETY, CACHE_SAFETY)
-                                      if lifecycle_coordinator.fois_generation_active() else CACHE_SAFETY)
-                if (type(used) is not int or type(limit) is not int or used < 0 or limit <= 0
-                        or min(limit, SERVICE_LIMIT) - used < required):
+                plan = restoration_admission(
+                    stat.st_size, sample, lifecycle_coordinator.fois_generation_active(),
+                    fois_working_bytes=FOIS_WORKING, fois_safety_bytes=FOIS_SAFETY,
+                    expansion_factor=CACHE_EXPANSION_FACTOR,
+                    minimum_working_bytes=CACHE_MINIMUM_WORKING,
+                    cache_safety_bytes=CACHE_SAFETY, service_limit_bytes=SERVICE_LIMIT,
+                )
+                if plan['would_admit'] is not True:
                     raise HeavyWorkDeferred('Saved league preparation is waiting for safe memory headroom.')
                 payload = json.load(handle)
             data = payload['data']

@@ -1,3 +1,11 @@
+# v1.22.11 / build 2226 — Bounded Granite restoration preflight
+
+Add one operator-authenticated, explicitly Granite-scoped metadata operation at `/api/inspect/operations/restoration-preflight`. It observes the serving process's lifecycle and shared container memory, safely pins cache metadata without reading its contents, and explains a current resource/coordination assessment. Unknown inputs and unsupported safe file handling remain unknown. A positive response is advisory and non-atomic; normal entry still rechecks admission and payload compatibility.
+
+Restoration and the probe share the unchanged raw-headroom calculation: effective 2 GiB cap, 16× serialized-size allowance, 128 MiB minimum/cache safety, and the existing FOIS 512 MiB working plus 256 MiB safety policy. Existing token authentication is unchanged; only the exact approved Granite league can use the new operation. No hydration, provider work, heavy lease, payload decoding or deep sizing occurs in the diagnostic.
+
+This diagnostic does not establish Granite recovery or the cause of the earlier 503. Render-local credential success is Main Chat-supplied evidence; Codex does not claim to reproduce it. See docs/audits/RESTORATION_PREFLIGHT_2226.md for the scope, provenance and verification procedure.
+
 # v1.22.10 / build 2225 — Trade lineup transparency and evidence limits
 
 Completed Trade assessments expose both franchises’ independently optimized before/after analytical starters and disjoint projected reserves. Details show actual league-configured slots, player names/positions, individual contributions, weekly totals and compatible publication identity. Missing positions remain explicit, genuine zeros remain numeric, and incompatible slot evidence is withheld without inventing a lineup. Submitted Sleeper starters remain separate and unchanged.

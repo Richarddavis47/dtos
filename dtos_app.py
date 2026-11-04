@@ -6,7 +6,8 @@ import os
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from html import escape
-from time import perf_counter
+from math import isfinite
+from time import monotonic, perf_counter
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -54,6 +55,7 @@ from services.sleeper import (
     STATE,
     ensure_data_fresh,
     load_cache,
+    league_cache_file,
     start_sleeper_sync as _start_sleeper_sync,
     sync_sleeper as _sync_sleeper,
     sync_sleeper_league,
@@ -66,7 +68,13 @@ from services.history import (
 )
 from services.fois import fois_service, storage_summary as fois_storage_summary
 from src.core.fois import FOIS_MODEL_VERSION
-from src.platform.fois_admission import FOISMemoryDeferred
+from src.platform.fois_admission import (
+    FOISMemoryDeferred,
+    WORKING_RESERVE_BYTES as FOIS_WORKING_RESERVE_BYTES,
+    SAFETY_MARGIN_BYTES as FOIS_SAFETY_MARGIN_BYTES,
+)
+from src.platform.operational_inspection import identity as inspection_identity
+from src.platform.restoration_preflight import restoration_preflight as read_restoration_preflight
 from src.core.fois.process_execution import (
     shutdown_fois_executor,
     warm_fois_executor,
@@ -424,6 +432,42 @@ def _measure_resources() -> dict[str, Any]:
         "minimal_metadata": minimal_metadata_store.health(),
         "legacy_historical_store": legacy_access_guard.health(),
     }
+
+
+def _restoration_runtime_metadata(league_id: str) -> dict[str, Any]:
+    """Observe only an already resident runtime; never touch or prepare it."""
+    runtime = league_runtime_manager.resident(league_id)
+    if runtime is None:
+        return {"resident": False, "status": "cold", "cooldown_remaining_seconds": 0.0,
+                "cooldown_valid": True}
+    deadline = runtime.lifecycle.get('hydration_retry_after', 0)
+    deferred = runtime.status is RuntimeState.DEFERRED
+    valid, remaining = True, 0.0
+    if deferred:
+        try:
+            valid = type(deadline) in {int, float} and deadline >= 0
+            remaining = max(0.0, float(deadline) - monotonic()) if valid else None
+            valid = valid and isfinite(float(deadline)) and isfinite(remaining)
+        except (OverflowError, TypeError, ValueError):
+            valid, remaining = False, None
+    return {
+        "resident": True, "status": runtime.status.value,
+        "cooldown_remaining_seconds": remaining if valid else None,
+        "cooldown_valid": valid,
+    }
+
+
+def _restoration_preflight(league_id: str, budget: Any) -> dict[str, Any]:
+    """Existing private operator route reads this serving process's providers."""
+    return read_restoration_preflight(
+        league_id, cache_path=league_cache_file,
+        lifecycle_snapshot=lifecycle_coordinator.restoration_snapshot,
+        resident_metadata=_restoration_runtime_metadata,
+        deployment_identity=inspection_identity,
+        fois_working_bytes=FOIS_WORKING_RESERVE_BYTES,
+        fois_safety_bytes=FOIS_SAFETY_MARGIN_BYTES,
+        check_budget=budget.check,
+    )
 
 
 async def ensure_fresh() -> None:
@@ -1093,7 +1137,7 @@ app.include_router(
 )
 
 app.add_middleware(OperationalInspectionBoundary)
-app.include_router(create_operations_inspection_router())
+app.include_router(create_operations_inspection_router(restoration_preflight=_restoration_preflight))
 app.include_router(create_inspection_router(
     state=runtime_state, route_provider=lambda: app.routes, league_id=LEAGUE_ID,
     projection_service=projection_service, market_cache=asset_market_cache,
