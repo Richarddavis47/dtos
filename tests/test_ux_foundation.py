@@ -64,7 +64,8 @@ class UXFoundationTests(unittest.TestCase):
         with patch('routes.home.build_team_directory', return_value={1: {'rank': None}, 2: {'rank': None}}):
             response = self._client().get('/')
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Canonical team assessment rankings unavailable', response.text)
+        self.assertIn('Compatible weekly lineup evidence is not prepared for this league.', response.text)
+        self.assertIn('does not yet calculate a validated overall team grade', response.text)
         self.assertNotIn('data-rank="1"', response.text)
         self.assertNotIn('data-rank="2"', response.text)
         self.assertIn('not standings or FOIS GM rankings', response.text)
